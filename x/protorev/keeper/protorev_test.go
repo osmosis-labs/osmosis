@@ -307,7 +307,7 @@ func (s *KeeperTestSuite) TestGetMaxPointsPerBlock() {
 
 // TestGetInfoByPoolType tests the GetInfoByPoolType and SetInfoByPoolType functions.
 func (s *KeeperTestSuite) TestGetInfoByPoolType() {
-	// Should be able to set the PoolWeights
+	// Should be able to set the InfoByPoolType
 	newRouteWeights := types.DefaultPoolTypeInfo
 	newRouteWeights.Balancer.Weight = 100
 	newRouteWeights.Cosmwasm.WeightMap = map[string]uint64{

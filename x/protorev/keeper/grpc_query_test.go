@@ -281,7 +281,7 @@ func (s *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
 	s.Require().Equal(developerAccount.String(), res.DeveloperAccount)
 }
 
-// TestGetProtoRevInfoByPoolType tests the query to retrieve the pool weights
+// TestGetProtoRevInfoByPoolType tests the query to retrieve the pool info
 func (s *KeeperTestSuite) TestGetProtoRevInfoByPoolType() {
 	// Set the pool weights
 	poolInfo := types.InfoByPoolType{

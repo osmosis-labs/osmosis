@@ -169,7 +169,7 @@ func (q Querier) GetProtoRevDeveloperAccount(c context.Context, req *types.Query
 	return &types.QueryGetProtoRevDeveloperAccountResponse{DeveloperAccount: developerAccount.String()}, nil
 }
 
-// GetProtoRevInfoByPoolType queries meta data about each pool type the module is using
+// GetProtoRevInfoByPoolType queries information pertaining to each pool type the module is using for arbitrage
 func (q Querier) GetProtoRevInfoByPoolType(c context.Context, req *types.QueryGetProtoRevInfoByPoolTypeRequest) (*types.QueryGetProtoRevInfoByPoolTypeResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

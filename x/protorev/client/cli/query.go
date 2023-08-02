@@ -144,8 +144,8 @@ func NewQueryEnabledCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevEnab
 // NewQueryInfoByPoolTypeCmd returns the command to query the pool type info of protorev
 func NewQueryInfoByPoolTypeCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevInfoByPoolTypeRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "pool-weights",
-		Short: "Query the pool weights used to determine how computationally expensive a route is",
+		Use:   "info-by-pool-type",
+		Short: "Query the pool info used to determine how computationally expensive a route is",
 	}, &types.QueryGetProtoRevInfoByPoolTypeRequest{}
 }
 

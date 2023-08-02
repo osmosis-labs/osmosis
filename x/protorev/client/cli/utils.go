@@ -125,24 +125,24 @@ func BuildSetHotRoutesMsg(clientCtx client.Context, args []string, fs *flag.Flag
 // ------------ types/functions to handle a SetInfoByPoolType CLI TX ------------ //
 type createInfoByPoolTypeInput types.InfoByPoolType
 
-type XCreatePoolWeightsInputs createInfoByPoolTypeInput
+type XCreateInfoByPoolTypeInputs createInfoByPoolTypeInput
 
-type XCreatePoolWeightsExceptions struct {
-	XCreatePoolWeightsInputs
+type XCreateInfoByPoolTypeExceptions struct {
+	XCreateInfoByPoolTypeInputs
 	Other *string // Other won't raise an error
 }
 
 // UnmarshalJSON should error if there are fields unexpected.
 func (release *createInfoByPoolTypeInput) UnmarshalJSON(data []byte) error {
-	var createPoolWeightsE XCreatePoolWeightsExceptions
+	var createInfoByPoolTypeE XCreateInfoByPoolTypeExceptions
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields() // Force
 
-	if err := dec.Decode(&createPoolWeightsE); err != nil {
+	if err := dec.Decode(&createInfoByPoolTypeE); err != nil {
 		return err
 	}
 
-	*release = createInfoByPoolTypeInput(createPoolWeightsE.XCreatePoolWeightsInputs)
+	*release = createInfoByPoolTypeInput(createInfoByPoolTypeE.XCreateInfoByPoolTypeInputs)
 	return nil
 }
 

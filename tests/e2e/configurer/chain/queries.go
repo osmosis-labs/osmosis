@@ -118,8 +118,8 @@ func (n *NodeConfig) QueryProtoRevDeveloperAccount() (sdk.AccAddress, error) {
 	return account, nil
 }
 
-// QueryProtoRevPoolTypeInfo gets information on how the module handles different pool types.
-func (n *NodeConfig) QueryProtoRevPoolTypeInfo() (*protorevtypes.InfoByPoolType, error) {
+// QueryProtoRevInfoByPoolType gets information on how the module handles different pool types.
+func (n *NodeConfig) QueryProtoRevInfoByPoolType() (*protorevtypes.InfoByPoolType, error) {
 	path := "/osmosis/protorev/info_by_pool_type"
 
 	bz, err := n.QueryGRPCGateway(path)

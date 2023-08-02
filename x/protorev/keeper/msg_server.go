@@ -114,9 +114,8 @@ func (m MsgServer) SetMaxPoolPointsPerBlock(c context.Context, msg *types.MsgSet
 	return &types.MsgSetMaxPoolPointsPerBlockResponse{}, nil
 }
 
-// SetInfoByPoolType sets the weights corresponding to each pool type. This distinction is necessary because the
-// pool types have different execution times. Each weight roughly corresponds to the amount of time (in ms) it takes
-// to simulate and execute a trade.
+// SetInfoByPoolType sets the execution time/gas consumption parameters corresponding to each pool type.
+// This distinction is necessary because the pool types have different execution times / gas consumption.
 func (m MsgServer) SetInfoByPoolType(c context.Context, msg *types.MsgSetInfoByPoolType) (*types.MsgSetInfoByPoolTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 

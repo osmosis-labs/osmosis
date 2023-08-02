@@ -206,7 +206,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	s.Require().Error(err)
 
 	// The module should have pool weights by default.
-	info, err := chainANode.QueryProtoRevPoolTypeInfo()
+	info, err := chainANode.QueryProtoRevInfoByPoolType()
 	s.T().Logf("checking that the protorev module has pool info on init: %v", info)
 	s.Require().NoError(err)
 	s.Require().NotNil(info)

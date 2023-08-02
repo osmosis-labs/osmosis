@@ -449,17 +449,16 @@ func (k Keeper) SetMaxPointsPerBlock(ctx sdk.Context, maxPoints uint64) error {
 }
 
 // GetInfoByPoolType retrieves the metadata about the different pool types. This is used to determine the execution costs of
-// different pool types when calculating the optimal route. Additionally, it allows for more flexibility in the future
-// if we want to add more pool types and custom handling around each pool type.
+// different pool types when calculating the optimal route (in terms of time and gas consumption).
 func (k Keeper) GetInfoByPoolType(ctx sdk.Context) types.InfoByPoolType {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolTypeInfo)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixInfoByPoolType)
 	poolWeights := &types.InfoByPoolType{}
-	osmoutils.MustGet(store, types.KeyPrefixPoolTypeInfo, poolWeights)
+	osmoutils.MustGet(store, types.KeyPrefixInfoByPoolType, poolWeights)
 	return *poolWeights
 }
 
 // SetInfoByPoolType sets the pool type information.
 func (k Keeper) SetInfoByPoolType(ctx sdk.Context, poolWeights types.InfoByPoolType) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolTypeInfo)
-	osmoutils.MustSet(store, types.KeyPrefixPoolTypeInfo, &poolWeights)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixInfoByPoolType)
+	osmoutils.MustSet(store, types.KeyPrefixInfoByPoolType, &poolWeights)
 }
