@@ -377,18 +377,15 @@ func (k Keeper) CreateConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLink
 		return nil, types.MustHaveTwoDenomsError{NumDenoms: len(poolLiquidity)}
 	}
 
-	foundDenom0 := false
 	denom1 := ""
 	for _, coin := range poolLiquidity {
 		if coin.Denom == desiredDenom0 {
-			foundDenom0 = true
-		} else {
+			continue
+		} else if denom1 == "" {
 			denom1 = coin.Denom
+		} else {
+			return nil, types.NoDesiredDenomInPoolError{DesiredDenom: desiredDenom0}
 		}
-	}
-
-	if !foundDenom0 {
-		return nil, types.NoDesiredDenomInPoolError{DesiredDenom: desiredDenom0}
 	}
 
 	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, desiredDenom0, denom1, tickSpacing, spreadFactor)
