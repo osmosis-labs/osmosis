@@ -99,6 +99,8 @@ jobs:
     runs-on: self-hosted
     timeout-minutes: 25
     steps:
+      - name: Clean up Docker containers
+        run: docker system prune -f
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
