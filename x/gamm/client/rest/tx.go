@@ -21,6 +21,13 @@ func ProposalUpdateMigrationRecordsRESTHandler(clientCtx client.Context) govrest
 	}
 }
 
+func ProposalSetScalingFactorController(clientCtx client.Context) govrest.ProposalRESTHandler {
+	return govrest.ProposalRESTHandler{
+		SubRoute: "set-scaling-factor-controller",
+		Handler:  emptyHandler(clientCtx),
+	}
+}
+
 func emptyHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 	}
