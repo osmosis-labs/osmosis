@@ -125,18 +125,16 @@ func CreateUpgradeHandler(
 		// Reset the pool weights upon upgrade. This will add support for CW pools on ProtoRev.
 		keepers.ProtoRevKeeper.SetInfoByPoolType(ctx, types.DefaultPoolTypeInfo)
 
-		// get all the existing CL pools
-		pools, err := keepers.ConcentratedLiquidityKeeper.GetPools(ctx)
+		// get all the existing CL pool Ids
+		poolIds, err := keepers.ConcentratedLiquidityKeeper.GetPoolIds(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, pool := range pools {
-			// migrate twap records for CL Pools
-			err = FlipTwapSpotPriceRecords(ctx, []uint64{pool.GetId()}, keepers)
-			if err != nil {
-				return nil, err
-			}
+		// migrate twap records for CL Pools
+		err = FlipTwapSpotPriceRecords(ctx, poolIds, keepers)
+		if err != nil {
+			return nil, err
 		}
 
 		return migrations, nil
