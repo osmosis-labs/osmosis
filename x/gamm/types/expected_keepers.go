@@ -23,6 +23,7 @@ type AccountKeeper interface {
 	SetAccount(ctx sdk.Context, acc authtypes.AccountI)
 
 	GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string)
+	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
 }
 
 // BankKeeper defines the banking contract that must be fulfilled when
@@ -91,6 +92,8 @@ type PoolManager interface {
 	GetPoolModule(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolModuleI, error)
 
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
+
+	CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (poolmanagertypes.PoolI, error)
 }
 
 type PoolIncentivesKeeper interface {

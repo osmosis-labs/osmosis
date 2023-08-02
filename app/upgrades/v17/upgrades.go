@@ -45,7 +45,7 @@ func CreateUpgradeHandler(
 
 		for _, assetPair := range assetPairs {
 			// Create a concentrated liquidity pool for asset pair.
-			clPool, err := createConcentratedPoolFromCFMM(ctx, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, *keepers.AccountKeeper, *keepers.GAMMKeeper, *keepers.PoolManagerKeeper)
+			clPool, err := keepers.GAMMKeeper.CreateConcentratedPoolFromCFMM(ctx, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, TickSpacing)
 			if err != nil {
 				return nil, err
 			}
