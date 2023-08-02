@@ -45,7 +45,7 @@ service Msg {
 
 // MsgCreateValidatorSetPreference is a list that holds validator-set.
 message MsgSetValidatorSetPreference {
-  option (amino.name) = "osmosis/valset-pref/MsgSetValidatorSetPreference";
+  option (amino.name) = "osmosis/MsgSetValidatorSetPreference";
 
   // delegator is the user who is trying to create a validator-set.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
@@ -62,7 +62,7 @@ message MsgSetValidatorSetPreferenceResponse {}
 // MsgDelegateToValidatorSet allows users to delegate to an existing
 // validator-set
 message MsgDelegateToValidatorSet {
-  option (amino.name) = "osmosis/valset-pref/MsgDelegateToValidatorSet";
+  option (amino.name) = "osmosis/MsgDelegateToValidatorSet";
 
   // delegator is the user who is trying to delegate.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
@@ -80,7 +80,7 @@ message MsgDelegateToValidatorSet {
 message MsgDelegateToValidatorSetResponse {}
 
 message MsgUndelegateFromValidatorSet {
-  option (amino.name) = "osmosis/valset-pref/MsgUndelegateFromValidatorSet";
+  option (amino.name) = "osmosis/MsgUndelegateFromValidatorSet";
 
   // delegator is the user who is trying to undelegate.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
@@ -99,6 +99,8 @@ message MsgUndelegateFromValidatorSet {
 message MsgUndelegateFromValidatorSetResponse {}
 
 message MsgRedelegateValidatorSet {
+  option (amino.name) = "osmosis/MsgRedelegateValidatorSet";
+
   // delegator is the user who is trying to create a validator-set.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
 
@@ -114,7 +116,7 @@ message MsgRedelegateValidatorSetResponse {}
 // MsgWithdrawDelegationRewards allows user to claim staking rewards from the
 // validator set.
 message MsgWithdrawDelegationRewards {
-  option (amino.name) = "osmosis/valset-pref/MsgWithdrawDelegationRewards";
+  option (amino.name) = "osmosis/MsgWithdrawDelegationRewards";
 
   // delegator is the user who is trying to claim staking rewards.
   string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];

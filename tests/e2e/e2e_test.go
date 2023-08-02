@@ -34,6 +34,11 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
+var (
+	// minDecTolerance minimum tolerance for sdk.Dec, given its precision of 18.
+	minDecTolerance = sdk.MustNewDecFromStr("0.000000000000000001")
+)
+
 // TODO: Find more scalable way to do this
 func (s *IntegrationTestSuite) TestAllE2E() {
 	// There appears to be an E2E quirk that requires a sleep here
@@ -1074,7 +1079,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	s.T().Log("creating first position")
 	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,20000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
 	timeAfterPositionCreationBeforeSwap := chainANode.QueryLatestBlockTime()
-	chainA.WaitForNumHeights(1)
+	chainA.WaitForNumHeights(2)
 	firstPositionTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken0(), concentratedPool.GetToken1(), timeAfterPositionCreationBeforeSwap)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.MustNewDecFromStr("0.5"), firstPositionTwapBOverA)

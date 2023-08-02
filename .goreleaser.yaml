@@ -82,7 +82,7 @@ builds:
       - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd
       - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
-      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc,osusergo
       - -w -s
       - -linkmode=external
       - -extldflags '-Wl,-z,muldefs -static -lm'
@@ -90,6 +90,7 @@ builds:
       - netgo
       - ledger
       - muslc
+      - osusergo
 
   - id: osmosisd-linux-arm64
     main: ./cmd/osmosisd
@@ -111,7 +112,7 @@ builds:
       - -X github.com/cosmos/cosmos-sdk/version.AppName=osmosisd 
       - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} 
       - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }}
-      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc
+      - -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc,osusergo
       - -w -s
       - -linkmode=external
       - -extldflags '-Wl,-z,muldefs -static -lm'
@@ -119,6 +120,7 @@ builds:
       - netgo
       - ledger
       - muslc
+      - osusergo
 
 universal_binaries:
   - id: osmosisd-darwin-universal
@@ -143,7 +145,7 @@ archives:
     builds:
       - osmosisd-darwin-universal
       - osmosisd-linux-amd64
-      - osmosisd-linux-amd64
+      - osmosisd-linux-arm64
       - osmosisd-darwin-amd64
       - osmosisd-darwin-arm64
     name_template: "{{.ProjectName}}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
