@@ -390,6 +390,14 @@ func (k Keeper) CreateConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLink
 		}
 	}
 
+	if !foundDenom0 {
+		return nil, types.NoDesiredDenomInPoolError{desiredDenom0}
+	}
+
+	if spreadFactor.IsZero() {
+		spreadFactor = cfmmPool.GetSpreadFactor(ctx)
+	}
+
 	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, desiredDenom0, denom1, tickSpacing, spreadFactor)
 	concentratedPool, err := k.poolManager.CreateConcentratedPoolAsPoolManager(ctx, createPoolMsg)
 	if err != nil {
