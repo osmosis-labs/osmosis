@@ -95,9 +95,10 @@ func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) []AssetP
 		// If the pool is superfluid, set the superfluid flag to true.
 		poolShareDenom := fmt.Sprintf("gamm/pool/%d", assetPair.LinkedClassicPool)
 		_, err = superfluidKeeper.GetSuperfluidAsset(ctx, poolShareDenom)
-		if err == nil {
-			AssetPairs[i].Superfluid = true
+		if err != nil {
+			continue
 		}
+		AssetPairs[i].Superfluid = true
 	}
 	return AssetPairs
 }
