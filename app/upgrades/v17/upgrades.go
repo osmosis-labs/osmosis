@@ -33,6 +33,18 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// get all the existing CL pool Ids
+		poolIds, err := keepers.ConcentratedLiquidityKeeper.GetPoolIds(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		// migrate twap records for CL Pools
+		err = FlipTwapSpotPriceRecords(ctx, poolIds, keepers)
+		if err != nil {
+			return nil, err
+		}
+
 		// Get community pool address.
 		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
 
@@ -129,18 +141,6 @@ func CreateUpgradeHandler(
 			ConcentratedWeight: 300,
 			CosmwasmWeight:     300,
 		})
-
-		// get all the existing CL pool Ids
-		poolIds, err := keepers.ConcentratedLiquidityKeeper.GetPoolIds(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		// migrate twap records for CL Pools
-		err = FlipTwapSpotPriceRecords(ctx, poolIds, keepers)
-		if err != nil {
-			return nil, err
-		}
 
 		return migrations, nil
 	}
