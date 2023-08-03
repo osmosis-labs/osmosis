@@ -41,6 +41,10 @@ type params struct {
 }
 
 func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("creating balancer pool from file %s", poolFile)
 	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=5000uosmo"}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -61,6 +65,10 @@ func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 }
 
 func (n *NodeConfig) CreateStableswapPool(poolFile, from string) uint64 {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("creating stableswap pool from file %s", poolFile)
 	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), "--pool-type=stableswap", fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=5000uosmo"}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -81,6 +89,10 @@ func (n *NodeConfig) CreateStableswapPool(poolFile, from string) uint64 {
 
 // CollectSpreadRewards collects spread rewards earned by concentrated position in range of [lowerTick; upperTick] in pool with id of poolId
 func (n *NodeConfig) CollectSpreadRewards(from, positionIds string) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("collecting spread rewards from concentrated position")
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "collect-spread-rewards", positionIds, fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -92,6 +104,10 @@ func (n *NodeConfig) CollectSpreadRewards(from, positionIds string) {
 // CreateConcentratedPool creates a concentrated pool.
 // Returns pool id of newly created pool on success
 func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpacing uint64, spreadFactor string) (uint64, error) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("creating concentrated pool")
 
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-pool", denom1, denom2, fmt.Sprintf("%d", tickSpacing), spreadFactor, fmt.Sprintf("--from=%s", from)}
@@ -116,6 +132,10 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 // CreateConcentratedPosition creates a concentrated position from [lowerTick; upperTick] in pool with id of poolId
 // token{0,1} - liquidity to create position with
 func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, tokens string, token0MinAmt, token1MinAmt int64, poolId uint64) uint64 {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("creating concentrated position")
 	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
 	// fees = 1250 (because 50,000 * 0.0025 = 1250)
@@ -139,6 +159,10 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) int {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("storing wasm code from file %s", wasmFile)
 	cmd := []string{"osmosisd", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.1uosmo", "--gas-adjustment=1.3"}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -156,6 +180,10 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) int {
 }
 
 func (n *NodeConfig) WithdrawPosition(from, liquidityOut string, positionId uint64) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("withdrawing liquidity from position")
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=5000uosmo"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -164,6 +192,10 @@ func (n *NodeConfig) WithdrawPosition(from, liquidityOut string, positionId uint
 }
 
 func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("instantiating wasm contract %s with %s", codeId, initMsg)
 	cmd := []string{"osmosisd", "tx", "wasm", "instantiate", codeId, initMsg, fmt.Sprintf("--from=%s", from), "--no-admin", "--label=contract"}
 	n.LogActionF(strings.Join(cmd, " "))
@@ -173,6 +205,10 @@ func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
 }
 
 func (n *NodeConfig) WasmExecute(contract, execMsg, from string) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("executing %s on wasm contract %s from %s", execMsg, contract, from)
 	cmd := []string{"osmosisd", "tx", "wasm", "execute", contract, execMsg, fmt.Sprintf("--from=%s", from)}
 	n.LogActionF(strings.Join(cmd, " "))
@@ -184,6 +220,10 @@ func (n *NodeConfig) WasmExecute(contract, execMsg, from string) {
 // QueryParams extracts the params for a given subspace and key. This is done generically via json to avoid having to
 // specify the QueryParamResponse type (which may not exist for all params).
 func (n *NodeConfig) QueryParams(subspace, key string) string {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	cmd := []string{"osmosisd", "query", "params", "subspace", subspace, key, "--output=json"}
 
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
@@ -196,6 +236,10 @@ func (n *NodeConfig) QueryParams(subspace, key string) string {
 }
 
 func (n *NodeConfig) QueryGovModuleAccount() string {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
 
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
@@ -217,6 +261,10 @@ func (n *NodeConfig) QueryGovModuleAccount() string {
 }
 
 func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) int {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("submitting param change proposal %s", proposalJson)
 	// ToDo: Is there a better way to do this?
 	wd, err := os.Getwd()
@@ -253,6 +301,10 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) int {
 }
 
 func (n *NodeConfig) SendIBCTransfer(dstChain *Config, from, recipient, memo string, token sdk.Coin) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("IBC sending %s from %s to %s. memo: %s", token.Amount.String(), from, recipient, memo)
 
 	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", n.chainId, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000", "--memo", memo}
@@ -271,6 +323,10 @@ func (n *NodeConfig) SendIBCTransfer(dstChain *Config, from, recipient, memo str
 }
 
 func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("IBC sending %s from %s to %s", amount, from, recipient)
 
 	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from)}
@@ -287,6 +343,10 @@ func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {
 // To reproduce locally:
 // docker container exec <container id> osmosisd tx gamm swap-exact-amount-in <tokeinInCoin> <tokenOutMinAmountInt> --swap-route-pool-ids <swapRoutePoolIds> --swap-route-denoms <swapRouteDenoms> --chain-id=<id>--from=<address> --keyring-backend=test -b=block --yes --log_format=json
 func (n *NodeConfig) SwapExactAmountIn(tokenInCoin, tokenOutMinAmountInt string, swapRoutePoolIds string, swapRouteDenoms string, from string) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("swapping %s to get a minimum of %s with pool id routes (%s) and denom routes (%s)", tokenInCoin, tokenOutMinAmountInt, swapRoutePoolIds, swapRouteDenoms)
 	cmd := []string{"osmosisd", "tx", "gamm", "swap-exact-amount-in", tokenInCoin, tokenOutMinAmountInt, fmt.Sprintf("--swap-route-pool-ids=%s", swapRoutePoolIds), fmt.Sprintf("--swap-route-denoms=%s", swapRouteDenoms), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -295,6 +355,10 @@ func (n *NodeConfig) SwapExactAmountIn(tokenInCoin, tokenOutMinAmountInt string,
 }
 
 func (n *NodeConfig) JoinPoolExactAmountIn(tokenIn string, poolId uint64, shareOutMinAmount string, from string) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("join-swap-extern-amount-in (%s)  (%s) from (%s), pool id (%d)", tokenIn, shareOutMinAmount, from, poolId)
 	cmd := []string{"osmosisd", "tx", "gamm", "join-swap-extern-amount-in", tokenIn, shareOutMinAmount, fmt.Sprintf("--pool-id=%d", poolId), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -303,6 +367,10 @@ func (n *NodeConfig) JoinPoolExactAmountIn(tokenIn string, poolId uint64, shareO
 }
 
 func (n *NodeConfig) ExitPool(from, minAmountsOut string, poolId uint64, shareAmountIn string) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("exiting gamm pool")
 	cmd := []string{"osmosisd", "tx", "gamm", "exit-pool", fmt.Sprintf("--min-amounts-out=%s", minAmountsOut), fmt.Sprintf("--share-amount-in=%s", shareAmountIn), fmt.Sprintf("--pool-id=%d", poolId), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -311,6 +379,10 @@ func (n *NodeConfig) ExitPool(from, minAmountsOut string, poolId uint64, shareAm
 }
 
 func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("submitting upgrade proposal %s for height %d", upgradeVersion, upgradeHeight)
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%d", upgradeHeight), "--upgrade-info=\"\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -319,6 +391,10 @@ func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight 
 }
 
 func (n *NodeConfig) SubmitSuperfluidProposal(asset string, initialDeposit sdk.Coin) int {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("submitting superfluid proposal for asset %s", asset)
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), "--title=\"superfluid asset prop\"", fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit), "--gas=700000", "--fees=5000uosmo"}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -340,6 +416,10 @@ func (n *NodeConfig) SubmitSuperfluidProposal(asset string, initialDeposit sdk.C
 }
 
 func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(initialDeposit sdk.Coin) int {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("Creating concentrated liquidity pool")
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,-6,0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -360,6 +440,10 @@ func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(initialDeposit sdk.Coi
 }
 
 func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, isExpedited bool) int {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("submitting text gov proposal")
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
 	if isExpedited {
@@ -384,6 +468,10 @@ func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, is
 }
 
 func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords string, initialDeposit sdk.Coin, isExpedited bool) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("submitting tick spacing reduction gov proposal")
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "tick-spacing-decrease-proposal", "--title=\"test tick spacing reduction proposal title\"", "--description=\"test tick spacing reduction proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit), fmt.Sprintf("--pool-tick-spacing-records=%s", poolTickSpacingRecords)}
 	if isExpedited {
@@ -395,6 +483,10 @@ func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords s
 }
 
 func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("depositing on proposal: %d", proposalNumber)
 	deposit := sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.MinDepositValue)).String()
 	if isExpedited {
@@ -407,6 +499,10 @@ func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
 }
 
 func (n *NodeConfig) VoteYesProposal(from string, proposalNumber int) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("voting yes on proposal: %d", proposalNumber)
 	cmd := []string{"osmosisd", "tx", "gov", "vote", fmt.Sprintf("%d", proposalNumber), "yes", fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -415,6 +511,10 @@ func (n *NodeConfig) VoteYesProposal(from string, proposalNumber int) {
 }
 
 func (n *NodeConfig) VoteNoProposal(from string, proposalNumber int) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("voting no on proposal: %d", proposalNumber)
 	cmd := []string{"osmosisd", "tx", "gov", "vote", fmt.Sprintf("%d", proposalNumber), "no", fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -423,6 +523,10 @@ func (n *NodeConfig) VoteNoProposal(from string, proposalNumber int) {
 }
 
 func (n *NodeConfig) LockTokens(tokens string, duration string, from string) int {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("locking %s for %s", tokens, duration)
 	cmd := []string{"osmosisd", "tx", "lockup", "lock-tokens", tokens, fmt.Sprintf("--duration=%s", duration), fmt.Sprintf("--from=%s", from)}
 
@@ -446,6 +550,10 @@ func (n *NodeConfig) LockTokens(tokens string, duration string, from string) int
 }
 
 func (n *NodeConfig) AddToExistingLock(tokens sdk.Int, denom, duration, from string, lockID int) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("noting previous lockup amount")
 	path := fmt.Sprintf("/osmosis/lockup/v1beta1/locked_by_id/%d", lockID)
 	bz, err := n.QueryGRPCGateway(path)
@@ -472,6 +580,10 @@ func (n *NodeConfig) AddToExistingLock(tokens sdk.Int, denom, duration, from str
 }
 
 func (n *NodeConfig) SuperfluidDelegate(lockNumber int, valAddress string, from string) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	lockStr := strconv.Itoa(lockNumber)
 	n.LogActionF("superfluid delegating lock %s to %s", lockStr, valAddress)
 	cmd := []string{"osmosisd", "tx", "superfluid", "delegate", lockStr, valAddress, fmt.Sprintf("--from=%s", from)}
@@ -481,6 +593,10 @@ func (n *NodeConfig) SuperfluidDelegate(lockNumber int, valAddress string, from 
 }
 
 func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress string) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
 	cmd := []string{"osmosisd", "tx", "bank", "send", sendAddress, receiveAddress, amount, "--from=val"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -489,6 +605,10 @@ func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress 
 }
 
 func (n *NodeConfig) FundCommunityPool(sendAddress string, funds string) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("funding community pool from address %s with %s", sendAddress, funds)
 	cmd := []string{"osmosisd", "tx", "distribution", "fund-community-pool", funds, fmt.Sprintf("--from=%s", sendAddress), "--gas=600000", "--fees=1500uosmo"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -499,6 +619,10 @@ func (n *NodeConfig) FundCommunityPool(sendAddress string, funds string) {
 // This method also funds fee tokens from the `initialization.ValidatorWalletName` account.
 // TODO: Abstract this to be a fee token provider account.
 func (n *NodeConfig) CreateWallet(walletName string) string {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("creating wallet %s", walletName)
 	cmd := []string{"osmosisd", "keys", "add", walletName, "--keyring-backend=test"}
 	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
@@ -513,10 +637,18 @@ func (n *NodeConfig) CreateWallet(walletName string) string {
 }
 
 func (n *NodeConfig) CreateWalletAndFund(walletName string, tokensToFund []string) string {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	return n.CreateWalletAndFundFrom(walletName, initialization.ValidatorWalletName, tokensToFund)
 }
 
 func (n *NodeConfig) CreateWalletAndFundFrom(newWalletName string, fundingWalletName string, tokensToFund []string) string {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("Sending tokens to %s", newWalletName)
 
 	walletAddr := n.CreateWallet(newWalletName)
@@ -529,6 +661,10 @@ func (n *NodeConfig) CreateWalletAndFundFrom(newWalletName string, fundingWallet
 }
 
 func (n *NodeConfig) GetWallet(walletName string) string {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.LogActionF("retrieving wallet %s", walletName)
 	cmd := []string{"osmosisd", "keys", "show", walletName, "--keyring-backend=test"}
 	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
@@ -575,6 +711,10 @@ type resultStatus struct {
 }
 
 func (n *NodeConfig) Status() (resultStatus, error) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	cmd := []string{"osmosisd", "status"}
 	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
 	if err != nil {
@@ -643,6 +783,10 @@ func ParseEvent(responseJson map[string]interface{}, field string) (string, erro
 }
 
 func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	n.t.Logf("IBC sending %s from %s to %s (%s)", token, n.chainId, dstChain.Id, recipient)
 
 	dstNode, err := dstChain.GetDefaultNode()
@@ -698,6 +842,10 @@ func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin)
 }
 
 func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	propNumber := n.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	srcChain.LatestProposalNumber += 1
 	n.DepositProposal(propNumber, false)
@@ -716,6 +864,10 @@ func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
 }
 
 func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	// lock tokens
 	lockID := n.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
 	srcChain.LatestLockNumber += 1
@@ -734,6 +886,10 @@ func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount sdk.Int, 
 
 // TODO remove chain from this as input
 func (n *NodeConfig) SetupRateLimiting(paths, gov_addr string, chain *Config) (string, error) {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	srcNode, err := chain.GetNodeAtIndex(1)
 	require.NoError(n.t, err)
 
@@ -787,6 +943,10 @@ func (n *NodeConfig) SetupRateLimiting(paths, gov_addr string, chain *Config) (s
 }
 
 func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, chain *Config) error {
+	// Lock the mutex before executing the function and defer its unlock.
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	proposal := paramsutils.ParamChangeProposalJSON{
 		Title:       "Param Change",
 		Description: fmt.Sprintf("Changing the %s param", key),

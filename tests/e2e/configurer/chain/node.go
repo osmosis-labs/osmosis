@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -28,6 +29,7 @@ type NodeConfig struct {
 
 	// Add this to help with logging / tracking time since start.
 	setupTime time.Time
+	mu        sync.Mutex
 }
 
 // NewNodeConfig returens new initialized NodeConfig.

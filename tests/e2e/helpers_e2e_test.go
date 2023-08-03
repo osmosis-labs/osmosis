@@ -63,6 +63,9 @@ func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address strin
 }
 
 func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
@@ -107,14 +110,11 @@ func (s *IntegrationTestSuite) validateCLPosition(position model.Position, poolI
 	s.Require().Equal(position.UpperTick, upperTick)
 }
 
-func (s *IntegrationTestSuite) CallCheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	s.CheckBalance(node, addr, denom, amount)
-}
-
 // CheckBalance Checks the balance of an address
 func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
 	// check the balance of the contract
 	s.Require().Eventually(func() bool {
 		// TODO: Change to QueryBalance(addr, denom)
@@ -137,6 +137,9 @@ func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom 
 }
 
 func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) string {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
 	// copy the contract from tests/ibc-hooks/bytecode
 	wd, err := os.Getwd()
 	s.NoError(err)
