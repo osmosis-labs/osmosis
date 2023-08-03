@@ -40,7 +40,7 @@ func handleUpdateMigrationRecordsProposal(ctx sdk.Context, k keeper.Keeper, p *t
 
 func handleCreatingCLPoolAndLinkToCFMMProposal(ctx sdk.Context, k keeper.Keeper, p *types.CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) error {
 	for _, record := range p.PoolRecordsWithCfmmLink {
-		_, err := k.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, record.BalancerPoolId, record.Denom0, record.TickSpacing, record.SpreadFactor)
+		_, err := k.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, record.BalancerPoolId, record.Denom0, record.SpreadFactor, record.TickSpacing)
 		if err != nil {
 			return err
 		}
