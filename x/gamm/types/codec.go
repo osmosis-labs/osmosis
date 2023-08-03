@@ -23,7 +23,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgExitSwapShareAmountIn{}, "osmosis/gamm/exit-swap-share-amount-in", nil)
 	cdc.RegisterConcrete(&UpdateMigrationRecordsProposal{}, "osmosis/gamm/update-migration-records-proposal", nil)
 	cdc.RegisterConcrete(&ReplaceMigrationRecordsProposal{}, "osmosis/gamm/replace-migration-records-proposal", nil)
-	cdc.RegisterConcrete(&SetScalingFactorControllerProposal{}, "osmosis/gamm/set-scaling-factor-controller-address", nil)
+	cdc.RegisterConcrete(&SetScalingFactorControllerProposal{}, "osmosis/gamm/scaling-factor-controller", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
