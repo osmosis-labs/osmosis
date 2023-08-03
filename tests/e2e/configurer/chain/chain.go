@@ -219,8 +219,8 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 				return false
 			}
 		},
-		5*time.Minute,
-		time.Second,
+		1*time.Minute,
+		10*time.Millisecond,
 		"tx not received on destination chain",
 	)
 

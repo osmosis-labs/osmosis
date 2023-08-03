@@ -689,8 +689,8 @@ func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin)
 				return false
 			}
 		},
-		5*time.Minute,
-		time.Second,
+		time.Minute,
+		10*time.Millisecond,
 		"tx not received on destination chain",
 	)
 
@@ -829,6 +829,6 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 			return false
 		}
 		return status == proposalStatusPassed
-	}, time.Minute*30, time.Millisecond*500)
+	}, time.Minute, 10*time.Millisecond)
 	return nil
 }
