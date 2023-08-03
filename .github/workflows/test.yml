@@ -100,7 +100,12 @@ jobs:
     timeout-minutes: 25
     steps:
       - name: Clean up Pre-Existing E2E Docker containers
-        run: docker container prune -f --filter "name=osmo-test-*" --filter "name=hermes-relayer*"
+        run: |
+          # Remove containers with names starting with "osmo-test-"
+          docker container ls --filter "name=osmo-test-*" -aq | xargs docker container rm -f
+
+          # Remove containers with names starting with "hermes-relayer"
+          docker container ls --filter "name=hermes-relayer*" -aq | xargs docker container rm -f
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
@@ -145,4 +150,9 @@ jobs:
         if: always()
         run: rm -rf $HOME/.osmosisd/ || true
       - name: Clean up E2E Docker containers
-        run: docker container prune -f --filter "name=osmo-test-*" --filter "name=hermes-relayer*"
+        run: |
+          # Remove containers with names starting with "osmo-test-"
+          docker container ls --filter "name=osmo-test-*" -aq | xargs docker container rm -f
+
+          # Remove containers with names starting with "hermes-relayer"
+          docker container ls --filter "name=hermes-relayer*" -aq | xargs docker container rm -f
