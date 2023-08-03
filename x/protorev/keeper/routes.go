@@ -102,6 +102,10 @@ func (k Keeper) BuildHighestLiquidityRoutes(ctx sdk.Context, tokenIn, tokenOut s
 		if newRoute, err := k.BuildHighestLiquidityRoute(ctx, baseDenom, tokenIn, tokenOut, poolId); err == nil {
 			routes = append(routes, newRoute)
 		}
+
+		if newRoute, err := k.BuildTwoPoolRoute(ctx, baseDenom, tokenIn, tokenOut, poolId); err == nil {
+			routes = append(routes, newRoute)
+		}
 	}
 
 	return routes, nil
@@ -146,6 +150,51 @@ func (k Keeper) BuildHighestLiquidityRoute(ctx sdk.Context, swapDenom types.Base
 		Route:      newRoute,
 		PoolPoints: routePoolPoints,
 		StepSize:   swapDenom.StepSize,
+	}, nil
+}
+
+// BuildTwoPoolRoute will attempt to create a two pool route that will rebalance pools that are paired with the base denom.
+// This is useful for pools that contain the same assets but are imbalanced.
+func (k Keeper) BuildTwoPoolRoute(ctx sdk.Context, baseDenom types.BaseDenom, tokenIn, tokenOut string, poolId uint64) (RouteMetaData, error) {
+	if baseDenom.Denom != tokenOut {
+		return RouteMetaData{}, fmt.Errorf("the token out denom must be the same as the base denom: got %s, expected %s", tokenOut, baseDenom.Denom)
+	}
+
+	// Get the highest liquidity pool for the tokenIn and base denom
+	highestLiquidityPool, err := k.GetPoolForDenomPair(ctx, baseDenom.Denom, tokenIn)
+	if err != nil {
+		return RouteMetaData{}, err
+	}
+
+	// If the swapped on pool is already the pool with the highest liquidity, we cannot build a two pool route (it would be a two hop route with the same pool)
+	if highestLiquidityPool == poolId {
+		return RouteMetaData{}, fmt.Errorf("the pool id must be different from the highest liquidity pool: id %d", poolId)
+	}
+
+	// Create the first swap for the MultiHopSwap Route
+	entryHop := poolmanagertypes.SwapAmountInRoute{
+		PoolId:        highestLiquidityPool,
+		TokenOutDenom: tokenIn,
+	}
+
+	// Creating the second swap in the arb
+	exitHop := poolmanagertypes.SwapAmountInRoute{
+		PoolId:        poolId,
+		TokenOutDenom: baseDenom.Denom,
+	}
+
+	newRoute := poolmanagertypes.SwapAmountInRoutes{entryHop, exitHop}
+
+	// Check that the route is valid and update the number of pool points that this route will consume when simulating and executing trades
+	routePoolPoints, err := k.CalculateRoutePoolPoints(ctx, newRoute)
+	if err != nil {
+		return RouteMetaData{}, err
+	}
+
+	return RouteMetaData{
+		Route:      newRoute,
+		PoolPoints: routePoolPoints,
+		StepSize:   baseDenom.StepSize,
 	}, nil
 }
 

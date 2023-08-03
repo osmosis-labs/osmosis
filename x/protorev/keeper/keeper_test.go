@@ -142,6 +142,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("gamm/pool/1", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin(apptesting.DefaultTransmuterDenomA, sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin(apptesting.DefaultTransmuterDenomB, sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("stake", sdk.NewInt(9000000000000000000)),
 	)
 	s.fundAllAccountsWith()
 	s.Commit()
@@ -901,6 +902,91 @@ func (s *KeeperTestSuite) setUpPools() {
 	// Create a cosmwasm pool for testing
 	// Pool 50
 	s.PrepareCosmWasmPool()
+
+	// Create a duplicate pool for testing
+	// Pool 51
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("Atom", sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
+
+	// Create a duplicate pool for testing
+	// Pool 52
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("usdc", sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
+
+	// Create a duplicate pool for testing
+	// Pool 53
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("stake", sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
+
+	// Create a duplicate pool for testing
+	// Pool 54
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("stake", sdk.NewInt(100000000)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(1000000000)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
+
+	// Create a duplicate pool for testing
+	// Pool 55
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("bitcoin", sdk.NewInt(100)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin("Atom", sdk.NewInt(100)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
 
 	// Set all of the pool info into the stores
 	err := s.App.ProtoRevKeeper.UpdatePools(s.Ctx)
