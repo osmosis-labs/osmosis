@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v7 upgrade.

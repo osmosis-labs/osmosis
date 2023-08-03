@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/simapp/helpers"
+	"cosmossdk.io/store"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tm-db"
 

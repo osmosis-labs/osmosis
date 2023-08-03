@@ -1,7 +1,7 @@
 package v15
 
 import (
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store/types"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 

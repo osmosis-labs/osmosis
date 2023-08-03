@@ -17,7 +17,7 @@ import (
 
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"

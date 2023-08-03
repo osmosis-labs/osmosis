@@ -3,7 +3,7 @@ package v9
 import (
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store/types"
 
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
 

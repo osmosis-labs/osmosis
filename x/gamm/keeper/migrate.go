@@ -11,7 +11,7 @@ import (
 	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

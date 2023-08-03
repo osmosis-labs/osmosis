@@ -1,8 +1,8 @@
 package upgrades
 
 import (
+	store "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"

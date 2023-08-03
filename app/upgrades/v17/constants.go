@@ -5,7 +5,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"

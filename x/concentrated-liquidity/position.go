@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	sdkprefix "github.com/cosmos/cosmos-sdk/store/prefix"
+	sdkprefix "cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 

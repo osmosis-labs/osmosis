@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"strings"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store/types"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 

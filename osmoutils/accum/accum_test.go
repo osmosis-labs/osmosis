@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store"
-	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
+	"cosmossdk.io/store"
+	iavlstore "cosmossdk.io/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/iavl"
 	"github.com/gogo/protobuf/proto"

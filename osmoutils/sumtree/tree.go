@@ -9,8 +9,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	store "github.com/cosmos/cosmos-sdk/store"
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
+	store "cosmossdk.io/store"
+	stypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

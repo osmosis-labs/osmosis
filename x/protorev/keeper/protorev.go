@@ -5,7 +5,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 

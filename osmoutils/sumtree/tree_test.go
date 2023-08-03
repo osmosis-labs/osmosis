@@ -13,7 +13,7 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
-	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
+	iavlstore "cosmossdk.io/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"

@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	"cosmossdk.io/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	osmosim "github.com/osmosis-labs/osmosis/v17/simulation/executor"

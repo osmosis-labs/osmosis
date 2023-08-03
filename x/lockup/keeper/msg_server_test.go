@@ -7,7 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"cosmossdk.io/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

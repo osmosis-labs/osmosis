@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"cosmossdk.io/simapp"
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tm-db"
 )

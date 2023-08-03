@@ -12,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"cosmossdk.io/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
