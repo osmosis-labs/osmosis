@@ -11,7 +11,6 @@ on:
       - "v[0-9]**"
   workflow_dispatch:
 
-
 env:
   GO_VERSION: '1.20.5'
 
