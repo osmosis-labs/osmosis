@@ -102,10 +102,10 @@ jobs:
       - name: Clean up Pre-Existing E2E Docker containers
         run: |
           # Remove containers with names starting with "osmo-test-"
-          docker container rm $(docker container ls -a -q --filter "name=osmo-test-*")
+          docker ps -aqf "name=osmo-test-*" | xargs -r docker rm -f
 
           # Remove containers with names starting with "hermes-relayer"
-          docker container rm $(docker container ls -a -q --filter "hermes-relayer*")
+          docker ps -aqf "name=hermes-relayer*" | xargs -r docker rm -f
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
@@ -152,7 +152,7 @@ jobs:
       - name: Clean up E2E Docker containers
         run: |
           # Remove containers with names starting with "osmo-test-"
-          docker container rm $(docker container ls -a -q --filter "name=osmo-test-*")
+          docker ps -aqf "name=osmo-test-*" | xargs -r docker rm -f
 
           # Remove containers with names starting with "hermes-relayer"
-          docker container rm $(docker container ls -a -q --filter "hermes-relayer*")
+          docker ps -aqf "name=hermes-relayer*" | xargs -r docker rm -f
