@@ -76,24 +76,28 @@ func (bc *baseConfigurer) RunValidators() error {
 func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 	bc.t.Logf("starting %s validator containers...", chainConfig.Id)
 
-	var mu sync.Mutex
+	var wg sync.WaitGroup
 	errCh := make(chan error, len(chainConfig.NodeConfigs)) // Buffer the channel to avoid blocking
+
+	// Increment the WaitGroup counter for each node
+	wg.Add(len(chainConfig.NodeConfigs))
 
 	// Iterate over each node
 	for _, node := range chainConfig.NodeConfigs {
 		go func(n *chain.NodeConfig) {
-			err := n.Run() // Run the node and get any error
-			mu.Lock()
-			errCh <- err // Send the error to the channel
-			mu.Unlock()
+			defer wg.Done()  // Decrement the WaitGroup counter when the goroutine is done
+			errCh <- n.Run() // Run the node and send any error to the channel
 		}(node)
 	}
 
-	// Wait for goroutines to finish and collect errors
-	for range chainConfig.NodeConfigs {
-		mu.Lock()
-		err := <-errCh // Receive the error from the channel
-		mu.Unlock()
+	// Wait for all goroutines to finish
+	wg.Wait()
+
+	// Close the error channel since all goroutines are done sending errors
+	close(errCh)
+
+	// Collect errors from the channel
+	for err := range errCh {
 		if err != nil {
 			return err
 		}
