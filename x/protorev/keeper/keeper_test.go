@@ -921,12 +921,14 @@ func (s *KeeperTestSuite) CreateCLPoolAndArbRouteWith_28000_Ticks() {
 	upperTick := int64(100)
 
 	for i := int64(0); i < 14000; i++ {
-		s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick-(100*i), upperTick-(100*i))
-		s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick+(100*i), upperTick+(100*i))
+		_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick-(100*i), upperTick-(100*i))
+		s.Require().NoError(err)
+		_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick+(100*i), upperTick+(100*i))
+		s.Require().NoError(err)
 	}
 
 	// Set 2-pool hot route between new CL pool and respective Balancer
-	s.App.ProtoRevKeeper.SetTokenPairArbRoutes(
+	err := s.App.ProtoRevKeeper.SetTokenPairArbRoutes(
 		s.Ctx,
 		"uosmo",
 		"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
@@ -952,6 +954,7 @@ func (s *KeeperTestSuite) CreateCLPoolAndArbRouteWith_28000_Ticks() {
 			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 		),
 	)
+	s.Require().NoError(err)
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
