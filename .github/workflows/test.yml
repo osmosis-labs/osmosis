@@ -99,8 +99,8 @@ jobs:
     runs-on: self-hosted
     timeout-minutes: 25
     steps:
-      - name: Clean up Docker containers
-        run: docker system prune -f
+      - name: Clean up Pre-Existing E2E Docker containers
+        run: docker container prune -f --filter "name=osmo-test-*" --filter "name=hermes-relayer*"
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
@@ -144,3 +144,5 @@ jobs:
       - name: 🧹 Clean up Osmosis Home
         if: always()
         run: rm -rf $HOME/.osmosisd/ || true
+      - name: Clean up E2E Docker containers
+        run: docker container prune -f --filter "name=osmo-test-*" --filter "name=hermes-relayer*"
