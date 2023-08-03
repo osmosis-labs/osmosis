@@ -98,7 +98,7 @@ func CreateUpgradeHandler(
 
 			for _, twapRecord := range clPoolTwapRecords {
 				twapRecord.LastErrorTime = time.Time{}
-				keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord)
+				keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord.Asset0Denom, twapRecord.Asset1Denom, twapRecord)
 			}
 		}
 
@@ -166,6 +166,7 @@ func FlipTwapSpotPriceRecords(ctx sdk.Context, poolIds []uint64, keepers *keeper
 			twapRecord.Asset1Denom = oldAsset0Denom
 			twapRecord.P0LastSpotPrice = oldSpotPrice1
 			twapRecord.P1LastSpotPrice = oldSpotPrice0
+
 			keepers.TwapKeeper.StoreNewRecord(ctx, oldAsset0Denom, oldAsset1Denom, twapRecord)
 		}
 	}
