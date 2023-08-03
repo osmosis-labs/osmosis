@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -19,6 +20,7 @@ import (
 	v17 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
 )
 
 type UpgradeTestSuite struct {
@@ -54,6 +56,21 @@ func dummyUpgrade(suite *UpgradeTestSuite) {
 	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
 }
 
+func dummyTwapRecord(poolId uint64, t time.Time, asset0 string, asset1 string, sp0, accum0, accum1, geomAccum sdk.Dec) types.TwapRecord {
+	return types.TwapRecord{
+		PoolId:      poolId,
+		Time:        t,
+		Asset0Denom: asset0,
+		Asset1Denom: asset1,
+
+		P0LastSpotPrice:             sp0,
+		P1LastSpotPrice:             sdk.OneDec().Quo(sp0),
+		P0ArithmeticTwapAccumulator: accum0,
+		P1ArithmeticTwapAccumulator: accum1,
+		GeometricTwapAccumulator:    geomAccum,
+	}
+}
+
 func (suite *UpgradeTestSuite) TestUpgrade() {
 	upgradeSetup := func() {
 		// This is done to ensure that we run the InitGenesis() logic for the new modules
@@ -70,12 +87,12 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 	testCases := []struct {
 		name        string
-		pre_upgrade func(sdk.Context, *keepers.AppKeepers) (sdk.Coins, uint64)
-		upgrade     func(sdk.Context, *keepers.AppKeepers, sdk.Coins, uint64)
+		pre_upgrade func(sdk.Context, *keepers.AppKeepers) (sdk.Coins, uint64, []types.TwapRecord)
+		upgrade     func(sdk.Context, *keepers.AppKeepers, sdk.Coins, uint64, []types.TwapRecord)
 	}{
 		{
 			"Test that the upgrade succeeds",
-			func(ctx sdk.Context, keepers *keepers.AppKeepers) (sdk.Coins, uint64) {
+			func(ctx sdk.Context, keepers *keepers.AppKeepers) (sdk.Coins, uint64, []types.TwapRecord) {
 				upgradeSetup()
 
 				var lastPoolID uint64 // To keep track of the last assigned pool ID
@@ -125,10 +142,21 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					lastPoolID = poolID
 				}
 
-				return expectedCoinsUsedInUpgradeHandler, lastPoolID
+				// create few TWAP records for the pools
+				t1 := dummyTwapRecord(1040, time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(2),
+					sdk.OneDec().MulInt64(10*10+5*10),
+					sdk.OneDec().MulInt64(3),
+					sdk.ZeroDec())
+
+				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", t1)
+
+				clPoolTwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, 1040)
+				suite.Require().NoError(err)
+
+				return expectedCoinsUsedInUpgradeHandler, lastPoolID, clPoolTwapRecordPreUpgrade
 
 			},
-			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
+			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64, twapRecord []types.TwapRecord) {
 				stakingParams := suite.App.StakingKeeper.GetParams(suite.Ctx)
 				stakingParams.BondDenom = "uosmo"
 				suite.App.StakingKeeper.SetParams(suite.Ctx, stakingParams)
@@ -201,15 +229,22 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().Equal(len(assetPairs), len(migrationInfo.BalancerToConcentratedPoolLinks))
 				suite.Require().NoError(err)
 
+				clPoolTwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, 1040)
+				suite.Require().NoError(err)
+
+				for idx := range clPoolTwapRecordPostUpgrade {
+					suite.Require().Equal(twapRecord[idx].Asset0Denom, clPoolTwapRecordPostUpgrade[idx].Asset1Denom)
+					suite.Require().Equal(twapRecord[idx].Asset1Denom, clPoolTwapRecordPostUpgrade[idx].Asset0Denom)
+				}
 			},
 		},
 		{
 			"Fails because CFMM pool is not found",
-			func(ctx sdk.Context, keepers *keepers.AppKeepers) (sdk.Coins, uint64) {
+			func(ctx sdk.Context, keepers *keepers.AppKeepers) (sdk.Coins, uint64, []types.TwapRecord) {
 				upgradeSetup()
-				return sdk.NewCoins(), 0
+				return sdk.NewCoins(), 0, nil
 			},
-			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
+			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64, twapRecord []types.TwapRecord) {
 				dummyUpgrade(suite)
 				suite.Require().Panics(func() {
 					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
@@ -222,8 +257,8 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			suite.SetupTest() // reset
 
-			expectedCoinsUsedInUpgradeHandler, lastPoolID := tc.pre_upgrade(suite.Ctx, &suite.App.AppKeepers)
-			tc.upgrade(suite.Ctx, &suite.App.AppKeepers, expectedCoinsUsedInUpgradeHandler, lastPoolID)
+			expectedCoinsUsedInUpgradeHandler, lastPoolID, twapRecord := tc.pre_upgrade(suite.Ctx, &suite.App.AppKeepers)
+			tc.upgrade(suite.Ctx, &suite.App.AppKeepers, expectedCoinsUsedInUpgradeHandler, lastPoolID, twapRecord)
 		})
 	}
 }
