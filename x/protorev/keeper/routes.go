@@ -153,37 +153,58 @@ func (k Keeper) BuildHighestLiquidityRoute(ctx sdk.Context, swapDenom types.Base
 	}, nil
 }
 
-// BuildTwoPoolRoute will attempt to create a two pool route that will rebalance pools that are paired with the base denom.
-// This is useful for pools that contain the same assets but are imbalanced.
-func (k Keeper) BuildTwoPoolRoute(ctx sdk.Context, baseDenom types.BaseDenom, tokenIn, tokenOut string, poolId uint64) (RouteMetaData, error) {
-	if baseDenom.Denom != tokenOut {
-		return RouteMetaData{}, fmt.Errorf("the token out denom must be the same as the base denom: got %s, expected %s", tokenOut, baseDenom.Denom)
+// BuildTwoPoolRoute will attempt to create a two pool route that will rebalance pools that are paired
+// with the base denom. This is useful for pools that contain the same assets but are imbalanced.
+func (k Keeper) BuildTwoPoolRoute(
+	ctx sdk.Context,
+	baseDenom types.BaseDenom,
+	swapIn, swapOut string,
+	poolId uint64,
+) (RouteMetaData, error) {
+	if baseDenom.Denom != swapIn && baseDenom.Denom != swapOut {
+		return RouteMetaData{}, fmt.Errorf("base denom (%s) must be either tokenIn (%s) or tokenOut (%s)", baseDenom.Denom, swapIn, swapOut)
 	}
 
-	// Get the highest liquidity pool for the tokenIn and base denom
-	highestLiquidityPool, err := k.GetPoolForDenomPair(ctx, baseDenom.Denom, tokenIn)
-	if err != nil {
-		return RouteMetaData{}, err
+	var (
+		tokenOutDenom string
+		pool1, pool2  uint64
+	)
+
+	// In the case where the base denom is the swap out, the base denom becomes more ~expensive~ on the current pool id
+	// and potentially cheaper on the highest liquidity pool. So we swap first on the current pool id and then on the
+	// highest liquidity pool.
+	if swapOut == baseDenom.Denom {
+		highestLiquidityPool, err := k.GetPoolForDenomPair(ctx, baseDenom.Denom, swapIn)
+		if err != nil {
+			return RouteMetaData{}, err
+		}
+
+		pool1, pool2 = poolId, highestLiquidityPool
+		tokenOutDenom = swapIn
+	} else {
+		highestLiquidityPool, err := k.GetPoolForDenomPair(ctx, baseDenom.Denom, swapOut)
+		if err != nil {
+			return RouteMetaData{}, err
+		}
+
+		pool1, pool2 = highestLiquidityPool, poolId
+		tokenOutDenom = swapOut
 	}
 
-	// If the swapped on pool is already the pool with the highest liquidity, we cannot build a two pool route (it would be a two hop route with the same pool)
-	if highestLiquidityPool == poolId {
-		return RouteMetaData{}, fmt.Errorf("the pool id must be different from the highest liquidity pool: id %d", poolId)
+	if pool1 == pool2 {
+		return RouteMetaData{}, fmt.Errorf("cannot be trading on the same pool twice")
 	}
 
-	// Create the first swap for the MultiHopSwap Route
-	entryHop := poolmanagertypes.SwapAmountInRoute{
-		PoolId:        highestLiquidityPool,
-		TokenOutDenom: tokenIn,
+	newRoute := poolmanagertypes.SwapAmountInRoutes{
+		poolmanagertypes.SwapAmountInRoute{
+			TokenOutDenom: tokenOutDenom,
+			PoolId:        pool1,
+		},
+		poolmanagertypes.SwapAmountInRoute{
+			TokenOutDenom: baseDenom.Denom,
+			PoolId:        pool2,
+		},
 	}
-
-	// Creating the second swap in the arb
-	exitHop := poolmanagertypes.SwapAmountInRoute{
-		PoolId:        poolId,
-		TokenOutDenom: baseDenom.Denom,
-	}
-
-	newRoute := poolmanagertypes.SwapAmountInRoutes{entryHop, exitHop}
 
 	// Check that the route is valid and update the number of pool points that this route will consume when simulating and executing trades
 	routePoolPoints, err := k.CalculateRoutePoolPoints(ctx, newRoute)

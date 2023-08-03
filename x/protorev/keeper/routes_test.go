@@ -52,8 +52,8 @@ func (s *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.OsmosisDenomination},
 				},
 				{
-					{PoolId: 4, InputDenom: "Atom", OutputDenom: "bitcoin"},
-					{PoolId: 55, InputDenom: "bitcoin", OutputDenom: "Atom"},
+					{PoolId: 55, InputDenom: "Atom", OutputDenom: "bitcoin"},
+					{PoolId: 4, InputDenom: "bitcoin", OutputDenom: "Atom"},
 				},
 			},
 		},
@@ -102,8 +102,12 @@ func (s *KeeperTestSuite) TestBuildRoutes() {
 			poolID:      51,
 			expectedRoutes: [][]TestRoute{
 				{
-					{PoolId: 25, InputDenom: types.OsmosisDenomination, OutputDenom: "Atom"},
-					{PoolId: 51, InputDenom: "Atom", OutputDenom: types.OsmosisDenomination},
+					{PoolId: 51, InputDenom: types.OsmosisDenomination, OutputDenom: "Atom"},
+					{PoolId: 25, InputDenom: "Atom", OutputDenom: types.OsmosisDenomination},
+				},
+				{
+					{PoolId: 25, InputDenom: "Atom", OutputDenom: types.OsmosisDenomination},
+					{PoolId: 51, InputDenom: types.OsmosisDenomination, OutputDenom: "Atom"},
 				},
 			},
 		},
@@ -117,6 +121,7 @@ func (s *KeeperTestSuite) TestBuildRoutes() {
 			for routeIndex, route := range routes {
 				for tradeIndex, poolID := range route.Route.PoolIds() {
 					s.Require().Equal(tc.expectedRoutes[routeIndex][tradeIndex].PoolId, poolID)
+					s.Require().Equal(tc.expectedRoutes[routeIndex][tradeIndex].OutputDenom, route.Route[tradeIndex].TokenOutDenom)
 				}
 			}
 		})
@@ -253,13 +258,28 @@ func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
 		hasRoute      bool
 	}{
 		{
-			description: "two pool route can be created",
+			description: "two pool route can be created with base as token out",
 			swapDenom: types.BaseDenom{
 				Denom:    types.OsmosisDenomination,
 				StepSize: sdk.NewInt(1_000_000),
 			},
 			tokenIn:  "stake",
 			tokenOut: types.OsmosisDenomination,
+			poolId:   53,
+			expectedRoute: []TestRoute{
+				{PoolId: 53, InputDenom: types.OsmosisDenomination, OutputDenom: "stake"},
+				{PoolId: 54, InputDenom: "stake", OutputDenom: types.OsmosisDenomination},
+			},
+			hasRoute: true,
+		},
+		{
+			description: "two pool route can be created with base as token in",
+			swapDenom: types.BaseDenom{
+				Denom:    types.OsmosisDenomination,
+				StepSize: sdk.NewInt(1_000_000),
+			},
+			tokenIn:  types.OsmosisDenomination,
+			tokenOut: "stake",
 			poolId:   53,
 			expectedRoute: []TestRoute{
 				{PoolId: 54, InputDenom: types.OsmosisDenomination, OutputDenom: "stake"},
@@ -280,14 +300,14 @@ func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
 			hasRoute:      false,
 		},
 		{
-			description: "two pool route where swap in is the base denom",
+			description: "trade executes on pool not tracked by the module",
 			swapDenom: types.BaseDenom{
 				Denom:    types.OsmosisDenomination,
 				StepSize: sdk.NewInt(1_000_000),
 			},
-			tokenIn:       types.OsmosisDenomination,
-			tokenOut:      "stake",
-			poolId:        53,
+			tokenIn:       "stake",
+			tokenOut:      types.OsmosisDenomination,
+			poolId:        1000000,
 			expectedRoute: []TestRoute{},
 			hasRoute:      false,
 		},
@@ -295,14 +315,21 @@ func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
 
 	for _, tc := range cases {
 		s.Run(tc.description, func() {
-			routeMetaData, err := s.App.ProtoRevKeeper.BuildTwoPoolRoute(s.Ctx, tc.swapDenom, tc.tokenIn, tc.tokenOut, tc.poolId)
+			routeMetaData, err := s.App.ProtoRevKeeper.BuildTwoPoolRoute(
+				s.Ctx,
+				tc.swapDenom,
+				tc.tokenIn,
+				tc.tokenOut,
+				tc.poolId,
+			)
 
 			if tc.hasRoute {
 				s.Require().NoError(err)
 				s.Require().Equal(len(tc.expectedRoute), len(routeMetaData.Route.PoolIds()))
 
 				for index, trade := range tc.expectedRoute {
-					s.Require().Equal(trade.PoolId, routeMetaData.Route.PoolIds()[index])
+					s.Require().Equal(trade.PoolId, routeMetaData.Route[index].PoolId)
+					s.Require().Equal(trade.OutputDenom, routeMetaData.Route[index].TokenOutDenom)
 				}
 			} else {
 				s.Require().Equal(len(tc.expectedRoute), len(routeMetaData.Route.PoolIds()))
