@@ -259,6 +259,14 @@ func (n *NodeConfig) SendIBCTransfer(dstChain *Config, from, recipient, memo str
 	_, _, err := n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
 	require.NoError(n.t, err)
 
+	cmd = []string{"hermes", "clear", "packets", "--chain", dstChain.Id, "--port", "transfer", "--channel", "channel-0"}
+	_, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
+	require.NoError(n.t, err)
+
+	cmd = []string{"hermes", "clear", "packets", "--chain", n.chainId, "--port", "transfer", "--channel", "channel-0"}
+	_, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
+	require.NoError(n.t, err)
+
 	n.LogActionF("successfully submitted sent IBC transfer")
 }
 

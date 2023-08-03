@@ -193,6 +193,14 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
 	require.NoError(c.t, err)
 
+	cmd = []string{"hermes", "clear", "packets", "--chain", dstChain.Id, "--port", "transfer", "--channel", "channel-0"}
+	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
+	require.NoError(c.t, err)
+
+	cmd = []string{"hermes", "clear", "packets", "--chain", c.Id, "--port", "transfer", "--channel", "channel-0"}
+	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
+	require.NoError(c.t, err)
+
 	require.Eventually(
 		c.t,
 		func() bool {

@@ -1228,7 +1228,7 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	// check the balance of the contract
 	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
 	ibcDenom := denomTrace.IBCDenom()
-	s.CheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
+	s.CallCheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
@@ -1301,7 +1301,7 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	chainANode.SendIBCTransfer(chainB, validatorAddr, validatorAddr, string(forwardMemo), coin)
 
 	// check the balance of the contract
-	s.CheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
+	s.CallCheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
