@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
-	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	v16 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v16"
+	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 )
 
 type ConcentratedUpgradeTestSuite struct {

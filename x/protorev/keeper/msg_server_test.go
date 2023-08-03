@@ -3,9 +3,9 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v16/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
 // TestMsgSetHotRoutes tests the MsgSetHotRoutes message.
@@ -481,6 +481,7 @@ func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
 				StableWeight:       1,
 				BalancerWeight:     2,
 				ConcentratedWeight: 3,
+				CosmwasmWeight:     4,
 			},
 			false,
 			false,
@@ -492,6 +493,7 @@ func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
 				StableWeight:       0,
 				BalancerWeight:     2,
 				ConcentratedWeight: 1,
+				CosmwasmWeight:     4,
 			},
 			false,
 			false,
@@ -500,7 +502,8 @@ func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
 			"Invalid message (unset pool weight)",
 			s.adminAccount.String(),
 			types.PoolWeights{
-				StableWeight: 1,
+				StableWeight:   1,
+				CosmwasmWeight: 4,
 			},
 			false,
 			false,
@@ -512,6 +515,7 @@ func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
 				StableWeight:       1,
 				BalancerWeight:     2,
 				ConcentratedWeight: 3,
+				CosmwasmWeight:     4,
 			},
 			true,
 			false,
@@ -523,6 +527,7 @@ func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
 				StableWeight:       1,
 				BalancerWeight:     2,
 				ConcentratedWeight: 3,
+				CosmwasmWeight:     4,
 			},
 			true,
 			true,

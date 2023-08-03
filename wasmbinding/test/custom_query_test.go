@@ -14,9 +14,9 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v16/app"
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v16/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v17/app"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/wasmbinding/bindings"
 )
 
 func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Context) {

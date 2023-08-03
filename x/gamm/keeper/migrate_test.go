@@ -8,10 +8,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 )
 
 func (s *KeeperTestSuite) TestMigrate() {

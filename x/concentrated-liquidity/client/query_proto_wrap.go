@@ -6,9 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	clquery "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	clquery "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 )
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method
@@ -272,6 +272,10 @@ func (q Querier) UserUnbondingPositions(ctx sdk.Context, req clquery.UserUnbondi
 	}
 
 	cfmmPoolId, err := q.Keeper.GetUserUnbondingPositions(ctx, sdkAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	return &clquery.UserUnbondingPositionsResponse{
 		PositionsWithPeriodLock: cfmmPoolId,
 	}, err

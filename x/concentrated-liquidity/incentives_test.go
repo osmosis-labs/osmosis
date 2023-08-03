@@ -12,14 +12,14 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 )
 
 var (
@@ -3191,8 +3191,7 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 				uptimeAccumulatorsPostClaim, err := s.clk.GetUptimeAccumulators(s.Ctx, pool.GetId())
 				s.Require().NoError(err)
 				for i, acc := range uptimeAccumulatorsPostClaim {
-					totalSharesAccum, err := acc.GetTotalShares()
-					s.Require().NoError(err)
+					totalSharesAccum := acc.GetTotalShares()
 
 					uptimeAccumsDiffPostClaim = append(uptimeAccumsDiffPostClaim, acc.GetValue().MulDec(totalSharesAccum).Sub(uptimeAccumulatorsPreClaim[i].GetValue().MulDec(totalSharesAccum))...)
 				}
@@ -3625,15 +3624,13 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 				s.Require().True(len(clPoolUptimeAccumulatorsFromState) > 0)
 				expectedShares := qualifyingShares.Add(initialLiquidity)
 				for uptimeIdx, uptimeAccum := range clPoolUptimeAccumulatorsFromState {
-					currAccumShares, err := uptimeAccum.GetTotalShares()
-					s.Require().NoError(err)
+					currAccumShares := uptimeAccum.GetTotalShares()
 
 					// Ensure each accum has the correct number of final shares
 					s.Require().Equal(expectedShares, currAccumShares)
 
 					// Also validate uptime accumulators passed in as parameter.
-					currAccumShares, err = uptimeAccums[uptimeIdx].GetTotalShares()
-					s.Require().NoError(err)
+					currAccumShares = uptimeAccums[uptimeIdx].GetTotalShares()
 					s.Require().Equal(expectedShares, currAccumShares)
 				}
 
@@ -3936,8 +3933,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 					s.Require().True(len(clPoolUptimeAccumulatorsFromState) > 0)
 					for uptimeIdx, uptimeAccum := range clPoolUptimeAccumulatorsFromState {
-						currAccumShares, err := uptimeAccum.GetTotalShares()
-						s.Require().NoError(err)
+						currAccumShares := uptimeAccum.GetTotalShares()
 
 						// Since reversions for errors are done at a higher level of abstraction,
 						// we have to assume that any state updates that happened prior to the error
@@ -3954,8 +3950,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 						s.Require().Equal(expectedLiquidity, currAccumShares)
 
 						// Also validate uptime accumulators passed in as parameter.
-						currAccumShares, err = uptimeAccums[uptimeIdx].GetTotalShares()
-						s.Require().NoError(err)
+						currAccumShares = uptimeAccums[uptimeIdx].GetTotalShares()
 						s.Require().Equal(expectedLiquidity, currAccumShares)
 					}
 
@@ -3988,8 +3983,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 				s.Require().True(len(clPoolUptimeAccumulators) > 0)
 				for uptimeIndex, uptimeAccum := range clPoolUptimeAccumulators {
-					currAccumShares, err := uptimeAccum.GetTotalShares()
-					s.Require().NoError(err)
+					currAccumShares := uptimeAccum.GetTotalShares()
 
 					// Ensure each accum has been cleared of the balancer full range shares
 					balancerPositionName := string(types.KeyBalancerFullRange(clPoolId, balancerPoolId, uint64(uptimeIndex)))
