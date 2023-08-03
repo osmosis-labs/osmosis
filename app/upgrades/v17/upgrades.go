@@ -33,10 +33,15 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		// get all the existing CL pool Ids
-		poolIds, err := keepers.ConcentratedLiquidityKeeper.GetPoolIds(ctx)
+		poolIds := []uint64{}
+		// get all the existing CL pools
+		pools, err := keepers.ConcentratedLiquidityKeeper.GetPools(ctx)
 		if err != nil {
 			return nil, err
+		}
+
+		for _, pool := range pools {
+			poolIds = append(poolIds, pool.GetId())
 		}
 
 		// migrate twap records for CL Pools
