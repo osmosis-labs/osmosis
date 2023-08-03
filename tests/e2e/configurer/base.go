@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -75,18 +76,25 @@ func (bc *baseConfigurer) RunValidators() error {
 func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 	bc.t.Logf("starting %s validator containers...", chainConfig.Id)
 
-	errCh := make(chan error) // Channel to collect errors
+	var mu sync.Mutex
+	errCh := make(chan error, len(chainConfig.NodeConfigs)) // Buffer the channel to avoid blocking
 
 	// Iterate over each node
 	for _, node := range chainConfig.NodeConfigs {
 		go func(n *chain.NodeConfig) {
-			errCh <- n.Run() // Run the node and send any error to the channel
+			err := n.Run() // Run the node and get any error
+			mu.Lock()
+			errCh <- err // Send the error to the channel
+			mu.Unlock()
 		}(node)
 	}
 
 	// Wait for goroutines to finish and collect errors
 	for range chainConfig.NodeConfigs {
-		if err := <-errCh; err != nil {
+		mu.Lock()
+		err := <-errCh // Receive the error from the channel
+		mu.Unlock()
+		if err != nil {
 			return err
 		}
 	}
