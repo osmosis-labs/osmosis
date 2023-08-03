@@ -19,8 +19,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	v17 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 type UpgradeTestSuite struct {
@@ -142,21 +143,25 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					lastPoolID = poolID
 				}
 
+				// poolId = 1040
+				poolId := suite.PrepareConcentratedPoolWithCoins("ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo")
+
 				// create few TWAP records for the pools
-				t1 := dummyTwapRecord(1040, time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(2),
-					sdk.OneDec().MulInt64(10*10+5*10),
+				t1 := dummyTwapRecord(poolId.GetId(), time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(10),
+					sdk.OneDec().MulInt64(10*10),
 					sdk.OneDec().MulInt64(3),
 					sdk.ZeroDec())
 
 				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", t1)
 
-				clPoolTwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, 1040)
+				clPoolTwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, poolId.GetId())
 				suite.Require().NoError(err)
 
 				return expectedCoinsUsedInUpgradeHandler, lastPoolID, clPoolTwapRecordPreUpgrade
 
 			},
 			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64, twapRecord []types.TwapRecord) {
+				lastPoolID = twapRecord[0].PoolId
 				stakingParams := suite.App.StakingKeeper.GetParams(suite.Ctx)
 				stakingParams.BondDenom = "uosmo"
 				suite.App.StakingKeeper.SetParams(suite.Ctx, stakingParams)
@@ -170,6 +175,14 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().NotPanics(func() {
 					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
 				})
+
+				clPoolTwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, 1040)
+				suite.Require().NoError(err)
+
+				for idx := range clPoolTwapRecordPostUpgrade {
+					suite.Require().Equal(twapRecord[idx].Asset0Denom, clPoolTwapRecordPostUpgrade[idx].Asset1Denom)
+					suite.Require().Equal(twapRecord[idx].Asset1Denom, clPoolTwapRecordPostUpgrade[idx].Asset0Denom)
+				}
 
 				// Retrieve the community pool balance (and the feePool balance) after the upgrade
 				communityPoolBalancePost := suite.App.BankKeeper.GetAllBalances(suite.Ctx, communityPoolAddress)
@@ -229,13 +242,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().Equal(len(assetPairs), len(migrationInfo.BalancerToConcentratedPoolLinks))
 				suite.Require().NoError(err)
 
-				clPoolTwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, 1040)
-				suite.Require().NoError(err)
-
-				for idx := range clPoolTwapRecordPostUpgrade {
-					suite.Require().Equal(twapRecord[idx].Asset0Denom, clPoolTwapRecordPostUpgrade[idx].Asset1Denom)
-					suite.Require().Equal(twapRecord[idx].Asset1Denom, clPoolTwapRecordPostUpgrade[idx].Asset0Denom)
-				}
 			},
 		},
 		{
