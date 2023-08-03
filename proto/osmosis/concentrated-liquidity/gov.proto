@@ -51,7 +51,8 @@ message PoolRecord {
   string denom0 = 1 [ (gogoproto.moretags) = "yaml:\"denom0\"" ];
   string denom1 = 2 [ (gogoproto.moretags) = "yaml:\"denom1\"" ];
   uint64 tick_spacing = 3 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
-  string spread_factor = 4 [
+  reserved 4;
+  string spread_factor = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"spread_factor\"",
     (gogoproto.nullable) = false
