@@ -242,6 +242,7 @@ message MsgAddToConcentratedLiquiditySuperfluidPositionResponse {
 message MsgUnbondConvertAndStake {
   option (amino.name) = "osmosis/unbond-convert-and-stake";
 
+  // 0 for no lock.
   uint64 lock_id = 1 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   string val_addr = 3;
@@ -263,7 +264,7 @@ message MsgUnbondConvertAndStakeResponse {
     (gogoproto.moretags) = "yaml:\"total_amt_staked\"",
     (gogoproto.nullable) = false
   ];
-  string total_shares = 2 [
+  string total_shares_delegated = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];

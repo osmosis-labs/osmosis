@@ -9,7 +9,6 @@ linters:
   enable:
     - asciicheck
     - bidichk
-    - depguard
     - durationcheck
     - errcheck
     - errname

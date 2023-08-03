@@ -797,7 +797,7 @@ func (s *KeeperTestSuite) TestValidateMigration() {
 	}
 }
 
-func (s *KeeperTestSuite) TestvalidateSharesToUnlockAndExitBalancerPool() {
+func (s *KeeperTestSuite) TestforceUnlockAndExitBalancerPool() {
 	defaultJoinTime := s.Ctx.BlockTime()
 	type sendTest struct {
 		overwritePreMigrationLock bool
@@ -830,11 +830,6 @@ func (s *KeeperTestSuite) TestvalidateSharesToUnlockAndExitBalancerPool() {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			overwritePoolId:          true,
 			expectedError:            fmt.Errorf("pool with ID %d does not exist", 2),
-		},
-		"error: attempt to leave a pool that has more than two denoms": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			overwritePool:            true,
-			expectedError:            types.TwoTokenBalancerPoolError{NumberOfTokens: 4},
 		},
 		"error: happy path (full shares), token out mins is more than exit coins": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
@@ -917,7 +912,7 @@ func (s *KeeperTestSuite) TestvalidateSharesToUnlockAndExitBalancerPool() {
 			}
 
 			// System under test
-			exitCoins, err := superfluidKeeper.validateSharesToUnlockAndExitBalancerPool(ctx, poolJoinAcc, balancerPooId, lock, coinsToMigrate, tc.tokenOutMins)
+			exitCoins, err := superfluidKeeper.ForceUnlockAndExitBalancerPool(ctx, poolJoinAcc, balancerPooId, lock, coinsToMigrate, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())

@@ -6,11 +6,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -1026,6 +1029,262 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestConvertLockToStake() {
+	defaultJoinTime := s.Ctx.BlockTime()
+	type tc struct {
+		superfluidUndelegating bool
+		unlocking              bool
+
+		useMinAmountToStake    bool
+		usepartialShares       bool
+		senderIsNotOwnerOfLock bool
+
+		expectedError bool
+	}
+	testCases := map[string]tc{
+		"lock that is superfluid delegated": {},
+		"lock that is superfluid undelegating": {
+			unlocking:              true,
+			superfluidUndelegating: true,
+		},
+		"lock that is unlocking": {
+			unlocking:              true,
+			superfluidUndelegating: false,
+		},
+		// error cases
+		"error: min amount to stake greater than actual amount": {
+			useMinAmountToStake: true,
+			expectedError:       true,
+		},
+		"error: use partial shares": {
+			usepartialShares: true,
+			expectedError:    true,
+		},
+		"error: use different lock ": {
+			usepartialShares: true,
+			expectedError:    true,
+		},
+		"error: sender is not owner of lock ": {
+			senderIsNotOwnerOfLock: true,
+			expectedError:          true,
+		},
+	}
+
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
+			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
+			_, _, lock, _, _, _, _, originalValAddr := s.SetupUnbondConvertAndStakeTest(s.Ctx, true, tc.superfluidUndelegating, false, false)
+
+			// testing params
+			sender := sdk.MustAccAddressFromBech32(lock.Owner)
+			if tc.senderIsNotOwnerOfLock {
+				sender = s.TestAccs[1]
+			}
+			valAddr := s.SetupValidator(stakingtypes.Bonded)
+			sharesToStake := lock.Coins
+			if tc.usepartialShares {
+				sharesToStake[0].Amount = lock.Coins[0].Amount.Quo(sdk.NewInt(2))
+			}
+			minAmountToStake := sdk.ZeroInt()
+			if tc.useMinAmountToStake {
+				minAmountToStake = sdk.NewInt(999999999)
+			}
+
+			balanceBeforeConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
+
+			// system under test
+			totalAmtConverted, sharesDelegated, err := s.App.SuperfluidKeeper.ConvertLockToStake(s.Ctx, sender, valAddr.String(), lock.ID, sharesToStake[0], minAmountToStake)
+			if tc.expectedError {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Staking & Delegation check
+			// check if old delegation is succesfully deleted
+			_, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, originalValAddr)
+			s.Require().False(found)
+			// check if delegation amount matches
+			delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, valAddr)
+			s.Require().True(found)
+			s.Require().Equal(delegation.Shares, sharesDelegated)
+			s.Require().True(totalAmtConverted.ToDec().Equal(delegation.Shares))
+
+			// Superfluid check
+			// The synthetic lockup should be deleted.
+			_, err = s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
+			s.Require().Error(err)
+
+			// Lock check
+			_, err = s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
+			s.Require().Error(err)
+
+			// Bank check
+			balanceAfterConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
+			s.Require().True(balanceBeforeConvertLockToStake.IsEqual(balanceAfterConvertLockToStake))
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestConvertUnlockedToStake() {
+	defaultJoinTime := s.Ctx.BlockTime()
+	type tc struct {
+		useMinAmountToStake bool
+		expectedError       bool
+	}
+	testCases := map[string]tc{
+		"lock that is superfluid delegated": {},
+	}
+
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
+
+			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
+			_, _, _, _, sender, _, shareOut, _ := s.SetupUnbondConvertAndStakeTest(s.Ctx, false, false, false, true)
+
+			// testing params
+			valAddr := s.SetupValidator(stakingtypes.Bonded)
+			minAmtToStake := sdk.ZeroInt()
+
+			// system under test
+			totalAmtConverted, sharesDelegated, err := s.App.SuperfluidKeeper.ConvertUnlockedToStake(s.Ctx, sender, valAddr.String(), shareOut, minAmtToStake)
+			if tc.expectedError {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Staking & Delegation check
+			// check if delegation amount matches
+			delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, valAddr)
+			s.Require().True(found)
+			s.Require().Equal(delegation.Shares, sharesDelegated)
+			s.Require().True(totalAmtConverted.ToDec().Equal(delegation.Shares))
+
+			//
+
+			// // Superfluid check
+			// // The synthetic lockup should be deleted.
+			// _, err = s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
+			// s.Require().Error(err)
+
+			// // Lock check
+			// _, err = s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
+			// s.Require().Error(err)
+
+			// // Bank check
+			// balanceAfterConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
+			// s.Require().True(balanceBeforeConvertLockToStake.IsEqual(balanceAfterConvertLockToStake))
+		})
+	}
+}
+
+func (s *KeeperTestSuite) SetupUnbondConvertAndStakeTest(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking, noLock bool) (joinPoolAmt sdk.Coins, balancerIntermediaryAcc types.SuperfluidIntermediaryAccount, balancerLock *lockuptypes.PeriodLock, poolCreateAcc, poolJoinAcc sdk.AccAddress, balancerPooId uint64, balancerPoolShareOut sdk.Coin, valAddr sdk.ValAddress) {
+	bankKeeper := s.App.BankKeeper
+	gammKeeper := s.App.GAMMKeeper
+	superfluidKeeper := s.App.SuperfluidKeeper
+	lockupKeeper := s.App.LockupKeeper
+	stakingKeeper := s.App.StakingKeeper
+	poolmanagerKeeper := s.App.PoolManagerKeeper
+
+	// Generate and fund two accounts.
+	// Account 1 will be the account that creates the pool.
+	// Account 2 will be the account that joins the pool.
+	delAddrs := CreateRandomAccounts(2)
+	poolCreateAcc = delAddrs[0]
+	poolJoinAcc = delAddrs[1]
+	for _, acc := range delAddrs {
+		err := simapp.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
+		s.Require().NoError(err)
+	}
+
+	// Set up a single validator.
+	valAddr = s.SetupValidator(stakingtypes.Bonded)
+
+	// Create a balancer pool of "stake" and "foo".
+	msg := balancer.NewMsgCreateBalancerPool(poolCreateAcc, balancer.PoolParams{
+		SwapFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.NewDec(0),
+	}, defaultPoolAssets, defaultFutureGovernor)
+	balancerPooId, err := poolmanagerKeeper.CreatePool(ctx, msg)
+	s.Require().NoError(err)
+
+	// Join the balancer pool.
+	// Note the account balance before and after joining the pool.
+	balanceBeforeJoin := bankKeeper.GetAllBalances(ctx, poolJoinAcc)
+	_, _, err = gammKeeper.JoinPoolNoSwap(ctx, poolJoinAcc, balancerPooId, gammtypes.OneShare.MulRaw(50), sdk.Coins{})
+	s.Require().NoError(err)
+	balanceAfterJoin := bankKeeper.GetAllBalances(ctx, poolJoinAcc)
+
+	// The balancer join pool amount is the difference between the account balance before and after joining the pool.
+	joinPoolAmt, _ = balanceBeforeJoin.SafeSub(balanceAfterJoin)
+
+	// Determine the balancer pool's LP token denomination.
+	balancerPoolDenom := gammtypes.GetPoolShareDenom(balancerPooId)
+
+	// Register the balancer pool's LP token as a superfluid asset
+	err = superfluidKeeper.AddNewSuperfluidAsset(ctx, types.SuperfluidAsset{
+		Denom:     balancerPoolDenom,
+		AssetType: types.SuperfluidAssetTypeLPShare,
+	})
+	s.Require().NoError(err)
+
+	// Note how much of the balancer pool's LP token the account that joined the pool has.
+	balancerPoolShareOut = bankKeeper.GetBalance(ctx, poolJoinAcc, balancerPoolDenom)
+
+	// The unbonding duration is the same as the staking module's unbonding duration.
+	unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime
+
+	// Lock the LP tokens for the duration of the unbonding period.
+	originalGammLockId := uint64(0)
+	if !noLock {
+		originalGammLockId = s.LockTokens(poolJoinAcc, sdk.NewCoins(balancerPoolShareOut), unbondingDuration)
+	}
+
+	// Superfluid delegate the balancer lock if the test case requires it.
+	// Note the intermediary account that was created.
+	if superfluidDelegated {
+		err = superfluidKeeper.SuperfluidDelegate(ctx, poolJoinAcc.String(), originalGammLockId, valAddr.String())
+		s.Require().NoError(err)
+		intermediaryAccConnection := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, originalGammLockId)
+		balancerIntermediaryAcc = superfluidKeeper.GetIntermediaryAccount(ctx, intermediaryAccConnection)
+	}
+
+	// Superfluid undelegate the lock if the test case requires it.
+	if superfluidUndelegating {
+		err = superfluidKeeper.SuperfluidUndelegate(ctx, poolJoinAcc.String(), originalGammLockId)
+		s.Require().NoError(err)
+	}
+
+	// Unlock the balancer lock if the test case requires it.
+	if unlocking {
+		// If lock was superfluid staked, we can't unlock via `BeginUnlock`,
+		// we need to unlock lock via `SuperfluidUnbondLock`
+		if superfluidUndelegating {
+			err = superfluidKeeper.SuperfluidUnbondLock(ctx, originalGammLockId, poolJoinAcc.String())
+			s.Require().NoError(err)
+		} else {
+			lock, err := lockupKeeper.GetLockByID(ctx, originalGammLockId)
+			s.Require().NoError(err)
+			_, err = lockupKeeper.BeginUnlock(ctx, originalGammLockId, lock.Coins)
+			s.Require().NoError(err)
+		}
+	}
+
+	balancerLock = &lockuptypes.PeriodLock{}
+	if !noLock {
+		balancerLock, err = lockupKeeper.GetLockByID(ctx, originalGammLockId)
+		s.Require().NoError(err)
+	}
+
+	s.Require().NoError(err)
+	return joinPoolAmt, balancerIntermediaryAcc, balancerLock, poolCreateAcc, poolJoinAcc, balancerPooId, balancerPoolShareOut, valAddr
 }
 
 // type superfluidRedelegation struct {

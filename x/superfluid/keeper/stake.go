@@ -313,6 +313,7 @@ func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, send
 // partialUndelegateCommon acts similarly to undelegateCommon, but undelegates a partial amount of the lock's delegation rather than the full amount. The amount
 // that is undelegated is placed in a new lock. This function returns the intermediary account associated with the original lock ID as well as the new lock that was created.
 // An error is returned if the amount to undelegate is greater than the locked amount.
+// nolint: unused
 func (k Keeper) partialUndelegateCommon(ctx sdk.Context, sender string, lockID uint64, amountToUndelegate sdk.Coin) (intermediaryAcc types.SuperfluidIntermediaryAccount, newlock *lockuptypes.PeriodLock, err error) {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -659,59 +660,65 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 	}
 }
 
-func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, valAddr string, tokenOutMins sdk.Coins, sharesToConvertAndStake sdk.Coin) error {
-	lock, err := k.lk.GetLockByID(ctx, lockID)
-	if err != nil {
-		return err
-	}
-
+// UnbondConvertAndStake converts given lock to osmo and stakes it to given validator.
+// Supports conversion of 1)superfluid bonded 2)superfluid undelegating 3)vanilla unlocking 4) unlocked locks.
+func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, valAddr string, minAmtToStake sdk.Int,
+	sharesToConvertAndStake sdk.Coin) (totalAmtConverted sdk.Int, totalSharesDelegated sdk.Dec, err error) {
 	senderAddr, err := sdk.AccAddressFromBech32(sender)
-	if err != nil {
-		return err
-	}
-
-	// use routeMigration method to check status of lock(either superfluid staked, superfluid unbonding, vanialla locked, unlocked)
-	synthLockBeforeMigration, migrationType, err := k.routeMigration(ctx, senderAddr, int64(lockID), sharesToConvertAndStake)
-	if err != nil {
-		return err
-	}
-	switch migrationType {
-	case SuperfluidBonded:
-		err = k.convertSuperfluidBondedToStakedOsmo(ctx, senderAddr, valAddr, lockID, sharesToConvertAndStake, tokenOutMins)
-		if err != nil {
-			return err
-		}
-	case SuperfluidUnbonding:
-
-		//
-	case NonSuperfluid:
-
-	case Unlocked:
-
-	default:
-		return fmt.Errorf("unsupported migration type")
-	}
-
-	return nil
-}
-
-func (k Keeper) convertSuperfluidBondedToStakedOsmo(ctx sdk.Context, sender sdk.AccAddress, valAddr string, originalLockId uint64,
-	sharesToStake sdk.Coin, minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, shares sdk.Dec, err error) {
-	// do basic validation before converting
-	poolIdLeaving, preMigrationLock, err := k.validateUnbondConvertAndStake(ctx, sender, originalLockId, sharesToStake)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.ZeroDec(), err
 	}
 
-	// undelegate superfluid delegated position instantly without creating unbonding synth lock (just yet).
-	_, err = k.undelegateCommon(ctx, sender.String(), originalLockId)
+	// use routeMigration method to check status of lock(either superfluid staked, superfluid unbonding, vanialla locked, unlocked)
+	_, migrationType, err := k.routeMigration(ctx, senderAddr, int64(lockID), sharesToConvertAndStake)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.ZeroDec(), err
+	}
+
+	// if superfluid bonded, first change it into superfluid undelegate to burn minted osmo and instantly undelegate.
+	if migrationType == MigrationType(0) {
+		_, err = k.undelegateCommon(ctx, sender, lockID)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.ZeroDec(), err
+		}
+	}
+
+	if migrationType == MigrationType(0) || migrationType == MigrationType(1) || migrationType == MigrationType(2) {
+		totalAmtConverted, totalSharesDelegated, err = k.convertLockToStake(ctx, senderAddr, valAddr, lockID, sharesToConvertAndStake, minAmtToStake)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.ZeroDec(), err
+		}
+	} else if migrationType == MigrationType(3) {
+		totalAmtConverted, totalSharesDelegated, err = k.convertUnlockedToStake(ctx, senderAddr, valAddr, sharesToConvertAndStake, minAmtToStake)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.ZeroDec(), err
+		}
+	} else {
+		return sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("unsupported migration type")
+	}
+
+	return totalAmtConverted, totalSharesDelegated, nil
+}
+
+// convertLockToStake handles locks that are superfluid bonded, superfluid unbonding, vanilla locked(unlocking) locks.
+// Deletes all associated state, converts the lock itself to staking delegation by going through exit pool and swap.
+func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, lockId uint64,
+	sharesToStake sdk.Coin, minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, shares sdk.Dec, err error) {
+	// do basic validation before converting
+	poolIdLeaving, _, err := k.validateUnbondConvertAndStake(ctx, sender, sharesToStake)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.ZeroDec(), err
+	}
+
+	// Check that lockID corresponds to sender and that the denomination of LP shares corresponds to the poolId.
+	preMigrationLock, err := k.validateGammLockForSuperfluidStaking(ctx, sender, poolIdLeaving, lockId)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.ZeroDec(), err
 	}
 
 	// Force unlock, validate the provided sharesToStake, and exit the balancer pool.
 	// we exit with min token out amount zero since we are checking min amount designated to stake later on anyways.
-	exitCoins, err := k.validateSharesToUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, preMigrationLock, sharesToStake, sdk.NewCoins())
+	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, preMigrationLock, sharesToStake, sdk.NewCoins())
 	if err != nil {
 		return sdk.ZeroInt(), sdk.ZeroDec(), err
 	}
@@ -724,7 +731,31 @@ func (k Keeper) convertSuperfluidBondedToStakedOsmo(ctx sdk.Context, sender sdk.
 	return totalAmtConverted, shares, nil
 }
 
-func (k Keeper) validateUnbondConvertAndStake(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (poolIdLeaving uint64, preMigrationLock *lockuptypes.PeriodLock, err error) {
+// convertUnlockedToStake converts unlocked lock shares to osmo and stakes.
+func (k Keeper) convertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string,
+	sharesToStake sdk.Coin, minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, shares sdk.Dec, err error) {
+	// do basic validation before converting
+	poolIdLeaving, _, err := k.validateUnbondConvertAndStake(ctx, sender, sharesToStake)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.ZeroDec(), err
+	}
+
+	// Exit the balancer pool position.
+	// we exit with min token out amount zero since we are checking min amount designated to stake later on anyways.
+	exitCoins, err := k.gk.ExitPool(ctx, sender, poolIdLeaving, sharesToStake.Amount, sdk.NewCoins())
+	if err != nil {
+		return sdk.ZeroInt(), sdk.ZeroDec(), err
+	}
+
+	totalAmtConverted, shares, err = k.convertGammSharesToOsmoAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.ZeroDec(), err
+	}
+
+	return totalAmtConverted, shares, nil
+}
+
+func (k Keeper) validateUnbondConvertAndStake(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate sdk.Coin) (poolIdLeaving uint64, preMigrationLock *lockuptypes.PeriodLock, err error) {
 	// Defense in depth, ensuring the sharesToMigrate contains gamm pool share prefix.
 	if !strings.HasPrefix(sharesToMigrate.Denom, gammtypes.GAMMTokenPrefix) {
 		return 0, &lockuptypes.PeriodLock{}, types.SharesToMigrateDenomPrefixError{Denom: sharesToMigrate.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
@@ -736,11 +767,6 @@ func (k Keeper) validateUnbondConvertAndStake(ctx sdk.Context, sender sdk.AccAdd
 		return 0, &lockuptypes.PeriodLock{}, err
 	}
 
-	// Check that lockID corresponds to sender and that the denomination of LP shares corresponds to the poolId.
-	preMigrationLock, err = k.validateGammLockForSuperfluidStaking(ctx, sender, poolIdLeaving, lockId)
-	if err != nil {
-		return 0, &lockuptypes.PeriodLock{}, err
-	}
 	return poolIdLeaving, preMigrationLock, nil
 }
 
@@ -796,5 +822,5 @@ func (k Keeper) convertGammSharesToOsmoAndStake(
 		return sdk.ZeroInt(), sdk.ZeroDec(), err
 	}
 
-	return totalAmtCoverted, sdk.ZeroDec(), nil
+	return totalAmtToStake, shares, nil
 }

@@ -33,8 +33,8 @@ func (k Keeper) MigrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context, 
 	return k.migrateNonSuperfluidLockBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, tokenOutMins)
 }
 
-func (k Keeper) validateSharesToUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, lock *lockuptypes.PeriodLock, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) (exitCoins sdk.Coins, err error) {
-	return k.validateSharesToUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, lock, sharesToMigrate, tokenOutMins)
+func (k Keeper) ForceUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, lock *lockuptypes.PeriodLock, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) (exitCoins sdk.Coins, err error) {
+	return k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, lock, sharesToMigrate, tokenOutMins)
 }
 
 func (k Keeper) RouteMigration(ctx sdk.Context, sender sdk.AccAddress, lockId int64, sharesToMigrate sdk.Coin) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
@@ -59,4 +59,25 @@ func (k Keeper) GetExistingLockRemainingDuration(ctx sdk.Context, lock *lockupty
 
 func (k Keeper) DistributeSuperfluidGauges(ctx sdk.Context) {
 	k.distributeSuperfluidGauges(ctx)
+}
+
+func (k Keeper) ConvertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, lockId uint64,
+	sharesToStake sdk.Coin, minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, shares sdk.Dec, err error) {
+	return k.convertLockToStake(ctx, sender, valAddr, lockId, sharesToStake, minAmtToStake)
+}
+func (k Keeper) ConvertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string,
+	sharesToStake sdk.Coin, minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, shares sdk.Dec, err error) {
+	return k.convertUnlockedToStake(ctx, sender, valAddr, sharesToStake, minAmtToStake)
+}
+
+func (k Keeper) ValidateUnbondConvertAndStake(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate sdk.Coin) (poolIdLeaving uint64, preMigrationLock *lockuptypes.PeriodLock, err error) {
+	return k.validateUnbondConvertAndStake(ctx, sender, sharesToMigrate)
+}
+
+func (k Keeper) ConvertGammSharesToOsmoAndStake(
+	ctx sdk.Context,
+	sender sdk.AccAddress, valAddr string,
+	poolIdLeaving uint64, exitCoins sdk.Coins, minAmtToStake sdk.Int,
+) (totalAmtCoverted sdk.Int, shares sdk.Dec, err error) {
+	return k.convertGammSharesToOsmoAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake)
 }
