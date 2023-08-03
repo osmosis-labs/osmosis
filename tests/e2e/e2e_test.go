@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
 
 	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"

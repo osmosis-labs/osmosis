@@ -3,9 +3,9 @@ package keepers
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
-	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v4/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
+	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v7/modules/core"
+	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	"github.com/strangelove-ventures/packet-forward-middleware/v7/router"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -27,7 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
-	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
+	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 
 	_ "github.com/osmosis-labs/osmosis/v17/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client"
