@@ -916,8 +916,8 @@ func (s *KeeperTestSuite) TestGetAllMigrationInfo() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestRedirectDistributionRecord() {
-	suite.Setup()
+func (s *KeeperTestSuite) TestRedirectDistributionRecord() {
+	s.Setup()
 
 	var (
 		defaultUsdcAmount = sdk.NewInt(7300000000)
@@ -926,8 +926,8 @@ func (suite *KeeperTestSuite) TestRedirectDistributionRecord() {
 		osmoCoin          = sdk.NewCoin("uosmo", defaultOsmoAmount)
 	)
 
-	longestLockableDuration, err := suite.App.PoolIncentivesKeeper.GetLongestLockableDuration(suite.Ctx)
-	suite.Require().NoError(err)
+	longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+	s.Require().NoError(err)
 
 	tests := map[string]struct {
 		poolLiquidity sdk.Coins
@@ -956,22 +956,22 @@ func (suite *KeeperTestSuite) TestRedirectDistributionRecord() {
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 
 			// Create primary balancer pool.
-			balancerId := suite.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
-			balancerPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, balancerId)
-			suite.Require().NoError(err)
+			balancerId := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+			balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerId)
+			s.Require().NoError(err)
 
 			// Create another balancer pool to test that its gauge links are unchanged
-			balancerId2 := suite.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+			balancerId2 := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
 
 			// Get gauges for both balancer pools.
-			gaugeToRedirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerPool.GetId(), longestLockableDuration)
-			suite.Require().NoError(err)
-			gaugeToNotRedirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerId2, longestLockableDuration)
-			suite.Require().NoError(err)
+			gaugeToRedirect, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPool.GetId(), longestLockableDuration)
+			s.Require().NoError(err)
+			gaugeToNotRedirect, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerId2, longestLockableDuration)
+			s.Require().NoError(err)
 
 			// Distribution info prior to redirecting.
 			originalDistrInfo := poolincentivestypes.DistrInfo{
@@ -987,31 +987,31 @@ func (suite *KeeperTestSuite) TestRedirectDistributionRecord() {
 					},
 				},
 			}
-			suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, originalDistrInfo)
+			s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, originalDistrInfo)
 
 			// Create concentrated pool.
-			clPool := suite.PrepareCustomConcentratedPool(suite.TestAccs[0], tc.poolLiquidity[1].Denom, tc.poolLiquidity[0].Denom, 100, sdk.MustNewDecFromStr("0.001"))
+			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.poolLiquidity[1].Denom, tc.poolLiquidity[0].Denom, 100, sdk.MustNewDecFromStr("0.001"))
 
 			// Redirect distribution record from the primary balancer pool to the concentrated pool.
-			err = suite.App.GAMMKeeper.RedirectDistributionRecord(suite.Ctx, tc.cfmmPoolId, tc.clPoolId)
+			err = s.App.GAMMKeeper.RedirectDistributionRecord(s.Ctx, tc.cfmmPoolId, tc.clPoolId)
 			if tc.expectError != nil {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				return
 			}
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// Validate that the balancer gauge is now linked to the new concentrated pool.
-			concentratedPoolGaugeId, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, clPool.GetId(), suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx).Duration)
-			suite.Require().NoError(err)
-			distrInfo := suite.App.PoolIncentivesKeeper.GetDistrInfo(suite.Ctx)
-			suite.Require().Equal(distrInfo.Records[0].GaugeId, concentratedPoolGaugeId)
+			concentratedPoolGaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration)
+			s.Require().NoError(err)
+			distrInfo := s.App.PoolIncentivesKeeper.GetDistrInfo(s.Ctx)
+			s.Require().Equal(distrInfo.Records[0].GaugeId, concentratedPoolGaugeId)
 
 			// Validate that distribution record from another pool is not redirected.
-			suite.Require().Equal(distrInfo.Records[1].GaugeId, gaugeToNotRedirect)
+			s.Require().Equal(distrInfo.Records[1].GaugeId, gaugeToNotRedirect)
 
 			// Validate that old gauge still exist
-			_, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeToRedirect)
-			suite.Require().NoError(err)
+			_, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeToRedirect)
+			s.Require().NoError(err)
 		})
 	}
 }
@@ -1022,7 +1022,6 @@ func (s *KeeperTestSuite) TestCreateConcentratedPoolFromCFMM() {
 
 		cfmmPoolIdToLinkWith uint64
 		desiredDenom0        string
-		spreadFactor         sdk.Dec
 		expectedDenoms       []string
 		expectError          error
 	}{
@@ -1030,22 +1029,19 @@ func (s *KeeperTestSuite) TestCreateConcentratedPoolFromCFMM() {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        desiredDenom0,
-			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
 			expectedDenoms:       []string{desiredDenom0, daiCoin.Denom},
 		},
 		"error: invalid denom 0": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        USDCIBCDenom,
-			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
-			expectError:          types.NoDesiredDenomInPoolError{DesiredDenom: USDCIBCDenom},
+			expectError:          types.NoDesiredDenomInPoolError{USDCIBCDenom},
 		},
 		"error: pool with 3 assets, must have two": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin, usdcCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        USDCIBCDenom,
-			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
-			expectError:          types.MustHaveTwoDenomsError{NumDenoms: 3},
+			expectError:          types.ErrMustHaveTwoDenoms,
 		},
 	}
 
@@ -1059,7 +1055,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedPoolFromCFMM() {
 			balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerId)
 			s.Require().NoError(err)
 
-			clPoolReturned, err := s.App.GAMMKeeper.CreateConcentratedPoolFromCFMM(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, tc.spreadFactor, defaultTickSpacing)
+			clPoolReturned, err := s.App.GAMMKeeper.CreateConcentratedPoolFromCFMM(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, sdk.ZeroDec(), defaultTickSpacing)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -1074,7 +1070,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedPoolFromCFMM() {
 			s.Require().Equal(clPoolReturned, clPoolInState)
 
 			// Validate CL and balancer pools have the same spread factor.
-			s.Require().Equal(tc.spreadFactor, clPoolReturned.GetSpreadFactor(s.Ctx))
+			s.Require().Equal(balancerPool.GetSpreadFactor(s.Ctx), clPoolReturned.GetSpreadFactor(s.Ctx))
 
 			// Validate that CL and balancer pools have the same denoms
 			balancerDenoms, err := s.App.PoolManagerKeeper.RouteGetPoolDenoms(s.Ctx, balancerPool.GetId())
@@ -1101,7 +1097,6 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 		poolLiquidity              sdk.Coins
 		cfmmPoolIdToLinkWith       uint64
 		desiredDenom0              string
-		spreadFactor               sdk.Dec
 		expectedBalancerDenoms     []string
 		expectedConcentratedDenoms []string
 		setupInvalidDuraitons      bool
@@ -1115,7 +1110,6 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			// determined by desired denom 0
 			expectedConcentratedDenoms: []string{desiredDenom0Coin.Denom, daiCoin.Denom},
 			desiredDenom0:              desiredDenom0,
-			spreadFactor:               sdk.MustNewDecFromStr("0.0001"),
 		},
 		"success - denoms are not reordered relative to balancer": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
@@ -1125,27 +1119,23 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			// determined by desired denom 0
 			expectedConcentratedDenoms: []string{daiCoin.Denom, desiredDenom0Coin.Denom},
 			desiredDenom0:              daiCoin.Denom,
-			spreadFactor:               sdk.MustNewDecFromStr("0.0001"),
 		},
 		"error: invalid denom 0": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        USDCIBCDenom,
-			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
-			expectError:          types.NoDesiredDenomInPoolError{DesiredDenom: USDCIBCDenom},
+			expectError:          types.NoDesiredDenomInPoolError{USDCIBCDenom},
 		},
 		"error: pool with 3 assets, must have two": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin, usdcCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        USDCIBCDenom,
-			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
-			expectError:          types.MustHaveTwoDenomsError{NumDenoms: 3},
+			expectError:          types.ErrMustHaveTwoDenoms,
 		},
 		"error: invalid denom durations": {
 			poolLiquidity:         sdk.NewCoins(desiredDenom0Coin, daiCoin),
 			cfmmPoolIdToLinkWith:  validPoolId,
 			desiredDenom0:         desiredDenom0,
-			spreadFactor:          sdk.MustNewDecFromStr("0.0001"),
 			setupInvalidDuraitons: true,
 			expectError:           types.ErrNoGaugeToRedirect,
 		},
@@ -1189,7 +1179,7 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			}
 			s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, originalDistrInfo)
 
-			clPool, err := s.App.GAMMKeeper.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, tc.spreadFactor, defaultTickSpacing)
+			clPool, err := s.App.GAMMKeeper.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, sdk.ZeroDec(), defaultTickSpacing)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)

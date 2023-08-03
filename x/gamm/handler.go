@@ -19,6 +19,8 @@ func NewMigrationRecordHandler(k keeper.Keeper) govtypes.Handler {
 			return handleUpdateMigrationRecordsProposal(ctx, k, c)
 		case *types.ReplaceMigrationRecordsProposal:
 			return handleReplaceMigrationRecordsProposal(ctx, k, c)
+		case *types.CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal:
+			return handleCreatingCLPoolAndLinkToCFMMProposal(ctx, k, c)
 
 		default:
 			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized migration record proposal content type: %T", c)
@@ -34,4 +36,14 @@ func handleReplaceMigrationRecordsProposal(ctx sdk.Context, k keeper.Keeper, p *
 // handleUpdateMigrationRecordsProposal is a handler for updating migration records governance proposals
 func handleUpdateMigrationRecordsProposal(ctx sdk.Context, k keeper.Keeper, p *types.UpdateMigrationRecordsProposal) error {
 	return k.HandleUpdateMigrationRecordsProposal(ctx, p)
+}
+
+func handleCreatingCLPoolAndLinkToCFMMProposal(ctx sdk.Context, k keeper.Keeper, p *types.CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) error {
+	for _, record := range p.PoolRecordsWithCfmmLink {
+		_, err := k.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, record.BalancerPoolId, record.Denom0, record.SpreadFactor, record.TickSpacing)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

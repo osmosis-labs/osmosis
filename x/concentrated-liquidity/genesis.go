@@ -154,6 +154,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		incentivesAccumObject := make([]genesis.AccumObject, len(incentivesAccum))
 		for i, incentiveAccum := range incentivesAccum {
 			incentiveAccumTotalShares := incentiveAccum.GetTotalShares()
+
 			genesisAccum := genesis.AccumObject{
 				Name: incentiveAccum.GetName(),
 				AccumContent: &accum.AccumulatorContent{
