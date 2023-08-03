@@ -126,7 +126,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				}
 
 				return expectedCoinsUsedInUpgradeHandler, lastPoolID
-
 			},
 			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				stakingParams := suite.App.StakingKeeper.GetParams(suite.Ctx)
@@ -176,6 +175,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 					// Validate that the link is correct.
 					migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
+					suite.Require().NoError(err)
 					link := migrationInfo.BalancerToConcentratedPoolLinks[i]
 					suite.Require().Equal(assetPair.LinkedClassicPool, link.BalancerPoolId)
 					suite.Require().Equal(concentratedPool.GetId(), link.ClPoolId)
@@ -200,7 +200,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
 				suite.Require().Equal(len(assetPairs), len(migrationInfo.BalancerToConcentratedPoolLinks))
 				suite.Require().NoError(err)
-
 			},
 		},
 		{

@@ -40,6 +40,7 @@ type positionAndLiquidity struct {
 }
 
 func TestFuzz_Many(t *testing.T) {
+	t.Parallel()
 	fuzz(t, defaultNumSwaps, defaultNumPositions, 10)
 }
 

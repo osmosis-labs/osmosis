@@ -35,11 +35,6 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
-var (
-	// minDecTolerance minimum tolerance for sdk.Dec, given its precision of 18.
-	minDecTolerance = sdk.MustNewDecFromStr("0.000000000000000001")
-)
-
 // TODO: Find more scalable way to do this
 // note: I don't think that these run in parallel.  When linting, it complains about the t.Parallel() call
 // being missing from the function TestAllE2E.  So, I think that the tests don't actually run in parallel, and when they do, they fail.

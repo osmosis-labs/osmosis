@@ -2695,7 +2695,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor)
 
 	// Refetch pool
-	pool, err = s.clk.GetPoolById(s.Ctx, poolId)
+	_, err = s.clk.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
 	// Swap to approximately DefaultCurrTick + 150
@@ -2740,6 +2740,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	})
 
 	s.RunTestCaseWithoutStateUpdates("assert rewards when current tick is below the position with negative accumulator", func(t *testing.T) {
+		t.Helper()
 		// Make closure-local copy of expectedTotalSpreadRewards
 		expectedTotalSpreadRewards := expectedTotalSpreadRewards
 		expectedTotalIncentiveRewards := expectedTotalIncentiveRewards
@@ -2769,6 +2770,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	})
 
 	s.RunTestCaseWithoutStateUpdates("assert rewards when current tick is inside the position with negative accumulator", func(t *testing.T) {
+		t.Helper()
 		// Make closure-local copy of expectedTotalSpreadRewards
 		expectedTotalSpreadRewards := expectedTotalSpreadRewards
 		expectedTotalIncentiveRewards := expectedTotalIncentiveRewards
@@ -2798,6 +2800,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	})
 
 	s.RunTestCaseWithoutStateUpdates("assert rewards when current tick is above the position with negative accumulator", func(t *testing.T) {
+		t.Helper()
 		// Make closure-local copy of expectedTotalSpreadRewards
 		expectedTotalSpreadRewards := expectedTotalSpreadRewards
 		expectedTotalIncentiveRewards := expectedTotalIncentiveRewards
