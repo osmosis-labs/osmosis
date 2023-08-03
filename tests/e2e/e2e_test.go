@@ -14,7 +14,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
 
-	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
@@ -22,8 +22,8 @@ import (
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"

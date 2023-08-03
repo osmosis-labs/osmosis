@@ -7,6 +7,8 @@ import (
 	"time"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	"github.com/cometbft/cometbft/crypto/ed25519"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -16,8 +18,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	proto "github.com/golang/protobuf/proto" //nolint:staticcheck // we're intentionally using this deprecated package to be compatible with cosmos protos
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"

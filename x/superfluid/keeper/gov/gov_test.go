@@ -1,8 +1,8 @@
 package gov_test
 
 import (
+	"github.com/cometbft/cometbft/crypto/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"

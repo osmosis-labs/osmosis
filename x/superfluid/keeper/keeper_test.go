@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"

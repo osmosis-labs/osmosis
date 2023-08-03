@@ -17,12 +17,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/app/params"
 
+	tmcmds "github.com/cometbft/cometbft/cmd/tendermint/commands"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	tmcmds "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

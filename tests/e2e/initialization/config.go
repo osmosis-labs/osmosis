@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -16,7 +17,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"

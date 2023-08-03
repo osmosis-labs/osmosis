@@ -62,9 +62,9 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
 
-	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
-	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v4/router/keeper"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v7/router"
+	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v7/router/keeper"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"

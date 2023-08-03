@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	osmoapp "github.com/osmosis-labs/osmosis/v17/app"

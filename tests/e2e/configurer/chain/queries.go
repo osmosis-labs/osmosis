@@ -12,12 +12,12 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	tmabcitypes "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
-	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
