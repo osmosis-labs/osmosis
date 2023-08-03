@@ -50,6 +50,38 @@ func (q Querier) EstimateSwapExactAmountIn(ctx sdk.Context, req queryproto.Estim
 	}, nil
 }
 
+// EstimateSwapExactAmountInWithPrimitiveTypes runs same logic with EstimateSwapExactAmountIn
+// but instead takes array of primitive types in the request to support query through grpc-gateway.
+func (q Querier) EstimateSwapExactAmountInWithPrimitiveTypes(ctx sdk.Context, req queryproto.EstimateSwapExactAmountInWithPrimitiveTypesRequest) (*queryproto.EstimateSwapExactAmountInResponse, error) {
+	if req.TokenIn == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid token")
+	}
+
+	tokenIn, err := sdk.ParseCoinNormalized(req.TokenIn)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
+	}
+
+	var routes []types.SwapAmountInRoute
+
+	for idx, poolId := range req.RoutesPoolId {
+		var route types.SwapAmountInRoute
+		route.PoolId = poolId
+		route.TokenOutDenom = req.RoutesTokenOutDenom[idx]
+
+		routes = append(routes, route)
+	}
+
+	tokenOutAmount, err := q.K.MultihopEstimateOutGivenExactAmountIn(ctx, routes, tokenIn)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryproto.EstimateSwapExactAmountInResponse{
+		TokenOutAmount: tokenOutAmount,
+	}, nil
+}
+
 // EstimateSwapExactAmountOut estimates token output amount for a swap.
 func (q Querier) EstimateSwapExactAmountOut(ctx sdk.Context, req queryproto.EstimateSwapExactAmountOutRequest) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
 	if req.TokenOut == "" {
@@ -66,6 +98,39 @@ func (q Querier) EstimateSwapExactAmountOut(ctx sdk.Context, req queryproto.Esti
 	}
 
 	tokenInAmount, err := q.K.MultihopEstimateInGivenExactAmountOut(ctx, req.Routes, tokenOut)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryproto.EstimateSwapExactAmountOutResponse{
+		TokenInAmount: tokenInAmount,
+	}, nil
+}
+
+// EstimateSwapExactAmountOut estimates token output amount for a swap.
+func (q Querier) EstimateSwapExactAmountOutWithPrimitiveTypes(ctx sdk.Context, req queryproto.EstimateSwapExactAmountOutWithPrimitiveTypesRequest) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
+	if req.TokenOut == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid token")
+	}
+
+	var routes []types.SwapAmountOutRoute
+
+	for idx, poolId := range req.RoutesPoolId {
+		var route types.SwapAmountOutRoute
+		route.PoolId = poolId
+		route.TokenInDenom = req.RoutesTokenInDenom[idx]
+	}
+
+	if err := types.SwapAmountOutRoutes(routes).Validate(); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	tokenOut, err := sdk.ParseCoinNormalized(req.TokenOut)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
+	}
+
+	tokenInAmount, err := q.K.MultihopEstimateInGivenExactAmountOut(ctx, routes, tokenOut)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

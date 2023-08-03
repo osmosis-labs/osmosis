@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strconv"
 	"text/template"
 
 	"github.com/spf13/cobra"
@@ -16,16 +18,52 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
+// Default constants
+const (
+	chainID        = ""
+	keyringBackend = "os"
+	output         = "text"
+	node           = "tcp://localhost:26657"
+	broadcastMode  = "sync"
+)
+
 type OsmosisCustomClient struct {
-	ChainID        string `mapstructure:"chain-id" json:"chain-id"`
-	KeyringBackend string `mapstructure:"keyring-backend" json:"keyring-backend"`
-	Output         string `mapstructure:"output" json:"output"`
-	Node           string `mapstructure:"node" json:"node"`
-	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
-	Gas            string `mapstructure:"gas" json:"gas"`
-	GasPrices      string `mapstructure:"gas-prices" json:"gas-prices"`
-	GasAdjustment  string `mapstructure:"gas-adjustment" json:"gas-adjustment"`
-	Fees           string `mapstructure:"fees" json:"fees"`
+	ChainID                   string `mapstructure:"chain-id" json:"chain-id"`
+	KeyringBackend            string `mapstructure:"keyring-backend" json:"keyring-backend"`
+	Output                    string `mapstructure:"output" json:"output"`
+	Node                      string `mapstructure:"node" json:"node"`
+	BroadcastMode             string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
+	Gas                       string `mapstructure:"gas" json:"gas"`
+	GasPrices                 string `mapstructure:"gas-prices" json:"gas-prices"`
+	GasAdjustment             string `mapstructure:"gas-adjustment" json:"gas-adjustment"`
+	Fees                      string `mapstructure:"fees" json:"fees"`
+	HumanReadableDenomsInput  bool   `mapstructure:"human-readable-denoms-input" json:"human-readable-denoms-input"`
+	HumanReadableDenomsOutput bool   `mapstructure:"human-readable-denoms-output" json:"human-readable-denoms-output"`
+}
+
+// defaultClientConfig returns the reference to ClientConfig with default values.
+func defaultClientConfig() *OsmosisCustomClient {
+	return &OsmosisCustomClient{ChainID: chainID, KeyringBackend: keyringBackend, Output: output, Node: node, BroadcastMode: broadcastMode}
+}
+
+func (c *OsmosisCustomClient) SetChainID(chainID string) {
+	c.ChainID = chainID
+}
+
+func (c *OsmosisCustomClient) SetKeyringBackend(keyringBackend string) {
+	c.KeyringBackend = keyringBackend
+}
+
+func (c *OsmosisCustomClient) SetOutput(output string) {
+	c.Output = output
+}
+
+func (c *OsmosisCustomClient) SetNode(node string) {
+	c.Node = node
+}
+
+func (c *OsmosisCustomClient) SetBroadcastMode(broadcastMode string) {
+	c.BroadcastMode = broadcastMode
 }
 
 // Override sdk ConfigCmd func
@@ -141,6 +179,13 @@ output = "{{ .Output }}"
 node = "{{ .Node }}"
 # Transaction broadcasting mode (sync|async)
 broadcast-mode = "{{ .BroadcastMode }}"
+# Human-readable denoms
+# If enabled, when using CLI, user can input base denoms (baseatom, basescrt, baseweth, basewbtc, basewbtc.grv etc.) instead of their ibc equivalents.
+# This feature isn't stable yet, and outputs will change in subsequent releases
+human-readable-denoms-input = {{ .HumanReadableDenomsInput }}
+# If enabled, CLI response return base denoms (baseatom, basescrt, baseweth, basewbtc, basewbtc.grv etc.) instead of their ibc equivalents.
+# This feature isn't stable yet, and outputs will change in subsequent releases
+human-readable-denoms-output = {{ .HumanReadableDenomsOutput }}
 
 
 ###############################################################################
@@ -155,9 +200,10 @@ fees = "{{ .Fees }}"
 `
 
 // writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to
-// configFilePath.
+// configFilePath. If nil is provided as config, the default config is used.
 func writeConfigToFile(configFilePath string, config *OsmosisCustomClient) error {
 	var buffer bytes.Buffer
+	defaultOsmosisCustomClient := defaultClientConfig()
 
 	tmpl := template.New("clientConfigFileTemplate")
 	configTemplate, err := tmpl.Parse(defaultConfigTemplate)
@@ -165,7 +211,31 @@ func writeConfigToFile(configFilePath string, config *OsmosisCustomClient) error
 		return err
 	}
 
-	if err := configTemplate.Execute(&buffer, config); err != nil {
+	// Loop through the fields of the provided config and replace values in the default client
+	if config != nil {
+		configValue := reflect.ValueOf(config).Elem()
+		defaultValue := reflect.ValueOf(defaultOsmosisCustomClient).Elem()
+
+		for i := 0; i < configValue.NumField(); i++ {
+			configField := configValue.Field(i)
+			defaultField := defaultValue.Field(i)
+
+			// Check if the field is a pointer type
+			if configField.Kind() == reflect.Ptr {
+				// If it's a pointer type, check if it's nil
+				if !configField.IsNil() {
+					defaultField.Set(configField.Elem())
+				}
+			} else {
+				// For non-pointer types, check if the value is the zero value
+				if !reflect.DeepEqual(configField.Interface(), reflect.Zero(configField.Type()).Interface()) {
+					defaultField.Set(configField)
+				}
+			}
+		}
+	}
+
+	if err := configTemplate.Execute(&buffer, defaultOsmosisCustomClient); err != nil {
 		return err
 	}
 
@@ -227,8 +297,38 @@ func SetCustomEnvVariablesFromClientToml(ctx client.Context) {
 	setEnvFromConfig("gas-adjustment", "OSMOSISD_GAS_ADJUSTMENT")
 	// fees
 	setEnvFromConfig("fees", "OSMOSISD_FEES")
+	// human readable denoms
+	setEnvFromConfig("human-readable-denoms-input", "OSMOSISD_HUMAN_READABLE_DENOMS_INPUT")
+	setEnvFromConfig("human-readable-denoms-output", "OSMOSISD_HUMAN_READABLE_DENOMS_OUTPUT")
 }
 
 func errUnknownConfigKey(key string) error {
 	return fmt.Errorf("unknown configuration key: %q", key)
+}
+
+func GetHumanReadableDenomEnvVariables() (bool, bool) {
+	humanReadableDenomsInputStr := os.Getenv("OSMOSISD_HUMAN_READABLE_DENOMS_INPUT")
+	humanReadableDenomsInput, err := strconv.ParseBool(humanReadableDenomsInputStr)
+	if err != nil {
+		return false, false
+	}
+	humanReadableDenomsOutputStr := os.Getenv("OSMOSISD_HUMAN_READABLE_DENOMS_OUTPUT")
+	humanReadableDenomsOutput, err := strconv.ParseBool(humanReadableDenomsOutputStr)
+	if err != nil {
+		return false, false
+	}
+	return humanReadableDenomsInput, humanReadableDenomsOutput
+}
+
+func GetChainId(initClientCtx client.Context, cmd *cobra.Command) string {
+	chainID := initClientCtx.ChainID
+
+	// Get the pflag.FlagSet for the command.
+	flagSet := cmd.Flags()
+
+	// Check if the "chain-id" flag exists.
+	if chainIDFlag := flagSet.Lookup(flags.FlagChainID); chainIDFlag != nil {
+		chainID = chainIDFlag.Value.String()
+	}
+	return chainID
 }

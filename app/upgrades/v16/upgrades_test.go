@@ -23,6 +23,15 @@ import (
 	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
+var (
+	DAIIBCDenom         = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
+	defaultDaiAmount, _ = sdk.NewIntFromString("73000000000000000000000")
+	defaultDenom0mount  = sdk.NewInt(10000000000)
+	desiredDenom0       = "uosmo"
+	desiredDenom0Coin   = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
+	daiCoin             = sdk.NewCoin(DAIIBCDenom, defaultDaiAmount)
+)
+
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }

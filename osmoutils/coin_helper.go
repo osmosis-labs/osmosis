@@ -45,6 +45,23 @@ func SubDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoi
 	return finalDecCoinArray, nil
 }
 
+// SafeSubDecCoinArrays subtracts the contents of the second param from the first (decCoinsArrayA - decCoinsArrayB)
+// Note that this takes in two _arrays_ of DecCoins, meaning that each term itself is of type DecCoins (i.e. an array of DecCoin).
+// Contrary to SubDecCoinArrays, this subtractions allows for negative result values.
+func SafeSubDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoins) ([]sdk.DecCoins, error) {
+	if len(decCoinsArrayA) != len(decCoinsArrayB) {
+		return []sdk.DecCoins{}, fmt.Errorf("DecCoin arrays must be of equal length to be subtracted")
+	}
+
+	finalDecCoinArray := []sdk.DecCoins{}
+	for i := range decCoinsArrayA {
+		subResult, _ := decCoinsArrayA[i].SafeSub(decCoinsArrayB[i])
+		finalDecCoinArray = append(finalDecCoinArray, subResult)
+	}
+
+	return finalDecCoinArray, nil
+}
+
 // AddDecCoinArrays adds the contents of the second param from the first (decCoinsArrayA + decCoinsArrayB)
 // Note that this takes in two _arrays_ of DecCoins, meaning that each term itself is of type DecCoins (i.e. an array of DecCoin).
 func AddDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoins) ([]sdk.DecCoins, error) {

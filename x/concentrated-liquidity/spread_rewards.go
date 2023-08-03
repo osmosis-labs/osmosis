@@ -60,7 +60,8 @@ func (k Keeper) initOrUpdatePositionSpreadRewardAccumulator(ctx sdk.Context, poo
 		return err
 	}
 
-	spreadRewardGrowthInside := spreadRewardAccumulator.GetValue().Sub(spreadRewardGrowthOutside)
+	// Note: this is SafeSub because interval accumulation is allowed to be negative.
+	spreadRewardGrowthInside, _ := spreadRewardAccumulator.GetValue().SafeSub(spreadRewardGrowthOutside)
 
 	if !hasPosition {
 		if !liquidityDelta.IsPositive() {
@@ -136,15 +137,10 @@ func (k Keeper) getSpreadRewardGrowthOutside(ctx sdk.Context, poolId uint64, low
 //
 // The value is chosen as if all of the spread rewards earned to date had occurred below the tick.
 // Returns error if the pool with the given id does exist or if fails to get the spread reward accumulator.
-func (k Keeper) getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return sdk.DecCoins{}, err
-	}
-
+func (k Keeper) getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, pool types.ConcentratedPoolExtension, tick int64) (sdk.DecCoins, error) {
 	currentTick := pool.GetCurrentTick()
 	if currentTick >= tick {
-		spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
+		spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, pool.GetId())
 		if err != nil {
 			return sdk.DecCoins{}, err
 		}
