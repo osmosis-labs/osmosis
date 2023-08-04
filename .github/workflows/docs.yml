@@ -48,4 +48,5 @@ jobs:
           chmod 700 ~/.ssh
           ssh-keyscan $DO_DOCS_IP >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          scp -r do-tmp root@$DO_DOCS_IP:/var/www/html
+          cd do-tmp
+          scp -r * root@$DO_DOCS_IP:/var/www/html
