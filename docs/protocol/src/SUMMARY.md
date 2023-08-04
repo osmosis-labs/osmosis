@@ -1,3 +1,4 @@
-# Introduction
+# Summary
 
-- [Core DEX](./core_dex.md)
+[Osmosis](./osmosis.md)
+- [Core Dex](./core_dex.md)
