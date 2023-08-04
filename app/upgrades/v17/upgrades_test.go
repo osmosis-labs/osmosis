@@ -104,24 +104,13 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 					// Now create the pool with the correct pool ID.
 					poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(10000000000)), sdk.NewCoin(v17.QuoteAsset, sdk.NewInt(10000000000)))
-					poolId := suite.PrepareBalancerPoolWithCoins(poolCoins...)
+					suite.PrepareBalancerPoolWithCoins(poolCoins...)
 
-					// Send two of the base asset to the community pool.
-					twoBaseAsset := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(2000000)))
-					suite.FundAcc(suite.TestAccs[0], twoBaseAsset)
+					// 0.1 OSMO used to get the respective base asset amount, 0.1 OSMO used to create the position
+					osmoIn := sdk.NewCoin(v17.QuoteAsset, sdk.NewInt(100000).MulRaw(2))
 
-					err := suite.App.DistrKeeper.FundCommunityPool(suite.Ctx, twoBaseAsset, suite.TestAccs[0])
-					suite.Require().NoError(err)
-
-					// Determine approx how much baseAsset will be used from community pool when 1 OSMO used.
-					oneOsmo := sdk.NewCoin(v17.QuoteAsset, sdk.NewInt(1000000))
-					pool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, poolId)
-					suite.Require().NoError(err)
-					respectiveBaseAsset, err := suite.App.GAMMKeeper.CalcOutAmtGivenIn(suite.Ctx, pool, oneOsmo, assetPair.BaseAsset, sdk.ZeroDec())
-					suite.Require().NoError(err)
-
-					// Add the amount of baseAsset that will be used to the expectedCoinsUsedInUpgradeHandler.
-					expectedCoinsUsedInUpgradeHandler = expectedCoinsUsedInUpgradeHandler.Add(respectiveBaseAsset)
+					// Add the amount of osmo that will be used to the expectedCoinsUsedInUpgradeHandler.
+					expectedCoinsUsedInUpgradeHandler = expectedCoinsUsedInUpgradeHandler.Add(osmoIn)
 
 					// Enable the GAMM pool for superfluid if the record says so.
 					if assetPair.Superfluid {
@@ -164,12 +153,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				assetPairs := v17.InitializeAssetPairs(ctx, keepers)
 
 				for i, assetPair := range assetPairs {
-					// Validate that the community pool balance has been reduced by the amount of baseAsset that was used to create the pool.
-					suite.Require().Equal(communityPoolBalancePre.AmountOf(assetPair.BaseAsset).Sub(expectedCoinsUsedInUpgradeHandler.AmountOf(assetPair.BaseAsset)).String(), communityPoolBalancePost.AmountOf(assetPair.BaseAsset).String())
-
-					// Validate that the fee pool community pool balance has been decreased by the amount of baseAsset that was used to create the pool.
-					suite.Require().Equal(communityPoolBalancePost.AmountOf(assetPair.BaseAsset).String(), feePoolCommunityPoolPost.AmountOf(assetPair.BaseAsset).TruncateInt().String())
-
 					// Get balancer pool's spot price.
 					balancerSpotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, assetPair.LinkedClassicPool, v17.QuoteAsset, assetPair.BaseAsset)
 					suite.Require().NoError(err)
@@ -206,14 +189,16 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					lastPoolID++
 				}
 
+				// Validate that the community pool balance has been reduced by the amount of osmo that was used to create the pool.
+				suite.Require().Equal(communityPoolBalancePre.Sub(expectedCoinsUsedInUpgradeHandler).String(), communityPoolBalancePost.String())
+
+				// Validate that the fee pool community pool balance has been decreased by the amount of osmo that was used to create the pool.
+				suite.Require().Equal(sdk.NewDecCoinsFromCoins(communityPoolBalancePost...).String(), feePoolCommunityPoolPost.String())
+
 				numPoolPostUpgrade := suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx) - 1
 
 				// Number of pools created should be equal to the number of records in the asset pairs.
 				suite.Require().Equal(len(assetPairs), int(numPoolPostUpgrade-numPoolPreUpgrade))
-
-				// Check osmo balance (was used in every pool creation)
-				suite.Require().Equal(0, multiplicativeTolerance.Compare(communityPoolBalancePre.AmountOf(v17.QuoteAsset), communityPoolBalancePost.AmountOf(v17.QuoteAsset).Sub(expectedCoinsUsedInUpgradeHandler.AmountOf(v17.QuoteAsset))))
-				suite.Require().Equal(communityPoolBalancePost.AmountOf(v17.QuoteAsset).String(), feePoolCommunityPoolPost.AmountOf(v17.QuoteAsset).TruncateInt().String())
 
 				// Validate that all links were created.
 				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
@@ -243,23 +228,13 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					// The only thing we use the assetPair list here for to select some pools to enable superfluid for.
 					for lastPoolID+1 < poolID {
 						poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(10000000000)), sdk.NewCoin(v17.QuoteAsset, sdk.NewInt(10000000000)))
-						poolId := suite.PrepareBalancerPoolWithCoins(poolCoins...)
+						suite.PrepareBalancerPoolWithCoins(poolCoins...)
 
-						// Send two of the base asset to the community pool.
-						twoBaseAsset := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(2000000)))
-						suite.FundAcc(suite.TestAccs[0], twoBaseAsset)
-						err := suite.App.DistrKeeper.FundCommunityPool(suite.Ctx, twoBaseAsset, suite.TestAccs[0])
-						suite.Require().NoError(err)
+						// 0.1 OSMO used to get the respective base asset amount, 0.1 OSMO used to create the position
+						osmoIn := sdk.NewCoin(v17.QuoteAsset, sdk.NewInt(100000).MulRaw(2))
 
-						// Determine approx how much baseAsset will be used from community pool when 1 OSMO used.
-						oneOsmo := sdk.NewCoin(v17.QuoteAsset, sdk.NewInt(1000000))
-						pool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, poolId)
-						suite.Require().NoError(err)
-						respectiveBaseAsset, err := suite.App.GAMMKeeper.CalcOutAmtGivenIn(suite.Ctx, pool, oneOsmo, assetPair.BaseAsset, sdk.ZeroDec())
-						suite.Require().NoError(err)
-
-						// Add the amount of baseAsset that will be used to the expectedCoinsUsedInUpgradeHandler.
-						expectedCoinsUsedInUpgradeHandler = expectedCoinsUsedInUpgradeHandler.Add(respectiveBaseAsset)
+						// Add the amount of osmo that will be used to the expectedCoinsUsedInUpgradeHandler.
+						expectedCoinsUsedInUpgradeHandler = expectedCoinsUsedInUpgradeHandler.Add(osmoIn)
 
 						lastPoolID++
 					}
@@ -345,12 +320,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 						continue
 					}
 
-					// Validate that the community pool balance has been reduced by the amount of baseAsset that was used to create the pool.
-					suite.Require().Equal(communityPoolBalancePre.AmountOf(baseAsset).Sub(expectedCoinsUsedInUpgradeHandler.AmountOf(baseAsset)).String(), communityPoolBalancePost.AmountOf(baseAsset).String())
-
-					// Validate that the fee pool community pool balance has been decreased by the amount of baseAsset that was used to create the pool.
-					suite.Require().Equal(communityPoolBalancePost.AmountOf(baseAsset).String(), feePoolCommunityPoolPost.AmountOf(baseAsset).TruncateInt().String())
-
 					// Get balancer pool's spot price.
 					balancerSpotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, gammPoolId, v17.QuoteAsset, baseAsset)
 					suite.Require().NoError(err)
@@ -394,16 +363,18 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					lastPoolID++
 				}
 
+				// Validate that the community pool balance has been reduced by the amount of osmo that was used to create the pool.
+				suite.Require().Equal(communityPoolBalancePre.Sub(expectedCoinsUsedInUpgradeHandler).String(), communityPoolBalancePost.String())
+
+				// Validate that the fee pool community pool balance has been decreased by the amount of osmo that was used to create the pool.
+				suite.Require().Equal(sdk.NewDecCoinsFromCoins(communityPoolBalancePost...).String(), feePoolCommunityPoolPost.String())
+
 				numPoolPostUpgrade := suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx) - 1
 				numPoolsCreated := numPoolPostUpgrade - numPoolPreUpgrade
 
 				// Number of pools created should be equal to the number of pools preUpgrade minus the number of pools that were not eligible for migration.
 				numPoolsEligibleForMigration := numPoolPreUpgrade - 3
 				suite.Require().Equal(int(numPoolsEligibleForMigration), int(numPoolsCreated))
-
-				// Check osmo balance (was used in every pool creation)
-				suite.Require().Equal(0, multiplicativeTolerance.Compare(communityPoolBalancePre.AmountOf(v17.QuoteAsset), communityPoolBalancePost.AmountOf(v17.QuoteAsset).Sub(expectedCoinsUsedInUpgradeHandler.AmountOf(v17.QuoteAsset))))
-				suite.Require().Equal(communityPoolBalancePost.AmountOf(v17.QuoteAsset).String(), feePoolCommunityPoolPost.AmountOf(v17.QuoteAsset).TruncateInt().String())
 
 				//Validate that all links were created.
 				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)

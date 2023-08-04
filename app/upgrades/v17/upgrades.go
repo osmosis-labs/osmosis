@@ -192,6 +192,9 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 		return "", 0, err
 	}
 
+	// 0.1 OSMO used for the swap, 0.1 OSMO used for the full range position.
+	osmoIn.Amount = osmoIn.Amount.MulRaw(2)
+
 	// Track the coins used to create the full range position (we manually update the fee pool later all at once).
 	*fullRangeCoinsUsed = fullRangeCoinsUsed.Add(sdk.NewCoins(osmoIn)...)
 

@@ -143,17 +143,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	v17SuperfluidAssets := v17GetSuperfluidAssets()
 
-	wg.Add(4)
-
-	go func() {
-		defer wg.Done()
-		chainANode.FundCommunityPool(initialization.ValidatorWalletName, strAllUpgradeBaseDenoms())
-	}()
-
-	go func() {
-		defer wg.Done()
-		chainBNode.FundCommunityPool(initialization.ValidatorWalletName, strAllUpgradeBaseDenoms())
-	}()
+	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
