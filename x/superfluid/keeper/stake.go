@@ -705,20 +705,20 @@ func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, va
 func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, lockId uint64,
 	sharesToStake sdk.Coin, minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, shares sdk.Dec, err error) {
 	// do basic validation before converting
-	poolIdLeaving, _, err := k.validateUnbondConvertAndStake(ctx, sender, sharesToStake)
+	poolIdLeaving, err := k.validateUnbondConvertAndStake(ctx, sharesToStake)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.ZeroDec(), err
 	}
 
 	// Check that lockID corresponds to sender and that the denomination of LP shares corresponds to the poolId.
-	preMigrationLock, err := k.validateGammLockForSuperfluidStaking(ctx, sender, poolIdLeaving, lockId)
+	lock, err := k.validateGammLockForSuperfluidStaking(ctx, sender, poolIdLeaving, lockId)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.ZeroDec(), err
 	}
 
 	// Force unlock, validate the provided sharesToStake, and exit the balancer pool.
 	// we exit with min token out amount zero since we are checking min amount designated to stake later on anyways.
-	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, preMigrationLock, sharesToStake, sdk.NewCoins())
+	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, lock, sharesToStake, sdk.NewCoins())
 	if err != nil {
 		return sdk.ZeroInt(), sdk.ZeroDec(), err
 	}
@@ -735,7 +735,7 @@ func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAd
 func (k Keeper) convertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string,
 	sharesToStake sdk.Coin, minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, shares sdk.Dec, err error) {
 	// do basic validation before converting
-	poolIdLeaving, _, err := k.validateUnbondConvertAndStake(ctx, sender, sharesToStake)
+	poolIdLeaving, err := k.validateUnbondConvertAndStake(ctx, sharesToStake)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.ZeroDec(), err
 	}
@@ -755,21 +755,27 @@ func (k Keeper) convertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, v
 	return totalAmtConverted, shares, nil
 }
 
-func (k Keeper) validateUnbondConvertAndStake(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate sdk.Coin) (poolIdLeaving uint64, preMigrationLock *lockuptypes.PeriodLock, err error) {
+// validateUnbondConvertAndStake validates
+// - given token has gamm share prefix
+// - gamm share denom is in correct format
+func (k Keeper) validateUnbondConvertAndStake(ctx sdk.Context, sharesToStake sdk.Coin) (poolIdLeaving uint64, err error) {
 	// Defense in depth, ensuring the sharesToMigrate contains gamm pool share prefix.
-	if !strings.HasPrefix(sharesToMigrate.Denom, gammtypes.GAMMTokenPrefix) {
-		return 0, &lockuptypes.PeriodLock{}, types.SharesToMigrateDenomPrefixError{Denom: sharesToMigrate.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
+	if !strings.HasPrefix(sharesToStake.Denom, gammtypes.GAMMTokenPrefix) {
+		return 0, types.SharesToMigrateDenomPrefixError{Denom: sharesToStake.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
 	}
 
 	// Get the balancer poolId by parsing the gamm share denom.
-	poolIdLeaving, err = gammtypes.GetPoolIdFromShareDenom(sharesToMigrate.Denom)
+	poolIdLeaving, err = gammtypes.GetPoolIdFromShareDenom(sharesToStake.Denom)
 	if err != nil {
-		return 0, &lockuptypes.PeriodLock{}, err
+		return 0, err
 	}
 
-	return poolIdLeaving, preMigrationLock, nil
+	return poolIdLeaving, nil
 }
 
+// convertGammSharesToOsmoAndStake converts given gamm shares to osmo by swapping in the given pool
+// then stakes it to the designated validator.
+// minAmtToStake works as slippage bound, and would error if total amount being staked is less than min amount to stake.
 func (k Keeper) convertGammSharesToOsmoAndStake(
 	ctx sdk.Context,
 	sender sdk.AccAddress, valAddr string,

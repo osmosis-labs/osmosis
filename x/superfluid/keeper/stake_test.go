@@ -1031,6 +1031,86 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 	}
 }
 
+func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
+	defaultJoinTime := s.Ctx.BlockTime()
+	type tc struct {
+		superfluidUndelegating bool
+		unlocking              bool
+		unlocked               bool
+
+		expectedError bool
+	}
+	testCases := map[string]tc{
+		"lock that is superfluid delegated": {},
+		"lock that is superfluid undelegating": {
+			unlocking:              true,
+			superfluidUndelegating: true,
+		},
+		"lock that is unlocking": {
+			unlocking:              true,
+			superfluidUndelegating: false,
+		},
+		"unlocked gamm shares": {
+			unlocking:              true,
+			superfluidUndelegating: false,
+		},
+	}
+
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
+			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
+			_, _, lock, _, _, _, _, originalValAddr := s.SetupUnbondConvertAndStakeTest(s.Ctx, true, tc.superfluidUndelegating, false, false)
+
+			// testing params
+			sender := sdk.MustAccAddressFromBech32(lock.Owner)
+			valAddr := s.SetupValidator(stakingtypes.Bonded)
+			sharesToStake := lock.Coins
+			minAmountToStake := sdk.ZeroInt()
+
+			balanceBeforeConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
+
+			// system under test
+			totalAmtConverted, sharesDelegated, err := s.App.SuperfluidKeeper.UnbondConvertAndStake(s.Ctx, lock.ID, sender.String(), valAddr.String(), minAmountToStake, sharesToStake[0])
+			if tc.expectedError {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Staking & Delegation check
+			// check if old delegation is succesfully deleted
+			_, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, originalValAddr)
+			s.Require().False(found)
+			// check if delegation amount matches
+			delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, valAddr)
+			s.Require().True(found)
+			s.Require().Equal(delegation.Shares, sharesDelegated)
+			s.Require().True(totalAmtConverted.ToDec().Equal(delegation.Shares))
+
+			// Superfluid check
+			// The synthetic lockup should be deleted.
+			_, err = s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
+			s.Require().Error(err)
+
+			// intermediary account should have been deleted in all case
+			if lock.ID != 0 {
+				_, err = s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
+				s.Require().Error(err)
+			}
+
+			// Lock check
+			_, err = s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
+			s.Require().Error(err)
+
+			// Bank check
+			balanceAfterConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
+			s.Require().True(balanceBeforeConvertLockToStake.IsEqual(balanceAfterConvertLockToStake))
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestConvertLockToStake() {
 	defaultJoinTime := s.Ctx.BlockTime()
 	type tc struct {
@@ -1133,11 +1213,19 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 func (s *KeeperTestSuite) TestConvertUnlockedToStake() {
 	defaultJoinTime := s.Ctx.BlockTime()
 	type tc struct {
+		usePartialShares    bool
 		useMinAmountToStake bool
 		expectedError       bool
 	}
 	testCases := map[string]tc{
-		"lock that is superfluid delegated": {},
+		"convert unlocked gamm shares": {},
+		"convert partial shares": {
+			usePartialShares: true,
+		},
+		"min amount to stake exceeds exit pool amount": {
+			useMinAmountToStake: true,
+			expectedError:       true,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -1146,11 +1234,26 @@ func (s *KeeperTestSuite) TestConvertUnlockedToStake() {
 			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
 
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
-			_, _, _, _, sender, _, shareOut, _ := s.SetupUnbondConvertAndStakeTest(s.Ctx, false, false, false, true)
+			_, _, _, _, sender, poolId, shareOut, _ := s.SetupUnbondConvertAndStakeTest(s.Ctx, false, false, false, true)
 
 			// testing params
 			valAddr := s.SetupValidator(stakingtypes.Bonded)
 			minAmtToStake := sdk.ZeroInt()
+			if tc.useMinAmountToStake {
+				minAmtToStake = sdk.NewInt(9999999999)
+			}
+			sharesToStake := shareOut
+			if tc.usePartialShares {
+				sharesToStake.Amount = sharesToStake.Amount.Quo(sdk.NewInt(2))
+			}
+
+			balanceBeforeConvert := s.App.BankKeeper.GetBalance(s.Ctx, sender, shareOut.Denom)
+			s.Require().True(!balanceBeforeConvert.Amount.IsZero())
+
+			bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+			totalPoolLiquidityBeforeConvert, err := s.App.GAMMKeeper.GetTotalPoolLiquidity(s.Ctx, poolId)
+			s.Require().NoError(err)
+			bondDenomPoolAmtBeforeConvert := totalPoolLiquidityBeforeConvert.AmountOf(bondDenom)
 
 			// system under test
 			totalAmtConverted, sharesDelegated, err := s.App.SuperfluidKeeper.ConvertUnlockedToStake(s.Ctx, sender, valAddr.String(), shareOut, minAmtToStake)
@@ -1160,6 +1263,13 @@ func (s *KeeperTestSuite) TestConvertUnlockedToStake() {
 			}
 			s.Require().NoError(err)
 
+			// gamm check
+			totalPoolLiquidityAfterConvert, err := s.App.GAMMKeeper.GetTotalPoolLiquidity(s.Ctx, poolId)
+			s.Require().NoError(err)
+			// check that pool liquidity have reduced
+			bondDenomPoolAmtAfterConvert := totalPoolLiquidityAfterConvert.AmountOf(bondDenom)
+			s.Require().True(bondDenomPoolAmtAfterConvert.LT(bondDenomPoolAmtBeforeConvert))
+
 			// Staking & Delegation check
 			// check if delegation amount matches
 			delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, valAddr)
@@ -1167,20 +1277,132 @@ func (s *KeeperTestSuite) TestConvertUnlockedToStake() {
 			s.Require().Equal(delegation.Shares, sharesDelegated)
 			s.Require().True(totalAmtConverted.ToDec().Equal(delegation.Shares))
 
-			//
+			// Bank check
+			balanceAfterConvertLockToStake := s.App.BankKeeper.GetBalance(s.Ctx, sender, shareOut.Denom)
+			s.Require().True(balanceAfterConvertLockToStake.IsZero())
+		})
+	}
+}
 
-			// // Superfluid check
-			// // The synthetic lockup should be deleted.
-			// _, err = s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
-			// s.Require().Error(err)
+func (s *KeeperTestSuite) TestValidateUnbondConvertAndStake() {
+	type tc struct {
+		sharesToMigrate sdk.Coin
+		expectedError   bool
+	}
+	testCases := map[string]tc{
+		"happy case": {
+			sharesToMigrate: sdk.NewInt64Coin("gamm/pool/1", 100),
+		},
+		"non gamm token prefix": {
+			sharesToMigrate: sdk.NewInt64Coin("uosmo", 100),
+			expectedError:   true,
+		},
+		"invalid gamm token": {
+			sharesToMigrate: sdk.NewInt64Coin("gamm/pool/invalid", 100),
+			expectedError:   true,
+		},
+	}
 
-			// // Lock check
-			// _, err = s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
-			// s.Require().Error(err)
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			s.SetupTest()
 
-			// // Bank check
-			// balanceAfterConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
-			// s.Require().True(balanceBeforeConvertLockToStake.IsEqual(balanceAfterConvertLockToStake))
+			poolIdLeaving, err := s.App.SuperfluidKeeper.ValidateUnbondConvertAndStake(s.Ctx, tc.sharesToMigrate)
+			if tc.expectedError {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+			s.Require().Equal(poolIdLeaving, uint64(1))
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
+	type tc struct {
+		useInvalidValAddr bool
+		useMinAmtToStake  bool
+
+		expectedError bool
+	}
+	testCases := map[string]tc{
+		"happy case": {},
+		"error: invalid val address": {
+			useInvalidValAddr: true,
+			expectedError:     true,
+		},
+		"error: min amount to stake exceeds actual amount staking": {
+			useMinAmtToStake: true,
+			expectedError:    true,
+		},
+	}
+
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			s.SetupTest()
+			bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+
+			// use setup helper function to setup pool, fund account with gamm shares
+			// note that we're not creating any locks here.
+			_, _, _, _, sender, poolId, shareOut, _ := s.SetupUnbondConvertAndStakeTest(s.Ctx, false, false, false, true)
+			// exit pool
+			exitCoins, err := s.App.GAMMKeeper.ExitPool(s.Ctx, sender, poolId, shareOut.Amount, sdk.NewCoins())
+			s.Require().NoError(err)
+
+			// test params
+			valAddr := s.SetupValidator(stakingtypes.Bonded)
+			valAddrString := valAddr.String()
+			if tc.useInvalidValAddr {
+				valAddrString = s.TestAccs[0].String()
+			}
+			minAmtToStake := sdk.ZeroInt()
+			if tc.useMinAmtToStake {
+				minAmtToStake = sdk.NewInt(999999999)
+			}
+
+			// mark expected shares before swap
+			nonStakeDenomCoin := exitCoins.FilterDenoms([]string{"foo"})[0]
+			stakeDenomCoin := exitCoins.AmountOf("stake")
+			// use cache context to get expected amount after swap without changing test state
+			cc, _ := s.Ctx.CacheContext()
+			tokenOutAmt, err := s.App.PoolManagerKeeper.SwapExactAmountIn(cc, sender, poolId, nonStakeDenomCoin, bondDenom, sdk.ZeroInt())
+			s.Require().NoError(err)
+			expectedTotalAmtStaked := tokenOutAmt.Add(stakeDenomCoin)
+
+			// mark pool liquidity
+			pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
+			s.Require().NoError(err)
+			poolLiquidityBeforeSwap := pool.GetTotalPoolLiquidity(s.Ctx)
+			poolBeforeBondDenomAmt := poolLiquidityBeforeSwap.AmountOf("stake")
+			poolBeforeNonBondDenomAmt := poolLiquidityBeforeSwap.AmountOf("foo")
+
+			// system under test.
+			totalAmtConverted, shares, err := s.App.SuperfluidKeeper.ConvertGammSharesToOsmoAndStake(s.Ctx, sender, valAddrString, poolId, exitCoins, minAmtToStake)
+			if tc.expectedError {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			// check that total Amount converted is equal to (swap result + original stake denom amount)
+			s.Require().True(expectedTotalAmtStaked.Equal(totalAmtConverted))
+			s.Require().True(expectedTotalAmtStaked.Equal(shares.RoundInt()))
+
+			// check staking
+			delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, valAddr)
+			s.Require().True(found)
+			s.Require().True(delegation.Shares.Equal(shares))
+
+			// check pool
+			pool, err = s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
+			s.Require().NoError(err)
+			poolLiquidityAfterSwap := pool.GetTotalPoolLiquidity(s.Ctx)
+			poolAfterBondDenomAmt := poolLiquidityAfterSwap.AmountOf("stake")
+			poolAfterNonBondDenomAmt := poolLiquidityAfterSwap.AmountOf("foo")
+			// we swapped from non-bond denom to bond denom,
+			// thus bond denom token in pool should have decreased, non bond denom token should have increased
+			s.Require().True(poolBeforeBondDenomAmt.GT(poolAfterBondDenomAmt))
+			s.Require().True(poolBeforeNonBondDenomAmt.LT(poolAfterNonBondDenomAmt))
 		})
 	}
 }

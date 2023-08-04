@@ -70,8 +70,8 @@ func (k Keeper) ConvertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, v
 	return k.convertUnlockedToStake(ctx, sender, valAddr, sharesToStake, minAmtToStake)
 }
 
-func (k Keeper) ValidateUnbondConvertAndStake(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate sdk.Coin) (poolIdLeaving uint64, preMigrationLock *lockuptypes.PeriodLock, err error) {
-	return k.validateUnbondConvertAndStake(ctx, sender, sharesToMigrate)
+func (k Keeper) ValidateUnbondConvertAndStake(ctx sdk.Context, sharesToMigrate sdk.Coin) (poolIdLeaving uint64, err error) {
+	return k.validateUnbondConvertAndStake(ctx, sharesToMigrate)
 }
 
 func (k Keeper) ConvertGammSharesToOsmoAndStake(
