@@ -1,0 +1,6 @@
+[book]
+authors = ["Roman"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Osmosis Protocol"
