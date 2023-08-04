@@ -172,6 +172,9 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 		ClPoolId:       clPoolId,
 	})
 
+	// Get community pool balance before swap and position creation
+	commPoolBalancePre := keepers.BankKeeper.GetAllBalances(ctx, communityPoolAddress)
+
 	// Swap 0.1 OSMO for baseAsset from the community pool.
 	osmoIn := sdk.NewCoin(QuoteAsset, sdk.NewInt(100000))
 	linkedClassicPool, err := keepers.PoolManagerKeeper.GetPool(ctx, gammPoolId)
@@ -192,11 +195,16 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 		return "", 0, err
 	}
 
-	// 0.1 OSMO used for the swap, 0.1 OSMO used for the full range position.
-	osmoIn.Amount = osmoIn.Amount.MulRaw(2)
+	// Get community pool balance after swap and position creation
+	commPoolBalancePost := keepers.BankKeeper.GetAllBalances(ctx, communityPoolAddress)
+
+	// While we can be fairly certain the diff between these two is 0.2 OSMO, if for whatever reason
+	// some baseAsset dust remains in the community pool and we don't account for it, when updating the
+	// fee pool balance later, we will be off by that amount and will cause a panic.
+	coinsUsed := commPoolBalancePre.Sub(commPoolBalancePost)
 
 	// Track the coins used to create the full range position (we manually update the fee pool later all at once).
-	*fullRangeCoinsUsed = fullRangeCoinsUsed.Add(sdk.NewCoins(osmoIn)...)
+	*fullRangeCoinsUsed = fullRangeCoinsUsed.Add(coinsUsed...)
 
 	return clPoolDenom, clPoolId, nil
 }
