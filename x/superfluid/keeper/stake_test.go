@@ -1320,13 +1320,22 @@ func (s *KeeperTestSuite) TestValidateUnbondConvertAndStake() {
 
 func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 	type tc struct {
-		useInvalidValAddr bool
-		useMinAmtToStake  bool
+		useInvalidValAddr        bool
+		useMinAmtToStake         bool
+		useValSetPrefSingleVal   bool
+		useValSetPrefMultipleVal bool
 
 		expectedError bool
 	}
 	testCases := map[string]tc{
 		"happy case": {},
+		"use val set preference (single validator)": {
+			useValSetPrefSingleVal: true,
+		},
+		"error: multiple validator returned from valset pref": {
+			useValSetPrefMultipleVal: true,
+			expectedError:            true,
+		},
 		"error: invalid val address": {
 			useInvalidValAddr: true,
 			expectedError:     true,
@@ -1355,6 +1364,30 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 			if tc.useInvalidValAddr {
 				valAddrString = s.TestAccs[0].String()
 			}
+
+			stakeCoin := sdk.NewInt64Coin(bondDenom, 100000)
+			if tc.useValSetPrefSingleVal || tc.useValSetPrefMultipleVal {
+				valAddrString = ""
+
+				s.FundAcc(sender, sdk.NewCoins(stakeCoin))
+				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+				s.Require().True(found)
+
+				_, err = s.App.StakingKeeper.Delegate(s.Ctx, sender, stakeCoin.Amount, stakingtypes.Unbonded, validator, true)
+				s.Require().NoError(err)
+			}
+
+			// if test case is setting multiple validator, stake one more time to a different validator
+			if tc.useValSetPrefMultipleVal {
+				valAddr2 := s.SetupValidator(stakingtypes.Bonded)
+				stakeCoin := sdk.NewInt64Coin(bondDenom, 100000)
+				s.FundAcc(sender, sdk.NewCoins(stakeCoin))
+				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr2)
+				s.Require().True(found)
+				_, err = s.App.StakingKeeper.Delegate(s.Ctx, sender, stakeCoin.Amount, stakingtypes.Unbonded, validator, true)
+				s.Require().NoError(err)
+			}
+
 			minAmtToStake := sdk.ZeroInt()
 			if tc.useMinAmtToStake {
 				minAmtToStake = sdk.NewInt(999999999)
@@ -1362,7 +1395,7 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 
 			// mark expected shares before swap
 			nonStakeDenomCoin := exitCoins.FilterDenoms([]string{"foo"})[0]
-			stakeDenomCoin := exitCoins.AmountOf("stake")
+			stakeDenomCoin := exitCoins.AmountOf(bondDenom)
 			// use cache context to get expected amount after swap without changing test state
 			cc, _ := s.Ctx.CacheContext()
 			tokenOutAmt, err := s.App.PoolManagerKeeper.SwapExactAmountIn(cc, sender, poolId, nonStakeDenomCoin, bondDenom, sdk.ZeroInt())
@@ -1391,7 +1424,12 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 			// check staking
 			delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, valAddr)
 			s.Require().True(found)
-			s.Require().True(delegation.Shares.Equal(shares))
+			// if we have used val set pref, we also need to count extra amount we have delegated
+			if tc.useValSetPrefSingleVal {
+				s.Require().True(delegation.Shares.Sub(stakeCoin.Amount.ToDec()).Equal(shares))
+			} else {
+				s.Require().True(delegation.Shares.Equal(shares))
+			}
 
 			// check pool
 			pool, err = s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)

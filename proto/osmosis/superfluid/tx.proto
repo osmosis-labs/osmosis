@@ -242,9 +242,13 @@ message MsgAddToConcentratedLiquiditySuperfluidPositionResponse {
 message MsgUnbondConvertAndStake {
   option (amino.name) = "osmosis/unbond-convert-and-stake";
 
-  // 0 for no lock.
+  // lock ID to convert and stake.
+  // lock id with 0 should be provided if converting liquid gamm shares to stake
   uint64 lock_id = 1 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  // validator address to delegate to.
+  // If provided empty string, we use validator returned from valset-preference
+  // module.
   string val_addr = 3;
   // min_amt_to_stake indicates the minimum amount to stake after conversion
   string min_amt_to_stake = 4 [
@@ -252,6 +256,8 @@ message MsgUnbondConvertAndStake {
     (gogoproto.moretags) = "yaml:\"min_amt_to_stake\"",
     (gogoproto.nullable) = false
   ];
+  // shares_to_convert_and_stake indicates amount of gamm shares to convert and
+  // stake.
   cosmos.base.v1beta1.Coin shares_to_convert_and_stake = 5 [
     (gogoproto.moretags) = "yaml:\"shares_to_convert_and_stake\"",
     (gogoproto.nullable) = false

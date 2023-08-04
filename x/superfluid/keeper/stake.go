@@ -662,6 +662,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 
 // UnbondConvertAndStake converts given lock to osmo and stakes it to given validator.
 // Supports conversion of 1)superfluid bonded 2)superfluid undelegating 3)vanilla unlocking 4) unlocked locks.
+// If valAddr is empty, we attempt to get staking preference from valset-pref module and stake to the given validator.
 func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, valAddr string, minAmtToStake sdk.Int,
 	sharesToConvertAndStake sdk.Coin) (totalAmtConverted sdk.Int, totalSharesDelegated sdk.Dec, err error) {
 	senderAddr, err := sdk.AccAddressFromBech32(sender)
@@ -776,6 +777,7 @@ func (k Keeper) validateUnbondConvertAndStake(ctx sdk.Context, sharesToStake sdk
 // convertGammSharesToOsmoAndStake converts given gamm shares to osmo by swapping in the given pool
 // then stakes it to the designated validator.
 // minAmtToStake works as slippage bound, and would error if total amount being staked is less than min amount to stake.
+// If valAddr is empty, we attempt to get staking preference from valset-pref module and stake to the given validator.
 func (k Keeper) convertGammSharesToOsmoAndStake(
 	ctx sdk.Context,
 	sender sdk.AccAddress, valAddr string,
@@ -817,9 +819,31 @@ func (k Keeper) convertGammSharesToOsmoAndStake(
 		}
 	}
 
-	val, err := k.validateValAddrForDelegate(ctx, valAddr)
-	if err != nil {
-		return sdk.ZeroInt(), sdk.ZeroDec(), err
+	var val stakingtypes.Validator
+	// if given valAddr is empty, we use delegation preference given from valset-pref module.
+	if valAddr == "" {
+		delegationPref, err := k.vspk.GetDelegationPreferences(ctx, sender.String())
+		if err != nil {
+			return sdk.ZeroInt(), sdk.ZeroDec(), err
+		}
+		if len(delegationPref.Preferences) != 1 {
+			return sdk.ZeroInt(), sdk.ZeroDec(), types.MultipleValFromValsetError{}
+		}
+		valOperAddr := delegationPref.Preferences[0].ValOperAddress
+		valAddr, err := sdk.ValAddressFromBech32(valOperAddr)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("validator address not formatted")
+		}
+		validator, found := k.sk.GetValidator(ctx, valAddr)
+		if !found {
+			return sdk.ZeroInt(), sdk.ZeroDec(), fmt.Errorf("validator not found %s", validator)
+		}
+		val = validator
+	} else {
+		val, err = k.validateValAddrForDelegate(ctx, valAddr)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.ZeroDec(), err
+		}
 	}
 
 	// delegate now!

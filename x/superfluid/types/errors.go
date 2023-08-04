@@ -126,3 +126,10 @@ type TokenConvertedLessThenDesiredStakeError struct {
 func (e TokenConvertedLessThenDesiredStakeError) Error() string {
 	return fmt.Sprintf("actual amount converted to stake (%s) is less then minimum amount expected to be staked (%s)", e.ActualTotalAmtToStake, e.ExpectedTotalAmtToStake)
 }
+
+type MultipleValFromValsetError struct {
+}
+
+func (e MultipleValFromValsetError) Error() string {
+	return fmt.Sprintf("Multiple validator from valset-preference exists")
+}

@@ -13,6 +13,7 @@ import (
 	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
 	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -131,4 +132,8 @@ type PoolManagerKeeper interface {
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
 	) (sdk.Int, error)
+}
+
+type ValSetPreferenceKeeper interface {
+	GetDelegationPreferences(ctx sdk.Context, delegator string) (valsetpreftypes.ValidatorSetPreferences, error)
 }

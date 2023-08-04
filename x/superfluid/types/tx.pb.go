@@ -1023,13 +1023,19 @@ func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) GetLockId() ui
 
 // ===================== MsgUnbondConvertAndStake
 type MsgUnbondConvertAndStake struct {
-	// 0 for no lock.
-	LockId  uint64 `protobuf:"varint,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty" yaml:"lock_id"`
-	Sender  string `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	// lock ID to convert and stake.
+	// lock id with 0 should be provided if converting liquid gamm shares to stake
+	LockId uint64 `protobuf:"varint,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty" yaml:"lock_id"`
+	Sender string `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	// validator address to delegate to.
+	// If provided empty string, we use validator returned from valset-preference
+	// module.
 	ValAddr string `protobuf:"bytes,3,opt,name=val_addr,json=valAddr,proto3" json:"val_addr,omitempty"`
 	// min_amt_to_stake indicates the minimum amount to stake after conversion
-	MinAmtToStake           github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=min_amt_to_stake,json=minAmtToStake,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_amt_to_stake" yaml:"min_amt_to_stake"`
-	SharesToConvertAndStake types.Coin                             `protobuf:"bytes,5,opt,name=shares_to_convert_and_stake,json=sharesToConvertAndStake,proto3" json:"shares_to_convert_and_stake" yaml:"shares_to_convert_and_stake"`
+	MinAmtToStake github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=min_amt_to_stake,json=minAmtToStake,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_amt_to_stake" yaml:"min_amt_to_stake"`
+	// shares_to_convert_and_stake indicates amount of gamm shares to convert and
+	// stake.
+	SharesToConvertAndStake types.Coin `protobuf:"bytes,5,opt,name=shares_to_convert_and_stake,json=sharesToConvertAndStake,proto3" json:"shares_to_convert_and_stake" yaml:"shares_to_convert_and_stake"`
 }
 
 func (m *MsgUnbondConvertAndStake) Reset()         { *m = MsgUnbondConvertAndStake{} }
