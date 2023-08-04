@@ -1800,9 +1800,9 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
 		expectedSpotPrice, err := balancerPool.SpotPrice(sdk.Context{}, v17.QuoteAsset, assetPair.BaseAsset)
 		s.Require().NoError(err)
 
-		// Allow 0.1% margin of error.
+		// Allow 1% margin of error (due to low pool liquidity being used for OSMO swap to base asset)
 		multiplicativeTolerance := osmomath.ErrTolerance{
-			MultiplicativeTolerance: sdk.MustNewDecFromStr("0.001"),
+			MultiplicativeTolerance: sdk.MustNewDecFromStr("0.01"),
 		}
 
 		s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(expectedSpotPrice), concentratedPool.GetCurrentSqrtPrice().PowerInteger(2)))
