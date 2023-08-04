@@ -176,6 +176,11 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
 				})
 
+				twapRecordHistoricalTimeIndexedPOST, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPs(ctx)
+				suite.Require().NoError(err)
+
+				fmt.Println("POST UPGRADE: ", twapRecordHistoricalTimeIndexedPOST)
+
 				clPoolTwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, 1040)
 				suite.Require().NoError(err)
 

@@ -161,20 +161,6 @@ func FlipTwapSpotPriceRecords(ctx sdk.Context, poolIds []uint64, keepers *keeper
 		keepers.TwapKeeper.DeleteHistoricalRecord(ctx, oldRecord)
 	}
 
-	twapRecordHistoricalPoolIndexed, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPs(ctx)
-	if err != nil {
-		return err
-	}
-
-	for _, historicalTwapRecord := range twapRecordHistoricalPoolIndexed {
-		oldRecord := historicalTwapRecord
-		historicalTwapRecord.Asset0Denom, historicalTwapRecord.Asset1Denom = oldRecord.Asset1Denom, oldRecord.Asset0Denom
-		historicalTwapRecord.P0LastSpotPrice, historicalTwapRecord.P1LastSpotPrice = oldRecord.P1LastSpotPrice, oldRecord.P0LastSpotPrice
-
-		keepers.TwapKeeper.StoreHistoricalTWAP(ctx, historicalTwapRecord)
-		keepers.TwapKeeper.DeleteHistoricalRecord(ctx, oldRecord)
-	}
-
 	for _, poolId := range poolIds {
 		// check that this is a cl pool
 		_, err := keepers.ConcentratedLiquidityKeeper.GetConcentratedPoolById(ctx, poolId)
