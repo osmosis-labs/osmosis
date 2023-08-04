@@ -60,7 +60,8 @@ func (k Keeper) initOrUpdatePositionSpreadRewardAccumulator(ctx sdk.Context, poo
 		return err
 	}
 
-	spreadRewardGrowthInside := spreadRewardAccumulator.GetValue().Sub(spreadRewardGrowthOutside)
+	// Note: this is SafeSub because interval accumulation is allowed to be negative.
+	spreadRewardGrowthInside, _ := spreadRewardAccumulator.GetValue().SafeSub(spreadRewardGrowthOutside)
 
 	if !hasPosition {
 		if !liquidityDelta.IsPositive() {
@@ -136,15 +137,10 @@ func (k Keeper) getSpreadRewardGrowthOutside(ctx sdk.Context, poolId uint64, low
 //
 // The value is chosen as if all of the spread rewards earned to date had occurred below the tick.
 // Returns error if the pool with the given id does exist or if fails to get the spread reward accumulator.
-func (k Keeper) getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) (sdk.DecCoins, error) {
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return sdk.DecCoins{}, err
-	}
-
+func (k Keeper) getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, pool types.ConcentratedPoolExtension, tick int64) (sdk.DecCoins, error) {
 	currentTick := pool.GetCurrentTick()
 	if currentTick >= tick {
-		spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
+		spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, pool.GetId())
 		if err != nil {
 			return sdk.DecCoins{}, err
 		}
@@ -264,10 +260,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 			return nil, err
 		}
 
-		totalSharesRemaining, err := spreadRewardAccumulator.GetTotalShares()
-		if err != nil {
-			return nil, err
-		}
+		totalSharesRemaining := spreadRewardAccumulator.GetTotalShares()
 
 		// if there are no shares remaining, the dust is ignored. Otherwise, it is added back to the global accumulator.
 		// Total shares remaining can be zero if we claim in withdrawPosition for the last position in the pool.

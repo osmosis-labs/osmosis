@@ -149,9 +149,6 @@ func ParseIncentiveRecordBodyFromBz(bz []byte) (incentiveRecordBody types.Incent
 // Returns an error if the byte array is empty.
 // Returns an error if fails to parse.
 func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord types.IncentiveRecord, err error) {
-	if len(key) == 0 {
-		return types.IncentiveRecord{}, types.ErrKeyNotFound
-	}
 	if len(value) == 0 {
 		return types.IncentiveRecord{}, types.ValueNotFoundForKeyError{Key: key}
 	}
@@ -160,18 +157,17 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 
 	// These may include irrelevant parts of the prefix such as the module prefix.
 	incentiveRecordKeyComponents := strings.Split(keyStr, types.KeySeparator)
+	if len(incentiveRecordKeyComponents) < 4 {
+		return types.IncentiveRecord{}, fmt.Errorf("Incorrect incentive record key format, expected at least 4 parts")
+	} else if incentiveRecordKeyComponents[0] != string(types.IncentivePrefix) {
+		return types.IncentiveRecord{}, fmt.Errorf("Wrong incentive prefix, got: %v, required %v", []byte(incentiveRecordKeyComponents[0]), types.IncentivePrefix)
+	}
 
 	// We only care about the last 4 components, which are:
 	// - pool id
 	// - min uptime
 	// - incentive id
-
 	relevantIncentiveKeyComponents := incentiveRecordKeyComponents[len(incentiveRecordKeyComponents)-4:]
-
-	incentivePrefix := incentiveRecordKeyComponents[0]
-	if incentivePrefix != string(types.IncentivePrefix) {
-		return types.IncentiveRecord{}, fmt.Errorf("Wrong incentive prefix, got: %v, required %v", []byte(incentivePrefix), types.IncentivePrefix)
-	}
 
 	poolId, err := strconv.ParseUint(relevantIncentiveKeyComponents[0], 10, 64)
 	if err != nil {

@@ -1179,18 +1179,15 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOppositeDirectionOfLastTrave
 	expectedUptimes := getExpectedUptimes()
 
 	type getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick struct {
-		poolId                          uint64
 		tick                            int64
 		expectedUptimeAccumulatorValues []sdk.DecCoins
 	}
 	tests := map[string]getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick{
 		"uptime growth for tick <= currentTick": {
-			poolId:                          1,
 			tick:                            -2,
 			expectedUptimeAccumulatorValues: expectedUptimes.hundredTokensMultiDenom,
 		},
 		"uptime growth for tick > currentTick": {
-			poolId:                          2,
 			tick:                            1,
 			expectedUptimeAccumulatorValues: expectedUptimes.emptyExpectedAccumValues,
 		},
@@ -1204,21 +1201,19 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOppositeDirectionOfLastTrave
 				s.SetupTest()
 				clKeeper := s.App.ConcentratedLiquidityKeeper
 
-				// create 2 pools
-				s.PrepareConcentratedPool()
-				s.PrepareConcentratedPool()
+				pool := s.PrepareConcentratedPool()
 
-				poolUptimeAccumulators, err := clKeeper.GetUptimeAccumulators(s.Ctx, tc.poolId)
+				poolUptimeAccumulators, err := clKeeper.GetUptimeAccumulators(s.Ctx, pool.GetId())
 				s.Require().NoError(err)
 
 				for uptimeId, uptimeAccum := range poolUptimeAccumulators {
 					uptimeAccum.AddToAccumulator(expectedUptimes.hundredTokensMultiDenom[uptimeId])
 				}
 
-				_, err = clKeeper.GetUptimeAccumulators(s.Ctx, tc.poolId)
+				_, err = clKeeper.GetUptimeAccumulators(s.Ctx, pool.GetId())
 				s.Require().NoError(err)
 
-				val, err := clKeeper.GetInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(s.Ctx, tc.poolId, tc.tick)
+				val, err := clKeeper.GetInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(s.Ctx, pool, tc.tick)
 				s.Require().NoError(err)
 				s.Require().Equal(val, tc.expectedUptimeAccumulatorValues)
 			})
@@ -3194,8 +3189,7 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 				uptimeAccumulatorsPostClaim, err := s.clk.GetUptimeAccumulators(s.Ctx, pool.GetId())
 				s.Require().NoError(err)
 				for i, acc := range uptimeAccumulatorsPostClaim {
-					totalSharesAccum, err := acc.GetTotalShares()
-					s.Require().NoError(err)
+					totalSharesAccum := acc.GetTotalShares()
 
 					uptimeAccumsDiffPostClaim = append(uptimeAccumsDiffPostClaim, acc.GetValue().MulDec(totalSharesAccum).Sub(uptimeAccumulatorsPreClaim[i].GetValue().MulDec(totalSharesAccum))...)
 				}
@@ -3629,14 +3623,13 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 				s.Require().True(len(clPoolUptimeAccumulatorsFromState) > 0)
 				expectedShares := qualifyingShares.Add(initialLiquidity)
 				for uptimeIdx, uptimeAccum := range clPoolUptimeAccumulatorsFromState {
-					currAccumShares, err := uptimeAccum.GetTotalShares()
-					s.Require().NoError(err)
+					currAccumShares := uptimeAccum.GetTotalShares()
 
 					// Ensure each accum has the correct number of final shares
 					s.Require().Equal(expectedShares, currAccumShares)
 
 					// Also validate uptime accumulators passed in as parameter.
-					currAccumShares, err = uptimeAccums[uptimeIdx].GetTotalShares()
+					currAccumShares = uptimeAccums[uptimeIdx].GetTotalShares()
 					s.Require().Equal(expectedShares, currAccumShares)
 				}
 
@@ -3939,8 +3932,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 					s.Require().True(len(clPoolUptimeAccumulatorsFromState) > 0)
 					for uptimeIdx, uptimeAccum := range clPoolUptimeAccumulatorsFromState {
-						currAccumShares, err := uptimeAccum.GetTotalShares()
-						s.Require().NoError(err)
+						currAccumShares := uptimeAccum.GetTotalShares()
 
 						// Since reversions for errors are done at a higher level of abstraction,
 						// we have to assume that any state updates that happened prior to the error
@@ -3957,7 +3949,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 						s.Require().Equal(expectedLiquidity, currAccumShares)
 
 						// Also validate uptime accumulators passed in as parameter.
-						currAccumShares, err = uptimeAccums[uptimeIdx].GetTotalShares()
+						currAccumShares = uptimeAccums[uptimeIdx].GetTotalShares()
 						s.Require().Equal(expectedLiquidity, currAccumShares)
 					}
 
@@ -3990,8 +3982,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 				s.Require().True(len(clPoolUptimeAccumulators) > 0)
 				for uptimeIndex, uptimeAccum := range clPoolUptimeAccumulators {
-					currAccumShares, err := uptimeAccum.GetTotalShares()
-					s.Require().NoError(err)
+					currAccumShares := uptimeAccum.GetTotalShares()
 
 					// Ensure each accum has been cleared of the balancer full range shares
 					balancerPositionName := string(types.KeyBalancerFullRange(clPoolId, balancerPoolId, uint64(uptimeIndex)))

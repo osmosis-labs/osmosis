@@ -42,6 +42,8 @@ const (
 	FlagScalingFactors = "scaling-factors"
 
 	FlagMigrationRecords = "migration-records"
+
+	FlagPoolRecords = "pool-records"
 )
 
 type createBalancerPoolInputs struct {

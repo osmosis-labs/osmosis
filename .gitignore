@@ -252,3 +252,6 @@ tests/cl-genesis-positions/*.json
 
 # Docs
 docs/protocol/book
+
+# Release folder
+dist/
