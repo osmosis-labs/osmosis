@@ -1,2 +1,2 @@
-# Core DEX
+# Decentralized Exchange
 

@@ -1,4 +1,8 @@
 # Summary
 
 [Osmosis](./osmosis.md)
-- [Core Dex](./core_dex.md)
+- [Decentralized Exchange](./core_dex.md)
+- [Governance](./governance.md)
+- [Staking](./staking.md)
+- [Smart Contracts](./smartcontracts.md)
+- [Ecosystem](./ecosystem.md)
