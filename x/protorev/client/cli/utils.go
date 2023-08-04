@@ -123,6 +123,29 @@ func BuildSetHotRoutesMsg(clientCtx client.Context, args []string, fs *flag.Flag
 }
 
 // ------------ types/functions to handle a SetInfoByPoolType CLI TX ------------ //
+type InfoByPoolTypeInput struct {
+	Stable       StablePoolInfoInput       `json:"stable"`
+	Balancer     BalancerPoolInfoInput     `json:"balancer"`
+	Concentrated ConcentratedPoolInfoInput `json:"concentrated"`
+	Cosmwasm     CosmwasmPoolInfoInput     `json:"cosmwasm"`
+}
+
+type StablePoolInfoInput struct {
+	Weight uint64 `json:"weight"`
+}
+
+type BalancerPoolInfoInput struct {
+	Weight uint64 `json:"weight"`
+}
+
+type ConcentratedPoolInfoInput struct {
+	Weight          uint64 `json:"weight"`
+	MaxTicksCrossed uint64 `json:"max_ticks_crossed"`
+}
+
+type CosmwasmPoolInfoInput struct {
+	WeightMap map[string]uint64 `json:"weight_map"`
+}
 type createInfoByPoolTypeInput types.InfoByPoolType
 
 type XCreateInfoByPoolTypeInputs createInfoByPoolTypeInput
@@ -146,8 +169,23 @@ func (release *createInfoByPoolTypeInput) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// BuildSetPoolTypeInfoMsg builds a MsgSetInfoByPoolType from the provided json file
-func BuildSetPoolTypeInfoMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
+// createInfoByPoolTypeInput converts the input to the types.InfoByPoolType type
+func (release *createInfoByPoolTypeInput) convertToInfoByPoolType() types.InfoByPoolType {
+	if release == nil {
+		return types.InfoByPoolType{}
+	}
+
+	infoByPoolType := types.InfoByPoolType{}
+	infoByPoolType.Stable = release.Stable
+	infoByPoolType.Balancer = release.Balancer
+	infoByPoolType.Concentrated = release.Concentrated
+	infoByPoolType.Cosmwasm = release.Cosmwasm
+
+	return infoByPoolType
+}
+
+// BuildSetInfoByPoolTypeMsg builds a MsgSetInfoByPoolType from the provided json file
+func BuildSetInfoByPoolTypeMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	if len(args) == 0 {
 		return nil, fmt.Errorf("must provide a json file")
 	}
@@ -169,7 +207,7 @@ func BuildSetPoolTypeInfoMsg(clientCtx client.Context, args []string, fs *flag.F
 	admin := clientCtx.GetFromAddress().String()
 	return &types.MsgSetInfoByPoolType{
 		Admin:          admin,
-		InfoByPoolType: types.InfoByPoolType(*input),
+		InfoByPoolType: input.convertToInfoByPoolType(),
 	}, nil
 }
 

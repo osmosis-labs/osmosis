@@ -28,7 +28,7 @@ const MaxPoolPointsPerTx uint64 = 50
 const MaxPoolPointsPerBlock uint64 = 200
 
 // Max number of ticks we can move in a concentrated pool swap.
-const MaxTicksCrossed uint64 = 5
+const MaxTicksCrossed uint64 = 10
 
 // ---------------- Module Profit Splitting Constants ---------------- //
 

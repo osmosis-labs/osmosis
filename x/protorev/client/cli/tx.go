@@ -144,7 +144,7 @@ func CmdSetMaxPoolPointsPerBlock() (*osmocli.TxCliDesc, *types.MsgSetMaxPoolPoin
 // CmdSetInfoByPoolType implements the command to set the pool information used throughout the module
 func CmdSetInfoByPoolType() *osmocli.TxCliDesc {
 	desc := osmocli.TxCliDesc{
-		Use:   "set-info-by-pool-type [path/to/routes.json]",
+		Use:   "set-info-by-pool-type [path/to/pool_info.json]",
 		Short: "set the protorev pool type info",
 		Long: `Must provide a json file with all the pool info that will be set. 
 		Sample json file:
@@ -161,14 +161,14 @@ func CmdSetInfoByPoolType() *osmocli.TxCliDesc {
 			},
 			"cosmwasm" : {
 				"weight_map" : {
-					"ibc/123..." : 1,
+					"osmo123..." : 1,
 				},
 			},
 		}
 		`,
-		Example:          fmt.Sprintf(`$ %s tx protorev set-info-by-pool-type weights.json --from mykey`, version.AppName),
+		Example:          fmt.Sprintf(`$ %s tx protorev set-info-by-pool-type pool_info.json --from mykey`, version.AppName),
 		NumArgs:          1,
-		ParseAndBuildMsg: BuildSetPoolTypeInfoMsg,
+		ParseAndBuildMsg: BuildSetInfoByPoolTypeMsg,
 	}
 
 	return &desc
