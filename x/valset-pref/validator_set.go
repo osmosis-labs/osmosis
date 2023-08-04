@@ -121,6 +121,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
 // nolint: staticcheck
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
+
 	// get the existingValSet if it exists, if not check existingStakingPosition and return it
 	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
 	if err != nil {
@@ -170,6 +171,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 			return err
 		}
 	}
+
 	return nil
 }
 

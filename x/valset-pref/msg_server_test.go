@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
@@ -425,6 +427,48 @@ func (s *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestUnDelegateFromValidatorSetGas() {
+
+	// prepare existing delegations validators
+	valAddrs := s.SetupMultipleValidators(50)
+	valPreferences := []types.ValidatorPreference{}
+	for _, vals := range valAddrs {
+		valPreferences = append(valPreferences, types.ValidatorPreference{
+			ValOperAddress: vals,
+			Weight:         sdk.NewDecWithPrec(2, 2), // 0.01 weight
+		})
+	}
+
+	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000_000_000)}
+
+	// setup message server
+	msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
+	c := sdk.WrapSDKContext(s.Ctx)
+
+	s.FundAcc(sdk.AccAddress([]byte("addr1---------------")), amountToFund) // 100_000 osmo
+
+	// SetValidatorSetPreference sets a new list of val-set
+	_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(sdk.AccAddress([]byte("addr1---------------")), valPreferences))
+	s.Require().NoError(err)
+
+	// DelegateToValidatorSet delegate to existing val-set
+	_, err = msgServer.DelegateToValidatorSet(c, types.NewMsgDelegateToValidatorSet(sdk.AccAddress([]byte("addr1---------------")), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000))))
+	s.Require().NoError(err)
+
+	fmt.Println("GAS BEFORE UNDELEGATE TEST : ", s.Ctx.GasMeter().GasConsumed())
+
+	err = s.App.ValidatorSetPreferenceKeeper.UndelegateFromValidatorSet(s.Ctx, sdk.AccAddress([]byte("addr1---------------")).String(), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)))
+	s.Require().NoError(err)
+
+	fmt.Println("GAS AFTER UNDELEGATE TEST: ", s.Ctx.GasMeter().GasConsumed())
+
+	// existingSet, err := s.App.ValidatorSetPreferenceKeeper.GetDelegationPreferences(s.Ctx, sdk.AccAddress([]byte("addr1---------------")).String())
+	// s.Require().NoError(err)
+
+	// fmt.Println(existingSet)
+
 }
 
 func (s *KeeperTestSuite) TestRedelegateToValidatorSet() {
