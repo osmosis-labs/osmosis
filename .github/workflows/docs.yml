@@ -37,15 +37,10 @@ jobs:
           mkdir do-tmp
           mv book do-tmp/${{ steps.get_version.outputs.version }}
           tree do-tmp
-      - name: Deploy protocol spec to firebase
-        uses: w9jds/firebase-action@v2.0.0
-        with:
-          args: deploy
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          PROJECT_ID: osmosis-protocol
-          PROJECT_PATH: docs/protocol
       - name: Deploy
+        env:
+          DO_DOCS_PK: ${{ secrets.DO_DOCS_PK }}
+          DO_DOCS_IP: ${{ secrets.DO_DOCS_IP }}
         run: |
           which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y  )
           which rsync || ( apt-get update -y && apt-get install rsync -y )
@@ -55,4 +50,4 @@ jobs:
           chmod 700 ~/.ssh
           ssh-keyscan $DO_DOCS_IP >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          scp -r * root@$DO_DOCS_IP:/var/www/html
+          scp -r do-tmp root@$DO_DOCS_IP:/var/www/html
