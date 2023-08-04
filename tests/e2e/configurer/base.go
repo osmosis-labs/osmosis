@@ -79,18 +79,14 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 	var wg sync.WaitGroup
 	errCh := make(chan error, len(chainConfig.NodeConfigs)) // Buffer the channel to avoid blocking
 
-	var mu sync.Mutex
-
 	// Increment the WaitGroup counter for each node
 	wg.Add(len(chainConfig.NodeConfigs))
 
 	// Iterate over each node
 	for _, node := range chainConfig.NodeConfigs {
 		go func(n *chain.NodeConfig) {
-			defer wg.Done() // Decrement the WaitGroup counter when the goroutine is done
-			mu.Lock()
+			defer wg.Done()  // Decrement the WaitGroup counter when the goroutine is done
 			errCh <- n.Run() // Run the node and send any error to the channel
-			mu.Unlock()
 		}(node)
 	}
 
