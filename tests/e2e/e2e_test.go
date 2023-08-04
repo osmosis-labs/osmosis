@@ -1192,7 +1192,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 		s.Eventually(func() bool {
 			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 			return strings.Contains(val, param)
-		}, time.Second*30, time.Millisecond*500)
+		}, time.Second*30, time.Second)
 	}
 }
 
@@ -1225,7 +1225,7 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	// check the balance of the contract
 	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
 	ibcDenom := denomTrace.IBCDenom()
-	s.CheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
+	s.CallCheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
@@ -1298,7 +1298,7 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	chainANode.SendIBCTransfer(chainB, validatorAddr, validatorAddr, string(forwardMemo), coin)
 
 	// check the balance of the contract
-	s.CheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
+	s.CallCheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
@@ -1612,8 +1612,8 @@ func (s *IntegrationTestSuite) StateSync() {
 		s.Require().NoError(err)
 		return stateSyncNodeHeight == runningNodeHeight
 	},
-		3*time.Minute,
-		500*time.Millisecond,
+		1*time.Minute,
+		time.Second,
 	)
 
 	// stop the state synching node.

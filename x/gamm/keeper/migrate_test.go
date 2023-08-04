@@ -1025,7 +1025,6 @@ func (s *KeeperTestSuite) TestCreateConcentratedPoolFromCFMM() {
 
 		cfmmPoolIdToLinkWith uint64
 		desiredDenom0        string
-		spreadFactor         sdk.Dec
 		expectedDenoms       []string
 		expectError          error
 	}{
@@ -1033,22 +1032,19 @@ func (s *KeeperTestSuite) TestCreateConcentratedPoolFromCFMM() {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        desiredDenom0,
-			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
 			expectedDenoms:       []string{desiredDenom0, daiCoin.Denom},
 		},
 		"error: invalid denom 0": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        USDCIBCDenom,
-			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
-			expectError:          types.NoDesiredDenomInPoolError{DesiredDenom: USDCIBCDenom},
+			expectError:          types.NoDesiredDenomInPoolError{USDCIBCDenom},
 		},
 		"error: pool with 3 assets, must have two": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin, usdcCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        USDCIBCDenom,
-			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
-			expectError:          types.MustHaveTwoDenomsError{NumDenoms: 3},
+			expectError:          types.ErrMustHaveTwoDenoms,
 		},
 	}
 
@@ -1062,7 +1058,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedPoolFromCFMM() {
 			balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerId)
 			s.Require().NoError(err)
 
-			clPoolReturned, err := s.App.GAMMKeeper.CreateConcentratedPoolFromCFMM(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, tc.spreadFactor, defaultTickSpacing)
+			clPoolReturned, err := s.App.GAMMKeeper.CreateConcentratedPoolFromCFMM(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, sdk.ZeroDec(), defaultTickSpacing)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -1077,7 +1073,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedPoolFromCFMM() {
 			s.Require().Equal(clPoolReturned, clPoolInState)
 
 			// Validate CL and balancer pools have the same spread factor.
-			s.Require().Equal(tc.spreadFactor, clPoolReturned.GetSpreadFactor(s.Ctx))
+			s.Require().Equal(balancerPool.GetSpreadFactor(s.Ctx), clPoolReturned.GetSpreadFactor(s.Ctx))
 
 			// Validate that CL and balancer pools have the same denoms
 			balancerDenoms, err := s.App.PoolManagerKeeper.RouteGetPoolDenoms(s.Ctx, balancerPool.GetId())
@@ -1104,7 +1100,6 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 		poolLiquidity              sdk.Coins
 		cfmmPoolIdToLinkWith       uint64
 		desiredDenom0              string
-		spreadFactor               sdk.Dec
 		expectedBalancerDenoms     []string
 		expectedConcentratedDenoms []string
 		setupInvalidDuraitons      bool
@@ -1118,7 +1113,6 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			// determined by desired denom 0
 			expectedConcentratedDenoms: []string{desiredDenom0Coin.Denom, daiCoin.Denom},
 			desiredDenom0:              desiredDenom0,
-			spreadFactor:               sdk.MustNewDecFromStr("0.0001"),
 		},
 		"success - denoms are not reordered relative to balancer": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
@@ -1128,27 +1122,23 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			// determined by desired denom 0
 			expectedConcentratedDenoms: []string{daiCoin.Denom, desiredDenom0Coin.Denom},
 			desiredDenom0:              daiCoin.Denom,
-			spreadFactor:               sdk.MustNewDecFromStr("0.0001"),
 		},
 		"error: invalid denom 0": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        USDCIBCDenom,
-			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
-			expectError:          types.NoDesiredDenomInPoolError{DesiredDenom: USDCIBCDenom},
+			expectError:          types.NoDesiredDenomInPoolError{USDCIBCDenom},
 		},
 		"error: pool with 3 assets, must have two": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin, usdcCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        USDCIBCDenom,
-			spreadFactor:         sdk.MustNewDecFromStr("0.0001"),
-			expectError:          types.MustHaveTwoDenomsError{NumDenoms: 3},
+			expectError:          types.ErrMustHaveTwoDenoms,
 		},
 		"error: invalid denom durations": {
 			poolLiquidity:         sdk.NewCoins(desiredDenom0Coin, daiCoin),
 			cfmmPoolIdToLinkWith:  validPoolId,
 			desiredDenom0:         desiredDenom0,
-			spreadFactor:          sdk.MustNewDecFromStr("0.0001"),
 			setupInvalidDuraitons: true,
 			expectError:           types.ErrNoGaugeToRedirect,
 		},
@@ -1192,7 +1182,7 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			}
 			s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, originalDistrInfo)
 
-			clPool, err := s.App.GAMMKeeper.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, tc.spreadFactor, defaultTickSpacing)
+			clPool, err := s.App.GAMMKeeper.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, sdk.ZeroDec(), defaultTickSpacing)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
