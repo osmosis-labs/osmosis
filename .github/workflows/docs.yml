@@ -30,18 +30,16 @@ jobs:
         run: cargo install mdbook mdbook-katex mdbook-mermaid
       - name: Build protocol spec
         run: cd docs/protocol && mdbook build
-      - name: Move protocol spec to subdirectory
+      - name: Move protocol spec to subdirectory & Deploy
+        env:
+          DO_DOCS_PK: ${{ secrets.DO_DOCS_PK }}
+          DO_DOCS_IP: ${{ secrets.DO_DOCS_IP }}
         run: |
           cd docs/protocol
           if [ -d "do-tmp" ]; then rm -rf do-tmp; fi
           mkdir do-tmp
           mv book do-tmp/${{ steps.get_version.outputs.version }}
           tree do-tmp
-      - name: Deploy
-        env:
-          DO_DOCS_PK: ${{ secrets.DO_DOCS_PK }}
-          DO_DOCS_IP: ${{ secrets.DO_DOCS_IP }}
-        run: |
           which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y  )
           which rsync || ( apt-get update -y && apt-get install rsync -y )
           eval $(ssh-agent -s)
