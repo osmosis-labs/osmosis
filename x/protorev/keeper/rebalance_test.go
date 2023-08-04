@@ -835,6 +835,6 @@ func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
 		)
 		s.Require().NoError(err)
 		s.Require().Equal(sdk.OneInt(), curLeft)
-		s.Require().Equal(sdk.NewInt(11247), curRight)
+		s.Require().Equal(sdk.NewInt(5141), curRight)
 	})
 }

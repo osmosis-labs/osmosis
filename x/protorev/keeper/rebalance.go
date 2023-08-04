@@ -290,7 +290,7 @@ func (k Keeper) executeSafeSwap(
 	}
 
 	// At most we can swap half of the liquidity in the pool
-	liquidTokenAmt := liquidity.AmountOf(outputCoin.Denom).Quo(sdk.NewInt(2))
+	liquidTokenAmt := liquidity.AmountOf(outputCoin.Denom).Quo(sdk.NewInt(4))
 	if liquidTokenAmt.LT(outputCoin.Amount) {
 		outputCoin.Amount = liquidTokenAmt
 	}
