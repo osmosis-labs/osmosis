@@ -47,7 +47,7 @@ func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *init
 // The node configuration must be already added to the chain config prior to calling this
 // method.
 func (n *NodeConfig) Run() error {
-	maxRetries := 2
+	maxRetries := 3
 	currentRetry := 0
 
 	for currentRetry < maxRetries {
@@ -65,27 +65,33 @@ func (n *NodeConfig) Run() error {
 
 		n.rpcClient = rpcClient
 
-		successChan := make(chan bool)
+		success := false
+		timeout := time.After(time.Second * 20)
+		ticker := time.NewTicker(10 * time.Millisecond)
+		defer ticker.Stop()
 
-		go func() {
-			ticker := time.NewTicker(10 * time.Millisecond)
-			defer ticker.Stop()
-
-			for range ticker.C {
+		for {
+			select {
+			case <-timeout:
+				n.t.Logf("Osmosis node failed to produce blocks")
+				break
+			case <-ticker.C:
 				_, err := n.QueryCurrentHeight()
 				if err == nil {
 					n.t.Logf("started node container: %s", n.Name)
-					successChan <- true
-					return
+					success = true
+					break
 				}
 			}
-		}()
-		defer close(successChan)
 
-		select {
-		case <-successChan:
+			if success {
+				break
+			}
+		}
+
+		if success {
 			break
-		case <-time.After(time.Second * 20):
+		} else {
 			n.t.Logf("failed to start node container, retrying... (%d/%d)", currentRetry+1, maxRetries)
 			err := n.containerManager.RemoveNodeResource(n.Name)
 			if err != nil {
