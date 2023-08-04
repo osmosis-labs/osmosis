@@ -172,26 +172,28 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 		ClPoolId:       clPoolId,
 	})
 
-	// Determine the amount of baseAsset that can be bought with 1 OSMO.
-	oneOsmo := sdk.NewCoin(QuoteAsset, sdk.NewInt(1000000))
+	// Swap 0.1 OSMO for baseAsset from the community pool.
+	osmoIn := sdk.NewCoin(QuoteAsset, sdk.NewInt(100000))
 	linkedClassicPool, err := keepers.PoolManagerKeeper.GetPool(ctx, gammPoolId)
 	if err != nil {
 		return "", 0, err
 	}
-	respectiveBaseAsset, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, linkedClassicPool, oneOsmo, baseAsset, sdk.ZeroDec())
+	respectiveBaseAssetInt, err := keepers.GAMMKeeper.SwapExactAmountIn(ctx, communityPoolAddress, linkedClassicPool, osmoIn, baseAsset, sdk.ZeroInt(), linkedClassicPool.GetSpreadFactor(ctx))
 	if err != nil {
 		return "", 0, err
 	}
 
+	respectiveBaseAsset := sdk.NewCoin(baseAsset, respectiveBaseAssetInt)
+
 	// Create a full range position via the community pool with the funds we calculated above.
-	fullRangeCoins := sdk.NewCoins(respectiveBaseAsset, oneOsmo)
-	_, actualBaseAmtUsed, actualQuoteAmtUsed, _, err := keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeCoins)
+	fullRangeCoins := sdk.NewCoins(respectiveBaseAsset, osmoIn)
+	_, _, _, _, err = keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeCoins)
 	if err != nil {
 		return "", 0, err
 	}
 
 	// Track the coins used to create the full range position (we manually update the fee pool later all at once).
-	*fullRangeCoinsUsed = fullRangeCoinsUsed.Add(sdk.NewCoins(sdk.NewCoin(QuoteAsset, actualQuoteAmtUsed), sdk.NewCoin(baseAsset, actualBaseAmtUsed))...)
+	*fullRangeCoinsUsed = fullRangeCoinsUsed.Add(sdk.NewCoins(osmoIn)...)
 
 	return clPoolDenom, clPoolId, nil
 }
@@ -257,17 +259,18 @@ func testnetParsePoolRecord(ctx sdk.Context, pool poolManagerTypes.PoolI, keeper
 	}
 
 	// Set the spread factor to the same spread factor the GAMM pool was.
-	// If its spread factor is not authorized, set it to the first authorized spread factor.
+	// If its spread factor is not authorized, set it to the first authorized non-zero spread factor.
 	spreadFactor := cfmmPool.GetSpreadFactor(ctx)
 	authorizedSpreadFactors := keepers.ConcentratedLiquidityKeeper.GetParams(ctx).AuthorizedSpreadFactors
 	spreadFactorAuthorized := false
 	for _, authorizedSpreadFactor := range authorizedSpreadFactors {
-		if authorizedSpreadFactor == spreadFactor {
+		if authorizedSpreadFactor.Equal(spreadFactor) {
 			spreadFactorAuthorized = true
+			break
 		}
 	}
 	if !spreadFactorAuthorized {
-		spreadFactor = authorizedSpreadFactors[0]
+		spreadFactor = authorizedSpreadFactors[1]
 	}
 	return false, gammPoolId, baseAsset, spreadFactor, nil
 }

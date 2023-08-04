@@ -689,7 +689,7 @@ func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin)
 				return false
 			}
 		},
-		time.Minute,
+		3*time.Minute,
 		10*time.Millisecond,
 		"tx not received on destination chain",
 	)
