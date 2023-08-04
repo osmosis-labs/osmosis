@@ -1,3 +1,3 @@
-# Summary
+# Introduction
 
-- [Chapter 1](./chapter_1.md)
+- [Core DEX](./core_dex.md)
