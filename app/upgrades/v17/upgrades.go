@@ -159,6 +159,7 @@ func testnetUpgradeHandler(ctx sdk.Context, keepers *keepers.AppKeepers, communi
 // There must be 1 OSMO worth baseAsset in the community pool for this to work.
 func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.AppKeepers, gammPoolId uint64, baseAsset string, spreadFactor sdk.Dec, communityPoolAddress sdk.AccAddress, poolLinks *[]gammmigration.BalancerToConcentratedPoolLink, fullRangeCoinsUsed *sdk.Coins) (clPoolDenom string, clPoolId uint64, err error) {
 	// Create a concentrated liquidity pool for asset pair.
+	ctx.Logger().Info(fmt.Sprintf("Creating CL pool from poolID (%d), baseAsset (%s), spreadFactor (%s), tickSpacing (%d)", gammPoolId, baseAsset, spreadFactor, TickSpacing))
 	clPool, err := keepers.GAMMKeeper.CreateConcentratedPoolFromCFMM(ctx, gammPoolId, baseAsset, spreadFactor, TickSpacing)
 	if err != nil {
 		return "", 0, err
@@ -185,6 +186,7 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 	if err != nil {
 		return "", 0, err
 	}
+	ctx.Logger().Info(fmt.Sprintf("Swapped %s for %s%s from the community pool", osmoIn.String(), respectiveBaseAssetInt.String(), baseAsset))
 
 	respectiveBaseAsset := sdk.NewCoin(baseAsset, respectiveBaseAssetInt)
 
@@ -215,6 +217,7 @@ func authorizeSuperfluidIfEnabled(ctx sdk.Context, keepers *keepers.AppKeepers, 
 	poolShareDenom := fmt.Sprintf("gamm/pool/%d", gammPoolId)
 	_, err = keepers.SuperfluidKeeper.GetSuperfluidAsset(ctx, poolShareDenom)
 	if err == nil {
+		ctx.Logger().Info(fmt.Sprintf("%s is superfluid enabled, enabling %s as a superfluid asset", poolShareDenom, clPoolDenom))
 		superfluidAsset := superfluidtypes.SuperfluidAsset{
 			Denom:     clPoolDenom,
 			AssetType: superfluidtypes.SuperfluidAssetTypeConcentratedShare,
@@ -224,11 +227,13 @@ func authorizeSuperfluidIfEnabled(ctx sdk.Context, keepers *keepers.AppKeepers, 
 			return err
 		}
 	}
+	ctx.Logger().Info(fmt.Sprintf("%s is not superfluid enabled, not enabling %s as a superfluid asset", poolShareDenom, clPoolDenom))
 	return nil
 }
 
 // manuallySetTWAPRecords manually sets the TWAP records for a CL pool. This prevents a panic when the CL pool is first used.
 func manuallySetTWAPRecords(ctx sdk.Context, keepers *keepers.AppKeepers, clPoolId uint64) error {
+	ctx.Logger().Info(fmt.Sprintf("manually setting twap record for newly created CL poolID %d", clPoolId))
 	clPoolTwapRecords, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, clPoolId)
 	if err != nil {
 		return err
