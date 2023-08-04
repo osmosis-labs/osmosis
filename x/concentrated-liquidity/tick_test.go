@@ -8,19 +8,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-<<<<<<< HEAD
 	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
-=======
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types/genesis"
->>>>>>> cf1b8fc9 (Separate out query only CL logic into its own file (#5922))
 )
 
 const validPoolId = 1
