@@ -1038,7 +1038,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedPoolFromCFMM() {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        USDCIBCDenom,
-			expectError:          types.NoDesiredDenomInPoolError{USDCIBCDenom},
+			expectError:          types.NoDesiredDenomInPoolError{DesiredDenom: USDCIBCDenom},
 		},
 		"error: pool with 3 assets, must have two": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin, usdcCoin),
@@ -1127,7 +1127,7 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        USDCIBCDenom,
-			expectError:          types.NoDesiredDenomInPoolError{USDCIBCDenom},
+			expectError:          types.NoDesiredDenomInPoolError{DesiredDenom: USDCIBCDenom},
 		},
 		"error: pool with 3 assets, must have two": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin, usdcCoin),
