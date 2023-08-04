@@ -115,7 +115,7 @@ func CreateUpgradeHandler(
 
 			for _, twapRecord := range clPoolTwapRecords {
 				twapRecord.LastErrorTime = time.Time{}
-				keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord.Asset0Denom, twapRecord.Asset1Denom, twapRecord)
+				keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord)
 			}
 		}
 
@@ -147,6 +147,34 @@ func CreateUpgradeHandler(
 }
 
 func FlipTwapSpotPriceRecords(ctx sdk.Context, poolIds []uint64, keepers *keepers.AppKeepers) error {
+	twapRecordHistoricalTimeIndexed, err := keepers.TwapKeeper.GetAllHistoricalTimeIndexedTWAPs(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, historicalTwapRecord := range twapRecordHistoricalTimeIndexed {
+		oldRecord := historicalTwapRecord
+		historicalTwapRecord.Asset0Denom, historicalTwapRecord.Asset1Denom = oldRecord.Asset1Denom, oldRecord.Asset0Denom
+		historicalTwapRecord.P0LastSpotPrice, historicalTwapRecord.P1LastSpotPrice = oldRecord.P1LastSpotPrice, oldRecord.P0LastSpotPrice
+
+		keepers.TwapKeeper.StoreHistoricalTWAP(ctx, historicalTwapRecord)
+		keepers.TwapKeeper.DeleteHistoricalRecord(ctx, oldRecord)
+	}
+
+	twapRecordHistoricalPoolIndexed, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPs(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, historicalTwapRecord := range twapRecordHistoricalPoolIndexed {
+		oldRecord := historicalTwapRecord
+		historicalTwapRecord.Asset0Denom, historicalTwapRecord.Asset1Denom = oldRecord.Asset1Denom, oldRecord.Asset0Denom
+		historicalTwapRecord.P0LastSpotPrice, historicalTwapRecord.P1LastSpotPrice = oldRecord.P1LastSpotPrice, oldRecord.P0LastSpotPrice
+
+		keepers.TwapKeeper.StoreHistoricalTWAP(ctx, historicalTwapRecord)
+		keepers.TwapKeeper.DeleteHistoricalRecord(ctx, oldRecord)
+	}
+
 	for _, poolId := range poolIds {
 		// check that this is a cl pool
 		_, err := keepers.ConcentratedLiquidityKeeper.GetConcentratedPoolById(ctx, poolId)
@@ -162,18 +190,15 @@ func FlipTwapSpotPriceRecords(ctx sdk.Context, poolIds []uint64, keepers *keeper
 
 		for _, twapRecord := range clPoolTwapRecords {
 			twapRecord.LastErrorTime = time.Time{}
-			oldAsset0Denom := twapRecord.Asset0Denom
-			oldAsset1Denom := twapRecord.Asset1Denom
-			oldSpotPrice0 := twapRecord.P0LastSpotPrice
-			oldSpotPrice1 := twapRecord.P1LastSpotPrice
+			oldRecord := twapRecord
 
-			twapRecord.Asset0Denom = oldAsset1Denom
-			twapRecord.Asset1Denom = oldAsset0Denom
-			twapRecord.P0LastSpotPrice = oldSpotPrice1
-			twapRecord.P1LastSpotPrice = oldSpotPrice0
+			twapRecord.Asset0Denom, twapRecord.Asset1Denom = oldRecord.Asset1Denom, oldRecord.Asset0Denom
+			twapRecord.P0LastSpotPrice, twapRecord.P1LastSpotPrice = oldRecord.P1LastSpotPrice, oldRecord.P0LastSpotPrice
 
-			keepers.TwapKeeper.StoreNewRecord(ctx, oldAsset0Denom, oldAsset1Denom, twapRecord)
+			keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord)
+			keepers.TwapKeeper.DeleteOldRecord(ctx, oldRecord)
 		}
 	}
+
 	return nil
 }

@@ -93,7 +93,7 @@ func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 		// that there is a swap against this pool in this same block.
 		// furthermore, this protects against an edge case where a pool is created
 		// during EndBlock, after twapkeeper's endblock.
-		k.StoreNewRecord(ctx, record.Asset0Denom, record.Asset1Denom, record)
+		k.StoreNewRecord(ctx, record)
 	}
 	k.trackChangedPool(ctx, poolId)
 	return err
@@ -148,7 +148,7 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 		if err != nil {
 			return err
 		}
-		k.StoreNewRecord(ctx, newRecord.Asset0Denom, newRecord.Asset1Denom, newRecord)
+		k.StoreNewRecord(ctx, newRecord)
 	}
 	return nil
 }

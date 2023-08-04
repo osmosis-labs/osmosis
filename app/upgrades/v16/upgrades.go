@@ -185,7 +185,7 @@ func CreateUpgradeHandler(
 
 		for _, twapRecord := range clPoolTwapRecords {
 			twapRecord.LastErrorTime = time.Time{}
-			keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord.Asset0Denom, twapRecord.Asset1Denom, twapRecord)
+			keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord)
 		}
 
 		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)

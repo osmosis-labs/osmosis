@@ -152,7 +152,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					sdk.OneDec().MulInt64(3),
 					sdk.ZeroDec())
 
-				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", t1)
+				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t1)
 
 				clPoolTwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, poolId.GetId())
 				suite.Require().NoError(err)

@@ -319,7 +319,7 @@ func (s *TestSuite) setupDefaultPool() (poolId uint64, denomA, denomB string) {
 // given records.
 func (s *TestSuite) preSetRecords(records []types.TwapRecord) {
 	for _, record := range records {
-		s.twapkeeper.StoreNewRecord(s.Ctx, record.Asset0Denom, record.Asset1Denom, record)
+		s.twapkeeper.StoreNewRecord(s.Ctx, record)
 	}
 }
 

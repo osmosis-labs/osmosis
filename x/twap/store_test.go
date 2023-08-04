@@ -140,7 +140,7 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 		s.Run(name, func() {
 			s.SetupTest()
 			for _, record := range test.recordsToSet {
-				s.twapkeeper.StoreNewRecord(s.Ctx, record.Asset0Denom, record.Asset1Denom, record)
+				s.twapkeeper.StoreNewRecord(s.Ctx, record)
 			}
 			actualRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, test.poolId)
 			s.Require().NoError(err)
@@ -233,7 +233,7 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		s.Run(name, func() {
 			s.SetupTest()
 			for _, record := range test.recordsToSet {
-				s.twapkeeper.StoreNewRecord(s.Ctx, record.Asset0Denom, record.Asset1Denom, record)
+				s.twapkeeper.StoreNewRecord(s.Ctx, record)
 			}
 			record, err := s.twapkeeper.GetRecordAtOrBeforeTime(
 				s.Ctx,
@@ -569,7 +569,7 @@ func (s *TestSuite) TestAccumulatorOverflow() {
 					P0ArithmeticTwapAccumulator: accumulatorVal,
 				}
 
-				s.twapkeeper.StoreNewRecord(s.Ctx, twapRecordToStore.Asset0Denom, twapRecordToStore.Asset1Denom, twapRecordToStore)
+				s.twapkeeper.StoreNewRecord(s.Ctx, twapRecordToStore)
 			}
 		})
 	}

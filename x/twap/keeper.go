@@ -65,7 +65,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	})
 
 	for _, twap := range genState.Twaps {
-		k.StoreNewRecord(ctx, twap.Asset0Denom, twap.Asset1Denom, twap)
+		k.StoreNewRecord(ctx, twap)
 	}
 }
 
@@ -73,7 +73,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	// These are ordered in increasing order, guaranteed by the iterator
 	// that is prefixed by time.
-	twapRecords, err := k.getAllHistoricalTimeIndexedTWAPs(ctx)
+	twapRecords, err := k.GetAllHistoricalTimeIndexedTWAPs(ctx)
 	if err != nil {
 		panic(err)
 	}

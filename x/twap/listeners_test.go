@@ -253,7 +253,7 @@ func (s *TestSuite) TestAfterEpochEnd() {
 	s.Ctx = s.Ctx.WithBlockTime(tPlus10sp5Record.Time)
 	newestRecord := tPlus10sp5Record
 
-	s.twapkeeper.StoreNewRecord(s.Ctx, newestRecord.Asset0Denom, newestRecord.Asset1Denom, newestRecord)
+	s.twapkeeper.StoreNewRecord(s.Ctx, newestRecord)
 
 	twapsBeforeEpoch, err := s.twapkeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
 	s.Require().NoError(err)

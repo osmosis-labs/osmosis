@@ -432,7 +432,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
-			s.twapkeeper.StoreNewRecord(s.Ctx, test.testDenom0, test.testDenom1, test.recordsToPreSet)
+			s.twapkeeper.StoreNewRecord(s.Ctx, test.recordsToPreSet)
 
 			interpolatedRecord, err := s.twapkeeper.GetInterpolatedRecord(s.Ctx, test.testPoolId, test.testDenom0, test.testDenom1, test.testTime)
 			if test.expectedErr != nil {
@@ -534,7 +534,7 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 		s.Run(name, func() {
 			s.SetupTest()
 			for i := range test.recordsToPreSet {
-				s.twapkeeper.StoreNewRecord(s.Ctx, test.recordsToPreSet[i].Asset0Denom, test.recordsToPreSet[i].Asset1Denom, test.recordsToPreSet[i])
+				s.twapkeeper.StoreNewRecord(s.Ctx, test.recordsToPreSet[i])
 
 				interpolatedRecord, err := s.twapkeeper.GetInterpolatedRecord(s.Ctx, baseRecord[i].PoolId, baseRecord[i].Asset0Denom, baseRecord[i].Asset1Denom, test.testTime)
 				if test.expectedErr != nil {
