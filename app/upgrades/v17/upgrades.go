@@ -22,6 +22,8 @@ import (
 
 const (
 	mainnetChainID     = "osmosis-1"
+	e2eChainA          = "osmo-test-a"
+	e2eChainB          = "osmo-test-b"
 	balancerWeight     = 1
 	stableWeight       = 4
 	concentratedWeight = 300
@@ -47,13 +49,13 @@ func CreateUpgradeHandler(
 
 		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
 
-		if ctx.ChainID() == mainnetChainID {
+		if ctx.ChainID() == mainnetChainID || ctx.ChainID() == e2eChainA || ctx.ChainID() == e2eChainB {
 			// Upgrades specific balancer pools to concentrated liquidity pools and links them to their CL equivalent.
-			ctx.Logger().Info("Chain ID is %s, running mainnet upgrade handler", ctx.ChainID())
+			ctx.Logger().Info(fmt.Sprintf("Chain ID is %s, running mainnet upgrade handler", ctx.ChainID()))
 			err = mainnetUpgradeHandler(ctx, keepers, communityPoolAddress, &poolLinks, &fullRangeCoinsUsed)
 		} else {
 			// Upgrades all existing balancer pools to concentrated liquidity pools and links them to their CL equivalent.
-			ctx.Logger().Info("Chain ID is %s, running testnet upgrade handler", ctx.ChainID())
+			ctx.Logger().Info(fmt.Sprintf("Chain ID is %s, running testnet upgrade handler", ctx.ChainID()))
 			err = testnetUpgradeHandler(ctx, keepers, communityPoolAddress, &poolLinks, &fullRangeCoinsUsed)
 		}
 		if err != nil {
