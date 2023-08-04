@@ -156,7 +156,6 @@ func testnetUpgradeHandler(ctx sdk.Context, keepers *keepers.AppKeepers, communi
 }
 
 // createCLPoolWithCommunityPoolPosition creates a CL pool for a given balancer pool and adds a full range position with the community pool.
-// There must be 1 OSMO worth baseAsset in the community pool for this to work.
 func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.AppKeepers, gammPoolId uint64, baseAsset string, spreadFactor sdk.Dec, communityPoolAddress sdk.AccAddress, poolLinks *[]gammmigration.BalancerToConcentratedPoolLink, fullRangeCoinsUsed *sdk.Coins) (clPoolDenom string, clPoolId uint64, err error) {
 	// Create a concentrated liquidity pool for asset pair.
 	ctx.Logger().Info(fmt.Sprintf("Creating CL pool from poolID (%d), baseAsset (%s), spreadFactor (%s), tickSpacing (%d)", gammPoolId, baseAsset, spreadFactor, TickSpacing))
