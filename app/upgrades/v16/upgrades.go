@@ -45,6 +45,7 @@ var (
 	ATOMIBCDenom = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
 	DAIIBCDenom  = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
 	USDCIBCDenom = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
+	SpreadFactor = sdk.MustNewDecFromStr("0.002")
 
 	// authorized_quote_denoms quote assets that can be used as token1
 	// when creating a pool. We limit the quote assets to a small set
@@ -123,7 +124,7 @@ func CreateUpgradeHandler(
 
 		// Create a concentrated liquidity pool for DAI/OSMO.
 		// Link the DAI/OSMO balancer pool to the cl pool.
-		clPool, err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, DaiOsmoPoolId, DesiredDenom0, keepers)
+		clPool, err := keepers.GAMMKeeper.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, DaiOsmoPoolId, DesiredDenom0, SpreadFactor, TickSpacing)
 		if err != nil {
 			return nil, err
 		}

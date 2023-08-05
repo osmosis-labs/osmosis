@@ -17,7 +17,7 @@ enabled = true
 refresh = true
 misbehaviour = true
 [mode.connections]
-enabled = false
+enabled = true
 [mode.channels]
 enabled = true
 [mode.packets]

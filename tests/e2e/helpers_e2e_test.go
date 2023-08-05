@@ -107,6 +107,12 @@ func (s *IntegrationTestSuite) validateCLPosition(position model.Position, poolI
 	s.Require().Equal(position.UpperTick, upperTick)
 }
 
+func (s *IntegrationTestSuite) CallCheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.CheckBalance(node, addr, denom, amount)
+}
+
 // CheckBalance Checks the balance of an address
 func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
 	// check the balance of the contract
@@ -125,7 +131,7 @@ func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom 
 		}
 		return false
 	},
-		2*time.Minute,
+		1*time.Minute,
 		10*time.Millisecond,
 	)
 }
