@@ -192,7 +192,9 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 	})
 
 	// Get community pool balance before swap and position creation
-	commPoolBalancePre := keepers.BankKeeper.GetAllBalances(ctx, communityPoolAddress)
+	commPoolBalanceBaseAssetPre := keepers.BankKeeper.GetBalance(ctx, communityPoolAddress, baseAsset)
+	commPoolBalanceQuoteAssetPre := keepers.BankKeeper.GetBalance(ctx, communityPoolAddress, QuoteAsset)
+	commPoolBalancePre := sdk.NewCoins(commPoolBalanceBaseAssetPre, commPoolBalanceQuoteAssetPre)
 
 	// Swap 0.1 OSMO for baseAsset from the community pool.
 	respectiveBaseAssetInt, err := keepers.GAMMKeeper.SwapExactAmountIn(ctx, communityPoolAddress, linkedClassicPool, osmoIn, baseAsset, sdk.ZeroInt(), linkedClassicPool.GetSpreadFactor(ctx))
@@ -211,7 +213,9 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 	}
 
 	// Get community pool balance after swap and position creation
-	commPoolBalancePost := keepers.BankKeeper.GetAllBalances(ctx, communityPoolAddress)
+	commPoolBalanceBaseAssetPost := keepers.BankKeeper.GetBalance(ctx, communityPoolAddress, baseAsset)
+	commPoolBalanceQuoteAssetPost := keepers.BankKeeper.GetBalance(ctx, communityPoolAddress, QuoteAsset)
+	commPoolBalancePost := sdk.NewCoins(commPoolBalanceBaseAssetPost, commPoolBalanceQuoteAssetPost)
 
 	// While we can be fairly certain the diff between these two is 0.2 OSMO, if for whatever reason
 	// some baseAsset dust remains in the community pool and we don't account for it, when updating the
