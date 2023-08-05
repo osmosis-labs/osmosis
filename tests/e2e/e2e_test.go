@@ -937,10 +937,10 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 	chainBNode, err := chainB.GetNodeAtIndex(1)
 	s.Require().NoError(err)
 
-	chainANode.SendIBC(chainB, chainB.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
-	chainBNode.SendIBC(chainA, chainA.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
-	chainANode.SendIBC(chainB, chainB.NodeConfigs[1].PublicAddress, initialization.StakeToken)
-	chainBNode.SendIBC(chainA, chainA.NodeConfigs[1].PublicAddress, initialization.StakeToken)
+	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
+	chainBNode.SendIBC(chainB, chainA, chainA.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
+	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[1].PublicAddress, initialization.StakeToken)
+	chainBNode.SendIBC(chainB, chainA, chainA.NodeConfigs[1].PublicAddress, initialization.StakeToken)
 
 	chainANode.CreateBalancerPool("ibcDenomPool.json", initialization.ValidatorWalletName)
 }
@@ -1152,7 +1152,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 
 	// Sending >1%
 	fmt.Println("Sending >1%")
-	chainANode.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
+	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
 	contract, err := chainANode.SetupRateLimiting(paths, chainA.NodeConfigs[1].PublicAddress, chainA)
 	s.Require().NoError(err)
@@ -1169,7 +1169,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 
 	// Sending <1%. Should work
 	fmt.Println("Sending <1%. Should work")
-	chainANode.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
+	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
 	// Sending >1%. Should fail
 	fmt.Println("Sending >1%. Should fail")
 	chainANode.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[1].PublicAddress, fmt.Sprintf("%duosmo", int(over)))

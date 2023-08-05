@@ -227,8 +227,8 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) int {
 func (n *NodeConfig) SendIBCTransfer(dstChain *Config, from, recipient, memo string, token sdk.Coin) {
 	n.LogActionF("IBC sending %s from %s to %s. memo: %s", token.Amount.String(), from, recipient, memo)
 
-	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", n.chainId, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000", "--memo", memo}
-	_, _, err := n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
+	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, token.String(), fmt.Sprintf("--from=%s", from), "--memo", memo}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
 	cmd = []string{"hermes", "clear", "packets", "--chain", dstChain.Id, "--port", "transfer", "--channel", "channel-0"}
@@ -246,7 +246,6 @@ func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {
 	n.LogActionF("IBC sending %s from %s to %s", amount, from, recipient)
 
 	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from)}
-
 	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "rate limit exceeded")
 	require.NoError(n.t, err)
 
@@ -607,10 +606,13 @@ func ParseEvent(responseJson map[string]interface{}, field string) (string, erro
 	return "", fmt.Errorf("%s field not found in response", field)
 }
 
-func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
+func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token sdk.Coin) {
 	n.t.Logf("IBC sending %s from %s to %s (%s)", token, n.chainId, dstChain.Id, recipient)
 
 	dstNode, err := dstChain.GetDefaultNode()
+	require.NoError(n.t, err)
+
+	srcNode, err := srcChain.GetDefaultNode()
 	require.NoError(n.t, err)
 
 	// removes the fee token from balances for calculating the difference in other tokens
@@ -632,9 +634,9 @@ func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin)
 	require.NoError(n.t, err)
 	fmt.Println("balancesDstPre with no fee removed: ", balancesDstPreWithTxFeeBalance)
 	balancesDstPre := removeFeeTokenFromBalance(balancesDstPreWithTxFeeBalance)
-	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", n.chainId, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
-	_, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
-	require.NoError(n.t, err)
+
+	validatorAddr := srcNode.GetWallet(initialization.ValidatorWalletName)
+	n.SendIBCTransfer(dstChain, validatorAddr, recipient, "", token)
 
 	require.Eventually(
 		n.t,
@@ -650,7 +652,11 @@ func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin)
 				resPre := token.Amount
 				resPost := tokenPost.Sub(tokenPre)
 				return resPost.Uint64() == resPre.Uint64()
+			} else if ibcCoin.Len() == 0 {
+				fmt.Println("no ibc coins found in receiver balances, retrying")
+				return false
 			} else {
+				fmt.Println("more than one ibc coin found in receiver balances, likely a concurrency bug")
 				return false
 			}
 		},
