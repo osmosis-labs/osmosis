@@ -270,8 +270,8 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 		"valid concentrated liquidity pool with position": {
 			preCreatePoolType:    types.Concentrated,
 			poolId:               1,
-			quoteAssetDenom:      "eth",
-			baseAssetDenom:       "usdc",
+			quoteAssetDenom:      "usdc",
+			baseAssetDenom:       "eth",
 			setPositionForCLPool: true,
 			// We generate this value using the scripts in x/concentrated-liquidity/python
 			// Exact output: 5000.000000000000000129480272834995458481

@@ -43,6 +43,8 @@ const (
 	FlagScalingFactorControllerAddress = "scaling-factor-controller-address"
 
 	FlagMigrationRecords = "migration-records"
+
+	FlagPoolRecords = "pool-records"
 )
 
 type createBalancerPoolInputs struct {

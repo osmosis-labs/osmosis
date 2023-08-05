@@ -335,35 +335,6 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			},
 			expectPass: true,
 		},
-		{
-			name: "Concentrated Liquidity - Many Ticks Run Out of Gas While Rebalacing, Ensure Doesn't Fail User Tx",
-			params: param{
-				trades: []types.Trade{
-					{
-						Pool:     51,
-						TokenOut: "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
-						TokenIn:  "uosmo",
-					},
-				},
-				expectedNumOfTrades: sdk.NewInt(5),
-				expectedProfits: []sdk.Coin{
-					{
-						Denom:  "Atom",
-						Amount: sdk.NewInt(15_767_231),
-					},
-					{
-						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
-						Amount: sdk.NewInt(218_149_058),
-					},
-					{
-						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(56_609_900),
-					},
-				},
-				expectedPoolPoints: 37,
-			},
-			expectPass: true,
-		},
 	}
 
 	// Ensure that the max points per tx is enough for the test suite

@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### State Breaking
 
 * [#5532](https://github.com/osmosis-labs/osmosis/pull/5532) fix: Fix x/tokenfactory genesis import denoms reset x/bank existing denom metadata
+* [#5863](https://github.com/osmosis-labs/osmosis/pull/5863) fix: swap base/quote asset for CL spot price query
 * [#5869](https://github.com/osmosis-labs/osmosis/pull/5869) fix negative interval accumulation with spread rewards
 * [#5872](https://github.com/osmosis-labs/osmosis/pull/5872) fix negative interval accumulation with incentive rewards
 * [#5883](https://github.com/osmosis-labs/osmosis/pull/5883) feat: Uninitialize empty ticks
@@ -57,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5831](https://github.com/osmosis-labs/osmosis/pull/5831) Fix superfluid_delegations query
 * [#5835](https://github.com/osmosis-labs/osmosis/pull/5835) Fix println's for "amountZeroInRemainingBigDec before fee" making it into production
 * [#5841] (https://github.com/osmosis-labs/osmosis/pull/5841) Fix protorev's out of gas erroring of the user's transcation.
+* [#5930] (https://github.com/osmosis-labs/osmosis/pull/5930) Updating Protorev Binary Search Range Logic with CL Pools
 
 ### Misc Improvements
 
@@ -69,6 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5870] (https://github.com/osmosis-labs/osmosis/pull/5870) Remove v14/ separator in protorev rest endpoints
 * [#5923] (https://github.com/osmosis-labs/osmosis/pull/5923) CL: Lower gas for initializing ticks
 * [#5927] (https://github.com/osmosis-labs/osmosis/pull/5927) Add gas metering to x/tokenfactory trackBeforeSend hook
+* [#5890](https://github.com/osmosis-labs/osmosis/pull/5890) feat: CreateCLPool & LinkCFMMtoCL pool into one gov-prop
+* [#5964](https://github.com/osmosis-labs/osmosis/pull/5964) fix e2e test concurrency bugs
 
 ### Minor improvements & Bug Fixes
 

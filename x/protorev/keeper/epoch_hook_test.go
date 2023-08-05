@@ -152,8 +152,8 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			// There are 2 pools with epochTwo and uosmo as denoms,
 			// One in the GAMM module and one in the Concentrated Liquidity module.
 			// pool with ID 48 has a liquidity value of 1,000,000
-			// pool with ID 49 has a liquidity value of 2,000,000
-			// pool with ID 49 should be returned as the highest liquidity pool
+			// pool with ID 50 has a liquidity value of 2,000,000
+			// pool with ID 50 should be returned as the highest liquidity pool
 			// We provide epochTwo as the input base denom, to test the method chooses the correct pool
 			// across the GAMM and Concentrated Liquidity modules
 			name: "Get highest liquidity pools for one GAMM pool and one Concentrated Liquidity pool",
@@ -162,7 +162,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			},
 			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochTwo": {
-					"uosmo": {Liquidity: sdk.Int(sdk.NewUintFromString("999999000000000001000000000000000000")), PoolId: 49},
+					"uosmo": {Liquidity: sdk.Int(sdk.NewUintFromString("999999000000000001000000000000000000")), PoolId: 50},
 				},
 			},
 		},
