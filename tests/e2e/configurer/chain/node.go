@@ -47,35 +47,63 @@ func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *init
 // The node configuration must be already added to the chain config prior to calling this
 // method.
 func (n *NodeConfig) Run() error {
-	n.t.Logf("starting node container: %s", n.Name)
-	resource, err := n.containerManager.RunNodeResource(n.chainId, n.Name, n.ConfigDir)
-	if err != nil {
-		return err
-	}
+	maxRetries := 3
+	currentRetry := 0
 
-	hostPort := resource.GetHostPort("26657/tcp")
-	rpcClient, err := rpchttp.New("tcp://"+hostPort, "/websocket")
-	if err != nil {
-		return err
-	}
+	for currentRetry < maxRetries {
+		n.t.Logf("starting node container: %s", n.Name)
+		resource, err := n.containerManager.RunNodeResource(n.chainId, n.Name, n.ConfigDir)
+		if err != nil {
+			return err
+		}
 
-	n.rpcClient = rpcClient
+		hostPort := resource.GetHostPort("26657/tcp")
+		rpcClient, err := rpchttp.New("tcp://"+hostPort, "/websocket")
+		if err != nil {
+			return err
+		}
 
-	require.Eventually(
-		n.t,
-		func() bool {
-			// This fails if unsuccessful.
-			_, err := n.QueryCurrentHeight()
-			if err != nil {
-				return false
+		n.rpcClient = rpcClient
+
+		success := false
+		timeout := time.After(time.Second * 20)
+		ticker := time.NewTicker(10 * time.Millisecond)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-timeout:
+				n.t.Logf("Osmosis node failed to produce blocks")
+				break
+			case <-ticker.C:
+				_, err := n.QueryCurrentHeight()
+				if err == nil {
+					n.t.Logf("started node container: %s", n.Name)
+					success = true
+					break
+				}
 			}
-			n.t.Logf("started node container: %s", n.Name)
-			return true
-		},
-		time.Minute,
-		10*time.Millisecond,
-		"Osmosis node failed to produce blocks",
-	)
+
+			if success {
+				break
+			}
+		}
+
+		if success {
+			break
+		} else {
+			n.t.Logf("failed to start node container, retrying... (%d/%d)", currentRetry+1, maxRetries)
+			err := n.containerManager.RemoveNodeResource(n.Name)
+			if err != nil {
+				return err
+			}
+			currentRetry++
+		}
+	}
+
+	if currentRetry >= maxRetries {
+		return fmt.Errorf("failed to start node container after %d retries", maxRetries)
+	}
 
 	if err := n.extractOperatorAddressIfValidator(); err != nil {
 		return err

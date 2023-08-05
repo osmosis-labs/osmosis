@@ -314,7 +314,7 @@ IterateRoutes iterates through a list of routes, determining the route and input
 
 ### FindMaxProfitForRoute
 
-This will take in a route and determine the optimal amount to swap in to maximize profits, given the reserves of all of the pools that are swapped against in the route.
+This will take in a route and determine the optimal amount to swap in to maximize profits, given the reserves of all of the pools that are swapped against in the route. The bounds of the binary search are dynamic and update per route (see `UpdateSearchRangeIfNeeded`) based on how computationally expensive (in terms of gas) swapping can be on that route. For instance, moving across several ticks on a concentrated pool is relatively expensive, so the bounds of the binary search with a route that includes that pool type may be smaller than a route that does not include that pool type.
 
 ### ExecuteTrade
 

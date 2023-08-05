@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -49,6 +50,7 @@ type Manager struct {
 	pool              *dockertest.Pool
 	network           *dockertest.Network
 	resources         map[string]*dockertest.Resource
+	resourcesMutex    sync.RWMutex
 	isDebugLogEnabled bool
 }
 
@@ -297,7 +299,9 @@ func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir st
 		return nil, err
 	}
 
+	m.resourcesMutex.Lock()
 	m.resources[containerName] = resource
+	m.resourcesMutex.Unlock()
 
 	return resource, nil
 }
