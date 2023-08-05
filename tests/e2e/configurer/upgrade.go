@@ -332,10 +332,9 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 			return err
 		}
 		chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
-		node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-		chainConfig.LatestProposalNumber += 1
-		node.DepositProposal(chainConfig.LatestProposalNumber, false)
-		propNumber := chainConfig.LatestProposalNumber
+		propNumber := node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+
+		node.DepositProposal(propNumber, false)
 
 		var wg sync.WaitGroup
 

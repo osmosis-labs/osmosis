@@ -26,11 +26,10 @@ type Config struct {
 	VotingPeriod          float32
 	ExpeditedVotingPeriod float32
 	// upgrade proposal height for chain.
-	UpgradePropHeight    int64
-	LatestProposalNumber int
-	LatestLockNumber     int
-	NodeConfigs          []*NodeConfig
-	NodeTempConfigs      []*NodeConfig
+	UpgradePropHeight int64
+
+	NodeConfigs     []*NodeConfig
+	NodeTempConfigs []*NodeConfig
 
 	LatestCodeId int
 
@@ -263,7 +262,6 @@ func (c *Config) SubmitCreateConcentratedPoolProposal() (uint64, error) {
 	}
 
 	propNumber := node.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-	c.LatestProposalNumber += 1
 
 	node.DepositProposal(propNumber, false)
 

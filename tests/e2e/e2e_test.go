@@ -328,8 +328,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	}
 
 	// Create concentrated liquidity pool when permisionless pool creation is enabled.
-	poolID, err := chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
-	s.Require().NoError(err)
+	poolID := chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
 
 	concentratedPool := s.updatedConcentratedPool(chainANode, poolID)
 
@@ -834,14 +833,11 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	newTickSpacing := cltypes.AuthorizedTickSpacing[indexOfCurrentTickSpacing-1]
 
 	// Run the tick spacing reduction proposal
-	chainANode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
-	// TODO: We should remove every instance of prop number inc and just parse from tx response
-	chainA.LatestProposalNumber += 1
-	latestPropNumber := chainA.LatestProposalNumber
+	propNumber := chainANode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
 
-	chainANode.DepositProposal(latestPropNumber, true)
+	chainANode.DepositProposal(propNumber, true)
 	totalTimeChan := make(chan time.Duration, 1)
-	go chainANode.QueryPropStatusTimed(latestPropNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
+	go chainANode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
 	var wg sync.WaitGroup
 
 	// TODO: create a helper function for all these go routine yes vote calls.
@@ -849,7 +845,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 		wg.Add(1)
 		go func(nodeConfig *chain.NodeConfig) {
 			defer wg.Done()
-			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
+			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
 		}(n)
 	}
 
@@ -970,33 +966,30 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	superfluidVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
 	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[2].PublicAddress, superfluidVotingWallet)
 	lockId := chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
-	chainA.LatestLockNumber += 1
 	chainANode.SuperfluidDelegate(lockId, chainA.NodeConfigs[2].OperatorAddress, superfluidVotingWallet)
 
 	// create a text prop, deposit and vote yes
-	chainANode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
-	chainA.LatestProposalNumber += 1
+	propNumber := chainANode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
+	chainANode.DepositProposal(propNumber, false)
 
-	chainANode.DepositProposal(chainA.LatestProposalNumber, false)
-	latestPropNumber := chainA.LatestProposalNumber
 	var wg sync.WaitGroup
 
 	for _, n := range chainA.NodeConfigs {
 		wg.Add(1)
 		go func(nodeConfig *chain.NodeConfig) {
 			defer wg.Done()
-			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
+			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
 		}(n)
 	}
 
 	wg.Wait()
 
 	// set delegator vote to no
-	chainANode.VoteNoProposal(superfluidVotingWallet, latestPropNumber)
+	chainANode.VoteNoProposal(superfluidVotingWallet, propNumber)
 
 	s.Eventually(
 		func() bool {
-			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := chainANode.QueryPropTally(latestPropNumber)
+			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := chainANode.QueryPropTally(propNumber)
 			if err != nil {
 				return false
 			}
@@ -1009,7 +1002,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 		10*time.Millisecond,
 		"Osmosis node failed to retrieve prop tally",
 	)
-	noTotal, _, _, _, _ := chainANode.QueryPropTally(latestPropNumber)
+	noTotal, _, _, _, _ := chainANode.QueryPropTally(propNumber)
 	noTotalFinal, err := strconv.Atoi(noTotal.String())
 	s.NoError(err)
 
@@ -1627,12 +1620,11 @@ func (s *IntegrationTestSuite) StateSync() {
 func (s *IntegrationTestSuite) ExpeditedProposals() {
 	chainA, chainANode := s.getChainACfgs()
 
-	latestPropNumber := chainANode.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
-	chainA.LatestProposalNumber += 1
+	propNumber := chainANode.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
 
-	chainANode.DepositProposal(latestPropNumber, true)
+	chainANode.DepositProposal(propNumber, true)
 	totalTimeChan := make(chan time.Duration, 1)
-	go chainANode.QueryPropStatusTimed(latestPropNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
+	go chainANode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
 
 	var wg sync.WaitGroup
 
@@ -1640,7 +1632,7 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 		wg.Add(1)
 		go func(nodeConfig *chain.NodeConfig) {
 			defer wg.Done()
-			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, latestPropNumber)
+			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
 		}(n)
 	}
 
