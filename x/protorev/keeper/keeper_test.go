@@ -888,6 +888,17 @@ func (s *KeeperTestSuite) setUpPools() {
 			},
 			scalingFactors: []uint64{1, 1},
 		},
+		{ // Pool 49 - Used for CL testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)),
+				sdk.NewCoin("epochTwo", sdk.NewInt(8_000_000_000_000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(0, 2),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1},
+		},
 	}
 
 	for _, pool := range s.stableSwapPools {
@@ -895,12 +906,28 @@ func (s *KeeperTestSuite) setUpPools() {
 	}
 
 	// Create a concentrated liquidity pool for epoch_hook testing
-	// Pool 49
+	// Pool 50
 	s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("epochTwo", "uosmo")
 
 	// Create a cosmwasm pool for testing
-	// Pool 50
+	// Pool 51
 	s.PrepareCosmWasmPool()
+
+	// Create a concentrated liquidity pool for range testing
+	// Pool 52
+	// Create the CL pool
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "epochTwo", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
+	fundCoins := sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(10_000_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)))
+	s.FundAcc(s.TestAccs[0], fundCoins)
+	s.CreateFullRangePosition(clPool, fundCoins)
+
+	// Create a concentrated liquidity pool for range testing
+	// Pool 53
+	// Create the CL pool
+	clPool = s.PrepareCustomConcentratedPool(s.TestAccs[0], "epochTwo", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
+	fundCoins = sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(2_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)))
+	s.FundAcc(s.TestAccs[0], fundCoins)
+	s.CreateFullRangePosition(clPool, fundCoins)
 
 	// Set all of the pool info into the stores
 	err := s.App.ProtoRevKeeper.UpdatePools(s.Ctx)

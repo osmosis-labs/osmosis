@@ -349,13 +349,13 @@ func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 		},
 		{
 			description:             "Valid route with a cosmwasm pool",
-			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 50, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}},
+			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 51, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}},
 			expectedRoutePoolPoints: 8,
 			expectedPass:            true,
 		},
 		{
 			description:             "Valid route with cw pool, balancer, stable swap and cl pool",
-			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 50, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 49, TokenOutDenom: ""}},
+			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 51, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 50, TokenOutDenom: ""}},
 			expectedRoutePoolPoints: 10,
 			expectedPass:            true,
 		},

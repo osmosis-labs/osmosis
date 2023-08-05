@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5831](https://github.com/osmosis-labs/osmosis/pull/5831) Fix superfluid_delegations query
 * [#5835](https://github.com/osmosis-labs/osmosis/pull/5835) Fix println's for "amountZeroInRemainingBigDec before fee" making it into production
 * [#5841](https://github.com/osmosis-labs/osmosis/pull/5841) Fix protorev's out of gas erroring of the user's transcation.
+* [#5930](https://github.com/osmosis-labs/osmosis/pull/5930) Updating Protorev Binary Search Range Logic with CL Pools
 * [#5950](https://github.com/osmosis-labs/osmosis/pull/5950) fix: spot price for cosmwasm pool types
 
 ### Misc Improvements
@@ -70,6 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5870] (https://github.com/osmosis-labs/osmosis/pull/5870) Remove v14/ separator in protorev rest endpoints
 * [#5923] (https://github.com/osmosis-labs/osmosis/pull/5923) CL: Lower gas for initializing ticks
 * [#5927] (https://github.com/osmosis-labs/osmosis/pull/5927) Add gas metering to x/tokenfactory trackBeforeSend hook
+* [#5890](https://github.com/osmosis-labs/osmosis/pull/5890) feat: CreateCLPool & LinkCFMMtoCL pool into one gov-prop
+* [#5964](https://github.com/osmosis-labs/osmosis/pull/5964) fix e2e test concurrency bugs
 
 ### Minor improvements & Bug Fixes
 

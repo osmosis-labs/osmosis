@@ -3,6 +3,7 @@ package e2e
 import (
 	"os"
 	"strconv"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -34,6 +35,7 @@ type IntegrationTestSuite struct {
 	skipUpgrade   bool
 	skipIBC       bool
 	skipStateSync bool
+	mutex         sync.Mutex
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
