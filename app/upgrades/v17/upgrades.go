@@ -1,9 +1,11 @@
 package v17
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -11,6 +13,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
 	poolManagerTypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
@@ -29,6 +32,8 @@ const (
 	concentratedWeight = 300
 	cosmwasmWeight     = 300
 )
+
+var notEnoughLiquidityForSwapErr = errorsmod.Wrapf(gammtypes.ErrInvalidMathApprox, "token amount must be positive")
 
 func CreateUpgradeHandler(
 	mm *module.Manager,
@@ -138,7 +143,9 @@ func testnetUpgradeHandler(ctx sdk.Context, keepers *keepers.AppKeepers, communi
 		}
 
 		clPoolDenom, clPoolId, err := createCLPoolWithCommunityPoolPosition(ctx, keepers, gammPoolId, baseAsset, spreadFactor, communityPoolAddress, poolLinks, fullRangeCoinsUsed)
-		if err != nil {
+		if errors.Is(err, notEnoughLiquidityForSwapErr) {
+			continue
+		} else if err != nil {
 			return err
 		}
 
@@ -157,6 +164,18 @@ func testnetUpgradeHandler(ctx sdk.Context, keepers *keepers.AppKeepers, communi
 
 // createCLPoolWithCommunityPoolPosition creates a CL pool for a given balancer pool and adds a full range position with the community pool.
 func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.AppKeepers, gammPoolId uint64, baseAsset string, spreadFactor sdk.Dec, communityPoolAddress sdk.AccAddress, poolLinks *[]gammmigration.BalancerToConcentratedPoolLink, fullRangeCoinsUsed *sdk.Coins) (clPoolDenom string, clPoolId uint64, err error) {
+	// Check if classic pool has enough liquidity to support a 0.1 OSMO swap before creating a CL pool.
+	// If not, skip the pool.
+	osmoIn := sdk.NewCoin(QuoteAsset, sdk.NewInt(100000))
+	linkedClassicPool, err := keepers.PoolManagerKeeper.GetPool(ctx, gammPoolId)
+	if err != nil {
+		return "", 0, err
+	}
+	_, err = keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, linkedClassicPool, osmoIn, baseAsset, spreadFactor)
+	if err != nil {
+		return "", 0, err
+	}
+
 	// Create a concentrated liquidity pool for asset pair.
 	ctx.Logger().Info(fmt.Sprintf("Creating CL pool from poolID (%d), baseAsset (%s), spreadFactor (%s), tickSpacing (%d)", gammPoolId, baseAsset, spreadFactor, TickSpacing))
 	clPool, err := keepers.GAMMKeeper.CreateConcentratedPoolFromCFMM(ctx, gammPoolId, baseAsset, spreadFactor, TickSpacing)
@@ -176,11 +195,6 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 	commPoolBalancePre := keepers.BankKeeper.GetAllBalances(ctx, communityPoolAddress)
 
 	// Swap 0.1 OSMO for baseAsset from the community pool.
-	osmoIn := sdk.NewCoin(QuoteAsset, sdk.NewInt(100000))
-	linkedClassicPool, err := keepers.PoolManagerKeeper.GetPool(ctx, gammPoolId)
-	if err != nil {
-		return "", 0, err
-	}
 	respectiveBaseAssetInt, err := keepers.GAMMKeeper.SwapExactAmountIn(ctx, communityPoolAddress, linkedClassicPool, osmoIn, baseAsset, sdk.ZeroInt(), linkedClassicPool.GetSpreadFactor(ctx))
 	if err != nil {
 		return "", 0, err
