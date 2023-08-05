@@ -69,6 +69,13 @@ func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig
 	return chainA, chainANode
 }
 
+func (s *IntegrationTestSuite) getChainBCfgs() (*chain.Config, *chain.NodeConfig) {
+	chainB := s.configurer.GetChainConfig(1)
+	chainBNode, err := chainB.GetDefaultNode()
+	s.Require().NoError(err)
+	return chainB, chainBNode
+}
+
 // Helper function for calculating uncollected spread rewards since the time that spreadRewardGrowthInsideLast corresponds to
 // positionLiquidity - current position liquidity
 // spreadRewardGrowthBelow - spread reward growth below lower tick

@@ -930,12 +930,8 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
-	chainB := s.configurer.GetChainConfig(1)
-	chainBNode, err := chainB.GetDefaultNode()
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
+	chainB, chainBNode := s.getChainBCfgs()
 
 	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 	chainBNode.SendIBC(chainB, chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
@@ -953,9 +949,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 // - voting no on the proposal from the delegator wallet
 // - ensuring that delegator's wallet overwrites the validator's vote
 func (s *IntegrationTestSuite) SuperfluidVoting() {
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
 
 	poolId := chainANode.CreateBalancerPool("nativeDenomPool.json", initialization.ValidatorWalletName)
 
@@ -1130,11 +1124,8 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainB := s.configurer.GetChainConfig(1)
-
-	chainANode, err := chainA.GetNodeAtIndex(0)
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
+	chainB, chainBNode := s.getChainBCfgs()
 
 	// If the RL param is already set. Remember it to set it back at the end
 	param := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
@@ -1152,9 +1143,9 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 
 	// Sending >1%
 	fmt.Println("Sending >1%")
-	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
+	chainANode.SendIBC(chainA, chainB, chainBNode.PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
-	contract, err := chainANode.SetupRateLimiting(paths, chainA.NodeConfigs[0].PublicAddress, chainA)
+	contract, err := chainANode.SetupRateLimiting(paths, chainANode.PublicAddress, chainA)
 	s.Require().NoError(err)
 
 	s.Eventually(
@@ -1169,10 +1160,10 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 
 	// Sending <1%. Should work
 	fmt.Println("Sending <1%. Should work")
-	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
+	chainANode.SendIBC(chainA, chainB, chainBNode.PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
 	// Sending >1%. Should fail
 	fmt.Println("Sending >1%. Should fail")
-	chainANode.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[1].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
+	chainANode.FailIBCTransfer(initialization.ValidatorWalletName, chainBNode.PublicAddress, fmt.Sprintf("%duosmo", int(over)))
 
 	// Removing the rate limit so it doesn't affect other tests
 	chainANode.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
@@ -1205,9 +1196,7 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 		s.T().Skip("Skipping IBC tests")
 	}
 	chainA, chainANode := s.getChainACfgs()
-	chainB := s.configurer.GetChainConfig(1)
-	chainBNode, err := chainB.GetDefaultNode()
-	s.Require().NoError(err)
+	_, chainBNode := s.getChainBCfgs()
 
 	contractAddr := s.UploadAndInstantiateCounter(chainA)
 
@@ -1269,7 +1258,7 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 		s.T().Skip("Skipping IBC tests")
 	}
 	chainA, chainANode := s.getChainACfgs()
-	chainB := s.configurer.GetChainConfig(1)
+	chainB, _ := s.getChainBCfgs()
 
 	// Instantiate the counter contract on chain A
 	contractAddr := s.UploadAndInstantiateCounter(chainA)
@@ -1332,9 +1321,8 @@ func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
 func (s *IntegrationTestSuite) AddToExistingLock() {
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetNodeAtIndex(2)
-	s.Require().NoError(err)
+	chainA, chainANode := s.getChainACfgs()
+
 	funder := chainANode.PublicAddress
 	// ensure we can add to new locks and superfluid locks
 	// create pool and enable superfluid assets
@@ -1681,7 +1669,6 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 
 	// Triggers the creation of TWAP records.
 	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
-	fmt.Println("poolId", poolId)
 	swapWalletAddr := chainANode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()})
 
 	// We add 5 ms to avoid landing directly on block time in twap. If block time
