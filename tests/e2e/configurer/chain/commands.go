@@ -214,8 +214,7 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) int {
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	err = os.Remove(localProposalFile)
-	require.NoError(n.t, err)
+	os.Remove(localProposalFile)
 
 	proposalID, err := extractProposalIdFromResponse(resp.String())
 	require.NoError(n.t, err)
