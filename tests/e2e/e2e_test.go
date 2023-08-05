@@ -931,16 +931,16 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 		s.T().Skip("Skipping IBC tests")
 	}
 	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetNodeAtIndex(1)
+	chainANode, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 	chainB := s.configurer.GetChainConfig(1)
-	chainBNode, err := chainB.GetNodeAtIndex(1)
+	chainBNode, err := chainB.GetDefaultNode()
 	s.Require().NoError(err)
 
-	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
-	chainBNode.SendIBC(chainB, chainA, chainA.NodeConfigs[1].PublicAddress, initialization.OsmoToken)
-	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[1].PublicAddress, initialization.StakeToken)
-	chainBNode.SendIBC(chainB, chainA, chainA.NodeConfigs[1].PublicAddress, initialization.StakeToken)
+	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainBNode.SendIBC(chainB, chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	chainBNode.SendIBC(chainB, chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
 	chainANode.CreateBalancerPool("ibcDenomPool.json", initialization.ValidatorWalletName)
 }
