@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/tendermint/tendermint/libs/bytes"
 
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
@@ -32,6 +33,8 @@ import (
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 )
+
+var sendIBCMutex sync.Mutex
 
 // The value is returned as a string, so we have to unmarshal twice
 type params struct {
@@ -608,6 +611,11 @@ func ParseEvent(responseJson map[string]interface{}, field string) (string, erro
 
 func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token sdk.Coin) {
 	n.t.Logf("IBC sending %s from %s to %s (%s)", token, n.chainId, dstChain.Id, recipient)
+	// We add a mutex here since we don't want multiple IBC transfers to happen at the same time
+	// Otherwise, when we check if the receiving end has the correct balance, we might get the balance
+	// of a previous transfer.
+	sendIBCMutex.Lock()
+	defer sendIBCMutex.Unlock()
 
 	dstNode, err := dstChain.GetDefaultNode()
 	require.NoError(n.t, err)
@@ -615,25 +623,11 @@ func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token
 	srcNode, err := srcChain.GetDefaultNode()
 	require.NoError(n.t, err)
 
-	// removes the fee token from balances for calculating the difference in other tokens
-	// before and after the IBC send. Since we run tests in parallel now, some tests may
-	// send uosmo between accounts while this test is running. Since we don't care about
-	// non ibc denoms, its safe to filter uosmo out.
-	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
-		filteredCoinDenoms := []string{}
-		for _, coin := range balance {
-			if !strings.HasPrefix(coin.Denom, "ibc/") {
-				filteredCoinDenoms = append(filteredCoinDenoms, coin.Denom)
-			}
-		}
-		feeRewardTokenBalance := balance.FilterDenoms(filteredCoinDenoms)
-		return balance.Sub(feeRewardTokenBalance)
-	}
+	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", token.Denom))
+	ibcDenom := denomTrace.IBCDenom()
 
-	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
+	balancePre, err := dstNode.QueryBalance(recipient, ibcDenom)
 	require.NoError(n.t, err)
-	fmt.Println("balancesDstPre with no fee removed: ", balancesDstPreWithTxFeeBalance)
-	balancesDstPre := removeFeeTokenFromBalance(balancesDstPreWithTxFeeBalance)
 
 	validatorAddr := srcNode.GetWallet(initialization.ValidatorWalletName)
 	n.SendIBCTransfer(dstChain, validatorAddr, recipient, "", token)
@@ -641,26 +635,12 @@ func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token
 	require.Eventually(
 		n.t,
 		func() bool {
-			balancesDstPostWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
+			balancePost, err := dstNode.QueryBalance(recipient, ibcDenom)
 			require.NoError(n.t, err)
-			balancesDstPost := removeFeeTokenFromBalance(balancesDstPostWithTxFeeBalance)
 
-			ibcCoin := balancesDstPost.Sub(balancesDstPre)
-			if ibcCoin.Len() == 1 {
-				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				resPre := token.Amount
-				resPost := tokenPost.Sub(tokenPre)
-				return resPost.Uint64() == resPre.Uint64()
-			} else if ibcCoin.Len() == 0 {
-				fmt.Println("no ibc coins found in receiver balances, retrying")
-				return false
-			} else {
-				fmt.Println("more than one ibc coin found in receiver balances, likely a concurrency bug")
-				return false
-			}
+			return balancePost.Amount.Equal(balancePre.Amount.Add(token.Amount))
 		},
-		time.Minute,
+		2*time.Minute,
 		10*time.Millisecond,
 		"tx not received on destination chain",
 	)

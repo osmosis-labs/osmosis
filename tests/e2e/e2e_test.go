@@ -1133,7 +1133,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	chainA := s.configurer.GetChainConfig(0)
 	chainB := s.configurer.GetChainConfig(1)
 
-	chainANode, err := chainA.GetNodeAtIndex(1)
+	chainANode, err := chainA.GetNodeAtIndex(0)
 	s.Require().NoError(err)
 
 	// If the RL param is already set. Remember it to set it back at the end
@@ -1154,7 +1154,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	fmt.Println("Sending >1%")
 	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
-	contract, err := chainANode.SetupRateLimiting(paths, chainA.NodeConfigs[1].PublicAddress, chainA)
+	contract, err := chainANode.SetupRateLimiting(paths, chainA.NodeConfigs[0].PublicAddress, chainA)
 	s.Require().NoError(err)
 
 	s.Eventually(
