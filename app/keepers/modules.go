@@ -83,6 +83,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 			gammclient.ReplaceMigrationRecordsProposalHandler,
 			gammclient.UpdateMigrationRecordsProposalHandler,
 			gammclient.CreateCLPoolAndLinkToCFMMProposalHandler,
+			gammclient.SetScalingFactorControllerProposalHandler,
 			clclient.CreateConcentratedLiquidityPoolProposalHandler,
 			clclient.TickSpacingDecreaseProposalHandler,
 			cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,

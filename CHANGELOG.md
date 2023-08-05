@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5883](https://github.com/osmosis-labs/osmosis/pull/5883) feat: Uninitialize empty ticks
 * [#5874](https://github.com/osmosis-labs/osmosis/pull/5874) Remove Partial Migration from superfluid migration to CL
 * [#5901](https://github.com/osmosis-labs/osmosis/pull/5901) Adding support for CW pools in ProtoRev
+* [#5937](https://github.com/osmosis-labs/osmosis/pull/5937) feat: add SetScalingFactorController gov prop
 
 ### BugFix
 
