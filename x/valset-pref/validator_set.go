@@ -130,7 +130,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 
 	// We first check determine what type of algorithm we need to run based on
 	// if total staked to valset-vals < unbond amount, fail
-	// if total staked to valset-vals == unbond amount, unbond all
+	// if round_down(total staked to valset-vals) == unbond amount, unbond all
 	// if total staked to valset-vals > unbond amount, unbond as true to valset ratios as possible.
 
 	totalStaked := sdk.ZeroDec()
@@ -145,8 +145,41 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 		totalStaked.AddMut(validators[i].TokensFromShares(delegations[i].Shares))
 	}
 
-	// the total amount the user wants to undelegate
-	tokenAmt := sdk.NewDec(coin.Amount.Int64())
+	if totalStaked.LT(coin.Amount.ToDec()) {
+		return fmt.Errorf("cannot unbond more than staked to validator set")
+	} else if totalStaked.TruncateInt().Equal(coin.Amount) {
+		// unbond all
+		for i, val := range validators {
+			_, err = k.stakingKeeper.Undelegate(ctx, delegator, val.GetOperator(), delegations[i].Shares)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// unbond as true to valset ratios as possible. Undelegation should be possible.
+	// Idea of what we should be doing for Undelegate(valset, amount):
+	// 1. Calculate the amount to undelegate from each validator under full valset usage
+	// 2. If all amounts are less than amount staked to validator, undelegate all
+	// 3. If any amount is greater than amount staked to validator (S,V),
+	//    fully unstake S from that validator. Recursively proceed with undelegating the
+	//    remaining amount from the remaining validators.
+	//    Undelegate(valset - V, amount - S)
+	//
+	// The above algorithm would take O(V^2) worst case, so we instead do something better
+	// to be O(V).
+	// 1. Calculate the amount to undelegate from each validator under full valset usage
+	// 2. For each validator, compute V.ratio = undelegate_amount / amount_staked_to_val
+	// 3. If no V_ratio > 1, undelegate taret amount from each validator. (happy path)
+	// 4. If a V_ratio > 1, sort validators by V_ratio descending
+	// 5. Set target_ratio = 1, amount_remaining_to_unbond = amount
+	// 6. While greatest V_ratio > target_ratio:
+	//    - Fully undelegate validator with greatest V_ratio. (Amount S)
+	//    - remove validator from list
+	//    - recalculate target_ratio = target_ratio * (1 - removed_V.target_percent)
+	//      - you understand this, because if you recalculated target ratio scaled to 1
+	//		  every val's ratio would just differ by the constant factor of 1 / (1 - removed_V.target_percent)
+	//        doing that would take O(V), hence we change the target.
+	// 7. Normal undelegate the remainder.
 
 	stakedToValset := sdk.NewInt(0)
 
