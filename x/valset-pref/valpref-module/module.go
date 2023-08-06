@@ -23,6 +23,7 @@ import (
 	valsetprefcli "github.com/osmosis-labs/osmosis/v17/x/valset-pref/client/cli"
 	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/client/grpc"
 	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/simulation"
 	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
 )
 
@@ -169,9 +170,9 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // WeightedOperations returns the all the valset module operations with their respective weights.
 func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
-		// simtypes.NewMsgBasedAction("SetValidatorSetPreference", am.keeper, simulation.RandomMsgSetValSetPreference),
-		// simtypes.NewMsgBasedAction("MsgDelegateToValidatorSet", am.keeper, simulation.RandomMsgDelegateToValSet),
-		// simtypes.NewMsgBasedAction("MsgUndelegateFromValidatorSet", am.keeper, simulation.RandomMsgUnDelegateFromValSet),
-		// simtypes.NewMsgBasedAction("MsgRedelegateValSet", am.keeper, simulation.RandomMsgReDelegateToValSet),
+		simtypes.NewMsgBasedAction("SetValidatorSetPreference", am.keeper, simulation.RandomMsgSetValSetPreference),
+		simtypes.NewMsgBasedAction("MsgDelegateToValidatorSet", am.keeper, simulation.RandomMsgDelegateToValSet),
+		simtypes.NewMsgBasedAction("MsgUndelegateFromValidatorSet", am.keeper, simulation.RandomMsgUnDelegateFromValSet),
+		simtypes.NewMsgBasedAction("MsgRedelegateValSet", am.keeper, simulation.RandomMsgReDelegateToValSet),
 	}
 }
