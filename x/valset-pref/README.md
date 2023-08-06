@@ -25,15 +25,26 @@ How does this module work?
 - If the delegator has not set a validator-set preference list then the validator set, then it defaults to their current validator set.
 - If a user has no preference list and has not staked, then these messages / queries return errors.
 
-## Calculations
+## Logic
 
-Staking Calculation 
+### Delegate to validator set
 
-- The user provides an amount to delegate and our `MsgDelegateToValidatorSet` divides the amount based on validator weight distribution.
-  For example: Stake 100osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
-  our delegate logic will attempt to delegate (100 * 0.5) 50osmo for ValA , (100 * 0.3) 30osmo from ValB and (100 * 0.2) 20osmo from ValC.
+This is pretty straight-forward, theres not really any edge cases here.
 
-UnStaking Calculation 
+The user provides an amount to delegate and our `MsgDelegateToValidatorSet` divides the amount based on validator weight distribution.
+  
+For example: Stake 100osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
+our delegate logic will attempt to delegate (100 * 0.5) 50osmo for ValA , (100 * 0.3) 30osmo from ValB and (100 * 0.2) 20osmo from ValC.
+
+### Undelegate from validator set 
+
+We can imagine describing undelegate from validator set in two cases:
+- Users existing delegation distribution matches their validator-set preference distribution.
+- Users existing delegation distribution does not match their validator-set preference distribution.
+
+#### Case 1: Users existing delegation distribution matches their validator-set preference distribution
+
+{Old docs below}
 
 - The user provides an amount to undelegate and our `MsgUnDelegateToValidatorSet` divides the amount based on validator weight distribution.
 - Here, the user can either undelegate the entire amount or partial amount 

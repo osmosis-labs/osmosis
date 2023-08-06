@@ -119,7 +119,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // For ex: userA has staked 10tokens with weight {Val->0.5, ValB->0.3, ValC->0.2}
 // undelegate 6osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
-// nolint: staticcheck
+// Rounding logic ensures we do not undelegate more than the user has staked with the validator set
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
 	// get the existingValSet if it exists, if not check existingStakingPosition and return it
 	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
@@ -174,6 +174,10 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 }
 
 // CheckUndelegateTotalAmount checks if the tokenAmount equals the total amount calculated from valset weights.
+// TODO: Do we need to be doing this? Its computing that
+// sum_{v in ValSet} {v.Weight * tokenAmt} = tokenAmt
+// So in infinite precision this is implied by sum v.Weight = 1
+// Its _technically_ doing something by testing with Mul's decimal rounding behavior.
 func (k Keeper) CheckUndelegateTotalAmount(tokenAmt sdk.Dec, existingSet []types.ValidatorPreference) error {
 	totalAmountFromWeights := sdk.NewDec(0)
 	for _, val := range existingSet {
