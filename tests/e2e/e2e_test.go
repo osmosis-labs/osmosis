@@ -298,6 +298,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	s.Require().Equal(sdk.OneInt(), routeStats[0].NumberOfTrades)
 	s.Require().Equal([]uint64{swapPoolId1, swapPoolId2, swapPoolId3}, routeStats[0].Route)
 	s.Require().Equal(profits, routeStats[0].Profits)
+	s.setNodeFree(chainANode)
 }
 
 func (s *IntegrationTestSuite) ConcentratedLiquidity() {
@@ -894,6 +895,7 @@ func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 	s.T().Log("performing swaps")
 	chainABNode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[index]), denomB, config.StableswapWallet[index])
 	chainABNode.SwapExactAmountIn(coinBIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[index]), denomA, config.StableswapWallet[index])
+	s.setNodeFree(chainABNode)
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
@@ -1348,6 +1350,7 @@ func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 	lockupWalletAddr, lockupWalletSuperfluidAddr := chainABNode.GetWallet("lockup-wallet"), chainABNode.GetWallet("lockup-wallet-superfluid")
 	chainABNode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletAddr, 1)
 	chainABNode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletSuperfluidAddr, 2)
+	s.setNodeFree(chainABNode)
 }
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
