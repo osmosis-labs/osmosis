@@ -1201,7 +1201,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 		s.Eventually(func() bool {
 			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 			return strings.Contains(val, param)
-		}, time.Second*30, time.Second)
+		}, time.Second*30, 10*time.Millisecond)
 	}
 	s.setNodeFree(chainANode)
 	s.setNodeFree(chainBNode)
@@ -1639,7 +1639,7 @@ func (s *IntegrationTestSuite) StateSync() {
 		return stateSyncNodeHeight == runningNodeHeight
 	},
 		1*time.Minute,
-		time.Second,
+		10*time.Millisecond,
 	)
 
 	// stop the state synching node.

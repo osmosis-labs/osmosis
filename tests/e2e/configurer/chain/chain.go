@@ -284,7 +284,7 @@ func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig) (u
 			return false
 		}
 		return status == proposalStatusPassed
-	}, time.Second*30, time.Millisecond*500)
+	}, time.Second*30, 10*time.Millisecond)
 	poolId := chainANode.QueryNumPools()
 	return poolId, nil
 }

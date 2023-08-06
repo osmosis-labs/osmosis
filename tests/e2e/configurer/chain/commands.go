@@ -35,8 +35,6 @@ import (
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 )
 
-var sendIBCMutex sync.Mutex
-
 // The value is returned as a string, so we have to unmarshal twice
 type params struct {
 	Key      string `json:"key"`
@@ -620,13 +618,30 @@ func ParseEvent(responseJson map[string]interface{}, field string) (string, erro
 	return "", fmt.Errorf("%s field not found in response", field)
 }
 
+var addrMutexMap = make(map[string]*sync.Mutex)
+
 func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token sdk.Coin) {
 	n.t.Logf("IBC sending %s from %s to %s (%s)", token, n.chainId, dstChain.Id, recipient)
 	// We add a mutex here since we don't want multiple IBC transfers to happen at the same time
 	// Otherwise, when we check if the receiving end has the correct balance, we might get the balance
 	// of a previous transfer.
-	sendIBCMutex.Lock()
-	defer sendIBCMutex.Unlock()
+	sender := n.GetWallet(initialization.ValidatorWalletName)
+
+	// Create or get the mutex for the specific sender and recipient
+	func() {
+		if _, exists := addrMutexMap[recipient]; !exists {
+			addrMutexMap[recipient] = &sync.Mutex{}
+		}
+		if _, exists := addrMutexMap[sender]; !exists {
+			addrMutexMap[sender] = &sync.Mutex{}
+		}
+	}()
+
+	// Lock the mutex for the specific sender and recipient
+	addrMutexMap[recipient].Lock()
+	defer addrMutexMap[recipient].Unlock()
+	addrMutexMap[sender].Lock()
+	defer addrMutexMap[sender].Unlock()
 
 	dstNode, err := dstChain.GetDefaultNode()
 	require.NoError(n.t, err)
@@ -637,7 +652,7 @@ func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token
 	balancePre, err := dstNode.QueryBalance(recipient, ibcDenom)
 	require.NoError(n.t, err)
 
-	n.SendIBCTransfer(dstChain, initialization.ValidatorWalletName, recipient, "", token)
+	n.SendIBCTransfer(dstChain, sender, recipient, "", token)
 
 	require.Eventually(
 		n.t,
