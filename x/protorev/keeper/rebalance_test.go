@@ -7,7 +7,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
-	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
@@ -365,7 +364,7 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 			// init the route
 			remainingPoolPoints := uint64(1000)
 			remainingBlockPoolPoints := uint64(1000)
-			route := protorevtypes.RouteMetaData{
+			route := keeper.RouteMetaData{
 				Route:      test.param.route,
 				PoolPoints: test.param.routePoolPoints,
 				StepSize:   sdk.NewInt(1_000_000),
@@ -467,7 +466,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 
 	for _, test := range tests {
 		// Empty SwapToBackrun var to pass in as param
-		pool := protorevtypes.SwapToBackrun{}
+		pool := keeper.SwapToBackrun{}
 		txPoolPointsRemaining := uint64(100)
 		blockPoolPointsRemaining := uint64(100)
 
@@ -594,9 +593,9 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			routes := make([]protorevtypes.RouteMetaData, len(test.params.routes))
+			routes := make([]keeper.RouteMetaData, len(test.params.routes))
 			for i, route := range test.params.routes {
-				routes[i] = protorevtypes.RouteMetaData{
+				routes[i] = keeper.RouteMetaData{
 					Route:      route,
 					PoolPoints: 0,
 					StepSize:   sdk.NewInt(1_000_000),

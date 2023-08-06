@@ -111,7 +111,6 @@ func (s *KeeperTestSuite) TestSwapping() {
 					},
 				},
 				executeSwap: func() {
-
 					route := []poolmanagertypes.SwapAmountInRoute{{PoolId: 50, TokenOutDenom: "epochTwo"}}
 
 					_, err := s.App.PoolManagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], route, sdk.NewCoin("uosmo", sdk.NewInt(10)), sdk.NewInt(1))
