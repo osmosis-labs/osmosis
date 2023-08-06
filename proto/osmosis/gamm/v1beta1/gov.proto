@@ -58,7 +58,6 @@ message UpdateMigrationRecordsProposal {
   repeated BalancerToConcentratedPoolLink records = 3
       [ (gogoproto.nullable) = false ];
 }
-
 message PoolRecordWithCFMMLink {
   option (gogoproto.equal) = true;
 
@@ -96,4 +95,19 @@ message CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal {
     (gogoproto.moretags) = "yaml:\"create_cl_pool_and_link_to_cfmm\"",
     (gogoproto.nullable) = false
   ];
+}
+
+// SetScalingFactorControllerProposal is a gov Content type for updating the
+// scaling factor controller address of a stableswap pool
+message SetScalingFactorControllerProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (amino.name) = "osmosis/SetScalingFactorControllerProposal";
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+
+  string title = 1;
+  string description = 2;
+  uint64 pool_id = 3;
+  string controller_address = 4;
 }
