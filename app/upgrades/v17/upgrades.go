@@ -276,6 +276,10 @@ func testnetParsePoolRecord(ctx sdk.Context, pool poolManagerTypes.PoolI, keeper
 		return true, 0, "", sdk.Dec{}, err
 	}
 
+	if len(cfmmPool.GetTotalPoolLiquidity(ctx)) != 2 {
+		return true, 0, "", sdk.Dec{}, nil
+	}
+
 	poolCoins := cfmmPool.GetTotalPoolLiquidity(ctx)
 
 	// We only want to upgrade pools paired with OSMO. OSMO will be the quote asset.
