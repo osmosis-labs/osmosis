@@ -102,17 +102,10 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
 	// fees = 1250 (because 50,000 * 0.0025 = 1250)
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=500000", "--fees=1250uosmo", "-o json"}
-	outJson, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
+	resp, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
 	require.NoError(n.t, err)
 
-	var txResponse map[string]interface{}
-	err = json.Unmarshal(outJson.Bytes(), &txResponse)
-	require.NoError(n.t, err)
-
-	positionIDString, err := GetPositionID(txResponse)
-	require.NoError(n.t, err)
-
-	positionID, err := strconv.ParseUint(positionIDString, 10, 64)
+	positionID, err := extractPositionIdFromResponse(resp.Bytes())
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully created concentrated position from %s to %s", lowerTick, upperTick)
@@ -125,14 +118,10 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) int {
 	cmd := []string{"osmosisd", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.1uosmo", "--gas-adjustment=1.3"}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
-	startIndex := strings.Index(resp.String(), `{"key":"code_id","value":"`) + len(`{"key":"code_id","value":"`)
-	endIndex := strings.Index(resp.String()[startIndex:], `"`)
 
-	// Extract the proposal ID substring
-	codeIdStr := resp.String()[startIndex : startIndex+endIndex]
+	codeId, err := extractCodeIdFromResponse(resp.String())
+	require.NoError(n.t, err)
 
-	// Convert the proposal ID from string to int
-	codeId, _ := strconv.Atoi(codeIdStr)
 	n.LogActionF("successfully stored")
 	return codeId
 }
@@ -620,17 +609,13 @@ func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token
 	dstNode, err := dstChain.GetDefaultNode()
 	require.NoError(n.t, err)
 
-	srcNode, err := srcChain.GetDefaultNode()
-	require.NoError(n.t, err)
-
 	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", token.Denom))
 	ibcDenom := denomTrace.IBCDenom()
 
 	balancePre, err := dstNode.QueryBalance(recipient, ibcDenom)
 	require.NoError(n.t, err)
 
-	validatorAddr := srcNode.GetWallet(initialization.ValidatorWalletName)
-	n.SendIBCTransfer(dstChain, validatorAddr, recipient, "", token)
+	n.SendIBCTransfer(dstChain, initialization.ValidatorWalletName, recipient, "", token)
 
 	require.Eventually(
 		n.t,
@@ -812,4 +797,40 @@ func extractPoolIdFromResponse(response string) (uint64, error) {
 	}
 
 	return poolID, nil
+}
+
+func extractPositionIdFromResponse(responseBytes []byte) (uint64, error) {
+	var txResponse map[string]interface{}
+	err := json.Unmarshal(responseBytes, &txResponse)
+	if err != nil {
+		return 0, err
+	}
+
+	positionIDString, err := GetPositionID(txResponse)
+	if err != nil {
+		return 0, err
+	}
+
+	positionID, err := strconv.ParseUint(positionIDString, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return positionID, nil
+}
+
+func extractCodeIdFromResponse(response string) (int, error) {
+	startIndex := strings.Index(response, `{"key":"code_id","value":"`) + len(`{"key":"code_id","value":"`)
+	endIndex := strings.Index(response[startIndex:], `"`)
+
+	// Extract the proposal ID substring
+	codeIdStr := response[startIndex : startIndex+endIndex]
+
+	// Convert the proposal ID from string to int
+	codeId, err := strconv.Atoi(codeIdStr)
+	if err != nil {
+		return 0, err
+	}
+
+	return codeId, nil
 }

@@ -64,16 +64,42 @@ func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address strin
 
 func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig) {
 	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
-	return chainA, chainANode
+	timeout := time.After(2 * time.Minute)
+
+	for {
+		freeNode := s.getFreeNode(chainA.GetAllChainNodes())
+
+		if freeNode != nil {
+			return chainA, freeNode
+		}
+
+		select {
+		case <-time.After(1 * time.Second):
+
+		case <-timeout:
+			return nil, nil // Return nil values when timeout occurs
+		}
+	}
 }
 
 func (s *IntegrationTestSuite) getChainBCfgs() (*chain.Config, *chain.NodeConfig) {
 	chainB := s.configurer.GetChainConfig(1)
-	chainBNode, err := chainB.GetDefaultNode()
-	s.Require().NoError(err)
-	return chainB, chainBNode
+	timeout := time.After(2 * time.Minute)
+
+	for {
+		freeNode := s.getFreeNode(chainB.GetAllChainNodes())
+
+		if freeNode != nil {
+			return chainB, freeNode
+		}
+
+		select {
+		case <-time.After(1 * time.Second):
+
+		case <-timeout:
+			return nil, nil // Return nil values when timeout occurs
+		}
+	}
 }
 
 // Helper function for calculating uncollected spread rewards since the time that spreadRewardGrowthInsideLast corresponds to
@@ -166,4 +192,27 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
 	contractAddr := contracts[0]
 	return contractAddr
+}
+
+func (s *IntegrationTestSuite) getFreeNode(nodes []*chain.NodeConfig) *chain.NodeConfig {
+	for _, node := range nodes {
+		node.StateMutex.Lock()
+
+		if node.IsFree {
+			node.IsFree = false
+			node.StateMutex.Unlock()
+			return node
+		}
+
+		node.StateMutex.Unlock()
+	}
+
+	return nil
+}
+
+func (s *IntegrationTestSuite) setNodeFree(node *chain.NodeConfig) {
+	node.StateMutex.Lock()
+	defer node.StateMutex.Unlock()
+
+	node.IsFree = true
 }

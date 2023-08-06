@@ -257,7 +257,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	// Create a wallet to use for the swap txs.
 	swapWalletAddr := chainANode.CreateWallet(walletName)
 	coinIn := fmt.Sprintf("%s%s", amount, denomIn)
-	chainANode.BankSend(coinIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+	chainANode.BankSend(coinIn, chainANode.PublicAddress, swapWalletAddr)
 
 	// Check supplies before swap.
 	supplyBefore, err := chainANode.QuerySupply()
@@ -864,6 +864,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Check that the tick spacing was reduced to the expected new tick spacing
 	concentratedPool = s.updatedConcentratedPool(chainANode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
+	s.setNodeFree(chainANode)
 }
 
 func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
@@ -871,7 +872,12 @@ func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 		s.T().Skip("Skipping StableSwapPostUpgrade test")
 	}
 
-	chainA, chainANode := s.getChainACfgs()
+	// This test requires use of chainA's default node, since pre upgrade
+	// the wallet was created on chainA's default node.
+	// TODO: Just add this wallet to every node.
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
 
 	const (
 		denomA = "stake"
@@ -882,9 +888,9 @@ func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 
 	coinAIn, coinBIn := fmt.Sprintf("20000%s", denomA), fmt.Sprintf("1%s", denomB)
 
-	chainANode.BankSend(initialization.WalletFeeTokens.String(), chainA.NodeConfigs[0].PublicAddress, config.StableswapWallet)
-	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, config.StableswapWallet)
-	chainANode.BankSend(coinBIn, chainA.NodeConfigs[0].PublicAddress, config.StableswapWallet)
+	chainANode.BankSend(initialization.WalletFeeTokens.String(), chainANode.PublicAddress, config.StableswapWallet)
+	chainANode.BankSend(coinAIn, chainANode.PublicAddress, config.StableswapWallet)
+	chainANode.BankSend(coinBIn, chainANode.PublicAddress, config.StableswapWallet)
 
 	s.T().Log("performing swaps")
 	chainANode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId), denomB, config.StableswapWallet)
@@ -912,16 +918,17 @@ func (s *IntegrationTestSuite) GeometricTwapMigration() {
 		migrationWallet = "migration"
 	)
 
-	chainA, chainANode := s.getChainACfgs()
+	_, chainANode := s.getChainACfgs()
 
 	uosmoIn := fmt.Sprintf("1000000%s", "uosmo")
 
 	swapWalletAddr := chainANode.CreateWallet(migrationWallet)
 
-	chainANode.BankSend(uosmoIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+	chainANode.BankSend(uosmoIn, chainANode.PublicAddress, swapWalletAddr)
 
 	// Swap to create new twap records on the pool that was created pre-upgrade.
 	chainANode.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradePoolId), otherDenom, swapWalletAddr)
+	s.setNodeFree(chainANode)
 }
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
@@ -933,12 +940,15 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 	chainA, chainANode := s.getChainACfgs()
 	chainB, chainBNode := s.getChainBCfgs()
 
-	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainBNode.SendIBC(chainB, chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainANode.SendIBC(chainA, chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
-	chainBNode.SendIBC(chainB, chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	chainANode.SendIBC(chainA, chainB, chainBNode.PublicAddress, initialization.OsmoToken)
+	chainBNode.SendIBC(chainB, chainA, chainANode.PublicAddress, initialization.OsmoToken)
+	chainANode.SendIBC(chainA, chainB, chainBNode.PublicAddress, initialization.StakeToken)
+	chainBNode.SendIBC(chainB, chainA, chainANode.PublicAddress, initialization.StakeToken)
 
 	chainANode.CreateBalancerPool("ibcDenomPool.json", initialization.ValidatorWalletName)
+
+	s.setNodeFree(chainANode)
+	s.setNodeFree(chainBNode)
 }
 
 // TestSuperfluidVoting tests that superfluid voting is functioning as expected.
@@ -960,7 +970,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	superfluidVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
 	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), initialization.ValidatorWalletName, superfluidVotingWallet)
 	lockId := chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
-	chainANode.SuperfluidDelegate(lockId, chainA.NodeConfigs[2].OperatorAddress, superfluidVotingWallet)
+	chainANode.SuperfluidDelegate(lockId, chainANode.OperatorAddress, superfluidVotingWallet)
 
 	// create a text prop, deposit and vote yes
 	propNumber := chainANode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
@@ -1002,7 +1012,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 
 	s.Eventually(
 		func() bool {
-			intAccountBalance, err := chainANode.QueryIntermediaryAccount(fmt.Sprintf("gamm/pool/%d", poolId), chainA.NodeConfigs[2].OperatorAddress)
+			intAccountBalance, err := chainANode.QueryIntermediaryAccount(fmt.Sprintf("gamm/pool/%d", poolId), chainANode.OperatorAddress)
 			s.Require().NoError(err)
 			if err != nil {
 				return false
@@ -1017,6 +1027,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 		10*time.Millisecond,
 		"superfluid delegation vote overwrite not working as expected",
 	)
+	s.setNodeFree(chainANode)
 }
 
 func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() {
@@ -1118,6 +1129,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	secondTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapRemoveAndCreatePlus1Height)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(1), secondTwapBOverA)
+	s.setNodeFree(chainANode)
 }
 
 func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
@@ -1181,6 +1193,8 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 			return strings.Contains(val, param)
 		}, time.Second*30, time.Second)
 	}
+	s.setNodeFree(chainANode)
+	s.setNodeFree(chainBNode)
 }
 
 func (s *IntegrationTestSuite) LargeWasmUpload() {
@@ -1249,6 +1263,8 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 		15*time.Second,
 		10*time.Millisecond,
 	)
+	s.setNodeFree(chainANode)
+	s.setNodeFree(chainBNode)
 }
 
 // TestPacketForwarding sends a packet from chainA to chainB, and forwards it
@@ -1258,7 +1274,7 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 		s.T().Skip("Skipping IBC tests")
 	}
 	chainA, chainANode := s.getChainACfgs()
-	chainB, _ := s.getChainBCfgs()
+	chainB := s.configurer.GetChainConfig(1)
 
 	// Instantiate the counter contract on chain A
 	contractAddr := s.UploadAndInstantiateCounter(chainA)
@@ -1302,6 +1318,7 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 		15*time.Second,
 		10*time.Millisecond,
 	)
+	s.setNodeFree(chainANode)
 }
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
@@ -1309,7 +1326,14 @@ func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 	if s.skipUpgrade {
 		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
 	}
-	_, chainANode := s.getChainACfgs()
+
+	// This test requires use of chainA's default node, since pre upgrade
+	// the wallet was created on chainA's default node.
+	// TODO: Just add this wallet to every node.
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+
 	// ensure we can add to existing locks and superfluid locks that existed pre upgrade on chainA
 	// we use the hardcoded gamm/pool/1 and these specific wallet names to match what was created pre upgrade
 	preUpgradePoolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
@@ -1337,6 +1361,7 @@ func (s *IntegrationTestSuite) AddToExistingLock() {
 
 	// ensure we can add to new locks and superfluid locks on chainA
 	chainANode.LockAndAddToExistingLock(chainA, sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
+	s.setNodeFree(chainANode)
 }
 
 // TestArithmeticTWAP tests TWAP by creating a pool, performing a swap.
@@ -1382,9 +1407,9 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 	twapFromBeforeSwapToBeforeSwapOneCA, err := chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
 	s.Require().NoError(err)
 
-	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
-	chainANode.BankSend(coinBIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
-	chainANode.BankSend(coinCIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+	chainANode.BankSend(coinAIn, chainANode.PublicAddress, swapWalletAddr)
+	chainANode.BankSend(coinBIn, chainANode.PublicAddress, swapWalletAddr)
+	chainANode.BankSend(coinCIn, chainANode.PublicAddress, swapWalletAddr)
 
 	s.T().Log("querying for the second TWAP to now before swap, must equal to first")
 	twapFromBeforeSwapToBeforeSwapTwoAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap.Add(50*time.Millisecond))
@@ -1510,6 +1535,7 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningAB, twapAfterSwapBeforePruning10MsAB, sdk.NewDecWithPrec(1, 3))
 	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningBC, twapAfterSwapBeforePruning10MsBC, sdk.NewDecWithPrec(1, 3))
 	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningCA, twapAfterSwapBeforePruning10MsCA, sdk.NewDecWithPrec(1, 3))
+	s.setNodeFree(chainANode)
 }
 
 func (s *IntegrationTestSuite) StateSync() {
@@ -1517,7 +1543,11 @@ func (s *IntegrationTestSuite) StateSync() {
 		s.T().Skip()
 	}
 
-	chainA, chainANode := s.getChainACfgs()
+	// This test benefits from the use of chainA's default node, since it has
+	// the shortest snapshot interval.
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
 
 	persistentPeers := chainA.GetPersistentPeers()
 
@@ -1643,6 +1673,7 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 	s.Require().Less(timeDelta, 2*time.Second)
 	s.T().Logf("expeditedVotingPeriodDuration within two seconds of expected time: %v", timeDelta)
 	close(totalTimeChan)
+	s.setNodeFree(chainANode)
 }
 
 // TestGeometricTWAP tests geometric twap.
@@ -1700,7 +1731,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	s.Require().Equal(sdk.NewDecWithPrec(5, 1), initialTwapAOverB)
 
 	coinAIn := fmt.Sprintf("1000000%s", denomA)
-	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+	chainANode.BankSend(coinAIn, chainANode.PublicAddress, swapWalletAddr)
 
 	s.T().Logf("performing swap of %s for %s", coinAIn, denomB)
 
@@ -1735,6 +1766,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	// uosmo = 2_000_000
 	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
+	s.setNodeFree(chainANode)
 }
 
 // START: CAN REMOVE POST v17 UPGRADE
@@ -1791,6 +1823,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
 	communityPoolAddress := chainANode.QueryCommunityPoolModuleAccount()
 	positions := chainANode.QueryConcentratedPositions(communityPoolAddress)
 	s.Require().Len(positions, len(v17.AssetPairsForTestsOnly))
+	s.setNodeFree(chainANode)
 }
 
 // END: CAN REMOVE POST v17 UPGRADE

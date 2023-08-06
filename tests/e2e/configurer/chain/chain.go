@@ -226,6 +226,12 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	c.t.Log("successfully sent IBC tokens")
 }
 
+func (c *Config) GetAllChainNodes() []*NodeConfig {
+	nodeConfigs := make([]*NodeConfig, len(c.NodeConfigs))
+	copy(nodeConfigs, c.NodeConfigs)
+	return nodeConfigs
+}
+
 // GetDefaultNode returns the default node of the chain.
 // The default node is the first one created. Returns error if no
 // ndoes created.
@@ -250,7 +256,7 @@ func (c *Config) GetNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 
 func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	if nodeIndex > len(c.NodeConfigs) {
-		return nil, fmt.Errorf("node index (%d) is greter than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
+		return nil, fmt.Errorf("node index (%d) is greater than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
 	}
 	return c.NodeConfigs[nodeIndex], nil
 }
