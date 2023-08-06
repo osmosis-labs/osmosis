@@ -73,7 +73,7 @@ func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimC
 		return nil, fmt.Errorf("Validator not found")
 	}
 
-	// check if the user has delegated tokens to the valset
+	// check if the user has delegated tokens to the valset or existing delegation
 	del, found := sim.StakingKeeper().GetDelegation(ctx, delAddr, val)
 	if !found {
 		return nil, fmt.Errorf("user hasn't delegated tokens to the validator, %s", val.String())
