@@ -121,24 +121,34 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
 // Rounding logic ensures we do not undelegate more than the user has staked with the validator set
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	// get the existingValSet if it exists, if not check existingStakingPosition and return it
-	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
-	if err != nil {
-		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
-	}
-
-	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
+	existingPref, delegations, err := k.getValsetDelegationsAndPreferences(ctx, delegatorAddr)
 	if err != nil {
 		return err
+	}
+	// err already checked
+	delegator := sdk.MustAccAddressFromBech32(delegatorAddr)
+
+	// We first check determine what type of algorithm we need to run based on
+	// if total staked to valset-vals < unbond amount, fail
+	// if total staked to valset-vals == unbond amount, unbond all
+	// if total staked to valset-vals > unbond amount, unbond as true to valset ratios as possible.
+
+	totalStaked := sdk.ZeroDec()
+	// get validators
+	validators := make([]stakingtypes.Validator, len(existingPref.Preferences))
+	for i, val := range existingPref.Preferences {
+		_, validators[i], err = k.getValAddrAndVal(ctx, val.ValOperAddress)
+		if err != nil {
+			return err
+		}
+		// Add up total staked to validator. NOTE: This is using the full "decimal amount" staked form
+		totalStaked.AddMut(validators[i].TokensFromShares(delegations[i].Shares))
 	}
 
 	// the total amount the user wants to undelegate
 	tokenAmt := sdk.NewDec(coin.Amount.Int64())
 
-	err = k.CheckUndelegateTotalAmount(tokenAmt, existingSet.Preferences)
-	if err != nil {
-		return err
-	}
+	stakedToValset := sdk.NewInt(0)
 
 	// totalDelAmt is the amount that keeps running track of the amount of tokens undelegated
 	totalUnDelAmt := sdk.NewInt(0)
