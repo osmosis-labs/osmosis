@@ -219,21 +219,21 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		// Setup wallets and send tokens to wallets (only chainA)
 		lockupWallet = chainANode.CreateWalletAndFund(config.LockupWallet, []string{
 			"10000000000000000000" + poolShareDenom,
-		})
+		}, chainA)
 	}()
 
 	go func() {
 		defer wg.Done()
 		lockupWalletSuperfluid = chainANode.CreateWalletAndFund(config.LockupWalletSuperfluid, []string{
 			"10000000000000000000" + poolShareDenom,
-		})
+		}, chainA)
 	}()
 
 	go func() {
 		defer wg.Done()
 		stableswapWallet = chainANode.CreateWalletAndFund(config.StableswapWallet, []string{
 			"100000stake",
-		})
+		}, chainA)
 	}()
 
 	// Wait for all goroutines to complete

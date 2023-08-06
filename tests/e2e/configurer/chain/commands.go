@@ -2,6 +2,7 @@ package chain
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -454,28 +455,49 @@ func (n *NodeConfig) FundCommunityPool(sendAddress string, funds string) {
 
 // This method also funds fee tokens from the `initialization.ValidatorWalletName` account.
 // TODO: Abstract this to be a fee token provider account.
-func (n *NodeConfig) CreateWallet(walletName string) string {
+func (n *NodeConfig) CreateWallet(walletName string, chain *Config) string {
 	n.LogActionF("creating wallet %s", walletName)
 	cmd := []string{"osmosisd", "keys", "add", walletName, "--keyring-backend=test"}
-	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	outBuf, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
 	require.NoError(n.t, err)
 	re := regexp.MustCompile("osmo1(.{38})")
 	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
 	walletAddr = strings.TrimSuffix(walletAddr, "\n")
+
+	mnemonic, err := pullMnemonicFromResponse(errBuf.String())
+	require.NoError(n.t, err)
+
+	chainNodes := chain.GetAllChainNodes()
+	for _, node := range chainNodes {
+		if node.Name == n.Name {
+			continue
+		}
+		node.AddExistingWallet(walletName, mnemonic)
+	}
+
 	n.LogActionF("created wallet %s, wallet address - %s", walletName, walletAddr)
 	n.BankSend(initialization.WalletFeeTokens.String(), initialization.ValidatorWalletName, walletAddr)
 	n.LogActionF("Sent fee tokens from %s", initialization.ValidatorWalletName)
 	return walletAddr
 }
 
-func (n *NodeConfig) CreateWalletAndFund(walletName string, tokensToFund []string) string {
-	return n.CreateWalletAndFundFrom(walletName, initialization.ValidatorWalletName, tokensToFund)
+func (n *NodeConfig) AddExistingWallet(walletName, mnemonic string) {
+	n.LogActionF("adding existing wallet %s", walletName)
+	cmd := []string{"sh", "-c", fmt.Sprintf("echo '%s' | osmosisd keys add %s --keyring-backend=test --recover", mnemonic, walletName)}
+	_, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	require.NoError(n.t, err)
+
+	n.LogActionF("added existing wallet %s", walletName)
 }
 
-func (n *NodeConfig) CreateWalletAndFundFrom(newWalletName string, fundingWalletName string, tokensToFund []string) string {
+func (n *NodeConfig) CreateWalletAndFund(walletName string, tokensToFund []string, chain *Config) string {
+	return n.CreateWalletAndFundFrom(walletName, initialization.ValidatorWalletName, tokensToFund, chain)
+}
+
+func (n *NodeConfig) CreateWalletAndFundFrom(newWalletName string, fundingWalletName string, tokensToFund []string, chain *Config) string {
 	n.LogActionF("Sending tokens to %s", newWalletName)
 
-	walletAddr := n.CreateWallet(newWalletName)
+	walletAddr := n.CreateWallet(newWalletName, chain)
 	for _, tokenToFund := range tokensToFund {
 		n.BankSend(tokenToFund, fundingWalletName, walletAddr)
 	}
@@ -737,11 +759,7 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 		return err
 	}
 
-	node, err := chain.GetDefaultNode()
-	if err != nil {
-		return err
-	}
-	propNumber := node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
+	propNumber := n.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
 
 	var wg sync.WaitGroup
 
@@ -756,7 +774,7 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 	wg.Wait()
 
 	require.Eventually(n.t, func() bool {
-		status, err := node.QueryPropStatus(propNumber)
+		status, err := n.QueryPropStatus(propNumber)
 		if err != nil {
 			return false
 		}
@@ -833,4 +851,25 @@ func extractCodeIdFromResponse(response string) (int, error) {
 	}
 
 	return codeId, nil
+}
+
+func pullMnemonicFromResponse(response string) (string, error) {
+	// Using regex to get mnemonic
+	r := regexp.MustCompile(`(?m)(?i)^(\w+\s){23}\w+$`)
+	mnemonicMatch := r.FindString(response)
+
+	// Check if we found the mnemonic
+	if mnemonicMatch == "" {
+		return "", errors.New("mnemonic not found")
+	}
+
+	// Split the mnemonicMatch on spaces to get individual words
+	mnemonicWords := strings.Split(mnemonicMatch, " ")
+
+	// Check if we got 24 words
+	if len(mnemonicWords) != 24 {
+		return "", errors.New("mnemonic does not contain 24 words")
+	}
+
+	return mnemonicMatch, nil
 }

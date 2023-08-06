@@ -255,7 +255,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	chainA.WaitForNumEpochs(1, epochIdentifier)
 
 	// Create a wallet to use for the swap txs.
-	swapWalletAddr := chainANode.CreateWallet(walletName)
+	swapWalletAddr := chainANode.CreateWallet(walletName, chainA)
 	coinIn := fmt.Sprintf("%s%s", amount, denomIn)
 	chainANode.BankSend(coinIn, chainANode.PublicAddress, swapWalletAddr)
 
@@ -348,9 +348,9 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	fundTokens := []string{"100000000uosmo", "100000000uion", "100000000stake"}
 
 	// Get 3 addresses to create positions
-	address1 := chainANode.CreateWalletAndFund("addr1", fundTokens)
-	address2 := chainANode.CreateWalletAndFund("addr2", fundTokens)
-	address3 := chainANode.CreateWalletAndFund("addr3", fundTokens)
+	address1 := chainANode.CreateWalletAndFund("addr1", fundTokens, chainA)
+	address2 := chainANode.CreateWalletAndFund("addr2", fundTokens, chainA)
+	address3 := chainANode.CreateWalletAndFund("addr3", fundTokens, chainA)
 
 	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions
 	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
@@ -918,11 +918,11 @@ func (s *IntegrationTestSuite) GeometricTwapMigration() {
 		migrationWallet = "migration"
 	)
 
-	_, chainANode := s.getChainACfgs()
+	chainA, chainANode := s.getChainACfgs()
 
 	uosmoIn := fmt.Sprintf("1000000%s", "uosmo")
 
-	swapWalletAddr := chainANode.CreateWallet(migrationWallet)
+	swapWalletAddr := chainANode.CreateWallet(migrationWallet, chainA)
 
 	chainANode.BankSend(uosmoIn, chainANode.PublicAddress, swapWalletAddr)
 
@@ -967,7 +967,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	chainANode.EnableSuperfluidAsset(chainA, fmt.Sprintf("gamm/pool/%d", poolId))
 
 	// setup wallets and send gamm tokens to these wallets (both chains)
-	superfluidVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
+	superfluidVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting", chainA)
 	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), initialization.ValidatorWalletName, superfluidVotingWallet)
 	lockId := chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
 	chainANode.SuperfluidDelegate(lockId, chainANode.OperatorAddress, superfluidVotingWallet)
@@ -1033,7 +1033,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() {
 	chainA, chainANode := s.getChainACfgs()
 
-	poolId, err := chainA.SubmitCreateConcentratedPoolProposal()
+	poolId, err := chainA.SubmitCreateConcentratedPoolProposal(chainANode)
 	s.NoError(err)
 	fmt.Println("poolId", poolId)
 
@@ -1064,7 +1064,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	fundTokens := []string{"100000000stake", "100000000uosmo"}
 
 	// Get address to create positions
-	address1 := chainANode.CreateWalletAndFund("address1", fundTokens)
+	address1 := chainANode.CreateWalletAndFund("address1", fundTokens, chainA)
 
 	// We add 5 ms to avoid landing directly on block time in twap. If block time
 	// is provided as start time, the latest spot price is used. Otherwise
@@ -1356,8 +1356,8 @@ func (s *IntegrationTestSuite) AddToExistingLock() {
 	// setup wallets and send gamm tokens to these wallets on chainA
 	gammShares := fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId)
 	fundTokens := []string{gammShares, initialization.WalletFeeTokens.String()}
-	lockupWalletAddr := chainANode.CreateWalletAndFundFrom("TestAddToExistingLock", funder, fundTokens)
-	lockupWalletSuperfluidAddr := chainANode.CreateWalletAndFundFrom("TestAddToExistingLockSuperfluid", funder, fundTokens)
+	lockupWalletAddr := chainANode.CreateWalletAndFundFrom("TestAddToExistingLock", funder, fundTokens, chainA)
+	lockupWalletSuperfluidAddr := chainANode.CreateWalletAndFundFrom("TestAddToExistingLockSuperfluid", funder, fundTokens, chainA)
 
 	// ensure we can add to new locks and superfluid locks on chainA
 	chainANode.LockAndAddToExistingLock(chainA, sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
@@ -1392,7 +1392,7 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 
 	// Triggers the creation of TWAP records.
 	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
-	swapWalletAddr := chainANode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()})
+	swapWalletAddr := chainANode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()}, chainA)
 
 	timeBeforeSwap := chainANode.QueryLatestBlockTime()
 	// Wait for the next height so that the requested twap
@@ -1700,7 +1700,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 
 	// Triggers the creation of TWAP records.
 	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
-	swapWalletAddr := chainANode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()})
+	swapWalletAddr := chainANode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()}, chainA)
 
 	// We add 5 ms to avoid landing directly on block time in twap. If block time
 	// is provided as start time, the latest spot price is used. Otherwise

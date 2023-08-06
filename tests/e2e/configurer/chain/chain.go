@@ -261,15 +261,10 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	return c.NodeConfigs[nodeIndex], nil
 }
 
-func (c *Config) SubmitCreateConcentratedPoolProposal() (uint64, error) {
-	node, err := c.GetDefaultNode()
-	if err != nil {
-		return 0, err
-	}
+func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig) (uint64, error) {
+	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 
-	propNumber := node.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-
-	node.DepositProposal(propNumber, false)
+	chainANode.DepositProposal(propNumber, false)
 
 	var wg sync.WaitGroup
 
@@ -284,12 +279,12 @@ func (c *Config) SubmitCreateConcentratedPoolProposal() (uint64, error) {
 	wg.Wait()
 
 	require.Eventually(c.t, func() bool {
-		status, err := node.QueryPropStatus(propNumber)
+		status, err := chainANode.QueryPropStatus(propNumber)
 		if err != nil {
 			return false
 		}
 		return status == proposalStatusPassed
 	}, time.Second*30, time.Millisecond*500)
-	poolId := node.QueryNumPools()
+	poolId := chainANode.QueryNumPools()
 	return poolId, nil
 }
