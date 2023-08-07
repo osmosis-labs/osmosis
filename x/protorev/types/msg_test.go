@@ -543,8 +543,11 @@ func TestMsgSetPoolTypeInfo(t *testing.T) {
 				Stable:       types.StablePoolInfo{Weight: 1},
 				Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
 				Cosmwasm: types.CosmwasmPoolInfo{
-					WeightMap: map[string]uint64{
-						"test": 1,
+					WeightMaps: []types.WeightMap{
+						{
+							ContractAddress: "contractAddress",
+							Weight:          1,
+						},
 					},
 				},
 			},
@@ -569,8 +572,11 @@ func TestMsgSetPoolTypeInfo(t *testing.T) {
 				Stable:       types.StablePoolInfo{Weight: 1},
 				Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
 				Cosmwasm: types.CosmwasmPoolInfo{
-					WeightMap: map[string]uint64{
-						createAccount().String(): 1,
+					WeightMaps: []types.WeightMap{
+						{
+							ContractAddress: createAccount().String(),
+							Weight:          1,
+						},
 					},
 				},
 			},

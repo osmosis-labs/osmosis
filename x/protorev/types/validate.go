@@ -117,13 +117,13 @@ func (c *CosmwasmPoolInfo) Validate() error {
 		return fmt.Errorf("cosmwasm pool info cannot be nil")
 	}
 
-	for contractAddress, weight := range c.WeightMap {
-		address, err := sdk.AccAddressFromBech32(contractAddress)
+	for _, weightMap := range c.WeightMaps {
+		address, err := sdk.AccAddressFromBech32(weightMap.ContractAddress)
 		if err != nil {
 			return err
 		}
 
-		if weight == 0 {
+		if weightMap.Weight == 0 {
 			return fmt.Errorf("cosmwasm pool weight cannot be 0 for contract address %s", address)
 		}
 	}

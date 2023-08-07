@@ -175,7 +175,14 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 		case poolmanagertypes.Concentrated:
 			totalWeight += infoByPoolType.Concentrated.Weight
 		case poolmanagertypes.CosmWasm:
-			weight, ok := infoByPoolType.Cosmwasm.WeightMap[pool.GetAddress().String()]
+			weight, ok := uint64(0), false
+			for _, weightMap := range infoByPoolType.Cosmwasm.WeightMaps {
+				if weightMap.ContractAddress == pool.GetAddress().String() {
+					weight = weightMap.Weight
+					ok = true
+					break
+				}
+			}
 			if !ok {
 				return 0, fmt.Errorf("cosmwasm pool %d does not have a weight", poolId)
 			}

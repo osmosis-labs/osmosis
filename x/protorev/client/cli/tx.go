@@ -146,7 +146,7 @@ func CmdSetInfoByPoolType() *osmocli.TxCliDesc {
 	desc := osmocli.TxCliDesc{
 		Use:   "set-info-by-pool-type [path/to/pool_info.json]",
 		Short: "set the protorev pool type info",
-		Long: `Must provide a json file with all the pool info that will be set. 
+		Long: `Must provide a json file with all the pool info that will be set. This does NOT set info for a single pool type.
 		Sample json file:
 		{
 			"stable" : {
@@ -160,9 +160,9 @@ func CmdSetInfoByPoolType() *osmocli.TxCliDesc {
 				"weight" : 1,
 			},
 			"cosmwasm" : {
-				"weight_map" : {
-					"osmo123..." : 1,
-				},
+				"weight_maps" : [
+					{"contract_address" : "cosmos123...", "weight" : 1}
+				],
 			},
 		}
 		`,

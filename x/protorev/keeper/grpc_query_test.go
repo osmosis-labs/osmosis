@@ -288,8 +288,8 @@ func (s *KeeperTestSuite) TestGetProtoRevInfoByPoolType() {
 		Stable:       types.StablePoolInfo{Weight: 1},
 		Balancer:     types.BalancerPoolInfo{Weight: 1},
 		Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
-		Cosmwasm: types.CosmwasmPoolInfo{WeightMap: map[string]uint64{
-			"test": 1,
+		Cosmwasm: types.CosmwasmPoolInfo{WeightMaps: []types.WeightMap{
+			{ContractAddress: "test", Weight: 1},
 		}},
 	}
 	s.App.AppKeepers.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, poolInfo)

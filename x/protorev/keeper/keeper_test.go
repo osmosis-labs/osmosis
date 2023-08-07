@@ -908,8 +908,11 @@ func (s *KeeperTestSuite) setUpPools() {
 
 	// Add the new cosmwasm pool to the pool info
 	poolInfo := types.DefaultPoolTypeInfo
-	poolInfo.Cosmwasm.WeightMap = map[string]uint64{
-		cwPool.GetContractAddress(): 4,
+	poolInfo.Cosmwasm.WeightMaps = []types.WeightMap{
+		{
+			ContractAddress: cwPool.GetContractAddress(),
+			Weight:          4,
+		},
 	}
 	s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, poolInfo)
 

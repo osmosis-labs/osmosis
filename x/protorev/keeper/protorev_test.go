@@ -310,8 +310,11 @@ func (s *KeeperTestSuite) TestGetInfoByPoolType() {
 	// Should be able to set the InfoByPoolType
 	newRouteWeights := types.DefaultPoolTypeInfo
 	newRouteWeights.Balancer.Weight = 100
-	newRouteWeights.Cosmwasm.WeightMap = map[string]uint64{
-		"wasm1": 100,
+	newRouteWeights.Cosmwasm.WeightMaps = []types.WeightMap{
+		{
+			ContractAddress: "contractAddress",
+			Weight:          1,
+		},
 	}
 
 	s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, newRouteWeights)
