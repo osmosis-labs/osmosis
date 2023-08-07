@@ -190,29 +190,6 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 	return contractAddr
 }
 
-func (s *IntegrationTestSuite) getFreeNode(nodes []*chain.NodeConfig) *chain.NodeConfig {
-	for _, node := range nodes {
-		node.StateMutex.Lock()
-
-		if node.IsFree {
-			node.IsFree = false
-			node.StateMutex.Unlock()
-			return node
-		}
-
-		node.StateMutex.Unlock()
-	}
-
-	return nil
-}
-
-func (s *IntegrationTestSuite) setNodeFree(node *chain.NodeConfig) {
-	node.StateMutex.Lock()
-	defer node.StateMutex.Unlock()
-
-	node.IsFree = true
-}
-
 func (s *IntegrationTestSuite) getChainIndex(chain *chain.Config) int {
 	if chain.Id == "osmo-test-a" {
 		return 0

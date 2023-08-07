@@ -300,7 +300,6 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	s.Require().Equal(sdk.OneInt(), routeStats[0].NumberOfTrades)
 	s.Require().Equal([]uint64{swapPoolId1, swapPoolId2, swapPoolId3}, routeStats[0].Route)
 	s.Require().Equal(profits, routeStats[0].Profits)
-	s.setNodeFree(chainANode)
 }
 
 func (s *IntegrationTestSuite) ConcentratedLiquidity() {
@@ -868,7 +867,6 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Check that the tick spacing was reduced to the expected new tick spacing
 	concentratedPool = s.updatedConcentratedPool(chainABNode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
-	s.setNodeFree(chainABNode)
 }
 
 func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
@@ -899,7 +897,6 @@ func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 	s.T().Log("performing swaps")
 	chainABNode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[index]), denomB, config.StableswapWallet[index])
 	chainABNode.SwapExactAmountIn(coinBIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[index]), denomA, config.StableswapWallet[index])
-	s.setNodeFree(chainABNode)
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
@@ -938,7 +935,6 @@ func (s *IntegrationTestSuite) GeometricTwapMigration() {
 
 	// Swap to create new twap records on the pool that was created pre-upgrade.
 	chainABNode.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradePoolId[index]), otherDenom[index], swapWalletAddr)
-	s.setNodeFree(chainABNode)
 }
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
@@ -958,9 +954,6 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 	chainBNode.SendIBC(chainB, chainA, chainANode.PublicAddress, initialization.StakeToken)
 
 	chainANode.CreateBalancerPool("ibcDenomPool.json", initialization.ValidatorWalletName)
-
-	s.setNodeFree(chainANode)
-	s.setNodeFree(chainBNode)
 }
 
 // TestSuperfluidVoting tests that superfluid voting is functioning as expected.
@@ -1040,7 +1033,6 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 		10*time.Millisecond,
 		"superfluid delegation vote overwrite not working as expected",
 	)
-	s.setNodeFree(chainABNode)
 }
 
 func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() {
@@ -1143,7 +1135,6 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	secondTwapBOverA, err := chainABNode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapRemoveAndCreatePlus1Height)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(1), secondTwapBOverA)
-	s.setNodeFree(chainABNode)
 }
 
 func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
@@ -1211,8 +1202,6 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 			return strings.Contains(val, param)
 		}, time.Second*30, 10*time.Millisecond)
 	}
-	s.setNodeFree(chainANode)
-	s.setNodeFree(chainBNode)
 }
 
 func (s *IntegrationTestSuite) LargeWasmUpload() {
@@ -1283,8 +1272,6 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 		15*time.Second,
 		10*time.Millisecond,
 	)
-	s.setNodeFree(chainANode)
-	s.setNodeFree(chainBNode)
 }
 
 // TestPacketForwarding sends a packet from chainA to chainB, and forwards it
@@ -1338,7 +1325,6 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 		15*time.Second,
 		10*time.Millisecond,
 	)
-	s.setNodeFree(chainANode)
 }
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
@@ -1358,7 +1344,6 @@ func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 	lockupWalletAddr, lockupWalletSuperfluidAddr := chainABNode.GetWallet("lockup-wallet"), chainABNode.GetWallet("lockup-wallet-superfluid")
 	chainABNode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletAddr, 1)
 	chainABNode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletSuperfluidAddr, 2)
-	s.setNodeFree(chainABNode)
 }
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
@@ -1380,7 +1365,6 @@ func (s *IntegrationTestSuite) AddToExistingLock() {
 
 	// ensure we can add to new locks and superfluid locks on chainA
 	chainABNode.LockAndAddToExistingLock(chainAB, sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
-	s.setNodeFree(chainABNode)
 }
 
 // TestArithmeticTWAP tests TWAP by creating a pool, performing a swap.
@@ -1557,7 +1541,6 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningAB, twapAfterSwapBeforePruning10MsAB, sdk.NewDecWithPrec(1, 3))
 	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningBC, twapAfterSwapBeforePruning10MsBC, sdk.NewDecWithPrec(1, 3))
 	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningCA, twapAfterSwapBeforePruning10MsCA, sdk.NewDecWithPrec(1, 3))
-	s.setNodeFree(chainABNode)
 }
 
 func (s *IntegrationTestSuite) StateSync() {
@@ -1696,7 +1679,6 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 	s.Require().Less(timeDelta, 2*time.Second)
 	s.T().Logf("expeditedVotingPeriodDuration within two seconds of expected time: %v", timeDelta)
 	close(totalTimeChan)
-	s.setNodeFree(chainABNode)
 }
 
 // TestGeometricTWAP tests geometric twap.
@@ -1792,7 +1774,6 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	// uosmo = 2_000_000
 	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
-	s.setNodeFree(chainABNode)
 }
 
 // START: CAN REMOVE POST v17 UPGRADE
@@ -1850,7 +1831,6 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
 	communityPoolAddress := chainABNode.QueryCommunityPoolModuleAccount()
 	positions := chainABNode.QueryConcentratedPositions(communityPoolAddress)
 	s.Require().Len(positions, len(v17.AssetPairsForTestsOnly))
-	s.setNodeFree(chainABNode)
 }
 
 // END: CAN REMOVE POST v17 UPGRADE
