@@ -178,7 +178,7 @@ func appModules(
 			app.EpochsKeeper,
 			app.ConcentratedLiquidityKeeper,
 		),
-		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, *app.BankKeeper),
 		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
 		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
 		ibc_hooks.NewAppModule(app.AccountKeeper),
