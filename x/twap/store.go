@@ -162,6 +162,11 @@ func (k Keeper) GetAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapR
 	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPPoolIndexPrefix), types.ParseTwapFromBz)
 }
 
+// GetAllHistoricalPoolIndexedTWAPsForPoolId returns HistoricalTwapRecord for a pool give poolId.
+func (k Keeper) GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
+	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.FormatKeyPoolTwapRecords(poolId), types.ParseTwapHistoricalPoolIndexedRecordFromBz)
+}
+
 // StoreNewRecord stores a record, in both the most recent record store and historical stores.
 // NOTE: if it's a new Record make sure to update asset0 and asset1 as well.
 func (k Keeper) StoreNewRecord(ctx sdk.Context, twap types.TwapRecord) {

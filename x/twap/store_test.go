@@ -574,3 +574,47 @@ func (s *TestSuite) TestAccumulatorOverflow() {
 		})
 	}
 }
+
+func (s *TestSuite) TestGetAllHistoricalPoolIndexedTWAPsForPooId() {
+	baseRecord := newEmptyPriceRecord(1, baseTime, denom0, denom1)
+	tPlusOneRecord := newEmptyPriceRecord(1, tPlusOne, denom0, denom1)
+	tests := map[string]struct {
+		recordsToSet    []types.TwapRecord
+		poolId          uint64
+		expectedRecords []types.TwapRecord
+	}{
+		"set single record": {
+			poolId:          1,
+			expectedRecords: []types.TwapRecord{baseRecord},
+		},
+		"query non-existent pool": {
+			poolId:          2,
+			expectedRecords: []types.TwapRecord{},
+		},
+		"set single record, different pool ID": {
+			poolId:          2,
+			expectedRecords: []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom0, denom1)},
+		},
+		"set two records": {
+			poolId:          1,
+			expectedRecords: []types.TwapRecord{baseRecord, tPlusOneRecord},
+		},
+	}
+
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			twapKeeper := s.twapkeeper
+			s.preSetRecords(test.expectedRecords)
+
+			// System under test.
+			actualRecords, err := twapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, test.poolId)
+			s.NoError(err)
+
+			// Assertions.
+			s.Equal(test.expectedRecords, actualRecords)
+
+		})
+	}
+
+}

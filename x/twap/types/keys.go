@@ -3,6 +3,8 @@ package types
 import (
 	"errors"
 	fmt "fmt"
+	"strconv"
+	"strings"
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,6 +47,10 @@ var (
 )
 
 // TODO: make utility command to automatically interlace separators
+
+func FormatKeyPoolTwapRecords(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%d", HistoricalTWAPPoolIndexPrefix, poolId))
+}
 
 func FormatMostRecentTWAPKey(poolId uint64, denom1, denom2 string) []byte {
 	poolIdS := osmoutils.FormatFixedLengthU64(poolId)
@@ -91,4 +97,31 @@ func ParseTwapFromBz(bz []byte) (twap TwapRecord, err error) {
 		twap.GeometricTwapAccumulator = sdk.ZeroDec()
 	}
 	return twap, err
+}
+
+// ParseTwapHistoricalPoolIndexedRecordFromBz parses through an existing Twap Record by key and returns Twap Record.
+func ParseTwapHistoricalPoolIndexedRecordFromBz(key []byte, value []byte) (TwapRecord, error) {
+	if len(key) == 0 {
+		return TwapRecord{}, fmt.Errorf("Invalid twap record key")
+	}
+	if len(value) == 0 {
+		return TwapRecord{}, fmt.Errorf("Invalid twap record value")
+	}
+
+	keyStr := string(key)
+	twapRecordKeyComponent := strings.Split(keyStr, KeySeparator)
+
+	poolId, err := strconv.ParseUint(twapRecordKeyComponent[1], 10, 64)
+	if err != nil {
+		return TwapRecord{}, fmt.Errorf("cannot parse poolId key")
+	}
+
+	twapRecord, err := ParseTwapFromBz(value)
+	if err != nil {
+		return TwapRecord{}, fmt.Errorf("cannot parse TwapRecord value")
+	}
+
+	twapRecord.PoolId = poolId
+
+	return twapRecord, nil
 }
