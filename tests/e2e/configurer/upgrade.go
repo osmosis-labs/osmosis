@@ -145,12 +145,14 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	wg.Add(2)
 
-	// Chain B
+	// Chain A
 
 	go func() {
 		defer wg.Done()
-		chainBNode.FundCommunityPool(initialization.ValidatorWalletName, strAllUpgradeBaseDenoms())
+		chainANode.EnableSuperfluidAsset(chainA, v17SuperfluidAssets)
 	}()
+
+	// Chain B
 
 	go func() {
 		defer wg.Done()
