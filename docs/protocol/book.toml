@@ -1,0 +1,16 @@
+[book]
+authors = ["Osmosis Labs"]
+language = "en"
+multilingual = false
+src = "src"
+title = "The Osmosis Protocol"
+
+[preprocessor.katex]
+
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
+
+[output.html]
+curly-quotes = true
+fold = { enable = true, level = 1 }
+git-repository-url = "https://github.com/osmosis-labs/osmosis"
