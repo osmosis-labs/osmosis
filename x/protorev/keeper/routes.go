@@ -158,37 +158,35 @@ func (k Keeper) BuildHighestLiquidityRoute(ctx sdk.Context, swapDenom types.Base
 func (k Keeper) BuildTwoPoolRoute(
 	ctx sdk.Context,
 	baseDenom types.BaseDenom,
-	swapIn, swapOut string,
+	tokenInDenom, tokenOutDenom string,
 	poolId uint64,
 ) (RouteMetaData, error) {
-	if baseDenom.Denom != swapIn && baseDenom.Denom != swapOut {
-		return RouteMetaData{}, fmt.Errorf("base denom (%s) must be either tokenIn (%s) or tokenOut (%s)", baseDenom.Denom, swapIn, swapOut)
+	if baseDenom.Denom != tokenInDenom && baseDenom.Denom != tokenOutDenom {
+		return RouteMetaData{}, fmt.Errorf("base denom (%s) must be either tokenIn (%s) or tokenOut (%s)", baseDenom.Denom, tokenInDenom, tokenOutDenom)
 	}
 
 	var (
-		tokenOutDenom string
-		pool1, pool2  uint64
+		pool1, pool2 uint64
 	)
 
 	// In the case where the base denom is the swap out, the base denom becomes more ~expensive~ on the current pool id
 	// and potentially cheaper on the highest liquidity pool. So we swap first on the current pool id and then on the
 	// highest liquidity pool.
-	if swapOut == baseDenom.Denom {
-		highestLiquidityPool, err := k.GetPoolForDenomPair(ctx, baseDenom.Denom, swapIn)
+	if tokenOutDenom == baseDenom.Denom {
+		highestLiquidityPool, err := k.GetPoolForDenomPair(ctx, baseDenom.Denom, tokenInDenom)
 		if err != nil {
 			return RouteMetaData{}, err
 		}
 
 		pool1, pool2 = poolId, highestLiquidityPool
-		tokenOutDenom = swapIn
+		tokenOutDenom = tokenInDenom
 	} else {
-		highestLiquidityPool, err := k.GetPoolForDenomPair(ctx, baseDenom.Denom, swapOut)
+		highestLiquidityPool, err := k.GetPoolForDenomPair(ctx, baseDenom.Denom, tokenOutDenom)
 		if err != nil {
 			return RouteMetaData{}, err
 		}
 
 		pool1, pool2 = highestLiquidityPool, poolId
-		tokenOutDenom = swapOut
 	}
 
 	if pool1 == pool2 {
