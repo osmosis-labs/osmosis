@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 
@@ -10,7 +9,6 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -178,9 +176,7 @@ func (k Keeper) redirectDistributionRecord(ctx sdk.Context, cfmmPoolId, clPoolId
 
 	// Get concentrated gauge corresponding to the distribution epoch duration.
 	concentratedGaugeId, err := k.poolIncentivesKeeper.GetPoolGaugeId(ctx, clPoolId, distributionEpochDuration)
-	if concentratedGaugeId == 0 && errors.Is(err, poolincentivestypes.NoGaugeAssociatedWithPoolError{PoolId: clPoolId, Duration: distributionEpochDuration}) {
-		return nil
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 
