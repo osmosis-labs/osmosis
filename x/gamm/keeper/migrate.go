@@ -326,9 +326,6 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []gammmigration.
 		recordsMap[existingRecord.BalancerPoolId] = existingRecord
 	}
 
-	fmt.Println("existing records: ", migrationInfos)
-	fmt.Println()
-
 	// Update the map with the new records
 	for _, record := range records {
 		recordsMap[record.BalancerPoolId] = record
@@ -348,9 +345,6 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []gammmigration.
 	sort.SliceStable(newRecords, func(i, j int) bool {
 		return newRecords[i].BalancerPoolId < newRecords[j].BalancerPoolId
 	})
-
-	fmt.Println("new records: ", newRecords)
-	fmt.Println()
 
 	// We now have a list of all previous records, as well as records that have been updated.
 	// We can now remove all previous records and replace them with the new ones.
