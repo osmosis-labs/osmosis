@@ -1,11 +1,9 @@
 package e2e
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -64,72 +62,39 @@ func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address strin
 	return addrBalances
 }
 
+var currentNodeIndexA int
+
 func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig, error) {
 	chainA := s.configurer.GetChainConfig(0)
-	timeout := time.After(5 * time.Minute)
 
-	for {
-		freeNode := s.getFreeNode(chainA.GetAllChainNodes())
+	chainANodes := chainA.GetAllChainNodes()
 
-		if freeNode != nil {
-			return chainA, freeNode, nil
-		}
-
-		select {
-		case <-time.After(1 * time.Second):
-
-		case <-timeout:
-			return nil, nil, fmt.Errorf("timeout while waiting for free node")
-		}
-	}
+	chosenNode := chainANodes[currentNodeIndexA]
+	currentNodeIndexA = (currentNodeIndexA + 1) % len(chainANodes)
+	return chainA, chosenNode, nil
 }
+
+var currentNodeIndexB int
 
 func (s *IntegrationTestSuite) getChainBCfgs() (*chain.Config, *chain.NodeConfig, error) {
 	chainB := s.configurer.GetChainConfig(1)
-	timeout := time.After(5 * time.Minute)
 
-	for {
-		freeNode := s.getFreeNode(chainB.GetAllChainNodes())
+	chainBNodes := chainB.GetAllChainNodes()
 
-		if freeNode != nil {
-			return chainB, freeNode, nil
-		}
-
-		select {
-		case <-time.After(1 * time.Second):
-
-		case <-timeout:
-			return nil, nil, fmt.Errorf("timeout while waiting for free node")
-		}
-	}
+	chosenNode := chainBNodes[currentNodeIndexB]
+	currentNodeIndexB = (currentNodeIndexB + 1) % len(chainBNodes)
+	return chainB, chosenNode, nil
 }
 
+var useChainA bool
+
 func (s *IntegrationTestSuite) getChainCfgs() (*chain.Config, *chain.NodeConfig, error) {
-	chainB := s.configurer.GetChainConfig(1)
-	chainA := s.configurer.GetChainConfig(0)
-	timeout := time.After(5 * time.Minute)
-
-	for {
-		allNodes := []*chain.NodeConfig{}
-		allNodes = append(allNodes, chainB.GetAllChainNodes()...)
-		allNodes = append(allNodes, chainA.GetAllChainNodes()...)
-
-		freeNode := s.getFreeNode(allNodes)
-
-		if freeNode != nil {
-			if strings.Contains(freeNode.Name, "osmo-test-a") {
-				return chainA, freeNode, nil
-			} else {
-				return chainB, freeNode, nil
-			}
-		}
-
-		select {
-		case <-time.After(1 * time.Second):
-
-		case <-timeout:
-			return nil, nil, fmt.Errorf("timeout while waiting for free node")
-		}
+	if useChainA {
+		useChainA = false
+		return s.getChainACfgs()
+	} else {
+		useChainA = true
+		return s.getChainBCfgs()
 	}
 }
 
