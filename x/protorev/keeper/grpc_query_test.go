@@ -281,20 +281,23 @@ func (s *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
 	s.Require().Equal(developerAccount.String(), res.DeveloperAccount)
 }
 
-// TestGetProtoRevPoolWeights tests the query to retrieve the pool weights
-func (s *KeeperTestSuite) TestGetProtoRevPoolWeights() {
+// TestGetProtoRevInfoByPoolType tests the query to retrieve the pool info
+func (s *KeeperTestSuite) TestGetProtoRevInfoByPoolType() {
 	// Set the pool weights
-	poolWeights := types.PoolWeights{
-		StableWeight:       5,
-		BalancerWeight:     1,
-		ConcentratedWeight: 3,
+	poolInfo := types.InfoByPoolType{
+		Stable:       types.StablePoolInfo{Weight: 1},
+		Balancer:     types.BalancerPoolInfo{Weight: 1},
+		Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
+		Cosmwasm: types.CosmwasmPoolInfo{WeightMaps: []types.WeightMap{
+			{ContractAddress: "test", Weight: 1},
+		}},
 	}
-	s.App.AppKeepers.ProtoRevKeeper.SetPoolWeights(s.Ctx, poolWeights)
+	s.App.AppKeepers.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, poolInfo)
 
-	req := &types.QueryGetProtoRevPoolWeightsRequest{}
-	res, err := s.queryClient.GetProtoRevPoolWeights(sdk.WrapSDKContext(s.Ctx), req)
+	req := &types.QueryGetProtoRevInfoByPoolTypeRequest{}
+	res, err := s.queryClient.GetProtoRevInfoByPoolType(sdk.WrapSDKContext(s.Ctx), req)
 	s.Require().NoError(err)
-	s.Require().Equal(poolWeights, res.PoolWeights)
+	s.Require().Equal(poolInfo, res.InfoByPoolType)
 }
 
 // TestGetProtoRevMaxPoolPointsPerTx tests the query to retrieve the max pool points per tx

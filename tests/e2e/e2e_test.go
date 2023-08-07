@@ -222,10 +222,10 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	s.Require().Error(err)
 
 	// The module should have pool weights by default.
-	poolWeights, err := chainANode.QueryProtoRevPoolWeights()
-	s.T().Logf("checking that the protorev module has pool weights on init: %v", poolWeights)
+	info, err := chainANode.QueryProtoRevInfoByPoolType()
+	s.T().Logf("checking that the protorev module has pool info on init: %v", info)
 	s.Require().NoError(err)
-	s.Require().NotNil(poolWeights)
+	s.Require().NotNil(info)
 
 	// The module should have max pool points per tx by default.
 	maxPoolPointsPerTx, err := chainANode.QueryProtoRevMaxPoolPointsPerTx()

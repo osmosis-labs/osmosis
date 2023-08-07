@@ -71,11 +71,11 @@ service Query {
     option (google.api.http).get = "/osmosis/protorev/developer_account";
   }
 
-  // GetProtoRevPoolWeights queries the weights of each pool type currently
-  // being used by the module
-  rpc GetProtoRevPoolWeights(QueryGetProtoRevPoolWeightsRequest)
-      returns (QueryGetProtoRevPoolWeightsResponse) {
-    option (google.api.http).get = "/osmosis/protorev/pool_weights";
+  // GetProtoRevInfoByPoolType queries pool type information that is currently
+  // being utilized by the module
+  rpc GetProtoRevInfoByPoolType(QueryGetProtoRevInfoByPoolTypeRequest)
+      returns (QueryGetProtoRevInfoByPoolTypeResponse) {
+    option (google.api.http).get = "/osmosis/protorev/info_by_pool_type";
   }
 
   // GetProtoRevMaxPoolPointsPerTx queries the maximum number of pool points
@@ -242,16 +242,17 @@ message QueryGetProtoRevDeveloperAccountResponse {
       [ (gogoproto.moretags) = "yaml:\"developer_account\"" ];
 }
 
-// QueryGetProtoRevPoolWeightsRequest is request type for the
-// Query/GetProtoRevPoolWeights RPC method.
-message QueryGetProtoRevPoolWeightsRequest {}
+// QueryGetProtoRevInfoByPoolTypeRequest is request type for the
+// Query/GetProtoRevInfoByPoolType RPC method.
+message QueryGetProtoRevInfoByPoolTypeRequest {}
 
-// QueryGetProtoRevPoolWeightsResponse is response type for the
-// Query/GetProtoRevPoolWeights RPC method.
-message QueryGetProtoRevPoolWeightsResponse {
-  // pool_weights is a list of all of the pool weights
-  PoolWeights pool_weights = 1 [
-    (gogoproto.moretags) = "yaml:\"pool_weights\"",
+// QueryGetProtoRevInfoByPoolTypeResponse is response type for the
+// Query/GetProtoRevInfoByPoolType RPC method.
+message QueryGetProtoRevInfoByPoolTypeResponse {
+  // InfoByPoolType contains all information pertaining to how different
+  // pool types are handled by the module.
+  InfoByPoolType info_by_pool_type = 1 [
+    (gogoproto.moretags) = "yaml:\"info_by_pool_type\"",
     (gogoproto.nullable) = false
   ];
 }

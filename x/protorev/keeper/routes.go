@@ -153,7 +153,7 @@ func (k Keeper) BuildHighestLiquidityRoute(ctx sdk.Context, swapDenom types.Base
 // is only added to the global pool point counter if the route simulated is minimally profitable i.e. it will make a profit.
 func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes) (uint64, error) {
 	// Calculate the number of pool points this route will consume
-	poolWeights := k.GetPoolWeights(ctx)
+	infoByPoolType := k.GetInfoByPoolType(ctx)
 	totalWeight := uint64(0)
 
 	for _, poolId := range route.PoolIds() {
@@ -169,13 +169,25 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 
 		switch pool.GetType() {
 		case poolmanagertypes.Balancer:
-			totalWeight += poolWeights.BalancerWeight
+			totalWeight += infoByPoolType.Balancer.Weight
 		case poolmanagertypes.Stableswap:
-			totalWeight += poolWeights.StableWeight
+			totalWeight += infoByPoolType.Stable.Weight
 		case poolmanagertypes.Concentrated:
-			totalWeight += poolWeights.ConcentratedWeight
+			totalWeight += infoByPoolType.Concentrated.Weight
 		case poolmanagertypes.CosmWasm:
-			totalWeight += poolWeights.CosmwasmWeight
+			weight, ok := uint64(0), false
+			for _, weightMap := range infoByPoolType.Cosmwasm.WeightMaps {
+				if weightMap.ContractAddress == pool.GetAddress().String() {
+					weight = weightMap.Weight
+					ok = true
+					break
+				}
+			}
+			if !ok {
+				return 0, fmt.Errorf("cosmwasm pool %d does not have a weight", poolId)
+			}
+
+			totalWeight += weight
 		default:
 			return 0, fmt.Errorf("invalid pool type")
 		}
