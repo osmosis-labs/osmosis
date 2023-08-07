@@ -339,6 +339,18 @@ func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 	return balancesResp.GetBalances(), nil
 }
 
+func (n *NodeConfig) QueryBalance(address, denom string) (sdk.Coin, error) {
+	path := fmt.Sprintf("cosmos/bank/v1beta1/balances/%s/by_denom?denom=%s", address, denom)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var balancesResp banktypes.QueryBalanceResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
+		return sdk.Coin{}, err
+	}
+	return *balancesResp.GetBalance(), nil
+}
+
 func (n *NodeConfig) QuerySupplyOf(denom string) (sdk.Int, error) {
 	path := fmt.Sprintf("cosmos/bank/v1beta1/supply/%s", denom)
 	bz, err := n.QueryGRPCGateway(path)

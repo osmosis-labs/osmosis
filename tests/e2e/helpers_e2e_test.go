@@ -62,11 +62,40 @@ func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address strin
 	return addrBalances
 }
 
-func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig) {
+var currentNodeIndexA int
+
+func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig, error) {
 	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
-	return chainA, chainANode
+
+	chainANodes := chainA.GetAllChainNodes()
+
+	chosenNode := chainANodes[currentNodeIndexA]
+	currentNodeIndexA = (currentNodeIndexA + 1) % len(chainANodes)
+	return chainA, chosenNode, nil
+}
+
+var currentNodeIndexB int
+
+func (s *IntegrationTestSuite) getChainBCfgs() (*chain.Config, *chain.NodeConfig, error) {
+	chainB := s.configurer.GetChainConfig(1)
+
+	chainBNodes := chainB.GetAllChainNodes()
+
+	chosenNode := chainBNodes[currentNodeIndexB]
+	currentNodeIndexB = (currentNodeIndexB + 1) % len(chainBNodes)
+	return chainB, chosenNode, nil
+}
+
+var useChainA bool
+
+func (s *IntegrationTestSuite) getChainCfgs() (*chain.Config, *chain.NodeConfig, error) {
+	if useChainA {
+		useChainA = false
+		return s.getChainACfgs()
+	} else {
+		useChainA = true
+		return s.getChainBCfgs()
+	}
 }
 
 // Helper function for calculating uncollected spread rewards since the time that spreadRewardGrowthInsideLast corresponds to
@@ -159,4 +188,12 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
 	contractAddr := contracts[0]
 	return contractAddr
+}
+
+func (s *IntegrationTestSuite) getChainIndex(chain *chain.Config) int {
+	if chain.Id == "osmo-test-a" {
+		return 0
+	} else {
+		return 1
+	}
 }
