@@ -2,6 +2,7 @@ package stableswap
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -138,13 +139,18 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	roundingDirection := osmomath.RoundUp
 	errTolerance.RoundingDir = roundingDirection
 
+	fmt.Println("xReserve", xReserve)
+
 	xEst, err := osmomath.BinarySearchBigDec(iterKCalc, xLowEst, xHighEst, targetK, errTolerance, maxIterations)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("xEst", xEst)
 
 	xOut := xReserve.Sub(xEst)
 	// fmt.Printf("xOut %v\n", xOut)
+
+	fmt.Println("xOut", xOut)
 
 	// We check the absolute value of the output against the xReserve amount to ensure that:
 	// 1. Swaps cannot more than double the input token's pool supply

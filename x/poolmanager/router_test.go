@@ -1292,6 +1292,27 @@ func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 			expectPass: false,
 			poolType:   types.Stableswap,
 		},
+		{
+			name: "Asserts panic catching in MultihopEstimateInGivenExactAmountOut for stableswap: tokenOut below actual pool reserves",
+			param: param{
+				routes: []types.SwapAmountOutRoute{
+					{
+						PoolId:       2,
+						TokenInDenom: bar,
+					},
+				},
+				estimateRoutes: []types.SwapAmountOutRoute{
+					{
+						PoolId:       4,
+						TokenInDenom: bar,
+					},
+				},
+				tokenInMaxAmount: sdk.NewInt(5_000_000),
+				tokenOut:         sdk.NewCoin(baz, sdk.NewInt(7_500_000)),
+			},
+			expectPass: false,
+			poolType:   types.Stableswap,
+		},
 	}
 
 	for _, test := range tests {
@@ -1299,6 +1320,7 @@ func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 		s.SetupTest()
 
 		s.Run(test.name, func() {
+			fmt.Println(test.name)
 			poolmanagerKeeper := s.App.PoolManagerKeeper
 
 			firstEstimatePoolId, secondEstimatePoolId := s.setupPools(test.poolType, defaultPoolSpreadFactor)
@@ -1314,11 +1336,14 @@ func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 				test.param.routes,
 				test.param.tokenInMaxAmount,
 				test.param.tokenOut)
+			fmt.Println(multihopTokenInAmount, errMultihop)
 
 			estimateMultihopTokenInAmount, errEstimate := poolmanagerKeeper.MultihopEstimateInGivenExactAmountOut(
 				s.Ctx,
 				test.param.estimateRoutes,
 				test.param.tokenOut)
+
+			fmt.Println(estimateMultihopTokenInAmount, errEstimate)
 
 			if test.expectPass {
 				s.Require().NoError(errMultihop, "test: %v", test.name)
