@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### BugFix
 
 ### Misc Improvements
+* [#5976](https://github.com/osmosis-labs/osmosis/pull/5976) chore[e2e]: faster epoch
 
 ### Minor improvements & Bug Fixes
 
