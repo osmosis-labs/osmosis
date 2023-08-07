@@ -3,29 +3,23 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
 	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v4/modules/core/exported"
 
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
-
-type ContractAck struct {
-	ContractResult []byte `json:"contract_result"`
-	IbcAck         []byte `json:"ibc_ack"`
-}
 
 type WasmHooks struct {
 	ContractKeeper      *wasmkeeper.PermissionedKeeper
@@ -117,7 +111,24 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrWasmError, err.Error())
 	}
 
-	fullAck := ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
+	// Check if the contract is requesting for the ack to be async.
+	var asyncAckRequest types.OnRecvPacketAsyncAckResponse
+	err = json.Unmarshal(response.Data, &asyncAckRequest)
+	if err == nil {
+		// If unmarshalling succeeds, the contract is requesting for the ack to be async.
+		if asyncAckRequest.IsAsyncAck { // in which case IsAsyncAck is expected to be set to true
+			if !h.ibcHooksKeeper.IsInAllowList(ctx, contractAddr.String()) {
+				// Only allowed contracts can send async acks
+				return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrAsyncAckNotAllowed)
+			}
+			// Store the contract as the packet's ack actor and return nil
+			h.ibcHooksKeeper.StorePacketAckActor(ctx, packet, contractAddr.String())
+			return nil
+		}
+	}
+
+	// If the ack is not async, we continue generating the ack and return it
+	fullAck := types.ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
 	bz, err = json.Marshal(fullAck)
 	if err != nil {
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadResponse, err.Error())
