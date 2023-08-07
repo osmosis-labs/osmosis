@@ -249,12 +249,13 @@ blocks.db
 # Ignore binary created from localosmosis scripts
 tests/cl-genesis-positions/script
 tests/cl-genesis-positions/*.json
-<<<<<<< HEAD
-=======
+
+
+
 
 # Docs
 docs/protocol/book
 
 # Release folder
 dist/
->>>>>>> 1497d5b7 (docs: Osmosis protocol book (#5971))
+
