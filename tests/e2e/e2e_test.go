@@ -3,6 +3,7 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
 
-	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+	packetforwardingtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
@@ -221,10 +222,10 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	s.Require().Error(err)
 
 	// The module should have pool weights by default.
-	poolWeights, err := chainANode.QueryProtoRevPoolWeights()
-	s.T().Logf("checking that the protorev module has pool weights on init: %v", poolWeights)
+	info, err := chainANode.QueryProtoRevInfoByPoolType()
+	s.T().Logf("checking that the protorev module has pool info on init: %v", info)
 	s.Require().NoError(err)
-	s.Require().NotNil(poolWeights)
+	s.Require().NotNil(info)
 
 	// The module should have max pool points per tx by default.
 	maxPoolPointsPerTx, err := chainANode.QueryProtoRevMaxPoolPointsPerTx()
@@ -1303,9 +1304,18 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	// check the balance of the contract
 	s.CallCheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
 
-	// sender wasm addr
-	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
+	// Getting the sender as set by PFM
+	senderStr := fmt.Sprintf("channel-0/%s", validatorAddr)
+	senderHash32 := address.Hash(packetforwardingtypes.ModuleName, []byte(senderStr)) // typo intended
+	sender := sdk.AccAddress(senderHash32[:20])
+	bech32Prefix := "osmo"
+	pfmSender, err := sdk.Bech32ifyAddressBytes(bech32Prefix, sender)
 	s.Require().NoError(err)
+
+	// sender wasm addr
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", pfmSender, "osmo")
+	s.Require().NoError(err)
+
 	s.Require().Eventually(func() bool {
 		response, err := chainANode.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
 		if err != nil {

@@ -24,13 +24,9 @@ import (
 )
 
 const (
-	mainnetChainID     = "osmosis-1"
-	e2eChainA          = "osmo-test-a"
-	e2eChainB          = "osmo-test-b"
-	balancerWeight     = 1
-	stableWeight       = 4
-	concentratedWeight = 300
-	cosmwasmWeight     = 300
+	mainnetChainID = "osmosis-1"
+	e2eChainA      = "osmo-test-a"
+	e2eChainB      = "osmo-test-b"
 )
 
 var notEnoughLiquidityForSwapErr = errorsmod.Wrapf(gammtypes.ErrInvalidMathApprox, "token amount must be positive")
@@ -88,12 +84,7 @@ func CreateUpgradeHandler(
 		keepers.DistrKeeper.SetFeePool(ctx, feePool)
 
 		// Reset the pool weights upon upgrade. This will add support for CW pools on ProtoRev.
-		keepers.ProtoRevKeeper.SetPoolWeights(ctx, types.PoolWeights{
-			BalancerWeight:     balancerWeight,
-			StableWeight:       stableWeight,
-			ConcentratedWeight: concentratedWeight,
-			CosmwasmWeight:     cosmwasmWeight,
-		})
+		keepers.ProtoRevKeeper.SetInfoByPoolType(ctx, types.DefaultPoolTypeInfo)
 
 		return migrations, nil
 	}

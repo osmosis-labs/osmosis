@@ -2462,6 +2462,15 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 			},
 			rangeTestParams: DefaultRangeTestParams,
 		},
+		"two adjacent ranges (flipped order)": {
+			// Note: this setup covers both edge cases where initial interval accumulation is negative
+			// for spread rewards and incentives
+			tickRanges: [][]int64{
+				{10000, 20000},
+				{-10000, 10000},
+			},
+			rangeTestParams: DefaultRangeTestParams,
+		},
 		"two adjacent ranges with current tick smaller than both": {
 			tickRanges: [][]int64{
 				{-10000, 10000},

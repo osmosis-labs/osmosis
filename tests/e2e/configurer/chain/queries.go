@@ -118,20 +118,20 @@ func (n *NodeConfig) QueryProtoRevDeveloperAccount() (sdk.AccAddress, error) {
 	return account, nil
 }
 
-// QueryProtoRevPoolWeights gets the pool point weights of the module.
-func (n *NodeConfig) QueryProtoRevPoolWeights() (protorevtypes.PoolWeights, error) {
-	path := "/osmosis/protorev/pool_weights"
+// QueryProtoRevInfoByPoolType gets information on how the module handles different pool types.
+func (n *NodeConfig) QueryProtoRevInfoByPoolType() (*protorevtypes.InfoByPoolType, error) {
+	path := "/osmosis/protorev/info_by_pool_type"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
-		return protorevtypes.PoolWeights{}, err
+		return nil, err
 	}
 
 	// nolint: staticcheck
-	var response protorevtypes.QueryGetProtoRevPoolWeightsResponse
+	var response protorevtypes.QueryGetProtoRevInfoByPoolTypeResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err) // this error should not happen
-	return response.PoolWeights, nil
+	return &response.InfoByPoolType, nil
 }
 
 // QueryProtoRevMaxPoolPointsPerTx gets the max pool points per tx of the module.
