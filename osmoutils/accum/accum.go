@@ -134,14 +134,10 @@ func (accum *AccumulatorObject) NewPosition(name string, numShareUnits sdk.Dec, 
 // It sets the position's accumulator to the given value of intervalAccumulationPerShare.
 // This is useful for when the accumulation happens at a sub-range of the full accumulator
 // rewards range. For example, a concentrated liquidity narrow range position.
-// All intervalAccumulationPerShare DecCoin values must be non-negative.
+// intervalAccumulationPerShare DecCoin values are allowed to be negative.
 // The position is initialized with empty unclaimed rewards
 // If there is an existing position for the given address, it is overwritten.
 func (accum *AccumulatorObject) NewPositionIntervalAccumulation(name string, numShareUnits sdk.Dec, intervalAccumulationPerShare sdk.DecCoins, options *Options) error {
-	if intervalAccumulationPerShare.IsAnyNegative() {
-		return NegativeIntervalAccumulationPerShareError{intervalAccumulationPerShare}
-	}
-
 	if err := options.validate(); err != nil {
 		return err
 	}

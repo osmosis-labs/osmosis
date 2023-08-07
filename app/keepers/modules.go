@@ -82,6 +82,8 @@ var AppModuleBasics = []module.AppModuleBasic{
 			superfluidclient.UpdateUnpoolWhitelistProposalHandler,
 			gammclient.ReplaceMigrationRecordsProposalHandler,
 			gammclient.UpdateMigrationRecordsProposalHandler,
+			gammclient.CreateCLPoolAndLinkToCFMMProposalHandler,
+			gammclient.SetScalingFactorControllerProposalHandler,
 			clclient.CreateConcentratedLiquidityPoolProposalHandler,
 			clclient.TickSpacingDecreaseProposalHandler,
 			cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,

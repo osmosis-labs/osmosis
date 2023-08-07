@@ -3081,9 +3081,9 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 	s.Require().Equal(liquidityBefore, liquidityAfter)
 
 	// Within a margin of error, the spot price should be the same before and after the swap
-	oldSpotPrice, err := poolBefore.SpotPrice(s.Ctx, pool.GetToken0(), pool.GetToken1())
+	oldSpotPrice, err := poolBefore.SpotPrice(s.Ctx, pool.GetToken1(), pool.GetToken0())
 	s.Require().NoError(err)
-	newSpotPrice, err := poolAfter.SpotPrice(s.Ctx, pool.GetToken0(), pool.GetToken1())
+	newSpotPrice, err := poolAfter.SpotPrice(s.Ctx, pool.GetToken1(), pool.GetToken0())
 	s.Require().NoError(err)
 	multiplicativeTolerance = osmomath.ErrTolerance{
 		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.001"),

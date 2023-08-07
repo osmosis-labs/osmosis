@@ -49,6 +49,8 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 }
 
 // ConvertProfits converts the profit denom to uosmo to allow for a fair comparison of profits
+//
+// NOTE: This does not check the underlying pool before swapping so this may go over the MaxTicksCrossed.
 func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.Int) (sdk.Int, error) {
 	if inputCoin.Denom == types.OsmosisDenomination {
 		return profit, nil
@@ -290,7 +292,7 @@ func (k Keeper) executeSafeSwap(
 	}
 
 	// At most we can swap half of the liquidity in the pool
-	liquidTokenAmt := liquidity.AmountOf(outputCoin.Denom).Quo(sdk.NewInt(2))
+	liquidTokenAmt := liquidity.AmountOf(outputCoin.Denom).Quo(sdk.NewInt(4))
 	if liquidTokenAmt.LT(outputCoin.Amount) {
 		outputCoin.Amount = liquidTokenAmt
 	}

@@ -249,3 +249,6 @@ blocks.db
 # Ignore binary created from localosmosis scripts
 tests/cl-genesis-positions/script
 tests/cl-genesis-positions/*.json
+
+# Release folder
+dist/

@@ -231,7 +231,7 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 		}
 
 		return resp.StatusCode != http.StatusServiceUnavailable
-	}, time.Minute, time.Millisecond*10, "failed to execute HTTP request")
+	}, time.Minute, 10*time.Millisecond, "failed to execute HTTP request")
 
 	defer resp.Body.Close()
 

@@ -348,7 +348,7 @@ func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 		{
 			description:             "Valid route with cw pool, balancer, stable swap and cl pool",
 			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 51, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 50, TokenOutDenom: ""}},
-			expectedRoutePoolPoints: 18,
+			expectedRoutePoolPoints: 10,
 			expectedPass:            true,
 		},
 	}

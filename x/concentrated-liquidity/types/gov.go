@@ -83,7 +83,7 @@ func (p *CreateConcentratedLiquidityPoolsProposal) ValidateBasic() error {
 func (p CreateConcentratedLiquidityPoolsProposal) String() string {
 	recordsStr := ""
 	for _, record := range p.PoolRecords {
-		recordsStr = recordsStr + fmt.Sprintf("(Denom0: %s, Denom1: %s, TickSpacing: %d, ExponentAtPriceOne: %d, SpreadFactor: %d) ", record.Denom0, record.Denom1, record.TickSpacing, record.ExponentAtPriceOne, record.SpreadFactor)
+		recordsStr = recordsStr + fmt.Sprintf("(Denom0: %s, Denom1: %s, TickSpacing: %d, SpreadFactor: %d) ", record.Denom0, record.Denom1, record.TickSpacing, record.SpreadFactor)
 	}
 
 	var b strings.Builder

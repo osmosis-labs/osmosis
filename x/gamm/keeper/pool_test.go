@@ -518,6 +518,83 @@ func (s *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 	}
 }
 
+func (s *KeeperTestSuite) TestSetStableSwapScalingFactorController() {
+	initialControllerAddr := s.TestAccs[0].String()
+	updatedControllerAddr := s.TestAccs[1].String()
+
+	testcases := []struct {
+		name             string
+		poolId           uint64
+		expError         error
+		isStableSwapPool bool
+	}{
+		{
+			name:             "Error: Pool does not exist",
+			poolId:           2,
+			expError:         types.PoolDoesNotExistError{PoolId: defaultPoolId + 1},
+			isStableSwapPool: false,
+		},
+		{
+			name:             "Error: Pool id is not of type stableswap pool",
+			poolId:           1,
+			expError:         fmt.Errorf("pool id 1 is not of type stableswap pool"),
+			isStableSwapPool: false,
+		},
+		{
+			name:             "Valid case",
+			poolId:           1,
+			isStableSwapPool: true,
+		},
+	}
+	for _, tc := range testcases {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			if tc.isStableSwapPool == true {
+				poolId := s.prepareCustomStableswapPool(
+					defaultAcctFunds,
+					stableswap.PoolParams{
+						SwapFee: defaultSpreadFactor,
+						ExitFee: defaultZeroExitFee,
+					},
+					sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[0].Denom, defaultAcctFunds[0].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2))),
+					[]uint64{1, 1},
+				)
+				pool, _ := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
+				stableswapPool, _ := pool.(*stableswap.Pool)
+				stableswapPool.ScalingFactorController = initialControllerAddr
+				err := s.App.GAMMKeeper.SetPool(s.Ctx, stableswapPool)
+				s.Require().NoError(err)
+
+				// attempt to adjust the scaling factor from the new address - it should fail
+				err = s.App.GAMMKeeper.SetStableSwapScalingFactors(s.Ctx, tc.poolId, []uint64{1, 2}, updatedControllerAddr)
+				s.Require().ErrorIs(err, types.ErrNotScalingFactorGovernor)
+			} else {
+				s.prepareCustomBalancerPool(
+					defaultAcctFunds,
+					defaultPoolAssets,
+					defaultPoolParams)
+			}
+
+			err := s.App.GAMMKeeper.SetStableSwapScalingFactorController(s.Ctx, tc.poolId, updatedControllerAddr)
+			if tc.expError != nil {
+				s.Require().Error(err)
+				s.Require().EqualError(err, tc.expError.Error())
+			} else {
+				s.Require().NoError(err)
+
+				// confirm the scaling factor controller has been updated
+				pool, _ := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, tc.poolId)
+				stableswapPool, _ := pool.(*stableswap.Pool)
+				s.Require().Equal(updatedControllerAddr, stableswapPool.ScalingFactorController)
+
+				// confirm the new controller can update the scaling factor
+				err = s.App.GAMMKeeper.SetStableSwapScalingFactors(s.Ctx, tc.poolId, []uint64{1, 2}, updatedControllerAddr)
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 	tests := map[string]struct {
 		poolId              uint64

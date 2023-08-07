@@ -71,7 +71,7 @@ func (p Pool) IsActive(ctx sdk.Context) bool {
 }
 
 // SpotPrice returns the spot price of the pool.
-func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
+func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (sdk.Dec, error) {
 	request := msg.SpotPriceQueryMsg{
 		SpotPrice: msg.SpotPrice{
 			QuoteAssetDenom: quoteAssetDenom,
