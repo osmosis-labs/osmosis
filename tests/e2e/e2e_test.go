@@ -3,6 +3,7 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
 
-	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+	packetforwardingtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
@@ -1195,7 +1196,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 		s.Eventually(func() bool {
 			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 			return strings.Contains(val, param)
-		}, time.Second*30, time.Millisecond*500)
+		}, time.Second*30, time.Second)
 	}
 }
 
@@ -1228,7 +1229,7 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	// check the balance of the contract
 	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
 	ibcDenom := denomTrace.IBCDenom()
-	s.CheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
+	s.CallCheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
@@ -1301,11 +1302,20 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	chainANode.SendIBCTransfer(chainB, validatorAddr, validatorAddr, string(forwardMemo), coin)
 
 	// check the balance of the contract
-	s.CheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
+	s.CallCheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
+
+	// Getting the sender as set by PFM
+	senderStr := fmt.Sprintf("channel-0/%s", validatorAddr)
+	senderHash32 := address.Hash(packetforwardingtypes.ModuleName, []byte(senderStr)) // typo intended
+	sender := sdk.AccAddress(senderHash32[:20])
+	bech32Prefix := "osmo"
+	pfmSender, err := sdk.Bech32ifyAddressBytes(bech32Prefix, sender)
+	s.Require().NoError(err)
 
 	// sender wasm addr
-	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", pfmSender, "osmo")
 	s.Require().NoError(err)
+
 	s.Require().Eventually(func() bool {
 		response, err := chainANode.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
 		if err != nil {
@@ -1615,8 +1625,8 @@ func (s *IntegrationTestSuite) StateSync() {
 		s.Require().NoError(err)
 		return stateSyncNodeHeight == runningNodeHeight
 	},
-		3*time.Minute,
-		500*time.Millisecond,
+		1*time.Minute,
+		time.Second,
 	)
 
 	// stop the state synching node.

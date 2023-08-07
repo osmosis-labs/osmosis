@@ -108,14 +108,14 @@ func (s *KeeperTestSuite) TestSwapping() {
 			param: param{
 				expectedTrades: []types.Trade{
 					{
-						Pool:     49,
+						Pool:     50,
 						TokenIn:  "uosmo",
 						TokenOut: "epochTwo",
 					},
 				},
 				executeSwap: func() {
 
-					route := []poolmanagertypes.SwapAmountInRoute{{PoolId: 49, TokenOutDenom: "epochTwo"}}
+					route := []poolmanagertypes.SwapAmountInRoute{{PoolId: 50, TokenOutDenom: "epochTwo"}}
 
 					_, err := s.App.PoolManagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], route, sdk.NewCoin("uosmo", sdk.NewInt(10)), sdk.NewInt(1))
 					s.Require().NoError(err)
@@ -606,7 +606,7 @@ func (s *KeeperTestSuite) TestStoreJoinExitPoolSwaps() {
 		{
 			name: "Non-Gamm Pool, Return Early Do Not Store Any Swaps",
 			param: param{
-				poolId:       49,
+				poolId:       50,
 				denom:        "uosmo",
 				isJoin:       true,
 				expectedSwap: types.Trade{},

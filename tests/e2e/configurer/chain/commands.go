@@ -259,6 +259,14 @@ func (n *NodeConfig) SendIBCTransfer(dstChain *Config, from, recipient, memo str
 	_, _, err := n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
 	require.NoError(n.t, err)
 
+	cmd = []string{"hermes", "clear", "packets", "--chain", dstChain.Id, "--port", "transfer", "--channel", "channel-0"}
+	_, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
+	require.NoError(n.t, err)
+
+	cmd = []string{"hermes", "clear", "packets", "--chain", n.chainId, "--port", "transfer", "--channel", "channel-0"}
+	_, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
+	require.NoError(n.t, err)
+
 	n.LogActionF("successfully submitted sent IBC transfer")
 }
 
@@ -333,7 +341,7 @@ func (n *NodeConfig) SubmitSuperfluidProposal(asset string, initialDeposit sdk.C
 
 func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(initialDeposit sdk.Coin) int {
 	n.LogActionF("Creating concentrated liquidity pool")
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,-6,0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	// Extract the proposal ID from the response
@@ -681,8 +689,8 @@ func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin)
 				return false
 			}
 		},
-		5*time.Minute,
-		time.Second,
+		time.Minute,
+		10*time.Millisecond,
 		"tx not received on destination chain",
 	)
 
@@ -821,6 +829,6 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 			return false
 		}
 		return status == proposalStatusPassed
-	}, time.Minute*30, time.Millisecond*500)
+	}, time.Minute, 10*time.Millisecond)
 	return nil
 }
