@@ -6,7 +6,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"google.golang.org/protobuf/types/known/wrapperspb"
+	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
@@ -185,10 +185,10 @@ func (k Keeper) GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration 
 		return 0, fmt.Errorf("cannot get gauge id from pool id without a lockable duration. There can be many gauges for pool id %d and duration 0", poolId)
 	}
 
-	uint64Value := &wrapperspb.UInt64Value{}
+	uint64Value := gogotypes.UInt64Value{}
 	key := types.GetPoolGaugeIdInternalStoreKey(poolId, lockableDuration)
 	store := ctx.KVStore(k.storeKey)
-	found, err := osmoutils.Get(store, key, uint64Value)
+	found, err := osmoutils.Get(store, key, &uint64Value)
 	if err != nil {
 		return 0, err
 	}
