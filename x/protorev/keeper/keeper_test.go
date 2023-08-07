@@ -915,7 +915,7 @@ func (s *KeeperTestSuite) setUpPools() {
 	s.PrepareCosmWasmPool()
 
 	// Create a duplicate pool for testing
-	// Pool 51
+	// Pool 52
 	s.createGAMMPool(
 		[]balancer.PoolAsset{
 			{
@@ -932,7 +932,7 @@ func (s *KeeperTestSuite) setUpPools() {
 	)
 
 	// Create a duplicate pool for testing
-	// Pool 52
+	// Pool 53
 	s.createGAMMPool(
 		[]balancer.PoolAsset{
 			{
@@ -949,7 +949,7 @@ func (s *KeeperTestSuite) setUpPools() {
 	)
 
 	// Create a duplicate pool for testing
-	// Pool 53
+	// Pool 54
 	s.createGAMMPool(
 		[]balancer.PoolAsset{
 			{
@@ -966,7 +966,7 @@ func (s *KeeperTestSuite) setUpPools() {
 	)
 
 	// Create a duplicate pool for testing
-	// Pool 54
+	// Pool 55
 	s.createGAMMPool(
 		[]balancer.PoolAsset{
 			{
@@ -983,7 +983,7 @@ func (s *KeeperTestSuite) setUpPools() {
 	)
 
 	// Create a duplicate pool for testing
-	// Pool 55
+	// Pool 56
 	s.createGAMMPool(
 		[]balancer.PoolAsset{
 			{
@@ -998,8 +998,9 @@ func (s *KeeperTestSuite) setUpPools() {
 		sdk.NewDecWithPrec(2, 3),
 		sdk.NewDecWithPrec(0, 2),
 	)
+
 	// Create a concentrated liquidity pool for range testing
-	// Pool 57
+	// Pool 58
 	// Create the CL pool
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "epochTwo", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
 	fundCoins := sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(10_000_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)))
@@ -1007,7 +1008,7 @@ func (s *KeeperTestSuite) setUpPools() {
 	s.CreateFullRangePosition(clPool, fundCoins)
 
 	// Create a concentrated liquidity pool for range testing
-	// Pool 58
+	// Pool 59
 	// Create the CL pool
 	clPool = s.PrepareCustomConcentratedPool(s.TestAccs[0], "epochTwo", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
 	fundCoins = sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(2_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)))
