@@ -671,18 +671,28 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 	upperTickUptimeValues := getUptimeTrackerValues(upperTickInfo.UptimeTrackers.List)
 	// If current tick is below range, we subtract uptime growth of upper tick from that of lower tick
 	if currentTick < lowerTick {
-		return osmoutils.SubDecCoinArrays(lowerTickUptimeValues, upperTickUptimeValues)
+		// Note: SafeSub with negative accumulation is possible if upper tick is initialized first
+		// while current tick > upper tick. Then, the current tick under the lower tick. The lower
+		// tick then gets initialized to zero.
+		// Therefore, we allow for negative result.
+		return osmoutils.SafeSubDecCoinArrays(lowerTickUptimeValues, upperTickUptimeValues)
 	} else if currentTick < upperTick {
 		// If current tick is within range, we subtract uptime growth of lower and upper tick from global growth
+		// Note: each individual tick snapshot never be greater than the global uptime accumulator.
+		// Therefore, we do not allow for negative result.
 		globalMinusUpper, err := osmoutils.SubDecCoinArrays(globalUptimeValues, upperTickUptimeValues)
 		if err != nil {
 			return []sdk.DecCoins{}, err
 		}
 
-		return osmoutils.SubDecCoinArrays(globalMinusUpper, lowerTickUptimeValues)
+		// Note: SafeSub with negative accumulation is possible if lower tick is initialized after upper tick
+		// and the current tick is between the two.
+		return osmoutils.SafeSubDecCoinArrays(globalMinusUpper, lowerTickUptimeValues)
 	} else {
 		// If current tick is above range, we subtract uptime growth of lower tick from that of upper tick
-		return osmoutils.SubDecCoinArrays(upperTickUptimeValues, lowerTickUptimeValues)
+		// Note: SafeSub with negative accumulation is possible if lower tick is initialized after upper tick
+		// and the current tick is above the two.
+		return osmoutils.SafeSubDecCoinArrays(upperTickUptimeValues, lowerTickUptimeValues)
 	}
 }
 

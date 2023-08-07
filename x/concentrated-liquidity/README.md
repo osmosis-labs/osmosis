@@ -1355,6 +1355,9 @@ This returns the amount of spread rewards collected by the user.
 
 ## Interval Accumulation
 
+Section pre-face: interval accumulation for incentives functions
+similarly to the spread rewards. However, we focus on spread rewards only for brevity.
+
 As mentioned in the previous sections, to collect spread rewards,
 we utilize a rewards accumulator abstraction with an interval accumulation extension.
 
@@ -1405,6 +1408,8 @@ For this reason, there are 3 ways to compute the rewards accrued inside the posi
 
 ### Negative Interval Accumulation Edge Case Behavior
 
+Case 1: Initialize lower tick snapshot to be greater than upper tick snapshot when current tick > upper tick
+
 Note, that if we initialize the lower tick after the upper tick is already initialized,
 for example, by another position, this might lead to negative accumulation inside
 the interval. This is only possible if the current tick is greater than the lower tick
@@ -1424,6 +1429,15 @@ interval accumulation inside if the upper is initialized after the lower and the
 The reason is that if the current tick is less than the tick we initialize, the snapshot becomes 0 by convention.
 As a result, the subtraction from the global accumulator for computing interval accumulation never leads to a
 negative value.
+
+Case 2: Initialize lower tick snapshot to be zero while upper tick snapshot to be non-zero when current tick < lower tick
+
+Assume that initially current tick > upper tick and the upper tick gets initialized by some position.
+Then, its accumulator snapshot is set to the global accumulator. Now, assume that the current tick
+moves under the future position's lower tick. Then, the position gets initialized.
+
+As a result, the lower tick is set to 0, and interval accumulation is
+`lower tick snapshot - upper tick snapshot = 0 - positive value = negative value`
 
 ## Swaps
 

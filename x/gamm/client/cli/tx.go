@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -291,6 +293,129 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
 	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
+
+	return cmd
+}
+
+// NewCmdSubmitUpdateMigrationRecordsProposal implements a command handler for update migration records proposal
+func NewCmdSubmitCreateCLPoolAndLinkToCFMMProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-cl-pool-and-cfmm-link [flags]",
+		Args:  cobra.ExactArgs(0),
+		Short: "Submit a create clpool and link to cfmm proposal",
+		Long:  strings.TrimSpace(`submit a proposal to create CL pool and link to Balancer pool.`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			content, err := parseCreateConcentratedLiquidityPoolArgsToContent(cmd)
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(FlagPoolRecords, "", "The pool records array")
+
+	return cmd
+}
+
+// NewCmdSubmitSetScalingFactorControllerProposal implements a command handler for the set scaling factor controller proposal
+func NewCmdSubmitSetScalingFactorControllerProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set-scaling-factor-controller-proposal [flags]",
+		Args:  cobra.ExactArgs(0),
+		Short: "Submit a set scaling factor controller proposal",
+		Long: strings.TrimSpace(`Submit a set scaling factor controller proposal.
+
+Sample proposal file:
+{
+	"title": "Set Scaling Factor Controller Proposal",
+	"description": "Change scaling factor controller address from osmoXXX to osmoYYY"
+	"pool-id": 1,
+	"controller-address": "osmoYYY"
+}
+>>> osmosisd tx gov submit-proposal set-scaling-factor-controller-proposal \
+        --proposal proposal.json \
+		--deposit 1600000000uosmo \
+
+Sample proposal with flags
+>>> osmosisd tx gov submit-proposal set-scaling-factor-controller-proposal \
+        --title "Set Scaling Factor Controller Proposal" \
+		--description "Change scaling factor controller address from osmoXXX to osmoYYY"
+		--deposit 1600000000uosmo
+		--pool-id 1
+		--controller-address osmoYYY
+		`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			content, err := parseSetScalingFactorControllerArgsToContent(cmd)
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().Uint64(FlagPoolId, 0, "stableswap pool-id")
+	cmd.Flags().String(FlagScalingFactorControllerAddress, "", "target scaling factor controller address")
+	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 
 	return cmd
 }
@@ -712,5 +837,135 @@ func parseUpdateMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypes.Cont
 		Description: description,
 		Records:     replaceMigrations,
 	}
+	return content, nil
+}
+
+func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+	title, err := cmd.Flags().GetString(govcli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	if err != nil {
+		return nil, err
+	}
+
+	poolRecordsWithCFMMLink, err := parsePoolRecordsWithCFMMLink(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	content := &types.CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal{
+		Title:                   title,
+		Description:             description,
+		PoolRecordsWithCfmmLink: poolRecordsWithCFMMLink,
+	}
+
+	return content, nil
+}
+
+func parsePoolRecordsWithCFMMLink(cmd *cobra.Command) ([]types.PoolRecordWithCFMMLink, error) {
+	poolRecordsStr, err := cmd.Flags().GetString(FlagPoolRecords)
+	if err != nil {
+		return nil, err
+	}
+
+	poolRecordsWithCFMMLink := strings.Split(poolRecordsStr, ",")
+
+	if len(poolRecordsWithCFMMLink)%6 != 0 {
+		return nil, fmt.Errorf("poolRecordswithCFMMLink must be a list of denom0, denom1, tickSpacing, exponentAtPriceOne, spreadFactor and balancerPoolId")
+	}
+
+	finalPoolRecords := []types.PoolRecordWithCFMMLink{}
+	i := 0
+	for i < len(poolRecordsWithCFMMLink) {
+		denom0 := poolRecordsWithCFMMLink[i]
+		denom1 := poolRecordsWithCFMMLink[i+1]
+
+		tickSpacing, err := strconv.Atoi(poolRecordsWithCFMMLink[i+2])
+		if err != nil {
+			return nil, err
+		}
+
+		exponentAtPriceOneStr := poolRecordsWithCFMMLink[i+3]
+		exponentAtPriceOne, ok := sdk.NewIntFromString(exponentAtPriceOneStr)
+		if !ok {
+			return nil, fmt.Errorf("invalid exponentAtPriceOne: %s", exponentAtPriceOneStr)
+		}
+
+		spreadFactorStr := poolRecordsWithCFMMLink[i+4]
+		spreadFactor, err := sdk.NewDecFromStr(spreadFactorStr)
+		if err != nil {
+			return nil, err
+		}
+
+		balancerPoolId, err := strconv.Atoi(poolRecordsWithCFMMLink[i+5])
+		if err != nil {
+			return nil, err
+		}
+
+		finalPoolRecords = append(finalPoolRecords, types.PoolRecordWithCFMMLink{
+			Denom0:             denom0,
+			Denom1:             denom1,
+			TickSpacing:        uint64(tickSpacing),
+			ExponentAtPriceOne: exponentAtPriceOne,
+			SpreadFactor:       spreadFactor,
+			BalancerPoolId:     uint64(balancerPoolId),
+		})
+
+		// increase counter by the next 6
+		i = i + 6
+	}
+
+	return finalPoolRecords, nil
+}
+
+func parseSetScalingFactorControllerArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+	proposalFile, err := cmd.Flags().GetString(govcli.FlagProposal)
+	if err != nil {
+		return nil, err
+	}
+
+	if proposalFile != "" {
+		contents, err := os.ReadFile(proposalFile)
+		if err != nil {
+			return nil, err
+		}
+
+		var proposal types.SetScalingFactorControllerProposal
+		if err := json.Unmarshal(contents, &proposal); err != nil {
+			return nil, err
+		}
+		return &proposal, nil
+	}
+
+	title, err := cmd.Flags().GetString(govcli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	if err != nil {
+		return nil, err
+	}
+
+	poolId, err := cmd.Flags().GetUint64(FlagPoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	controllerAddress, err := cmd.Flags().GetString(FlagScalingFactorControllerAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	content := &types.SetScalingFactorControllerProposal{
+		Title:             title,
+		Description:       description,
+		PoolId:            poolId,
+		ControllerAddress: controllerAddress,
+	}
+
 	return content, nil
 }

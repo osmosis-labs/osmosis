@@ -1,4 +1,5 @@
 name: Cosmwasm Contracts
+
 on:
   pull_request:
     branches:
@@ -9,6 +10,9 @@ on:
       - "v[0-9]**"
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   test:

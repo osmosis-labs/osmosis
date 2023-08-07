@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -49,6 +50,7 @@ type Manager struct {
 	pool              *dockertest.Pool
 	network           *dockertest.Network
 	resources         map[string]*dockertest.Resource
+	resourcesMutex    sync.RWMutex
 	isDebugLogEnabled bool
 }
 
@@ -121,7 +123,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 		errBuf bytes.Buffer
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	if m.isDebugLogEnabled {
@@ -218,7 +220,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			return true
 		},
 		time.Minute,
-		50*time.Millisecond,
+		10*time.Millisecond,
 		fmt.Sprintf("success condition (%s) was not met.\nstdout:\n %s\nstderr:\n %s\n",
 			success, outBuf.String(), errBuf.String()),
 	)
@@ -297,7 +299,9 @@ func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir st
 		return nil, err
 	}
 
+	m.resourcesMutex.Lock()
 	m.resources[containerName] = resource
+	m.resourcesMutex.Unlock()
 
 	return resource, nil
 }

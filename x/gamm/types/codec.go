@@ -23,6 +23,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgExitSwapShareAmountIn{}, "osmosis/gamm/exit-swap-share-amount-in", nil)
 	cdc.RegisterConcrete(&UpdateMigrationRecordsProposal{}, "osmosis/gamm/update-migration-records-proposal", nil)
 	cdc.RegisterConcrete(&ReplaceMigrationRecordsProposal{}, "osmosis/gamm/replace-migration-records-proposal", nil)
+	cdc.RegisterConcrete(&CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal{}, "osmosis/gamm/create-cl-pool-and-cfmm-link", nil)
+	cdc.RegisterConcrete(&SetScalingFactorControllerProposal{}, "osmosis/gamm/scaling-factor-controller", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -47,6 +49,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*govtypes.Content)(nil),
 		&UpdateMigrationRecordsProposal{},
 		&ReplaceMigrationRecordsProposal{},
+		&CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal{},
+		&SetScalingFactorControllerProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
