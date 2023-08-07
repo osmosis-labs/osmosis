@@ -4,14 +4,16 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v16/app"
-	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 	"github.com/tidwall/gjson"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v17/app"
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
 
 func (suite *HooksTestSuite) forceContractToEmitAckForPacket(osmosisApp *app.OsmosisApp, ctx sdk.Context, contractAddr sdk.AccAddress, packet channeltypes.Packet, success bool) ([]byte, error) {
