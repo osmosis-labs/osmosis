@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
@@ -60,78 +58,6 @@ func (s *KeeperTestSuite) TestValidateLockForForceUnlock() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			_, _, err := s.App.ValidatorSetPreferenceKeeper.ValidateLockForForceUnlock(s.Ctx, test.lockID, test.delegatorAddr)
-			if test.expectPass {
-				s.Require().NoError(err)
-			} else {
-				s.Require().Error(err)
-			}
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestCheckUndelegateTotalAmount() {
-	valAddrs := s.SetupMultipleValidators(3)
-	tests := []struct {
-		name        string
-		tokenAmt    sdk.Dec
-		existingSet []types.ValidatorPreference
-		expectPass  bool
-	}{
-		{
-			name:     "token amount matches with totalAmountFromWeights",
-			tokenAmt: sdk.NewDec(122_312_231),
-			existingSet: []types.ValidatorPreference{
-				{
-					ValOperAddress: valAddrs[0],
-					Weight:         sdk.NewDecWithPrec(17, 2), // 0.17
-				},
-				{
-					ValOperAddress: valAddrs[1],
-					Weight:         sdk.NewDecWithPrec(83, 2), // 0.83
-				},
-			},
-			expectPass: true,
-		},
-		{
-			name:     "token decimal amount matches with totalAmountFromWeights",
-			tokenAmt: sdk.MustNewDecFromStr("122312231.532"),
-			existingSet: []types.ValidatorPreference{
-				{
-					ValOperAddress: valAddrs[0],
-					Weight:         sdk.NewDecWithPrec(17, 2), // 0.17
-				},
-				{
-					ValOperAddress: valAddrs[1],
-					Weight:         sdk.NewDecWithPrec(83, 2), // 0.83
-				},
-			},
-			expectPass: true,
-		},
-		{
-			name:     "tokenAmt doesnot match with totalAmountFromWeights",
-			tokenAmt: sdk.NewDec(122_312_231),
-			existingSet: []types.ValidatorPreference{
-				{
-					ValOperAddress: valAddrs[0],
-					Weight:         sdk.NewDecWithPrec(17, 2), // 0.17
-				},
-
-				{
-					ValOperAddress: valAddrs[1],
-					Weight:         sdk.NewDecWithPrec(83, 2), // 0.83
-				},
-				{
-					ValOperAddress: valAddrs[2],
-					Weight:         sdk.NewDecWithPrec(83, 2), // 0.83
-				},
-			},
-			expectPass: false,
-		},
-	}
-
-	for _, test := range tests {
-		s.Run(test.name, func() {
-			err := s.App.ValidatorSetPreferenceKeeper.CheckUndelegateTotalAmount(test.tokenAmt, test.existingSet)
 			if test.expectPass {
 				s.Require().NoError(err)
 			} else {
@@ -279,7 +205,8 @@ func (s *KeeperTestSuite) TestIsPreferenceValid() {
 	}
 }
 
-func (s *KeeperTestSuite) TestUndelegateError() {
+// NOTE: this is the case that used to error. Fixed by this PR
+func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase() {
 	s.SetupTest()
 
 	valAddrs := s.SetupMultipleValidators(2)
@@ -295,14 +222,13 @@ func (s *KeeperTestSuite) TestUndelegateError() {
 	}
 
 	delegator := sdk.AccAddress([]byte("addr1---------------"))
-	coinToStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000))   // delegate 20osmo
-	coinToUnStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)) // undelegate 10osmo
+	coinToStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000))   // delegate 10osmo using Valset now and 10 osmo using regular staking delegate
+	coinToUnStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)) // undelegate 20osmo
+	expectedShares := []sdk.Dec{sdk.NewDec(15_000_000), sdk.NewDec(500_000)}
 
 	s.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)}) // 100 osmo
 
 	// valset test setup
-
-	fmt.Println("PREFERENCES: ", valPreferences)
 	// SetValidatorSetPreference sets a new list of val-set
 	_, err := s.App.ValidatorSetPreferenceKeeper.SetValidatorSetPreference(s.Ctx, delegator.String(), valPreferences)
 	s.Require().NoError(err)
@@ -321,10 +247,22 @@ func (s *KeeperTestSuite) TestUndelegateError() {
 	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
 	s.Require().True(found)
 
+	// Delegate more token to the validator. This will cause valset and regular staking to go out of sync
 	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, sdk.NewInt(10_000_000), stakingtypes.Unbonded, validator, true)
 	s.Require().NoError(err)
 
 	err = s.App.ValidatorSetPreferenceKeeper.UndelegateFromValidatorSet(s.Ctx, delegator.String(), coinToUnStake)
 	s.Require().NoError(err)
+
+	for i, val := range valPreferences {
+		valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
+		s.Require().NoError(err)
+
+		// guarantees that the delegator exists because we check it in UnDelegateToValidatorSet
+		del, found := s.App.StakingKeeper.GetDelegation(s.Ctx, delegator, valAddr)
+		if found {
+			s.Require().Equal(expectedShares[i], del.GetShares())
+		}
+	}
 
 }

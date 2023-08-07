@@ -128,19 +128,21 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // For ex: userA has staked 10tokens with weight {Val->0.5, ValB->0.3, ValC->0.2}
 // undelegate 6osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
-// Rounding logic ensures we do not undelegate more than the user has staked with the validator set
+// Rounding logic ensures we do not undelegate more than the user has staked with the validator set.
+// NOTE: check readme.md for more verbose description of the algorithm.
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	existingPref, _, err := k.getValsetDelegationsAndPreferences(ctx, delegatorAddr)
+	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
 	if err != nil {
-		return err
+		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
 	}
-	// err already checked
+
 	delegator := sdk.MustAccAddressFromBech32(delegatorAddr)
 	// the total amount the user wants to undelegate
 	tokenAmt := sdk.NewDec(coin.Amount.Int64())
 
+	// Step 1-2
 	var valSetRatio []ValRatio
-	for _, val := range existingPref.Preferences {
+	for _, val := range existingSet.Preferences {
 		amountToUnDelegate := val.Weight.Mul(tokenAmt).TruncateInt()
 		valAddr, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
 		if err != nil {
@@ -148,8 +150,8 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 		}
 
 		delegation, found := k.stakingKeeper.GetDelegation(ctx, delegator, valAddr)
-		if found {
-			fmt.Println("DELEGATION: ", delegation)
+		if !found {
+			return fmt.Errorf("No delegation found for thie delegator %s to this validator %s\n", delegator, valAddr)
 		}
 
 		sharesAmt, err := validator.SharesFromTokens(amountToUnDelegate)
@@ -158,7 +160,6 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 		}
 
 		valShares := sharesAmt.Quo(delegation.Shares)
-
 		valSetRatio = append(valSetRatio, ValRatio{
 			ValAddr:       valAddr,
 			UndelegateAmt: amountToUnDelegate,
@@ -168,16 +169,16 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 		})
 	}
 
-	maxVRatio := valSetRatio[0].VRatio
-	for _, val := range valSetRatio {
-		if val.VRatio.GT(maxVRatio) {
-			maxVRatio = val.VRatio
-		}
-	}
+	// Step 3
+	sort.Slice(valSetRatio, func(i, j int) bool {
+		return valSetRatio[i].VRatio.GT(valSetRatio[j].VRatio)
+	})
 
-	if maxVRatio.LTE(sdk.OneDec()) {
+	// Step 4
+	if valSetRatio[0].VRatio.LTE(sdk.OneDec()) {
 		fmt.Println("All validators can undelegate normally, falling to happy path exit early")
 		for _, val := range valSetRatio {
+			fmt.Println("UNDELEGATED AMT: ", val.UndelegateAmt)
 			_, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, val.UndelegateAmt.ToDec()) // this has to be shares amount
 			if err != nil {
 				return err
@@ -187,18 +188,16 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 		return nil
 	}
 
-	// Step 4
-	sort.Slice(valSetRatio, func(i, j int) bool {
-		return valSetRatio[i].VRatio.GT(valSetRatio[j].VRatio)
-	})
-
 	// Step 5
+	// `targetRatio`: This is a threshold value that is used to decide how to unbond tokens from validators.
+	// It starts as 1 and is recalculated each time a validator is fully unbonded and removed from the unbonding process.
+	// By reducing the target ratio using the ratio of the removed validator, we adjust the proportions we are aiming for with the remaining validators.
 	targetRatio := sdk.OneDec()
 	amountRemaining := coin.Amount
 
 	// Step 6
 	for len(valSetRatio) > 0 && valSetRatio[0].VRatio.GT(targetRatio) {
-		fmt.Printf("Undelegating fully from validator %s\n", valSetRatio[0].ValAddr.String())
+		fmt.Printf("Undelegating fully from validator %s %s\n", valSetRatio[0].ValAddr.String(), valSetRatio[0].DelegatedAmt)
 		_, err = k.stakingKeeper.Undelegate(ctx, delegator, valSetRatio[0].ValAddr, valSetRatio[0].DelegatedAmt.ToDec()) // this has to be shares amount
 		if err != nil {
 			return err
@@ -217,27 +216,6 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 		if err != nil {
 			return err
 		}
-	}
-
-	return nil
-}
-
-// CheckUndelegateTotalAmount checks if the tokenAmount equals the total amount calculated from valset weights.
-// TODO: Do we need to be doing this? Its computing that
-// sum_{v in ValSet} {v.Weight * tokenAmt} = tokenAmt
-// So in infinite precision this is implied by sum v.Weight = 1
-// Its _technically_ doing something by testing with Mul's decimal rounding behavior.
-func (k Keeper) CheckUndelegateTotalAmount(tokenAmt sdk.Dec, existingSet []types.ValidatorPreference) error {
-	totalAmountFromWeights := sdk.NewDec(0)
-	for _, val := range existingSet {
-		totalAmountFromWeights = totalAmountFromWeights.Add(val.Weight.Mul(tokenAmt))
-	}
-
-	totalAmountFromWeights = totalAmountFromWeights.RoundInt().ToDec()
-	tokenAmt = tokenAmt.RoundInt().ToDec()
-
-	if !totalAmountFromWeights.Equal(tokenAmt) {
-		return fmt.Errorf("The undelegate total do not add up with the amount calculated from weights expected %s got %s", tokenAmt, totalAmountFromWeights)
 	}
 
 	return nil
