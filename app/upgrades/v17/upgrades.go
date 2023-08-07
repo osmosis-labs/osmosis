@@ -146,6 +146,7 @@ func CreateUpgradeHandler(
 	}
 }
 
+// FlipTwapSpotPriceRecords flips the denoms and spot price of twap record of a given pool.
 func FlipTwapSpotPriceRecords(ctx sdk.Context, poolIds []uint64, keepers *keepers.AppKeepers) error {
 	for _, poolId := range poolIds {
 		// check that this is a cl pool

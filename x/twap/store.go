@@ -167,7 +167,6 @@ func (k Keeper) GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx sdk.Context, poolI
 }
 
 // StoreNewRecord stores a record, in both the most recent record store and historical stores.
-// NOTE: if it's a new Record make sure to update asset0 and asset1 as well.
 func (k Keeper) StoreNewRecord(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatMostRecentTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
@@ -175,7 +174,7 @@ func (k Keeper) StoreNewRecord(ctx sdk.Context, twap types.TwapRecord) {
 	k.StoreHistoricalTWAP(ctx, twap)
 }
 
-// DeleteOldRecord deletes a record, in both the most recent record store and historical stores.
+// DeleteOldRecord deletes a record, in most recent record store
 func (k Keeper) DeleteOldRecord(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatMostRecentTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
