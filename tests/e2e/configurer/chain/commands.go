@@ -2,6 +2,7 @@ package chain
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/tendermint/tendermint/libs/bytes"
 
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
@@ -46,15 +48,8 @@ func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	// TODO: create a helper function for parsing pool ID and prop ID from the response
-	startIndex := strings.Index(resp.String(), `{"key":"pool_id","value":"`) + len(`{"key":"pool_id","value":"`)
-	endIndex := strings.Index(resp.String()[startIndex:], `"`)
-
-	// Extract the proposal ID substring
-	codeIdStr := resp.String()[startIndex : startIndex+endIndex]
-
-	// Convert the proposal ID from string to int
-	poolID, _ := strconv.ParseUint(codeIdStr, 10, 64)
+	poolID, err := extractPoolIdFromResponse(resp.String())
+	require.NoError(n.t, err)
 
 	n.LogActionF("successfully created balancer pool %d", poolID)
 	return poolID
@@ -66,14 +61,8 @@ func (n *NodeConfig) CreateStableswapPool(poolFile, from string) uint64 {
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	startIndex := strings.Index(resp.String(), `{"key":"pool_id","value":"`) + len(`{"key":"pool_id","value":"`)
-	endIndex := strings.Index(resp.String()[startIndex:], `"`)
-
-	// Extract the proposal ID substring
-	codeIdStr := resp.String()[startIndex : startIndex+endIndex]
-
-	// Convert the proposal ID from string to int
-	poolID, _ := strconv.ParseUint(codeIdStr, 10, 64)
+	poolID, err := extractPoolIdFromResponse(resp.String())
+	require.NoError(n.t, err)
 
 	n.LogActionF("successfully created stableswap pool with ID %d", poolID)
 	return poolID
@@ -91,26 +80,18 @@ func (n *NodeConfig) CollectSpreadRewards(from, positionIds string) {
 
 // CreateConcentratedPool creates a concentrated pool.
 // Returns pool id of newly created pool on success
-func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpacing uint64, spreadFactor string) (uint64, error) {
+func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpacing uint64, spreadFactor string) uint64 {
 	n.LogActionF("creating concentrated pool")
 
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-pool", denom1, denom2, fmt.Sprintf("%d", tickSpacing), spreadFactor, fmt.Sprintf("--from=%s", from)}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	if err != nil {
-		return 0, err
-	}
+	require.NoError(n.t, err)
 
-	startIndex := strings.Index(resp.String(), `{"key":"pool_id","value":"`) + len(`{"key":"pool_id","value":"`)
-	endIndex := strings.Index(resp.String()[startIndex:], `"`)
-
-	// Extract the proposal ID substring
-	codeIdStr := resp.String()[startIndex : startIndex+endIndex]
-
-	// Convert the proposal ID from string to int
-	poolID, _ := strconv.ParseUint(codeIdStr, 10, 64)
+	poolID, err := extractPoolIdFromResponse(resp.String())
+	require.NoError(n.t, err)
 
 	n.LogActionF("successfully created concentrated pool with ID %d", poolID)
-	return poolID, nil
+	return poolID
 }
 
 // CreateConcentratedPosition creates a concentrated position from [lowerTick; upperTick] in pool with id of poolId
@@ -120,17 +101,10 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
 	// fees = 1250 (because 50,000 * 0.0025 = 1250)
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprint(poolId), lowerTick, upperTick, tokens, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), "--gas=500000", "--fees=1250uosmo", "-o json"}
-	outJson, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
+	resp, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
 	require.NoError(n.t, err)
 
-	var txResponse map[string]interface{}
-	err = json.Unmarshal(outJson.Bytes(), &txResponse)
-	require.NoError(n.t, err)
-
-	positionIDString, err := GetPositionID(txResponse)
-	require.NoError(n.t, err)
-
-	positionID, err := strconv.ParseUint(positionIDString, 10, 64)
+	positionID, err := extractPositionIdFromResponse(resp.Bytes())
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully created concentrated position from %s to %s", lowerTick, upperTick)
@@ -143,14 +117,10 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) int {
 	cmd := []string{"osmosisd", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.1uosmo", "--gas-adjustment=1.3"}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
-	startIndex := strings.Index(resp.String(), `{"key":"code_id","value":"`) + len(`{"key":"code_id","value":"`)
-	endIndex := strings.Index(resp.String()[startIndex:], `"`)
 
-	// Extract the proposal ID substring
-	codeIdStr := resp.String()[startIndex : startIndex+endIndex]
+	codeId, err := extractCodeIdFromResponse(resp.String())
+	require.NoError(n.t, err)
 
-	// Convert the proposal ID from string to int
-	codeId, _ := strconv.Atoi(codeIdStr)
 	n.LogActionF("successfully stored")
 	return codeId
 }
@@ -235,17 +205,10 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) int {
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	err = os.Remove(localProposalFile)
+	os.Remove(localProposalFile)
+
+	proposalID, err := extractProposalIdFromResponse(resp.String())
 	require.NoError(n.t, err)
-
-	startIndex := strings.Index(resp.String(), `[{"key":"proposal_id","value":"`) + len(`[{"key":"proposal_id","value":"`)
-	endIndex := strings.Index(resp.String()[startIndex:], `"`)
-
-	// Extract the proposal ID substring
-	proposalIDStr := resp.String()[startIndex : startIndex+endIndex]
-
-	// Convert the proposal ID from string to int
-	proposalID, _ := strconv.Atoi(proposalIDStr)
 
 	n.LogActionF("successfully submitted param change proposal")
 
@@ -255,8 +218,8 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) int {
 func (n *NodeConfig) SendIBCTransfer(dstChain *Config, from, recipient, memo string, token sdk.Coin) {
 	n.LogActionF("IBC sending %s from %s to %s. memo: %s", token.Amount.String(), from, recipient, memo)
 
-	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", n.chainId, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000", "--memo", memo}
-	_, _, err := n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
+	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, token.String(), fmt.Sprintf("--from=%s", from), "--memo", memo}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
 	cmd = []string{"hermes", "clear", "packets", "--chain", dstChain.Id, "--port", "transfer", "--channel", "channel-0"}
@@ -274,7 +237,6 @@ func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {
 	n.LogActionF("IBC sending %s from %s to %s", amount, from, recipient)
 
 	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from)}
-
 	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "rate limit exceeded")
 	require.NoError(n.t, err)
 
@@ -310,12 +272,19 @@ func (n *NodeConfig) ExitPool(from, minAmountsOut string, poolId uint64, shareAm
 	n.LogActionF("successfully exited pool %d, minAmountsOut %s, shareAmountIn %s", poolId, minAmountsOut, shareAmountIn)
 }
 
-func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin) {
+func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin) int {
 	n.LogActionF("submitting upgrade proposal %s for height %d", upgradeVersion, upgradeHeight)
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%d", upgradeHeight), "--upgrade-info=\"\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+
+	proposalID, err := extractProposalIdFromResponse(resp.String())
+	require.NoError(n.t, err)
+
 	require.NoError(n.t, err)
 	n.LogActionF("successfully submitted upgrade proposal")
+
+	return proposalID
 }
 
 func (n *NodeConfig) SubmitSuperfluidProposal(asset string, initialDeposit sdk.Coin) int {
@@ -324,15 +293,8 @@ func (n *NodeConfig) SubmitSuperfluidProposal(asset string, initialDeposit sdk.C
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	// Extract the proposal ID from the response
-	startIndex := strings.Index(resp.String(), `[{"key":"proposal_id","value":"`) + len(`[{"key":"proposal_id","value":"`)
-	endIndex := strings.Index(resp.String()[startIndex:], `"`)
-
-	// Extract the proposal ID substring
-	proposalIDStr := resp.String()[startIndex : startIndex+endIndex]
-
-	// Convert the proposal ID from string to int
-	proposalID, _ := strconv.Atoi(proposalIDStr)
+	proposalID, err := extractProposalIdFromResponse(resp.String())
+	require.NoError(n.t, err)
 
 	n.LogActionF("successfully submitted superfluid proposal for asset %s", asset)
 
@@ -344,15 +306,9 @@ func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(initialDeposit sdk.Coi
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
-	// Extract the proposal ID from the response
-	startIndex := strings.Index(resp.String(), `[{"key":"proposal_id","value":"`) + len(`[{"key":"proposal_id","value":"`)
-	endIndex := strings.Index(resp.String()[startIndex:], `"`)
 
-	// Extract the proposal ID substring
-	proposalIDStr := resp.String()[startIndex : startIndex+endIndex]
-
-	// Convert the proposal ID from string to int
-	proposalID, _ := strconv.Atoi(proposalIDStr)
+	proposalID, err := extractProposalIdFromResponse(resp.String())
+	require.NoError(n.t, err)
 
 	n.LogActionF("successfully created a create concentrated liquidity pool proposal")
 
@@ -368,30 +324,29 @@ func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, is
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	// Extract the proposal ID from the response
-	startIndex := strings.Index(resp.String(), `[{"key":"proposal_id","value":"`) + len(`[{"key":"proposal_id","value":"`)
-	endIndex := strings.Index(resp.String()[startIndex:], `"`)
-
-	// Extract the proposal ID substring
-	proposalIDStr := resp.String()[startIndex : startIndex+endIndex]
-
-	// Convert the proposal ID from string to int
-	proposalID, _ := strconv.Atoi(proposalIDStr)
+	proposalID, err := extractProposalIdFromResponse(resp.String())
+	require.NoError(n.t, err)
 
 	n.LogActionF("successfully submitted text gov proposal")
 
 	return proposalID
 }
 
-func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords string, initialDeposit sdk.Coin, isExpedited bool) {
+func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords string, initialDeposit sdk.Coin, isExpedited bool) int {
 	n.LogActionF("submitting tick spacing reduction gov proposal")
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "tick-spacing-decrease-proposal", "--title=\"test tick spacing reduction proposal title\"", "--description=\"test tick spacing reduction proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit), fmt.Sprintf("--pool-tick-spacing-records=%s", poolTickSpacingRecords)}
 	if isExpedited {
 		cmd = append(cmd, "--is-expedited=true")
 	}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
+
+	proposalID, err := extractProposalIdFromResponse(resp.String())
+	require.NoError(n.t, err)
+
 	n.LogActionF("successfully submitted tick spacing reduction gov proposal")
+
+	return proposalID
 }
 
 func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
@@ -498,28 +453,49 @@ func (n *NodeConfig) FundCommunityPool(sendAddress string, funds string) {
 
 // This method also funds fee tokens from the `initialization.ValidatorWalletName` account.
 // TODO: Abstract this to be a fee token provider account.
-func (n *NodeConfig) CreateWallet(walletName string) string {
+func (n *NodeConfig) CreateWallet(walletName string, chain *Config) string {
 	n.LogActionF("creating wallet %s", walletName)
 	cmd := []string{"osmosisd", "keys", "add", walletName, "--keyring-backend=test"}
-	outBuf, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	outBuf, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
 	require.NoError(n.t, err)
 	re := regexp.MustCompile("osmo1(.{38})")
 	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
 	walletAddr = strings.TrimSuffix(walletAddr, "\n")
+
+	mnemonic, err := pullMnemonicFromResponse(errBuf.String())
+	require.NoError(n.t, err)
+
+	chainNodes := chain.GetAllChainNodes()
+	for _, node := range chainNodes {
+		if node.Name == n.Name {
+			continue
+		}
+		node.AddExistingWallet(walletName, mnemonic)
+	}
+
 	n.LogActionF("created wallet %s, wallet address - %s", walletName, walletAddr)
 	n.BankSend(initialization.WalletFeeTokens.String(), initialization.ValidatorWalletName, walletAddr)
 	n.LogActionF("Sent fee tokens from %s", initialization.ValidatorWalletName)
 	return walletAddr
 }
 
-func (n *NodeConfig) CreateWalletAndFund(walletName string, tokensToFund []string) string {
-	return n.CreateWalletAndFundFrom(walletName, initialization.ValidatorWalletName, tokensToFund)
+func (n *NodeConfig) AddExistingWallet(walletName, mnemonic string) {
+	n.LogActionF("adding existing wallet %s", walletName)
+	cmd := []string{"sh", "-c", fmt.Sprintf("echo '%s' | osmosisd keys add %s --keyring-backend=test --recover", mnemonic, walletName)}
+	_, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	require.NoError(n.t, err)
+
+	n.LogActionF("added existing wallet %s", walletName)
 }
 
-func (n *NodeConfig) CreateWalletAndFundFrom(newWalletName string, fundingWalletName string, tokensToFund []string) string {
+func (n *NodeConfig) CreateWalletAndFund(walletName string, tokensToFund []string, chain *Config) string {
+	return n.CreateWalletAndFundFrom(walletName, initialization.ValidatorWalletName, tokensToFund, chain)
+}
+
+func (n *NodeConfig) CreateWalletAndFundFrom(newWalletName string, fundingWalletName string, tokensToFund []string, chain *Config) string {
 	n.LogActionF("Sending tokens to %s", newWalletName)
 
-	walletAddr := n.CreateWallet(newWalletName)
+	walletAddr := n.CreateWallet(newWalletName, chain)
 	for _, tokenToFund := range tokensToFund {
 		n.BankSend(tokenToFund, fundingWalletName, walletAddr)
 	}
@@ -642,54 +618,51 @@ func ParseEvent(responseJson map[string]interface{}, field string) (string, erro
 	return "", fmt.Errorf("%s field not found in response", field)
 }
 
-func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
+var addrMutexMap = make(map[string]*sync.Mutex)
+
+func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token sdk.Coin) {
 	n.t.Logf("IBC sending %s from %s to %s (%s)", token, n.chainId, dstChain.Id, recipient)
+	// We add a mutex here since we don't want multiple IBC transfers to happen at the same time
+	// Otherwise, when we check if the receiving end has the correct balance, we might get the balance
+	// of a previous transfer.
+	sender := n.GetWallet(initialization.ValidatorWalletName)
+
+	// Create or get the mutex for the specific sender and recipient
+	func() {
+		if _, exists := addrMutexMap[recipient]; !exists {
+			addrMutexMap[recipient] = &sync.Mutex{}
+		}
+		if _, exists := addrMutexMap[sender]; !exists {
+			addrMutexMap[sender] = &sync.Mutex{}
+		}
+	}()
+
+	// Lock the mutex for the specific sender and recipient
+	addrMutexMap[recipient].Lock()
+	defer addrMutexMap[recipient].Unlock()
+	addrMutexMap[sender].Lock()
+	defer addrMutexMap[sender].Unlock()
 
 	dstNode, err := dstChain.GetDefaultNode()
 	require.NoError(n.t, err)
 
-	// removes the fee token from balances for calculating the difference in other tokens
-	// before and after the IBC send. Since we run tests in parallel now, some tests may
-	// send uosmo between accounts while this test is running. Since we don't care about
-	// non ibc denoms, its safe to filter uosmo out.
-	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
-		filteredCoinDenoms := []string{}
-		for _, coin := range balance {
-			if !strings.HasPrefix(coin.Denom, "ibc/") {
-				filteredCoinDenoms = append(filteredCoinDenoms, coin.Denom)
-			}
-		}
-		feeRewardTokenBalance := balance.FilterDenoms(filteredCoinDenoms)
-		return balance.Sub(feeRewardTokenBalance)
-	}
+	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", token.Denom))
+	ibcDenom := denomTrace.IBCDenom()
 
-	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
+	balancePre, err := dstNode.QueryBalance(recipient, ibcDenom)
 	require.NoError(n.t, err)
-	fmt.Println("balancesDstPre with no fee removed: ", balancesDstPreWithTxFeeBalance)
-	balancesDstPre := removeFeeTokenFromBalance(balancesDstPreWithTxFeeBalance)
-	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.Id, "--src-chain", n.chainId, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
-	_, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
-	require.NoError(n.t, err)
+
+	n.SendIBCTransfer(dstChain, sender, recipient, "", token)
 
 	require.Eventually(
 		n.t,
 		func() bool {
-			balancesDstPostWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
+			balancePost, err := dstNode.QueryBalance(recipient, ibcDenom)
 			require.NoError(n.t, err)
-			balancesDstPost := removeFeeTokenFromBalance(balancesDstPostWithTxFeeBalance)
 
-			ibcCoin := balancesDstPost.Sub(balancesDstPre)
-			if ibcCoin.Len() == 1 {
-				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				resPre := token.Amount
-				resPost := tokenPost.Sub(tokenPre)
-				return resPost.Uint64() == resPre.Uint64()
-			} else {
-				return false
-			}
+			return balancePost.Amount.Equal(balancePre.Amount.Add(token.Amount))
 		},
-		time.Minute,
+		2*time.Minute,
 		10*time.Millisecond,
 		"tx not received on destination chain",
 	)
@@ -699,7 +672,6 @@ func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin)
 
 func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
 	propNumber := n.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-	srcChain.LatestProposalNumber += 1
 	n.DepositProposal(propNumber, false)
 
 	var wg sync.WaitGroup
@@ -718,15 +690,13 @@ func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
 func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
 	// lock tokens
 	lockID := n.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
-	srcChain.LatestLockNumber += 1
-	fmt.Println("lock number: ", lockID)
+
 	// add to existing lock
 	n.AddToExistingLock(amount, denom, "240s", lockupWalletAddr, lockID)
 
 	// superfluid lock tokens
 	lockID = n.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletSuperfluidAddr)
-	srcChain.LatestLockNumber += 1
-	fmt.Println("lock number: ", lockID)
+
 	n.SuperfluidDelegate(lockID, srcChain.NodeConfigs[1].OperatorAddress, lockupWalletSuperfluidAddr)
 	// add to existing lock
 	n.AddToExistingLock(amount, denom, "240s", lockupWalletSuperfluidAddr, lockID)
@@ -804,12 +774,7 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 		return err
 	}
 
-	node, err := chain.GetDefaultNode()
-	if err != nil {
-		return err
-	}
-	propNumber := node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
-	chain.LatestProposalNumber += 1
+	propNumber := n.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
 
 	var wg sync.WaitGroup
 
@@ -824,11 +789,102 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 	wg.Wait()
 
 	require.Eventually(n.t, func() bool {
-		status, err := node.QueryPropStatus(propNumber)
+		status, err := n.QueryPropStatus(propNumber)
 		if err != nil {
 			return false
 		}
 		return status == proposalStatusPassed
 	}, time.Minute, 10*time.Millisecond)
 	return nil
+}
+
+func extractProposalIdFromResponse(response string) (int, error) {
+	// Extract the proposal ID from the response
+	startIndex := strings.Index(response, `[{"key":"proposal_id","value":"`) + len(`[{"key":"proposal_id","value":"`)
+	endIndex := strings.Index(response[startIndex:], `"`)
+
+	// Extract the proposal ID substring
+	proposalIDStr := response[startIndex : startIndex+endIndex]
+
+	// Convert the proposal ID from string to int
+	proposalID, err := strconv.Atoi(proposalIDStr)
+	if err != nil {
+		return 0, err
+	}
+
+	return proposalID, nil
+}
+
+func extractPoolIdFromResponse(response string) (uint64, error) {
+	// Extract the pool ID from the response
+	startIndex := strings.Index(response, `{"key":"pool_id","value":"`) + len(`{"key":"pool_id","value":"`)
+	endIndex := strings.Index(response[startIndex:], `"`)
+
+	// Extract the pool ID substring
+	codeIdStr := response[startIndex : startIndex+endIndex]
+
+	// Convert the pool ID from string to int
+	poolID, err := strconv.ParseUint(codeIdStr, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return poolID, nil
+}
+
+func extractPositionIdFromResponse(responseBytes []byte) (uint64, error) {
+	var txResponse map[string]interface{}
+	err := json.Unmarshal(responseBytes, &txResponse)
+	if err != nil {
+		return 0, err
+	}
+
+	positionIDString, err := GetPositionID(txResponse)
+	if err != nil {
+		return 0, err
+	}
+
+	positionID, err := strconv.ParseUint(positionIDString, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return positionID, nil
+}
+
+func extractCodeIdFromResponse(response string) (int, error) {
+	startIndex := strings.Index(response, `{"key":"code_id","value":"`) + len(`{"key":"code_id","value":"`)
+	endIndex := strings.Index(response[startIndex:], `"`)
+
+	// Extract the proposal ID substring
+	codeIdStr := response[startIndex : startIndex+endIndex]
+
+	// Convert the proposal ID from string to int
+	codeId, err := strconv.Atoi(codeIdStr)
+	if err != nil {
+		return 0, err
+	}
+
+	return codeId, nil
+}
+
+func pullMnemonicFromResponse(response string) (string, error) {
+	// Using regex to get mnemonic
+	r := regexp.MustCompile(`(?m)(?i)^(\w+\s){23}\w+$`)
+	mnemonicMatch := r.FindString(response)
+
+	// Check if we found the mnemonic
+	if mnemonicMatch == "" {
+		return "", errors.New("mnemonic not found")
+	}
+
+	// Split the mnemonicMatch on spaces to get individual words
+	mnemonicWords := strings.Split(mnemonicMatch, " ")
+
+	// Check if we got 24 words
+	if len(mnemonicWords) != 24 {
+		return "", errors.New("mnemonic does not contain 24 words")
+	}
+
+	return mnemonicMatch, nil
 }
