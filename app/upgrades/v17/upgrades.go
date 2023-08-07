@@ -271,6 +271,13 @@ func testnetParsePoolRecord(ctx sdk.Context, pool poolManagerTypes.PoolI, keeper
 	}
 
 	gammPoolId := pool.GetId()
+
+	// Skip pools that are already linked.
+	_, err := keepers.GAMMKeeper.GetLinkedConcentratedPoolID(ctx, gammPoolId)
+	if err != nil {
+		return true, 0, "", sdk.Dec{}, nil
+	}
+
 	cfmmPool, err := keepers.GAMMKeeper.GetCFMMPool(ctx, gammPoolId)
 	if err != nil {
 		return true, 0, "", sdk.Dec{}, err
