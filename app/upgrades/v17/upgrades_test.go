@@ -376,7 +376,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				numPoolsEligibleForMigration := numPoolPreUpgrade - 3
 				suite.Require().Equal(int(numPoolsEligibleForMigration), int(numPoolsCreated))
 
-				//Validate that all links were created.
+				// Validate that all links were created.
 				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
 				suite.Require().Equal(int(numPoolsEligibleForMigration), len(migrationInfo.BalancerToConcentratedPoolLinks))
 				suite.Require().NoError(err)
