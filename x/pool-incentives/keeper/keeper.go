@@ -6,6 +6,8 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
@@ -183,15 +185,18 @@ func (k Keeper) GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration 
 		return 0, fmt.Errorf("cannot get gauge id from pool id without a lockable duration. There can be many gauges for pool id %d and duration 0", poolId)
 	}
 
+	uint64Value := &wrapperspb.UInt64Value{}
 	key := types.GetPoolGaugeIdInternalStoreKey(poolId, lockableDuration)
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(key)
-
-	if len(bz) == 0 {
+	found, err := osmoutils.Get(store, key, uint64Value)
+	if err != nil {
+		return 0, err
+	}
+	if !found {
 		return 0, types.NoGaugeAssociatedWithPoolError{PoolId: poolId, Duration: lockableDuration}
 	}
 
-	return sdk.BigEndianToUint64(bz), nil
+	return uint64Value.Value, nil
 }
 
 // GetNoLockGaugeIdsFromPool returns all the NoLock gauge ids associated with the pool id.
