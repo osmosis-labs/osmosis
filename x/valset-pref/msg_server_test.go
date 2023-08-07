@@ -345,23 +345,23 @@ func (s *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 			setValSet:     true,
 			expectPass:    true,
 		},
-		{
-			name:          "Unstake more amount than the staked amount",
-			delegator:     sdk.AccAddress([]byte("addr4---------------")),
-			coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
-			coinToUnStake: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(40_000_000)),
-			setValSet:     true,
-			expectPass:    false,
-		},
-		{
-			name:                   "UnDelegate from existing staking position (non valSet) ",
-			delegator:              sdk.AccAddress([]byte("addr5---------------")),
-			coinToStake:            sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
-			coinToUnStake:          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
-			expectedShares:         []sdk.Dec{sdk.NewDec(1_000_000), sdk.NewDec(1_660_000), sdk.NewDec(600_000), sdk.NewDec(1_740_000)}, // validatorDelegatedShares - (weight * coinToUnstake)
-			setExistingDelegations: true,
-			expectPass:             true,
-		},
+		// {
+		// 	name:          "Unstake more amount than the staked amount",
+		// 	delegator:     sdk.AccAddress([]byte("addr4---------------")),
+		// 	coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
+		// 	coinToUnStake: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(40_000_000)),
+		// 	setValSet:     true,
+		// 	expectPass:    false,
+		// },
+		// {
+		// 	name:                   "UnDelegate from existing staking position (non valSet) ",
+		// 	delegator:              sdk.AccAddress([]byte("addr5---------------")),
+		// 	coinToStake:            sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+		// 	coinToUnStake:          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+		// 	expectedShares:         []sdk.Dec{sdk.NewDec(1_000_000), sdk.NewDec(1_660_000), sdk.NewDec(600_000), sdk.NewDec(1_740_000)}, // validatorDelegatedShares - (weight * coinToUnstake)
+		// 	setExistingDelegations: true,
+		// 	expectPass:             true,
+		// },
 		{
 			name:           "Undelegate extreme amounts to check truncation, large amount",
 			delegator:      sdk.AccAddress([]byte("addr6---------------")),

@@ -1,9 +1,13 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
+
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (s *KeeperTestSuite) TestValidateLockForForceUnlock() {
@@ -273,4 +277,54 @@ func (s *KeeperTestSuite) TestIsPreferenceValid() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestUndelegateError() {
+	s.SetupTest()
+
+	valAddrs := s.SetupMultipleValidators(2)
+	valPreferences := []types.ValidatorPreference{
+		{
+			ValOperAddress: valAddrs[0],
+			Weight:         sdk.NewDecWithPrec(5, 1), // 0.5
+		},
+		{
+			ValOperAddress: valAddrs[1],
+			Weight:         sdk.NewDecWithPrec(5, 1), // 0.5
+		},
+	}
+
+	delegator := sdk.AccAddress([]byte("addr1---------------"))
+	coinToStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000))   // delegate 20osmo
+	coinToUnStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)) // undelegate 10osmo
+
+	s.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)}) // 100 osmo
+
+	// valset test setup
+
+	fmt.Println("PREFERENCES: ", valPreferences)
+	// SetValidatorSetPreference sets a new list of val-set
+	_, err := s.App.ValidatorSetPreferenceKeeper.SetValidatorSetPreference(s.Ctx, delegator.String(), valPreferences)
+	s.Require().NoError(err)
+
+	s.App.ValidatorSetPreferenceKeeper.SetValidatorSetPreferences(s.Ctx, delegator.String(), types.ValidatorSetPreferences{
+		Preferences: valPreferences,
+	})
+
+	// DelegateToValidatorSet delegate to existing val-set
+	err = s.App.ValidatorSetPreferenceKeeper.DelegateToValidatorSet(s.Ctx, delegator.String(), coinToStake)
+	s.Require().NoError(err)
+
+	valAddr, err := sdk.ValAddressFromBech32(valAddrs[0])
+	s.Require().NoError(err)
+
+	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+	s.Require().True(found)
+
+	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, sdk.NewInt(10_000_000), stakingtypes.Unbonded, validator, true)
+	s.Require().NoError(err)
+
+	err = s.App.ValidatorSetPreferenceKeeper.UndelegateFromValidatorSet(s.Ctx, delegator.String(), coinToUnStake)
+	s.Require().NoError(err)
+
 }
