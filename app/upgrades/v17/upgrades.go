@@ -67,6 +67,8 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		ctx.Logger().Info(fmt.Sprintf("Pool links: %v", poolLinks))
+
 		// Set the migration links in x/gamm.
 		// This will also migrate the CFMM distribution records to point to the new CL pools.
 		err = keepers.GAMMKeeper.UpdateMigrationRecords(ctx, poolLinks)
