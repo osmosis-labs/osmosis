@@ -147,6 +147,7 @@ func CmdSetInfoByPoolType() *osmocli.TxCliDesc {
 		Use:   "set-info-by-pool-type [path/to/pool_info.json]",
 		Short: "set the protorev pool type info",
 		Long: `Must provide a json file with all the pool info that will be set. This does NOT set info for a single pool type.
+		All information must be provided across all pool types in the json file.
 		Sample json file:
 		{
 			"stable" : {
