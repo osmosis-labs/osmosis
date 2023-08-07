@@ -12,10 +12,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v16/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
 // BenchmarkBalancerSwapHighestLiquidityArb benchmarks a balancer swap that creates a single three hop arbitrage
@@ -225,7 +225,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 				trades: []types.Trade{
 					{
 						Pool:     38,
-						TokenOut: "test/3",
+						TokenOut: "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 						TokenIn:  types.OsmosisDenomination,
 					},
 				},
@@ -236,7 +236,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
-						Denom:  "test/3",
+						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 						Amount: sdk.NewInt(218_149_058),
 					},
 					{
@@ -265,7 +265,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
-						Denom:  "test/3",
+						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 						Amount: sdk.NewInt(218_149_058),
 					},
 					{
@@ -294,7 +294,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
-						Denom:  "test/3",
+						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 						Amount: sdk.NewInt(218_149_058),
 					},
 					{
@@ -323,7 +323,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
-						Denom:  "test/3",
+						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 						Amount: sdk.NewInt(218_149_058),
 					},
 					{
@@ -403,6 +403,10 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 				tx = txBuilder.GetTx()
 			} else {
 				tx = s.BuildTx(txBuilder, msgs, sigV2, "", txFee, gasLimit)
+			}
+
+			if strings.Contains(tc.name, "Concentrated Liquidity") {
+				s.CreateCLPoolAndArbRouteWith_28000_Ticks()
 			}
 
 			protoRevDecorator := keeper.NewProtoRevDecorator(*s.App.ProtoRevKeeper)

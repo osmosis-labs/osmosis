@@ -13,13 +13,13 @@ import (
 
 	"github.com/tendermint/tendermint/libs/bytes"
 
-	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
+	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -28,7 +28,7 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	app "github.com/osmosis-labs/osmosis/v16/app"
+	app "github.com/osmosis-labs/osmosis/v17/app"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 )
@@ -42,7 +42,7 @@ type params struct {
 
 func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 	n.LogActionF("creating balancer pool from file %s", poolFile)
-	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from)}
+	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=5000uosmo"}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
@@ -62,7 +62,7 @@ func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 
 func (n *NodeConfig) CreateStableswapPool(poolFile, from string) uint64 {
 	n.LogActionF("creating stableswap pool from file %s", poolFile)
-	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), "--pool-type=stableswap", fmt.Sprintf("--from=%s", from)}
+	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), "--pool-type=stableswap", fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=5000uosmo"}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
@@ -259,6 +259,14 @@ func (n *NodeConfig) SendIBCTransfer(dstChain *Config, from, recipient, memo str
 	_, _, err := n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
 	require.NoError(n.t, err)
 
+	cmd = []string{"hermes", "clear", "packets", "--chain", dstChain.Id, "--port", "transfer", "--channel", "channel-0"}
+	_, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
+	require.NoError(n.t, err)
+
+	cmd = []string{"hermes", "clear", "packets", "--chain", n.chainId, "--port", "transfer", "--channel", "channel-0"}
+	_, _, err = n.containerManager.ExecHermesCmd(n.t, cmd, "SUCCESS")
+	require.NoError(n.t, err)
+
 	n.LogActionF("successfully submitted sent IBC transfer")
 }
 
@@ -312,7 +320,7 @@ func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight 
 
 func (n *NodeConfig) SubmitSuperfluidProposal(asset string, initialDeposit sdk.Coin) int {
 	n.LogActionF("submitting superfluid proposal for asset %s", asset)
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), fmt.Sprintf("--title=\"%s superfluid asset\"", asset), fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), "--title=\"superfluid asset prop\"", fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit), "--gas=700000", "--fees=5000uosmo"}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
@@ -333,7 +341,7 @@ func (n *NodeConfig) SubmitSuperfluidProposal(asset string, initialDeposit sdk.C
 
 func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(initialDeposit sdk.Coin) int {
 	n.LogActionF("Creating concentrated liquidity pool")
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,-6,0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	// Extract the proposal ID from the response
@@ -414,32 +422,33 @@ func (n *NodeConfig) VoteNoProposal(from string, proposalNumber int) {
 	n.LogActionF("successfully voted no on proposal: %d", proposalNumber)
 }
 
-func (n *NodeConfig) LockTokens(tokens string, duration string, from string) {
+func (n *NodeConfig) LockTokens(tokens string, duration string, from string) int {
 	n.LogActionF("locking %s for %s", tokens, duration)
 	cmd := []string{"osmosisd", "tx", "lockup", "lock-tokens", tokens, fmt.Sprintf("--duration=%s", duration), fmt.Sprintf("--from=%s", from)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+
+	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
+
+	// Extract the lock ID from the response
+	startIndex := strings.Index(resp.String(), `[{"key":"period_lock_id","value":"`) + len(`[{"key":"period_lock_id","value":"`)
+	endIndex := strings.Index(resp.String()[startIndex:], `"`)
+
+	// Extract the lock ID substring
+	lockIDStr := resp.String()[startIndex : startIndex+endIndex]
+
+	// Convert the lock ID from string to int
+	lockID, err := strconv.Atoi(lockIDStr)
+	require.NoError(n.t, err)
+
 	n.LogActionF("successfully created lock")
+
+	return lockID
 }
 
-func (n *NodeConfig) AddToExistingLock(tokens sdk.Int, denom, duration, from string) {
-	n.LogActionF("retrieving existing lock ID")
-	durationPath := fmt.Sprintf("/osmosis/lockup/v1beta1/account_locked_longer_duration/%s?duration=%s", from, duration)
-	bz, err := n.QueryGRPCGateway(durationPath)
-	require.NoError(n.t, err)
-	var accountLockedDurationResp lockuptypes.AccountLockedDurationResponse
-	err = util.Cdc.UnmarshalJSON(bz, &accountLockedDurationResp)
-	require.NoError(n.t, err)
-	var lockID string
-	for _, periodLock := range accountLockedDurationResp.Locks {
-		if periodLock.Coins.AmountOf(denom).GT(sdk.ZeroInt()) {
-			lockID = fmt.Sprintf("%v", periodLock.ID)
-			break
-		}
-	}
+func (n *NodeConfig) AddToExistingLock(tokens sdk.Int, denom, duration, from string, lockID int) {
 	n.LogActionF("noting previous lockup amount")
-	path := fmt.Sprintf("/osmosis/lockup/v1beta1/locked_by_id/%s", lockID)
-	bz, err = n.QueryGRPCGateway(path)
+	path := fmt.Sprintf("/osmosis/lockup/v1beta1/locked_by_id/%d", lockID)
+	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 	var lockedResp lockuptypes.LockedResponse
 	err = util.Cdc.UnmarshalJSON(bz, &lockedResp)
@@ -481,7 +490,7 @@ func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress 
 
 func (n *NodeConfig) FundCommunityPool(sendAddress string, funds string) {
 	n.LogActionF("funding community pool from address %s with %s", sendAddress, funds)
-	cmd := []string{"osmosisd", "tx", "distribution", "fund-community-pool", funds, fmt.Sprintf("--from=%s", sendAddress)}
+	cmd := []string{"osmosisd", "tx", "distribution", "fund-community-pool", funds, fmt.Sprintf("--from=%s", sendAddress), "--gas=600000", "--fees=1500uosmo"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully funded community pool from address %s with %s", sendAddress, funds)
@@ -680,8 +689,8 @@ func (n *NodeConfig) SendIBC(dstChain *Config, recipient string, token sdk.Coin)
 				return false
 			}
 		},
-		5*time.Minute,
-		time.Second,
+		time.Minute,
+		10*time.Millisecond,
 		"tx not received on destination chain",
 	)
 
@@ -708,19 +717,19 @@ func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
 
 func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
 	// lock tokens
-	n.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
+	lockID := n.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
 	srcChain.LatestLockNumber += 1
-	fmt.Println("lock number: ", srcChain.LatestLockNumber)
+	fmt.Println("lock number: ", lockID)
 	// add to existing lock
-	n.AddToExistingLock(amount, denom, "240s", lockupWalletAddr)
+	n.AddToExistingLock(amount, denom, "240s", lockupWalletAddr, lockID)
 
 	// superfluid lock tokens
-	n.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletSuperfluidAddr)
+	lockID = n.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletSuperfluidAddr)
 	srcChain.LatestLockNumber += 1
-	fmt.Println("lock number: ", srcChain.LatestLockNumber)
-	n.SuperfluidDelegate(srcChain.LatestLockNumber, srcChain.NodeConfigs[1].OperatorAddress, lockupWalletSuperfluidAddr)
+	fmt.Println("lock number: ", lockID)
+	n.SuperfluidDelegate(lockID, srcChain.NodeConfigs[1].OperatorAddress, lockupWalletSuperfluidAddr)
 	// add to existing lock
-	n.AddToExistingLock(amount, denom, "240s", lockupWalletSuperfluidAddr)
+	n.AddToExistingLock(amount, denom, "240s", lockupWalletSuperfluidAddr, lockID)
 }
 
 // TODO remove chain from this as input
@@ -820,6 +829,6 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 			return false
 		}
 		return status == proposalStatusPassed
-	}, time.Minute*30, time.Millisecond*500)
+	}, time.Minute, 10*time.Millisecond)
 	return nil
 }

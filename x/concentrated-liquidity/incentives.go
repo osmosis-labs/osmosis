@@ -13,10 +13,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 )
 
 // createUptimeAccumulators creates accumulator objects in store for each supported uptime for the given poolId.
@@ -44,12 +44,12 @@ func getUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins
 
 // GetUptimeAccumulators gets the uptime accumulator objects for the given poolId
 // Returns error if accumulator for the given poolId does not exist.
-func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
-	accums := make([]accum.AccumulatorObject, len(types.SupportedUptimes))
+func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]*accum.AccumulatorObject, error) {
+	accums := make([]*accum.AccumulatorObject, len(types.SupportedUptimes))
 	for uptimeIndex := range types.SupportedUptimes {
 		acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), types.KeyUptimeAccumulator(poolId, uint64(uptimeIndex)))
 		if err != nil {
-			return []accum.AccumulatorObject{}, err
+			return []*accum.AccumulatorObject{}, err
 		}
 
 		accums[uptimeIndex] = acc
@@ -84,15 +84,10 @@ func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sd
 // Similar to spread factors, by convention the value is chosen as if all of the uptime (seconds per liquidity) to date has
 // occurred below the tick.
 // Returns error if the pool with the given id does not exist or if fails to get any of the uptime accumulators.
-func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, poolId uint64, tick int64) ([]sdk.DecCoins, error) {
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return []sdk.DecCoins{}, err
-	}
-
+func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, pool types.ConcentratedPoolExtension, tick int64) ([]sdk.DecCoins, error) {
 	currentTick := pool.GetCurrentTick()
 	if currentTick >= tick {
-		uptimeAccumulatorValues, err := k.GetUptimeAccumulatorValues(ctx, poolId)
+		uptimeAccumulatorValues, err := k.GetUptimeAccumulatorValues(ctx, pool.GetId())
 		if err != nil {
 			return []sdk.DecCoins{}, err
 		}
@@ -123,7 +118,7 @@ func (k Keeper) getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick(ct
 // CONTRACT: the caller validates that the pool with the given id exists.
 // CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
 // CONTRACT: uptimeAccums are associated with the given pool id.
-func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64, uptimeAccums []accum.AccumulatorObject) (uint64, sdk.Dec, error) {
+func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64, uptimeAccums []*accum.AccumulatorObject) (uint64, sdk.Dec, error) {
 	// Get CL pool from ID
 	clPool, err := k.getPoolById(ctx, clPoolId)
 	if err != nil {
@@ -245,7 +240,7 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 // CONTRACT: the caller validates that the pool with the given id exists.
 // CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
 // CONTRACT: uptimeAccums are associated with the given pool id.
-func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64, uptimeAccums []accum.AccumulatorObject) (sdk.Coins, error) {
+func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64, uptimeAccums []*accum.AccumulatorObject) (sdk.Coins, error) {
 	// Get CL pool from ID. This also serves as an early pool existence check.
 	clPool, err := k.getPoolById(ctx, clPoolId)
 	if err != nil {
@@ -335,7 +330,11 @@ func (k Keeper) UpdatePoolUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64
 		return err
 	}
 
-	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
+	return k.updatePoolUptimeAccumulatorsToNowWithPool(ctx, pool)
+}
+
+func (k Keeper) updatePoolUptimeAccumulatorsToNowWithPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, pool.GetId())
 	if err != nil {
 		return err
 	}
@@ -364,7 +363,7 @@ var dec1e9 = sdk.NewDec(1e9)
 // * this function does not refetch the uptime accumulators from state.
 // * this function operates on the given pool directly, instead of fetching it from state.
 // This is to avoid unnecessary state reads during swaps for performance reasons.
-func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []accum.AccumulatorObject) error {
+func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool types.ConcentratedPoolExtension, uptimeAccums []*accum.AccumulatorObject) error {
 	if pool == nil {
 		return types.ErrPoolNil
 	}
@@ -672,18 +671,28 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 	upperTickUptimeValues := getUptimeTrackerValues(upperTickInfo.UptimeTrackers.List)
 	// If current tick is below range, we subtract uptime growth of upper tick from that of lower tick
 	if currentTick < lowerTick {
-		return osmoutils.SubDecCoinArrays(lowerTickUptimeValues, upperTickUptimeValues)
+		// Note: SafeSub with negative accumulation is possible if upper tick is initialized first
+		// while current tick > upper tick. Then, the current tick under the lower tick. The lower
+		// tick then gets initialized to zero.
+		// Therefore, we allow for negative result.
+		return osmoutils.SafeSubDecCoinArrays(lowerTickUptimeValues, upperTickUptimeValues)
 	} else if currentTick < upperTick {
 		// If current tick is within range, we subtract uptime growth of lower and upper tick from global growth
+		// Note: each individual tick snapshot never be greater than the global uptime accumulator.
+		// Therefore, we do not allow for negative result.
 		globalMinusUpper, err := osmoutils.SubDecCoinArrays(globalUptimeValues, upperTickUptimeValues)
 		if err != nil {
 			return []sdk.DecCoins{}, err
 		}
 
-		return osmoutils.SubDecCoinArrays(globalMinusUpper, lowerTickUptimeValues)
+		// Note: SafeSub with negative accumulation is possible if lower tick is initialized after upper tick
+		// and the current tick is between the two.
+		return osmoutils.SafeSubDecCoinArrays(globalMinusUpper, lowerTickUptimeValues)
 	} else {
 		// If current tick is above range, we subtract uptime growth of lower tick from that of upper tick
-		return osmoutils.SubDecCoinArrays(upperTickUptimeValues, lowerTickUptimeValues)
+		// Note: SafeSub with negative accumulation is possible if lower tick is initialized after upper tick
+		// and the current tick is above the two.
+		return osmoutils.SafeSubDecCoinArrays(upperTickUptimeValues, lowerTickUptimeValues)
 	}
 }
 
@@ -788,7 +797,7 @@ func (k Keeper) initOrUpdatePositionUptimeAccumulators(ctx sdk.Context, poolId u
 // - fails to claim rewards
 // - fails to check if position record exists
 // - fails to update position accumulator with the current growth inside the position
-func updateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
+func updateAccumAndClaimRewards(accum *accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
 	// Set the position's accumulator value to it's initial value at creation time plus the growth outside at this moment.
 	err := updatePositionToInitValuePlusGrowthOutside(accum, positionKey, growthOutside)
 	if err != nil {
@@ -810,7 +819,8 @@ func updateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey strin
 		// The position accumulator value must always equal to the growth inside at the time of last update.
 		// Since this is the time we update the accumulator, we must subtract the growth outside from the global accumulator value
 		// to get growth inside at the current block time.
-		currentGrowthInsideForPosition := accum.GetValue().Sub(growthOutside)
+		// Note: this is SafeSub because interval accumulation is allowed to be negative.
+		currentGrowthInsideForPosition, _ := accum.GetValue().SafeSub(growthOutside)
 		err := accum.SetPositionIntervalAccumulation(positionKey, currentGrowthInsideForPosition)
 		if err != nil {
 			return sdk.Coins{}, sdk.DecCoins{}, err
@@ -828,7 +838,7 @@ func updateAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey strin
 // Returns nil on success. Error otherwise.
 // NOTE: It is only used by fungifyChargedPosition which we disabled for launch.
 // nolint: unused
-func moveRewardsToNewPositionAndDeleteOldAcc(accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
+func moveRewardsToNewPositionAndDeleteOldAcc(accum *accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
 	if oldPositionName == newPositionName {
 		return types.ModifySamePositionAccumulatorError{PositionAccName: oldPositionName}
 	}

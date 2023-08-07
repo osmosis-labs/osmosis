@@ -3,8 +3,8 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -44,6 +44,11 @@ type PoolManagerKeeper interface {
 		tokenIn sdk.Coin,
 	) (tokenOutAmount sdk.Int, err error)
 
+	MultihopEstimateInGivenExactAmountOut(
+		ctx sdk.Context,
+		routes []poolmanagertypes.SwapAmountOutRoute,
+		tokenOut sdk.Coin) (tokenInAmount sdk.Int, err error)
+
 	AllPools(
 		ctx sdk.Context,
 	) ([]poolmanagertypes.PoolI, error)
@@ -60,4 +65,15 @@ type PoolManagerKeeper interface {
 // creating a x/protorev keeper.
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochtypes.EpochInfo
+}
+
+// ConcentratedLiquidityKeeper defines the ConcentratedLiquidity contract that must be fulfilled when
+// creating a x/protorev keeper.
+type ConcentratedLiquidityKeeper interface {
+	ComputeMaxInAmtGivenMaxTicksCrossed(
+		ctx sdk.Context,
+		poolId uint64,
+		tokenInDenom string,
+		maxTicksCrossed uint64,
+	) (maxTokenIn, resultingTokenOut sdk.Coin, err error)
 }

@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
+	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/config"
 
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
 )
 
 type Config struct {
@@ -193,6 +193,14 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
 	require.NoError(c.t, err)
 
+	cmd = []string{"hermes", "clear", "packets", "--chain", dstChain.Id, "--port", "transfer", "--channel", "channel-0"}
+	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
+	require.NoError(c.t, err)
+
+	cmd = []string{"hermes", "clear", "packets", "--chain", c.Id, "--port", "transfer", "--channel", "channel-0"}
+	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
+	require.NoError(c.t, err)
+
 	require.Eventually(
 		c.t,
 		func() bool {
@@ -211,8 +219,8 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 				return false
 			}
 		},
-		5*time.Minute,
-		time.Second,
+		1*time.Minute,
+		10*time.Millisecond,
 		"tx not received on destination chain",
 	)
 

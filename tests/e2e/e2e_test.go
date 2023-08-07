@@ -3,6 +3,7 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,25 +15,30 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
 
-	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+	packetforwardingtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
-	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
-	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
+	v17 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
+	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+)
+
+var (
+	// minDecTolerance minimum tolerance for sdk.Dec, given its precision of 18.
+	minDecTolerance = sdk.MustNewDecFromStr("0.000000000000000001")
 )
 
 // TODO: Find more scalable way to do this
@@ -128,11 +134,11 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 	}
 
 	if s.skipUpgrade {
-		s.T().Skip("Skipping ConcentratedLiquidity_CanonicalPool_And_Parameters test")
+		s.T().Skip("Skipping ConcentratedLiquidity_CanonicalPools test")
 	} else {
-		s.T().Run("ConcentratedLiquidity_CanonicalPool_And_Parameters", func(t *testing.T) {
+		s.T().Run("ConcentratedLiquidity_CanonicalPools", func(t *testing.T) {
 			t.Parallel()
-			s.ConcentratedLiquidity_CanonicalPool_And_Parameters()
+			s.ConcentratedLiquidity_CanonicalPools()
 		})
 	}
 
@@ -964,10 +970,9 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	// setup wallets and send gamm tokens to these wallets (both chains)
 	superfluidVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
 	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[2].PublicAddress, superfluidVotingWallet)
-	chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
+	lockId := chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
 	chainA.LatestLockNumber += 1
-	lastLockNumber := chainA.LatestLockNumber
-	chainANode.SuperfluidDelegate(lastLockNumber, chainA.NodeConfigs[2].OperatorAddress, superfluidVotingWallet)
+	chainANode.SuperfluidDelegate(lockId, chainA.NodeConfigs[2].OperatorAddress, superfluidVotingWallet)
 
 	// create a text prop, deposit and vote yes
 	chainANode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
@@ -1077,7 +1082,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	// Check initial TWAP
 	// We expect this to error since there is no spot price yet.
 	s.T().Log("initial twap check")
-	initialTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken0(), concentratedPool.GetToken1(), timeBeforePositionCreationBeforeSwap)
+	initialTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeBeforePositionCreationBeforeSwap)
 	s.Require().Error(err)
 	s.Require().Equal(sdk.Dec{}, initialTwapBOverA)
 
@@ -1085,8 +1090,8 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	s.T().Log("creating first position")
 	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,20000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
 	timeAfterPositionCreationBeforeSwap := chainANode.QueryLatestBlockTime()
-	chainA.WaitForNumHeights(1)
-	firstPositionTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken0(), concentratedPool.GetToken1(), timeAfterPositionCreationBeforeSwap)
+	chainA.WaitForNumHeights(2)
+	firstPositionTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterPositionCreationBeforeSwap)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.MustNewDecFromStr("0.5"), firstPositionTwapBOverA)
 
@@ -1100,7 +1105,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	timeAfterSwapPlus1Height := chainANode.QueryLatestBlockTime()
 
 	s.T().Log("querying for the TWAP after swap")
-	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(concentratedPool.GetId(), concentratedPool.GetToken0(), concentratedPool.GetToken1(), timeAfterSwap, timeAfterSwapPlus1Height)
+	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwap, timeAfterSwapPlus1Height)
 	s.Require().NoError(err)
 
 	// We swap stake so uosmo's supply will decrease and stake will increase.
@@ -1114,7 +1119,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	chainA.WaitForNumHeights(1)
 
 	s.T().Log("querying for the TWAP from after pool drained")
-	afterRemoveTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken0(), concentratedPool.GetToken1(), timeAfterSwapPlus1Height)
+	afterRemoveTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapPlus1Height)
 	s.Require().Error(err)
 	s.Require().Equal(sdk.Dec{}, afterRemoveTwapBOverA)
 
@@ -1124,7 +1129,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
 	chainA.WaitForNumHeights(1)
 	timeAfterSwapRemoveAndCreatePlus1Height := chainANode.QueryLatestBlockTime()
-	secondTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken0(), concentratedPool.GetToken1(), timeAfterSwapRemoveAndCreatePlus1Height)
+	secondTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapRemoveAndCreatePlus1Height)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(1), secondTwapBOverA)
 }
@@ -1191,7 +1196,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 		s.Eventually(func() bool {
 			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 			return strings.Contains(val, param)
-		}, time.Second*30, time.Millisecond*500)
+		}, time.Second*30, time.Second)
 	}
 }
 
@@ -1224,7 +1229,7 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	// check the balance of the contract
 	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
 	ibcDenom := denomTrace.IBCDenom()
-	s.CheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
+	s.CallCheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
@@ -1297,11 +1302,20 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	chainANode.SendIBCTransfer(chainB, validatorAddr, validatorAddr, string(forwardMemo), coin)
 
 	// check the balance of the contract
-	s.CheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
+	s.CallCheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
+
+	// Getting the sender as set by PFM
+	senderStr := fmt.Sprintf("channel-0/%s", validatorAddr)
+	senderHash32 := address.Hash(packetforwardingtypes.ModuleName, []byte(senderStr)) // typo intended
+	sender := sdk.AccAddress(senderHash32[:20])
+	bech32Prefix := "osmo"
+	pfmSender, err := sdk.Bech32ifyAddressBytes(bech32Prefix, sender)
+	s.Require().NoError(err)
 
 	// sender wasm addr
-	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", pfmSender, "osmo")
 	s.Require().NoError(err)
+
 	s.Require().Eventually(func() bool {
 		response, err := chainANode.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
 		if err != nil {
@@ -1329,8 +1343,8 @@ func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 	preUpgradePoolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
 
 	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.GetWallet("lockup-wallet"), chainANode.GetWallet("lockup-wallet-superfluid")
-	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletAddr)
-	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletSuperfluidAddr)
+	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletAddr, 1)
+	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletSuperfluidAddr, 2)
 }
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
@@ -1611,8 +1625,8 @@ func (s *IntegrationTestSuite) StateSync() {
 		s.Require().NoError(err)
 		return stateSyncNodeHeight == runningNodeHeight
 	},
-		3*time.Minute,
-		500*time.Millisecond,
+		1*time.Minute,
+		time.Second,
 	)
 
 	// stop the state synching node.
@@ -1754,56 +1768,60 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
 }
 
-// Tests that v16 upgrade correctly creates the canonical OSMO-DAI pool in the upgrade.
-// Prefixed with "A" to run before TestConcentratedLiquidity that resets the pool creation
-// parameter.
-func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPool_And_Parameters() {
-	if s.skipUpgrade {
-		s.T().Skip("Skipping v16 canonical pool creation test because upgrade is not enabled")
-	}
+// START: CAN REMOVE POST v17 UPGRADE
 
-	expectedSpreadReward := sdk.MustNewDecFromStr("0.002")
+// Tests that v17 upgrade correctly creates the canonical pools in the upgrade handler.
+func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping v17 canonical pools creation test because upgrade is not enabled")
+	}
 
 	_, chainANode := s.getChainACfgs()
 
-	// Taken from: https://app.osmosis.zone/pool/674
-	concentratedPoolId := chainANode.QueryConcentratedPooIdLinkFromCFMM(config.DaiOsmoPoolIdv16)
+	for _, assetPair := range v17.AssetPairsForTestsOnly {
+		expectedSpreadFactor := assetPair.SpreadFactor
+		concentratedPoolId := chainANode.QueryConcentratedPooIdLinkFromCFMM(assetPair.LinkedClassicPool)
+		concentratedPool := s.updatedConcentratedPool(chainANode, concentratedPoolId)
 
-	concentratedPool := s.updatedConcentratedPool(chainANode, concentratedPoolId)
+		s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
+		s.Require().Equal(assetPair.BaseAsset, concentratedPool.GetToken0())
+		s.Require().Equal(v17.QuoteAsset, concentratedPool.GetToken1())
+		s.Require().Equal(uint64(v17.TickSpacing), concentratedPool.GetTickSpacing())
+		s.Require().Equal(expectedSpreadFactor.String(), concentratedPool.GetSpreadFactor(sdk.Context{}).String())
 
-	s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
-	s.Require().Equal(v16.DesiredDenom0, concentratedPool.GetToken0())
-	s.Require().Equal(v16.DAIIBCDenom, concentratedPool.GetToken1())
-	s.Require().Equal(uint64(v16.TickSpacing), concentratedPool.GetTickSpacing())
-	s.Require().Equal(expectedSpreadReward.String(), concentratedPool.GetSpreadFactor(sdk.Context{}).String())
+		superfluidAssets := chainANode.QueryAllSuperfluidAssets()
 
-	// Check that the cl pool denom is now an authorized superfluid denom.
-	superfluidAssets := chainANode.QueryAllSuperfluidAssets()
-
-	found := false
-	for _, superfluidAsset := range superfluidAssets {
-		if superfluidAsset.Denom == cltypes.GetConcentratedLockupDenomFromPoolId(concentratedPoolId) {
-			found = true
-			break
+		found := false
+		for _, superfluidAsset := range superfluidAssets {
+			if superfluidAsset.Denom == cltypes.GetConcentratedLockupDenomFromPoolId(concentratedPoolId) {
+				found = true
+				break
+			}
 		}
+
+		if assetPair.Superfluid {
+			s.Require().True(found, "concentrated liquidity pool denom not found in superfluid assets")
+		} else {
+			s.Require().False(found, "concentrated liquidity pool denom found in superfluid assets")
+		}
+
+		// This spot price is taken from the balancer pool that was initiated pre upgrade.
+		balancerPool := s.updatedCFMMPool(chainANode, assetPair.LinkedClassicPool)
+		expectedSpotPrice, err := balancerPool.SpotPrice(sdk.Context{}, v17.QuoteAsset, assetPair.BaseAsset)
+		s.Require().NoError(err)
+
+		// Allow 0.1% margin of error.
+		multiplicativeTolerance := osmomath.ErrTolerance{
+			MultiplicativeTolerance: sdk.MustNewDecFromStr("0.001"),
+		}
+
+		s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(expectedSpotPrice), concentratedPool.GetCurrentSqrtPrice().PowerInteger(2)))
 	}
 
-	s.Require().True(found, "concentrated liquidity pool denom not found in superfluid assets")
-
-	// Check that the community pool module account possesses a position
+	// Check that the community pool module account possesses positions for all the canonical pools.
 	communityPoolAddress := chainANode.QueryCommunityPoolModuleAccount()
 	positions := chainANode.QueryConcentratedPositions(communityPoolAddress)
-	s.Require().Len(positions, 1)
-
-	// This spot price is taken from the balancer pool that was initiated pre upgrade.
-	balancerDaiOsmoPool := s.updatedCFMMPool(chainANode, config.DaiOsmoPoolIdv16)
-	expectedSpotPrice, err := balancerDaiOsmoPool.SpotPrice(sdk.Context{}, v16.DAIIBCDenom, v16.DesiredDenom0)
-	s.Require().NoError(err)
-
-	// Allow 0.01% margin of error.
-	multiplicativeTolerance := osmomath.ErrTolerance{
-		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
-	}
-
-	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(expectedSpotPrice), concentratedPool.GetCurrentSqrtPrice().PowerInteger(2)))
+	s.Require().Len(positions, len(v17.AssetPairsForTestsOnly))
 }
+
+// END: CAN REMOVE POST v17 UPGRADE
