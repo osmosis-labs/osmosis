@@ -279,6 +279,8 @@ func testnetParsePoolRecord(ctx sdk.Context, pool poolManagerTypes.PoolI, keeper
 		return true, 0, "", sdk.Dec{}, nil
 	}
 
+	ctx.Logger().Info(fmt.Sprintf("parsing gamm pool %d", gammPoolId))
+
 	cfmmPool, err := keepers.GAMMKeeper.GetCFMMPool(ctx, gammPoolId)
 	if err != nil {
 		return true, 0, "", sdk.Dec{}, err
