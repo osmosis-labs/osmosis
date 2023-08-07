@@ -2,15 +2,15 @@
 
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
+
 LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
-GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
-GO_MODULE := $(shell cat go.mod | grep "module " | cut -d ' ' -f 2)
 BUILDDIR ?= $(CURDIR)/build
 DOCKER := $(shell which docker)
-E2E_UPGRADE_VERSION := "v16"
+E2E_UPGRADE_VERSION := "v17"
 
-
+GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
+GO_MODULE := $(shell cat go.mod | grep "module " | cut -d ' ' -f 2)
 GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
 GO_MINOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
 
@@ -188,6 +188,32 @@ distclean: clean
 	rm -rf vendor/
 
 ###############################################################################
+###                           Dependency Updates                            ###
+###############################################################################
+
+VERSION := 
+MODFILES := ./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod
+# run with VERSION argument specified
+# e.g) make update-sdk-version VERSION=v0.45.1-0.20230523200430-193959b898ec
+# This will change sdk dependencyu version for go.mod in root directory + all sub-modules in this repo.
+update-sdk-version:
+	@if [ -z "$(VERSION)" ]; then \
+		echo "VERSION not set"; \
+		exit 1; \
+	fi
+	@echo "Updating version to $(VERSION)"
+	@for modfile in $(MODFILES); do \
+		if [ -e "$$modfile" ]; then \
+			sed -i '' 's|github.com/osmosis-labs/cosmos-sdk v[0-9a-z.\-]*|github.com/osmosis-labs/cosmos-sdk $(VERSION)|g' $$modfile; \
+			cd `dirname $$modfile`; \
+			go mod tidy; \
+			cd - > /dev/null; \
+		else \
+			echo "File $$modfile does not exist"; \
+		fi; \
+	done
+
+###############################################################################
 ###                                  Proto                                  ###
 ###############################################################################
 
@@ -255,8 +281,8 @@ run-querygen:
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
-PACKAGES_UNIT=$(shell go list ./... ./osmomath/... ./osmoutils/... ./x/ibc-hooks/... | grep -E -v 'tests/simulator|e2e')
-PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
+PACKAGES_UNIT=$(shell go list ./... ./osmomath/... ./osmoutils/... ./x/ibc-hooks/... ./x/epochs | grep -E -v 'tests/simulator|e2e')
+PACKAGES_E2E := $(shell go list ./... | grep '/e2e' | awk -F'/e2e' '{print $$1 "/e2e"}' | uniq)
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
 TEST_PACKAGES=./...
 
@@ -296,7 +322,7 @@ test-e2e: e2e-setup test-e2e-ci e2e-remove-resources
 # does not do any validation about the state of the Docker environment
 # As a result, avoid using this locally.
 test-e2e-ci:
-	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -p 4
 
 # test-e2e-debug runs a full e2e test suite but does
 # not attempt to delete Docker resources at the end.
@@ -446,9 +472,53 @@ localnet-state-export-stop:
 
 localnet-state-export-clean: localnet-clean
 
-# create 1000 concentrated-liquidity positions in localosmosis at pool id 1
+# create 100 concentrated-liquidity positions in localosmosis at pool id 1
 localnet-cl-create-positions:
-	go run tests/cl-go-client/main.go
+	go run tests/cl-go-client/main.go --operation 0
+
+# does 100 small randomized swaps in localosmosis at pool id 1
+localnet-cl-small-swap:
+	go run tests/cl-go-client/main.go --operation 1
+
+# does 100 large swaps where the output of the previous swap is swapped back at the
+# next swap. localosmosis at pool id 1
+localnet-cl-large-swap:
+	go run tests/cl-go-client/main.go --operation 2
+
+# creates a gauge and waits for one epoch so that the gauge
+# is converted into an incentive record for pool id 1.
+localnet-cl-external-incentive:
+	go run tests/cl-go-client/main.go --operation 3
+
+# attempts to create a CL pool at id 1.
+# if pool already exists, this is a no-op.
+# if pool with different id is desired, tweak expectedPoolId
+# in the script.
+localnet-cl-create-pool:
+	go run tests/cl-go-client/main.go --operation 4
+
+# claims spread rewards for a random account for a random
+# subset of positions.
+localnet-cl-claim-spread-rewards:
+	go run tests/cl-go-client/main.go --operation 5
+
+# claims incentives for a random account for a random
+# subset of positions.
+localnet-cl-claim-incentives:
+	go run tests/cl-go-client/main.go --operation 6
+
+localnet-cl-add-to-positions:
+	go run tests/cl-go-client/main.go --operation 7
+
+localnet-cl-withdraw-positions:
+	go run tests/cl-go-client/main.go --operation 8
+
+
+# does both of localnet-cl-create-positions and localnet-cl-small-swap
+localnet-cl-positions-small-swaps: localnet-cl-create-positions localnet-cl-small-swap
+
+# does both of localnet-cl-create-positions and localnet-cl-large-swap
+localnet-cl-positions-large-swaps: localnet-cl-create-positions localnet-cl-large-swap
 
 # This script retrieves Uniswap v3 Ethereum position data
 # from subgraph. It uses WETH / USDC pool. This is helpful
@@ -478,7 +548,60 @@ cl-create-bigbang-config:
 go-mock-update:
 	mockgen -source=x/poolmanager/types/routes.go -destination=tests/mocks/pool_module.go -package=mocks
 	mockgen -source=x/poolmanager/types/pool.go -destination=tests/mocks/pool.go -package=mocks
+	mockgen -source=x/gamm/types/pool.go -destination=tests/mocks/cfmm_pool.go -package=mocks
+	mockgen -source=x/concentrated-liquidity/types/cl_pool_extensionI.go -destination=tests/mocks/cl_pool.go -package=mocks
+
+###############################################################################
+###                                Release                                  ###
+###############################################################################
+
+GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v$(GO_VERSION)
+COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm | sed 's/.* //')
+
+ifdef GITHUB_TOKEN
+release:
+	docker run \
+		--rm \
+		-e GITHUB_TOKEN=$(GITHUB_TOKEN) \
+		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/osmosisd \
+		-w /go/src/osmosisd \
+		$(GORELEASER_IMAGE) \
+		release \
+		--clean
+else
+release:
+	@echo "Error: GITHUB_TOKEN is not defined. Please define it before running 'make release'."
+endif
+
+release-dry-run:
+	docker run \
+		--rm \
+		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/osmosisd \
+		-w /go/src/osmosisd \
+		$(GORELEASER_IMAGE) \
+		release \
+		--clean \
+		--skip-publish
+
+release-snapshot:
+	docker run \
+		--rm \
+		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/osmosisd \
+		-w /go/src/osmosisd \
+		$(GORELEASER_IMAGE) \
+		release \
+		--clean \
+		--snapshot \
+		--skip-validate \
+		--skip-publish
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
-	test test-all test-build test-cover test-unit test-race benchmark
+	test test-all test-build test-cover test-unit test-race benchmark \
+	release release-dry-run release-snapshot

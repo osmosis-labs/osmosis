@@ -18,7 +18,7 @@ The cosmwasm `MsgExecuteContract` is defined [here](https://github.com/CosmWasm/
 
 ```go
 type MsgExecuteContract struct {
-	// Sender is the that actor that signed the messages
+	// Sender is the actor that committed the message in the sender chain
 	Sender string
 	// Contract is the address of the smart contract
 	Contract string
@@ -38,6 +38,8 @@ This is done by setting the sender to `Bech32(Hash("ibc-wasm-hook-intermediary" 
 * Contract: This field should be directly obtained from the ICS-20 packet metadata
 * Msg: This field should be directly obtained from the ICS-20 packet metadata.
 * Funds: This field is set to the amount of funds being sent over in the ICS 20 packet. One detail is that the denom in the packet is the counterparty chains representation of the denom, so we have to translate it to Osmosis' representation.
+
+> **_WARNING:_**  Due to a [bug](https://twitter.com/SCVSecurity/status/1682329758020022272) in the packet forward middleware, we cannot trust the sender from chains that use PFM. Until that is fixed, we recommend chains to not trust the sender on contracts executed via IBC hooks. 
 
 So our constructed cosmwasm message that we execute will look like:
 

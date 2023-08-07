@@ -49,7 +49,7 @@ func (pw *PoolWeights) Validate() error {
 		return fmt.Errorf("pool weights cannot be nil")
 	}
 
-	if pw.BalancerWeight == 0 || pw.StableWeight == 0 || pw.ConcentratedWeight == 0 {
+	if pw.BalancerWeight == 0 || pw.StableWeight == 0 || pw.ConcentratedWeight == 0 || pw.CosmwasmWeight == 0 {
 		return fmt.Errorf("pool weights cannot be 0")
 	}
 

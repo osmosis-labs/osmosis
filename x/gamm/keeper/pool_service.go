@@ -9,8 +9,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 // CalculateSpotPrice returns the spot price of the quote asset in terms of the base asset,
@@ -64,13 +64,13 @@ func (k Keeper) CalculateSpotPrice(
 // - Records total liquidity increase
 // - Calls the AfterPoolCreated hook
 func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, sender sdk.AccAddress) (err error) {
-	cfmmPool, err := convertToCFMMPool(pool)
+	cfmmPool, err := asCFMMPool(pool)
 	if err != nil {
 		return err
 	}
 
 	exitFee := cfmmPool.GetExitFee(ctx)
-	if !exitFee.Equal(sdk.ZeroDec()) {
+	if !exitFee.IsZero() {
 		return fmt.Errorf("can not create pool with non zero exit fee, got %d", exitFee)
 	}
 

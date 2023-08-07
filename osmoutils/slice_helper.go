@@ -1,6 +1,7 @@
 package osmoutils
 
 import (
+	"math/rand"
 	"reflect"
 	"sort"
 
@@ -91,4 +92,28 @@ func MergeSlices[T any](slice1, slice2 []T, less LessFunc[T]) []T {
 	result = append(result, slice2[j:]...)
 
 	return result
+}
+
+// Contains returns true if the slice contains the item, false otherwise.
+func Contains[T comparable](slice []T, item T) bool {
+	for _, a := range slice {
+		if a == item {
+			return true
+		}
+	}
+	return false
+}
+
+// GetRandomSubset returns a random subset of the given slice
+func GetRandomSubset[T any](slice []T) []T {
+	if len(slice) == 0 {
+		return []T{}
+	}
+
+	rand.Shuffle(len(slice), func(i, j int) {
+		slice[i], slice[j] = slice[j], slice[i]
+	})
+
+	n := rand.Intn(len(slice))
+	return slice[:n]
 }

@@ -9,9 +9,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app"
-	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/app"
+	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -114,7 +114,7 @@ func benchmarkDistributionLogic(b *testing.B, numAccts, numDenoms, numGauges, nu
 			numEpochsPaidOver = uint64(r.Int63n(durationMillisecs/millisecsPerEpoch)) + 1
 		}
 
-		gaugeId, err := app.IncentivesKeeper.CreateGauge(ctx, isPerpetual, addr, rewards, distributeTo, startTime, numEpochsPaidOver)
+		gaugeId, err := app.IncentivesKeeper.CreateGauge(ctx, isPerpetual, addr, rewards, distributeTo, startTime, numEpochsPaidOver, 0)
 		if err != nil {
 			fmt.Printf("Create Gauge, %v\n", err)
 			b.FailNow()

@@ -9,10 +9,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 // InitializePool initializes a new concentrated liquidity pool with the given PoolI interface and creator address.
@@ -28,7 +31,7 @@ import (
 // - There is an error creating the fee or uptime accumulator.
 // - There is an error setting the pool in the keeper's state.
 func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, creatorAddress sdk.AccAddress) error {
-	concentratedPool, err := convertPoolInterfaceToConcentrated(poolI)
+	concentratedPool, err := asConcentrated(poolI)
 	if err != nil {
 		return err
 	}
@@ -51,7 +54,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: params.AuthorizedQuoteDenoms}
 	}
 
-	if err := k.createFeeAccumulator(ctx, poolId); err != nil {
+	if err := k.createSpreadRewardAccumulator(ctx, poolId); err != nil {
 		return err
 	}
 
@@ -76,7 +79,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 	if err != nil {
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
-	poolI, err := convertConcentratedToPoolInterface(concentratedPool)
+	poolI, err := asPoolI(concentratedPool)
 	if err != nil {
 		return nil, err
 	}
@@ -185,10 +188,10 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 	return filteredPoolBalance, nil
 }
 
-// convertConcentratedToPoolInterface takes a types.ConcentratedPoolExtension and attempts to convert it to a
+// asPoolI takes a types.ConcentratedPoolExtension and attempts to convert it to a
 // poolmanagertypes.PoolI. If the conversion is successful, the converted value is returned. If the conversion fails,
 // an error is returned.
-func convertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
+func asPoolI(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
 	// Attempt to convert the concentratedPool to a poolmanagertypes.PoolI
 	pool, ok := concentratedPool.(poolmanagertypes.PoolI)
 	if !ok {
@@ -199,10 +202,10 @@ func convertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolE
 	return pool, nil
 }
 
-// convertPoolInterfaceToConcentrated takes a poolmanagertypes.PoolI and attempts to convert it to a
+// asConcentrated takes a poolmanagertypes.PoolI and attempts to convert it to a
 // types.ConcentratedPoolExtension. If the conversion is successful, the converted value is returned. If the conversion fails,
 // an error is returned.
-func convertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.ConcentratedPoolExtension, error) {
+func asConcentrated(poolI poolmanagertypes.PoolI) (types.ConcentratedPoolExtension, error) {
 	// Attempt to convert poolmanagertypes.PoolI to a concentratedPool
 	concentratedPool, ok := poolI.(types.ConcentratedPoolExtension)
 	if !ok {
@@ -220,7 +223,7 @@ func (k Keeper) GetConcentratedPoolById(ctx sdk.Context, poolId uint64) (types.C
 	if err != nil {
 		return nil, err
 	}
-	return convertPoolInterfaceToConcentrated(poolI)
+	return asConcentrated(poolI)
 }
 
 func (k Keeper) GetSerializedPools(ctx sdk.Context, pagination *query.PageRequest) ([]*codectypes.Any, *query.PageResponse, error) {
@@ -332,4 +335,51 @@ func validateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuo
 		}
 	}
 	return false
+}
+
+// GetLinkedBalancerPoolID is a wrapper function for gammKeeper.GetLinkedBalancerPoolID in order to allow
+// the concentrated pool module to access the linked balancer pool id via query.
+// Without this function, both pool link query functions would have to live in the gamm module which is unintuitive.
+func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint64) (uint64, error) {
+	return k.gammKeeper.GetLinkedBalancerPoolID(ctx, concentratedPoolId)
+}
+
+func (k Keeper) GetUserUnbondingPositions(ctx sdk.Context, address sdk.AccAddress) ([]model.PositionWithPeriodLock, error) {
+	// Get the position IDs for the specified user address.
+	positions, err := k.GetUserPositions(ctx, address, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// Query each position ID and determine if it has a lock ID associated with it.
+	// Construct a response with the position as well as the lock's info.
+	var userPositionsWithPeriodLocks []model.PositionWithPeriodLock
+	for _, pos := range positions {
+		lockId, err := k.GetLockIdFromPositionId(ctx, pos.PositionId)
+		if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: pos.PositionId}) {
+			continue
+		} else if err != nil {
+			return nil, err
+		}
+		// If we have hit this logic branch, it means that, at one point, the lockId provided existed. If we fetch it again
+		// and it doesn't exist, that means that the lock has matured.
+		lock, err := k.lockupKeeper.GetLockByID(ctx, lockId)
+		if errors.Is(err, errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", lockId))) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		// Don't include locks that aren't unlocking
+		if lock.EndTime.IsZero() {
+			continue
+		}
+
+		userPositionsWithPeriodLocks = append(userPositionsWithPeriodLocks, model.PositionWithPeriodLock{
+			Position: pos,
+			Locks:    *lock,
+		})
+	}
+	return userPositionsWithPeriodLocks, nil
 }

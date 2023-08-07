@@ -2,22 +2,61 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
+)
+
+const (
+	validPoolId = uint64(1)
+)
+
+var (
+	DAIIBCDenom  = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
+	USDCIBCDenom = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
+
+	defaultDaiAmount, _ = sdk.NewIntFromString("73000000000000000000000")
+	defaultDenom0mount  = sdk.NewInt(10000000000)
+	desiredDenom0       = "uosmo"
+	desiredDenom0Coin   = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
+	daiCoin             = sdk.NewCoin(DAIIBCDenom, defaultDaiAmount)
+	usdcCoin            = sdk.NewCoin(USDCIBCDenom, defaultDaiAmount)
 )
 
 func (s *KeeperTestSuite) TestMigrate() {
-	defaultAccount := s.TestAccs[0]
+	defaultAccount := apptesting.CreateRandomAccounts(1)[0]
 	defaultGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("100000000000000000000").RoundInt())
 	invalidGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("190000000000000000001").RoundInt())
 	defaultAccountFunds := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200000000000)), sdk.NewCoin("usdc", sdk.NewInt(200000000000)))
+
+	// Explanation of additive tolerance of 100000:
+	//
+	// The balance in the CL pool should be equal to the portion of the user's previous GAMM balances that could be
+	// joined into a full range CL position. These are not exactly equivalent because GAMM pools covers prices (0, inf)
+	// while CL pools cover prices (minSpotPrice, maxSpotPrice), where minSpotPrice and maxSpotPrice are close to the GAMM
+	// boundaries but not exactly on them.
+	//
+	// # Base equations for full range asset amounts:
+	// Expected amount of asset 0: (liquidity * (maxSqrtPrice - curSqrtPrice)) / (maxSqrtPrice * curSqrtPrice)
+	// Expected amount of asset 1: liquidity * (curSqrtPrice - minSqrtPrice)
+	//
+	// # Using scripts in x/concentrated-liquidity/python/swap_test.py, we compute the following:
+	// expectedAsset0 = floor((liquidity * (maxSqrtPrice - curSqrtPrice)) / (maxSqrtPrice * curSqrtPrice)) = 99999999999.000000000000000000
+	// expectedAsset1 = floor(liquidity * (curSqrtPrice - minSqrtPrice)) = 99999900000.000000000000000000
+	//
+	// We add 1 to account for ExitPool rounding exit amount up. This is not an issue since the balance is deducted from the user regardless.
+	// These leaves us with full transfer of asset 0 and a (correct) transfer of asset 1 amounting to full GAMM balance minus 100000.
+	// We expect this tolerance to be sufficient as long as our test cases are on the same order of magnitude.
 	defaultErrorTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.NewDec(100),
+		AdditiveTolerance: sdk.NewDec(100000),
 		RoundingDir:       osmomath.RoundDown,
 	}
 	defaultJoinTime := s.Ctx.BlockTime()
@@ -161,8 +200,8 @@ func (s *KeeperTestSuite) TestMigrate() {
 
 		// Set up canonical link between balancer and cl pool
 		if test.setupPoolMigrationLink {
-			record := types.BalancerToConcentratedPoolLink{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()}
-			err = keeper.ReplaceMigrationRecords(s.Ctx, []types.BalancerToConcentratedPoolLink{record})
+			record := gammmigration.BalancerToConcentratedPoolLink{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()}
+			err = keeper.ReplaceMigrationRecords(s.Ctx, []gammmigration.BalancerToConcentratedPoolLink{record})
 			s.Require().NoError(err)
 		}
 
@@ -190,7 +229,7 @@ func (s *KeeperTestSuite) TestMigrate() {
 
 		// Migrate the user's gamm shares to a full range concentrated liquidity position
 		userBalancesBeforeMigration := s.App.BankKeeper.GetAllBalances(s.Ctx, test.param.sender)
-		positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, err := keeper.MigrateUnlockedPositionFromBalancerToConcentrated(s.Ctx, test.param.sender, sharesToMigrate, test.tokenOutMins)
+		positionId, amount0, amount1, _, poolIdLeaving, poolIdEntering, err := keeper.MigrateUnlockedPositionFromBalancerToConcentrated(s.Ctx, test.param.sender, sharesToMigrate, test.tokenOutMins)
 		userBalancesAfterMigration := s.App.BankKeeper.GetAllBalances(s.Ctx, test.param.sender)
 		if test.expectedErr != nil {
 			s.Require().Error(err)
@@ -263,7 +302,7 @@ func (s *KeeperTestSuite) TestMigrate() {
 func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 	tests := []struct {
 		name                        string
-		testingMigrationRecords     []types.BalancerToConcentratedPoolLink
+		testingMigrationRecords     []gammmigration.BalancerToConcentratedPoolLink
 		overwriteBalancerDenom0     string
 		overwriteBalancerDenom1     string
 		createFourAssetBalancerPool bool
@@ -271,7 +310,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 	}{
 		{
 			name: "Non existent balancer pool",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{{
 				BalancerPoolId: 5,
 				ClPoolId:       3,
 			}},
@@ -279,7 +318,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Non existent concentrated pool",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{{
 				BalancerPoolId: 1,
 				ClPoolId:       5,
 			}},
@@ -287,7 +326,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Adding two of the same balancer pool id at once should error",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       3,
@@ -301,7 +340,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Adding two of the same cl pool id at once should error",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       3,
@@ -315,7 +354,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Normal case with two records",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       3,
@@ -329,7 +368,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Try to set one of the BalancerPoolIds to a cl pool Id",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 2,
 					ClPoolId:       4,
@@ -343,7 +382,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Try to set one of the ClPoolIds to a balancer pool Id",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 2,
 					ClPoolId:       1,
@@ -353,7 +392,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Mismatch denom0 between the two pools",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       3,
@@ -364,7 +403,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Mismatch denom1 between the two pools",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       3,
@@ -375,7 +414,7 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 		},
 		{
 			name: "Balancer pool has more than two tokens",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 5,
 					ClPoolId:       3,
@@ -438,8 +477,8 @@ func (s *KeeperTestSuite) TestReplaceMigrationRecords() {
 func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 	tests := []struct {
 		name                        string
-		testingMigrationRecords     []types.BalancerToConcentratedPoolLink
-		expectedResultingRecords    []types.BalancerToConcentratedPoolLink
+		testingMigrationRecords     []gammmigration.BalancerToConcentratedPoolLink
+		expectedResultingRecords    []gammmigration.BalancerToConcentratedPoolLink
 		isPoolPrepared              bool
 		isPreexistingRecordsSet     bool
 		overwriteBalancerDenom0     string
@@ -449,7 +488,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 	}{
 		{
 			name: "Non existent balancer pool.",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{{
 				BalancerPoolId: 9,
 				ClPoolId:       6,
 			}},
@@ -458,7 +497,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Non existent concentrated pool.",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{{
 				BalancerPoolId: 1,
 				ClPoolId:       9,
 			}},
@@ -467,7 +506,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Adding two of the same balancer pool ids at once should error",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -482,7 +521,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Adding two of the same cl pool ids at once should error",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -497,7 +536,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Normal case with two records",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -507,7 +546,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       8,
 				},
 			},
-			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
+			expectedResultingRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -526,7 +565,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Normal case with two records no preexisting records",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -536,7 +575,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       8,
 				},
 			},
-			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
+			expectedResultingRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -551,7 +590,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Modify existing record, delete existing record, leave a record alone, add new record",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -565,7 +604,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 					ClPoolId:       8,
 				},
 			},
-			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
+			expectedResultingRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -584,7 +623,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Try to set one of the BalancerPoolIds to a cl pool Id",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 2,
 					ClPoolId:       4,
@@ -599,7 +638,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Try to set one of the ClPoolIds to a balancer pool Id",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 2,
 					ClPoolId:       1,
@@ -610,7 +649,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Mismatch denom0 between the two pools",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -622,7 +661,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Mismatch denom1 between the two pools",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       6,
@@ -634,7 +673,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 		},
 		{
 			name: "Balancer pool has more than two tokens",
-			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+			testingMigrationRecords: []gammmigration.BalancerToConcentratedPoolLink{
 				{
 					BalancerPoolId: 9,
 					ClPoolId:       6,
@@ -678,7 +717,7 @@ func (s *KeeperTestSuite) TestUpdateMigrationRecords() {
 
 			if test.isPreexistingRecordsSet {
 				// Set up existing records so we can update them
-				existingRecords := []types.BalancerToConcentratedPoolLink{
+				existingRecords := []gammmigration.BalancerToConcentratedPoolLink{
 					{
 						BalancerPoolId: 1,
 						ClPoolId:       5,
@@ -750,7 +789,7 @@ func (s *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 			s.PrepareMultipleBalancerPools(3)
 			s.PrepareMultipleConcentratedPools(3)
 
-			keeper.OverwriteMigrationRecords(s.Ctx, DefaultMigrationRecords)
+			keeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, DefaultMigrationRecords)
 
 			for i, poolIdLeaving := range test.poolIdLeaving {
 				poolIdEntering, err := keeper.GetLinkedConcentratedPoolID(s.Ctx, poolIdLeaving)
@@ -817,7 +856,7 @@ func (s *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 			s.PrepareMultipleConcentratedPools(3)
 
 			if !test.skipLinking {
-				keeper.OverwriteMigrationRecords(s.Ctx, DefaultMigrationRecords)
+				keeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, DefaultMigrationRecords)
 			}
 
 			s.Require().True(len(test.poolIdEntering) > 0)
@@ -863,7 +902,7 @@ func (s *KeeperTestSuite) TestGetAllMigrationInfo() {
 			s.PrepareMultipleConcentratedPools(3)
 
 			if !test.skipLinking {
-				keeper.OverwriteMigrationRecords(s.Ctx, DefaultMigrationRecords)
+				keeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, DefaultMigrationRecords)
 			}
 
 			migrationRecords, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
@@ -873,6 +912,328 @@ func (s *KeeperTestSuite) TestGetAllMigrationInfo() {
 			} else {
 				s.Require().Equal(len(migrationRecords.BalancerToConcentratedPoolLinks), 0)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestRedirectDistributionRecord() {
+	s.Setup()
+
+	var (
+		defaultUsdcAmount = sdk.NewInt(7300000000)
+		defaultOsmoAmount = sdk.NewInt(10000000000)
+		usdcCoin          = sdk.NewCoin("uusdc", defaultUsdcAmount)
+		osmoCoin          = sdk.NewCoin("uosmo", defaultOsmoAmount)
+	)
+
+	longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+	s.Require().NoError(err)
+
+	tests := map[string]struct {
+		poolLiquidity sdk.Coins
+		cfmmPoolId    uint64
+		clPoolId      uint64
+		expectError   error
+	}{
+		"happy path": {
+			poolLiquidity: sdk.NewCoins(usdcCoin, osmoCoin),
+			cfmmPoolId:    uint64(1),
+			clPoolId:      uint64(3),
+		},
+		"error: cfmm pool ID doesn't exist": {
+			poolLiquidity: sdk.NewCoins(usdcCoin, osmoCoin),
+			cfmmPoolId:    uint64(4),
+			clPoolId:      uint64(3),
+			expectError:   poolincentivestypes.NoGaugeAssociatedWithPoolError{PoolId: 4, Duration: longestLockableDuration},
+		},
+		"error: cl pool ID doesn't exist": {
+			poolLiquidity: sdk.NewCoins(usdcCoin, osmoCoin),
+			cfmmPoolId:    uint64(1),
+			clPoolId:      uint64(4),
+			expectError:   poolincentivestypes.NoGaugeAssociatedWithPoolError{PoolId: 4, Duration: longestLockableDuration},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+
+			// Create primary balancer pool.
+			balancerId := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+			balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerId)
+			s.Require().NoError(err)
+
+			// Create another balancer pool to test that its gauge links are unchanged
+			balancerId2 := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+
+			// Get gauges for both balancer pools.
+			gaugeToRedirect, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPool.GetId(), longestLockableDuration)
+			s.Require().NoError(err)
+			gaugeToNotRedirect, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerId2, longestLockableDuration)
+			s.Require().NoError(err)
+
+			// Distribution info prior to redirecting.
+			originalDistrInfo := poolincentivestypes.DistrInfo{
+				TotalWeight: sdk.NewInt(100),
+				Records: []poolincentivestypes.DistrRecord{
+					{
+						GaugeId: gaugeToRedirect,
+						Weight:  sdk.NewInt(50),
+					},
+					{
+						GaugeId: gaugeToNotRedirect,
+						Weight:  sdk.NewInt(50),
+					},
+				},
+			}
+			s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, originalDistrInfo)
+
+			// Create concentrated pool.
+			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.poolLiquidity[1].Denom, tc.poolLiquidity[0].Denom, 100, sdk.MustNewDecFromStr("0.001"))
+
+			// Redirect distribution record from the primary balancer pool to the concentrated pool.
+			err = s.App.GAMMKeeper.RedirectDistributionRecord(s.Ctx, tc.cfmmPoolId, tc.clPoolId)
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Validate that the balancer gauge is now linked to the new concentrated pool.
+			concentratedPoolGaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration)
+			s.Require().NoError(err)
+			distrInfo := s.App.PoolIncentivesKeeper.GetDistrInfo(s.Ctx)
+			s.Require().Equal(distrInfo.Records[0].GaugeId, concentratedPoolGaugeId)
+
+			// Validate that distribution record from another pool is not redirected.
+			s.Require().Equal(distrInfo.Records[1].GaugeId, gaugeToNotRedirect)
+
+			// Validate that old gauge still exist
+			_, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeToRedirect)
+			s.Require().NoError(err)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCreateConcentratedPoolFromCFMM() {
+	tests := map[string]struct {
+		poolLiquidity sdk.Coins
+
+		cfmmPoolIdToLinkWith uint64
+		desiredDenom0        string
+		expectedDenoms       []string
+		expectError          error
+	}{
+		"success": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			desiredDenom0:        desiredDenom0,
+			expectedDenoms:       []string{desiredDenom0, daiCoin.Denom},
+		},
+		"error: invalid denom 0": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			desiredDenom0:        USDCIBCDenom,
+			expectError:          types.NoDesiredDenomInPoolError{USDCIBCDenom},
+		},
+		"error: pool with 3 assets, must have two": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin, usdcCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			desiredDenom0:        USDCIBCDenom,
+			expectError:          types.ErrMustHaveTwoDenoms,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+
+			balancerId := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+
+			balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerId)
+			s.Require().NoError(err)
+
+			clPoolReturned, err := s.App.GAMMKeeper.CreateConcentratedPoolFromCFMM(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, sdk.ZeroDec(), defaultTickSpacing)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				s.Require().Nil(clPoolReturned)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Validate that pool saved in state is the same as the one returned
+			clPoolInState, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, clPoolReturned.GetId())
+			s.Require().NoError(err)
+			s.Require().Equal(clPoolReturned, clPoolInState)
+
+			// Validate CL and balancer pools have the same spread factor.
+			s.Require().Equal(balancerPool.GetSpreadFactor(s.Ctx), clPoolReturned.GetSpreadFactor(s.Ctx))
+
+			// Validate that CL and balancer pools have the same denoms
+			balancerDenoms, err := s.App.PoolManagerKeeper.RouteGetPoolDenoms(s.Ctx, balancerPool.GetId())
+			s.Require().NoError(err)
+
+			concentratedDenoms, err := s.App.PoolManagerKeeper.RouteGetPoolDenoms(s.Ctx, clPoolReturned.GetId())
+			s.Require().NoError(err)
+
+			// Order between balancer and concentrated might differ
+			// because balancer lexicographically orders denoms but CL does not.
+			s.Require().ElementsMatch(balancerDenoms, concentratedDenoms)
+			s.Require().Equal(tc.expectedDenoms, concentratedDenoms)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrationLink() {
+	s.Setup()
+
+	longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+	s.Require().NoError(err)
+
+	tests := map[string]struct {
+		poolLiquidity              sdk.Coins
+		cfmmPoolIdToLinkWith       uint64
+		desiredDenom0              string
+		expectedBalancerDenoms     []string
+		expectedConcentratedDenoms []string
+		setupInvalidDuraitons      bool
+		expectError                error
+	}{
+		"success - denoms reordered relative to balancer": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			// lexicographically ordered
+			expectedBalancerDenoms: []string{daiCoin.Denom, desiredDenom0Coin.Denom},
+			// determined by desired denom 0
+			expectedConcentratedDenoms: []string{desiredDenom0Coin.Denom, daiCoin.Denom},
+			desiredDenom0:              desiredDenom0,
+		},
+		"success - denoms are not reordered relative to balancer": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			// lexicographically ordered
+			expectedBalancerDenoms: []string{daiCoin.Denom, desiredDenom0Coin.Denom},
+			// determined by desired denom 0
+			expectedConcentratedDenoms: []string{daiCoin.Denom, desiredDenom0Coin.Denom},
+			desiredDenom0:              daiCoin.Denom,
+		},
+		"error: invalid denom 0": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			desiredDenom0:        USDCIBCDenom,
+			expectError:          types.NoDesiredDenomInPoolError{USDCIBCDenom},
+		},
+		"error: pool with 3 assets, must have two": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, daiCoin, usdcCoin),
+			cfmmPoolIdToLinkWith: validPoolId,
+			desiredDenom0:        USDCIBCDenom,
+			expectError:          types.ErrMustHaveTwoDenoms,
+		},
+		"error: invalid denom durations": {
+			poolLiquidity:         sdk.NewCoins(desiredDenom0Coin, daiCoin),
+			cfmmPoolIdToLinkWith:  validPoolId,
+			desiredDenom0:         desiredDenom0,
+			setupInvalidDuraitons: true,
+			expectError:           types.ErrNoGaugeToRedirect,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+
+			if tc.setupInvalidDuraitons {
+				// Overwrite default lockable durations.
+				s.App.PoolIncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{})
+			}
+
+			balancerId := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+
+			// Another pool for testing that its gauge links are unchanged
+			balancerId2 := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+
+			balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerId)
+			s.Require().NoError(err)
+
+			// Get balancer gauges.
+			gaugeToRedirect, _ := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPool.GetId(), longestLockableDuration)
+
+			gaugeToNotRedeirect, _ := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerId2, longestLockableDuration)
+
+			originalDistrInfo := poolincentivestypes.DistrInfo{
+				TotalWeight: sdk.NewInt(100),
+				Records: []poolincentivestypes.DistrRecord{
+					{
+						GaugeId: gaugeToRedirect,
+						Weight:  sdk.NewInt(50),
+					},
+					{
+						GaugeId: gaugeToNotRedeirect,
+						Weight:  sdk.NewInt(50),
+					},
+				},
+			}
+			s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, originalDistrInfo)
+
+			clPool, err := s.App.GAMMKeeper.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, sdk.ZeroDec(), defaultTickSpacing)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Get the new concentrated pool.
+			// Note, + 2 becuse we create 2 balancer pools during test setup, and 1 concentrated pool during migration.
+			clPoolInState, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, validPoolId+2)
+			s.Require().NoError(err)
+			s.Require().Equal(clPool, clPoolInState)
+
+			// Validate that CL and balancer pools have the same denoms
+			balancerDenoms, err := s.App.PoolManagerKeeper.RouteGetPoolDenoms(s.Ctx, balancerPool.GetId())
+			s.Require().NoError(err)
+
+			concentratedDenoms, err := s.App.PoolManagerKeeper.RouteGetPoolDenoms(s.Ctx, clPoolInState.GetId())
+			s.Require().NoError(err)
+
+			// This check does not guarantee order.
+			s.Require().ElementsMatch(balancerDenoms, concentratedDenoms)
+
+			// Validate order of balancer denoms is lexicographically sorted.
+			s.Require().Equal(tc.expectedBalancerDenoms, balancerDenoms)
+
+			// Validate order of concentrated pool denoms which might be different from balancer.
+			s.Require().Equal(tc.expectedConcentratedDenoms, concentratedDenoms)
+
+			// Validate that CFMM gauge is linked to the new concentrated pool.
+			concentratedPoolGaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPoolInState.GetId(), s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration)
+			s.Require().NoError(err)
+
+			distrInfo := s.App.PoolIncentivesKeeper.GetDistrInfo(s.Ctx)
+			s.Require().Equal(distrInfo.Records[0].GaugeId, concentratedPoolGaugeId)
+
+			// Validate that distribution record from another pool is not redirected.
+			s.Require().Equal(distrInfo.Records[1].GaugeId, gaugeToNotRedeirect)
+
+			// Validate migration record.
+			migrationInfo, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
+			s.Require().NoError(err)
+			s.Require().Equal(migrationInfo, gammmigration.MigrationRecords{
+				BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
+					{
+						BalancerPoolId: balancerId,
+						ClPoolId:       clPoolInState.GetId(),
+					},
+				},
+			})
+
+			// Validate that old gauge still exist
+			_, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeToRedirect)
+			s.Require().NoError(err)
 		})
 	}
 }

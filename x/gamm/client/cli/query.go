@@ -16,8 +16,8 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -29,6 +29,8 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPools)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdEstimateSwapExactAmountIn)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdEstimateSwapExactAmountOut)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetConcentratedPoolIdLinkFromCFMMRequest)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCFMMConcentratedPoolLinksRequest)
 	cmd.AddCommand(
 		GetCmdNumPools(),
 		GetCmdPoolParams(),
@@ -325,6 +327,16 @@ Example:
 	)
 }
 
+// GetConcentratedPoolIdLinkFromCFMMRequest returns concentrated pool id that is linked to the given cfmm pool id.
+func GetConcentratedPoolIdLinkFromCFMMRequest() (*osmocli.QueryDescriptor, *types.QueryConcentratedPoolIdLinkFromCFMMRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "cl-pool-link-from-cfmm [poolID]",
+		Short: "Query concentrated pool id link from cfmm pool id",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} cl-pool-link-from-cfmm 1`,
+	}, &types.QueryConcentratedPoolIdLinkFromCFMMRequest{}
+}
+
 // GetCmdTotalPoolLiquidity returns total liquidity in pool.
 // Deprecated: please use the alternative in x/poolmanager
 // nolint: staticcheck
@@ -338,4 +350,14 @@ Example:
 `,
 		types.ModuleName, types.NewQueryClient,
 	)
+}
+
+// GetConcentratedPoolIdLinkFromCFMMRequest returns all concentrated pool id to cfmm pool id links.
+func GetCFMMConcentratedPoolLinksRequest() (*osmocli.QueryDescriptor, *types.QueryCFMMConcentratedPoolLinksRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "cfmm-cl-pool-links",
+		Short: "Query all concentrated pool and cfmm pool id links",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} cfmm-cl-pool-links`,
+	}, &types.QueryCFMMConcentratedPoolLinksRequest{}
 }

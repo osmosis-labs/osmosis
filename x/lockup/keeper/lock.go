@@ -14,8 +14,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 )
 
 // WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by
@@ -105,7 +105,8 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 		return nil, err
 	}
 
-	synthlock, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+	// TODO: Handle found case in a better way, with state breaking update
+	synthlock, _, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +147,8 @@ func (k Keeper) CreateLockNoSend(ctx sdk.Context, owner sdk.AccAddress, coins sd
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is initially set without a value, gets set as unlock start time + duration
 	// when unlocking starts.
-	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
+	// the reward receiver is set as the owner by default when creating a lock, and we indicate this by using an empty string.
+	lock := types.NewPeriodLock(ID, owner, "", duration, time.Time{}, coins)
 
 	// lock the coins without sending them to the lockup module account
 	err := k.lock(ctx, lock, lock.Coins)
@@ -381,7 +383,8 @@ func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	// 2) If lock is bonded, move it to unlocking
 	// 3) Run logic to delete unlocking metadata, and send tokens to owner.
 
-	synthLock, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+	// TODO: Use found instead of !synthLock.IsNil() later on.
+	synthLock, _, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
 	if err != nil {
 		return err
 	}
@@ -452,6 +455,37 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 	}
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	return nil
+}
+
+// SetLockRewardReceiverAddress changes the reward recipient address to the given address.
+// Storing an empty string for reward receiver would indicate the owner being reward receiver.
+func (k Keeper) SetLockRewardReceiverAddress(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, newReceiverAddress string) error {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+	// check if the lock owner is the method caller.
+	if lock.GetOwner() != owner.String() {
+		return types.ErrNotLockOwner
+	}
+
+	// if the given receiver address is same as the lock owner, we store an empty string instead.
+	if lock.Owner == newReceiverAddress {
+		newReceiverAddress = types.DefaultOwnerReceiverPlaceholder
+	}
+
+	if lock.RewardReceiverAddress == newReceiverAddress {
+		return types.ErrRewardReceiverIsSame
+	}
+
+	lock.RewardReceiverAddress = newReceiverAddress
+
+	err = k.setLock(ctx, *lock)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -734,7 +768,8 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 	}
 
 	// increase synthetic lockup's accumulation store
-	synthLock, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+	// TODO: In next state break, do err != nil || found == false
+	synthLock, _, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
 	if err != nil {
 		return err
 	}
@@ -801,7 +836,7 @@ func (k Keeper) SplitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coin
 	splitLockID := k.GetLastLockID(ctx) + 1
 	k.SetLastLockID(ctx, splitLockID)
 
-	splitLock := types.NewPeriodLock(splitLockID, lock.OwnerAddress(), lock.Duration, lock.EndTime, coins)
+	splitLock := types.NewPeriodLock(splitLockID, lock.OwnerAddress(), lock.RewardReceiverAddress, lock.Duration, lock.EndTime, coins)
 
 	err = k.setLock(ctx, splitLock)
 	return splitLock, err

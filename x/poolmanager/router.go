@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
+	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 // 1 << 256 - 1 where 256 is the max bit length defined for sdk.Int
@@ -722,4 +722,22 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 	}
 
 	return coins, nil
+}
+
+// TotalLiquidity gets the total liquidity across all pools.
+func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
+	totalGammLiquidity, err := k.gammKeeper.GetTotalLiquidity(ctx)
+	if err != nil {
+		return nil, err
+	}
+	totalConcentratedLiquidity, err := k.concentratedKeeper.GetTotalLiquidity(ctx)
+	if err != nil {
+		return nil, err
+	}
+	totalCosmwasmLiquidity, err := k.cosmwasmpoolKeeper.GetTotalLiquidity(ctx)
+	if err != nil {
+		return nil, err
+	}
+	totalLiquidity := totalGammLiquidity.Add(totalConcentratedLiquidity...).Add(totalCosmwasmLiquidity...)
+	return totalLiquidity, nil
 }

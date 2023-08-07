@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
 )
 
 func (s *KeeperTestSuite) TestGenesis() {
@@ -38,7 +38,7 @@ func (s *KeeperTestSuite) TestGenesis() {
 	for i, denom := range genesisState.FactoryDenoms {
 		// hacky, sets bank metadata to exist if i != 0, to cover both cases.
 		if i != 0 {
-			app.BankKeeper.SetDenomMetaData(s.Ctx, banktypes.Metadata{Base: denom.GetDenom()})
+			app.BankKeeper.SetDenomMetaData(s.Ctx, banktypes.Metadata{Base: denom.GetDenom(), Display: "test"})
 		}
 	}
 
@@ -56,4 +56,15 @@ func (s *KeeperTestSuite) TestGenesis() {
 	exportedGenesis := app.TokenFactoryKeeper.ExportGenesis(s.Ctx)
 	s.Require().NotNil(exportedGenesis)
 	s.Require().Equal(genesisState, *exportedGenesis)
+
+	app.BankKeeper.SetParams(s.Ctx, banktypes.DefaultParams())
+	app.BankKeeper.InitGenesis(s.Ctx, app.BankKeeper.ExportGenesis(s.Ctx))
+	for i, denom := range genesisState.FactoryDenoms {
+		// hacky, check whether bank metadata is not replaced if i != 0, to cover both cases.
+		if i != 0 {
+			metadata, found := app.BankKeeper.GetDenomMetaData(s.Ctx, denom.GetDenom())
+			s.Require().True(found)
+			s.Require().Equal(metadata, banktypes.Metadata{Base: denom.GetDenom(), Display: "test"})
+		}
+	}
 }

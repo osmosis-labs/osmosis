@@ -58,7 +58,7 @@ pub fn validate_pool_route(
             return Result::Err(ContractError::InvalidPoolRoute {
                 reason: format!(
                     "denom {} is not in pool id {}",
-                    current_denom, route_part.pool_id
+                    route_part.token_out_denom, route_part.pool_id
                 ),
             });
         }

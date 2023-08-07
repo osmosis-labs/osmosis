@@ -18,20 +18,20 @@ import (
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v15/x/twap/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v17/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v17/x/twap/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner
@@ -71,6 +71,7 @@ const (
 	StakeAmountA  = 100000000000
 	UstBalanceA   = 500000000000000
 	LuncBalanceA  = 500000000000000
+	DaiBalanceA   = "100000000000000000000000"
 	// chainB
 	ChainBID          = "osmo-test-b"
 	OsmoBalanceB      = 500000000000
@@ -93,7 +94,7 @@ var (
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(OsmoDenom, StakeAmountIntB)
 
-	DaiOsmoPoolBalances = fmt.Sprintf("%d%s", LuncBalanceA, DaiDenom)
+	DaiOsmoPoolBalances = fmt.Sprintf("%s%s", DaiBalanceA, DaiDenom)
 
 	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)

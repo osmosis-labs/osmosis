@@ -6,6 +6,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 var (
@@ -83,12 +85,12 @@ func (e PositionIdNotFoundError) Error() string {
 	return fmt.Sprintf("position not found. position id (%d)", e.PositionId)
 }
 
-type FeePositionNotFoundError struct {
+type SpreadRewardPositionNotFoundError struct {
 	PositionId uint64
 }
 
-func (e FeePositionNotFoundError) Error() string {
-	return fmt.Sprintf("position not found in fee accumulator. position id (%d)", e.PositionId)
+func (e SpreadRewardPositionNotFoundError) Error() string {
+	return fmt.Sprintf("position not found in spread reward accumulator. position id (%d)", e.PositionId)
 }
 
 type PoolNotFoundError struct {
@@ -189,9 +191,9 @@ func (e TokenOutDenomNotInPoolError) Error() string {
 }
 
 type SqrtPriceValidationError struct {
-	SqrtPriceLimit sdk.Dec
-	LowerBound     sdk.Dec
-	UpperBound     sdk.Dec
+	SqrtPriceLimit osmomath.BigDec
+	LowerBound     osmomath.BigDec
+	UpperBound     osmomath.BigDec
 }
 
 func (e SqrtPriceValidationError) Error() string {
@@ -280,7 +282,7 @@ func (e SpotPriceNegativeError) Error() string {
 }
 
 type SqrtPriceNegativeError struct {
-	ProvidedSqrtPrice sdk.Dec
+	ProvidedSqrtPrice osmomath.BigDec
 }
 
 func (e SqrtPriceNegativeError) Error() string {
@@ -288,11 +290,11 @@ func (e SqrtPriceNegativeError) Error() string {
 }
 
 type InvalidSpreadFactorError struct {
-	ActualFee sdk.Dec
+	ActualSpreadFactor sdk.Dec
 }
 
 func (e InvalidSpreadFactorError) Error() string {
-	return fmt.Sprintf("invalid spread factor(%s), must be in [0, 1) range", e.ActualFee)
+	return fmt.Sprintf("invalid spread factor(%s), must be in [0, 1) range", e.ActualSpreadFactor)
 }
 
 type PositionAlreadyExistsError struct {
@@ -307,14 +309,13 @@ func (e PositionAlreadyExistsError) Error() string {
 }
 
 type IncentiveRecordNotFoundError struct {
-	PoolId              uint64
-	IncentiveDenom      string
-	MinUptime           time.Duration
-	IncentiveCreatorStr string
+	PoolId            uint64
+	MinUptime         time.Duration
+	IncentiveRecordId uint64
 }
 
 func (e IncentiveRecordNotFoundError) Error() string {
-	return fmt.Sprintf("incentive record not found. pool id (%d), incentive denom (%s), minimum uptime (%s), incentive creator (%s)", e.PoolId, e.IncentiveDenom, e.MinUptime.String(), e.IncentiveCreatorStr)
+	return fmt.Sprintf("incentive record not found. pool id (%d), minimum uptime (%s), incentive record id (%d)", e.PoolId, e.MinUptime.String(), e.IncentiveRecordId)
 }
 
 type StartTimeTooEarlyError struct {
@@ -468,7 +469,7 @@ type InvalidTickKeyByteLengthError struct {
 }
 
 func (e InvalidTickKeyByteLengthError) Error() string {
-	return fmt.Sprintf("expected tick store key to be of length (%d), was (%d)", TickKeyLengthBytes, e.Length)
+	return fmt.Sprintf("expected tick store key to be of length (%d), was (%d)", KeyTickLengthBytes, e.Length)
 }
 
 type InsufficientPoolBalanceError struct {
@@ -504,7 +505,15 @@ type InvalidNextPositionIdError struct {
 }
 
 func (e InvalidNextPositionIdError) Error() string {
-	return fmt.Sprintf("invalid next position id (%d), must be positive", e.NextPositionId)
+	return fmt.Sprintf("invalid next incentive record id (%d), must be positive", e.NextPositionId)
+}
+
+type InvalidNextIncentiveRecordIdError struct {
+	NextIncentiveRecordId uint64
+}
+
+func (e InvalidNextIncentiveRecordIdError) Error() string {
+	return fmt.Sprintf("invalid next incentive record id (%d), must be positive", e.NextIncentiveRecordId)
 }
 
 type AddressPoolPositionIdNotFoundError struct {
@@ -832,4 +841,49 @@ type TickToSqrtPriceConversionError struct {
 
 func (e TickToSqrtPriceConversionError) Error() string {
 	return fmt.Sprintf("could not convert next tick  to nextSqrtPrice (%v)", e.NextTick)
+}
+
+type SwapNoProgressError struct {
+	PoolId           uint64
+	UserProvidedCoin sdk.Coin
+}
+
+func (e SwapNoProgressError) Error() string {
+	return fmt.Sprintf("ran out of iterations during swap. Possibly entered an infinite loop. Pool id (%d), user provided coin (%s)", e.PoolId, e.UserProvidedCoin)
+}
+
+type SwapNoProgressWithConsumptionError struct {
+	ComputedSqrtPrice osmomath.BigDec
+	AmountIn          sdk.Dec
+	AmountOut         sdk.Dec
+}
+
+func (e SwapNoProgressWithConsumptionError) Error() string {
+	return fmt.Sprintf("did not advance sqrt price after swap step %s, with amounts in (%s), out (%s)", e.ComputedSqrtPrice, e.AmountIn, e.AmountOut)
+}
+
+type SqrtPriceToTickError struct {
+	OutOfBounds bool
+}
+
+func (e SqrtPriceToTickError) Error() string {
+	return fmt.Sprintf("sqrt price to tick could not find a satisfying tick index. Hit bounds: %v", e.OutOfBounds)
+}
+
+type OverChargeSwapOutGivenInError struct {
+	AmountSpecifiedRemaining sdk.Dec
+}
+
+func (e OverChargeSwapOutGivenInError) Error() string {
+	return fmt.Sprintf("over charge problem swap out given in by (%s)", e.AmountSpecifiedRemaining)
+}
+
+type ComputedSqrtPriceInequalityError struct {
+	IsZeroForOne                 bool
+	NextInitializedTickSqrtPrice osmomath.BigDec
+	ComputedSqrtPrice            osmomath.BigDec
+}
+
+func (e ComputedSqrtPriceInequalityError) Error() string {
+	return fmt.Sprintf("edge case has occurred when swapping at tick boundaries, with izZeroForOne (%t), NextInitializedTickSqrtPrice (%s), computedSqrtPrice (%s). Please try again with a different swap amount", e.IsZeroForOne, e.NextInitializedTickSqrtPrice, e.ComputedSqrtPrice)
 }
