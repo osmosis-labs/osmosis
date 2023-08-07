@@ -78,6 +78,9 @@ message RouteStatistics {
 // significantly between the different pool types. Each weight roughly
 // corresponds to the amount of time (in ms) it takes to execute a swap on that
 // pool type.
+//
+// DEPRECATED: This field is deprecated and will be removed in the next
+// release. It is replaced by the `info_by_pool_type` field.
 message PoolWeights {
   // The weight of a stableswap pool
   uint64 stable_weight = 1 [ (gogoproto.moretags) = "yaml:\"stable_weight\"" ];
@@ -90,6 +93,74 @@ message PoolWeights {
   // The weight of a cosmwasm pool
   uint64 cosmwasm_weight = 4
       [ (gogoproto.moretags) = "yaml:\"cosmwasm_weight\"" ];
+}
+
+// InfoByPoolType contains information pertaining to how expensive (in terms of
+// gas and time) it is to execute a swap on a given pool type. This distinction
+// is made and necessary because the execution time ranges significantly between
+// the different pool types.
+message InfoByPoolType {
+  // The stable pool info
+  StablePoolInfo stable = 1 [
+    (gogoproto.moretags) = "yaml:\"stable\"",
+    (gogoproto.nullable) = false
+  ];
+  // The balancer pool info
+  BalancerPoolInfo balancer = 2 [
+    (gogoproto.moretags) = "yaml:\"balancer\"",
+    (gogoproto.nullable) = false
+  ];
+  // The concentrated pool info
+  ConcentratedPoolInfo concentrated = 3 [
+    (gogoproto.moretags) = "yaml:\"concentrated\"",
+    (gogoproto.nullable) = false
+  ];
+  // The cosmwasm pool info
+  CosmwasmPoolInfo cosmwasm = 4 [
+    (gogoproto.moretags) = "yaml:\"cosmwasm\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// StablePoolInfo contains meta data pertaining to a stableswap pool type.
+message StablePoolInfo {
+  // The weight of a stableswap pool
+  uint64 weight = 1 [ (gogoproto.moretags) = "yaml:\"weight\"" ];
+}
+
+// BalancerPoolInfo contains meta data pertaining to a balancer pool type.
+message BalancerPoolInfo {
+  // The weight of a balancer pool
+  uint64 weight = 1 [ (gogoproto.moretags) = "yaml:\"weight\"" ];
+}
+
+// ConcentratedPoolInfo contains meta data pertaining to a concentrated pool
+// type.
+message ConcentratedPoolInfo {
+  // The weight of a concentrated pool
+  uint64 weight = 1 [ (gogoproto.moretags) = "yaml:\"weight\"" ];
+  // The maximum number of ticks we can move when rebalancing
+  uint64 max_ticks_crossed = 2
+      [ (gogoproto.moretags) = "yaml:\"max_ticks_crossed\"" ];
+}
+
+// CosmwasmPoolInfo contains meta data pertaining to a cosmwasm pool type.
+message CosmwasmPoolInfo {
+  // The weight of a cosmwasm pool (by contract address)
+  repeated WeightMap weight_maps = 1 [
+    (gogoproto.moretags) = "yaml:\"weight_maps\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// WeightMap maps a contract address to a weight. The weight of an address
+// corresponds to the amount of ms required to execute a swap on that contract.
+message WeightMap {
+  // The weight of a cosmwasm pool (by contract address)
+  uint64 weight = 1 [ (gogoproto.moretags) = "yaml:\"weight\"" ];
+  // The contract address
+  string contract_address = 2
+      [ (gogoproto.moretags) = "yaml:\"contract_address\"" ];
 }
 
 // BaseDenom represents a single base denom that the module uses for its
