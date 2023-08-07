@@ -201,6 +201,8 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	chainA, chainANode, err := s.getChainACfgs()
 	s.Require().NoError(err)
 
+	sender := chainANode.GetWallet(initialization.ValidatorWalletName)
+
 	// --------------- Module init checks ---------------- //
 	// The module should be enabled by default.
 	enabled, err := chainANode.QueryProtoRevEnabled()
@@ -256,7 +258,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	// Create a wallet to use for the swap txs.
 	swapWalletAddr := chainANode.CreateWallet(walletName, chainA)
 	coinIn := fmt.Sprintf("%s%s", amount, denomIn)
-	chainANode.BankSend(coinIn, chainANode.PublicAddress, swapWalletAddr)
+	chainANode.BankSend(coinIn, sender, swapWalletAddr)
 
 	// Check supplies before swap.
 	supplyBefore, err := chainANode.QuerySupply()
@@ -879,6 +881,8 @@ func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 
 	index := s.getChainIndex(chainAB)
 
+	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
+
 	const (
 		denomA = "stake"
 		denomB = "uosmo"
@@ -888,9 +892,9 @@ func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 
 	coinAIn, coinBIn := fmt.Sprintf("20000%s", denomA), fmt.Sprintf("1%s", denomB)
 
-	chainABNode.BankSend(initialization.WalletFeeTokens.String(), chainABNode.PublicAddress, config.StableswapWallet[index])
-	chainABNode.BankSend(coinAIn, chainABNode.PublicAddress, config.StableswapWallet[index])
-	chainABNode.BankSend(coinBIn, chainABNode.PublicAddress, config.StableswapWallet[index])
+	chainABNode.BankSend(initialization.WalletFeeTokens.String(), sender, config.StableswapWallet[index])
+	chainABNode.BankSend(coinAIn, sender, config.StableswapWallet[index])
+	chainABNode.BankSend(coinBIn, sender, config.StableswapWallet[index])
 
 	s.T().Log("performing swaps")
 	chainABNode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[index]), denomB, config.StableswapWallet[index])
@@ -924,11 +928,13 @@ func (s *IntegrationTestSuite) GeometricTwapMigration() {
 
 	index := s.getChainIndex(chainAB)
 
+	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
+
 	uosmoIn := fmt.Sprintf("1000000%s", "uosmo")
 
 	swapWalletAddr := chainABNode.CreateWallet(migrationWallet, chainAB)
 
-	chainABNode.BankSend(uosmoIn, chainABNode.PublicAddress, swapWalletAddr)
+	chainABNode.BankSend(uosmoIn, sender, swapWalletAddr)
 
 	// Swap to create new twap records on the pool that was created pre-upgrade.
 	chainABNode.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradePoolId[index]), otherDenom[index], swapWalletAddr)
@@ -1149,6 +1155,8 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	chainB, chainBNode, err := s.getChainBCfgs()
 	s.Require().NoError(err)
 
+	receiver := chainBNode.GetWallet(initialization.ValidatorWalletName)
+
 	// If the RL param is already set. Remember it to set it back at the end
 	param := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 	fmt.Println("param", param)
@@ -1165,7 +1173,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 
 	// Sending >1%
 	fmt.Println("Sending >1%")
-	chainANode.SendIBC(chainA, chainB, chainBNode.PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
+	chainANode.SendIBC(chainA, chainB, receiver, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
 	contract, err := chainANode.SetupRateLimiting(paths, chainANode.PublicAddress, chainA)
 	s.Require().NoError(err)
@@ -1182,10 +1190,10 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 
 	// Sending <1%. Should work
 	fmt.Println("Sending <1%. Should work")
-	chainANode.SendIBC(chainA, chainB, chainBNode.PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
+	chainANode.SendIBC(chainA, chainB, receiver, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
 	// Sending >1%. Should fail
 	fmt.Println("Sending >1%. Should fail")
-	chainANode.FailIBCTransfer(initialization.ValidatorWalletName, chainBNode.PublicAddress, fmt.Sprintf("%duosmo", int(over)))
+	chainANode.FailIBCTransfer(initialization.ValidatorWalletName, receiver, fmt.Sprintf("%duosmo", int(over)))
 
 	// Removing the rate limit so it doesn't affect other tests
 	chainANode.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
@@ -1402,6 +1410,8 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 	chainAB, chainABNode, err := s.getChainCfgs()
 	s.Require().NoError(err)
 
+	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
+
 	// Triggers the creation of TWAP records.
 	poolId := chainABNode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
 	swapWalletAddr := chainABNode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()}, chainAB)
@@ -1419,9 +1429,9 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 	twapFromBeforeSwapToBeforeSwapOneCA, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
 	s.Require().NoError(err)
 
-	chainABNode.BankSend(coinAIn, chainABNode.PublicAddress, swapWalletAddr)
-	chainABNode.BankSend(coinBIn, chainABNode.PublicAddress, swapWalletAddr)
-	chainABNode.BankSend(coinCIn, chainABNode.PublicAddress, swapWalletAddr)
+	chainABNode.BankSend(coinAIn, sender, swapWalletAddr)
+	chainABNode.BankSend(coinBIn, sender, swapWalletAddr)
+	chainABNode.BankSend(coinCIn, sender, swapWalletAddr)
 
 	s.T().Log("querying for the second TWAP to now before swap, must equal to first")
 	twapFromBeforeSwapToBeforeSwapTwoAB, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap.Add(50*time.Millisecond))
@@ -1712,6 +1722,8 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	chainAB, chainABNode, err := s.getChainCfgs()
 	s.Require().NoError(err)
 
+	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
+
 	// Triggers the creation of TWAP records.
 	poolId := chainABNode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
 	swapWalletAddr := chainABNode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()}, chainAB)
@@ -1745,7 +1757,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	s.Require().Equal(sdk.NewDecWithPrec(5, 1), initialTwapAOverB)
 
 	coinAIn := fmt.Sprintf("1000000%s", denomA)
-	chainABNode.BankSend(coinAIn, chainABNode.PublicAddress, swapWalletAddr)
+	chainABNode.BankSend(coinAIn, sender, swapWalletAddr)
 
 	s.T().Logf("performing swap of %s for %s", coinAIn, denomB)
 
