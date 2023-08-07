@@ -305,21 +305,20 @@ func (s *KeeperTestSuite) TestGetMaxPointsPerBlock() {
 	s.Require().Error(err)
 }
 
-// TestGetPoolWeights tests the GetPoolWeights and SetPoolWeights functions.
-func (s *KeeperTestSuite) TestGetPoolWeights() {
-	// Should be initialized on genesis
-	poolWeights := s.App.ProtoRevKeeper.GetPoolWeights(s.Ctx)
-	s.Require().Equal(types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2}, poolWeights)
-
-	// Should be able to set the PoolWeights
-	newRouteWeights := types.PoolWeights{
-		StableWeight:       10,
-		BalancerWeight:     2,
-		ConcentratedWeight: 22,
+// TestGetInfoByPoolType tests the GetInfoByPoolType and SetInfoByPoolType functions.
+func (s *KeeperTestSuite) TestGetInfoByPoolType() {
+	// Should be able to set the InfoByPoolType
+	newRouteWeights := types.DefaultPoolTypeInfo
+	newRouteWeights.Balancer.Weight = 100
+	newRouteWeights.Cosmwasm.WeightMaps = []types.WeightMap{
+		{
+			ContractAddress: "contractAddress",
+			Weight:          1,
+		},
 	}
 
-	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, newRouteWeights)
+	s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, newRouteWeights)
 
-	poolWeights = s.App.ProtoRevKeeper.GetPoolWeights(s.Ctx)
+	poolWeights := s.App.ProtoRevKeeper.GetInfoByPoolType(s.Ctx)
 	s.Require().Equal(newRouteWeights, poolWeights)
 }

@@ -29,7 +29,7 @@ func NewCmdTx() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, CmdSetMaxPoolPointsPerBlock)
 	txCmd.AddCommand(
 		CmdSetDeveloperHotRoutes().BuildCommandCustomFn(),
-		CmdSetPoolWeights().BuildCommandCustomFn(),
+		CmdSetInfoByPoolType().BuildCommandCustomFn(),
 		CmdSetBaseDenoms().BuildCommandCustomFn(),
 		CmdSetProtoRevAdminAccountProposal(),
 		CmdSetProtoRevEnabledProposal(),
@@ -141,22 +141,35 @@ func CmdSetMaxPoolPointsPerBlock() (*osmocli.TxCliDesc, *types.MsgSetMaxPoolPoin
 	}, &types.MsgSetMaxPoolPointsPerBlock{}
 }
 
-// CmdSetPoolWeights implements the command to set the pool weights used to estimate execution costs
-func CmdSetPoolWeights() *osmocli.TxCliDesc {
+// CmdSetInfoByPoolType implements the command to set the pool information used throughout the module
+func CmdSetInfoByPoolType() *osmocli.TxCliDesc {
 	desc := osmocli.TxCliDesc{
-		Use:   "set-pool-weights [path/to/routes.json]",
-		Short: "set the protorev pool weights",
-		Long: `Must provide a json file with all the pool weights that will be set. 
+		Use:   "set-info-by-pool-type [path/to/pool_info.json]",
+		Short: "set the protorev pool type info",
+		Long: `Must provide a json file with all the pool info that will be set. This does NOT set info for a single pool type.
+		All information must be provided across all pool types in the json file.
 		Sample json file:
 		{
-			"stable_weight" : 1,
-			"balancer_weight" : 1,
-			"concentrated_weight" : 1
+			"stable" : {
+				"weight" : 1,
+			},
+			"concentrated" : {
+				"weight" : 1,
+				"max_ticks_crossed": 10,
+			},
+			"balancer" : {
+				"weight" : 1,
+			},
+			"cosmwasm" : {
+				"weight_maps" : [
+					{"contract_address" : "cosmos123...", "weight" : 1}
+				],
+			},
 		}
 		`,
-		Example:          fmt.Sprintf(`$ %s tx protorev set-pool-weights weights.json --from mykey`, version.AppName),
+		Example:          fmt.Sprintf(`$ %s tx protorev set-info-by-pool-type pool_info.json --from mykey`, version.AppName),
 		NumArgs:          1,
-		ParseAndBuildMsg: BuildSetPoolWeightsMsg,
+		ParseAndBuildMsg: BuildSetInfoByPoolTypeMsg,
 	}
 
 	return &desc

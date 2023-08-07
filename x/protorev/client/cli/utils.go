@@ -122,38 +122,76 @@ func BuildSetHotRoutesMsg(clientCtx client.Context, args []string, fs *flag.Flag
 	}, nil
 }
 
-// ------------ types/functions to handle a SetPoolWeights CLI TX ------------ //
-type createPoolWeightsInput types.PoolWeights
+// ------------ types/functions to handle a SetInfoByPoolType CLI TX ------------ //
+type InfoByPoolTypeInput struct {
+	Stable       StablePoolInfoInput       `json:"stable"`
+	Balancer     BalancerPoolInfoInput     `json:"balancer"`
+	Concentrated ConcentratedPoolInfoInput `json:"concentrated"`
+	Cosmwasm     CosmwasmPoolInfoInput     `json:"cosmwasm"`
+}
 
-type XCreatePoolWeightsInputs createPoolWeightsInput
+type StablePoolInfoInput struct {
+	Weight uint64 `json:"weight"`
+}
 
-type XCreatePoolWeightsExceptions struct {
-	XCreatePoolWeightsInputs
+type BalancerPoolInfoInput struct {
+	Weight uint64 `json:"weight"`
+}
+
+type ConcentratedPoolInfoInput struct {
+	Weight          uint64 `json:"weight"`
+	MaxTicksCrossed uint64 `json:"max_ticks_crossed"`
+}
+
+type CosmwasmPoolInfoInput struct {
+	WeightMap map[string]uint64 `json:"weight_map"`
+}
+type createInfoByPoolTypeInput types.InfoByPoolType
+
+type XCreateInfoByPoolTypeInputs createInfoByPoolTypeInput
+
+type XCreateInfoByPoolTypeExceptions struct {
+	XCreateInfoByPoolTypeInputs
 	Other *string // Other won't raise an error
 }
 
 // UnmarshalJSON should error if there are fields unexpected.
-func (release *createPoolWeightsInput) UnmarshalJSON(data []byte) error {
-	var createPoolWeightsE XCreatePoolWeightsExceptions
+func (release *createInfoByPoolTypeInput) UnmarshalJSON(data []byte) error {
+	var createInfoByPoolTypeE XCreateInfoByPoolTypeExceptions
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields() // Force
 
-	if err := dec.Decode(&createPoolWeightsE); err != nil {
+	if err := dec.Decode(&createInfoByPoolTypeE); err != nil {
 		return err
 	}
 
-	*release = createPoolWeightsInput(createPoolWeightsE.XCreatePoolWeightsInputs)
+	*release = createInfoByPoolTypeInput(createInfoByPoolTypeE.XCreateInfoByPoolTypeInputs)
 	return nil
 }
 
-// BuildSetPoolWeightsMsg builds a MsgSetPoolWeights from the provided json file
-func BuildSetPoolWeightsMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
+// createInfoByPoolTypeInput converts the input to the types.InfoByPoolType type
+func (release *createInfoByPoolTypeInput) convertToInfoByPoolType() types.InfoByPoolType {
+	if release == nil {
+		return types.InfoByPoolType{}
+	}
+
+	infoByPoolType := types.InfoByPoolType{}
+	infoByPoolType.Stable = release.Stable
+	infoByPoolType.Balancer = release.Balancer
+	infoByPoolType.Concentrated = release.Concentrated
+	infoByPoolType.Cosmwasm = release.Cosmwasm
+
+	return infoByPoolType
+}
+
+// BuildSetInfoByPoolTypeMsg builds a MsgSetInfoByPoolType from the provided json file
+func BuildSetInfoByPoolTypeMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	if len(args) == 0 {
 		return nil, fmt.Errorf("must provide a json file")
 	}
 
 	// Read the json file
-	input := &createPoolWeightsInput{}
+	input := &createInfoByPoolTypeInput{}
 	path := args[0]
 	contents, err := os.ReadFile(path)
 	if err != nil {
@@ -167,9 +205,9 @@ func BuildSetPoolWeightsMsg(clientCtx client.Context, args []string, fs *flag.Fl
 
 	// Build the msg
 	admin := clientCtx.GetFromAddress().String()
-	return &types.MsgSetPoolWeights{
-		Admin:       admin,
-		PoolWeights: types.PoolWeights(*input),
+	return &types.MsgSetInfoByPoolType{
+		Admin:          admin,
+		InfoByPoolType: input.convertToInfoByPoolType(),
 	}, nil
 }
 

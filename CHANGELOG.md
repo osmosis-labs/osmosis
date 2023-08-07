@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Features
+
+* [#5072](https://github.com/osmosis-labs/osmosis/pull/5072) IBC-hooks: Add support for async acks when processing onRecvPacket
+
 ### State Breaking
 
 * [#5532](https://github.com/osmosis-labs/osmosis/pull/5532) fix: Fix x/tokenfactory genesis import denoms reset x/bank existing denom metadata
@@ -74,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5927] (https://github.com/osmosis-labs/osmosis/pull/5927) Add gas metering to x/tokenfactory trackBeforeSend hook
 * [#5890](https://github.com/osmosis-labs/osmosis/pull/5890) feat: CreateCLPool & LinkCFMMtoCL pool into one gov-prop
 * [#5964](https://github.com/osmosis-labs/osmosis/pull/5964) fix e2e test concurrency bugs
+* [#5948] (https://github.com/osmosis-labs/osmosis/pull/5948) Parameterizing Pool Type Information in Protorev
 * [#5953] (https://github.com/osmosis-labs/osmosis/pull/5953) Supporting two pool routes in ProtoRev
 
 ### Minor improvements & Bug Fixes
