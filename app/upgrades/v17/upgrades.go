@@ -273,8 +273,9 @@ func testnetParsePoolRecord(ctx sdk.Context, pool poolManagerTypes.PoolI, keeper
 	gammPoolId := pool.GetId()
 
 	// Skip pools that are already linked.
-	_, err := keepers.GAMMKeeper.GetLinkedConcentratedPoolID(ctx, gammPoolId)
-	if err != nil {
+	clPoolId, err := keepers.GAMMKeeper.GetLinkedConcentratedPoolID(ctx, gammPoolId)
+	if err == nil && clPoolId != 0 {
+		ctx.Logger().Info(fmt.Sprintf("gammPoolId %d is already linked to CL pool %d, skipping", gammPoolId, clPoolId))
 		return true, 0, "", sdk.Dec{}, nil
 	}
 
