@@ -319,32 +319,32 @@ func (s *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 		setExistingDelegations bool
 		expectPass             bool
 	}{
-		// {
-		// 	name:           "Unstake half from the ValSet",
-		// 	delegator:      sdk.AccAddress([]byte("addr1---------------")),
-		// 	coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20osmo
-		// 	coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)), // undelegate 10osmo
-		// 	expectedShares: []sdk.Dec{sdk.NewDec(2_000_000), sdk.NewDec(3_300_000), sdk.NewDec(1_200_000), sdk.NewDec(3_500_000)},
-		// 	setValSet:      true,
-		// 	expectPass:     true,
-		// },
-		// {
-		// 	name:           "Unstake x amount from ValSet",
-		// 	delegator:      sdk.AccAddress([]byte("addr2---------------")),
-		// 	coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),                                           // delegate 20osmo
-		// 	coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15_000_000)),                                           // undelegate 15osmo
-		// 	expectedShares: []sdk.Dec{sdk.NewDec(1_000_000), sdk.NewDec(1_650_000), sdk.NewDec(600_000), sdk.NewDec(1_750_000)}, // validatorDelegatedShares - (weight * coinToUnstake)
-		// 	setValSet:      true,
-		// 	expectPass:     true,
-		// },
-		// {
-		// 	name:          "Unstake everything",
-		// 	delegator:     sdk.AccAddress([]byte("addr3---------------")),
-		// 	coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
-		// 	coinToUnStake: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
-		// 	setValSet:     true,
-		// 	expectPass:    true,
-		// },
+		{
+			name:           "Unstake half from the ValSet",
+			delegator:      sdk.AccAddress([]byte("addr1---------------")),
+			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)), // delegate 20osmo
+			coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)), // undelegate 10osmo
+			expectedShares: []sdk.Dec{sdk.NewDec(2_000_000), sdk.NewDec(3_300_000), sdk.NewDec(1_200_000), sdk.NewDec(3_500_000)},
+			setValSet:      true,
+			expectPass:     true,
+		},
+		{
+			name:           "Unstake x amount from ValSet",
+			delegator:      sdk.AccAddress([]byte("addr2---------------")),
+			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),                                           // delegate 20osmo
+			coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15_000_000)),                                           // undelegate 15osmo
+			expectedShares: []sdk.Dec{sdk.NewDec(1_000_000), sdk.NewDec(1_650_000), sdk.NewDec(600_000), sdk.NewDec(1_750_000)}, // validatorDelegatedShares - (weight * coinToUnstake)
+			setValSet:      true,
+			expectPass:     true,
+		},
+		{
+			name:          "Unstake everything",
+			delegator:     sdk.AccAddress([]byte("addr3---------------")),
+			coinToStake:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
+			coinToUnStake: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)),
+			setValSet:     true,
+			expectPass:    true,
+		},
 		// {
 		// 	name:          "Unstake more amount than the staked amount",
 		// 	delegator:     sdk.AccAddress([]byte("addr4---------------")),
@@ -353,21 +353,21 @@ func (s *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 		// 	setValSet:     true,
 		// 	expectPass:    false,
 		// },
-		// {
-		// 	name:                   "UnDelegate from existing staking position (non valSet) ",
-		// 	delegator:              sdk.AccAddress([]byte("addr5---------------")),
-		// 	coinToStake:            sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
-		// 	coinToUnStake:          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
-		// 	expectedShares:         []sdk.Dec{sdk.NewDec(1_000_000), sdk.NewDec(1_660_000), sdk.NewDec(600_000), sdk.NewDec(1_740_000)}, // validatorDelegatedShares - (weight * coinToUnstake)
-		// 	setExistingDelegations: true,
-		// 	expectPass:             true,
-		// },
+		{
+			name:                   "UnDelegate from existing staking position (non valSet) ",
+			delegator:              sdk.AccAddress([]byte("addr5---------------")),
+			coinToStake:            sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			coinToUnStake:          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			expectedShares:         []sdk.Dec{sdk.NewDec(1_000_000), sdk.NewDec(1_660_000), sdk.NewDec(600_000), sdk.NewDec(1_740_000)}, // validatorDelegatedShares - (weight * coinToUnstake)
+			setExistingDelegations: true,
+			expectPass:             true,
+		},
 		{
 			name:           "Undelegate extreme amounts to check truncation, large amount",
 			delegator:      sdk.AccAddress([]byte("addr6---------------")),
 			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000)),
 			coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(87_461_351)),
-			expectedShares: []sdk.Dec{sdk.NewDec(2_507_730), sdk.NewDec(4_137_755), sdk.NewDec(1_504_638), sdk.NewDec(4_388_526)}, // validatorDelegatedShares - (weight * coinToUnstake), for ex: 20_000_000 - (0.2 * 87_461_351)
+			expectedShares: []sdk.Dec{sdk.NewDec(2_507_730), sdk.NewDec(4_137_753), sdk.NewDec(1_504_638), sdk.NewDec(4_388_528)}, // validatorDelegatedShares - (weight * coinToUnstake), for ex: 20_000_000 - (0.2 * 87_461_351)
 			setValSet:      true,
 			expectPass:     true,
 		},
@@ -376,7 +376,7 @@ func (s *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 			delegator:      sdk.AccAddress([]byte("addr7---------------")),
 			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
 			coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1234)),
-			expectedShares: []sdk.Dec{sdk.NewDec(1_999_754), sdk.NewDec(3_299_593), sdk.NewDec(1_199_852), sdk.NewDec(3_499_567)}, // validatorDelegatedShares - (weight * coinToUnstake),
+			expectedShares: []sdk.Dec{sdk.NewDec(1_999_752), sdk.NewDec(3_299_593), sdk.NewDec(1_199_852), sdk.NewDec(3_499_569)}, // validatorDelegatedShares - (weight * coinToUnstake),
 			setValSet:      true,
 			expectPass:     true,
 		},

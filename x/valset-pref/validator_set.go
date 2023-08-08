@@ -175,11 +175,31 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	})
 
 	// Step 4
+	totalUnDelAmt, amountToUnDelegate := sdk.NewInt(0), sdk.NewInt(0)
 	if valSetRatio[0].VRatio.LTE(sdk.OneDec()) {
 		fmt.Println("All validators can undelegate normally, falling to happy path exit early")
-		for _, val := range valSetRatio {
-			fmt.Println("UNDELEGATED AMT: ", val.UndelegateAmt)
-			_, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, val.UndelegateAmt.ToDec()) // this has to be shares amount
+		for index, val := range valSetRatio {
+			_, validator, err := k.getValAddrAndVal(ctx, val.ValAddr.String())
+			if err != nil {
+				return err
+			}
+
+			// in the last valset iteration we dont calculate it from shares using decimals and trucation,
+			// we use whats remaining to get more accurate value
+			if len(existingSet.Preferences)-1 == index {
+				amountToUnDelegate = coin.Amount.Sub(totalUnDelAmt).ToDec().TruncateInt()
+			} else {
+				// Calculate the amount to undelegate based on the existing weights
+				amountToUnDelegate = val.UndelegateAmt
+				totalUnDelAmt = totalUnDelAmt.Add(amountToUnDelegate)
+			}
+
+			sharesAmt, err := validator.SharesFromTokens(amountToUnDelegate)
+			if err != nil {
+				return err
+			}
+
+			_, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, sharesAmt) // this has to be shares amount
 			if err != nil {
 				return err
 			}
@@ -209,10 +229,20 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 
 	// Step 7
 	fmt.Println("Distributing the remaining tokens normally amongst the remaining validators.")
-	for _, v := range valSetRatio {
-		undelegateAmt := v.Weight.MulInt(amountRemaining)
-		fmt.Printf("Undelegate %.2f from validator %s\n", undelegateAmt, v.ValAddr.String())
-		_, err = k.stakingKeeper.Undelegate(ctx, delegator, v.ValAddr, undelegateAmt) // this has to be shares amount
+	for _, val := range valSetRatio {
+		undelegateAmt := val.Weight.MulInt(amountRemaining).TruncateInt()
+		fmt.Printf("Undelegate %.2f from validator %s\n", undelegateAmt, val.ValAddr.String())
+		_, validator, err := k.getValAddrAndVal(ctx, val.ValAddr.String())
+		if err != nil {
+			return err
+		}
+
+		sharesAmt, err := validator.SharesFromTokens(undelegateAmt)
+		if err != nil {
+			return err
+		}
+
+		_, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, sharesAmt) // this has to be shares amount
 		if err != nil {
 			return err
 		}
