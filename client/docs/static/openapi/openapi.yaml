@@ -179,6 +179,222 @@ paths:
                           format: byte
       tags:
         - Query
+  /osmosis/gamm/v1beta1/cfmm_concentrated_pool_links:
+    get:
+      summary: |-
+        CFMMConcentratedPoolLinks returns migration links between CFMM and
+        Concentrated pools.
+      operationId: CFMMConcentratedPoolLinks
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  migration_records:
+                    type: object
+                    properties:
+                      balancer_to_concentrated_pool_links:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            balancer_pool_id:
+                              type: string
+                              format: uint64
+                            cl_pool_id:
+                              type: string
+                              format: uint64
+                          description: >-
+                            BalancerToConcentratedPoolLink defines a single link between a single
+
+                            balancer pool and a single concentrated liquidity pool. This link is used to
+
+                            allow a balancer pool to migrate to a single canonical full range
+
+                            concentrated liquidity pool position
+
+                            A balancer pool can be linked to a maximum of one cl pool, and a cl pool can
+
+                            be linked to a maximum of one balancer pool.
+                    title: >-
+                      MigrationRecords contains all the links between balancer and concentrated
+
+                      pools
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                          description: >-
+                            A URL/resource name that uniquely identifies the type of the serialized
+
+                            protocol buffer message. This string must contain at least
+
+                            one "/" character. The last segment of the URL's path must represent
+
+                            the fully qualified name of the type (as in
+
+                            `path/google.protobuf.Duration`). The name should be in a canonical form
+
+                            (e.g., leading "." is not accepted).
+
+
+                            In practice, teams usually precompile into the binary all types that they
+
+                            expect it to use in the context of Any. However, for URLs which use the
+
+                            scheme `http`, `https`, or no scheme, one can optionally set up a type
+
+                            server that maps type URLs to message definitions as follows:
+
+
+                            * If no scheme is provided, `https` is assumed.
+
+                            * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+
+                              value in binary format, or produce an error.
+                            * Applications are allowed to cache lookup results based on the
+
+                              URL, or have them precompiled into a binary to avoid any
+                              lookup. Therefore, binary compatibility needs to be preserved
+                              on changes to types. (Use versioned type names to manage
+                              breaking changes.)
+
+                            Note: this functionality is not currently available in the official
+
+                            protobuf release, and it is not used for type URLs beginning with
+
+                            type.googleapis.com.
+
+
+                            Schemes other than `http`, `https` (or the empty scheme) might be
+
+                            used with implementation specific semantics.
+                        value:
+                          type: string
+                          format: byte
+                          description: Must be a valid serialized protocol buffer of the above specified type.
+                      description: >-
+                        `Any` contains an arbitrary serialized protocol buffer message along with a
+
+                        URL that describes the type of the serialized message.
+
+
+                        Protobuf library provides support to pack/unpack Any values in the form
+
+                        of utility functions or additional generated methods of the Any type.
+
+
+                        Example 1: Pack and unpack a message in C++.
+
+
+                            Foo foo = ...;
+                            Any any;
+                            any.PackFrom(foo);
+                            ...
+                            if (any.UnpackTo(&foo)) {
+                              ...
+                            }
+
+                        Example 2: Pack and unpack a message in Java.
+
+
+                            Foo foo = ...;
+                            Any any = Any.pack(foo);
+                            ...
+                            if (any.is(Foo.class)) {
+                              foo = any.unpack(Foo.class);
+                            }
+
+                         Example 3: Pack and unpack a message in Python.
+
+                            foo = Foo(...)
+                            any = Any()
+                            any.Pack(foo)
+                            ...
+                            if any.Is(Foo.DESCRIPTOR):
+                              any.Unpack(foo)
+                              ...
+
+                         Example 4: Pack and unpack a message in Go
+
+                             foo := &pb.Foo{...}
+                             any, err := ptypes.MarshalAny(foo)
+                             ...
+                             foo := &pb.Foo{}
+                             if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                               ...
+                             }
+
+                        The pack methods provided by protobuf library will by default use
+
+                        'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+                        methods only use the fully qualified type name after the last '/'
+
+                        in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+                        name "y.z".
+
+
+
+                        JSON
+
+                        ====
+
+                        The JSON representation of an `Any` value uses the regular
+
+                        representation of the deserialized, embedded message, with an
+
+                        additional field `@type` which contains the type URL. Example:
+
+
+                            package google.profile;
+                            message Person {
+                              string first_name = 1;
+                              string last_name = 2;
+                            }
+
+                            {
+                              "@type": "type.googleapis.com/google.profile.Person",
+                              "firstName": <string>,
+                              "lastName": <string>
+                            }
+
+                        If the embedded message type is well-known and has a custom JSON
+
+                        representation, that representation will be embedded adding a field
+
+                        `value` which holds the custom JSON in addition to the `@type`
+
+                        field. Example (for message [google.protobuf.Duration][]):
+
+
+                            {
+                              "@type": "type.googleapis.com/google.protobuf.Duration",
+                              "value": "1.212s"
+                            }
+      tags:
+        - Query
   "/osmosis/gamm/v1beta1/concentrated_pool_id_link_from_cfmm/{cfmm_pool_id}":
     get:
       summary: >-
@@ -3981,6 +4197,7 @@ paths:
                               enum:
                                 - ByDuration
                                 - ByTime
+                                - NoLock
                               default: ByDuration
                               description: >-
                                 LockQueryType defines the type of the lock query that can
@@ -4229,6 +4446,7 @@ paths:
                               enum:
                                 - ByDuration
                                 - ByTime
+                                - NoLock
                               default: ByDuration
                               description: >-
                                 LockQueryType defines the type of the lock query that can
@@ -4481,6 +4699,7 @@ paths:
                             enum:
                               - ByDuration
                               - ByTime
+                              - NoLock
                             default: ByDuration
                             description: >-
                               LockQueryType defines the type of the lock query that can
@@ -4654,6 +4873,7 @@ paths:
                               enum:
                                 - ByDuration
                                 - ByTime
+                                - NoLock
                               default: ByDuration
                               description: >-
                                 LockQueryType defines the type of the lock query that can
@@ -5092,6 +5312,7 @@ paths:
                               enum:
                                 - ByDuration
                                 - ByTime
+                                - NoLock
                               default: ByDuration
                               description: >-
                                 LockQueryType defines the type of the lock query that can
@@ -5343,6 +5564,7 @@ paths:
                               enum:
                                 - ByDuration
                                 - ByTime
+                                - NoLock
                               default: ByDuration
                               description: >-
                                 LockQueryType defines the type of the lock query that can
@@ -7829,6 +8051,7 @@ paths:
                               enum:
                                 - ByDuration
                                 - ByTime
+                                - NoLock
                               default: ByDuration
                               description: >-
                                 LockQueryType defines the type of the lock query that can
@@ -8146,6 +8369,540 @@ paths:
                         value:
                           type: string
                           format: byte
+      tags:
+        - Query
+  "/osmosis/superfluid/v1beta1/account_delegated_cl_positions/{delegator_address}":
+    get:
+      operationId: UserConcentratedSuperfluidPositionsDelegated
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  cl_pool_user_position_records:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        validator_address:
+                          type: string
+                        position_id:
+                          type: string
+                          format: uint64
+                        lock_id:
+                          type: string
+                          format: uint64
+                        synthetic_lock:
+                          type: object
+                          properties:
+                            underlying_lock_id:
+                              type: string
+                              format: uint64
+                              description: >-
+                                Underlying Lock ID is the underlying native lock's id for this synthetic
+
+                                lockup. A synthetic lock MUST have an underlying lock.
+                            synth_denom:
+                              type: string
+                              description: >-
+                                SynthDenom is the synthetic denom that is a combination of
+
+                                gamm share + bonding status + validator address.
+                            end_time:
+                              type: string
+                              format: date-time
+                              title: >-
+                                used for unbonding synthetic lockups, for active synthetic lockups, this
+
+                                value is set to uninitialized value
+                            duration:
+                              type: string
+                              description: >-
+                                Duration is the duration for a synthetic lock to mature
+
+                                at the point of unbonding has started.
+                          description: >-
+                            SyntheticLock is creating virtual lockup where new denom is combination of
+
+                            original denom and synthetic suffix. At the time of synthetic lockup creation
+
+                            and deletion, accumulation store is also being updated and on querier side,
+
+                            they can query as freely as native lockup.
+                        delegation_amount:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            amount:
+                              type: string
+                          description: >-
+                            Coin defines a token with a denomination and an amount.
+
+
+                            NOTE: The amount field is an Int which implements the custom method
+
+                            signatures required by gogoproto.
+                        equivalent_staked_amount:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            amount:
+                              type: string
+                          description: >-
+                            Coin defines a token with a denomination and an amount.
+
+
+                            NOTE: The amount field is an Int which implements the custom method
+
+                            signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                          description: >-
+                            A URL/resource name that uniquely identifies the type of the serialized
+
+                            protocol buffer message. This string must contain at least
+
+                            one "/" character. The last segment of the URL's path must represent
+
+                            the fully qualified name of the type (as in
+
+                            `path/google.protobuf.Duration`). The name should be in a canonical form
+
+                            (e.g., leading "." is not accepted).
+
+
+                            In practice, teams usually precompile into the binary all types that they
+
+                            expect it to use in the context of Any. However, for URLs which use the
+
+                            scheme `http`, `https`, or no scheme, one can optionally set up a type
+
+                            server that maps type URLs to message definitions as follows:
+
+
+                            * If no scheme is provided, `https` is assumed.
+
+                            * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+
+                              value in binary format, or produce an error.
+                            * Applications are allowed to cache lookup results based on the
+
+                              URL, or have them precompiled into a binary to avoid any
+                              lookup. Therefore, binary compatibility needs to be preserved
+                              on changes to types. (Use versioned type names to manage
+                              breaking changes.)
+
+                            Note: this functionality is not currently available in the official
+
+                            protobuf release, and it is not used for type URLs beginning with
+
+                            type.googleapis.com.
+
+
+                            Schemes other than `http`, `https` (or the empty scheme) might be
+
+                            used with implementation specific semantics.
+                        value:
+                          type: string
+                          format: byte
+                          description: Must be a valid serialized protocol buffer of the above specified type.
+                      description: >-
+                        `Any` contains an arbitrary serialized protocol buffer message along with a
+
+                        URL that describes the type of the serialized message.
+
+
+                        Protobuf library provides support to pack/unpack Any values in the form
+
+                        of utility functions or additional generated methods of the Any type.
+
+
+                        Example 1: Pack and unpack a message in C++.
+
+
+                            Foo foo = ...;
+                            Any any;
+                            any.PackFrom(foo);
+                            ...
+                            if (any.UnpackTo(&foo)) {
+                              ...
+                            }
+
+                        Example 2: Pack and unpack a message in Java.
+
+
+                            Foo foo = ...;
+                            Any any = Any.pack(foo);
+                            ...
+                            if (any.is(Foo.class)) {
+                              foo = any.unpack(Foo.class);
+                            }
+
+                         Example 3: Pack and unpack a message in Python.
+
+                            foo = Foo(...)
+                            any = Any()
+                            any.Pack(foo)
+                            ...
+                            if any.Is(Foo.DESCRIPTOR):
+                              any.Unpack(foo)
+                              ...
+
+                         Example 4: Pack and unpack a message in Go
+
+                             foo := &pb.Foo{...}
+                             any, err := ptypes.MarshalAny(foo)
+                             ...
+                             foo := &pb.Foo{}
+                             if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                               ...
+                             }
+
+                        The pack methods provided by protobuf library will by default use
+
+                        'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+                        methods only use the fully qualified type name after the last '/'
+
+                        in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+                        name "y.z".
+
+
+
+                        JSON
+
+                        ====
+
+                        The JSON representation of an `Any` value uses the regular
+
+                        representation of the deserialized, embedded message, with an
+
+                        additional field `@type` which contains the type URL. Example:
+
+
+                            package google.profile;
+                            message Person {
+                              string first_name = 1;
+                              string last_name = 2;
+                            }
+
+                            {
+                              "@type": "type.googleapis.com/google.profile.Person",
+                              "firstName": <string>,
+                              "lastName": <string>
+                            }
+
+                        If the embedded message type is well-known and has a custom JSON
+
+                        representation, that representation will be embedded adding a field
+
+                        `value` which holds the custom JSON in addition to the `@type`
+
+                        field. Example (for message [google.protobuf.Duration][]):
+
+
+                            {
+                              "@type": "type.googleapis.com/google.protobuf.Duration",
+                              "value": "1.212s"
+                            }
+      parameters:
+        - name: delegator_address
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Query
+  "/osmosis/superfluid/v1beta1/account_undelegating_cl_positions/{delegator_address}":
+    get:
+      operationId: UserConcentratedSuperfluidPositionsUndelegating
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  cl_pool_user_position_records:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        validator_address:
+                          type: string
+                        position_id:
+                          type: string
+                          format: uint64
+                        lock_id:
+                          type: string
+                          format: uint64
+                        synthetic_lock:
+                          type: object
+                          properties:
+                            underlying_lock_id:
+                              type: string
+                              format: uint64
+                              description: >-
+                                Underlying Lock ID is the underlying native lock's id for this synthetic
+
+                                lockup. A synthetic lock MUST have an underlying lock.
+                            synth_denom:
+                              type: string
+                              description: >-
+                                SynthDenom is the synthetic denom that is a combination of
+
+                                gamm share + bonding status + validator address.
+                            end_time:
+                              type: string
+                              format: date-time
+                              title: >-
+                                used for unbonding synthetic lockups, for active synthetic lockups, this
+
+                                value is set to uninitialized value
+                            duration:
+                              type: string
+                              description: >-
+                                Duration is the duration for a synthetic lock to mature
+
+                                at the point of unbonding has started.
+                          description: >-
+                            SyntheticLock is creating virtual lockup where new denom is combination of
+
+                            original denom and synthetic suffix. At the time of synthetic lockup creation
+
+                            and deletion, accumulation store is also being updated and on querier side,
+
+                            they can query as freely as native lockup.
+                        delegation_amount:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            amount:
+                              type: string
+                          description: >-
+                            Coin defines a token with a denomination and an amount.
+
+
+                            NOTE: The amount field is an Int which implements the custom method
+
+                            signatures required by gogoproto.
+                        equivalent_staked_amount:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            amount:
+                              type: string
+                          description: >-
+                            Coin defines a token with a denomination and an amount.
+
+
+                            NOTE: The amount field is an Int which implements the custom method
+
+                            signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          content:
+            "*/*":
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type_url:
+                          type: string
+                          description: >-
+                            A URL/resource name that uniquely identifies the type of the serialized
+
+                            protocol buffer message. This string must contain at least
+
+                            one "/" character. The last segment of the URL's path must represent
+
+                            the fully qualified name of the type (as in
+
+                            `path/google.protobuf.Duration`). The name should be in a canonical form
+
+                            (e.g., leading "." is not accepted).
+
+
+                            In practice, teams usually precompile into the binary all types that they
+
+                            expect it to use in the context of Any. However, for URLs which use the
+
+                            scheme `http`, `https`, or no scheme, one can optionally set up a type
+
+                            server that maps type URLs to message definitions as follows:
+
+
+                            * If no scheme is provided, `https` is assumed.
+
+                            * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+
+                              value in binary format, or produce an error.
+                            * Applications are allowed to cache lookup results based on the
+
+                              URL, or have them precompiled into a binary to avoid any
+                              lookup. Therefore, binary compatibility needs to be preserved
+                              on changes to types. (Use versioned type names to manage
+                              breaking changes.)
+
+                            Note: this functionality is not currently available in the official
+
+                            protobuf release, and it is not used for type URLs beginning with
+
+                            type.googleapis.com.
+
+
+                            Schemes other than `http`, `https` (or the empty scheme) might be
+
+                            used with implementation specific semantics.
+                        value:
+                          type: string
+                          format: byte
+                          description: Must be a valid serialized protocol buffer of the above specified type.
+                      description: >-
+                        `Any` contains an arbitrary serialized protocol buffer message along with a
+
+                        URL that describes the type of the serialized message.
+
+
+                        Protobuf library provides support to pack/unpack Any values in the form
+
+                        of utility functions or additional generated methods of the Any type.
+
+
+                        Example 1: Pack and unpack a message in C++.
+
+
+                            Foo foo = ...;
+                            Any any;
+                            any.PackFrom(foo);
+                            ...
+                            if (any.UnpackTo(&foo)) {
+                              ...
+                            }
+
+                        Example 2: Pack and unpack a message in Java.
+
+
+                            Foo foo = ...;
+                            Any any = Any.pack(foo);
+                            ...
+                            if (any.is(Foo.class)) {
+                              foo = any.unpack(Foo.class);
+                            }
+
+                         Example 3: Pack and unpack a message in Python.
+
+                            foo = Foo(...)
+                            any = Any()
+                            any.Pack(foo)
+                            ...
+                            if any.Is(Foo.DESCRIPTOR):
+                              any.Unpack(foo)
+                              ...
+
+                         Example 4: Pack and unpack a message in Go
+
+                             foo := &pb.Foo{...}
+                             any, err := ptypes.MarshalAny(foo)
+                             ...
+                             foo := &pb.Foo{}
+                             if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                               ...
+                             }
+
+                        The pack methods provided by protobuf library will by default use
+
+                        'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+                        methods only use the fully qualified type name after the last '/'
+
+                        in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+                        name "y.z".
+
+
+
+                        JSON
+
+                        ====
+
+                        The JSON representation of an `Any` value uses the regular
+
+                        representation of the deserialized, embedded message, with an
+
+                        additional field `@type` which contains the type URL. Example:
+
+
+                            package google.profile;
+                            message Person {
+                              string first_name = 1;
+                              string last_name = 2;
+                            }
+
+                            {
+                              "@type": "type.googleapis.com/google.profile.Person",
+                              "firstName": <string>,
+                              "lastName": <string>
+                            }
+
+                        If the embedded message type is well-known and has a custom JSON
+
+                        representation, that representation will be embedded adding a field
+
+                        `value` which holds the custom JSON in addition to the `@type`
+
+                        field. Example (for message [google.protobuf.Duration][]):
+
+
+                            {
+                              "@type": "type.googleapis.com/google.protobuf.Duration",
+                              "value": "1.212s"
+                            }
+      parameters:
+        - name: delegator_address
+          in: path
+          required: true
+          schema:
+            type: string
       tags:
         - Query
   /osmosis/superfluid/v1beta1/all_assets:
@@ -30960,6 +31717,90 @@ components:
 
         NOTE: The amount field is an Int which implements the custom method
         signatures required by gogoproto.
+    osmosis.gamm.v1beta1.BalancerToConcentratedPoolLink:
+      type: object
+      properties:
+        balancer_pool_id:
+          type: string
+          format: uint64
+        cl_pool_id:
+          type: string
+          format: uint64
+      description: >-
+        BalancerToConcentratedPoolLink defines a single link between a single
+
+        balancer pool and a single concentrated liquidity pool. This link is used to
+
+        allow a balancer pool to migrate to a single canonical full range
+
+        concentrated liquidity pool position
+
+        A balancer pool can be linked to a maximum of one cl pool, and a cl pool can
+
+        be linked to a maximum of one balancer pool.
+    osmosis.gamm.v1beta1.MigrationRecords:
+      type: object
+      properties:
+        balancer_to_concentrated_pool_links:
+          type: array
+          items:
+            type: object
+            properties:
+              balancer_pool_id:
+                type: string
+                format: uint64
+              cl_pool_id:
+                type: string
+                format: uint64
+            description: >-
+              BalancerToConcentratedPoolLink defines a single link between a single
+
+              balancer pool and a single concentrated liquidity pool. This link is used to
+
+              allow a balancer pool to migrate to a single canonical full range
+
+              concentrated liquidity pool position
+
+              A balancer pool can be linked to a maximum of one cl pool, and a cl pool can
+
+              be linked to a maximum of one balancer pool.
+      title: >-
+        MigrationRecords contains all the links between balancer and concentrated
+
+        pools
+    osmosis.gamm.v1beta1.QueryCFMMConcentratedPoolLinksResponse:
+      type: object
+      properties:
+        migration_records:
+          type: object
+          properties:
+            balancer_to_concentrated_pool_links:
+              type: array
+              items:
+                type: object
+                properties:
+                  balancer_pool_id:
+                    type: string
+                    format: uint64
+                  cl_pool_id:
+                    type: string
+                    format: uint64
+                description: >-
+                  BalancerToConcentratedPoolLink defines a single link between a single
+
+                  balancer pool and a single concentrated liquidity pool. This link is used to
+
+                  allow a balancer pool to migrate to a single canonical full range
+
+                  concentrated liquidity pool position
+
+                  A balancer pool can be linked to a maximum of one cl pool, and a cl pool can
+
+                  be linked to a maximum of one balancer pool.
+          title: >-
+            MigrationRecords contains all the links between balancer and concentrated
+
+            pools
     osmosis.gamm.v1beta1.QueryCalcExitPoolCoinsFromSharesResponse:
       type: object
       properties:
@@ -31831,6 +32672,7 @@ components:
                     enum:
                       - ByDuration
                       - ByTime
+                      - NoLock
                     default: ByDuration
                     description: |-
                       LockQueryType defines the type of the lock query that can
@@ -31983,6 +32825,7 @@ components:
                     enum:
                       - ByDuration
                       - ByTime
+                      - NoLock
                     default: ByDuration
                     description: |-
                       LockQueryType defines the type of the lock query that can
@@ -32130,6 +32973,7 @@ components:
               enum:
                 - ByDuration
                 - ByTime
+                - NoLock
               default: ByDuration
               description: |-
                 LockQueryType defines the type of the lock query that can
@@ -32254,6 +33098,7 @@ components:
                   enum:
                     - ByDuration
                     - ByTime
+                    - NoLock
                   default: ByDuration
                   description: |-
                     LockQueryType defines the type of the lock query that can
@@ -32381,6 +33226,7 @@ components:
                     enum:
                       - ByDuration
                       - ByTime
+                      - NoLock
                     default: ByDuration
                     description: |-
                       LockQueryType defines the type of the lock query that can
@@ -32583,6 +33429,7 @@ components:
                     enum:
                       - ByDuration
                       - ByTime
+                      - NoLock
                     default: ByDuration
                     description: |-
                       LockQueryType defines the type of the lock query that can
@@ -32735,6 +33582,7 @@ components:
                     enum:
                       - ByDuration
                       - ByTime
+                      - NoLock
                     default: ByDuration
                     description: |-
                       LockQueryType defines the type of the lock query that can
@@ -32856,6 +33704,7 @@ components:
       enum:
         - ByDuration
         - ByTime
+        - NoLock
       default: ByDuration
       description: |-
         LockQueryType defines the type of the lock query that can
@@ -32869,6 +33718,7 @@ components:
           enum:
             - ByDuration
             - ByTime
+            - NoLock
           default: ByDuration
           description: |-
             LockQueryType defines the type of the lock query that can
@@ -34185,6 +35035,7 @@ components:
                     enum:
                       - ByDuration
                       - ByTime
+                      - NoLock
                     default: ByDuration
                     description: |-
                       LockQueryType defines the type of the lock query that can
@@ -34496,6 +35347,76 @@ components:
           title: |-
             SuperfluidAssetType indicates whether the superfluid asset is
             a native token, lp share of a pool, or concentrated share of a pool
+    osmosis.superfluid.ConcentratedPoolUserPositionRecord:
+      type: object
+      properties:
+        validator_address:
+          type: string
+        position_id:
+          type: string
+          format: uint64
+        lock_id:
+          type: string
+          format: uint64
+        synthetic_lock:
+          type: object
+          properties:
+            underlying_lock_id:
+              type: string
+              format: uint64
+              description: >-
+                Underlying Lock ID is the underlying native lock's id for this synthetic
+
+                lockup. A synthetic lock MUST have an underlying lock.
+            synth_denom:
+              type: string
+              description: |-
+                SynthDenom is the synthetic denom that is a combination of
+                gamm share + bonding status + validator address.
+            end_time:
+              type: string
+              format: date-time
+              title: >-
+                used for unbonding synthetic lockups, for active synthetic lockups, this
+
+                value is set to uninitialized value
+            duration:
+              type: string
+              description: |-
+                Duration is the duration for a synthetic lock to mature
+                at the point of unbonding has started.
+          description: >-
+            SyntheticLock is creating virtual lockup where new denom is combination of
+
+            original denom and synthetic suffix. At the time of synthetic lockup creation
+
+            and deletion, accumulation store is also being updated and on querier side,
+
+            they can query as freely as native lockup.
+        delegation_amount:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+        equivalent_staked_amount:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
     osmosis.superfluid.ConnectedIntermediaryAccountResponse:
       type: object
       properties:
@@ -35041,6 +35962,164 @@ components:
       properties:
         total_delegations:
           type: string
+    osmosis.superfluid.UserConcentratedSuperfluidPositionsDelegatedResponse:
+      type: object
+      properties:
+        cl_pool_user_position_records:
+          type: array
+          items:
+            type: object
+            properties:
+              validator_address:
+                type: string
+              position_id:
+                type: string
+                format: uint64
+              lock_id:
+                type: string
+                format: uint64
+              synthetic_lock:
+                type: object
+                properties:
+                  underlying_lock_id:
+                    type: string
+                    format: uint64
+                    description: >-
+                      Underlying Lock ID is the underlying native lock's id for this synthetic
+
+                      lockup. A synthetic lock MUST have an underlying lock.
+                  synth_denom:
+                    type: string
+                    description: |-
+                      SynthDenom is the synthetic denom that is a combination of
+                      gamm share + bonding status + validator address.
+                  end_time:
+                    type: string
+                    format: date-time
+                    title: >-
+                      used for unbonding synthetic lockups, for active synthetic lockups, this
+
+                      value is set to uninitialized value
+                  duration:
+                    type: string
+                    description: |-
+                      Duration is the duration for a synthetic lock to mature
+                      at the point of unbonding has started.
+                description: >-
+                  SyntheticLock is creating virtual lockup where new denom is combination of
+
+                  original denom and synthetic suffix. At the time of synthetic lockup creation
+
+                  and deletion, accumulation store is also being updated and on querier side,
+
+                  they can query as freely as native lockup.
+              delegation_amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom method
+
+                  signatures required by gogoproto.
+              equivalent_staked_amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom method
+
+                  signatures required by gogoproto.
+    osmosis.superfluid.UserConcentratedSuperfluidPositionsUndelegatingResponse:
+      type: object
+      properties:
+        cl_pool_user_position_records:
+          type: array
+          items:
+            type: object
+            properties:
+              validator_address:
+                type: string
+              position_id:
+                type: string
+                format: uint64
+              lock_id:
+                type: string
+                format: uint64
+              synthetic_lock:
+                type: object
+                properties:
+                  underlying_lock_id:
+                    type: string
+                    format: uint64
+                    description: >-
+                      Underlying Lock ID is the underlying native lock's id for this synthetic
+
+                      lockup. A synthetic lock MUST have an underlying lock.
+                  synth_denom:
+                    type: string
+                    description: |-
+                      SynthDenom is the synthetic denom that is a combination of
+                      gamm share + bonding status + validator address.
+                  end_time:
+                    type: string
+                    format: date-time
+                    title: >-
+                      used for unbonding synthetic lockups, for active synthetic lockups, this
+
+                      value is set to uninitialized value
+                  duration:
+                    type: string
+                    description: |-
+                      Duration is the duration for a synthetic lock to mature
+                      at the point of unbonding has started.
+                description: >-
+                  SyntheticLock is creating virtual lockup where new denom is combination of
+
+                  original denom and synthetic suffix. At the time of synthetic lockup creation
+
+                  and deletion, accumulation store is also being updated and on querier side,
+
+                  they can query as freely as native lockup.
+              delegation_amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom method
+
+                  signatures required by gogoproto.
+              equivalent_staked_amount:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom method
+
+                  signatures required by gogoproto.
     osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata:
       type: object
       properties:

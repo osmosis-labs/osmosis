@@ -9,17 +9,17 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v16/tests/mocks"
-	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	cwpool "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool"
-	cwmodel "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/model"
-	gamm "github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
-	"github.com/osmosis-labs/osmosis/v16/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/tests/mocks"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	cwpool "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool"
+	cwmodel "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/model"
+	gamm "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v17/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 type poolSetup struct {
@@ -270,8 +270,8 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 		"valid concentrated liquidity pool with position": {
 			preCreatePoolType:    types.Concentrated,
 			poolId:               1,
-			quoteAssetDenom:      "eth",
-			baseAssetDenom:       "usdc",
+			quoteAssetDenom:      "usdc",
+			baseAssetDenom:       "eth",
 			setPositionForCLPool: true,
 			// We generate this value using the scripts in x/concentrated-liquidity/python
 			// Exact output: 5000.000000000000000129480272834995458481

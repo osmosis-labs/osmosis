@@ -10,10 +10,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 func (k Keeper) MarshalPool(pool poolmanagertypes.PoolI) ([]byte, error) {
@@ -323,6 +323,23 @@ func (k Keeper) setStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scal
 	if err := stableswapPool.SetScalingFactors(ctx, scalingFactors, sender); err != nil {
 		return err
 	}
+
+	return k.setPool(ctx, stableswapPool)
+}
+
+// setStableSwapScalingFactorController updates the scaling factor controller address for a stable swap pool
+// errors if the pool does not exist or is not a stable swap pool
+func (k Keeper) setStableSwapScalingFactorController(ctx sdk.Context, poolId uint64, controllerAddress string) error {
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return err
+	}
+	stableswapPool, ok := pool.(*stableswap.Pool)
+	if !ok {
+		return fmt.Errorf("pool id %d is not of type stableswap pool", poolId)
+	}
+
+	stableswapPool.ScalingFactorController = controllerAddress
 
 	return k.setPool(ctx, stableswapPool)
 }

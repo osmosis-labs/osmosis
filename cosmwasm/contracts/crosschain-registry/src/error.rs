@@ -13,11 +13,33 @@ pub enum ContractError {
     #[error("{0}")]
     Payment(#[from] cw_utils::PaymentError),
 
-    #[error("Unauthorized")]
+    #[error("unauthorized")]
     Unauthorized {},
+
+    #[error("chain validation not started for {chain}")]
+    ValidationNotFound { chain: String },
+
+    #[error("coin from invalid chain. It belongs to {supplied_chain} and should be from {expected_chain}")]
+    CoinFromInvalidChain {
+        supplied_chain: String,
+        expected_chain: String,
+    },
+
+    #[error(
+        "only messages initialized by the address of this contract in another chain are allowed. Expected {expected_sender} but got {actual_sender}"
+    )]
+    InvalidSender {
+        expected_sender: String,
+        actual_sender: String,
+    },
 
     #[error("contract alias already exists: {alias:?}")]
     AliasAlreadyExists { alias: String },
+
+    #[error(
+        "PFM validation already in progress for {chain:?}. Wait for the ibc lifecycle to complete"
+    )]
+    PFMValidationAlreadyInProgress { chain: String },
 
     #[error("authorized address already exists for source chain: {source_chain:?}")]
     ChainAuthorizedAddressAlreadyExists { source_chain: String },

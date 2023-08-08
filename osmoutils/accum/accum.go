@@ -134,14 +134,10 @@ func (accum *AccumulatorObject) NewPosition(name string, numShareUnits sdk.Dec, 
 // It sets the position's accumulator to the given value of intervalAccumulationPerShare.
 // This is useful for when the accumulation happens at a sub-range of the full accumulator
 // rewards range. For example, a concentrated liquidity narrow range position.
-// All intervalAccumulationPerShare DecCoin values must be non-negative.
+// intervalAccumulationPerShare DecCoin values are allowed to be negative.
 // The position is initialized with empty unclaimed rewards
 // If there is an existing position for the given address, it is overwritten.
 func (accum *AccumulatorObject) NewPositionIntervalAccumulation(name string, numShareUnits sdk.Dec, intervalAccumulationPerShare sdk.DecCoins, options *Options) error {
-	if intervalAccumulationPerShare.IsAnyNegative() {
-		return NegativeIntervalAccumulationPerShareError{intervalAccumulationPerShare}
-	}
-
 	if err := options.validate(); err != nil {
 		return err
 	}
@@ -344,12 +340,7 @@ func (accum *AccumulatorObject) DeletePosition(positionName string) (sdk.DecCoin
 	}
 
 	accum.store.Delete(FormatPositionPrefixKey(accum.name, positionName))
-
-	totalShares, err := accum.GetTotalShares()
-	if err != nil {
-		return sdk.DecCoins{}, err
-	}
-	accum.totalShares = totalShares.Sub(position.NumShares)
+	accum.totalShares.SubMut(position.NumShares)
 	err = setAccumulator(accum, accum.valuePerShare, accum.totalShares)
 	if err != nil {
 		return sdk.DecCoins{}, err
@@ -425,10 +416,8 @@ func (accum *AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sd
 }
 
 // GetTotalShares returns the total number of shares in the accumulator
-func (accum AccumulatorObject) GetTotalShares() (sdk.Dec, error) {
-	// TODO: Make this not do an extra get.
-	accumPtr, err := GetAccumulator(accum.store, accum.name)
-	return accumPtr.totalShares, err
+func (accum AccumulatorObject) GetTotalShares() sdk.Dec {
+	return accum.totalShares
 }
 
 // AddToUnclaimedRewards adds the given amount of rewards to the unclaimed rewards

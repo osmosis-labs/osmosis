@@ -42,6 +42,10 @@ env:
   LCD_ENDPOINT: https://lcd.osmosis.zone
   DELTA_HALT_HEIGHT: 50
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   compare_versions:
     # Compare current mainnet osmosis major version with the major version of github branch
