@@ -55,6 +55,8 @@ jobs:
           date > 1.txt
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add .
+          git add *.go
+          git add *.proto
+          git add *.txt
           git commit -m "Generated protofile changes" || echo "No changes to commit"
-          git push origin HEAD
+          git push
