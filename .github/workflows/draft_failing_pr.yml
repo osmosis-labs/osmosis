@@ -19,10 +19,7 @@ jobs:
         id: await-check-suites
         uses: jitterbit/await-check-suites@v1 # Use the correct version/tag
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.event.pull_request.head.sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          failStepIfUnsuccessful: "true"
       - name: Set PR to draft if checks failed
         if: steps.await-check-suites.outputs.conclusion != 'success'
         run: |
