@@ -137,7 +137,7 @@ func AppStateRandomizedFn(
 	// number of bonded accounts
 	initialStake := r.Int63n(1e12)
 	// Don't allow 0 validators to start off with
-	numInitiallyBonded := int64(rand.Intn(299)) + 1
+	numInitiallyBonded := int64(r.Intn(299)) + 1
 
 	if numInitiallyBonded > numAccs {
 		numInitiallyBonded = numAccs
