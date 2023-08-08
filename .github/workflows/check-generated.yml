@@ -1,9 +1,5 @@
-# Verify that generated code is up-to-date.
-#
-# Note that we run these checks regardless whether the input files have
-# changed, because generated code can change in response to toolchain updates
-# even if no files in the repository are modified.
-name: Check generated code
+# Ensure that generated code is up-to-date.
+name: Generate protobuf code
 
 on:
   workflow_dispatch:
@@ -12,6 +8,7 @@ on:
       - 'proto/**'
       - '**/**.proto'
       - '**/**.pb.go'
+      - '**/**.sum'
       - '**/client/**.go'
       - 'scripts/ci/**'
       - 'Makefile'
