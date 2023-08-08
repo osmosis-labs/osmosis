@@ -26,7 +26,7 @@ var _ types.MsgServer = msgServer{}
 func (server msgServer) SetValidatorSetPreference(goCtx context.Context, msg *types.MsgSetValidatorSetPreference) (*types.MsgSetValidatorSetPreferenceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	preferences, err := server.keeper.SetValidatorSetPreference(ctx, msg.Delegator, msg.Preferences)
+	preferences, err := server.keeper.DeriveValidatorSetPreference(ctx, msg.Delegator, msg.Preferences)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (server msgServer) RedelegateValidatorSet(goCtx context.Context, msg *types
 	}
 
 	// Message 1: override the validator set preference set entry
-	newPreferences, err := server.keeper.SetValidatorSetPreference(ctx, msg.Delegator, msg.Preferences)
+	newPreferences, err := server.keeper.DeriveValidatorSetPreference(ctx, msg.Delegator, msg.Preferences)
 	if err != nil {
 		return nil, err
 	}

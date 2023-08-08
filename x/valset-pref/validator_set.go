@@ -52,10 +52,11 @@ func (k Keeper) GetValidatorSetPreference(ctx sdk.Context, delegator string) (ty
 	return valsetPref, true
 }
 
-// SetValidatorSetPreference creates or updates delegators validator set.
+// DeriveValidatorSetPreference derives given validator set.
+// It validates the list and formats the inputs such as rounding.
 // Errors when the given preference is the same as the existing preference in state.
 // NOTE: this function doesnot add valset to the state
-func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) (types.ValidatorSetPreferences, error) {
+func (k Keeper) DeriveValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) (types.ValidatorSetPreferences, error) {
 	existingValSet, found := k.GetValidatorSetPreference(ctx, delegator)
 	if found {
 		// check if the new preferences is the same as the existing preferences
@@ -137,13 +138,15 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	}
 
 	delegator := sdk.MustAccAddressFromBech32(delegatorAddr)
-	// the total amount the user wants to undelegate
-	tokenAmt := sdk.NewDec(coin.Amount.Int64())
+	// total amount the user wants to undelegate
+	tokenAmtToUndelegate := sdk.NewDec(coin.Amount.Int64())
+	// total amount user has delegated
+	totalDelegatedAmt := sdk.ZeroDec()
 
 	// Step 1-2
 	var valSetRatio []ValRatio
 	for _, val := range existingSet.Preferences {
-		amountToUnDelegate := val.Weight.Mul(tokenAmt).TruncateInt()
+		amountToUnDelegate := val.Weight.Mul(tokenAmtToUndelegate).TruncateInt()
 		valAddr, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
 		if err != nil {
 			return err
@@ -160,6 +163,9 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 		}
 
 		valShares := sharesAmt.Quo(delegation.Shares)
+		tokenAmt := validator.TokensFromShares(delegation.Shares)
+		totalDelegatedAmt = totalDelegatedAmt.Add(tokenAmt)
+
 		valSetRatio = append(valSetRatio, ValRatio{
 			ValAddr:       valAddr,
 			UndelegateAmt: amountToUnDelegate,
@@ -167,6 +173,10 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 			DelegatedAmt:  delegation.Shares.TruncateInt(),
 			Weight:        val.Weight,
 		})
+	}
+
+	if tokenAmtToUndelegate.GT(totalDelegatedAmt) {
+		return fmt.Errorf("Total tokenAmountToUndelegate more than delegated amount have %s got %s\n", totalDelegatedAmt, tokenAmtToUndelegate)
 	}
 
 	// Step 3
@@ -215,7 +225,6 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	targetRatio := sdk.OneDec()
 	amountRemaining := coin.Amount
 
-	fmt.Println("VRATIO PRE: ", valSetRatio)
 	// Step 6
 	for len(valSetRatio) > 0 && valSetRatio[0].VRatio.GT(targetRatio) {
 		fmt.Printf("Undelegating fully from validator %s %s\n", valSetRatio[0].ValAddr.String(), valSetRatio[0].DelegatedAmt)

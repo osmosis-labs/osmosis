@@ -231,7 +231,7 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase() {
 
 	// valset test setup
 	// SetValidatorSetPreference sets a new list of val-set
-	_, err := s.App.ValidatorSetPreferenceKeeper.SetValidatorSetPreference(s.Ctx, delegator.String(), valPreferences)
+	_, err := s.App.ValidatorSetPreferenceKeeper.DeriveValidatorSetPreference(s.Ctx, delegator.String(), valPreferences)
 	s.Require().NoError(err)
 
 	s.App.ValidatorSetPreferenceKeeper.SetValidatorSetPreferences(s.Ctx, delegator.String(), types.ValidatorSetPreferences{
