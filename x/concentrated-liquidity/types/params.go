@@ -43,6 +43,7 @@ func DefaultParams() Params {
 		AuthorizedSpreadFactors: AuthorizedSpreadFactors,
 		AuthorizedQuoteDenoms: []string{
 			"uosmo",
+			"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", // ATOM
 			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", // DAI
 			"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
 		},
@@ -109,16 +110,16 @@ func validateTicks(i interface{}) error {
 		if MaxTick%tickSpacingInt64 != 0 {
 			return fmt.Errorf("max tick (%d) is not a multiple of tick spacing (%d)", MaxTick, tickSpacing)
 		}
-		if MinTick%tickSpacingInt64 != 0 {
-			return fmt.Errorf("in tick (%d) is not a multiple of tick spacing (%d)", MinTick, tickSpacing)
+		if MinInitializedTick%tickSpacingInt64 != 0 {
+			return fmt.Errorf("in tick (%d) is not a multiple of tick spacing (%d)", MinInitializedTick, tickSpacing)
 		}
 
 		if tickSpacingInt64 > MaxTick {
 			return fmt.Errorf("tick spacing (%d) cannot be greater than max tick spacing (%d)", tickSpacing, MaxTick)
 		}
 
-		if tickSpacingInt64 < MinTick {
-			return fmt.Errorf("tick spacing (%d) cannot be less than min tick spacing (%d)", tickSpacing, MinTick)
+		if tickSpacingInt64 < MinInitializedTick {
+			return fmt.Errorf("tick spacing (%d) cannot be less than min tick spacing (%d)", tickSpacing, MinInitializedTick)
 		}
 	}
 
@@ -186,7 +187,7 @@ func validateBalancerSharesDiscount(i interface{}) error {
 	}
 
 	// Ensure that the passed in discount rate is between 0 and 1.
-	if balancerSharesRewardDiscount.LT(sdk.ZeroDec()) || balancerSharesRewardDiscount.GT(sdk.OneDec()) {
+	if balancerSharesRewardDiscount.IsNegative() || balancerSharesRewardDiscount.GT(sdk.OneDec()) {
 		return InvalidDiscountRateError{DiscountRate: balancerSharesRewardDiscount}
 	}
 

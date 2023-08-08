@@ -16,10 +16,18 @@ var (
 			StepSize: sdk.NewInt(1_000_000),
 		},
 	}
-	DefaultPoolWeights = PoolWeights{
-		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
-		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
-		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
+	DefaultPoolTypeInfo = InfoByPoolType{
+		Balancer: BalancerPoolInfo{
+			Weight: 2, // it takes around 2 ms to simulate and execute a balancer swap
+		},
+		Stable: StablePoolInfo{
+			Weight: 5, // it takes around 5 ms to simulate and execute a stable swap
+		},
+		Concentrated: ConcentratedPoolInfo{
+			Weight:          7, // it takes around 7 ms to simulate and execute a concentrated swap
+			MaxTicksCrossed: 5,
+		},
+		Cosmwasm: CosmwasmPoolInfo{},
 	}
 	DefaultDaysSinceModuleGenesis    = uint64(0)
 	DefaultDeveloperFees             = []sdk.Coin{}
@@ -28,6 +36,7 @@ var (
 	DefaultMaxPoolPointsPerBlock     = uint64(100)
 	DefaultMaxPoolPointsPerTx        = uint64(18)
 	DefaultPoolPointsConsumedInBlock = uint64(0)
+	DefaultProfits                   = []sdk.Coin{}
 )
 
 // DefaultGenesis returns the default genesis state
@@ -36,7 +45,7 @@ func DefaultGenesis() *GenesisState {
 		Params:                 DefaultParams(),
 		TokenPairArbRoutes:     DefaultTokenPairArbRoutes,
 		BaseDenoms:             DefaultBaseDenoms,
-		PoolWeights:            DefaultPoolWeights,
+		InfoByPoolType:         DefaultPoolTypeInfo,
 		DaysSinceModuleGenesis: DefaultDaysSinceModuleGenesis,
 		DeveloperFees:          DefaultDeveloperFees,
 		DeveloperAddress:       DefaultDeveloperAddress,
@@ -44,6 +53,7 @@ func DefaultGenesis() *GenesisState {
 		MaxPoolPointsPerBlock:  DefaultMaxPoolPointsPerBlock,
 		MaxPoolPointsPerTx:     DefaultMaxPoolPointsPerTx,
 		PointCountForBlock:     DefaultPoolPointsConsumedInBlock,
+		Profits:                DefaultProfits,
 	}
 }
 
@@ -59,8 +69,8 @@ func (gs GenesisState) Validate() error {
 		return err
 	}
 
-	// Validate the pool weights
-	if err := gs.PoolWeights.Validate(); err != nil {
+	// Validate the pool type information
+	if err := gs.InfoByPoolType.Validate(); err != nil {
 		return err
 	}
 

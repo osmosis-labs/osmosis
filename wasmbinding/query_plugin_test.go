@@ -19,15 +19,15 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	gammv2types "github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	gammv2types "github.com/osmosis-labs/osmosis/v17/x/gamm/v2types"
 
-	"github.com/osmosis-labs/osmosis/v15/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/app"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
-	"github.com/osmosis-labs/osmosis/v15/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v17/wasmbinding"
 )
 
 type StargateTestSuite struct {
@@ -70,8 +70,37 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			responseProtoStruct: &epochtypes.QueryEpochsInfoResponse{},
 		},
 		{
-			name: "happy path gamm",
+			name: "happy path gamm spot price",
 			path: "/osmosis.gamm.v2.Query/SpotPrice",
+			testSetup: func() {
+				pk := ed25519.GenPrivKey().PubKey()
+				sender := sdk.AccAddress(pk.Address())
+				err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, sender, apptesting.DefaultAcctFunds)
+				suite.Require().NoError(err)
+				msg := balancer.NewMsgCreateBalancerPool(sender,
+					balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil),
+					apptesting.DefaultPoolAssets, "")
+				_, err = suite.app.PoolManagerKeeper.CreatePool(suite.ctx, msg)
+				suite.NoError(err)
+			},
+			requestData: func() []byte {
+				queryrequest := gammv2types.QuerySpotPriceRequest{ //nolint:staticcheck // we're intentionally using this deprecated package for testing
+					PoolId:          1,
+					BaseAssetDenom:  "bar",
+					QuoteAssetDenom: "uosmo",
+				}
+				bz, err := proto.Marshal(&queryrequest)
+				suite.Require().NoError(err)
+				return bz
+			},
+			checkResponseStruct: true,
+			responseProtoStruct: &gammv2types.QuerySpotPriceResponse{ //nolint:staticcheck // we're intentionally using this deprecated package for testing
+				SpotPrice: sdk.NewDecWithPrec(5, 1).String(),
+			},
+		},
+		{
+			name: "happy path pool manager",
+			path: "/osmosis.poolmanager.v1beta1.Query/SpotPrice",
 			testSetup: func() {
 				pk := ed25519.GenPrivKey().PubKey()
 				sender := sdk.AccAddress(pk.Address())

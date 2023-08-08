@@ -2,11 +2,12 @@ syntax = "proto3";
 package osmosis.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "amino/amino.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
+option go_package = "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types";
 
 service Msg {
   rpc CreatePosition(MsgCreatePosition) returns (MsgCreatePositionResponse);
@@ -18,15 +19,16 @@ service Msg {
   // charging, this function deletes the old position and creates a new one with
   // the resulting amount after addition.
   rpc AddToPosition(MsgAddToPosition) returns (MsgAddToPositionResponse);
-  rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
+  rpc CollectSpreadRewards(MsgCollectSpreadRewards)
+      returns (MsgCollectSpreadRewardsResponse);
   rpc CollectIncentives(MsgCollectIncentives)
       returns (MsgCollectIncentivesResponse);
-  rpc FungifyChargedPositions(MsgFungifyChargedPositions)
-      returns (MsgFungifyChargedPositionsResponse);
 }
 
 // ===================== MsgCreatePosition
 message MsgCreatePosition {
+  option (amino.name) = "osmosis/cl-create-position";
+
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
@@ -63,11 +65,6 @@ message MsgCreatePositionResponse {
     (gogoproto.moretags) = "yaml:\"amount1\"",
     (gogoproto.nullable) = false
   ];
-  google.protobuf.Timestamp join_time = 4 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true,
-    (gogoproto.moretags) = "yaml:\"join_time\""
-  ];
   string liquidity_created = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_created\"",
@@ -83,6 +80,8 @@ message MsgCreatePositionResponse {
 
 // ===================== MsgAddToPosition
 message MsgAddToPosition {
+  option (amino.name) = "osmosis/cl-add-to-position";
+
   uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   // amount0 represents the amount of token0 willing to put in.
@@ -94,13 +93,13 @@ message MsgAddToPosition {
   // amount1 represents the amount of token1 willing to put in.
   string amount1 = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"amount1\"",
+    (gogoproto.moretags) = "yaml:\"amount_1\"",
     (gogoproto.nullable) = false
   ];
   // token_min_amount0 represents the minimum amount of token0 desired from the
   // new position being created. Note that this field indicates the min amount0
-  // corresponding to the total liquidity of the position, not just the
-  // liquidity that is being added.
+  // corresponding to the liquidity that is being added, not the total
+  // liquidity of the position.
   string token_min_amount0 = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_min_amount0\"",
@@ -108,8 +107,8 @@ message MsgAddToPosition {
   ];
   // token_min_amount1 represents the minimum amount of token1 desired from the
   // new position being created. Note that this field indicates the min amount1
-  // corresponding to the total liquidity of the position, not just the
-  // liquidity that is being added.
+  // corresponding to the liquidity that is being added, not the total
+  // liquidity of the position.
   string token_min_amount1 = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_min_amount1\"",
@@ -133,6 +132,8 @@ message MsgAddToPositionResponse {
 
 // ===================== MsgWithdrawPosition
 message MsgWithdrawPosition {
+  option (amino.name) = "osmosis/cl-withdraw-position";
+
   uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   string liquidity_amount = 3 [
@@ -155,22 +156,27 @@ message MsgWithdrawPositionResponse {
   ];
 }
 
-// ===================== MsgCollectFees
-message MsgCollectFees {
+// ===================== MsgCollectSpreadRewards
+message MsgCollectSpreadRewards {
+  option (amino.name) = "osmosis/cl-col-sp-rewards";
+
   repeated uint64 position_ids = 1
       [ (gogoproto.moretags) = "yaml:\"position_ids\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 }
 
-message MsgCollectFeesResponse {
-  repeated cosmos.base.v1beta1.Coin collected_fees = 1 [
-    (gogoproto.moretags) = "yaml:\"collected_fees\"",
+message MsgCollectSpreadRewardsResponse {
+  repeated cosmos.base.v1beta1.Coin collected_spread_rewards = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"collected_spread_rewards\"",
     (gogoproto.nullable) = false
   ];
 }
 
 // ===================== MsgCollectIncentives
 message MsgCollectIncentives {
+  option (amino.name) = "osmosis/cl-collect-incentives";
+
   repeated uint64 position_ids = 1
       [ (gogoproto.moretags) = "yaml:\"position_ids\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
@@ -178,10 +184,12 @@ message MsgCollectIncentives {
 
 message MsgCollectIncentivesResponse {
   repeated cosmos.base.v1beta1.Coin collected_incentives = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"collected_incentives\"",
     (gogoproto.nullable) = false
   ];
   repeated cosmos.base.v1beta1.Coin forfeited_incentives = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
     (gogoproto.nullable) = false
   ];
@@ -189,6 +197,8 @@ message MsgCollectIncentivesResponse {
 
 // ===================== MsgFungifyChargedPositions
 message MsgFungifyChargedPositions {
+  option (amino.name) = "osmosis/cl-fungify-charged-positions";
+
   repeated uint64 position_ids = 1
       [ (gogoproto.moretags) = "yaml:\"position_ids\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];

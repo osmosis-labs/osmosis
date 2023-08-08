@@ -274,8 +274,8 @@ The configuration json file contains the following parameters:
 {
  "weights": "5ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4,5uosmo",
  "initial-deposit": "499404ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4,500000uosmo",
- "swap-fee": "0.01",
- "exit-fee": "0.01",
+ "swap-fee": "0.003",
+ "exit-fee": "0.00",
  "future-governor": ""
 }
 ```
@@ -612,7 +612,8 @@ osmosisd query gamm total-share 1
 ## Other resources
 
 * [Creating a liquidity bootstrapping pool](./client/docs/create-lbp-pool.md)
-* [Creating a pool with a pool file](./client/docs/create-pool.md)
+* [Creating a pool with a pool file](./client/docs/create-balancer-pool.md)
+* [Creating a stableswap pool](./client/docs/create-stableswap-pool.md)
 
 ## Events
 

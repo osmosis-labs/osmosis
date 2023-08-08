@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 type msgServer struct {
@@ -19,15 +19,15 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	}
 }
 
-func NewMsgCreatorServerImpl(keeper *Keeper) clmodel.MsgCreatorServer {
+func NewMsgCreatorServerImpl(keeper *Keeper) clmodel.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
 }
 
 var (
-	_ types.MsgServer          = msgServer{}
-	_ clmodel.MsgCreatorServer = msgServer{}
+	_ types.MsgServer   = msgServer{}
+	_ clmodel.MsgServer = msgServer{}
 )
 
 // CreateConcentratedPool attempts to create a concentrated liquidity pool via the poolmanager module, returning a MsgCreateConcentratedPoolResponse or an error upon failure.
@@ -52,7 +52,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	positionId, actualAmount0, actualAmount1, liquidityCreated, joinTime, lowerTick, upperTick, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokensProvided, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick)
+	positionId, actualAmount0, actualAmount1, liquidityCreated, lowerTick, upperTick, err := server.keeper.CreatePosition(ctx, msg.PoolId, sender, msg.TokensProvided, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 
 	// Note: create position event is emitted in keeper.createPosition(...)
 
-	return &types.MsgCreatePositionResponse{PositionId: positionId, Amount0: actualAmount0, Amount1: actualAmount1, JoinTime: joinTime, LiquidityCreated: liquidityCreated, LowerTick: lowerTick, UpperTick: upperTick}, nil
+	return &types.MsgCreatePositionResponse{PositionId: positionId, Amount0: actualAmount0, Amount1: actualAmount1, LiquidityCreated: liquidityCreated, LowerTick: lowerTick, UpperTick: upperTick}, nil
 }
 
 func (server msgServer) AddToPosition(goCtx context.Context, msg *types.MsgAddToPosition) (*types.MsgAddToPositionResponse, error) {
@@ -128,9 +128,9 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 	return &types.MsgWithdrawPositionResponse{Amount0: amount0, Amount1: amount1}, nil
 }
 
-// CollectFees collects the fees earned by each position ID provided and sends them to the owner's account.
+// CollectSpreadRewards collects the fees earned by each position ID provided and sends them to the owner's account.
 // Returns error if one of the provided position IDs do not exist or if the function fails to get the fee accumulator.
-func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollectFees) (*types.MsgCollectFeesResponse, error) {
+func (server msgServer) CollectSpreadRewards(goCtx context.Context, msg *types.MsgCollectSpreadRewards) (*types.MsgCollectSpreadRewardsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
@@ -138,13 +138,13 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 		return nil, err
 	}
 
-	totalCollectedFees := sdk.NewCoins()
+	totalCollectedSpreadRewards := sdk.NewCoins()
 	for _, positionId := range msg.PositionIds {
-		collectedFees, err := server.keeper.collectFees(ctx, sender, positionId)
+		collectedFees, err := server.keeper.collectSpreadRewards(ctx, sender, positionId)
 		if err != nil {
 			return nil, err
 		}
-		totalCollectedFees = totalCollectedFees.Add(collectedFees...)
+		totalCollectedSpreadRewards = totalCollectedSpreadRewards.Add(collectedFees...)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -154,14 +154,14 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 		sdk.NewEvent(
-			types.TypeEvtTotalCollectFees,
+			types.TypeEvtTotalCollectSpreadRewards,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedFees.String()),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedSpreadRewards.String()),
 		),
 	})
 
-	return &types.MsgCollectFeesResponse{CollectedFees: totalCollectedFees}, nil
+	return &types.MsgCollectSpreadRewardsResponse{CollectedSpreadRewards: totalCollectedSpreadRewards}, nil
 }
 
 // CollectIncentives collects incentives for all positions in given range that belong to sender
@@ -199,30 +199,4 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 	})
 
 	return &types.MsgCollectIncentivesResponse{CollectedIncentives: totalCollectedIncentives, ForfeitedIncentives: totalForefeitedIncentives}, nil
-}
-
-func (server msgServer) FungifyChargedPositions(goCtx context.Context, msg *types.MsgFungifyChargedPositions) (*types.MsgFungifyChargedPositionsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return nil, err
-	}
-
-	newPositionId, err := server.keeper.fungifyChargedPosition(ctx, sender, msg.PositionIds)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-	})
-
-	return &types.MsgFungifyChargedPositionsResponse{
-		NewPositionId: newPositionId,
-	}, nil
 }

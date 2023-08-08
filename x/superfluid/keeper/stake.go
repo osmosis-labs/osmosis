@@ -6,8 +6,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -364,14 +364,6 @@ func (k Keeper) partialSuperfluidUndelegate(ctx sdk.Context, sender string, lock
 	return k.createSyntheticLockup(ctx, newLock.ID, intermediaryAcc, unlockingStatus)
 }
 
-// partialSuperfluidUndelegateToConcentratedPosition starts undelegating a portion of a superfluid delegated position for the given lock. It behaves similarly to partialSuperfluidUndelegate,
-// however it does not create a new synthetic lockup representing the unstaking side. This is because after the time this function is called, we might
-// want to perform more operations prior to creating a lock. Once the actual lock is created, the synthetic lockup representing the unstaking side
-// should eventually be created as well. Use this function with caution to avoid accidentally missing synthetic lock creation.
-func (k Keeper) partialSuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64, amountToUndelegate sdk.Coin) (types.SuperfluidIntermediaryAccount, *lockuptypes.PeriodLock, error) {
-	return k.partialUndelegateCommon(ctx, sender, gammLockID, amountToUndelegate)
-}
-
 // SuperfluidUnbondLock unbonds the lock that has been used for superfluid staking.
 // This method would return an error if the underlying lock is not superfluid undelegating.
 func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, sender string) error {
@@ -469,10 +461,11 @@ func (k Keeper) unbondLock(ctx sdk.Context, underlyingLockId uint64, sender stri
 	if err != nil {
 		return 0, err
 	}
-	synthLock, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, underlyingLockId)
+	synthLock, _, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, underlyingLockId)
 	if err != nil {
 		return 0, err
 	}
+	// TODO: Use !found
 	if synthLock == (lockuptypes.SyntheticLock{}) {
 		return 0, types.ErrNotSuperfluidUsedLockup
 	}
@@ -496,10 +489,11 @@ func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
 		return true
 	}
 
-	synthLock, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
+	synthLock, _, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
 	if err != nil {
 		return false
 	}
+	// TODO: return found
 	return synthLock != (lockuptypes.SyntheticLock{})
 }
 

@@ -3,8 +3,8 @@ package keeper
 import (
 	"github.com/gogo/protobuf/proto"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,7 +78,7 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 		// move this synthetic denom creation to a dedicated function
 		Denom:    stakingSyntheticDenom(denom, valAddr),
 		Duration: k.sk.GetParams(ctx).UnbondingTime,
-	}, ctx.BlockTime(), 1)
+	}, ctx.BlockTime(), 1, 0)
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())
 		return types.SuperfluidIntermediaryAccount{}, err

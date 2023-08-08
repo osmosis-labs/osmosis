@@ -4,7 +4,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
 )
 
 // InitGenesis initializes the x/gamm module's state from a provided genesis
@@ -36,9 +37,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 	k.setTotalLiquidity(ctx, liquidity)
 
 	if genState.MigrationRecords == nil {
-		k.OverwriteMigrationRecords(ctx, types.MigrationRecords{})
+		k.SetMigrationRecords(ctx, gammmigration.MigrationRecords{})
 	} else {
-		k.OverwriteMigrationRecords(ctx, *genState.MigrationRecords)
+		k.SetMigrationRecords(ctx, *genState.MigrationRecords)
 	}
 }
 

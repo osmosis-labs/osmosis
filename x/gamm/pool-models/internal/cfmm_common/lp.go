@@ -8,7 +8,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 )
 
 const errMsgFormatSharesLargerThanMax = "cannot exit all shares in a pool. Attempted to exit %s shares, max allowed is %s"
@@ -25,7 +25,7 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares sdk.Int, 
 	var refundedShares sdk.Dec
 	if !exitFee.IsZero() {
 		// exitingShares * (1 - exit fee)
-		oneSubExitFee := sdk.OneDec().SubMut(exitFee)
+		oneSubExitFee := sdk.OneDec().Sub(exitFee)
 		refundedShares = oneSubExitFee.MulIntMut(exitingShares)
 	} else {
 		refundedShares = exitingShares.ToDec()

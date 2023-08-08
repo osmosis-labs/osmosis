@@ -39,7 +39,10 @@ pub fn derive_wasmhooks_sender(
 
     let result = hasher.finalize();
 
+    // The bech32 crate requires a Vec<u5> as input, so we need to convert the bytes.
     let result_u5 = bech32::convert_bits(result.as_slice(), 8, 5, true)?;
+    // result_u5 contains the bytes as a u5 but in an u8 type, so we need to explicitly
+    // do the type conversion
     let result_u5: Vec<bech32::u5> = result_u5
         .iter()
         .filter_map(|&x| bech32::u5::try_from_u8(x).ok())

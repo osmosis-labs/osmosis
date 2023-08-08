@@ -6,9 +6,9 @@ const (
 	// if not skipping upgrade, how many blocks we allow for fork to run pre upgrade state creation
 	ForkHeightPreUpgradeOffset int64 = 60
 	// estimated number of blocks it takes to submit for a proposal
-	PropSubmitBlocks float32 = 10
+	PropSubmitBlocks float32 = 1
 	// estimated number of blocks it takes to deposit for a proposal
-	PropDepositBlocks float32 = 10
+	PropDepositBlocks float32 = 1
 	// number of blocks it takes to vote for a single validator to vote for a proposal
 	PropVoteBlocks float32 = 1.2
 	// number of blocks used as a calculation buffer
@@ -33,15 +33,15 @@ var (
 	DaiOsmoPoolIdv16 uint64
 	// A pool created via CLI before starting an
 	// upgrade.
-	PreUpgradePoolId uint64
+	PreUpgradePoolId = []uint64{}
 
-	PreUpgradeStableSwapPoolId uint64
+	PreUpgradeStableSwapPoolId = []uint64{}
 
-	StrideMigrateWallet = "stride-migration"
+	StrideMigrateWallet = []string{"stride-migration", "stride-migration"}
 
-	LockupWallet = "lockup-wallet"
+	LockupWallet = []string{"lockup-wallet", "lockup-wallet"}
 
-	LockupWalletSuperfluid = "lockup-wallet-superfluid"
+	LockupWalletSuperfluid = []string{"lockup-wallet-superfluid", "lockup-wallet-superfluid"}
 
-	StableswapWallet = "stableswap-wallet"
+	StableswapWallet = []string{"stableswap-wallet", "stableswap-wallet"}
 )

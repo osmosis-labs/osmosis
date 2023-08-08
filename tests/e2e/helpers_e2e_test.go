@@ -1,36 +1,43 @@
 package e2e
 
 import (
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 )
 
 var defaultFeePerTx = sdk.NewInt(1000)
 
-// calculateFeeGrowthGlobal calculates fee growth global per unit of virtual liquidity based on swap parameters:
+// calculateSpreadRewardGrowthGlobal calculates spread reward growth global per unit of virtual liquidity based on swap parameters:
 // amountIn - amount being swapped
 // spreadFactor - pool's spread factor
 // poolLiquidity - current pool liquidity
-func calculateFeeGrowthGlobal(amountIn, spreadFactor, poolLiquidity sdk.Dec) sdk.Dec {
-	// First we get total fee charge for the swap (ΔY * spreadFactor)
-	feeChargeTotal := amountIn.Mul(spreadFactor)
+func calculateSpreadRewardGrowthGlobal(amountIn, spreadFactor, poolLiquidity sdk.Dec) sdk.Dec {
+	// First we get total spread reward charge for the swap (ΔY * spreadFactor)
+	spreadRewardChargeTotal := amountIn.Mul(spreadFactor)
 
-	// Calculating fee growth global (dividing by pool liquidity to find fee growth per unit of virtual liquidity)
-	feeGrowthGlobal := feeChargeTotal.Quo(poolLiquidity)
-	return feeGrowthGlobal
+	// Calculating spread reward growth global (dividing by pool liquidity to find spread reward growth per unit of virtual liquidity)
+	spreadRewardGrowthGlobal := spreadRewardChargeTotal.Quo(poolLiquidity)
+	return spreadRewardGrowthGlobal
 }
 
-// calculateFeeGrowthInside calculates fee growth inside range per unit of virtual liquidity
-// feeGrowthGlobal - global fee growth per unit of virtual liquidity
-// feeGrowthBelow - fee growth below lower tick
-// feeGrowthAbove - fee growth above upper tick
-// Formula: feeGrowthGlobal - feeGrowthBelowLowerTick - feeGrowthAboveUpperTick
-func calculateFeeGrowthInside(feeGrowthGlobal, feeGrowthBelow, feeGrowthAbove sdk.Dec) sdk.Dec {
-	return feeGrowthGlobal.Sub(feeGrowthBelow).Sub(feeGrowthAbove)
+// calculateSpreadRewardGrowthInside calculates spread reward growth inside range per unit of virtual liquidity
+// spreadRewardGrowthGlobal - global spread reward growth per unit of virtual liquidity
+// spreadRewardGrowthBelow - spread reward growth below lower tick
+// spreadRewardGrowthAbove - spread reward growth above upper tick
+// Formula: spreadRewardGrowthGlobal - spreadRewardGrowthBelowLowerTick - spreadRewardGrowthAboveUpperTick
+func calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGrowthBelow, spreadRewardGrowthAbove sdk.Dec) sdk.Dec {
+	return spreadRewardGrowthGlobal.Sub(spreadRewardGrowthBelow).Sub(spreadRewardGrowthAbove)
 }
 
 // Assert balances that are not affected by swap:
@@ -55,22 +62,58 @@ func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address strin
 	return addrBalances
 }
 
-// Helper function for calculating uncollected fees since the time that feeGrowthInsideLast corresponds to
+var currentNodeIndexA int
+
+func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig, error) {
+	chainA := s.configurer.GetChainConfig(0)
+
+	chainANodes := chainA.GetAllChainNodes()
+
+	chosenNode := chainANodes[currentNodeIndexA]
+	currentNodeIndexA = (currentNodeIndexA + 1) % len(chainANodes)
+	return chainA, chosenNode, nil
+}
+
+var currentNodeIndexB int
+
+func (s *IntegrationTestSuite) getChainBCfgs() (*chain.Config, *chain.NodeConfig, error) {
+	chainB := s.configurer.GetChainConfig(1)
+
+	chainBNodes := chainB.GetAllChainNodes()
+
+	chosenNode := chainBNodes[currentNodeIndexB]
+	currentNodeIndexB = (currentNodeIndexB + 1) % len(chainBNodes)
+	return chainB, chosenNode, nil
+}
+
+var useChainA bool
+
+func (s *IntegrationTestSuite) getChainCfgs() (*chain.Config, *chain.NodeConfig, error) {
+	if useChainA {
+		useChainA = false
+		return s.getChainACfgs()
+	} else {
+		useChainA = true
+		return s.getChainBCfgs()
+	}
+}
+
+// Helper function for calculating uncollected spread rewards since the time that spreadRewardGrowthInsideLast corresponds to
 // positionLiquidity - current position liquidity
-// feeGrowthBelow - fee growth below lower tick
-// feeGrowthAbove - fee growth above upper tick
-// feeGrowthInsideLast - amount of fee growth inside range at the time from which we want to calculate the amount of uncollected fees
-// feeGrowthGlobal - variable for tracking global fee growth
-func calculateUncollectedFees(positionLiquidity, feeGrowthBelow, feeGrowthAbove, feeGrowthInsideLast sdk.Dec, feeGrowthGlobal sdk.Dec) sdk.Dec {
-	// Calculating fee growth inside range [-1200; 400]
-	feeGrowthInside := calculateFeeGrowthInside(feeGrowthGlobal, feeGrowthBelow, feeGrowthAbove)
+// spreadRewardGrowthBelow - spread reward growth below lower tick
+// spreadRewardGrowthAbove - spread reward growth above upper tick
+// spreadRewardGrowthInsideLast - amount of spread reward growth inside range at the time from which we want to calculate the amount of uncollected spread rewards
+// spreadRewardGrowthGlobal - variable for tracking global spread reward growth
+func calculateUncollectedSpreadRewards(positionLiquidity, spreadRewardGrowthBelow, spreadRewardGrowthAbove, spreadRewardGrowthInsideLast sdk.Dec, spreadRewardGrowthGlobal sdk.Dec) sdk.Dec {
+	// Calculating spread reward growth inside range [-1200; 400]
+	spreadRewardGrowthInside := calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGrowthBelow, spreadRewardGrowthAbove)
 
-	// Calculating uncollected fees
-	// Formula for finding uncollected fees in time range [t1; t2]:
-	// F_u = position_liquidity * (fee_growth_inside_t2 - fee_growth_inside_t1).
-	feesUncollected := positionLiquidity.Mul(feeGrowthInside.Sub(feeGrowthInsideLast))
+	// Calculating uncollected spread rewards
+	// Formula for finding uncollected spread rewards in time range [t1; t2]:
+	// F_u = position_liquidity * (spread_rewards_growth_inside_t2 - spread_rewards_growth_inside_t1).
+	spreadRewardsUncollected := positionLiquidity.Mul(spreadRewardGrowthInside.Sub(spreadRewardGrowthInsideLast))
 
-	return feesUncollected
+	return spreadRewardsUncollected
 }
 
 // Get current (updated) pool
@@ -91,4 +134,66 @@ func (s *IntegrationTestSuite) validateCLPosition(position model.Position, poolI
 	s.Require().Equal(position.PoolId, poolId)
 	s.Require().Equal(position.LowerTick, lowerTick)
 	s.Require().Equal(position.UpperTick, upperTick)
+}
+
+func (s *IntegrationTestSuite) CallCheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.CheckBalance(node, addr, denom, amount)
+}
+
+// CheckBalance Checks the balance of an address
+func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
+	// check the balance of the contract
+	s.Require().Eventually(func() bool {
+		// TODO: Change to QueryBalance(addr, denom)
+		balance, err := node.QueryBalances(addr)
+		s.Require().NoError(err)
+		if len(balance) == 0 {
+			return false
+		}
+		// check that the amount is in one of the balances inside the balance list
+		for _, b := range balance {
+			if b.Denom == denom && b.Amount.Int64() == amount {
+				return true
+			}
+		}
+		return false
+	},
+		1*time.Minute,
+		10*time.Millisecond,
+	)
+}
+
+func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) string {
+	// copy the contract from tests/ibc-hooks/bytecode
+	wd, err := os.Getwd()
+	s.NoError(err)
+	// co up two levels
+	projectDir := filepath.Dir(filepath.Dir(wd))
+	_, err = util.CopyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
+	s.NoError(err)
+	node, err := s.configurer.GetChainConfig(0).GetNodeAtIndex(0)
+	s.NoError(err)
+
+	codeId := node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
+	chain.LatestCodeId++
+	node.InstantiateWasmContract(
+		strconv.Itoa(codeId),
+		`{"count": 0}`,
+		initialization.ValidatorWalletName)
+
+	contracts, err := node.QueryContractsFromId(codeId)
+	s.NoError(err)
+	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
+	contractAddr := contracts[0]
+	return contractAddr
+}
+
+func (s *IntegrationTestSuite) getChainIndex(chain *chain.Config) int {
+	if chain.Id == "osmo-test-a" {
+		return 0
+	} else {
+		return 1
+	}
 }

@@ -13,20 +13,20 @@ pub enum ContractError {
     #[error("{0}")]
     Payment(#[from] cw_utils::PaymentError),
 
-    #[error("Unauthorized")]
+    #[error("unauthorized")]
     Unauthorized {},
 
-    #[error("Chain validation not started for {chain}")]
+    #[error("chain validation not started for {chain}")]
     ValidationNotFound { chain: String },
 
     #[error("coin from invalid chain. It belongs to {supplied_chain} and should be from {expected_chain}")]
-    CoinFronInvalidChain {
+    CoinFromInvalidChain {
         supplied_chain: String,
         expected_chain: String,
     },
 
     #[error(
-        "Only messages initialized by the address of this contract in another chain are allowed. Expected {expected_sender} but got {actual_sender}"
+        "only messages initialized by the address of this contract in another chain are allowed. Expected {expected_sender} but got {actual_sender}"
     )]
     InvalidSender {
         expected_sender: String,

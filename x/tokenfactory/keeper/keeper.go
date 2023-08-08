@@ -8,9 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -20,8 +19,10 @@ type (
 
 		paramSpace paramtypes.Subspace
 
-		accountKeeper       types.AccountKeeper
-		bankKeeper          types.BankKeeper
+		accountKeeper  types.AccountKeeper
+		bankKeeper     types.BankKeeper
+		contractKeeper types.ContractKeeper
+
 		communityPoolKeeper types.CommunityPoolKeeper
 	}
 )
@@ -71,11 +72,15 @@ func (k Keeper) GetCreatorsPrefixStore(ctx sdk.Context) sdk.KVStore {
 	return prefix.NewStore(store, types.GetCreatorsPrefix())
 }
 
+// Set the wasm keeper.
+func (k *Keeper) SetContractKeeper(contractKeeper types.ContractKeeper) {
+	k.contractKeeper = contractKeeper
+}
+
 // CreateModuleAccount creates a module account with minting and burning capabilities
 // This account isn't intended to store any coins,
 // it purely mints and burns them on behalf of the admin of respective denoms,
 // and sends to the relevant address.
 func (k Keeper) CreateModuleAccount(ctx sdk.Context) {
-	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter, authtypes.Burner)
-	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
+	k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 }

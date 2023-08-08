@@ -12,4 +12,5 @@ var (
 	ErrSyntheticLockupAlreadyExists      = errorsmod.Register(ModuleName, 2, "synthetic lockup already exists for same lock")
 	ErrSyntheticDurationLongerThanNative = errorsmod.Register(ModuleName, 3, "synthetic lockup duration should be shorter than native lockup duration")
 	ErrLockupNotFound                    = errorsmod.Register(ModuleName, 4, "lockup not found")
+	ErrRewardReceiverIsSame              = errorsmod.Register(ModuleName, 5, "reward receiver is the same")
 )

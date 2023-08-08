@@ -1,0 +1,33 @@
+# This workflow creates a release using goreleaser
+# via the 'make release' command.
+
+name: Create release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'The desired tag for the release (e.g. v0.1.0).'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create release
+    runs-on: self-hosted
+    steps:
+      -
+        name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.release_tag }}
+      - 
+        name: Make release
+        run: |
+          sudo rm -rf dist
+          make release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

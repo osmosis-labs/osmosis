@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -16,8 +18,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
-	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
+	txfeestypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
 )
 
 const (
@@ -48,6 +50,7 @@ type Manager struct {
 	pool              *dockertest.Pool
 	network           *dockertest.Network
 	resources         map[string]*dockertest.Resource
+	resourcesMutex    sync.RWMutex
 	isDebugLogEnabled bool
 }
 
@@ -120,7 +123,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 		errBuf bytes.Buffer
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	if m.isDebugLogEnabled {
@@ -128,11 +131,17 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 	}
 	maxDebugLogTriesLeft := maxDebugLogsPerCommand
 
+	expectedSequence := 0
+	var sequenceMismatchRegex = regexp.MustCompile(`account sequence mismatch, expected (\d+),`)
+
 	// We use the `require.Eventually` function because it is only allowed to do one transaction per block without
 	// sequence numbers. For simplicity, we avoid keeping track of the sequence number and just use the `require.Eventually`.
 	require.Eventually(
 		t,
 		func() bool {
+			outBuf.Reset()
+			errBuf.Reset()
+
 			exec, err := m.pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
@@ -154,6 +163,39 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			}
 
 			errBufString := errBuf.String()
+			// When a validator attempts to send multiple transactions in the same block, the expected sequence number
+			// will be thrown off, causing the transaction to fail. It will eventually clear, but what the following code
+			// does is it takes the expected sequence number from the error message, adds a sequence number flag with that
+			// number, and retries the transaction. This allows for multiple txs from the same validator to be committed in the same block.
+			if (errBufString != "" || outBuf.String() != "") && containerName != hermesContainerName {
+				// Check if the error message matches the expected pattern
+				errBufMatches := sequenceMismatchRegex.FindAllStringSubmatch(errBufString, -1)
+				outBufMatches := sequenceMismatchRegex.FindAllStringSubmatch(outBuf.String(), -1)
+				if len(errBufMatches) > 0 {
+					lastArg := command[len(command)-1]
+					if strings.Contains(lastArg, "--sequence") {
+						// Remove the last argument from the command
+						command = command[:len(command)-1]
+					}
+					expectedSequenceStr := errBufMatches[len(errBufMatches)-1][1]
+					expectedSequence, _ = strconv.Atoi(expectedSequenceStr)
+					modifiedCommand := append(command, fmt.Sprintf("--sequence=%d", expectedSequence))
+					// Update the command for the next iteration
+					command = modifiedCommand
+				} else if len(outBufMatches) > 0 {
+					lastArg := command[len(command)-1]
+					if strings.Contains(lastArg, "--sequence") {
+						// Remove the last argument from the command
+						command = command[:len(command)-1]
+					}
+					expectedSequenceStr := outBufMatches[len(outBufMatches)-1][1]
+					expectedSequence, _ = strconv.Atoi(expectedSequenceStr)
+					modifiedCommand := append(command, fmt.Sprintf("--sequence=%d", expectedSequence))
+					// Update the command for the next iteration
+					command = modifiedCommand
+				}
+			}
+
 			// Note that this does not match all errors.
 			// This only works if CLI outpurs "Error" or "error"
 			// to stderr.
@@ -178,7 +220,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			return true
 		},
 		time.Minute,
-		50*time.Millisecond,
+		10*time.Millisecond,
 		fmt.Sprintf("success condition (%s) was not met.\nstdout:\n %s\nstderr:\n %s\n",
 			success, outBuf.String(), errBuf.String()),
 	)
@@ -257,7 +299,9 @@ func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir st
 		return nil, err
 	}
 
+	m.resourcesMutex.Lock()
 	m.resources[containerName] = resource
+	m.resourcesMutex.Unlock()
 
 	return resource, nil
 }

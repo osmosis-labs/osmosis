@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/client/queryproto"
 )
 
 type Querier struct {
@@ -28,6 +28,16 @@ func (q Querier) TotalPoolLiquidity(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.TotalPoolLiquidity(ctx, *req)
+}
+
+func (q Querier) TotalLiquidity(grpcCtx context.Context,
+	req *queryproto.TotalLiquidityRequest,
+) (*queryproto.TotalLiquidityResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.TotalLiquidity(ctx, *req)
 }
 
 func (q Querier) SpotPrice(grpcCtx context.Context,
@@ -70,6 +80,16 @@ func (q Querier) NumPools(grpcCtx context.Context,
 	return q.Q.NumPools(ctx, *req)
 }
 
+func (q Querier) EstimateSwapExactAmountOutWithPrimitiveTypes(grpcCtx context.Context,
+	req *queryproto.EstimateSwapExactAmountOutWithPrimitiveTypesRequest,
+) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.EstimateSwapExactAmountOutWithPrimitiveTypes(ctx, *req)
+}
+
 func (q Querier) EstimateSwapExactAmountOut(grpcCtx context.Context,
 	req *queryproto.EstimateSwapExactAmountOutRequest,
 ) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
@@ -78,6 +98,16 @@ func (q Querier) EstimateSwapExactAmountOut(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.EstimateSwapExactAmountOut(ctx, *req)
+}
+
+func (q Querier) EstimateSwapExactAmountInWithPrimitiveTypes(grpcCtx context.Context,
+	req *queryproto.EstimateSwapExactAmountInWithPrimitiveTypesRequest,
+) (*queryproto.EstimateSwapExactAmountInResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.EstimateSwapExactAmountInWithPrimitiveTypes(ctx, *req)
 }
 
 func (q Querier) EstimateSwapExactAmountIn(grpcCtx context.Context,

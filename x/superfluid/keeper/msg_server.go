@@ -8,11 +8,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 )
 
 type msgServer struct {
@@ -172,7 +172,7 @@ func (server msgServer) CreateFullRangePositionAndSuperfluidDelegate(goCtx conte
 	if err != nil {
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}
-	positionId, _, _, _, _, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, server.keeper.sk.GetParams(ctx).UnbondingTime)
+	positionId, _, _, _, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, server.keeper.sk.GetParams(ctx).UnbondingTime)
 	if err != nil {
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}
@@ -205,7 +205,7 @@ func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(go
 		return nil, err
 	}
 
-	positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, clLockId, err := server.keeper.RouteLockedBalancerToConcentratedMigration(ctx, sender, msg.LockId, msg.SharesToMigrate, msg.TokenOutMins)
+	positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, clLockId, err := server.keeper.RouteLockedBalancerToConcentratedMigration(ctx, sender, msg.LockId, msg.SharesToMigrate, msg.TokenOutMins)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,6 @@ func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(go
 			sdk.NewAttribute(types.AttributeAmount0, amount0.String()),
 			sdk.NewAttribute(types.AttributeAmount1, amount1.String()),
 			sdk.NewAttribute(types.AttributeLiquidity, liquidity.String()),
-			sdk.NewAttribute(types.AttributeJoinTime, joinTime.String()),
 		),
 	})
 

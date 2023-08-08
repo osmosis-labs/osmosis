@@ -4,6 +4,7 @@
 # changed, because generated code can change in response to toolchain updates
 # even if no files in the repository are modified.
 name: Check generated code
+
 on:
   workflow_dispatch:
   pull_request:
@@ -13,19 +14,35 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   check-proto:
     runs-on: ubuntu-latest
     steps:
       - 
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1  # we need a .git directory to run git diff
+      -
+        name: Get git diff
+        uses: technote-space/get-diff-action@v6.1.2
+        with:
+          PATTERNS: |
+            proto/**
+            **/**.pb.go
+            **/client/**.go
+            scripts/ci/**
+            Makefile
+            Dockerfile
+            .github/workflows/check-generated.yml
+      - 
         name: 🐿 Setup Golang
         uses: actions/setup-go@v4
         with:
           go-version: '^1.20'
-      - 
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 1  # we need a .git directory to run git diff
       -
         name: "Check protobuf generated code"
         run: scripts/ci/check-generated.sh

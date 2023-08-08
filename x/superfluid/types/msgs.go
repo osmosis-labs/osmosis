@@ -268,7 +268,7 @@ func (msg MsgUnPoolWhitelistedPool) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}
 
-func NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
+func NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender sdk.AccAddress, lockId int64, sharesToMigrate sdk.Coin) *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
 	return &MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{
 		Sender:          sender.String(),
 		LockId:          lockId,
@@ -285,9 +285,6 @@ func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) ValidateBasi
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
-	}
-	if msg.LockId <= 0 {
-		return fmt.Errorf("Invalid lock ID (%d)", msg.LockId)
 	}
 	if msg.SharesToMigrate.IsNegative() {
 		return fmt.Errorf("Invalid shares to migrate (%s)", msg.SharesToMigrate)

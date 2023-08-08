@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -135,7 +135,7 @@ func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 	coinsToSlash := sdk.NewCoins(asset0, asset1)
 
 	// Update the cl positions liquidity to the new amount
-	_, _, err = k.clk.UpdatePosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, slashAmtNeg, position.JoinTime, position.PositionId)
+	_, _, _, _, err = k.clk.UpdatePosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, slashAmtNeg, position.JoinTime, position.PositionId)
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}
