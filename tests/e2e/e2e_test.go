@@ -3,7 +3,6 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -11,6 +10,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
@@ -34,6 +35,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
 	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
 var (
@@ -323,6 +325,10 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Change the parameter to enable permisionless pool creation.
 	err = chainABNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainAB)
+	s.Require().NoError(err)
+
+	// Change the parameter to disable protorev
+	err = chainABNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyEnableModule), []byte("false"), chainAB)
 	s.Require().NoError(err)
 
 	// Confirm that the parameter has been changed.
