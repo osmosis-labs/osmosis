@@ -675,7 +675,7 @@ func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, va
 		return sdk.ZeroInt(), err
 	}
 
-	// use routeMigration method to check status of lock(either superfluid staked, superfluid unbonding, vanialla locked, unlocked)
+	// use routeMigration method to check status of lock (either superfluid staked, superfluid unbonding, vanilla locked, unlocked)
 	_, migrationType, err := k.routeMigration(ctx, senderAddr, int64(lockID))
 	if err != nil {
 		return sdk.ZeroInt(), err
