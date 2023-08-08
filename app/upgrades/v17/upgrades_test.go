@@ -231,9 +231,10 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().NoError(err)
 
 				suite.Require().NotEmpty(clPool1TwapRecordPostUpgrade, "Most recent TWAP records should not be empty after upgrade.")
-				suite.Require().NotEmpty(clPool1TwapRecordHistoricalPoolIndexPostUpgrade, "Historical Pool Index TWAP record should not be empty after upgrade")
+				suite.Require().NotEmpty(clPool1TwapRecordHistoricalPoolIndexPostUpgrade, "Historical Pool Index TWAP record should not be empty after upgrade.")
 				suite.Require().NotEmpty(clPool2TwapRecordPostUpgrade, "Most recent TWAP records should not be empty after upgrade.")
-				suite.Require().NotEmpty(clPool2TwapRecordHistoricalPoolIndexPostUpgrade, "Historical Pool Index TWAP record should not be empty after upgrade")
+				suite.Require().NotEmpty(clPool2TwapRecordHistoricalPoolIndexPostUpgrade, "Historical Pool Index TWAP record should not be empty after upgrade.")
+				suite.Require().NotEmpty(clPoolsTwapRecordHistoricalTimeIndexPostUpgrade, "Historical Time Index TWAP record should not be empty after upgrade.")
 
 				for i := range clPool1TwapRecordPostUpgrade {
 					suite.Require().Equal(clPool1TwapRecordPreUpgrade[i].Asset0Denom, clPool1TwapRecordPostUpgrade[i].Asset1Denom)
