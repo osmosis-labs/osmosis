@@ -247,8 +247,8 @@ message MsgUnbondConvertAndStake {
   uint64 lock_id = 1 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   // validator address to delegate to.
-  // If provided empty string, we use the validators returned from valset-preference
-  // module.
+  // If provided empty string, we use the validators returned from
+  // valset-preference module.
   string val_addr = 3;
   // min_amt_to_stake indicates the minimum amount to stake after conversion
   string min_amt_to_stake = 4 [

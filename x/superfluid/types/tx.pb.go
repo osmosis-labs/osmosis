@@ -1028,8 +1028,8 @@ type MsgUnbondConvertAndStake struct {
 	LockId uint64 `protobuf:"varint,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty" yaml:"lock_id"`
 	Sender string `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	// validator address to delegate to.
-	// If provided empty string, we use validator returned from valset-preference
-	// module.
+	// If provided empty string, we use the validators returned from
+	// valset-preference module.
 	ValAddr string `protobuf:"bytes,3,opt,name=val_addr,json=valAddr,proto3" json:"val_addr,omitempty"`
 	// min_amt_to_stake indicates the minimum amount to stake after conversion
 	MinAmtToStake github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=min_amt_to_stake,json=minAmtToStake,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"min_amt_to_stake" yaml:"min_amt_to_stake"`

@@ -1034,11 +1034,11 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 	defaultJoinTime := s.Ctx.BlockTime()
 	type tc struct {
+		notSuperfluidDelegated bool
 		superfluidUndelegating bool
 		unlocking              bool
 		unlocked               bool
-
-		expectedError bool
+		expectedError          bool
 	}
 	testCases := map[string]tc{
 		"lock that is superfluid delegated": {},
@@ -1046,13 +1046,17 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			unlocking:              true,
 			superfluidUndelegating: true,
 		},
+		"bonded lock, not superfluid delegated": {
+			notSuperfluidDelegated: true,
+		},
 		"lock that is unlocking": {
 			unlocking:              true,
-			superfluidUndelegating: false,
+			superfluidUndelegating: true,
 		},
-		"unlocked gamm shares": {
-			unlocking:              true,
-			superfluidUndelegating: false,
+		"error: unlocked gamm shares": {
+			notSuperfluidDelegated: true,
+			unlocked:               true,
+			expectedError:          true,
 		},
 	}
 
@@ -1061,10 +1065,10 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
-			_, _, lock, _, _, _, _, originalValAddr := s.SetupUnbondConvertAndStakeTest(s.Ctx, true, tc.superfluidUndelegating, false, false)
+			_, _, lock, _, joinPoolAcc, _, _, originalValAddr := s.SetupUnbondConvertAndStakeTest(s.Ctx, !tc.notSuperfluidDelegated, tc.superfluidUndelegating, tc.unlocking, tc.unlocked)
 
 			// testing params
-			sender := sdk.MustAccAddressFromBech32(lock.Owner)
+			sender := sdk.MustAccAddressFromBech32(joinPoolAcc.String())
 			valAddr := s.SetupValidator(stakingtypes.Bonded)
 			minAmountToStake := sdk.ZeroInt()
 
@@ -1079,7 +1083,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			s.Require().NoError(err)
 
 			// Staking & Delegation check
-			// check if old delegation is succesfully deleted
+			// check if original superfluid staked lock's delgation is successfully deleted
 			_, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, originalValAddr)
 			s.Require().False(found)
 			// check if delegation amount matches
@@ -1114,6 +1118,7 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 	type tc struct {
 		superfluidUndelegating bool
 		unlocking              bool
+		notSuperfluidDelegated bool
 
 		useMinAmountToStake    bool
 		senderIsNotOwnerOfLock bool
@@ -1130,6 +1135,9 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 		"lock that is unlocking": {
 			unlocking:              true,
 			superfluidUndelegating: false,
+		},
+		"bonded lock, not superfluid delegated": {
+			notSuperfluidDelegated: true,
 		},
 		// error cases
 		"error: min amount to stake greater than actual amount": {
@@ -1151,7 +1159,7 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
-			_, _, lock, _, _, _, _, originalValAddr := s.SetupUnbondConvertAndStakeTest(s.Ctx, true, tc.superfluidUndelegating, false, false)
+			_, _, lock, _, _, _, _, originalValAddr := s.SetupUnbondConvertAndStakeTest(s.Ctx, !tc.notSuperfluidDelegated, tc.superfluidUndelegating, false, false)
 
 			// testing params
 			sender := sdk.MustAccAddressFromBech32(lock.Owner)
@@ -1219,7 +1227,7 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 		expectedError bool
 	}
 	testCases := map[string]tc{
-		"happy case": {},
+		"superfluid staked": {},
 		"use val set preference (single validator)": {
 			useValSetPrefSingleVal: true,
 		},
