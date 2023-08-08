@@ -151,12 +151,12 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					sdk.OneDec().MulInt64(3),
 					sdk.ZeroDec())
 
-				t2 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(30),
+				t2 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*10), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(30),
 					sdk.OneDec().MulInt64(10*10+10),
 					sdk.OneDec().MulInt64(5),
 					sdk.ZeroDec())
 
-				t3 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(20),
+				t3 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(20),
 					sdk.OneDec().MulInt64(10*10+10*5),
 					sdk.OneDec().MulInt64(10),
 					sdk.ZeroDec())
@@ -166,7 +166,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					sdk.OneDec().MulInt64(5),
 					sdk.ZeroDec())
 
-				t5 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour*24), "akash", "uosmo", sdk.NewDec(20),
+				t5 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour), "akash", "uosmo", sdk.NewDec(20),
 					sdk.OneDec().MulInt64(10),
 					sdk.OneDec().MulInt64(2),
 					sdk.ZeroDec())
@@ -238,27 +238,37 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				for i := range clPool1TwapRecordPostUpgrade {
 					suite.Require().Equal(clPool1TwapRecordPreUpgrade[i].Asset0Denom, clPool1TwapRecordPostUpgrade[i].Asset1Denom)
 					suite.Require().Equal(clPool1TwapRecordPreUpgrade[i].Asset1Denom, clPool1TwapRecordPostUpgrade[i].Asset0Denom)
+					suite.Require().Equal(clPool1TwapRecordPreUpgrade[i].P0LastSpotPrice, clPool1TwapRecordPostUpgrade[i].P1LastSpotPrice)
+					suite.Require().Equal(clPool1TwapRecordPreUpgrade[i].P1LastSpotPrice, clPool1TwapRecordPostUpgrade[i].P0LastSpotPrice)
 				}
 
 				for i := range clPool1TwapRecordHistoricalPoolIndexPostUpgrade {
 					suite.Require().Equal(clPool1TwapRecordHistoricalPoolIndexPreUpgrade[i].Asset0Denom, clPool1TwapRecordHistoricalPoolIndexPostUpgrade[i].Asset1Denom)
 					suite.Require().Equal(clPool1TwapRecordHistoricalPoolIndexPreUpgrade[i].Asset1Denom, clPool1TwapRecordHistoricalPoolIndexPostUpgrade[i].Asset0Denom)
+					suite.Require().Equal(clPool1TwapRecordHistoricalPoolIndexPreUpgrade[i].P0LastSpotPrice, clPool1TwapRecordHistoricalPoolIndexPostUpgrade[i].P1LastSpotPrice)
+					suite.Require().Equal(clPool1TwapRecordHistoricalPoolIndexPreUpgrade[i].P1LastSpotPrice, clPool1TwapRecordHistoricalPoolIndexPostUpgrade[i].P0LastSpotPrice)
 				}
 
 				for i := range clPool2TwapRecordPostUpgrade {
 					suite.Require().Equal(clPool2TwapRecordPreUpgrade[i].Asset0Denom, clPool2TwapRecordPostUpgrade[i].Asset1Denom)
 					suite.Require().Equal(clPool2TwapRecordPreUpgrade[i].Asset1Denom, clPool2TwapRecordPostUpgrade[i].Asset0Denom)
+					suite.Require().Equal(clPool2TwapRecordPreUpgrade[i].P0LastSpotPrice, clPool2TwapRecordPostUpgrade[i].P1LastSpotPrice)
+					suite.Require().Equal(clPool2TwapRecordPreUpgrade[i].P1LastSpotPrice, clPool2TwapRecordPostUpgrade[i].P0LastSpotPrice)
 				}
 
 				for i := range clPool2TwapRecordHistoricalPoolIndexPostUpgrade {
 					suite.Require().Equal(clPool2TwapRecordHistoricalPoolIndexPreUpgrade[i].Asset0Denom, clPool2TwapRecordHistoricalPoolIndexPostUpgrade[i].Asset1Denom)
 					suite.Require().Equal(clPool2TwapRecordHistoricalPoolIndexPreUpgrade[i].Asset1Denom, clPool2TwapRecordHistoricalPoolIndexPostUpgrade[i].Asset0Denom)
+					suite.Require().Equal(clPool2TwapRecordHistoricalPoolIndexPreUpgrade[i].P0LastSpotPrice, clPool2TwapRecordHistoricalPoolIndexPostUpgrade[i].P1LastSpotPrice)
+					suite.Require().Equal(clPool2TwapRecordHistoricalPoolIndexPreUpgrade[i].P1LastSpotPrice, clPool2TwapRecordHistoricalPoolIndexPostUpgrade[i].P0LastSpotPrice)
 				}
 
 				for i := range clPoolsTwapRecordHistoricalTimeIndexPostUpgrade {
 					if (clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].PoolId == lastPoolID) || (clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].PoolId == lastPoolIdMinusOne) {
 						suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i].Asset0Denom, clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].Asset1Denom)
 						suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i].Asset1Denom, clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].Asset0Denom)
+						suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i].P0LastSpotPrice, clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].P1LastSpotPrice)
+						suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i].P1LastSpotPrice, clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].P0LastSpotPrice)
 					}
 				}
 
