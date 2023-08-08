@@ -81,6 +81,8 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230706204954-ccb25ca9f130 // indirect
 )
 
+fail
+
 require (
 	4d63.com/gochecknoglobals v0.2.1 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
