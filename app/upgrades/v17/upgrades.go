@@ -3,8 +3,9 @@ package v17
 import (
 	"errors"
 	"fmt"
-	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 	"time"
+
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -105,9 +106,12 @@ func mainnetUpgradeHandler(ctx sdk.Context, keepers *keepers.AppKeepers, communi
 			return err
 		}
 
-		err = authorizeSuperfluidIfEnabled(ctx, keepers, assetPair.LinkedClassicPool, clPoolDenom)
-		if err != nil {
-			return err
+		if assetPair.Superfluid {
+			ctx.Logger().Info(fmt.Sprintf("gammPoolId %d is superfluid enabled, enabling %s as a superfluid asset", assetPair.LinkedClassicPool, clPoolDenom))
+			err := authorizeSuperfluid(ctx, keepers, clPoolDenom)
+			if err != nil {
+				return err
+			}
 		}
 
 		err = manuallySetTWAPRecords(ctx, keepers, clPoolId)
@@ -144,7 +148,7 @@ func testnetUpgradeHandler(ctx sdk.Context, keepers *keepers.AppKeepers, communi
 			return err
 		}
 
-		err = authorizeSuperfluidIfEnabled(ctx, keepers, gammPoolId, clPoolDenom)
+		err = authorizeSuperfluidIfEnabledTestnet(ctx, keepers, gammPoolId, clPoolDenom)
 		if err != nil {
 			return err
 		}
@@ -223,8 +227,18 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 	return clPoolDenom, clPoolId, nil
 }
 
-// authorizeSuperfluidIfEnabled authorizes superfluid for a CL pool if the balancer pool is superfluid enabled.
-func authorizeSuperfluidIfEnabled(ctx sdk.Context, keepers *keepers.AppKeepers, gammPoolId uint64, clPoolDenom string) (err error) {
+// authorizeSuperfluid authorizes superfluid for the provided CL pool.
+func authorizeSuperfluid(ctx sdk.Context, keepers *keepers.AppKeepers, clPoolDenom string) (err error) {
+	superfluidAsset := superfluidtypes.SuperfluidAsset{
+		Denom:     clPoolDenom,
+		AssetType: superfluidtypes.SuperfluidAssetTypeConcentratedShare,
+	}
+	return keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
+}
+
+// authorizeSuperfluidIfEnabledTestnet authorizes superfluid for a CL pool if the balancer pool is superfluid enabled.
+// Since there is no assetList for testnet, we manually check each pool we are iterating over, so a different method for testnet must be used.
+func authorizeSuperfluidIfEnabledTestnet(ctx sdk.Context, keepers *keepers.AppKeepers, gammPoolId uint64, clPoolDenom string) (err error) {
 	// If pair was previously superfluid enabled, add the cl pool's full range denom as an authorized superfluid asset.
 	poolShareDenom := fmt.Sprintf("gamm/pool/%d", gammPoolId)
 	_, err = keepers.SuperfluidKeeper.GetSuperfluidAsset(ctx, poolShareDenom)
