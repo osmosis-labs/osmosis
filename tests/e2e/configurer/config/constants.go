@@ -33,15 +33,15 @@ var (
 	DaiOsmoPoolIdv16 uint64
 	// A pool created via CLI before starting an
 	// upgrade.
-	PreUpgradePoolId uint64
+	PreUpgradePoolId = []uint64{}
 
-	PreUpgradeStableSwapPoolId uint64
+	PreUpgradeStableSwapPoolId = []uint64{}
 
-	StrideMigrateWallet = "stride-migration"
+	StrideMigrateWallet = []string{"stride-migration", "stride-migration"}
 
-	LockupWallet = "lockup-wallet"
+	LockupWallet = []string{"lockup-wallet", "lockup-wallet"}
 
-	LockupWalletSuperfluid = "lockup-wallet-superfluid"
+	LockupWalletSuperfluid = []string{"lockup-wallet-superfluid", "lockup-wallet-superfluid"}
 
-	StableswapWallet = "stableswap-wallet"
+	StableswapWallet = []string{"stableswap-wallet", "stableswap-wallet"}
 )

@@ -114,10 +114,9 @@ func (m MsgServer) SetMaxPoolPointsPerBlock(c context.Context, msg *types.MsgSet
 	return &types.MsgSetMaxPoolPointsPerBlockResponse{}, nil
 }
 
-// SetPoolWeights sets the weights corresponding to each pool type. This distinction is necessary because the
-// pool types have different execution times. Each weight roughly corresponds to the amount of time (in ms) it takes
-// to simulate and execute a trade.
-func (m MsgServer) SetPoolWeights(c context.Context, msg *types.MsgSetPoolWeights) (*types.MsgSetPoolWeightsResponse, error) {
+// SetInfoByPoolType sets the execution time/gas consumption parameters corresponding to each pool type.
+// This distinction is necessary because the pool types have different execution times / gas consumption.
+func (m MsgServer) SetInfoByPoolType(c context.Context, msg *types.MsgSetInfoByPoolType) (*types.MsgSetInfoByPoolTypeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// Ensure the account has the admin role and can make the tx
@@ -125,9 +124,9 @@ func (m MsgServer) SetPoolWeights(c context.Context, msg *types.MsgSetPoolWeight
 		return nil, err
 	}
 
-	m.k.SetPoolWeights(ctx, msg.PoolWeights)
+	m.k.SetInfoByPoolType(ctx, msg.InfoByPoolType)
 
-	return &types.MsgSetPoolWeightsResponse{}, nil
+	return &types.MsgSetInfoByPoolTypeResponse{}, nil
 }
 
 // SetBaseDenoms sets the base denoms that will be used to generate cyclic arbitrage routes

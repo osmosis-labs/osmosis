@@ -465,23 +465,23 @@ func (s *KeeperTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 	}
 }
 
-// TestMsgSetPoolWeights tests the MsgSetPoolWeights message.
-func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
+// TestMsgSetPoolTypeInfo tests the MsgSetInfoByPoolType message.
+func (s *KeeperTestSuite) TestMsgSetPoolTypeInfo() {
 	cases := []struct {
 		description       string
 		admin             string
-		poolWeights       types.PoolWeights
+		poolInfo          types.InfoByPoolType
 		passValidateBasic bool
 		pass              bool
 	}{
 		{
 			"Invalid message (invalid admin)",
 			"admin",
-			types.PoolWeights{
-				StableWeight:       1,
-				BalancerWeight:     2,
-				ConcentratedWeight: 3,
-				CosmwasmWeight:     4,
+			types.InfoByPoolType{
+				Stable:       types.StablePoolInfo{Weight: 1},
+				Balancer:     types.BalancerPoolInfo{Weight: 1},
+				Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
+				Cosmwasm:     types.CosmwasmPoolInfo{WeightMaps: nil},
 			},
 			false,
 			false,
@@ -489,11 +489,11 @@ func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
 		{
 			"Invalid message (invalid pool weight)",
 			s.adminAccount.String(),
-			types.PoolWeights{
-				StableWeight:       0,
-				BalancerWeight:     2,
-				ConcentratedWeight: 1,
-				CosmwasmWeight:     4,
+			types.InfoByPoolType{
+				Stable:       types.StablePoolInfo{Weight: 0},
+				Balancer:     types.BalancerPoolInfo{Weight: 1},
+				Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
+				Cosmwasm:     types.CosmwasmPoolInfo{WeightMaps: nil},
 			},
 			false,
 			false,
@@ -501,9 +501,10 @@ func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
 		{
 			"Invalid message (unset pool weight)",
 			s.adminAccount.String(),
-			types.PoolWeights{
-				StableWeight:   1,
-				CosmwasmWeight: 4,
+			types.InfoByPoolType{
+				Stable:       types.StablePoolInfo{Weight: 1},
+				Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
+				Cosmwasm:     types.CosmwasmPoolInfo{WeightMaps: nil},
 			},
 			false,
 			false,
@@ -511,11 +512,11 @@ func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
 		{
 			"Invalid message (wrong admin)",
 			apptesting.CreateRandomAccounts(1)[0].String(),
-			types.PoolWeights{
-				StableWeight:       1,
-				BalancerWeight:     2,
-				ConcentratedWeight: 3,
-				CosmwasmWeight:     4,
+			types.InfoByPoolType{
+				Stable:       types.StablePoolInfo{Weight: 1},
+				Balancer:     types.BalancerPoolInfo{Weight: 1},
+				Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
+				Cosmwasm:     types.CosmwasmPoolInfo{WeightMaps: nil},
 			},
 			true,
 			false,
@@ -523,11 +524,11 @@ func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
 		{
 			"Valid message (correct admin)",
 			s.adminAccount.String(),
-			types.PoolWeights{
-				StableWeight:       1,
-				BalancerWeight:     2,
-				ConcentratedWeight: 3,
-				CosmwasmWeight:     4,
+			types.InfoByPoolType{
+				Stable:       types.StablePoolInfo{Weight: 1},
+				Balancer:     types.BalancerPoolInfo{Weight: 1},
+				Concentrated: types.ConcentratedPoolInfo{Weight: 1, MaxTicksCrossed: 1},
+				Cosmwasm:     types.CosmwasmPoolInfo{WeightMaps: nil},
 			},
 			true,
 			true,
@@ -536,7 +537,7 @@ func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
 
 	for _, testCase := range cases {
 		s.Run(testCase.description, func() {
-			msg := types.NewMsgSetPoolWeights(testCase.admin, testCase.poolWeights)
+			msg := types.NewMsgSetPoolTypeInfo(testCase.admin, testCase.poolInfo)
 
 			err := msg.ValidateBasic()
 			if testCase.passValidateBasic {
@@ -548,14 +549,14 @@ func (s *KeeperTestSuite) TestMsgSetPoolWeights() {
 
 			server := keeper.NewMsgServer(*s.App.AppKeepers.ProtoRevKeeper)
 			wrappedCtx := sdk.WrapSDKContext(s.Ctx)
-			response, err := server.SetPoolWeights(wrappedCtx, msg)
+			response, err := server.SetInfoByPoolType(wrappedCtx, msg)
 			if testCase.pass {
 				s.Require().NoError(err)
-				s.Require().Equal(response, &types.MsgSetPoolWeightsResponse{})
+				s.Require().Equal(response, &types.MsgSetInfoByPoolTypeResponse{})
 
-				poolWeights := s.App.AppKeepers.ProtoRevKeeper.GetPoolWeights(s.Ctx)
+				poolWeights := s.App.AppKeepers.ProtoRevKeeper.GetInfoByPoolType(s.Ctx)
 				s.Require().NoError(err)
-				s.Require().Equal(testCase.poolWeights, poolWeights)
+				s.Require().Equal(testCase.poolInfo, poolWeights)
 			} else {
 				s.Require().Error(err)
 			}

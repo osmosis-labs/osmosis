@@ -39,7 +39,8 @@ const (
 	// Will be parsed to []string.
 	FlagSwapRouteDenoms = "swap-route-denoms"
 	// FlagScalingFactors represents the flag name for the scaling factors.
-	FlagScalingFactors = "scaling-factors"
+	FlagScalingFactors                 = "scaling-factors"
+	FlagScalingFactorControllerAddress = "scaling-factor-controller-address"
 
 	FlagMigrationRecords = "migration-records"
 
