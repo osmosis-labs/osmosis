@@ -15,7 +15,7 @@ import (
 
 const noUnderlyingLockId = uint64(0)
 
-// CreatePositionData reprsents the return data from CreatePosition.
+// CreatePositionData represents the return data from CreatePosition.
 type CreatePositionData struct {
 	ID        uint64
 	Amount0   sdk.Int
