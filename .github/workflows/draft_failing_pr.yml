@@ -1,29 +1,22 @@
-name: draft failing prs
+name: Check All CI Statuses and Set PR to Draft
 
 on:
   pull_request:
-    branches:
-      - "**"
-  push:
-    branches:
-      - "main"
-      - "concentrated-liquidity-main"
-      - "v[0-9]**"
-  workflow_dispatch:
+    types: [synchronize]
 
 jobs:
-  await_checks:
+  check_all_ci:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for check suites to complete
-        id: await-check-suites
-        uses: jitterbit/await-check-suites@v1 # Use the correct version/tag
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          appSlugFilter: "github-actions"
-      - name: Set PR to draft if checks failed
-        if: steps.await-check-suites.outputs.conclusion != 'success'
+      - name: Check all CI statuses
         run: |
-          gh pr update ${{ github.event.pull_request.number }} --draft
+          # Get all check runs for the latest commit
+          CHECKS=$(gh api repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }}/check-runs -q ".check_runs[] | .conclusion")
+
+          # Check if any of the checks has a status of 'failure'
+          if echo "$CHECKS" | grep -q "failure"; then
+            # Set the PR to draft mode
+            gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }} -X PATCH -f draft=true
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
