@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 )
 
 // addToConcentratedLiquiditySuperfluidPosition adds the specified amounts of tokens to an existing superfluid staked
@@ -49,7 +49,7 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, se
 	}
 
 	// Defense in depth making sure that the position is full-range.
-	if position.LowerTick != cltypes.MinTick || position.UpperTick != cltypes.MaxTick {
+	if position.LowerTick != cltypes.MinInitializedTick || position.UpperTick != cltypes.MaxTick {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, types.ConcentratedTickRangeNotFullError{ActualLowerTick: position.LowerTick, ActualUpperTick: position.UpperTick}
 	}
 
@@ -111,7 +111,7 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, se
 	newPositionCoins := sdk.NewCoins(sdk.NewCoin(concentratedPool.GetToken0(), amount0Withdrawn.Add(amount0ToAdd)), sdk.NewCoin(concentratedPool.GetToken1(), amount1Withdrawn.Add(amount1ToAdd)))
 
 	// Create a full range (min to max tick) concentrated liquidity position, lock it, and superfluid delegate it.
-	newPositionId, actualNewAmount0, actualNewAmount1, newLiquidity, _, newLockId, err := k.clk.CreateFullRangePositionLocked(ctx, position.PoolId, sender, newPositionCoins, unbondingDuration)
+	newPositionId, actualNewAmount0, actualNewAmount1, newLiquidity, newLockId, err := k.clk.CreateFullRangePositionLocked(ctx, position.PoolId, sender, newPositionCoins, unbondingDuration)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
@@ -129,7 +129,8 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, se
 		sdk.NewEvent(
 			types.TypeEvtAddToConcentratedLiquiditySuperfluidPosition,
 			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
-			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(newPositionId, 10)),
+			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(positionId, 10)),
+			sdk.NewAttribute(types.AttributeNewPositionId, strconv.FormatUint(newPositionId, 10)),
 			sdk.NewAttribute(types.AttributeAmount0, actualNewAmount0.String()),
 			sdk.NewAttribute(types.AttributeAmount1, actualNewAmount1.String()),
 			sdk.NewAttribute(types.AttributeConcentratedLockId, strconv.FormatUint(newLockId, 10)),

@@ -11,13 +11,17 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*ConcentratedPoolExtension)(nil), nil)
+
+	// msgs
 	cdc.RegisterConcrete(&MsgCreatePosition{}, "osmosis/cl-create-position", nil)
 	cdc.RegisterConcrete(&MsgAddToPosition{}, "osmosis/cl-add-to-position", nil)
 	cdc.RegisterConcrete(&MsgWithdrawPosition{}, "osmosis/cl-withdraw-position", nil)
-	cdc.RegisterConcrete(&MsgCollectFees{}, "osmosis/cl-collect-fees", nil)
+	cdc.RegisterConcrete(&MsgCollectSpreadRewards{}, "osmosis/cl-col-sp-rewards", nil)
 	cdc.RegisterConcrete(&MsgCollectIncentives{}, "osmosis/cl-collect-incentives", nil)
 	cdc.RegisterConcrete(&MsgFungifyChargedPositions{}, "osmosis/cl-fungify-charged-positions", nil)
-	cdc.RegisterConcrete(&CreateConcentratedLiquidityPoolProposal{}, "osmosis/create-concentrated-liquidity-pool-proposal", nil)
+
+	// gov proposals
+	cdc.RegisterConcrete(&CreateConcentratedLiquidityPoolsProposal{}, "osmosis/create-cl-pools-proposal", nil)
 	cdc.RegisterConcrete(&TickSpacingDecreaseProposal{}, "osmosis/cl-tick-spacing-dec-prop", nil)
 }
 
@@ -32,14 +36,14 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCreatePosition{},
 		&MsgAddToPosition{},
 		&MsgWithdrawPosition{},
-		&MsgCollectFees{},
+		&MsgCollectSpreadRewards{},
 		&MsgCollectIncentives{},
 		&MsgFungifyChargedPositions{},
 	)
 
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),
-		&CreateConcentratedLiquidityPoolProposal{},
+		&CreateConcentratedLiquidityPoolsProposal{},
 		&TickSpacingDecreaseProposal{},
 	)
 

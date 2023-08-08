@@ -1,7 +1,7 @@
 keeper:
-  path: "github.com/osmosis-labs/osmosis/v15/x/poolmanager"
+  path: "github.com/osmosis-labs/osmosis/v17/x/poolmanager"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client"
+client_path: "github.com/osmosis-labs/osmosis/v17/x/poolmanager/client"
 queries:
   Params:
     proto_wrapper:
@@ -13,11 +13,23 @@ queries:
       query_func: "k.EstimateSwapExactAmountIn"
     cli:
       cmd: "EstimateSwapExactAmountIn"
+  EstimateSwapExactAmountInWithPrimitiveTypes:
+    proto_wrapper:
+      query_func: "k.EstimateSwapExactAmountInWithPrimitiveTypes"
+      response: "*queryproto.EstimateSwapExactAmountInResponse"
+    cli:
+      cmd: "EstimateSwapExactAmountInWithPrimitiveTypes"
   EstimateSwapExactAmountOut:
     proto_wrapper:
       query_func: "k.EstimateSwapExactAmountOut"
     cli:
       cmd: "EstimateSwapExactAmountOut"
+  EstimateSwapExactAmountOutWithPrimitiveTypes:
+    proto_wrapper:
+      query_func: "k.EstimateSwapExactAmountOutWithPrimitiveTypes"
+      response: "*queryproto.EstimateSwapExactAmountOutResponse"
+    cli:
+      cmd: "EstimateSwapExactAmountOutWithPrimitiveTypes"
   EstimateSinglePoolSwapExactAmountIn:
     proto_wrapper:
       query_func: "k.EstimateSinglePoolSwapExactAmountIn"
@@ -55,3 +67,8 @@ queries:
       query_func: "k.TotalPoolLiquidity"
     cli:
       cmd: "TotalPoolLiquidity"
+  TotalLiquidity:
+    proto_wrapper:
+      query_func: "k.TotalLiquidity"
+    cli:
+      cmd: "TotalLiquidity"

@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 type KeeperTestSuite struct {
@@ -66,8 +66,6 @@ func (s *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins) {
 }
 
 func (s *KeeperTestSuite) TestInitGenesis() {
-	s.Setup()
-
 	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
@@ -82,8 +80,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 }
 
 func (s *KeeperTestSuite) TestExportGenesis() {
-	s.Setup()
-
 	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,

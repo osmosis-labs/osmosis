@@ -7,10 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 )
 
 type KeeperTestSuite struct {
@@ -29,8 +29,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
-	s.Setup()
-
+	s.Reset()
 	s.queryClient = types.NewQueryClient(s.QueryHelper)
 }
 

@@ -57,7 +57,7 @@ pub fn propose_pfm(
     let native_chain = registry.get_native_chain(&coin.denom)?;
 
     if native_chain.as_ref() != chain {
-        return Err(ContractError::CoinFronInvalidChain {
+        return Err(ContractError::CoinFromInvalidChain {
             supplied_chain: native_chain.as_ref().to_string(),
             expected_chain: chain,
         });

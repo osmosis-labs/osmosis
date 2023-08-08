@@ -9,15 +9,17 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
+	types "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types/genesis"
 )
 
 // InitGenesis initializes the concentrated-liquidity module with the provided genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 	k.SetNextPositionId(ctx, genState.NextPositionId)
+	k.SetNextIncentiveRecordId(ctx, genState.NextIncentiveRecordId)
 	// Initialize pools
+	totalLiquidity := sdk.Coins{}
 	var unpacker codectypes.AnyUnpacker = k.cdc
 	seenPoolIds := map[uint64]struct{}{}
 	for _, poolData := range genState.PoolData {
@@ -38,9 +40,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		}
 		seenPoolIds[poolId] = struct{}{}
 
-		// set up fee accumulators
+		// add pools liquidity to total liquidity
+		poolLiquidity, err := k.GetTotalPoolLiquidity(ctx, poolId)
+		if err != nil {
+			panic(err)
+		}
+		totalLiquidity = totalLiquidity.Add(poolLiquidity...)
+
+		// set up spread reward accumulators
 		store := ctx.KVStore(k.storeKey)
-		err = accum.MakeAccumulatorWithValueAndShare(store, poolData.FeeAccumulator.Name, poolData.FeeAccumulator.AccumContent.AccumValue, poolData.FeeAccumulator.AccumContent.TotalShares)
+		err = accum.MakeAccumulatorWithValueAndShare(store, poolData.SpreadRewardAccumulator.Name, poolData.SpreadRewardAccumulator.AccumContent.AccumValue, poolData.SpreadRewardAccumulator.AccumContent.TotalShares)
 		if err != nil {
 			panic(err)
 		}
@@ -71,15 +80,28 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 			panic(err)
 		}
 
-		// set individual fee accumulator state position
-		feeAccumObject, err := k.GetFeeAccumulator(ctx, positionWrapper.Position.PoolId)
+		// set individual spread reward accumulator state position
+		spreadRewardAccumObject, err := k.GetSpreadRewardAccumulator(ctx, positionWrapper.Position.PoolId)
 		if err != nil {
 			panic(err)
 		}
-		feePositionKey := types.KeyFeePositionAccumulator(positionWrapper.Position.PositionId)
+		spreadRewardPositionKey := types.KeySpreadRewardPositionAccumulator(positionWrapper.Position.PositionId)
 
-		k.initOrUpdateAccumPosition(ctx, feeAccumObject, positionWrapper.FeeAccumRecord.AccumValuePerShare, feePositionKey, positionWrapper.FeeAccumRecord.NumShares, positionWrapper.FeeAccumRecord.UnclaimedRewardsTotal, positionWrapper.FeeAccumRecord.Options)
+		k.initOrUpdateAccumPosition(ctx, spreadRewardAccumObject, positionWrapper.SpreadRewardAccumRecord.AccumValuePerShare, spreadRewardPositionKey, positionWrapper.SpreadRewardAccumRecord.NumShares, positionWrapper.SpreadRewardAccumRecord.UnclaimedRewardsTotal, positionWrapper.SpreadRewardAccumRecord.Options)
+
+		positionName := string(types.KeyPositionId(positionWrapper.Position.PositionId))
+		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, positionWrapper.Position.PoolId)
+		if err != nil {
+			panic(err)
+		}
+
+		for uptimeIndex, uptimeRecord := range positionWrapper.UptimeAccumRecords {
+			k.initOrUpdateAccumPosition(ctx, uptimeAccumulators[uptimeIndex], uptimeRecord.AccumValuePerShare, positionName, uptimeRecord.NumShares, uptimeRecord.UnclaimedRewardsTotal, uptimeRecord.Options)
+		}
 	}
+
+	// set total liquidity
+	k.setTotalLiquidity(ctx, totalLiquidity)
 }
 
 // ExportGenesis returns the concentrated-liquidity module's exported genesis state.
@@ -103,18 +125,15 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		if err != nil {
 			panic(err)
 		}
-		accumObject, err := k.GetFeeAccumulator(ctx, poolI.GetId())
+		accumObject, err := k.GetSpreadRewardAccumulator(ctx, poolI.GetId())
 		if err != nil {
 			panic(err)
 		}
 
-		totalShares, err := accumObject.GetTotalShares()
-		if err != nil {
-			panic(err)
-		}
+		totalShares := accumObject.GetTotalShares()
 
-		feeAccumObject := genesis.AccumObject{
-			Name: types.KeyFeePoolAccumulator(poolI.GetId()),
+		spreadRewardAccumObject := genesis.AccumObject{
+			Name: types.KeySpreadRewardPoolAccumulator(poolI.GetId()),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  accumObject.GetValue(),
 				TotalShares: totalShares,
@@ -134,10 +153,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 
 		incentivesAccumObject := make([]genesis.AccumObject, len(incentivesAccum))
 		for i, incentiveAccum := range incentivesAccum {
-			incentiveAccumTotalShares, err := incentiveAccum.GetTotalShares()
-			if err != nil {
-				panic(err)
-			}
+			incentiveAccumTotalShares := incentiveAccum.GetTotalShares()
+
 			genesisAccum := genesis.AccumObject{
 				Name: incentiveAccum.GetName(),
 				AccumContent: &accum.AccumulatorContent{
@@ -149,11 +166,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		}
 
 		poolData = append(poolData, genesis.PoolData{
-			Pool:                   &anyCopy,
-			Ticks:                  ticks,
-			FeeAccumulator:         feeAccumObject,
-			IncentivesAccumulators: incentivesAccumObject,
-			IncentiveRecords:       incentiveRecordsForPool,
+			Pool:                    &anyCopy,
+			Ticks:                   ticks,
+			SpreadRewardAccumulator: spreadRewardAccumObject,
+			IncentivesAccumulators:  incentivesAccumObject,
+			IncentiveRecords:        incentiveRecordsForPool,
 		})
 	}
 
@@ -171,42 +188,59 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 
 		lockId, err := k.GetLockIdFromPositionId(ctx, position.PositionId)
 		if err != nil {
-			if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: position.PositionId}) {
-				lockId = 0
-			} else {
+			if !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: position.PositionId}) {
 				panic(err)
 			}
 		}
 
-		// Retrieve fee accumulator state for position
-		feePositionKey := types.KeyFeePositionAccumulator(position.PositionId)
-		feeAccumObject, err := k.GetFeeAccumulator(ctx, position.PoolId)
+		// Retrieve spread reward accumulator state for position
+		spreadRewardPositionKey := types.KeySpreadRewardPositionAccumulator(position.PositionId)
+		spreadRewardAccumObject, err := k.GetSpreadRewardAccumulator(ctx, position.PoolId)
 		if err != nil {
 			panic(err)
 		}
-		feeAccumPositionRecord, err := feeAccumObject.GetPosition(feePositionKey)
+		spreadRewardAccumPositionRecord, err := spreadRewardAccumObject.GetPosition(spreadRewardPositionKey)
 		if err != nil {
 			panic(err)
 		}
 
+		// Retrieve uptime incentive accumulator state for position
+		positionName := string(types.KeyPositionId(position.PositionId))
+		uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, position.PoolId)
+		if err != nil {
+			panic(err)
+		}
+
+		uptimeAccumObject := make([]accum.Record, len(uptimeAccumulators))
+		for uptimeIndex := range types.SupportedUptimes {
+			accumRecord, err := uptimeAccumulators[uptimeIndex].GetPosition(positionName)
+			if err != nil {
+				panic(err)
+			}
+
+			uptimeAccumObject[uptimeIndex] = accumRecord
+		}
+
 		positionData = append(positionData, genesis.PositionData{
-			LockId:         lockId,
-			Position:       &position,
-			FeeAccumRecord: feeAccumPositionRecord,
+			LockId:                  lockId,
+			Position:                &position,
+			SpreadRewardAccumRecord: spreadRewardAccumPositionRecord,
+			UptimeAccumRecords:      uptimeAccumObject,
 		})
 	}
 
 	return &genesis.GenesisState{
-		Params:         k.GetParams(ctx),
-		PoolData:       poolData,
-		PositionData:   positionData,
-		NextPositionId: k.GetNextPositionId(ctx),
+		Params:                k.GetParams(ctx),
+		PoolData:              poolData,
+		PositionData:          positionData,
+		NextPositionId:        k.GetNextPositionId(ctx),
+		NextIncentiveRecordId: k.GetNextIncentiveRecordId(ctx),
 	}
 }
 
 // initOrUpdateAccumPosition creates a new position or override an existing position
 // at accumulator's current value with a specific number of shares and unclaimed rewards
-func (k Keeper) initOrUpdateAccumPosition(ctx sdk.Context, accumumulator accum.AccumulatorObject, accumulatorValuePerShare sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewardsTotal sdk.DecCoins, options *accum.Options) {
+func (k Keeper) initOrUpdateAccumPosition(ctx sdk.Context, accumumulator *accum.AccumulatorObject, accumulatorValuePerShare sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewardsTotal sdk.DecCoins, options *accum.Options) {
 	position := accum.Record{
 		NumShares:             numShareUnits,
 		AccumValuePerShare:    accumulatorValuePerShare,

@@ -28,10 +28,6 @@ func (suite *HooksTestSuite) SetupAndTestPFM(chainBId Chain, chainBName string, 
 
 	ctx := suite.chainA.GetContext()
 
-	channels_msg := fmt.Sprintf(`{"get_channel_from_chain_pair": {"source_chain": "osmosis", "destination_chain": "%s"}}`, chainBName)
-	qResult := suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(channels_msg))
-	fmt.Println(qResult)
-
 	msg := fmt.Sprintf(`{"propose_pfm":{"chain": "%s"}}`, chainBName)
 	_, err := contractKeeper.Execute(ctx, registryAddr, sendFrom, []byte(msg), sdk.NewCoins(sdk.NewCoin(tokenBA, sdk.NewInt(1))))
 	suite.Require().NoError(err)

@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -164,6 +164,17 @@ func (q Querier) LockedByID(goCtx context.Context, req *types.LockedRequest) (*t
 	return &types.LockedResponse{Lock: lock}, err
 }
 
+// LockRewardReceiver returns lock reward receiver of the lock.
+func (q Querier) LockRewardReceiver(goCtx context.Context, req *types.LockRewardReceiverRequest) (*types.LockRewardReceiverResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	rewardReceiver, err := q.Keeper.GetLockRewardReceiver(ctx, req.LockId)
+	return &types.LockRewardReceiverResponse{RewardReceiver: rewardReceiver}, err
+}
+
 // NextLockID returns next lock ID to be created.
 func (q Querier) NextLockID(goCtx context.Context, req *types.NextLockIDRequest) (*types.NextLockIDResponse, error) {
 	if req == nil {
@@ -186,11 +197,15 @@ func (q Querier) SyntheticLockupsByLockupID(goCtx context.Context, req *types.Sy
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	synthLock, err := q.Keeper.GetSyntheticLockupByUnderlyingLockId(ctx, req.LockId)
+	synthLock, found, err := q.Keeper.GetSyntheticLockupByUnderlyingLockId(ctx, req.LockId)
 	if err != nil {
 		return nil, err
 	}
-	return &types.SyntheticLockupsByLockupIDResponse{SyntheticLocks: []types.SyntheticLock{synthLock}}, nil
+	synthlocks := []types.SyntheticLock{}
+	if found {
+		synthlocks = append(synthlocks, synthLock)
+	}
+	return &types.SyntheticLockupsByLockupIDResponse{SyntheticLocks: synthlocks}, nil
 }
 
 // SyntheticLockupByLockupID returns synthetic lockup by native lockup id.
@@ -200,9 +215,9 @@ func (q Querier) SyntheticLockupByLockupID(goCtx context.Context, req *types.Syn
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	synthLock, err := q.Keeper.GetSyntheticLockupByUnderlyingLockId(ctx, req.LockId)
-	if err != nil {
-		return nil, err
+	synthLock, found, err := q.Keeper.GetSyntheticLockupByUnderlyingLockId(ctx, req.LockId)
+	if err != nil || !found {
+		return &types.SyntheticLockupByLockupIDResponse{}, err
 	}
 	return &types.SyntheticLockupByLockupIDResponse{SyntheticLock: synthLock}, nil
 }

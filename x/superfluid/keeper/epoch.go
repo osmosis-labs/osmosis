@@ -9,13 +9,13 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 )
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) error {
@@ -95,6 +95,8 @@ func (k Keeper) distributeSuperfluidGauges(ctx sdk.Context) {
 	// only distribute to active gauges that are for perpetual synthetic denoms
 	distrGauges := []incentivestypes.Gauge{}
 	for _, gauge := range gauges {
+		// we filter superfluid gauges by using the distributeTo denom in the gauge.
+		// If the denom in the gauge is a synthetic denom, we append the gauge to the gauge list to distribute to.
 		isSynthetic := lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom)
 		if isSynthetic && gauge.IsPerpetual {
 			distrGauges = append(distrGauges, gauge)
@@ -153,7 +155,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		position := model.Position{
-			LowerTick: cltypes.MinTick,
+			LowerTick: cltypes.MinInitializedTick,
 			UpperTick: cltypes.MaxTick,
 			Liquidity: fullRangeLiquidity,
 		}

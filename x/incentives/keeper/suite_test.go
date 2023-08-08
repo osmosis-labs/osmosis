@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -35,6 +35,7 @@ var (
 		lockAmounts:   []sdk.Coins{defaultLPSyntheticTokens, defaultLPSyntheticTokens},
 	}
 	defaultRewardDenom string = "rewardDenom"
+	otherDenom         string = "someOtherDenom"
 )
 
 // TODO: Switch more code to use userLocks and perpGaugeDesc
@@ -48,6 +49,11 @@ type perpGaugeDesc struct {
 	lockDenom    string
 	lockDuration time.Duration
 	rewardAmount sdk.Coins
+}
+
+type changeRewardReceiver struct {
+	newReceiverAccIndex int
+	lockId              uint64
 }
 
 // setupAddr takes a balance, prefix, and address number. Then returns the respective account address byte array.
@@ -81,6 +87,16 @@ func (s *KeeperTestSuite) SetupUserLocks(users []userLocks) (accs []sdk.AccAddre
 		}
 	}
 	return
+}
+
+func (s *KeeperTestSuite) SetupChangeRewardReceiver(changeRewardReceivers []changeRewardReceiver, accs []sdk.AccAddress) {
+	for _, changeRewardReceiver := range changeRewardReceivers {
+		lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, changeRewardReceiver.lockId)
+		s.Require().NoError(err)
+
+		err = s.App.LockupKeeper.SetLockRewardReceiverAddress(s.Ctx, changeRewardReceiver.lockId, lock.OwnerAddress(), accs[changeRewardReceiver.newReceiverAccIndex].String())
+		s.Require().NoError(err)
+	}
 }
 
 // SetupUserSyntheticLocks takes an array of user locks and creates synthetic locks based on this array, then returns the respective account address byte array.
@@ -119,7 +135,7 @@ func (s *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc, denom st
 // CreateGauge creates a gauge struct given the required params.
 func (s *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Gauge) {
 	s.FundAcc(addr, coins)
-	gaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch)
+	gaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch, 0)
 	s.Require().NoError(err)
 	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID)
 	s.Require().NoError(err)

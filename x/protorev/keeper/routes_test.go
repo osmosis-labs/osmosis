@@ -3,8 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
 type TestRoute struct {
@@ -199,11 +199,7 @@ func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 
 	for _, tc := range cases {
 		s.Run(tc.description, func() {
-			s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{
-				StableWeight:       5,
-				BalancerWeight:     2,
-				ConcentratedWeight: 2,
-			})
+			s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, types.DefaultPoolTypeInfo)
 
 			baseDenom := types.BaseDenom{
 				Denom:    tc.swapDenom,
@@ -274,11 +270,7 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 
 	for _, tc := range cases {
 		s.Run(tc.description, func() {
-			s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{
-				StableWeight:       5,
-				BalancerWeight:     2,
-				ConcentratedWeight: 2,
-			})
+			s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, types.DefaultPoolTypeInfo)
 
 			routes, err := s.App.ProtoRevKeeper.BuildHotRoutes(s.Ctx, tc.swapIn, tc.swapOut, tc.poolId)
 
@@ -332,13 +324,13 @@ func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 		{
 			description:             "Valid route containing only stable swap pools",
 			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}},
-			expectedRoutePoolPoints: 9,
+			expectedRoutePoolPoints: 15,
 			expectedPass:            true,
 		},
 		{
 			description:             "Valid route with more than 3 hops",
 			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}},
-			expectedRoutePoolPoints: 11,
+			expectedRoutePoolPoints: 17,
 			expectedPass:            true,
 		},
 		{
@@ -347,12 +339,25 @@ func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 			expectedRoutePoolPoints: 11,
 			expectedPass:            false,
 		},
+		{
+			description:             "Valid route with a cosmwasm pool",
+			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 51, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}},
+			expectedRoutePoolPoints: 8,
+			expectedPass:            true,
+		},
+		{
+			description:             "Valid route with cw pool, balancer, stable swap and cl pool",
+			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 51, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 50, TokenOutDenom: ""}},
+			expectedRoutePoolPoints: 18,
+			expectedPass:            true,
+		},
 	}
 
 	for _, tc := range cases {
 		s.Run(tc.description, func() {
 			s.SetupTest()
-			s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{StableWeight: 3, BalancerWeight: 2, ConcentratedWeight: 1})
+			s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 25))
+			s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100))
 
 			routePoolPoints, err := s.App.ProtoRevKeeper.CalculateRoutePoolPoints(s.Ctx, tc.route)
 			if tc.expectedPass {

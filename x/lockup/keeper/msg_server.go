@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -208,7 +208,8 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 	}
 
 	// check that given lock is not superfluid staked
-	synthLock, err := server.keeper.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+	// TODO: Next state break do found, instead !synthlock.IsNil()
+	synthLock, _, err := server.keeper.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
 	if err != nil {
 		return &types.MsgForceUnlockResponse{Success: false}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -225,4 +226,25 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 	}
 
 	return &types.MsgForceUnlockResponse{Success: true}, nil
+}
+
+func (server msgServer) SetRewardReceiverAddress(goCtx context.Context, msg *types.MsgSetRewardReceiverAddress) (*types.MsgSetRewardReceiverAddressResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	owner, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	newRewardRecepient, err := sdk.AccAddressFromBech32(msg.RewardReceiver)
+	if err != nil {
+		return nil, err
+	}
+
+	err = server.keeper.SetLockRewardReceiverAddress(ctx, msg.LockID, owner, newRewardRecepient.String())
+	if err != nil {
+		return &types.MsgSetRewardReceiverAddressResponse{Success: false}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	return &types.MsgSetRewardReceiverAddressResponse{Success: true}, nil
 }

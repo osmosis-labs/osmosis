@@ -15,10 +15,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/v2types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -415,12 +415,16 @@ func (q QuerierV2) SpotPrice(ctx context.Context, req *v2types.QuerySpotPriceReq
 	}, nil
 }
 
-// TotalLiquidity returns total liquidity across all pools.
+// TotalLiquidity returns total liquidity across all gamm pools.
 func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidityRequest) (*types.QueryTotalLiquidityResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	totalLiquidity, err := q.Keeper.GetTotalLiquidity(sdkCtx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
 	return &types.QueryTotalLiquidityResponse{
-		Liquidity: q.Keeper.GetTotalLiquidity(sdkCtx),
+		Liquidity: totalLiquidity,
 	}, nil
 }
 
@@ -497,5 +501,20 @@ func (q Querier) ConcentratedPoolIdLinkFromCFMM(ctx context.Context, req *types.
 
 	return &types.QueryConcentratedPoolIdLinkFromCFMMResponse{
 		ConcentratedPoolId: poolIdEntering,
+	}, nil
+}
+
+func (q Querier) CFMMConcentratedPoolLinks(ctx context.Context, req *types.QueryCFMMConcentratedPoolLinksRequest) (*types.QueryCFMMConcentratedPoolLinksResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	poolLinks, err := q.Keeper.GetAllMigrationInfo(sdk.UnwrapSDKContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryCFMMConcentratedPoolLinksResponse{
+		MigrationRecords: &poolLinks,
 	}, nil
 }

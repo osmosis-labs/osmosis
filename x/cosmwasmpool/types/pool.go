@@ -1,9 +1,9 @@
 package types
 
 import (
-	"github.com/gogo/protobuf/proto"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 // CosmWasmExtension
@@ -18,7 +18,9 @@ type CosmWasmExtension interface {
 
 	SetContractAddress(contractAddress string)
 
-	GetStoreModel() proto.Message
+	GetStoreModel() poolmanagertypes.PoolI
 
 	SetWasmKeeper(wasmKeeper WasmKeeper)
+
+	GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins
 }

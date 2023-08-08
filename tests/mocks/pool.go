@@ -9,7 +9,7 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
-	types0 "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	types0 "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 // MockPoolI is a mock of PoolI interface.
@@ -33,6 +33,20 @@ func NewMockPoolI(ctrl *gomock.Controller) *MockPoolI {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockPoolI) EXPECT() *MockPoolIMockRecorder {
 	return m.recorder
+}
+
+// AsSerializablePool mocks base method.
+func (m *MockPoolI) AsSerializablePool() types0.PoolI {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AsSerializablePool")
+	ret0, _ := ret[0].(types0.PoolI)
+	return ret0
+}
+
+// AsSerializablePool indicates an expected call of AsSerializablePool.
+func (mr *MockPoolIMockRecorder) AsSerializablePool() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AsSerializablePool", reflect.TypeOf((*MockPoolI)(nil).AsSerializablePool))
 }
 
 // GetAddress mocks base method.

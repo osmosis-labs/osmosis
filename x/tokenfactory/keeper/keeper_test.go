@@ -13,9 +13,9 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
 )
 
 type KeeperTestSuite struct {
@@ -55,7 +55,7 @@ func (p SudoAuthorizationPolicy) CanModifyCodeAccessConfig(creator, actor sdk.Ac
 func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
 	// Fund every TestAcc with two denoms, one of which is the denom creation fee
-	fundAccsAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)), sdk.NewCoin(apptesting.SecondaryDenom, apptesting.SecondaryAmount))
+	fundAccsAmount := sdk.NewCoins(sdk.NewCoin(apptesting.SecondaryDenom, apptesting.SecondaryAmount))
 	for _, acc := range s.TestAccs {
 		s.FundAcc(acc, fundAccsAmount)
 	}
@@ -73,6 +73,9 @@ func (s *KeeperTestSuite) CreateDefaultDenom() {
 func (s *KeeperTestSuite) TestCreateModuleAccount() {
 	app := s.App
 
+	// setup new next account number
+	nextAccountNumber := app.AccountKeeper.GetNextAccountNumber(s.Ctx)
+
 	// remove module account
 	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
 	app.AccountKeeper.RemoveAccount(s.Ctx, tokenfactoryModuleAccount)
@@ -88,4 +91,7 @@ func (s *KeeperTestSuite) TestCreateModuleAccount() {
 	// check that the module account is now initialized
 	tokenfactoryModuleAccount = app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
 	s.Require().NotNil(tokenfactoryModuleAccount)
+
+	// check that the account number of the module account is now initialized correctly
+	s.Require().Equal(nextAccountNumber+1, tokenfactoryModuleAccount.GetAccountNumber())
 }

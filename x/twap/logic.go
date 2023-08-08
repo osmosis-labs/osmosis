@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
 )
 
 func newTwapRecord(k types.PoolManagerInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
@@ -93,7 +93,7 @@ func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 		// that there is a swap against this pool in this same block.
 		// furthermore, this protects against an edge case where a pool is created
 		// during EndBlock, after twapkeeper's endblock.
-		k.storeNewRecord(ctx, record)
+		k.StoreNewRecord(ctx, record)
 	}
 	k.trackChangedPool(ctx, poolId)
 	return err
@@ -124,7 +124,7 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 //     number of denoms in the pool.
 func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	// Will only err if pool doesn't have most recent entry set
-	records, err := k.getAllMostRecentRecordsForPool(ctx, poolId)
+	records, err := k.GetAllMostRecentRecordsForPool(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 		if err != nil {
 			return err
 		}
-		k.storeNewRecord(ctx, newRecord)
+		k.StoreNewRecord(ctx, newRecord)
 	}
 	return nil
 }
@@ -164,8 +164,8 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.Tw
 	// Incase record height should equal to ctx height
 	// But ArithmeticTwapAccumulators should be zero
 	if (record.Height == ctx.BlockHeight() || record.Time.Equal(ctx.BlockTime())) &&
-		!record.P1ArithmeticTwapAccumulator.Equal(sdk.ZeroDec()) &&
-		!record.P0ArithmeticTwapAccumulator.Equal(sdk.ZeroDec()) {
+		!record.P1ArithmeticTwapAccumulator.IsZero() &&
+		!record.P0ArithmeticTwapAccumulator.IsZero() {
 		return types.TwapRecord{}, types.InvalidUpdateRecordError{}
 	} else if record.Height > ctx.BlockHeight() || record.Time.After(ctx.BlockTime()) {
 		// Normal case, ctx should be after record height & time

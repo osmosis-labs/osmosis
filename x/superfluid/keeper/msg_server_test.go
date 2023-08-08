@@ -6,14 +6,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	v8constants "github.com/osmosis-labs/osmosis/v15/app/upgrades/v8/constants"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v15/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	v8constants "github.com/osmosis-labs/osmosis/v17/app/upgrades/v8/constants"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v17/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 )
 
 var defaultFunds = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", sdk.NewInt(5000000000)))
@@ -500,10 +501,10 @@ func (s *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosit
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, sdk.ZeroDec())
 
 	// Set migration link between the balancer and concentrated pool
-	migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+	migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 		{BalancerPoolId: balancerPool.GetId(), ClPoolId: clPool.GetId()},
 	}}
-	s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx, migrationRecord)
+	s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, migrationRecord)
 
 	// Superfluid delegate the balancer pool shares
 	_, _, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 9000000000000000000}}, []string{poolDenom})
@@ -523,7 +524,7 @@ func (s *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosit
 	sender, err := sdk.AccAddressFromBech32(locks[0].Owner)
 	s.Require().NoError(err)
 	_, err = msgServer.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(s.Ctx),
-		types.NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender, locks[0].ID, locks[0].Coins[0]))
+		types.NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender, int64(locks[0].ID), locks[0].Coins[0]))
 	s.Require().NoError(err)
 
 	// Asset event emitted
@@ -563,7 +564,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_Event
 
 			if !tc.isLastPositionInPool {
 				s.FundAcc(s.TestAccs[1], defaultFunds)
-				_, _, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, 1, s.TestAccs[1], defaultFunds)
+				_, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, 1, s.TestAccs[1], defaultFunds)
 				s.Require().NoError(err)
 			}
 

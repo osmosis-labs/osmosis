@@ -8,7 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v17/x/incentives/types";
 
 service Msg {
   rpc CreateGauge(MsgCreateGauge) returns (MsgCreateGaugeResponse);
@@ -45,6 +45,15 @@ message MsgCreateGauge {
   // num_epochs_paid_over is the number of epochs distribution will be completed
   // over
   uint64 num_epochs_paid_over = 6;
+
+  // pool_id is the ID of the pool that the gauge is meant to be associated
+  // with. if pool_id is set, then the "QueryCondition.LockQueryType" must be
+  // "NoLock" with all other fields of the "QueryCondition.LockQueryType" struct
+  // unset, including "QueryCondition.Denom". However, note that, internally,
+  // the empty string in "QueryCondition.Denom" ends up being overwritten with
+  // incentivestypes.NoLockExternalGaugeDenom(<pool-id>) so that the gauges
+  // associated with a pool can be queried by this prefix if needed.
+  uint64 pool_id = 7;
 }
 message MsgCreateGaugeResponse {}
 

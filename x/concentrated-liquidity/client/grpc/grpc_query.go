@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
 )
 
 type Querier struct {
@@ -19,6 +19,16 @@ type Querier struct {
 }
 
 var _ queryproto.QueryServer = Querier{}
+
+func (q Querier) UserUnbondingPositions(grpcCtx context.Context,
+	req *queryproto.UserUnbondingPositionsRequest,
+) (*queryproto.UserUnbondingPositionsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.UserUnbondingPositions(ctx, *req)
+}
 
 func (q Querier) UserPositions(grpcCtx context.Context,
 	req *queryproto.UserPositionsRequest,
@@ -28,6 +38,16 @@ func (q Querier) UserPositions(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.UserPositions(ctx, *req)
+}
+
+func (q Querier) TickAccumulatorTrackers(grpcCtx context.Context,
+	req *queryproto.TickAccumulatorTrackersRequest,
+) (*queryproto.TickAccumulatorTrackersResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.TickAccumulatorTrackers(ctx, *req)
 }
 
 func (q Querier) PositionById(grpcCtx context.Context,
@@ -48,6 +68,16 @@ func (q Querier) Pools(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.Pools(ctx, *req)
+}
+
+func (q Querier) PoolAccumulatorRewards(grpcCtx context.Context,
+	req *queryproto.PoolAccumulatorRewardsRequest,
+) (*queryproto.PoolAccumulatorRewardsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.PoolAccumulatorRewards(ctx, *req)
 }
 
 func (q Querier) Params(grpcCtx context.Context,
@@ -80,6 +110,36 @@ func (q Querier) LiquidityNetInDirection(grpcCtx context.Context,
 	return q.Q.LiquidityNetInDirection(ctx, *req)
 }
 
+func (q Querier) IncentiveRecords(grpcCtx context.Context,
+	req *queryproto.IncentiveRecordsRequest,
+) (*queryproto.IncentiveRecordsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.IncentiveRecords(ctx, *req)
+}
+
+func (q Querier) GetTotalLiquidity(grpcCtx context.Context,
+	req *queryproto.GetTotalLiquidityRequest,
+) (*queryproto.GetTotalLiquidityResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.GetTotalLiquidity(ctx, *req)
+}
+
+func (q Querier) ClaimableSpreadRewards(grpcCtx context.Context,
+	req *queryproto.ClaimableSpreadRewardsRequest,
+) (*queryproto.ClaimableSpreadRewardsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.ClaimableSpreadRewards(ctx, *req)
+}
+
 func (q Querier) ClaimableIncentives(grpcCtx context.Context,
 	req *queryproto.ClaimableIncentivesRequest,
 ) (*queryproto.ClaimableIncentivesResponse, error) {
@@ -90,13 +150,13 @@ func (q Querier) ClaimableIncentives(grpcCtx context.Context,
 	return q.Q.ClaimableIncentives(ctx, *req)
 }
 
-func (q Querier) ClaimableFees(grpcCtx context.Context,
-	req *queryproto.ClaimableFeesRequest,
-) (*queryproto.ClaimableFeesResponse, error) {
+func (q Querier) CFMMPoolIdLinkFromConcentratedPoolId(grpcCtx context.Context,
+	req *queryproto.CFMMPoolIdLinkFromConcentratedPoolIdRequest,
+) (*queryproto.CFMMPoolIdLinkFromConcentratedPoolIdResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.ClaimableFees(ctx, *req)
+	return q.Q.CFMMPoolIdLinkFromConcentratedPoolId(ctx, *req)
 }
 

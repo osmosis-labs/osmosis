@@ -6,7 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 // x/superfluid module errors.
@@ -73,6 +73,15 @@ func (e MigrateMoreSharesThanLockHasError) Error() string {
 	return fmt.Sprintf("cannot migrate more shares (%s) than lock has (%s)", e.SharesToMigrate, e.SharesInLock)
 }
 
+type MigratePartialSharesError struct {
+	SharesToMigrate string
+	SharesInLock    string
+}
+
+func (e MigratePartialSharesError) Error() string {
+	return fmt.Sprintf("cannot partial migrate shares (%s). The lock has (%s)", e.SharesToMigrate, e.SharesInLock)
+}
+
 type TwoTokenBalancerPoolError struct {
 	NumberOfTokens int
 }
@@ -87,7 +96,7 @@ type ConcentratedTickRangeNotFullError struct {
 }
 
 func (e ConcentratedTickRangeNotFullError) Error() string {
-	return fmt.Sprintf("position must be full range. Lower tick (%d) must be (%d). Upper tick (%d) must be (%d)", e.ActualLowerTick, e.ActualUpperTick, cltypes.MinTick, cltypes.MaxTick)
+	return fmt.Sprintf("position must be full range. Lower tick (%d) must be (%d). Upper tick (%d) must be (%d)", e.ActualLowerTick, e.ActualUpperTick, cltypes.MinInitializedTick, cltypes.MaxTick)
 }
 
 type NegativeDurationError struct {

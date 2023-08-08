@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
@@ -196,7 +197,8 @@ func GetDec(store store.KVStore, key []byte) (sdk.Dec, error) {
 }
 
 // Get returns a value at key by mutating the result parameter. Returns true if the value was found and the
-// result mutated correctly. If the value is not in the store, returns false. Returns error only when database or serialization errors occur. (And when an error occurs, returns false)
+// result mutated correctly. If the value is not in the store, returns false.
+// Returns error only when database or serialization errors occur. (And when an error occurs, returns false)
 func Get(store store.KVStore, key []byte, result proto.Message) (found bool, err error) {
 	b := store.Get(key)
 	if b == nil {
@@ -206,4 +208,15 @@ func Get(store store.KVStore, key []byte, result proto.Message) (found bool, err
 		return true, err
 	}
 	return true, nil
+}
+
+// DeleteAllKeysFromPrefix deletes all store records that contains the given prefixKey.
+func DeleteAllKeysFromPrefix(ctx sdk.Context, store store.KVStore, prefixKey []byte) {
+	prefixStore := prefix.NewStore(store, prefixKey)
+	iter := prefixStore.Iterator(nil, nil)
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		prefixStore.Delete(iter.Key())
+	}
 }

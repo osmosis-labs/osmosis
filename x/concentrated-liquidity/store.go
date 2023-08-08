@@ -11,9 +11,9 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types/genesis"
 )
 
 const (
@@ -92,7 +92,7 @@ func ParseFullTickFromBytes(key, value []byte) (tick genesis.FullTick, err error
 		return genesis.FullTick{}, types.ValueNotFoundForKeyError{Key: key}
 	}
 
-	if len(key) != types.TickKeyLengthBytes {
+	if len(key) != types.KeyTickLengthBytes {
 		return genesis.FullTick{}, types.InvalidTickKeyByteLengthError{Length: len(key)}
 	}
 
@@ -149,9 +149,6 @@ func ParseIncentiveRecordBodyFromBz(bz []byte) (incentiveRecordBody types.Incent
 // Returns an error if the byte array is empty.
 // Returns an error if fails to parse.
 func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord types.IncentiveRecord, err error) {
-	if len(key) == 0 {
-		return types.IncentiveRecord{}, types.ErrKeyNotFound
-	}
 	if len(value) == 0 {
 		return types.IncentiveRecord{}, types.ValueNotFoundForKeyError{Key: key}
 	}
@@ -160,19 +157,17 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 
 	// These may include irrelevant parts of the prefix such as the module prefix.
 	incentiveRecordKeyComponents := strings.Split(keyStr, types.KeySeparator)
+	if len(incentiveRecordKeyComponents) < 4 {
+		return types.IncentiveRecord{}, fmt.Errorf("Incorrect incentive record key format, expected at least 4 parts")
+	} else if incentiveRecordKeyComponents[0] != string(types.IncentivePrefix) {
+		return types.IncentiveRecord{}, fmt.Errorf("Wrong incentive prefix, got: %v, required %v", []byte(incentiveRecordKeyComponents[0]), types.IncentivePrefix)
+	}
 
 	// We only care about the last 4 components, which are:
 	// - pool id
 	// - min uptime
-	// - incentive denom
-	// - incentive creator
-
+	// - incentive id
 	relevantIncentiveKeyComponents := incentiveRecordKeyComponents[len(incentiveRecordKeyComponents)-4:]
-
-	incentivePrefix := incentiveRecordKeyComponents[0]
-	if incentivePrefix != string(types.IncentivePrefix) {
-		return types.IncentiveRecord{}, fmt.Errorf("Wrong incentive prefix, got: %v, required %v", []byte(incentivePrefix), types.IncentivePrefix)
-	}
 
 	poolId, err := strconv.ParseUint(relevantIncentiveKeyComponents[0], 10, 64)
 	if err != nil {
@@ -184,30 +179,26 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 		return types.IncentiveRecord{}, err
 	}
 
-	incentiveDenom := relevantIncentiveKeyComponents[2]
-
-	// Note that we skip the first byte since we prefix addresses by length in key
-	incentiveCreator, err := sdk.AccAddressFromBech32(relevantIncentiveKeyComponents[3])
-	if err != nil {
-		return types.IncentiveRecord{}, err
-	}
-
 	incentiveBody, err := ParseIncentiveRecordBodyFromBz(value)
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}
 
+	incentiveRecordId, err := strconv.ParseUint(relevantIncentiveKeyComponents[2], 10, 64)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
 	incentiveRecordBody := types.IncentiveRecordBody{
-		RemainingAmount: incentiveBody.RemainingAmount,
-		EmissionRate:    incentiveBody.EmissionRate,
-		StartTime:       incentiveBody.StartTime,
+		RemainingCoin: incentiveBody.RemainingCoin,
+		EmissionRate:  incentiveBody.EmissionRate,
+		StartTime:     incentiveBody.StartTime,
 	}
 
 	return types.IncentiveRecord{
-		PoolId:               poolId,
-		IncentiveDenom:       incentiveDenom,
-		IncentiveCreatorAddr: incentiveCreator.String(),
-		IncentiveRecordBody:  incentiveRecordBody,
-		MinUptime:            types.SupportedUptimes[minUptimeIndex],
+		PoolId:              poolId,
+		IncentiveRecordBody: incentiveRecordBody,
+		MinUptime:           types.SupportedUptimes[minUptimeIndex],
+		IncentiveId:         incentiveRecordId,
 	}, nil
 }
