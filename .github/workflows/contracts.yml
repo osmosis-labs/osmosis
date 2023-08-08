@@ -4,10 +4,26 @@ on:
   pull_request:
     branches:
       - "**"
+    paths:
+      - "**/**/*.wasm"
+      - "**/**.rs"
+      - "**/**Cargo.toml"
+      - "**/**Cargo.lock"
+      - "**/cosmwasm/**"
+      - "**/wasmbinding/**"
+      - ".github/workflows/contracts.yml"
   push:
     branches:
       - "main"
       - "v[0-9]**"
+    paths:
+      - "**/**/*.wasm"
+      - "**/**.rs"
+      - "**/**Cargo.toml"
+      - "**/**Cargo.lock"
+      - "**/cosmwasm/**"
+      - "**/wasmbinding/**"
+      - ".github/workflows/contracts.yml"
   workflow_dispatch:
 
 concurrency:
@@ -30,13 +46,6 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.1.2
-        with:
-          PATTERNS: |
-            **/**/*.wasm
-            **/**.rs
-            **/**Cargo.toml
-            **/**Cargo.lock
 
       - name: Optimize
         working-directory: ${{ matrix.contract.workdir }}
@@ -46,7 +55,6 @@ jobs:
             --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
             --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
             cosmwasm/workspace-optimizer:0.12.10
-        if: env.GIT_DIFF
 
       - name: 'Upload optimized contract artifact'
         uses: actions/upload-artifact@v3
@@ -54,7 +62,6 @@ jobs:
           name: ${{ matrix.contract.name }}
           path: ${{ matrix.contract.workdir }}${{ matrix.contract.build }}
           retention-days: 1
-        if: env.GIT_DIFF
 
       - name: 'Upload Cargo.lock artifact'
         uses: actions/upload-artifact@v3
@@ -62,13 +69,11 @@ jobs:
           name: Cargo.lock
           path: ${{ matrix.contract.workdir }}Cargo.lock
           retention-days: 1
-        if: env.GIT_DIFF
 
       # TODO: workspace optimizer compiles all contracts in the workspace, so we could just run that once
       # and then check the diff of all the bytecode files
       - name: Check Test Data
         working-directory: ${{ matrix.contract.workdir }}
-        if: env.GIT_DIFF
         run: >
           diff "${GITHUB_WORKSPACE}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
 
@@ -87,31 +92,20 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.1.2
-        with:
-          PATTERNS: |
-            **/bytecode/*.wasm
-            **/**.rs
-            **/**Cargo.toml
-            **/**Cargo.lock
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@1.69.0
         with:
           target: wasm32-unknown-unknown
-        if: env.GIT_DIFF
 
       - name: Add the wasm target
         working-directory: ${{ matrix.contract.workdir }}
         run: >
           rustup target add wasm32-unknown-unknown;
-        if: env.GIT_DIFF
 
       - name: Test
         working-directory: ${{ matrix.contract.workdir }}
         run: >
           cargo test
-        if: env.GIT_DIFF
-
 
   lints:
     name: Cosmwasm Lints
@@ -123,27 +117,18 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.1.2
-        with:
-          PATTERNS: |
-            **/**.rs
-            **/**Cargo.toml
-            **/**Cargo.lock
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@1.69.0
         with:
           components: rustfmt, clippy
-        if: env.GIT_DIFF
 
       - name: Format
         working-directory: ${{ matrix.workdir }}
         run: >
           cargo fmt --all -- --check
-        if: env.GIT_DIFF
 
       - name: run cargo clippy
         working-directory: ${{ matrix.workdir }}
         run: >
           cargo clippy -- -D warnings
-        if: env.GIT_DIFF
 

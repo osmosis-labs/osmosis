@@ -39,10 +39,11 @@ service Msg {
         "/osmosis/protorev/set_max_pool_points_per_block";
   };
 
-  // SetPoolWeights sets the weights of each pool type in the store. Can only be
-  // called by the admin account.
-  rpc SetPoolWeights(MsgSetPoolWeights) returns (MsgSetPoolWeightsResponse) {
-    option (google.api.http).post = "/osmosis/protorev/set_pool_weights";
+  // SetInfoByPoolType sets the pool type information needed to make smart
+  // assumptions about swapping on different pool types
+  rpc SetInfoByPoolType(MsgSetInfoByPoolType)
+      returns (MsgSetInfoByPoolTypeResponse) {
+    option (google.api.http).post = "/osmosis/protorev/set_info_by_pool_type";
   };
 
   // SetBaseDenoms sets the base denoms that will be used to create cyclic
@@ -90,24 +91,24 @@ message MsgSetDeveloperAccount {
 // type.
 message MsgSetDeveloperAccountResponse {}
 
-// MsgSetPoolWeights defines the Msg/SetPoolWeights request type.
-message MsgSetPoolWeights {
-  option (amino.name) = "osmosis/MsgSetPoolWeights";
+// MsgSetInfoByPoolType defines the Msg/SetInfoByPoolType request type.
+message MsgSetInfoByPoolType {
+  option (amino.name) = "osmosis/MsgSetInfoByPoolType";
 
   // admin is the account that is authorized to set the pool weights.
   string admin = 1 [
     (gogoproto.moretags) = "yaml:\"admin\"",
     (cosmos_proto.scalar) = "cosmos.AddressString"
   ];
-  // pool_weights is the list of pool weights to set.
-  PoolWeights pool_weights = 2 [
-    (gogoproto.moretags) = "yaml:\"pool_weights\"",
+  // info_by_pool_type contains information about the pool types.
+  InfoByPoolType info_by_pool_type = 2 [
+    (gogoproto.moretags) = "yaml:\"info_by_pool_type\"",
     (gogoproto.nullable) = false
   ];
 }
 
-// MsgSetPoolWeightsResponse defines the Msg/SetPoolWeights response type.
-message MsgSetPoolWeightsResponse {}
+// MsgSetInfoByPoolTypeResponse defines the Msg/SetInfoByPoolType response type.
+message MsgSetInfoByPoolTypeResponse {}
 
 // MsgSetMaxPoolPointsPerTx defines the Msg/SetMaxPoolPointsPerTx request type.
 message MsgSetMaxPoolPointsPerTx {

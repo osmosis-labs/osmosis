@@ -210,12 +210,12 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
 
 			// Set up position
-			curPositionId, actualAmt0, actualAmt1, curLiquidity, actualLowerTick, actualUpperTick, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), curAddr, curAssets, sdk.ZeroInt(), sdk.ZeroInt(), ranges[curRange][0], ranges[curRange][1])
+			positionData, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), curAddr, curAssets, sdk.ZeroInt(), sdk.ZeroInt(), ranges[curRange][0], ranges[curRange][1])
 			s.Require().NoError(err)
 
 			// Ensure position was set up correctly and didn't break global invariants
-			s.Require().Equal(ranges[curRange][0], actualLowerTick)
-			s.Require().Equal(ranges[curRange][1], actualUpperTick)
+			s.Require().Equal(ranges[curRange][0], positionData.LowerTick)
+			s.Require().Equal(ranges[curRange][1], positionData.UpperTick)
 			s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 
 			// Let time elapse after join if applicable
@@ -226,14 +226,14 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 
 			// Track changes to state
-			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), actualAmt0), sdk.NewCoin(pool.GetToken1(), actualAmt1))
+			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), positionData.Amount0), sdk.NewCoin(pool.GetToken1(), positionData.Amount1))
 			totalAssets = totalAssets.Add(actualAddedCoins...)
 			if testParams.baseSwapAmount != (sdk.Int{}) {
 				totalAssets = totalAssets.Add(swappedIn).Sub(sdk.NewCoins(swappedOut))
 			}
-			totalLiquidity = totalLiquidity.Add(curLiquidity)
+			totalLiquidity = totalLiquidity.Add(positionData.Liquidity)
 			totalTimeElapsed = totalTimeElapsed + timeElapsed
-			allPositionIds = append(allPositionIds, curPositionId)
+			allPositionIds = append(allPositionIds, positionData.ID)
 			curBlock++
 		}
 		endNumPositions := len(allPositionIds)

@@ -483,13 +483,13 @@ func (s *KeeperTestSuite) addRandomPositon(r *rand.Rand, poolId uint64, minTick,
 
 	fmt.Println("creating position: ", "accountName", "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1)
 
-	positionId, amt0, amt1, liq, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[accountIndex], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
+	positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[accountIndex], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
 	s.Require().NoError(err)
-	fmt.Printf("actually created: %s%s %s%s \n", amt0, ETH, amt1, USDC)
+	fmt.Printf("actually created: %s%s %s%s \n", positionData.Amount0, ETH, positionData.Amount1, USDC)
 
 	s.positionData = append(s.positionData, positionAndLiquidity{
-		positionId:   positionId,
-		liquidity:    liq,
+		positionId:   positionData.ID,
+		liquidity:    positionData.Liquidity,
 		accountIndex: accountIndex,
 	})
 }

@@ -2760,7 +2760,7 @@ func (s *KeeperTestSuite) setupSecondPosition(test SwapTest, pool types.Concentr
 	if !test.secondPositionLowerPrice.IsNil() {
 		newLowerTick, newUpperTick := s.lowerUpperPricesToTick(test.secondPositionLowerPrice, test.secondPositionUpperPrice, pool.GetTickSpacing())
 
-		_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
+		_, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
 		s.Require().NoError(err)
 	}
 }
@@ -3395,7 +3395,7 @@ func (s *KeeperTestSuite) TestInfiniteSwapLoop_OutGivenIn() {
 
 	// Create position near min tick
 	s.FundAcc(positionOwner, DefaultRangeTestParams.baseAssets.Add(DefaultRangeTestParams.baseAssets...))
-	_, _, _, _, _, _, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), positionOwner, DefaultRangeTestParams.baseAssets, sdk.ZeroInt(), sdk.ZeroInt(), -108000000, -107999900)
+	_, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), positionOwner, DefaultRangeTestParams.baseAssets, sdk.ZeroInt(), sdk.ZeroInt(), -108000000, -107999900)
 	s.Require().NoError(err)
 
 	// Swap small amount to get current tick to position above, triggering the problematic function/branch (CalcAmount0Delta)
@@ -3506,7 +3506,9 @@ func (s *KeeperTestSuite) TestComputeMaxInAmtGivenMaxTicksCrossed() {
 
 func (s *KeeperTestSuite) createPositionAndFundAcc(clPool types.ConcentratedPoolExtension, lowerTick, upperTick int64) (amt0, amt1 sdk.Int) {
 	s.FundAcc(s.TestAccs[0], DefaultCoins)
-	_, amt0, amt1, _, _, _, _ = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	positionData, _ := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	amt0 = positionData.Amount0
+	amt1 = positionData.Amount1
 	return
 }
 

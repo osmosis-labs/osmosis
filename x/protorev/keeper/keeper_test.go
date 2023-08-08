@@ -78,13 +78,6 @@ func (s *KeeperTestSuite) SetupTest() {
 		panic(err)
 	}
 
-	poolWeights := types.PoolWeights{
-		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
-		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
-		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
-	}
-	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, poolWeights)
-
 	// Configure the initial base denoms used for cyclic route building
 	baseDenomPriorities := []types.BaseDenom{
 		{
@@ -911,7 +904,17 @@ func (s *KeeperTestSuite) setUpPools() {
 
 	// Create a cosmwasm pool for testing
 	// Pool 51
-	s.PrepareCosmWasmPool()
+	cwPool := s.PrepareCosmWasmPool()
+
+	// Add the new cosmwasm pool to the pool info
+	poolInfo := types.DefaultPoolTypeInfo
+	poolInfo.Cosmwasm.WeightMaps = []types.WeightMap{
+		{
+			ContractAddress: cwPool.GetContractAddress(),
+			Weight:          4,
+		},
+	}
+	s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, poolInfo)
 
 	// Create a concentrated liquidity pool for range testing
 	// Pool 52
@@ -948,9 +951,9 @@ func (s *KeeperTestSuite) CreateCLPoolAndArbRouteWith_28000_Ticks() {
 	upperTick := int64(100)
 
 	for i := int64(0); i < 14000; i++ {
-		_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick-(100*i), upperTick-(100*i))
+		_, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick-(100*i), upperTick-(100*i))
 		s.Require().NoError(err)
-		_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick+(100*i), upperTick+(100*i))
+		_, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick+(100*i), upperTick+(100*i))
 		s.Require().NoError(err)
 	}
 

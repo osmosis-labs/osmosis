@@ -67,8 +67,9 @@ type Asset struct {
 }
 
 type DenomUnit struct {
-	Denom    string `json:"denom"`
-	Exponent uint64 `json:"exponent"`
+	Denom    string   `json:"denom"`
+	Exponent uint64   `json:"exponent"`
+	Aliases  []string `json:"aliases"`
 }
 
 type Trace struct {
@@ -79,8 +80,8 @@ type Trace struct {
 }
 
 type DenomUnitMap struct {
-	Base       string
-	DenomUnits []DenomUnit `json:"denom_units"`
+	Base     string
+	Exponent uint64 `json:"exponent"`
 }
 
 var (
@@ -143,16 +144,38 @@ func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomTo
 
 	if basedenomToIBC {
 		for _, asset := range assetList.Assets {
-			DenomUnitMap := DenomUnitMap{
-				Base:       asset.Base,
-				DenomUnits: asset.DenomUnits,
+			// Each asset has a list of denom units. A majority of them have 2 entries, one being the base 0 exponent denom and the other being a larger exponent denom.
+			// An example for tether:
+			// * Exponent 0: uusdt
+			// * Exponent 6: usdt
+			// This implies that if a usdt value is given, in order to convert it to it's base denom (uusdt), we need to multiply the provided value by 10^6.
+			for i, denomUnit := range asset.DenomUnits {
+				DenomUnitMap := DenomUnitMap{
+					Base:     asset.Base,
+					Exponent: asset.DenomUnits[i].Exponent,
+				}
+				// The 0 exponent denom is the base denom.
+				if asset.DenomUnits[i].Exponent == 0 {
+					// To make everyone's life harder, some assets have multiple base denom aliases. For example, the asset list has the following base aliases for the asset "luna":
+					// * uluna
+					// * microluna
+					for _, alias := range denomUnit.Aliases {
+						baseMap[strings.ToLower(alias)] = DenomUnitMap
+					}
+				} else {
+					// Otherwise we just store the denom alias for that exponent.
+					baseMap[strings.ToLower(denomUnit.Denom)] = DenomUnitMap
+				}
 			}
-			baseMap["base"+strings.ToLower(asset.Symbol)] = DenomUnitMap
 		}
 	}
 	if IBCtoBasedenom {
+		// We just store a link from the first base denom alias to the IBC denom. This is just used for display purposes on the terminal's output.
 		for _, asset := range assetList.Assets {
-			baseMapRev[asset.Base] = "base" + strings.ToLower(asset.Symbol)
+			if len(asset.DenomUnits) > 0 && asset.DenomUnits[0].Exponent == 0 && len(asset.DenomUnits[0].Aliases) > 0 {
+				baseDenom := asset.DenomUnits[0].Aliases[0]
+				baseMapRev[asset.Base] = strings.ToLower(baseDenom)
+			}
 		}
 	}
 	return baseMap, baseMapRev
@@ -295,17 +318,20 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				for i, arg := range args {
 					lowerCaseArg := strings.ToLower(arg)
 					lowerCaseArgArray := strings.Split(lowerCaseArg, ",")
-					re := regexp.MustCompile(`^(\d+)(.+)`)
+
+					re := regexp.MustCompile(`^([\d.]+)(\D+)$`)
 
 					for i, lowerCaseArg := range lowerCaseArgArray {
 						match := re.FindStringSubmatch(lowerCaseArg)
 						if len(match) == 3 {
+							value, denom := match[1], match[2]
 							// If the index has a length of 3 then it has a number and a denom (this is a coin object)
 							// Note, index 0 is the entire string, index 1 is the number, and index 2 is the denom
-							if _, ok := assetMap[match[2]]; ok {
-								// In this case, we just need to replace the denom with the base denom and retain the number
-								lowerCaseArgArray[i] = match[1] + assetMap[match[2]].Base
+							transformedCoin, err := transformCoinValueToBaseInt(value, denom, assetMap)
+							if err != nil {
+								continue
 							}
+							lowerCaseArgArray[i] = transformedCoin
 						} else {
 							if _, ok := assetMap[lowerCaseArg]; ok {
 								// In this case, we just need to replace the denom with the base denom
@@ -321,17 +347,19 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 					lowerCaseFlagValue := strings.ToLower(flag.Value.String())
 					lowerCaseFlagValueArray := strings.Split(lowerCaseFlagValue, ",")
 
-					re := regexp.MustCompile(`^(\d+)(.+)`)
+					re := regexp.MustCompile(`^([\d.]+)(\D+)$`)
 
 					for i, lowerCaseFlagValue := range lowerCaseFlagValueArray {
 						match := re.FindStringSubmatch(lowerCaseFlagValue)
 						if len(match) == 3 {
+							value, denom := match[1], match[2]
 							// If the index has a length of 3 then it has a number and a denom (this is a coin object)
 							// Note, index 0 is the entire string, index 1 is the number, and index 2 is the denom
-							if _, ok := assetMap[match[2]]; ok {
-								// In this case, we just need to replace the denom with the base denom and retain the number
-								lowerCaseFlagValueArray[i] = strings.Replace(lowerCaseFlagValue, match[2], assetMap[match[2]].Base, -1)
+							transformedCoin, err := transformCoinValueToBaseInt(value, denom, assetMap)
+							if err != nil {
+								continue
 							}
+							lowerCaseFlagValueArray[i] = transformedCoin
 						} else {
 							if _, ok := assetMap[lowerCaseFlagValue]; ok {
 								// Otherwise, we just need to replace the denom with the base denom
@@ -407,7 +435,7 @@ func initAppConfig() (string, interface{}) {
 ###############################################################################
 
 [osmosis-mempool]
-# This is the max allowed gas any tx. 
+# This is the max allowed gas any tx.
 # This is only for local mempool purposes, and thus	is only ran on check tx.
 max-gas-wanted-per-tx = "25000000"
 
@@ -675,4 +703,29 @@ source ~/.zshrc
 			}
 		},
 	})
+}
+
+// transformCoinValueToBaseInt transforms a cli input that has been split into a number and a denom into it's base int value and base denom.
+// i.e. 10.7osmo -> 10700000uosmo
+// 12atom -> 12000000uatom
+// 15000000uakt -> 15000000uakt (does nothing since it's already in base denom format)
+func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[string]DenomUnitMap) (string, error) {
+	// If the index has a length of 3 then it has a number and a denom (this is a coin object)
+	// Note, index 0 is the entire string, index 1 is the number, and index 2 is the denom
+	if denomUnitMap, ok := assetMap[coinDenom]; ok {
+		// In this case, we just need to replace the denom with the base denom and retain the number
+		if denomUnitMap.Exponent != 0 {
+			coinDec, err := sdk.NewDecFromStr(coinValue)
+			if err != nil {
+				return "", err
+			}
+			transformedCoinValue := coinDec.Mul(sdk.MustNewDecFromStr("10").Power(denomUnitMap.Exponent))
+			transformedCoinValueInt := transformedCoinValue.TruncateInt()
+			transformedCoinValueStr := transformedCoinValueInt.String()
+			return transformedCoinValueStr + assetMap[coinDenom].Base, nil
+		} else {
+			return coinValue + assetMap[coinDenom].Base, nil
+		}
+	}
+	return "", fmt.Errorf("denom %s not found in asset map", coinDenom)
 }

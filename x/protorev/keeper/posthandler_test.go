@@ -342,7 +342,6 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 	s.Require().NoError(err)
 	err = s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100)
 	s.Require().NoError(err)
-	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
@@ -704,7 +703,6 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 	err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 40)
 	s.Require().NoError(err)
-	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
 
 	// Init a new account and fund it with tokens for gas fees
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
