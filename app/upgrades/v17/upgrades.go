@@ -40,8 +40,6 @@ func CreateUpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		var assetPairs []AssetPair
-		poolLinks := []gammmigration.BalancerToConcentratedPoolLink{}
-		fullRangeCoinsUsed := sdk.Coins{}
 
 		// Run migrations before applying any other state changes.
 		// NOTE: DO NOT PUT ANY STATE CHANGES BEFORE RunMigrations().
@@ -65,14 +63,20 @@ func CreateUpgradeHandler(
 		}
 
 		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
+		poolLinks := []gammmigration.BalancerToConcentratedPoolLink{}
+		fullRangeCoinsUsed := sdk.Coins{}
 
 		for _, assetPair := range assetPairs {
-			clPoolDenom, clPoolId, err := createCLPoolWithCommunityPoolPosition(ctx, keepers, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, communityPoolAddress, &poolLinks, &fullRangeCoinsUsed)
+			clPoolDenom, clPoolId, poolLink, coinsUser, err := createCLPoolWithCommunityPoolPosition(ctx, keepers, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, communityPoolAddress)
 			if errors.Is(err, notEnoughLiquidityForSwapErr) {
 				continue
 			} else if err != nil {
 				return nil, err
 			}
+
+			// Track pool link created and coins used for the community pool.
+			poolLinks = append(poolLinks, poolLink)
+			fullRangeCoinsUsed = fullRangeCoinsUsed.Add(coinsUser...)
 
 			if assetPair.Superfluid {
 				ctx.Logger().Info(fmt.Sprintf("gammPoolId %d is superfluid enabled, enabling %s as a superfluid asset", assetPair.LinkedClassicPool, clPoolDenom))
@@ -119,33 +123,33 @@ func CreateUpgradeHandler(
 }
 
 // createCLPoolWithCommunityPoolPosition creates a CL pool for a given balancer pool and adds a full range position with the community pool.
-func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.AppKeepers, gammPoolId uint64, baseAsset string, spreadFactor sdk.Dec, communityPoolAddress sdk.AccAddress, poolLinks *[]gammmigration.BalancerToConcentratedPoolLink, fullRangeCoinsUsed *sdk.Coins) (clPoolDenom string, clPoolId uint64, err error) {
+func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.AppKeepers, gammPoolId uint64, baseAsset string, spreadFactor sdk.Dec, communityPoolAddress sdk.AccAddress) (clPoolDenom string, clPoolId uint64, poolLink gammmigration.BalancerToConcentratedPoolLink, coinsUsed sdk.Coins, err error) {
 	// Check if classic pool has enough liquidity to support a 0.1 OSMO swap before creating a CL pool.
 	// If not, skip the pool.
 	osmoIn := sdk.NewCoin(QuoteAsset, sdk.NewInt(100000))
 	linkedClassicPool, err := keepers.PoolManagerKeeper.GetPool(ctx, gammPoolId)
 	if err != nil {
-		return "", 0, err
+		return "", 0, gammmigration.BalancerToConcentratedPoolLink{}, nil, err
 	}
 	_, err = keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, linkedClassicPool, osmoIn, baseAsset, spreadFactor)
 	if err != nil {
-		return "", 0, err
+		return "", 0, gammmigration.BalancerToConcentratedPoolLink{}, nil, err
 	}
 
 	// Create a concentrated liquidity pool for asset pair.
 	ctx.Logger().Info(fmt.Sprintf("Creating CL pool from poolID (%d), baseAsset (%s), spreadFactor (%s), tickSpacing (%d)", gammPoolId, baseAsset, spreadFactor, TickSpacing))
 	clPool, err := keepers.GAMMKeeper.CreateConcentratedPoolFromCFMM(ctx, gammPoolId, baseAsset, spreadFactor, TickSpacing)
 	if err != nil {
-		return "", 0, err
+		return "", 0, gammmigration.BalancerToConcentratedPoolLink{}, nil, err
 	}
 	clPoolId = clPool.GetId()
 	clPoolDenom = cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
 
-	// Add the pool link to the list of pool links (we set them all at once later)
-	*poolLinks = append(*poolLinks, gammmigration.BalancerToConcentratedPoolLink{
+	// Create pool link object.
+	poolLink = gammmigration.BalancerToConcentratedPoolLink{
 		BalancerPoolId: gammPoolId,
 		ClPoolId:       clPoolId,
-	})
+	}
 
 	// Get community pool balance before swap and position creation
 	commPoolBalanceBaseAssetPre := keepers.BankKeeper.GetBalance(ctx, communityPoolAddress, baseAsset)
@@ -155,7 +159,7 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 	// Swap 0.1 OSMO for baseAsset from the community pool.
 	respectiveBaseAssetInt, err := keepers.GAMMKeeper.SwapExactAmountIn(ctx, communityPoolAddress, linkedClassicPool, osmoIn, baseAsset, sdk.ZeroInt(), linkedClassicPool.GetSpreadFactor(ctx))
 	if err != nil {
-		return "", 0, err
+		return "", 0, gammmigration.BalancerToConcentratedPoolLink{}, nil, err
 	}
 	ctx.Logger().Info(fmt.Sprintf("Swapped %s for %s%s from the community pool", osmoIn.String(), respectiveBaseAssetInt.String(), baseAsset))
 
@@ -165,7 +169,7 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 	fullRangeCoins := sdk.NewCoins(respectiveBaseAsset, osmoIn)
 	_, _, _, _, err = keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeCoins)
 	if err != nil {
-		return "", 0, err
+		return "", 0, gammmigration.BalancerToConcentratedPoolLink{}, nil, err
 	}
 
 	// Get community pool balance after swap and position creation
@@ -176,12 +180,9 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 	// While we can be fairly certain the diff between these two is 0.2 OSMO, if for whatever reason
 	// some baseAsset dust remains in the community pool and we don't account for it, when updating the
 	// fee pool balance later, we will be off by that amount and will cause a panic.
-	coinsUsed := commPoolBalancePre.Sub(commPoolBalancePost)
+	coinsUsed = commPoolBalancePre.Sub(commPoolBalancePost)
 
-	// Track the coins used to create the full range position (we manually update the fee pool later all at once).
-	*fullRangeCoinsUsed = fullRangeCoinsUsed.Add(coinsUsed...)
-
-	return clPoolDenom, clPoolId, nil
+	return clPoolDenom, clPoolId, poolLink, coinsUsed, nil
 }
 
 // authorizeSuperfluid authorizes superfluid for the provided CL pool.
