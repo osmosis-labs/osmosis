@@ -80,6 +80,7 @@ require (
 	google.golang.org/genproto v0.0.0-20230726155614-23370e0ffb3e // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230706204954-ccb25ca9f130 // indirect
 )
+randomerror
 
 require (
 	4d63.com/gochecknoglobals v0.2.1 // indirect
