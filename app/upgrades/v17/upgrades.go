@@ -3,6 +3,7 @@ package v17
 import (
 	"errors"
 	"fmt"
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -47,6 +48,9 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+
+		// Set ibc-hooks params
+		keepers.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
 
 		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
 
