@@ -95,6 +95,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 	totalDelAmt := sdk.NewInt(0)
 	tokenAmt := sdk.NewInt(0)
 
+	fmt.Println(existingSet.Preferences)
 	// loop through the validatorSetPreference and delegate the proportion of the tokens based on weights
 	for i, val := range existingSet.Preferences {
 		_, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
@@ -108,10 +109,9 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 			tokenAmt = coin.Amount.Sub(totalDelAmt).ToDec().TruncateInt()
 		} else {
 			// tokenAmt takes the amount to delegate, calculated by {val_distribution_weight * tokenAmt}
-			tokenAmt = val.Weight.Mul(coin.Amount.ToDec()).TruncateInt()
+			tokenAmt = val.Weight.MulInt(coin.Amount).TruncateInt()
 			totalDelAmt = totalDelAmt.Add(tokenAmt)
 		}
-
 		// TODO: What happens here if validator unbonding
 		// Delegate the unbonded tokens
 		_, err = k.stakingKeeper.Delegate(ctx, delegator, tokenAmt, stakingtypes.Unbonded, validator, true)
@@ -215,6 +215,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	targetRatio := sdk.OneDec()
 	amountRemaining := coin.Amount
 
+	fmt.Println("VRATIO PRE: ", valSetRatio)
 	// Step 6
 	for len(valSetRatio) > 0 && valSetRatio[0].VRatio.GT(targetRatio) {
 		fmt.Printf("Undelegating fully from validator %s %s\n", valSetRatio[0].ValAddr.String(), valSetRatio[0].DelegatedAmt)
@@ -228,16 +229,16 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	}
 
 	// Step 7
-	fmt.Println("Distributing the remaining tokens normally amongst the remaining validators.")
+	fmt.Println("Undelegating the remaining amount.")
 	for _, val := range valSetRatio {
-		undelegateAmt := val.Weight.MulInt(amountRemaining).TruncateInt()
-		fmt.Printf("Undelegate %.2f from validator %s\n", undelegateAmt, val.ValAddr.String())
+		// TestUndelegateFromValSetErrorCase1 specifically checks this logic
+		fmt.Printf("Undelegate %s from validator %s\n", val.UndelegateAmt, val.ValAddr.String())
 		_, validator, err := k.getValAddrAndVal(ctx, val.ValAddr.String())
 		if err != nil {
 			return err
 		}
 
-		sharesAmt, err := validator.SharesFromTokens(undelegateAmt)
+		sharesAmt, err := validator.SharesFromTokens(val.UndelegateAmt)
 		if err != nil {
 			return err
 		}

@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	valPref "github.com/osmosis-labs/osmosis/v17/x/valset-pref"
 	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -264,5 +265,72 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase() {
 			s.Require().Equal(expectedShares[i], del.GetShares())
 		}
 	}
+
+}
+
+// NOTE: this is the case that used to error. Fixed by this PR
+func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase1() {
+	s.SetupTest()
+
+	valAddrs := s.SetupMultipleValidators(4)
+	valPreferences := []types.ValidatorPreference{
+		{
+			ValOperAddress: valAddrs[0],
+			Weight:         sdk.MustNewDecFromStr("0.05"),
+		},
+		{
+			ValOperAddress: valAddrs[1],
+			Weight:         sdk.MustNewDecFromStr("0.05"),
+		},
+		{
+			ValOperAddress: valAddrs[2],
+			Weight:         sdk.NewDecWithPrec(45, 2), // 0.45
+		},
+		{
+			ValOperAddress: valAddrs[3],
+			Weight:         sdk.NewDecWithPrec(45, 2), // 0.45
+		},
+	}
+
+	delegator := sdk.AccAddress([]byte("addr4---------------"))
+	coinToStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000))   // delegate 100osmo using Valset now and 10 osmo using regular staking delegate
+	coinToUnStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000_000)) // undelegate 20osmo
+
+	s.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 300_000_000)}) // 100 osmo
+
+	// valset test setup
+	// SetValidatorSetPreference sets a new list of val-set
+	msgServer := valPref.NewMsgServerImpl(s.App.ValidatorSetPreferenceKeeper)
+	c := sdk.WrapSDKContext(s.Ctx)
+
+	// SetValidatorSetPreference sets a new list of val-set
+	_, err := msgServer.SetValidatorSetPreference(c, types.NewMsgSetValidatorSetPreference(delegator, valPreferences))
+	s.Require().NoError(err)
+
+	// DelegateToValidatorSet delegate to existing val-set
+	err = s.App.ValidatorSetPreferenceKeeper.DelegateToValidatorSet(s.Ctx, delegator.String(), coinToStake)
+	s.Require().NoError(err)
+
+	valAddr, err := sdk.ValAddressFromBech32(valAddrs[0])
+	s.Require().NoError(err)
+
+	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+	s.Require().True(found)
+
+	valAddr2, err := sdk.ValAddressFromBech32(valAddrs[1])
+	s.Require().NoError(err)
+
+	validator2, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr2)
+	s.Require().True(found)
+
+	// Delegate more token to the validator. This will cause valset and regular staking to go out of sync
+	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, sdk.NewInt(50_000_000), stakingtypes.Unbonded, validator, true)
+	s.Require().NoError(err)
+
+	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, sdk.NewInt(50_000_000), stakingtypes.Unbonded, validator2, true)
+	s.Require().NoError(err)
+
+	err = s.App.ValidatorSetPreferenceKeeper.UndelegateFromValidatorSet(s.Ctx, delegator.String(), coinToUnStake)
+	s.Require().NoError(err)
 
 }
