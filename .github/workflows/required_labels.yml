@@ -1,31 +1,33 @@
-name: required labels
-
 on:
   pull_request:
-    branches:
-      - "**"
-  push:
+    types: [opened, labeled, unlabeled, synchronize]
     branches:
       - "main"
-      - "concentrated-liquidity-main"
-      - "v[0-9]**"
-  workflow_dispatch:
 
 jobs:
-  await_checks:
+  state_compatability_labels:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for check suites to complete
-        id: await-check-suites
-        uses: jitterbit/await-check-suites@v1 # Use the correct version/tag
+      - uses: actions/checkout@v3
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v37.1.0
         with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.event.pull_request.head.sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          failStepIfUnsuccessful: "true"
-      - name: Set PR to draft if checks failed
-        if: steps.await-check-suites.outputs.conclusion != 'success'
-        run: |
-          gh pr update ${{ github.event.pull_request.number }} --draft
+          files_ignore: |
+            **/*.md
+            **/*_test.go
+            .github/workflows/*.yml
+      - name: Check required labels
+        # Skip this step and return success result for markdown only changes
+        if: |
+          steps.changed-files.outputs.any_changed == 'true' ||
+          steps.changed-files.outputs.any_deleted == 'true' ||
+          steps.changed-files.outputs.any_modified == 'true'
+        uses: mheap/github-action-required-labels@v5
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ADD_TO_PROJECT_PAT }}
+        with: #Require one of the following labels
+          mode: exactly
+          count: 1
+          labels: "V:state/breaking, V:state/compatible/no_backport, V:state/compatible/backport"
