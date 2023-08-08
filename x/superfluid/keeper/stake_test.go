@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -1038,7 +1039,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 		superfluidUndelegating bool
 		unlocking              bool
 		unlocked               bool
-		expectedError          bool
+		expectedError          error
 	}
 	testCases := map[string]tc{
 		"lock that is superfluid delegated": {},
@@ -1056,7 +1057,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 		"error: unlocked gamm shares": {
 			notSuperfluidDelegated: true,
 			unlocked:               true,
-			expectedError:          true,
+			expectedError:          fmt.Errorf("unsupported staking conversion type"),
 		},
 	}
 
@@ -1076,7 +1077,8 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 
 			// system under test
 			totalAmtConverted, err := s.App.SuperfluidKeeper.UnbondConvertAndStake(s.Ctx, lock.ID, sender.String(), valAddr.String(), minAmountToStake)
-			if tc.expectedError {
+			if tc.expectedError != nil {
+				s.Require().Equal(err.Error(), tc.expectedError.Error())
 				s.Require().Error(err)
 				return
 			}
@@ -1124,7 +1126,7 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 		senderIsNotOwnerOfLock bool
 		useNonBalancerLock     bool
 
-		expectedError bool
+		expectedError error
 	}
 	testCases := map[string]tc{
 		"lock that is superfluid delegated": {},
@@ -1142,15 +1144,25 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 		// error cases
 		"error: min amount to stake greater than actual amount": {
 			useMinAmountToStake: true,
-			expectedError:       true,
+			expectedError: types.TokenConvertedLessThenDesiredStakeError{
+				ActualTotalAmtToStake:   sdk.NewInt(8309),
+				ExpectedTotalAmtToStake: sdk.NewInt(999999999),
+			},
 		},
-		"error: use non balancner lock": {
+		"error: use non balancer lock": {
 			useNonBalancerLock: true,
-			expectedError:      true,
+			expectedError: types.SharesToMigrateDenomPrefixError{
+				Denom:               "foo",
+				ExpectedDenomPrefix: "gamm/pool/",
+			},
 		},
 		"error: sender is not owner of lock ": {
 			senderIsNotOwnerOfLock: true,
-			expectedError:          true,
+			expectedError: types.LockOwnerMismatchError{
+				LockId:        1,
+				LockOwner:     s.TestAccs[0].String(),
+				ProvidedOwner: s.TestAccs[1].String(),
+			},
 		},
 	}
 
@@ -1185,8 +1197,14 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 
 			// system under test
 			totalAmtConverted, err := s.App.SuperfluidKeeper.ConvertLockToStake(s.Ctx, sender, valAddr.String(), lock.ID, minAmountToStake)
-			if tc.expectedError {
+			if tc.expectedError != nil {
 				s.Require().Error(err)
+				// TODO: come back to this specific err case
+				// err check for LockOwnerMismatchError needs further refactoring for all these test cases
+				// since lock owner is not know-able at the time of test creation
+				if !tc.senderIsNotOwnerOfLock {
+					s.Require().Equal(err.Error(), tc.expectedError.Error())
+				}
 				return
 			}
 			s.Require().NoError(err)
@@ -1224,28 +1242,26 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 		useValSetPrefMultipleVal bool
 		useSuperfluid            bool
 
-		expectedError bool
+		expectedError string
 	}
 	testCases := map[string]tc{
-		"superfluid staked": {},
+		"superfluid staked, provide validator address": {},
 		"use val set preference (single validator)": {
 			useValSetPrefSingleVal: true,
 		},
 		"multiple validator returned from valset pref": {
 			useValSetPrefMultipleVal: true,
-			expectedError:            false,
 		},
 		"No validator returned from valset, fall back to superfluid delegation": {
 			useSuperfluid: true,
-			expectedError: false,
 		},
 		"error: invalid val address": {
 			useInvalidValAddr: true,
-			expectedError:     true,
+			expectedError:     "invalid Bech32 prefix; expected osmovaloper, got osmo",
 		},
 		"error: min amount to stake exceeds actual amount staking": {
 			useMinAmtToStake: true,
-			expectedError:    true,
+			expectedError:    "actual amount converted to stake (8309) is less then minimum amount expected to be staked (999999999)",
 		},
 	}
 
@@ -1319,7 +1335,8 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 
 			// system under test.
 			totalAmtConverted, err := s.App.SuperfluidKeeper.ConvertGammSharesToOsmoAndStake(s.Ctx, sender, valAddrString, poolId, exitCoins, minAmtToStake, originalSuperfluidValAddr)
-			if tc.expectedError {
+			if tc.expectedError != "" {
+				s.Require().Equal(err.Error(), tc.expectedError)
 				s.Require().Error(err)
 				return
 			}

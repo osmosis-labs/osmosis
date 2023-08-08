@@ -711,6 +711,15 @@ func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAd
 		return sdk.ZeroInt(), err
 	}
 
+	// check lock owner is sender
+	if lock.Owner != sender.String() {
+		return sdk.ZeroInt(), types.LockOwnerMismatchError{
+			LockId:        lock.ID,
+			LockOwner:     lock.Owner,
+			ProvidedOwner: sender.String(),
+		}
+	}
+
 	lockCoin := lock.Coins[0]
 
 	// Ensuring the sharesToMigrate contains gamm pool share prefix.
