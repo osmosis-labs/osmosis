@@ -24,7 +24,7 @@ var (
 			Weight: 5, // it takes around 5 ms to simulate and execute a stable swap
 		},
 		Concentrated: ConcentratedPoolInfo{
-			Weight:          500, // it takes around 7 ms to simulate and execute a concentrated swap
+			Weight:          7, // it takes around 7 ms to simulate and execute a concentrated swap
 			MaxTicksCrossed: 5,
 		},
 		Cosmwasm: CosmwasmPoolInfo{},
