@@ -10,13 +10,19 @@ jobs:
     steps:
       - name: Check all CI statuses
         run: |
-          # Get all check runs for the latest commit
-          CHECKS=$(gh api repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }}/check-runs -q ".check_runs[] | .conclusion")
+          for i in {1..90}; do  # This will check for 15 minutes
+              # Get all check runs for the latest commit
+              CHECKS=$(gh api repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }}/check-runs -q ".check_runs[] | .conclusion")
 
-          # Check if any of the checks has a status of 'failure'
-          if echo "$CHECKS" | grep -q "failure"; then
-            # Set the PR to draft mode
-            gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }} -X PATCH -f draft=true
-          fi
+              # Check if any of the checks has a status of 'failure'
+              if echo "$CHECKS" | grep -q "failure"; then
+                  # Set the PR to draft mode
+                  gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }} -X PATCH -f draft=true
+                  exit 0  # Exit the loop if PR is set to draft
+              fi
+
+              # Wait for 5 seconds before the next check
+              sleep 10
+          done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
