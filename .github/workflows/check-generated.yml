@@ -48,7 +48,7 @@ jobs:
         name: "Check protobuf generated code"
         run: |
           make proto-gen
-          make query-gen
+          make run-querygen
       - 
         name: Set up Git
         run: |
