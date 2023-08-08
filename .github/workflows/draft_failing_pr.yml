@@ -20,6 +20,7 @@ jobs:
         uses: jitterbit/await-check-suites@v1 # Use the correct version/tag
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          appSlugFilter: "github-actions"
       - name: Set PR to draft if checks failed
         if: steps.await-check-suites.outputs.conclusion != 'success'
         run: |
