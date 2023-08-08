@@ -10,6 +10,8 @@ jobs:
   check_all_ci:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+
       - name: Check all CI statuses
         run: |
           for i in {1..90}; do  # This will check for 15 minutes
