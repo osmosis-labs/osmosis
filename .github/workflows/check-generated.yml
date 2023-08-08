@@ -50,10 +50,12 @@ jobs:
           make proto-gen
           make run-querygen
       - 
+        # TODO: Switch to osmobot
         name: Set up Git
         run: |
-          git config --global user.email "github-actions-bot@example.com"
-          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "141283918+devbot-wizard@users.noreply.github.com"
+          git config --global user.name "devbot-wizard"
+          git remote add origin_with_token https://$DEVBOT_TOKEN@github.com/osmosis-labs/osmosis.git
       - 
         name: Commit changes
         run: |
