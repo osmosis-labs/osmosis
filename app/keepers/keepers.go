@@ -246,8 +246,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Configure the hooks keeper
 	hooksKeeper := ibchookskeeper.NewKeeper(
 		appKeepers.keys[ibchookstypes.StoreKey],
+		appKeepers.GetSubspace(ibchookstypes.ModuleName),
+		appKeepers.IBCKeeper.ChannelKeeper,
+		nil,
 	)
-	appKeepers.IBCHooksKeeper = &hooksKeeper
+	appKeepers.IBCHooksKeeper = hooksKeeper
 
 	appKeepers.WireICS20PreWasmKeeper(appCodec, bApp, appKeepers.IBCHooksKeeper)
 
@@ -423,7 +426,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
 		appKeepers.GetSubspace(tokenfactorytypes.ModuleName),
 		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper.WithMintCoinsRestriction(tokenfactorytypes.NewTokenFactoryDenomMintCoinsRestriction()),
+		appKeepers.BankKeeper,
 		appKeepers.DistrKeeper,
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
@@ -477,6 +480,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.Ics20WasmHooks.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.CosmwasmPoolKeeper.SetContractKeeper(appKeepers.ContractKeeper)
+	appKeepers.IBCHooksKeeper.ContractKeeper = appKeepers.ContractKeeper
 
 	// set token factory contract keeper
 	appKeepers.TokenFactoryKeeper.SetContractKeeper(appKeepers.ContractKeeper)
@@ -671,6 +675,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(icqtypes.ModuleName)
 	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
 	paramsKeeper.Subspace(cosmwasmpooltypes.ModuleName)
+	paramsKeeper.Subspace(ibchookstypes.ModuleName)
 
 	return paramsKeeper
 }

@@ -27,6 +27,9 @@ message GenesisState {
   ];
   // The pool weights that are being used to calculate the weight (compute cost)
   // of each route.
+  //
+  // DEPRECATED: This field is deprecated and will be removed in the next
+  // release. It is replaced by the `info_by_pool_type` field.
   PoolWeights pool_weights = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"pool_weights\""
@@ -62,5 +65,11 @@ message GenesisState {
   repeated cosmos.base.v1beta1.Coin profits = 12 [
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"profits\""
+  ];
+  // Information that is used to estimate execution time / gas
+  // consumption of a swap on a given pool type.
+  InfoByPoolType info_by_pool_type = 13 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"info_by_pool_type\""
   ];
 }
