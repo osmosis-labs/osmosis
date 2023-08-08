@@ -50,14 +50,14 @@ func (s *KeeperTestSuite) CreatePositionTickSpacingsFromCurrentTick(poolId uint6
 	lowerTick := currentTick - int64(tickSpacingsAwayFromCurrentTick)*tickSpacing
 	upperTick := currentTick + int64(tickSpacingsAwayFromCurrentTick)*tickSpacing
 	s.FundAcc(s.TestAccs[0], DefaultCoins)
-	positionId, _, _, liquidityNarrowRangeTwo, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
 
 	return positionMeta{
-		positionId: positionId,
+		positionId: positionData.ID,
 		lowerTick:  lowerTick,
 		upperTick:  upperTick,
-		liquidity:  liquidityNarrowRangeTwo,
+		liquidity:  positionData.Liquidity,
 	}
 }
 
