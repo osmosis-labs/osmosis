@@ -163,7 +163,7 @@ func (k Keeper) GetAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapR
 
 // GetAllHistoricalPoolIndexedTWAPsForPoolId returns HistoricalTwapRecord for a pool give poolId.
 func (k Keeper) GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
-	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.FormatKeyPoolTwapRecords(poolId), types.ParseTwapHistoricalPoolIndexedRecordFromBz)
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.FormatKeyPoolTwapRecords(poolId), types.ParseTwapFromBz)
 }
 
 // StoreNewRecord stores a record, in both the most recent record store and historical stores.
@@ -174,8 +174,9 @@ func (k Keeper) StoreNewRecord(ctx sdk.Context, twap types.TwapRecord) {
 	k.StoreHistoricalTWAP(ctx, twap)
 }
 
-// DeleteOldRecord deletes a record, in most recent record store
-func (k Keeper) DeleteOldRecord(ctx sdk.Context, twap types.TwapRecord) {
+// DeleteMostRecentRecord deletes a given record in most recent record store.
+// Note that if there are entries in historical indexes for this record, they are not deleted by this method.
+func (k Keeper) DeleteMostRecentRecord(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatMostRecentTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
 	store.Delete(key)

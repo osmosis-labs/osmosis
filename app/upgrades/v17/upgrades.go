@@ -160,7 +160,6 @@ func FlipTwapSpotPriceRecords(ctx sdk.Context, pools []poolmanagertypes.PoolI, k
 			keepers.TwapKeeper.DeleteHistoricalRecord(ctx, oldRecord)
 		}
 
-		// check that the twap record exists
 		clPoolTwapRecords, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, pool.GetId())
 		if err != nil {
 			return err
@@ -174,7 +173,7 @@ func FlipTwapSpotPriceRecords(ctx sdk.Context, pools []poolmanagertypes.PoolI, k
 			twapRecord.P0LastSpotPrice, twapRecord.P1LastSpotPrice = oldRecord.P1LastSpotPrice, oldRecord.P0LastSpotPrice
 
 			keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord)
-			keepers.TwapKeeper.DeleteOldRecord(ctx, oldRecord)
+			keepers.TwapKeeper.DeleteMostRecentRecord(ctx, oldRecord)
 		}
 	}
 
