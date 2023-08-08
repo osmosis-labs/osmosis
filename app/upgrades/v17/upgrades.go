@@ -17,6 +17,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 func CreateUpgradeHandler(
@@ -33,19 +35,14 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		poolIds := []uint64{}
 		// get all the existing CL pools
 		pools, err := keepers.ConcentratedLiquidityKeeper.GetPools(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, pool := range pools {
-			poolIds = append(poolIds, pool.GetId())
-		}
-
 		// migrate twap records for CL Pools
-		err = FlipTwapSpotPriceRecords(ctx, poolIds, keepers)
+		err = FlipTwapSpotPriceRecords(ctx, pools, keepers)
 		if err != nil {
 			return nil, err
 		}
@@ -147,16 +144,9 @@ func CreateUpgradeHandler(
 }
 
 // FlipTwapSpotPriceRecords flips the denoms and spot price of twap record of a given pool.
-func FlipTwapSpotPriceRecords(ctx sdk.Context, poolIds []uint64, keepers *keepers.AppKeepers) error {
-	for _, poolId := range poolIds {
-		// check that this is a cl pool
-		_, err := keepers.ConcentratedLiquidityKeeper.GetConcentratedPoolById(ctx, poolId)
-		if err != nil {
-			return err
-		}
-
-		// check if the pool is CL osmo/dai pool
-		twapRecordHistoricalPoolIndexed, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, poolId)
+func FlipTwapSpotPriceRecords(ctx sdk.Context, pools []poolmanagertypes.PoolI, keepers *keepers.AppKeepers) error {
+	for _, pool := range pools {
+		twapRecordHistoricalPoolIndexed, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, pool.GetId())
 		if err != nil {
 			return err
 		}
@@ -171,7 +161,7 @@ func FlipTwapSpotPriceRecords(ctx sdk.Context, poolIds []uint64, keepers *keeper
 		}
 
 		// check that the twap record exists
-		clPoolTwapRecords, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, poolId)
+		clPoolTwapRecords, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, pool.GetId())
 		if err != nil {
 			return err
 		}
