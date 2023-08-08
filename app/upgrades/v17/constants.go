@@ -1,10 +1,14 @@
 package v17
 
 import (
+	"errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 	poolManagerTypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -364,7 +368,9 @@ func InitializeAssetPairsTestnet(ctx sdk.Context, keepers *keepers.AppKeepers) (
 		isSuperfluid := false
 		poolShareDenom := fmt.Sprintf("gamm/pool/%d", gammPoolId)
 		_, err = superfluidKeeper.GetSuperfluidAsset(ctx, poolShareDenom)
-		if err == nil {
+		if err != nil && !errors.Is(err, errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", poolShareDenom)) {
+			return nil, err
+		} else if err == nil {
 			isSuperfluid = true
 		}
 
