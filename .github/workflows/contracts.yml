@@ -1,5 +1,8 @@
 name: Cosmwasm Contracts
 
+permissions:
+  contents: write
+
 on:
   pull_request:
     branches:
@@ -46,6 +49,8 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Optimize
         working-directory: ${{ matrix.contract.workdir }}
@@ -70,12 +75,22 @@ jobs:
           path: ${{ matrix.contract.workdir }}Cargo.lock
           retention-days: 1
 
-      # TODO: workspace optimizer compiles all contracts in the workspace, so we could just run that once
-      # and then check the diff of all the bytecode files
-      - name: Check Test Data
-        working-directory: ${{ matrix.contract.workdir }}
+      - name: Move files
         run: >
-          diff "${GITHUB_WORKSPACE}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
+          mv ${{ matrix.contract.workdir }}${{ matrix.contract.build }} ${{ matrix.contract.bytecode }}
+      - name: Commit changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add *.wasm
+          git add *Cargo.Lock
+          git commit -m "Generated protofile changes" || echo "No changes to commit"
+          git push      # TODO: workspace optimizer compiles all contracts in the workspace, so we could just run that once
+      # and then check the diff of all the bytecode files
+      # - name: Check Test Data
+      #   working-directory: ${{ matrix.contract.workdir }}
+      #   run: >
+      #     diff "${GITHUB_WORKSPACE}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
 
   tests:
     name: Test Cosmwasm Contracts
