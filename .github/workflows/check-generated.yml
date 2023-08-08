@@ -62,4 +62,4 @@ jobs:
           git add *.go
           git add *.proto
           git commit -m "Generated protofile changes" || echo "No changes to commit"
-          git push origin HEAD
+          git push
