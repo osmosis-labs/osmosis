@@ -1,7 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
 use schemars::JsonSchema;
-use serde_json_wasm::from_str;
 
 use crate::RegistryError;
 
@@ -31,9 +30,6 @@ pub enum QueryMsg {
 
     #[returns(crate::proto::QueryDenomTraceResponse)]
     GetDenomTrace { ibc_denom: String },
-
-    #[returns(bool)]
-    HasPacketForwarding { chain: String },
 }
 
 // Response for GetAddressFromAlias query
@@ -97,14 +93,6 @@ impl SerializableJson {
 impl From<serde_cw_value::Value> for SerializableJson {
     fn from(value: serde_cw_value::Value) -> Self {
         Self(value)
-    }
-}
-
-impl TryFrom<String> for SerializableJson {
-    type Error = RegistryError;
-
-    fn try_from(value: String) -> Result<Self, RegistryError> {
-        Ok(Self(from_str(&value)?))
     }
 }
 
