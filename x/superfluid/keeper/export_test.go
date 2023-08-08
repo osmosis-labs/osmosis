@@ -37,8 +37,8 @@ func (k Keeper) ForceUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAd
 	return k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, lock, sharesToMigrate, tokenOutMins)
 }
 
-func (k Keeper) RouteMigration(ctx sdk.Context, sender sdk.AccAddress, lockId int64, sharesToMigrate sdk.Coin) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
-	return k.routeMigration(ctx, sender, lockId, sharesToMigrate)
+func (k Keeper) RouteMigration(ctx sdk.Context, sender sdk.AccAddress, lockId int64) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
+	return k.routeMigration(ctx, sender, lockId)
 }
 
 func (k Keeper) ValidateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (poolIdLeaving, poolIdEntering uint64, preMigrationLock *lockuptypes.PeriodLock, remainingLockTime time.Duration, err error) {
@@ -62,16 +62,8 @@ func (k Keeper) DistributeSuperfluidGauges(ctx sdk.Context) {
 }
 
 func (k Keeper) ConvertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, lockId uint64,
-	sharesToStake sdk.Coin, minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, shares sdk.Dec, err error) {
-	return k.convertLockToStake(ctx, sender, valAddr, lockId, sharesToStake, minAmtToStake)
-}
-func (k Keeper) ConvertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string,
-	sharesToStake sdk.Coin, minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, shares sdk.Dec, err error) {
-	return k.convertUnlockedToStake(ctx, sender, valAddr, sharesToStake, minAmtToStake)
-}
-
-func (k Keeper) ValidateUnbondConvertAndStake(ctx sdk.Context, sharesToMigrate sdk.Coin) (poolIdLeaving uint64, err error) {
-	return k.validateUnbondConvertAndStake(ctx, sharesToMigrate)
+	minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, shares sdk.Dec, err error) {
+	return k.convertLockToStake(ctx, sender, valAddr, lockId, minAmtToStake)
 }
 
 func (k Keeper) ConvertGammSharesToOsmoAndStake(
