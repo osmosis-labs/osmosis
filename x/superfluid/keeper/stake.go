@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -711,6 +712,12 @@ func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAd
 	}
 
 	lockCoin := lock.Coins[0]
+
+	// Ensuring the sharesToMigrate contains gamm pool share prefix.
+	if !strings.HasPrefix(lockCoin.Denom, gammtypes.GAMMTokenPrefix) {
+		return sdk.ZeroInt(), types.SharesToMigrateDenomPrefixError{Denom: lockCoin.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
+	}
+
 	poolIdLeaving, err := gammtypes.GetPoolIdFromShareDenom(lockCoin.Denom)
 	if err != nil {
 		return sdk.ZeroInt(), err

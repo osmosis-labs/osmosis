@@ -1117,6 +1117,7 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 
 		useMinAmountToStake    bool
 		senderIsNotOwnerOfLock bool
+		useNonBalancerLock     bool
 
 		expectedError bool
 	}
@@ -1134,6 +1135,10 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 		"error: min amount to stake greater than actual amount": {
 			useMinAmountToStake: true,
 			expectedError:       true,
+		},
+		"error: use non balancner lock": {
+			useNonBalancerLock: true,
+			expectedError:      true,
 		},
 		"error: sender is not owner of lock ": {
 			senderIsNotOwnerOfLock: true,
@@ -1153,6 +1158,15 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 			if tc.senderIsNotOwnerOfLock {
 				sender = s.TestAccs[1]
 			}
+
+			if tc.useNonBalancerLock {
+				nonBalancerShareDenomCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)))
+				s.FundAcc(sender, nonBalancerShareDenomCoins)
+				newLock, err := s.App.LockupKeeper.CreateLock(s.Ctx, sender, nonBalancerShareDenomCoins, time.Second)
+				s.Require().NoError(err)
+				lock = &newLock
+			}
+
 			valAddr := s.SetupValidator(stakingtypes.Bonded)
 			minAmountToStake := sdk.ZeroInt()
 			if tc.useMinAmountToStake {
