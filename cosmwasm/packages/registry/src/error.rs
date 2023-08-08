@@ -15,9 +15,6 @@ pub enum RegistryError {
     #[error("{0}")]
     ValueSerialization(ValueSerError),
 
-    #[error("{0}")]
-    Bech32ErrorRaw(#[from] bech32::Error),
-
     // Validation errors
     #[error("Invalid channel id: {0}")]
     InvalidChannelId(String),
@@ -32,9 +29,6 @@ pub enum RegistryError {
 
     #[error("serialization error: {error}")]
     SerialiaztionError { error: String },
-
-    #[error("registry improperly configured")]
-    ImproperlyConfigured {},
 
     #[error("denom {denom:?} is not an IBC denom")]
     InvalidIBCDenom { denom: String },
@@ -98,9 +92,6 @@ pub enum RegistryError {
 
     #[error("bech32 prefix does not exist for chain: {chain}")]
     Bech32PrefixDoesNotExist { chain: String },
-
-    #[error("Chain {chain} does not support forwarding")]
-    ForwardingUnsopported { chain: String },
 }
 
 impl From<RegistryError> for StdError {
