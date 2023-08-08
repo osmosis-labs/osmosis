@@ -1,6 +1,6 @@
 use crate::state::{
-    CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_BECH32_PREFIX_REVERSE_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP,
-    CHANNEL_ON_CHAIN_CHAIN_MAP,
+    CHAIN_PFM_MAP, CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+    CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
 };
 
 use cosmwasm_std::{Deps, StdError};
@@ -88,4 +88,14 @@ pub fn query_chain_from_channel_chain_pair(
     }
 
     Ok(chain.value)
+}
+
+pub fn query_chain_has_pfm(deps: Deps, chain: String) -> bool {
+    let chain = chain.to_lowercase();
+    if let Ok(chain_pfm) = CHAIN_PFM_MAP.load(deps.storage, &chain) {
+        deps.api.debug(&format!("{chain_pfm:?}"));
+        chain_pfm.is_validated()
+    } else {
+        false
+    }
 }
