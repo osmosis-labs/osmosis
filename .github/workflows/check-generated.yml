@@ -36,7 +36,7 @@ jobs:
       -
         name: "Check protobuf generated code"
         run: |
-          make proto-gen
+          make proto-all
           make run-querygen
       - 
         name: Commit changes
