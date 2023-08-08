@@ -17,7 +17,6 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
-	poolManagerTypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
@@ -40,6 +39,7 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		var assetPairs []AssetPair
 		poolLinks := []gammmigration.BalancerToConcentratedPoolLink{}
 		fullRangeCoinsUsed := sdk.Coins{}
 
@@ -50,22 +50,42 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		// Set ibc-hooks params
-		keepers.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
-
-		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
-
+		// Set the asset pair list depending on the chain ID.
 		if ctx.ChainID() == mainnetChainID || ctx.ChainID() == e2eChainA || ctx.ChainID() == e2eChainB {
 			// Upgrades specific balancer pools to concentrated liquidity pools and links them to their CL equivalent.
 			ctx.Logger().Info(fmt.Sprintf("Chain ID is %s, running mainnet upgrade handler", ctx.ChainID()))
-			err = mainnetUpgradeHandler(ctx, keepers, communityPoolAddress, &poolLinks, &fullRangeCoinsUsed)
+			assetPairs = InitializeAssetPairs(ctx, keepers)
 		} else {
 			// Upgrades all existing balancer pools to concentrated liquidity pools and links them to their CL equivalent.
 			ctx.Logger().Info(fmt.Sprintf("Chain ID is %s, running testnet upgrade handler", ctx.ChainID()))
-			err = testnetUpgradeHandler(ctx, keepers, communityPoolAddress, &poolLinks, &fullRangeCoinsUsed)
+			assetPairs, err = InitializeAssetPairsTestnet(ctx, keepers)
 		}
 		if err != nil {
 			return nil, err
+		}
+
+		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
+
+		for _, assetPair := range assetPairs {
+			clPoolDenom, clPoolId, err := createCLPoolWithCommunityPoolPosition(ctx, keepers, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, communityPoolAddress, &poolLinks, &fullRangeCoinsUsed)
+			if errors.Is(err, notEnoughLiquidityForSwapErr) {
+				continue
+			} else if err != nil {
+				return nil, err
+			}
+
+			if assetPair.Superfluid {
+				ctx.Logger().Info(fmt.Sprintf("gammPoolId %d is superfluid enabled, enabling %s as a superfluid asset", assetPair.LinkedClassicPool, clPoolDenom))
+				err := authorizeSuperfluid(ctx, keepers, clPoolDenom)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			err = manuallySetTWAPRecords(ctx, keepers, clPoolId)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		// Set the migration links in x/gamm.
@@ -88,77 +108,14 @@ func CreateUpgradeHandler(
 		feePool.CommunityPool = newPool
 		keepers.DistrKeeper.SetFeePool(ctx, feePool)
 
+		// Set ibc-hooks params
+		keepers.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
+
 		// Reset the pool weights upon upgrade. This will add support for CW pools on ProtoRev.
 		keepers.ProtoRevKeeper.SetInfoByPoolType(ctx, types.DefaultPoolTypeInfo)
 
 		return migrations, nil
 	}
-}
-
-// mainnetUpgradeHandler creates CL pools for all balancer pools defined in the asset pairs struct. It also links the CL pools to their balancer pool counterpart, creates a full range position with the community pool,
-// authorizes superfluid for the CL pool if the balancer pool is superfluid enabled, and manually sets the TWAP records for the CL pool.
-func mainnetUpgradeHandler(ctx sdk.Context, keepers *keepers.AppKeepers, communityPoolAddress sdk.AccAddress, poolLinks *[]gammmigration.BalancerToConcentratedPoolLink, fullRangeCoinsUsed *sdk.Coins) error {
-	assetPairs := InitializeAssetPairs(ctx, keepers)
-
-	for _, assetPair := range assetPairs {
-		clPoolDenom, clPoolId, err := createCLPoolWithCommunityPoolPosition(ctx, keepers, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, communityPoolAddress, poolLinks, fullRangeCoinsUsed)
-		if err != nil {
-			return err
-		}
-
-		if assetPair.Superfluid {
-			ctx.Logger().Info(fmt.Sprintf("gammPoolId %d is superfluid enabled, enabling %s as a superfluid asset", assetPair.LinkedClassicPool, clPoolDenom))
-			err := authorizeSuperfluid(ctx, keepers, clPoolDenom)
-			if err != nil {
-				return err
-			}
-		}
-
-		err = manuallySetTWAPRecords(ctx, keepers, clPoolId)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// testnetUpgradeHandler creates CL pools for all existing balancer pools. It also links the CL pools to their balancer pool counterpart, creates a full range position with the community pool,
-// authorizes superfluid for the CL pool if the balancer pool is superfluid enabled, and manually sets the TWAP records for the CL pool.
-func testnetUpgradeHandler(ctx sdk.Context, keepers *keepers.AppKeepers, communityPoolAddress sdk.AccAddress, poolLinks *[]gammmigration.BalancerToConcentratedPoolLink, fullRangeCoinsUsed *sdk.Coins) error {
-	// Retrieve all GAMM pools on the testnet.
-	pools, err := keepers.GAMMKeeper.GetPools(ctx)
-	if err != nil {
-		return err
-	}
-
-	for _, pool := range pools {
-		skipPool, gammPoolId, baseAsset, spreadFactor, err := testnetParsePoolRecord(ctx, pool, keepers)
-		if err != nil {
-			return err
-		}
-		if skipPool {
-			continue
-		}
-
-		clPoolDenom, clPoolId, err := createCLPoolWithCommunityPoolPosition(ctx, keepers, gammPoolId, baseAsset, spreadFactor, communityPoolAddress, poolLinks, fullRangeCoinsUsed)
-		if errors.Is(err, notEnoughLiquidityForSwapErr) {
-			continue
-		} else if err != nil {
-			return err
-		}
-
-		err = authorizeSuperfluidIfEnabledTestnet(ctx, keepers, gammPoolId, clPoolDenom)
-		if err != nil {
-			return err
-		}
-
-		err = manuallySetTWAPRecords(ctx, keepers, clPoolId)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // createCLPoolWithCommunityPoolPosition creates a CL pool for a given balancer pool and adds a full range position with the community pool.
@@ -236,27 +193,6 @@ func authorizeSuperfluid(ctx sdk.Context, keepers *keepers.AppKeepers, clPoolDen
 	return keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
 }
 
-// authorizeSuperfluidIfEnabledTestnet authorizes superfluid for a CL pool if the balancer pool is superfluid enabled.
-// Since there is no assetList for testnet, we manually check each pool we are iterating over, so a different method for testnet must be used.
-func authorizeSuperfluidIfEnabledTestnet(ctx sdk.Context, keepers *keepers.AppKeepers, gammPoolId uint64, clPoolDenom string) (err error) {
-	// If pair was previously superfluid enabled, add the cl pool's full range denom as an authorized superfluid asset.
-	poolShareDenom := fmt.Sprintf("gamm/pool/%d", gammPoolId)
-	_, err = keepers.SuperfluidKeeper.GetSuperfluidAsset(ctx, poolShareDenom)
-	if err == nil {
-		ctx.Logger().Info(fmt.Sprintf("%s is superfluid enabled, enabling %s as a superfluid asset", poolShareDenom, clPoolDenom))
-		superfluidAsset := superfluidtypes.SuperfluidAsset{
-			Denom:     clPoolDenom,
-			AssetType: superfluidtypes.SuperfluidAssetTypeConcentratedShare,
-		}
-		err = keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
-		if err != nil {
-			return err
-		}
-	}
-	ctx.Logger().Info(fmt.Sprintf("%s is not superfluid enabled, not enabling %s as a superfluid asset", poolShareDenom, clPoolDenom))
-	return nil
-}
-
 // manuallySetTWAPRecords manually sets the TWAP records for a CL pool. This prevents a panic when the CL pool is first used.
 func manuallySetTWAPRecords(ctx sdk.Context, keepers *keepers.AppKeepers, clPoolId uint64) error {
 	ctx.Logger().Info(fmt.Sprintf("manually setting twap record for newly created CL poolID %d", clPoolId))
@@ -270,61 +206,4 @@ func manuallySetTWAPRecords(ctx sdk.Context, keepers *keepers.AppKeepers, clPool
 		keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord)
 	}
 	return nil
-}
-
-// testnetParsePoolRecord parses a pool record and returns whether or not to skip the pool, the pool's gammPoolId, the pool's base asset, and the pool's spread factor.
-func testnetParsePoolRecord(ctx sdk.Context, pool poolManagerTypes.PoolI, keepers *keepers.AppKeepers) (bool, uint64, string, sdk.Dec, error) {
-	// We only want to upgrade balancer pools.
-	if pool.GetType() != poolManagerTypes.Balancer {
-		return true, 0, "", sdk.Dec{}, nil
-	}
-
-	gammPoolId := pool.GetId()
-
-	// Skip pools that are already linked.
-	clPoolId, err := keepers.GAMMKeeper.GetLinkedConcentratedPoolID(ctx, gammPoolId)
-	if err == nil && clPoolId != 0 {
-		ctx.Logger().Info(fmt.Sprintf("gammPoolId %d is already linked to CL pool %d, skipping", gammPoolId, clPoolId))
-		return true, 0, "", sdk.Dec{}, nil
-	}
-
-	cfmmPool, err := keepers.GAMMKeeper.GetCFMMPool(ctx, gammPoolId)
-	if err != nil {
-		return true, 0, "", sdk.Dec{}, err
-	}
-
-	if len(cfmmPool.GetTotalPoolLiquidity(ctx)) != 2 {
-		return true, 0, "", sdk.Dec{}, nil
-	}
-
-	poolCoins := cfmmPool.GetTotalPoolLiquidity(ctx)
-
-	// We only want to upgrade pools paired with OSMO. OSMO will be the quote asset.
-	quoteAsset, baseAsset := "", ""
-	for _, coin := range poolCoins {
-		if coin.Denom == QuoteAsset {
-			quoteAsset = coin.Denom
-		} else {
-			baseAsset = coin.Denom
-		}
-	}
-	if quoteAsset == "" || baseAsset == "" {
-		return true, 0, "", sdk.Dec{}, nil
-	}
-
-	// Set the spread factor to the same spread factor the GAMM pool was.
-	// If its spread factor is not authorized, set it to the first authorized non-zero spread factor.
-	spreadFactor := cfmmPool.GetSpreadFactor(ctx)
-	authorizedSpreadFactors := keepers.ConcentratedLiquidityKeeper.GetParams(ctx).AuthorizedSpreadFactors
-	spreadFactorAuthorized := false
-	for _, authorizedSpreadFactor := range authorizedSpreadFactors {
-		if authorizedSpreadFactor.Equal(spreadFactor) {
-			spreadFactorAuthorized = true
-			break
-		}
-	}
-	if !spreadFactorAuthorized {
-		spreadFactor = authorizedSpreadFactors[1]
-	}
-	return false, gammPoolId, baseAsset, spreadFactor, nil
 }

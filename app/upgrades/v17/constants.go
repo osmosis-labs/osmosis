@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
+	poolManagerTypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -294,4 +295,86 @@ var AssetPairsForTestsOnly = []AssetPair{
 		LinkedClassicPool: 625,
 		Superfluid:        false,
 	},
+}
+
+// InitializeAssetPairsTestnet initializes the asset pairs for the testnet, which is every osmo paired gamm pool with exactly 2 tokens.
+func InitializeAssetPairsTestnet(ctx sdk.Context, keepers *keepers.AppKeepers) ([]AssetPair, error) {
+	superfluidKeeper := keepers.SuperfluidKeeper
+	testnetAssetPairs := []AssetPair{}
+
+	// Retrieve all GAMM pools on the testnet.
+	pools, err := keepers.GAMMKeeper.GetPools(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pool := range pools {
+		if pool.GetType() != poolManagerTypes.Balancer {
+			continue
+		}
+
+		gammPoolId := pool.GetId()
+
+		// Skip pools that are already linked.
+		clPoolId, err := keepers.GAMMKeeper.GetLinkedConcentratedPoolID(ctx, gammPoolId)
+		if err == nil && clPoolId != 0 {
+			ctx.Logger().Info(fmt.Sprintf("gammPoolId %d is already linked to CL pool %d, skipping", gammPoolId, clPoolId))
+			continue
+		}
+
+		cfmmPool, err := keepers.GAMMKeeper.GetCFMMPool(ctx, gammPoolId)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(cfmmPool.GetTotalPoolLiquidity(ctx)) != 2 {
+			continue
+		}
+
+		poolCoins := cfmmPool.GetTotalPoolLiquidity(ctx)
+
+		// We only want to upgrade pools paired with OSMO. OSMO will be the quote asset.
+		quoteAsset, baseAsset := "", ""
+		for _, coin := range poolCoins {
+			if coin.Denom == QuoteAsset {
+				quoteAsset = coin.Denom
+			} else {
+				baseAsset = coin.Denom
+			}
+		}
+		if quoteAsset == "" || baseAsset == "" {
+			continue
+		}
+
+		// Set the spread factor to the same spread factor the GAMM pool was.
+		// If its spread factor is not authorized, set it to the first authorized non-zero spread factor.
+		spreadFactor := cfmmPool.GetSpreadFactor(ctx)
+		authorizedSpreadFactors := keepers.ConcentratedLiquidityKeeper.GetParams(ctx).AuthorizedSpreadFactors
+		spreadFactorAuthorized := false
+		for _, authorizedSpreadFactor := range authorizedSpreadFactors {
+			if authorizedSpreadFactor.Equal(spreadFactor) {
+				spreadFactorAuthorized = true
+				break
+			}
+		}
+		if !spreadFactorAuthorized {
+			spreadFactor = authorizedSpreadFactors[1]
+		}
+
+		isSuperfluid := false
+		poolShareDenom := fmt.Sprintf("gamm/pool/%d", gammPoolId)
+		_, err = superfluidKeeper.GetSuperfluidAsset(ctx, poolShareDenom)
+		if err == nil {
+			isSuperfluid = true
+		}
+
+		internalAssetPair := AssetPair{
+			BaseAsset:         baseAsset,
+			SpreadFactor:      spreadFactor,
+			LinkedClassicPool: gammPoolId,
+			Superfluid:        isSuperfluid,
+		}
+		testnetAssetPairs = append(testnetAssetPairs, internalAssetPair)
+	}
+	return testnetAssetPairs, nil
 }
