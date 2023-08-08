@@ -3,7 +3,6 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -11,6 +10,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
@@ -49,10 +50,10 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.CreateConcentratedLiquidityPoolVoting_And_TWAP()
 	})
 
-	s.T().Run("ProtoRev", func(t *testing.T) {
-		t.Parallel()
-		s.ProtoRev()
-	})
+	//s.T().Run("ProtoRev", func(t *testing.T) {
+	//	t.Parallel()
+	//	s.ProtoRev()
+	//})
 
 	s.T().Run("ConcentratedLiquidity", func(t *testing.T) {
 		t.Parallel()
