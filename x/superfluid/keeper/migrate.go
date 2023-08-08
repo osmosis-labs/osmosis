@@ -105,14 +105,9 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
 	// This will return the coins that will be used to create the concentrated liquidity position.
 	// It also returns the lock object that contains the remaining shares that were not used in this migration.
-	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, preMigrationLock, sharesToMigrate, tokenOutMins)
+	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, preMigrationLock, sharesToMigrate, tokenOutMins, true)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
-	}
-
-	// Defense in depth, ensuring we are returning exactly two coins.
-	if len(exitCoins) != 2 {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, types.TwoTokenBalancerPoolError{NumberOfTokens: len(exitCoins)}
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position, lock it, and superfluid delegate it.
@@ -156,14 +151,9 @@ func (k Keeper) migrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
 	// This will return the coins that will be used to create the concentrated liquidity position.
 	// It also returns the lock object that contains the remaining shares that were not used in this migration.
-	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, preMigrationLock, sharesToMigrate, tokenOutMins)
+	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, preMigrationLock, sharesToMigrate, tokenOutMins, true)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
-	}
-
-	// Defense in depth, ensuring we are returning exactly two coins.
-	if len(exitCoins) != 2 {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, types.TwoTokenBalancerPoolError{NumberOfTokens: len(exitCoins)}
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
@@ -209,14 +199,9 @@ func (k Keeper) migrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context,
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
 	// This will return the coins that will be used to create the concentrated liquidity position.
 	// It also returns the lock object that contains the remaining shares that were not used in this migration.
-	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, preMigrationLock, sharesToMigrate, tokenOutMins)
+	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, preMigrationLock, sharesToMigrate, tokenOutMins, true)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
-	}
-
-	// Defense in depth, ensuring we are returning exactly two coins.
-	if len(exitCoins) != 2 {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, types.TwoTokenBalancerPoolError{NumberOfTokens: len(exitCoins)}
 	}
 
 	// Create a new lock that is unlocking for the remaining time of the old lock.
@@ -314,7 +299,7 @@ func (k Keeper) validateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId
 // 4. Exits the position in the Balancer pool.
 // 5. Ensures that exactly two coins are returned.
 // 6. Any remaining shares that were not migrated are re-locked as a new lock for the remaining time on the lock.
-func (k Keeper) forceUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, lock *lockuptypes.PeriodLock, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) (exitCoins sdk.Coins, err error) {
+func (k Keeper) forceUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, lock *lockuptypes.PeriodLock, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins, exitCoinsLengthIsTwo bool) (exitCoins sdk.Coins, err error) {
 	// validateMigration ensures that the preMigrationLock contains coins of length 1.
 	gammSharesInLock := lock.Coins[0]
 
@@ -343,6 +328,11 @@ func (k Keeper) forceUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAd
 	exitCoins, err = k.gk.ExitPool(ctx, sender, poolIdLeaving, sharesToMigrate.Amount, tokenOutMins)
 	if err != nil {
 		return sdk.Coins{}, err
+	}
+
+	// if exit coins length should be two, check exitCoins length
+	if exitCoinsLengthIsTwo && len(exitCoins) != 2 {
+		return sdk.Coins{}, types.TwoTokenBalancerPoolError{NumberOfTokens: len(exitCoins)}
 	}
 
 	return exitCoins, nil

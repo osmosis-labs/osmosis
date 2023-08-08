@@ -127,9 +127,9 @@ func (e TokenConvertedLessThenDesiredStakeError) Error() string {
 	return fmt.Sprintf("actual amount converted to stake (%s) is less then minimum amount expected to be staked (%s)", e.ActualTotalAmtToStake, e.ExpectedTotalAmtToStake)
 }
 
-type MultipleValFromValsetError struct {
+type NoValsetNoSuperfluidDelegationError struct {
 }
 
-func (e MultipleValFromValsetError) Error() string {
-	return fmt.Sprintf("Multiple validator from valset-preference exists")
+func (e NoValsetNoSuperfluidDelegationError) Error() string {
+	return fmt.Sprintf("No val-set for delegation nor existing superfluid delegation")
 }

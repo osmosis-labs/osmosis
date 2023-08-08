@@ -264,8 +264,4 @@ message MsgUnbondConvertAndStakeResponse {
     (gogoproto.moretags) = "yaml:\"total_amt_staked\"",
     (gogoproto.nullable) = false
   ];
-  string total_shares_delegated = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
-  ];
 }

@@ -797,13 +797,14 @@ func (s *KeeperTestSuite) TestValidateMigration() {
 	}
 }
 
-func (s *KeeperTestSuite) TestforceUnlockAndExitBalancerPool() {
+func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 	defaultJoinTime := s.Ctx.BlockTime()
 	type sendTest struct {
 		overwritePreMigrationLock bool
 		overwriteShares           bool
 		overwritePool             bool
 		overwritePoolId           bool
+		exitCoinsLengthIsTwo      bool
 		percentOfSharesToMigrate  sdk.Dec
 		tokenOutMins              sdk.Coins
 		expectedError             error
@@ -815,6 +816,11 @@ func (s *KeeperTestSuite) TestforceUnlockAndExitBalancerPool() {
 		"happy path (partial shares)": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.4"),
 			expectedError:            types.MigratePartialSharesError{SharesToMigrate: "20000000000000000000", SharesInLock: "50000000000000000000"},
+		},
+		"attempt to leave a pool that has more than two denoms": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			overwritePool:            true,
+			exitCoinsLengthIsTwo:     false,
 		},
 		"error: lock does not exist": {
 			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
@@ -830,6 +836,12 @@ func (s *KeeperTestSuite) TestforceUnlockAndExitBalancerPool() {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			overwritePoolId:          true,
 			expectedError:            fmt.Errorf("pool with ID %d does not exist", 2),
+		},
+		"error: attempt to leave a pool that has more than two denoms with exitCoinsLengthIsTwo true": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			overwritePool:            true,
+			exitCoinsLengthIsTwo:     true,
+			expectedError:            types.TwoTokenBalancerPoolError{NumberOfTokens: 4},
 		},
 		"error: happy path (full shares), token out mins is more than exit coins": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
@@ -912,7 +924,7 @@ func (s *KeeperTestSuite) TestforceUnlockAndExitBalancerPool() {
 			}
 
 			// System under test
-			exitCoins, err := superfluidKeeper.ForceUnlockAndExitBalancerPool(ctx, poolJoinAcc, balancerPooId, lock, coinsToMigrate, tc.tokenOutMins)
+			exitCoins, err := superfluidKeeper.ForceUnlockAndExitBalancerPool(ctx, poolJoinAcc, balancerPooId, lock, coinsToMigrate, tc.tokenOutMins, tc.exitCoinsLengthIsTwo)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
@@ -937,9 +949,11 @@ func (s *KeeperTestSuite) TestforceUnlockAndExitBalancerPool() {
 				s.Require().Equal(expectedSharesStillInOldLock.String(), lock.Coins[0].Amount.String())
 			}
 
-			for _, coin := range exitCoins {
-				// Check that the exit coin is the same amount that we joined with (with one unit rounding down)
-				s.Require().Equal(0, defaultErrorTolerance.Compare(tokensIn.AmountOf(coin.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), coin.Amount))
+			if tc.exitCoinsLengthIsTwo {
+				for _, coin := range exitCoins {
+					// Check that the exit coin is the same amount that we joined with (with one unit rounding down)
+					s.Require().Equal(0, defaultErrorTolerance.Compare(tokensIn.AmountOf(coin.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), coin.Amount))
+				}
 			}
 		})
 	}

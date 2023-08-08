@@ -1071,7 +1071,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			balanceBeforeConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
 
 			// system under test
-			totalAmtConverted, sharesDelegated, err := s.App.SuperfluidKeeper.UnbondConvertAndStake(s.Ctx, lock.ID, sender.String(), valAddr.String(), minAmountToStake)
+			totalAmtConverted, err := s.App.SuperfluidKeeper.UnbondConvertAndStake(s.Ctx, lock.ID, sender.String(), valAddr.String(), minAmountToStake)
 			if tc.expectedError {
 				s.Require().Error(err)
 				return
@@ -1085,7 +1085,6 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			// check if delegation amount matches
 			delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, valAddr)
 			s.Require().True(found)
-			s.Require().Equal(delegation.Shares, sharesDelegated)
 			s.Require().True(totalAmtConverted.ToDec().Equal(delegation.Shares))
 
 			// Superfluid check
@@ -1163,7 +1162,7 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 			balanceBeforeConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
 
 			// system under test
-			totalAmtConverted, sharesDelegated, err := s.App.SuperfluidKeeper.ConvertLockToStake(s.Ctx, sender, valAddr.String(), lock.ID, minAmountToStake)
+			totalAmtConverted, err := s.App.SuperfluidKeeper.ConvertLockToStake(s.Ctx, sender, valAddr.String(), lock.ID, minAmountToStake)
 			if tc.expectedError {
 				s.Require().Error(err)
 				return
@@ -1177,7 +1176,6 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 			// check if delegation amount matches
 			delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, valAddr)
 			s.Require().True(found)
-			s.Require().Equal(delegation.Shares, sharesDelegated)
 			s.Require().True(totalAmtConverted.ToDec().Equal(delegation.Shares))
 
 			// Superfluid check
@@ -1202,6 +1200,7 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 		useMinAmtToStake         bool
 		useValSetPrefSingleVal   bool
 		useValSetPrefMultipleVal bool
+		useSuperfluid            bool
 
 		expectedError bool
 	}
@@ -1210,9 +1209,13 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 		"use val set preference (single validator)": {
 			useValSetPrefSingleVal: true,
 		},
-		"error: multiple validator returned from valset pref": {
+		"multiple validator returned from valset pref": {
 			useValSetPrefMultipleVal: true,
-			expectedError:            true,
+			expectedError:            false,
+		},
+		"No validator returned from valset, fall back to superfluid delegation": {
+			useSuperfluid: true,
+			expectedError: false,
 		},
 		"error: invalid val address": {
 			useInvalidValAddr: true,
@@ -1237,6 +1240,7 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 			s.Require().NoError(err)
 
 			// test params
+			originalSuperfluidValAddr := ""
 			valAddr := s.SetupValidator(stakingtypes.Bonded)
 			valAddrString := valAddr.String()
 			if tc.useInvalidValAddr {
@@ -1253,6 +1257,10 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 
 				_, err = s.App.StakingKeeper.Delegate(s.Ctx, sender, stakeCoin.Amount, stakingtypes.Unbonded, validator, true)
 				s.Require().NoError(err)
+			}
+			if tc.useSuperfluid {
+				originalSuperfluidValAddr = valAddrString
+				valAddrString = ""
 			}
 
 			// if test case is setting multiple validator, stake one more time to a different validator
@@ -1288,7 +1296,7 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 			poolBeforeNonBondDenomAmt := poolLiquidityBeforeSwap.AmountOf("foo")
 
 			// system under test.
-			totalAmtConverted, shares, err := s.App.SuperfluidKeeper.ConvertGammSharesToOsmoAndStake(s.Ctx, sender, valAddrString, poolId, exitCoins, minAmtToStake)
+			totalAmtConverted, err := s.App.SuperfluidKeeper.ConvertGammSharesToOsmoAndStake(s.Ctx, sender, valAddrString, poolId, exitCoins, minAmtToStake, originalSuperfluidValAddr)
 			if tc.expectedError {
 				s.Require().Error(err)
 				return
@@ -1297,16 +1305,24 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 
 			// check that total Amount converted is equal to (swap result + original stake denom amount)
 			s.Require().True(expectedTotalAmtStaked.Equal(totalAmtConverted))
-			s.Require().True(expectedTotalAmtStaked.Equal(shares.RoundInt()))
 
 			// check staking
-			delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, valAddr)
-			s.Require().True(found)
-			// if we have used val set pref, we also need to count extra amount we have delegated
-			if tc.useValSetPrefSingleVal {
-				s.Require().True(delegation.Shares.Sub(stakeCoin.Amount.ToDec()).Equal(shares))
+			if tc.useValSetPrefMultipleVal {
+				delegations := s.App.StakingKeeper.GetAllDelegatorDelegations(s.Ctx, sender)
+				// we used two validators
+				s.Require().True(len(delegations) == 2)
+
+				delegation0Shares := delegations[0].Shares
+				delegation1Shares := delegations[1].Shares
+
+				shareDiff := delegation0Shares.Sub(delegation1Shares).Abs()
+
+				// in practice, the share amount between two validators should be equal,
+				// but due to how we handle truncation and rounding in valset pref, we expect the diff to be under one dec.
+				s.Require().True(shareDiff.LTE(sdk.OneDec()))
 			} else {
-				s.Require().True(delegation.Shares.Equal(shares))
+				_, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, valAddr)
+				s.Require().True(found)
 			}
 
 			// check pool

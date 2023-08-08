@@ -48,7 +48,6 @@ func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (typ
 		if err != nil {
 			return types.ValidatorSetPreferences{}, err
 		}
-
 		existingDelsValSetFormatted, err := k.GetExistingStakingDelegations(ctx, delAddr)
 		if err != nil {
 			return types.ValidatorSetPreferences{}, err
@@ -69,7 +68,7 @@ func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delAddr sdk.AccAd
 
 	existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
 	if len(existingDelegations) == 0 {
-		return nil, fmt.Errorf("No Existing delegation")
+		return nil, types.ErrNoDelegation
 	}
 
 	existingTotalShares := sdk.NewDec(0)

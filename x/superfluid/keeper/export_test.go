@@ -33,8 +33,8 @@ func (k Keeper) MigrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context, 
 	return k.migrateNonSuperfluidLockBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, tokenOutMins)
 }
 
-func (k Keeper) ForceUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, lock *lockuptypes.PeriodLock, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) (exitCoins sdk.Coins, err error) {
-	return k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, lock, sharesToMigrate, tokenOutMins)
+func (k Keeper) ForceUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, lock *lockuptypes.PeriodLock, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins, exitCoinsLengthIsTwo bool) (exitCoins sdk.Coins, err error) {
+	return k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, lock, sharesToMigrate, tokenOutMins, exitCoinsLengthIsTwo)
 }
 
 func (k Keeper) RouteMigration(ctx sdk.Context, sender sdk.AccAddress, lockId int64) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
@@ -62,14 +62,14 @@ func (k Keeper) DistributeSuperfluidGauges(ctx sdk.Context) {
 }
 
 func (k Keeper) ConvertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, lockId uint64,
-	minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, shares sdk.Dec, err error) {
+	minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, err error) {
 	return k.convertLockToStake(ctx, sender, valAddr, lockId, minAmtToStake)
 }
 
 func (k Keeper) ConvertGammSharesToOsmoAndStake(
 	ctx sdk.Context,
 	sender sdk.AccAddress, valAddr string,
-	poolIdLeaving uint64, exitCoins sdk.Coins, minAmtToStake sdk.Int,
-) (totalAmtCoverted sdk.Int, shares sdk.Dec, err error) {
-	return k.convertGammSharesToOsmoAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake)
+	poolIdLeaving uint64, exitCoins sdk.Coins, minAmtToStake sdk.Int, originalSuperfluidValAddr string,
+) (totalAmtCoverted sdk.Int, err error) {
+	return k.convertGammSharesToOsmoAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake, originalSuperfluidValAddr)
 }
