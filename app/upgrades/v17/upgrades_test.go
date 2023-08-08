@@ -87,12 +87,12 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 	testCases := []struct {
 		name        string
-		pre_upgrade func(sdk.Context, *keepers.AppKeepers) (sdk.Coins, uint64, []types.TwapRecord)
-		upgrade     func(sdk.Context, *keepers.AppKeepers, sdk.Coins, uint64, []types.TwapRecord)
+		pre_upgrade func(sdk.Context, *keepers.AppKeepers) (sdk.Coins, uint64)
+		upgrade     func(sdk.Context, *keepers.AppKeepers, sdk.Coins, uint64)
 	}{
 		{
 			"Test that the upgrade succeeds",
-			func(ctx sdk.Context, keepers *keepers.AppKeepers) (sdk.Coins, uint64, []types.TwapRecord) {
+			func(ctx sdk.Context, keepers *keepers.AppKeepers) (sdk.Coins, uint64) {
 				upgradeSetup()
 
 				var lastPoolID uint64 // To keep track of the last assigned pool ID
@@ -144,6 +144,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				existingPool := suite.PrepareConcentratedPoolWithCoins("ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo")
 				existingPool2 := suite.PrepareConcentratedPoolWithCoins("akash", "uosmo")
+				existingBalancerPoolId := suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("atom", sdk.NewInt(10000000000)), sdk.NewCoin("uosmo", sdk.NewInt(10000000000)))
 
 				// create few TWAP records for the pools
 				t1 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(10),
@@ -171,21 +172,31 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					sdk.OneDec().MulInt64(2),
 					sdk.ZeroDec())
 
+				t6 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Hour), "atom", "uosmo", sdk.NewDec(10),
+					sdk.OneDec().MulInt64(10),
+					sdk.OneDec().MulInt64(10),
+					sdk.ZeroDec())
+
+				t7 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Minute*20), "atom", "uosmo", sdk.NewDec(50),
+					sdk.OneDec().MulInt64(10*5),
+					sdk.OneDec().MulInt64(5),
+					sdk.ZeroDec())
+
+				// store TWAP records
 				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t1)
 				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t2)
 				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t3)
 				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t4)
 				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t5)
+				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t6)
+				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t7)
 
-				clPool2TwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, existingPool2.GetId())
-				suite.Require().NoError(err)
-
-				return expectedCoinsUsedInUpgradeHandler, lastPoolID, clPool2TwapRecordPreUpgrade
+				return expectedCoinsUsedInUpgradeHandler, existingBalancerPoolId
 
 			},
-			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64, clPoolTwapRecordPreUpgrade []types.TwapRecord) {
-				lastPoolID = clPoolTwapRecordPreUpgrade[0].GetPoolId()
+			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				lastPoolIdMinusOne := lastPoolID - 1
+				lastPoolIdMinusTwo := lastPoolID - 2
 				stakingParams := suite.App.StakingKeeper.GetParams(suite.Ctx)
 				stakingParams.BondDenom = "uosmo"
 				suite.App.StakingKeeper.SetParams(suite.Ctx, stakingParams)
@@ -194,16 +205,16 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				communityPoolAddress := suite.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
 				communityPoolBalancePre := suite.App.BankKeeper.GetAllBalances(suite.Ctx, communityPoolAddress)
 
-				clPool1TwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusOne)
+				clPool1TwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusTwo)
 				suite.Require().NoError(err)
 
-				clPool1TwapRecordHistoricalPoolIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusOne)
+				clPool1TwapRecordHistoricalPoolIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusTwo)
 				suite.Require().NoError(err)
 
-				clPool2TwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolID)
+				clPool2TwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusOne)
 				suite.Require().NoError(err)
 
-				clPool2TwapRecordHistoricalPoolIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolID)
+				clPool2TwapRecordHistoricalPoolIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusOne)
 				suite.Require().NoError(err)
 
 				clPoolsTwapRecordHistoricalTimeIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalTimeIndexedTWAPs(ctx)
@@ -215,27 +226,29 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
 				})
 
-				clPool1TwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusOne)
+				clPool1TwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusTwo)
 				suite.Require().NoError(err)
 
-				clPool1TwapRecordHistoricalPoolIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusOne)
+				clPool1TwapRecordHistoricalPoolIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusTwo)
 				suite.Require().NoError(err)
 
-				clPool2TwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolID)
+				clPool2TwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusOne)
 				suite.Require().NoError(err)
 
-				clPool2TwapRecordHistoricalPoolIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolID)
+				clPool2TwapRecordHistoricalPoolIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusOne)
 				suite.Require().NoError(err)
 
 				clPoolsTwapRecordHistoricalTimeIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalTimeIndexedTWAPs(ctx)
 				suite.Require().NoError(err)
 
+				// check that all TWAP records aren't empty
 				suite.Require().NotEmpty(clPool1TwapRecordPostUpgrade, "Most recent TWAP records should not be empty after upgrade.")
 				suite.Require().NotEmpty(clPool1TwapRecordHistoricalPoolIndexPostUpgrade, "Historical Pool Index TWAP record should not be empty after upgrade.")
 				suite.Require().NotEmpty(clPool2TwapRecordPostUpgrade, "Most recent TWAP records should not be empty after upgrade.")
 				suite.Require().NotEmpty(clPool2TwapRecordHistoricalPoolIndexPostUpgrade, "Historical Pool Index TWAP record should not be empty after upgrade.")
 				suite.Require().NotEmpty(clPoolsTwapRecordHistoricalTimeIndexPostUpgrade, "Historical Time Index TWAP record should not be empty after upgrade.")
 
+				// check that all most recent TWAP record has been flipped for pool1
 				for i := range clPool1TwapRecordPostUpgrade {
 					suite.Require().Equal(clPool1TwapRecordPreUpgrade[i].Asset0Denom, clPool1TwapRecordPostUpgrade[i].Asset1Denom)
 					suite.Require().Equal(clPool1TwapRecordPreUpgrade[i].Asset1Denom, clPool1TwapRecordPostUpgrade[i].Asset0Denom)
@@ -243,6 +256,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					suite.Require().Equal(clPool1TwapRecordPreUpgrade[i].P1LastSpotPrice, clPool1TwapRecordPostUpgrade[i].P0LastSpotPrice)
 				}
 
+				// check that historical pool index TWAP record has been flipped for pool1
 				for i := range clPool1TwapRecordHistoricalPoolIndexPostUpgrade {
 					suite.Require().Equal(clPool1TwapRecordHistoricalPoolIndexPreUpgrade[i].Asset0Denom, clPool1TwapRecordHistoricalPoolIndexPostUpgrade[i].Asset1Denom)
 					suite.Require().Equal(clPool1TwapRecordHistoricalPoolIndexPreUpgrade[i].Asset1Denom, clPool1TwapRecordHistoricalPoolIndexPostUpgrade[i].Asset0Denom)
@@ -250,6 +264,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					suite.Require().Equal(clPool1TwapRecordHistoricalPoolIndexPreUpgrade[i].P1LastSpotPrice, clPool1TwapRecordHistoricalPoolIndexPostUpgrade[i].P0LastSpotPrice)
 				}
 
+				// check that all most recent TWAP record has been flipped for pool2
 				for i := range clPool2TwapRecordPostUpgrade {
 					suite.Require().Equal(clPool2TwapRecordPreUpgrade[i].Asset0Denom, clPool2TwapRecordPostUpgrade[i].Asset1Denom)
 					suite.Require().Equal(clPool2TwapRecordPreUpgrade[i].Asset1Denom, clPool2TwapRecordPostUpgrade[i].Asset0Denom)
@@ -257,6 +272,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					suite.Require().Equal(clPool2TwapRecordPreUpgrade[i].P1LastSpotPrice, clPool2TwapRecordPostUpgrade[i].P0LastSpotPrice)
 				}
 
+				// check that historical pool index TWAP record has been flipped for pool2
 				for i := range clPool2TwapRecordHistoricalPoolIndexPostUpgrade {
 					suite.Require().Equal(clPool2TwapRecordHistoricalPoolIndexPreUpgrade[i].Asset0Denom, clPool2TwapRecordHistoricalPoolIndexPostUpgrade[i].Asset1Denom)
 					suite.Require().Equal(clPool2TwapRecordHistoricalPoolIndexPreUpgrade[i].Asset1Denom, clPool2TwapRecordHistoricalPoolIndexPostUpgrade[i].Asset0Denom)
@@ -264,12 +280,18 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					suite.Require().Equal(clPool2TwapRecordHistoricalPoolIndexPreUpgrade[i].P1LastSpotPrice, clPool2TwapRecordHistoricalPoolIndexPostUpgrade[i].P0LastSpotPrice)
 				}
 
+				// check that historical time index TWAP record has been flipped for pool1 and pool2
+				// Also check that all the records is the same for the rest of the pools
 				for i := range clPoolsTwapRecordHistoricalTimeIndexPostUpgrade {
-					if (clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].PoolId == lastPoolID) || (clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].PoolId == lastPoolIdMinusOne) {
+					if (clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].PoolId == lastPoolIdMinusOne) || (clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].PoolId == lastPoolIdMinusTwo) {
 						suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i].Asset0Denom, clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].Asset1Denom)
 						suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i].Asset1Denom, clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].Asset0Denom)
 						suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i].P0LastSpotPrice, clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].P1LastSpotPrice)
 						suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i].P1LastSpotPrice, clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].P0LastSpotPrice)
+					} else {
+						if clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].PoolId == lastPoolID {
+							suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i], clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i])
+						}
 					}
 				}
 
@@ -335,11 +357,11 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		},
 		{
 			"Fails because CFMM pool is not found",
-			func(ctx sdk.Context, keepers *keepers.AppKeepers) (sdk.Coins, uint64, []types.TwapRecord) {
+			func(ctx sdk.Context, keepers *keepers.AppKeepers) (sdk.Coins, uint64) {
 				upgradeSetup()
-				return sdk.NewCoins(), 0, nil
+				return sdk.NewCoins(), 0
 			},
-			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64, clPoolTwapRecordPreUpgrade []types.TwapRecord) {
+			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				dummyUpgrade(suite)
 				suite.Require().Panics(func() {
 					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
@@ -352,8 +374,8 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			suite.SetupTest() // reset
 
-			expectedCoinsUsedInUpgradeHandler, lastPoolID, clPoolTwapRecordPreUpgrade := tc.pre_upgrade(suite.Ctx, &suite.App.AppKeepers)
-			tc.upgrade(suite.Ctx, &suite.App.AppKeepers, expectedCoinsUsedInUpgradeHandler, lastPoolID, clPoolTwapRecordPreUpgrade)
+			expectedCoinsUsedInUpgradeHandler, lastPoolID := tc.pre_upgrade(suite.Ctx, &suite.App.AppKeepers)
+			tc.upgrade(suite.Ctx, &suite.App.AppKeepers, expectedCoinsUsedInUpgradeHandler, lastPoolID)
 		})
 	}
 }
