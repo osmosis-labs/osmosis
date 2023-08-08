@@ -1,28 +1,31 @@
 name: required labels
 
 on:
-  check_suite:
-    types:
-      - completed
+  pull_request:
+    branches:
+      - "**"
+  push:
+    branches:
+      - "main"
+      - "concentrated-liquidity-main"
+      - "v[0-9]**"
+  workflow_dispatch:
 
 jobs:
-  check_ci_status:
+  await_checks:
     runs-on: ubuntu-latest
     steps:
-      - name: Install jq
-        run: sudo apt-get install jq
-      - name: Check if CI failed and PR is not draft
-        if: github.event.check_suite.conclusion != 'success'
+      - name: Wait for check suites to complete
+        id: await-check-suites
+        uses: jitterbit/await-check-suites@v1 # Use the correct version/tag
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          failStepIfUnsuccessful: "true"
+      - name: Set PR to draft if checks failed
+        if: steps.await-check-suites.outputs.conclusion != 'success'
         run: |
-          PR_NUMBER=$(curl -s -H "authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:${{ github.ref }} \
-            | jq '.[0].number')
-
-          if [[ "$PR_NUMBER" != "null" ]]; then
-            curl -s -X PATCH -H "authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github.shadow-cat-preview+json" \
-              https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER \
-              -d '{"draft": true}'
-          fi
+          gh pr update ${{ github.event.pull_request.number }} --draft
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
