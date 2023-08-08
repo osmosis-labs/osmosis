@@ -49,14 +49,15 @@ jobs:
         run: |
           make proto-gen
           make query-gen
-    - name: Set up Git
-      run: |
-        git config --global user.email "github-actions-bot@example.com"
-        git config --global user.name "GitHub Actions Bot"
-
-    - name: Commit changes
-      run: |
-        git add *.go
-        git add *.proto
-        git commit -m "Generated protofile changes" || echo "No changes to commit"
-        git push origin HEAD
+      - 
+        name: Set up Git
+        run: |
+          git config --global user.email "github-actions-bot@example.com"
+          git config --global user.name "GitHub Actions Bot"
+      - 
+        name: Commit changes
+        run: |
+          git add *.go
+          git add *.proto
+          git commit -m "Generated protofile changes" || echo "No changes to commit"
+          git push origin HEAD
