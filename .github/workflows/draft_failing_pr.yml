@@ -2,7 +2,9 @@ name: Check All CI Statuses and Set PR to Draft
 
 on:
   pull_request:
-    types: [synchronize]
+  push:
+    branches:
+      - main
 
 jobs:
   check_all_ci:
