@@ -22,13 +22,13 @@ pub enum ContractError {
     #[error("authorized address already exists for source chain: {source_chain:?}")]
     ChainAuthorizedAddressAlreadyExists { source_chain: String },
 
-    #[error("chain channel link already exists: {source_chain:?} -> {destination_chain:?}")]
+    #[error("chain -> channel link already exists: {source_chain:?} -> {destination_chain:?}")]
     ChainToChainChannelLinkAlreadyExists {
         source_chain: String,
         destination_chain: String,
     },
 
-    #[error("channel chain link already exists: {channel_id:?} -> {source_chain:?}")]
+    #[error("channel -> chain link already exists: {channel_id:?} -> {source_chain:?}")]
     ChannelToChainChainLinkAlreadyExists {
         channel_id: String,
         source_chain: String,
