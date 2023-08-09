@@ -146,7 +146,8 @@ func CreateUpgradeHandler(
 // FlipTwapSpotPriceRecords flips the denoms and spot price of twap record of a given pool.
 func FlipTwapSpotPriceRecords(ctx sdk.Context, pools []poolmanagertypes.PoolI, keepers *keepers.AppKeepers) error {
 	for _, pool := range pools {
-		twapRecordHistoricalPoolIndexed, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, pool.GetId())
+		poolId := pool.GetId()
+		twapRecordHistoricalPoolIndexed, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, poolId)
 		if err != nil {
 			return err
 		}
@@ -160,7 +161,7 @@ func FlipTwapSpotPriceRecords(ctx sdk.Context, pools []poolmanagertypes.PoolI, k
 			keepers.TwapKeeper.DeleteHistoricalRecord(ctx, oldRecord)
 		}
 
-		clPoolTwapRecords, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, pool.GetId())
+		clPoolTwapRecords, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, poolId)
 		if err != nil {
 			return err
 		}

@@ -71,6 +71,17 @@ func dummyTwapRecord(poolId uint64, t time.Time, asset0 string, asset1 string, s
 	}
 }
 
+func assertTwapFlipped(suite *UpgradeTestSuite, pre, post types.TwapRecord) {
+	suite.Require().Equal(pre.Asset0Denom, post.Asset1Denom)
+	suite.Require().Equal(pre.Asset1Denom, post.Asset0Denom)
+	suite.Require().Equal(pre.P0LastSpotPrice, post.P1LastSpotPrice)
+	suite.Require().Equal(pre.P1LastSpotPrice, post.P0LastSpotPrice)
+}
+
+func assertEqual(suite *UpgradeTestSuite, pre, post interface{}) {
+	suite.Require().Equal(pre, post)
+}
+
 func (suite *UpgradeTestSuite) TestUpgrade() {
 	upgradeSetup := func() {
 		// This is done to ensure that we run the InitGenesis() logic for the new modules
@@ -242,56 +253,31 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().NoError(err)
 
 				// check that all TWAP records aren't empty
-				suite.Require().NotEmpty(clPool1TwapRecordPostUpgrade, "Most recent TWAP records should not be empty after upgrade.")
-				suite.Require().NotEmpty(clPool1TwapRecordHistoricalPoolIndexPostUpgrade, "Historical Pool Index TWAP record should not be empty after upgrade.")
-				suite.Require().NotEmpty(clPool2TwapRecordPostUpgrade, "Most recent TWAP records should not be empty after upgrade.")
-				suite.Require().NotEmpty(clPool2TwapRecordHistoricalPoolIndexPostUpgrade, "Historical Pool Index TWAP record should not be empty after upgrade.")
-				suite.Require().NotEmpty(clPoolsTwapRecordHistoricalTimeIndexPostUpgrade, "Historical Time Index TWAP record should not be empty after upgrade.")
+				suite.Require().NotEmpty(clPool1TwapRecordPostUpgrade)
+				suite.Require().NotEmpty(clPool1TwapRecordHistoricalPoolIndexPostUpgrade)
+				suite.Require().NotEmpty(clPool2TwapRecordPostUpgrade)
+				suite.Require().NotEmpty(clPool2TwapRecordHistoricalPoolIndexPostUpgrade)
+				suite.Require().NotEmpty(clPoolsTwapRecordHistoricalTimeIndexPostUpgrade)
 
-				// check that all most recent TWAP record has been flipped for pool1
-				for i := range clPool1TwapRecordPostUpgrade {
-					suite.Require().Equal(clPool1TwapRecordPreUpgrade[i].Asset0Denom, clPool1TwapRecordPostUpgrade[i].Asset1Denom)
-					suite.Require().Equal(clPool1TwapRecordPreUpgrade[i].Asset1Denom, clPool1TwapRecordPostUpgrade[i].Asset0Denom)
-					suite.Require().Equal(clPool1TwapRecordPreUpgrade[i].P0LastSpotPrice, clPool1TwapRecordPostUpgrade[i].P1LastSpotPrice)
-					suite.Require().Equal(clPool1TwapRecordPreUpgrade[i].P1LastSpotPrice, clPool1TwapRecordPostUpgrade[i].P0LastSpotPrice)
+				for _, data := range []struct {
+					pre, post []types.TwapRecord
+				}{
+					{clPool1TwapRecordPreUpgrade, clPool1TwapRecordPostUpgrade},
+					{clPool1TwapRecordHistoricalPoolIndexPreUpgrade, clPool1TwapRecordHistoricalPoolIndexPostUpgrade},
+					{clPool2TwapRecordPreUpgrade, clPool2TwapRecordPostUpgrade},
+					{clPool2TwapRecordHistoricalPoolIndexPreUpgrade, clPool2TwapRecordHistoricalPoolIndexPostUpgrade},
+				} {
+					for i := range data.post {
+						assertTwapFlipped(suite, data.pre[i], data.post[i])
+					}
 				}
 
-				// check that historical pool index TWAP record has been flipped for pool1
-				for i := range clPool1TwapRecordHistoricalPoolIndexPostUpgrade {
-					suite.Require().Equal(clPool1TwapRecordHistoricalPoolIndexPreUpgrade[i].Asset0Denom, clPool1TwapRecordHistoricalPoolIndexPostUpgrade[i].Asset1Denom)
-					suite.Require().Equal(clPool1TwapRecordHistoricalPoolIndexPreUpgrade[i].Asset1Denom, clPool1TwapRecordHistoricalPoolIndexPostUpgrade[i].Asset0Denom)
-					suite.Require().Equal(clPool1TwapRecordHistoricalPoolIndexPreUpgrade[i].P0LastSpotPrice, clPool1TwapRecordHistoricalPoolIndexPostUpgrade[i].P1LastSpotPrice)
-					suite.Require().Equal(clPool1TwapRecordHistoricalPoolIndexPreUpgrade[i].P1LastSpotPrice, clPool1TwapRecordHistoricalPoolIndexPostUpgrade[i].P0LastSpotPrice)
-				}
-
-				// check that all most recent TWAP record has been flipped for pool2
-				for i := range clPool2TwapRecordPostUpgrade {
-					suite.Require().Equal(clPool2TwapRecordPreUpgrade[i].Asset0Denom, clPool2TwapRecordPostUpgrade[i].Asset1Denom)
-					suite.Require().Equal(clPool2TwapRecordPreUpgrade[i].Asset1Denom, clPool2TwapRecordPostUpgrade[i].Asset0Denom)
-					suite.Require().Equal(clPool2TwapRecordPreUpgrade[i].P0LastSpotPrice, clPool2TwapRecordPostUpgrade[i].P1LastSpotPrice)
-					suite.Require().Equal(clPool2TwapRecordPreUpgrade[i].P1LastSpotPrice, clPool2TwapRecordPostUpgrade[i].P0LastSpotPrice)
-				}
-
-				// check that historical pool index TWAP record has been flipped for pool2
-				for i := range clPool2TwapRecordHistoricalPoolIndexPostUpgrade {
-					suite.Require().Equal(clPool2TwapRecordHistoricalPoolIndexPreUpgrade[i].Asset0Denom, clPool2TwapRecordHistoricalPoolIndexPostUpgrade[i].Asset1Denom)
-					suite.Require().Equal(clPool2TwapRecordHistoricalPoolIndexPreUpgrade[i].Asset1Denom, clPool2TwapRecordHistoricalPoolIndexPostUpgrade[i].Asset0Denom)
-					suite.Require().Equal(clPool2TwapRecordHistoricalPoolIndexPreUpgrade[i].P0LastSpotPrice, clPool2TwapRecordHistoricalPoolIndexPostUpgrade[i].P1LastSpotPrice)
-					suite.Require().Equal(clPool2TwapRecordHistoricalPoolIndexPreUpgrade[i].P1LastSpotPrice, clPool2TwapRecordHistoricalPoolIndexPostUpgrade[i].P0LastSpotPrice)
-				}
-
-				// check that historical time index TWAP record has been flipped for pool1 and pool2
-				// Also check that all the records is the same for the rest of the pools
 				for i := range clPoolsTwapRecordHistoricalTimeIndexPostUpgrade {
-					if (clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].PoolId == lastPoolIdMinusOne) || (clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].PoolId == lastPoolIdMinusTwo) {
-						suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i].Asset0Denom, clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].Asset1Denom)
-						suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i].Asset1Denom, clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].Asset0Denom)
-						suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i].P0LastSpotPrice, clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].P1LastSpotPrice)
-						suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i].P1LastSpotPrice, clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].P0LastSpotPrice)
-					} else {
-						if clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i].PoolId == lastPoolID {
-							suite.Require().Equal(clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i], clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i])
-						}
+					record := clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i]
+					if record.PoolId == lastPoolIdMinusOne || record.PoolId == lastPoolIdMinusTwo {
+						assertTwapFlipped(suite, clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i], record)
+					} else if record.PoolId == lastPoolID {
+						assertEqual(suite, clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i], record)
 					}
 				}
 
