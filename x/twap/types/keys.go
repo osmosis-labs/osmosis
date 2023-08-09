@@ -2,7 +2,7 @@ package types
 
 import (
 	"errors"
-	fmt "fmt"
+	"fmt"
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,6 +45,10 @@ var (
 )
 
 // TODO: make utility command to automatically interlace separators
+
+func FormatKeyPoolTwapRecords(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%d", HistoricalTWAPPoolIndexPrefix, poolId))
+}
 
 func FormatMostRecentTWAPKey(poolId uint64, denom1, denom2 string) []byte {
 	poolIdS := osmoutils.FormatFixedLengthU64(poolId)

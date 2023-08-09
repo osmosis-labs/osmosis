@@ -1988,6 +1988,7 @@ type QueryClient interface {
 	TotalDelegationByDelegator(ctx context.Context, in *QueryTotalDelegationByDelegatorRequest, opts ...grpc.CallOption) (*QueryTotalDelegationByDelegatorResponse, error)
 	// Returns a list of whitelisted pool ids to unpool.
 	UnpoolWhitelist(ctx context.Context, in *QueryUnpoolWhitelistRequest, opts ...grpc.CallOption) (*QueryUnpoolWhitelistResponse, error)
+	// Returns all of a user's full range CL positions that are superfluid staked.
 	UserConcentratedSuperfluidPositionsDelegated(ctx context.Context, in *UserConcentratedSuperfluidPositionsDelegatedRequest, opts ...grpc.CallOption) (*UserConcentratedSuperfluidPositionsDelegatedResponse, error)
 	UserConcentratedSuperfluidPositionsUndelegating(ctx context.Context, in *UserConcentratedSuperfluidPositionsUndelegatingRequest, opts ...grpc.CallOption) (*UserConcentratedSuperfluidPositionsUndelegatingResponse, error)
 }
@@ -2191,6 +2192,7 @@ type QueryServer interface {
 	TotalDelegationByDelegator(context.Context, *QueryTotalDelegationByDelegatorRequest) (*QueryTotalDelegationByDelegatorResponse, error)
 	// Returns a list of whitelisted pool ids to unpool.
 	UnpoolWhitelist(context.Context, *QueryUnpoolWhitelistRequest) (*QueryUnpoolWhitelistResponse, error)
+	// Returns all of a user's full range CL positions that are superfluid staked.
 	UserConcentratedSuperfluidPositionsDelegated(context.Context, *UserConcentratedSuperfluidPositionsDelegatedRequest) (*UserConcentratedSuperfluidPositionsDelegatedResponse, error)
 	UserConcentratedSuperfluidPositionsUndelegating(context.Context, *UserConcentratedSuperfluidPositionsUndelegatingRequest) (*UserConcentratedSuperfluidPositionsUndelegatingResponse, error)
 }

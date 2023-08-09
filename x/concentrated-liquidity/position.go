@@ -413,12 +413,12 @@ func (k Keeper) CreateFullRangePosition(ctx sdk.Context, poolId uint64, owner sd
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, _, _, err = k.CreatePosition(ctx, concentratedPool.GetId(), owner, coins, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
+	positionData, err := k.CreatePosition(ctx, concentratedPool.GetId(), owner, coins, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 
-	return positionId, amount0, amount1, liquidity, nil
+	return positionData.ID, positionData.Amount0, positionData.Amount1, positionData.Liquidity, nil
 }
 
 // CreateFullRangePositionLocked creates a full range (min to max tick) concentrated liquidity position for the given pool ID, owner, and coins.
