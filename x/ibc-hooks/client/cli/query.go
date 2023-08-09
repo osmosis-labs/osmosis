@@ -7,8 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
@@ -42,7 +43,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdPoolParams return pool params.
+// GetCmdWasmSender returns a generated local address for a wasm hooks sender.
 func GetCmdWasmSender() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "wasm-sender <channelID> <originalSender>",
@@ -59,8 +60,24 @@ $ %s query ibc-hooks wasm-hooks-sender channel-42 juno12smx2wdlyttvyzvzg54y2vnqw
 		RunE: func(cmd *cobra.Command, args []string) error {
 			channelID := args[0]
 			originalSender := args[1]
-			// ToDo: Make this flexible as an arg
-			prefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+
+			prefixArg, err := cmd.Flags().GetString(FlagBech32Prefix)
+			if err != nil {
+				return err
+			}
+
+			config := sdk.GetConfig()
+
+			var prefix string
+			if prefixArg == "" {
+				prefix = config.GetBech32AccountAddrPrefix()
+			} else {
+				prefix, err = getBech32CustomPrefix(config, prefixArg)
+				if err != nil {
+					return err
+				}
+			}
+
 			senderBech32, err := keeper.DeriveIntermediateSender(channelID, originalSender, prefix)
 			if err != nil {
 				return err
@@ -70,6 +87,7 @@ $ %s query ibc-hooks wasm-hooks-sender channel-42 juno12smx2wdlyttvyzvzg54y2vnqw
 		},
 	}
 
+	cmd.Flags().String(FlagBech32Prefix, "", "bech32 prefix to use in derivation")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
