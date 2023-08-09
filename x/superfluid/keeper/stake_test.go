@@ -1087,35 +1087,19 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			s.Require().NoError(err)
 
 			// Staking & Delegation check
-			// check if original superfluid staked lock's delgation is successfully deleted
-			_, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, originalValAddr)
-			s.Require().False(found)
-			// check if delegation amount matches
-			delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, valAddr)
-			s.Require().True(found)
-			s.Require().True(totalAmtConverted.ToDec().Equal(delegation.Shares))
+			s.delegationCheck(s.Ctx, sender, originalValAddr, valAddr, totalAmtConverted)
 
 			// Bank check
 			balanceAfterConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender).FilterDenoms([]string{"foo", "stake", "uosmo"})
 			s.Require().True(balanceBeforeConvertLockToStake.IsEqual(balanceAfterConvertLockToStake))
 
-			// Superfluid check
-			// The synthetic lockup should be deleted.
+			// if unlocked, no need to check locks since there is no lock existing
 			if tc.unlocked {
 				return
 			}
-			_, err = s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
-			s.Require().Error(err)
 
-			// intermediary account should have been deleted in all case
-			if lock.ID != 0 {
-				_, err = s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
-				s.Require().Error(err)
-			}
-
-			// Lock check
-			_, err = s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
-			s.Require().Error(err)
+			// lock check
+			s.lockCheck(s.Ctx, *lock, valAddr.String(), true)
 
 		})
 	}
@@ -1216,22 +1200,10 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 			s.Require().NoError(err)
 
 			// Staking & Delegation check
-			// check if old delegation is succesfully deleted
-			_, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, originalValAddr)
-			s.Require().False(found)
-			// check if delegation amount matches
-			delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, valAddr)
-			s.Require().True(found)
-			s.Require().True(totalAmtConverted.ToDec().Equal(delegation.Shares))
-
-			// Superfluid check
-			// The synthetic lockup should be deleted.
-			_, err = s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
-			s.Require().Error(err)
+			s.delegationCheck(s.Ctx, sender, originalValAddr, valAddr, totalAmtConverted)
 
 			// Lock check
-			_, err = s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
-			s.Require().Error(err)
+			s.lockCheck(s.Ctx, *lock, valAddr.String(), true)
 
 			// Bank check
 			balanceAfterConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
@@ -1315,10 +1287,7 @@ func (s *KeeperTestSuite) TestConvertUnlockedToStake() {
 			s.Require().True(bondDenomPoolAmtAfterConvert.LT(bondDenomPoolAmtBeforeConvert))
 
 			// Staking & Delegation check
-			// check if delegation amount matches
-			delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, valAddr)
-			s.Require().True(found)
-			s.Require().True(totalAmtConverted.ToDec().Equal(delegation.Shares))
+			s.delegationCheck(s.Ctx, sender, sdk.ValAddress{}, valAddr, totalAmtConverted)
 
 			// Bank check
 			balanceAfterConvertLockToStake := s.App.BankKeeper.GetBalance(s.Ctx, sender, shareOut.Denom)
@@ -1575,6 +1544,33 @@ func (s *KeeperTestSuite) SetupUnbondConvertAndStakeTest(ctx sdk.Context, superf
 
 	s.Require().NoError(err)
 	return joinPoolAmt, balancerIntermediaryAcc, balancerLock, poolCreateAcc, poolJoinAcc, balancerPooId, balancerPoolShareOut, valAddr
+
+}
+
+func (s *KeeperTestSuite) delegationCheck(ctx sdk.Context, sender sdk.AccAddress, originalValAddr, newValAddr sdk.ValAddress, totalAmtConverted sdk.Int) {
+	if !originalValAddr.Empty() {
+		// check if original superfluid staked lock's delgation is successfully deleted
+		_, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, originalValAddr)
+		s.Require().False(found)
+	}
+	// check if delegation amount matches
+	delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, newValAddr)
+	s.Require().True(found)
+	s.Require().True(totalAmtConverted.ToDec().Equal(delegation.Shares))
+}
+
+func (s *KeeperTestSuite) lockCheck(ctx sdk.Context, lock lockuptypes.PeriodLock, valAddr string, checkUnstakingSynthLock bool) {
+	// The synthetic lockup should be deleted.
+	_, err := s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+	s.Require().Error(err)
+
+	// intermediary account should have been deleted
+	_, err = s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
+	s.Require().Error(err)
+
+	// Lock check
+	_, err = s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
+	s.Require().Error(err)
 }
 
 // type superfluidRedelegation struct {

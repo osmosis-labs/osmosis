@@ -837,7 +837,6 @@ func (k Keeper) convertGammSharesToOsmoAndStake(
 	// if given valAddr is empty, we use delegation preference given from valset-pref module or reference from superfluid staking
 	if valAddr == "" {
 		err := k.vspk.DelegateToValidatorSet(ctx, sender.String(), sdk.NewCoin(bondDenom, totalAmtToStake))
-
 		// if valset-pref delegation errored due to no existing delegation existing, fall back and try using superfluid staked validator
 		if err == valsettypes.ErrNoDelegation {
 			val, err := k.validateValAddrForDelegate(ctx, originalSuperfluidValAddr)
@@ -850,10 +849,7 @@ func (k Keeper) convertGammSharesToOsmoAndStake(
 			if err != nil {
 				return sdk.ZeroInt(), err
 			}
-		}
-
-		// for other errors, handle error
-		if err != nil {
+		} else if err != nil { // for other errors, handle error
 			return sdk.ZeroInt(), err
 		}
 	} else {
