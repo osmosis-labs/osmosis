@@ -93,13 +93,6 @@ func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) ([]Asset
 			}
 		}
 
-		// Check if pool's resulting spot price will fall within min and max spot price bounds.
-		spreadFactor := pool.GetSpreadFactor(ctx)
-		err = validateSpotPriceFallsInBounds(ctx, pool, keepers, AssetPairs[i].BaseAsset, spreadFactor)
-		if err != nil {
-			return nil, err
-		}
-
 		// If the spread factor is not manually set above, set it to the the same value as the pool's spread factor.
 		if assetPair.SpreadFactor.IsNil() {
 			AssetPairs[i].SpreadFactor = pool.GetSpreadFactor(ctx)
