@@ -8,6 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	poolManagerTypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
@@ -355,7 +356,11 @@ func InitializeAssetPairsTestnet(ctx sdk.Context, keepers *keepers.AppKeepers) (
 		// Check if swapping 0.1 OSMO results in a spot price less than the min or greater than the max
 		spreadFactor := cfmmPool.GetSpreadFactor(ctx)
 		respectiveBaseAsset, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, cfmmPool, sdk.NewCoin(QuoteAsset, sdk.NewInt(100000)), baseAsset, spreadFactor)
-		if err != nil {
+		if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
+			// Result is zero, which means 0.1 osmo was too much for the swap to handle.
+			// This is likely because the pool liquidity is too small, so we skip it.
+			continue
+		} else if err != nil {
 			return nil, err
 		}
 		expectedSpotPriceFromSwap := sdk.NewDec(100000).Quo(respectiveBaseAsset.Amount.ToDec())
