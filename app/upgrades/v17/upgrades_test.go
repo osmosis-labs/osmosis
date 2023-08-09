@@ -287,7 +287,8 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				communityPoolBalancePost := suite.App.BankKeeper.GetAllBalances(suite.Ctx, communityPoolAddress)
 				feePoolCommunityPoolPost := suite.App.DistrKeeper.GetFeePool(suite.Ctx).CommunityPool
 
-				assetPairs := v17.InitializeAssetPairs(ctx, keepers)
+				assetPairs, err := v17.InitializeAssetPairs(ctx, keepers)
+				suite.Require().NoError(err)
 
 				for i, assetPair := range assetPairs {
 					// Get balancer pool's spot price.

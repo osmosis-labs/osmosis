@@ -75,13 +75,13 @@ var AssetPairs = []AssetPair{
 }
 
 // AssetPairs contract: all AssetPairs being initialized in this upgrade handler all have the same quote asset (OSMO).
-func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) []AssetPair {
+func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) ([]AssetPair, error) {
 	gammKeeper := keepers.GAMMKeeper
 	superfluidKeeper := keepers.SuperfluidKeeper
 	for i, assetPair := range AssetPairs {
 		pool, err := gammKeeper.GetCFMMPool(ctx, assetPair.LinkedClassicPool)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		// Set the base asset as the non-osmo asset in the pool
@@ -91,6 +91,13 @@ func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) []AssetP
 				AssetPairs[i].BaseAsset = coin.Denom
 				break
 			}
+		}
+
+		// Check if pool's resulting spot price will fall within min and max spot price bounds.
+		spreadFactor := pool.GetSpreadFactor(ctx)
+		err = validateSpotPriceFallsInBounds(ctx, pool, keepers, AssetPairs[i].BaseAsset, spreadFactor)
+		if err != nil {
+			return nil, err
 		}
 
 		// If the spread factor is not manually set above, set it to the the same value as the pool's spread factor.
@@ -107,7 +114,7 @@ func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) []AssetP
 		}
 		AssetPairs[i].Superfluid = true
 	}
-	return AssetPairs
+	return AssetPairs, nil
 }
 
 // The values below this comment are used strictly for testing.
@@ -353,19 +360,14 @@ func InitializeAssetPairsTestnet(ctx sdk.Context, keepers *keepers.AppKeepers) (
 			continue
 		}
 
-		// Check if swapping 0.1 OSMO results in a spot price less than the min or greater than the max
 		spreadFactor := cfmmPool.GetSpreadFactor(ctx)
-		respectiveBaseAsset, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, cfmmPool, sdk.NewCoin(QuoteAsset, sdk.NewInt(100000)), baseAsset, spreadFactor)
+		err = validateSpotPriceFallsInBounds(ctx, cfmmPool, keepers, baseAsset, spreadFactor)
 		if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
 			// Result is zero, which means 0.1 osmo was too much for the swap to handle.
-			// This is likely because the pool liquidity is too small, so we skip it.
+			// This is likely because the pool liquidity is too small, so since this just testnet, we skip it.
 			continue
 		} else if err != nil {
 			return nil, err
-		}
-		expectedSpotPriceFromSwap := sdk.NewDec(100000).Quo(respectiveBaseAsset.Amount.ToDec())
-		if expectedSpotPriceFromSwap.LT(cltypes.MinSpotPrice) || expectedSpotPriceFromSwap.GT(cltypes.MaxSpotPrice) {
-			continue
 		}
 
 		// Set the spread factor to the same spread factor the GAMM pool was.
@@ -400,4 +402,19 @@ func InitializeAssetPairsTestnet(ctx sdk.Context, keepers *keepers.AppKeepers) (
 		testnetAssetPairs = append(testnetAssetPairs, internalAssetPair)
 	}
 	return testnetAssetPairs, nil
+}
+
+// validateSpotPriceFallsInBounds ensures that after swapping in the OSMO for the baseAsset, the resulting spot price is within the
+// min and max spot price bounds of the concentrated liquidity module.
+func validateSpotPriceFallsInBounds(ctx sdk.Context, cfmmPool gammtypes.CFMMPoolI, keepers *keepers.AppKeepers, baseAsset string, spreadFactor sdk.Dec) error {
+	// Check if swapping 0.1 OSMO results in a spot price less than the min or greater than the max
+	respectiveBaseAsset, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, cfmmPool, sdk.NewCoin(QuoteAsset, sdk.NewInt(100000)), baseAsset, spreadFactor)
+	if err != nil {
+		return err
+	}
+	expectedSpotPriceFromSwap := sdk.NewDec(100000).Quo(respectiveBaseAsset.Amount.ToDec())
+	if expectedSpotPriceFromSwap.LT(cltypes.MinSpotPrice) || expectedSpotPriceFromSwap.GT(cltypes.MaxSpotPrice) {
+		return err
+	}
+	return nil
 }

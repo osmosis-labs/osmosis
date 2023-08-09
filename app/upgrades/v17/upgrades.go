@@ -66,14 +66,14 @@ func CreateUpgradeHandler(
 		if ctx.ChainID() == mainnetChainID || ctx.ChainID() == e2eChainA || ctx.ChainID() == e2eChainB {
 			// Upgrades specific balancer pools to concentrated liquidity pools and links them to their CL equivalent.
 			ctx.Logger().Info(fmt.Sprintf("Chain ID is %s, running mainnet upgrade handler", ctx.ChainID()))
-			assetPairs = InitializeAssetPairs(ctx, keepers)
+			assetPairs, err = InitializeAssetPairs(ctx, keepers)
 		} else {
 			// Upgrades all existing balancer pools to concentrated liquidity pools and links them to their CL equivalent.
 			ctx.Logger().Info(fmt.Sprintf("Chain ID is %s, running testnet upgrade handler", ctx.ChainID()))
 			assetPairs, err = InitializeAssetPairsTestnet(ctx, keepers)
-			if err != nil {
-				return nil, err
-			}
+		}
+		if err != nil {
+			return nil, err
 		}
 
 		// Get community pool address.
