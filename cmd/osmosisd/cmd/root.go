@@ -287,6 +287,12 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		Use:   "osmosisd",
 		Short: "Start osmosis app",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// If not calling the set-env command, this is a no-op.
+			err := changeEnvPriorToSetup(cmd, &initClientCtx, args, homeDir)
+			if err != nil {
+				return err
+			}
+
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -391,8 +397,9 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 func getHomeEnvironment() string {
 	envPath := filepath.Join(osmosis.DefaultNodeHome, ".env")
 
-	// Use default node home if can't get environment
-	err := godotenv.Load(envPath)
+	// Use default node home if can't get environment.
+	// Overload must be used here in the event that the .env gets updated.
+	err := godotenv.Overload(envPath)
 	if err != nil {
 		// Failed to load, using default home directory
 		return EnvMainnet
