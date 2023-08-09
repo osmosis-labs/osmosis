@@ -20,6 +20,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	minttypes "github.com/osmosis-labs/osmosis/v17/x/mint/types"
 	txfeetypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 
@@ -457,7 +458,7 @@ func (suite *HooksTestSuite) TestFundTracking() {
 		addr.String(),
 		fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"increment": {} } } }`, addr))
 
-	senderLocalAcc, err := ibchookskeeper.DeriveIntermediateSender("channel-0", suite.chainB.SenderAccount.GetAddress().String(), "osmo")
+	senderLocalAcc, err := ibchookskeeper.DeriveIntermediateSender("channel-0", suite.chainB.SenderAccount.GetAddress().String(), "osmo", ibchookstypes.SenderPrefix)
 	suite.Require().NoError(err)
 
 	state := suite.chainA.QueryContract(
