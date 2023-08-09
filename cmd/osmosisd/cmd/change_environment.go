@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -29,17 +30,21 @@ func ChangeEnvironmentCmd() *cobra.Command {
 Example:
 	osmosisd set-env mainnet
 	osmosisd set-env testnet
-	osmosisd set-env localnet
+	osmosisd set-env localnet [optional-chain-id]
 	osmosisd set-env $HOME/.custom-dir
 `,
-		Args: cobra.ExactArgs(1),
+		Args: customArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Note: If we are calling this method, the environment file has already been set in
 			// NewRootCmd() when creating the rootCmd. We do this because order of operations
 			// dictates this as a requirement. If we changed the env file here, the osmosis
 			// daemon would not initialize the folder we are intending to set to.
 			newEnv := args[0]
-			return clientSettingsFromEnv(cmd, newEnv)
+			chainId := ""
+			if len(args) > 1 {
+				chainId = args[1]
+			}
+			return clientSettingsFromEnv(cmd, newEnv, chainId)
 		},
 	}
 	return cmd
@@ -101,7 +106,7 @@ func environmentNameToPath(environmentName string) (string, error) {
 
 // clientSettingsFromEnv takes the env name (mainnet, testnet, localnet, etc) and sets the
 // client.toml settings to commonly used values for that environment.
-func clientSettingsFromEnv(cmd *cobra.Command, environmentName string) error {
+func clientSettingsFromEnv(cmd *cobra.Command, environmentName, chainId string) error {
 	envConfigs := map[string]map[string]string{
 		EnvMainnet: {
 			flags.FlagChainID:       "osmosis-1",
@@ -122,6 +127,11 @@ func clientSettingsFromEnv(cmd *cobra.Command, environmentName string) error {
 	configs, ok := envConfigs[environmentName]
 	if !ok {
 		return nil
+	}
+
+	// Update the ChainID if environmentName is EnvLocalnet and chainId is provided
+	if environmentName == EnvLocalnet && chainId != "" {
+		configs[flags.FlagChainID] = chainId
 	}
 
 	for flag, value := range configs {
@@ -181,7 +191,7 @@ func createHomeDirIfNotExist(homeDir string) error {
 // If this is not called in NewRootCmd(), the environment change will happen **after** all relevant setup actions
 // happen (e.g., the .env will be read in as the previous value in the setup and not the new value).
 func changeEnvPriorToSetup(cmd *cobra.Command, initClientCtx *client.Context, args []string, homeDir string) error {
-	if cmd.Name() == "set-env" && len(args) == 1 {
+	if cmd.Name() == "set-env" {
 		err := createHomeDirIfNotExist(homeDir)
 		if err != nil {
 			return err
@@ -199,6 +209,20 @@ func changeEnvPriorToSetup(cmd *cobra.Command, initClientCtx *client.Context, ar
 			homeDir = app.DefaultNodeHome
 		}
 		*initClientCtx = initClientCtx.WithHomeDir(homeDir)
+	}
+	return nil
+}
+
+// customArgs accepts one arg, but if the first arg is "localnet", then it accepts two args.
+func customArgs(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 || len(args) > 2 {
+		return errors.New("set-env requires 1 or 2 arguments")
+	}
+	if args[0] == "localnet" {
+		return nil
+	}
+	if len(args) == 2 {
+		return errors.New("only 'set-env localnet' accepts a second argument")
 	}
 	return nil
 }
