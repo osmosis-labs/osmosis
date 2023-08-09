@@ -3,7 +3,6 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -19,11 +18,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
@@ -1237,7 +1238,7 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	s.CallCheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
 
 	// sender wasm addr
-	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo", ibchookstypes.SenderPrefix)
 
 	var response map[string]interface{}
 	s.Require().Eventually(func() bool {
@@ -1318,7 +1319,7 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	s.Require().NoError(err)
 
 	// sender wasm addr
-	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", pfmSender, "osmo")
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", pfmSender, "osmo", ibchookstypes.SenderPrefix)
 	s.Require().NoError(err)
 
 	s.Require().Eventually(func() bool {
