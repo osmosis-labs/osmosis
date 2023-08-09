@@ -49,7 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 * [#5072](https://github.com/osmosis-labs/osmosis/pull/5072) IBC-hooks: Add support for async acks when processing onRecvPacket
-* [#6003](https://github.com/osmosis-labs/osmosis/pull/6003) Allow providing custom bech32 and hash prefixes in derivation of intermediate sender in ibc-hooks
+* [#6003](https://github.com/osmosis-labs/osmosis/pull/6003) IBC-hooks: Allow providing custom bech32 and hash prefixes in derivation of intermediate sender 
 
 ### State Breaking
 
