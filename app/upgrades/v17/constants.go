@@ -354,11 +354,11 @@ func InitializeAssetPairsTestnet(ctx sdk.Context, keepers *keepers.AppKeepers) (
 
 		// Check if swapping 0.1 OSMO results in a spot price less than the min or greater than the max
 		spreadFactor := cfmmPool.GetSpreadFactor(ctx)
-		respectiveBaseAsset, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, cfmmPool, sdk.NewCoin(QuoteAsset, sdk.NewInt(10000000000)), baseAsset, spreadFactor)
+		respectiveBaseAsset, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, cfmmPool, sdk.NewCoin(QuoteAsset, sdk.NewInt(100000)), baseAsset, spreadFactor)
 		if err != nil {
 			return nil, err
 		}
-		expectedSpotPriceFromSwap := sdk.NewDec(10000000000).Quo(respectiveBaseAsset.Amount.ToDec())
+		expectedSpotPriceFromSwap := sdk.NewDec(100000).Quo(respectiveBaseAsset.Amount.ToDec())
 		if expectedSpotPriceFromSwap.LT(cltypes.MinSpotPrice) || expectedSpotPriceFromSwap.GT(cltypes.MaxSpotPrice) {
 			continue
 		}
