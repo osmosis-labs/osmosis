@@ -58,27 +58,38 @@ $ %s query ibchooks wasm-hooks-sender channel-42 juno12smx2wdlyttvyzvzg54y2vnqwq
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			config := sdk.GetConfig()
 			channelID := args[0]
 			originalSender := args[1]
 
-			prefixArg, err := cmd.Flags().GetString(FlagBech32Prefix)
+			bech32PrefixArg, err := cmd.Flags().GetString(FlagBech32Prefix)
 			if err != nil {
 				return err
 			}
 
-			config := sdk.GetConfig()
+			hashPrefixArg, err := cmd.Flags().GetString(FlagHashPrefix)
+			if err != nil {
+				return err
+			}
 
-			var prefix string
-			if prefixArg == "" {
-				prefix = config.GetBech32AccountAddrPrefix()
+			var hashPrefix string
+			if hashPrefixArg == "" {
+				hashPrefix = types.SenderPrefix
 			} else {
-				prefix, err = getBech32CustomPrefix(config, prefixArg)
+				hashPrefix = hashPrefixArg
+			}
+
+			var bech32Prefix string
+			if bech32PrefixArg == "" {
+				bech32Prefix = config.GetBech32AccountAddrPrefix()
+			} else {
+				bech32Prefix, err = getBech32CustomPrefix(config, bech32PrefixArg)
 				if err != nil {
 					return err
 				}
 			}
 
-			senderBech32, err := keeper.DeriveIntermediateSender(channelID, originalSender, prefix)
+			senderBech32, err := keeper.DeriveIntermediateSender(channelID, originalSender, bech32Prefix, hashPrefix)
 			if err != nil {
 				return err
 			}
@@ -87,8 +98,9 @@ $ %s query ibchooks wasm-hooks-sender channel-42 juno12smx2wdlyttvyzvzg54y2vnqwq
 		},
 	}
 
-	cmd.Flags().String(FlagBech32Prefix, "", "bech32 prefix to use in derivation")
 	flags.AddQueryFlagsToCmd(cmd)
+	cmd.Flags().String(FlagBech32Prefix, "", "bech32 prefix to use in derivation")
+	cmd.Flags().String(FlagHashPrefix, "", "hash prefix to use in derivation")
 
 	return cmd
 }

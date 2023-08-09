@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 )
 

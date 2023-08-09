@@ -4,15 +4,17 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
-	"strings"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
@@ -167,9 +169,9 @@ func (k Keeper) DeletePacketAckActor(ctx sdk.Context, channel string, packetSequ
 }
 
 // DeriveIntermediateSender derives the sender address to be used when calling wasm hooks
-func DeriveIntermediateSender(channel, originalSender, bech32Prefix string) (string, error) {
+func DeriveIntermediateSender(channel, originalSender, bech32Prefix, hashPrefix string) (string, error) {
 	senderStr := fmt.Sprintf("%s/%s", channel, originalSender)
-	senderHash32 := address.Hash(types.SenderPrefix, []byte(senderStr))
+	senderHash32 := address.Hash(hashPrefix, []byte(senderStr))
 	sender := sdk.AccAddress(senderHash32[:])
 	return sdk.Bech32ifyAddressBytes(bech32Prefix, sender)
 }
@@ -218,7 +220,6 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 	ack, err := types.UnmarshalIBCAck(bz)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "could not unmarshal into IBCAckResponse or IBCAckError")
-
 	}
 	var newAck channeltypes.Acknowledgement
 	var packet channeltypes.Packet

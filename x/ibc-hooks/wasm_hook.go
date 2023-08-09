@@ -3,6 +3,7 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
@@ -25,13 +26,15 @@ type WasmHooks struct {
 	ContractKeeper      *wasmkeeper.PermissionedKeeper
 	ibcHooksKeeper      *keeper.Keeper
 	bech32PrefixAccAddr string
+	hashPrefix          string
 }
 
-func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.PermissionedKeeper, bech32PrefixAccAddr string) WasmHooks {
+func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.PermissionedKeeper, bech32PrefixAccAddr, hashPrefix string) WasmHooks {
 	return WasmHooks{
 		ContractKeeper:      contractKeeper,
 		ibcHooksKeeper:      ibcHooksKeeper,
 		bech32PrefixAccAddr: bech32PrefixAccAddr,
+		hashPrefix:          hashPrefix,
 	}
 }
 
@@ -64,7 +67,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	// Calculate the receiver / contract caller based on the packet's channel and sender
 	channel := packet.GetDestChannel()
 	sender := data.GetSender()
-	senderBech32, err := keeper.DeriveIntermediateSender(channel, sender, h.bech32PrefixAccAddr)
+	senderBech32, err := keeper.DeriveIntermediateSender(channel, sender, h.bech32PrefixAccAddr, h.hashPrefix)
 	if err != nil {
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err.Error()))
 	}
