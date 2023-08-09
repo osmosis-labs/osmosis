@@ -406,7 +406,12 @@ func (msg MsgUnbondConvertAndStake) ValidateBasic() error {
 	if err != nil {
 		return fmt.Errorf("Invalid sender address (%s)", err)
 	}
-
+	if msg.ValAddr == "" {
+		return fmt.Errorf("ValAddr should not be empty")
+	}
+	if msg.MinAmtToStake.IsNegative() {
+		return fmt.Errorf("Min amount to stake cannot be negative")
+	}
 	return nil
 }
 

@@ -256,6 +256,14 @@ message MsgUnbondConvertAndStake {
     (gogoproto.moretags) = "yaml:\"min_amt_to_stake\"",
     (gogoproto.nullable) = false
   ];
+  // shares_to_convert indicates shares wanted to stake.
+  // Note that this field is only used for liquid(unlocked) gamm shares.
+  // For all other cases, this field would be disregarded.
+  cosmos.base.v1beta1.Coin shares_to_convert = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"shares_to_convert\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
 }
 
 message MsgUnbondConvertAndStakeResponse {
