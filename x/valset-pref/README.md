@@ -57,7 +57,7 @@ Algorithm for undelegation;
 // 1. Calculate the amount to undelegate from each validator under full valset usage
 // 2. For each validator, compute V.ratio = undelegate_amount / amount_staked_to_val
 // 3. Sort validators by V_ratio descending If V_ratio <= 1, undelegate taret amount from each validator. (happy path)
-// 4. If V_ratio <= 1, undelegate taret amount from each validator. (happy path)  
+// 4. If V_ratio <= 1, undelegate target amount from each validator. (happy path)  
 // 5. Set target_ratio = 1, amount_remaining_to_unbond = amount
 // 6. While greatest V_ratio > target_ratio:
 //    - Fully undelegate validator with greatest V_ratio. (Amount S)
