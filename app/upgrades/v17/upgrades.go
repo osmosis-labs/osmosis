@@ -91,7 +91,7 @@ func CreateUpgradeHandler(
 
 			// Track pool link created and coins used for the community pool.
 			poolLinks = append(poolLinks, poolLink)
-			fullRangeCoinsUsed = fullRangeCoinsUsed.Add(coinsUser...)
+			fullRangeCoinsUsed = fullRangeCoinsUsed.Add(coinsUsed...)
 
 			if assetPair.Superfluid {
 				ctx.Logger().Info(fmt.Sprintf("gammPoolId %d is superfluid enabled, enabling %s as a superfluid asset", assetPair.LinkedClassicPool, clPoolDenom))
