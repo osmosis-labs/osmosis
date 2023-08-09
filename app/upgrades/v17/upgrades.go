@@ -85,13 +85,13 @@ func CreateUpgradeHandler(
 
 			// Create a full range position via the community pool with the funds we calculated above.
 			fullRangeCoins := sdk.NewCoins(respectiveBaseAsset, oneOsmo)
-			_, actualBaseAmtUsed, actualQuoteAmtUsed, _, err := keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeCoins)
+			positionData, err := keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeCoins)
 			if err != nil {
 				return nil, err
 			}
 
 			// Track the coins used to create the full range position (we manually update the fee pool later all at once).
-			fullRangeCoinsUsed = fullRangeCoinsUsed.Add(sdk.NewCoins(sdk.NewCoin(QuoteAsset, actualQuoteAmtUsed), sdk.NewCoin(assetPair.BaseAsset, actualBaseAmtUsed))...)
+			fullRangeCoinsUsed = fullRangeCoinsUsed.Add(sdk.NewCoins(sdk.NewCoin(QuoteAsset, positionData.Amount1), sdk.NewCoin(assetPair.BaseAsset, positionData.Amount0))...)
 
 			// If pair was previously superfluid enabled, add the cl pool's full range denom as an authorized superfluid asset.
 			if assetPair.Superfluid {

@@ -683,7 +683,7 @@ func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
 
 			// Create 3 locked positions
 			for i := 0; i < 3; i++ {
-				_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), defaultAddress, defaultFunds, time.Hour)
+				_, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), defaultAddress, defaultFunds, time.Hour)
 				s.Require().NoError(err)
 			}
 
