@@ -191,6 +191,7 @@ func attachFieldsToUse[reqP proto.Message](desc *QueryDescriptor) {
 	for i := 0; i < v.NumField(); i++ {
 		fn := strings.ToLower(v.Field(i).Name)
 
+		// if a field is parsed from a flag, skip it
 		if desc.CustomFlagOverrides[fn] != "" || osmoutils.Contains(nonAttachableFields, fn) {
 			continue
 		}
