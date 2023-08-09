@@ -12,6 +12,7 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	types "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
@@ -391,25 +392,25 @@ const (
 
 func (s *KeeperTestSuite) createPositionWithLockState(ls lockState, poolId uint64, owner sdk.AccAddress, providedCoins sdk.Coins, dur time.Duration) (uint64, sdk.Dec) {
 	var (
-		positionData     cl.CreatePositionData
-		liquidityCreated sdk.Dec
-		positionId       uint64
-		err              error
+		positionData          cl.CreatePositionData
+		fullRangePositionData cltypes.CreateFullRangePositionData
+		err                   error
 	)
 
 	if ls == locked {
-		positionId, _, _, liquidityCreated, _, err = s.clk.CreateFullRangePositionLocked(s.Ctx, poolId, owner, providedCoins, dur)
+		fullRangePositionData, _, err = s.clk.CreateFullRangePositionLocked(s.Ctx, poolId, owner, providedCoins, dur)
 	} else if ls == unlocking {
-		positionId, _, _, liquidityCreated, _, err = s.clk.CreateFullRangePositionUnlocking(s.Ctx, poolId, owner, providedCoins, dur+time.Hour)
+		fullRangePositionData, _, err = s.clk.CreateFullRangePositionUnlocking(s.Ctx, poolId, owner, providedCoins, dur+time.Hour)
 	} else if ls == unlocked {
-		positionId, _, _, liquidityCreated, _, err = s.clk.CreateFullRangePositionUnlocking(s.Ctx, poolId, owner, providedCoins, dur-time.Hour)
+		fullRangePositionData, _, err = s.clk.CreateFullRangePositionUnlocking(s.Ctx, poolId, owner, providedCoins, dur-time.Hour)
 	} else {
 		positionData, err = s.clk.CreatePosition(s.Ctx, poolId, owner, providedCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-		positionId = positionData.ID
-		liquidityCreated = positionData.Liquidity
+		s.Require().NoError(err)
+		return positionData.ID, positionData.Liquidity
 	}
+	// full range case
 	s.Require().NoError(err)
-	return positionId, liquidityCreated
+	return fullRangePositionData.ID, fullRangePositionData.Liquidity
 }
 
 func (s *KeeperTestSuite) TestWithdrawPosition() {
@@ -1999,8 +2000,8 @@ func (s *KeeperTestSuite) TestIsLockMature() {
 		s.Run(name, func() {
 			tc := tc
 			var (
-				positionId         uint64
 				concentratedLockId uint64
+				positionData       types.CreateFullRangePositionData
 				err                error
 			)
 			s.SetupTest()
@@ -2012,17 +2013,15 @@ func (s *KeeperTestSuite) TestIsLockMature() {
 			s.FundAcc(s.TestAccs[0], coinsToFund)
 
 			if tc.unlockingPosition {
-				positionId, _, _, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool.GetId(), s.TestAccs[0], coinsToFund, tc.remainingLockDuration)
-				s.Require().NoError(err)
+				positionData, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool.GetId(), s.TestAccs[0], coinsToFund, tc.remainingLockDuration)
 			} else if tc.lockedPosition {
-				positionId, _, _, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, pool.GetId(), s.TestAccs[0], coinsToFund, tc.remainingLockDuration)
-				s.Require().NoError(err)
+				positionData, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, pool.GetId(), s.TestAccs[0], coinsToFund, tc.remainingLockDuration)
 			} else {
-				positionId, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, pool.GetId(), s.TestAccs[0], coinsToFund)
-				s.Require().NoError(err)
+				positionData, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, pool.GetId(), s.TestAccs[0], coinsToFund)
 			}
+			s.Require().NoError(err)
 
-			_, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+			_, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionData.ID)
 			s.Require().NoError(err)
 
 			// Increment block time by a second to ensure test cases with zero lock duration are in the past
@@ -2031,11 +2030,7 @@ func (s *KeeperTestSuite) TestIsLockMature() {
 			// System under test
 			lockIsMature, _ := s.App.ConcentratedLiquidityKeeper.IsLockMature(s.Ctx, concentratedLockId)
 
-			if tc.expectedLockIsMature {
-				s.Require().True(lockIsMature)
-			} else {
-				s.Require().False(lockIsMature)
-			}
+			s.Require().Equal(tc.expectedLockIsMature, lockIsMature)
 		})
 	}
 }
