@@ -22,6 +22,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 const (
@@ -48,6 +50,18 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// get all the existing CL pools
+		pools, err := keepers.ConcentratedLiquidityKeeper.GetPools(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		// migrate twap records for CL Pools
+		err = flipTwapSpotPriceRecords(ctx, pools, keepers)
+		if err != nil {
+			return nil, err
+		}
+
 		// Set the asset pair list depending on the chain ID.
 		if ctx.ChainID() == mainnetChainID || ctx.ChainID() == e2eChainA || ctx.ChainID() == e2eChainB {
 			// Upgrades specific balancer pools to concentrated liquidity pools and links them to their CL equivalent.
@@ -57,11 +71,12 @@ func CreateUpgradeHandler(
 			// Upgrades all existing balancer pools to concentrated liquidity pools and links them to their CL equivalent.
 			ctx.Logger().Info(fmt.Sprintf("Chain ID is %s, running testnet upgrade handler", ctx.ChainID()))
 			assetPairs, err = InitializeAssetPairsTestnet(ctx, keepers)
-		}
-		if err != nil {
-			return nil, err
+			if err != nil {
+				return nil, err
+			}
 		}
 
+		// Get community pool address.
 		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
 		poolLinks := []gammmigration.BalancerToConcentratedPoolLink{}
 		fullRangeCoinsUsed := sdk.Coins{}
@@ -205,6 +220,43 @@ func manuallySetTWAPRecords(ctx sdk.Context, keepers *keepers.AppKeepers, clPool
 	for _, twapRecord := range clPoolTwapRecords {
 		twapRecord.LastErrorTime = time.Time{}
 		keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord)
+	}
+	return nil
+}
+
+// flipTwapSpotPriceRecords flips the denoms and spot price of twap record of a given pool.
+func flipTwapSpotPriceRecords(ctx sdk.Context, pools []poolmanagertypes.PoolI, keepers *keepers.AppKeepers) error {
+	for _, pool := range pools {
+		poolId := pool.GetId()
+		twapRecordHistoricalPoolIndexed, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, poolId)
+		if err != nil {
+			return err
+		}
+
+		for _, historicalTwapRecord := range twapRecordHistoricalPoolIndexed {
+			oldRecord := historicalTwapRecord
+			historicalTwapRecord.Asset0Denom, historicalTwapRecord.Asset1Denom = oldRecord.Asset1Denom, oldRecord.Asset0Denom
+			historicalTwapRecord.P0LastSpotPrice, historicalTwapRecord.P1LastSpotPrice = oldRecord.P1LastSpotPrice, oldRecord.P0LastSpotPrice
+
+			keepers.TwapKeeper.StoreHistoricalTWAP(ctx, historicalTwapRecord)
+			keepers.TwapKeeper.DeleteHistoricalRecord(ctx, oldRecord)
+		}
+
+		clPoolTwapRecords, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, poolId)
+		if err != nil {
+			return err
+		}
+
+		for _, twapRecord := range clPoolTwapRecords {
+			twapRecord.LastErrorTime = time.Time{}
+			oldRecord := twapRecord
+
+			twapRecord.Asset0Denom, twapRecord.Asset1Denom = oldRecord.Asset1Denom, oldRecord.Asset0Denom
+			twapRecord.P0LastSpotPrice, twapRecord.P1LastSpotPrice = oldRecord.P1LastSpotPrice, oldRecord.P0LastSpotPrice
+
+			keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord)
+			keepers.TwapKeeper.DeleteMostRecentRecord(ctx, oldRecord)
+		}
 	}
 	return nil
 }
