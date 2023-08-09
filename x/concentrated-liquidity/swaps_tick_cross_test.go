@@ -204,7 +204,7 @@ func (s *KeeperTestSuite) setupPoolAndPositions(testTickSpacing uint64, position
 
 	// Create a full range position
 	s.FundAcc(s.TestAccs[0], DefaultCoins)
-	_, _, _, liquidityFullRange, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolId, s.TestAccs[0], initialCoins)
+	positionData, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolId, s.TestAccs[0], initialCoins)
 	s.Require().NoError(err)
 
 	// Refetch pool as the first position updated its state.
@@ -214,7 +214,7 @@ func (s *KeeperTestSuite) setupPoolAndPositions(testTickSpacing uint64, position
 	// Create all narrow range positions per given tick spacings away from the current tick
 	// configuration.
 	positionMetas := make([]positionMeta, len(positionTickSpacingsFromCurrTick))
-	liquidityAllPositions := liquidityFullRange
+	liquidityAllPositions := positionData.Liquidity
 	for i, tickSpacingsAway := range positionTickSpacingsFromCurrTick {
 		// Create narrow range position tickSpacingsAway from the current tick
 		positionMetas[i] = s.CreatePositionTickSpacingsFromCurrentTick(poolId, tickSpacingsAway)
