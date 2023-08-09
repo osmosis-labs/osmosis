@@ -182,7 +182,7 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 
 	// Create a full range position via the community pool with the funds we calculated above.
 	fullRangeCoins := sdk.NewCoins(respectiveBaseAsset, osmoIn)
-	_, _, _, _, err = keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeCoins)
+	_, err = keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeCoins)
 	if err != nil {
 		return "", 0, gammmigration.BalancerToConcentratedPoolLink{}, nil, err
 	}

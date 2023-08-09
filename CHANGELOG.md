@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### API breaks
 
 * [#5983](https://github.com/osmosis-labs/osmosis/pull/5983) refactor(CL): 6 return values in CL CreatePosition with a struct
+* [#6004](https://github.com/osmosis-labs/osmosis/pull/6004) reduce number of returns for creating full range position
 
 ### Features
 
@@ -86,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5959](https://github.com/osmosis-labs/osmosis/pull/5959) allow testing with different chain-id's in E2E testing
 * [#5964](https://github.com/osmosis-labs/osmosis/pull/5964) fix e2e test concurrency bugs
 * [#5948] (https://github.com/osmosis-labs/osmosis/pull/5948) Parameterizing Pool Type Information in Protorev
+* [#6001](https://github.com/osmosis-labs/osmosis/pull/6001) feat: improve set-env CLI cmd
 
 ### Minor improvements & Bug Fixes
 
