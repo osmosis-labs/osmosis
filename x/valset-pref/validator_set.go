@@ -96,7 +96,6 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 	totalDelAmt := sdk.NewInt(0)
 	tokenAmt := sdk.NewInt(0)
 
-	fmt.Println(existingSet.Preferences)
 	// loop through the validatorSetPreference and delegate the proportion of the tokens based on weights
 	for i, val := range existingSet.Preferences {
 		_, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
