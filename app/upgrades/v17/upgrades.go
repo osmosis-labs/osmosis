@@ -82,7 +82,7 @@ func CreateUpgradeHandler(
 		fullRangeCoinsUsed := sdk.Coins{}
 
 		for _, assetPair := range assetPairs {
-			clPoolDenom, clPoolId, poolLink, coinsUser, err := createCLPoolWithCommunityPoolPosition(ctx, keepers, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, communityPoolAddress)
+			clPoolDenom, clPoolId, poolLink, coinsUsed, err := createCLPoolWithCommunityPoolPosition(ctx, keepers, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, communityPoolAddress)
 			if errors.Is(err, notEnoughLiquidityForSwapErr) {
 				continue
 			} else if err != nil {
