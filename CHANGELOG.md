@@ -61,6 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5901](https://github.com/osmosis-labs/osmosis/pull/5901) Adding support for CW pools in ProtoRev
 * [#5937](https://github.com/osmosis-labs/osmosis/pull/5937) feat: add SetScalingFactorController gov prop
 * [#5949](https://github.com/osmosis-labs/osmosis/pull/5949) Add message to convert from superfluid / locks to native staking directly.
+* [#5939](https://github.com/osmosis-labs/osmosis/pull/5939) Fix: Flip existing twapRecords base/quote price denoms 
+* [#5938](https://github.com/osmosis-labs/osmosis/pull/5938) Chore: Fix valset amino codec
 
 ### BugFix
 
@@ -84,6 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5890](https://github.com/osmosis-labs/osmosis/pull/5890) feat: CreateCLPool & LinkCFMMtoCL pool into one gov-prop
 * [#5964](https://github.com/osmosis-labs/osmosis/pull/5964) fix e2e test concurrency bugs
 * [#5948] (https://github.com/osmosis-labs/osmosis/pull/5948) Parameterizing Pool Type Information in Protorev
+* [#6001](https://github.com/osmosis-labs/osmosis/pull/6001) feat: improve set-env CLI cmd
 
 ### Minor improvements & Bug Fixes
 
