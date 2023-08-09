@@ -55,7 +55,7 @@ func (k Keeper) GetValidatorSetPreference(ctx sdk.Context, delegator string) (ty
 // DeriveValidatorSetPreference derives given validator set.
 // It validates the list and formats the inputs such as rounding.
 // Errors when the given preference is the same as the existing preference in state.
-// NOTE: this function doesnot add valset to the state
+// NOTE: this function does not add valset to the state
 func (k Keeper) DeriveValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) (types.ValidatorSetPreferences, error) {
 	existingValSet, found := k.GetValidatorSetPreference(ctx, delegator)
 	if found {
