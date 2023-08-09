@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	poolManagerTypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
@@ -331,15 +332,16 @@ func InitializeAssetPairsTestnet(ctx sdk.Context, keepers *keepers.AppKeepers) (
 			return nil, err
 		}
 
-		if len(cfmmPool.GetTotalPoolLiquidity(ctx)) != 2 {
+		totalPoolLiquidity := cfmmPool.GetTotalPoolLiquidity(ctx)
+
+		// Skip pools that are not paired with exactly 2 tokens.
+		if len(totalPoolLiquidity) != 2 {
 			continue
 		}
 
-		poolCoins := cfmmPool.GetTotalPoolLiquidity(ctx)
-
-		// We only want to upgrade pools paired with OSMO. OSMO will be the quote asset.
+		// Skip pools that aren't paired with OSMO. OSMO will be the quote asset.
 		quoteAsset, baseAsset := "", ""
-		for _, coin := range poolCoins {
+		for _, coin := range totalPoolLiquidity {
 			if coin.Denom == QuoteAsset {
 				quoteAsset = coin.Denom
 			} else {
@@ -350,9 +352,19 @@ func InitializeAssetPairsTestnet(ctx sdk.Context, keepers *keepers.AppKeepers) (
 			continue
 		}
 
+		// Check if swapping 0.1 OSMO results in a spot price less than the min or greater than the max
+		spreadFactor := cfmmPool.GetSpreadFactor(ctx)
+		respectiveBaseAsset, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, cfmmPool, sdk.NewCoin(QuoteAsset, sdk.NewInt(10000000000)), baseAsset, spreadFactor)
+		if err != nil {
+			return nil, err
+		}
+		expectedSpotPriceFromSwap := sdk.NewDec(10000000000).Quo(respectiveBaseAsset.Amount.ToDec())
+		if expectedSpotPriceFromSwap.LT(cltypes.MinSpotPrice) || expectedSpotPriceFromSwap.GT(cltypes.MaxSpotPrice) {
+			continue
+		}
+
 		// Set the spread factor to the same spread factor the GAMM pool was.
 		// If its spread factor is not authorized, set it to the first authorized non-zero spread factor.
-		spreadFactor := cfmmPool.GetSpreadFactor(ctx)
 		authorizedSpreadFactors := keepers.ConcentratedLiquidityKeeper.GetParams(ctx).AuthorizedSpreadFactors
 		spreadFactorAuthorized := false
 		for _, authorizedSpreadFactor := range authorizedSpreadFactors {
