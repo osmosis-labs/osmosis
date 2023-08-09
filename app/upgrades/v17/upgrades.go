@@ -17,6 +17,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 func CreateUpgradeHandler(
@@ -29,6 +31,18 @@ func CreateUpgradeHandler(
 		// Run migrations before applying any other state changes.
 		// NOTE: DO NOT PUT ANY STATE CHANGES BEFORE RunMigrations().
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
+		if err != nil {
+			return nil, err
+		}
+
+		// get all the existing CL pools
+		pools, err := keepers.ConcentratedLiquidityKeeper.GetPools(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		// migrate twap records for CL Pools
+		err = FlipTwapSpotPriceRecords(ctx, pools, keepers)
 		if err != nil {
 			return nil, err
 		}
@@ -127,4 +141,42 @@ func CreateUpgradeHandler(
 
 		return migrations, nil
 	}
+}
+
+// FlipTwapSpotPriceRecords flips the denoms and spot price of twap record of a given pool.
+func FlipTwapSpotPriceRecords(ctx sdk.Context, pools []poolmanagertypes.PoolI, keepers *keepers.AppKeepers) error {
+	for _, pool := range pools {
+		poolId := pool.GetId()
+		twapRecordHistoricalPoolIndexed, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, poolId)
+		if err != nil {
+			return err
+		}
+
+		for _, historicalTwapRecord := range twapRecordHistoricalPoolIndexed {
+			oldRecord := historicalTwapRecord
+			historicalTwapRecord.Asset0Denom, historicalTwapRecord.Asset1Denom = oldRecord.Asset1Denom, oldRecord.Asset0Denom
+			historicalTwapRecord.P0LastSpotPrice, historicalTwapRecord.P1LastSpotPrice = oldRecord.P1LastSpotPrice, oldRecord.P0LastSpotPrice
+
+			keepers.TwapKeeper.StoreHistoricalTWAP(ctx, historicalTwapRecord)
+			keepers.TwapKeeper.DeleteHistoricalRecord(ctx, oldRecord)
+		}
+
+		clPoolTwapRecords, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, poolId)
+		if err != nil {
+			return err
+		}
+
+		for _, twapRecord := range clPoolTwapRecords {
+			twapRecord.LastErrorTime = time.Time{}
+			oldRecord := twapRecord
+
+			twapRecord.Asset0Denom, twapRecord.Asset1Denom = oldRecord.Asset1Denom, oldRecord.Asset0Denom
+			twapRecord.P0LastSpotPrice, twapRecord.P1LastSpotPrice = oldRecord.P1LastSpotPrice, oldRecord.P0LastSpotPrice
+
+			keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord)
+			keepers.TwapKeeper.DeleteMostRecentRecord(ctx, oldRecord)
+		}
+	}
+
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -19,6 +20,7 @@ import (
 	v17 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
 )
 
 type UpgradeTestSuite struct {
@@ -52,6 +54,32 @@ func dummyUpgrade(suite *UpgradeTestSuite) {
 	suite.Require().True(exists)
 
 	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
+}
+
+func dummyTwapRecord(poolId uint64, t time.Time, asset0 string, asset1 string, sp0, accum0, accum1, geomAccum sdk.Dec) types.TwapRecord {
+	return types.TwapRecord{
+		PoolId:      poolId,
+		Time:        t,
+		Asset0Denom: asset0,
+		Asset1Denom: asset1,
+
+		P0LastSpotPrice:             sp0,
+		P1LastSpotPrice:             sdk.OneDec().Quo(sp0),
+		P0ArithmeticTwapAccumulator: accum0,
+		P1ArithmeticTwapAccumulator: accum1,
+		GeometricTwapAccumulator:    geomAccum,
+	}
+}
+
+func assertTwapFlipped(suite *UpgradeTestSuite, pre, post types.TwapRecord) {
+	suite.Require().Equal(pre.Asset0Denom, post.Asset1Denom)
+	suite.Require().Equal(pre.Asset1Denom, post.Asset0Denom)
+	suite.Require().Equal(pre.P0LastSpotPrice, post.P1LastSpotPrice)
+	suite.Require().Equal(pre.P1LastSpotPrice, post.P0LastSpotPrice)
+}
+
+func assertEqual(suite *UpgradeTestSuite, pre, post interface{}) {
+	suite.Require().Equal(pre, post)
 }
 
 func (suite *UpgradeTestSuite) TestUpgrade() {
@@ -125,10 +153,61 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					lastPoolID = poolID
 				}
 
-				return expectedCoinsUsedInUpgradeHandler, lastPoolID
+				existingPool := suite.PrepareConcentratedPoolWithCoins("ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo")
+				existingPool2 := suite.PrepareConcentratedPoolWithCoins("akash", "uosmo")
+				existingBalancerPoolId := suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("atom", sdk.NewInt(10000000000)), sdk.NewCoin("uosmo", sdk.NewInt(10000000000)))
+
+				// create few TWAP records for the pools
+				t1 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(10),
+					sdk.OneDec().MulInt64(10*10),
+					sdk.OneDec().MulInt64(3),
+					sdk.ZeroDec())
+
+				t2 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*10), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(30),
+					sdk.OneDec().MulInt64(10*10+10),
+					sdk.OneDec().MulInt64(5),
+					sdk.ZeroDec())
+
+				t3 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(20),
+					sdk.OneDec().MulInt64(10*10+10*5),
+					sdk.OneDec().MulInt64(10),
+					sdk.ZeroDec())
+
+				t4 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour*24), "akash", "uosmo", sdk.NewDec(10),
+					sdk.OneDec().MulInt64(10*10*10),
+					sdk.OneDec().MulInt64(5),
+					sdk.ZeroDec())
+
+				t5 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour), "akash", "uosmo", sdk.NewDec(20),
+					sdk.OneDec().MulInt64(10),
+					sdk.OneDec().MulInt64(2),
+					sdk.ZeroDec())
+
+				t6 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Hour), "atom", "uosmo", sdk.NewDec(10),
+					sdk.OneDec().MulInt64(10),
+					sdk.OneDec().MulInt64(10),
+					sdk.ZeroDec())
+
+				t7 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Minute*20), "atom", "uosmo", sdk.NewDec(50),
+					sdk.OneDec().MulInt64(10*5),
+					sdk.OneDec().MulInt64(5),
+					sdk.ZeroDec())
+
+				// store TWAP records
+				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t1)
+				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t2)
+				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t3)
+				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t4)
+				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t5)
+				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t6)
+				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t7)
+
+				return expectedCoinsUsedInUpgradeHandler, existingBalancerPoolId
 
 			},
 			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
+				lastPoolIdMinusOne := lastPoolID - 1
+				lastPoolIdMinusTwo := lastPoolID - 2
 				stakingParams := suite.App.StakingKeeper.GetParams(suite.Ctx)
 				stakingParams.BondDenom = "uosmo"
 				suite.App.StakingKeeper.SetParams(suite.Ctx, stakingParams)
@@ -137,11 +216,70 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				communityPoolAddress := suite.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
 				communityPoolBalancePre := suite.App.BankKeeper.GetAllBalances(suite.Ctx, communityPoolAddress)
 
+				clPool1TwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusTwo)
+				suite.Require().NoError(err)
+
+				clPool1TwapRecordHistoricalPoolIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusTwo)
+				suite.Require().NoError(err)
+
+				clPool2TwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusOne)
+				suite.Require().NoError(err)
+
+				clPool2TwapRecordHistoricalPoolIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusOne)
+				suite.Require().NoError(err)
+
+				clPoolsTwapRecordHistoricalTimeIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalTimeIndexedTWAPs(ctx)
+				suite.Require().NoError(err)
+
 				// Run upgrade handler.
 				dummyUpgrade(suite)
 				suite.Require().NotPanics(func() {
 					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
 				})
+
+				clPool1TwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusTwo)
+				suite.Require().NoError(err)
+
+				clPool1TwapRecordHistoricalPoolIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusTwo)
+				suite.Require().NoError(err)
+
+				clPool2TwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusOne)
+				suite.Require().NoError(err)
+
+				clPool2TwapRecordHistoricalPoolIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusOne)
+				suite.Require().NoError(err)
+
+				clPoolsTwapRecordHistoricalTimeIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalTimeIndexedTWAPs(ctx)
+				suite.Require().NoError(err)
+
+				// check that all TWAP records aren't empty
+				suite.Require().NotEmpty(clPool1TwapRecordPostUpgrade)
+				suite.Require().NotEmpty(clPool1TwapRecordHistoricalPoolIndexPostUpgrade)
+				suite.Require().NotEmpty(clPool2TwapRecordPostUpgrade)
+				suite.Require().NotEmpty(clPool2TwapRecordHistoricalPoolIndexPostUpgrade)
+				suite.Require().NotEmpty(clPoolsTwapRecordHistoricalTimeIndexPostUpgrade)
+
+				for _, data := range []struct {
+					pre, post []types.TwapRecord
+				}{
+					{clPool1TwapRecordPreUpgrade, clPool1TwapRecordPostUpgrade},
+					{clPool1TwapRecordHistoricalPoolIndexPreUpgrade, clPool1TwapRecordHistoricalPoolIndexPostUpgrade},
+					{clPool2TwapRecordPreUpgrade, clPool2TwapRecordPostUpgrade},
+					{clPool2TwapRecordHistoricalPoolIndexPreUpgrade, clPool2TwapRecordHistoricalPoolIndexPostUpgrade},
+				} {
+					for i := range data.post {
+						assertTwapFlipped(suite, data.pre[i], data.post[i])
+					}
+				}
+
+				for i := range clPoolsTwapRecordHistoricalTimeIndexPostUpgrade {
+					record := clPoolsTwapRecordHistoricalTimeIndexPostUpgrade[i]
+					if record.PoolId == lastPoolIdMinusOne || record.PoolId == lastPoolIdMinusTwo {
+						assertTwapFlipped(suite, clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i], record)
+					} else if record.PoolId == lastPoolID {
+						assertEqual(suite, clPoolsTwapRecordHistoricalTimeIndexPreUpgrade[i], record)
+					}
+				}
 
 				// Retrieve the community pool balance (and the feePool balance) after the upgrade
 				communityPoolBalancePost := suite.App.BankKeeper.GetAllBalances(suite.Ctx, communityPoolAddress)
