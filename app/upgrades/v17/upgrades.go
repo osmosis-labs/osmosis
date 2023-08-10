@@ -235,11 +235,9 @@ func flipTwapSpotPriceRecords(ctx sdk.Context, pools []poolmanagertypes.PoolI, k
 
 		for _, historicalTwapRecord := range twapRecordHistoricalPoolIndexed {
 			oldRecord := historicalTwapRecord
-			historicalTwapRecord.Asset0Denom, historicalTwapRecord.Asset1Denom = oldRecord.Asset1Denom, oldRecord.Asset0Denom
 			historicalTwapRecord.P0LastSpotPrice, historicalTwapRecord.P1LastSpotPrice = oldRecord.P1LastSpotPrice, oldRecord.P0LastSpotPrice
 
 			keepers.TwapKeeper.StoreHistoricalTWAP(ctx, historicalTwapRecord)
-			keepers.TwapKeeper.DeleteHistoricalRecord(ctx, oldRecord)
 		}
 
 		clPoolTwapRecords, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, poolId)
@@ -248,14 +246,10 @@ func flipTwapSpotPriceRecords(ctx sdk.Context, pools []poolmanagertypes.PoolI, k
 		}
 
 		for _, twapRecord := range clPoolTwapRecords {
-			twapRecord.LastErrorTime = time.Time{}
 			oldRecord := twapRecord
-
-			twapRecord.Asset0Denom, twapRecord.Asset1Denom = oldRecord.Asset1Denom, oldRecord.Asset0Denom
 			twapRecord.P0LastSpotPrice, twapRecord.P1LastSpotPrice = oldRecord.P1LastSpotPrice, oldRecord.P0LastSpotPrice
 
 			keepers.TwapKeeper.StoreNewRecord(ctx, twapRecord)
-			keepers.TwapKeeper.DeleteMostRecentRecord(ctx, oldRecord)
 		}
 	}
 	return nil
