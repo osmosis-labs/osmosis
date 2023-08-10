@@ -183,14 +183,17 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 
 // ensure the valAddr is correctly formatted & corresponds to a real validator on chain.
 func (k Keeper) validateValAddrForDelegate(ctx sdk.Context, valAddr string) (stakingtypes.Validator, error) {
+	ctx.Logger().Error("here")
 	valAddress, err := sdk.ValAddressFromBech32(valAddr)
 	if err != nil {
 		return stakingtypes.Validator{}, err
 	}
+	ctx.Logger().Error("here2")
 	validator, found := k.sk.GetValidator(ctx, valAddress)
 	if !found {
 		return stakingtypes.Validator{}, stakingtypes.ErrNoValidatorFound
 	}
+	ctx.Logger().Error("here3")
 	return validator, nil
 }
 

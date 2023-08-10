@@ -396,6 +396,16 @@ func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) GetSigners() []sdk.Ac
 
 var _ sdk.Msg = &MsgUnbondConvertAndStake{}
 
+func NewMsgUnbondConvertAndStake(sender sdk.AccAddress, lockId uint64, valAddr string, minAmtToStake sdk.Int, sharesToConvert sdk.Coin) *MsgUnbondConvertAndStake {
+	return &MsgUnbondConvertAndStake{
+		Sender:          sender.String(),
+		LockId:          lockId,
+		ValAddr:         valAddr,
+		MinAmtToStake:   minAmtToStake,
+		SharesToConvert: sharesToConvert,
+	}
+}
+
 func (msg MsgUnbondConvertAndStake) Route() string { return RouterKey }
 func (msg MsgUnbondConvertAndStake) Type() string {
 	return TypeMsgUnbondConvertAndStake
