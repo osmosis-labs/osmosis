@@ -1,15 +1,12 @@
 package osmocli
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 )
 
 type testingStruct struct {
@@ -166,16 +163,4 @@ func TestParseFieldFromArg(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestDesc(t *testing.T) {
-	val := &TxCliDesc{
-		Use:   "set-reward-receiver-address",
-		Short: "sets reward receiver address for the designated lock id",
-		Long:  "sets reward receiver address for the designated lock id",
-	}
-
-	attachFieldsToUse[*lockuptypes.MsgSetRewardReceiverAddress](val)
-
-	fmt.Println(val.Use)
 }
