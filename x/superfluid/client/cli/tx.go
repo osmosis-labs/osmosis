@@ -447,7 +447,6 @@ func NewUnbondConvertAndStake() *cobra.Command {
 
 			valAddr := args[1]
 
-			// if user provided args for min amount to stake, use it. If not, use Zero Int.
 			var minAmtToStake sdk.Int
 			// if user provided args for min amount to stake, use it. If not, use empty coin struct
 			var sharesToConvert sdk.Coin
