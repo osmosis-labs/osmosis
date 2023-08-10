@@ -895,13 +895,13 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 func TestMonotnicityAtPriceBounds(t *testing.T) {
 	// Note: this starting value was manually adjusted until it was on the boundary of where the
 	// ticks started becoming monotonic
-	x := int64(-108000002)
+	x := int64(-162000000)
 	lastValueMonotonic := true
 	highestMonotonicTick := types.MinInitializedTick
 
 	// Find the highest tick where the sqrt price is monotonic. If nothing is found in 50,000 ticks,
 	// lastValueMonotonic is false and starting value should be adjusted.
-	for i := 0; i < 50000; i++ {
+	for i := 0; i < 162000000; i++ {
 		_, xSqrtPrice, err := math.TickToSqrtPrice(x)
 		require.NoError(t, err)
 		_, xSqrtPriceNext, err := math.TickToSqrtPrice(x + 1)
