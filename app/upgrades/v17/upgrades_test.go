@@ -74,8 +74,8 @@ func dummyTwapRecord(poolId uint64, t time.Time, asset0 string, asset1 string, s
 }
 
 func assertTwapFlipped(suite *UpgradeTestSuite, pre, post types.TwapRecord) {
-	suite.Require().Equal(pre.Asset0Denom, post.Asset1Denom)
-	suite.Require().Equal(pre.Asset1Denom, post.Asset0Denom)
+	suite.Require().Equal(pre.Asset0Denom, post.Asset0Denom)
+	suite.Require().Equal(pre.Asset1Denom, post.Asset1Denom)
 	suite.Require().Equal(pre.P0LastSpotPrice, post.P1LastSpotPrice)
 	suite.Require().Equal(pre.P1LastSpotPrice, post.P0LastSpotPrice)
 }
