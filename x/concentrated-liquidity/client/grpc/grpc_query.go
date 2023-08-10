@@ -159,3 +159,4 @@ func (q Querier) CFMMPoolIdLinkFromConcentratedPoolId(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.CFMMPoolIdLinkFromConcentratedPoolId(ctx, *req)
 }
+
