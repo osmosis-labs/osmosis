@@ -25,7 +25,7 @@ func NewQueryCmd() *cobra.Command {
 
 func GetCmdPools() (*osmocli.QueryDescriptor, *queryproto.PoolsRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"pools",
+		Use:   "pools",
 		Short: "Query pools",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} pools`,
@@ -34,7 +34,7 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *queryproto.PoolsRequest) {
 
 func GetCmdContractInfoByPoolId() (*osmocli.QueryDescriptor, *queryproto.ContractInfoByPoolIdRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"contract-info",
+		Use:   "contract-info",
 		Short: "Query contract info by pool id",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} pools`,

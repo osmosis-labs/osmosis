@@ -31,7 +31,7 @@ func GetQueryCmd() *cobra.Command {
 
 func GetUserPositions() (*osmocli.QueryDescriptor, *queryproto.UserPositionsRequest) {
 	return &osmocli.QueryDescriptor{
-			Use:"user-positions",
+			Use:   "user-positions",
 			Short: "Query user's positions",
 			Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} user-positions osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`,
@@ -43,7 +43,7 @@ func GetUserPositions() (*osmocli.QueryDescriptor, *queryproto.UserPositionsRequ
 
 func GetPositionById() (*osmocli.QueryDescriptor, *queryproto.PositionByIdRequest) {
 	return &osmocli.QueryDescriptor{
-			Use:"position-by-id",
+			Use:   "position-by-id",
 			Short: "Query position by ID",
 			Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} position-by-id 53`,
@@ -53,7 +53,7 @@ func GetPositionById() (*osmocli.QueryDescriptor, *queryproto.PositionByIdReques
 
 func GetCmdPools() (*osmocli.QueryDescriptor, *queryproto.PoolsRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"pools",
+		Use:   "pools",
 		Short: "Query pools",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} pools`,
@@ -62,7 +62,7 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *queryproto.PoolsRequest) {
 
 func GetClaimableSpreadRewards() (*osmocli.QueryDescriptor, *queryproto.ClaimableSpreadRewardsRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"claimable-spread-rewards",
+		Use:   "claimable-spread-rewards",
 		Short: "Query claimable spread rewards",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} claimable-spread-rewards 53`,
@@ -71,7 +71,7 @@ func GetClaimableSpreadRewards() (*osmocli.QueryDescriptor, *queryproto.Claimabl
 
 func GetClaimableIncentives() (*osmocli.QueryDescriptor, *queryproto.ClaimableIncentivesRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"claimable-incentives",
+		Use:   "claimable-incentives",
 		Short: "Query claimable incentives",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} claimable-incentives 53`,
@@ -80,7 +80,7 @@ func GetClaimableIncentives() (*osmocli.QueryDescriptor, *queryproto.ClaimableIn
 
 func GetIncentiveRecords() (*osmocli.QueryDescriptor, *queryproto.IncentiveRecordsRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"incentive-records",
+		Use:   "incentive-records",
 		Short: "Query incentive records for a given pool",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} incentive-records 1`,
@@ -89,7 +89,7 @@ func GetIncentiveRecords() (*osmocli.QueryDescriptor, *queryproto.IncentiveRecor
 
 func GetCFMMPoolIdLinkFromConcentratedPoolId() (*osmocli.QueryDescriptor, *queryproto.CFMMPoolIdLinkFromConcentratedPoolIdRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"cfmm-pool-link-from-cl",
+		Use:   "cfmm-pool-link-from-cl",
 		Short: "Query cfmm pool id link from concentrated pool id",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} cfmm-pool-link-from-cl 1`,
@@ -98,7 +98,7 @@ func GetCFMMPoolIdLinkFromConcentratedPoolId() (*osmocli.QueryDescriptor, *query
 
 func GetTotalLiquidity() (*osmocli.QueryDescriptor, *queryproto.GetTotalLiquidityRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"total-liquidity",
+		Use:   "total-liquidity",
 		Short: "Query total liquidity across all concentrated pool",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} total-liquidity 1`,
@@ -107,7 +107,7 @@ func GetTotalLiquidity() (*osmocli.QueryDescriptor, *queryproto.GetTotalLiquidit
 
 func GetTickLiquidityNetInDirection() (*osmocli.QueryDescriptor, *queryproto.LiquidityNetInDirectionRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"liquidity-net-in-direction",
+		Use:   "liquidity-net-in-direction",
 		Short: "Query liquidity net in direction",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} 4 uosmo "[-18000000]" true "[-9000000]" true`,
@@ -116,7 +116,7 @@ func GetTickLiquidityNetInDirection() (*osmocli.QueryDescriptor, *queryproto.Liq
 
 func GetPoolAccumulatorRewards() (*osmocli.QueryDescriptor, *queryproto.PoolAccumulatorRewardsRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"pool-accumulator-rewards",
+		Use:   "pool-accumulator-rewards",
 		Short: "Query pool accumulator rewards",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} pool-accumulator-rewards 1`,
@@ -125,7 +125,7 @@ func GetPoolAccumulatorRewards() (*osmocli.QueryDescriptor, *queryproto.PoolAccu
 
 func GetTickAccumulatorTrackers() (*osmocli.QueryDescriptor, *queryproto.TickAccumulatorTrackersRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"tick-accumulator-trackers",
+		Use:   "tick-accumulator-trackers",
 		Short: "Query tick accumulator trackers",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} tick-accumulator-trackers 1 "[-18000000]"`,

@@ -37,7 +37,7 @@ func NewCmdQuery() *cobra.Command {
 // NewQueryParamsCmd returns the command to query the module params
 func NewQueryParamsCmd() (*osmocli.QueryDescriptor, *types.QueryParamsRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"params",
+		Use:   "params",
 		Short: "Query the module params",
 	}, &types.QueryParamsRequest{}
 }
@@ -45,7 +45,7 @@ func NewQueryParamsCmd() (*osmocli.QueryDescriptor, *types.QueryParamsRequest) {
 // NewQueryNumberOfTradesCmd returns the command to query the number of trades executed by protorev
 func NewQueryNumberOfTradesCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevNumberOfTradesRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"number-of-trades",
+		Use:   "number-of-trades",
 		Short: "Query the number of cyclic arbitrage trades protorev has executed",
 	}, &types.QueryGetProtoRevNumberOfTradesRequest{}
 }
@@ -53,7 +53,7 @@ func NewQueryNumberOfTradesCmd() (*osmocli.QueryDescriptor, *types.QueryGetProto
 // NewQueryProfitsByDenomCmd returns the command to query the profits of protorev by denom
 func NewQueryProfitsByDenomCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevProfitsByDenomRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"profits-by-denom",
+		Use:   "profits-by-denom",
 		Short: "Query the profits of protorev by denom",
 		Long:  `{{.Short}}{{.ExampleHeader}}{{.CommandPrefix}} profits-by-denom uosmo`,
 	}, &types.QueryGetProtoRevProfitsByDenomRequest{}
@@ -62,7 +62,7 @@ func NewQueryProfitsByDenomCmd() (*osmocli.QueryDescriptor, *types.QueryGetProto
 // NewQueryAllProfitsCmd returns the command to query all profits of protorev
 func NewQueryAllProfitsCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevAllProfitsRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"all-profits",
+		Use:   "all-profits",
 		Short: "Query all ProtoRev profits",
 	}, &types.QueryGetProtoRevAllProfitsRequest{}
 }
@@ -70,7 +70,7 @@ func NewQueryAllProfitsCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevA
 // NewQueryStatisticsByRoute returns the command to query the statistics of protorev by route
 func NewQueryStatisticsByRouteCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevStatisticsByRouteRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"statistics-by-route",
+		Use:                "statistics-by-route",
 		Short:              "Query statistics about a specific arbitrage route",
 		Long:               `{{.Short}}{{.ExampleHeader}}{{.CommandPrefix}} statistics-by-route  `,
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{"Route": parseRoute},
@@ -80,7 +80,7 @@ func NewQueryStatisticsByRouteCmd() (*osmocli.QueryDescriptor, *types.QueryGetPr
 // NewQueryAllRouteStatisticsCmd returns the command to query all route statistics of protorev
 func NewQueryAllRouteStatisticsCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevAllRouteStatisticsRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"all-statistics",
+		Use:   "all-statistics",
 		Short: "Query all ProtoRev statistics",
 	}, &types.QueryGetProtoRevAllRouteStatisticsRequest{}
 }
@@ -88,7 +88,7 @@ func NewQueryAllRouteStatisticsCmd() (*osmocli.QueryDescriptor, *types.QueryGetP
 // NewQueryTokenPairArbRoutesCmd returns the command to query the token pair arb routes
 func NewQueryTokenPairArbRoutesCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevTokenPairArbRoutesRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"hot-routes",
+		Use:   "hot-routes",
 		Short: "Query the ProtoRev hot routes currently being used",
 	}, &types.QueryGetProtoRevTokenPairArbRoutesRequest{}
 }
@@ -96,7 +96,7 @@ func NewQueryTokenPairArbRoutesCmd() (*osmocli.QueryDescriptor, *types.QueryGetP
 // NewQueryAdminAccountCmd returns the command to query the admin account
 func NewQueryAdminAccountCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevAdminAccountRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"admin-account",
+		Use:   "admin-account",
 		Short: "Query the admin account",
 	}, &types.QueryGetProtoRevAdminAccountRequest{}
 }
@@ -104,7 +104,7 @@ func NewQueryAdminAccountCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRe
 // NewQueryDeveloperAccountCmd returns the command to query the developer account
 func NewQueryDeveloperAccountCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevDeveloperAccountRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"developer-account",
+		Use:   "developer-account",
 		Short: "Query the developer account",
 	}, &types.QueryGetProtoRevDeveloperAccountRequest{}
 }
@@ -112,7 +112,7 @@ func NewQueryDeveloperAccountCmd() (*osmocli.QueryDescriptor, *types.QueryGetPro
 // NewQueryMaxPoolPointsPerTxCmd returns the command to query the max pool points per tx
 func NewQueryMaxPoolPointsPerTxCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevMaxPoolPointsPerTxRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"max-pool-points-per-tx",
+		Use:   "max-pool-points-per-tx",
 		Short: "Query the max pool points per tx",
 	}, &types.QueryGetProtoRevMaxPoolPointsPerTxRequest{}
 }
@@ -120,7 +120,7 @@ func NewQueryMaxPoolPointsPerTxCmd() (*osmocli.QueryDescriptor, *types.QueryGetP
 // NewQueryMaxPoolPointsPerBlockCmd returns the command to query the max pool points per block
 func NewQueryMaxPoolPointsPerBlockCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevMaxPoolPointsPerBlockRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"max-pool-points-per-block",
+		Use:   "max-pool-points-per-block",
 		Short: "Query the max pool points per block",
 	}, &types.QueryGetProtoRevMaxPoolPointsPerBlockRequest{}
 }
@@ -128,7 +128,7 @@ func NewQueryMaxPoolPointsPerBlockCmd() (*osmocli.QueryDescriptor, *types.QueryG
 // NewQueryBaseDenomsCmd returns the command to query the base denoms
 func NewQueryBaseDenomsCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevBaseDenomsRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"base-denoms",
+		Use:   "base-denoms",
 		Short: "Query the base denoms used to construct arbitrage routes",
 	}, &types.QueryGetProtoRevBaseDenomsRequest{}
 }
@@ -136,7 +136,7 @@ func NewQueryBaseDenomsCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevB
 // NewQueryEnabled returns the command to query the enabled status of protorev
 func NewQueryEnabledCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevEnabledRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"enabled",
+		Use:   "enabled",
 		Short: "Query whether protorev is currently enabled",
 	}, &types.QueryGetProtoRevEnabledRequest{}
 }
@@ -144,7 +144,7 @@ func NewQueryEnabledCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevEnab
 // NewQueryInfoByPoolTypeCmd returns the command to query the pool type info of protorev
 func NewQueryInfoByPoolTypeCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevInfoByPoolTypeRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"info-by-pool-type",
+		Use:   "info-by-pool-type",
 		Short: "Query the pool info used to determine how computationally expensive a route is",
 	}, &types.QueryGetProtoRevInfoByPoolTypeRequest{}
 }
@@ -152,7 +152,7 @@ func NewQueryInfoByPoolTypeCmd() (*osmocli.QueryDescriptor, *types.QueryGetProto
 // NewQueryPoolCmd returns the command to query the pool id for a given denom pair stored via the highest liquidity method in ProtoRev
 func NewQueryPoolCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevPoolRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"pool",
+		Use:   "pool",
 		Short: "Query the pool id for a given denom pair stored via the highest liquidity method in ProtoRev",
 	}, &types.QueryGetProtoRevPoolRequest{}
 }

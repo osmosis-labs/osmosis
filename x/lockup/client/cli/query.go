@@ -59,7 +59,7 @@ func GetQueryCmd() *cobra.Command {
 // This includes locked balance and unlocked balance of the module.
 func GetCmdModuleBalance() (*osmocli.QueryDescriptor, *types.ModuleBalanceRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"module-balance",
+		Use:   "module-balance",
 		Short: "Query module balance",
 		Long:  `{{.Short}}`,
 	}, &types.ModuleBalanceRequest{}
@@ -69,7 +69,7 @@ func GetCmdModuleBalance() (*osmocli.QueryDescriptor, *types.ModuleBalanceReques
 // which are all the tokens not unlocking + tokens that are not finished unlocking.
 func GetCmdModuleLockedAmount() (*osmocli.QueryDescriptor, *types.ModuleLockedAmountRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"module-locked-amount",
+		Use:   "module-locked-amount",
 		Short: "Query locked amount",
 		Long:  `{{.Short}}`,
 	}, &types.ModuleLockedAmountRequest{}
@@ -116,7 +116,7 @@ $ %s query lockup account-unlockable-coins <address>
 // GetCmdAccountUnlockingCoins returns unlocking coins of a specific account.
 func GetCmdAccountUnlockingCoins() (*osmocli.QueryDescriptor, *types.AccountUnlockingCoinsRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"account-unlocking-coins",
+		Use:   "account-unlocking-coins",
 		Short: "Query account's unlocking coins",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} account-unlocking-coins <address>`,
@@ -136,7 +136,7 @@ func GetCmdAccountLockedCoins() *cobra.Command {
 // GetCmdAccountLockedPastTime returns locks of an account with unlock time beyond timestamp.
 func GetCmdAccountLockedPastTime() (*osmocli.QueryDescriptor, *types.AccountLockedPastTimeRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"account-locked-pastime",
+		Use:   "account-locked-pastime",
 		Short: "Query locked records of an account with unlock time beyond timestamp",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} account-locked-pastime <address> <timestamp>
@@ -148,7 +148,7 @@ func GetCmdAccountLockedPastTime() (*osmocli.QueryDescriptor, *types.AccountLock
 // amongst the locks that are in the unlocking queue.
 func GetCmdAccountLockedPastTimeNotUnlockingOnly() (*osmocli.QueryDescriptor, *types.AccountLockedPastTimeNotUnlockingOnlyRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"account-locked-pastime-not-unlocking",
+		Use:   "account-locked-pastime-not-unlocking",
 		Short: "Query locked records of an account with unlock time beyond timestamp within not unlocking queue.",
 		Long: `{{.Short}}
 Timestamp is UNIX time in seconds.{{.ExampleHeader}}
@@ -183,7 +183,7 @@ Timestamp is UNIX time in seconds.{{.ExampleHeader}}
 // GetCmdLockedByID returns lock by id.
 func GetCmdLockedByID() *cobra.Command {
 	q := osmocli.QueryDescriptor{
-		Use:"lock-by-id",
+		Use:   "lock-by-id",
 		Short: "Query account's lock record by id",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} lock-by-id 1`,
@@ -196,7 +196,7 @@ func GetCmdLockedByID() *cobra.Command {
 // GetCmdLockRewardReceiver returns reward receiver for the given lock id
 func GetCmdLockRewardReceiver() *cobra.Command {
 	q := osmocli.QueryDescriptor{
-		Use:"lock-reward-receiver",
+		Use:   "lock-reward-receiver",
 		Short: "Query lock's reward receiver",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} lock-reward-receiver 1`,
@@ -267,7 +267,7 @@ func GetCmdAccountLockedLongerDurationDenom() *cobra.Command {
 
 func GetCmdTotalLockedByDenom() (*osmocli.QueryDescriptor, *types.LockedDenomRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"total-locked-of-denom",
+		Use:   "total-locked-of-denom",
 		Short: "Query locked amount for a specific denom bigger then duration provided",
 		Long: osmocli.FormatLongDescDirect(`{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} total-locked-of-denom uosmo --min-duration=0s`, types.ModuleName),

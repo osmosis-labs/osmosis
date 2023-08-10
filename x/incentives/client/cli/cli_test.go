@@ -9,7 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 )
 
-
 func TestGetCmdGauges(t *testing.T) {
 	desc, _ := GetCmdGauges()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.GaugesRequest]{
