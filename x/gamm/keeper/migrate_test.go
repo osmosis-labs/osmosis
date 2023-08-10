@@ -229,15 +229,15 @@ func (s *KeeperTestSuite) TestMigrate() {
 
 		// Migrate the user's gamm shares to a full range concentrated liquidity position
 		userBalancesBeforeMigration := s.App.BankKeeper.GetAllBalances(s.Ctx, test.param.sender)
-		positionData, poolIdLeaving, poolIdEntering, err := keeper.MigrateUnlockedPositionFromBalancerToConcentrated(s.Ctx, test.param.sender, sharesToMigrate, test.tokenOutMins)
+		positionData, migratedPools, err := keeper.MigrateUnlockedPositionFromBalancerToConcentrated(s.Ctx, test.param.sender, sharesToMigrate, test.tokenOutMins)
 		userBalancesAfterMigration := s.App.BankKeeper.GetAllBalances(s.Ctx, test.param.sender)
 		if test.expectedErr != nil {
 			s.Require().Error(err)
 			s.Require().ErrorContains(err, test.expectedErr.Error())
 
 			// Expect zero values for both pool ids
-			s.Require().Zero(poolIdLeaving)
-			s.Require().Zero(poolIdEntering)
+			s.Require().Zero(migratedPools.LeavingID)
+			s.Require().Zero(migratedPools.EnteringID)
 
 			// Assure the user's gamm shares still exist
 			userGammBalanceAfterFailedMigration := s.App.BankKeeper.GetBalance(s.Ctx, test.param.sender, "gamm/pool/1")
@@ -259,8 +259,8 @@ func (s *KeeperTestSuite) TestMigrate() {
 
 		// Expect the poolIdLeaving to be the balancer pool id
 		// Expect the poolIdEntering to be the concentrated liquidity pool id
-		s.Require().Equal(balancerPoolId, poolIdLeaving)
-		s.Require().Equal(clPool.GetId(), poolIdEntering)
+		s.Require().Equal(balancerPoolId, migratedPools.LeavingID)
+		s.Require().Equal(clPool.GetId(), migratedPools.EnteringID)
 
 		// Determine how much of the user's balance was not used in the migration
 		// This amount should be returned to the user.
