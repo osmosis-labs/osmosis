@@ -258,8 +258,8 @@ github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
 github.com/cosmos/iavl v0.19.4 h1:t82sN+Y0WeqxDLJRSpNd8YFX5URIrT+p8n6oJbJ2Dok=
 github.com/cosmos/iavl v0.19.4/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
-github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20230803185752-97c9635dd74a h1:FKEtbHE+kULYf6ghxa3FvEfyR7BNde0940gAyuWborE=
-github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20230803185752-97c9635dd74a/go.mod h1:Mn/jr9pIYr1ofFuptLEi9N6MjcshTT0cpoOY4ln1DeA=
+github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20230810084954-1e09a8e53e42 h1:Etn6c3WNM5AmjvwGxea3S7El/iEvBbNgXR3kDillep8=
+github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20230810084954-1e09a8e53e42/go.mod h1:Mn/jr9pIYr1ofFuptLEi9N6MjcshTT0cpoOY4ln1DeA=
 github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.0.0-20230803151532-5c60ac789ef7 h1:q6OzbGXmWRbMedDejhuctDbb3M6fWyJg3DY3bzJbYVs=
 github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.0.0-20230803151532-5c60ac789ef7/go.mod h1:X/dLZ6QxTImzno7qvD6huLhh6ZZBcRt2URn4YCLcXFY=
 github.com/cosmos/ibc-go/v4 v4.3.1 h1:xbg0CaCdxK3lvgGvSaI91ROOLd7s30UqEcexH6Ba4Ys=
@@ -907,7 +907,6 @@ github.com/nunnatsa/ginkgolinter v0.9.0 h1:Sm0zX5QfjJzkeCjEp+t6d3Ha0jwvoDjleP9XC
 github.com/nunnatsa/ginkgolinter v0.9.0/go.mod h1:FHaMLURXP7qImeH6bvxWJUpyH+2tuqe5j4rW1gxJRmI=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
-github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
 github.com/oklog/oklog v0.3.2/go.mod h1:FCV+B7mhrz4o+ueLpx+KqkyXRGMWOYEvfiXtdGtbWGs=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
@@ -1150,6 +1149,8 @@ github.com/ssgreg/nlreturn/v2 v2.2.1/go.mod h1:E/iiPB78hV7Szg2YfRgyIrk1AD6JVMTRk
 github.com/status-im/keycard-go v0.0.0-20190316090335-8537d3370df4/go.mod h1:RZLeN1LMWmRsyYjvAu+I6Dm9QmlDaIIt+Y+4Kd7Tp+Q=
 github.com/stbenjam/no-sprintf-host-port v0.1.1 h1:tYugd/yrm1O0dV+ThCbaKZh195Dfm07ysF0U6JQXczc=
 github.com/stbenjam/no-sprintf-host-port v0.1.1/go.mod h1:TLhvtIvONRzdmkFiio4O8LHsN9N74I+PhRquPsxpL0I=
+github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.6 h1:aY64yjKZyDyzlIbDOkGBPvVpR0ArzIjunpCRKqoIm7o=
+github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.6/go.mod h1:4zAtg449/JISRmf+sbmqolqSLP+QJBh+EtWkWtt/AKE=
 github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
 github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
 github.com/streadway/handy v0.0.0-20190108123426-d5acb3125c2a/go.mod h1:qNTQ5P5JnDBl6z3cMAg/SywNDC5ABu5ApDIw6lUbRmI=
