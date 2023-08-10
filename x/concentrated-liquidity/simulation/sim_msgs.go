@@ -233,7 +233,7 @@ func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx s
 }
 
 // createPoolRestriction creates specific restriction for the creation of a pool.
-func createPoolRestriction(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) osmosimtypes.SimAccountConstraint {
+func createPoolRestriction(sim *osmosimtypes.SimCtx, ctx sdk.Context) osmosimtypes.SimAccountConstraint {
 	return func(acc legacysimulationtype.Account) bool {
 		accCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
 		hasTwoCoins := len(accCoins) >= 3
@@ -329,7 +329,7 @@ func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper
 	authorizedSpreadFactor := cltypes.AuthorizedSpreadFactors
 
 	// find an address with two or more distinct denoms in their wallet
-	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
+	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(sim, ctx))
 	if !senderExists {
 		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, fmt.Errorf("no sender with two different denoms & pool creation fee exists")
 	}
