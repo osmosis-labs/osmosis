@@ -122,7 +122,7 @@ install: check_version go.sum
 
 install-with-autocomplete: check_version go.sum
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
-	@PARENT_SHELL=$$(ps -o ppid= -p $$PPID | xargs ps -o comm= -p) && echo "Parent shell is: $$PARENT_SHELL" ;\
+	@PARENT_SHELL=$$(ps -o ppid= -p $$PPID | xargs ps -o comm= -p) ;\
 	if [[ "$$PARENT_SHELL" == *zsh* ]]; then \
 		if ! grep -q ". <(osmosisd enable-cli-autocomplete zsh)" ~/.zshrc; then \
 			echo ". <(osmosisd enable-cli-autocomplete zsh)" >> ~/.zshrc; \
