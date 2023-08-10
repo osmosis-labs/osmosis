@@ -8,6 +8,7 @@ SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 BUILDDIR ?= $(CURDIR)/build
 DOCKER := $(shell which docker)
 E2E_UPGRADE_VERSION := "v17"
+SHELL := /bin/bash
 
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 GO_MODULE := $(shell cat go.mod | grep "module " | cut -d ' ' -f 2)
@@ -134,6 +135,7 @@ install-with-autocomplete: check_version go.sum
 		if ! grep -q -e "\. <(osmosisd enable-cli-autocomplete bash)" -e '\[\[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" \]\] && \. "/opt/homebrew/etc/profile.d/bash_completion.sh"' ~/.bashrc; then \
 			echo '[[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ]] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"' >> ~/.bashrc; \
 			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bashrc; \
+			source ~/.bashrc; \
 			echo "Autocomplete enabled. Run 'source ~/.bashrc' to complete installation."; \
 		else \
 			echo "Autocomplete already enabled in ~/.bashrc"; \
@@ -143,6 +145,7 @@ install-with-autocomplete: check_version go.sum
 		if ! grep -q ". <(osmosisd enable-cli-autocomplete bash)" ~/.bashrc; then \
 			echo '[[ -r "/etc/bash_completion" ]] && . "/etc/bash_completion"' >> ~/.bashrc; \
 			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bashrc; \
+			source ~/.bashrc; \
 			echo "Autocomplete enabled. Run 'source ~/.bashrc' to complete installation."; \
 		else \
 			echo "Autocomplete already enabled in ~/.bashrc"; \
