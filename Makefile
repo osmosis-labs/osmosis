@@ -119,6 +119,39 @@ build-all: check_version go.sum
 install: check_version go.sum
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 
+install-with-autocomplete: check_version go.sum
+	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
+	@PARENT_SHELL=$$(ps -o ppid= -p $$PPID | xargs ps -o comm= -p) && echo "Parent shell is: $$PARENT_SHELL" ;\
+	if [[ "$$PARENT_SHELL" == *zsh* ]]; then \
+		if ! grep -q ". <(osmosisd enable-cli-autocomplete zsh)" ~/.zshrc; then \
+			echo ". <(osmosisd enable-cli-autocomplete zsh)" >> ~/.zshrc; \
+			source ~/.zshrc; \
+		else \
+			echo "Autocomplete already enabled in ~/.zshrc"; \
+		fi \
+	elif [[ "$$PARENT_SHELL" == *bash* && "$$(uname)" == "Darwin" ]]; then \
+		brew install bash-completion; \
+		if ! grep -q -e "\. <(osmosisd enable-cli-autocomplete bash)" -e '\[\[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" \]\] && \. "/opt/homebrew/etc/profile.d/bash_completion.sh"' ~/.bashrc; then \
+			echo '[[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ]] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"' >> ~/.bashrc; \
+			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bashrc; \
+			echo "Autocomplete enabled. Run 'source ~/.bashrc' to complete installation."; \
+		else \
+			echo "Autocomplete already enabled in ~/.bashrc"; \
+		fi \
+	elif [[ "$$PARENT_SHELL" == *bash* && "$$(uname)" == "Linux" ]]; then \
+		sudo apt-get install -y bash-completion; \
+		if ! grep -q ". <(osmosisd enable-cli-autocomplete bash)" ~/.bashrc; then \
+			echo '[[ -r "/etc/bash_completion" ]] && . "/etc/bash_completion"' >> ~/.bashrc; \
+			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bashrc; \
+			echo "Autocomplete enabled. Run 'source ~/.bashrc' to complete installation."; \
+		else \
+			echo "Autocomplete already enabled in ~/.bashrc"; \
+		fi \
+	else \
+		echo "Shell or OS not recognized. Skipping autocomplete setup."; \
+	fi
+
+
 # Cross-building for arm64 from amd64 (or viceversa) takes
 # a lot of time due to QEMU virtualization but it's the only way (afaik)
 # to get a statically linked binary with CosmWasm
