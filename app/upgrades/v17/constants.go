@@ -355,12 +355,8 @@ func InitializeAssetPairsTestnet(ctx sdk.Context, keepers *keepers.AppKeepers) (
 
 		spreadFactor := cfmmPool.GetSpreadFactor(ctx)
 		err = validateSpotPriceFallsInBounds(ctx, cfmmPool, keepers, baseAsset, spreadFactor)
-		if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
-			// Result is zero, which means 0.1 osmo was too much for the swap to handle.
-			// This is likely because the pool liquidity is too small, so since this just testnet, we skip it.
+		if err != nil {
 			continue
-		} else if err != nil {
-			return nil, err
 		}
 
 		// Set the spread factor to the same spread factor the GAMM pool was.
@@ -407,7 +403,7 @@ func validateSpotPriceFallsInBounds(ctx sdk.Context, cfmmPool gammtypes.CFMMPool
 	}
 	expectedSpotPriceFromSwap := sdk.NewDec(100000).Quo(respectiveBaseAsset.Amount.ToDec())
 	if expectedSpotPriceFromSwap.LT(cltypes.MinSpotPrice) || expectedSpotPriceFromSwap.GT(cltypes.MaxSpotPrice) {
-		return err
+		return fmt.Errorf("expected spot price from swap to be between %s and %s, got %s", cltypes.MinSpotPrice, cltypes.MaxSpotPrice, expectedSpotPriceFromSwap)
 	}
 	return nil
 }
