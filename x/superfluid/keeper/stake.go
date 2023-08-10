@@ -311,63 +311,6 @@ func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, send
 	return k.undelegateCommon(ctx, sender, gammLockID)
 }
 
-// partialUndelegateCommon acts similarly to undelegateCommon, but undelegates a partial amount of the lock's delegation rather than the full amount. The amount
-// that is undelegated is placed in a new lock. This function returns the intermediary account associated with the original lock ID as well as the new lock that was created.
-// An error is returned if the amount to undelegate is greater than the locked amount.
-// nolint: unused
-func (k Keeper) partialUndelegateCommon(ctx sdk.Context, sender string, lockID uint64, amountToUndelegate sdk.Coin) (intermediaryAcc types.SuperfluidIntermediaryAccount, newlock *lockuptypes.PeriodLock, err error) {
-	lock, err := k.lk.GetLockByID(ctx, lockID)
-	if err != nil {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, err
-	}
-	err = k.validateLockForSF(ctx, lock, sender)
-	if err != nil {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, err
-	}
-
-	if amountToUndelegate.Amount.GTE(lock.Coins[0].Amount) {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, fmt.Errorf("partial undelegate amount must be less than the locked amount")
-	}
-
-	// get the intermediate account associated with lock id, and delete the connection.
-	intermediaryAcc, found := k.GetIntermediaryAccountFromLockId(ctx, lockID)
-	if !found {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, types.ErrNotSuperfluidUsedLockup
-	}
-
-	// undelegate the desired lock amount, and burn the minted osmo.
-	amount, err := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, amountToUndelegate.Amount)
-	if err != nil {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, err
-	}
-	err = k.forceUndelegateAndBurnOsmoTokens(ctx, amount, intermediaryAcc)
-	if err != nil {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, err
-	}
-
-	// Move the funds from the old lock to a new lock with the remaining amount.
-	newLock, err := k.lk.SplitLock(ctx, *lock, sdk.NewCoins(amountToUndelegate), true)
-	if err != nil {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, err
-	}
-
-	return intermediaryAcc, &newLock, nil
-}
-
-// partialSuperfluidUndelegate starts undelegating a portion of a superfluid delegated position for the given lock.
-// Undelegation is done instantly and the equivalent amount is sent to the module account
-// where it is burnt. Note that this method does not include unbonding the lock
-// itself.
-// nolint: unused
-func (k Keeper) partialSuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64, amountToUndelegate sdk.Coin) error {
-	intermediaryAcc, newLock, err := k.partialUndelegateCommon(ctx, sender, lockID, amountToUndelegate)
-	if err != nil {
-		return err
-	}
-	// Create a new synthetic lockup representing the unstaking side.
-	return k.createSyntheticLockup(ctx, newLock.ID, intermediaryAcc, unlockingStatus)
-}
-
 // SuperfluidUnbondLock unbonds the lock that has been used for superfluid staking.
 // This method would return an error if the underlying lock is not superfluid undelegating.
 func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, sender string) error {
@@ -673,20 +616,20 @@ func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, va
 	minAmtToStake sdk.Int, sharesToConvert sdk.Coin) (totalAmtConverted sdk.Int, err error) {
 	senderAddr, err := sdk.AccAddressFromBech32(sender)
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdk.Int{}, err
 	}
 
-	// use routeMigration method to check status of lock (either superfluid staked, superfluid unbonding, vanilla locked, unlocked)
-	_, migrationType, err := k.routeMigration(ctx, senderAddr, int64(lockID))
+	// use getMigrationType method to check status of lock (either superfluid staked, superfluid unbonding, vanilla locked, unlocked)
+	_, migrationType, err := k.getMigrationType(ctx, senderAddr, int64(lockID))
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdk.Int{}, err
 	}
 
 	// if superfluid bonded, first change it into superfluid undelegate to burn minted osmo and instantly undelegate.
 	if migrationType == SuperfluidBonded {
 		_, err = k.undelegateCommon(ctx, sender, lockID)
 		if err != nil {
-			return sdk.ZeroInt(), err
+			return sdk.Int{}, err
 		}
 	}
 
@@ -695,11 +638,11 @@ func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, va
 	} else if migrationType == Unlocked {
 		totalAmtConverted, err = k.convertUnlockedToStake(ctx, senderAddr, valAddr, sharesToConvert, minAmtToStake)
 	} else { // liquid gamm shares without locks are not supported
-		return sdk.ZeroInt(), fmt.Errorf("unsupported staking conversion type")
+		return sdk.Int{}, fmt.Errorf("unsupported staking conversion type")
 	}
 
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdk.Int{}, err
 	}
 
 	return totalAmtConverted, nil
@@ -711,7 +654,7 @@ func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAd
 	minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, err error) {
 	lock, err := k.lk.GetLockByID(ctx, lockId)
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdk.Int{}, err
 	}
 
 	// check lock owner is sender
@@ -727,12 +670,12 @@ func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAd
 
 	// Ensuring the sharesToMigrate contains gamm pool share prefix.
 	if !strings.HasPrefix(lockCoin.Denom, gammtypes.GAMMTokenPrefix) {
-		return sdk.ZeroInt(), types.SharesToMigrateDenomPrefixError{Denom: lockCoin.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
+		return sdk.Int{}, types.SharesToMigrateDenomPrefixError{Denom: lockCoin.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
 	}
 
 	poolIdLeaving, err := gammtypes.GetPoolIdFromShareDenom(lockCoin.Denom)
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdk.Int{}, err
 	}
 
 	var superfluidValAddr string
@@ -745,12 +688,12 @@ func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAd
 	// we exit with min token out amount zero since we are checking min amount designated to stake later on anyways.
 	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, lock, lockCoin, sdk.NewCoins(), false)
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdk.Int{}, err
 	}
 
 	totalAmtConverted, err = k.convertGammSharesToOsmoAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake, superfluidValAddr)
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdk.Int{}, err
 	}
 
 	return totalAmtConverted, nil
@@ -759,25 +702,25 @@ func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAd
 func (k Keeper) convertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, sharesToStake sdk.Coin,
 	minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, err error) {
 	if !strings.HasPrefix(sharesToStake.Denom, gammtypes.GAMMTokenPrefix) {
-		return sdk.ZeroInt(), types.SharesToMigrateDenomPrefixError{Denom: sharesToStake.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
+		return sdk.Int{}, types.SharesToMigrateDenomPrefixError{Denom: sharesToStake.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
 	}
 
 	// Get the balancer poolId by parsing the gamm share denom.
 	poolIdLeaving, err := gammtypes.GetPoolIdFromShareDenom(sharesToStake.Denom)
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdk.Int{}, err
 	}
 
 	// Exit the balancer pool position.
 	// we exit with min token out amount zero since we are checking min amount designated to stake later on anyways.
 	exitCoins, err := k.gk.ExitPool(ctx, sender, poolIdLeaving, sharesToStake.Amount, sdk.NewCoins())
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdk.Int{}, err
 	}
 
 	totalAmtConverted, err = k.convertGammSharesToOsmoAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake, "")
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return sdk.Int{}, err
 	}
 
 	return totalAmtConverted, nil
@@ -786,12 +729,7 @@ func (k Keeper) convertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, v
 // convertGammSharesToOsmoAndStake converts given gamm shares to osmo by swapping in the given pool
 // then stakes it to the designated validator.
 // minAmtToStake works as slippage bound, and would error if total amount being staked is less than min amount to stake.
-// If valAddr is empty, we attempt to get staking preference from valset-pref module and stake to the given validator.
-// Delegation is done in the following logic:
-// - If valAddr provided, single delegate.
-// - If valAddr not provided and valset exists, valsetpref.Delegate
-// - If valAddr not provided and valset delegation is not possible, refer back to original lock's superfluid validator
-// - Else: error
+// Acutal delegation is done based on input paramters of delegateBaseOnValsetPref.
 func (k Keeper) convertGammSharesToOsmoAndStake(
 	ctx sdk.Context,
 	sender sdk.AccAddress, valAddr string,
@@ -816,7 +754,7 @@ func (k Keeper) convertGammSharesToOsmoAndStake(
 	for _, coinToConvert := range nonOsmoCoins {
 		tokenOutAmt, err := k.pmk.SwapExactAmountIn(ctx, sender, poolIdLeaving, coinToConvert, bondDenom, sdk.ZeroInt())
 		if err != nil {
-			return sdk.ZeroInt(), err
+			return sdk.Int{}, err
 		}
 
 		totalAmtCoverted = totalAmtCoverted.Add(tokenOutAmt)
@@ -833,36 +771,49 @@ func (k Keeper) convertGammSharesToOsmoAndStake(
 		}
 	}
 
-	// var val stakingtypes.Validator
-	// if given valAddr is empty, we use delegation preference given from valset-pref module or reference from superfluid staking
-	if valAddr == "" {
-		err := k.vspk.DelegateToValidatorSet(ctx, sender.String(), sdk.NewCoin(bondDenom, totalAmtToStake))
-		// if valset-pref delegation errored due to no existing delegation existing, fall back and try using superfluid staked validator
-		if err == valsettypes.ErrNoDelegation {
-			val, err := k.validateValAddrForDelegate(ctx, originalSuperfluidValAddr)
-			if err != nil {
-				return sdk.ZeroInt(), err
-			}
-
-			// delegate now!
-			_, err = k.sk.Delegate(ctx, sender, totalAmtToStake, stakingtypes.Unbonded, val, true)
-			if err != nil {
-				return sdk.ZeroInt(), err
-			}
-		} else if err != nil { // for other errors, handle error
-			return sdk.ZeroInt(), err
-		}
-	} else {
-		val, err := k.validateValAddrForDelegate(ctx, valAddr)
-		if err != nil {
-			return sdk.ZeroInt(), err
-		}
-		// delegate now!
-		_, err = k.sk.Delegate(ctx, sender, totalAmtToStake, stakingtypes.Unbonded, val, true)
-		if err != nil {
-			return sdk.ZeroInt(), err
-		}
+	err = k.delegateBaseOnValsetPref(ctx, sender, valAddr, originalSuperfluidValAddr, totalAmtToStake)
+	if err != nil {
+		return sdk.Int{}, err
 	}
 
 	return totalAmtToStake, nil
+}
+
+// delegateBaseOnValsetPref delegates based on given input parameters.
+// Delegation is done in the following logic:
+// - If valAddr provided, single delegate.
+// - If valAddr not provided and valset exists, valsetpref.Delegate
+// - If valAddr not provided and valset delegation is not possible, refer back to original lock's superfluid validator
+// - Else: error
+func (k Keeper) delegateBaseOnValsetPref(ctx sdk.Context, sender sdk.AccAddress, valAddr, originalSuperfluidValAddr string, totalAmtToStake sdk.Int) error {
+	bondDenom := k.sk.BondDenom(ctx)
+
+	// if given valAddr is empty, we use delegation preference given from valset-pref module or reference from superfluid staking
+	if valAddr == "" {
+		err := k.vspk.DelegateToValidatorSet(ctx, sender.String(), sdk.NewCoin(bondDenom, totalAmtToStake))
+		// if valset-pref delegation succeeded without error, end method
+		if err == nil {
+			return nil
+		}
+
+		// if valset-pref delegation errored due to no existing delegation existing, fall back and try using superfluid staked validator
+		if err == valsettypes.ErrNoDelegation {
+			valAddr = originalSuperfluidValAddr
+		} else if err != nil { // for other errors, handle error
+			return err
+		}
+	}
+
+	val, err := k.validateValAddrForDelegate(ctx, valAddr)
+	if err != nil {
+		return err
+	}
+
+	// delegate now!
+	_, err = k.sk.Delegate(ctx, sender, totalAmtToStake, stakingtypes.Unbonded, val, true)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

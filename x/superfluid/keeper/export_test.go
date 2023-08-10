@@ -37,8 +37,8 @@ func (k Keeper) ForceUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAd
 	return k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, lock, sharesToMigrate, tokenOutMins, exitCoinsLengthIsTwo)
 }
 
-func (k Keeper) RouteMigration(ctx sdk.Context, sender sdk.AccAddress, lockId int64) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
-	return k.routeMigration(ctx, sender, lockId)
+func (k Keeper) GetMigrationType(ctx sdk.Context, sender sdk.AccAddress, lockId int64) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
+	return k.getMigrationType(ctx, sender, lockId)
 }
 
 func (k Keeper) ValidateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (poolIdLeaving, poolIdEntering uint64, preMigrationLock *lockuptypes.PeriodLock, remainingLockTime time.Duration, err error) {
@@ -77,4 +77,8 @@ func (k Keeper) ConvertGammSharesToOsmoAndStake(
 func (k Keeper) ConvertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, sharesToStake sdk.Coin,
 	minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, err error) {
 	return k.convertUnlockedToStake(ctx, sender, valAddr, sharesToStake, minAmtToStake)
+}
+
+func (k Keeper) DelegateBaseOnValsetPref(ctx sdk.Context, sender sdk.AccAddress, valAddr, originalSuperfluidValAddr string, totalAmtToStake sdk.Int) error {
+	return k.delegateBaseOnValsetPref(ctx, sender, valAddr, originalSuperfluidValAddr, totalAmtToStake)
 }

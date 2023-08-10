@@ -1444,6 +1444,110 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 	}
 }
 
+func (s *KeeperTestSuite) TestDelegateBaseOnValsetPref() {
+	type tc struct {
+		useValAddr                   bool
+		haveExistingDelegation       bool
+		useOriginalSuperfluidValAddr bool
+
+		useInvalidValAddr bool
+
+		expectedError string
+	}
+	testCases := map[string]tc{
+		"provide val address": {
+			useValAddr: true,
+		},
+		"use valset pref delegation": {
+			haveExistingDelegation: true,
+		},
+		"using valset pref fail, fallback to using provided original superfluid address": {
+			useOriginalSuperfluidValAddr: true,
+		},
+		"error: using valset pref fail, no superfluid address provided": {
+			expectedError: "empty address string is not allowed",
+		},
+		"error: invalid val address provded": {
+			useInvalidValAddr: true,
+			expectedError:     "ecoding bech32 failed: invalid character not part of charset",
+		},
+	}
+
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			s.Setup()
+			bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+			stakeAmount := sdk.NewInt(100)
+
+			sender := s.TestAccs[0]
+			s.FundAcc(sender, sdk.NewCoins(sdk.NewCoin(bondDenom, stakeAmount)))
+
+			var valAddr string
+			if tc.useValAddr {
+				valAddr = s.SetupValidator(stakingtypes.Bonded).String()
+			}
+			if tc.useInvalidValAddr {
+				valAddr = s.SetupValidator(stakingtypes.Bonded).String() + "invalid"
+			}
+
+			var originalSuperfluidValAddr string
+			if tc.useOriginalSuperfluidValAddr {
+				originalSuperfluidValAddr = s.SetupValidator(stakingtypes.Bonded).String()
+			}
+
+			// by having existing delegation, we can test val set pref based delgation
+			var superfluidStakedValAddr sdk.ValAddress
+			if tc.haveExistingDelegation {
+				superfluidStakedValAddr = s.SetupValidator(stakingtypes.Bonded)
+
+				stakeCoin := sdk.NewInt64Coin(bondDenom, 100)
+				s.FundAcc(sender, sdk.NewCoins(stakeCoin))
+				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, superfluidStakedValAddr)
+				s.Require().True(found)
+				_, err := s.App.StakingKeeper.Delegate(s.Ctx, sender, stakeCoin.Amount, stakingtypes.Unbonded, validator, true)
+				s.Require().NoError(err)
+			}
+
+			// system under test
+			err := s.App.SuperfluidKeeper.DelegateBaseOnValsetPref(s.Ctx, sender, valAddr, originalSuperfluidValAddr, stakeAmount)
+			if tc.expectedError != "" {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError)
+				return
+			}
+
+			s.Require().NoError(err)
+
+			// check delegation
+			if valAddr != "" || originalSuperfluidValAddr != "" {
+				// we want to check which ever param that was passed in with value
+				var delegatedAddr string
+				if valAddr == "" {
+					delegatedAddr = originalSuperfluidValAddr
+				} else {
+					delegatedAddr = valAddr
+				}
+
+				val, err := sdk.ValAddressFromBech32(delegatedAddr)
+				s.Require().NoError(err)
+				del, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, val)
+				s.Require().True(found)
+				s.Require().True(del.Shares.RoundInt().Equal(stakeAmount))
+				return
+			}
+
+			// if we are testing valset-pref case(already deleated), check existing delegation address to see if delegation increased
+			if tc.haveExistingDelegation {
+				del, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, superfluidStakedValAddr)
+				s.Require().True(found)
+				// should be 200(original delegated amount + newly staked amount)
+				s.Require().True(del.Shares.RoundInt().Equal(stakeAmount.Mul(sdk.NewInt(2))))
+				return
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) SetupUnbondConvertAndStakeTest(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking, noLock bool) (joinPoolAmt sdk.Coins, balancerIntermediaryAcc types.SuperfluidIntermediaryAccount, balancerLock *lockuptypes.PeriodLock, poolCreateAcc, poolJoinAcc sdk.AccAddress, balancerPooId uint64, balancerPoolShareOut sdk.Coin, valAddr sdk.ValAddress) {
 	bankKeeper := s.App.BankKeeper
 	gammKeeper := s.App.GAMMKeeper

@@ -47,7 +47,7 @@ const (
 //
 // Errors if the lock is not found, if the lock is not a balancer pool lock, or if the lock is not owned by the sender.
 func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, sender sdk.AccAddress, providedLockId int64, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving, poolIdEntering, concentratedLockId uint64, err error) {
-	synthLockBeforeMigration, migrationType, err := k.routeMigration(ctx, sender, providedLockId)
+	synthLockBeforeMigration, migrationType, err := k.getMigrationType(ctx, sender, providedLockId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
 	}
@@ -215,9 +215,9 @@ func (k Keeper) migrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context,
 	return positionId, amount0, amount1, liquidity, concentratedLockId, poolIdLeaving, poolIdEntering, nil
 }
 
-// routeMigration determines the status of the provided lock which is used to determine the method for migration.
+// getMigrationType determines the status of the provided lock which is used to determine the method for migration.
 // It also returns the underlying synthetic locks of the provided lock, if any exist.
-func (k Keeper) routeMigration(ctx sdk.Context, sender sdk.AccAddress, providedLockId int64) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
+func (k Keeper) getMigrationType(ctx sdk.Context, sender sdk.AccAddress, providedLockId int64) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
 	// As a hack around to get frontend working, we decided to allow negative values for the provided lock ID to indicate that the user wants to migrate shares that are not locked.
 	if providedLockId <= 0 {
 		return lockuptypes.SyntheticLock{}, Unlocked, nil

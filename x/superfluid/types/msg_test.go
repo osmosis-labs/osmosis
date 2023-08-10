@@ -120,17 +120,6 @@ func TestUnbondConvertAndStakeMsg(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "err: val address in invalid",
-			msg: &types.MsgUnbondConvertAndStake{
-				LockId:          0,
-				Sender:          addr1,
-				ValAddr:         "",
-				MinAmtToStake:   sdk.NewInt(10),
-				SharesToConvert: sdk.NewInt64Coin("foo", 10),
-			},
-			expectedError: true,
-		},
-		{
 			name: "err: min amount to stake is negative",
 			msg: &types.MsgUnbondConvertAndStake{
 				LockId:          0,
