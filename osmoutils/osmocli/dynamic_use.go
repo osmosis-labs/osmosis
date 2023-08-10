@@ -3,6 +3,7 @@ package osmocli
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
@@ -24,7 +25,7 @@ func attachFieldsToUse[reqP proto.Message](desc Descriptor) {
 	v := reflect.ValueOf(req).Type().Elem() // get underlying non-pointer struct
 	var useField string
 	for i := 0; i < v.NumField(); i++ {
-		fn := strings.ToLower(v.Field(i).Name)
+		fn := pascalToKebab(v.Field(i).Name)
 
 		// if a field is parsed from a flag, skip it
 		if desc.GetCustomFlagOverrides()[fn] != "" || osmoutils.Contains(nonAttachableFields, fn) {
@@ -35,4 +36,13 @@ func attachFieldsToUse[reqP proto.Message](desc Descriptor) {
 	}
 
 	desc.AttachToUse(useField)
+}
+
+// pascalToKebab converts PascalCase string to kebab-case string
+func pascalToKebab(s string) string {
+	reg := regexp.MustCompile(`([a-z0-9])([A-Z])`)
+	s = reg.ReplaceAllString(s, `${1}-${2}`)
+
+	// Convert everything to lowercase
+	return strings.ToLower(s)
 }
