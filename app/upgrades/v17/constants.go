@@ -355,7 +355,7 @@ func InitializeAssetPairsTestnet(ctx sdk.Context, keepers *keepers.AppKeepers) (
 
 		spreadFactor := cfmmPool.GetSpreadFactor(ctx)
 		err = validateSpotPriceFallsInBounds(ctx, cfmmPool, keepers, baseAsset, spreadFactor)
-		if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
+		if errors.Is(err, errorsmod.Wrapf(gammtypes.ErrInvalidMathApprox, "token amount must be positive")) {
 			// Result is zero, which means 0.1 osmo was too much for the swap to handle.
 			// This is likely because the pool liquidity is too small, so since this just testnet, we skip it.
 			continue
