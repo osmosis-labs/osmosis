@@ -18,7 +18,7 @@ func GetQueryCmd() *cobra.Command {
 
 func GetCmdEpochInfos() (*osmocli.QueryDescriptor, *types.QueryEpochsInfoRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"epoch-infos",
+		Use:   "epoch-infos",
 		Short: "Query running epoch infos.",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}}`,
@@ -28,11 +28,9 @@ func GetCmdEpochInfos() (*osmocli.QueryDescriptor, *types.QueryEpochsInfoRequest
 
 func GetCmdCurrentEpoch() (*osmocli.QueryDescriptor, *types.QueryCurrentEpochRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:"current-epoch",
+		Use:   "current-epoch",
 		Short: "Query current epoch by specified identifier.",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} day`,
 	}, &types.QueryCurrentEpochRequest{}
 }
-
-

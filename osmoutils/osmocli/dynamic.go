@@ -17,7 +17,7 @@ type Descriptor interface {
 }
 
 // fields that are not provided as arguments
-var nonAttachableFields []string = []string{"sender", "pagination", "owner"}
+var nonAttachableFields []string = []string{"sender", "pagination", "owner", "admin"}
 
 // attachFieldsToUse extracts fields from reqP proto message and dynamically appends them into Use field
 func attachFieldsToUse[reqP proto.Message](desc Descriptor) {

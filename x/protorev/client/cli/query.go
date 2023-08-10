@@ -72,7 +72,7 @@ func NewQueryStatisticsByRouteCmd() (*osmocli.QueryDescriptor, *types.QueryGetPr
 	return &osmocli.QueryDescriptor{
 		Use:                "statistics-by-route",
 		Short:              "Query statistics about a specific arbitrage route",
-		Long:               `{{.Short}}{{.ExampleHeader}}{{.CommandPrefix}} statistics-by-route  `,
+		Long:               `{{.Short}}{{.ExampleHeader}}{{.CommandPrefix}} statistics-by-route [1,2,3] `,
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{"Route": parseRoute},
 	}, &types.QueryGetProtoRevStatisticsByRouteRequest{}
 }

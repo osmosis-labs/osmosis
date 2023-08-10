@@ -75,7 +75,7 @@ func GetCmdActiveGauges() (*osmocli.QueryDescriptor, *types.ActiveGaugesRequest)
 // GetCmdActiveGaugesPerDenom returns active gauges for a specified denom.
 func GetCmdActiveGaugesPerDenom() (*osmocli.QueryDescriptor, *types.ActiveGaugesPerDenomRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "active-gauges-per-den  denom",
+		Use:   "active-gauges-per-denom",
 		Short: "Query active gauges per denom",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} active-gauges-per-denom gamm/pool/1`,
