@@ -777,7 +777,6 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 		Deposit: "625000000uosmo",
 	}
 	proposalJson, err := json.Marshal(proposal)
-	fmt.Println("marshalling output", proposalJson, err)
 	if err != nil {
 		return err
 	}
