@@ -389,11 +389,11 @@ func TestPriceToTick(t *testing.T) {
 		},
 		"price is greater than max spot price": {
 			price:         types.MaxSpotPrice.Add(sdk.OneDec()),
-			expectedError: types.PriceBoundError{ProvidedPrice: types.MaxSpotPrice.Add(sdk.OneDec()), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
+			expectedError: types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromSDKDec(types.MaxSpotPrice).Add(osmomath.OneDec()), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
 		},
 		"price is smaller than min spot price": {
 			price:         types.MinSpotPrice.Quo(sdk.NewDec(10)),
-			expectedError: types.PriceBoundError{ProvidedPrice: types.MinSpotPrice.Quo(sdk.NewDec(10)), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
+			expectedError: types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromSDKDec(types.MinSpotPrice.Quo(sdk.NewDec(10))), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
 		},
 	}
 	for name, tc := range testCases {
@@ -605,7 +605,7 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 			require.Equal(t, expectedPrice, price)
 
 			// 3. Compute tick from inverse price (inverse tick)
-			inverseTickFromPrice, err := PriceToTick(price)
+			inverseTickFromPrice, err := PriceToTick(price.SDKDec())
 			require.NoError(t, err)
 
 			// Make sure original tick and inverse tick match.
@@ -620,7 +620,7 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 			// require.Equal(t, expectedPrice.String(), priceFromSqrtPrice.String())
 
 			// 5. Compute tick from sqrt price from the original tick.
-			inverseTickFromSqrtPrice, err := math.CalculateSqrtPriceToTick(osmomath.BigDecFromSDKDec(sqrtPrice))
+			inverseTickFromSqrtPrice, err := math.CalculateSqrtPriceToTick(sqrtPrice)
 			require.NoError(t, err)
 
 			require.Equal(t, tickFromPrice, inverseTickFromSqrtPrice, "expected: %s, actual: %s", tickFromPrice, inverseTickFromSqrtPrice)
@@ -757,12 +757,12 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
-		sqrtPrice    sdk.Dec
+		sqrtPrice    osmomath.BigDec
 		tickSpacing  uint64
 		tickExpected int64
 	}{
 		"sqrt price of 1 (tick spacing 1)": {
-			sqrtPrice:    sdk.OneDec(),
+			sqrtPrice:    osmomath.OneDec(),
 			tickSpacing:  1,
 			tickExpected: 0,
 		},
@@ -772,7 +772,7 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 			tickExpected: 1,
 		},
 		"sqrt price one ULP below boundary of next tick (tick spacing 1)": {
-			sqrtPrice:    sqp1.Sub(sdk.SmallestDec()),
+			sqrtPrice:    sqp1.Sub(osmomath.SmallestDec()),
 			tickSpacing:  1,
 			tickExpected: 0,
 		},
@@ -787,7 +787,7 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 			tickExpected: 100,
 		},
 		"sqrt price one ULP below bucket 100 (tick spacing 100)": {
-			sqrtPrice:    sqp100.Sub(sdk.SmallestDec()),
+			sqrtPrice:    sqp100.Sub(osmomath.SmallestDec()),
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: 0,
 		},
@@ -797,7 +797,7 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 			tickExpected: -100,
 		},
 		"sqrt price one ULP below bucket -100 (tick spacing 100)": {
-			sqrtPrice:    sqpn100.Sub(sdk.SmallestDec()),
+			sqrtPrice:    sqpn100.Sub(osmomath.SmallestDec()),
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: -200,
 		},
@@ -807,17 +807,17 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 			tickExpected: -200,
 		},
 		"sqrt price exactly equal to max sqrt price": {
-			sqrtPrice:    types.MaxSqrtPrice,
+			sqrtPrice:    osmomath.BigDecFromSDKDec(types.MaxSqrtPrice),
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: types.MaxTick,
 		},
 		"sqrt price exactly equal to min sqrt price": {
-			sqrtPrice:    types.MinSqrtPrice,
+			sqrtPrice:    osmomath.BigDecFromSDKDec(types.MinSqrtPrice),
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: types.MinInitializedTick,
 		},
 		"sqrt price equal to max sqrt price minus one ULP": {
-			sqrtPrice:    types.MaxSqrtPrice.Sub(sdk.SmallestDec()),
+			sqrtPrice:    osmomath.BigDecFromSDKDec(types.MaxSqrtPrice).Sub(osmomath.SmallestDec()),
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: types.MaxTick - defaultTickSpacing,
 		},
@@ -827,12 +827,12 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 			tickExpected: types.MaxTick - 1,
 		},
 		"sqrt price one ULP below max tick - 1 (tick spacing 1)": {
-			sqrtPrice:    sqpMaxTickSubOne.Sub(sdk.SmallestDec()),
+			sqrtPrice:    sqpMaxTickSubOne.Sub(osmomath.SmallestDec()),
 			tickSpacing:  1,
 			tickExpected: types.MaxTick - 2,
 		},
 		"sqrt price one ULP below max tick - 1 (tick spacing 100)": {
-			sqrtPrice:    sqpMaxTickSubOne.Sub(sdk.SmallestDec()),
+			sqrtPrice:    sqpMaxTickSubOne.Sub(osmomath.SmallestDec()),
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: types.MaxTick - defaultTickSpacing,
 		},
@@ -843,13 +843,13 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 		},
 		"sqrt price corresponds exactly to min tick + 1 minus 1 ULP (tick spacing 1)": {
 			// Calculated using TickToSqrtPrice(types.MinInitializedTick + 1) - 1 ULP
-			sqrtPrice:    sqpMinTickPlusOne.Sub(sdk.SmallestDec()),
+			sqrtPrice:    sqpMinTickPlusOne.Sub(osmomath.SmallestDec()),
 			tickSpacing:  1,
 			tickExpected: types.MinInitializedTick,
 		},
 		"sqrt price corresponds exactly to min tick + 1 plus 1 ULP (tick spacing 1)": {
 			// Calculated using TickToSqrtPrice(types.MinInitializedTick + 1) + 1 ULP
-			sqrtPrice:    sqpMinTickPlusOne.Add(sdk.SmallestDec()),
+			sqrtPrice:    sqpMinTickPlusOne.Add(osmomath.SmallestDec()),
 			tickSpacing:  1,
 			tickExpected: types.MinInitializedTick + 1,
 		},
@@ -860,20 +860,20 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 		},
 		"sqrt price corresponds exactly to min tick + 2 plus 1 ULP (tick spacing 1)": {
 			// Calculated using TickToSqrtPrice(types.MinInitializedTick + 2) + 1 ULP
-			sqrtPrice:    sqpMinTickPlusTwo.Add(sdk.SmallestDec()),
+			sqrtPrice:    sqpMinTickPlusTwo.Add(osmomath.SmallestDec()),
 			tickSpacing:  1,
 			tickExpected: types.MinInitializedTick + 2,
 		},
 		"sqrt price corresponds exactly to min tick + 2 minus 1 ULP (tick spacing 1)": {
 			// Calculated using TickToSqrtPrice(types.MinInitializedTick + 2) - 1 ULP
-			sqrtPrice:    sqpMinTickPlusTwo.Sub(sdk.SmallestDec()),
+			sqrtPrice:    sqpMinTickPlusTwo.Sub(osmomath.SmallestDec()),
 			tickSpacing:  1,
 			tickExpected: types.MinInitializedTick + 1,
 		},
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			tickIndex, err := math.SqrtPriceToTickRoundDownSpacing(tc.sqrtPrice, tc.tickSpacing)
+			tickIndex, err := math.SqrtPriceToTickRoundDownSpacing(tc.sqrtPrice.SDKDec(), tc.tickSpacing)
 			require.NoError(t, err)
 			require.Equal(t, tc.tickExpected, tickIndex)
 
@@ -890,4 +890,41 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMonotnicityAtPriceBounds(t *testing.T) {
+	// Note: this starting value was manually adjusted until it was on the boundary of where the
+	// ticks started becoming monotonic
+	x := int64(-108000002)
+	lastValueMonotonic := true
+	highestMonotonicTick := types.MinInitializedTick
+
+	// Find the highest tick where the sqrt price is monotonic. If nothing is found in 50,000 ticks,
+	// lastValueMonotonic is false and starting value should be adjusted.
+	for i := 0; i < 50000; i++ {
+		_, xSqrtPrice, err := math.TickToSqrtPrice(x)
+		require.NoError(t, err)
+		_, xSqrtPriceNext, err := math.TickToSqrtPrice(x + 1)
+		require.NoError(t, err)
+		if xSqrtPrice.GTE(xSqrtPriceNext) {
+			fmt.Printf("Non-monotonic behavior detected at x = %d\n", x)
+			lastValueMonotonic = false
+		} else if !lastValueMonotonic {
+			highestMonotonicTick = x
+			lastValueMonotonic = true
+		} else {
+			lastValueMonotonic = true
+		}
+		x++
+	}
+	fmt.Println("Last value was monotonic: ", lastValueMonotonic)
+
+	// highestMonotonicTick lands on tick -108000000
+	fmt.Println("Highest monotonic tick: ", highestMonotonicTick)
+
+	// smallestSupportedPrice = 10^-12
+	smallestSupportedPrice, smallestSqrtPrice, err := math.TickToSqrtPrice(highestMonotonicTick)
+	require.NoError(t, err)
+	fmt.Println("smallestSupportedPrice: ", smallestSupportedPrice)
+	fmt.Println("smallestSqrtPrice: ", smallestSqrtPrice)
 }
