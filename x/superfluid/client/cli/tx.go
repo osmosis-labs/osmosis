@@ -440,7 +440,6 @@ func NewUnbondConvertAndStake() *cobra.Command {
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			sender := clientCtx.GetFromAddress()
-
 			lockId, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
@@ -450,25 +449,23 @@ func NewUnbondConvertAndStake() *cobra.Command {
 
 			// if user provided args for min amount to stake, use it. If not, use Zero Int.
 			var minAmtToStake sdk.Int
-			if len(args) > 3 {
+			// if user provided args for min amount to stake, use it. If not, use empty coin struct
+			var sharesToConvert sdk.Coin
+			if len(args) >= 3 {
 				convertedInt, ok := sdk.NewIntFromString(args[2])
 				if !ok {
 					return fmt.Errorf("Conversion for sdk.Int failed")
 				}
 				minAmtToStake = convertedInt
+				if len(args) == 4 {
+					coins, err := sdk.ParseCoinNormalized(args[3])
+					if err != nil {
+						return err
+					}
+					sharesToConvert = coins
+				}
 			} else {
 				minAmtToStake = sdk.ZeroInt()
-			}
-
-			// if user provided args for min amount to stake, use it. If not, use empty coin struct
-			var sharesToConvert sdk.Coin
-			if len(args) > 4 {
-				coins, err := sdk.ParseCoinNormalized(args[3])
-				if err != nil {
-					return err
-				}
-				sharesToConvert = coins
-			} else {
 				sharesToConvert = sdk.Coin{}
 			}
 
