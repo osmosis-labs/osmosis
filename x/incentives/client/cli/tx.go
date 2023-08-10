@@ -88,8 +88,8 @@ func NewCreateGaugeCmd() *cobra.Command {
 			}
 
 			var distributeTo lockuptypes.QueryCondition
-			// if poolId is 0 it is a guranteed lock gauge
-			// if poolId is > 0 it is a guranteed no-lock gauge
+			// if poolId is 0 it is a guaranteed lock gauge
+			// if poolId is > 0 it is a guaranteed no-lock gauge
 			if poolId == 0 {
 				distributeTo = lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.ByDuration,
@@ -124,7 +124,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 
 func NewAddToGaugeCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgAddToGauge](&osmocli.TxCliDesc{
-		Use:   "add-to-gauge [gauge_id] [rewards] [flags]",
+		Use:   "add-to-gauge",
 		Short: "add coins to gauge to distribute more rewards to users",
 	})
 }

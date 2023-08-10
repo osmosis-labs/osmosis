@@ -40,7 +40,7 @@ func NewCmdTx() *cobra.Command {
 // CmdSetDeveloperHotRoutes implements the command to set the protorev hot routes
 func CmdSetDeveloperHotRoutes() *osmocli.TxCliDesc {
 	desc := osmocli.TxCliDesc{
-		Use:   "set-hot-routes [path/to/routes.json]",
+		Use:   "set-hot-routes",
 		Short: "set the protorev hot routes",
 		Long: `Must provide a json file with all of the hot routes that will be set. 
 		Sample json file:
@@ -84,7 +84,7 @@ func CmdSetDeveloperHotRoutes() *osmocli.TxCliDesc {
 // CmdSetDeveloperAccount implements the command to set the protorev developer account
 func CmdSetDeveloperAccount() (*osmocli.TxCliDesc, *types.MsgSetDeveloperAccount) {
 	return &osmocli.TxCliDesc{
-		Use:     "set-developer-account [sdk.AccAddress]",
+		Use:     "set-developer-account",
 		Short:   "set the protorev developer account",
 		NumArgs: 1,
 		ParseAndBuildMsg: func(clientCtx client.Context, args []string, flags *pflag.FlagSet) (sdk.Msg, error) {
@@ -104,7 +104,7 @@ func CmdSetDeveloperAccount() (*osmocli.TxCliDesc, *types.MsgSetDeveloperAccount
 // CmdSetMaxPoolPointsPerTx implements the command to set the max pool points per tx
 func CmdSetMaxPoolPointsPerTx() (*osmocli.TxCliDesc, *types.MsgSetMaxPoolPointsPerTx) {
 	return &osmocli.TxCliDesc{
-		Use:     "set-max-pool-points-per-tx [uint64]",
+		Use:     "set-max-pool-points-per-tx",
 		Short:   "set the max pool points that can be consumed per tx",
 		NumArgs: 1,
 		ParseAndBuildMsg: func(clientCtx client.Context, args []string, flags *pflag.FlagSet) (sdk.Msg, error) {
@@ -124,7 +124,7 @@ func CmdSetMaxPoolPointsPerTx() (*osmocli.TxCliDesc, *types.MsgSetMaxPoolPointsP
 // CmdSetMaxPoolPointsPerBlock implements the command to set the max pool points per block
 func CmdSetMaxPoolPointsPerBlock() (*osmocli.TxCliDesc, *types.MsgSetMaxPoolPointsPerBlock) {
 	return &osmocli.TxCliDesc{
-		Use:     "set-max-pool-points-per-block [uint64]",
+		Use:     "set-max-pool-points-per-block",
 		Short:   "set the max pool points that can be consumed per block",
 		NumArgs: 1,
 		ParseAndBuildMsg: func(clientCtx client.Context, args []string, flags *pflag.FlagSet) (sdk.Msg, error) {
@@ -144,7 +144,7 @@ func CmdSetMaxPoolPointsPerBlock() (*osmocli.TxCliDesc, *types.MsgSetMaxPoolPoin
 // CmdSetInfoByPoolType implements the command to set the pool information used throughout the module
 func CmdSetInfoByPoolType() *osmocli.TxCliDesc {
 	desc := osmocli.TxCliDesc{
-		Use:   "set-info-by-pool-type [path/to/pool_info.json]",
+		Use:   "set-info-by-pool-type",
 		Short: "set the protorev pool type info",
 		Long: `Must provide a json file with all the pool info that will be set. This does NOT set info for a single pool type.
 		All information must be provided across all pool types in the json file.
@@ -178,7 +178,7 @@ func CmdSetInfoByPoolType() *osmocli.TxCliDesc {
 // CmdSetBaseDenoms implements the command to set the base denoms used in the highest liquidity method
 func CmdSetBaseDenoms() *osmocli.TxCliDesc {
 	desc := osmocli.TxCliDesc{
-		Use:   "set-base-denoms [path/to/denoms.json]",
+		Use:   "set-base-denoms",
 		Short: "set the protorev base denoms",
 		Long: `Must provide a json file with all the base denoms that will be set. 
 		Sample json file:
