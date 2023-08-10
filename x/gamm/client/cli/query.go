@@ -164,7 +164,7 @@ $ %s query gamm pool-params 1
 
 func GetCmdTotalShares() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryTotalSharesRequest](
-		"total-share [poolID]",
+		"total-share",
 		"Query total-share",
 		`Query total-share.
 Example:
@@ -317,7 +317,7 @@ $ %s query gamm pools-with-filter <min_liquidity> <pool_type>
 // GetCmdPoolType returns pool type given pool id.
 func GetCmdPoolType() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryPoolTypeRequest](
-		"pool-type <pool_id>",
+		"pool-type",
 		"Query pool type",
 		`Query pool type
 Example:
@@ -342,7 +342,7 @@ func GetConcentratedPoolIdLinkFromCFMMRequest() (*osmocli.QueryDescriptor, *type
 // nolint: staticcheck
 func GetCmdTotalPoolLiquidity() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryTotalPoolLiquidityRequest](
-		"total-pool-liquidity [poolID]",
+		"total-pool-liquidity",
 		"Query total-pool-liquidity",
 		`Query total-pool-liquidity.
 Example:

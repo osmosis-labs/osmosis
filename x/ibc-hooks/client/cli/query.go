@@ -74,3 +74,5 @@ $ %s query ibc-hooks wasm-hooks-sender channel-42 juno12smx2wdlyttvyzvzg54y2vnqw
 
 	return cmd
 }
+
+

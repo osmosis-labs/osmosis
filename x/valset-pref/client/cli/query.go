@@ -18,7 +18,7 @@ func GetQueryCmd() *cobra.Command {
 // GetCmdValSetPref takes the  address and returns the existing validator set for that address.
 func GetCmdValSetPref() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*queryproto.UserValidatorPreferencesRequest](
-		"val-set [address]",
+		"val-set",
 		"Query the validator set for a specific user address", "",
 		types.ModuleName, queryproto.NewQueryClient,
 	)

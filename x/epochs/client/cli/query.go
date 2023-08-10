@@ -34,3 +34,5 @@ func GetCmdCurrentEpoch() (*osmocli.QueryDescriptor, *types.QueryCurrentEpochReq
 {{.CommandPrefix}} day`,
 	}, &types.QueryCurrentEpochRequest{}
 }
+
+

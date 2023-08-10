@@ -27,7 +27,7 @@ func GetQueryCmd() *cobra.Command {
 // GetCmdGaugeIds takes the pool id and returns the matching gauge ids and durations.
 func GetCmdGaugeIds() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryGaugeIdsRequest](
-		"gauge-ids [pool-id]",
+		"gauge-ids",
 		"Query the matching gauge ids and durations by pool id",
 		`{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} gauge-ids 1
