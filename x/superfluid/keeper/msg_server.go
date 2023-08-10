@@ -205,7 +205,7 @@ func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(go
 		return nil, err
 	}
 
-	positionData, poolIdLeaving, poolIdEntering, clLockId, err := server.keeper.RouteLockedBalancerToConcentratedMigration(ctx, sender, msg.LockId, msg.SharesToMigrate, msg.TokenOutMins)
+	positionData, migratedPoolIDs, clLockId, err := server.keeper.RouteLockedBalancerToConcentratedMigration(ctx, sender, msg.LockId, msg.SharesToMigrate, msg.TokenOutMins)
 	if err != nil {
 		return nil, err
 	}
@@ -213,8 +213,8 @@ func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(go
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtUnlockAndMigrateShares,
-			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(poolIdEntering, 10)),
-			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, strconv.FormatUint(poolIdLeaving, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(migratedPoolIDs.EnteringID, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, strconv.FormatUint(migratedPoolIDs.LeavingID, 10)),
 			sdk.NewAttribute(types.AttributeConcentratedLockId, strconv.FormatUint(clLockId, 10)),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(positionData.ID, 10)),
