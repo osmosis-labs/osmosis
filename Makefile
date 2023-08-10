@@ -135,7 +135,8 @@ install-with-autocomplete: check_version go.sum
 			brew install bash-completion; \
 			echo '[[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ]] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"' >> ~/.bashrc; \
 			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bashrc; \
-			echo "Autocomplete enabled. Run 'source ~/.bashrc' to complete installation.";
+			echo; \
+			echo "Autocomplete enabled. Run 'source ~/.bashrc' to complete installation."; \
 		else \
 			echo "Autocomplete already enabled in ~/.bashrc"; \
 		fi \
@@ -144,7 +145,8 @@ install-with-autocomplete: check_version go.sum
 			sudo apt-get install -y bash-completion; \
 			echo '[[ -r "/etc/bash_completion" ]] && . "/etc/bash_completion"' >> ~/.bashrc; \
 			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bashrc; \
-			echo "Autocomplete enabled. Run 'source ~/.bashrc' to complete installation.";
+			echo; \
+			echo "Autocomplete enabled. Run 'source ~/.bashrc' to complete installation."; \
 		else \
 			echo "Autocomplete already enabled in ~/.bashrc"; \
 		fi \
