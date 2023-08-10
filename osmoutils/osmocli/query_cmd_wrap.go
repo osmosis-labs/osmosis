@@ -12,8 +12,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 // global variable set on index command.
@@ -41,7 +39,17 @@ type QueryDescriptor struct {
 	numArgs    int
 }
 
-var nonAttachableFields []string = []string{"sender", "pagination"}
+var _ Descriptor = &QueryDescriptor{}
+
+// Implement Descriptor interface
+func (desc QueryDescriptor) GetCustomFlagOverrides() map[string]string {
+	return desc.CustomFlagOverrides
+}
+
+// Implement Descriptor interface
+func (desc *QueryDescriptor) SetUse(newUse string) {
+	desc.Use = newUse
+}
 
 func QueryIndexCmd(moduleName string) *cobra.Command {
 	cmd := IndexCmd(moduleName)
@@ -182,20 +190,5 @@ func queryLogic[querier any](desc *QueryDescriptor,
 		}
 
 		return clientCtx.PrintProto(res)
-	}
-}
-
-func attachFieldsToUse[reqP proto.Message](desc *QueryDescriptor) {
-	req := osmoutils.MakeNew[reqP]()
-	v := reflect.ValueOf(req).Type().Elem() // get underlying non-pointer struct
-	for i := 0; i < v.NumField(); i++ {
-		fn := strings.ToLower(v.Field(i).Name)
-
-		// if a field is parsed from a flag, skip it
-		if desc.CustomFlagOverrides[fn] != "" || osmoutils.Contains(nonAttachableFields, fn) {
-			continue
-		}
-
-		desc.Use += fmt.Sprintf(" [%s]", fn)
 	}
 }
