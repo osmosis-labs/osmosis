@@ -47,8 +47,8 @@ func (desc QueryDescriptor) GetCustomFlagOverrides() map[string]string {
 }
 
 // Implement Descriptor interface
-func (desc *QueryDescriptor) SetUse(newUse string) {
-	desc.Use = newUse
+func (desc *QueryDescriptor) AttachToUse(str string) {
+	desc.Use += str
 }
 
 func QueryIndexCmd(moduleName string) *cobra.Command {

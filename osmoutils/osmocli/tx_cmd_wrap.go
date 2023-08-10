@@ -44,8 +44,8 @@ func (desc TxCliDesc) GetCustomFlagOverrides() map[string]string {
 }
 
 // Implement Descriptor interface
-func (desc *TxCliDesc) SetUse(newUse string) {
-	desc.Use = newUse
+func (desc *TxCliDesc) AttachToUse(str string) {
+	desc.Use += str
 }
 
 func AddTxCmd[M sdk.Msg](cmd *cobra.Command, f func() (*TxCliDesc, M)) {

@@ -12,10 +12,11 @@ import (
 
 type Descriptor interface {
 	GetCustomFlagOverrides() map[string]string
-	SetUse(newUse string)
+	AttachToUse(str string)
 }
 
-var nonAttachableFields []string = []string{"sender", "pagination"}
+// fields that are not provided as arguments
+var nonAttachableFields []string = []string{"sender", "pagination", "owner"}
 
 // attachFieldsToUse extracts fields from reqP proto message and dynamically appends them into Use field
 func attachFieldsToUse[reqP proto.Message](desc Descriptor) {
@@ -33,5 +34,5 @@ func attachFieldsToUse[reqP proto.Message](desc Descriptor) {
 		useField += fmt.Sprintf(" [%s]", fn)
 	}
 
-	desc.SetUse(useField)
+	desc.AttachToUse(useField)
 }
