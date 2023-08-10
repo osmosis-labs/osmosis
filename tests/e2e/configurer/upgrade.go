@@ -143,14 +143,9 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	v17SuperfluidAssets := v17GetSuperfluidAssets()
 
-	wg.Add(4)
+	wg.Add(2)
 
 	// Chain A
-
-	go func() {
-		defer wg.Done()
-		chainANode.FundCommunityPool(initialization.ValidatorWalletName, strAllUpgradeBaseDenoms())
-	}()
 
 	go func() {
 		defer wg.Done()
@@ -158,11 +153,6 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	}()
 
 	// Chain B
-
-	go func() {
-		defer wg.Done()
-		chainBNode.FundCommunityPool(initialization.ValidatorWalletName, strAllUpgradeBaseDenoms())
-	}()
 
 	go func() {
 		defer wg.Done()
@@ -451,18 +441,6 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 }
 
 // START: CAN REMOVE POST v17 UPGRADE
-
-func strAllUpgradeBaseDenoms() string {
-	upgradeBaseDenoms := ""
-	n := len(v17.AssetPairsForTestsOnly)
-	for i, assetPair := range v17.AssetPairsForTestsOnly {
-		upgradeBaseDenoms += "2000000" + assetPair.BaseAsset
-		if i < n-1 { // Check if it's not the last iteration
-			upgradeBaseDenoms += ","
-		}
-	}
-	return upgradeBaseDenoms
-}
 
 func v17GetSuperfluidAssets() string {
 	assets := ""

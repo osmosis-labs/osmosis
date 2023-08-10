@@ -1,9 +1,16 @@
 package v17
 
 import (
+	"errors"
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	poolManagerTypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -68,13 +75,13 @@ var AssetPairs = []AssetPair{
 }
 
 // AssetPairs contract: all AssetPairs being initialized in this upgrade handler all have the same quote asset (OSMO).
-func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) []AssetPair {
+func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) ([]AssetPair, error) {
 	gammKeeper := keepers.GAMMKeeper
 	superfluidKeeper := keepers.SuperfluidKeeper
 	for i, assetPair := range AssetPairs {
 		pool, err := gammKeeper.GetCFMMPool(ctx, assetPair.LinkedClassicPool)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		// Set the base asset as the non-osmo asset in the pool
@@ -100,7 +107,7 @@ func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) []AssetP
 		}
 		AssetPairs[i].Superfluid = true
 	}
-	return AssetPairs
+	return AssetPairs, nil
 }
 
 // The values below this comment are used strictly for testing.
@@ -294,4 +301,113 @@ var AssetPairsForTestsOnly = []AssetPair{
 		LinkedClassicPool: 625,
 		Superfluid:        false,
 	},
+}
+
+// InitializeAssetPairsTestnet initializes the asset pairs for the testnet, which is every osmo paired gamm pool with exactly 2 tokens.
+func InitializeAssetPairsTestnet(ctx sdk.Context, keepers *keepers.AppKeepers) ([]AssetPair, error) {
+	superfluidKeeper := keepers.SuperfluidKeeper
+	testnetAssetPairs := []AssetPair{}
+
+	// Retrieve all GAMM pools on the testnet.
+	pools, err := keepers.GAMMKeeper.GetPools(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pool := range pools {
+		if pool.GetType() != poolManagerTypes.Balancer {
+			continue
+		}
+
+		gammPoolId := pool.GetId()
+
+		// Skip pools that are already linked.
+		clPoolId, err := keepers.GAMMKeeper.GetLinkedConcentratedPoolID(ctx, gammPoolId)
+		if err == nil && clPoolId != 0 {
+			ctx.Logger().Info(fmt.Sprintf("gammPoolId %d is already linked to CL pool %d, skipping", gammPoolId, clPoolId))
+			continue
+		}
+
+		cfmmPool, err := keepers.GAMMKeeper.GetCFMMPool(ctx, gammPoolId)
+		if err != nil {
+			return nil, err
+		}
+
+		totalPoolLiquidity := cfmmPool.GetTotalPoolLiquidity(ctx)
+
+		// Skip pools that are not paired with exactly 2 tokens.
+		if len(totalPoolLiquidity) != 2 {
+			continue
+		}
+
+		// Skip pools that aren't paired with OSMO. OSMO will be the quote asset.
+		quoteAsset, baseAsset := "", ""
+		for _, coin := range totalPoolLiquidity {
+			if coin.Denom == QuoteAsset {
+				quoteAsset = coin.Denom
+			} else {
+				baseAsset = coin.Denom
+			}
+		}
+		if quoteAsset == "" || baseAsset == "" {
+			continue
+		}
+
+		spreadFactor := cfmmPool.GetSpreadFactor(ctx)
+		err = validateSpotPriceFallsInBounds(ctx, cfmmPool, keepers, baseAsset, spreadFactor)
+		if errors.Is(err, gammtypes.ErrInvalidMathApprox) {
+			// Result is zero, which means 0.1 osmo was too much for the swap to handle.
+			// This is likely because the pool liquidity is too small, so since this just testnet, we skip it.
+			continue
+		} else if err != nil {
+			return nil, err
+		}
+
+		// Set the spread factor to the same spread factor the GAMM pool was.
+		// If its spread factor is not authorized, set it to the first authorized non-zero spread factor.
+		authorizedSpreadFactors := keepers.ConcentratedLiquidityKeeper.GetParams(ctx).AuthorizedSpreadFactors
+		spreadFactorAuthorized := false
+		for _, authorizedSpreadFactor := range authorizedSpreadFactors {
+			if authorizedSpreadFactor.Equal(spreadFactor) {
+				spreadFactorAuthorized = true
+				break
+			}
+		}
+		if !spreadFactorAuthorized {
+			spreadFactor = authorizedSpreadFactors[1]
+		}
+
+		isSuperfluid := false
+		poolShareDenom := fmt.Sprintf("gamm/pool/%d", gammPoolId)
+		_, err = superfluidKeeper.GetSuperfluidAsset(ctx, poolShareDenom)
+		if err != nil && !errors.Is(err, errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", poolShareDenom)) {
+			return nil, err
+		} else if err == nil {
+			isSuperfluid = true
+		}
+
+		internalAssetPair := AssetPair{
+			BaseAsset:         baseAsset,
+			SpreadFactor:      spreadFactor,
+			LinkedClassicPool: gammPoolId,
+			Superfluid:        isSuperfluid,
+		}
+		testnetAssetPairs = append(testnetAssetPairs, internalAssetPair)
+	}
+	return testnetAssetPairs, nil
+}
+
+// validateSpotPriceFallsInBounds ensures that after swapping in the OSMO for the baseAsset, the resulting spot price is within the
+// min and max spot price bounds of the concentrated liquidity module.
+func validateSpotPriceFallsInBounds(ctx sdk.Context, cfmmPool gammtypes.CFMMPoolI, keepers *keepers.AppKeepers, baseAsset string, spreadFactor sdk.Dec) error {
+	// Check if swapping 0.1 OSMO results in a spot price less than the min or greater than the max
+	respectiveBaseAsset, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, cfmmPool, sdk.NewCoin(QuoteAsset, sdk.NewInt(100000)), baseAsset, spreadFactor)
+	if err != nil {
+		return err
+	}
+	expectedSpotPriceFromSwap := sdk.NewDec(100000).Quo(respectiveBaseAsset.Amount.ToDec())
+	if expectedSpotPriceFromSwap.LT(cltypes.MinSpotPrice) || expectedSpotPriceFromSwap.GT(cltypes.MaxSpotPrice) {
+		return err
+	}
+	return nil
 }
