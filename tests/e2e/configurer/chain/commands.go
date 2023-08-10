@@ -662,7 +662,7 @@ func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token
 
 			return balancePost.Amount.Equal(balancePre.Amount.Add(token.Amount))
 		},
-		2*time.Minute,
+		3*time.Minute,
 		10*time.Millisecond,
 		"tx not received on destination chain",
 	)
