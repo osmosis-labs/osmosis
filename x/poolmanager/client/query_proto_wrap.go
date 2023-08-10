@@ -239,8 +239,8 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		}
 	}
 
-	// First, try the full 'from coin' amount
-	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx))
+	// First, try the full 'from coin' amount without a swap fee.
+	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, sdk.ZeroDec())
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -253,12 +253,20 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		}, nil
 	}
 
-	currTradePrice := sdk.NewDec(tokenOut.Amount.Int64()).QuoInt(req.FromCoin.Amount)
+	// currTradePrice := sdk.NewDec(tokenOut.Amount.Int64()).QuoInt(req.FromCoin.Amount)
+	currTradePrice := sdk.NewDec(req.FromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
 	priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
 
 	if priceDeviation.LTE(adjustedMaxPriceImpact) {
 		// If the full 'from coin' amount results in a price deviation less than or equal to the adjusted max price
 		// impact, return it
+
+		// Re-calculate the tokenOut with a swap fee.
+		tokenOut, err = swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx))
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
 		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
 			InputCoin:  req.FromCoin,
 			OutputCoin: tokenOut,
@@ -277,7 +285,7 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		currFromCoin := sdk.NewCoin(req.FromCoin.Denom, midAmount)
 
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(
-			ctx, poolI, currFromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx))
+			ctx, poolI, currFromCoin, req.ToCoinDenom, sdk.ZeroDec())
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -290,7 +298,8 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 			}, nil
 		}
 
-		currTradePrice := sdk.NewDec(tokenOut.Amount.Int64()).QuoInt(currFromCoin.Amount)
+		// currTradePrice := sdk.NewDec(tokenOut.Amount.Int64()).QuoInt(currFromCoin.Amount)
+		currTradePrice := sdk.NewDec(req.FromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
 		priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
 
 		// Check priceDeviation against adjustedMaxPriceImpact
