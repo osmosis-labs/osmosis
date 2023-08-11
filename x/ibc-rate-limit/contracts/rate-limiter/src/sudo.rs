@@ -21,6 +21,7 @@ pub fn process_packet(
     #[cfg(test)] channel_value_mock: Option<Uint256>,
 ) -> Result<Response, ContractError> {
     let (channel_id, denom) = packet.path_data(&direction);
+    #[allow(clippy::needless_borrow)]
     let path = &Path::new(&channel_id, &denom);
     let funds = packet.get_funds();
 
@@ -144,6 +145,7 @@ fn add_rate_limit_attributes(response: Response, result: &RateLimit) -> Response
 pub fn undo_send(deps: DepsMut, packet: Packet) -> Result<Response, ContractError> {
     // Sudo call. Only go modules should be allowed to access this
     let (channel_id, denom) = packet.path_data(&FlowType::Out); // Sends have direction out.
+    #[allow(clippy::needless_borrow)]
     let path = &Path::new(&channel_id, &denom);
     let any_path = Path::new("any", &denom);
     let funds = packet.get_funds();

@@ -6,15 +6,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	v8constants "github.com/osmosis-labs/osmosis/v16/app/upgrades/v8/constants"
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v16/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v16/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
+	v8constants "github.com/osmosis-labs/osmosis/v17/app/upgrades/v8/constants"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v17/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 )
 
 var defaultFunds = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", sdk.NewInt(5000000000)))
@@ -564,7 +564,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_Event
 
 			if !tc.isLastPositionInPool {
 				s.FundAcc(s.TestAccs[1], defaultFunds)
-				_, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, 1, s.TestAccs[1], defaultFunds)
+				_, err := concentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, 1, s.TestAccs[1], defaultFunds)
 				s.Require().NoError(err)
 			}
 

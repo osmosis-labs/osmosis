@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v16/app/params"
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/config"
+	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/config"
 
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
 )
 
 type Config struct {
@@ -26,11 +26,10 @@ type Config struct {
 	VotingPeriod          float32
 	ExpeditedVotingPeriod float32
 	// upgrade proposal height for chain.
-	UpgradePropHeight    int64
-	LatestProposalNumber int
-	LatestLockNumber     int
-	NodeConfigs          []*NodeConfig
-	NodeTempConfigs      []*NodeConfig
+	UpgradePropHeight int64
+
+	NodeConfigs     []*NodeConfig
+	NodeTempConfigs []*NodeConfig
 
 	LatestCodeId int
 
@@ -193,6 +192,14 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
 	require.NoError(c.t, err)
 
+	cmd = []string{"hermes", "clear", "packets", "--chain", dstChain.Id, "--port", "transfer", "--channel", "channel-0"}
+	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
+	require.NoError(c.t, err)
+
+	cmd = []string{"hermes", "clear", "packets", "--chain", c.Id, "--port", "transfer", "--channel", "channel-0"}
+	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
+	require.NoError(c.t, err)
+
 	require.Eventually(
 		c.t,
 		func() bool {
@@ -211,12 +218,18 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 				return false
 			}
 		},
-		5*time.Minute,
-		time.Second,
+		1*time.Minute,
+		10*time.Millisecond,
 		"tx not received on destination chain",
 	)
 
 	c.t.Log("successfully sent IBC tokens")
+}
+
+func (c *Config) GetAllChainNodes() []*NodeConfig {
+	nodeConfigs := make([]*NodeConfig, len(c.NodeConfigs))
+	copy(nodeConfigs, c.NodeConfigs)
+	return nodeConfigs
 }
 
 // GetDefaultNode returns the default node of the chain.
@@ -243,19 +256,17 @@ func (c *Config) GetNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 
 func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	if nodeIndex > len(c.NodeConfigs) {
-		return nil, fmt.Errorf("node index (%d) is greter than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
+		return nil, fmt.Errorf("node index (%d) is greater than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
 	}
 	return c.NodeConfigs[nodeIndex], nil
 }
 
-func (c *Config) SubmitCreateConcentratedPoolProposal() (uint64, error) {
-	node, err := c.GetDefaultNode()
-	if err != nil {
-		return 0, err
-	}
+func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig) (uint64, error) {
+	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 
-	propNumber := node.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-	c.LatestProposalNumber += 1
+	chainANode.DepositProposal(propNumber, false)
+
+	var wg sync.WaitGroup
 
 	node.DepositProposal(propNumber, false)
 
@@ -272,12 +283,12 @@ func (c *Config) SubmitCreateConcentratedPoolProposal() (uint64, error) {
 	wg.Wait()
 
 	require.Eventually(c.t, func() bool {
-		status, err := node.QueryPropStatus(propNumber)
+		status, err := chainANode.QueryPropStatus(propNumber)
 		if err != nil {
 			return false
 		}
 		return status == proposalStatusPassed
-	}, time.Second*30, time.Millisecond*500)
-	poolId := node.QueryNumPools()
+	}, time.Second*30, 10*time.Millisecond)
+	poolId := chainANode.QueryNumPools()
 	return poolId, nil
 }

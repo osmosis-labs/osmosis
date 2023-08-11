@@ -1,8 +1,8 @@
 package gammsimulation
 
 import (
-	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v17/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
 )
 
 func DefaultActions(keeper keeper.Keeper) []simtypes.Action {

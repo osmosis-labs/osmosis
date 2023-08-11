@@ -8,13 +8,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
-	sftypes "github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	sftypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestInitializePool() {
@@ -250,14 +250,15 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 	// set up default position to have proper spot price
 	s.SetupDefaultPosition(defaultPoolId)
 
-	spotPriceBaseUSDC, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, USDC, ETH)
+	// ETH is token0 so its price will be the DefaultCurrSqrtPrice squared
+	spotPriceBaseETH, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, USDC, ETH)
 	s.Require().NoError(err)
-	s.Require().Equal(spotPriceBaseUSDC, DefaultCurrSqrtPrice.PowerInteger(2).SDKDec())
+	s.Require().Equal(spotPriceBaseETH, DefaultCurrSqrtPrice.PowerInteger(2).SDKDec())
 
 	// test that we have correct values for reversed quote asset and base asset
-	spotPriceBaseETH, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, ETH, USDC)
+	spotPriceBaseUSDC, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, ETH, USDC)
 	s.Require().NoError(err)
-	s.Require().Equal(spotPriceBaseETH, osmomath.OneDec().Quo(DefaultCurrSqrtPrice.PowerInteger(2)).SDKDec())
+	s.Require().Equal(spotPriceBaseUSDC, osmomath.OneDec().Quo(DefaultCurrSqrtPrice.PowerInteger(2)).SDKDec())
 
 	// try getting spot price from a non-existent pool
 	spotPrice, err = s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId+1, USDC, ETH)
@@ -469,11 +470,11 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 			concentratedPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(ETH, USDC)
 
 			// Create a position in the pool that is divisible by the tick spacing
-			_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), -100, 100)
+			_, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), -100, 100)
 			s.Require().NoError(err)
 
 			// Attempt to create a position that is not divisible by the tick spacing
-			_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
+			_, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
 			s.Require().Error(err)
 
 			// Alter the tick spacing of the pool
@@ -486,7 +487,7 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 			s.Require().NoError(err)
 
 			// Attempt to create a position that was previously not divisible by the tick spacing but now is
-			_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
+			_, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
 			if test.expectedCreatePositionErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, test.expectedCreatePositionErr.Error())
@@ -682,7 +683,7 @@ func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
 
 			// Create 3 locked positions
 			for i := 0; i < 3; i++ {
-				_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), defaultAddress, defaultFunds, time.Hour)
+				_, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), defaultAddress, defaultFunds, time.Hour)
 				s.Require().NoError(err)
 			}
 

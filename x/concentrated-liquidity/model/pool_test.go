@@ -11,10 +11,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 const (
@@ -206,7 +206,7 @@ func (s *ConcentratedPoolTestSuite) TestSpotPrice() {
 			}
 
 			// Check the spot price of the mock pool using the SpotPrice method.
-			spotPriceFromMethod, err := mock_pool.SpotPrice(sdk.Context{}, tc.param.baseDenom, tc.param.quoteDenom)
+			spotPriceFromMethod, err := mock_pool.SpotPrice(sdk.Context{}, tc.param.quoteDenom, tc.param.baseDenom)
 
 			if tc.expectedErr != nil {
 				s.Require().Error(err)

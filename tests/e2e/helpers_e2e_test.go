@@ -8,12 +8,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 )
 
 var defaultFeePerTx = sdk.NewInt(1000)
@@ -62,11 +62,40 @@ func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address strin
 	return addrBalances
 }
 
-func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig) {
+var currentNodeIndexA int
+
+func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig, error) {
 	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
-	return chainA, chainANode
+
+	chainANodes := chainA.GetAllChainNodes()
+
+	chosenNode := chainANodes[currentNodeIndexA]
+	currentNodeIndexA = (currentNodeIndexA + 1) % len(chainANodes)
+	return chainA, chosenNode, nil
+}
+
+var currentNodeIndexB int
+
+func (s *IntegrationTestSuite) getChainBCfgs() (*chain.Config, *chain.NodeConfig, error) {
+	chainB := s.configurer.GetChainConfig(1)
+
+	chainBNodes := chainB.GetAllChainNodes()
+
+	chosenNode := chainBNodes[currentNodeIndexB]
+	currentNodeIndexB = (currentNodeIndexB + 1) % len(chainBNodes)
+	return chainB, chosenNode, nil
+}
+
+var useChainA bool
+
+func (s *IntegrationTestSuite) getChainCfgs() (*chain.Config, *chain.NodeConfig, error) {
+	if useChainA {
+		useChainA = false
+		return s.getChainACfgs()
+	} else {
+		useChainA = true
+		return s.getChainBCfgs()
+	}
 }
 
 // Helper function for calculating uncollected spread rewards since the time that spreadRewardGrowthInsideLast corresponds to
@@ -107,6 +136,12 @@ func (s *IntegrationTestSuite) validateCLPosition(position model.Position, poolI
 	s.Require().Equal(position.UpperTick, upperTick)
 }
 
+func (s *IntegrationTestSuite) CallCheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.CheckBalance(node, addr, denom, amount)
+}
+
 // CheckBalance Checks the balance of an address
 func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
 	// check the balance of the contract
@@ -125,7 +160,7 @@ func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom 
 		}
 		return false
 	},
-		2*time.Minute,
+		1*time.Minute,
 		10*time.Millisecond,
 	)
 }
@@ -153,4 +188,12 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
 	contractAddr := contracts[0]
 	return contractAddr
+}
+
+func (s *IntegrationTestSuite) getChainIndex(chain *chain.Config) int {
+	if chain.Id == "osmo-test-a" {
+		return 0
+	} else {
+		return 1
+	}
 }

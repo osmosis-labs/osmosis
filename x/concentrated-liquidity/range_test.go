@@ -1,15 +1,16 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 type RangeTestParams struct {
@@ -70,6 +71,13 @@ var (
 		baseTimeBetweenJoins: time.Hour,
 		baseSwapAmount:       sdk.NewInt(10000000),
 		numSwapAddresses:     10,
+		baseIncentiveAmount:  sdk.NewInt(1000000000000000000),
+		baseEmissionRate:     sdk.NewDec(1),
+		baseIncentiveDenom:   "incentiveDenom",
+
+		// Pool params
+		spreadFactor: DefaultSpreadFactor,
+		tickSpacing:  uint64(1),
 
 		// Pool params
 		spreadFactor: DefaultSpreadFactor,
@@ -158,7 +166,15 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 
 	// --- Incentive setup ---
 
-	// TODO: support incentive fuzzing (use to `totalTimeElapsed` to track emitted amounts)
+	if testParams.baseIncentiveAmount != (sdk.Int{}) {
+		incentiveAddr := apptesting.CreateRandomAccounts(1)[0]
+		incentiveAmt := testParams.baseIncentiveAmount
+		emissionRate := testParams.baseEmissionRate
+		incentiveCoin := sdk.NewCoin(fmt.Sprintf("%s%d", testParams.baseIncentiveDenom, 0), incentiveAmt)
+		s.FundAcc(incentiveAddr, sdk.NewCoins(incentiveCoin))
+		_, err := s.clk.CreateIncentive(s.Ctx, pool.GetId(), incentiveAddr, incentiveCoin, emissionRate, s.Ctx.BlockTime(), types.DefaultAuthorizedUptimes[0])
+		s.Require().NoError(err)
+	}
 
 	// --- Position setup ---
 
@@ -204,12 +220,12 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
 
 			// Set up position
-			curPositionId, actualAmt0, actualAmt1, curLiquidity, actualLowerTick, actualUpperTick, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), curAddr, curAssets, sdk.ZeroInt(), sdk.ZeroInt(), ranges[curRange][0], ranges[curRange][1])
+			positionData, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), curAddr, curAssets, sdk.ZeroInt(), sdk.ZeroInt(), ranges[curRange][0], ranges[curRange][1])
 			s.Require().NoError(err)
 
 			// Ensure position was set up correctly and didn't break global invariants
-			s.Require().Equal(ranges[curRange][0], actualLowerTick)
-			s.Require().Equal(ranges[curRange][1], actualUpperTick)
+			s.Require().Equal(ranges[curRange][0], positionData.LowerTick)
+			s.Require().Equal(ranges[curRange][1], positionData.UpperTick)
 			s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 
 			// Let time elapse after join if applicable
@@ -220,14 +236,14 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 
 			// Track changes to state
-			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), actualAmt0), sdk.NewCoin(pool.GetToken1(), actualAmt1))
+			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), positionData.Amount0), sdk.NewCoin(pool.GetToken1(), positionData.Amount1))
 			totalAssets = totalAssets.Add(actualAddedCoins...)
 			if testParams.baseSwapAmount != (sdk.Int{}) {
 				totalAssets = totalAssets.Add(swappedIn).Sub(sdk.NewCoins(swappedOut))
 			}
-			totalLiquidity = totalLiquidity.Add(curLiquidity)
+			totalLiquidity = totalLiquidity.Add(positionData.Liquidity)
 			totalTimeElapsed = totalTimeElapsed + timeElapsed
-			allPositionIds = append(allPositionIds, curPositionId)
+			allPositionIds = append(allPositionIds, positionData.ID)
 			curBlock++
 		}
 		endNumPositions := len(allPositionIds)

@@ -5,12 +5,12 @@ go 1.20
 require (
 	github.com/cosmos/cosmos-sdk v0.47.3
 	github.com/ignite/cli v0.23.0
-	github.com/osmosis-labs/osmosis/osmomath v0.0.5
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.5
+	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230621002052-afb82fbaa312
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230623115558-38aaab07d343
 	github.com/tendermint/tendermint v0.37.0-rc1
 )
 
-require github.com/osmosis-labs/osmosis/v16 v16.0.0-20230623172200-24f580da1227
+require github.com/osmosis-labs/osmosis/v16 v16.0.0-20230630175215-d5fcd089a71c
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect

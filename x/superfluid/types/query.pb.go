@@ -14,7 +14,7 @@ import (
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/gogo/protobuf/types"
-	types1 "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	types1 "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -1935,9 +1935,9 @@ var fileDescriptor_e3d9448e4ed3943f = []byte{
 	0x82, 0xa4, 0x6f, 0x33, 0x92, 0xd6, 0xd1, 0xbb, 0x79, 0x48, 0x6a, 0x25, 0x2c, 0xf4, 0xe4, 0xa9,
 	0xb2, 0xf6, 0xd9, 0xe3, 0xa2, 0xf2, 0xf9, 0xe3, 0xa2, 0xf2, 0x8f, 0xc7, 0x45, 0xe5, 0xe7, 0x4f,
 	0x8a, 0x43, 0x9f, 0x3f, 0x29, 0x0e, 0xfd, 0xed, 0x49, 0x71, 0xe8, 0x3b, 0x8b, 0x89, 0xf1, 0x89,
-	0x70, 0x7b, 0xd6, 0x31, 0xb7, 0x68, 0x14, 0xc3, 0xee, 0xb9, 0x45, 0xfd, 0xfd, 0x64, 0x24, 0x6c,
-	0xa4, 0xb2, 0x35, 0xca, 0xfe, 0x17, 0xc9, 0xf9, 0xff, 0x07, 0x00, 0x00, 0xff, 0xff, 0x4f, 0xdc,
-	0x65, 0x83, 0xc3, 0x23, 0x00, 0x00,
+	0x70, 0x7b, 0xd6, 0x31, 0xb7, 0x68, 0x14, 0xc3, 0xee, 0xb9, 0x8b, 0xfa, 0xfb, 0xc9, 0x48, 0xd8,
+	0x48, 0x65, 0x6b, 0x94, 0xfd, 0x2f, 0x92, 0xf3, 0xff, 0x0f, 0x00, 0x00, 0xff, 0xff, 0x52, 0x21,
+	0xd0, 0x82, 0xc3, 0x23, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1988,6 +1988,7 @@ type QueryClient interface {
 	TotalDelegationByDelegator(ctx context.Context, in *QueryTotalDelegationByDelegatorRequest, opts ...grpc.CallOption) (*QueryTotalDelegationByDelegatorResponse, error)
 	// Returns a list of whitelisted pool ids to unpool.
 	UnpoolWhitelist(ctx context.Context, in *QueryUnpoolWhitelistRequest, opts ...grpc.CallOption) (*QueryUnpoolWhitelistResponse, error)
+	// Returns all of a user's full range CL positions that are superfluid staked.
 	UserConcentratedSuperfluidPositionsDelegated(ctx context.Context, in *UserConcentratedSuperfluidPositionsDelegatedRequest, opts ...grpc.CallOption) (*UserConcentratedSuperfluidPositionsDelegatedResponse, error)
 	UserConcentratedSuperfluidPositionsUndelegating(ctx context.Context, in *UserConcentratedSuperfluidPositionsUndelegatingRequest, opts ...grpc.CallOption) (*UserConcentratedSuperfluidPositionsUndelegatingResponse, error)
 }
@@ -2191,6 +2192,7 @@ type QueryServer interface {
 	TotalDelegationByDelegator(context.Context, *QueryTotalDelegationByDelegatorRequest) (*QueryTotalDelegationByDelegatorResponse, error)
 	// Returns a list of whitelisted pool ids to unpool.
 	UnpoolWhitelist(context.Context, *QueryUnpoolWhitelistRequest) (*QueryUnpoolWhitelistResponse, error)
+	// Returns all of a user's full range CL positions that are superfluid staked.
 	UserConcentratedSuperfluidPositionsDelegated(context.Context, *UserConcentratedSuperfluidPositionsDelegatedRequest) (*UserConcentratedSuperfluidPositionsDelegatedResponse, error)
 	UserConcentratedSuperfluidPositionsUndelegating(context.Context, *UserConcentratedSuperfluidPositionsUndelegatingRequest) (*UserConcentratedSuperfluidPositionsUndelegatingResponse, error)
 }

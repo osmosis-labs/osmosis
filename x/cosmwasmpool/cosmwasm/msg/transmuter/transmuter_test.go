@@ -8,10 +8,10 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	incentivetypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	incentivetypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
 )
 
 const (

@@ -3,7 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
 // TestGetTokenPairArbRoutes tests the GetTokenPairArbRoutes function.
@@ -63,7 +63,7 @@ func (s *KeeperTestSuite) TestGetAllBaseDenoms() {
 	s.Require().Equal(3, len(baseDenoms))
 	s.Require().Equal(baseDenoms[0].Denom, types.OsmosisDenomination)
 	s.Require().Equal(baseDenoms[1].Denom, "Atom")
-	s.Require().Equal(baseDenoms[2].Denom, "test/3")
+	s.Require().Equal(baseDenoms[2].Denom, "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7")
 
 	// Should be able to delete all base denoms
 	s.App.ProtoRevKeeper.DeleteBaseDenoms(s.Ctx)
@@ -305,21 +305,20 @@ func (s *KeeperTestSuite) TestGetMaxPointsPerBlock() {
 	s.Require().Error(err)
 }
 
-// TestGetPoolWeights tests the GetPoolWeights and SetPoolWeights functions.
-func (s *KeeperTestSuite) TestGetPoolWeights() {
-	// Should be initialized on genesis
-	poolWeights := s.App.ProtoRevKeeper.GetPoolWeights(s.Ctx)
-	s.Require().Equal(types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2}, poolWeights)
-
-	// Should be able to set the PoolWeights
-	newRouteWeights := types.PoolWeights{
-		StableWeight:       10,
-		BalancerWeight:     2,
-		ConcentratedWeight: 22,
+// TestGetInfoByPoolType tests the GetInfoByPoolType and SetInfoByPoolType functions.
+func (s *KeeperTestSuite) TestGetInfoByPoolType() {
+	// Should be able to set the InfoByPoolType
+	newRouteWeights := types.DefaultPoolTypeInfo
+	newRouteWeights.Balancer.Weight = 100
+	newRouteWeights.Cosmwasm.WeightMaps = []types.WeightMap{
+		{
+			ContractAddress: "contractAddress",
+			Weight:          1,
+		},
 	}
 
-	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, newRouteWeights)
+	s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, newRouteWeights)
 
-	poolWeights = s.App.ProtoRevKeeper.GetPoolWeights(s.Ctx)
+	poolWeights := s.App.ProtoRevKeeper.GetInfoByPoolType(s.Ctx)
 	s.Require().Equal(newRouteWeights, poolWeights)
 }

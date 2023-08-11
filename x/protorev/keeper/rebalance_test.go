@@ -3,10 +3,12 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v16/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
+	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
 // Mainnet Arb Route - 2 Asset, Same Weights (Block: 5905150)
@@ -149,7 +151,7 @@ var twoPoolRoute = poolmanagertypes.SwapAmountInRoutes{
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        39,
-		TokenOutDenom: "test/3",
+		TokenOutDenom: "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 	},
 }
 
@@ -162,6 +164,42 @@ var extendedRangeRoute = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        43,
 		TokenOutDenom: "usdx",
+	},
+}
+
+// Tests the binary search range for CL pools
+var clPoolRouteExtended = poolmanagertypes.SwapAmountInRoutes{
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        49,
+		TokenOutDenom: "uosmo",
+	},
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        50,
+		TokenOutDenom: "epochTwo",
+	},
+}
+
+// Tests multiple CL pools in the same route
+var clPoolRouteMulti = poolmanagertypes.SwapAmountInRoutes{
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        52,
+		TokenOutDenom: "uosmo",
+	},
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        53,
+		TokenOutDenom: "epochTwo",
+	},
+}
+
+// Tests reducing the binary search range
+var clPoolRoute = poolmanagertypes.SwapAmountInRoutes{
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        49,
+		TokenOutDenom: "uosmo",
+	},
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        52,
+		TokenOutDenom: "epochTwo",
 	},
 }
 
@@ -290,6 +328,36 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 			},
 			expectPass: false,
 		},
+		{
+			name: "CL Route (extended range)", // This will search up to 131072 * stepsize
+			param: param{
+				route:           clPoolRouteExtended,
+				expectedAmtIn:   sdk.NewInt(131_072_000_000),
+				expectedProfit:  sdk.NewInt(295_125_808),
+				routePoolPoints: 7,
+			},
+			expectPass: true,
+		},
+		{
+			name: "CL Route", // This will search up to 131072 * stepsize
+			param: param{
+				route:           clPoolRoute,
+				expectedAmtIn:   sdk.NewInt(13_159_000_000),
+				expectedProfit:  sdk.NewInt(18_055_586),
+				routePoolPoints: 7,
+			},
+			expectPass: true,
+		},
+		{
+			name: "CL Route Multi", // This will search up to 131072 * stepsize
+			param: param{
+				route:           clPoolRouteMulti,
+				expectedAmtIn:   sdk.NewInt(414_000_000),
+				expectedProfit:  sdk.NewInt(171_555_698),
+				routePoolPoints: 12,
+			},
+			expectPass: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -388,10 +456,10 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 			name: "2-Pool Route Arb",
 			param: param{
 				route:          twoPoolRoute,
-				inputCoin:      sdk.NewCoin("test/3", sdk.NewInt(989_000_000)),
+				inputCoin:      sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", sdk.NewInt(989_000_000)),
 				expectedProfit: sdk.NewInt(218_149_058),
 			},
-			arbDenom:            "test/3",
+			arbDenom:            "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 			expectPass:          true,
 			expectedNumOfTrades: sdk.NewInt(3),
 		},
@@ -517,9 +585,9 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{twoPoolRoute},
 				expectedMaxProfitAmount:    sdk.NewInt(198_653_535),
-				expectedMaxProfitInputCoin: sdk.NewCoin("test/3", sdk.NewInt(989_000_000)),
+				expectedMaxProfitInputCoin: sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", sdk.NewInt(989_000_000)),
 				expectedOptimalRoute:       twoPoolRoute,
-				arbDenom:                   "test/3",
+				arbDenom:                   "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 			},
 			expectPass: true,
 		},
@@ -666,4 +734,107 @@ func (s *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 			s.Require().Equal(tc.expectedPointCount, points)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
+	s.Run("Extended search on stable pools", func() {
+		route := keeper.RouteMetaData{
+			Route:    extendedRangeRoute,
+			StepSize: sdk.NewInt(1_000_000),
+		}
+
+		curLeft, curRight, err := s.App.ProtoRevKeeper.UpdateSearchRangeIfNeeded(
+			s.Ctx,
+			route,
+			"usdx",
+			sdk.OneInt(),
+			types.MaxInputAmount,
+		)
+		s.Require().NoError(err)
+		s.Require().Equal(types.MaxInputAmount, curLeft)
+		s.Require().Equal(types.ExtendedMaxInputAmount, curRight)
+	})
+
+	s.Run("Extended search on CL pools", func() {
+		// Create two massive CL pools with a massive arb
+		clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "atom", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
+		fundCoins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(10_000_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)))
+		s.FundAcc(s.TestAccs[0], fundCoins)
+		s.CreateFullRangePosition(clPool, fundCoins)
+
+		clPool2 := s.PrepareCustomConcentratedPool(s.TestAccs[0], "atom", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
+		fundCoins = sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(20_000_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)))
+		s.FundAcc(s.TestAccs[0], fundCoins)
+		s.CreateFullRangePosition(clPool2, fundCoins)
+
+		route := keeper.RouteMetaData{
+			Route: poolmanagertypes.SwapAmountInRoutes{
+				poolmanagertypes.SwapAmountInRoute{
+					PoolId:        clPool.GetId(),
+					TokenOutDenom: "uosmo",
+				},
+				poolmanagertypes.SwapAmountInRoute{
+					PoolId:        clPool2.GetId(),
+					TokenOutDenom: "atom",
+				},
+			},
+			StepSize: sdk.NewInt(1_000_000),
+		}
+
+		curLeft, curRight, err := s.App.ProtoRevKeeper.UpdateSearchRangeIfNeeded(
+			s.Ctx,
+			route,
+			"atom",
+			sdk.OneInt(),
+			types.MaxInputAmount,
+		)
+		s.Require().NoError(err)
+		s.Require().Equal(types.MaxInputAmount, curLeft)
+		s.Require().Equal(types.ExtendedMaxInputAmount, curRight)
+	})
+
+	s.Run("Reduced search on CL pools", func() {
+		stablePool := s.createStableswapPool(
+			sdk.NewCoins(
+				sdk.NewCoin("uosmo", sdk.NewInt(25_000_000_000)),
+				sdk.NewCoin("eth", sdk.NewInt(20_000_000_000)),
+			),
+			stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(0, 2),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			[]uint64{1, 1},
+		)
+
+		// Create two massive CL pools with a massive arb
+		clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "eth", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
+		fundCoins := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10_000_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)))
+		s.FundAcc(s.TestAccs[0], fundCoins)
+		s.CreateFullRangePosition(clPool, fundCoins)
+
+		route := keeper.RouteMetaData{
+			Route: poolmanagertypes.SwapAmountInRoutes{
+				poolmanagertypes.SwapAmountInRoute{
+					PoolId:        stablePool,
+					TokenOutDenom: "eth",
+				},
+				poolmanagertypes.SwapAmountInRoute{
+					PoolId:        clPool.GetId(),
+					TokenOutDenom: "uosmo",
+				},
+			},
+			StepSize: sdk.NewInt(1_000_000),
+		}
+
+		curLeft, curRight, err := s.App.ProtoRevKeeper.UpdateSearchRangeIfNeeded(
+			s.Ctx,
+			route,
+			"uosmo",
+			sdk.OneInt(),
+			types.MaxInputAmount,
+		)
+		s.Require().NoError(err)
+		s.Require().Equal(sdk.OneInt(), curLeft)
+		s.Require().Equal(sdk.NewInt(5141), curRight)
+	})
 }

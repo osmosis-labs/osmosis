@@ -27,7 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 
-	"github.com/osmosis-labs/osmosis/v16/app"
+	"github.com/osmosis-labs/osmosis/v17/app"
 )
 
 const (
@@ -171,6 +171,11 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
 			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+
+			err = writeConfigToFile(filepath.Join(config.RootDir, "config", "client.toml"), nil)
+			if err != nil {
+				return errors.Wrap(err, "Failed to write client.toml file")
+			}
 
 			createEnv, _ := cmd.Flags().GetBool(FlagSetEnv)
 			if createEnv {

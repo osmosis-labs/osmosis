@@ -7,10 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v16/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 )
 
 type MigrationType int
@@ -26,26 +26,30 @@ const (
 // RouteLockedBalancerToConcentratedMigration routes the provided lock to the proper migration function based on the lock status.
 // The testing conditions and scope for the different lock status are as follows:
 // Lock Status = Superfluid delegated
+// - cannot migrate partial shares
 // - Instantly undelegate which will bypass unbonding time.
 // - Create new CL Lock and Re-delegate it as a concentrated liquidity position.
 //
 // Lock Status = Superfluid undelegating
+// - cannot migrate partial shares
 // - Continue undelegating as superfluid unbonding CL Position.
 // - Lock the tokens and create an unlocking syntheticLock (to handle cases of slashing)
 //
 // Lock Status = Locked or unlocking (no superfluid delegation/undelegation)
+// - cannot migrate partial shares
 // - Force unlock tokens from gamm shares.
 // - Create new CL lock and starts unlocking or unlocking where it left off.
 //
 // Lock Status = Unlocked
+// - can migrate partial shares
 // - For ex: LP shares
 // - Create new CL lock and starts unlocking or unlocking where it left off.
 //
 // Errors if the lock is not found, if the lock is not a balancer pool lock, or if the lock is not owned by the sender.
-func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, sender sdk.AccAddress, providedLockId int64, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving, poolIdEntering, concentratedLockId uint64, err error) {
+func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, sender sdk.AccAddress, providedLockId int64, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) (positionData cltypes.CreateFullRangePositionData, migratedPoolIDs types.MigrationPoolIDs, concentratedLockId uint64, err error) {
 	synthLockBeforeMigration, migrationType, err := k.routeMigration(ctx, sender, providedLockId, sharesToMigrate)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, types.MigrationPoolIDs{}, 0, err
 	}
 
 	// As a hack around to get frontend working, we decided to allow negative values for the provided lock ID to indicate that the user wants to migrate shares that are not locked.
@@ -53,19 +57,19 @@ func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, send
 
 	switch migrationType {
 	case SuperfluidBonded:
-		positionId, amount0, amount1, liquidity, concentratedLockId, poolIdLeaving, poolIdEntering, err = k.migrateSuperfluidBondedBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, synthLockBeforeMigration.SynthDenom, tokenOutMins)
+		positionData, concentratedLockId, migratedPoolIDs, err = k.migrateSuperfluidBondedBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, synthLockBeforeMigration.SynthDenom, tokenOutMins)
 	case SuperfluidUnbonding:
-		positionId, amount0, amount1, liquidity, concentratedLockId, poolIdLeaving, poolIdEntering, err = k.migrateSuperfluidUnbondingBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, synthLockBeforeMigration.SynthDenom, tokenOutMins)
+		positionData, concentratedLockId, migratedPoolIDs, err = k.migrateSuperfluidUnbondingBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, synthLockBeforeMigration.SynthDenom, tokenOutMins)
 	case NonSuperfluid:
-		positionId, amount0, amount1, liquidity, concentratedLockId, poolIdLeaving, poolIdEntering, err = k.migrateNonSuperfluidLockBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, tokenOutMins)
+		positionData, concentratedLockId, migratedPoolIDs, err = k.migrateNonSuperfluidLockBalancerToConcentrated(ctx, sender, lockId, sharesToMigrate, tokenOutMins)
 	case Unlocked:
-		positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, err = k.gk.MigrateUnlockedPositionFromBalancerToConcentrated(ctx, sender, sharesToMigrate, tokenOutMins)
+		positionData, migratedPoolIDs, err = k.gk.MigrateUnlockedPositionFromBalancerToConcentrated(ctx, sender, sharesToMigrate, tokenOutMins)
 		concentratedLockId = 0
 	default:
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, fmt.Errorf("unsupported migration type")
+		return cltypes.CreateFullRangePositionData{}, types.MigrationPoolIDs{}, 0, fmt.Errorf("unsupported migration type")
 	}
 
-	return positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, concentratedLockId, err
+	return positionData, migratedPoolIDs, concentratedLockId, err
 }
 
 // migrateSuperfluidBondedBalancerToConcentrated migrates a user's superfluid bonded balancer position to a superfluid bonded concentrated liquidity position.
@@ -78,62 +82,48 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	sharesToMigrate sdk.Coin,
 	synthDenomBeforeMigration string,
 	tokenOutMins sdk.Coins,
-) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, concentratedLockId, poolIdLeaving, poolIdEntering uint64, err error) {
-	poolIdLeaving, poolIdEntering, preMigrationLock, remainingLockTime, err := k.validateMigration(ctx, sender, originalLockId, sharesToMigrate)
+) (cltypes.CreateFullRangePositionData, uint64, types.MigrationPoolIDs, error) {
+	migratedPoolIDs, preMigrationLock, remainingLockTime, err := k.validateMigration(ctx, sender, originalLockId, sharesToMigrate)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
-
-	isPartialMigration := sharesToMigrate.Amount.LT(preMigrationLock.Coins[0].Amount)
 
 	// Get the validator address from the synth denom and ensure it is a valid address.
 	valAddr := strings.Split(synthDenomBeforeMigration, "/")[4]
 	_, err = sdk.ValAddressFromBech32(valAddr)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
 	// Superfluid undelegate the portion of shares the user is migrating from the superfluid delegated position.
 	// If all shares are being migrated, this deletes the connection between the gamm lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
 	intermediateAccount := types.SuperfluidIntermediaryAccount{}
-	var gammLockToMigrate *lockuptypes.PeriodLock
-	if isPartialMigration {
-		// Note that lock's id is different from the originalLockId since it was split.
-		// The original lock id stays in gamm.
-		intermediateAccount, gammLockToMigrate, err = k.partialSuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), originalLockId, sharesToMigrate)
-		if err != nil {
-			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
-		}
-	} else {
-		// Note that lock's id is the same as the originalLockId since all shares are being migrated
-		// and old lock is deleted
-		gammLockToMigrate = preMigrationLock
-		intermediateAccount, err = k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), originalLockId)
-		if err != nil {
-			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
-		}
+
+	intermediateAccount, err = k.SuperfluidUndelegateToConcentratedPosition(ctx, sender.String(), originalLockId)
+	if err != nil {
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
 	// This will return the coins that will be used to create the concentrated liquidity position.
 	// It also returns the lock object that contains the remaining shares that were not used in this migration.
-	exitCoins, err := k.validateSharesToMigrateUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, gammLockToMigrate, sharesToMigrate, tokenOutMins)
+	exitCoins, err := k.validateSharesToMigrateUnlockAndExitBalancerPool(ctx, sender, migratedPoolIDs.LeavingID, preMigrationLock, sharesToMigrate, tokenOutMins)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position, lock it, and superfluid delegate it.
-	positionId, amount0, amount1, liquidity, concentratedLockId, err = k.clk.CreateFullRangePositionLocked(ctx, poolIdEntering, sender, exitCoins, remainingLockTime)
+	positionData, concentratedLockId, err := k.clk.CreateFullRangePositionLocked(ctx, migratedPoolIDs.EnteringID, sender, exitCoins, remainingLockTime)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
 	err = k.SuperfluidDelegate(ctx, sender.String(), concentratedLockId, intermediateAccount.ValAddr)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
-	return positionId, amount0, amount1, liquidity, concentratedLockId, poolIdLeaving, poolIdEntering, nil
+	return positionData, concentratedLockId, migratedPoolIDs, nil
 }
 
 // migrateSuperfluidUnbondingBalancerToConcentrated migrates a user's superfluid unbonding balancer position to a superfluid unbonding concentrated liquidity position.
@@ -147,50 +137,50 @@ func (k Keeper) migrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context
 	sharesToMigrate sdk.Coin,
 	synthDenomBeforeMigration string,
 	tokenOutMins sdk.Coins,
-) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, concentratedLockId, poolIdLeaving, poolIdEntering uint64, err error) {
-	poolIdLeaving, poolIdEntering, preMigrationLock, remainingLockTime, err := k.validateMigration(ctx, sender, lockId, sharesToMigrate)
+) (cltypes.CreateFullRangePositionData, uint64, types.MigrationPoolIDs, error) {
+	migratedPoolIDs, preMigrationLock, remainingLockTime, err := k.validateMigration(ctx, sender, lockId, sharesToMigrate)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
 	// Get the validator address from the synth denom and ensure it is a valid address.
 	valAddr := strings.Split(synthDenomBeforeMigration, "/")[4]
 	_, err = sdk.ValAddressFromBech32(valAddr)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
 	// This will return the coins that will be used to create the concentrated liquidity position.
 	// It also returns the lock object that contains the remaining shares that were not used in this migration.
-	exitCoins, err := k.validateSharesToMigrateUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, preMigrationLock, sharesToMigrate, tokenOutMins)
+	exitCoins, err := k.validateSharesToMigrateUnlockAndExitBalancerPool(ctx, sender, migratedPoolIDs.LeavingID, preMigrationLock, sharesToMigrate, tokenOutMins)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, concentratedLockId, err = k.clk.CreateFullRangePositionUnlocking(ctx, poolIdEntering, sender, exitCoins, remainingLockTime)
+	positionData, concentratedLockId, err := k.clk.CreateFullRangePositionUnlocking(ctx, migratedPoolIDs.EnteringID, sender, exitCoins, remainingLockTime)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
 	// The previous gamm intermediary account is now invalid for the new lock, since the underlying denom has changed and intermediary accounts are
 	// created by validator address, denom, and gauge id.
 	// We must therefore create and set a new intermediary account based on the previous validator but with the new lock's denom.
-	concentratedLockupDenom := cltypes.GetConcentratedLockupDenomFromPoolId(poolIdEntering)
+	concentratedLockupDenom := cltypes.GetConcentratedLockupDenomFromPoolId(migratedPoolIDs.EnteringID)
 	clIntermediateAccount, err := k.GetOrCreateIntermediaryAccount(ctx, concentratedLockupDenom, valAddr)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
 	// Synthetic lock is created to indicate unbonding position. The synthetic lock will be in unbonding period for remainingLockTime.
 	// Create a new synthetic lockup for the new intermediary account in an unlocking status for the remaining duration.
 	err = k.createSyntheticLockupWithDuration(ctx, concentratedLockId, clIntermediateAccount, remainingLockTime, unlockingStatus)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
-	return positionId, amount0, amount1, liquidity, concentratedLockId, poolIdLeaving, poolIdEntering, nil
+	return positionData, concentratedLockId, migratedPoolIDs, nil
 }
 
 // migrateNonSuperfluidLockBalancerToConcentrated migrates a user's non-superfluid locked or unlocking balancer position to an unlocking concentrated liquidity position.
@@ -202,29 +192,29 @@ func (k Keeper) migrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context,
 	lockId uint64,
 	sharesToMigrate sdk.Coin,
 	tokenOutMins sdk.Coins,
-) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, concentratedLockId, poolIdLeaving, poolIdEntering uint64, err error) {
-	poolIdLeaving, poolIdEntering, preMigrationLock, remainingLockTime, err := k.validateMigration(ctx, sender, lockId, sharesToMigrate)
+) (cltypes.CreateFullRangePositionData, uint64, types.MigrationPoolIDs, error) {
+	migratedPoolIDs, preMigrationLock, remainingLockTime, err := k.validateMigration(ctx, sender, lockId, sharesToMigrate)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
 	// This will return the coins that will be used to create the concentrated liquidity position.
 	// It also returns the lock object that contains the remaining shares that were not used in this migration.
-	exitCoins, err := k.validateSharesToMigrateUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, preMigrationLock, sharesToMigrate, tokenOutMins)
+	exitCoins, err := k.validateSharesToMigrateUnlockAndExitBalancerPool(ctx, sender, migratedPoolIDs.LeavingID, preMigrationLock, sharesToMigrate, tokenOutMins)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
 	// Create a new lock that is unlocking for the remaining time of the old lock.
 	// Regardless of the previous lock's status, we create a new lock that is unlocking.
 	// This is because locking without superfluid is pointless in the context of concentrated liquidity.
-	positionId, amount0, amount1, liquidity, concentratedLockId, err = k.clk.CreateFullRangePositionUnlocking(ctx, poolIdEntering, sender, exitCoins, remainingLockTime)
+	positionData, concentratedLockId, err := k.clk.CreateFullRangePositionUnlocking(ctx, migratedPoolIDs.EnteringID, sender, exitCoins, remainingLockTime)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
 
-	return positionId, amount0, amount1, liquidity, concentratedLockId, poolIdLeaving, poolIdEntering, nil
+	return positionData, concentratedLockId, migratedPoolIDs, nil
 }
 
 // routeMigration determines the status of the provided lock which is used to determine the method for migration.
@@ -270,37 +260,40 @@ func (k Keeper) routeMigration(ctx sdk.Context, sender sdk.AccAddress, providedL
 // preMigrationLock: The original lock before migration.
 // remainingLockTime: The remaining time on the lock before it expires.
 // err: An error, if any occurred.
-func (k Keeper) validateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (poolIdLeaving, poolIdEntering uint64, preMigrationLock *lockuptypes.PeriodLock, remainingLockTime time.Duration, err error) {
+func (k Keeper) validateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (types.MigrationPoolIDs, *lockuptypes.PeriodLock, time.Duration, error) {
 	// Defense in depth, ensuring the sharesToMigrate contains gamm pool share prefix.
 	if !strings.HasPrefix(sharesToMigrate.Denom, gammtypes.GAMMTokenPrefix) {
-		return 0, 0, &lockuptypes.PeriodLock{}, 0, types.SharesToMigrateDenomPrefixError{Denom: sharesToMigrate.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
+		return types.MigrationPoolIDs{}, &lockuptypes.PeriodLock{}, 0, types.SharesToMigrateDenomPrefixError{Denom: sharesToMigrate.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
 	}
 
 	// Get the balancer poolId by parsing the gamm share denom.
-	poolIdLeaving, err = gammtypes.GetPoolIdFromShareDenom(sharesToMigrate.Denom)
+	poolIdLeaving, err := gammtypes.GetPoolIdFromShareDenom(sharesToMigrate.Denom)
 	if err != nil {
-		return 0, 0, &lockuptypes.PeriodLock{}, 0, err
+		return types.MigrationPoolIDs{}, &lockuptypes.PeriodLock{}, 0, err
 	}
 
 	// Ensure a governance sanctioned link exists between the balancer pool and a concentrated pool.
-	poolIdEntering, err = k.gk.GetLinkedConcentratedPoolID(ctx, poolIdLeaving)
+	poolIdEntering, err := k.gk.GetLinkedConcentratedPoolID(ctx, poolIdLeaving)
 	if err != nil {
-		return 0, 0, &lockuptypes.PeriodLock{}, 0, err
+		return types.MigrationPoolIDs{}, &lockuptypes.PeriodLock{}, 0, err
 	}
 
 	// Check that lockID corresponds to sender and that the denomination of LP shares corresponds to the poolId.
-	preMigrationLock, err = k.validateGammLockForSuperfluidStaking(ctx, sender, poolIdLeaving, lockId)
+	preMigrationLock, err := k.validateGammLockForSuperfluidStaking(ctx, sender, poolIdLeaving, lockId)
 	if err != nil {
-		return 0, 0, &lockuptypes.PeriodLock{}, 0, err
+		return types.MigrationPoolIDs{}, &lockuptypes.PeriodLock{}, 0, err
 	}
 
 	// Before we break the lock, we must note the time remaining on the lock.
-	remainingLockTime, err = k.getExistingLockRemainingDuration(ctx, preMigrationLock)
+	remainingLockTime, err := k.getExistingLockRemainingDuration(ctx, preMigrationLock)
 	if err != nil {
-		return 0, 0, &lockuptypes.PeriodLock{}, 0, err
+		return types.MigrationPoolIDs{}, &lockuptypes.PeriodLock{}, 0, err
 	}
 
-	return poolIdLeaving, poolIdEntering, preMigrationLock, remainingLockTime, nil
+	return types.MigrationPoolIDs{
+		EnteringID: poolIdEntering,
+		LeavingID:  poolIdLeaving,
+	}, preMigrationLock, remainingLockTime, nil
 }
 
 // validateSharesToMigrateUnlockAndExitBalancerPool validates the unlocking and exiting of gamm LP tokens from the Balancer pool. It performs the following steps:
@@ -326,20 +319,14 @@ func (k Keeper) validateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context
 	}
 
 	// Finish unlocking directly for locked or unlocking locks
-	if sharesToMigrate.Equal(gammSharesInLock) {
-		// If migrating the entire lock, force unlock.
-		// This breaks and deletes associated synthetic locks.
-		err = k.lk.ForceUnlock(ctx, *lock)
-		if err != nil {
-			return sdk.Coins{}, err
-		}
-	} else {
-		// Otherwise, we must split the lock and force unlock the partial shares to migrate.
-		// This breaks and deletes associated synthetic locks.
-		err = k.lk.PartialForceUnlock(ctx, *lock, sdk.NewCoins(sharesToMigrate))
-		if err != nil {
-			return sdk.Coins{}, err
-		}
+	if !sharesToMigrate.Equal(gammSharesInLock) {
+		return sdk.Coins{}, types.MigratePartialSharesError{SharesToMigrate: sharesToMigrate.Amount.String(), SharesInLock: gammSharesInLock.Amount.String()}
+	}
+
+	// Force migrate, which breaks and deletes associated synthetic locks.
+	err = k.lk.ForceUnlock(ctx, *lock)
+	if err != nil {
+		return sdk.Coins{}, err
 	}
 
 	// Exit the balancer pool position.

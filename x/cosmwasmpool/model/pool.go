@@ -5,9 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
 	cosmwasmutils "github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 )
@@ -71,7 +71,7 @@ func (p Pool) IsActive(ctx sdk.Context) bool {
 }
 
 // SpotPrice returns the spot price of the pool.
-func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
+func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (sdk.Dec, error) {
 	request := msg.SpotPriceQueryMsg{
 		SpotPrice: msg.SpotPrice{
 			QuoteAssetDenom: quoteAssetDenom,

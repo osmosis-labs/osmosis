@@ -18,20 +18,20 @@ import (
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v16/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v16/x/protorev/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v16/x/twap/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v16/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v17/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v17/x/twap/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/osmosis-labs/osmosis/v16/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner
@@ -438,10 +438,10 @@ func updatePoolManagerGenesis(appGenState map[string]json.RawMessage) func(*pool
 
 func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {
 	epochGenState.Epochs = []epochtypes.EpochInfo{
-		// override week epochs which are in default integrations, to be 2min
-		epochtypes.NewGenesisEpochInfo("week", time.Second*120),
-		// override day epochs which are in default integrations, to be 1min
-		epochtypes.NewGenesisEpochInfo("day", time.Second*60),
+		// override week epochs which are in default integrations, to be 60 seconds
+		epochtypes.NewGenesisEpochInfo("week", time.Second*60),
+		// override day epochs which are in default integrations, to be 5 seconds
+		epochtypes.NewGenesisEpochInfo("day", time.Second*5),
 	}
 }
 

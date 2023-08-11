@@ -10,13 +10,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
 )
 
 type BenchTestSuite struct {
@@ -26,7 +26,7 @@ type BenchTestSuite struct {
 func (s *BenchTestSuite) createPosition(accountIndex int, poolId uint64, coin0, coin1 sdk.Coin, lowerTick, upperTick int64) {
 	tokensDesired := sdk.NewCoins(coin0, coin1)
 
-	_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[accountIndex], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	_, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[accountIndex], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	if err != nil {
 		// This can happen for ticks that map to the very small prices
 		// e.g 2 * 10^(-18) ends up mapping to the same sqrt price
@@ -113,7 +113,7 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 		tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(100))
 		tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(100))
 		tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
-		_, _, _, _, _, _, err = clKeeper.CreatePosition(s.Ctx, clPoolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
+		_, err = clKeeper.CreatePosition(s.Ctx, clPoolId, s.TestAccs[0], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
 		noError(b, err)
 
 		pool, err := clKeeper.GetPoolById(s.Ctx, clPoolId)

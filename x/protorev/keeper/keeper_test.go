@@ -9,15 +9,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v16/x/protorev"
-	protorevkeeper "github.com/osmosis-labs/osmosis/v16/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v16/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v17/app"
 )
 
 type KeeperTestSuite struct {
@@ -78,13 +78,6 @@ func (s *KeeperTestSuite) SetupTest() {
 		panic(err)
 	}
 
-	poolWeights := types.PoolWeights{
-		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
-		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
-		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
-	}
-	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, poolWeights)
-
 	// Configure the initial base denoms used for cyclic route building
 	baseDenomPriorities := []types.BaseDenom{
 		{
@@ -96,7 +89,7 @@ func (s *KeeperTestSuite) SetupTest() {
 			StepSize: sdk.NewInt(1_000_000),
 		},
 		{
-			Denom:    "test/3",
+			Denom:    "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 			StepSize: sdk.NewInt(1_000_000),
 		},
 	}
@@ -130,7 +123,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("test/1", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("test/2", sdk.NewInt(9000000000000000000)),
-		sdk.NewCoin("test/3", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("usdx", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("usdy", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("epochOne", sdk.NewInt(9000000000000000000)),
@@ -140,6 +133,8 @@ func (s *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("hook", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("eth", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("gamm/pool/1", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin(apptesting.DefaultTransmuterDenomA, sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin(apptesting.DefaultTransmuterDenomB, sdk.NewInt(9000000000000000000)),
 	)
 	s.fundAllAccountsWith()
 	s.Commit()
@@ -755,7 +750,7 @@ func (s *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin("test/3", sdk.NewInt(4478366578)),
+					Token:  sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", sdk.NewInt(4478366578)),
 					Weight: sdk.NewInt(1),
 				},
 			},
@@ -766,7 +761,7 @@ func (s *KeeperTestSuite) setUpPools() {
 		{ // Pool 39
 			PoolAssets: []balancer.PoolAsset{
 				{
-					Token:  sdk.NewCoin("test/3", sdk.NewInt(18631000485558)),
+					Token:  sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", sdk.NewInt(18631000485558)),
 					Weight: sdk.NewInt(1),
 				},
 				{
@@ -886,6 +881,17 @@ func (s *KeeperTestSuite) setUpPools() {
 			},
 			scalingFactors: []uint64{1, 1},
 		},
+		{ // Pool 49 - Used for CL testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)),
+				sdk.NewCoin("epochTwo", sdk.NewInt(8_000_000_000_000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(0, 2),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1},
+		},
 	}
 
 	for _, pool := range s.stableSwapPools {
@@ -893,12 +899,89 @@ func (s *KeeperTestSuite) setUpPools() {
 	}
 
 	// Create a concentrated liquidity pool for epoch_hook testing
-	// Pool 49
+	// Pool 50
 	s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("epochTwo", "uosmo")
+
+	// Create a cosmwasm pool for testing
+	// Pool 51
+	cwPool := s.PrepareCosmWasmPool()
+
+	// Add the new cosmwasm pool to the pool info
+	poolInfo := types.DefaultPoolTypeInfo
+	poolInfo.Cosmwasm.WeightMaps = []types.WeightMap{
+		{
+			ContractAddress: cwPool.GetContractAddress(),
+			Weight:          4,
+		},
+	}
+	s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, poolInfo)
+
+	// Create a concentrated liquidity pool for range testing
+	// Pool 52
+	// Create the CL pool
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "epochTwo", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
+	fundCoins := sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(10_000_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)))
+	s.FundAcc(s.TestAccs[0], fundCoins)
+	s.CreateFullRangePosition(clPool, fundCoins)
+
+	// Create a concentrated liquidity pool for range testing
+	// Pool 53
+	// Create the CL pool
+	clPool = s.PrepareCustomConcentratedPool(s.TestAccs[0], "epochTwo", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
+	fundCoins = sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(2_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)))
+	s.FundAcc(s.TestAccs[0], fundCoins)
+	s.CreateFullRangePosition(clPool, fundCoins)
 
 	// Set all of the pool info into the stores
 	err := s.App.ProtoRevKeeper.UpdatePools(s.Ctx)
 	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) CreateCLPoolAndArbRouteWith_28000_Ticks() {
+	// Create the CL pool
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[2], "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", "uosmo", 100, sdk.NewDecWithPrec(2, 3))
+	fundCoins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000000000000000)), sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", sdk.NewInt(1000000000000000000)))
+	s.FundAcc(s.TestAccs[2], fundCoins)
+
+	// Create 28000 ticks in the CL pool, 14000 on each side
+	tokensProvided := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100000)), sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", sdk.NewInt(100000)))
+	amount0Min := sdk.NewInt(0)
+	amount1Min := sdk.NewInt(0)
+	lowerTick := int64(0)
+	upperTick := int64(100)
+
+	for i := int64(0); i < 14000; i++ {
+		s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick-(100*i), upperTick-(100*i))
+		s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick+(100*i), upperTick+(100*i))
+	}
+
+	// Set 2-pool hot route between new CL pool and respective Balancer
+	s.App.ProtoRevKeeper.SetTokenPairArbRoutes(
+		s.Ctx,
+		"uosmo",
+		"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
+		types.NewTokenPairArbRoutes(
+			[]types.Route{
+				{
+					Trades: []types.Trade{
+						{
+							Pool:     38,
+							TokenIn:  "uosmo",
+							TokenOut: "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
+						},
+						{
+							Pool:     0,
+							TokenIn:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
+							TokenOut: "uosmo",
+						},
+					},
+					StepSize: sdk.NewInt(100000),
+				},
+			},
+			"uosmo",
+			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
+		),
+	)
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
@@ -965,8 +1048,8 @@ func (s *KeeperTestSuite) setUpTokenPairRoutes() {
 	fourPool3 := types.NewTrade(0, "test/2", "Atom")
 
 	// Two-Pool Route
-	twoPool0 := types.NewTrade(0, "test/3", types.OsmosisDenomination)
-	twoPool1 := types.NewTrade(39, types.OsmosisDenomination, "test/3")
+	twoPool0 := types.NewTrade(0, "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", types.OsmosisDenomination)
+	twoPool1 := types.NewTrade(39, types.OsmosisDenomination, "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7")
 
 	// Doomsday Route - Stableswap
 	doomsdayStable0 := types.NewTrade(29, types.OsmosisDenomination, "usdc")
@@ -1018,7 +1101,7 @@ func (s *KeeperTestSuite) setUpTokenPairRoutes() {
 		},
 		{
 			TokenIn:  types.OsmosisDenomination,
-			TokenOut: "test/3",
+			TokenOut: "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
 			ArbRoutes: []types.Route{
 				{
 					StepSize: standardStepSize,
