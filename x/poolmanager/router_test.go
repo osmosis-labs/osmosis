@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v16/tests/mocks"
@@ -19,6 +18,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
 	"github.com/osmosis-labs/osmosis/v16/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
 )
 
@@ -1540,6 +1541,453 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 				s.Require().NoError(err)
 				s.Require().Equal(tc.expectedTokenOutAmount.String(), multihopTokenOutAmount.String())
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
+	poolId := uint64(1)
+	maxPriceImpact := sdk.MustNewDecFromStr("0.01")        // 1%
+	maxPriceImpactHalved := sdk.MustNewDecFromStr("0.005") // 0.5%
+	maxPriceImpactTiny := sdk.MustNewDecFromStr("0.0005")  // 0.05%
+
+	twapPriceOneBalancer := sdk.MustNewDecFromStr("1.5")           // Same as spot price
+	twapPriceTwoBalancer := sdk.MustNewDecFromStr("1.4")           // Cheaper than spot price
+	twapPriceThreeBalancer := sdk.MustNewDecFromStr("1.492537313") // Transform adjusted max price impact by 50%
+
+	twapPriceOneStableSwap := sdk.MustNewDecFromStr("0.999999980000000000")   // Same as spot price
+	twapPriceTwoStableSwap := sdk.MustNewDecFromStr("0.99")                   // Cheaper than spot price
+	twapPriceThreeStableSwap := sdk.MustNewDecFromStr("0.990589380881624567") // Transform adjusted max price impact by a %
+
+	twapPriceOneConcentrated := sdk.MustNewDecFromStr("5000.000000000000000129") // Same as spot price
+	twapPriceOneConcentratedInv := sdk.MustNewDecFromStr("0.0002")               // Inverse of twapOne
+	twapPriceTwoConcentrated := sdk.MustNewDecFromStr("4950")                    // Cheaper than spot price
+	twapPriceThreeConcentrated := sdk.MustNewDecFromStr("4952.947003467")
+
+	assetBaz := "baz"
+	assetBar := "bar"
+	assetUsdc := "usdc"
+	assetEth := "eth"
+
+	clCoinsLiquid := sdk.NewCoins(
+		sdk.NewCoin("eth", sdk.NewInt(1000000)),
+		sdk.NewCoin("usdc", sdk.NewInt(5000000000)),
+	)
+	clCoinsNotLiquid := sdk.NewCoins(
+		sdk.NewCoin("eth", sdk.NewInt(1)),
+		sdk.NewCoin("usdc", sdk.NewInt(1)),
+	)
+
+	tests := map[string]struct {
+		poolId               uint64
+		preCreatePoolType    types.PoolType
+		setPositionForCLPool bool
+		setClTokens          sdk.Coins
+		req                  queryproto.EstimateTradeBasedOnPriceImpactRequest
+		expectedInputCoin    sdk.Coin
+		expectedOutputCoin   sdk.Coin
+		expectError          string
+	}{
+		"valid balancer pool - first estimate works": {
+			preCreatePoolType: types.Balancer,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceOneBalancer,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(30_000)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(44_664)),
+		},
+		"valid balancer pool - multiple estimates work as first exceeds price impact": {
+			preCreatePoolType: types.Balancer,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(1_000_000)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceOneBalancer,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(40_338)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(59_902)),
+		},
+		"valid balancer pool - estimate trying to trade dust": {
+			preCreatePoolType: types.Balancer,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(20)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceOneBalancer,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(20)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(0)),
+		},
+		"valid balancer pool - twap value much greater than spot price do not trade": {
+			preCreatePoolType: types.Balancer,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceTwoBalancer,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(0)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(0)),
+		},
+		"valid balancer pool - adjusted price impact halved": {
+			preCreatePoolType: types.Balancer,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpactHalved,
+				TwapPrice:      twapPriceOneBalancer,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(20_067)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(29_950)),
+		},
+		"valid balancer pool - twap price halfs adjusted price impact": {
+			preCreatePoolType: types.Balancer,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceThreeBalancer,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(20_067)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(29_950)),
+		},
+		"valid balancer pool - adjusted price impact halved - twap not given": {
+			preCreatePoolType: types.Balancer,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpactHalved,
+				TwapPrice:      sdk.ZeroDec(),
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(20_067)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(29_950)),
+		},
+		"valid stableswap pool - first estimate works": {
+			preCreatePoolType: types.Stableswap,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceOneStableSwap,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(30_000)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(29_982)),
+		},
+		"valid stableswap pool - multiple estimates work as first exceeds price impact": {
+			preCreatePoolType: types.Stableswap,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(1_000_000)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceOneStableSwap,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(502_643)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(497_617)),
+		},
+		"valid stableswap pool - estimate trying to trade dust": {
+			preCreatePoolType: types.Stableswap,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(20)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceOneStableSwap,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(20)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(0)),
+		},
+		"valid stableswap pool - twap value much greater than spot price do not trade": {
+			preCreatePoolType: types.Stableswap,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceTwoStableSwap,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(0)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(0)),
+		},
+		"valid stableswap pool - adjusted price impact tiny": {
+			preCreatePoolType: types.Stableswap,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpactTiny,
+				TwapPrice:      twapPriceOneStableSwap,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(24_500)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(24_488)),
+		},
+		"valid stableswap pool - twap price changes adjusted price impact": {
+			preCreatePoolType: types.Stableswap,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceThreeStableSwap,
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(24_500)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(24_488)),
+		},
+		"valid stableswap pool - adjusted price impact tiny - twap not given": {
+			preCreatePoolType: types.Stableswap,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetBaz, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetBar,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpactTiny,
+				TwapPrice:      sdk.ZeroDec(),
+			},
+			expectedInputCoin:  sdk.NewCoin(assetBaz, sdk.NewInt(24_500)),
+			expectedOutputCoin: sdk.NewCoin(assetBar, sdk.NewInt(24_488)),
+		},
+		"valid concentrated pool - first estimate works": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetEth, sdk.NewInt(10)),
+				ToCoinDenom:    assetUsdc,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceOneConcentrated,
+			},
+			setPositionForCLPool: true,
+			setClTokens:          clCoinsLiquid,
+			expectedInputCoin:    sdk.NewCoin(assetEth, sdk.NewInt(10)),
+			expectedOutputCoin:   sdk.NewCoin(assetUsdc, sdk.NewInt(49_999)),
+		},
+		"valid concentrated pool - multiple estimates work as first exceeds price impact": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetEth, sdk.NewInt(1_000_000)),
+				ToCoinDenom:    assetUsdc,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceOneConcentrated,
+			},
+			setPositionForCLPool: true,
+			setClTokens:          clCoinsLiquid,
+			expectedInputCoin:    sdk.NewCoin(assetEth, sdk.NewInt(216_829)),
+			expectedOutputCoin:   sdk.NewCoin(assetUsdc, sdk.NewInt(1_073_303_563)),
+		},
+		"valid concentrated pool - estimate trying to trade dust": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetUsdc, sdk.NewInt(1)),
+				ToCoinDenom:    assetEth,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceOneConcentratedInv,
+			},
+			setPositionForCLPool: true,
+			setClTokens:          clCoinsLiquid,
+			expectedInputCoin:    sdk.NewCoin(assetUsdc, sdk.NewInt(1)),
+			expectedOutputCoin:   sdk.NewCoin(assetEth, sdk.NewInt(0)),
+		},
+		"valid concentrated pool - twap value much greater than spot price do not trade": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetEth, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetUsdc,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceTwoConcentrated,
+			},
+			setPositionForCLPool: true,
+			setClTokens:          clCoinsLiquid,
+			expectedInputCoin:    sdk.NewCoin(assetEth, sdk.NewInt(0)),
+			expectedOutputCoin:   sdk.NewCoin(assetUsdc, sdk.NewInt(0)),
+		},
+		"valid concentrated pool - adjusted price impact halved": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetEth, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetUsdc,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpactTiny,
+				TwapPrice:      twapPriceOneConcentrated,
+			},
+			setPositionForCLPool: true,
+			setClTokens:          clCoinsLiquid,
+			expectedInputCoin:    sdk.NewCoin(assetEth, sdk.NewInt(10_738)),
+			expectedOutputCoin:   sdk.NewCoin(assetUsdc, sdk.NewInt(53_663_156)),
+		},
+		"valid concentrated pool - twap price halfs adjusted price impact": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetEth, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetUsdc,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceThreeConcentrated,
+			},
+			setPositionForCLPool: true,
+			setClTokens:          clCoinsLiquid,
+			expectedInputCoin:    sdk.NewCoin(assetEth, sdk.NewInt(10_738)),
+			expectedOutputCoin:   sdk.NewCoin(assetUsdc, sdk.NewInt(53_663_156)),
+		},
+		"valid concentrated pool - adjusted price impact halved - twap not given": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetEth, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetUsdc,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpactTiny,
+				TwapPrice:      sdk.ZeroDec(),
+			},
+			setPositionForCLPool: true,
+			setClTokens:          clCoinsLiquid,
+			expectedInputCoin:    sdk.NewCoin(assetEth, sdk.NewInt(10_738)),
+			expectedOutputCoin:   sdk.NewCoin(assetUsdc, sdk.NewInt(53_663_156)),
+		},
+		"valid concentrated pool - errors liquidity too low": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            poolId,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetEth, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetUsdc,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceThreeConcentrated,
+			},
+			setPositionForCLPool: true,
+			setClTokens:          clCoinsNotLiquid,
+			expectError:          "ran out of ticks for pool (1) during swap",
+		},
+		"Invalid Pool ID": {
+			preCreatePoolType: types.Balancer,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				PoolId: 0,
+			},
+			expectError: "Invalid Pool Id",
+		},
+		"Pool Does not exist": {
+			preCreatePoolType: types.Balancer,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				PoolId:      2,
+				FromCoin:    sdk.NewCoin(assetEth, sdk.NewInt(30_000)),
+				ToCoinDenom: assetUsdc,
+			},
+			expectError: "failed to find route for pool id (2)",
+		},
+		"Invalid From Coin Denom": {
+			preCreatePoolType: types.Balancer,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				PoolId: 1,
+			},
+			expectError: "invalid from coin denom",
+		},
+		"Invalid To Coin Denom": {
+			preCreatePoolType: types.Balancer,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				PoolId:   1,
+				FromCoin: sdk.NewCoin(assetBaz, sdk.NewInt(100)),
+			},
+			expectError: "invalid to coin denom",
+		},
+		"valid concentrated liquidity pool without position": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            1,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin:       sdk.NewCoin(assetEth, sdk.NewInt(30_000)),
+				ToCoinDenom:    assetUsdc,
+				PoolId:         poolId,
+				MaxPriceImpact: maxPriceImpact,
+				TwapPrice:      twapPriceThreeConcentrated,
+			},
+			expectError: "error getting spot price for pool (1), no liquidity in pool",
+		},
+		"from coin token does not exist": {
+			preCreatePoolType: types.Balancer,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				PoolId:      1,
+				FromCoin:    sdk.NewCoin("random", sdk.NewInt(30_000)),
+				ToCoinDenom: assetBar,
+			},
+			expectError: "(random) does not exist in the pool",
+		},
+		"to coin token does not exist": {
+			preCreatePoolType: types.Balancer,
+			req: queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				PoolId:      1,
+				FromCoin:    sdk.NewCoin(assetBaz, sdk.NewInt(30_000)),
+				ToCoinDenom: "random",
+			},
+			expectError: "(random) does not exist in the pool",
+		},
+	}
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+			poolmanagerKeeper := s.App.PoolManagerKeeper
+			poolmanagerQuerier := client.NewQuerier(*poolmanagerKeeper)
+
+			s.CreatePoolFromType(tc.preCreatePoolType)
+
+			// we manually set position for CL to set spot price to correct value
+			if tc.setPositionForCLPool {
+
+				s.FundAcc(s.TestAccs[0], tc.setClTokens)
+
+				clMsgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
+				_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(s.Ctx), &cltypes.MsgCreatePosition{
+					PoolId:          1,
+					Sender:          s.TestAccs[0].String(),
+					LowerTick:       int64(30545000),
+					UpperTick:       int64(31500000),
+					TokensProvided:  tc.setClTokens,
+					TokenMinAmount0: sdk.ZeroInt(),
+					TokenMinAmount1: sdk.ZeroInt(),
+				})
+				s.Require().NoError(err)
+			}
+
+			resp, err := poolmanagerQuerier.EstimateTradeBasedOnPriceImpact(s.Ctx, tc.req)
+			if len(tc.expectError) > 0 {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectError)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedInputCoin, resp.InputCoin)
+			s.Require().Equal(tc.expectedOutputCoin, resp.OutputCoin)
 		})
 	}
 }

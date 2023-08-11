@@ -218,7 +218,7 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	spotPrice, err := swapModule.CalculateSpotPrice(ctx, req.PoolId, req.FromCoin.Denom, req.ToCoinDenom)
+	spotPrice, err := swapModule.CalculateSpotPrice(ctx, req.PoolId, req.ToCoinDenom, req.FromCoin.Denom)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -229,9 +229,9 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		priceDeviation := spotPrice.Sub(req.TwapPrice).Quo(req.TwapPrice)
 		adjustedMaxPriceImpact = adjustedMaxPriceImpact.Sub(priceDeviation)
 
-		// If price deviation is greater than the adjustedMaxPriceImpact it means spot is greater than twap
-		// therefore return 0 input and 0 output.
-		if priceDeviation.GT(adjustedMaxPriceImpact) {
+		// If the adjusted max price impact is negative or zero it means the difference between spot price and
+		// twap already exceeds the max price impact.
+		if adjustedMaxPriceImpact.IsZero() || adjustedMaxPriceImpact.IsNegative() {
 			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
 				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.NewInt(0)),
 				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.NewInt(0)),
@@ -239,22 +239,14 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		}
 	}
 
-	// First, try the full 'from coin' amount without a swap fee.
+	// First, try the full 'from coin' amount without a swap fee, if it errors it means there
+	// is very low liquidity for the trade we are attempting.
 	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, sdk.ZeroDec())
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	// If the calculated amount of tokenOut is 0 it means that input value of fromCoin was too low.
-	if tokenOut.IsZero() {
-		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-			InputCoin:  req.FromCoin,
-			OutputCoin: tokenOut,
-		}, nil
-	}
-
-	// currTradePrice := sdk.NewDec(tokenOut.Amount.Int64()).QuoInt(req.FromCoin.Amount)
-	currTradePrice := sdk.NewDec(req.FromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
+	currTradePrice := sdk.NewDec(tokenOut.Amount.Int64()).QuoInt(req.FromCoin.Amount)
 	priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
 
 	if priceDeviation.LTE(adjustedMaxPriceImpact) {
@@ -284,22 +276,18 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		// Update currFromCoin
 		currFromCoin := sdk.NewCoin(req.FromCoin.Denom, midAmount)
 
+		// If we error in the input it means we've gotten too low and are trading dust.
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(
-			ctx, poolI, currFromCoin, req.ToCoinDenom, sdk.ZeroDec())
+			ctx, poolI, currFromCoin, req.ToCoinDenom, sdk.ZeroDec(),
+		)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-
-		// If the calculated amount of tokenOut is 0 it means that input value of fromCoin was too low.
-		if tokenOut.IsZero() {
 			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
 				InputCoin:  req.FromCoin,
-				OutputCoin: tokenOut,
+				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
 			}, nil
 		}
 
-		// currTradePrice := sdk.NewDec(tokenOut.Amount.Int64()).QuoInt(currFromCoin.Amount)
-		currTradePrice := sdk.NewDec(req.FromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
+		currTradePrice := sdk.NewDec(tokenOut.Amount.Int64()).QuoInt(currFromCoin.Amount)
 		priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
 
 		// Check priceDeviation against adjustedMaxPriceImpact
@@ -308,6 +296,15 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		} else {
 			highAmount = midAmount.Sub(sdk.NewInt(1))
 		}
+	}
+
+	// If the calculated amount of highAmount is 0 it means that input value of fromCoin was too low,
+	// and we are trying to estimate dust.
+	if highAmount.IsZero() {
+		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+			InputCoin:  req.FromCoin,
+			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+		}, nil
 	}
 
 	// If lowAmount exceeds highAmount, then binary search ends and the last successful trade amount is `highAmount`
