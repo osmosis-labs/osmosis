@@ -157,8 +157,7 @@ func (k Keeper) CalculateSpotPrice(
 		return sdk.Dec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
 	}
 
-	// Inverse quoteAssetDenom and baseAssetDenom due to old Bug.
-	price, err := concentratedPool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
+	price, err := concentratedPool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}

@@ -79,10 +79,6 @@ var (
 		spreadFactor: DefaultSpreadFactor,
 		tickSpacing:  uint64(1),
 
-		// Pool params
-		spreadFactor: DefaultSpreadFactor,
-		tickSpacing:  uint64(1),
-
 		// Fuzz params
 		fuzzNumPositions:     true,
 		fuzzAssets:           true,

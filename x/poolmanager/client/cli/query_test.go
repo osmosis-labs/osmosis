@@ -6,6 +6,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
