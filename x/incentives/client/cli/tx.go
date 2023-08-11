@@ -88,8 +88,8 @@ func NewCreateGaugeCmd() *cobra.Command {
 			}
 
 			var distributeTo lockuptypes.QueryCondition
-			// if poolId is 0 it is a guranteed lock gauge
-			// if poolId is > 0 it is a guranteed no-lock gauge
+			// if poolId is 0 it is a guaranteed lock gauge
+			// if poolId is > 0 it is a guaranteed no-lock gauge
 			if poolId == 0 {
 				distributeTo = lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.ByDuration,
