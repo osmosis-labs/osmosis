@@ -614,8 +614,6 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 // - Else: error
 func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, valAddr string,
 	minAmtToStake sdk.Int, sharesToConvert sdk.Coin) (totalAmtConverted sdk.Int, err error) {
-	ctx.Logger().Error(sharesToConvert.String())
-	ctx.Logger().Error(minAmtToStake.String())
 	senderAddr, err := sdk.AccAddressFromBech32(sender)
 	if err != nil {
 		return sdk.Int{}, err
