@@ -87,7 +87,7 @@ func RandomExitPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*balancertypes.MsgCreateBalancerPool, error) {
 	var poolAssets []balancertypes.PoolAsset
 	// find an address with two or more distinct denoms in their wallet
-	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
+	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(sim, ctx))
 	if !senderExists {
 		return nil, errors.New("no sender with two different denoms & pool creation fee exists")
 	}
@@ -405,7 +405,7 @@ func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.CFM
 	return minShareOutAmt, nil
 }
 
-func createPoolRestriction(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) simtypes.SimAccountConstraint {
+func createPoolRestriction(sim *simtypes.SimCtx, ctx sdk.Context) simtypes.SimAccountConstraint {
 	return func(acc legacysimulationtype.Account) bool {
 		accCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
 		hasTwoCoins := len(accCoins) >= 2
