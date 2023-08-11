@@ -328,6 +328,7 @@ replace (
 
 	// N.B. v0.19.5 contains a breaking change to the IAVL API
 	github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.4
+	github.com/cosmos/ibc-go/v4 => github.com/nicolaslara/ibc-go/v4 v4.20.22
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 

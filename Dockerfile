@@ -18,6 +18,8 @@ RUN apk add --no-cache \
     linux-headers
 
 # Download go dependencies
+//COPY ibc-go /ibc-go
+//COPY ibc-apps /ibc-apps
 WORKDIR /osmosis
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/root/.cache/go-build \

@@ -262,8 +262,6 @@ github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-202308
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20230810172507-8794d6bcce0d/go.mod h1:Mn/jr9pIYr1ofFuptLEi9N6MjcshTT0cpoOY4ln1DeA=
 github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.0.0-20230803151532-5c60ac789ef7 h1:q6OzbGXmWRbMedDejhuctDbb3M6fWyJg3DY3bzJbYVs=
 github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.0.0-20230803151532-5c60ac789ef7/go.mod h1:X/dLZ6QxTImzno7qvD6huLhh6ZZBcRt2URn4YCLcXFY=
-github.com/cosmos/ibc-go/v4 v4.3.1 h1:xbg0CaCdxK3lvgGvSaI91ROOLd7s30UqEcexH6Ba4Ys=
-github.com/cosmos/ibc-go/v4 v4.3.1/go.mod h1:89E+K9CxpkS/etLEcG026jPM/RSnVMcfesvRYp/0aKI=
 github.com/cosmos/interchain-accounts v0.2.6 h1:TV2M2g1/Rb9MCNw1YePdBKE0rcEczNj1RGHT+2iRYas=
 github.com/cosmos/ledger-cosmos-go v0.12.2 h1:/XYaBlE2BJxtvpkHiBm97gFGSGmYGKunKyF3nNqAXZA=
 github.com/cosmos/ledger-cosmos-go v0.12.2/go.mod h1:ZcqYgnfNJ6lAXe4HPtWgarNEY+B74i+2/8MhZw4ziiI=
@@ -898,6 +896,8 @@ github.com/nats-io/nuid v1.0.1/go.mod h1:19wcPz3Ph3q0Jbyiqsd0kePYG7A95tJPxeL+1OS
 github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354 h1:4kuARK6Y6FxaNu/BnU2OAaLF86eTVhP2hjTB6iMvItA=
 github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354/go.mod h1:KSVJerMDfblTH7p5MZaTt+8zaT2iEk3AkVb9PQdZuE8=
 github.com/neilotoole/errgroup v0.1.6/go.mod h1:Q2nLGf+594h0CLBs/Mbg6qOr7GtqDK7C2S41udRnToE=
+github.com/nicolaslara/ibc-go/v4 v4.20.22 h1:yiusuven+XMfbSM7xUuucaJUcW185xNP7zoWF2pMV8o=
+github.com/nicolaslara/ibc-go/v4 v4.20.22/go.mod h1:57qWScDtfCx3FOMLYmBIKPbOLE6xiVhrgxHAQmbWYXM=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/nishanths/exhaustive v0.9.5 h1:TzssWan6orBiLYVqewCG8faud9qlFntJE30ACpzmGME=
 github.com/nishanths/exhaustive v0.9.5/go.mod h1:IbwrGdVMizvDcIxPYGVdQn5BqWJaOwpCvg4RGb8r/TA=
