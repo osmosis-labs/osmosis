@@ -23,6 +23,8 @@ type AccountI interface {
 type BankI interface {
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
+	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
 
 // CommunityPoolI defines the contract needed to be fulfilled for distribution keeper.

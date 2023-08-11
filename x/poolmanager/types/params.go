@@ -11,7 +11,10 @@ import (
 
 // Parameter store keys.
 var (
-	KeyPoolCreationFee = []byte("PoolCreationFee")
+	KeyPoolCreationFee     = []byte("PoolCreationFee")
+	KeyDefaultTakerFee     = []byte("DefaultTakerFee")
+	KeyStableswapTakerFee  = []byte("StableswapTakerFee")
+	KeyTradingPairTakerFee = []byte("TradingPairTakerFee")
 )
 
 // ParamTable for gamm module.
@@ -19,16 +22,22 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(poolCreationFee sdk.Coins) Params {
+func NewParams(poolCreationFee sdk.Coins, defaultTakerFee, stableswapTakerFee sdk.Dec, customPoolTakerFee []CustomPoolTakerFee) Params {
 	return Params{
-		PoolCreationFee: poolCreationFee,
+		PoolCreationFee:    poolCreationFee,
+		DefaultTakerFee:    defaultTakerFee,
+		StableswapTakerFee: stableswapTakerFee,
+		CustomPoolTakerFee: customPoolTakerFee,
 	}
 }
 
 // DefaultParams are the default poolmanager module parameters.
 func DefaultParams() Params {
 	return Params{
-		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
+		PoolCreationFee:    sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
+		DefaultTakerFee:    sdk.MustNewDecFromStr("0.0015"),                                   // 0.15%
+		StableswapTakerFee: sdk.MustNewDecFromStr("0.0002"),                                   // 0.02%
+		CustomPoolTakerFee: []CustomPoolTakerFee{},
 	}
 }
 

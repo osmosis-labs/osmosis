@@ -17,6 +17,20 @@ message Params {
     (gogoproto.moretags) = "yaml:\"pool_creation_fee\"",
     (gogoproto.nullable) = false
   ];
+  string default_taker_fee = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customname) = "DefaultTakerFee",
+    (gogoproto.nullable) = false
+  ];
+  string stableswap_taker_fee = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customname) = "StableswapTakerFee",
+    (gogoproto.nullable) = false
+  ];
+  repeated CustomPoolTakerFee trading_pair_taker_fee = 4 [
+    (gogoproto.customname) = "CustomPoolTakerFee",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // GenesisState defines the poolmanager module's genesis state.
@@ -27,4 +41,14 @@ message GenesisState {
   Params params = 2 [ (gogoproto.nullable) = false ];
   // pool_routes is the container of the mappings from pool id to pool type.
   repeated ModuleRoute pool_routes = 3 [ (gogoproto.nullable) = false ];
+}
+
+// CustomPoolTakerFee defines a custom taker fee for a specific pool.
+message CustomPoolTakerFee {
+  uint64 pool_id = 1 [ (gogoproto.customname) = "PoolId" ];
+  string taker_fee = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"taker_fee\"",
+    (gogoproto.nullable) = false
+  ];
 }

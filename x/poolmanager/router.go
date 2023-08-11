@@ -9,7 +9,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
 )
 
 // 1 << 256 - 1 where 256 is the max bit length defined for sdk.Int
@@ -38,24 +40,6 @@ func (k Keeper) RouteExactAmountIn(
 	routeStep := types.SwapAmountInRoutes(route)
 	if err := routeStep.Validate(); err != nil {
 		return sdk.Int{}, err
-	}
-
-	// In this loop (isOsmoRoutedMultihop), we check if:
-	// - the routeStep is of length 2
-	// - routeStep 1 and routeStep 2 don't trade via the same pool
-	// - routeStep 1 contains uosmo
-	// - both routeStep 1 and routeStep 2 are incentivized pools
-	//
-	// If all of the above is true, then we collect the additive and max fee between the
-	// two pools to later calculate the following:
-	// total_spread_factor = max(spread_factor1, spread_factor2)
-	// fee_per_pool = total_spread_factor * ((pool_fee) / (spread_factor1 + spread_factor2))
-	if k.isOsmoRoutedMultihop(ctx, routeStep, route[0].TokenOutDenom, tokenIn.Denom) {
-		isMultiHopRouted = true
-		routeSpreadFactor, sumOfSpreadFactors, err = k.getOsmoRoutedMultihopTotalSpreadFactor(ctx, routeStep)
-		if err != nil {
-			return sdk.Int{}, err
-		}
 	}
 
 	// Iterate through the route and execute a series of swaps through each pool.
@@ -92,7 +76,15 @@ func (k Keeper) RouteExactAmountIn(
 			spreadFactor = routeSpreadFactor.MulRoundUp((spreadFactor.QuoRoundUp(sumOfSpreadFactors)))
 		}
 
-		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, routeStep.TokenOutDenom, _outMinAmount, spreadFactor)
+		takerFee := k.determineTakerFee(ctx, pool)
+		totalFees := spreadFactor.Add(takerFee)
+
+		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, routeStep.TokenOutDenom, _outMinAmount, totalFees)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+
+		err = k.extractTakerFeeToFeePool(ctx, pool, tokenIn)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -204,9 +196,16 @@ func (k Keeper) SwapExactAmountIn(
 	}
 
 	spreadFactor := pool.GetSpreadFactor(ctx)
+	takerFee := k.determineTakerFee(ctx, pool)
+	totalFees := spreadFactor.Add(takerFee)
 
 	// routeStep to the pool-specific SwapExactAmountIn implementation.
-	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, spreadFactor)
+	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, totalFees)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	err = k.extractTakerFeeToFeePool(ctx, pool, tokenIn)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -259,6 +258,8 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 
 		spreadFactor := poolI.GetSpreadFactor(ctx)
+		takerFee := k.determineTakerFee(ctx, poolI)
+		totalFees := spreadFactor.Add(takerFee)
 
 		// If we determined the routeStep is an osmo multi-hop and both route are incentivized,
 		// we modify the swap fee accordingly.
@@ -266,7 +267,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
 		}
 
-		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenIn, routeStep.TokenOutDenom, spreadFactor)
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenIn, routeStep.TokenOutDenom, totalFees)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -377,9 +378,18 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
 		}
 
-		_tokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, routeStep.TokenInDenom, insExpected[i], _tokenOut, spreadFactor)
+		takerFee := k.determineTakerFee(ctx, pool)
+		totalFees := spreadFactor.Add(takerFee)
+
+		_tokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, routeStep.TokenInDenom, insExpected[i], _tokenOut, totalFees)
 		if swapErr != nil {
 			return sdk.Int{}, swapErr
+		}
+
+		tokenIn := sdk.NewCoin(routeStep.TokenInDenom, _tokenInAmount)
+		err = k.extractTakerFeeToFeePool(ctx, pool, tokenIn)
+		if err != nil {
+			return sdk.Int{}, err
 		}
 
 		// Sets the final amount of tokens that need to be input into the first pool. Even though this is the final return value for the
@@ -740,4 +750,38 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	}
 	totalLiquidity := totalGammLiquidity.Add(totalConcentratedLiquidity...).Add(totalCosmwasmLiquidity...)
 	return totalLiquidity, nil
+}
+
+// determineTakerFee takes in a pool and determines the taker fee based on the pool type.
+// If the pool is a stableswap pool, the stableswap taker fee is returned.
+// If the poolId exists in the custom pool taker fee list, the custom taker fee is returned.
+func (k Keeper) determineTakerFee(ctx sdk.Context, pool types.PoolI) sdk.Dec {
+	poolManagerParams := k.GetParams(ctx)
+	poolId := pool.GetId()
+	if pool.GetType() == types.Stableswap {
+		return poolManagerParams.StableswapTakerFee
+	}
+	for _, tradingPair := range poolManagerParams.CustomPoolTakerFee {
+		if poolId == tradingPair.PoolId {
+			return tradingPair.TakerFee
+		}
+	}
+	return poolManagerParams.DefaultTakerFee
+}
+
+func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, pool types.PoolI, tokenIn sdk.Coin) error {
+	relevantPoolAddress := sdk.AccAddress{}
+	feeCollectorName := txfeestypes.FeeCollectorName
+	if pool.GetType() == types.Concentrated {
+		concentratedTypePool, ok := pool.(cltypes.ConcentratedPoolExtension)
+		if !ok {
+			return fmt.Errorf("pool %d is not a concentrated pool", pool.GetId())
+		}
+		relevantPoolAddress = concentratedTypePool.GetSpreadRewardsAddress()
+	} else {
+		relevantPoolAddress = pool.GetAddress()
+	}
+	testCoin := sdk.Coins{}
+	k.bankKeeper.SendCoinsFromAccountToModule(ctx, relevantPoolAddress, feeCollectorName, testCoin)
+	return nil
 }
