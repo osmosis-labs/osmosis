@@ -1038,6 +1038,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 		superfluidUndelegating bool
 		unlocking              bool
 		unlocked               bool
+		testCLLock             bool
 		expectedError          error
 	}
 	testCases := map[string]tc{
@@ -1056,16 +1057,40 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			notSuperfluidDelegated: true,
 			unlocked:               true,
 		},
+		"error: concentrated lock should fail": {
+			testCLLock: true,
+			expectedError: types.SharesToMigrateDenomPrefixError{
+				Denom:               "cl/pool/2",
+				ExpectedDenomPrefix: "gamm/pool/",
+			},
+		},
 	}
 
 	for name, tc := range testCases {
 		s.Run(name, func() {
 			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
-			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
-			_, _, lock, _, joinPoolAcc, _, balancerShareOut, originalValAddr := s.SetupUnbondConvertAndStakeTest(s.Ctx, !tc.notSuperfluidDelegated, tc.superfluidUndelegating, tc.unlocking, tc.unlocked)
 
-			// testing params
+			var (
+				lock             *lockuptypes.PeriodLock
+				lockId           uint64
+				joinPoolAcc      sdk.AccAddress
+				originalValAddr  sdk.ValAddress
+				balancerShareOut sdk.Coin
+			)
+			// we use migration setup for testing with cl lock
+			if tc.testCLLock {
+				_, _, lock, _, joinPoolAcc, _, _, balancerShareOut, originalValAddr = s.SetupMigrationTest(s.Ctx, !tc.notSuperfluidDelegated, tc.superfluidUndelegating, tc.unlocking, tc.unlocked, sdk.MustNewDecFromStr("1"))
+				synthLockBeforeMigration, _, err := s.App.SuperfluidKeeper.GetMigrationType(s.Ctx, joinPoolAcc, int64(lock.ID))
+				s.Require().NoError(err)
+				_, lockId, _, _, err = s.App.SuperfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(s.Ctx, joinPoolAcc, lock.ID, lock.Coins[0], synthLockBeforeMigration.SynthDenom, sdk.NewCoins())
+				s.Require().NoError(err)
+			} else {
+				// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
+				_, _, lock, _, joinPoolAcc, _, balancerShareOut, originalValAddr = s.SetupUnbondConvertAndStakeTest(s.Ctx, !tc.notSuperfluidDelegated, tc.superfluidUndelegating, tc.unlocking, tc.unlocked)
+				lockId = lock.ID
+			}
+
 			sender := sdk.MustAccAddressFromBech32(joinPoolAcc.String())
 			valAddr := s.SetupValidator(stakingtypes.Bonded)
 			minAmountToStake := sdk.ZeroInt()
@@ -1078,7 +1103,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			balanceBeforeConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender).FilterDenoms([]string{"foo", "stake", "uosmo"})
 
 			// system under test
-			totalAmtConverted, err := s.App.SuperfluidKeeper.UnbondConvertAndStake(s.Ctx, lock.ID, sender.String(), valAddr.String(), minAmountToStake, sharesToConvert)
+			totalAmtConverted, err := s.App.SuperfluidKeeper.UnbondConvertAndStake(s.Ctx, lockId, sender.String(), valAddr.String(), minAmountToStake, sharesToConvert)
 			if tc.expectedError != nil {
 				s.Require().Equal(err.Error(), tc.expectedError.Error())
 				s.Require().Error(err)

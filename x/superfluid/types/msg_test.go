@@ -109,6 +109,15 @@ func TestUnbondConvertAndStakeMsg(t *testing.T) {
 			},
 		},
 		{
+			name: "no val address should not fail",
+			msg: &types.MsgUnbondConvertAndStake{
+				LockId:          0,
+				Sender:          addr1,
+				MinAmtToStake:   sdk.NewInt(10),
+				SharesToConvert: sdk.NewInt64Coin("foo", 10),
+			},
+		},
+		{
 			name: "err: sender is invalid",
 			msg: &types.MsgUnbondConvertAndStake{
 				LockId:          0,
@@ -124,7 +133,6 @@ func TestUnbondConvertAndStakeMsg(t *testing.T) {
 			msg: &types.MsgUnbondConvertAndStake{
 				LockId:          0,
 				Sender:          addr1,
-				ValAddr:         "abcd",
 				MinAmtToStake:   sdk.NewInt(10).Neg(),
 				SharesToConvert: sdk.NewInt64Coin("foo", 10),
 			},
