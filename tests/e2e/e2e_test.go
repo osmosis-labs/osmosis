@@ -26,7 +26,6 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
