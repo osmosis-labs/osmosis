@@ -1083,7 +1083,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 				_, _, lock, _, joinPoolAcc, _, _, balancerShareOut, originalValAddr = s.SetupMigrationTest(s.Ctx, !tc.notSuperfluidDelegated, tc.superfluidUndelegating, tc.unlocking, tc.unlocked, sdk.MustNewDecFromStr("1"))
 				synthLockBeforeMigration, _, err := s.App.SuperfluidKeeper.GetMigrationType(s.Ctx, joinPoolAcc, int64(lock.ID))
 				s.Require().NoError(err)
-				_, lockId, _, _, err = s.App.SuperfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(s.Ctx, joinPoolAcc, lock.ID, lock.Coins[0], synthLockBeforeMigration.SynthDenom, sdk.NewCoins())
+				_, lockId, _, err = s.App.SuperfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(s.Ctx, joinPoolAcc, lock.ID, lock.Coins[0], synthLockBeforeMigration.SynthDenom, sdk.NewCoins())
 				s.Require().NoError(err)
 			} else {
 				// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
