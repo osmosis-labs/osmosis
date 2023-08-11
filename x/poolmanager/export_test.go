@@ -12,12 +12,6 @@ func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return k.getNextPoolIdAndIncrement(ctx)
 }
 
-func (k Keeper) GetOsmoRoutedMultihopTotalSpreadFactor(ctx sdk.Context, route types.MultihopRoute) (
-	totalPathSpreadFactor sdk.Dec, sumOfSpreadFactors sdk.Dec, err error,
-) {
-	return k.getOsmoRoutedMultihopTotalSpreadFactor(ctx, route)
-}
-
 // SetPoolRoutesUnsafe sets the given routes to the poolmanager keeper
 // to allow routing from a pool type to a certain swap module.
 // For example, balancer -> gamm.
@@ -40,10 +34,6 @@ func (k Keeper) GetAllPoolRoutes(ctx sdk.Context) []types.ModuleRoute {
 
 func (k Keeper) ValidateCreatedPool(ctx sdk.Context, poolId uint64, pool types.PoolI) error {
 	return k.validateCreatedPool(ctx, poolId, pool)
-}
-
-func (k Keeper) IsOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute, inDenom, outDenom string) (isRouted bool) {
-	return k.isOsmoRoutedMultihop(ctx, route, inDenom, outDenom)
 }
 
 func (k Keeper) CreateMultihopExpectedSwapOuts(
