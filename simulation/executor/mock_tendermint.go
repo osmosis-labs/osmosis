@@ -181,7 +181,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	}
 
 	voteInfos := randomVoteInfos(r, params, validators)
-	evidence := randomDoubleSignEvidence(r, params, validators, pastTimes, pastVoteInfos, event, header, voteInfos)
+	evidence := randomDoubleSignEvidence(r, params, pastTimes, pastVoteInfos, event, header, voteInfos)
 
 	return abci.RequestBeginBlock{
 		Header: header,
@@ -230,8 +230,7 @@ func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators,
 	return voteInfos
 }
 
-func randomDoubleSignEvidence(r *rand.Rand, params Params,
-	validators mockValidators, pastTimes []time.Time,
+func randomDoubleSignEvidence(r *rand.Rand, params Params, pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
 	event func(route, op, evResult string), header tmproto.Header, voteInfos []abci.VoteInfo,
 ) []abci.Evidence {

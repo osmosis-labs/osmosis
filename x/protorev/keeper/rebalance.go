@@ -167,6 +167,149 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 	return tokenIn, profit, nil
 }
 
+<<<<<<< HEAD
+=======
+// UpdateSearchRangeIfNeeded updates the search range for the binary search. First, we check if there are any
+// concentrated liquidity pools in the route. If there are, then we may need to reduce the upper bound of the
+// binary search since it is gas intensive to move across several ticks. Next, we determine if the current bound
+// includes the optimal amount in. If it does not, then we can extend the search range to capture more profits.
+func (k Keeper) UpdateSearchRangeIfNeeded(
+	ctx sdk.Context,
+	route RouteMetaData,
+	inputDenom string,
+	curLeft, curRight sdk.Int,
+) (sdk.Int, sdk.Int, error) {
+	// If there are concentrated liquidity pools in the route, then we may need to reduce the upper bound of the binary search.
+	updatedMax, err := k.CalculateUpperBoundForSearch(ctx, route, inputDenom)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.ZeroInt(), err
+	}
+
+	// In the case where the updated upper bound is less than the current upper bound, we know we will not extend
+	// the search range so we can short-circuit return.
+	if updatedMax.LT(curRight) {
+		return curLeft, updatedMax, nil
+	}
+
+	return k.ExtendSearchRangeIfNeeded(ctx, route, inputDenom, curLeft, curRight, updatedMax)
+}
+
+// CalculateUpperBoundForSearch returns the max amount in that can be used for the binary search
+// respecting the max ticks moved across all concentrated liquidity pools in the route.
+func (k Keeper) CalculateUpperBoundForSearch(
+	ctx sdk.Context,
+	route RouteMetaData,
+	inputDenom string,
+) (sdk.Int, error) {
+	var intermidiateCoin sdk.Coin
+
+	poolInfo := k.GetInfoByPoolType(ctx)
+
+	// Iterate through all CL pools and determine the maximal amount of input that can be used
+	// respecting the max ticks moved.
+	for index := route.Route.Length() - 1; index >= 0; index-- {
+		hop := route.Route[index]
+		pool, err := k.poolmanagerKeeper.GetPool(ctx, hop.PoolId)
+		if err != nil {
+			return sdk.ZeroInt(), err
+		}
+
+		tokenInDenom := inputDenom
+		if index > 0 {
+			tokenInDenom = route.Route[index-1].TokenOutDenom
+		}
+
+		switch {
+		case pool.GetType() == poolmanagertypes.Concentrated:
+			// If the pool is a concentrated liquidity pool, then check the maximum amount in that can be used
+			// and determine what this amount is as an input at the previous pool (working all the way up to the
+			// beginning of the route).
+			maxTokenIn, maxTokenOut, err := k.concentratedLiquidityKeeper.ComputeMaxInAmtGivenMaxTicksCrossed(
+				ctx,
+				pool.GetId(),
+				tokenInDenom,
+				poolInfo.Concentrated.MaxTicksCrossed,
+			)
+			if err != nil {
+				return sdk.ZeroInt(), err
+			}
+
+			// if there have been no other CL pools in the route, then we can set the intermediate coin to the max input amount.
+			// Additionally, if the amount of the previous token is greater than the possible amount from this pool, then we
+			// can set the intermediate coin to the max input amount (from the current pool). Otherwise we have to do a
+			// safe swap given the previous max amount.
+			if intermidiateCoin.IsNil() || maxTokenOut.Amount.LT(intermidiateCoin.Amount) {
+				intermidiateCoin = maxTokenIn
+				continue
+			}
+
+			// In the scenario where there are multiple CL pools in a route, we select the one that inputs
+			// the smaller amount to ensure we do not overstep the max ticks moved.
+			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenInDenom)
+			if err != nil {
+				return sdk.ZeroInt(), err
+			}
+		case !intermidiateCoin.IsNil():
+			// If we have already seen a CL pool in the route, then simply propagate the intermediate coin up
+			// the route.
+			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenInDenom)
+			if err != nil {
+				return sdk.ZeroInt(), err
+			}
+		}
+	}
+
+	// In the case where there are no CL pools, we want to return the extended max input amount
+	if intermidiateCoin.IsNil() {
+		return types.ExtendedMaxInputAmount, nil
+	}
+
+	// Ensure that the normalized upper bound is not greater than the extended max input amount
+	upperBound := intermidiateCoin.Amount.Quo(route.StepSize)
+	if upperBound.GT(types.ExtendedMaxInputAmount) {
+		return types.ExtendedMaxInputAmount, nil
+	}
+
+	return upperBound, nil
+}
+
+// executeSafeSwap executes a safe swap by first ensuring the swap amount is less than the
+// amount of total liquidity in the pool.
+func (k Keeper) executeSafeSwap(
+	ctx sdk.Context,
+	poolID uint64,
+	outputCoin sdk.Coin,
+	tokenInDenom string,
+) (sdk.Coin, error) {
+	liquidity, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolID)
+	if err != nil {
+		return sdk.NewCoin(tokenInDenom, sdk.ZeroInt()), err
+	}
+
+	// At most we can swap half of the liquidity in the pool
+	liquidTokenAmt := liquidity.AmountOf(outputCoin.Denom).Quo(sdk.NewInt(4))
+	if liquidTokenAmt.LT(outputCoin.Amount) {
+		outputCoin.Amount = liquidTokenAmt
+	}
+
+	amt, err := k.poolmanagerKeeper.MultihopEstimateInGivenExactAmountOut(
+		ctx,
+		poolmanagertypes.SwapAmountOutRoutes{
+			{
+				PoolId:       poolID,
+				TokenInDenom: tokenInDenom,
+			},
+		},
+		outputCoin,
+	)
+	if err != nil {
+		return sdk.NewCoin(tokenInDenom, sdk.ZeroInt()), err
+	}
+
+	return sdk.NewCoin(tokenInDenom, amt), nil
+}
+
+>>>>>>> 2e3f19d8 (golangci: enable unused parameters linter (#6018))
 // Determine if the binary search range needs to be extended
 func (k Keeper) ExtendSearchRangeIfNeeded(ctx sdk.Context, route RouteMetaData, inputDenom string, curLeft, curRight sdk.Int) (sdk.Int, sdk.Int) {
 	// Get the profit for the maximum amount in

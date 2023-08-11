@@ -12,7 +12,7 @@ import (
 )
 
 // validateCreatedPool checks that the pool was created with the correct pool ID and address.
-func (k Keeper) validateCreatedPool(ctx sdk.Context, poolId uint64, pool types.PoolI) error {
+func (k Keeper) validateCreatedPool(poolId uint64, pool types.PoolI) error {
 	if pool.GetId() != poolId {
 		return types.IncorrectPoolIdError{ExpectedPoolId: poolId, ActualPoolId: pool.GetId()}
 	}
@@ -115,7 +115,7 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 	k.SetPoolRoute(ctx, poolId, msg.GetPoolType())
 
 	// Validates the pool address and pool ID stored match what was expected.
-	if err := k.validateCreatedPool(ctx, poolId, pool); err != nil {
+	if err := k.validateCreatedPool(poolId, pool); err != nil {
 		return nil, err
 	}
 

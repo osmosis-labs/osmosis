@@ -42,15 +42,15 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	poolId := concentratedPool.GetId()
 	quoteAsset := concentratedPool.GetToken1()
 
-	if !k.validateTickSpacing(ctx, params, tickSpacing) {
+	if !k.validateTickSpacing(params, tickSpacing) {
 		return types.UnauthorizedTickSpacingError{ProvidedTickSpacing: tickSpacing, AuthorizedTickSpacings: params.AuthorizedTickSpacing}
 	}
 
-	if !k.validateSpreadFactor(ctx, params, spreadFactor) {
+	if !k.validateSpreadFactor(params, spreadFactor) {
 		return types.UnauthorizedSpreadFactorError{ProvidedSpreadFactor: spreadFactor, AuthorizedSpreadFactors: params.AuthorizedSpreadFactors}
 	}
 
-	if !validateAuthorizedQuoteDenoms(ctx, quoteAsset, params.AuthorizedQuoteDenoms) {
+	if !validateAuthorizedQuoteDenoms(quoteAsset, params.AuthorizedQuoteDenoms) {
 		return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: params.AuthorizedQuoteDenoms}
 	}
 
@@ -270,7 +270,7 @@ func (k Keeper) DecreaseConcentratedPoolTickSpacing(ctx sdk.Context, poolIdToTic
 		}
 		params := k.GetParams(ctx)
 
-		if !k.validateTickSpacingUpdate(ctx, pool, params, poolIdToTickSpacingRecord.NewTickSpacing) {
+		if !k.validateTickSpacingUpdate(pool, params, poolIdToTickSpacingRecord.NewTickSpacing) {
 			return fmt.Errorf("tick spacing %d is not valid", poolIdToTickSpacingRecord.NewTickSpacing)
 		}
 
@@ -285,7 +285,7 @@ func (k Keeper) DecreaseConcentratedPoolTickSpacing(ctx sdk.Context, poolIdToTic
 
 // validateTickSpacing returns true if the given tick spacing is one of the authorized tick spacings set in the
 // params. False otherwise.
-func (k Keeper) validateTickSpacing(ctx sdk.Context, params types.Params, tickSpacing uint64) bool {
+func (k Keeper) validateTickSpacing(params types.Params, tickSpacing uint64) bool {
 	for _, authorizedTick := range params.AuthorizedTickSpacing {
 		if tickSpacing == authorizedTick {
 			return true
@@ -296,7 +296,7 @@ func (k Keeper) validateTickSpacing(ctx sdk.Context, params types.Params, tickSp
 
 // validateTickSpacingUpdate returns true if the given tick spacing is one of the authorized tick spacings set in the
 // params and is less than the current tick spacing. False otherwise.
-func (k Keeper) validateTickSpacingUpdate(ctx sdk.Context, pool types.ConcentratedPoolExtension, params types.Params, newTickSpacing uint64) bool {
+func (k Keeper) validateTickSpacingUpdate(pool types.ConcentratedPoolExtension, params types.Params, newTickSpacing uint64) bool {
 	currentTickSpacing := pool.GetTickSpacing()
 	for _, authorizedTick := range params.AuthorizedTickSpacing {
 		// New tick spacing must be one of the authorized tick spacings and must be less than the current tick spacing
@@ -309,7 +309,7 @@ func (k Keeper) validateTickSpacingUpdate(ctx sdk.Context, pool types.Concentrat
 
 // validateSpreadFactor returns true if the given spread factor is one of the authorized spread factors set in the
 // params. False otherwise.
-func (k Keeper) validateSpreadFactor(ctx sdk.Context, params types.Params, spreadFactor sdk.Dec) bool {
+func (k Keeper) validateSpreadFactor(params types.Params, spreadFactor sdk.Dec) bool {
 	for _, authorizedSpreadFactor := range params.AuthorizedSpreadFactors {
 		if spreadFactor.Equal(authorizedSpreadFactor) {
 			return true
@@ -328,7 +328,7 @@ func (k Keeper) validateSpreadFactor(ctx sdk.Context, params types.Params, sprea
 //
 // Returns:
 // - bool: A boolean indicating if the denom1 is authorized or not.
-func validateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuoteDenoms []string) bool {
+func validateAuthorizedQuoteDenoms(denom1 string, authorizedQuoteDenoms []string) bool {
 	for _, authorizedQuoteDenom := range authorizedQuoteDenoms {
 		if denom1 == authorizedQuoteDenom {
 			return true

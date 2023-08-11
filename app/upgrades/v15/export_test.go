@@ -26,8 +26,8 @@ func SetICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
 	setICQParams(ctx, icqKeeper)
 }
 
-func MigrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanager *poolmanager.Keeper, bankKeeper bankkeeper.Keeper, poolId uint64) {
-	migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanager, bankKeeper, poolId)
+func MigrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, bankKeeper bankkeeper.Keeper, poolId uint64) {
+	migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, bankKeeper, poolId)
 }
 
 func SetRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper, wasmKeeper *wasmkeeper.Keeper) {

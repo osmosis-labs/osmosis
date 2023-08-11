@@ -300,8 +300,13 @@ func parsePoolRecords(cmd *cobra.Command) ([]types.PoolRecord, error) {
 
 	poolRecords := strings.Split(poolRecordsStr, ",")
 
+<<<<<<< HEAD
 	if len(poolRecords)%5 != 0 {
 		return nil, fmt.Errorf("poolRecords must be a list of denom0, denom1, tickSpacing, exponentAtPriceOne, and spreadFactor")
+=======
+	if len(poolRecords)%4 != 0 {
+		return nil, fmt.Errorf("poolRecords must be a list of denom0, denom1, tickSpacing, and spreadFactor")
+>>>>>>> 2e3f19d8 (golangci: enable unused parameters linter (#6018))
 	}
 
 	finalPoolRecords := []types.PoolRecord{}
