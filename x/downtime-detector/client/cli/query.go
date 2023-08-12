@@ -30,6 +30,7 @@ downtime-duration is a duration, but is restricted to a smaller set. Heres a few
 	}, &queryproto.RecoveredSinceDowntimeOfLengthRequest{}
 }
 
+//nolint:unparam
 func parseDowntimeDuration(arg string, _ *pflag.FlagSet) (any, osmocli.FieldReadLocation, error) {
 	dur, err := time.ParseDuration(arg)
 	if err != nil {
