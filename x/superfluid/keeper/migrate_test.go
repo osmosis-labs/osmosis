@@ -304,7 +304,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 
 			// GetMigrationType is called via the migration message router and is always run prior to the migration itself.
 			// We use it here just to retrieve the synthetic lock before the migration.
-			synthLockBeforeMigration, migrationType, err := superfluidKeeper.GetMigrationType(s.Ctx, poolJoinAcc, int64(originalGammLockId))
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.GetMigrationType(s.Ctx, int64(originalGammLockId))
 			s.Require().NoError(err)
 			s.Require().Equal(migrationType, keeper.SuperfluidBonded)
 
@@ -459,7 +459,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// GetMigrationType is called via the migration message router and is always run prior to the migration itself
-			synthLockBeforeMigration, migrationType, err := superfluidKeeper.GetMigrationType(s.Ctx, poolJoinAcc, int64(originalGammLockId))
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.GetMigrationType(s.Ctx, int64(originalGammLockId))
 			s.Require().NoError(err)
 			s.Require().Equal(migrationType, keeper.SuperfluidUnbonding)
 
@@ -574,7 +574,7 @@ func (s *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated() {
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// GetMigrationType is called via the migration message router and is always run prior to the migration itself
-			synthLockBeforeMigration, migrationType, err := superfluidKeeper.GetMigrationType(s.Ctx, poolJoinAcc, int64(originalGammLockId))
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.GetMigrationType(s.Ctx, int64(originalGammLockId))
 			s.Require().NoError(err)
 			s.Require().Equal((lockuptypes.SyntheticLock{}), synthLockBeforeMigration)
 			s.Require().Equal(migrationType, keeper.NonSuperfluid)
@@ -657,7 +657,7 @@ func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated(
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// GetMigrationType is called via the migration message router and is always run prior to the migration itself
-			synthLockBeforeMigration, migrationType, err := superfluidKeeper.GetMigrationType(s.Ctx, poolJoinAcc, 0)
+			synthLockBeforeMigration, migrationType, err := superfluidKeeper.GetMigrationType(s.Ctx, 0)
 			s.Require().NoError(err)
 			s.Require().Equal((lockuptypes.SyntheticLock{}), synthLockBeforeMigration)
 			s.Require().Equal(migrationType, keeper.Unlocked)

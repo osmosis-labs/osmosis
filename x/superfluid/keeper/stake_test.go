@@ -1081,7 +1081,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			// we use migration setup for testing with cl lock
 			if tc.testCLLock {
 				_, _, lock, _, joinPoolAcc, _, _, balancerShareOut, originalValAddr = s.SetupMigrationTest(s.Ctx, !tc.notSuperfluidDelegated, tc.superfluidUndelegating, tc.unlocking, tc.unlocked, sdk.MustNewDecFromStr("1"))
-				synthLockBeforeMigration, _, err := s.App.SuperfluidKeeper.GetMigrationType(s.Ctx, joinPoolAcc, int64(lock.ID))
+				synthLockBeforeMigration, _, err := s.App.SuperfluidKeeper.GetMigrationType(s.Ctx, int64(lock.ID))
 				s.Require().NoError(err)
 				_, lockId, _, err = s.App.SuperfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(s.Ctx, joinPoolAcc, lock.ID, lock.Coins[0], synthLockBeforeMigration.SynthDenom, sdk.NewCoins())
 				s.Require().NoError(err)
