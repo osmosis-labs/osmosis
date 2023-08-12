@@ -381,7 +381,6 @@ type sqrtRoundingTestCase struct {
 
 func runSqrtRoundingTestCase(
 	t *testing.T,
-	name string,
 	fn func(osmomath.BigDec, osmomath.BigDec, osmomath.BigDec) osmomath.BigDec,
 	cases map[string]sqrtRoundingTestCase,
 ) {
@@ -420,7 +419,7 @@ func TestGetNextSqrtPriceFromAmount0InRoundingUp(t *testing.T) {
 			expected: osmomath.MustNewDecFromStr("70.666663910857144331148691821263626767"),
 		},
 	}
-	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount0InRoundingUp", math.GetNextSqrtPriceFromAmount0InRoundingUp, tests)
+	runSqrtRoundingTestCase(t, math.GetNextSqrtPriceFromAmount0InRoundingUp, tests)
 }
 
 // Estimates are computed with x/concentrated-liquidity/python/clmath.py
@@ -441,7 +440,7 @@ func TestGetNextSqrtPriceFromAmount0OutRoundingUp(t *testing.T) {
 			expected: osmomath.MustNewDecFromStr("2.5"),
 		},
 	}
-	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount0OutRoundingUp", math.GetNextSqrtPriceFromAmount0OutRoundingUp, tests)
+	runSqrtRoundingTestCase(t, math.GetNextSqrtPriceFromAmount0OutRoundingUp, tests)
 }
 
 // Estimates are computed with x/concentrated-liquidity/python/clmath.py
@@ -470,7 +469,7 @@ func TestGetNextSqrtPriceFromAmount1InRoundingDown(t *testing.T) {
 			expected: osmomath.MustNewDecFromStr("70.738319930382329008049494613660784220"),
 		},
 	}
-	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount1InRoundingDown", math.GetNextSqrtPriceFromAmount1InRoundingDown, tests)
+	runSqrtRoundingTestCase(t, math.GetNextSqrtPriceFromAmount1InRoundingDown, tests)
 }
 
 func TestGetNextSqrtPriceFromAmount1OutRoundingDown(t *testing.T) {
@@ -490,5 +489,5 @@ func TestGetNextSqrtPriceFromAmount1OutRoundingDown(t *testing.T) {
 			expected: osmomath.MustNewDecFromStr("2.5"),
 		},
 	}
-	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount1OutRoundingDown", math.GetNextSqrtPriceFromAmount1OutRoundingDown, tests)
+	runSqrtRoundingTestCase(t, math.GetNextSqrtPriceFromAmount1OutRoundingDown, tests)
 }

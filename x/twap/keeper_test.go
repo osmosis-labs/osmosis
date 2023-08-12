@@ -516,7 +516,7 @@ func newExpRecord(accum0, accum1, geomAccum sdk.Dec) types.TwapRecord {
 	}
 }
 
-func newThreeAssetRecord(poolId uint64, t time.Time, sp0, accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC sdk.Dec) []types.TwapRecord {
+func newThreeAssetRecord(poolId uint64, t time.Time, sp0, accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC sdk.Dec) []types.TwapRecord { //nolint:unparam // poolId always receives 2
 	spA := sp0
 	spB := sdk.OneDec().Quo(sp0)
 	spC := sp0.Mul(sdk.NewDec(2))
@@ -586,7 +586,7 @@ func newOneSidedGeometricRecord(time time.Time, accum sdk.Dec) types.TwapRecord 
 	return record
 }
 
-func newThreeAssetOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) []types.TwapRecord {
+func newThreeAssetOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) []types.TwapRecord { //nolint:unparam // useP0 always receives true
 	record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
 	if useP0 {
 		record.P0ArithmeticTwapAccumulator = accum

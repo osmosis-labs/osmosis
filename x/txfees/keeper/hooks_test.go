@@ -14,7 +14,8 @@ import (
 
 var defaultPooledAssetAmount = int64(500)
 
-func (s *KeeperTestSuite) preparePool(denom string) (poolID uint64, pool poolmanagertypes.PoolI) {
+func (s *KeeperTestSuite) preparePool(denom string) (pool poolmanagertypes.PoolI) {
+	var poolID uint64
 	baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 	poolID = s.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
@@ -24,7 +25,7 @@ func (s *KeeperTestSuite) preparePool(denom string) (poolID uint64, pool poolman
 	s.Require().NoError(err)
 	err = s.ExecuteUpgradeFeeTokenProposal(denom, poolID)
 	s.Require().NoError(err)
-	return poolID, pool
+	return pool
 }
 
 func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
@@ -33,11 +34,11 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 
 	// create pools for three separate fee tokens
 	uion := "uion"
-	_, uionPool := s.preparePool(uion)
+	uionPool := s.preparePool(uion)
 	atom := "atom"
-	_, atomPool := s.preparePool(atom)
+	atomPool := s.preparePool(atom)
 	ust := "ust"
-	_, ustPool := s.preparePool(ust)
+	ustPool := s.preparePool(ust)
 
 	tests := []struct {
 		name         string

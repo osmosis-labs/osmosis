@@ -31,15 +31,15 @@ func FundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, acct sd
 }
 
 // we need to make this deterministic (same every test run), as content might affect gas costs
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
+func keyPubAddr() (crypto.PubKey, sdk.AccAddress) {
 	key := ed25519.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
-	return key, pub, addr
+	return pub, addr
 }
 
 func RandomAccountAddress() sdk.AccAddress {
-	_, _, addr := keyPubAddr()
+	_, addr := keyPubAddr()
 	return addr
 }
 

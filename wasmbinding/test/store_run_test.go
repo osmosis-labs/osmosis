@@ -26,7 +26,7 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 	// this wraps wasmKeeper, providing interfaces exposed to external messages
 	contractKeeper := keeper.NewDefaultPermissionKeeper(wasmKeeper)
 
-	_, _, creator := keyPubAddr()
+	_, creator := keyPubAddr()
 
 	// upload reflect code
 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")

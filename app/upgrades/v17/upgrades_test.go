@@ -19,7 +19,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	v17 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	poolManagerTypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
@@ -58,7 +57,7 @@ func dummyUpgrade(suite *UpgradeTestSuite) {
 	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
 }
 
-func dummyTwapRecord(poolId uint64, t time.Time, asset0 string, asset1 string, sp0, accum0, accum1, geomAccum sdk.Dec) types.TwapRecord {
+func dummyTwapRecord(poolId uint64, t time.Time, asset0 string, asset1 string, sp0, accum0, accum1, geomAccum sdk.Dec) types.TwapRecord { //nolint:unparam // asset1 always receives uosmo
 	return types.TwapRecord{
 		PoolId:      poolId,
 		Time:        t,
@@ -204,7 +203,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t7)
 
 				return expectedCoinsUsedInUpgradeHandler, existingBalancerPoolId
-
 			},
 			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				lastPoolIdMinusOne := lastPoolID - 1
@@ -401,7 +399,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				lastPoolID += 3
 
 				return expectedCoinsUsedInUpgradeHandler, lastPoolID
-
 			},
 			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				stakingParams := suite.App.StakingKeeper.GetParams(suite.Ctx)
@@ -433,7 +430,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				// For testnet, we run through all gamm pools (not just the asset list)
 				for i, pool := range gammPoolsPreUpgrade {
 					// Skip pools that are not balancer pools
-					if pool.GetType() != poolManagerTypes.Balancer {
+					if pool.GetType() != poolmanagertypes.Balancer {
 						indexOffset++
 						continue
 					}
@@ -478,6 +475,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 					// Validate that the link is correct.
 					migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
+					suite.Require().NoError(err)
 					link := migrationInfo.BalancerToConcentratedPoolLinks[i-indexOffset]
 					suite.Require().Equal(gammPoolId, link.BalancerPoolId)
 					suite.Require().Equal(concentratedPool.GetId(), link.ClPoolId)
@@ -518,7 +516,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
 				suite.Require().Equal(int(numPoolsEligibleForMigration), len(migrationInfo.BalancerToConcentratedPoolLinks))
 				suite.Require().NoError(err)
-
 			},
 		},
 		{
