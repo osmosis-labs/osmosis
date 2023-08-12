@@ -322,7 +322,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			if humanReadableDenomsInput {
 				// Parse and replace denoms in args
 				for i, arg := range args {
-					//lowerCaseArg := strings.ToLower(arg)
 					argArray := strings.Split(arg, ",")
 
 					re := regexp.MustCompile(`^([\d.]+)(\D+)$`)
