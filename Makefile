@@ -123,8 +123,6 @@ install: check_version go.sum
 install-with-autocomplete: check_version go.sum
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 	@PARENT_SHELL=$$(ps -o ppid= -p $$PPID | xargs ps -o comm= -p); \
-	echo "Detected parent shell: $$PARENT_SHELL"; \
-	echo "Installing "$$(uname)"..."; \
 	if echo "$$PARENT_SHELL" | grep -q "zsh"; then \
 		if ! grep -q ". <(osmosisd enable-cli-autocomplete zsh)" ~/.zshrc; then \
 			echo ". <(osmosisd enable-cli-autocomplete zsh)" >> ~/.zshrc; \
@@ -140,6 +138,7 @@ install-with-autocomplete: check_version go.sum
 			echo '[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile; \
 			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bash_profile; \
 			echo; \
+			echo; \
 			echo "Autocomplete enabled. Run 'source ~/.bash_profile' to complete installation."; \
 		else \
 			echo "Autocomplete already enabled in ~/.bash_profile"; \
@@ -152,6 +151,7 @@ install-with-autocomplete: check_version go.sum
 			echo; \
 			echo "Autocomplete enabled. Run 'source ~/.bash_profile' to complete installation."; \
 		else \
+			echo; \
 			echo "Autocomplete already enabled in ~/.bash_profile"; \
 		fi \
 	else \
