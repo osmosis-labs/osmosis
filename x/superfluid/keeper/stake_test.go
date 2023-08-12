@@ -1296,6 +1296,12 @@ func (s *KeeperTestSuite) TestConvertUnlockedToStake() {
 			s.Require().NoError(err)
 			bondDenomPoolAmtBeforeConvert := totalPoolLiquidityBeforeConvert.AmountOf(bondDenom)
 
+			var expectedBondDenomAmt sdk.Int
+			// check expected bond denom pool liquidity amount after conversion(only for non error cases)
+			if tc.expectedError == nil {
+				expectedBondDenomAmt = s.getExpectedBondDenomPoolAmtAfterConvert(sender, poolId, sharesToStake)
+			}
+
 			// system under test
 			totalAmtConverted, err := s.App.SuperfluidKeeper.ConvertUnlockedToStake(s.Ctx, sender, valAddr.String(), sharesToStake, minAmtToStake)
 			if tc.expectedError != nil {
@@ -1310,6 +1316,7 @@ func (s *KeeperTestSuite) TestConvertUnlockedToStake() {
 			// check that pool liquidity have reduced
 			bondDenomPoolAmtAfterConvert := totalPoolLiquidityAfterConvert.AmountOf(bondDenom)
 			s.Require().True(bondDenomPoolAmtAfterConvert.LT(bondDenomPoolAmtBeforeConvert))
+			s.Require().True(expectedBondDenomAmt.Equal(bondDenomPoolAmtAfterConvert))
 
 			// Staking & Delegation check
 			s.delegationCheck(s.Ctx, sender, sdk.ValAddress{}, valAddr, totalAmtConverted)
@@ -1700,6 +1707,27 @@ func (s *KeeperTestSuite) lockCheck(ctx sdk.Context, lock lockuptypes.PeriodLock
 	// Lock check
 	_, err = s.App.LockupKeeper.GetLockByID(s.Ctx, lock.ID)
 	s.Require().Error(err)
+}
+
+func (s *KeeperTestSuite) getExpectedBondDenomPoolAmtAfterConvert(sender sdk.AccAddress, poolId uint64, sharesToStake sdk.Coin) sdk.Int {
+	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+	cc, _ := s.Ctx.CacheContext()
+	exitCoins, err := s.App.GAMMKeeper.ExitPool(cc, sender, poolId, sharesToStake.Amount, sdk.NewCoins())
+	s.Require().NoError(err)
+
+	var nonOsmoCoin sdk.Coin
+	for _, exitCoin := range exitCoins {
+		// if coin is not uosmo, add it to non-osmo Coins
+		if exitCoin.Denom != bondDenom {
+			nonOsmoCoin = exitCoin
+		}
+	}
+	_, err = s.App.PoolManagerKeeper.SwapExactAmountIn(cc, sender, poolId, nonOsmoCoin, bondDenom, sdk.ZeroInt())
+	s.Require().NoError(err)
+	expectedLiquidity, err := s.App.GAMMKeeper.GetTotalPoolLiquidity(cc, poolId)
+	s.Require().NoError(err)
+
+	return expectedLiquidity.AmountOf(bondDenom)
 }
 
 // type superfluidRedelegation struct {
