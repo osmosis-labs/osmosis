@@ -123,6 +123,8 @@ install: check_version go.sum
 install-with-autocomplete: check_version go.sum
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 	@PARENT_SHELL=$$(ps -o ppid= -p $$PPID | xargs ps -o comm= -p); \
+	echo "Detected parent shell: $$PARENT_SHELL"; \
+	echo "Installing "$$(uname)"..."; \
 	if echo "$$PARENT_SHELL" | grep -q "zsh"; then \
 		if ! grep -q ". <(osmosisd enable-cli-autocomplete zsh)" ~/.zshrc; then \
 			echo ". <(osmosisd enable-cli-autocomplete zsh)" >> ~/.zshrc; \
@@ -132,7 +134,7 @@ install-with-autocomplete: check_version go.sum
 			echo; \
 			echo "Autocomplete already enabled in ~/.zshrc"; \
 		fi \
-	elif echo "$$PARENT_SHELL" | grep -q "bash" -a "$$(uname)" = "Darwin"; then \
+	elif echo "$$PARENT_SHELL" | grep -q "bash" && [ "$$(uname)" = "Darwin" ]; then \
 		if ! grep -q -e "\. <(osmosisd enable-cli-autocomplete bash)" -e '\[\[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" \]\] && \. "/opt/homebrew/etc/profile.d/bash_completion.sh"' ~/.bash_profile; then \
 			brew install bash-completion; \
 			echo '[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile; \
@@ -140,10 +142,9 @@ install-with-autocomplete: check_version go.sum
 			echo; \
 			echo "Autocomplete enabled. Run 'source ~/.bash_profile' to complete installation."; \
 		else \
-			echo; \
 			echo "Autocomplete already enabled in ~/.bash_profile"; \
 		fi \
-	elif echo "$$PARENT_SHELL" | grep -q "bash" -a "$$(uname)" = "Linux"; then \
+	elif echo "$$PARENT_SHELL" | grep -q "bash" && [ "$$(uname)" = "Linux" ]; then \
 		if ! grep -q ". <(osmosisd enable-cli-autocomplete bash)" ~/.bash_profile; then \
 			sudo apt-get install -y bash-completion; \
 			echo '[ -r "/etc/bash_completion" ] && . "/etc/bash_completion"' >> ~/.bash_profile; \
@@ -151,7 +152,6 @@ install-with-autocomplete: check_version go.sum
 			echo; \
 			echo "Autocomplete enabled. Run 'source ~/.bash_profile' to complete installation."; \
 		else \
-			echo; \
 			echo "Autocomplete already enabled in ~/.bash_profile"; \
 		fi \
 	else \
