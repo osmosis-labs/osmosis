@@ -126,8 +126,10 @@ install-with-autocomplete: check_version go.sum
 	if echo "$$PARENT_SHELL" | grep -q "zsh"; then \
 		if ! grep -q ". <(osmosisd enable-cli-autocomplete zsh)" ~/.zshrc; then \
 			echo ". <(osmosisd enable-cli-autocomplete zsh)" >> ~/.zshrc; \
-			source ~/.zshrc; \
+			echo; \
+			echo "Autocomplete enabled. Run 'source ~/.zshrc' to complete installation."; \
 		else \
+			echo; \
 			echo "Autocomplete already enabled in ~/.zshrc"; \
 		fi \
 	elif echo "$$PARENT_SHELL" | grep -q "bash" -a "$$(uname)" = "Darwin"; then \
@@ -138,6 +140,7 @@ install-with-autocomplete: check_version go.sum
 			echo; \
 			echo "Autocomplete enabled. Run 'source ~/.bash_profile' to complete installation."; \
 		else \
+			echo; \
 			echo "Autocomplete already enabled in ~/.bash_profile"; \
 		fi \
 	elif echo "$$PARENT_SHELL" | grep -q "bash" -a "$$(uname)" = "Linux"; then \
@@ -148,6 +151,7 @@ install-with-autocomplete: check_version go.sum
 			echo; \
 			echo "Autocomplete enabled. Run 'source ~/.bash_profile' to complete installation."; \
 		else \
+			echo; \
 			echo "Autocomplete already enabled in ~/.bash_profile"; \
 		fi \
 	else \
