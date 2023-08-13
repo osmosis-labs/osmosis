@@ -138,11 +138,12 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 
 	delegator := sdk.MustAccAddressFromBech32(delegatorAddr)
 	// total amount the user wants to undelegate
-	tokenAmtToUndelegate := sdk.NewDec(coin.Amount.Int64())
+	tokenAmtToUndelegate := coin.Amount.ToDec()
 	// total amount user has delegated
 	totalDelegatedAmt := sdk.ZeroDec()
 
-	// Step 1-2
+	// Step 1-2, compute the total amount delegated and the amount to undelegate for each validator
+	// under valset-ratios.
 	var valSetRatio []ValRatio
 	for _, val := range existingSet.Preferences {
 		amountToUnDelegate := val.Weight.Mul(tokenAmtToUndelegate).TruncateInt()
