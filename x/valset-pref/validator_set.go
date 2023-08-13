@@ -145,12 +145,14 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	// Step 1-2, compute the total amount delegated and the amount to undelegate for each validator
 	// under valset-ratios.
 	var valSetRatio []ValRatio
+	validators := map[string]stakingtypes.Validator{}
 	for _, val := range existingSet.Preferences {
 		amountToUnDelegate := val.Weight.Mul(tokenAmtToUndelegate).TruncateInt()
 		valAddr, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
 		if err != nil {
 			return err
 		}
+		validators[valAddr.String()] = validator
 
 		delegation, found := k.stakingKeeper.GetDelegation(ctx, delegator, valAddr)
 		if !found {
@@ -189,10 +191,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	if valSetRatio[0].VRatio.LTE(sdk.OneDec()) {
 		fmt.Println("All validators can undelegate normally, falling to happy path exit early")
 		for index, val := range valSetRatio {
-			_, validator, err := k.getValAddrAndVal(ctx, val.ValAddr.String())
-			if err != nil {
-				return err
-			}
+			validator := validators[val.ValAddr.String()]
 
 			// in the last valset iteration we dont calculate it from shares using decimals and trucation,
 			// we use whats remaining to get more accurate value
