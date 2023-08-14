@@ -322,12 +322,12 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			if humanReadableDenomsInput {
 				// Parse and replace denoms in args
 				for i, arg := range args {
-					lowerCaseArg := strings.ToLower(arg)
-					lowerCaseArgArray := strings.Split(lowerCaseArg, ",")
+					argArray := strings.Split(arg, ",")
 
 					re := regexp.MustCompile(`^([\d.]+)(\D+)$`)
 
-					for i, lowerCaseArg := range lowerCaseArgArray {
+					for i, singleArg := range argArray {
+						lowerCaseArg := strings.ToLower(singleArg)
 						match := re.FindStringSubmatch(lowerCaseArg)
 						if len(match) == 3 {
 							value, denom := match[1], match[2]
@@ -337,15 +337,15 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 							if err != nil {
 								continue
 							}
-							lowerCaseArgArray[i] = transformedCoin
+							argArray[i] = transformedCoin
 						} else {
 							if _, ok := assetMap[lowerCaseArg]; ok {
 								// In this case, we just need to replace the denom with the base denom
-								lowerCaseArgArray[i] = assetMap[lowerCaseArg].Base
+								argArray[i] = assetMap[lowerCaseArg].Base
 							}
 						}
 					}
-					args[i] = strings.Join(lowerCaseArgArray, ",")
+					args[i] = strings.Join(argArray, ",")
 				}
 
 				// Parse and replace denoms in flags
