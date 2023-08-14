@@ -8,7 +8,7 @@ SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 BUILDDIR ?= $(CURDIR)/build
 DOCKER := $(shell which docker)
 E2E_UPGRADE_VERSION := "v17"
-SHELL := /bin/bash
+#SHELL := /bin/bash
 
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 GO_MODULE := $(shell cat go.mod | grep "module " | cut -d ' ' -f 2)
@@ -123,32 +123,36 @@ install: check_version go.sum
 install-with-autocomplete: check_version go.sum
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 	@PARENT_SHELL=$$(ps -o ppid= -p $$PPID | xargs ps -o comm= -p); \
-	if [[ "$$PARENT_SHELL" == *zsh* ]]; then \
+	if echo "$$PARENT_SHELL" | grep -q "zsh"; then \
 		if ! grep -q ". <(osmosisd enable-cli-autocomplete zsh)" ~/.zshrc; then \
 			echo ". <(osmosisd enable-cli-autocomplete zsh)" >> ~/.zshrc; \
-			source ~/.zshrc; \
+			echo; \
+			echo "Autocomplete enabled. Run 'source ~/.zshrc' to complete installation."; \
 		else \
+			echo; \
 			echo "Autocomplete already enabled in ~/.zshrc"; \
 		fi \
-	elif [[ "$$PARENT_SHELL" == *bash* && "$$(uname)" == "Darwin" ]]; then \
-		if ! grep -q -e "\. <(osmosisd enable-cli-autocomplete bash)" -e '\[\[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" \]\] && \. "/opt/homebrew/etc/profile.d/bash_completion.sh"' ~/.bashrc; then \
+	elif echo "$$PARENT_SHELL" | grep -q "bash" && [ "$$(uname)" = "Darwin" ]; then \
+		if ! grep -q -e "\. <(osmosisd enable-cli-autocomplete bash)" -e '\[\[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" \]\] && \. "/opt/homebrew/etc/profile.d/bash_completion.sh"' ~/.bash_profile; then \
 			brew install bash-completion; \
-			echo '[[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ]] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"' >> ~/.bashrc; \
-			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bashrc; \
+			echo '[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile; \
+			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bash_profile; \
 			echo; \
-			echo "Autocomplete enabled. Run 'source ~/.bashrc' to complete installation."; \
+			echo; \
+			echo "Autocomplete enabled. Run 'source ~/.bash_profile' to complete installation."; \
 		else \
-			echo "Autocomplete already enabled in ~/.bashrc"; \
+			echo "Autocomplete already enabled in ~/.bash_profile"; \
 		fi \
-	elif [[ "$$PARENT_SHELL" == *bash* && "$$(uname)" == "Linux" ]]; then \
-		if ! grep -q ". <(osmosisd enable-cli-autocomplete bash)" ~/.bashrc; then \
+	elif echo "$$PARENT_SHELL" | grep -q "bash" && [ "$$(uname)" = "Linux" ]; then \
+		if ! grep -q ". <(osmosisd enable-cli-autocomplete bash)" ~/.bash_profile; then \
 			sudo apt-get install -y bash-completion; \
-			echo '[[ -r "/etc/bash_completion" ]] && . "/etc/bash_completion"' >> ~/.bashrc; \
-			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bashrc; \
+			echo '[ -r "/etc/bash_completion" ] && . "/etc/bash_completion"' >> ~/.bash_profile; \
+			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bash_profile; \
 			echo; \
-			echo "Autocomplete enabled. Run 'source ~/.bashrc' to complete installation."; \
+			echo "Autocomplete enabled. Run 'source ~/.bash_profile' to complete installation."; \
 		else \
-			echo "Autocomplete already enabled in ~/.bashrc"; \
+			echo; \
+			echo "Autocomplete already enabled in ~/.bash_profile"; \
 		fi \
 	else \
 		echo "Shell or OS not recognized. Skipping autocomplete setup."; \

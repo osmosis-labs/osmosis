@@ -687,8 +687,8 @@ func genAutoCompleteCmd(rootCmd *cobra.Command) {
 		Long: `To configure your shell to load completions for each session, add to your profile:
 
 # bash example
-echo '. <(osmosisd enable-cli-autocomplete bash)' >> ~/.profile
-source ~/.profile
+echo '. <(osmosisd enable-cli-autocomplete bash)' >> ~/.bash_profile
+source ~/.bash_profile
 
 # zsh example
 echo '. <(osmosisd enable-cli-autocomplete zsh)' >> ~/.zshrc
