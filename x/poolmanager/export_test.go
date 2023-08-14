@@ -33,7 +33,7 @@ func (k Keeper) GetAllPoolRoutes(ctx sdk.Context) []types.ModuleRoute {
 }
 
 func (k Keeper) ValidateCreatedPool(ctx sdk.Context, poolId uint64, pool types.PoolI) error {
-	return k.validateCreatedPool(ctx, poolId, pool)
+	return k.validateCreatedPool(poolId, pool)
 }
 
 func (k Keeper) CreateMultihopExpectedSwapOuts(

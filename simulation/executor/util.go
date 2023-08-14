@@ -8,6 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/simulation/simtypes"
 )
 
+//nolint:unparam
 func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
 	tb.Helper()
 	testingMode = false

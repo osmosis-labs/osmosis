@@ -40,7 +40,7 @@ func (k Keeper) ValidateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context
 }
 
 func (k Keeper) RouteMigration(ctx sdk.Context, sender sdk.AccAddress, lockId int64, sharesToMigrate sdk.Coin) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
-	return k.routeMigration(ctx, sender, lockId, sharesToMigrate)
+	return k.routeMigration(ctx, lockId)
 }
 
 func (k Keeper) ValidateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (types.MigrationPoolIDs, *lockuptypes.PeriodLock, time.Duration, error) {
