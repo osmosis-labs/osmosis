@@ -9,6 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
 )
 
@@ -87,4 +89,39 @@ func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delAddr sdk.AccAd
 	}
 
 	return existingDelsValSetFormatted, nil
+}
+
+// getValsetDelegationsAndPreferences retrieves the validator preferences and
+// delegations for a given delegator. It returns the ValidatorSetPreferences,
+// a slice of Delegations, and an error if any issues occur during the process.
+//
+// The function first retrieves the validator set preferences associated with the delegator.
+// If preferences exist, it iterates over them and fetches each associated delegation,
+// adding it to a slice of delegations. If no preferences exist, it gets all delegator
+// delegations.
+func (k Keeper) getValsetDelegationsAndPreferences(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, []stakingtypes.Delegation, error) {
+	delAddr, err := sdk.AccAddressFromBech32(delegator)
+	if err != nil {
+		return types.ValidatorSetPreferences{}, nil, err
+	}
+
+	valSet, exists := k.GetValidatorSetPreference(ctx, delegator)
+	var delegations []stakingtypes.Delegation
+	if exists {
+		for _, val := range valSet.Preferences {
+			del, found := k.stakingKeeper.GetDelegation(ctx, delAddr, sdk.ValAddress(val.ValOperAddress))
+			if !found {
+				del = stakingtypes.Delegation{DelegatorAddress: delegator, ValidatorAddress: (val.ValOperAddress), Shares: sdk.ZeroDec()}
+			}
+			delegations = append(delegations, del)
+		}
+	}
+	if !exists {
+		delegations = k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
+		if len(delegations) == 0 {
+			return types.ValidatorSetPreferences{}, nil, fmt.Errorf("No Existing delegation to unbond from")
+		}
+	}
+
+	return valSet, delegations, nil
 }
