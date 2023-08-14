@@ -462,6 +462,31 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	return totalDistributedCoins, nil
 }
 
+// TODO: consider performance. Is this too inefficient?
+// func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, groupGaugeIds []uint64) (sdk.Coins, error) {
+// 	// Loop through group gauges, and for each:
+// 		// Figure out splitting policy
+// 		// if VolumeSplitting (enum 0), run AllocateByVolume
+// 		// else, error for now since we only have one policy
+// }
+
+// TODO: figure out how to track/accumulate volume in a base asset (should probably do this in the pool to avoid scaling overhead as more gauges are created)
+// AllocateByVolume allocates coins from a single gauge to all eligible locks and pools.
+// func (k Keeper) AllocateByVolume(ctx sdk.Context, groupGauge uint64) error {
+// 	// Validate group gauge
+//
+// 	// Get the pool IDs corresponding the group gauge (trivially, using the field in the group gauge object)
+// 	// Get their internally tracked volumes in base asset / OSMO
+// 	// Allocate pro-rated amount and AddToGauge for each internal gauge
+// 	// If we end up storing just the list of pool IDs in the group, we would need a helper that retrieves the corresponding internal pool IDs
+// 	// (should be implemented anyway for the create gauge refactor: https://hackmd.io/rLt-8Ox4Qn2pIXRnsLyhMg)
+//
+//  // Deduct coins from group gauge
+//  // Run logic for shutting down gauge if it's non perpetual etc. similar to updateGaugePostDistribute and checkFinishDistribution
+//
+//  // return deductedCoins, nil
+// }
+
 // GetPoolFromGaugeId returns a pool associated with the given gauge id.
 // Returns error if there is no link between pool id and gauge id.
 // Returns error if pool is not saved in state.

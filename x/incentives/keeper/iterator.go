@@ -57,6 +57,8 @@ func (k Keeper) ActiveGaugesIterator(ctx sdk.Context) sdk.Iterator {
 	return k.iterator(ctx, types.KeyPrefixActiveGauges)
 }
 
+// TODO: implement ActiveGroupGaugeIterator using KeyPrefixActiveGroupGauges
+
 // FinishedGaugesIterator returns the iterator for all finished gauges.
 func (k Keeper) FinishedGaugesIterator(ctx sdk.Context) sdk.Iterator {
 	return k.iterator(ctx, types.KeyPrefixFinishedGauges)

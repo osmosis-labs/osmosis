@@ -116,6 +116,7 @@ func (q Querier) LockableDurations(ctx context.Context, _ *types.QueryLockableDu
 }
 
 // IncentivizedPools iterates over all internally incentivized gauges and returns their corresponding pools.
+// TODO: update this to include group gauges once they are implemented.
 func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivizedPoolsRequest) (*types.QueryIncentivizedPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -199,6 +200,8 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 }
 
 // ExternalIncentiveGauges iterates over all gauges and returns gauges externally incentivized by excluding default (internal) gauges.
+// TODO: update this to include group gauges once they are implemented. This logic is not going to work, as external group gauges will route
+// through the pool's "internal" perpetual gauges as well.
 func (q Querier) ExternalIncentiveGauges(ctx context.Context, req *types.QueryExternalIncentiveGaugesRequest) (*types.QueryExternalIncentiveGaugesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

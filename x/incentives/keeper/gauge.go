@@ -208,6 +208,73 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	return gauge.Id, nil
 }
 
+// TODO: refactor CreateGauge to use this as well
+// type GaugeParams struct {
+// 	IsPerpetual       bool
+// 	DistributeTo      lockuptypes.QueryCondition
+// 	Coins             sdk.Coins
+// 	StartTime         time.Time
+// 	NumEpochsPaidOver uint64
+// }
+
+// TODO: consider doing a general gauge interface?
+// type GroupGauge struct {
+//  Id                uint64
+//  GaugeParams 	  GaugeParams
+//  InternalGaugeIDs  []uint64 // consider just using pool IDs
+//  SplittingPolicy   SplittingPolicy
+// }
+
+// CreateGroupGauge creates a group gauge (need better name) that allocates rewards dynamically across its internal gauges based on the given splitting policy.
+// The only supported splitting policy for now is VolumeSplitting, which allocates rewards based on the volume of each internal gauge.
+// Note: we should expect that the internal gauges consist of the gauges that are automatically created for each pool upon pool creation, as even non-perpetual
+// external incentives would likely want to route through these.
+//
+// Observation: in that case, can we just make people pass in a list pool IDs instead of internalGaugeIDs? This would allow us to abstract the notion of internal gauges
+// from people who just want to incentivize a list of pools.
+//
+// Alternatively, we can have a pre-approved list of "Groups" which are just lists of pool IDs that are allowed to be used in group gauges. Then, people can just pass in the IDs for these.
+// These can be a module param set by governance.
+//
+// func (k Keeper) CreateGroupGauge(ctx sdk.Context, internalGaugeIDs []uint64, gaugeParams GaugeParams, splittingPolicy SplittingPolicy) (newGroupGauge GroupGauge, err error) {
+// // Require all internal gauges:
+// // - to be perpetual
+// // - to share the same base asset (let's just require an OSMO pair). Get pool using `GetPoolIdFromGaugeIdStoreKey`
+// // - TODO: allow for non OSMO pair using `GetPoolForDenomPair`
+// // - TODO: determine if there should be a governance-approved list of pool IDs that are allowed (see observation above as well)
+// // - TODO: if not governance-approved groups, add cap on length. This all becomes much easier if we just have governance-approved groups.
+
+// // Validate gauge params (usual validation logic)
+
+// // Validate splitting policy:
+// // If != enum 0 (VolumeSplitting, defined in types like e.g. SuperfluidUnbonding), then error
+
+// // TODO: add initial one in upgrade handler
+// // nextGroupGaugeId := k.GetLastGroupGaugeID(ctx) + 1
+
+// // newGroupGauge := GroupGauge{
+// // 	Id: nextGroupGaugeId,
+// // 	GaugeParams: gaugeParams,
+// // 	InternalGaugeIDs: internalGaugeIDs,
+// // 	SplittingPolicy: splittingPolicy,
+// // }
+
+// // TODO: implement this
+// // err = k.setGroupGauge(ctx, &newGroupGauge)
+// // if err != nil {
+// // return 0, err
+// // }
+
+// // TODO: implement this
+// // k.SetLastGroupGaugeID(ctx, gauge.Id)
+
+// // Figure out gauge ref key stuff here
+
+// // Scale gas by number of internal gauges (linearly)
+
+// // return newGroupGauge, nil
+// }
+
 // AddToGaugeRewards adds coins to gauge.
 func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error {
 	gauge, err := k.GetGaugeByID(ctx, gaugeID)
@@ -276,6 +343,8 @@ func (k Keeper) GetNotFinishedGauges(ctx sdk.Context) []types.Gauge {
 func (k Keeper) GetActiveGauges(ctx sdk.Context) []types.Gauge {
 	return k.getGaugesFromIterator(ctx, k.ActiveGaugesIterator(ctx))
 }
+
+// TODO: implement GetActiveGroupGauges
 
 // GetUpcomingGauges returns upcoming gauges.
 func (k Keeper) GetUpcomingGauges(ctx sdk.Context) []types.Gauge {

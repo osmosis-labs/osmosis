@@ -34,6 +34,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			ctx.EventManager().IncreaseCapacity(2e6)
 		}
 
+		// TODO: implement GetActiveGroupGauges
+		// Call AllocateAcrossGauges on the list of group gauges/IDs
+
 		// distribute due to epoch event
 		gauges = k.GetActiveGauges(ctx)
 		// only distribute to active gauges that are for native denoms
