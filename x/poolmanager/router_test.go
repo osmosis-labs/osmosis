@@ -2212,11 +2212,7 @@ func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 			var actualSwapOuts []sdk.Int
 			var err error
 
-			if !tc.sumOfSpreadFactors.IsNil() && !tc.cumulativeRouteSpreadFactor.IsNil() {
-				actualSwapOuts, err = suite.App.PoolManagerKeeper.CreateOsmoMultihopExpectedSwapOuts(suite.Ctx, tc.route, tc.tokenOut, tc.cumulativeRouteSpreadFactor, tc.sumOfSpreadFactors)
-			} else {
-				actualSwapOuts, err = suite.App.PoolManagerKeeper.CreateMultihopExpectedSwapOuts(suite.Ctx, tc.route, tc.tokenOut)
-			}
+			actualSwapOuts, err = suite.App.PoolManagerKeeper.CreateMultihopExpectedSwapOuts(suite.Ctx, tc.route, tc.tokenOut)
 			if tc.expectedError {
 				suite.Require().Error(err)
 			} else {

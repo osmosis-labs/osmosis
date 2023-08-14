@@ -91,12 +91,12 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 				_, _, addr0 := testdata.KeyTestPubAddr()
 				err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.Coins{coin})
 				s.NoError(err)
-				err = s.App.BankKeeper.SendCoinsFromAccountToModule(s.Ctx, addr0, types.NonNativeFeeCollectorName, sdk.Coins{coin})
+				err = s.App.BankKeeper.SendCoinsFromAccountToModule(s.Ctx, addr0, types.NonNativeFeeCollectorForStakingRewardsName, sdk.Coins{coin})
 				s.NoError(err)
 			}
 
 			// checks the balance of the non-native denom in module account
-			moduleAddrNonNativeFee := s.App.AccountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
+			moduleAddrNonNativeFee := s.App.AccountKeeper.GetModuleAddress(types.NonNativeFeeCollectorForStakingRewardsName)
 			s.Equal(s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddrNonNativeFee), tc.coins)
 
 			// End of epoch, so all the non-osmo fee amount should be swapped to osmo and transfer to fee module account

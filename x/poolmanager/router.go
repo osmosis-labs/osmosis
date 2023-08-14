@@ -7,6 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
@@ -34,6 +36,8 @@ func (k Keeper) RouteExactAmountIn(
 		routeSpreadFactor  sdk.Dec
 		sumOfSpreadFactors sdk.Dec
 	)
+
+	poolManagerParams := k.GetParams(ctx)
 
 	// Ensure that provided route is not empty and has valid denom format.
 	routeStep := types.SwapAmountInRoutes(route)
@@ -75,7 +79,7 @@ func (k Keeper) RouteExactAmountIn(
 			spreadFactor = routeSpreadFactor.MulRoundUp((spreadFactor.QuoRoundUp(sumOfSpreadFactors)))
 		}
 
-		takerFee := k.determineTakerFee(ctx, pool)
+		takerFee := k.determineTakerFee(ctx, pool, poolManagerParams)
 		totalFees := spreadFactor.Add(takerFee)
 
 		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, routeStep.TokenOutDenom, _outMinAmount, totalFees)
@@ -83,7 +87,7 @@ func (k Keeper) RouteExactAmountIn(
 			return sdk.Int{}, err
 		}
 
-		err = k.extractTakerFeeToFeePool(ctx, pool, tokenIn)
+		err = k.extractTakerFeeToFeePool(ctx, pool, tokenIn, takerFee, poolManagerParams)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -194,8 +198,10 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
 	}
 
+	poolManagerParams := k.GetParams(ctx)
+
 	spreadFactor := pool.GetSpreadFactor(ctx)
-	takerFee := k.determineTakerFee(ctx, pool)
+	takerFee := k.determineTakerFee(ctx, pool, poolManagerParams)
 	totalFees := spreadFactor.Add(takerFee)
 
 	// routeStep to the pool-specific SwapExactAmountIn implementation.
@@ -204,7 +210,45 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, err
 	}
 
-	err = k.extractTakerFeeToFeePool(ctx, pool, tokenIn)
+	err = k.extractTakerFeeToFeePool(ctx, pool, tokenIn, takerFee, poolManagerParams)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	return tokenOutAmount, nil
+}
+
+func (k Keeper) SwapExactAmountInNoTakerFee(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	poolId uint64,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	tokenOutMinAmount sdk.Int,
+) (tokenOutAmount sdk.Int, err error) {
+	// Get the pool-specific module implementation to ensure that
+	// swaps are routed to the pool type corresponding to pool ID's pool.
+	swapModule, err := k.GetPoolModule(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// Get pool as a general pool type. Note that the underlying function used
+	// still varies with the pool type.
+	pool, poolErr := swapModule.GetPool(ctx, poolId)
+	if poolErr != nil {
+		return sdk.Int{}, poolErr
+	}
+
+	// Check if pool has swaps enabled.
+	if !pool.IsActive(ctx) {
+		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
+	}
+
+	spreadFactor := pool.GetSpreadFactor(ctx)
+
+	// routeStep to the pool-specific SwapExactAmountIn implementation.
+	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, spreadFactor)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -225,6 +269,8 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 	}()
 
+	poolManagerParams := k.GetParams(ctx)
+
 	routeStep := types.SwapAmountInRoutes(route)
 	if err := routeStep.Validate(); err != nil {
 		return sdk.Int{}, err
@@ -243,7 +289,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 
 		spreadFactor := poolI.GetSpreadFactor(ctx)
-		takerFee := k.determineTakerFee(ctx, poolI)
+		takerFee := k.determineTakerFee(ctx, poolI, poolManagerParams)
 		totalFees := spreadFactor.Add(takerFee)
 
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenIn, routeStep.TokenOutDenom, totalFees)
@@ -280,6 +326,8 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	if err := routeStep.Validate(); err != nil {
 		return sdk.Int{}, err
 	}
+
+	poolManagerParams := k.GetParams(ctx)
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -335,7 +383,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
 		}
 
-		takerFee := k.determineTakerFee(ctx, pool)
+		takerFee := k.determineTakerFee(ctx, pool, poolManagerParams)
 		totalFees := spreadFactor.Add(takerFee)
 
 		_tokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, routeStep.TokenInDenom, insExpected[i], _tokenOut, totalFees)
@@ -344,7 +392,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		tokenIn := sdk.NewCoin(routeStep.TokenInDenom, _tokenInAmount)
-		err = k.extractTakerFeeToFeePool(ctx, pool, tokenIn)
+		err = k.extractTakerFeeToFeePool(ctx, pool, tokenIn, takerFee, poolManagerParams)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -470,7 +518,6 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	route []types.SwapAmountOutRoute,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
-	isMultiHopRouted, routeSpreadFactor, sumOfSpreadFactors := false, sdk.Dec{}, sdk.Dec{}
 	var insExpected []sdk.Int
 
 	// recover from panic
@@ -487,13 +534,7 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	}
 
 	// Determine what the estimated input would be for each pool along the multi-hop route
-	// if we determined the route is an osmo multi-hop and both routes are incentivized,
-	// we utilize a separate function that calculates the discounted spread factors
-	if isMultiHopRouted {
-		insExpected, err = k.createOsmoMultihopExpectedSwapOuts(ctx, route, tokenOut, routeSpreadFactor, sumOfSpreadFactors)
-	} else {
-		insExpected, err = k.createMultihopExpectedSwapOuts(ctx, route, tokenOut)
-	}
+	insExpected, err = k.createMultihopExpectedSwapOuts(ctx, route, tokenOut)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -577,40 +618,6 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 	return insExpected, nil
 }
 
-// createOsmoMultihopExpectedSwapOuts does the same as createMultihopExpectedSwapOuts, however discounts the swap fee.
-func (k Keeper) createOsmoMultihopExpectedSwapOuts(
-	ctx sdk.Context,
-	route []types.SwapAmountOutRoute,
-	tokenOut sdk.Coin,
-	cumulativeRouteSpreadFactor, sumOfSpreadFactors sdk.Dec,
-) ([]sdk.Int, error) {
-	insExpected := make([]sdk.Int, len(route))
-	for i := len(route) - 1; i >= 0; i-- {
-		routeStep := route[i]
-
-		swapModule, err := k.GetPoolModule(ctx, routeStep.PoolId)
-		if err != nil {
-			return nil, err
-		}
-
-		poolI, err := swapModule.GetPool(ctx, routeStep.PoolId)
-		if err != nil {
-			return nil, err
-		}
-
-		spreadFactor := poolI.GetSpreadFactor(ctx)
-		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, routeStep.TokenInDenom, cumulativeRouteSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors))))
-		if err != nil {
-			return nil, err
-		}
-
-		insExpected[i] = tokenIn.Amount
-		tokenOut = tokenIn
-	}
-
-	return insExpected, nil
-}
-
 // GetTotalPoolLiquidity gets the total liquidity for a given poolId.
 func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
 	swapModule, err := k.GetPoolModule(ctx, poolId)
@@ -647,32 +654,119 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 // determineTakerFee takes in a pool and determines the taker fee based on the pool type.
 // If the pool is a stableswap pool, the stableswap taker fee is returned.
 // If the poolId exists in the custom pool taker fee list, the custom taker fee is returned.
-func (k Keeper) determineTakerFee(ctx sdk.Context, pool types.PoolI) sdk.Dec {
-	poolManagerParams := k.GetParams(ctx)
+func (k Keeper) determineTakerFee(ctx sdk.Context, pool types.PoolI, poolManagerParams types.Params) sdk.Dec {
 	poolId := pool.GetId()
-	if pool.GetType() == types.Stableswap {
-		return poolManagerParams.StableswapTakerFee
-	}
+
+	// First, we check if the poolId exists in the custom pool taker fee list.
+	// This supersedes any other taker fee parameter.
 	for _, tradingPair := range poolManagerParams.CustomPoolTakerFee {
 		if poolId == tradingPair.PoolId {
 			return tradingPair.TakerFee
 		}
 	}
+	// If the pool is a stableswap pool, the stableswap taker fee is returned.
+	if pool.GetType() == types.Stableswap {
+		return poolManagerParams.StableswapTakerFee
+	}
+
+	// Otherwise, the default taker fee is returned.
 	return poolManagerParams.DefaultTakerFee
 }
 
-func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, pool types.PoolI, tokenIn sdk.Coin) error {
+// extractTakerFeeToFeePool takes in a pool and extracts the taker fee from the pool and sends it to the non native fee pool module account.
+// Its important to note here that in the original swap, the taker fee + spread fee is sent to the pool's address, so this is why we
+// pull directly from the pool and not the user's account.
+func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, pool types.PoolI, tokenIn sdk.Coin, takerFee sdk.Dec, poolManagerParams types.Params) error {
 	var relevantPoolAddress sdk.AccAddress
-	feeCollectorName := txfeestypes.FeeCollectorName
+	nonNativeFeeCollectorForStakingRewardsName := txfeestypes.NonNativeFeeCollectorForStakingRewardsName
+	nonNativeFeeCollectorForCommunityPoolName := txfeestypes.NonNativeFeeCollectorForCommunityPoolName
+	baseDenom := appparams.BaseCoinUnit
+
 	if pool.GetType() == types.Concentrated {
+		// If the pool being swapped from is a concentrated pool, the fee is sent from the spread rewards address
 		concentratedTypePool, ok := pool.(cltypes.ConcentratedPoolExtension)
 		if !ok {
 			return fmt.Errorf("pool %d is not a concentrated pool", pool.GetId())
 		}
 		relevantPoolAddress = concentratedTypePool.GetSpreadRewardsAddress()
 	} else {
+		// If the pool being swapped from is not a concentrated pool, the fee is sent from the pool address
 		relevantPoolAddress = pool.GetAddress()
 	}
-	testCoin := sdk.Coins{}
-	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, relevantPoolAddress, feeCollectorName, testCoin)
+
+	// Take the taker fee from the input token and send it to the fee pool module account
+	takerFeeDec := tokenIn.Amount.ToDec().Mul(takerFee)
+	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, takerFeeDec.TruncateInt())
+
+	// We determine the distributution of the taker fee based on its denom
+	// If the denom is the base denom:
+	if takerFeeCoin.Denom == baseDenom {
+		// Community Pool:
+		if poolManagerParams.OsmoTakerFeeDistribution.CommunityPool.GT(sdk.ZeroDec()) {
+			// Osmo community pool funds is a direct send
+			osmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.OsmoTakerFeeDistribution.CommunityPool)
+			osmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, osmoTakerFeeToCommunityPoolDec.TruncateInt()))
+			err := k.communityPoolKeeper.FundCommunityPool(ctx, osmoTakerFeeToCommunityPoolCoins, relevantPoolAddress)
+			if err != nil {
+				return err
+			}
+		}
+		// Staking Rewards:
+		if poolManagerParams.OsmoTakerFeeDistribution.StakingRewards.GT(sdk.ZeroDec()) {
+			// Osmo staking rewards funds are sent to the non native fee pool module account (even though its native, we want to distribute at the same time as the non native fee tokens)
+			// We could stream these rewards via the fee collector account, but this is decision to be made by governance.
+			osmoTakerFeeToStakingRewardsDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.OsmoTakerFeeDistribution.StakingRewards)
+			osmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, osmoTakerFeeToStakingRewardsDec.TruncateInt()))
+			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, relevantPoolAddress, nonNativeFeeCollectorForStakingRewardsName, osmoTakerFeeToStakingRewardsCoins)
+			if err != nil {
+				return err
+			}
+		}
+
+		// If the denom is not the base denom:
+	} else {
+		// Community Pool:
+		if poolManagerParams.NonOsmoTakerFeeDistribution.CommunityPool.GT(sdk.ZeroDec()) {
+			denomIsWhitelisted := isDenomWhitelisted(takerFeeCoin.Denom, poolManagerParams.AuthorizedQuoteDenoms)
+			// If the non osmo denom is a whitelisted quote asset, we send to the community pool
+			if denomIsWhitelisted {
+				nonOsmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.NonOsmoTakerFeeDistribution.CommunityPool)
+				nonOsmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt()))
+				err := k.communityPoolKeeper.FundCommunityPool(ctx, nonOsmoTakerFeeToCommunityPoolCoins, relevantPoolAddress)
+				if err != nil {
+					return err
+				}
+			} else {
+				// If the non osmo denom is not a whitelisted asset, we send to the non native fee pool for community pool module account.
+				// At epoch, this account swaps the non native, non whitelisted assets for XXX and sends to the community pool.
+				nonOsmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.NonOsmoTakerFeeDistribution.CommunityPool)
+				nonOsmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt()))
+				err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, relevantPoolAddress, nonNativeFeeCollectorForCommunityPoolName, nonOsmoTakerFeeToCommunityPoolCoins)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		// Staking Rewards:
+		if poolManagerParams.NonOsmoTakerFeeDistribution.StakingRewards.GT(sdk.ZeroDec()) {
+			// Non Osmo staking rewards are sent to the non native fee pool module account
+			nonOsmoTakerFeeToStakingRewardsDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.NonOsmoTakerFeeDistribution.StakingRewards)
+			nonOsmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToStakingRewardsDec.TruncateInt()))
+			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, relevantPoolAddress, nonNativeFeeCollectorForStakingRewardsName, nonOsmoTakerFeeToStakingRewardsCoins)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func isDenomWhitelisted(denom string, authorizedQuoteDenoms []string) bool {
+	for _, authorizedQuoteDenom := range authorizedQuoteDenoms {
+		if denom == authorizedQuoteDenom {
+			return true
+		}
+	}
+	return false
 }

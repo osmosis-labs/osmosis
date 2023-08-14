@@ -43,12 +43,3 @@ func (k Keeper) CreateMultihopExpectedSwapOuts(
 ) ([]sdk.Int, error) {
 	return k.createMultihopExpectedSwapOuts(ctx, route, tokenOut)
 }
-
-func (k Keeper) CreateOsmoMultihopExpectedSwapOuts(
-	ctx sdk.Context,
-	route []types.SwapAmountOutRoute,
-	tokenOut sdk.Coin,
-	cumulativeRouteSwapFee, sumOfSwapFees sdk.Dec,
-) ([]sdk.Int, error) {
-	return k.createOsmoMultihopExpectedSwapOuts(ctx, route, tokenOut, cumulativeRouteSwapFee, sumOfSwapFees)
-}

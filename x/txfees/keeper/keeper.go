@@ -18,6 +18,8 @@ type Keeper struct {
 	bankKeeper          types.BankKeeper
 	poolManager         types.PoolManager
 	spotPriceCalculator types.SpotPriceCalculator
+	protorevKeeper      types.ProtorevKeeper
+	distributionKeeper  types.DistributionKeeper
 }
 
 var _ types.TxFeesKeeper = (*Keeper)(nil)
@@ -28,6 +30,8 @@ func NewKeeper(
 	storeKey sdk.StoreKey,
 	poolManager types.PoolManager,
 	spotPriceCalculator types.SpotPriceCalculator,
+	protorevKeeper types.ProtorevKeeper,
+	distributionKeeper types.DistributionKeeper,
 ) Keeper {
 	return Keeper{
 		accountKeeper:       accountKeeper,
@@ -35,6 +39,8 @@ func NewKeeper(
 		storeKey:            storeKey,
 		poolManager:         poolManager,
 		spotPriceCalculator: spotPriceCalculator,
+		protorevKeeper:      protorevKeeper,
+		distributionKeeper:  distributionKeeper,
 	}
 }
 
