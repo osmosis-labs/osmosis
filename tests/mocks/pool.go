@@ -91,6 +91,20 @@ func (mr *MockPoolIMockRecorder) GetSpreadFactor(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpreadFactor", reflect.TypeOf((*MockPoolI)(nil).GetSpreadFactor), ctx)
 }
 
+// GetTakerFee mocks base method.
+func (m *MockPoolI) GetTakerFee(ctx types.Context) types.Dec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTakerFee", ctx)
+	ret0, _ := ret[0].(types.Dec)
+	return ret0
+}
+
+// GetTakerFee indicates an expected call of GetTakerFee.
+func (mr *MockPoolIMockRecorder) GetTakerFee(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTakerFee", reflect.TypeOf((*MockPoolI)(nil).GetTakerFee), ctx)
+}
+
 // GetType mocks base method.
 func (m *MockPoolI) GetType() types0.PoolType {
 	m.ctrl.T.Helper()

@@ -65,6 +65,12 @@ func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
 	return response.SwapFee
 }
 
+func (p Pool) GetTakerFee(ctx sdk.Context) sdk.Dec {
+	request := msg.GetTakerFeeQueryMsg{}
+	response := cosmwasmutils.MustQuery[msg.GetTakerFeeQueryMsg, msg.GetTakerFeeQueryMsgResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
+	return response.TakerFee
+}
+
 // IsActive returns true if the pool is active
 func (p Pool) IsActive(ctx sdk.Context) bool {
 	return true

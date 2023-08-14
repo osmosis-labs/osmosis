@@ -19,6 +19,7 @@ type PoolI interface {
 	// (prior TWAPs, network downtime, other pool states, etc.)
 	// hence Context is provided as an argument.
 	GetSpreadFactor(ctx sdk.Context) sdk.Dec
+	GetTakerFee(ctx sdk.Context) sdk.Dec
 	// Returns whether the pool has swaps enabled at the moment
 	IsActive(ctx sdk.Context) bool
 

@@ -66,7 +66,7 @@ func (k Keeper) RouteExactAmountIn(
 		}
 
 		spreadFactor := pool.GetSpreadFactor(ctx)
-		takerFee := k.determineTakerFee(ctx, pool, poolManagerParams)
+		takerFee := pool.GetTakerFee(ctx)
 		totalFees := spreadFactor.Add(takerFee)
 
 		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, routeStep.TokenOutDenom, _outMinAmount, totalFees)
@@ -188,7 +188,7 @@ func (k Keeper) SwapExactAmountIn(
 	poolManagerParams := k.GetParams(ctx)
 
 	spreadFactor := pool.GetSpreadFactor(ctx)
-	takerFee := k.determineTakerFee(ctx, pool, poolManagerParams)
+	takerFee := pool.GetTakerFee(ctx)
 	totalFees := spreadFactor.Add(takerFee)
 
 	// routeStep to the pool-specific SwapExactAmountIn implementation.
@@ -256,8 +256,6 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 	}()
 
-	poolManagerParams := k.GetParams(ctx)
-
 	routeStep := types.SwapAmountInRoutes(route)
 	if err := routeStep.Validate(); err != nil {
 		return sdk.Int{}, err
@@ -276,7 +274,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 
 		spreadFactor := poolI.GetSpreadFactor(ctx)
-		takerFee := k.determineTakerFee(ctx, poolI, poolManagerParams)
+		takerFee := poolI.GetTakerFee(ctx)
 		totalFees := spreadFactor.Add(takerFee)
 
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenIn, routeStep.TokenOutDenom, totalFees)
@@ -363,7 +361,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		spreadFactor := pool.GetSpreadFactor(ctx)
-		takerFee := k.determineTakerFee(ctx, pool, poolManagerParams)
+		takerFee := pool.GetTakerFee(ctx)
 		totalFees := spreadFactor.Add(takerFee)
 
 		_tokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, routeStep.TokenInDenom, insExpected[i], _tokenOut, totalFees)
@@ -629,28 +627,6 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	}
 	totalLiquidity := totalGammLiquidity.Add(totalConcentratedLiquidity...).Add(totalCosmwasmLiquidity...)
 	return totalLiquidity, nil
-}
-
-// determineTakerFee takes in a pool and determines the taker fee based on the pool type.
-// If the pool is a stableswap pool, the stableswap taker fee is returned.
-// If the poolId exists in the custom pool taker fee list, the custom taker fee is returned.
-func (k Keeper) determineTakerFee(ctx sdk.Context, pool types.PoolI, poolManagerParams types.Params) sdk.Dec {
-	poolId := pool.GetId()
-
-	// First, we check if the poolId exists in the custom pool taker fee list.
-	// This supersedes any other taker fee parameter.
-	for _, tradingPair := range poolManagerParams.CustomPoolTakerFee {
-		if poolId == tradingPair.PoolId {
-			return tradingPair.TakerFee
-		}
-	}
-	// If the pool is a stableswap pool, the stableswap taker fee is returned.
-	if pool.GetType() == types.Stableswap {
-		return poolManagerParams.StableswapTakerFee
-	}
-
-	// Otherwise, the default taker fee is returned.
-	return poolManagerParams.DefaultTakerFee
 }
 
 // extractTakerFeeToFeePool takes in a pool and extracts the taker fee from the pool and sends it to the non native fee pool module account.

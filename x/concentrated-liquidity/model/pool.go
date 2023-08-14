@@ -101,6 +101,10 @@ func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
 	return p.SpreadFactor
 }
 
+func (p Pool) GetTakerFee(ctx sdk.Context) sdk.Dec {
+	return p.TakerFee
+}
+
 // IsActive returns true if the pool is active
 func (p Pool) IsActive(ctx sdk.Context) bool {
 	return true

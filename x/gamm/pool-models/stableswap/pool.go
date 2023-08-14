@@ -90,6 +90,10 @@ func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
 	return p.PoolParams.SwapFee
 }
 
+func (p Pool) GetTakerFee(ctx sdk.Context) sdk.Dec {
+	return p.PoolParams.TakerFee
+}
+
 func (p Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
 	return p.PoolParams.ExitFee
 }

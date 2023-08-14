@@ -20,6 +20,20 @@ message GetSwapFeeQueryMsgResponse {
   ];
 }
 
+// ===================== GetTakerFeeQueryMsg
+message GetTakerFeeQueryMsg {
+  // get_taker_fee is the query strcuture to get taker fee.
+  EmptyStruct get_taker_fee = 1 [ (gogoproto.nullable) = false ];
+}
+
+message GetTakerFeeQueryMsgResponse {
+  // taker_fee is the taker fee for this swap estimate.
+  string taker_fee = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
 // ===================== SpotPriceQueryMsg
 message SpotPrice {
   // quote_asset_denom is the quote asset of the spot query.

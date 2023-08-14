@@ -1229,7 +1229,6 @@ func (s *KeeperTestSuite) calcOutAmountAsSeparateSwaps(routes []types.SwapAmount
 func (s *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
 	cacheCtx, _ := s.Ctx.CacheContext()
 	nextTokenIn := tokenIn
-	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 
 	for _, hop := range routes {
 		swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
@@ -1240,7 +1239,7 @@ func (s *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(routes []types.SwapAmo
 
 		// utilize the routeSpreadFactor, sumOfSpreadFactors, and current pool swap fee to calculate the new reduced swap fee
 		spreadFactor := pool.GetSpreadFactor(cacheCtx)
-		takerFee := s.App.PoolManagerKeeper.DetermineTakerFee(cacheCtx, pool, poolManagerParams)
+		takerFee := pool.GetTakerFee(s.Ctx)
 		totalFee := spreadFactor.Add(takerFee)
 
 		// we then do individual swaps until we reach the end of the swap route
