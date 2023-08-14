@@ -272,8 +272,8 @@ github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-202308
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20230803185752-97c9635dd74a/go.mod h1:Mn/jr9pIYr1ofFuptLEi9N6MjcshTT0cpoOY4ln1DeA=
 github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.0.0-20230803151532-5c60ac789ef7 h1:q6OzbGXmWRbMedDejhuctDbb3M6fWyJg3DY3bzJbYVs=
 github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.0.0-20230803151532-5c60ac789ef7/go.mod h1:X/dLZ6QxTImzno7qvD6huLhh6ZZBcRt2URn4YCLcXFY=
-github.com/cosmos/ibc-go/v4 v4.3.1 h1:xbg0CaCdxK3lvgGvSaI91ROOLd7s30UqEcexH6Ba4Ys=
-github.com/cosmos/ibc-go/v4 v4.3.1/go.mod h1:89E+K9CxpkS/etLEcG026jPM/RSnVMcfesvRYp/0aKI=
+github.com/cosmos/ibc-go/v4 v4.4.2 h1:PG4Yy0/bw6Hvmha3RZbc53KYzaCwuB07Ot4GLyzcBvo=
+github.com/cosmos/ibc-go/v4 v4.4.2/go.mod h1:j/kD2JCIaV5ozvJvaEkWhLxM2zva7/KTM++EtKFYcB8=
 github.com/cosmos/interchain-accounts v0.2.6 h1:TV2M2g1/Rb9MCNw1YePdBKE0rcEczNj1RGHT+2iRYas=
 github.com/cosmos/ledger-cosmos-go v0.12.2 h1:/XYaBlE2BJxtvpkHiBm97gFGSGmYGKunKyF3nNqAXZA=
 github.com/cosmos/ledger-cosmos-go v0.12.2/go.mod h1:ZcqYgnfNJ6lAXe4HPtWgarNEY+B74i+2/8MhZw4ziiI=
