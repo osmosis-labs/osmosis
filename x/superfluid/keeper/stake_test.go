@@ -1683,6 +1683,10 @@ func (s *KeeperTestSuite) SetupUnbondConvertAndStakeTest(ctx sdk.Context, superf
 
 }
 
+// delegationCheck checks staking related invariants of the test.
+// We check the following in this method:
+// - if superfluid staked previously, check if the original validator's delegation has been deleted.
+// - Cehck if the delegation of the new validator matches what's expected.
 func (s *KeeperTestSuite) delegationCheck(ctx sdk.Context, sender sdk.AccAddress, originalValAddr, newValAddr sdk.ValAddress, totalAmtConverted sdk.Int) {
 	if !originalValAddr.Empty() {
 		// check if original superfluid staked lock's delgation is successfully deleted
@@ -1693,8 +1697,13 @@ func (s *KeeperTestSuite) delegationCheck(ctx sdk.Context, sender sdk.AccAddress
 	delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, newValAddr)
 	s.Require().True(found)
 	s.Require().True(totalAmtConverted.ToDec().Equal(delegation.Shares))
+	s.Require().True(delegation.Shares.Equal(totalAmtConverted.ToDec()))
 }
 
+// lockCheck checks lock related invariants of the test.
+// We check the following in this method:
+// - check if old synth lock has been deleted (both staking & unstaking)
+// - check if old lock has been succesfully deleted.
 func (s *KeeperTestSuite) lockCheck(ctx sdk.Context, lock lockuptypes.PeriodLock, valAddr string, checkUnstakingSynthLock bool) {
 	// The synthetic lockup should be deleted.
 	_, err := s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
