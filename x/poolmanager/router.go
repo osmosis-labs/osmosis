@@ -305,13 +305,13 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
+	poolManagerParams := k.GetParams(ctx)
+
 	// Ensure that provided route is not empty and has valid denom format.
 	routeStep := types.SwapAmountOutRoutes(route)
 	if err := routeStep.Validate(); err != nil {
 		return sdk.Int{}, err
 	}
-
-	poolManagerParams := k.GetParams(ctx)
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -584,7 +584,11 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
-		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, routeStep.TokenInDenom, poolI.GetSpreadFactor(ctx))
+		spreadFactor := poolI.GetSpreadFactor(ctx)
+		takeFee := poolI.GetTakerFee(ctx)
+		totalFees := spreadFactor.Add(takeFee)
+
+		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, routeStep.TokenInDenom, totalFees)
 		if err != nil {
 			return nil, err
 		}
