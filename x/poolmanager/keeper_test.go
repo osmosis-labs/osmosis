@@ -18,8 +18,31 @@ type KeeperTestSuite struct {
 const testExpectedPoolId = 3
 
 var (
-	testPoolCreationFee = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)}
-	testPoolRoute       = []types.ModuleRoute{
+	testPoolCreationFee    = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)}
+	testDefaultTakerFee    = sdk.MustNewDecFromStr("0.0015")
+	testStableswapTakerFee = sdk.MustNewDecFromStr("0.0002")
+	testCustomPoolTakerFee = []types.CustomPoolTakerFee{
+		{
+			PoolId:   1,
+			TakerFee: sdk.MustNewDecFromStr("0.0005"),
+		},
+		{
+			PoolId:   2,
+			TakerFee: sdk.MustNewDecFromStr("0.0001"),
+		},
+	}
+	testOsmoTakerFeeDistribution = types.TakerFeeDistributionPercentage{
+		StakingRewards: sdk.MustNewDecFromStr("0.3"),
+		CommunityPool:  sdk.MustNewDecFromStr("0.7"),
+	}
+	testNonOsmoTakerFeeDistribution = types.TakerFeeDistributionPercentage{
+		StakingRewards: sdk.MustNewDecFromStr("0.2"),
+		CommunityPool:  sdk.MustNewDecFromStr("0.8"),
+	}
+	testAuthorizedQuoteDenoms                          = []string{"uosmo", "uion", "uatom"}
+	testCommunityPoolDenomToSwapNonWhitelistedAssetsTo = "uusdc"
+
+	testPoolRoute = []types.ModuleRoute{
 		{
 			PoolId:   1,
 			PoolType: types.Balancer,
@@ -68,21 +91,42 @@ func (s *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins) {
 func (s *KeeperTestSuite) TestInitGenesis() {
 	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
 		Params: types.Params{
-			PoolCreationFee: testPoolCreationFee,
+			PoolCreationFee:                                testPoolCreationFee,
+			DefaultTakerFee:                                testDefaultTakerFee,
+			StableswapTakerFee:                             testStableswapTakerFee,
+			CustomPoolTakerFee:                             testCustomPoolTakerFee,
+			OsmoTakerFeeDistribution:                       testOsmoTakerFeeDistribution,
+			NonOsmoTakerFeeDistribution:                    testNonOsmoTakerFeeDistribution,
+			AuthorizedQuoteDenoms:                          testAuthorizedQuoteDenoms,
+			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: testCommunityPoolDenomToSwapNonWhitelistedAssetsTo,
 		},
 		NextPoolId: testExpectedPoolId,
 		PoolRoutes: testPoolRoute,
 	})
 
+	params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 	s.Require().Equal(uint64(testExpectedPoolId), s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx))
-	s.Require().Equal(testPoolCreationFee, s.App.PoolManagerKeeper.GetParams(s.Ctx).PoolCreationFee)
+	s.Require().Equal(testPoolCreationFee, params.PoolCreationFee)
+	s.Require().Equal(testDefaultTakerFee, params.DefaultTakerFee)
+	s.Require().Equal(testStableswapTakerFee, params.StableswapTakerFee)
+	s.Require().Equal(testCustomPoolTakerFee, params.CustomPoolTakerFee)
+	s.Require().Equal(testOsmoTakerFeeDistribution, params.OsmoTakerFeeDistribution)
+	s.Require().Equal(testNonOsmoTakerFeeDistribution, params.NonOsmoTakerFeeDistribution)
+	s.Require().Equal(testAuthorizedQuoteDenoms, params.AuthorizedQuoteDenoms)
 	s.Require().Equal(testPoolRoute, s.App.PoolManagerKeeper.GetAllPoolRoutes(s.Ctx))
 }
 
 func (s *KeeperTestSuite) TestExportGenesis() {
 	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
 		Params: types.Params{
-			PoolCreationFee: testPoolCreationFee,
+			PoolCreationFee:                                testPoolCreationFee,
+			DefaultTakerFee:                                testDefaultTakerFee,
+			StableswapTakerFee:                             testStableswapTakerFee,
+			CustomPoolTakerFee:                             testCustomPoolTakerFee,
+			OsmoTakerFeeDistribution:                       testOsmoTakerFeeDistribution,
+			NonOsmoTakerFeeDistribution:                    testNonOsmoTakerFeeDistribution,
+			AuthorizedQuoteDenoms:                          testAuthorizedQuoteDenoms,
+			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: testCommunityPoolDenomToSwapNonWhitelistedAssetsTo,
 		},
 		NextPoolId: testExpectedPoolId,
 		PoolRoutes: testPoolRoute,
@@ -91,5 +135,12 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	genesis := s.App.PoolManagerKeeper.ExportGenesis(s.Ctx)
 	s.Require().Equal(uint64(testExpectedPoolId), genesis.NextPoolId)
 	s.Require().Equal(testPoolCreationFee, genesis.Params.PoolCreationFee)
+	s.Require().Equal(testDefaultTakerFee, genesis.Params.DefaultTakerFee)
+	s.Require().Equal(testStableswapTakerFee, genesis.Params.StableswapTakerFee)
+	s.Require().Equal(testCustomPoolTakerFee, genesis.Params.CustomPoolTakerFee)
+	s.Require().Equal(testOsmoTakerFeeDistribution, genesis.Params.OsmoTakerFeeDistribution)
+	s.Require().Equal(testNonOsmoTakerFeeDistribution, genesis.Params.NonOsmoTakerFeeDistribution)
+	s.Require().Equal(testAuthorizedQuoteDenoms, genesis.Params.AuthorizedQuoteDenoms)
+	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, genesis.Params.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
 	s.Require().Equal(testPoolRoute, genesis.PoolRoutes)
 }

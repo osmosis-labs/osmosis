@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
 			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
+			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
 		"two hops": {
 			routes: []poolmanagertypes.SwapAmountInRoute{
@@ -62,7 +62,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
 			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
+			expectedMessageEvents: 9, // 1 gamm + 8 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []poolmanagertypes.SwapAmountInRoute{
@@ -145,7 +145,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
 			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
+			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
 		"two hops": {
 			routes: []poolmanagertypes.SwapAmountOutRoute{
@@ -161,7 +161,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
 			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
+			expectedMessageEvents: 9, // 1 gamm + 8 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []poolmanagertypes.SwapAmountOutRoute{

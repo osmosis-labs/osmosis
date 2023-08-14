@@ -43,3 +43,7 @@ func (k Keeper) CreateMultihopExpectedSwapOuts(
 ) ([]sdk.Int, error) {
 	return k.createMultihopExpectedSwapOuts(ctx, route, tokenOut)
 }
+
+func (k Keeper) DetermineTakerFee(ctx sdk.Context, pool types.PoolI, poolManagerParams types.Params) sdk.Dec {
+	return k.determineTakerFee(ctx, pool, poolManagerParams)
+}

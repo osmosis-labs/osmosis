@@ -31,12 +31,6 @@ func (k Keeper) RouteExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, err error) {
-	var (
-		isMultiHopRouted   bool
-		routeSpreadFactor  sdk.Dec
-		sumOfSpreadFactors sdk.Dec
-	)
-
 	poolManagerParams := k.GetParams(ctx)
 
 	// Ensure that provided route is not empty and has valid denom format.
@@ -72,13 +66,6 @@ func (k Keeper) RouteExactAmountIn(
 		}
 
 		spreadFactor := pool.GetSpreadFactor(ctx)
-
-		// If we determined the route is an osmo multi-hop and both routes are incentivized,
-		// we modify the spread factor accordingly.
-		if isMultiHopRouted {
-			spreadFactor = routeSpreadFactor.MulRoundUp((spreadFactor.QuoRoundUp(sumOfSpreadFactors)))
-		}
-
 		takerFee := k.determineTakerFee(ctx, pool, poolManagerParams)
 		totalFees := spreadFactor.Add(takerFee)
 
@@ -320,7 +307,6 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
-	isMultiHopRouted, routeSpreadFactor, sumOfSpreadFactors := false, sdk.Dec{}, sdk.Dec{}
 	// Ensure that provided route is not empty and has valid denom format.
 	routeStep := types.SwapAmountOutRoutes(route)
 	if err := routeStep.Validate(); err != nil {
@@ -377,12 +363,6 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		spreadFactor := pool.GetSpreadFactor(ctx)
-		// If we determined the routeStep is an osmo multi-hop and both route are incentivized,
-		// we modify the swap fee accordingly.
-		if isMultiHopRouted {
-			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
-		}
-
 		takerFee := k.determineTakerFee(ctx, pool, poolManagerParams)
 		totalFees := spreadFactor.Add(takerFee)
 

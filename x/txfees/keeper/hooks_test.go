@@ -112,7 +112,7 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			// non-osmos module account should be empty as all the funds should be transferred to osmo module
 			s.Empty(s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddrNonNativeFee))
 			// check that the total osmo amount has been transferred to module account
-			s.Equal(moduleBaseDenomBalance.Amount, finalOutputAmount)
+			s.Equal(moduleBaseDenomBalance.Amount.String(), finalOutputAmount.String())
 		})
 	}
 }

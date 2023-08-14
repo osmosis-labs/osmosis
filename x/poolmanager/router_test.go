@@ -1229,6 +1229,8 @@ func (s *KeeperTestSuite) calcOutAmountAsSeparateSwaps(routes []types.SwapAmount
 func (s *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
 	cacheCtx, _ := s.Ctx.CacheContext()
 	nextTokenIn := tokenIn
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+
 	for _, hop := range routes {
 		swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
 		s.Require().NoError(err)
@@ -1238,9 +1240,11 @@ func (s *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(routes []types.SwapAmo
 
 		// utilize the routeSpreadFactor, sumOfSpreadFactors, and current pool swap fee to calculate the new reduced swap fee
 		spreadFactor := pool.GetSpreadFactor(cacheCtx)
+		takerFee := s.App.PoolManagerKeeper.DetermineTakerFee(cacheCtx, pool, poolManagerParams)
+		totalFee := spreadFactor.Add(takerFee)
 
 		// we then do individual swaps until we reach the end of the swap route
-		tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), spreadFactor)
+		tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), totalFee)
 		s.Require().NoError(err)
 
 		nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
@@ -1266,10 +1270,11 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 		//  - foo: 1000000000000
 		//  - bar: 1000000000000
 		//  - spreadFactor: 0.1%
+		//  - takerFee: 0.15%
 		//  - foo in: 100000
 		//  - bar amount out will be calculated according to the formula
-		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.999%29%2810%5E12+-+x%29+%3D+10%5E24
-		// We round down the token amount out, get the result is 99899
+		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.9975%29%2810%5E12+-+x%29+%3D+10%5E24
+		// We round down the token amount out, get the result is 99749
 		{
 			name:                   "Swap - [foo -> bar], 0.1 percent fee",
 			poolId:                 1,
@@ -1278,7 +1283,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:      sdk.NewInt(1),
 			tokenOutDenom:          bar,
-			expectedTokenOutAmount: sdk.NewInt(99899),
+			expectedTokenOutAmount: sdk.NewInt(99749),
 		},
 		{
 			name:              "Wrong pool id",
