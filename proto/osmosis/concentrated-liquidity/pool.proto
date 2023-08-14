@@ -65,4 +65,13 @@ message Pool {
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"last_liquidity_update\""
   ];
+
+  // taker_fee is the ratio that is charged on the amount of token in.
+  // this value is assigned by the protocol at time of pool creation,
+  // however can be changed by governance.
+  string taker_fee = 14 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"taker_fee\"",
+    (gogoproto.nullable) = false
+  ];
 }

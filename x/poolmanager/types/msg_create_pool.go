@@ -17,5 +17,5 @@ type CreatePoolMsg interface {
 	// Initial Liquidity for the pool that the sender is required to send to the pool account
 	InitialLiquidity() sdk.Coins
 	// CreatePool creates a pool implementing PoolI, using data from the message.
-	CreatePool(ctx sdk.Context, poolID uint64) (PoolI, error)
+	CreatePool(ctx sdk.Context, poolID uint64, takerFee sdk.Dec) (PoolI, error)
 }

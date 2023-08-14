@@ -110,7 +110,8 @@ func (msg MsgCreateStableswapPool) InitialLiquidity() sdk.Coins {
 	return msg.InitialPoolLiquidity
 }
 
-func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error) {
+func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64, takerFee sdk.Dec) (poolmanagertypes.PoolI, error) {
+	msg.PoolParams.TakerFee = takerFee
 	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity,
 		msg.ScalingFactors, msg.ScalingFactorController, msg.FuturePoolGovernor)
 	if err != nil {

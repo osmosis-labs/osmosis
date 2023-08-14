@@ -97,8 +97,8 @@ func (msg MsgCreateConcentratedPool) InitialLiquidity() sdk.Coins {
 	return sdk.Coins{}
 }
 
-func (msg MsgCreateConcentratedPool) CreatePool(ctx sdk.Context, poolID uint64) (poolmanagertypes.PoolI, error) {
-	poolI, err := NewConcentratedLiquidityPool(poolID, msg.Denom0, msg.Denom1, msg.TickSpacing, msg.SpreadFactor)
+func (msg MsgCreateConcentratedPool) CreatePool(ctx sdk.Context, poolID uint64, takerFee sdk.Dec) (poolmanagertypes.PoolI, error) {
+	poolI, err := NewConcentratedLiquidityPool(poolID, msg.Denom0, msg.Denom1, msg.TickSpacing, msg.SpreadFactor, takerFee)
 	return &poolI, err
 }
 

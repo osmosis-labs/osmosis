@@ -26,7 +26,7 @@ var (
 
 // NewConcentratedLiquidityPool creates a new ConcentratedLiquidity pool with the specified parameters.
 // The two provided denoms are ordered so that denom0 is lexicographically smaller than denom1.
-func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, spreadFactor sdk.Dec) (Pool, error) {
+func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, spreadFactor, takerFee sdk.Dec) (Pool, error) {
 	// Ensure that the two denoms are different
 	if denom0 == denom1 {
 		return Pool{}, types.MatchingDenomError{Denom: denom0}
@@ -51,6 +51,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		TickSpacing:          tickSpacing,
 		ExponentAtPriceOne:   types.ExponentAtPriceOne,
 		SpreadFactor:         spreadFactor,
+		TakerFee:             takerFee,
 	}
 	return pool, nil
 }

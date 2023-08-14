@@ -33,6 +33,14 @@ message PoolParams {
     (gogoproto.moretags) = "yaml:\"exit_fee\"",
     (gogoproto.nullable) = false
   ];
+  // taker_fee is the ratio that is charged on the amount of token in.
+  // this value is assigned by the protocol at time of pool creation,
+  // however can be changed by governance.
+  string taker_fee = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"taker_fee\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // Pool is the stableswap Pool struct

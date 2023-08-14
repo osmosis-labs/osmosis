@@ -55,6 +55,15 @@ message Params {
   string community_pool_denom_to_swap_non_whitelisted_assets_to = 8
       [ (gogoproto.moretags) =
             "yaml:\"community_pool_denom_to_swap_non_whitelisted_assets_to\"" ];
+  // stablecoin_denoms is a list of denoms that are considered stablecoins.
+  // This is used to determine if a pool should use the stableswap taker
+  // fee.bool LSTs are NOT apart of this catagory, even though they are eligible
+  // for stableswap taker fees. This is determined via the
+  // liquid_stake_denom_pairings field.
+  repeated string stablecoin_denoms = 9
+      [ (gogoproto.moretags) = "yaml:\"stablecoin_denoms\"" ];
+  repeated LiquidStakedTokenToUnderlyingDenom liquid_stake_denom_pairings = 10
+      [ (gogoproto.moretags) = "yaml:\"liquid_stake_denom_pairings\"" ];
 }
 
 // GenesisState defines the poolmanager module's genesis state.
@@ -90,4 +99,11 @@ message TakerFeeDistributionPercentage {
     (gogoproto.moretags) = "yaml:\"community_pool\"",
     (gogoproto.nullable) = false
   ];
+}
+
+message LiquidStakedTokenToUnderlyingDenom {
+  repeated string liquid_staked_token_denoms = 1
+      [ (gogoproto.moretags) = "yaml:\"liquid_staked_token_denoms\"" ];
+  string underlying_token_denom = 2
+      [ (gogoproto.moretags) = "yaml:\"underlying_token_denom\"" ];
 }

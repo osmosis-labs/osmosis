@@ -487,7 +487,7 @@ func (s *KeeperTestSuite) TestCalculateSpreadRewardGrowth() {
 // Test what happens if somehow the accumulator didn't exist.
 // TODO: Does this test even matter? We should never be in a situation where the accumulator doesn't exist
 func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTickAccumDoesntExist() {
-	pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultZeroSpreadFactor)
+	pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultZeroSpreadFactor, DefaultTakerFee)
 	s.Require().NoError(err)
 
 	// N.B.: we set the listener mock because we would like to avoid

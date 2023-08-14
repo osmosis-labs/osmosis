@@ -298,6 +298,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 
 func (suite *TestSuite) TestMsgCreateStableswapPool() {
 	suite.SetupTest()
+	defaultTakerFee := sdk.MustNewDecFromStr("0.0015")
 
 	var (
 		validParams           = &stableswap.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.ZeroDec()}
@@ -338,7 +339,7 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
+			pool, err := tc.msg.CreatePool(suite.Ctx, 1, defaultTakerFee)
 
 			if tc.expectError {
 				suite.Require().Error(err)

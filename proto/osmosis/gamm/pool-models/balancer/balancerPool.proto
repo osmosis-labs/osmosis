@@ -94,6 +94,14 @@ message PoolParams {
     (gogoproto.moretags) = "yaml:\"smooth_weight_change_params\"",
     (gogoproto.nullable) = true
   ];
+  // taker_fee is the ratio that is charged on the amount of token in.
+  // this value is assigned by the protocol at time of pool creation,
+  // however can be changed by governance.
+  string taker_fee = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"taker_fee\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // Pool asset is an internal struct that combines the amount of the

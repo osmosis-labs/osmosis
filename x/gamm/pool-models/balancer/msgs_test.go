@@ -243,6 +243,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 }
 
 func (s *KeeperTestSuite) TestMsgCreateBalancerPool() {
+	defaultTakerFee := sdk.MustNewDecFromStr("0.0015")
 	tests := map[string]struct {
 		msg         balancer.MsgCreateBalancerPool
 		poolId      uint64
@@ -271,7 +272,7 @@ func (s *KeeperTestSuite) TestMsgCreateBalancerPool() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			pool, err := tc.msg.CreatePool(s.Ctx, 1)
+			pool, err := tc.msg.CreatePool(s.Ctx, 1, defaultTakerFee)
 
 			if tc.expectError {
 				s.Require().Error(err)

@@ -59,6 +59,7 @@ var (
 	FullRangeLiquidityAmt = sdk.MustNewDecFromStr("70710678.118654752941000000")
 
 	DefaultTickSpacing                             = uint64(100)
+	DefaultTakerFee                                = sdk.MustNewDecFromStr("0.0015")
 	PoolCreationFee                                = poolmanagertypes.DefaultParams().PoolCreationFee
 	sqrt4000                                       = sdk.MustNewDecFromStr("63.245553203367586640")
 	sqrt4994                                       = sdk.MustNewDecFromStr("70.668238976219012614")
