@@ -824,7 +824,7 @@ func (k Keeper) convertGammSharesToOsmoAndStake(
 
 	// check if the total amount to stake after all conversion is greater than provided min amount to stake
 	if totalAmtToStake.LT(minAmtToStake) {
-		return sdk.ZeroInt(), types.TokenConvertedLessThenDesiredStakeError{
+		return sdk.Int{}, types.TokenConvertedLessThenDesiredStakeError{
 			ActualTotalAmtToStake:   totalAmtToStake,
 			ExpectedTotalAmtToStake: minAmtToStake,
 		}
