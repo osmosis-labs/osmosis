@@ -128,7 +128,7 @@ func (k Keeper) IncreaseSuperfluidDelegation(ctx sdk.Context, lockID uint64, amo
 // basic validation for locks to be eligible for superfluid delegation. This includes checking
 // - that the sender is the owner of the lock
 // - that the lock is consisted of single coin
-func (k Keeper) validateLockForSF(ctx sdk.Context, lock *lockuptypes.PeriodLock, sender string) error {
+func (k Keeper) validateLockForSF(lock *lockuptypes.PeriodLock, sender string) error {
 	if lock.Owner != sender {
 		return lockuptypes.ErrNotLockOwner
 	}
@@ -146,7 +146,7 @@ func (k Keeper) validateLockForSF(ctx sdk.Context, lock *lockuptypes.PeriodLock,
 // - lock duration is greater or equal to the unbonding time
 // - lock should not be already superfluid staked
 func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.PeriodLock, sender string) error {
-	err := k.validateLockForSF(ctx, lock, sender)
+	err := k.validateLockForSF(lock, sender)
 	if err != nil {
 		return err
 	}
@@ -255,7 +255,7 @@ func (k Keeper) undelegateCommon(ctx sdk.Context, sender string, lockID uint64) 
 	if err != nil {
 		return types.SuperfluidIntermediaryAccount{}, err
 	}
-	err = k.validateLockForSF(ctx, lock, sender)
+	err = k.validateLockForSF(lock, sender)
 	if err != nil {
 		return types.SuperfluidIntermediaryAccount{}, err
 	}
@@ -316,7 +316,7 @@ func (k Keeper) partialUndelegateCommon(ctx sdk.Context, sender string, lockID u
 	if err != nil {
 		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, err
 	}
-	err = k.validateLockForSF(ctx, lock, sender)
+	err = k.validateLockForSF(lock, sender)
 	if err != nil {
 		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, err
 	}
@@ -457,7 +457,7 @@ func (k Keeper) unbondLock(ctx sdk.Context, underlyingLockId uint64, sender stri
 	if err != nil {
 		return 0, err
 	}
-	err = k.validateLockForSF(ctx, lock, sender)
+	err = k.validateLockForSF(lock, sender)
 	if err != nil {
 		return 0, err
 	}
