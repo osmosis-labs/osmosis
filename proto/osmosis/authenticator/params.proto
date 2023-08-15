@@ -1,0 +1,12 @@
+syntax = "proto3";
+package authenticator.authenticator;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v17/x/authenticator/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  
+}
