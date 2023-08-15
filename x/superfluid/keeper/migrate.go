@@ -47,7 +47,7 @@ const (
 //
 // Errors if the lock is not found, if the lock is not a balancer pool lock, or if the lock is not owned by the sender.
 func (k Keeper) RouteLockedBalancerToConcentratedMigration(ctx sdk.Context, sender sdk.AccAddress, providedLockId int64, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) (positionData cltypes.CreateFullRangePositionData, migratedPoolIDs types.MigrationPoolIDs, concentratedLockId uint64, err error) {
-	synthLockBeforeMigration, migrationType, err := k.routeMigration(ctx, providedLockId)
+	synthLockBeforeMigration, migrationType, err := k.getMigrationType(ctx, providedLockId)
 	if err != nil {
 		return cltypes.CreateFullRangePositionData{}, types.MigrationPoolIDs{}, 0, err
 	}
@@ -105,7 +105,7 @@ func (k Keeper) migrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context,
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
 	// This will return the coins that will be used to create the concentrated liquidity position.
 	// It also returns the lock object that contains the remaining shares that were not used in this migration.
-	exitCoins, err := k.validateSharesToMigrateUnlockAndExitBalancerPool(ctx, sender, migratedPoolIDs.LeavingID, preMigrationLock, sharesToMigrate, tokenOutMins)
+	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, migratedPoolIDs.LeavingID, preMigrationLock, sharesToMigrate, tokenOutMins, true)
 	if err != nil {
 		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
@@ -151,7 +151,7 @@ func (k Keeper) migrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
 	// This will return the coins that will be used to create the concentrated liquidity position.
 	// It also returns the lock object that contains the remaining shares that were not used in this migration.
-	exitCoins, err := k.validateSharesToMigrateUnlockAndExitBalancerPool(ctx, sender, migratedPoolIDs.LeavingID, preMigrationLock, sharesToMigrate, tokenOutMins)
+	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, migratedPoolIDs.LeavingID, preMigrationLock, sharesToMigrate, tokenOutMins, true)
 	if err != nil {
 		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
@@ -199,7 +199,7 @@ func (k Keeper) migrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context,
 	// Force unlock, validate the provided sharesToMigrate, and exit the balancer pool.
 	// This will return the coins that will be used to create the concentrated liquidity position.
 	// It also returns the lock object that contains the remaining shares that were not used in this migration.
-	exitCoins, err := k.validateSharesToMigrateUnlockAndExitBalancerPool(ctx, sender, migratedPoolIDs.LeavingID, preMigrationLock, sharesToMigrate, tokenOutMins)
+	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, migratedPoolIDs.LeavingID, preMigrationLock, sharesToMigrate, tokenOutMins, true)
 	if err != nil {
 		return cltypes.CreateFullRangePositionData{}, 0, types.MigrationPoolIDs{}, err
 	}
@@ -215,9 +215,9 @@ func (k Keeper) migrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context,
 	return positionData, concentratedLockId, migratedPoolIDs, nil
 }
 
-// routeMigration determines the status of the provided lock which is used to determine the method for migration.
+// getMigrationType determines the status of the provided lock which is used to determine the method for migration.
 // It also returns the underlying synthetic locks of the provided lock, if any exist.
-func (k Keeper) routeMigration(ctx sdk.Context, providedLockId int64) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
+func (k Keeper) getMigrationType(ctx sdk.Context, providedLockId int64) (synthLockBeforeMigration lockuptypes.SyntheticLock, migrationType MigrationType, err error) {
 	// As a hack around to get frontend working, we decided to allow negative values for the provided lock ID to indicate that the user wants to migrate shares that are not locked.
 	if providedLockId <= 0 {
 		return lockuptypes.SyntheticLock{}, Unlocked, nil
@@ -294,7 +294,7 @@ func (k Keeper) validateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId
 	}, preMigrationLock, remainingLockTime, nil
 }
 
-// validateSharesToMigrateUnlockAndExitBalancerPool validates the unlocking and exiting of gamm LP tokens from the Balancer pool. It performs the following steps:
+// forceUnlockAndExitBalancerPool validates the unlocking and exiting of gamm LP tokens from the Balancer pool. It performs the following steps:
 //
 // 1. Completes the unlocking process / deletes synthetic locks for the provided lock.
 // 2. If shares to migrate are not specified, all shares in the lock are migrated.
@@ -302,7 +302,7 @@ func (k Keeper) validateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId
 // 4. Exits the position in the Balancer pool.
 // 5. Ensures that exactly two coins are returned.
 // 6. Any remaining shares that were not migrated are re-locked as a new lock for the remaining time on the lock.
-func (k Keeper) validateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, lock *lockuptypes.PeriodLock, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins) (exitCoins sdk.Coins, err error) {
+func (k Keeper) forceUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, lock *lockuptypes.PeriodLock, sharesToMigrate sdk.Coin, tokenOutMins sdk.Coins, exitCoinsLengthIsTwo bool) (exitCoins sdk.Coins, err error) {
 	// validateMigration ensures that the preMigrationLock contains coins of length 1.
 	gammSharesInLock := lock.Coins[0]
 
@@ -321,7 +321,7 @@ func (k Keeper) validateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context
 		return sdk.Coins{}, types.MigratePartialSharesError{SharesToMigrate: sharesToMigrate.Amount.String(), SharesInLock: gammSharesInLock.Amount.String()}
 	}
 
-	// Force migrate, which breaks and deletes associated synthetic locks.
+	// Force migrate, which breaks and deletes associated synthetic locks (if exists).
 	err = k.lk.ForceUnlock(ctx, *lock)
 	if err != nil {
 		return sdk.Coins{}, err
@@ -333,8 +333,8 @@ func (k Keeper) validateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context
 		return sdk.Coins{}, err
 	}
 
-	// Defense in depth, ensuring we are returning exactly two coins.
-	if len(exitCoins) != 2 {
+	// if exit coins length should be two, check exitCoins length
+	if exitCoinsLengthIsTwo && len(exitCoins) != 2 {
 		return sdk.Coins{}, types.TwoTokenBalancerPoolError{NumberOfTokens: len(exitCoins)}
 	}
 
