@@ -36,7 +36,14 @@ var (
 	// KeyPrefixActiveGauges defines prefix key for storing reference key for active gauges.
 	KeyPrefixActiveGauges = []byte{0x04, 0x01}
 
+	// TODO: add keyPrefixUpcomingGroupGauges
+	KeyPrefixUpcomingGroupGauges = []byte{0x04, 0x03}
+
 	// TODO: add KeyPrefixActiveGroupGauges
+	KeyPrefixActiveGroupGauges = []byte{0x04, 0x04}
+
+	// TODO: add keyPrefixFinishedGauges
+	KeyPrefixFinishedGroupGauges = []byte{0x04, 0x05}
 
 	// KeyPrefixFinishedGauges defines prefix key for storing reference key for finished gauges.
 	KeyPrefixFinishedGauges = []byte{0x04, 0x02}

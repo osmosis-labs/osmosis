@@ -20,10 +20,12 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.DistrEpochIdentifier {
 		// begin distribution if it's start time
+		// TODO: call getUpcomingGroupGauges as well
 		gauges := k.GetUpcomingGauges(ctx)
 		ctx.Logger().Info(fmt.Sprintf("x/incentives AfterEpochEnd, num upcoming gauges %d, %d", len(gauges), ctx.BlockHeight()))
 		for _, gauge := range gauges {
 			if !ctx.BlockTime().Before(gauge.StartTime) {
+				// TODO: move upcomingGroupGaugeToActiveGauge
 				if err := k.moveUpcomingGaugeToActiveGauge(ctx, gauge); err != nil {
 					return err
 				}

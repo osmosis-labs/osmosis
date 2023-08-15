@@ -43,6 +43,11 @@ func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []t
 	return gauges
 }
 
+// TODO implement getGetGroupGaugeFromIterator function
+// func (k Keeper) getGroupGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []types.GroupGauge {
+
+// }
+
 // setGauge set the gauge inside store.
 func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 	store := ctx.KVStore(k.storeKey)
@@ -57,10 +62,14 @@ func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 // CreateGaugeRefKeys takes combinedKey (the keyPrefix for upcoming, active, or finished gauges combined with gauge start time) and adds a reference to the respective gauge ID.
 // If gauge is active or upcoming, creates reference between the denom and gauge ID.
 // Used to consolidate codepaths for InitGenesis and CreateGauge.
+// Note: this function adds gauge reference to state to identify if this gauge is (upcoming, active, finished) with a certain KV.
+// Note: We can probably reuse this function for GroupGauge.
 func (k Keeper) CreateGaugeRefKeys(ctx sdk.Context, gauge *types.Gauge, combinedKeys []byte, activeOrUpcomingGauge bool) error {
 	if err := k.addGaugeRefByKey(ctx, combinedKeys, gauge.Id); err != nil {
 		return err
 	}
+	// Note: i dont think we need this for GroupGauge since we donot need GroupGauge <> Denoms connection.
+	// Note: we use denom here so that we can getAllGaugesByDenom. look into getAllGaugeIDsByDenom for more details.
 	if activeOrUpcomingGauge {
 		if err := k.addGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
 			return err
@@ -235,45 +244,52 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 //
 // Alternatively, we can have a pre-approved list of "Groups" which are just lists of pool IDs that are allowed to be used in group gauges. Then, people can just pass in the IDs for these.
 // These can be a module param set by governance.
-//
-// func (k Keeper) CreateGroupGauge(ctx sdk.Context, internalGaugeIDs []uint64, gaugeParams GaugeParams, splittingPolicy SplittingPolicy) (newGroupGauge GroupGauge, err error) {
-// // Require all internal gauges:
-// // - to be perpetual
-// // - to share the same base asset (let's just require an OSMO pair). Get pool using `GetPoolIdFromGaugeIdStoreKey`
-// // - TODO: allow for non OSMO pair using `GetPoolForDenomPair`
-// // - TODO: determine if there should be a governance-approved list of pool IDs that are allowed (see observation above as well)
-// // - TODO: if not governance-approved groups, add cap on length. This all becomes much easier if we just have governance-approved groups.
+func (k Keeper) CreateGroupGauge(ctx sdk.Context, internalGaugeIDs []uint64, gaugeParams GaugeParams, splittingPolicy SplittingPolicy) (newGroupGauge GroupGauge, err error) {
+	// Require all internal gauges:
+	// - to be perpetual
+	// - to share the same base asset (let's just require an OSMO pair). Get pool using `GetPoolIdFromGaugeIdStoreKey`
+	// - TODO: allow for non OSMO pair using `GetPoolForDenomPair`
+	// - TODO: determine if there should be a governance-approved list of pool IDs that are allowed (see observation above as well)
+	// - TODO: if not governance-approved groups, add cap on length. This all becomes much easier if we just have governance-approved groups.
 
-// // Validate gauge params (usual validation logic)
+	// Validate gauge params (usual validation logic)
 
-// // Validate splitting policy:
-// // If != enum 0 (VolumeSplitting, defined in types like e.g. SuperfluidUnbonding), then error
+	// Validate splitting policy:
+	// If != enum 0 (VolumeSplitting, defined in types like e.g. SuperfluidUnbonding), then error
 
-// // TODO: add initial one in upgrade handler
-// // nextGroupGaugeId := k.GetLastGroupGaugeID(ctx) + 1
+	// TODO: add initial one in upgrade handler
+	nextGroupGaugeId := k.GetLastGroupGaugeID(ctx) + 1
 
-// // newGroupGauge := GroupGauge{
-// // 	Id: nextGroupGaugeId,
-// // 	GaugeParams: gaugeParams,
-// // 	InternalGaugeIDs: internalGaugeIDs,
-// // 	SplittingPolicy: splittingPolicy,
-// // }
+	newGroupGauge := GroupGauge{
+		Id:               nextGroupGaugeId,
+		GaugeParams:      gaugeParams,
+		InternalGaugeIDs: internalGaugeIDs,
+		SplittingPolicy:  splittingPolicy,
+	}
 
-// // TODO: implement this
-// // err = k.setGroupGauge(ctx, &newGroupGauge)
-// // if err != nil {
-// // return 0, err
-// // }
+	// TODO: implement this
+	err = k.setGroupGauge(ctx, &newGroupGauge)
+	if err != nil {
+		return 0, err
+	}
 
-// // TODO: implement this
-// // k.SetLastGroupGaugeID(ctx, gauge.Id)
+	// TODO: implement this
+	k.SetLastGroupGaugeID(ctx, gauge.Id)
 
-// // Figure out gauge ref key stuff here
+	//Figure out gauge ref key stuff here
 
-// // Scale gas by number of internal gauges (linearly)
+	combinedKeys := combineKeys(types.keyPrefixUpcomingGroupGauges, getTimeKey(groupGauge.StartTime))
+	activeOrUpcomingGroupGauge := true
 
-// // return newGroupGauge, nil
-// }
+	err = k.CreateGaugeRefKeys(ctx, &gauge, combinedKeys, activeOrUpcomingGroupGauge)
+	if err != nil {
+		return 0, err
+	}
+
+	//Scale gas by number of internal gauges (linearly)
+
+	return newGroupGauge, nil
+}
 
 // AddToGaugeRewards adds coins to gauge.
 func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error {
@@ -344,7 +360,23 @@ func (k Keeper) GetActiveGauges(ctx sdk.Context) []types.Gauge {
 	return k.getGaugesFromIterator(ctx, k.ActiveGaugesIterator(ctx))
 }
 
+// TODO: implement GetUpcomingGroupGauges
+func (k Keeper) GetUpcomingGroupGauges(ctx sdk.Context) []types.Gauge {
+	// Todo: call getGroupGaugesFromIterator with upcomingGroupGaugeIterator
+	return k.getGaugesFromIterator(ctx, k.UpcomingGaugesIterator(ctx))
+}
+
 // TODO: implement GetActiveGroupGauges
+func (k Keeper) GetActiveGroupGauges(ctx sdk.Context) []types.Gauge {
+	// Todo: call getGroupGaugesFromIterator with activeGroupGaugeIterator
+	return k.getGaugesFromIterator(ctx, k.ActiveGaugesIterator(ctx))
+}
+
+// TODO: implement GetFinishedGroupGauges
+func (k Keeper) GetFinishedGroupGauges(ctx sdk.Context) []types.Gauge {
+	// Todo: call getGroupGaugesFromIterator with finishedGroupGaugeIterator
+	return k.getGaugesFromIterator(ctx, k.FinishedGaugesIterator(ctx))
+}
 
 // GetUpcomingGauges returns upcoming gauges.
 func (k Keeper) GetUpcomingGauges(ctx sdk.Context) []types.Gauge {

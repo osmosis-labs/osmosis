@@ -47,6 +47,7 @@ func (k Keeper) getDistributedCoinsFromIterator(ctx sdk.Context, iterator db.Ite
 }
 
 // moveUpcomingGaugeToActiveGauge moves a gauge that has reached it's start time from an upcoming to an active status.
+// TODO: check if we can reuse this function for GroupGauge
 func (k Keeper) moveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gauge) error {
 	// validation for current time and distribution start time
 	if ctx.BlockTime().Before(gauge.StartTime) {
@@ -64,6 +65,7 @@ func (k Keeper) moveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gaug
 }
 
 // moveActiveGaugeToFinishedGauge moves a gauge that has completed its distribution from an active to a finished status.
+// TODO: check if we can reuse this function for GroupGauge
 func (k Keeper) moveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gauge) error {
 	timeKey := getTimeKey(gauge.StartTime)
 	if err := k.deleteGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id); err != nil {
@@ -518,6 +520,7 @@ func (k Keeper) checkFinishDistribution(ctx sdk.Context, gauges []types.Gauge) {
 }
 
 // GetModuleToDistributeCoins returns sum of coins yet to be distributed for all of the module.
+// TODO: check if we can reuse this method for GroupGauge since we're gonna use a different iterator
 func (k Keeper) GetModuleToDistributeCoins(ctx sdk.Context) sdk.Coins {
 	activeGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.ActiveGaugesIterator(ctx))
 	upcomingGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.UpcomingGaugesIterator(ctx))
@@ -525,6 +528,7 @@ func (k Keeper) GetModuleToDistributeCoins(ctx sdk.Context) sdk.Coins {
 }
 
 // GetModuleDistributedCoins returns sum of coins that have been distributed so far for all of the module.
+// TODO: check if we can reuse this method for GroupGauge since we're going to use a different iterator
 func (k Keeper) GetModuleDistributedCoins(ctx sdk.Context) sdk.Coins {
 	activeGaugesDistr := k.getDistributedCoinsFromIterator(ctx, k.ActiveGaugesIterator(ctx))
 	finishedGaugesDistr := k.getDistributedCoinsFromIterator(ctx, k.FinishedGaugesIterator(ctx))

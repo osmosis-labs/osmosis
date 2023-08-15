@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
@@ -416,6 +418,7 @@ func (s *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 
 					// guarantees that the delegator exists because we check it in UnDelegateToValidatorSet
 					del, found := s.App.StakingKeeper.GetDelegation(s.Ctx, test.delegator, valAddr)
+					fmt.Println("DEL: ", del)
 					if found {
 						s.Require().Equal(test.expectedShares[i], del.GetShares())
 					}
