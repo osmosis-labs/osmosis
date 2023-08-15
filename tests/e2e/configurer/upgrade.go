@@ -332,7 +332,7 @@ func (uc *UpgradeConfigurer) RunSetup() error {
 func (uc *UpgradeConfigurer) RunUpgrade() error {
 	var err error
 	if uc.forkHeight > 0 {
-		err = uc.runForkUpgrade()
+		uc.runForkUpgrade()
 	} else {
 		err = uc.runProposalUpgrade()
 	}
@@ -413,13 +413,12 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 	return nil
 }
 
-func (uc *UpgradeConfigurer) runForkUpgrade() error {
+func (uc *UpgradeConfigurer) runForkUpgrade() {
 	for _, chainConfig := range uc.chainConfigs {
 		uc.t.Logf("waiting to reach fork height on chain %s", chainConfig.Id)
 		chainConfig.WaitUntilHeight(uc.forkHeight)
 		uc.t.Logf("fork height reached on chain %s", chainConfig.Id)
 	}
-	return nil
 }
 
 func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHeight int64) error {

@@ -69,6 +69,7 @@ pub fn unwrap_or_swap_and_forward(
                 })?
                 .into(),
             }),
+            false,
         )?;
         return Ok(Response::new().add_message(ibc_transfer));
     }
@@ -127,6 +128,7 @@ pub fn swap_and_forward(
         env.block.time,
         memo,
         None,
+        false,
     )?;
 
     // Message to swap tokens in the underlying swaprouter contract
@@ -200,6 +202,7 @@ pub fn handle_swap_reply(
         env.block.time,
         memo,
         None,
+        false,
     )?;
     deps.api.debug(&format!("IBC transfer: {ibc_transfer:?}"));
 

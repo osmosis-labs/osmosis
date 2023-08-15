@@ -13,6 +13,7 @@ enum StorageKey {
     GlobalAdminMap,
     ChainAdminMap,
     ChainMaintainerMap,
+    HasPacketForwardMiddleware,
 }
 
 // Implement the `StorageKey` enum to a string conversion.
@@ -28,6 +29,7 @@ impl StorageKey {
             StorageKey::GlobalAdminMap => "gam",
             StorageKey::ChainAdminMap => "cam",
             StorageKey::ChainMaintainerMap => "cmm",
+            StorageKey::HasPacketForwardMiddleware => "hpfm",
         }
     }
 }
@@ -44,6 +46,27 @@ impl<T: AsRef<str>> From<(T, bool)> for RegistryValue {
             value: value.as_ref().to_string(),
             enabled,
         }
+    }
+}
+
+/// ChainPFM stores the state of the packet forward middleware for a chain. Anyone can request
+/// to enable the packet forward middleware for a chain, but the contract will verify that  
+/// packets can properly be forwarded by the chain
+#[cw_serde]
+#[derive(Default)]
+pub struct ChainPFM {
+    /// The verification packet has been received by the chain, forwarded, and the ack has been received
+    pub acknowledged: bool,
+    /// The contract has validated that the received packet is as expected
+    pub validated: bool,
+}
+
+impl ChainPFM {
+    /// Both acknowledged and validated must be true for the pfm to be enabled. This is to avoid
+    /// situations in which the chain calls the contract to set validated to true but that call is
+    /// not from the same packet that was forwarded by this contract.
+    pub fn is_validated(&self) -> bool {
+        self.acknowledged && self.validated
     }
 }
 
@@ -87,6 +110,10 @@ pub const CHAIN_ADMIN_MAP: Map<&str, Addr> = Map::new(StorageKey::ChainAdminMap.
 // CHAIN_MAINTAINER_MAP is a map from a source chain to the address that is authorized add, enable, or disable channels for that source chain
 pub const CHAIN_MAINTAINER_MAP: Map<&str, Addr> =
     Map::new(StorageKey::ChainMaintainerMap.to_string());
+
+// CHAIN_PFM_MAP stores whether a chain supports the Packet Forward Middleware interface for forwarding IBC packets
+pub const CHAIN_PFM_MAP: Map<&str, ChainPFM> =
+    Map::new(StorageKey::HasPacketForwardMiddleware.to_string());
 
 #[cw_serde]
 pub struct Config {
