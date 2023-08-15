@@ -14,6 +14,7 @@ import (
 var (
 	ETH                = "eth"
 	USDC               = "usdc"
+	WBTC               = "ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F"
 	DefaultTickSpacing = uint64(100)
 	DefaultLowerTick   = int64(30545000)
 	DefaultUpperTick   = int64(31500000)
@@ -138,6 +139,6 @@ func (s *KeeperTestHelper) SetupConcentratedLiquidityDenomsAndPoolCreation() {
 	// modify authorized quote denoms to include test denoms.
 	defaultParams := types.DefaultParams()
 	defaultParams.IsPermissionlessPoolCreationEnabled = true
-	defaultParams.AuthorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE)
+	defaultParams.AuthorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE, WBTC)
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
 }

@@ -1805,7 +1805,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
 
 		s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 		s.Require().Equal(assetPair.BaseAsset, concentratedPool.GetToken0())
-		s.Require().Equal(v17.QuoteAsset, concentratedPool.GetToken1())
+		s.Require().Equal(assetPair.QuoteAsset, concentratedPool.GetToken1())
 		s.Require().Equal(uint64(v17.TickSpacing), concentratedPool.GetTickSpacing())
 		s.Require().Equal(expectedSpreadFactor.String(), concentratedPool.GetSpreadFactor(sdk.Context{}).String())
 
@@ -1827,7 +1827,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
 
 		// This spot price is taken from the balancer pool that was initiated pre upgrade.
 		balancerPool := s.updatedCFMMPool(chainABNode, assetPair.LinkedClassicPool)
-		expectedSpotPrice, err := balancerPool.SpotPrice(sdk.Context{}, v17.QuoteAsset, assetPair.BaseAsset)
+		expectedSpotPrice, err := balancerPool.SpotPrice(sdk.Context{}, assetPair.QuoteAsset, assetPair.BaseAsset)
 		s.Require().NoError(err)
 
 		// Margin of error should be slightly larger than the gamm pool's spread factor, as the gamm pool is used to
