@@ -8,7 +8,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
@@ -85,14 +84,6 @@ func assertEqual(suite *UpgradeTestSuite, pre, post interface{}) {
 }
 
 func (suite *UpgradeTestSuite) TestUpgrade() {
-	upgradeSetup := func() {
-		// This is done to ensure that we run the InitGenesis() logic for the new modules
-		upgradeStoreKey := suite.App.AppKeepers.GetKey(upgradetypes.StoreKey)
-		store := suite.Ctx.KVStore(upgradeStoreKey)
-		versionStore := prefix.NewStore(store, []byte{upgradetypes.VersionMapByte})
-		versionStore.Delete([]byte(cltypes.ModuleName))
-	}
-
 	// Allow 0.1% margin of error.
 	multiplicativeTolerance := osmomath.ErrTolerance{
 		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.001"),
@@ -100,14 +91,12 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 	testCases := []struct {
 		name        string
-		pre_upgrade func(sdk.Context, *keepers.AppKeepers) (sdk.Coins, uint64)
-		upgrade     func(sdk.Context, *keepers.AppKeepers, sdk.Coins, uint64)
+		pre_upgrade func(*keepers.AppKeepers) (sdk.Coins, uint64)
+		upgrade     func(*keepers.AppKeepers, sdk.Coins, uint64)
 	}{
 		{
 			"Test that the upgrade succeeds: mainnet",
-			func(ctx sdk.Context, keepers *keepers.AppKeepers) (sdk.Coins, uint64) {
-				upgradeSetup()
-
+			func(keepers *keepers.AppKeepers) (sdk.Coins, uint64) {
 				var lastPoolID uint64 // To keep track of the last assigned pool ID
 
 				// Sort AssetPairs based on LinkedClassicPool values.
@@ -125,17 +114,17 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					// If LinkedClassicPool is specified, but it's smaller than the current pool ID,
 					// create dummy pools to fill the gap.
 					for lastPoolID+1 < poolID {
-						poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(10000000000)), sdk.NewCoin(v17.QuoteAsset, sdk.NewInt(10000000000)))
+						poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(10000000000)), sdk.NewCoin(assetPair.QuoteAsset, sdk.NewInt(10000000000)))
 						suite.PrepareBalancerPoolWithCoins(poolCoins...)
 						lastPoolID++
 					}
 
 					// Now create the pool with the correct pool ID.
-					poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(10000000000)), sdk.NewCoin(v17.QuoteAsset, sdk.NewInt(10000000000)))
+					poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(10000000000)), sdk.NewCoin(assetPair.QuoteAsset, sdk.NewInt(10000000000)))
 					suite.PrepareBalancerPoolWithCoins(poolCoins...)
 
 					// 0.1 OSMO used to get the respective base asset amount, 0.1 OSMO used to create the position
-					osmoIn := sdk.NewCoin(v17.QuoteAsset, sdk.NewInt(100000).MulRaw(2))
+					osmoIn := sdk.NewCoin(v17.OSMO, sdk.NewInt(100000).MulRaw(2))
 
 					// Add the amount of osmo that will be used to the expectedCoinsUsedInUpgradeHandler.
 					expectedCoinsUsedInUpgradeHandler = expectedCoinsUsedInUpgradeHandler.Add(osmoIn)
@@ -206,7 +195,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				return expectedCoinsUsedInUpgradeHandler, existingBalancerPoolId
 
 			},
-			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
+			func(keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				lastPoolIdMinusOne := lastPoolID - 1
 				lastPoolIdMinusTwo := lastPoolID - 2
 				stakingParams := suite.App.StakingKeeper.GetParams(suite.Ctx)
@@ -218,19 +207,19 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				communityPoolBalancePre := suite.App.BankKeeper.GetAllBalances(suite.Ctx, communityPoolAddress)
 
 				numPoolPreUpgrade := suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx) - 1
-				clPool1TwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusTwo)
+				clPool1TwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(suite.Ctx, lastPoolIdMinusTwo)
 				suite.Require().NoError(err)
 
-				clPool1TwapRecordHistoricalPoolIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusTwo)
+				clPool1TwapRecordHistoricalPoolIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(suite.Ctx, lastPoolIdMinusTwo)
 				suite.Require().NoError(err)
 
-				clPool2TwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusOne)
+				clPool2TwapRecordPreUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(suite.Ctx, lastPoolIdMinusOne)
 				suite.Require().NoError(err)
 
-				clPool2TwapRecordHistoricalPoolIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusOne)
+				clPool2TwapRecordHistoricalPoolIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(suite.Ctx, lastPoolIdMinusOne)
 				suite.Require().NoError(err)
 
-				clPoolsTwapRecordHistoricalTimeIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalTimeIndexedTWAPs(ctx)
+				clPoolsTwapRecordHistoricalTimeIndexPreUpgrade, err := keepers.TwapKeeper.GetAllHistoricalTimeIndexedTWAPs(suite.Ctx)
 				suite.Require().NoError(err)
 
 				// Run upgrade handler.
@@ -239,19 +228,19 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
 				})
 
-				clPool1TwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusTwo)
+				clPool1TwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(suite.Ctx, lastPoolIdMinusTwo)
 				suite.Require().NoError(err)
 
-				clPool1TwapRecordHistoricalPoolIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusTwo)
+				clPool1TwapRecordHistoricalPoolIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(suite.Ctx, lastPoolIdMinusTwo)
 				suite.Require().NoError(err)
 
-				clPool2TwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(ctx, lastPoolIdMinusOne)
+				clPool2TwapRecordPostUpgrade, err := keepers.TwapKeeper.GetAllMostRecentRecordsForPool(suite.Ctx, lastPoolIdMinusOne)
 				suite.Require().NoError(err)
 
-				clPool2TwapRecordHistoricalPoolIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(ctx, lastPoolIdMinusOne)
+				clPool2TwapRecordHistoricalPoolIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(suite.Ctx, lastPoolIdMinusOne)
 				suite.Require().NoError(err)
 
-				clPoolsTwapRecordHistoricalTimeIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalTimeIndexedTWAPs(ctx)
+				clPoolsTwapRecordHistoricalTimeIndexPostUpgrade, err := keepers.TwapKeeper.GetAllHistoricalTimeIndexedTWAPs(suite.Ctx)
 				suite.Require().NoError(err)
 
 				// check that all TWAP records aren't empty
@@ -287,12 +276,12 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				communityPoolBalancePost := suite.App.BankKeeper.GetAllBalances(suite.Ctx, communityPoolAddress)
 				feePoolCommunityPoolPost := suite.App.DistrKeeper.GetFeePool(suite.Ctx).CommunityPool
 
-				assetPairs, err := v17.InitializeAssetPairs(ctx, keepers)
+				assetPairs, err := v17.InitializeAssetPairs(suite.Ctx, keepers)
 				suite.Require().NoError(err)
 
 				for i, assetPair := range assetPairs {
 					// Get balancer pool's spot price.
-					balancerSpotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, assetPair.LinkedClassicPool, v17.QuoteAsset, assetPair.BaseAsset)
+					balancerSpotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, assetPair.LinkedClassicPool, assetPair.QuoteAsset, assetPair.BaseAsset)
 					suite.Require().NoError(err)
 
 					// Validate CL pool was created.
@@ -304,7 +293,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					concentratedTypePool, ok := concentratedPool.(cltypes.ConcentratedPoolExtension)
 					suite.Require().True(ok)
 					suite.Require().Equal(assetPair.BaseAsset, concentratedTypePool.GetToken0())
-					suite.Require().Equal(v17.QuoteAsset, concentratedTypePool.GetToken1())
+					suite.Require().Equal(assetPair.QuoteAsset, concentratedTypePool.GetToken1())
 
 					// Validate that the spot price of the CL pool is what we expect
 					suite.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromSDKDec(balancerSpotPrice)))
@@ -347,8 +336,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		},
 		{
 			"Test that the upgrade succeeds: testnet",
-			func(ctx sdk.Context, keepers *keepers.AppKeepers) (sdk.Coins, uint64) {
-				upgradeSetup()
+			func(keepers *keepers.AppKeepers) (sdk.Coins, uint64) {
 				suite.Ctx = suite.Ctx.WithChainID("osmo-test-5")
 
 				var lastPoolID uint64 // To keep track of the last assigned pool ID
@@ -365,11 +353,11 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					// For testnet, we create a CL pool for ANY balancer pool.
 					// The only thing we use the assetPair list here for to select some pools to enable superfluid for.
 					for lastPoolID+1 < poolID {
-						poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(10000000000)), sdk.NewCoin(v17.QuoteAsset, sdk.NewInt(10000000000)))
+						poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(10000000000)), sdk.NewCoin(assetPair.QuoteAsset, sdk.NewInt(10000000000)))
 						suite.PrepareBalancerPoolWithCoins(poolCoins...)
 
 						// 0.1 OSMO used to get the respective base asset amount, 0.1 OSMO used to create the position
-						osmoIn := sdk.NewCoin(v17.QuoteAsset, sdk.NewInt(100000).MulRaw(2))
+						osmoIn := sdk.NewCoin(v17.OSMO, sdk.NewInt(100000).MulRaw(2))
 
 						// Add the amount of osmo that will be used to the expectedCoinsUsedInUpgradeHandler.
 						expectedCoinsUsedInUpgradeHandler = expectedCoinsUsedInUpgradeHandler.Add(osmoIn)
@@ -403,7 +391,8 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				return expectedCoinsUsedInUpgradeHandler, lastPoolID
 
 			},
-			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
+			func(keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
+				// Set the bond denom to uosmo
 				stakingParams := suite.App.StakingKeeper.GetParams(suite.Ctx)
 				stakingParams.BondDenom = "uosmo"
 				suite.App.StakingKeeper.SetParams(suite.Ctx, stakingParams)
@@ -439,15 +428,15 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					}
 
 					gammPoolId := pool.GetId()
-					cfmmPool, err := keepers.GAMMKeeper.GetCFMMPool(ctx, gammPoolId)
+					cfmmPool, err := keepers.GAMMKeeper.GetCFMMPool(suite.Ctx, gammPoolId)
 					suite.Require().NoError(err)
 
-					poolCoins := cfmmPool.GetTotalPoolLiquidity(ctx)
+					poolCoins := cfmmPool.GetTotalPoolLiquidity(suite.Ctx)
 
 					// Retrieve quoteAsset and baseAsset from the poolCoins
 					quoteAsset, baseAsset := "", ""
 					for _, coin := range poolCoins {
-						if coin.Denom == v17.QuoteAsset {
+						if coin.Denom == v17.OSMO {
 							quoteAsset = coin.Denom
 						} else {
 							baseAsset = coin.Denom
@@ -459,7 +448,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					}
 
 					// Get balancer pool's spot price.
-					balancerSpotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, gammPoolId, v17.QuoteAsset, baseAsset)
+					balancerSpotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, gammPoolId, quoteAsset, baseAsset)
 					suite.Require().NoError(err)
 
 					// Validate CL pool was created.
@@ -471,7 +460,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					concentratedTypePool, ok := concentratedPool.(cltypes.ConcentratedPoolExtension)
 					suite.Require().True(ok)
 					suite.Require().Equal(baseAsset, concentratedTypePool.GetToken0())
-					suite.Require().Equal(v17.QuoteAsset, concentratedTypePool.GetToken1())
+					suite.Require().Equal(quoteAsset, concentratedTypePool.GetToken1())
 
 					// Validate that the spot price of the CL pool is what we expect
 					suite.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromSDKDec(balancerSpotPrice)))
@@ -523,11 +512,10 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		},
 		{
 			"Fails because CFMM pool is not found",
-			func(ctx sdk.Context, keepers *keepers.AppKeepers) (sdk.Coins, uint64) {
-				upgradeSetup()
+			func(keepers *keepers.AppKeepers) (sdk.Coins, uint64) {
 				return sdk.NewCoins(), 0
 			},
-			func(ctx sdk.Context, keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
+			func(keepers *keepers.AppKeepers, expectedCoinsUsedInUpgradeHandler sdk.Coins, lastPoolID uint64) {
 				dummyUpgrade(suite)
 				suite.Require().Panics(func() {
 					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
@@ -540,8 +528,8 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			suite.SetupTest() // reset
 
-			expectedCoinsUsedInUpgradeHandler, lastPoolID := tc.pre_upgrade(suite.Ctx, &suite.App.AppKeepers)
-			tc.upgrade(suite.Ctx, &suite.App.AppKeepers, expectedCoinsUsedInUpgradeHandler, lastPoolID)
+			expectedCoinsUsedInUpgradeHandler, lastPoolID := tc.pre_upgrade(&suite.App.AppKeepers)
+			tc.upgrade(&suite.App.AppKeepers, expectedCoinsUsedInUpgradeHandler, lastPoolID)
 		})
 	}
 }
