@@ -362,16 +362,17 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 // - fee reduction is applied correctly
 func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 	tests := []struct {
-		name               string
-		poolCoins          []sdk.Coins
-		poolSpreadFactor   []sdk.Dec
-		poolType           []types.PoolType
-		routes             []types.SwapAmountInRoute
-		incentivizedGauges []uint64
-		tokenIn            sdk.Coin
-		tokenOutMinAmount  sdk.Int
-		spreadFactor       sdk.Dec
-		expectError        bool
+		name                    string
+		poolCoins               []sdk.Coins
+		poolSpreadFactor        []sdk.Dec
+		poolType                []types.PoolType
+		routes                  []types.SwapAmountInRoute
+		incentivizedGauges      []uint64
+		tokenIn                 sdk.Coin
+		tokenOutMinAmount       sdk.Int
+		spreadFactor            sdk.Dec
+		expectError             bool
+		expectReducedFeeApplied bool
 	}{
 		{
 			name:             "One route: Swap - [foo -> bar], 1 percent fee",
@@ -410,6 +411,52 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			tokenOutMinAmount:  sdk.NewInt(1),
 		},
 		{
+			name: "Two routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) with a half fee applied, both pools 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(baz, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 2.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer},
+			poolSpreadFactor: []sdk.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: baz,
+				},
+			},
+			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
+			tokenIn:                 sdk.NewCoin("foo", sdk.NewInt(100000)),
+			tokenOutMinAmount:       sdk.NewInt(1),
+			expectReducedFeeApplied: true,
+		},
+		{
+			name: "Two routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) with a half fee applied, (pool 1) 1 percent fee, (pool 2) 10 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(baz, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 2.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer},
+			poolSpreadFactor: []sdk.Dec{defaultPoolSpreadFactor, sdk.NewDecWithPrec(1, 1)},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: baz,
+				},
+			},
+			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
+			tokenIn:                 sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount:       sdk.NewInt(1),
+			expectReducedFeeApplied: true,
+		},
+		{
 			name: "Three routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
 			poolCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
@@ -432,9 +479,10 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 					TokenOutDenom: bar,
 				},
 			},
-			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
-			tokenIn:            sdk.NewCoin(foo, sdk.NewInt(100000)),
-			tokenOutMinAmount:  sdk.NewInt(1),
+			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
+			tokenIn:                 sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount:       sdk.NewInt(1),
+			expectReducedFeeApplied: false,
 		},
 		{
 			name: "Two routes: Swap between four asset pools - [foo -> bar](pool 1) - [bar -> baz](pool 2), all pools 1 percent fee",
@@ -456,9 +504,35 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 					TokenOutDenom: baz,
 				},
 			},
-			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
-			tokenIn:            sdk.NewCoin(foo, sdk.NewInt(100000)),
-			tokenOutMinAmount:  sdk.NewInt(1),
+			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
+			tokenIn:                 sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount:       sdk.NewInt(1),
+			expectReducedFeeApplied: false,
+		},
+		{
+			name: "Two routes: Swap between four asset pools - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2), with a half fee applied, both pools 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount),
+					sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount),
+					sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 2.                                                                                     // pool 3.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer},
+			poolSpreadFactor: []sdk.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: baz,
+				},
+			},
+			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
+			tokenIn:                 sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount:       sdk.NewInt(1),
+			expectReducedFeeApplied: true,
 		},
 		{
 			name: "Three routes: Swap between four asset pools - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
@@ -486,9 +560,10 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 					TokenOutDenom: bar,
 				},
 			},
-			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9},
-			tokenIn:            sdk.NewCoin(foo, sdk.NewInt(100000)),
-			tokenOutMinAmount:  sdk.NewInt(1),
+			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9},
+			tokenIn:                 sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount:       sdk.NewInt(1),
+			expectReducedFeeApplied: false,
 		},
 		{
 			name: "[Concentrated] One route: Swap - [foo -> bar], 1 percent fee",
@@ -600,7 +675,7 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 				s.Require().Error(err)
 			} else {
 				// calculate the swap as separate swaps with either the reduced swap fee or normal fee
-				expectedMultihopTokenOutAmount := s.calcInAmountAsSeparatePoolSwaps(tc.routes, tc.tokenIn)
+				expectedMultihopTokenOutAmount := s.calcInAmountAsSeparatePoolSwaps(tc.expectReducedFeeApplied, tc.routes, tc.tokenIn)
 
 				// execute the swap
 				multihopTokenOutAmount, err := poolmanagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenIn, tc.tokenOutMinAmount)
@@ -619,16 +694,17 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 // - fee reduction is applied correctly
 func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 	tests := []struct {
-		name               string
-		poolCoins          []sdk.Coins
-		poolSpreadFactor   []sdk.Dec
-		poolType           []types.PoolType
-		routes             []types.SwapAmountOutRoute
-		incentivizedGauges []uint64
-		tokenOut           sdk.Coin
-		tokenInMaxAmount   sdk.Int
-		spreadFactor       sdk.Dec
-		expectError        bool
+		name                    string
+		poolCoins               []sdk.Coins
+		poolSpreadFactor        []sdk.Dec
+		poolType                []types.PoolType
+		routes                  []types.SwapAmountOutRoute
+		incentivizedGauges      []uint64
+		tokenOut                sdk.Coin
+		tokenInMaxAmount        sdk.Int
+		spreadFactor            sdk.Dec
+		expectError             bool
+		expectReducedFeeApplied bool
 	}{
 		{
 			name:             "One route: Swap - [foo -> bar], 1 percent fee",
@@ -668,6 +744,52 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 			tokenOut:         sdk.NewCoin(baz, sdk.NewInt(100000)),
 		},
 		{
+			name: "Two routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) with a half fee applied, both pools 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(baz, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 2.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer},
+			poolSpreadFactor: []sdk.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: foo,
+				},
+				{
+					PoolId:       2,
+					TokenInDenom: uosmo,
+				},
+			},
+			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
+			tokenInMaxAmount:        sdk.NewInt(90000000),
+			tokenOut:                sdk.NewCoin(baz, sdk.NewInt(100000)),
+			expectReducedFeeApplied: true,
+		},
+		{
+			name: "Two routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) with a half fee applied, (pool 1) 1 percent fee, (pool 2) 10 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(baz, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 2.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer},
+			poolSpreadFactor: []sdk.Dec{defaultPoolSpreadFactor, sdk.NewDecWithPrec(1, 1)},
+			routes: []types.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: foo,
+				},
+				{
+					PoolId:       2,
+					TokenInDenom: uosmo,
+				},
+			},
+			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
+			tokenInMaxAmount:        sdk.NewInt(90000000),
+			tokenOut:                sdk.NewCoin(baz, sdk.NewInt(100000)),
+			expectReducedFeeApplied: true,
+		},
+		{
 			name: "Three routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
 			poolCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
@@ -690,9 +812,10 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 					TokenInDenom: baz,
 				},
 			},
-			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
-			tokenInMaxAmount:   sdk.NewInt(90000000),
-			tokenOut:           sdk.NewCoin(bar, sdk.NewInt(100000)),
+			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
+			tokenInMaxAmount:        sdk.NewInt(90000000),
+			tokenOut:                sdk.NewCoin(bar, sdk.NewInt(100000)),
+			expectReducedFeeApplied: false,
 		},
 		{
 			name: "Two routes: Swap between four asset pools - [foo -> bar](pool 1) - [bar -> baz](pool 2), all pools 1 percent fee",
@@ -714,9 +837,35 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 					TokenInDenom: bar,
 				},
 			},
-			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
-			tokenOut:           sdk.NewCoin(baz, sdk.NewInt(100000)),
-			tokenInMaxAmount:   sdk.NewInt(90000000),
+			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
+			tokenOut:                sdk.NewCoin(baz, sdk.NewInt(100000)),
+			tokenInMaxAmount:        sdk.NewInt(90000000),
+			expectReducedFeeApplied: false,
+		},
+		{
+			name: "Two routes: Swap between four asset pools - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2), with a half fee applied, both pools 1 percent fee",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount),
+					sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount),
+					sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 2.                                                                                     // pool 3.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer},
+			poolSpreadFactor: []sdk.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: foo,
+				},
+				{
+					PoolId:       2,
+					TokenInDenom: uosmo,
+				},
+			},
+			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6},
+			tokenOut:                sdk.NewCoin(baz, sdk.NewInt(100000)),
+			tokenInMaxAmount:        sdk.NewInt(90000000),
+			expectReducedFeeApplied: true,
 		},
 		{
 			name: "Three routes: Swap between four asset pools - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
@@ -744,9 +893,10 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 					TokenInDenom: baz,
 				},
 			},
-			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9},
-			tokenOut:           sdk.NewCoin(bar, sdk.NewInt(100000)),
-			tokenInMaxAmount:   sdk.NewInt(90000000),
+			incentivizedGauges:      []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9},
+			tokenOut:                sdk.NewCoin(bar, sdk.NewInt(100000)),
+			tokenInMaxAmount:        sdk.NewInt(90000000),
+			expectReducedFeeApplied: false,
 		},
 		{
 			name: "[Cosmwasm] One route: Swap - [foo -> bar], 1 percent fee",
@@ -817,7 +967,7 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 				s.Require().Error(err)
 			} else {
 				// calculate the swap as separate swaps with either the reduced swap fee or normal fee
-				expectedMultihopTokenOutAmount := s.calcOutAmountAsSeparateSwaps(tc.routes, tc.tokenOut)
+				expectedMultihopTokenOutAmount := s.calcOutAmountAsSeparateSwaps(tc.expectReducedFeeApplied, tc.routes, tc.tokenOut)
 				// execute the swap
 				multihopTokenOutAmount, err := poolmanagerKeeper.RouteExactAmountOut(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenInMaxAmount, tc.tokenOut)
 				// compare the expected tokenOut to the actual tokenOut
@@ -1204,52 +1354,119 @@ func (s *KeeperTestSuite) makeGaugesIncentivized(incentivizedGauges []uint64) {
 	s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, distInfo)
 }
 
-func (s *KeeperTestSuite) calcOutAmountAsSeparateSwaps(routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) sdk.Coin {
+func (s *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) sdk.Coin {
 	cacheCtx, _ := s.Ctx.CacheContext()
-	nextTokenOut := tokenOut
-	for i := len(routes) - 1; i >= 0; i-- {
-		hop := routes[i]
-		hopPool, err := s.App.PoolManagerKeeper.GetPool(cacheCtx, hop.PoolId)
+	if osmoFeeReduced {
+		// extract route from swap
+		route := types.SwapAmountOutRoutes(routes)
+		// utilizing the extracted route, determine the routeSpreadFactor and sumOfspreadFactors
+		// these two variables are used to calculate the overall swap fee utilizing the following formula
+		// spreadFactor = routeSpreadFactor * ((pool_fee) / (sumOfspreadFactors))
+		routeSpreadFactor, sumOfSpreadFactors, err := s.App.PoolManagerKeeper.GetOsmoRoutedMultihopTotalSpreadFactor(s.Ctx, route)
 		s.Require().NoError(err)
-		updatedPoolSpreadFactor := hopPool.GetSpreadFactor(cacheCtx)
+		nextTokenOut := tokenOut
+		for i := len(routes) - 1; i >= 0; i-- {
+			hop := routes[i]
+			// extract the current pool's swap fee
+			hopPool, err := s.App.GAMMKeeper.GetPoolAndPoke(cacheCtx, hop.PoolId)
+			s.Require().NoError(err)
+			currentPoolSpreadFactor := hopPool.GetSpreadFactor(cacheCtx)
+			// utilize the routeSpreadFactor, sumOfSpreadFactors, and current pool swap fee to calculate the new reduced swap fee
+			spreadFactor := routeSpreadFactor.Mul((currentPoolSpreadFactor.Quo(sumOfSpreadFactors)))
 
-		swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
-		s.Require().NoError(err)
+			takerFee := hopPool.GetTakerFee(cacheCtx)
+			totalFees := spreadFactor.Add(takerFee)
 
-		tokenOut, err := swapModule.SwapExactAmountOut(cacheCtx, s.TestAccs[0], hopPool, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut, updatedPoolSpreadFactor)
-		s.Require().NoError(err)
-		nextTokenOut = sdk.NewCoin(hop.TokenInDenom, tokenOut)
+			swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
+			s.Require().NoError(err)
+
+			// we then do individual swaps until we reach the end of the swap route
+			tokenOut, err := swapModule.SwapExactAmountOut(cacheCtx, s.TestAccs[0], hopPool, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut, totalFees)
+			s.Require().NoError(err)
+			nextTokenOut = sdk.NewCoin(hop.TokenInDenom, tokenOut)
+		}
+		return nextTokenOut
+	} else {
+		nextTokenOut := tokenOut
+		for i := len(routes) - 1; i >= 0; i-- {
+			hop := routes[i]
+			hopPool, err := s.App.PoolManagerKeeper.GetPool(cacheCtx, hop.PoolId)
+			s.Require().NoError(err)
+			updatedPoolSpreadFactor := hopPool.GetSpreadFactor(cacheCtx)
+
+			takerFee := hopPool.GetTakerFee(cacheCtx)
+			totalFees := updatedPoolSpreadFactor.Add(takerFee)
+
+			swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
+			s.Require().NoError(err)
+
+			tokenOut, err := swapModule.SwapExactAmountOut(cacheCtx, s.TestAccs[0], hopPool, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut, totalFees)
+			s.Require().NoError(err)
+			nextTokenOut = sdk.NewCoin(hop.TokenInDenom, tokenOut)
+		}
+		return nextTokenOut
 	}
-	return nextTokenOut
 }
 
 // calcInAmountAsSeparatePoolSwaps calculates the output amount of a series of swaps on PoolManager pools while factoring in reduces swap fee changes.
 // If its GAMM pool functions directly to ensure the poolmanager functions route to the correct modules. It it's CL pool functions directly to ensure the
 // poolmanager functions route to the correct modules.
-func (s *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
+func (s *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(osmoFeeReduced bool, routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
 	cacheCtx, _ := s.Ctx.CacheContext()
-	nextTokenIn := tokenIn
-
-	for _, hop := range routes {
-		swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
+	if osmoFeeReduced {
+		// extract route from swap
+		route := types.SwapAmountInRoutes(routes)
+		// utilizing the extracted route, determine the routeSpreadFactor and sumOfSpreadFactors
+		// these two variables are used to calculate the overall swap fee utilizing the following formula
+		// spreadFactor = routeSpreadFactor * ((pool_fee) / (sumOfSpreadFactors))
+		routeSpreadFactor, sumOfSpreadFactors, err := s.App.PoolManagerKeeper.GetOsmoRoutedMultihopTotalSpreadFactor(s.Ctx, route)
 		s.Require().NoError(err)
+		nextTokenIn := tokenIn
 
-		pool, err := swapModule.GetPool(s.Ctx, hop.PoolId)
-		s.Require().NoError(err)
+		for _, hop := range routes {
+			swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
+			s.Require().NoError(err)
 
-		// utilize the routeSpreadFactor, sumOfSpreadFactors, and current pool swap fee to calculate the new reduced swap fee
-		spreadFactor := pool.GetSpreadFactor(cacheCtx)
-		takerFee := pool.GetTakerFee(s.Ctx)
-		totalFee := spreadFactor.Add(takerFee)
+			pool, err := swapModule.GetPool(s.Ctx, hop.PoolId)
+			s.Require().NoError(err)
 
-		// we then do individual swaps until we reach the end of the swap route
-		tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), totalFee)
-		s.Require().NoError(err)
+			// utilize the routeSpreadFactor, sumOfSpreadFactors, and current pool swap fee to calculate the new reduced swap fee
+			spreadFactor := routeSpreadFactor.Mul(pool.GetSpreadFactor(cacheCtx).Quo(sumOfSpreadFactors))
 
-		nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
+			takerFee := pool.GetTakerFee(cacheCtx)
+			totalFees := spreadFactor.Add(takerFee)
 
+			// we then do individual swaps until we reach the end of the swap route
+			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), totalFees)
+			s.Require().NoError(err)
+
+			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
+		}
+		return nextTokenIn
+	} else {
+		nextTokenIn := tokenIn
+		for _, hop := range routes {
+			swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
+			s.Require().NoError(err)
+
+			pool, err := swapModule.GetPool(s.Ctx, hop.PoolId)
+			s.Require().NoError(err)
+
+			// utilize the routeSpreadFactor, sumOfSpreadFactors, and current pool swap fee to calculate the new reduced swap fee
+			spreadFactor := pool.GetSpreadFactor(cacheCtx)
+
+			takerFee := pool.GetTakerFee(cacheCtx)
+			totalFees := spreadFactor.Add(takerFee)
+
+			// we then do individual swaps until we reach the end of the swap route
+			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), totalFees)
+			s.Require().NoError(err)
+
+			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
+
+		}
+		return nextTokenIn
 	}
-	return nextTokenIn
 }
 
 // TODO: abstract SwapAgainstBalancerPool and SwapAgainstConcentratedPool

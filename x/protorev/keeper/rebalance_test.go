@@ -737,6 +737,7 @@ func (s *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 }
 
 func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
+	s.SetupTest()
 	s.Run("Extended search on stable pools", func() {
 		route := keeper.RouteMetaData{
 			Route:    extendedRangeRoute,

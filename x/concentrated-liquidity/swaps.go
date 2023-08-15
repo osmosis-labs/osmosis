@@ -349,7 +349,8 @@ func (k Keeper) computeOutAmtGivenIn(
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
 
-	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(p, spreadFactor, tokenInMin.Denom, priceLimit)
+	totalFees := spreadFactor.Add(p.GetTakerFee(ctx))
+	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(p, totalFees, tokenInMin.Denom, priceLimit)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
@@ -478,7 +479,8 @@ func (k Keeper) computeInAmtGivenOut(
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
 
-	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(p, spreadFactor, tokenInDenom, priceLimit)
+	totalFees := spreadFactor.Add(p.GetTakerFee(ctx))
+	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(p, totalFees, tokenInDenom, priceLimit)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}

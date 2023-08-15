@@ -198,6 +198,10 @@ func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
 	p.LastLiquidityUpdate = newTime
 }
 
+func (p *Pool) SetTakerFee(newTakerFee sdk.Dec) {
+	p.TakerFee = newTakerFee
+}
+
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
 // Returns true if updated, false otherwise.
 func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {

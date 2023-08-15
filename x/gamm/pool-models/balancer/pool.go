@@ -116,6 +116,10 @@ func (p Pool) GetTotalShares() sdk.Int {
 	return p.TotalShares.Amount
 }
 
+func (p *Pool) SetTakerFee(newTakerFee sdk.Dec) {
+	p.PoolParams.TakerFee = newTakerFee
+}
+
 func (p *Pool) AddTotalShares(amt sdk.Int) {
 	p.TotalShares.Amount = p.TotalShares.Amount.Add(amt)
 }
@@ -503,7 +507,8 @@ func (p Pool) CalcOutAmtGivenIn(
 		return sdk.Coin{}, err
 	}
 
-	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(spreadFactor))
+	totalFee := spreadFactor.Add(p.GetTakerFee(ctx))
+	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(totalFee))
 	poolTokenInBalance := poolAssetIn.Token.Amount.ToDec()
 	poolPostSwapInBalance := poolTokenInBalance.Add(tokenAmountInAfterFee)
 
@@ -570,7 +575,8 @@ func (p Pool) CalcInAmtGivenOut(
 	// and then the spread factor is added to the pool.
 	// Thus in order to give X amount out, we solve the invariant for the invariant input. However invariant input = (1 - spread factor) * trade input.
 	// Therefore we divide by (1 - spread factor) here
-	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(spreadFactor))
+	totalFee := spreadFactor.Add(p.GetTakerFee(ctx))
+	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(totalFee))
 
 	// We round up tokenInAmt, as this is whats charged for the swap, for the precise amount out.
 	// Otherwise, the pool would under-charge by this rounding error.
@@ -669,6 +675,7 @@ func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, spreadFactor sdk.Dec, token
 		totalShares.ToDec(),
 		tokenIn.Amount.ToDec(),
 		spreadFactor,
+		p.PoolParams.TakerFee,
 	).TruncateInt(), nil
 }
 
@@ -906,6 +913,7 @@ func (p *Pool) CalcTokenInShareAmountOut(
 		p.GetTotalShares().ToDec(),
 		shareOutAmount.ToDec(),
 		spreadFactor,
+		p.GetTakerFee(ctx),
 	).Ceil().TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
@@ -933,6 +941,7 @@ func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
 		p.GetTotalShares().ToDec(),
 		shareOutAmount.ToDec(),
 		p.GetSpreadFactor(ctx),
+		p.GetTakerFee(ctx),
 	).TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
@@ -964,6 +973,7 @@ func (p *Pool) ExitSwapExactAmountOut(
 		p.GetTotalShares().ToDec(),
 		tokenOut.Amount.ToDec(),
 		p.GetSpreadFactor(ctx),
+		p.GetTakerFee(ctx),
 		p.GetExitFee(ctx),
 	).TruncateInt()
 

@@ -194,7 +194,8 @@ func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, spreadFa
 	}
 
 	// amm input = tokenIn * (1 - spread factor)
-	ammIn := tokenInDec.Mul(oneMinus(spreadFactor))
+	totalFee := spreadFactor.Add(p.PoolParams.TakerFee)
+	ammIn := tokenInDec.Mul(oneMinus(totalFee))
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
 	// fmt.Printf("outSupply %s, inSupply %s, remReservs %s, ammIn %s\n ", tokenOutSupply, tokenInSupply, remReserves, ammIn)
 	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, remReserves, ammIn)
@@ -223,7 +224,8 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, spreadF
 	// We invert that negative here.
 	cfmmIn = cfmmIn.Neg()
 	// divide by (1 - spread factor) to force a corresponding increase in input asset
-	inAmt := cfmmIn.QuoRoundUp(oneMinus(spreadFactor))
+	totalFee := spreadFactor.Add(p.PoolParams.TakerFee)
+	inAmt := cfmmIn.QuoRoundUp(oneMinus(totalFee))
 	inCoinAmt := p.getDescaledPoolAmt(tokenInDenom, inAmt)
 	return inCoinAmt, nil
 }
@@ -246,7 +248,8 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, spreadFactor sdk.Dec)
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	oneMinusSpreadFactor := sdk.OneDec().Sub(spreadFactor.Mul(spreadFactorApplicableRatio))
+	totalFee := spreadFactor.Add(p.PoolParams.TakerFee)
+	oneMinusSpreadFactor := sdk.OneDec().Sub(totalFee.Mul(spreadFactorApplicableRatio))
 	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(oneMinusSpreadFactor).TruncateInt()
 
 	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)

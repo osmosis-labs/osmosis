@@ -119,6 +119,10 @@ func (p Pool) GetType() poolmanagertypes.PoolType {
 	return poolmanagertypes.Stableswap
 }
 
+func (p *Pool) SetTakerFee(newTakerFee sdk.Dec) {
+	p.PoolParams.TakerFee = newTakerFee
+}
+
 // CONTRACT: scaling factors follow the same index with pool liquidity denoms
 func (p Pool) GetScalingFactorByDenom(denom string) uint64 {
 	for i, coin := range p.PoolLiquidity {
