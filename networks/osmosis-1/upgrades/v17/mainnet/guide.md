@@ -1,6 +1,6 @@
-# v15 to v16 Mainnet Upgrade Guide
+# v16 to v17 Mainnet Upgrade Guide
 
-Osmosis v16 Gov Prop: <https://www.mintscan.io/osmosis/proposals/TODO>
+Osmosis v17 Gov Prop: <https://www.mintscan.io/osmosis/proposals/TODO>
 
 Countdown: <https://www.mintscan.io/osmosis/blocks/TODO>
 
