@@ -160,7 +160,7 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 	}
 
 	// Create a concentrated liquidity pool for asset pair.
-	ctx.Logger().Info(fmt.Sprintf("Creating CL pool from poolID (%d), baseAsset (%s), spreadFactor (%s), tickSpacing (%d)", assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, TickSpacing))
+	ctx.Logger().Info(fmt.Sprintf("Creating CL pool from poolID (%d), baseAsset (%s), quoteAsset (%s) spreadFactor (%s), tickSpacing (%d)", assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.QuoteAsset, assetPair.SpreadFactor, TickSpacing))
 	clPool, err := keepers.GAMMKeeper.CreateConcentratedPoolFromCFMM(ctx, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, TickSpacing)
 	if err != nil {
 		return "", 0, gammmigration.BalancerToConcentratedPoolLink{}, nil, err
