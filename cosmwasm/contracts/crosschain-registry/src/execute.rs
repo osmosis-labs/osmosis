@@ -687,6 +687,7 @@ mod tests {
     static CHAIN_ADMIN: &str = "chain_admin";
     static CHAIN_MAINTAINER: &str = "chain_maintainer";
     static UNAUTHORIZED_ADDRESS: &str = "unauthorized_address";
+    use crate::contract::CONTRACT_CHAIN;
 
     #[test]
     fn test_set_contract_alias() {
