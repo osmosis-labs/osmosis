@@ -111,17 +111,19 @@ pub fn validate_pfm(
 
     let chain = chain.to_lowercase();
 
-    let registry = Registry::default(deps.as_ref());
-    let channel = registry.get_channel(&chain, CONTRACT_CHAIN)?;
-    let own_addr = env.contract.address.as_str();
-    let original_sender = registry.encode_addr_for_chain(own_addr, &chain)?;
-    let expected_sender = registry::derive_wasmhooks_sender(&channel, &original_sender, "osmo")?;
-    if expected_sender != info.sender {
-        return Err(ContractError::InvalidSender {
-            expected_sender,
-            actual_sender: info.sender.into_string(),
-        });
-    }
+    // TODO: Uncomment this once all chains are on the latest PFM and we can properly verify the sender
+    //
+    // let registry = Registry::default(deps.as_ref());
+    // let channel = registry.get_channel(&chain, CONTRACT_CHAIN)?;
+    // let own_addr = env.contract.address.as_str();
+    // let original_sender = registry.encode_addr_for_chain(own_addr, &chain)?;
+    // let expected_sender = registry::derive_wasmhooks_sender(&channel, &original_sender, "osmo")?;
+    // if expected_sender != info.sender {
+    //     return Err(ContractError::InvalidSender {
+    //         expected_sender,
+    //         actual_sender: info.sender.into_string(),
+    //     });
+    // }
 
     let mut chain_pfm = CHAIN_PFM_MAP.load(deps.storage, &chain).map_err(|_| {
         ContractError::ValidationNotFound {
