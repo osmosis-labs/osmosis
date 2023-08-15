@@ -1,4 +1,3 @@
-use crate::contract::CONTRACT_CHAIN;
 use crate::helpers::*;
 use crate::state::{
     ChainPFM, CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_PFM_MAP, CHAIN_TO_BECH32_PREFIX_MAP,
@@ -107,7 +106,7 @@ pub fn validate_pfm(
     ctx: (DepsMut, Env, MessageInfo),
     chain: String,
 ) -> Result<Response, ContractError> {
-    let (deps, env, info) = ctx;
+    let (deps, _env, _info) = ctx;
 
     let chain = chain.to_lowercase();
 
