@@ -582,3 +582,143 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestCreateGroupGauge() {
+	coinsToAdd := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)))
+	tests := []struct {
+		name             string
+		coins            sdk.Coins
+		numEpochPaidOver uint64
+		internalGaugeIds []uint64
+		expectErr        bool
+	}{
+		{
+			name:             "Happy case: created valid gauge",
+			coins:            coinsToAdd,
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{2, 3, 4},
+			expectErr:        false,
+		},
+
+		{
+			name:             "Error: Invalid InternalGauge Id",
+			coins:            coinsToAdd,
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{2, 3, 4, 5},
+			expectErr:        true,
+		},
+		{
+			name:             "Error: owner doesnot have enough funds",
+			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200_000_000))),
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{2, 3, 4},
+			expectErr:        true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)))) // 1,000 osmo
+			clPool := s.PrepareConcentratedPool()                                                 // gaugeid = 1
+
+			// create 3 internal Gauge
+			for i := 0; i <= 2; i++ {
+				s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(1)) // gauge id = 2,3,4
+			}
+
+			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[1], tc.internalGaugeIds) // gauge id = 5
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				// check that the gauge has been create with right value
+				groupGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, groupGaugeId)
+				s.Require().NoError(err)
+
+				s.Require().Equal(groupGauge.Coins, tc.coins)
+				s.Require().Equal(groupGauge.NumEpochsPaidOver, tc.numEpochPaidOver)
+				s.Require().Equal(groupGauge.IsPerpetual, true)
+				s.Require().Equal(groupGauge.DistributeTo.LockQueryType, lockuptypes.ByGroup)
+
+				// check that GroupGauge has been added to state
+				groupGaugeObj, err := s.App.IncentivesKeeper.GetGroupGaugeById(s.Ctx, groupGaugeId)
+				s.Require().NoError(err)
+
+				s.Require().Equal(groupGaugeObj.InternalIds, tc.internalGaugeIds)
+			}
+
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestAddToGaugeRewardsFromGauge() {
+	coinsToTransfer := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)))
+	tests := []struct {
+		name            string
+		groupGaugeId    uint64
+		internalGaugeId uint64
+		coinsToTransfer sdk.Coins
+		expectErr       bool
+	}{
+		{
+			name:            "Happy case: Valid gaugeId with valid Internal GaugeId",
+			groupGaugeId:    3,
+			internalGaugeId: 2,
+			coinsToTransfer: coinsToTransfer,
+			expectErr:       false,
+		},
+		{
+			name:            "Error: InternalGauge is not present in groupGauge",
+			groupGaugeId:    3,
+			internalGaugeId: 1,
+			coinsToTransfer: coinsToTransfer,
+			expectErr:       true,
+		},
+		{
+			name:            "Error: Not enough tokens to transfer",
+			groupGaugeId:    3,
+			internalGaugeId: 2,
+			coinsToTransfer: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200_000_000))),
+			expectErr:       true,
+		},
+		{
+			name:            "Error: GroupGaugeId doesnot exist",
+			groupGaugeId:    5,
+			internalGaugeId: 2,
+			coinsToTransfer: coinsToTransfer,
+			expectErr:       true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)))) // 1,000 osmo
+			clPool := s.PrepareConcentratedPool()                                                 // gaugeid = 1
+
+			// create internal Gauge
+			internalGauge1 := s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(1)) // gauge id = 2
+
+			// create group gauge
+			_, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))), uint64(1), s.TestAccs[1], []uint64{internalGauge1}) // gauge id = 3
+			s.Require().NoError(err)
+
+			err = s.App.IncentivesKeeper.AddToGaugeRewardsFromGauge(s.Ctx, tc.groupGaugeId, tc.coinsToTransfer, tc.internalGaugeId)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				// check that the coins have been transferred
+				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, tc.groupGaugeId)
+				s.Require().NoError(err)
+
+				s.Require().Equal(gauge.Coins, tc.coinsToTransfer)
+
+			}
+		})
+	}
+
+}

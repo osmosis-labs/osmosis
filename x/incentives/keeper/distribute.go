@@ -266,6 +266,46 @@ func (k Keeper) distributeSyntheticInternal(
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
 }
 
+// AllocateAcrossGauges gets all the active groupGauges and distributes tokens evenly based on the internalGauges set for that
+// groupGauge. After each iteration we update the groupGauge by modifying filledEpoch and distributed coins.
+// TODO: Replace even eplit by volume split once its implemented.
+func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
+	currTime := ctx.BlockTime()
+
+	groupGauges, err := k.GetAllGroupGauges(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, groupGauge := range groupGauges {
+		gauge, err := k.GetGaugeByID(ctx, groupGauge.GroupGaugeId)
+		if err != nil {
+			return err
+		}
+
+		// only allow distribution if the GroupGauge is Active
+		if currTime.After(gauge.StartTime) || currTime.Equal(gauge.StartTime) && (gauge.IsPerpetual || gauge.FilledEpochs < gauge.NumEpochsPaidOver) {
+			// TODO: replace the calculation below by volume split.
+			remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+			amountToDistributeThisEpoch := remainCoins[0].Amount.Quo(sdk.NewInt(int64(gauge.NumEpochsPaidOver - (gauge.FilledEpochs))))
+			amountToDistributePerInternalGauge := amountToDistributeThisEpoch.Quo(sdk.NewInt(int64(len(groupGauge.InternalIds))))
+
+			for _, internalGaugeId := range groupGauge.InternalIds {
+				err = k.AddToGaugeRewardsFromGauge(ctx, groupGauge.GroupGaugeId, sdk.NewCoins(sdk.NewCoin(remainCoins[0].Denom, amountToDistributePerInternalGauge)), internalGaugeId)
+				if err != nil {
+					return err
+				}
+			}
+
+			// we distribute tokens from groupGauge to internal gauge therefore update groupGauge fields
+			// updates filledEpoch and distributedCoins
+			k.updateGaugePostDistribute(ctx, *gauge, sdk.NewCoins(sdk.NewCoin(gauge.Coins[0].Denom, amountToDistributeThisEpoch)))
+		}
+	}
+
+	return nil
+}
+
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
 // It handles any kind of gauges:
@@ -285,6 +325,7 @@ func (k Keeper) distributeInternal(
 	totalDistrCoins := sdk.NewCoins()
 
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+
 	// if its a perpetual gauge, we set remaining epochs to 1.
 	// otherwise is is a non perpetual gauge and we determine how many epoch payouts are left
 	remainEpochs := uint64(1)
@@ -329,7 +370,6 @@ func (k Keeper) distributeInternal(
 			// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
 			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
 			emissionRate := sdk.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
-
 			ctx.Logger().Debug("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
 			_, err := k.clk.CreateIncentive(ctx,
 				pool.GetId(),
@@ -346,7 +386,6 @@ func (k Keeper) distributeInternal(
 			if err != nil {
 				return nil, err
 			}
-
 			totalDistrCoins = totalDistrCoins.Add(remainCoinPerEpoch)
 		}
 	} else {
@@ -441,7 +480,10 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 			ctx.Logger().Debug("distributeSyntheticInternal, gauge id %d, %d", "module", types.ModuleName, "gaugeId", gauge.Id, "height", ctx.BlockHeight())
 			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
 		} else {
-			gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
+			// Donot distribue if LockQueryType = Group, because if we distribute here we will be double distributing.
+			if gauge.DistributeTo.LockQueryType != lockuptypes.ByGroup {
+				gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
+			}
 		}
 		if err != nil {
 			return nil, err
