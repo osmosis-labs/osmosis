@@ -262,3 +262,16 @@ func flipTwapSpotPriceRecords(ctx sdk.Context, pools []poolmanagertypes.PoolI, k
 	}
 	return nil
 }
+
+func getLatestCLPoolID(ctx sdk.Context, keepers *keepers.AppKeepers) error {
+
+	// // Get all CL pools
+	// pools, err := keepers.ConcentratedLiquidityKeeper.GetPools(ctx)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// lastPoolID := pools[len(pools)-1].GetId()
+
+	return nil
+}

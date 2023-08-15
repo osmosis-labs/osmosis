@@ -23,7 +23,7 @@ func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGiven
 		"reached target -> charge spread factor on amount in": {
 			hasReachedTarget:         true,
 			amountIn:                 sdk.NewDec(100),
-			amountSpecifiedRemaining: five,
+			amountSpecifiedRemaining: five.SDKDec(),
 			spreadFactor:             onePercentSpreadFactor,
 
 			// amount in * spread factor / (1 - spread factor)
@@ -31,7 +31,7 @@ func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGiven
 		},
 		"did not reach target -> charge spread factor on the difference between amount remaining and amount in": {
 			hasReachedTarget:         false,
-			amountIn:                 five,
+			amountIn:                 five.SDKDec(),
 			amountSpecifiedRemaining: sdk.NewDec(100),
 			spreadFactor:             onePercentSpreadFactor,
 
@@ -39,7 +39,7 @@ func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGiven
 		},
 		"zero spread factor": {
 			hasReachedTarget:         true,
-			amountIn:                 five,
+			amountIn:                 five.SDKDec(),
 			amountSpecifiedRemaining: sdk.NewDec(100),
 			spreadFactor:             sdk.ZeroDec(),
 
@@ -48,7 +48,7 @@ func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGiven
 		"negative spread factor - panic": {
 			hasReachedTarget:         false,
 			amountIn:                 sdk.NewDec(100),
-			amountSpecifiedRemaining: five,
+			amountSpecifiedRemaining: five.SDKDec(),
 			spreadFactor:             sdk.OneDec().Neg(),
 
 			expectPanic: true,

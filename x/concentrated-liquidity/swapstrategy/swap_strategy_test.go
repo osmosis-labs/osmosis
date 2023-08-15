@@ -33,12 +33,12 @@ const (
 var (
 	zero                    = sdk.NewDec(0)
 	one                     = sdk.NewDec(1)
-	two                     = sdk.NewDec(2)
-	three                   = sdk.NewDec(3)
-	four                    = sdk.NewDec(4)
-	five                    = sdk.NewDec(5)
-	sqrt5000                = sdk.MustNewDecFromStr("70.710678118654752440") // 5000
-	defaultSqrtPriceLower   = sdk.MustNewDecFromStr("70.688664163408836321") // approx 4996.89
+	two                     = osmomath.NewBigDec(2)
+	three                   = osmomath.NewBigDec(3)
+	four                    = osmomath.NewBigDec(4)
+	five                    = osmomath.NewBigDec(5)
+	sqrt5000                = osmomath.MustNewDecFromStr("70.710678118654752440") // 5000
+	defaultSqrtPriceLower   = sdk.MustNewDecFromStr("70.688664163408836321")      // approx 4996.89
 	defaultSqrtPriceUpper   = sqrt5000
 	defaultAmountOne        = sdk.MustNewDecFromStr("66829187.967824033199646915")
 	defaultAmountZero       = sdk.MustNewDecFromStr("13369.999999999998920002")
@@ -128,8 +128,8 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 	)
 
 	testCases := map[string]struct {
-		sqrtPriceCurrent sdk.Dec
-		sqrtPriceTarget  sdk.Dec
+		sqrtPriceCurrent osmomath.BigDec
+		sqrtPriceTarget  osmomath.BigDec
 		liquidity        sdk.Dec
 		amountIn         sdk.Dec
 		amountOut        sdk.Dec
@@ -142,8 +142,8 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 		expectedAmountOut               sdk.Dec
 	}{
 		"1: one_for_zero__not_equal_target__no_spread_reward": {
-			sqrtPriceCurrent: sqrt5000,                                       // 5000
-			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.724818840347693039"), // 5002
+			sqrtPriceCurrent: sqrt5000,                                            // 5000
+			sqrtPriceTarget:  osmomath.MustNewDecFromStr("70.724818840347693039"), // 5002
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(42000000),
 			amountOut:        sdk.NewDec(8398),
@@ -161,8 +161,8 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountOut: sdk.NewDec(8398),
 		},
 		"2: zero_for_one__not_equal_target_no_spread_reward": {
-			sqrtPriceCurrent: sqrt5000,                                       // 5000
-			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.682388188289167342"), // 4996
+			sqrtPriceCurrent: sqrt5000,                                            // 5000
+			sqrtPriceTarget:  osmomath.MustNewDecFromStr("70.682388188289167342"), // 4996
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(13370),
 			amountOut:        sdk.NewDec(66829187),
@@ -180,8 +180,8 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountOut: sdk.NewDec(66829187),
 		},
 		"3: one_for_zero__equal_target__no_spread_reward": {
-			sqrtPriceCurrent: sqrt5000,                                       // 5000
-			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.724513183069625078"), // approx 5001.96
+			sqrtPriceCurrent: sqrt5000,                                            // 5000
+			sqrtPriceTarget:  osmomath.MustNewDecFromStr("70.724513183069625078"), // approx 5001.96
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(42000000),
 			amountOut:        sdk.NewDec(8398),
@@ -199,8 +199,8 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedAmountOut: sdk.NewDec(8398),
 		},
 		"4: zero_for_one__equal_target__no_spread_reward": {
-			sqrtPriceCurrent: sqrt5000,                                       // 5000
-			sqrtPriceTarget:  sdk.MustNewDecFromStr("70.688664163408836320"), // approx 4996.89
+			sqrtPriceCurrent: sqrt5000,                                            // 5000
+			sqrtPriceTarget:  osmomath.MustNewDecFromStr("70.688664163408836320"), // approx 4996.89
 			liquidity:        sdk.MustNewDecFromStr("3035764687.503020836176699298"),
 			amountIn:         sdk.NewDec(13370),
 			amountOut:        sdk.NewDec(66829187),
@@ -223,12 +223,12 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 		tc := tc
 		suite.Run(name, func() {
 			sut := swapstrategy.New(tc.zeroForOne, osmomath.ZeroDec(), suite.App.GetKey(types.ModuleName), sdk.ZeroDec())
-			sqrtPriceNextOutGivenIn, amountInOutGivenIn, amountOutOutGivenIn, _ := sut.ComputeSwapWithinBucketOutGivenIn(osmomath.BigDecFromSDKDec(tc.sqrtPriceCurrent), osmomath.BigDecFromSDKDec(tc.sqrtPriceTarget), tc.liquidity, tc.amountIn)
+			sqrtPriceNextOutGivenIn, amountInOutGivenIn, amountOutOutGivenIn, _ := sut.ComputeSwapWithinBucketOutGivenIn(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountIn)
 			suite.Require().Equal(tc.expectedSqrtPriceNextOutGivenIn.String(), sqrtPriceNextOutGivenIn.String())
 
 			fmt.Println("amountOutOutGivenIn", amountOutOutGivenIn)
 
-			sqrtPriceNextInGivenOut, amountOutInGivenOut, amountInInGivenOut, _ := sut.ComputeSwapWithinBucketInGivenOut(osmomath.BigDecFromSDKDec(tc.sqrtPriceCurrent), osmomath.BigDecFromSDKDec(tc.sqrtPriceTarget), tc.liquidity, amountOutOutGivenIn)
+			sqrtPriceNextInGivenOut, amountOutInGivenOut, amountInInGivenOut, _ := sut.ComputeSwapWithinBucketInGivenOut(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, amountOutOutGivenIn)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNextInGivenOut.String(), sqrtPriceNextInGivenOut.String())
 

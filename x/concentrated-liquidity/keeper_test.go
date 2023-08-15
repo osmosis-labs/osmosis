@@ -60,15 +60,15 @@ var (
 
 	DefaultTickSpacing                             = uint64(100)
 	PoolCreationFee                                = poolmanagertypes.DefaultParams().PoolCreationFee
-	sqrt4000                                       = sdk.MustNewDecFromStr("63.245553203367586640")
-	sqrt4994                                       = sdk.MustNewDecFromStr("70.668238976219012614")
-	sqrt4999                                       = sdk.MustNewDecFromStr("70.703606697254136613")
-	sqrt5500                                       = sdk.MustNewDecFromStr("74.161984870956629488")
-	sqrt6250                                       = sdk.MustNewDecFromStr("79.056941504209483300")
-	DefaultExponentConsecutivePositionLowerTick, _ = math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt5500), DefaultTickSpacing)
-	DefaultExponentConsecutivePositionUpperTick, _ = math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt6250), DefaultTickSpacing)
-	DefaultExponentOverlappingPositionLowerTick, _ = math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt4000), DefaultTickSpacing)
-	DefaultExponentOverlappingPositionUpperTick, _ = math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt4999), DefaultTickSpacing)
+	sqrt4000                                       = osmomath.MustNewDecFromStr("63.245553203367586640")
+	sqrt4994                                       = osmomath.MustNewDecFromStr("70.668238976219012614")
+	sqrt4999                                       = osmomath.MustNewDecFromStr("70.703606697254136613")
+	sqrt5500                                       = osmomath.MustNewDecFromStr("74.161984870956629488")
+	sqrt6250                                       = osmomath.MustNewDecFromStr("79.056941504209483300")
+	DefaultExponentConsecutivePositionLowerTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt5500, DefaultTickSpacing)
+	DefaultExponentConsecutivePositionUpperTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt6250, DefaultTickSpacing)
+	DefaultExponentOverlappingPositionLowerTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt4000, DefaultTickSpacing)
+	DefaultExponentOverlappingPositionUpperTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt4999, DefaultTickSpacing)
 	BAR                                            = "bar"
 	FOO                                            = "foo"
 	InsufficientFundsError                         = fmt.Errorf("insufficient funds")
@@ -79,10 +79,10 @@ var (
 )
 
 func TestConstants(t *testing.T) {
-	lowerSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultLowerPrice)
-	upperSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultUpperPrice)
+	lowerSqrtPrice, _ := osmomath.MonotonicSqrtBigDec(osmomath.BigDecFromSDKDec(DefaultLowerPrice))
+	upperSqrtPrice, _ := osmomath.MonotonicSqrtBigDec(osmomath.BigDecFromSDKDec(DefaultUpperPrice))
 	liq := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice,
-		osmomath.BigDecFromSDKDec(lowerSqrtPrice), osmomath.BigDecFromSDKDec(upperSqrtPrice), DefaultAmt0, DefaultAmt1)
+		lowerSqrtPrice, upperSqrtPrice, DefaultAmt0, DefaultAmt1)
 	require.Equal(t, DefaultLiquidityAmt, liq)
 }
 
