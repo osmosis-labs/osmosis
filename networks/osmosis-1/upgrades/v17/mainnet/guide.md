@@ -74,7 +74,7 @@ mkdir -p ~/.osmosisd/cosmovisor/upgrades/v16/bin
 cp $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/upgrades/v16/bin
 ```
 
-Cosmovisor is now ready to be set up for v16.
+Cosmovisor is now ready to be set up for v17.
 
 Set these environment variables:
 
