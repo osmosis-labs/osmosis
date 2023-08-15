@@ -5,6 +5,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/osmosis-labs/osmosis/v17/x/poolmanager"
@@ -273,6 +275,24 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		return nil, status.Error(codes.InvalidArgument, "invalid to coin denom")
 	}
 
+	// When calculating the estimate one or more of the queries we are using might
+	// panic, this is problematic when using this query in async-icq.
+	var resp *queryproto.EstimateTradeBasedOnPriceImpactResponse
+	var err error
+	err = osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
+		resp, err = q.estimateTradeBasedOnPriceImpactInternal(ctx, req)
+		return err
+	})
+
+	return resp, err
+}
+
+// estimateTradeBasedOnPriceImpactInternal returns the input and output amount of coins for a pool trade
+// based on twap value and maximum price impact.
+func (q Querier) estimateTradeBasedOnPriceImpactInternal(
+	ctx sdk.Context,
+	req queryproto.EstimateTradeBasedOnPriceImpactRequest,
+) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
 	swapModule, err := q.K.GetPoolModule(ctx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -283,7 +303,7 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	spotPrice, err := swapModule.CalculateSpotPrice(ctx, req.PoolId, req.ToCoinDenom, req.FromCoin.Denom)
+	spotPrice, err := swapModule.CalculateSpotPrice(ctx, req.PoolId, req.FromCoin.Denom, req.ToCoinDenom)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -298,8 +318,8 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		// twap already exceeds the max price impact.
 		if adjustedMaxPriceImpact.IsZero() || adjustedMaxPriceImpact.IsNegative() {
 			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.NewInt(0)),
-				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.NewInt(0)),
+				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
 			}, nil
 		}
 	}
@@ -311,7 +331,15 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	currTradePrice := sdk.NewDec(tokenOut.Amount.Int64()).QuoInt(req.FromCoin.Amount)
+	// If tokenOut is zero it means we are trying to trade dust.
+	if tokenOut.IsZero() {
+		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+			InputCoin:  req.FromCoin,
+			OutputCoin: tokenOut,
+		}, nil
+	}
+
+	currTradePrice := sdk.NewDec(req.FromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
 	priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
 
 	if priceDeviation.LTE(adjustedMaxPriceImpact) {
@@ -331,35 +359,36 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 	}
 
 	// Define low and high amount to search between. Start from 1 and req.FromCoin.Amount as initial range.
-	lowAmount := sdk.NewInt(1)
+	lowAmount := sdk.OneInt()
 	highAmount := req.FromCoin.Amount
+	currFromCoin := req.FromCoin
 
 	for lowAmount.LTE(highAmount) {
 		// Calculate middle amount
 		midAmount := lowAmount.Add(highAmount).Quo(sdk.NewInt(2))
 
 		// Update currFromCoin
-		currFromCoin := sdk.NewCoin(req.FromCoin.Denom, midAmount)
+		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
 
 		// If we error in the input it means we've gotten too low and are trading dust.
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(
 			ctx, poolI, currFromCoin, req.ToCoinDenom, sdk.ZeroDec(),
 		)
-		if err != nil {
+		if err != nil || tokenOut.IsZero() {
 			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
 				InputCoin:  req.FromCoin,
 				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
 			}, nil
 		}
 
-		currTradePrice := sdk.NewDec(tokenOut.Amount.Int64()).QuoInt(currFromCoin.Amount)
+		currTradePrice := sdk.NewDec(currFromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
 		priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
 
 		// Check priceDeviation against adjustedMaxPriceImpact
 		if priceDeviation.LTE(adjustedMaxPriceImpact) {
-			lowAmount = midAmount.Add(sdk.NewInt(1))
+			lowAmount = midAmount.Add(sdk.OneInt())
 		} else {
-			highAmount = midAmount.Sub(sdk.NewInt(1))
+			highAmount = midAmount.Sub(sdk.OneInt())
 		}
 	}
 
@@ -372,12 +401,9 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		}, nil
 	}
 
-	// If lowAmount exceeds highAmount, then binary search ends and the last successful trade amount is `highAmount`
-	finalTradeAmount := sdk.NewCoin(req.FromCoin.Denom, highAmount)
-
-	// Calculate final tokenOut using highAmount
+	// Calculate final tokenOut using currFromCoin
 	tokenOut, err = swapModule.CalcOutAmtGivenIn(
-		ctx, poolI, finalTradeAmount, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
+		ctx, poolI, currFromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
 	)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -385,7 +411,7 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 
 	// Return the result
 	return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-		InputCoin:  finalTradeAmount,
+		InputCoin:  currFromCoin,
 		OutputCoin: tokenOut,
 	}, nil
 }

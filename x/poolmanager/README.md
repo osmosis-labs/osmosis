@@ -330,3 +330,52 @@ higher slippage.
 
 Note, that the actual split happens off-chain. The router is only responsible for executing the swaps in the order and quantities of token in provided
 by the routes.
+
+## EstimateTradeBasedOnPriceImpact Query
+
+The `EstimateTradeBasedOnPriceImpact` query allows users to estimate a trade for all pool types given the following parameters are provided for this request `EstimateTradeBasedOnPriceImpactRequest`:
+
+
+- **FromCoin**: (`sdk.Coin`): the total amount of tokens one wants to sell.
+- **ToCoinDenom**: (`string`): is the denom they want to buy with the tokens being sold.
+- **PoolId**: (`uint64`): is the identifier of the pool that the trade will happen on.
+- **MaxPriceImpact**: (`sdk.Dec`): is the maximum percentage that the user is willing to affect the price of the pool.
+- **TwapPrice**: (`sdk.Dec`) is an external price that the user can optionally enter to have the `MaxPriceImpact` adjusted as the `SpotPrice` of a pool could be changed at any time.
+
+The response would be `EstimateTradeBasedOnPriceImpactResponse` which contains the following data:
+
+- **InputCoin**: (`sdk.Coin`): the actual input amount that would be tradeable under that price impact (might be the full amount).
+- **OutputCoin**: (`sdk.Coin`): the amount of the `ToCoinDenom` tokens being received for the actual `InputCoin` trade.
+
+With that data it is easier for any entity to fill in the `MsgSwapExactAmountIn` details.
+
+### Process
+
+The following is the process in which the query finds a trade that will stay below the `MaxPriceImpact` value.
+
+1. Verify `PoolId`, `FromCoin`, `ToCoinDenom` are not empty
+2. Return the specific `swapModule` based on the `PoolId`
+3. Return the specific `PoolI` interface from the `swapModule` based on the `PoolId`
+4. Calculate the `SpotPrice` in terms of the token being bought, therefore if it's an OSMO/ATOM pool and OSMO is being sold we need to calculate the `SpotPrice` in terms of `ATOM` being the base asset and OSMO being the quote asset.
+5. If we have a `TwapPrice` specified in the request we need to adjust the `MaxPriceImpact` into a new variable `adjustedMaxPriceImpact` which would either increase if the `SpotPrice` is cheaper than the `TwapPrice` or decrease if the `SpotPrice` is more expensive leaving less room to estimate a trade.
+   1. If the `adjustedMaxPriceImpact` was calculated to be `0` or negative it means that the `SpotPrice` is more expensive than the `TwapPrice` and has already exceeded the possible `MaxPriceImpact`. We return a `sdk.ZeroInt()` input and output for the input and output coins indicating that no trade is viable.
+6. Firstly we execute `CalcOutAmtGivenIn` using the initial amount given from `FromCoin` without a swap fee as we're only interested in the price impact of the trade which doesn't involve swap fees.
+   1. If this errors there is very little liquidity for the pool to estimate anything.
+   2. If the amount of tokens returned is `0` it means we've entered a very small amount and we are trying to estimate a trade on dust. We should return the full input amount `FromCoin` as the `InputCoin` and `OutputCoin` of `sdk.ZeroInt()` to indicate we will get `0` from our trade.
+7. We calculate the `currTradePrice` by dividing the `FromCoin.Amount` by the `tokenOut.Amount` received from the calculation.
+8. Using the `currTradePrice` we get the `priceDeviation` calculated by (`currTradePrice` - `SpotPrice`)/`SpotPrice`.
+   1. If the `priceDeviation` is less than or equal to the `adjustedMaxPriceImpact` it means that the first trade of `FromCoin` does not exceed the `MaxPriceImpact`. Therefore we can return the amount of tokens we will get out of this after re-executing `CalcOutAmtGivenIn` with the swap-fee included.
+9. If the `priceDeviation` is greater than the `adjustedMaxPriceImpact` we begin a binary search loop halfing the input amount in `FromCoin` each time until a trade is estimated within the `adjustedMaxPriceImpact` or it fails.
+10. We initialized three variables, `lowAmount=1`, `highAmount=FromCoin.Amount`, `currFromCoin=FromCoin`
+11. While the `lowAmount` is less than or equal to the `highAmount`:
+    1.  Calculate the `midAmount` by adding the `lowAmount` to the `highAmount` and dividing by 2.
+    2.  The new `currFromCoin` now has the `midAmount` as it's amount of tokens.
+    3.  Calculate the `tokenOut` using the new input value `currFromCoin` and `CalcOutAmtGivenIn` without a swap fee.
+        1.  If there is an `err` or the `tokenOut` is `sdk.ZeroInt()` we need to return `InputCoin` as the full `FromCoin` and the `OutputCoin` as `sdk.ZeroInt()` to indicate we are trying to trade dust.
+    4.  Re-calculate the `currTradePrice` and the `priceDeviation` for the newest input/output amounts.
+        1.  If the `priceDeviation` is less that or equal to `adjustedmaxPriceImpact` the `lowAmount` is set to the `midAmount + 1`, this will cause the process to re-loop at a higher `currFromCoin` amount.
+        2.  Otherwise we set the `highAmount` to the `midAmount-1`, this will cause the process to re-loop at a lower `currFromCoin` amount.
+    5.  Once the `lowAmount` is less than or equal to `highAmount` the loop breaks.
+12. If the `highAmount` looped all the way to `sdk.Zero()` it means no amount of tokens could have been trade to get a trade that respects the `adjustedPriceImpact`, this is usually because of low-liquidity pools.
+13. Otherwise we have successfully found a trade that respects the `adjustedPriceImpact` therefore we need to re-calculate the `currFromCoin` trade this time with the swap fee of the pool to give an accurate `OutputCoin`.
+14. Return the `InputCoin`, `OutputCoin` trade estimation.
