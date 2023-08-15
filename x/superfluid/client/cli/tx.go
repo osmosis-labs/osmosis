@@ -34,6 +34,7 @@ func GetTxCmd() *cobra.Command {
 		// NewSuperfluidRedelegateCmd(),
 		NewCmdLockAndSuperfluidDelegate(),
 		NewCmdUnPoolWhitelistedPool(),
+		NewUnbondConvertAndStake(),
 	)
 	osmocli.AddTxCmd(cmd, NewCreateFullRangePositionAndSuperfluidDelegateCmd)
 	osmocli.AddTxCmd(cmd, NewAddToConcentratedLiquiditySuperfluidPositionCmd)
@@ -422,4 +423,57 @@ func NewUnlockAndMigrateSharesToFullRangeConcentratedPositionCmd() (*osmocli.TxC
 		Short:   "unlock and migrate gamm shares to full range concentrated position",
 		Example: "unlock-and-migrate-cl 10 25000000000gamm/pool/2 1000000000uosmo,10000000uion",
 	}, &types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}
+}
+
+func NewUnbondConvertAndStake() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "unbond-convert-and-stake [lock-id] [valAddr] [min-amount-to-stake](optional) [shares-to-convert](optional)",
+		Short:   "instantly unbond any locked gamm shares convert them into osmo and stake",
+		Example: "unbond-convert-and-stake 10 osmo1xxx 100000uosmo",
+		Args:    cobra.MinimumNArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			sender := clientCtx.GetFromAddress()
+			lockId, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			valAddr := args[1]
+
+			var minAmtToStake sdk.Int
+			// if user provided args for min amount to stake, use it. If not, use empty coin struct
+			var sharesToConvert sdk.Coin
+			if len(args) >= 3 {
+				convertedInt, ok := sdk.NewIntFromString(args[2])
+				if !ok {
+					return fmt.Errorf("Conversion for sdk.Int failed")
+				}
+				minAmtToStake = convertedInt
+				if len(args) == 4 {
+					coins, err := sdk.ParseCoinNormalized(args[3])
+					if err != nil {
+						return err
+					}
+					sharesToConvert = coins
+				}
+			} else {
+				minAmtToStake = sdk.ZeroInt()
+				sharesToConvert = sdk.Coin{}
+			}
+
+			msg := types.NewMsgUnbondConvertAndStake(sender, uint64(lockId), valAddr, minAmtToStake, sharesToConvert)
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }
