@@ -8,7 +8,9 @@ import (
 )
 
 var smallestDec = sdk.SmallestDec()
+var smallestBigDec = SmallestDec()
 var tenTo18 = big.NewInt(1e18)
+var tenTo36 = big.NewInt(0).Mul(tenTo18, tenTo18)
 var oneBigInt = big.NewInt(1)
 
 // Returns square root of d
@@ -64,18 +66,18 @@ func MonotonicSqrtBigDec(d BigDec) (BigDec, error) {
 	// We can than interpret sqrt(10^18 * v) as our resulting decimal and return it.
 	// monotonicity is guaranteed by correctness of integer square root.
 	dBi := d.BigInt()
-	r := big.NewInt(0).Mul(dBi, tenTo18)
+	r := big.NewInt(0).Mul(dBi, tenTo36)
 	r.Sqrt(r)
 	// However this square root r is s.t. r^2 <= d. We want to flip this to be r^2 >= d.
 	// To do so, we check that if r^2 < d, do r += 1. Then by correctness we will be in the case we want.
 	// To compare r^2 and d, we can just compare r^2 and 10^18 * v. (recall r = 10^18 * sqrt(d), v = 10^18 * d)
 	check := big.NewInt(0).Mul(r, r)
 	// dBi is a copy of d, so we can modify it.
-	shiftedD := dBi.Mul(dBi, tenTo18)
+	shiftedD := dBi.Mul(dBi, tenTo36)
 	if check.Cmp(shiftedD) == -1 {
 		r.Add(r, oneBigInt)
 	}
-	root := NewDecFromBigIntWithPrec(r, 18)
+	root := NewDecFromBigIntWithPrec(r, 36)
 
 	return root, nil
 }
@@ -83,6 +85,15 @@ func MonotonicSqrtBigDec(d BigDec) (BigDec, error) {
 // MustMonotonicSqrt returns the output of MonotonicSqrt, panicking on error.
 func MustMonotonicSqrt(d sdk.Dec) sdk.Dec {
 	sqrt, err := MonotonicSqrt(d)
+	if err != nil {
+		panic(err)
+	}
+	return sqrt
+}
+
+// MustMonotonicSqrt returns the output of MonotonicSqrt, panicking on error.
+func MustMonotonicSqrtBigDec(d BigDec) BigDec {
+	sqrt, err := MonotonicSqrtBigDec(d)
 	if err != nil {
 		panic(err)
 	}
