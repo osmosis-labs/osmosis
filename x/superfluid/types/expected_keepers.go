@@ -121,3 +121,18 @@ type ConcentratedKeeper interface {
 	GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId uint64) ([]model.Position, error)
 	GetLockIdFromPositionId(ctx sdk.Context, positionId uint64) (uint64, error)
 }
+
+type PoolManagerKeeper interface {
+	SwapExactAmountIn(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		poolId uint64,
+		tokenIn sdk.Coin,
+		tokenOutDenom string,
+		tokenOutMinAmount sdk.Int,
+	) (sdk.Int, error)
+}
+
+type ValSetPreferenceKeeper interface {
+	DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error
+}
