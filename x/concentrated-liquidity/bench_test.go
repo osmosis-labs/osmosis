@@ -149,7 +149,10 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 				// Normalize upperTick to be a multiple of tickSpacing
 				upperTick = upperTick - upperTick%tickSpacing
 
-				priceLowerTick, priceUpperTick, _, _, err := clmath.TicksToSqrtPrice(lowerTick, upperTick)
+				priceLowerTick, err := clmath.TickToPrice(lowerTick)
+				noError(b, err)
+
+				priceUpperTick, err := clmath.TickToPrice(upperTick)
 				noError(b, err)
 
 				lowerTick, upperTick, err = cl.RoundTickToCanonicalPriceTick(
