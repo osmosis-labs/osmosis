@@ -20,3 +20,13 @@ type CreateFullRangePositionData struct {
 	Amount1   sdk.Int
 	Liquidity sdk.Dec
 }
+
+// UpdatePositionData represents the return data from updating a position.
+// Tick flags are used to signal if tick is not referenced by any liquidity after the update
+// for removal purposes.
+type UpdatePositionData struct {
+	Amount0          sdk.Int
+	Amount1          sdk.Int
+	LowerTickIsEmpty bool
+	UpperTickIsEmpty bool
+}
