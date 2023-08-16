@@ -118,7 +118,7 @@ func (k Keeper) DeleteBaseDenoms(ctx sdk.Context) {
 	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixBaseDenoms)
 }
 
-// GetPoolForDenomPair returns the id of the highest liquidty pool between the base denom and the denom to match
+// GetPoolForDenomPair returns the id of the highest liquidity pool between the base denom and the denom to match
 func (k Keeper) GetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDenomPairToPool)
 	key := types.GetKeyPrefixDenomPairToPool(baseDenom, denomToMatch)

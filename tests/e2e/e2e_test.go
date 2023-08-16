@@ -35,6 +35,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
 	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
 var (
@@ -325,6 +326,15 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Change the parameter to enable permisionless pool creation.
 	err = chainABNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainAB)
 	s.Require().NoError(err)
+
+	// Update the protorev admin address to a known wallet we can control
+
+	adminWalletAddr := chainABNode.CreateWalletAndFund("admin", []string{"4000000uosmo"}, chainAB)
+	err = chainABNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainAB)
+	s.Require().NoError(err)
+
+	// Update the weight of CL pools so that this test case is not back run by protorev.
+	chainABNode.SetMaxPoolPointsPerTx(7, adminWalletAddr)
 
 	// Confirm that the parameter has been changed.
 	isPermisionlessCreationEnabledStr = chainABNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
@@ -869,6 +879,9 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Check that the tick spacing was reduced to the expected new tick spacing
 	concentratedPool = s.updatedConcentratedPool(chainABNode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
+
+	// Reset the maximum number of pool points
+	chainABNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
 }
 
 func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
