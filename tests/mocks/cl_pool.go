@@ -379,6 +379,18 @@ func (mr *MockConcentratedPoolExtensionMockRecorder) SetLastLiquidityUpdate(newT
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLastLiquidityUpdate", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).SetLastLiquidityUpdate), newTime)
 }
 
+// SetTakerFee mocks base method.
+func (m *MockConcentratedPoolExtension) SetTakerFee(newTakerFee types.Dec) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetTakerFee", newTakerFee)
+}
+
+// SetTakerFee indicates an expected call of SetTakerFee.
+func (mr *MockConcentratedPoolExtensionMockRecorder) SetTakerFee(newTakerFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTakerFee", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).SetTakerFee), newTakerFee)
+}
+
 // SetTickSpacing mocks base method.
 func (m *MockConcentratedPoolExtension) SetTickSpacing(newTickSpacing uint64) {
 	m.ctrl.T.Helper()
