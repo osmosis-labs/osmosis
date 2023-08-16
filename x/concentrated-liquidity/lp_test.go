@@ -2229,10 +2229,10 @@ func (s *KeeperTestSuite) TestWithdrawPositionInvalidLiquidityUpdate() {
 	validateLiquidity(positionData.Amount0, positionData.Amount1)
 
 	// Withdraw liquidity
-	_, _, err = s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, s.TestAccs[0], positionData.ID, positionData.Liquidity)
+	liq0Withdrawn, liq1Withdrawn, err := s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, s.TestAccs[0], positionData.ID, positionData.Liquidity)
 	s.Require().NoError(err)
 
 	// Validate liquidity decreased
-	// TODO:
-	// validateLiquidity(positionData.Amount0.Sub(liq0Withdrawn), positionData.Amount1.Sub(liq1Withdrawn))
+	// TODO: fix this: https://github.com/osmosis-labs/osmosis/issues/6072
+	validateLiquidity(positionData.Amount0.Sub(liq0Withdrawn), positionData.Amount1.Sub(liq1Withdrawn))
 }
