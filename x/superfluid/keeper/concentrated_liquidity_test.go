@@ -135,7 +135,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			if !tc.isLastPositionInPool {
 				fundCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), sdk.NewInt(100000000)), sdk.NewCoin(clPool.GetToken1(), sdk.NewInt(100000000)))
 				s.FundAcc(nonOwner, fundCoins)
-				_, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPool.GetId(), nonOwner, fundCoins)
+				_, err := concentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPool.GetId(), nonOwner, fundCoins)
 				s.Require().NoError(err)
 			}
 
@@ -147,7 +147,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			preAddToPositionPoolFunds := bankKeeper.GetAllBalances(ctx, clPoolAddress)
 
 			// System under test.
-			newPositionId, finalAmount0, finalAmount1, newLiquidity, newLockId, err := superfluidKeeper.AddToConcentratedLiquiditySuperfluidPosition(ctx, executionAcc, positionId, tc.amount0Added, tc.amount1Added)
+			positionData, newLockId, err := superfluidKeeper.AddToConcentratedLiquiditySuperfluidPosition(ctx, executionAcc, positionId, tc.amount0Added, tc.amount1Added)
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
@@ -184,11 +184,11 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			expectedNewCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), amount0.Add(tc.amount0Added)), sdk.NewCoin(clPool.GetToken1(), amount1.Add(tc.amount1Added)))
 
 			clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
-			expectedLockCoins := sdk.NewCoins(sdk.NewCoin(clPoolDenom, newLiquidity.TruncateInt()))
+			expectedLockCoins := sdk.NewCoins(sdk.NewCoin(clPoolDenom, positionData.Liquidity.TruncateInt()))
 
 			// Resulting position should have the expected amount of coins within one unit (rounding down).
-			s.Require().Equal(0, errTolerance.Compare(expectedNewCoins[0].Amount, finalAmount0), fmt.Sprintf("expected (%s), actual (%s)", expectedNewCoins[0].Amount, finalAmount0))
-			s.Require().Equal(0, errTolerance.Compare(expectedNewCoins[1].Amount, finalAmount1), fmt.Sprintf("expected (%s), actual (%s)", expectedNewCoins[1].Amount, finalAmount1))
+			s.Require().Equal(0, errTolerance.Compare(expectedNewCoins[0].Amount, positionData.Amount0), fmt.Sprintf("expected (%s), actual (%s)", expectedNewCoins[0].Amount, positionData.Amount0))
+			s.Require().Equal(0, errTolerance.Compare(expectedNewCoins[1].Amount, positionData.Amount1), fmt.Sprintf("expected (%s), actual (%s)", expectedNewCoins[1].Amount, positionData.Amount1))
 
 			// Check the new lock.
 			newLock, err := s.App.LockupKeeper.GetLockByID(ctx, newLockId)
@@ -199,7 +199,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			s.Require().Equal(expectedLockCoins.String(), newLock.Coins.String())
 
 			// Check that a new position and lock ID were generated.
-			s.Require().NotEqual(positionId, newPositionId)
+			s.Require().NotEqual(positionId, positionData.ID)
 			s.Require().NotEqual(lockId, newLockId)
 
 			// Check if intermediary account connection for the old lock ID is deleted.
@@ -224,7 +224,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			s.Require().False(found)
 
 			// Check if the new intermediary account has expected delegation amount.
-			expectedDelegationAmt := superfluidKeeper.GetRiskAdjustedOsmoValue(ctx, finalAmount0)
+			expectedDelegationAmt := superfluidKeeper.GetRiskAdjustedOsmoValue(ctx, positionData.Amount0)
 			delegationAmt, found := stakingKeeper.GetDelegation(ctx, newIntermediaryAcc, valAddr)
 			s.Require().True(found)
 			s.Require().Equal(expectedDelegationAmt, delegationAmt.Shares.TruncateInt())
@@ -263,8 +263,11 @@ func (s *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, s
 	unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime
 
 	// Create a full range position in the concentrated liquidity pool.
-	positionId, amount0, amount1, _, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, poolJoinAcc, fullRangeCoins, unbondingDuration)
+	positionData, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, poolJoinAcc, fullRangeCoins, unbondingDuration)
 	s.Require().NoError(err)
+	positionId = positionData.ID
+	amount0 = positionData.Amount0
+	amount1 = positionData.Amount1
 
 	// Register the CL full range LP tokens as a superfluid asset.
 	clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)

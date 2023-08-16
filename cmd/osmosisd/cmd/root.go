@@ -287,6 +287,12 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		Use:   "osmosisd",
 		Short: "Start osmosis app",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// If not calling the set-env command, this is a no-op.
+			err := changeEnvPriorToSetup(cmd, &initClientCtx, args, homeDir)
+			if err != nil {
+				return err
+			}
+
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -316,12 +322,12 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			if humanReadableDenomsInput {
 				// Parse and replace denoms in args
 				for i, arg := range args {
-					lowerCaseArg := strings.ToLower(arg)
-					lowerCaseArgArray := strings.Split(lowerCaseArg, ",")
+					argArray := strings.Split(arg, ",")
 
 					re := regexp.MustCompile(`^([\d.]+)(\D+)$`)
 
-					for i, lowerCaseArg := range lowerCaseArgArray {
+					for i, singleArg := range argArray {
+						lowerCaseArg := strings.ToLower(singleArg)
 						match := re.FindStringSubmatch(lowerCaseArg)
 						if len(match) == 3 {
 							value, denom := match[1], match[2]
@@ -331,15 +337,15 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 							if err != nil {
 								continue
 							}
-							lowerCaseArgArray[i] = transformedCoin
+							argArray[i] = transformedCoin
 						} else {
 							if _, ok := assetMap[lowerCaseArg]; ok {
 								// In this case, we just need to replace the denom with the base denom
-								lowerCaseArgArray[i] = assetMap[lowerCaseArg].Base
+								argArray[i] = assetMap[lowerCaseArg].Base
 							}
 						}
 					}
-					args[i] = strings.Join(lowerCaseArgArray, ",")
+					args[i] = strings.Join(argArray, ",")
 				}
 
 				// Parse and replace denoms in flags
@@ -391,8 +397,9 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 func getHomeEnvironment() string {
 	envPath := filepath.Join(osmosis.DefaultNodeHome, ".env")
 
-	// Use default node home if can't get environment
-	err := godotenv.Load(envPath)
+	// Use default node home if can't get environment.
+	// Overload must be used here in the event that the .env gets updated.
+	err := godotenv.Overload(envPath)
 	if err != nil {
 		// Failed to load, using default home directory
 		return EnvMainnet
@@ -680,8 +687,8 @@ func genAutoCompleteCmd(rootCmd *cobra.Command) {
 		Long: `To configure your shell to load completions for each session, add to your profile:
 
 # bash example
-echo '. <(osmosisd enable-cli-autocomplete bash)' >> ~/.profile
-source ~/.profile
+echo '. <(osmosisd enable-cli-autocomplete bash)' >> ~/.bash_profile
+source ~/.bash_profile
 
 # zsh example
 echo '. <(osmosisd enable-cli-autocomplete zsh)' >> ~/.zshrc

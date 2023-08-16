@@ -14,6 +14,7 @@ import (
 var (
 	ETH                = "eth"
 	USDC               = "usdc"
+	WBTC               = "ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F"
 	DefaultTickSpacing = uint64(100)
 	DefaultLowerTick   = int64(30545000)
 	DefaultUpperTick   = int64(31500000)
@@ -72,11 +73,11 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndLockedFullRangePos
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, sdk.ZeroDec())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(denom1, DefaultCoinAmount), sdk.NewCoin(denom2, DefaultCoinAmount))
 	s.FundAcc(s.TestAccs[0], fundCoins)
-	positionId, _, _, _, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), s.TestAccs[0], fundCoins, time.Hour*24*14)
+	positionData, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), s.TestAccs[0], fundCoins, time.Hour*24*14)
 	s.Require().NoError(err)
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
-	return clPool, concentratedLockId, positionId
+	return clPool, concentratedLockId, positionData.ID
 }
 
 // PrepareCustomConcentratedPool sets up a concentrated liquidity pool with the custom parameters.
@@ -113,9 +114,9 @@ func (s *KeeperTestHelper) PrepareMultipleConcentratedPools(poolsToCreate uint16
 // CreateFullRangePosition creates a full range position and returns position id and the liquidity created.
 func (s *KeeperTestHelper) CreateFullRangePosition(pool types.ConcentratedPoolExtension, coins sdk.Coins) (uint64, sdk.Dec) {
 	s.FundAcc(s.TestAccs[0], coins)
-	positionId, _, _, liquidity, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, pool.GetId(), s.TestAccs[0], coins)
+	positionData, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, pool.GetId(), s.TestAccs[0], coins)
 	s.Require().NoError(err)
-	return positionId, liquidity
+	return positionData.ID, positionData.Liquidity
 }
 
 // WithdrawFullRangePosition withdraws given liquidity from a position specified by id.
@@ -138,6 +139,6 @@ func (s *KeeperTestHelper) SetupConcentratedLiquidityDenomsAndPoolCreation() {
 	// modify authorized quote denoms to include test denoms.
 	defaultParams := types.DefaultParams()
 	defaultParams.IsPermissionlessPoolCreationEnabled = true
-	defaultParams.AuthorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE)
+	defaultParams.AuthorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE, WBTC)
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
 }

@@ -143,30 +143,35 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	v17SuperfluidAssets := v17GetSuperfluidAssets()
 
-	wg.Add(4)
+	wg.Add(2)
+
+	// START: CAN REMOVE POST v17 UPGRADE
+	authorizedQuoteDenoms := "[\"uosmo\",\"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2\",\"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7\",\"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858\",\"ibc/4ABBEF4C8926DDDB320AE5188CFD63267ABBCEFC0583E4AE05D6E5AA2401DDAB\",\"ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5\",\"ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F\"]"
+	// END: CAN REMOVE POST v17 UPGRADE
 
 	// Chain A
-
-	go func() {
-		defer wg.Done()
-		chainANode.FundCommunityPool(initialization.ValidatorWalletName, strAllUpgradeBaseDenoms())
-	}()
-
 	go func() {
 		defer wg.Done()
 		chainANode.EnableSuperfluidAsset(chainA, v17SuperfluidAssets)
+		// START: CAN REMOVE POST v17 UPGRADE
+		err := chainANode.ParamChangeProposal("concentratedliquidity", "AuthorizedQuoteDenoms", []byte(authorizedQuoteDenoms), chainA)
+		if err != nil {
+			uc.t.Logf("error during param change proposal: %v", err)
+		}
+		// END: CAN REMOVE POST v17 UPGRADE
 	}()
 
 	// Chain B
 
 	go func() {
 		defer wg.Done()
-		chainBNode.FundCommunityPool(initialization.ValidatorWalletName, strAllUpgradeBaseDenoms())
-	}()
-
-	go func() {
-		defer wg.Done()
 		chainBNode.EnableSuperfluidAsset(chainB, v17SuperfluidAssets)
+		// START: CAN REMOVE POST v17 UPGRADE
+		err := chainBNode.ParamChangeProposal("concentratedliquidity", "AuthorizedQuoteDenoms", []byte(authorizedQuoteDenoms), chainB)
+		if err != nil {
+			uc.t.Logf("error during param change proposal: %v", err)
+		}
+		// END: CAN REMOVE POST v17 UPGRADE
 	}()
 
 	wg.Wait()
@@ -342,7 +347,7 @@ func (uc *UpgradeConfigurer) RunSetup() error {
 func (uc *UpgradeConfigurer) RunUpgrade() error {
 	var err error
 	if uc.forkHeight > 0 {
-		err = uc.runForkUpgrade()
+		uc.runForkUpgrade()
 	} else {
 		err = uc.runProposalUpgrade()
 	}
@@ -423,13 +428,12 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 	return nil
 }
 
-func (uc *UpgradeConfigurer) runForkUpgrade() error {
+func (uc *UpgradeConfigurer) runForkUpgrade() {
 	for _, chainConfig := range uc.chainConfigs {
 		uc.t.Logf("waiting to reach fork height on chain %s", chainConfig.Id)
 		chainConfig.WaitUntilHeight(uc.forkHeight)
 		uc.t.Logf("fork height reached on chain %s", chainConfig.Id)
 	}
-	return nil
 }
 
 func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHeight int64) error {
@@ -451,18 +455,6 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 }
 
 // START: CAN REMOVE POST v17 UPGRADE
-
-func strAllUpgradeBaseDenoms() string {
-	upgradeBaseDenoms := ""
-	n := len(v17.AssetPairsForTestsOnly)
-	for i, assetPair := range v17.AssetPairsForTestsOnly {
-		upgradeBaseDenoms += "2000000" + assetPair.BaseAsset
-		if i < n-1 { // Check if it's not the last iteration
-			upgradeBaseDenoms += ","
-		}
-	}
-	return upgradeBaseDenoms
-}
 
 func v17GetSuperfluidAssets() string {
 	assets := ""
