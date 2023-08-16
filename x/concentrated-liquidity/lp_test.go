@@ -2204,3 +2204,35 @@ func (s *KeeperTestSuite) TestValidatePositionUpdateById() {
 		})
 	}
 }
+
+// This test reproduces the bug with liquidity not being updated correctly when withdrawing liquidity from a pool.
+func (s *KeeperTestSuite) TestWithdrawPositionInvalidLiquidityUpdate() {
+
+	pool := s.PrepareConcentratedPool()
+
+	validateLiquidity := func(expectedLiq0, expectedLiq1 sdk.Int) {
+		token0Liq := s.App.ConcentratedLiquidityKeeper.GetDenomLiquidity(s.Ctx, pool.GetToken0())
+		s.Require().Equal(expectedLiq0.String(), token0Liq.String())
+
+		token1Liq := s.App.ConcentratedLiquidityKeeper.GetDenomLiquidity(s.Ctx, pool.GetToken1())
+		s.Require().Equal(expectedLiq1.String(), token1Liq.String())
+	}
+
+	// Validate liquidity is zero initially.
+	validateLiquidity(sdk.ZeroInt(), sdk.ZeroInt())
+
+	s.FundAcc(s.TestAccs[0], DefaultCoins)
+	positionData, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins)
+	s.Require().NoError(err)
+
+	// Validate liquidity increased
+	validateLiquidity(positionData.Amount0, positionData.Amount1)
+
+	// Withdraw liquidity
+	_, _, err = s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, s.TestAccs[0], positionData.ID, positionData.Liquidity)
+	s.Require().NoError(err)
+
+	// Validate liquidity decreased
+	// TODO:
+	// validateLiquidity(positionData.Amount0.Sub(liq0Withdrawn), positionData.Amount1.Sub(liq1Withdrawn))
+}
