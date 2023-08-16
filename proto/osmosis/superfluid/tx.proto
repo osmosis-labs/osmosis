@@ -52,6 +52,11 @@ service Msg {
   rpc AddToConcentratedLiquiditySuperfluidPosition(
       MsgAddToConcentratedLiquiditySuperfluidPosition)
       returns (MsgAddToConcentratedLiquiditySuperfluidPositionResponse);
+
+  // UnbondConvertAndStake breaks all locks / superfluid staked assets,
+  // converts them to osmo then stakes the osmo to the designated validator.
+  rpc UnbondConvertAndStake(MsgUnbondConvertAndStake)
+      returns (MsgUnbondConvertAndStakeResponse);
 }
 
 message MsgSuperfluidDelegate {
@@ -231,4 +236,40 @@ message MsgAddToConcentratedLiquiditySuperfluidPositionResponse {
     (gogoproto.nullable) = false
   ];
   uint64 lock_id = 4 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
+}
+
+// ===================== MsgUnbondConvertAndStake
+message MsgUnbondConvertAndStake {
+  option (amino.name) = "osmosis/unbond-convert-and-stake";
+
+  // lock ID to convert and stake.
+  // lock id with 0 should be provided if converting liquid gamm shares to stake
+  uint64 lock_id = 1 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  // validator address to delegate to.
+  // If provided empty string, we use the validators returned from
+  // valset-preference module.
+  string val_addr = 3;
+  // min_amt_to_stake indicates the minimum amount to stake after conversion
+  string min_amt_to_stake = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"min_amt_to_stake\"",
+    (gogoproto.nullable) = false
+  ];
+  // shares_to_convert indicates shares wanted to stake.
+  // Note that this field is only used for liquid(unlocked) gamm shares.
+  // For all other cases, this field would be disregarded.
+  cosmos.base.v1beta1.Coin shares_to_convert = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"shares_to_convert\"",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}
+
+message MsgUnbondConvertAndStakeResponse {
+  string total_amt_staked = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"total_amt_staked\"",
+    (gogoproto.nullable) = false
+  ];
 }

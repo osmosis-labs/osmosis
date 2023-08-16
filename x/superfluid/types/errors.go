@@ -6,6 +6,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
@@ -114,4 +116,13 @@ type UnexpectedDenomError struct {
 
 func (e UnexpectedDenomError) Error() string {
 	return fmt.Sprintf("provided denom (%s) was expected to be formatted as follows: %s", e.ProvidedDenom, e.ExpectedDenom)
+}
+
+type TokenConvertedLessThenDesiredStakeError struct {
+	ActualTotalAmtToStake   sdk.Int
+	ExpectedTotalAmtToStake sdk.Int
+}
+
+func (e TokenConvertedLessThenDesiredStakeError) Error() string {
+	return fmt.Sprintf("actual amount converted to stake (%s) is less then minimum amount expected to be staked (%s)", e.ActualTotalAmtToStake, e.ExpectedTotalAmtToStake)
 }
