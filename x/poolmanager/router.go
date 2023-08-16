@@ -10,7 +10,6 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
 )
@@ -103,7 +102,7 @@ func (k Keeper) RouteExactAmountIn(
 			return sdk.Int{}, err
 		}
 
-		err = k.extractTakerFeeToFeePool(ctx, pool, tokenIn, takerFee, poolManagerParams)
+		err = k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -225,7 +224,7 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, err
 	}
 
-	err = k.extractTakerFeeToFeePool(ctx, pool, tokenIn, takerFee, poolManagerParams)
+	err = k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -445,7 +444,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		tokenIn := sdk.NewCoin(routeStep.TokenInDenom, _tokenInAmount)
-		err = k.extractTakerFeeToFeePool(ctx, pool, tokenIn, takerFee, poolManagerParams)
+		err = k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -817,23 +816,10 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 // extractTakerFeeToFeePool takes in a pool and extracts the taker fee from the pool and sends it to the non native fee pool module account.
 // Its important to note here that in the original swap, the taker fee + spread fee is sent to the pool's address, so this is why we
 // pull directly from the pool and not the user's account.
-func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, pool types.PoolI, tokenIn sdk.Coin, takerFee sdk.Dec, poolManagerParams types.Params) error {
-	var relevantPoolAddress sdk.AccAddress
+func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, tokenIn sdk.Coin, takerFee sdk.Dec, poolManagerParams types.Params, sender sdk.AccAddress) error {
 	nonNativeFeeCollectorForStakingRewardsName := txfeestypes.NonNativeFeeCollectorForStakingRewardsName
 	nonNativeFeeCollectorForCommunityPoolName := txfeestypes.NonNativeFeeCollectorForCommunityPoolName
 	baseDenom := appparams.BaseCoinUnit
-
-	if pool.GetType() == types.Concentrated {
-		// If the pool being swapped from is a concentrated pool, the fee is sent from the spread rewards address
-		concentratedTypePool, ok := pool.(cltypes.ConcentratedPoolExtension)
-		if !ok {
-			return fmt.Errorf("pool %d is not a concentrated pool", pool.GetId())
-		}
-		relevantPoolAddress = concentratedTypePool.GetSpreadRewardsAddress()
-	} else {
-		// If the pool being swapped from is not a concentrated pool, the fee is sent from the pool address
-		relevantPoolAddress = pool.GetAddress()
-	}
 
 	// Take the taker fee from the input token and send it to the fee pool module account
 	takerFeeDec := tokenIn.Amount.ToDec().Mul(takerFee)
@@ -847,7 +833,7 @@ func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, pool types.PoolI, toke
 			// Osmo community pool funds is a direct send
 			osmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.OsmoTakerFeeDistribution.CommunityPool)
 			osmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, osmoTakerFeeToCommunityPoolDec.TruncateInt()))
-			err := k.communityPoolKeeper.FundCommunityPool(ctx, osmoTakerFeeToCommunityPoolCoins, relevantPoolAddress)
+			err := k.communityPoolKeeper.FundCommunityPool(ctx, osmoTakerFeeToCommunityPoolCoins, sender)
 			if err != nil {
 				return err
 			}
@@ -858,7 +844,7 @@ func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, pool types.PoolI, toke
 			// We could stream these rewards via the fee collector account, but this is decision to be made by governance.
 			osmoTakerFeeToStakingRewardsDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.OsmoTakerFeeDistribution.StakingRewards)
 			osmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, osmoTakerFeeToStakingRewardsDec.TruncateInt()))
-			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, relevantPoolAddress, nonNativeFeeCollectorForStakingRewardsName, osmoTakerFeeToStakingRewardsCoins)
+			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForStakingRewardsName, osmoTakerFeeToStakingRewardsCoins)
 			if err != nil {
 				return err
 			}
@@ -873,7 +859,7 @@ func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, pool types.PoolI, toke
 			if denomIsWhitelisted {
 				nonOsmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.NonOsmoTakerFeeDistribution.CommunityPool)
 				nonOsmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt()))
-				err := k.communityPoolKeeper.FundCommunityPool(ctx, nonOsmoTakerFeeToCommunityPoolCoins, relevantPoolAddress)
+				err := k.communityPoolKeeper.FundCommunityPool(ctx, nonOsmoTakerFeeToCommunityPoolCoins, sender)
 				if err != nil {
 					return err
 				}
@@ -882,7 +868,7 @@ func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, pool types.PoolI, toke
 				// At epoch, this account swaps the non native, non whitelisted assets for XXX and sends to the community pool.
 				nonOsmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.NonOsmoTakerFeeDistribution.CommunityPool)
 				nonOsmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt()))
-				err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, relevantPoolAddress, nonNativeFeeCollectorForCommunityPoolName, nonOsmoTakerFeeToCommunityPoolCoins)
+				err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForCommunityPoolName, nonOsmoTakerFeeToCommunityPoolCoins)
 				if err != nil {
 					return err
 				}
@@ -893,7 +879,7 @@ func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, pool types.PoolI, toke
 			// Non Osmo staking rewards are sent to the non native fee pool module account
 			nonOsmoTakerFeeToStakingRewardsDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.NonOsmoTakerFeeDistribution.StakingRewards)
 			nonOsmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToStakingRewardsDec.TruncateInt()))
-			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, relevantPoolAddress, nonNativeFeeCollectorForStakingRewardsName, nonOsmoTakerFeeToStakingRewardsCoins)
+			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForStakingRewardsName, nonOsmoTakerFeeToStakingRewardsCoins)
 			if err != nil {
 				return err
 			}
