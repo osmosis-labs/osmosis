@@ -1,5 +1,5 @@
 syntax = "proto3";
-package authenticator.authenticator;
+package osmosis.authenticator;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -12,7 +12,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v17/x/authenticator/types";
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/authenticator/authenticator/params";
+    option (google.api.http).get = "/osmosis/authenticator/params";
   }
 }
 
@@ -22,5 +22,5 @@ message QueryParamsRequest {}
 // QueryParamsResponse is response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // params holds all the parameters of this module.
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [ (gogoproto.nullable) = false ];
 }
