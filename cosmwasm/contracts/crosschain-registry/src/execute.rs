@@ -62,6 +62,12 @@ pub fn propose_pfm(
         });
     }
 
+    // Temporarily check that only the global admin can propose a PFM. This is
+    // due to different versions of PFM having different senders. Once all
+    // chains are on the latest PFM, we can remove this check and uncomment the
+    // code in validate_pfm
+    check_action_permission(FullOperation::Set, Permission::GlobalAdmin)?;
+
     // check if the chain is already registered or is in progress
     if let Some(chain_pfm) = CHAIN_PFM_MAP.may_load(deps.storage, &chain)? {
         if chain_pfm.is_validated() {
@@ -110,7 +116,9 @@ pub fn validate_pfm(
 
     let chain = chain.to_lowercase();
 
-    // TODO: Uncomment this once all chains are on the latest PFM and we can properly verify the sender
+    // TODO: Uncomment this once all chains are on the latest PFM and we can
+    // properly verify the sender. We will also need to modify how
+    // derive_wasmhooks_sender works at that point
     //
     // let registry = Registry::default(deps.as_ref());
     // let channel = registry.get_channel(&chain, CONTRACT_CHAIN)?;
