@@ -135,6 +135,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("gamm/pool/1", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin(apptesting.DefaultTransmuterDenomA, sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin(apptesting.DefaultTransmuterDenomB, sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("stake", sdk.NewInt(9000000000000000000)),
 	)
 	s.fundAllAccountsWith()
 	s.Commit()
@@ -916,8 +917,93 @@ func (s *KeeperTestSuite) setUpPools() {
 	}
 	s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, poolInfo)
 
-	// Create a concentrated liquidity pool for range testing
+	// Create a duplicate pool for testing
 	// Pool 52
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("Atom", sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
+
+	// Create a duplicate pool for testing
+	// Pool 53
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("usdc", sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
+
+	// Create a duplicate pool for testing
+	// Pool 54
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("stake", sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
+
+	// Create a duplicate pool for testing
+	// Pool 55
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("stake", sdk.NewInt(100000000)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(1000000000)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
+
+	// Create a duplicate pool for testing
+	// Pool 56
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("bitcoin", sdk.NewInt(100)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin("Atom", sdk.NewInt(100)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
+
+	// Create a concentrated liquidity pool for range testing
+	// Pool 58
 	// Create the CL pool
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "epochTwo", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
 	fundCoins := sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(10_000_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)))
@@ -925,7 +1011,7 @@ func (s *KeeperTestSuite) setUpPools() {
 	s.CreateFullRangePosition(clPool, fundCoins)
 
 	// Create a concentrated liquidity pool for range testing
-	// Pool 53
+	// Pool 59
 	// Create the CL pool
 	clPool = s.PrepareCustomConcentratedPool(s.TestAccs[0], "epochTwo", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
 	fundCoins = sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(2_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)))
