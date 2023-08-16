@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"authenticator/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v17/x/authenticator/types"
 )
 
 var _ types.QueryServer = Keeper{}
