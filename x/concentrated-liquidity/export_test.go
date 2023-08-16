@@ -142,14 +142,6 @@ func (k Keeper) ValidateTickSpacingUpdate(ctx sdk.Context, pool types.Concentrat
 	return k.validateTickSpacingUpdate(pool, params, newTickSpacing)
 }
 
-func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
-	return k.fungifyChargedPosition(ctx, owner, positionIds)
-}
-
-func (k Keeper) ValidatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64, fullyChargedDuration time.Duration) (uint64, int64, int64, sdk.Dec, error) {
-	return k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds, fullyChargedDuration)
-}
-
 func (k Keeper) IsLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, error) {
 	return k.isLockMature(ctx, underlyingLockId)
 }
