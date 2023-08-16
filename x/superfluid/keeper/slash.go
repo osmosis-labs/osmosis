@@ -135,7 +135,11 @@ func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 	coinsToSlash := sdk.NewCoins(asset0, asset1)
 
 	// Update the cl positions liquidity to the new amount
+<<<<<<< HEAD
 	_, _, err = k.clk.UpdatePosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, slashAmtNeg, position.JoinTime, position.PositionId)
+=======
+	_, err = k.clk.UpdatePosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, slashAmtNeg, position.JoinTime, position.PositionId)
+>>>>>>> b3cbdd47 (refactor: reduce the number of returns in tick conversions and update position (#6071))
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}

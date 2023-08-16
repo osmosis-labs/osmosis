@@ -228,7 +228,7 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 	}
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
-	_, _, sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
+	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}

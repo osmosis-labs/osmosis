@@ -109,7 +109,11 @@ type EpochKeeper interface {
 type ConcentratedKeeper interface {
 	GetPosition(ctx sdk.Context, positionId uint64) (model.Position, error)
 	SetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, liquidity sdk.Dec, positionId uint64, underlyingLockId uint64) error
+<<<<<<< HEAD
 	UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) (sdk.Int, sdk.Int, error)
+=======
+	UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) (cltypes.UpdatePositionData, error)
+>>>>>>> b3cbdd47 (refactor: reduce the number of returns in tick conversions and update position (#6071))
 	GetConcentratedPoolById(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
 	CreateFullRangePositionLocked(ctx sdk.Context, clPoolId uint64, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionData cltypes.CreateFullRangePositionData, concentratedLockID uint64, err error)
 	CreateFullRangePositionUnlocking(ctx sdk.Context, clPoolId uint64, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionData cltypes.CreateFullRangePositionData, concentratedLockID uint64, err error)

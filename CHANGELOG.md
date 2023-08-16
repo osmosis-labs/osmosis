@@ -41,6 +41,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+<<<<<<< HEAD
+=======
+
+### API breaks
+
+* [#6071](https://github.com/osmosis-labs/osmosis/pull/6071) reduce number of returns for UpdatePosition and TicksToSqrtPrice functions
+
+## v17.0.0
+>>>>>>> b3cbdd47 (refactor: reduce the number of returns in tick conversions and update position (#6071))
 
 ### API breaks
 

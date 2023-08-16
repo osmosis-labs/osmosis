@@ -1621,7 +1621,11 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			s.Ctx = s.Ctx.WithBlockTime(expectedUpdateTime)
 
 			// system under test
+<<<<<<< HEAD
 			actualAmount0, actualAmount1, err := s.App.ConcentratedLiquidityKeeper.UpdatePosition(
+=======
+			updateData, err := s.App.ConcentratedLiquidityKeeper.UpdatePosition(
+>>>>>>> b3cbdd47 (refactor: reduce the number of returns in tick conversions and update position (#6071))
 				s.Ctx,
 				tc.poolId,
 				s.TestAccs[tc.ownerIndex],
@@ -1634,11 +1638,22 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 
 			if tc.expectedError {
 				s.Require().Error(err)
-				s.Require().Equal(sdk.Int{}, actualAmount0)
-				s.Require().Equal(sdk.Int{}, actualAmount1)
+				s.Require().Equal(sdk.Int{}, updateData.Amount0)
+				s.Require().Equal(sdk.Int{}, updateData.Amount1)
 			} else {
 				s.Require().NoError(err)
 
+<<<<<<< HEAD
+=======
+				if tc.liquidityDelta.Equal(DefaultLiquidityAmt.Neg()) {
+					s.Require().True(updateData.LowerTickIsEmpty)
+					s.Require().True(updateData.UpperTickIsEmpty)
+				} else {
+					s.Require().False(updateData.LowerTickIsEmpty)
+					s.Require().False(updateData.UpperTickIsEmpty)
+				}
+
+>>>>>>> b3cbdd47 (refactor: reduce the number of returns in tick conversions and update position (#6071))
 				var (
 					expectedAmount0 sdk.Dec
 					expectedAmount1 sdk.Dec
@@ -1657,8 +1672,8 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 					expectedAmount1 = tc.amount1Expected.ToDec()
 				}
 
-				s.Require().Equal(expectedAmount0.TruncateInt().String(), actualAmount0.String())
-				s.Require().Equal(expectedAmount1.TruncateInt().String(), actualAmount1.String())
+				s.Require().Equal(expectedAmount0.TruncateInt().String(), updateData.Amount0.String())
+				s.Require().Equal(expectedAmount1.TruncateInt().String(), updateData.Amount1.String())
 
 				// validate if position has been properly updated
 				s.validatePositionUpdate(s.Ctx, tc.positionId, tc.expectedPositionLiquidity)

@@ -572,7 +572,11 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 
 	// Create the new position in the pool based on the provided tick range and liquidity delta.
 	// This also initializes the spread reward accumulator and the uptime accumulators for the new position.
+<<<<<<< HEAD
 	_, _, err = k.UpdatePosition(ctx, poolId, owner, lowerTick, upperTick, combinedLiquidityOfAllPositions, joinTime, newPositionId)
+=======
+	_, err = k.UpdatePosition(ctx, poolId, owner, lowerTick, upperTick, combinedLiquidityOfAllPositions, joinTime, newPositionId)
+>>>>>>> b3cbdd47 (refactor: reduce the number of returns in tick conversions and update position (#6071))
 	if err != nil {
 		return 0, err
 	}

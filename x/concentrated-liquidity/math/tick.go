@@ -13,19 +13,19 @@ import (
 // TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks by
 // individually calling `TickToSqrtPrice` method.
 // Returns error if fails to calculate price.
-func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec, error) {
+func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
 	if lowerTick >= upperTick {
-		return sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
+		return sdk.Dec{}, sdk.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
 	}
-	priceUpperTick, sqrtPriceUpperTick, err := TickToSqrtPrice(upperTick)
+	_, sqrtPriceUpperTick, err := TickToSqrtPrice(upperTick)
 	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Dec{}, sdk.Dec{}, err
 	}
-	priceLowerTick, sqrtPriceLowerTick, err := TickToSqrtPrice(lowerTick)
+	_, sqrtPriceLowerTick, err := TickToSqrtPrice(lowerTick)
 	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Dec{}, sdk.Dec{}, err
 	}
-	return priceLowerTick, priceUpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, nil
+	return sqrtPriceLowerTick, sqrtPriceUpperTick, nil
 }
 
 // TickToSqrtPrice returns the sqrtPrice given a tickIndex

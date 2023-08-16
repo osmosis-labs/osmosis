@@ -115,6 +115,7 @@ func NewExecutionDbConfigFromFlags() ExecutionDbConfig {
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for
 // the simulation tests. If `FlagEnabledValue` is false it skips the current test.
 // Returns error on an invalid db intantiation or temp dir creation.
+// nolint: revive
 func SetupSimulation(dirPrefix, dbName string) (cfg Config, db dbm.DB, logger log.Logger, cleanup func(), err error) {
 	if !FlagEnabledValue {
 		return Config{}, nil, nil, func() {}, nil
