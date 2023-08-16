@@ -62,6 +62,12 @@ pub fn propose_pfm(
         });
     }
 
+    // Temporarily check that only the global admin can propose a PFM. This is
+    // due to different versions of PFM having different senders. Once all
+    // chains are on the latest PFM, we can remove this check and uncomment the
+    // code in validate_pfm
+    check_action_permission(FullOperation::Set, Permission::GlobalAdmin)?;
+
     // check if the chain is already registered or is in progress
     if let Some(chain_pfm) = CHAIN_PFM_MAP.may_load(deps.storage, &chain)? {
         if chain_pfm.is_validated() {
@@ -91,10 +97,10 @@ pub fn propose_pfm(
         None,
         own_addr.to_string(),
         env.block.time,
-        format!(r#"{{"ibc_callback":"{}"}}"#, own_addr),
+        format!(r#"{{"ibc_callback":"{own_addr}"}}"#),
         Some(Callback {
             contract: own_addr,
-            msg: format!(r#"{{"validate_pfm": {{"chain": "{}"}} }}"#, chain).try_into()?,
+            msg: format!(r#"{{"validate_pfm": {{"chain": "{chain}"}} }}"#).try_into()?,
         }),
         true,
     )?;
@@ -110,7 +116,9 @@ pub fn validate_pfm(
 
     let chain = chain.to_lowercase();
 
-    // TODO: Uncomment this once all chains are on the latest PFM and we can properly verify the sender
+    // TODO: Uncomment this once all chains are on the latest PFM and we can
+    // properly verify the sender. We will also need to modify how
+    // derive_wasmhooks_sender works at that point
     //
     // let registry = Registry::default(deps.as_ref());
     // let channel = registry.get_channel(&chain, CONTRACT_CHAIN)?;
@@ -273,7 +281,7 @@ pub fn connection_operations(
                     })?;
                 let channel_on_chain_map = CHANNEL_ON_CHAIN_CHAIN_MAP
                     .load(deps.storage, (&chain_to_chain_map.value, &source_chain))
-                    .map_err(|_| RegistryError::ChannelChainLinkDoesNotExist {
+                    .map_err(|_| RegistryError::ChannelDoesNotExistOnChain {
                         channel_id: chain_to_chain_map.value.clone(),
                         source_chain: source_chain.clone(),
                     })?;
@@ -370,7 +378,7 @@ pub fn connection_operations(
                     })?;
                 let channel_on_chain_map = CHANNEL_ON_CHAIN_CHAIN_MAP
                     .load(deps.storage, (&chain_to_chain_map.value, &source_chain))
-                    .map_err(|_| RegistryError::ChannelChainLinkDoesNotExist {
+                    .map_err(|_| RegistryError::ChannelDoesNotExistOnChain {
                         channel_id: chain_to_chain_map.value.clone(),
                         source_chain: source_chain.clone(),
                     })?;
@@ -398,7 +406,7 @@ pub fn connection_operations(
                     })?;
                 let channel_on_chain_map = CHANNEL_ON_CHAIN_CHAIN_MAP
                     .load(deps.storage, (&chain_to_chain_map.value, &source_chain))
-                    .map_err(|_| RegistryError::ChannelChainLinkDoesNotExist {
+                    .map_err(|_| RegistryError::ChannelDoesNotExistOnChain {
                         channel_id: chain_to_chain_map.value.clone(),
                         source_chain: source_chain.clone(),
                     })?;

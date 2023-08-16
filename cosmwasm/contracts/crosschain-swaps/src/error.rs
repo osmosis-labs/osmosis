@@ -2,6 +2,8 @@ use cosmwasm_std::StdError;
 use registry::RegistryError;
 use thiserror::Error;
 
+use crate::FailedDeliveryAction;
+
 #[derive(Error, Debug)]
 pub enum ContractError {
     #[error("{0}")]
@@ -30,6 +32,11 @@ pub enum ContractError {
 
     #[error("invalid receiver: {receiver}")]
     InvalidReceiver { receiver: String },
+
+    #[error("invalid recovery action: {recovery_action:?}")]
+    InvalidRecoveryAction {
+        recovery_action: FailedDeliveryAction,
+    },
 
     #[error("invalid json: {error}. Got: {json}")]
     InvalidJson { error: String, json: String },
