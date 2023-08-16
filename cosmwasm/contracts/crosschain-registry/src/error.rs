@@ -25,14 +25,16 @@ pub enum ContractError {
         expected_chain: String,
     },
 
-    #[error(
-        "only messages initialized by the address of this contract in another chain are allowed. Expected {expected_sender} but got {actual_sender}"
-    )]
-    InvalidSender {
-        expected_sender: String,
-        actual_sender: String,
-    },
-
+    // This is only used for pfm validation. Uncomment when re-activating pfm validation
+    //
+    // #[error(
+    //     "only messages initialized by the address of this contract in another chain are allowed. Expected {expected_sender} but got {actual_sender}"
+    // )]
+    // InvalidSender {
+    //     expected_sender: String,
+    //     actual_sender: String,
+    // },
+    //
     #[error("alias already exists: {alias:?}")]
     AliasAlreadyExists { alias: String },
 
