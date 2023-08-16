@@ -3,7 +3,6 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -11,6 +10,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
@@ -1804,7 +1805,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
 
 		s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 		s.Require().Equal(assetPair.BaseAsset, concentratedPool.GetToken0())
-		s.Require().Equal(v17.QuoteAsset, concentratedPool.GetToken1())
+		s.Require().Equal(assetPair.QuoteAsset, concentratedPool.GetToken1())
 		s.Require().Equal(uint64(v17.TickSpacing), concentratedPool.GetTickSpacing())
 		s.Require().Equal(expectedSpreadFactor.String(), concentratedPool.GetSpreadFactor(sdk.Context{}).String())
 
@@ -1826,12 +1827,14 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
 
 		// This spot price is taken from the balancer pool that was initiated pre upgrade.
 		balancerPool := s.updatedCFMMPool(chainABNode, assetPair.LinkedClassicPool)
-		expectedSpotPrice, err := balancerPool.SpotPrice(sdk.Context{}, v17.QuoteAsset, assetPair.BaseAsset)
+		expectedSpotPrice, err := balancerPool.SpotPrice(sdk.Context{}, assetPair.QuoteAsset, assetPair.BaseAsset)
 		s.Require().NoError(err)
 
-		// Allow 0.1% margin of error.
+		// Margin of error should be slightly larger than the gamm pool's spread factor, as the gamm pool is used to
+		// swap through when creating the initial position. The below implies a 0.1% margin of error.
+		tollerance := expectedSpreadFactor.Add(sdk.MustNewDecFromStr("0.0001"))
 		multiplicativeTolerance := osmomath.ErrTolerance{
-			MultiplicativeTolerance: sdk.MustNewDecFromStr("0.001"),
+			MultiplicativeTolerance: tollerance,
 		}
 
 		s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(expectedSpotPrice), concentratedPool.GetCurrentSqrtPrice().PowerInteger(2)))

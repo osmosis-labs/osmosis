@@ -1,9 +1,16 @@
 package v17
 
 import (
+	"errors"
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	poolManagerTypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,12 +31,13 @@ var Upgrade = upgrades.Upgrade{
 }
 
 const (
-	QuoteAsset  = "uosmo"
+	OSMO        = "uosmo"
 	TickSpacing = 100
 )
 
 type AssetPair struct {
 	BaseAsset         string
+	QuoteAsset        string
 	SpreadFactor      sdk.Dec
 	LinkedClassicPool uint64
 	Superfluid        bool
@@ -41,7 +49,10 @@ var AssetPairs = []AssetPair{
 		SpreadFactor:      sdk.MustNewDecFromStr("0.0005"), // Normally 0.0002, but is not authorized
 		LinkedClassicPool: 857,
 	},
-	{LinkedClassicPool: 712},
+	{
+		LinkedClassicPool: 712,
+		QuoteAsset:        WBTCIBCDenom, // WBTC supersedes OSMO in quote asset status
+	},
 	{LinkedClassicPool: 773},
 	{LinkedClassicPool: 9},
 	{LinkedClassicPool: 3},
@@ -68,22 +79,35 @@ var AssetPairs = []AssetPair{
 }
 
 // AssetPairs contract: all AssetPairs being initialized in this upgrade handler all have the same quote asset (OSMO).
-func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) []AssetPair {
+func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) ([]AssetPair, error) {
 	gammKeeper := keepers.GAMMKeeper
 	superfluidKeeper := keepers.SuperfluidKeeper
 	for i, assetPair := range AssetPairs {
 		pool, err := gammKeeper.GetCFMMPool(ctx, assetPair.LinkedClassicPool)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
-		// Set the base asset as the non-osmo asset in the pool
+		// Unless the quote asset is manually set above, set the quote asset to OSMO.
+		if assetPair.QuoteAsset == "" {
+			assetPair.QuoteAsset = OSMO
+			AssetPairs[i].QuoteAsset = OSMO
+		}
+
+		// Set the base asset for the asset pair.
 		poolLiquidity := pool.GetTotalPoolLiquidity(ctx)
+		found := false
 		for _, coin := range poolLiquidity {
-			if coin.Denom != QuoteAsset {
+			if coin.Denom != assetPair.QuoteAsset {
 				AssetPairs[i].BaseAsset = coin.Denom
+				found = true
 				break
 			}
+		}
+
+		// If the quote asset is the only asset in the pool, return an error.
+		if !found {
+			return nil, errors.New("quote asset is the only asset in the pool")
 		}
 
 		// If the spread factor is not manually set above, set it to the the same value as the pool's spread factor.
@@ -100,7 +124,7 @@ func InitializeAssetPairs(ctx sdk.Context, keepers *keepers.AppKeepers) []AssetP
 		}
 		AssetPairs[i].Superfluid = true
 	}
-	return AssetPairs
+	return AssetPairs, nil
 }
 
 // The values below this comment are used strictly for testing.
@@ -139,159 +163,299 @@ var (
 
 var AssetPairsForTestsOnly = []AssetPair{
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         ISTIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 837,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         CMSTIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.0005"), // Normally 0.0002, but is not authorized
 		LinkedClassicPool: 857,
 		Superfluid:        false,
 	},
 	{
-		BaseAsset:         WBTCIBCDenom,
+		QuoteAsset:        WBTCIBCDenom,
+		BaseAsset:         OSMO,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 712,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         DOTIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 773,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         CROIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 9,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         AKTIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 3,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         AXLIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 812,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         SCRTIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 584,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         STARSIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.003"),
 		LinkedClassicPool: 604,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         JUNOIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.003"),
 		LinkedClassicPool: 497,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         STRDIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 806,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         MARSIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 907,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         ION,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.005"),
 		LinkedClassicPool: 1013,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         XPRTIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 15,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         MEDIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 586,
 		Superfluid:        false,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         SOMMIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 627,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         BLDIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 795,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         KAVAIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 730,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         IRISIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 7,
 		Superfluid:        false,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         stIBCXDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.003"),
 		LinkedClassicPool: 1039,
 		Superfluid:        false,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         DVPNIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 5,
 		Superfluid:        false,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         BTSGIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 573,
 		Superfluid:        false,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         UMEEIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 641,
 		Superfluid:        false,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         HUAHUAIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 605,
 		Superfluid:        true,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         NCTIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 971,
 		Superfluid:        false,
 	},
 	{
+		QuoteAsset:        OSMO,
 		BaseAsset:         GRAVIBCDenom,
 		SpreadFactor:      sdk.MustNewDecFromStr("0.002"),
 		LinkedClassicPool: 625,
 		Superfluid:        false,
 	},
+}
+
+// InitializeAssetPairsTestnet initializes the asset pairs for the testnet, which is every osmo paired gamm pool with exactly 2 tokens.
+func InitializeAssetPairsTestnet(ctx sdk.Context, keepers *keepers.AppKeepers) ([]AssetPair, error) {
+	superfluidKeeper := keepers.SuperfluidKeeper
+	testnetAssetPairs := []AssetPair{}
+
+	// Retrieve all GAMM pools on the testnet.
+	pools, err := keepers.GAMMKeeper.GetPools(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pool := range pools {
+		if pool.GetType() != poolManagerTypes.Balancer {
+			continue
+		}
+
+		gammPoolId := pool.GetId()
+
+		// Skip pools that are already linked.
+		clPoolId, err := keepers.GAMMKeeper.GetLinkedConcentratedPoolID(ctx, gammPoolId)
+		if err == nil && clPoolId != 0 {
+			ctx.Logger().Info(fmt.Sprintf("gammPoolId %d is already linked to CL pool %d, skipping", gammPoolId, clPoolId))
+			continue
+		}
+
+		cfmmPool, err := keepers.GAMMKeeper.GetCFMMPool(ctx, gammPoolId)
+		if err != nil {
+			return nil, err
+		}
+
+		totalPoolLiquidity := cfmmPool.GetTotalPoolLiquidity(ctx)
+
+		// Skip pools that are not paired with exactly 2 tokens.
+		if len(totalPoolLiquidity) != 2 {
+			continue
+		}
+
+		// Skip pools that aren't paired with OSMO. OSMO will be the quote asset.
+		quoteAsset, baseAsset := "", ""
+		for _, coin := range totalPoolLiquidity {
+			if coin.Denom == OSMO {
+				quoteAsset = coin.Denom
+			} else {
+				baseAsset = coin.Denom
+			}
+		}
+		if quoteAsset == "" || baseAsset == "" {
+			continue
+		}
+
+		spreadFactor := cfmmPool.GetSpreadFactor(ctx)
+		err = validateSpotPriceFallsInBounds(ctx, cfmmPool, keepers, baseAsset, quoteAsset, spreadFactor)
+		if err != nil {
+			continue
+		}
+
+		// Set the spread factor to the same spread factor the GAMM pool was.
+		// If its spread factor is not authorized, set it to the first authorized non-zero spread factor.
+		authorizedSpreadFactors := keepers.ConcentratedLiquidityKeeper.GetParams(ctx).AuthorizedSpreadFactors
+		spreadFactorAuthorized := false
+		for _, authorizedSpreadFactor := range authorizedSpreadFactors {
+			if authorizedSpreadFactor.Equal(spreadFactor) {
+				spreadFactorAuthorized = true
+				break
+			}
+		}
+		if !spreadFactorAuthorized {
+			spreadFactor = authorizedSpreadFactors[1]
+		}
+
+		isSuperfluid := false
+		poolShareDenom := fmt.Sprintf("gamm/pool/%d", gammPoolId)
+		_, err = superfluidKeeper.GetSuperfluidAsset(ctx, poolShareDenom)
+		if err != nil && !errors.Is(err, errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", poolShareDenom)) {
+			return nil, err
+		} else if err == nil {
+			isSuperfluid = true
+		}
+
+		internalAssetPair := AssetPair{
+			QuoteAsset:        quoteAsset,
+			BaseAsset:         baseAsset,
+			SpreadFactor:      spreadFactor,
+			LinkedClassicPool: gammPoolId,
+			Superfluid:        isSuperfluid,
+		}
+		testnetAssetPairs = append(testnetAssetPairs, internalAssetPair)
+	}
+	return testnetAssetPairs, nil
+}
+
+// validateSpotPriceFallsInBounds ensures that after swapping in the OSMO for the baseAsset, the resulting spot price is within the
+// min and max spot price bounds of the concentrated liquidity module.
+func validateSpotPriceFallsInBounds(ctx sdk.Context, cfmmPool gammtypes.CFMMPoolI, keepers *keepers.AppKeepers, baseAsset, quoteAsset string, spreadFactor sdk.Dec) error {
+	// Check if swapping 0.1 OSMO results in a spot price less than the min or greater than the max
+	var respectiveBaseAsset sdk.Coin
+	var err error
+	if baseAsset == OSMO {
+		respectiveBaseAsset, err = keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, cfmmPool, sdk.NewCoin(baseAsset, sdk.NewInt(100000)), quoteAsset, spreadFactor)
+	} else if quoteAsset == OSMO {
+		respectiveBaseAsset, err = keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, cfmmPool, sdk.NewCoin(quoteAsset, sdk.NewInt(100000)), baseAsset, spreadFactor)
+	} else {
+		return fmt.Errorf("expected one of the pool's assets to be OSMO, got %s and %s", baseAsset, quoteAsset)
+	}
+	if err != nil {
+		return err
+	}
+	expectedSpotPriceFromSwap := sdk.NewDec(100000).Quo(respectiveBaseAsset.Amount.ToDec())
+	if expectedSpotPriceFromSwap.LT(cltypes.MinSpotPrice) || expectedSpotPriceFromSwap.GT(cltypes.MaxSpotPrice) {
+		return fmt.Errorf("expected spot price from swap to be between %s and %s, got %s", cltypes.MinSpotPrice, cltypes.MaxSpotPrice, expectedSpotPriceFromSwap)
+	}
+	return nil
 }

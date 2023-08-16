@@ -158,6 +158,8 @@ func NewQueryPoolCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevPoolReq
 }
 
 // convert a string array "[1,2,3]" to []uint64
+//
+//nolint:unparam
 func parseRoute(arg string, _ *pflag.FlagSet) (any, osmocli.FieldReadLocation, error) {
 	var route []uint64
 	err := json.Unmarshal([]byte(arg), &route)

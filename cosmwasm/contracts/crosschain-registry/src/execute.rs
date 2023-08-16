@@ -1,4 +1,3 @@
-use crate::contract::CONTRACT_CHAIN;
 use crate::helpers::*;
 use crate::state::{
     ChainPFM, CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_PFM_MAP, CHAIN_TO_BECH32_PREFIX_MAP,
@@ -107,21 +106,23 @@ pub fn validate_pfm(
     ctx: (DepsMut, Env, MessageInfo),
     chain: String,
 ) -> Result<Response, ContractError> {
-    let (deps, env, info) = ctx;
+    let (deps, _env, _info) = ctx;
 
     let chain = chain.to_lowercase();
 
-    let registry = Registry::default(deps.as_ref());
-    let channel = registry.get_channel(&chain, CONTRACT_CHAIN)?;
-    let own_addr = env.contract.address.as_str();
-    let original_sender = registry.encode_addr_for_chain(own_addr, &chain)?;
-    let expected_sender = registry::derive_wasmhooks_sender(&channel, &original_sender, "osmo")?;
-    if expected_sender != info.sender {
-        return Err(ContractError::InvalidSender {
-            expected_sender,
-            actual_sender: info.sender.into_string(),
-        });
-    }
+    // TODO: Uncomment this once all chains are on the latest PFM and we can properly verify the sender
+    //
+    // let registry = Registry::default(deps.as_ref());
+    // let channel = registry.get_channel(&chain, CONTRACT_CHAIN)?;
+    // let own_addr = env.contract.address.as_str();
+    // let original_sender = registry.encode_addr_for_chain(own_addr, &chain)?;
+    // let expected_sender = registry::derive_wasmhooks_sender(&channel, &original_sender, "osmo")?;
+    // if expected_sender != info.sender {
+    //     return Err(ContractError::InvalidSender {
+    //         expected_sender,
+    //         actual_sender: info.sender.into_string(),
+    //     });
+    // }
 
     let mut chain_pfm = CHAIN_PFM_MAP.load(deps.storage, &chain).map_err(|_| {
         ContractError::ValidationNotFound {
@@ -686,6 +687,7 @@ mod tests {
     static CHAIN_ADMIN: &str = "chain_admin";
     static CHAIN_MAINTAINER: &str = "chain_maintainer";
     static UNAUTHORIZED_ADDRESS: &str = "unauthorized_address";
+    use crate::contract::CONTRACT_CHAIN;
 
     #[test]
     fn test_set_contract_alias() {

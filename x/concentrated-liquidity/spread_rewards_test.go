@@ -1417,39 +1417,40 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	s.Require().Error(err)
 
 	// Create position in the default range 1.
-	positionIdOne, _, _, liquidity, _, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	positionDataOne, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 
 	// Swap once.
 	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ := s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, 1)
 
 	// Withdraw half.
-	halfLiquidity := liquidity.Mul(sdk.NewDecWithPrec(5, 1))
-	_, _, err = concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, positionIdOne, halfLiquidity)
+	halfLiquidity := positionDataOne.Liquidity.Mul(sdk.NewDecWithPrec(5, 1))
+	_, _, err = concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, positionDataOne.ID, halfLiquidity)
 	s.Require().NoError(err)
 
 	// Collect spread rewards.
-	spreadRewardsCollected := s.collectSpreadRewardsAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionIdOne, sdk.NewCoins(), []string{USDC}, [][]int64{ticksActivatedAfterEachSwap})
+	spreadRewardsCollected := s.collectSpreadRewardsAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionDataOne.ID, sdk.NewCoins(), []string{USDC}, [][]int64{ticksActivatedAfterEachSwap})
 	expectedSpreadRewardsTruncated := totalSpreadRewardsExpected
 	for i, spreadRewardToken := range totalSpreadRewardsExpected {
 		// We run expected spread rewards through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior
-		expectedSpreadRewardsTruncated[i] = sdk.NewCoin(spreadRewardToken.Denom, spreadRewardToken.Amount.ToDec().QuoTruncate(liquidity).MulTruncate(liquidity).TruncateInt())
+		expectedSpreadRewardsTruncated[i] = sdk.NewCoin(spreadRewardToken.Denom, spreadRewardToken.Amount.ToDec().QuoTruncate(positionDataOne.Liquidity).MulTruncate(positionDataOne.Liquidity).TruncateInt())
 	}
 	s.Require().Equal(expectedSpreadRewardsTruncated, spreadRewardsCollected)
 
 	// Unclaimed rewards should be emptied since spread rewards were collected.
-	s.validatePositionSpreadRewardGrowth(pool.GetId(), positionIdOne, cl.EmptyCoins)
+	s.validatePositionSpreadRewardGrowth(pool.GetId(), positionDataOne.ID, cl.EmptyCoins)
 
 	// Create position in the default range 2.
-	positionIdTwo, _, _, fullLiquidity, _, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	positionDataTwo, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
+	fullLiquidity := positionDataTwo.Liquidity
 
 	// Swap once in the other direction.
 	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, 1)
 
 	// This should claim under the hood for position 2 since full liquidity is removed.
 	balanceBeforeWithdraw := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
-	amtDenom0, _, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, positionIdTwo, fullLiquidity)
+	amtDenom0, _, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, positionDataTwo.ID, positionDataTwo.Liquidity)
 	s.Require().NoError(err)
 	balanceAfterWithdraw := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
 
@@ -1459,20 +1460,20 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	s.Require().Equal(expectedPositionToWithdraw.String(), balanceAfterWithdraw.Sub(balanceBeforeWithdraw).Amount.Sub(amtDenom0).String())
 
 	// Validate cannot claim for withdrawn position.
-	_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, owner, positionIdTwo)
+	_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, owner, positionDataTwo.ID)
 	s.Require().Error(err)
 
-	spreadRewardsCollected = s.collectSpreadRewardsAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionIdOne, sdk.NewCoins(), []string{ETH}, [][]int64{ticksActivatedAfterEachSwap})
+	spreadRewardsCollected = s.collectSpreadRewardsAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionDataOne.ID, sdk.NewCoins(), []string{ETH}, [][]int64{ticksActivatedAfterEachSwap})
 
 	// total spread rewards * half liquidity / (full liquidity + half liquidity)
 	expectesSpreadRewardsCollected := totalSpreadRewardsExpected.AmountOf(ETH).ToDec().Mul(halfLiquidity.Quo(fullLiquidity.Add(halfLiquidity))).TruncateInt()
 	s.Require().Equal(expectesSpreadRewardsCollected.String(), spreadRewardsCollected.AmountOf(ETH).String())
 
 	// Create position in the default range 3.
-	positionIdThree, _, _, fullLiquidity, _, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	positionDataThree, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 
-	collectedThree, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, owner, positionIdThree)
+	collectedThree, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, owner, positionDataThree.ID)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.Coins(nil), collectedThree)
 }

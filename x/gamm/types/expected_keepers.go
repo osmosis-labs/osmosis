@@ -55,7 +55,7 @@ type CommunityPoolKeeper interface {
 type ConcentratedLiquidityKeeper interface {
 	SetParams(ctx sdk.Context, params cltypes.Params)
 	GetConcentratedPoolById(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
-	CreateFullRangePosition(ctx sdk.Context, clPoolId uint64, owner sdk.AccAddress, coins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, err error)
+	CreateFullRangePosition(ctx sdk.Context, clPoolId uint64, owner sdk.AccAddress, coins sdk.Coins) (positionData cltypes.CreateFullRangePositionData, err error)
 }
 
 // PoolManager defines the interface needed to be fulfilled for
