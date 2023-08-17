@@ -16,6 +16,8 @@ import (
 
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v17/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+
+	authante "github.com/osmosis-labs/osmosis/v17/x/authenticator/ante"
 )
 
 // Link to default ante handler used by cosmos sdk:
@@ -55,7 +57,8 @@ func NewAnteHandler(
 		ante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(ak),
 		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
-		ante.NewSigVerificationDecorator(ak, signModeHandler),
+		//ante.NewSigVerificationDecorator(ak, signModeHandler),
+		authante.NewAuthenticatorDecorator(ak, signModeHandler),
 		ante.NewIncrementSequenceDecorator(ak),
 		ibcante.NewAnteDecorator(channelKeeper),
 	)
