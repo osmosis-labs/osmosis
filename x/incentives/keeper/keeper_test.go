@@ -39,6 +39,7 @@ func (s *KeeperTestSuite) ValidateDistributedGauge(gaugeID uint64, expectedFille
 	s.Require().NoError(err)
 	s.Require().Equal(expectedFilledEpoch, gauge.FilledEpochs)
 	// Check that distributed coins is not updated
+
 	s.Require().Equal(expectedDistributions, gauge.DistributedCoins)
 }
 

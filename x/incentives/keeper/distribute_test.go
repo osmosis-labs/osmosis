@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -17,6 +16,13 @@ import (
 )
 
 var _ = suite.TestingSuite(nil)
+
+type GroupGaugeCreationFields struct {
+	coins            sdk.Coins
+	numEpochPaidOver uint64
+	owner            sdk.AccAddress
+	internalGaugeIds []uint64
+}
 
 // TestDistribute tests that when the distribute command is executed on a provided gauge
 // that the correct amount of rewards is sent to the correct lock owners.
@@ -1176,112 +1182,156 @@ func (s *KeeperTestSuite) SetupGroupGauge(clPoolId uint64, lockOwner sdk.AccAddr
 	return internalGauges
 }
 
+func (s *KeeperTestSuite) WithBaseCaseDifferentCoins(baseCase GroupGaugeCreationFields, newCoins sdk.Coins) GroupGaugeCreationFields {
+	baseCase.coins = newCoins
+	return baseCase
+}
+
+func (s *KeeperTestSuite) WithBaseCaseDifferentEpochPaidOver(baseCase GroupGaugeCreationFields, numEpochPaidOver uint64) GroupGaugeCreationFields {
+	baseCase.numEpochPaidOver = numEpochPaidOver
+	return baseCase
+}
+
+func (s *KeeperTestSuite) WithBaseCaseDifferentInternalGauges(baseCase GroupGaugeCreationFields, internalGauges []uint64) GroupGaugeCreationFields {
+	baseCase.internalGaugeIds = internalGauges
+	return baseCase
+}
+
 func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
-	type GroupGaugeCreationFields struct {
-		coins            sdk.Coins
-		numEpochPaidOver uint64
-		owner            sdk.AccAddress
-		internalGaugeIds []uint64
+	hundredKUosmo := sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))
+	hundredKUatom := sdk.NewCoin("uatom", sdk.NewInt(100_000_000))
+	fifetyKUosmo := sdk.NewCoin("uosmo", sdk.NewInt(50_000_000))
+	fifetyKUatom := sdk.NewCoin("uatom", sdk.NewInt(50_000_000))
+	twentyfiveKUosmo := sdk.NewCoin("uosmo", sdk.NewInt(25_000_000))
+	twentyfiveKUatom := sdk.NewCoin("uatom", sdk.NewInt(25_000_000))
+
+	baseCase := &GroupGaugeCreationFields{
+		coins:            sdk.NewCoins(hundredKUosmo),
+		numEpochPaidOver: 1,
+		owner:            s.TestAccs[1],
+		internalGaugeIds: []uint64{2, 3, 4, 5},
 	}
 
 	tests := []struct {
-		name                                     string
-		createGauge                              GroupGaugeCreationFields
-		expectedDistibutionCoinsPerInternalGauge sdk.Coins
-		expectedTotalDistributedCoinsPerEpoch    sdk.Coins
+		name                             string
+		createGauge                      GroupGaugeCreationFields
+		expectedCoinsPerInternalGauge    sdk.Coins
+		expectedCoinsDistributedPerEpoch sdk.Coins
 	}{
 		{
-			name: "Valid case: Valid perp-GroupGauge Creation and Distribution",
-			createGauge: GroupGaugeCreationFields{
-				coins:            sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))),
-				numEpochPaidOver: 1,
-				owner:            s.TestAccs[1],
-				internalGaugeIds: []uint64{2, 3, 4, 5},
-			},
-			expectedDistibutionCoinsPerInternalGauge: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(25_000_000))), // 100osmo / 4 = 25osmo
-			expectedTotalDistributedCoinsPerEpoch:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))),
+			name:                             "Valid case: Valid perp-GroupGauge Creation and Distribution",
+			createGauge:                      *baseCase,
+			expectedCoinsPerInternalGauge:    sdk.NewCoins(twentyfiveKUosmo), // 100osmo / 4 = 25osmo
+			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo),
 		},
 		{
-			name: "Valid case: Valid non-perpGroupGauge Creation with and Distribution",
-			createGauge: GroupGaugeCreationFields{
-				coins:            sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))),
-				numEpochPaidOver: 4,
-				owner:            s.TestAccs[1],
-				internalGaugeIds: []uint64{2, 3, 4, 5},
-			},
-			expectedDistibutionCoinsPerInternalGauge: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(6_250_000))),
-			expectedTotalDistributedCoinsPerEpoch:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(25_000_000))),
+			name:                             "Valid case: Valid perp-GroupGauge Creation with only CL internal gauges and Distribution",
+			createGauge:                      s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{2, 3, 4}),
+			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(33_333_333))),
+			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo),
 		},
 		{
-			name: "Valid case: Valid GroupGauge Creation with 2 coins and Distribution",
-			createGauge: GroupGaugeCreationFields{
-				coins:            sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)), sdk.NewCoin("uatom", sdk.NewInt(100_000_000))),
-				numEpochPaidOver: 1,
-				owner:            s.TestAccs[1],
-				internalGaugeIds: []uint64{2, 3, 4, 5},
-			},
-			expectedDistibutionCoinsPerInternalGauge: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(25_000_000)), sdk.NewCoin("uatom", sdk.NewInt(25_000_000))), // 100osmo / 4 = 25osmo
-			expectedTotalDistributedCoinsPerEpoch:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)), sdk.NewCoin("uatom", sdk.NewInt(100_000_000))),
+			name:                             "Valid case: Valid perp-GroupGauge Creation with only GAMM internal gauge and Distribution",
+			createGauge:                      s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{5}),
+			expectedCoinsPerInternalGauge:    sdk.NewCoins(hundredKUosmo),
+			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo),
 		},
-
-		// {
-		// 	name: "Valid case: Valid GroupGauge Creation With Balancer & Cl internalGauges and Distribution",
-		// },
+		{
+			name:                             "Valid case: Valid non-perpGroupGauge Creation with and Distribution",
+			createGauge:                      s.WithBaseCaseDifferentEpochPaidOver(*baseCase, uint64(4)),
+			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(6_250_000))),
+			expectedCoinsDistributedPerEpoch: sdk.NewCoins(twentyfiveKUosmo),
+		},
+		{
+			name:                             "Valid case: Valid perp-GroupGauge Creation with 2 coins and Distribution",
+			createGauge:                      s.WithBaseCaseDifferentCoins(*baseCase, sdk.NewCoins(hundredKUosmo, hundredKUatom)),
+			expectedCoinsPerInternalGauge:    sdk.NewCoins(twentyfiveKUosmo, twentyfiveKUatom),
+			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo, hundredKUatom),
+		},
+		{
+			name:                             "Valid case: Valid non-perp GroupGauge Creation with 2 coins and Distribution",
+			createGauge:                      s.WithBaseCaseDifferentEpochPaidOver(s.WithBaseCaseDifferentCoins(*baseCase, sdk.NewCoins(hundredKUosmo, hundredKUatom)), uint64(2)),
+			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(12_500_000)), sdk.NewCoin("uatom", sdk.NewInt(12_500_000))),
+			expectedCoinsDistributedPerEpoch: sdk.NewCoins(fifetyKUosmo, fifetyKUatom),
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.SetupTest()
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(hundredKUosmo, hundredKUatom)) // 100osmo, 100atom
 
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)), sdk.NewCoin("uatom", sdk.NewInt(1_000_000_000)))) // 1,000 osmo
+			// Setup
 			clPool := s.PrepareConcentratedPool()
 			lockOwner := sdk.AccAddress([]byte("addr1---------------"))
+			epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
 			s.SetupGroupGauge(clPool.GetId(), lockOwner, uint64(3), uint64(1))
 
 			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, tc.createGauge.coins, tc.createGauge.numEpochPaidOver, tc.createGauge.owner, tc.createGauge.internalGaugeIds) // gauge id = 6
 			s.Require().NoError(err)
 
-			//fmt.Println(groupGaugeId)
+			groupGaugeObj, err := s.App.IncentivesKeeper.GetGroupGaugeById(s.Ctx, groupGaugeId)
+			s.Require().NoError(err)
 
-			// TODO check internal incentives matches what we created
+			// check internalGauges matches what we expect
+			s.Require().Equal(groupGaugeObj.InternalIds, tc.createGauge.internalGaugeIds)
 
-			epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
-			for i := uint64(1); i <= tc.createGauge.numEpochPaidOver; i++ {
+			for epoch := uint64(1); epoch <= tc.createGauge.numEpochPaidOver; epoch++ {
 				// ******************** EPOCH PASSED ********************* //
 				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(epochInfo.Duration))
-				s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), int64(i))
+				s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), int64(epoch))
 
 				// Validate GroupGauge
 				groupGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, groupGaugeId)
 				s.Require().NoError(err)
 
-				for _, coin := range tc.expectedTotalDistributedCoinsPerEpoch {
-					s.ValidateDistributedGauge(groupGauge.Id, i, sdk.NewCoins(sdk.NewCoin(coin.Denom, coin.Amount.Mul(sdk.NewIntFromUint64(i)))))
+				var expectedDistributedCoins []sdk.Coin
+				for _, coin := range tc.expectedCoinsDistributedPerEpoch {
+					expectedDistributedCoins = append(expectedDistributedCoins, sdk.NewCoin(coin.Denom, coin.Amount.Mul(sdk.NewIntFromUint64(epoch))))
 				}
+
+				s.ValidateDistributedGauge(groupGauge.Id, epoch, expectedDistributedCoins)
 
 				// Validate Internal Gauges
 				internalGauges, err := s.App.IncentivesKeeper.GetGaugeFromIDs(s.Ctx, tc.createGauge.internalGaugeIds)
 				s.Require().NoError(err)
 
 				for _, internalGauge := range internalGauges {
-					for _, coin := range tc.expectedDistibutionCoinsPerInternalGauge {
-						s.ValidateDistributedGauge(internalGauge.Id, i, sdk.NewCoins(sdk.NewCoin(coin.Denom, coin.Amount.Mul(sdk.NewIntFromUint64(i)))))
+					var expectedDistributedCoinsPerInternalGauge []sdk.Coin
+					for _, coin := range tc.expectedCoinsPerInternalGauge {
+						expectedDistributedCoinsPerInternalGauge = append(expectedDistributedCoinsPerInternalGauge, (sdk.NewCoin(coin.Denom, coin.Amount.Mul(sdk.NewIntFromUint64(epoch)))))
 					}
+					s.ValidateDistributedGauge(internalGauge.Id, epoch, expectedDistributedCoinsPerInternalGauge)
 				}
 
 				// Validate CL Incentive distribution
 				poolIncentives, err := s.App.ConcentratedLiquidityKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPool.GetId())
 				s.Require().NoError(err)
 
-				//	fmt.Println(poolIncentives)
 				for i := 0; i < len(poolIncentives); i++ {
-					s.ValidateIncentiveRecord(clPool.GetId(), tc.expectedDistibutionCoinsPerInternalGauge[0], poolIncentives[i])
+					idx := 0
+					// the logic below is for indexing incentiveRecord, flips idx from 0,1,0,1 or 1,0,1,0 etc.
+					if len(tc.expectedCoinsPerInternalGauge) > 1 {
+						if epoch == 2 {
+							idx = 1 - (i % 2)
+						} else {
+							idx = i % 2
+						}
+					}
+					s.ValidateIncentiveRecord(clPool.GetId(), tc.expectedCoinsPerInternalGauge[idx], poolIncentives[i])
 				}
 
 				// Validate GAMM incentive distribution
-				bal := s.App.BankKeeper.GetAllBalances(s.Ctx, lockOwner)
-				fmt.Println(bal)
+				balances := s.App.BankKeeper.GetAllBalances(s.Ctx, lockOwner)
+				if len(balances) != 0 {
+					var coins sdk.Coins
+					for _, bal := range tc.expectedCoinsPerInternalGauge {
+						coin := sdk.NewCoin(bal.Denom, bal.Amount.Mul(sdk.NewIntFromUint64(epoch)))
+						coins = append(coins, coin)
+					}
 
+					s.Require().Equal(balances, coins)
+				}
 			}
 		})
 	}
