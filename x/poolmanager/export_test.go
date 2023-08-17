@@ -62,3 +62,11 @@ func (k Keeper) CreateOsmoMultihopExpectedSwapOuts(
 ) ([]sdk.Int, error) {
 	return k.createOsmoMultihopExpectedSwapOuts(ctx, route, tokenOut, cumulativeRouteSwapFee, sumOfSwapFees)
 }
+
+func (k Keeper) CalcTakerFeeExactIn(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
+	return k.calcTakerFeeExactIn(tokenIn, takerFee)
+}
+
+func (k Keeper) CalcTakerFeeExactOut(tokenOut sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
+	return k.calcTakerFeeExactOut(tokenOut, takerFee)
+}

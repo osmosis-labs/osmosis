@@ -75,9 +75,10 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 					TokenOutDenom: "baz",
 				},
 			},
-			tokenIn:           sdk.NewCoin(doesNotExistDenom, sdk.NewInt(tokenIn)),
-			tokenOutMinAmount: sdk.NewInt(tokenInMinAmount),
-			expectError:       true,
+			tokenIn:               sdk.NewCoin(doesNotExistDenom, sdk.NewInt(tokenIn)),
+			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
+			expectedMessageEvents: 2, // 2 events get triggered prior to failure.
+			expectError:           true,
 		},
 	}
 

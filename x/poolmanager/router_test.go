@@ -675,7 +675,7 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 				s.Require().Error(err)
 			} else {
 				// calculate the swap as separate swaps with either the reduced swap fee or normal fee
-				expectedMultihopTokenOutAmount := s.calcInAmountAsSeparatePoolSwaps(tc.expectReducedFeeApplied, tc.routes, tc.tokenIn)
+				expectedMultihopTokenOutAmount := s.calcOutGivenInAmountAsSeparatePoolSwaps(tc.expectReducedFeeApplied, tc.routes, tc.tokenIn)
 
 				// execute the swap
 				multihopTokenOutAmount, err := poolmanagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenIn, tc.tokenOutMinAmount)
@@ -967,12 +967,12 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 				s.Require().Error(err)
 			} else {
 				// calculate the swap as separate swaps with either the reduced swap fee or normal fee
-				expectedMultihopTokenOutAmount := s.calcOutAmountAsSeparateSwaps(tc.expectReducedFeeApplied, tc.routes, tc.tokenOut)
+				expectedMultihopTokenInAmount := s.calcInGivenOutAmountAsSeparateSwaps(tc.expectReducedFeeApplied, tc.routes, tc.tokenOut)
 				// execute the swap
-				multihopTokenOutAmount, err := poolmanagerKeeper.RouteExactAmountOut(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenInMaxAmount, tc.tokenOut)
+				multihopTokenInAmount, err := poolmanagerKeeper.RouteExactAmountOut(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenInMaxAmount, tc.tokenOut)
 				// compare the expected tokenOut to the actual tokenOut
 				s.Require().NoError(err)
-				s.Require().Equal(expectedMultihopTokenOutAmount.Amount.String(), multihopTokenOutAmount.String())
+				s.Require().Equal(expectedMultihopTokenInAmount.Amount.String(), multihopTokenInAmount.String())
 			}
 		})
 	}
@@ -1323,7 +1323,7 @@ func (s *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 			if test.expectPass {
 				s.Require().NoError(errMultihop, "test: %v", test.name)
 				s.Require().NoError(errEstimate, "test: %v", test.name)
-				s.Require().Equal(multihopTokenInAmount, estimateMultihopTokenInAmount)
+				s.Require().Equal(estimateMultihopTokenInAmount.String(), multihopTokenInAmount.String())
 			} else {
 				s.Require().Error(errMultihop, "test: %v", test.name)
 				s.Require().Error(errEstimate, "test: %v", test.name)
@@ -1354,7 +1354,7 @@ func (s *KeeperTestSuite) makeGaugesIncentivized(incentivizedGauges []uint64) {
 	s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, distInfo)
 }
 
-func (s *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) sdk.Coin {
+func (s *KeeperTestSuite) calcInGivenOutAmountAsSeparateSwaps(osmoFeeReduced bool, routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) sdk.Coin {
 	cacheCtx, _ := s.Ctx.CacheContext()
 	if osmoFeeReduced {
 		// extract route from swap
@@ -1375,15 +1375,18 @@ func (s *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, rout
 			spreadFactor := routeSpreadFactor.Mul((currentPoolSpreadFactor.Quo(sumOfSpreadFactors)))
 
 			takerFee := hopPool.GetTakerFee(cacheCtx)
-			totalFees := spreadFactor.Add(takerFee)
 
 			swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
 			s.Require().NoError(err)
 
 			// we then do individual swaps until we reach the end of the swap route
-			tokenOut, err := swapModule.SwapExactAmountOut(cacheCtx, s.TestAccs[0], hopPool, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut, totalFees)
+			tokenInAmt, err := swapModule.SwapExactAmountOut(cacheCtx, s.TestAccs[0], hopPool, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut, spreadFactor)
 			s.Require().NoError(err)
-			nextTokenOut = sdk.NewCoin(hop.TokenInDenom, tokenOut)
+
+			tokenInCoin := sdk.NewCoin(hop.TokenInDenom, tokenInAmt)
+			tokenInCoinAfterTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactOut(tokenInCoin, takerFee)
+
+			nextTokenOut = tokenInCoinAfterTakerFee
 		}
 		return nextTokenOut
 	} else {
@@ -1395,23 +1398,26 @@ func (s *KeeperTestSuite) calcOutAmountAsSeparateSwaps(osmoFeeReduced bool, rout
 			updatedPoolSpreadFactor := hopPool.GetSpreadFactor(cacheCtx)
 
 			takerFee := hopPool.GetTakerFee(cacheCtx)
-			totalFees := updatedPoolSpreadFactor.Add(takerFee)
 
 			swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
 			s.Require().NoError(err)
 
-			tokenOut, err := swapModule.SwapExactAmountOut(cacheCtx, s.TestAccs[0], hopPool, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut, totalFees)
+			tokenInAmt, err := swapModule.SwapExactAmountOut(cacheCtx, s.TestAccs[0], hopPool, hop.TokenInDenom, sdk.NewInt(100000000), nextTokenOut, updatedPoolSpreadFactor)
 			s.Require().NoError(err)
-			nextTokenOut = sdk.NewCoin(hop.TokenInDenom, tokenOut)
+
+			tokenInCoin := sdk.NewCoin(hop.TokenInDenom, tokenInAmt)
+			tokenInCoinAfterTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactOut(tokenInCoin, takerFee)
+
+			nextTokenOut = tokenInCoinAfterTakerFee
 		}
 		return nextTokenOut
 	}
 }
 
-// calcInAmountAsSeparatePoolSwaps calculates the output amount of a series of swaps on PoolManager pools while factoring in reduces swap fee changes.
+// calcOutGivenInAmountAsSeparatePoolSwaps calculates the output amount of a series of swaps on PoolManager pools while factoring in reduces swap fee changes.
 // If its GAMM pool functions directly to ensure the poolmanager functions route to the correct modules. It it's CL pool functions directly to ensure the
 // poolmanager functions route to the correct modules.
-func (s *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(osmoFeeReduced bool, routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
+func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(osmoFeeReduced bool, routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
 	cacheCtx, _ := s.Ctx.CacheContext()
 	if osmoFeeReduced {
 		// extract route from swap
@@ -1434,10 +1440,11 @@ func (s *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(osmoFeeReduced bool, r
 			spreadFactor := routeSpreadFactor.Mul(pool.GetSpreadFactor(cacheCtx).Quo(sumOfSpreadFactors))
 
 			takerFee := pool.GetTakerFee(cacheCtx)
-			totalFees := spreadFactor.Add(takerFee)
+
+			nextTokenInAfterTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
 
 			// we then do individual swaps until we reach the end of the swap route
-			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), totalFees)
+			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterTakerFee, hop.TokenOutDenom, sdk.OneInt(), spreadFactor)
 			s.Require().NoError(err)
 
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
@@ -1456,10 +1463,11 @@ func (s *KeeperTestSuite) calcInAmountAsSeparatePoolSwaps(osmoFeeReduced bool, r
 			spreadFactor := pool.GetSpreadFactor(cacheCtx)
 
 			takerFee := pool.GetTakerFee(cacheCtx)
-			totalFees := spreadFactor.Add(takerFee)
+
+			nextTokenInAfterTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
 
 			// we then do individual swaps until we reach the end of the swap route
-			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenIn, hop.TokenOutDenom, sdk.OneInt(), totalFees)
+			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterTakerFee, hop.TokenOutDenom, sdk.OneInt(), spreadFactor)
 			s.Require().NoError(err)
 
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
@@ -1490,7 +1498,6 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 		//  - foo in: 100000
 		//  - bar amount out will be calculated according to the formula
 		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.9975%29%2810%5E12+-+x%29+%3D+10%5E24
-		// We round down the token amount out, get the result is 99749
 		{
 			name:                   "Swap - [foo -> bar], 0.1 percent fee",
 			poolId:                 1,
@@ -1499,7 +1506,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:      sdk.NewInt(1),
 			tokenOutDenom:          bar,
-			expectedTokenOutAmount: sdk.NewInt(99749),
+			expectedTokenOutAmount: sdk.NewInt(99750),
 		},
 		{
 			name:              "Wrong pool id",
@@ -1860,7 +1867,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			TokenInAmount: sdk.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
 		}
 
-		priceImpactThreshold = sdk.NewInt(97866545)
+		priceImpactThreshold = sdk.NewInt(97595721)
 	)
 
 	tests := map[string]struct {
@@ -2060,7 +2067,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			TokenOutAmount: sdk.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
 		}
 
-		priceImpactThreshold = sdk.NewInt(102239504)
+		priceImpactThreshold = sdk.NewInt(102530430)
 	)
 
 	tests := map[string]struct {

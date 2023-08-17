@@ -18,4 +18,9 @@ message CosmWasmPool {
   uint64 code_id = 3;
   bytes instantiate_msg = 4
       [ (gogoproto.moretags) = "yaml:\"instantiate_msg\"" ];
+  string taker_fee = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"taker_fee\"",
+    (gogoproto.nullable) = false
+  ];
 }

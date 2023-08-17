@@ -29,6 +29,7 @@ type PoolModuleSuite struct {
 
 var (
 	defaultAmount       = sdk.NewInt(100)
+	defaultTakerFee     = sdk.MustNewDecFromStr("0.0015")
 	initalDefaultSupply = sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount))
 
 	defaultDenoms = []string{denomA, denomB}
@@ -82,7 +83,7 @@ func (s *PoolModuleSuite) TestInitializePool() {
 
 			var testPool poolmanagertypes.PoolI
 			if !tc.isInvalidPoolType {
-				testPool = model.NewCosmWasmPool(defaultPoolId, tc.codeid, tc.instantiateMsg)
+				testPool = model.NewCosmWasmPool(defaultPoolId, tc.codeid, tc.instantiateMsg, defaultTakerFee)
 			} else {
 				testPool = s.PrepareConcentratedPool()
 			}

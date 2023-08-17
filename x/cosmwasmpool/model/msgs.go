@@ -79,7 +79,7 @@ func (msg MsgCreateCosmWasmPool) InitialLiquidity() sdk.Coins {
 }
 
 func (msg MsgCreateCosmWasmPool) CreatePool(ctx sdk.Context, poolID uint64, takerFee sdk.Dec) (poolmanagertypes.PoolI, error) {
-	poolI := NewCosmWasmPool(poolID, msg.CodeId, msg.InstantiateMsg)
+	poolI := NewCosmWasmPool(poolID, msg.CodeId, msg.InstantiateMsg, takerFee)
 	return poolI, nil
 }
 

@@ -96,13 +96,12 @@ func (k Keeper) RouteExactAmountIn(
 		}
 
 		takerFee := pool.GetTakerFee(ctx)
-
-		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, routeStep.TokenOutDenom, _outMinAmount, spreadFactor)
+		tokenInAfterTakerFee, err := k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender, true)
 		if err != nil {
 			return sdk.Int{}, err
 		}
 
-		err = k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender)
+		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterTakerFee, routeStep.TokenOutDenom, _outMinAmount, spreadFactor)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -218,13 +217,13 @@ func (k Keeper) SwapExactAmountIn(
 	spreadFactor := pool.GetSpreadFactor(ctx)
 	takerFee := pool.GetTakerFee(ctx)
 
-	// routeStep to the pool-specific SwapExactAmountIn implementation.
-	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, spreadFactor)
+	tokenInAfterTakerFee, err := k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender, true)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	err = k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender)
+	// routeStep to the pool-specific SwapExactAmountIn implementation.
+	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterTakerFee, tokenOutDenom, tokenOutMinAmount, spreadFactor)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -322,7 +321,9 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
 		}
 
-		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenIn, routeStep.TokenOutDenom, spreadFactor)
+		tokenInAfterTakerFee, _ := k.calcTakerFeeExactIn(tokenIn, poolI.GetTakerFee(ctx))
+
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenInAfterTakerFee, routeStep.TokenOutDenom, spreadFactor)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -444,7 +445,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		tokenIn := sdk.NewCoin(routeStep.TokenInDenom, _tokenInAmount)
-		err = k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender)
+		tokenInWithTakerFee, err := k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender, false)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -453,7 +454,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		// whole method and will not change after the first iteration, we still iterate through the rest of the pools to execute their respective
 		// swaps.
 		if i == 0 {
-			tokenInAmount = _tokenInAmount
+			tokenInAmount = tokenInWithTakerFee.Amount
 		}
 	}
 
@@ -731,16 +732,17 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 		}
 
 		spreadFactor := poolI.GetSpreadFactor(ctx)
-		takeFee := poolI.GetTakerFee(ctx)
-		totalFees := spreadFactor.Add(takeFee)
+		takerFee := poolI.GetTakerFee(ctx)
 
-		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, routeStep.TokenInDenom, totalFees)
+		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, routeStep.TokenInDenom, spreadFactor)
 		if err != nil {
 			return nil, err
 		}
 
-		insExpected[i] = tokenIn.Amount
-		tokenOut = tokenIn
+		tokenInAfterTakerFee, _ := k.calcTakerFeeExactOut(tokenIn, takerFee)
+
+		insExpected[i] = tokenInAfterTakerFee.Amount
+		tokenOut = tokenInAfterTakerFee
 	}
 
 	return insExpected, nil
@@ -768,13 +770,18 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 		}
 
 		spreadFactor := poolI.GetSpreadFactor(ctx)
-		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, routeStep.TokenInDenom, cumulativeRouteSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors))))
+		takerFee := poolI.GetTakerFee(ctx)
+		osmoDiscountedSpreadFactor := cumulativeRouteSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
+
+		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, routeStep.TokenInDenom, osmoDiscountedSpreadFactor)
 		if err != nil {
 			return nil, err
 		}
 
-		insExpected[i] = tokenIn.Amount
-		tokenOut = tokenIn
+		tokenInAfterTakerFee, _ := k.calcTakerFeeExactOut(tokenIn, takerFee)
+
+		insExpected[i] = tokenInAfterTakerFee.Amount
+		tokenOut = tokenInAfterTakerFee
 	}
 
 	return insExpected, nil
@@ -816,14 +823,18 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 // extractTakerFeeToFeePool takes in a pool and extracts the taker fee from the pool and sends it to the non native fee pool module account.
 // Its important to note here that in the original swap, the taker fee + spread fee is sent to the pool's address, so this is why we
 // pull directly from the pool and not the user's account.
-func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, tokenIn sdk.Coin, takerFee sdk.Dec, poolManagerParams types.Params, sender sdk.AccAddress) error {
+func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, tokenIn sdk.Coin, takerFee sdk.Dec, poolManagerParams types.Params, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
 	nonNativeFeeCollectorForStakingRewardsName := txfeestypes.NonNativeFeeCollectorForStakingRewardsName
 	nonNativeFeeCollectorForCommunityPoolName := txfeestypes.NonNativeFeeCollectorForCommunityPoolName
 	baseDenom := appparams.BaseCoinUnit
 
-	// Take the taker fee from the input token and send it to the fee pool module account
-	takerFeeDec := tokenIn.Amount.ToDec().Mul(takerFee)
-	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, takerFeeDec.TruncateInt())
+	var tokenInAfterTakerFee sdk.Coin
+	var takerFeeCoin sdk.Coin
+	if exactIn {
+		tokenInAfterTakerFee, takerFeeCoin = k.calcTakerFeeExactIn(tokenIn, takerFee)
+	} else {
+		tokenInAfterTakerFee, takerFeeCoin = k.calcTakerFeeExactOut(tokenIn, takerFee)
+	}
 
 	// We determine the distributution of the taker fee based on its denom
 	// If the denom is the base denom:
@@ -835,7 +846,7 @@ func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, tokenIn sdk.Coin, take
 			osmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, osmoTakerFeeToCommunityPoolDec.TruncateInt()))
 			err := k.communityPoolKeeper.FundCommunityPool(ctx, osmoTakerFeeToCommunityPoolCoins, sender)
 			if err != nil {
-				return err
+				return sdk.Coin{}, err
 			}
 		}
 		// Staking Rewards:
@@ -846,7 +857,7 @@ func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, tokenIn sdk.Coin, take
 			osmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, osmoTakerFeeToStakingRewardsDec.TruncateInt()))
 			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForStakingRewardsName, osmoTakerFeeToStakingRewardsCoins)
 			if err != nil {
-				return err
+				return sdk.Coin{}, err
 			}
 		}
 
@@ -861,7 +872,7 @@ func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, tokenIn sdk.Coin, take
 				nonOsmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt()))
 				err := k.communityPoolKeeper.FundCommunityPool(ctx, nonOsmoTakerFeeToCommunityPoolCoins, sender)
 				if err != nil {
-					return err
+					return sdk.Coin{}, err
 				}
 			} else {
 				// If the non osmo denom is not a whitelisted asset, we send to the non native fee pool for community pool module account.
@@ -870,7 +881,7 @@ func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, tokenIn sdk.Coin, take
 				nonOsmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt()))
 				err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForCommunityPoolName, nonOsmoTakerFeeToCommunityPoolCoins)
 				if err != nil {
-					return err
+					return sdk.Coin{}, err
 				}
 			}
 		}
@@ -881,12 +892,28 @@ func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, tokenIn sdk.Coin, take
 			nonOsmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToStakingRewardsDec.TruncateInt()))
 			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForStakingRewardsName, nonOsmoTakerFeeToStakingRewardsCoins)
 			if err != nil {
-				return err
+				return sdk.Coin{}, err
 			}
 		}
 	}
 
-	return nil
+	return tokenInAfterTakerFee, nil
+}
+
+func (k Keeper) calcTakerFeeExactIn(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
+	takerFeeDec := tokenIn.Amount.ToDec().Mul(takerFee)
+	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, takerFeeDec.TruncateInt())
+	tokenInAfterTakerFee := sdk.NewCoin(tokenIn.Denom, tokenIn.Amount.Sub(takerFeeCoin.Amount))
+
+	return tokenInAfterTakerFee, takerFeeCoin
+}
+
+func (k Keeper) calcTakerFeeExactOut(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
+	takerFeeDec := tokenIn.Amount.ToDec().Mul(takerFee)
+	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, takerFeeDec.RoundInt())
+	tokenInAfterTakerFee := sdk.NewCoin(tokenIn.Denom, tokenIn.Amount.Add(takerFeeCoin.Amount))
+
+	return tokenInAfterTakerFee, takerFeeCoin
 }
 
 func isDenomWhitelisted(denom string, authorizedQuoteDenoms []string) bool {

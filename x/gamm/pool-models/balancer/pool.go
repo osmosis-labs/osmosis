@@ -507,8 +507,7 @@ func (p Pool) CalcOutAmtGivenIn(
 		return sdk.Coin{}, err
 	}
 
-	totalFee := spreadFactor.Add(p.GetTakerFee(ctx))
-	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(totalFee))
+	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(spreadFactor))
 	poolTokenInBalance := poolAssetIn.Token.Amount.ToDec()
 	poolPostSwapInBalance := poolTokenInBalance.Add(tokenAmountInAfterFee)
 
@@ -575,8 +574,7 @@ func (p Pool) CalcInAmtGivenOut(
 	// and then the spread factor is added to the pool.
 	// Thus in order to give X amount out, we solve the invariant for the invariant input. However invariant input = (1 - spread factor) * trade input.
 	// Therefore we divide by (1 - spread factor) here
-	totalFee := spreadFactor.Add(p.GetTakerFee(ctx))
-	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(totalFee))
+	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(spreadFactor))
 
 	// We round up tokenInAmt, as this is whats charged for the swap, for the precise amount out.
 	// Otherwise, the pool would under-charge by this rounding error.

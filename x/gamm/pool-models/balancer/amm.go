@@ -124,7 +124,7 @@ func calcPoolSharesOutGivenSingleAssetIn(
 	// deduct spread factor on the in asset.
 	// We don't charge spread factor on the token amount that we imagine as unswapped (the normalized weight).
 	// So effective_swapfee = spread factor * (1 - normalized_token_weight)
-	tokenAmountInAfterFee := tokenAmountIn.Mul(feeRatio(normalizedTokenWeightIn, spreadFactor.Add(takerFee)))
+	tokenAmountInAfterFee := tokenAmountIn.Mul(feeRatio(normalizedTokenWeightIn, spreadFactor))
 	// To figure out the number of shares we add, first notice that in balancer we can treat
 	// the number of shares as linearly related to the `k` value function. This is due to the normalization.
 	// e.g.
@@ -203,7 +203,7 @@ func calcSingleAssetInGivenPoolSharesOut(
 	// pool weight is always 1
 	tokenAmountIn := solveConstantFunctionInvariant(totalPoolSharesSupply.Add(sharesAmountOut), totalPoolSharesSupply, sdk.OneDec(), tokenBalanceIn, normalizedTokenWeightIn).Neg()
 	// deduct spread factor on the in asset
-	tokenAmountInFeeIncluded := tokenAmountIn.Quo(feeRatio(normalizedTokenWeightIn, spreadFactor.Add(takerFee)))
+	tokenAmountInFeeIncluded := tokenAmountIn.Quo(feeRatio(normalizedTokenWeightIn, spreadFactor))
 	return tokenAmountInFeeIncluded
 }
 
@@ -218,7 +218,7 @@ func calcPoolSharesInGivenSingleAssetOut(
 	spreadFactor, takerFee,
 	exitFee sdk.Dec,
 ) sdk.Dec {
-	tokenAmountOutFeeIncluded := tokenAmountOut.Quo(feeRatio(normalizedTokenWeightOut, spreadFactor.Add(takerFee)))
+	tokenAmountOutFeeIncluded := tokenAmountOut.Quo(feeRatio(normalizedTokenWeightOut, spreadFactor))
 
 	// delta poolSupply is positive(total pool shares decreases)
 	// pool weight is always 1
