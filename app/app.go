@@ -57,7 +57,6 @@ import (
 	v14 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v14"
 	v15 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v15"
 	v16 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v16"
-	v17 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17"
 	v17b "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17b"
 	v3 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v3"
 	v4 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v4"
@@ -104,7 +103,7 @@ var (
 
 	// _ sdksimapp.App = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v17b.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17b.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
