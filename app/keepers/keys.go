@@ -8,6 +8,7 @@ import (
 	twaptypes "github.com/osmosis-labs/osmosis/v17/x/twap/types"
 )
 
+// dummy change
 // GenerateKeys generates new keys (KV Store, Transient store, and memory store).
 func (appKeepers *AppKeepers) GenerateKeys() {
 	// Define what keys will be used in the cosmos-sdk key/value store.
