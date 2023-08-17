@@ -614,6 +614,20 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 			internalGaugeIds: []uint64{2, 3, 4},
 			expectErr:        true,
 		},
+		{
+			name:             "Error: One of the internal Gauge is non-perp",
+			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200_000_000))),
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{2, 3, 4, 5},
+			expectErr:        true,
+		},
+		{
+			name:             "Error: No InternalGaugeIds provided",
+			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200_000_000))),
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{},
+			expectErr:        true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -622,12 +636,15 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)))) // 1,000 osmo
 			clPool := s.PrepareConcentratedPool()                                                 // gaugeid = 1
 
-			// create 3 internal Gauge
+			// create 3 perp-internal Gauge
 			for i := 0; i <= 2; i++ {
 				s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(1)) // gauge id = 2,3,4
 			}
 
-			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[1], tc.internalGaugeIds) // gauge id = 5
+			//create 1 non-perp internal Gauge
+			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gauge id = 5
+
+			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[1], tc.internalGaugeIds) // gauge id = 6
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

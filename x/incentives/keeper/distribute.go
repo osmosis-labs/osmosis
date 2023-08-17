@@ -268,7 +268,7 @@ func (k Keeper) distributeSyntheticInternal(
 
 // AllocateAcrossGauges gets all the active groupGauges and distributes tokens evenly based on the internalGauges set for that
 // groupGauge. After each iteration we update the groupGauge by modifying filledEpoch and distributed coins.
-// TODO: Replace even eplit by volume split once its implemented.
+// TODO: Replace even split by volume split once its implemented.
 func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 	currTime := ctx.BlockTime()
 
@@ -284,14 +284,14 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 		}
 
 		// only allow distribution if the GroupGauge is Active
-		if currTime.After(gauge.StartTime) || currTime.Equal(gauge.StartTime) && (gauge.IsPerpetual || gauge.FilledEpochs < gauge.NumEpochsPaidOver) {
-			// TODO: replace the calculation below by volume split.
-			remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
-			amountToDistributeThisEpoch := remainCoins[0].Amount.Quo(sdk.NewInt(int64(gauge.NumEpochsPaidOver - (gauge.FilledEpochs))))
-			amountToDistributePerInternalGauge := amountToDistributeThisEpoch.Quo(sdk.NewInt(int64(len(groupGauge.InternalIds))))
+		if !currTime.Before(gauge.StartTime) && (gauge.IsPerpetual || gauge.FilledEpochs < gauge.NumEpochsPaidOver) {
+			coinsToDistributePerInternalGauge, coinsToDistributeThisEpoch := k.CalcSplitPolicyCoins(ctx, groupGauge.SplittingPolicy, gauge, groupGauge)
+			if coinsToDistributePerInternalGauge == nil || coinsToDistributeThisEpoch == nil {
+				return fmt.Errorf("GroupGauge id %d doesnot have enought coins to distribute.", groupGauge.GroupGaugeId)
+			}
 
 			for _, internalGaugeId := range groupGauge.InternalIds {
-				err = k.AddToGaugeRewardsFromGauge(ctx, groupGauge.GroupGaugeId, sdk.NewCoins(sdk.NewCoin(remainCoins[0].Denom, amountToDistributePerInternalGauge)), internalGaugeId)
+				err = k.AddToGaugeRewardsFromGauge(ctx, groupGauge.GroupGaugeId, coinsToDistributePerInternalGauge, internalGaugeId)
 				if err != nil {
 					return err
 				}
@@ -299,11 +299,32 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 
 			// we distribute tokens from groupGauge to internal gauge therefore update groupGauge fields
 			// updates filledEpoch and distributedCoins
-			k.updateGaugePostDistribute(ctx, *gauge, sdk.NewCoins(sdk.NewCoin(gauge.Coins[0].Denom, amountToDistributeThisEpoch)))
+			k.updateGaugePostDistribute(ctx, *gauge, coinsToDistributeThisEpoch)
 		}
 	}
 
 	return nil
+}
+
+// CalcSplitPolicyCoins calculates tokens to split given a policy and groupGauge.
+func (k Keeper) CalcSplitPolicyCoins(ctx sdk.Context, policy types.SplittingPolicy, groupGauge *types.Gauge, groupGaugeObj types.GroupGauge) (sdk.Coins, sdk.Coins) {
+	// TODO: add volume split policy
+	if policy == types.Evenly {
+		remainCoins := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
+
+		var coinsDistPerInternalGauge, coinsDistThisEpoch sdk.Coins
+		for _, coin := range remainCoins {
+			amountToDistributeThisEpoch := coin.Amount.Quo(sdk.NewIntFromUint64(groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs))
+			amountToDistributePerInternalGauge := amountToDistributeThisEpoch.Quo(sdk.NewInt(int64(len(groupGaugeObj.InternalIds))))
+
+			coinsDistThisEpoch = coinsDistThisEpoch.Add(sdk.NewCoin(coin.Denom, amountToDistributeThisEpoch))
+			coinsDistPerInternalGauge = coinsDistPerInternalGauge.Add(sdk.NewCoin(coin.Denom, amountToDistributePerInternalGauge))
+		}
+
+		return coinsDistPerInternalGauge, coinsDistThisEpoch
+	}
+
+	return nil, nil
 }
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
@@ -481,9 +502,11 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
 		} else {
 			// Donot distribue if LockQueryType = Group, because if we distribute here we will be double distributing.
-			if gauge.DistributeTo.LockQueryType != lockuptypes.ByGroup {
-				gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
+			if gauge.DistributeTo.LockQueryType == lockuptypes.ByGroup {
+				continue
 			}
+
+			gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
 		}
 		if err != nil {
 			return nil, err

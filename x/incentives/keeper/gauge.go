@@ -212,21 +212,28 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 // Note: we should expect that the internal gauges consist of the gauges that are automatically created for each pool upon pool creation, as even non-perpetual
 // external incentives would likely want to route through these.
 func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64) (uint64, error) {
-	isPerp := false
-	if numEpochPaidOver == 1 {
-		isPerp = true
+	if len(internalGaugeIds) == 0 {
+		return 0, fmt.Errorf("No internalGauge provided.")
 	}
 
 	// check that all the internalGaugeIds exist
-	if _, err := k.GetGaugeFromIDs(ctx, internalGaugeIds); err != nil {
+	internalGauges, err := k.GetGaugeFromIDs(ctx, internalGaugeIds)
+	if err != nil {
 		return 0, fmt.Errorf("Invalid internalGaugeIds, please make sure all the internalGauge have been created.")
+	}
+
+	// check that all internalGauges are perp
+	for _, gauge := range internalGauges {
+		if !gauge.IsPerpetual {
+			return 0, fmt.Errorf("Internal Gauge id %d is non-perp, all internalGauge must be perpetual Gauge.", gauge.Id)
+		}
 	}
 
 	nextGaugeId := k.GetLastGaugeID(ctx) + 1
 
 	gauge := types.Gauge{
 		Id:          nextGaugeId,
-		IsPerpetual: isPerp,
+		IsPerpetual: numEpochPaidOver == 1,
 		DistributeTo: lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByGroup,
 		},
@@ -244,13 +251,15 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	}
 
 	newGroupGauge := types.GroupGauge{
-		GroupGaugeId: nextGaugeId,
-		InternalIds:  internalGaugeIds,
+		GroupGaugeId:    nextGaugeId,
+		InternalIds:     internalGaugeIds,
+		SplittingPolicy: types.Evenly,
 	}
 
 	k.SetGroupGauge(ctx, newGroupGauge)
 	k.SetLastGaugeID(ctx, gauge.Id)
 
+	// TODO: check if this is necessary
 	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
 	activeOrUpcomingGauge := true
 
