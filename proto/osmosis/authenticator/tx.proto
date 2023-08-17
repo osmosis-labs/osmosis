@@ -4,4 +4,32 @@ package osmosis.authenticator;
 option go_package = "github.com/osmosis-labs/osmosis/v17/x/authenticator/types";
 
 // Msg defines the Msg service.
-service Msg {}
+service Msg {
+  rpc MsgAddAuthenticator(MsgAddAuthenticatorRequest)
+      returns (MsgAddAuthenticatorResponse);
+  rpc MsgRemoveAuthenticator(MsgRemoveAuthenticatorRequest)
+      returns (MsgRemoveAuthenticatorResponse);
+}
+
+// ToDo: Should we give the authenticator a name/id? Positions can be unstable
+// if several users are adding/removing authenticators at the same time.
+
+// MsgAddAuthenticatorRequest defines the Msg/AddAuthenticator request type.
+message MsgAddAuthenticatorRequest {
+  string type = 1;
+  bytes data = 2;
+}
+
+// MsgAddAuthenticatorResponse defines the Msg/AddAuthenticator response type.
+message MsgAddAuthenticatorResponse { bool success = 1; }
+
+// MsgRemoveAuthenticatorRequest defines the Msg/RemoveAuthenticator request
+// type.
+message MsgRemoveAuthenticatorRequest {
+  int64 position = 1;
+  // ToDo: Maybe a hash of the authenticator data?
+}
+
+// MsgRemoveAuthenticatorResponse defines the Msg/RemoveAuthenticator response
+// type.
+message MsgRemoveAuthenticatorResponse { bool success = 1; }

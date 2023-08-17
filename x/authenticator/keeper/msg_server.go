@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"github.com/osmosis-labs/osmosis/v17/x/authenticator/types"
 )
 
@@ -15,3 +16,17 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 var _ types.MsgServer = msgServer{}
+
+func (m msgServer) MsgAddAuthenticator(goCtx context.Context, request *types.MsgAddAuthenticatorRequest) (*types.MsgAddAuthenticatorResponse, error) {
+	//ctx := sdk.UnwrapSDKContext(goCtx)
+
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m msgServer) MsgRemoveAuthenticator(goCtx context.Context, request *types.MsgRemoveAuthenticatorRequest) (*types.MsgRemoveAuthenticatorResponse, error) {
+	//ctx := sdk.UnwrapSDKContext(goCtx)
+
+	//TODO implement me
+	panic("implement me")
+}
