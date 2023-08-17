@@ -1,6 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
 use schemars::JsonSchema;
+use serde_json_wasm::from_str;
 
 use crate::RegistryError;
 
@@ -30,6 +31,15 @@ pub enum QueryMsg {
 
     #[returns(crate::proto::QueryDenomTraceResponse)]
     GetDenomTrace { ibc_denom: String },
+
+    #[returns(bool)]
+    HasPacketForwarding { chain: String },
+
+    #[returns(QueryAliasForDenomPathResponse)]
+    GetAliasForDenomPath { denom_path: String },
+
+    #[returns(QueryDenomPathForAliasResponse)]
+    GetDenomPathForAlias { alias: String },
 }
 
 // Response for GetAddressFromAlias query
@@ -60,6 +70,18 @@ pub struct QueryGetBech32PrefixFromChainNameResponse {
 #[cw_serde]
 pub struct QueryGetChainNameFromBech32PrefixResponse {
     pub chain_name: String,
+}
+
+// Response for GetAliasForDenomPath query
+#[cw_serde]
+pub struct QueryAliasForDenomPathResponse {
+    pub alias: String,
+}
+
+// Response for GetDenomPathForAlias query
+#[cw_serde]
+pub struct QueryDenomPathForAliasResponse {
+    pub denom_path: String,
 }
 
 // Value does not implement JsonSchema, so we wrap it here. This can be removed
@@ -93,6 +115,14 @@ impl SerializableJson {
 impl From<serde_cw_value::Value> for SerializableJson {
     fn from(value: serde_cw_value::Value) -> Self {
         Self(value)
+    }
+}
+
+impl TryFrom<String> for SerializableJson {
+    type Error = RegistryError;
+
+    fn try_from(value: String) -> Result<Self, RegistryError> {
+        Ok(Self(from_str(&value)?))
     }
 }
 

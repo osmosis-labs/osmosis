@@ -35,6 +35,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
 	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
 var (
@@ -325,6 +326,15 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Change the parameter to enable permisionless pool creation.
 	err = chainABNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainAB)
 	s.Require().NoError(err)
+
+	// Update the protorev admin address to a known wallet we can control
+
+	adminWalletAddr := chainABNode.CreateWalletAndFund("admin", []string{"4000000uosmo"}, chainAB)
+	err = chainABNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainAB)
+	s.Require().NoError(err)
+
+	// Update the weight of CL pools so that this test case is not back run by protorev.
+	chainABNode.SetMaxPoolPointsPerTx(7, adminWalletAddr)
 
 	// Confirm that the parameter has been changed.
 	isPermisionlessCreationEnabledStr = chainABNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
@@ -869,6 +879,9 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Check that the tick spacing was reduced to the expected new tick spacing
 	concentratedPool = s.updatedConcentratedPool(chainABNode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
+
+	// Reset the maximum number of pool points
+	chainABNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
 }
 
 func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
@@ -1805,7 +1818,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
 
 		s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 		s.Require().Equal(assetPair.BaseAsset, concentratedPool.GetToken0())
-		s.Require().Equal(v17.QuoteAsset, concentratedPool.GetToken1())
+		s.Require().Equal(assetPair.QuoteAsset, concentratedPool.GetToken1())
 		s.Require().Equal(uint64(v17.TickSpacing), concentratedPool.GetTickSpacing())
 		s.Require().Equal(expectedSpreadFactor.String(), concentratedPool.GetSpreadFactor(sdk.Context{}).String())
 
@@ -1827,7 +1840,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
 
 		// This spot price is taken from the balancer pool that was initiated pre upgrade.
 		balancerPool := s.updatedCFMMPool(chainABNode, assetPair.LinkedClassicPool)
-		expectedSpotPrice, err := balancerPool.SpotPrice(sdk.Context{}, v17.QuoteAsset, assetPair.BaseAsset)
+		expectedSpotPrice, err := balancerPool.SpotPrice(sdk.Context{}, assetPair.QuoteAsset, assetPair.BaseAsset)
 		s.Require().NoError(err)
 
 		// Margin of error should be slightly larger than the gamm pool's spread factor, as the gamm pool is used to

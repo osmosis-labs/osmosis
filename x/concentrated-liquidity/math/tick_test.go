@@ -283,7 +283,7 @@ func TestTicksToSqrtPrice(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			priceLower, priceUpper, lowerSqrtPrice, upperSqrtPrice, err := math.TicksToSqrtPrice(tc.lowerTickIndex.Int64(), tc.upperTickIndex.Int64())
+			lowerSqrtPrice, upperSqrtPrice, err := math.TicksToSqrtPrice(tc.lowerTickIndex.Int64(), tc.upperTickIndex.Int64())
 			if tc.expectedError != nil {
 				require.Error(t, err)
 				require.Equal(t, tc.expectedError.Error(), err.Error())
@@ -297,8 +297,6 @@ func TestTicksToSqrtPrice(t *testing.T) {
 			expectedUpperSqrtPrice, err := osmomath.MonotonicSqrt(tc.expectedUpperPrice)
 			require.NoError(t, err)
 
-			require.Equal(t, tc.expectedLowerPrice.String(), priceLower.String())
-			require.Equal(t, tc.expectedUpperPrice.String(), priceUpper.String())
 			require.Equal(t, expectedLowerSqrtPrice.String(), lowerSqrtPrice.String())
 			require.Equal(t, expectedUpperSqrtPrice.String(), upperSqrtPrice.String())
 		})

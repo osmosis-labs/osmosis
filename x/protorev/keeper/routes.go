@@ -102,6 +102,10 @@ func (k Keeper) BuildHighestLiquidityRoutes(ctx sdk.Context, tokenIn, tokenOut s
 		if newRoute, err := k.BuildHighestLiquidityRoute(ctx, baseDenom, tokenIn, tokenOut, poolId); err == nil {
 			routes = append(routes, newRoute)
 		}
+
+		if newRoute, err := k.BuildTwoPoolRoute(ctx, baseDenom, tokenIn, tokenOut, poolId); err == nil {
+			routes = append(routes, newRoute)
+		}
 	}
 
 	return routes, nil
@@ -146,6 +150,70 @@ func (k Keeper) BuildHighestLiquidityRoute(ctx sdk.Context, swapDenom types.Base
 		Route:      newRoute,
 		PoolPoints: routePoolPoints,
 		StepSize:   swapDenom.StepSize,
+	}, nil
+}
+
+// BuildTwoPoolRoute will attempt to create a two pool route that will rebalance pools that are paired
+// with the base denom. This is useful for pools that contain the same assets but are imbalanced.
+func (k Keeper) BuildTwoPoolRoute(
+	ctx sdk.Context,
+	baseDenom types.BaseDenom,
+	tokenInDenom, tokenOutDenom string,
+	poolId uint64,
+) (RouteMetaData, error) {
+	if baseDenom.Denom != tokenInDenom && baseDenom.Denom != tokenOutDenom {
+		return RouteMetaData{}, fmt.Errorf("base denom (%s) must be either tokenIn (%s) or tokenOut (%s)", baseDenom.Denom, tokenInDenom, tokenOutDenom)
+	}
+
+	var (
+		pool1, pool2 uint64
+	)
+
+	// In the case where the base denom is the swap out, the base denom becomes more ~expensive~ on the current pool id
+	// and potentially cheaper on the highest liquidity pool. So we swap first on the current pool id and then on the
+	// highest liquidity pool.
+	if tokenOutDenom == baseDenom.Denom {
+		highestLiquidityPool, err := k.GetPoolForDenomPair(ctx, baseDenom.Denom, tokenInDenom)
+		if err != nil {
+			return RouteMetaData{}, err
+		}
+
+		pool1, pool2 = poolId, highestLiquidityPool
+		tokenOutDenom = tokenInDenom
+	} else {
+		highestLiquidityPool, err := k.GetPoolForDenomPair(ctx, baseDenom.Denom, tokenOutDenom)
+		if err != nil {
+			return RouteMetaData{}, err
+		}
+
+		pool1, pool2 = highestLiquidityPool, poolId
+	}
+
+	if pool1 == pool2 {
+		return RouteMetaData{}, fmt.Errorf("cannot be trading on the same pool twice")
+	}
+
+	newRoute := poolmanagertypes.SwapAmountInRoutes{
+		poolmanagertypes.SwapAmountInRoute{
+			TokenOutDenom: tokenOutDenom,
+			PoolId:        pool1,
+		},
+		poolmanagertypes.SwapAmountInRoute{
+			TokenOutDenom: baseDenom.Denom,
+			PoolId:        pool2,
+		},
+	}
+
+	// Check that the route is valid and update the number of pool points that this route will consume when simulating and executing trades
+	routePoolPoints, err := k.CalculateRoutePoolPoints(ctx, newRoute)
+	if err != nil {
+		return RouteMetaData{}, err
+	}
+
+	return RouteMetaData{
+		Route:      newRoute,
+		PoolPoints: routePoolPoints,
+		StepSize:   baseDenom.StepSize,
 	}, nil
 }
 

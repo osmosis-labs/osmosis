@@ -109,7 +109,7 @@ type EpochKeeper interface {
 type ConcentratedKeeper interface {
 	GetPosition(ctx sdk.Context, positionId uint64) (model.Position, error)
 	SetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, liquidity sdk.Dec, positionId uint64, underlyingLockId uint64) error
-	UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) (sdk.Int, sdk.Int, bool, bool, error)
+	UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) (cltypes.UpdatePositionData, error)
 	GetConcentratedPoolById(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
 	CreateFullRangePositionLocked(ctx sdk.Context, clPoolId uint64, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionData cltypes.CreateFullRangePositionData, concentratedLockID uint64, err error)
 	CreateFullRangePositionUnlocking(ctx sdk.Context, clPoolId uint64, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionData cltypes.CreateFullRangePositionData, concentratedLockID uint64, err error)
@@ -120,4 +120,19 @@ type ConcentratedKeeper interface {
 	WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error)
 	GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId uint64) ([]model.Position, error)
 	GetLockIdFromPositionId(ctx sdk.Context, positionId uint64) (uint64, error)
+}
+
+type PoolManagerKeeper interface {
+	SwapExactAmountIn(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		poolId uint64,
+		tokenIn sdk.Coin,
+		tokenOutDenom string,
+		tokenOutMinAmount sdk.Int,
+	) (sdk.Int, error)
+}
+
+type ValSetPreferenceKeeper interface {
+	DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error
 }
