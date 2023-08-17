@@ -5,6 +5,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
@@ -23,6 +25,9 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+
+		// Set ibc-hooks params
+		keepers.IBCHooksKeeper.SetParams(ctx, ibchookstypes.DefaultParams())
 
 		// Reset the pool weights upon upgrade. This will add support for CW pools on ProtoRev.
 		keepers.ProtoRevKeeper.SetInfoByPoolType(ctx, types.DefaultPoolTypeInfo)
