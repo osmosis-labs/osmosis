@@ -836,25 +836,29 @@ func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, tokenIn sdk.Coin, take
 		tokenInAfterTakerFee, takerFeeCoin = k.calcTakerFeeExactOut(tokenIn, takerFee)
 	}
 
+	// N.B. We truncate from the community pool calculation, then remove that from the total, and use the remaining for staking rewards.
+	// If we truncate both, these can leave tokens in the users wallet when swapping and exact amount in, which is bad UX.
+
 	// We determine the distributution of the taker fee based on its denom
 	// If the denom is the base denom:
+	takerFeeAmtRemaining := takerFeeCoin.Amount
 	if takerFeeCoin.Denom == baseDenom {
 		// Community Pool:
 		if poolManagerParams.OsmoTakerFeeDistribution.CommunityPool.GT(sdk.ZeroDec()) {
 			// Osmo community pool funds is a direct send
-			osmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.OsmoTakerFeeDistribution.CommunityPool)
+			osmoTakerFeeToCommunityPoolDec := takerFeeAmtRemaining.ToDec().Mul(poolManagerParams.OsmoTakerFeeDistribution.CommunityPool)
 			osmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, osmoTakerFeeToCommunityPoolDec.TruncateInt()))
 			err := k.communityPoolKeeper.FundCommunityPool(ctx, osmoTakerFeeToCommunityPoolCoins, sender)
 			if err != nil {
 				return sdk.Coin{}, err
 			}
+			takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(osmoTakerFeeToCommunityPoolCoins.AmountOf(baseDenom))
 		}
 		// Staking Rewards:
 		if poolManagerParams.OsmoTakerFeeDistribution.StakingRewards.GT(sdk.ZeroDec()) {
 			// Osmo staking rewards funds are sent to the non native fee pool module account (even though its native, we want to distribute at the same time as the non native fee tokens)
 			// We could stream these rewards via the fee collector account, but this is decision to be made by governance.
-			osmoTakerFeeToStakingRewardsDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.OsmoTakerFeeDistribution.StakingRewards)
-			osmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, osmoTakerFeeToStakingRewardsDec.TruncateInt()))
+			osmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, takerFeeAmtRemaining))
 			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForStakingRewardsName, osmoTakerFeeToStakingRewardsCoins)
 			if err != nil {
 				return sdk.Coin{}, err
@@ -868,28 +872,29 @@ func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, tokenIn sdk.Coin, take
 			denomIsWhitelisted := isDenomWhitelisted(takerFeeCoin.Denom, poolManagerParams.AuthorizedQuoteDenoms)
 			// If the non osmo denom is a whitelisted quote asset, we send to the community pool
 			if denomIsWhitelisted {
-				nonOsmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.NonOsmoTakerFeeDistribution.CommunityPool)
+				nonOsmoTakerFeeToCommunityPoolDec := takerFeeAmtRemaining.ToDec().Mul(poolManagerParams.NonOsmoTakerFeeDistribution.CommunityPool)
 				nonOsmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt()))
 				err := k.communityPoolKeeper.FundCommunityPool(ctx, nonOsmoTakerFeeToCommunityPoolCoins, sender)
 				if err != nil {
 					return sdk.Coin{}, err
 				}
+				takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(nonOsmoTakerFeeToCommunityPoolCoins.AmountOf(tokenIn.Denom))
 			} else {
 				// If the non osmo denom is not a whitelisted asset, we send to the non native fee pool for community pool module account.
 				// At epoch, this account swaps the non native, non whitelisted assets for XXX and sends to the community pool.
-				nonOsmoTakerFeeToCommunityPoolDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.NonOsmoTakerFeeDistribution.CommunityPool)
+				nonOsmoTakerFeeToCommunityPoolDec := takerFeeAmtRemaining.ToDec().Mul(poolManagerParams.NonOsmoTakerFeeDistribution.CommunityPool)
 				nonOsmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt()))
 				err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForCommunityPoolName, nonOsmoTakerFeeToCommunityPoolCoins)
 				if err != nil {
 					return sdk.Coin{}, err
 				}
+				takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(nonOsmoTakerFeeToCommunityPoolCoins.AmountOf(tokenIn.Denom))
 			}
 		}
 		// Staking Rewards:
 		if poolManagerParams.NonOsmoTakerFeeDistribution.StakingRewards.GT(sdk.ZeroDec()) {
 			// Non Osmo staking rewards are sent to the non native fee pool module account
-			nonOsmoTakerFeeToStakingRewardsDec := takerFeeCoin.Amount.ToDec().Mul(poolManagerParams.NonOsmoTakerFeeDistribution.StakingRewards)
-			nonOsmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToStakingRewardsDec.TruncateInt()))
+			nonOsmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(takerFeeCoin.Denom, takerFeeAmtRemaining))
 			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForStakingRewardsName, nonOsmoTakerFeeToStakingRewardsCoins)
 			if err != nil {
 				return sdk.Coin{}, err
