@@ -766,8 +766,9 @@ func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 	// Since this removal scenario is all-or-nothing, this is functionally equiavalent to freezing the tracked volume amounts
 	// where they were prior to the disabling, which seems an appropriate response.
 	//
-	// This branch would also get triggered in the rare scenario where there is a token that has no OSMO-paired pool on the entire chain,
-	// although the volume splitting gauge logic should prevent a gauge from being created for such a pool that includes such a token.
+	// This branch would also get triggered in the case where there is a token that has no OSMO-paired pool on the entire chain.
+	// We simply do not track volume in these cases. Importantly, volume splitting gauge logic should prevent a gauge from being
+	// created for such a pool that includes such a token, although it is okay to no-op in these cases regardless.
 	if err != nil {
 		return
 	}
