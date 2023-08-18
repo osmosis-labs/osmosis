@@ -747,17 +747,14 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 // Fails quietly if an OSMO paired pool cannot be found, although this should only happen in rare scenarios where OSMO is
 // removed as a base denom from the protorev module (which this function relies on).
 //
-// Returns error if:
-// * The given pool ID does not exist
-// * The input token does not correspond to a token in the pool ID's reserve
-//
 // CONTRACT: `volumeGenerated` corresponds to one of the denoms in the pool
 // CONTRACT: pool with `poolId` exists
-func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) error {
+func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
 	// If the denom is already denominated in uosmo, we can just use it directly
 	OSMO := k.stakingKeeper.BondDenom(ctx)
 	if volumeGenerated.Denom == OSMO {
-		return k.addVolume(ctx, poolId, volumeGenerated)
+		k.addVolume(ctx, poolId, volumeGenerated)
+		return
 	}
 
 	// Get the most liquid OSMO-paired pool with `volumeGenerated`'s denom using `GetPoolForDenomPair`
@@ -772,38 +769,37 @@ func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 	// This branch would also get triggered in the rare scenario where there is a token that has no OSMO-paired pool on the entire chain,
 	// although the volume splitting gauge logic should prevent a gauge from being created for such a pool that includes such a token.
 	if err != nil {
-		return nil
+		return
 	}
 
 	// Since we want to ultimately multiply the volume by this spot price, we want to quote OSMO in terms of the input token.
 	// This is so that once we multiply the volume by the spot price, we get the volume in units of OSMO.
+	//
+	// We expect that if a pool is found, there should always be an available spot price as well.
+	// That being said, if there is an error finding the spot price, we fail quietly and leave volume unchanged.
+	// This is because we do not want to escalate an issue with finding spot price to locking all swaps involving the given asset.
 	osmoPerInputToken, err := k.RouteCalculateSpotPrice(ctx, osmoPairedPoolId, OSMO, volumeGenerated.Denom)
 	if err != nil {
-		return err
+		return
 	}
 
 	// Multiply `volumeGenerated.Amount.ToDec()` by this spot price.
 	// While rounding does not particularly matter here, we round down to ensure that we do not overcount volume.
 	volumeInOsmo := volumeGenerated.Amount.ToDec().Mul(osmoPerInputToken).TruncateInt()
 
-	// Run `addVolume` on sdk.NewCoin(OSMO, result) and return
-	return k.addVolume(ctx, poolId, sdk.NewCoin(OSMO, volumeInOsmo))
+	// Add this new volume to the global tracked volume for the pool ID
+	k.addVolume(ctx, poolId, sdk.NewCoin(OSMO, volumeInOsmo))
 }
 
 // nolint: unused
 // addVolume adds the given volume to the global tracked volume for the given pool ID.
-func (k Keeper) addVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) error {
+func (k Keeper) addVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
 	// Get the current volume for the pool ID
-	currentTotalVolume, err := k.GetTotalVolumeForPool(ctx, poolId)
-	if err != nil {
-		return err
-	}
+	currentTotalVolume := k.GetTotalVolumeForPool(ctx, poolId)
 
 	// Add newly generated volume to existing volume and set updated volume in state
 	newTotalVolume := currentTotalVolume.Add(volumeGenerated)
 	k.setVolume(ctx, poolId, newTotalVolume)
-
-	return nil
 }
 
 // nolint: unused
@@ -814,11 +810,12 @@ func (k Keeper) setVolume(ctx sdk.Context, poolId uint64, totalVolume sdk.Coins)
 }
 
 // GetTotalVolumeForPool gets the total OSMO-denominated historical volume for a given pool ID.
-func (k Keeper) GetTotalVolumeForPool(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
+func (k Keeper) GetTotalVolumeForPool(ctx sdk.Context, poolId uint64) sdk.Coins {
 	var currentTrackedVolume types.TrackedVolume
 	volumeFound, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyPoolVolume(poolId), &currentTrackedVolume)
 	if err != nil {
-		return sdk.Coins{}, err
+		// We can only encounter an error if a database or serialization errors occurs, so we panic here.
+		panic(err)
 	}
 
 	// If no volume was found, we treat the existing volume as 0.
@@ -829,5 +826,5 @@ func (k Keeper) GetTotalVolumeForPool(ctx sdk.Context, poolId uint64) (sdk.Coins
 		currentTotalVolume = currentTrackedVolume.Amount
 	}
 
-	return currentTotalVolume, nil
+	return currentTotalVolume
 }

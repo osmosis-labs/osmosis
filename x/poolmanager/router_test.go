@@ -2736,16 +2736,11 @@ func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 	}
 }
 
-// runMultipleTrackVolumes runs TrackVolume on the same pool multiple times, returning the error encountered (if any)
-func (s *KeeperTestSuite) runMultipleTrackVolumes(poolId uint64, volume sdk.Coin, times int64) (err error) {
+// runMultipleTrackVolumes runs TrackVolume on the same pool multiple times
+func (s *KeeperTestSuite) runMultipleTrackVolumes(poolId uint64, volume sdk.Coin, times int64) {
 	for i := 0; i < int(times); i++ {
-		err = s.App.PoolManagerKeeper.TrackVolume(s.Ctx, poolId, volume)
-		if err != nil {
-			return err
-		}
+		s.App.PoolManagerKeeper.TrackVolume(s.Ctx, poolId, volume)
 	}
-
-	return nil
 }
 
 // Testing strategy:
@@ -2767,7 +2762,6 @@ func (s *KeeperTestSuite) TestTrackVolume() {
 		osmoPairedPoolCoins sdk.Coins
 
 		expectedVolume sdk.Int
-		expectError    bool
 	}{
 		"Happy path: volume denominated in OSMO": {
 			generatedVolume: hundredUosmo,
@@ -2975,23 +2969,10 @@ func (s *KeeperTestSuite) TestTrackVolume() {
 
 			// --- System under test ---
 
-			// Run TrackVolume the specified number of times, exiting early if an error is encountered
-			err := s.runMultipleTrackVolumes(targetPoolId, tc.generatedVolume, tc.timesRun)
+			// Run TrackVolume the specified number of times. Note that this function fails quietly in all error cases.
+			s.runMultipleTrackVolumes(targetPoolId, tc.generatedVolume, tc.timesRun)
 
 			// --- Assertions ---
-
-			if tc.expectError {
-				s.Require().Error(err)
-
-				// Assert that no volume was added to the pool
-				totalVolume, err := s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, targetPoolId)
-				s.Require().NoError(err)
-				s.Require().Equal(sdk.NewCoins(), sdk.NewCoins(totalVolume...))
-
-				return
-			}
-
-			s.Require().NoError(err)
 
 			// Assert that the correct amount of volume was added to the pool tracker
 			totalVolume, err := s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, targetPoolId)
