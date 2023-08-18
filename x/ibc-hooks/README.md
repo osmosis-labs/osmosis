@@ -302,4 +302,4 @@ the future if needed.
 
 # Testing strategy
 
-See go tests.
+See go tests.`

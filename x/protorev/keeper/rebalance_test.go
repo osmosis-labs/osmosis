@@ -182,11 +182,11 @@ var clPoolRouteExtended = poolmanagertypes.SwapAmountInRoutes{
 // Tests multiple CL pools in the same route
 var clPoolRouteMulti = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
-		PoolId:        52,
+		PoolId:        57,
 		TokenOutDenom: "uosmo",
 	},
 	poolmanagertypes.SwapAmountInRoute{
-		PoolId:        53,
+		PoolId:        58,
 		TokenOutDenom: "epochTwo",
 	},
 }
@@ -198,7 +198,7 @@ var clPoolRoute = poolmanagertypes.SwapAmountInRoutes{
 		TokenOutDenom: "uosmo",
 	},
 	poolmanagertypes.SwapAmountInRoute{
-		PoolId:        52,
+		PoolId:        57,
 		TokenOutDenom: "epochTwo",
 	},
 }

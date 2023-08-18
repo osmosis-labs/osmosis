@@ -14,6 +14,8 @@ enum StorageKey {
     ChainAdminMap,
     ChainMaintainerMap,
     HasPacketForwardMiddleware,
+    DenomAliasMap,
+    DenomAliasReverseMap,
 }
 
 // Implement the `StorageKey` enum to a string conversion.
@@ -30,6 +32,8 @@ impl StorageKey {
             StorageKey::ChainAdminMap => "cam",
             StorageKey::ChainMaintainerMap => "cmm",
             StorageKey::HasPacketForwardMiddleware => "hpfm",
+            StorageKey::DenomAliasMap => "dam",
+            StorageKey::DenomAliasReverseMap => "darm",
         }
     }
 }
@@ -92,9 +96,7 @@ pub const CHANNEL_ON_CHAIN_CHAIN_MAP: Map<(&str, &str), RegistryValue> =
 pub const CHAIN_TO_BECH32_PREFIX_MAP: Map<&str, RegistryValue> =
     Map::new(StorageKey::ChainToBech32PrefixMap.to_string());
 
-// CHAIN_TO_BECH32_PREFIX_MAP is a map from a chain id to its respective bech32 prefix.
-// The boolean value indicates whether the mapping is enabled or not.
-// CHAIN_ID -> (BECH32_PREFIX, ENABLED)
+// CHAIN_TO_BECH32_PREFIX_REVERSE_MAP is a map from a bech32 prefix to the chains that use that prefix
 pub const CHAIN_TO_BECH32_PREFIX_REVERSE_MAP: Map<&str, Vec<String>> =
     Map::new(StorageKey::ChainToBech32PrefixReverseMap.to_string());
 
@@ -102,6 +104,7 @@ pub const CHAIN_TO_BECH32_PREFIX_REVERSE_MAP: Map<&str, Vec<String>> =
 pub const CONFIG: Item<Config> = Item::new(StorageKey::Config.to_string());
 
 // CHAIN_ADMIN_MAP is a map from a source chain to the address that is authorized to add, update, or remove channels for that source chain
+// TODO: why isn't this an item?
 pub const GLOBAL_ADMIN_MAP: Map<&str, Addr> = Map::new(StorageKey::GlobalAdminMap.to_string());
 
 // CHAIN_ADMIN_MAP is a map from a source chain to the address that is authorized to add, update, or remove channels for that source chain
@@ -114,6 +117,14 @@ pub const CHAIN_MAINTAINER_MAP: Map<&str, Addr> =
 // CHAIN_PFM_MAP stores whether a chain supports the Packet Forward Middleware interface for forwarding IBC packets
 pub const CHAIN_PFM_MAP: Map<&str, ChainPFM> =
     Map::new(StorageKey::HasPacketForwardMiddleware.to_string());
+
+// DENOM_ALIAS_MAP is a map from a denom path to a denom alias
+pub const DENOM_ALIAS_MAP: Map<&str, RegistryValue> =
+    Map::new(StorageKey::DenomAliasMap.to_string());
+
+// DENOM_ALIAS_REVERSE_MAP is a map from a denom alias to a denom path
+pub const DENOM_ALIAS_REVERSE_MAP: Map<&str, RegistryValue> =
+    Map::new(StorageKey::DenomAliasReverseMap.to_string());
 
 #[cw_serde]
 pub struct Config {
