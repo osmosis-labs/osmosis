@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
-	v17 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/containers"
@@ -138,40 +137,6 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	// Wait for all goroutines to complete
 	wg.Wait()
-
-	// START: CAN REMOVE POST v17 UPGRADE
-
-	v17SuperfluidAssets := v17GetSuperfluidAssets()
-
-	wg.Add(4)
-
-	// Chain A
-
-	go func() {
-		defer wg.Done()
-		chainANode.FundCommunityPool(initialization.ValidatorWalletName, strAllUpgradeBaseDenoms())
-	}()
-
-	go func() {
-		defer wg.Done()
-		chainANode.EnableSuperfluidAsset(chainA, v17SuperfluidAssets)
-	}()
-
-	// Chain B
-
-	go func() {
-		defer wg.Done()
-		chainBNode.FundCommunityPool(initialization.ValidatorWalletName, strAllUpgradeBaseDenoms())
-	}()
-
-	go func() {
-		defer wg.Done()
-		chainBNode.EnableSuperfluidAsset(chainB, v17SuperfluidAssets)
-	}()
-
-	wg.Wait()
-
-	// END: CAN REMOVE POST v17 UPGRADE
 
 	var (
 		poolShareDenom             = make([]string, 2)
@@ -342,7 +307,7 @@ func (uc *UpgradeConfigurer) RunSetup() error {
 func (uc *UpgradeConfigurer) RunUpgrade() error {
 	var err error
 	if uc.forkHeight > 0 {
-		err = uc.runForkUpgrade()
+		uc.runForkUpgrade()
 	} else {
 		err = uc.runProposalUpgrade()
 	}
@@ -423,13 +388,12 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 	return nil
 }
 
-func (uc *UpgradeConfigurer) runForkUpgrade() error {
+func (uc *UpgradeConfigurer) runForkUpgrade() {
 	for _, chainConfig := range uc.chainConfigs {
 		uc.t.Logf("waiting to reach fork height on chain %s", chainConfig.Id)
 		chainConfig.WaitUntilHeight(uc.forkHeight)
 		uc.t.Logf("fork height reached on chain %s", chainConfig.Id)
 	}
-	return nil
 }
 
 func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHeight int64) error {
@@ -449,32 +413,3 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 	uc.t.Logf("upgrade successful on chain %s", chainConfig.Id)
 	return nil
 }
-
-// START: CAN REMOVE POST v17 UPGRADE
-
-func strAllUpgradeBaseDenoms() string {
-	upgradeBaseDenoms := ""
-	n := len(v17.AssetPairsForTestsOnly)
-	for i, assetPair := range v17.AssetPairsForTestsOnly {
-		upgradeBaseDenoms += "2000000" + assetPair.BaseAsset
-		if i < n-1 { // Check if it's not the last iteration
-			upgradeBaseDenoms += ","
-		}
-	}
-	return upgradeBaseDenoms
-}
-
-func v17GetSuperfluidAssets() string {
-	assets := ""
-	for _, assetPair := range v17.AssetPairsForTestsOnly {
-		if assetPair.Superfluid {
-			assets += fmt.Sprintf("gamm/pool/%d,", assetPair.LinkedClassicPool)
-		}
-	}
-	if len(assets) > 0 {
-		assets = assets[:len(assets)-1]
-	}
-	return assets
-}
-
-// END: CAN REMOVE POST v17 UPGRADE

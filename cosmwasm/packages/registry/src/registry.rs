@@ -26,7 +26,7 @@ pub fn derive_wasmhooks_sender(
     original_sender: &str,
     bech32_prefix: &str,
 ) -> Result<String, RegistryError> {
-    let sender = format!("{}/{}", channel, original_sender);
+    let sender = format!("{channel}/{original_sender}");
 
     let mut hasher0 = Sha256::new();
     hasher0.update("ibc-wasm-hook-intermediary".as_bytes());
@@ -203,7 +203,7 @@ impl<'a> Registry<'a> {
                     via_channel: via_channel.to_string(),
                 },
             )
-            .map_err(|_e| RegistryError::ChannelToChainChainLinkDoesNotExist {
+            .map_err(|_e| RegistryError::ChannelDoesNotExistOnChain {
                 channel_id: via_channel.to_string(),
                 source_chain: on_chain.to_string(),
             })
@@ -385,7 +385,7 @@ impl<'a> Registry<'a> {
 
     pub fn get_native_chain(&self, denom: &str) -> Result<Chain, RegistryError> {
         let hops = self.unwrap_denom_path(denom)?;
-        self.debug(format!("hops: {:?}", hops));
+        self.debug(format!("hops: {hops:?}"));
         // verify that the last hop is native
         let last_hop = hops.last().ok_or(RegistryError::NoDenomTrace {
             denom: denom.into(),

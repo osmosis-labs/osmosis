@@ -302,7 +302,6 @@ func parsePoolRecords(cmd *cobra.Command) ([]types.PoolRecord, error) {
 
 	if len(poolRecords)%4 != 0 {
 		return nil, fmt.Errorf("poolRecords must be a list of denom0, denom1, tickSpacing, and spreadFactor")
-
 	}
 
 	finalPoolRecords := []types.PoolRecord{}
