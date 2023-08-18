@@ -18,6 +18,8 @@ var (
 	KeyNonOsmoTakerFeeDistribution                    = []byte("NonOsmoTakerFeeDistribution")
 	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
 	KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo = []byte("CommunityPoolDenomToSwapNonWhitelistedAssetsTo")
+	KeyStablecoinDenoms                               = []byte("StablecoinDenoms")
+	KeyLiquidStakeDenomPairings                       = []byte("LiquidStakeDenomPairings")
 )
 
 // ParamTable for gamm module.
@@ -25,7 +27,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(poolCreationFee sdk.Coins, defaultTakerFee, stableswapTakerFee sdk.Dec, osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage, authorizedQuoteDenoms []string, communityPoolDenomToSwapNonWhitelistedAssetsTo string) Params {
+func NewParams(poolCreationFee sdk.Coins,
+	defaultTakerFee, stableswapTakerFee sdk.Dec,
+	osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage,
+	authorizedQuoteDenoms []string,
+	communityPoolDenomToSwapNonWhitelistedAssetsTo string,
+	stablecoinDenoms []string,
+	liquidStakeDenomPairings []*LiquidStakedTokenToUnderlyingDenom) Params {
 	return Params{
 		PoolCreationFee:                                poolCreationFee,
 		DefaultTakerFee:                                defaultTakerFee,
@@ -34,6 +42,8 @@ func NewParams(poolCreationFee sdk.Coins, defaultTakerFee, stableswapTakerFee sd
 		NonOsmoTakerFeeDistribution:                    nonOsmoTakerFeeDistribution,
 		AuthorizedQuoteDenoms:                          authorizedQuoteDenoms,
 		CommunityPoolDenomToSwapNonWhitelistedAssetsTo: communityPoolDenomToSwapNonWhitelistedAssetsTo,
+		StablecoinDenoms:                               stablecoinDenoms,
+		LiquidStakeDenomPairings:                       liquidStakeDenomPairings,
 	}
 }
 
@@ -58,6 +68,20 @@ func DefaultParams() Params {
 			"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
 		},
 		CommunityPoolDenomToSwapNonWhitelistedAssetsTo: "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
+		StablecoinDenoms: []string{
+			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", // DAI
+			"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
+		},
+		LiquidStakeDenomPairings: []*LiquidStakedTokenToUnderlyingDenom{
+			{
+				LiquidStakedTokenDenoms: []string{"ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901", "ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC"},
+				UnderlyingTokenDenom:    "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", // ATOM
+			},
+			{
+				LiquidStakedTokenDenoms: []string{"ibc/D176154B0C63D1F9C6DCFB4F70349EBF2E2B5A87A05902F57A6AE92B863E9AEC", "ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC"},
+				UnderlyingTokenDenom:    "uosmo",
+			},
+		},
 	}
 }
 
@@ -84,6 +108,12 @@ func (p Params) Validate() error {
 	if err := validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo(p.CommunityPoolDenomToSwapNonWhitelistedAssetsTo); err != nil {
 		return err
 	}
+	if err := validateStablecoinDenoms(p.StablecoinDenoms); err != nil {
+		return err
+	}
+	if err := validateLiquidStakeDenomPairings(p.LiquidStakeDenomPairings); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -98,6 +128,8 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyNonOsmoTakerFeeDistribution, &p.NonOsmoTakerFeeDistribution, validateTakerFeeDistribution),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
 		paramtypes.NewParamSetPair(KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo, &p.CommunityPoolDenomToSwapNonWhitelistedAssetsTo, validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo),
+		paramtypes.NewParamSetPair(KeyStablecoinDenoms, &p.StablecoinDenoms, validateStablecoinDenoms),
+		paramtypes.NewParamSetPair(KeyLiquidStakeDenomPairings, &p.LiquidStakeDenomPairings, validateLiquidStakeDenomPairings),
 	}
 }
 
@@ -202,6 +234,51 @@ func validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo(i interface{}) error
 
 	if err := sdk.ValidateDenom(communityPoolDenomToSwapNonWhitelistedAssetsTo); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func validateStablecoinDenoms(i interface{}) error {
+	stablecoinDenoms, ok := i.([]string)
+
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if len(stablecoinDenoms) == 0 {
+		return fmt.Errorf("stablecoin denoms cannot be empty")
+	}
+
+	for _, denom := range stablecoinDenoms {
+		if err := sdk.ValidateDenom(denom); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateLiquidStakeDenomPairings(i interface{}) error {
+	liquidStakeDenomPairings, ok := i.([]*LiquidStakedTokenToUnderlyingDenom)
+
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if len(liquidStakeDenomPairings) == 0 {
+		return fmt.Errorf("liquid stake denom pairings cannot be empty")
+	}
+
+	for _, pairing := range liquidStakeDenomPairings {
+		for _, lst := range pairing.LiquidStakedTokenDenoms {
+			if err := sdk.ValidateDenom(lst); err != nil {
+				return err
+			}
+		}
+		if err := sdk.ValidateDenom(pairing.UnderlyingTokenDenom); err != nil {
+			return err
+		}
 	}
 
 	return nil

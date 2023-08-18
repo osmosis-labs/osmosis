@@ -31,6 +31,17 @@ var (
 	}
 	testAuthorizedQuoteDenoms                          = []string{"uosmo", "uion", "uatom"}
 	testCommunityPoolDenomToSwapNonWhitelistedAssetsTo = "uusdc"
+	testStablecoinDenoms                               = []string{"uusdc", "uusdt", "udai"}
+	testLiquidStakeDenomPairings                       = []*types.LiquidStakedTokenToUnderlyingDenom{
+		{
+			LiquidStakedTokenDenoms: []string{"ibc/C140AFD542AE77BD7DCC83F13FDD8C5E5BB8C4929785E6EC2F4C636F98F17901", "ibc/FA602364BEC305A696CBDF987058E99D8B479F0318E47314C49173E8838C5BAC"},
+			UnderlyingTokenDenom:    "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", // ATOM
+		},
+		{
+			LiquidStakedTokenDenoms: []string{"ibc/D176154B0C63D1F9C6DCFB4F70349EBF2E2B5A87A05902F57A6AE92B863E9AEC", "ibc/42D24879D4569CE6477B7E88206ADBFE47C222C6CAD51A54083E4A72594269FC"},
+			UnderlyingTokenDenom:    "uosmo",
+		},
+	}
 
 	testPoolRoute = []types.ModuleRoute{
 		{
@@ -88,6 +99,8 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			NonOsmoTakerFeeDistribution:                    testNonOsmoTakerFeeDistribution,
 			AuthorizedQuoteDenoms:                          testAuthorizedQuoteDenoms,
 			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: testCommunityPoolDenomToSwapNonWhitelistedAssetsTo,
+			StablecoinDenoms:                               testStablecoinDenoms,
+			LiquidStakeDenomPairings:                       testLiquidStakeDenomPairings,
 		},
 		NextPoolId: testExpectedPoolId,
 		PoolRoutes: testPoolRoute,
@@ -101,6 +114,9 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.Require().Equal(testOsmoTakerFeeDistribution, params.OsmoTakerFeeDistribution)
 	s.Require().Equal(testNonOsmoTakerFeeDistribution, params.NonOsmoTakerFeeDistribution)
 	s.Require().Equal(testAuthorizedQuoteDenoms, params.AuthorizedQuoteDenoms)
+	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, params.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
+	s.Require().Equal(testStablecoinDenoms, params.StablecoinDenoms)
+	s.Require().Equal(testLiquidStakeDenomPairings, params.LiquidStakeDenomPairings)
 	s.Require().Equal(testPoolRoute, s.App.PoolManagerKeeper.GetAllPoolRoutes(s.Ctx))
 }
 
@@ -114,6 +130,8 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 			NonOsmoTakerFeeDistribution:                    testNonOsmoTakerFeeDistribution,
 			AuthorizedQuoteDenoms:                          testAuthorizedQuoteDenoms,
 			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: testCommunityPoolDenomToSwapNonWhitelistedAssetsTo,
+			StablecoinDenoms:                               testStablecoinDenoms,
+			LiquidStakeDenomPairings:                       testLiquidStakeDenomPairings,
 		},
 		NextPoolId: testExpectedPoolId,
 		PoolRoutes: testPoolRoute,
@@ -128,5 +146,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.Require().Equal(testNonOsmoTakerFeeDistribution, genesis.Params.NonOsmoTakerFeeDistribution)
 	s.Require().Equal(testAuthorizedQuoteDenoms, genesis.Params.AuthorizedQuoteDenoms)
 	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, genesis.Params.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
+	s.Require().Equal(testStablecoinDenoms, genesis.Params.StablecoinDenoms)
+	s.Require().Equal(testLiquidStakeDenomPairings, genesis.Params.LiquidStakeDenomPairings)
 	s.Require().Equal(testPoolRoute, genesis.PoolRoutes)
 }
