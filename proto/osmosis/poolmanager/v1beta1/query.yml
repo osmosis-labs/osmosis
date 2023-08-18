@@ -72,3 +72,9 @@ queries:
       query_func: "k.TotalLiquidity"
     cli:
       cmd: "TotalLiquidity"
+  EstimateTradeBasedOnPriceImpact:
+    proto_wrapper:
+      query_func: "k.EstimateTradeBasedOnPriceImpact"
+      response: "*queryproto.EstimateTradeBasedOnPriceImpactResponse"
+    cli:
+      cmd: "EstimateTradeBasedOnPriceImpact"
