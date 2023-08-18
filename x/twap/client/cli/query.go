@@ -16,7 +16,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
 )
 
-type TwapQueryArgs struct {
+// twapQueryParseArgs represents the outcome
+// of parsing the arguments for twap query command.
+type twapQueryArgs struct {
 	PoolId    uint64
 	BaseDenom string
 	StartTime time.Time
@@ -156,12 +158,12 @@ func getQuoteDenomFromLiquidity(ctx context.Context, clientCtx client.Context, p
 	return quoteDenom, nil
 }
 
-func twapQueryParseArgs(args []string) (TwapQueryArgs, error) {
+func twapQueryParseArgs(args []string) (twapQueryArgs, error) {
 	// boilerplate parse fields
 	// <UINT PARSE>
 	poolId, err := osmocli.ParseUint(args[0], "poolId")
 	if err != nil {
-		return TwapQueryArgs{}, err
+		return twapQueryArgs{}, err
 	}
 
 	// <DENOM PARSE>
@@ -170,7 +172,7 @@ func twapQueryParseArgs(args []string) (TwapQueryArgs, error) {
 	// <UNIX TIME PARSE>
 	startTime, err := osmocli.ParseUnixTime(args[2], "start time")
 	if err != nil {
-		return TwapQueryArgs{}, err
+		return twapQueryArgs{}, err
 	}
 
 	// END TIME PARSE: ONEOF {<UNIX TIME PARSE>, <DURATION>}
@@ -182,11 +184,11 @@ func twapQueryParseArgs(args []string) (TwapQueryArgs, error) {
 		duration, err2 := time.ParseDuration(args[3])
 		if err2 != nil {
 			err = err2
-			return TwapQueryArgs{}, err
+			return twapQueryArgs{}, err
 		}
 		endTime = startTime.Add(duration)
 	}
-	return TwapQueryArgs{
+	return twapQueryArgs{
 		PoolId:    poolId,
 		BaseDenom: baseDenom,
 		StartTime: startTime,

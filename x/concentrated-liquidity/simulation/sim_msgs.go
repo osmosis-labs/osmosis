@@ -17,6 +17,8 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v19/x/mint/types"
 )
 
+// preparePoolConfig defines the parameters for creating a new pool
+// returned from the respective randomizer helper.
 type preparePoolConfig struct {
 	creator      sdk.AccAddress
 	coin0        sdk.Coin
@@ -25,6 +27,8 @@ type preparePoolConfig struct {
 	spreadFactor sdk.Dec
 }
 
+// preparePositionConfig defines the parameters for creating a new position
+// returned from the respective randomizer helper.
 type preparePositionConfig struct {
 	owner     sdk.AccAddress
 	tokens    sdk.Coins
