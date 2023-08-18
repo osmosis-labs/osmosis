@@ -815,6 +815,8 @@ func (k Keeper) GetTotalVolumeForPool(ctx sdk.Context, poolId uint64) sdk.Coins 
 	volumeFound, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyPoolVolume(poolId), &currentTrackedVolume)
 	if err != nil {
 		// We can only encounter an error if a database or serialization errors occurs, so we panic here.
+		// Normally this would be handled by `osmoutils.MustGet`, but since we want to specifically use `osmoutils.Get`,
+		// we also have to manually panic here.
 		panic(err)
 	}
 
