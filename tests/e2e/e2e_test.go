@@ -1210,11 +1210,10 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 }
 
 func (s *IntegrationTestSuite) LargeWasmUpload() {
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
+	_, chainNode, err := s.getChainCfgs()
 	s.Require().NoError(err)
-	validatorAddr := chainANode.GetWallet(initialization.ValidatorWalletName)
-	chainANode.StoreWasmCode("bytecode/large.wasm", validatorAddr)
+	validatorAddr := chainNode.GetWallet(initialization.ValidatorWalletName)
+	chainNode.StoreWasmCode("bytecode/large.wasm", validatorAddr)
 }
 
 func (s *IntegrationTestSuite) IBCWasmHooks() {
@@ -1287,7 +1286,8 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	}
 	chainA, chainANode, err := s.getChainACfgs()
 	s.Require().NoError(err)
-	chainB := s.configurer.GetChainConfig(1)
+	chainB, _, err := s.getChainBCfgs()
+	s.Require().NoError(err)
 
 	// Instantiate the counter contract on chain A
 	contractAddr := s.UploadAndInstantiateCounter(chainA)
