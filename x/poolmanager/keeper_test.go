@@ -18,19 +18,9 @@ type KeeperTestSuite struct {
 const testExpectedPoolId = 3
 
 var (
-	testPoolCreationFee    = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)}
-	testDefaultTakerFee    = sdk.MustNewDecFromStr("0.0015")
-	testStableswapTakerFee = sdk.MustNewDecFromStr("0.0002")
-	testCustomPoolTakerFee = []types.CustomPoolTakerFee{
-		{
-			PoolId:   1,
-			TakerFee: sdk.MustNewDecFromStr("0.0005"),
-		},
-		{
-			PoolId:   2,
-			TakerFee: sdk.MustNewDecFromStr("0.0001"),
-		},
-	}
+	testPoolCreationFee          = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)}
+	testDefaultTakerFee          = sdk.MustNewDecFromStr("0.0015")
+	testStableswapTakerFee       = sdk.MustNewDecFromStr("0.0002")
 	testOsmoTakerFeeDistribution = types.TakerFeeDistributionPercentage{
 		StakingRewards: sdk.MustNewDecFromStr("0.3"),
 		CommunityPool:  sdk.MustNewDecFromStr("0.7"),
@@ -94,7 +84,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			PoolCreationFee:                                testPoolCreationFee,
 			DefaultTakerFee:                                testDefaultTakerFee,
 			StableswapTakerFee:                             testStableswapTakerFee,
-			CustomPoolTakerFee:                             testCustomPoolTakerFee,
 			OsmoTakerFeeDistribution:                       testOsmoTakerFeeDistribution,
 			NonOsmoTakerFeeDistribution:                    testNonOsmoTakerFeeDistribution,
 			AuthorizedQuoteDenoms:                          testAuthorizedQuoteDenoms,
@@ -109,7 +98,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.Require().Equal(testPoolCreationFee, params.PoolCreationFee)
 	s.Require().Equal(testDefaultTakerFee, params.DefaultTakerFee)
 	s.Require().Equal(testStableswapTakerFee, params.StableswapTakerFee)
-	s.Require().Equal(testCustomPoolTakerFee, params.CustomPoolTakerFee)
 	s.Require().Equal(testOsmoTakerFeeDistribution, params.OsmoTakerFeeDistribution)
 	s.Require().Equal(testNonOsmoTakerFeeDistribution, params.NonOsmoTakerFeeDistribution)
 	s.Require().Equal(testAuthorizedQuoteDenoms, params.AuthorizedQuoteDenoms)
@@ -122,7 +110,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 			PoolCreationFee:                                testPoolCreationFee,
 			DefaultTakerFee:                                testDefaultTakerFee,
 			StableswapTakerFee:                             testStableswapTakerFee,
-			CustomPoolTakerFee:                             testCustomPoolTakerFee,
 			OsmoTakerFeeDistribution:                       testOsmoTakerFeeDistribution,
 			NonOsmoTakerFeeDistribution:                    testNonOsmoTakerFeeDistribution,
 			AuthorizedQuoteDenoms:                          testAuthorizedQuoteDenoms,
@@ -137,7 +124,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.Require().Equal(testPoolCreationFee, genesis.Params.PoolCreationFee)
 	s.Require().Equal(testDefaultTakerFee, genesis.Params.DefaultTakerFee)
 	s.Require().Equal(testStableswapTakerFee, genesis.Params.StableswapTakerFee)
-	s.Require().Equal(testCustomPoolTakerFee, genesis.Params.CustomPoolTakerFee)
 	s.Require().Equal(testOsmoTakerFeeDistribution, genesis.Params.OsmoTakerFeeDistribution)
 	s.Require().Equal(testNonOsmoTakerFeeDistribution, genesis.Params.NonOsmoTakerFeeDistribution)
 	s.Require().Equal(testAuthorizedQuoteDenoms, genesis.Params.AuthorizedQuoteDenoms)

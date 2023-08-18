@@ -14,7 +14,6 @@ var (
 	KeyPoolCreationFee                                = []byte("PoolCreationFee")
 	KeyDefaultTakerFee                                = []byte("DefaultTakerFee")
 	KeyStableswapTakerFee                             = []byte("StableswapTakerFee")
-	KeyCustomPoolTakerFee                             = []byte("CustomPoolTakerFee")
 	KeyOsmoTakerFeeDistribution                       = []byte("OsmoTakerFeeDistribution")
 	KeyNonOsmoTakerFeeDistribution                    = []byte("NonOsmoTakerFeeDistribution")
 	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
@@ -26,12 +25,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(poolCreationFee sdk.Coins, defaultTakerFee, stableswapTakerFee sdk.Dec, customPoolTakerFee []CustomPoolTakerFee, osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage, authorizedQuoteDenoms []string, communityPoolDenomToSwapNonWhitelistedAssetsTo string) Params {
+func NewParams(poolCreationFee sdk.Coins, defaultTakerFee, stableswapTakerFee sdk.Dec, osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage, authorizedQuoteDenoms []string, communityPoolDenomToSwapNonWhitelistedAssetsTo string) Params {
 	return Params{
 		PoolCreationFee:                                poolCreationFee,
 		DefaultTakerFee:                                defaultTakerFee,
 		StableswapTakerFee:                             stableswapTakerFee,
-		CustomPoolTakerFee:                             customPoolTakerFee,
 		OsmoTakerFeeDistribution:                       osmoTakerFeeDistribution,
 		NonOsmoTakerFeeDistribution:                    nonOsmoTakerFeeDistribution,
 		AuthorizedQuoteDenoms:                          authorizedQuoteDenoms,
@@ -45,7 +43,6 @@ func DefaultParams() Params {
 		PoolCreationFee:    sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
 		DefaultTakerFee:    sdk.MustNewDecFromStr("0.0015"),                                   // 0.15%
 		StableswapTakerFee: sdk.MustNewDecFromStr("0.0002"),                                   // 0.02%
-		CustomPoolTakerFee: []CustomPoolTakerFee{},
 		OsmoTakerFeeDistribution: TakerFeeDistributionPercentage{
 			StakingRewards: sdk.MustNewDecFromStr("1"), // 100%
 			CommunityPool:  sdk.MustNewDecFromStr("0"), // 0%
@@ -75,9 +72,6 @@ func (p Params) Validate() error {
 	if err := validateStableswapTakerFee(p.StableswapTakerFee); err != nil {
 		return err
 	}
-	if err := validateCustomPoolTakerFee(p.CustomPoolTakerFee); err != nil {
-		return err
-	}
 	if err := validateTakerFeeDistribution(p.OsmoTakerFeeDistribution); err != nil {
 		return err
 	}
@@ -100,7 +94,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyPoolCreationFee, &p.PoolCreationFee, validatePoolCreationFee),
 		paramtypes.NewParamSetPair(KeyDefaultTakerFee, &p.DefaultTakerFee, validateDefaultTakerFee),
 		paramtypes.NewParamSetPair(KeyStableswapTakerFee, &p.StableswapTakerFee, validateStableswapTakerFee),
-		paramtypes.NewParamSetPair(KeyCustomPoolTakerFee, &p.CustomPoolTakerFee, validateCustomPoolTakerFee),
 		paramtypes.NewParamSetPair(KeyOsmoTakerFeeDistribution, &p.OsmoTakerFeeDistribution, validateTakerFeeDistribution),
 		paramtypes.NewParamSetPair(KeyNonOsmoTakerFeeDistribution, &p.NonOsmoTakerFeeDistribution, validateTakerFeeDistribution),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
@@ -148,26 +141,6 @@ func validateStableswapTakerFee(i interface{}) error {
 	// Ensure that the passed in discount rate is between 0 and 1.
 	if stableswapTakerFee.IsNegative() || stableswapTakerFee.GT(sdk.OneDec()) {
 		return fmt.Errorf("invalid stableswap taker fee: %s", stableswapTakerFee)
-	}
-
-	return nil
-}
-
-func validateCustomPoolTakerFee(i interface{}) error {
-	// Convert the given parameter to sdk.Dec.
-	customPoolTakerFee, ok := i.([]CustomPoolTakerFee)
-
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	for _, customPoolTakerFee := range customPoolTakerFee {
-		if customPoolTakerFee.PoolId <= 0 {
-			return fmt.Errorf("invalid pool ID: %d", customPoolTakerFee.PoolId)
-		}
-		if customPoolTakerFee.TakerFee.IsNegative() || customPoolTakerFee.TakerFee.GT(sdk.OneDec()) {
-			return fmt.Errorf("invalid taker fee: %s", customPoolTakerFee.TakerFee)
-		}
 	}
 
 	return nil
