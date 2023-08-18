@@ -220,6 +220,7 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 		return 0, fmt.Errorf("Invalid gauge type needs to be ByGroup, got %s.", gaugetype)
 	}
 
+	// TODO: remove this check once volume splitting is implemented
 	if splittingPolicy != types.Evenly {
 		return 0, fmt.Errorf("Invalid splitting policy, needs to be Evenly got %s", splittingPolicy)
 	}

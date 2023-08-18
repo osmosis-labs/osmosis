@@ -70,5 +70,6 @@ func NoLockInternalGaugeDenom(poolId uint64) string {
 
 // KeyGroupGaugeForId returns key for a given groupGaugeId.
 func KeyGroupGaugeForId(groupGaugeId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s", "group_gauge", "|", groupGaugeId, "|"))
+	return []byte(fmt.Sprintf("%s%s%d%s", GroupGaugePrefix, "|", groupGaugeId, "|"))
+
 }

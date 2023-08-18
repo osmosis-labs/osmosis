@@ -268,7 +268,6 @@ func (k Keeper) distributeSyntheticInternal(
 
 // AllocateAcrossGauges gets all the active groupGauges and distributes tokens evenly based on the internalGauges set for that
 // groupGauge. After each iteration we update the groupGauge by modifying filledEpoch and distributed coins.
-// TODO: Replace even split by volume split once its implemented.
 func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 	currTime := ctx.BlockTime()
 
@@ -284,7 +283,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 		}
 
 		// only allow distribution if the GroupGauge is Active
-		if !currTime.Before(gauge.StartTime) && (gauge.IsPerpetual || gauge.FilledEpochs < gauge.NumEpochsPaidOver) {
+		if gauge.IsActiveGauge(currTime) {
 			coinsToDistributePerInternalGauge, coinsToDistributeThisEpoch, err := k.CalcSplitPolicyCoins(ctx, groupGauge.SplittingPolicy, gauge, groupGauge)
 			if err != nil {
 				return err
@@ -505,7 +504,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 			ctx.Logger().Debug("distributeSyntheticInternal, gauge id %d, %d", "module", types.ModuleName, "gaugeId", gauge.Id, "height", ctx.BlockHeight())
 			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
 		} else {
-			// Donot distribue if LockQueryType = Group, because if we distribute here we will be double distributing.
+			// Do not distribue if LockQueryType = Group, because if we distribute here we will be double distributing.
 			if gauge.DistributeTo.LockQueryType == lockuptypes.ByGroup {
 				continue
 			}

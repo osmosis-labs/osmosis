@@ -55,8 +55,7 @@ enum SplittingPolicy {
   option (gogoproto.goproto_enum_prefix) = false;
 
   Volume = 0;
-  Liquidity = 1;
-  Evenly = 2;
+  Evenly = 1;
 }
 
 // Gauge is an object that stores GroupGaugeId as well as internalGaugeIds. We
