@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
-	v17 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/containers"
@@ -138,45 +137,6 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	// Wait for all goroutines to complete
 	wg.Wait()
-
-	// START: CAN REMOVE POST v17 UPGRADE
-
-	v17SuperfluidAssets := v17GetSuperfluidAssets()
-
-	wg.Add(2)
-
-	// START: CAN REMOVE POST v17 UPGRADE
-	authorizedQuoteDenoms := "[\"uosmo\",\"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2\",\"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7\",\"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858\",\"ibc/4ABBEF4C8926DDDB320AE5188CFD63267ABBCEFC0583E4AE05D6E5AA2401DDAB\",\"ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5\",\"ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F\"]"
-	// END: CAN REMOVE POST v17 UPGRADE
-
-	// Chain A
-	go func() {
-		defer wg.Done()
-		chainANode.EnableSuperfluidAsset(chainA, v17SuperfluidAssets)
-		// START: CAN REMOVE POST v17 UPGRADE
-		err := chainANode.ParamChangeProposal("concentratedliquidity", "AuthorizedQuoteDenoms", []byte(authorizedQuoteDenoms), chainA)
-		if err != nil {
-			uc.t.Logf("error during param change proposal: %v", err)
-		}
-		// END: CAN REMOVE POST v17 UPGRADE
-	}()
-
-	// Chain B
-
-	go func() {
-		defer wg.Done()
-		chainBNode.EnableSuperfluidAsset(chainB, v17SuperfluidAssets)
-		// START: CAN REMOVE POST v17 UPGRADE
-		err := chainBNode.ParamChangeProposal("concentratedliquidity", "AuthorizedQuoteDenoms", []byte(authorizedQuoteDenoms), chainB)
-		if err != nil {
-			uc.t.Logf("error during param change proposal: %v", err)
-		}
-		// END: CAN REMOVE POST v17 UPGRADE
-	}()
-
-	wg.Wait()
-
-	// END: CAN REMOVE POST v17 UPGRADE
 
 	var (
 		poolShareDenom             = make([]string, 2)
@@ -453,20 +413,3 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 	uc.t.Logf("upgrade successful on chain %s", chainConfig.Id)
 	return nil
 }
-
-// START: CAN REMOVE POST v17 UPGRADE
-
-func v17GetSuperfluidAssets() string {
-	assets := ""
-	for _, assetPair := range v17.AssetPairsForTestsOnly {
-		if assetPair.Superfluid {
-			assets += fmt.Sprintf("gamm/pool/%d,", assetPair.LinkedClassicPool)
-		}
-	}
-	if len(assets) > 0 {
-		assets = assets[:len(assets)-1]
-	}
-	return assets
-}
-
-// END: CAN REMOVE POST v17 UPGRADE
