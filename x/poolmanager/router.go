@@ -774,11 +774,11 @@ func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 
 	// Since we want to ultimately multiply the volume by this spot price, we want to quote OSMO in terms of the input token.
 	// This is so that once we multiply the volume by the spot price, we get the volume in units of OSMO.
-	//
-	// We expect that if a pool is found, there should always be an available spot price as well.
-	// That being said, if there is an error finding the spot price, we fail quietly and leave volume unchanged.
-	// This is because we do not want to escalate an issue with finding spot price to locking all swaps involving the given asset.
 	osmoPerInputToken, err := k.RouteCalculateSpotPrice(ctx, osmoPairedPoolId, OSMO, volumeGenerated.Denom)
+
+	// We expect that if a pool is found, there should always be an available spot price as well.
+	// That being said, if there is an error finding the spot price, we fail quietly and leave tracked volume unchanged.
+	// This is because we do not want to escalate an issue with finding spot price to locking all swaps involving the given asset.
 	if err != nil {
 		return
 	}

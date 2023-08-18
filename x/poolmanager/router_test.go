@@ -2975,11 +2975,11 @@ func (s *KeeperTestSuite) TestTrackVolume() {
 			// --- Assertions ---
 
 			// Assert that the correct amount of volume was added to the pool tracker
-			totalVolume, err := s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, targetPoolId)
-			s.Require().NoError(err)
 
 			// Note that the units should always be in OSMO, even if the input volume was in another token.
+			//
 			// We wrap with sdk.NewCoins() to sanitize the outputs for comparison in case they are empty.
+			totalVolume := s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, targetPoolId)
 			s.Require().Equal(sdk.NewCoins(sdk.NewCoin(uosmo, tc.expectedVolume)), sdk.NewCoins(totalVolume...))
 		})
 	}
