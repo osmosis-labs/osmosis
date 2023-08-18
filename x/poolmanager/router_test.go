@@ -2315,6 +2315,307 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 	}
 }
 
+func (s *KeeperTestSuite) TestIsOsmoRoutedMultihop() {
+	tests := map[string]struct {
+		route                  types.MultihopRoute
+		balancerPoolCoins      []sdk.Coins
+		concentratedPoolDenoms [][]string
+		incentivizedGauges     []uint64
+		inDenom                string
+		outDenom               string
+		expectIsRouted         bool
+	}{
+		"happy path: osmo routed (balancer)": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			balancerPoolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(uosmo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)), // pool 2.
+			},
+			// Note that we incentivize all candidate gauges for the sake of test readability.
+			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
+			inDenom:            foo,
+			outDenom:           bar,
+
+			expectIsRouted: true,
+		},
+		"happy path: osmo routed (balancer, only one active gauge for each pool)": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			balancerPoolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(uosmo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)), // pool 2.
+			},
+			incentivizedGauges: []uint64{1, 4},
+			inDenom:            foo,
+			outDenom:           bar,
+
+			expectIsRouted: true,
+		},
+		"osmo routed (concentrated)": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			concentratedPoolDenoms: [][]string{
+				{foo, uosmo}, // pool 1.
+				{uosmo, baz}, // pool 2.
+			},
+			incentivizedGauges: []uint64{1, 2},
+			inDenom:            foo,
+			outDenom:           bar,
+
+			expectIsRouted: true,
+		},
+		"osmo routed (mixed concentrated and balancer)": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			concentratedPoolDenoms: [][]string{
+				{foo, uosmo}, // pool 1.
+			},
+			balancerPoolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(uosmo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)), // pool 2.
+			},
+
+			incentivizedGauges: []uint64{1, 2},
+			inDenom:            foo,
+			outDenom:           bar,
+
+			expectIsRouted: true,
+		},
+		"not osmo routed (single pool)": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: bar,
+				},
+			}),
+			inDenom:  foo,
+			outDenom: bar,
+
+			expectIsRouted: false,
+		},
+		"not osmo routed (two pools)": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: bar,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: baz,
+				},
+			}),
+			inDenom:  foo,
+			outDenom: baz,
+
+			expectIsRouted: false,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			poolManagerKeeper := s.App.PoolManagerKeeper
+
+			// Create pools to route through
+			if tc.concentratedPoolDenoms != nil {
+				s.CreateConcentratedPoolsAndFullRangePosition(tc.concentratedPoolDenoms)
+			}
+
+			if tc.balancerPoolCoins != nil {
+				s.createBalancerPoolsFromCoins(tc.balancerPoolCoins)
+			}
+
+			// If test specifies incentivized gauges, set them here
+			if len(tc.incentivizedGauges) > 0 {
+				s.makeGaugesIncentivized(tc.incentivizedGauges)
+			}
+
+			// System under test
+			isRouted := poolManagerKeeper.IsOsmoRoutedMultihop(s.Ctx, tc.route, tc.inDenom, tc.outDenom)
+
+			// Check output
+			s.Require().Equal(tc.expectIsRouted, isRouted)
+		})
+	}
+}
+
+// TestGetOsmoRoutedMultihopTotalSpreadFactor tests the GetOsmoRoutedMultihopTotalSpreadFactor function
+func (s *KeeperTestSuite) TestGetOsmoRoutedMultihopTotalSpreadFactor() {
+	tests := map[string]struct {
+		route                  types.MultihopRoute
+		balancerPoolCoins      []sdk.Coins
+		concentratedPoolDenoms [][]string
+		poolFees               []sdk.Dec
+
+		expectedRouteFee sdk.Dec
+		expectedTotalFee sdk.Dec
+		expectedError    error
+	}{
+		"happy path: balancer route": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			poolFees: []sdk.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			balancerPoolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(uosmo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)), // pool 2.
+			},
+
+			expectedRouteFee: defaultPoolSpreadFactor,
+			expectedTotalFee: defaultPoolSpreadFactor.Add(defaultPoolSpreadFactor),
+		},
+		"concentrated route": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			poolFees: []sdk.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			concentratedPoolDenoms: [][]string{
+				{foo, uosmo}, // pool 1.
+				{uosmo, baz}, // pool 2.
+			},
+
+			expectedRouteFee: defaultPoolSpreadFactor,
+			expectedTotalFee: defaultPoolSpreadFactor.Add(defaultPoolSpreadFactor),
+		},
+		"mixed concentrated and balancer route": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			poolFees: []sdk.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			concentratedPoolDenoms: [][]string{
+				{foo, uosmo}, // pool 1.
+			},
+			balancerPoolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(uosmo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)), // pool 2.
+			},
+
+			expectedRouteFee: defaultPoolSpreadFactor,
+			expectedTotalFee: defaultPoolSpreadFactor.Add(defaultPoolSpreadFactor),
+		},
+		"edge case: average fee is lower than highest pool fee": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			// Note that pool 2 has 5x the swap fee of pool 1
+			poolFees: []sdk.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor.Mul(sdk.NewDec(5))},
+			concentratedPoolDenoms: [][]string{
+				{foo, uosmo}, // pool 1.
+				{uosmo, baz}, // pool 2.
+			},
+
+			expectedRouteFee: defaultPoolSpreadFactor.Mul(sdk.NewDec(5)),
+			expectedTotalFee: defaultPoolSpreadFactor.Mul(sdk.NewDec(6)),
+		},
+		"error: pool does not exist": {
+			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: bar,
+				},
+			}),
+			poolFees: []sdk.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+
+			expectedError: types.FailedToFindRouteError{PoolId: 1},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			poolManagerKeeper := s.App.PoolManagerKeeper
+
+			// Create pools for test route
+			if tc.concentratedPoolDenoms != nil {
+				s.CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor(tc.concentratedPoolDenoms, tc.poolFees)
+			}
+
+			if tc.balancerPoolCoins != nil {
+				s.createBalancerPoolsFromCoinsWithSpreadFactor(tc.balancerPoolCoins, tc.poolFees)
+			}
+
+			// System under test
+			routeFee, totalFee, err := poolManagerKeeper.GetOsmoRoutedMultihopTotalSpreadFactor(s.Ctx, tc.route)
+
+			// Assertions
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().Equal(tc.expectedError.Error(), err.Error())
+				s.Require().Equal(sdk.Dec{}, routeFee)
+				s.Require().Equal(sdk.Dec{}, totalFee)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedRouteFee, routeFee)
+			s.Require().Equal(tc.expectedTotalFee, totalFee)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 	tests := map[string]struct {
 		route                       []types.SwapAmountOutRoute
