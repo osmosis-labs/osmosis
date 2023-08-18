@@ -37,6 +37,8 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithCodec(encodingConfig.Marshaler)
 
+	// We Set the base denom here in order for highest liquidity routes to get generated.
+	// This is used in the tx fees epoch hook to swap the non OSMO to other tokens.
 	baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 	s.Require().NoError(err)
 
