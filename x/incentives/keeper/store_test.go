@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -47,8 +48,9 @@ func (s *KeeperTestSuite) TestGetGroupGaugeById() {
 		"Valid record": {
 			groupGaugeId: uint64(5),
 			expectedRecord: types.GroupGauge{
-				GroupGaugeId: uint64(5),
-				InternalIds:  []uint64{2, 3, 4},
+				GroupGaugeId:    uint64(5),
+				InternalIds:     []uint64{2, 3, 4},
+				SplittingPolicy: types.Evenly,
 			},
 		},
 
@@ -70,7 +72,7 @@ func (s *KeeperTestSuite) TestGetGroupGaugeById() {
 				internalGauges = append(internalGauges, internalGauge)
 			}
 
-			_, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))), 1, s.TestAccs[1], internalGauges) // gauge id = 5
+			_, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))), 1, s.TestAccs[1], internalGauges, lockuptypes.ByGroup, types.Evenly) // gauge id = 5
 			s.Require().NoError(err)
 
 			record, err := s.App.IncentivesKeeper.GetGroupGaugeById(s.Ctx, test.groupGaugeId)

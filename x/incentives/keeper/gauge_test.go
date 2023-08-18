@@ -590,6 +590,8 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 		coins            sdk.Coins
 		numEpochPaidOver uint64
 		internalGaugeIds []uint64
+		gaugeType        lockuptypes.LockQueryType
+		splittiingPolicy types.SplittingPolicy
 		expectErr        bool
 	}{
 		{
@@ -597,6 +599,8 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 			coins:            coinsToAdd,
 			numEpochPaidOver: 1,
 			internalGaugeIds: []uint64{2, 3, 4},
+			gaugeType:        lockuptypes.ByGroup,
+			splittiingPolicy: types.Evenly,
 			expectErr:        false,
 		},
 
@@ -605,6 +609,8 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 			coins:            coinsToAdd,
 			numEpochPaidOver: 1,
 			internalGaugeIds: []uint64{2, 3, 4, 5},
+			gaugeType:        lockuptypes.ByGroup,
+			splittiingPolicy: types.Evenly,
 			expectErr:        true,
 		},
 		{
@@ -612,6 +618,8 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200_000_000))),
 			numEpochPaidOver: 1,
 			internalGaugeIds: []uint64{2, 3, 4},
+			gaugeType:        lockuptypes.ByGroup,
+			splittiingPolicy: types.Evenly,
 			expectErr:        true,
 		},
 		{
@@ -619,6 +627,8 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200_000_000))),
 			numEpochPaidOver: 1,
 			internalGaugeIds: []uint64{2, 3, 4, 5},
+			gaugeType:        lockuptypes.ByGroup,
+			splittiingPolicy: types.Evenly,
 			expectErr:        true,
 		},
 		{
@@ -626,6 +636,26 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200_000_000))),
 			numEpochPaidOver: 1,
 			internalGaugeIds: []uint64{},
+			splittiingPolicy: types.Evenly,
+			gaugeType:        lockuptypes.ByGroup,
+			expectErr:        true,
+		},
+		{
+			name:             "Error: Invalid Splitting Policy",
+			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200_000_000))),
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{},
+			gaugeType:        lockuptypes.ByGroup,
+			splittiingPolicy: types.Volume,
+			expectErr:        true,
+		},
+		{
+			name:             "Error: Invalid gauge type",
+			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200_000_000))),
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{},
+			gaugeType:        lockuptypes.NoLock,
+			splittiingPolicy: types.Evenly,
 			expectErr:        true,
 		},
 	}
@@ -644,7 +674,7 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 			//create 1 non-perp internal Gauge
 			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gauge id = 5
 
-			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[1], tc.internalGaugeIds) // gauge id = 6
+			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[1], tc.internalGaugeIds, tc.gaugeType, tc.splittiingPolicy) // gauge id = 6
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -719,7 +749,7 @@ func (s *KeeperTestSuite) TestAddToGaugeRewardsFromGauge() {
 			internalGauge1 := s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(1)) // gauge id = 2
 
 			// create group gauge
-			_, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))), uint64(1), s.TestAccs[1], []uint64{internalGauge1}) // gauge id = 3
+			_, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))), uint64(1), s.TestAccs[1], []uint64{internalGauge1}, lockuptypes.ByGroup, types.Evenly) // gauge id = 3
 			s.Require().NoError(err)
 
 			err = s.App.IncentivesKeeper.AddToGaugeRewardsFromGauge(s.Ctx, tc.groupGaugeId, tc.coinsToTransfer, tc.internalGaugeId)

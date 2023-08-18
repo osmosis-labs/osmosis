@@ -285,9 +285,9 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 
 		// only allow distribution if the GroupGauge is Active
 		if !currTime.Before(gauge.StartTime) && (gauge.IsPerpetual || gauge.FilledEpochs < gauge.NumEpochsPaidOver) {
-			coinsToDistributePerInternalGauge, coinsToDistributeThisEpoch := k.CalcSplitPolicyCoins(ctx, groupGauge.SplittingPolicy, gauge, groupGauge)
-			if coinsToDistributePerInternalGauge == nil || coinsToDistributeThisEpoch == nil {
-				return fmt.Errorf("GroupGauge id %d doesnot have enought coins to distribute.", groupGauge.GroupGaugeId)
+			coinsToDistributePerInternalGauge, coinsToDistributeThisEpoch, err := k.CalcSplitPolicyCoins(ctx, groupGauge.SplittingPolicy, gauge, groupGauge)
+			if err != nil {
+				return err
 			}
 
 			for _, internalGaugeId := range groupGauge.InternalIds {
@@ -307,24 +307,28 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 }
 
 // CalcSplitPolicyCoins calculates tokens to split given a policy and groupGauge.
-func (k Keeper) CalcSplitPolicyCoins(ctx sdk.Context, policy types.SplittingPolicy, groupGauge *types.Gauge, groupGaugeObj types.GroupGauge) (sdk.Coins, sdk.Coins) {
+func (k Keeper) CalcSplitPolicyCoins(ctx sdk.Context, policy types.SplittingPolicy, groupGauge *types.Gauge, groupGaugeObj types.GroupGauge) (sdk.Coins, sdk.Coins, error) {
 	// TODO: add volume split policy
 	if policy == types.Evenly {
 		remainCoins := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
 
 		var coinsDistPerInternalGauge, coinsDistThisEpoch sdk.Coins
 		for _, coin := range remainCoins {
-			amountToDistributeThisEpoch := coin.Amount.Quo(sdk.NewIntFromUint64(groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs))
-			amountToDistributePerInternalGauge := amountToDistributeThisEpoch.Quo(sdk.NewInt(int64(len(groupGaugeObj.InternalIds))))
+			epochDiff := groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs
+			internalGaugeLen := len(groupGaugeObj.InternalIds)
 
-			coinsDistThisEpoch = coinsDistThisEpoch.Add(sdk.NewCoin(coin.Denom, amountToDistributeThisEpoch))
-			coinsDistPerInternalGauge = coinsDistPerInternalGauge.Add(sdk.NewCoin(coin.Denom, amountToDistributePerInternalGauge))
+			distPerEpoch := coin.Amount.Quo(sdk.NewIntFromUint64(epochDiff))
+			distPerGauge := distPerEpoch.Quo(sdk.NewInt(int64(internalGaugeLen)))
+
+			coinsDistThisEpoch = coinsDistThisEpoch.Add(sdk.NewCoin(coin.Denom, distPerEpoch))
+			coinsDistPerInternalGauge = coinsDistPerInternalGauge.Add(sdk.NewCoin(coin.Denom, distPerGauge))
 		}
 
-		return coinsDistPerInternalGauge, coinsDistThisEpoch
+		return coinsDistPerInternalGauge, coinsDistThisEpoch, nil
+	} else {
+		return nil, nil, fmt.Errorf("GroupGauge id %d doesnot have enought coins to distribute.", &groupGauge.Id)
 	}
 
-	return nil, nil
 }
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to

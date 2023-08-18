@@ -1126,60 +1126,78 @@ func (s *KeeperTestSuite) IncentivizeInternalGauge(poolIds []uint64, epochDurati
 	s.Require().NoError(err)
 }
 func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
-	s.SetupTest()
-	expectedInternalGaugeCoins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(33_333_333)))
-	s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)))) // 1,000 osmo
-	clPool := s.PrepareConcentratedPool()                                                 // gaugeid = 1
-
-	// create 3 internal Gauge
-	var internalGauges []uint64
-	for i := 0; i <= 2; i++ {
-		internalGauge := s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(1)) // gauge id = 2,3,4
-		internalGauges = append(internalGauges, internalGauge)
+	tests := []struct {
+		name                               string
+		GroupGauge                         types.GroupGauge
+		expectedAllocationPerGroupGauge    sdk.Coins
+		expectedAllocationPerInternalGauge sdk.Coins
+		expectError                        bool
+	}{
+		{
+			name: "Happy case: Valid perp Group Gauge",
+			GroupGauge: types.GroupGauge{
+				GroupGaugeId:    9,
+				InternalIds:     []uint64{2, 3, 4},
+				SplittingPolicy: types.Evenly,
+			},
+			expectedAllocationPerGroupGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))),
+			expectedAllocationPerInternalGauge: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(33_333_333))),
+			expectError:                        false,
+		},
+		{
+			name: "Happy Case: Valid non-perp Group Gauge",
+			GroupGauge: types.GroupGauge{
+				GroupGaugeId:    10,
+				InternalIds:     []uint64{5, 6, 7},
+				SplittingPolicy: types.Evenly,
+			},
+			expectedAllocationPerGroupGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(50_000_000))),
+			expectedAllocationPerInternalGauge: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(16_666_666))),
+			expectError:                        false,
+		},
 	}
 
-	// create group gauge
-	groupGauge, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))), uint64(1), s.TestAccs[1], internalGauges) // gauge id = 3
-	s.Require().NoError(err)
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200_000_000))))
+			clPool := s.PrepareConcentratedPool()
 
-	// Call AllocateAcrossGauges
-	// Allocate 100 osmo across 3 internal gauges evenly
-	s.App.IncentivesKeeper.AllocateAcrossGauges(s.Ctx)
+			// create 3 internal Gauge
+			internalGauges := s.setupNoLockInternalGauge(clPool.GetId(), uint64(6)) // gauge Id = 2,3,4,5,6,7
 
-	groupGaugePostAllocate, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, groupGauge)
-	s.Require().NoError(err)
+			// create non-perp internal Gauge
+			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gaugeid= 8
 
-	s.Require().Equal(groupGaugePostAllocate.Coins.Sub(groupGaugePostAllocate.DistributedCoins), sdk.Coins(nil))
+			// create perp group gauge
+			_, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))), uint64(1), s.TestAccs[1], internalGauges[:3], lockuptypes.ByGroup, types.Evenly) // gauge id = 2,3,4
+			s.Require().NoError(err)
 
-	for _, gauge := range internalGauges {
-		internalGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gauge)
-		s.Require().NoError(err)
+			// create non-perp group gauge
+			_, err = s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))), uint64(2), s.TestAccs[1], internalGauges[len(internalGauges)-3:], lockuptypes.ByGroup, types.Evenly) // gauge id = 5,6,7
+			s.Require().NoError(err)
 
-		s.Require().Equal(internalGauge.Coins.Sub(internalGauge.DistributedCoins), expectedInternalGaugeCoins)
+			// Call Testing function
+			err = s.App.IncentivesKeeper.AllocateAcrossGauges(s.Ctx)
+			if tc.expectError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				groupGaugePostAllocate, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, tc.GroupGauge.GroupGaugeId)
+				s.Require().NoError(err)
+
+				s.Require().Equal(groupGaugePostAllocate.DistributedCoins, tc.expectedAllocationPerGroupGauge)
+
+				for _, gauge := range tc.GroupGauge.InternalIds {
+					internalGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gauge)
+					s.Require().NoError(err)
+
+					s.Require().Equal(internalGauge.Coins, tc.expectedAllocationPerInternalGauge)
+				}
+			}
+		})
 	}
-
-}
-
-func (s *KeeperTestSuite) SetupGroupGauge(clPoolId uint64, lockOwner sdk.AccAddress, numOfNoLockGauges uint64, numOfLockGauges uint64) []uint64 {
-	var internalGauges []uint64
-
-	// create Internal Gauges
-	for i := uint64(1); i <= numOfNoLockGauges; i++ {
-		clNoLockGaugeId := s.CreateNoLockExternalGauges(clPoolId, sdk.NewCoins(), s.TestAccs[1], uint64(1)) // gauge id = 2,3,4
-		internalGauges = append(internalGauges, clNoLockGaugeId)
-	}
-
-	for i := uint64(1); i <= numOfLockGauges; i++ {
-		// setup lock
-		s.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Hour*7)
-
-		// create gauge
-		gaugeID, _, _, _ := s.SetupNewGauge(true, sdk.NewCoins())
-
-		internalGauges = append(internalGauges, gaugeID)
-	}
-
-	return internalGauges
 }
 
 func (s *KeeperTestSuite) WithBaseCaseDifferentCoins(baseCase GroupGaugeCreationFields, newCoins sdk.Coins) GroupGaugeCreationFields {
@@ -1213,10 +1231,12 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 	}
 
 	tests := []struct {
-		name                             string
-		createGauge                      GroupGaugeCreationFields
-		expectedCoinsPerInternalGauge    sdk.Coins
-		expectedCoinsDistributedPerEpoch sdk.Coins
+		name                                 string
+		createGauge                          GroupGaugeCreationFields
+		expectedCoinsPerInternalGauge        sdk.Coins
+		expectedCoinsDistributedPerEpoch     sdk.Coins
+		expectCreateGroupGaugeError          bool
+		expectDistributeToInternalGaugeError bool
 	}{
 		{
 			name:                             "Valid case: Valid perp-GroupGauge Creation and Distribution",
@@ -1254,6 +1274,16 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(12_500_000)), sdk.NewCoin("uatom", sdk.NewInt(12_500_000))),
 			expectedCoinsDistributedPerEpoch: sdk.NewCoins(fifetyKUosmo, fifetyKUatom),
 		},
+		{
+			name:                        "InValid case: Creating a GroupGauge with invalid internalIds",
+			createGauge:                 s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{100, 101}),
+			expectCreateGroupGaugeError: true,
+		},
+		{
+			name:                        "InValid case: Creating a GroupGauge with non-perpetual internalId",
+			createGauge:                 s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{2, 3, 4, 6}),
+			expectCreateGroupGaugeError: true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -1267,7 +1297,15 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 			epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
 			s.SetupGroupGauge(clPool.GetId(), lockOwner, uint64(3), uint64(1))
 
-			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, tc.createGauge.coins, tc.createGauge.numEpochPaidOver, tc.createGauge.owner, tc.createGauge.internalGaugeIds) // gauge id = 6
+			//create 1 non-perp internal Gauge
+			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gauge id = 6
+
+			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, tc.createGauge.coins, tc.createGauge.numEpochPaidOver, tc.createGauge.owner, tc.createGauge.internalGaugeIds, lockuptypes.ByGroup, types.Evenly) // gauge id = 6
+			if tc.expectCreateGroupGaugeError {
+				s.Require().Error(err)
+				return
+			}
+
 			s.Require().NoError(err)
 
 			groupGaugeObj, err := s.App.IncentivesKeeper.GetGroupGaugeById(s.Ctx, groupGaugeId)

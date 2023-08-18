@@ -211,9 +211,17 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 // CreateGroupGauge creates a new gauge, that allocates rewards dynamically across its internal gauges based on the given splitting policy.
 // Note: we should expect that the internal gauges consist of the gauges that are automatically created for each pool upon pool creation, as even non-perpetual
 // external incentives would likely want to route through these.
-func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64) (uint64, error) {
+func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64, gaugetype lockuptypes.LockQueryType, splittingPolicy types.SplittingPolicy) (uint64, error) {
 	if len(internalGaugeIds) == 0 {
 		return 0, fmt.Errorf("No internalGauge provided.")
+	}
+
+	if gaugetype != lockuptypes.ByGroup {
+		return 0, fmt.Errorf("Invalid gauge type needs to be ByGroup, got %s.", gaugetype)
+	}
+
+	if splittingPolicy != types.Evenly {
+		return 0, fmt.Errorf("Invalid splitting policy, needs to be Evenly got %s", splittingPolicy)
 	}
 
 	// check that all the internalGaugeIds exist
@@ -235,7 +243,7 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 		Id:          nextGaugeId,
 		IsPerpetual: numEpochPaidOver == 1,
 		DistributeTo: lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.ByGroup,
+			LockQueryType: gaugetype,
 		},
 		Coins:             coins,
 		StartTime:         ctx.BlockTime(),
@@ -253,13 +261,13 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	newGroupGauge := types.GroupGauge{
 		GroupGaugeId:    nextGaugeId,
 		InternalIds:     internalGaugeIds,
-		SplittingPolicy: types.Evenly,
+		SplittingPolicy: splittingPolicy,
 	}
 
 	k.SetGroupGauge(ctx, newGroupGauge)
 	k.SetLastGaugeID(ctx, gauge.Id)
 
-	// TODO: check if this is necessary
+	// TODO: check if this is necessary, will investigate this in following PR.
 	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
 	activeOrUpcomingGauge := true
 
