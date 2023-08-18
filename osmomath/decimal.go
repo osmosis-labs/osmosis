@@ -37,7 +37,7 @@ const (
 
 var (
 	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil)
-	precisionReuseSDK    = new(big.Int).Exp(big.NewInt(10), big.NewInt(sdk.Precision), nil)
+	precisionReuseSDK    = new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionSDKDec), nil)
 	fivePrecision        = new(big.Int).Quo(precisionReuse, big.NewInt(2))
 	precisionMultipliers []*big.Int
 	zeroInt              = big.NewInt(0)
@@ -549,10 +549,10 @@ func (d BigDec) MustFloat64() float64 {
 	}
 }
 
-// SdkDec returns the Sdk.Dec representation of a BigDec.
+// SdkDec returns the osmomath.SDKDec representation of a BigDec.
 // Values in any additional decimal places are truncated.
-func (d BigDec) SDKDec() sdk.Dec {
-	precisionDiff := Precision - sdk.Precision
+func (d BigDec) SDKDec() SDKDec {
+	precisionDiff := Precision - PrecisionSDKDec
 	precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(precisionDiff)), nil)
 
 	if precisionDiff < 0 {
@@ -564,30 +564,30 @@ func (d BigDec) SDKDec() sdk.Dec {
 	intRepresentation := new(big.Int).Quo(d.BigInt(), precisionFactor)
 
 	// convert int representation back to SDK Dec precision
-	truncatedDec := sdk.NewDecFromBigIntWithPrec(intRepresentation, sdk.Precision)
+	truncatedDec := NewSDKDecFromBigIntWithPrec(intRepresentation, PrecisionSDKDec)
 
 	return truncatedDec
 }
 
-// SDKDecRoundUp returns the Sdk.Dec representation of a BigDec.
+// SDKDecRoundUp returns the osmomath.SDKDec representation of a BigDec.
 // Round up at precision end.
 // Values in any additional decimal places are truncated.
-func (d BigDec) SDKDecRoundUp() sdk.Dec {
-	return sdk.NewDecFromBigIntWithPrec(chopPrecisionAndRoundUpSDKDec(d.i), sdk.Precision)
+func (d BigDec) SDKDecRoundUp() SDKDec {
+	return NewSDKDecFromBigIntWithPrec(chopPrecisionAndRoundUpSDKDec(d.i), PrecisionSDKDec)
 }
 
 // BigDecFromSdkDec returns the BigDec representation of an SDKDec.
 // Values in any additional decimal places are truncated.
-func BigDecFromSDKDec(d sdk.Dec) BigDec {
-	return NewDecFromBigIntWithPrec(d.BigInt(), sdk.Precision)
+func BigDecFromSDKDec(d SDKDec) BigDec {
+	return NewDecFromBigIntWithPrec(d.BigInt(), PrecisionSDKDec)
 }
 
 // BigDecFromSdkDecSlice returns the []BigDec representation of an []SDKDec.
 // Values in any additional decimal places are truncated.
-func BigDecFromSDKDecSlice(ds []sdk.Dec) []BigDec {
+func BigDecFromSDKDecSlice(ds []SDKDec) []BigDec {
 	result := make([]BigDec, len(ds))
 	for i, d := range ds {
-		result[i] = NewDecFromBigIntWithPrec(d.BigInt(), sdk.Precision)
+		result[i] = NewDecFromBigIntWithPrec(d.BigInt(), PrecisionSDKDec)
 	}
 	return result
 }
@@ -597,7 +597,7 @@ func BigDecFromSDKDecSlice(ds []sdk.Dec) []BigDec {
 func BigDecFromSDKDecCoinSlice(ds []sdk.DecCoin) []BigDec {
 	result := make([]BigDec, len(ds))
 	for i, d := range ds {
-		result[i] = NewDecFromBigIntWithPrec(d.Amount.BigInt(), sdk.Precision)
+		result[i] = NewDecFromBigIntWithPrec(d.Amount.BigInt(), PrecisionSDKDec)
 	}
 	return result
 }

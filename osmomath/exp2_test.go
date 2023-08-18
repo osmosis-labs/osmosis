@@ -3,15 +3,14 @@ package osmomath_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 var (
-	// minDecTolerance minimum tolerance for sdk.Dec, given its precision of 18.
-	minDecTolerance = sdk.MustNewDecFromStr("0.000000000000000001")
+	// minDecTolerance minimum tolerance for SDKDec, given its precision of 18.
+	minDecTolerance = osmomath.MustNewSDKDecFromStr("0.000000000000000001")
 )
 
 func TestExp2ChebyshevRationalApprox(t *testing.T) {
@@ -48,8 +47,8 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			expectedResult: osmomath.OneDec(),
 
 			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance:       sdk.ZeroDec(),
-				MultiplicativeTolerance: sdk.ZeroDec(),
+				AdditiveTolerance:       osmomath.ZeroSDKDec(),
+				MultiplicativeTolerance: osmomath.ZeroSDKDec(),
 				RoundingDir:             osmomath.RoundDown,
 			},
 		},
@@ -58,8 +57,8 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			expectedResult: osmomath.MustNewDecFromStr("2"),
 
 			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance:       sdk.ZeroDec(),
-				MultiplicativeTolerance: sdk.ZeroDec(),
+				AdditiveTolerance:       osmomath.ZeroSDKDec(),
+				MultiplicativeTolerance: osmomath.ZeroSDKDec(),
 				RoundingDir:             osmomath.RoundDown,
 			},
 		},
@@ -80,8 +79,8 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			expectedResult: osmomath.MustNewDecFromStr("1.999986137104433991477606830496602898"),
 
 			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance:       sdk.MustNewDecFromStr("0.00000000000000007"),
-				MultiplicativeTolerance: minDecTolerance.Mul(sdk.NewDec(100)),
+				AdditiveTolerance:       osmomath.MustNewSDKDecFromStr("0.00000000000000007"),
+				MultiplicativeTolerance: minDecTolerance.Mul(osmomath.NewSDKDec(100)),
 				RoundingDir:             osmomath.RoundDown,
 			},
 		},
@@ -113,8 +112,8 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			expectedResult: osmomath.MustNewDecFromStr("1.260028791934303989065848870753742298"),
 
 			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance:       sdk.MustNewDecFromStr("0.00000000000000007"),
-				MultiplicativeTolerance: minDecTolerance.Mul(sdk.NewDec(10)),
+				AdditiveTolerance:       osmomath.MustNewSDKDecFromStr("0.00000000000000007"),
+				MultiplicativeTolerance: minDecTolerance.Mul(osmomath.NewSDKDec(10)),
 				RoundingDir:             osmomath.RoundDown,
 			},
 		},
@@ -124,8 +123,8 @@ func TestExp2ChebyshevRationalApprox(t *testing.T) {
 			expectedResult: osmomath.MustNewDecFromStr("1.800806138872630518880998772777747572"),
 
 			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance:       sdk.MustNewDecFromStr("0.00000000000000002"),
-				MultiplicativeTolerance: minDecTolerance.Mul(sdk.NewDec(10)),
+				AdditiveTolerance:       osmomath.MustNewSDKDecFromStr("0.00000000000000002"),
+				MultiplicativeTolerance: minDecTolerance.Mul(osmomath.NewSDKDec(10)),
 				RoundingDir:             osmomath.RoundUnconstrained,
 			},
 		},
@@ -193,7 +192,7 @@ func TestExp2(t *testing.T) {
 			expectedResult: osmomath.MustNewDecFromStr("16609504985074238416.013387053450559984846024066925604094"),
 
 			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance:       sdk.MustNewDecFromStr("0.00042"),
+				AdditiveTolerance:       osmomath.MustNewSDKDecFromStr("0.00042"),
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundUnconstrained,
 			},
@@ -204,7 +203,7 @@ func TestExp2(t *testing.T) {
 			expectedResult: osmomath.MustNewDecFromStr("26087635650665564424.699143612505016737766552579185717157"),
 
 			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance:       sdk.MustNewDecFromStr("0.000000000000000008"),
+				AdditiveTolerance:       osmomath.MustNewSDKDecFromStr("0.000000000000000008"),
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundUnconstrained,
 			},
@@ -215,7 +214,7 @@ func TestExp2(t *testing.T) {
 			expectedResult: osmomath.MustNewDecFromStr("1709679290002018430137083.075789128776926268789829515159631571"),
 
 			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance:       sdk.MustNewDecFromStr("0.0000000000006"),
+				AdditiveTolerance:       osmomath.MustNewSDKDecFromStr("0.0000000000006"),
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundUnconstrained,
 			},
@@ -226,7 +225,7 @@ func TestExp2(t *testing.T) {
 			expectedResult: osmomath.MustNewDecFromStr("1792728671193156477399422023278.661496394239222564273688025833797661"),
 
 			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance:       sdk.MustNewDecFromStr("0.0000006"),
+				AdditiveTolerance:       osmomath.MustNewSDKDecFromStr("0.0000006"),
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundUnconstrained,
 			},
@@ -237,7 +236,7 @@ func TestExp2(t *testing.T) {
 			expectedResult: osmomath.MustNewDecFromStr("481231938336009023090067544955250113854.229961482126296754016435255422777776"),
 
 			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance:       sdk.MustNewDecFromStr("146.5"),
+				AdditiveTolerance:       osmomath.MustNewSDKDecFromStr("146.5"),
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundUnconstrained,
 			},
@@ -248,7 +247,7 @@ func TestExp2(t *testing.T) {
 			expectedResult: osmomath.MustNewDecFromStr("340282366920938463463374607431768211220.134236774486705862055857235845515682"),
 
 			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance:       sdk.MustNewDecFromStr("15044647266406936"),
+				AdditiveTolerance:       osmomath.MustNewSDKDecFromStr("15044647266406936"),
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundDown,
 			},
@@ -259,7 +258,7 @@ func TestExp2(t *testing.T) {
 			expectedResult: osmomath.MustNewDecFromStr("306391287650667462068703337664945630660.398687487527674545778353588077174571"),
 
 			errTolerance: osmomath.ErrTolerance{
-				AdditiveTolerance:       sdk.MustNewDecFromStr("7707157415597963"),
+				AdditiveTolerance:       osmomath.MustNewSDKDecFromStr("7707157415597963"),
 				MultiplicativeTolerance: minDecTolerance,
 				RoundingDir:             osmomath.RoundUnconstrained,
 			},

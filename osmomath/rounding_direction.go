@@ -16,7 +16,7 @@ const (
 	RoundBankers       RoundingDirection = 3
 )
 
-func DivIntByU64ToBigDec(i sdk.Int, u uint64, round RoundingDirection) (BigDec, error) {
+func DivIntByU64ToBigDec(i SDKInt, u uint64, round RoundingDirection) (BigDec, error) {
 	if u == 0 {
 		return BigDec{}, errors.New("div by zero")
 	}

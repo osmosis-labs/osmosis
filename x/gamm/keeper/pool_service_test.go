@@ -959,3 +959,21 @@ func (s *KeeperTestSuite) TestGetPoolDenom() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestAA() {
+	s.Setup()
+	poolCoins := sdk.NewCoins(sdk.NewInt64Coin("ibc/4DAE26570FD24ABA40E2BE4137E39D946C78B00B248D3F78B0919567C4371156", 7228976703), sdk.NewInt64Coin("uosmo", 5122660335))
+	weights := []int64{5, 5}
+	poolId := s.PrepareBalancerPoolWithCoinsAndWeights(poolCoins, weights)
+	fmt.Println(poolId)
+	a, err := s.App.GAMMKeeper.GetPool(s.Ctx, 1)
+	s.Require().NoError(err)
+	fmt.Println(a.String())
+	totalCoinsInAcc := sdk.NewCoins(sdk.NewInt64Coin("gamm/pool/1", 816673399699999))
+	s.FundAcc(s.TestAccs[0], totalCoinsInAcc)
+
+	coins, err := s.App.GAMMKeeper.ExitPool(s.Ctx, s.TestAccs[0], 1, totalCoinsInAcc[0].Amount, sdk.NewCoins())
+	s.Require().NoError(err)
+	fmt.Println("----")
+	fmt.Println(coins.String())
+}

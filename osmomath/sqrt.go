@@ -3,11 +3,9 @@ package osmomath
 import (
 	"errors"
 	"math/big"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var smallestDec = sdk.SmallestDec()
+var smallestDec = SDKSmallestDec()
 var tenTo18 = big.NewInt(1e18)
 var oneBigInt = big.NewInt(1)
 
@@ -18,7 +16,7 @@ var oneBigInt = big.NewInt(1)
 // This function guarantees:
 // the returned root r, will be such that r^2 >= d
 // This function is monotonic, i.e. if d1 >= d2, then sqrt(d1) >= sqrt(d2)
-func MonotonicSqrt(d sdk.Dec) (sdk.Dec, error) {
+func MonotonicSqrt(d SDKDec) (SDKDec, error) {
 	if d.IsNegative() {
 		return d, errors.New("cannot take square root of negative number")
 	}
@@ -44,13 +42,13 @@ func MonotonicSqrt(d sdk.Dec) (sdk.Dec, error) {
 	if check.Cmp(shiftedD) == -1 {
 		r.Add(r, oneBigInt)
 	}
-	root := sdk.NewDecFromBigIntWithPrec(r, 18)
+	root := NewSDKDecFromBigIntWithPrec(r, 18)
 
 	return root, nil
 }
 
 // MustMonotonicSqrt returns the output of MonotonicSqrt, panicking on error.
-func MustMonotonicSqrt(d sdk.Dec) sdk.Dec {
+func MustMonotonicSqrt(d SDKDec) SDKDec {
 	sqrt, err := MonotonicSqrt(d)
 	if err != nil {
 		panic(err)

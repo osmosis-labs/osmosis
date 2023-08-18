@@ -8,8 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type intTestSuite struct {
@@ -307,35 +305,35 @@ func (s *intTestSuite) TestEncodingTableInt() {
 }
 
 func (s *intTestSuite) TestEncodingTableUint() {
-	var i sdk.Uint
+	var i SDKUint
 
 	cases := []struct {
-		i      sdk.Uint
+		i      SDKUint
 		jsonBz []byte
 		rawBz  []byte
 	}{
 		{
-			sdk.NewUint(0),
+			NewSDKUint(0),
 			[]byte("\"0\""),
 			[]byte{0x30},
 		},
 		{
-			sdk.NewUint(100),
+			NewSDKUint(100),
 			[]byte("\"100\""),
 			[]byte{0x31, 0x30, 0x30},
 		},
 		{
-			sdk.NewUint(51842),
+			NewSDKUint(51842),
 			[]byte("\"51842\""),
 			[]byte{0x35, 0x31, 0x38, 0x34, 0x32},
 		},
 		{
-			sdk.NewUint(19513368),
+			NewSDKUint(19513368),
 			[]byte("\"19513368\""),
 			[]byte{0x31, 0x39, 0x35, 0x31, 0x33, 0x33, 0x36, 0x38},
 		},
 		{
-			sdk.NewUint(999999999999),
+			NewSDKUint(999999999999),
 			[]byte("\"999999999999\""),
 			[]byte{0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39},
 		},
@@ -450,9 +448,9 @@ func (s *intTestSuite) TestEncodingRandom() {
 
 	for i := 0; i < 1000; i++ {
 		n := rand.Uint64()
-		ni := sdk.NewUint(n)
+		ni := NewSDKUint(n)
 
-		var ri sdk.Uint
+		var ri SDKUint
 
 		str, err := ni.Marshal()
 		s.Require().Nil(err)
