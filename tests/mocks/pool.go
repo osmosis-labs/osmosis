@@ -92,17 +92,17 @@ func (mr *MockPoolIMockRecorder) GetSpreadFactor(ctx interface{}) *gomock.Call {
 }
 
 // GetTakerFee mocks base method.
-func (m *MockPoolI) GetTakerFee(ctx types.Context) types.Dec {
+func (m *MockPoolI) GetTakerFee() types.Dec {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTakerFee", ctx)
+	ret := m.ctrl.Call(m, "GetTakerFee")
 	ret0, _ := ret[0].(types.Dec)
 	return ret0
 }
 
 // GetTakerFee indicates an expected call of GetTakerFee.
-func (mr *MockPoolIMockRecorder) GetTakerFee(ctx interface{}) *gomock.Call {
+func (mr *MockPoolIMockRecorder) GetTakerFee() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTakerFee", reflect.TypeOf((*MockPoolI)(nil).GetTakerFee), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTakerFee", reflect.TypeOf((*MockPoolI)(nil).GetTakerFee))
 }
 
 // GetType mocks base method.
@@ -155,6 +155,18 @@ func (m *MockPoolI) Reset() {
 func (mr *MockPoolIMockRecorder) Reset() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reset", reflect.TypeOf((*MockPoolI)(nil).Reset))
+}
+
+// SetTakerFee mocks base method.
+func (m *MockPoolI) SetTakerFee(newTakerFee types.Dec) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetTakerFee", newTakerFee)
+}
+
+// SetTakerFee indicates an expected call of SetTakerFee.
+func (mr *MockPoolIMockRecorder) SetTakerFee(newTakerFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTakerFee", reflect.TypeOf((*MockPoolI)(nil).SetTakerFee), newTakerFee)
 }
 
 // SpotPrice mocks base method.

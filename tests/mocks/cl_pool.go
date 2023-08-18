@@ -222,17 +222,17 @@ func (mr *MockConcentratedPoolExtensionMockRecorder) GetSpreadRewardsAddress() *
 }
 
 // GetTakerFee mocks base method.
-func (m *MockConcentratedPoolExtension) GetTakerFee(ctx types.Context) types.Dec {
+func (m *MockConcentratedPoolExtension) GetTakerFee() types.Dec {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTakerFee", ctx)
+	ret := m.ctrl.Call(m, "GetTakerFee")
 	ret0, _ := ret[0].(types.Dec)
 	return ret0
 }
 
 // GetTakerFee indicates an expected call of GetTakerFee.
-func (mr *MockConcentratedPoolExtensionMockRecorder) GetTakerFee(ctx interface{}) *gomock.Call {
+func (mr *MockConcentratedPoolExtensionMockRecorder) GetTakerFee() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTakerFee", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetTakerFee), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTakerFee", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetTakerFee))
 }
 
 // GetTickSpacing mocks base method.

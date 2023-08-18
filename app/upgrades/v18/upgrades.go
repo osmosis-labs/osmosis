@@ -7,6 +7,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
+	poolmanager "github.com/osmosis-labs/osmosis/v17/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 func CreateUpgradeHandler(
@@ -23,6 +25,38 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		keepers.PoolManagerKeeper.SetParams(ctx, poolmanagertypes.DefaultParams())
+
+		err = SetAllExistingPoolsTakerFee(ctx, keepers)
+		if err != nil {
+			return nil, err
+		}
+
 		return migrations, nil
 	}
+}
+
+func SetAllExistingPoolsTakerFee(ctx sdk.Context, keepers *keepers.AppKeepers) error {
+	lastPoolId := keepers.PoolManagerKeeper.GetNextPoolId(ctx) - 1
+
+	for i := uint64(1); i <= lastPoolId; i++ {
+		pool, err := keepers.PoolManagerKeeper.GetPool(ctx, i)
+		if err != nil {
+			return err
+		}
+
+		poolManagerParams := keepers.PoolManagerKeeper.GetParams(ctx)
+		accAddress := pool.GetAddress()
+		poolBalances := keepers.BankKeeper.GetAllBalances(ctx, accAddress)
+		poolType := pool.GetType()
+
+		takerFee := poolmanager.DetermineTakerFee(poolManagerParams, poolBalances, poolType)
+
+		pool.SetTakerFee(takerFee)
+		err = keepers.GAMMKeeper.OverwritePoolV15MigrationUnsafe(ctx, pool)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -119,7 +119,7 @@ func calcPoolSharesOutGivenSingleAssetIn(
 	normalizedTokenWeightIn,
 	poolShares,
 	tokenAmountIn,
-	spreadFactor, takerFee sdk.Dec,
+	spreadFactor sdk.Dec,
 ) sdk.Dec {
 	// deduct spread factor on the in asset.
 	// We don't charge spread factor on the token amount that we imagine as unswapped (the normalized weight).
@@ -197,7 +197,7 @@ func calcSingleAssetInGivenPoolSharesOut(
 	normalizedTokenWeightIn,
 	totalPoolSharesSupply,
 	sharesAmountOut,
-	spreadFactor, takerFee sdk.Dec,
+	spreadFactor sdk.Dec,
 ) sdk.Dec {
 	// delta balanceIn is negative(tokens inside the pool increases)
 	// pool weight is always 1
@@ -215,7 +215,7 @@ func calcPoolSharesInGivenSingleAssetOut(
 	normalizedTokenWeightOut,
 	totalPoolSharesSupply,
 	tokenAmountOut,
-	spreadFactor, takerFee,
+	spreadFactor,
 	exitFee sdk.Dec,
 ) sdk.Dec {
 	tokenAmountOutFeeIncluded := tokenAmountOut.Quo(feeRatio(normalizedTokenWeightOut, spreadFactor))

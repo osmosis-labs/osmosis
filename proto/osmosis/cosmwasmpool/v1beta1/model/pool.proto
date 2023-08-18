@@ -18,6 +18,9 @@ message CosmWasmPool {
   uint64 code_id = 3;
   bytes instantiate_msg = 4
       [ (gogoproto.moretags) = "yaml:\"instantiate_msg\"" ];
+  // taker_fee is the ratio that is charged on the amount of token in.
+  // this value is assigned by the protocol at time of pool creation,
+  // however can be changed by governance.
   string taker_fee = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"taker_fee\"",

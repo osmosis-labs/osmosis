@@ -675,7 +675,6 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 					initialTotalShares,
 					initialCalcTokenOut.ToDec(),
 					spreadFactorDec,
-					sdk.ZeroDec(),
 				)
 
 				inverseCalcTokenOut := balancer.CalcSingleAssetInGivenPoolSharesOut(
@@ -684,7 +683,6 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 					initialTotalShares.Add(actualSharesOut),
 					actualSharesOut,
 					spreadFactorDec,
-					sdk.ZeroDec(),
 				)
 
 				tol := sdk.NewDec(1)

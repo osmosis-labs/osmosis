@@ -95,7 +95,7 @@ func (k Keeper) RouteExactAmountIn(
 			spreadFactor = routeSpreadFactor.MulRoundUp((spreadFactor.QuoRoundUp(sumOfSpreadFactors)))
 		}
 
-		takerFee := pool.GetTakerFee(ctx)
+		takerFee := pool.GetTakerFee()
 		tokenInAfterTakerFee, err := k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender, true)
 		if err != nil {
 			return sdk.Int{}, err
@@ -215,7 +215,7 @@ func (k Keeper) SwapExactAmountIn(
 	poolManagerParams := k.GetParams(ctx)
 
 	spreadFactor := pool.GetSpreadFactor(ctx)
-	takerFee := pool.GetTakerFee(ctx)
+	takerFee := pool.GetTakerFee()
 
 	tokenInAfterTakerFee, err := k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender, true)
 	if err != nil {
@@ -321,7 +321,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
 		}
 
-		tokenInAfterTakerFee, _ := k.calcTakerFeeExactIn(tokenIn, poolI.GetTakerFee(ctx))
+		tokenInAfterTakerFee, _ := k.calcTakerFeeExactIn(tokenIn, poolI.GetTakerFee())
 
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenInAfterTakerFee, routeStep.TokenOutDenom, spreadFactor)
 		if err != nil {
@@ -437,7 +437,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
 		}
 
-		takerFee := pool.GetTakerFee(ctx)
+		takerFee := pool.GetTakerFee()
 
 		_tokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, routeStep.TokenInDenom, insExpected[i], _tokenOut, spreadFactor)
 		if swapErr != nil {
@@ -732,7 +732,7 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 		}
 
 		spreadFactor := poolI.GetSpreadFactor(ctx)
-		takerFee := poolI.GetTakerFee(ctx)
+		takerFee := poolI.GetTakerFee()
 
 		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, routeStep.TokenInDenom, spreadFactor)
 		if err != nil {
@@ -770,7 +770,7 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 		}
 
 		spreadFactor := poolI.GetSpreadFactor(ctx)
-		takerFee := poolI.GetTakerFee(ctx)
+		takerFee := poolI.GetTakerFee()
 		osmoDiscountedSpreadFactor := cumulativeRouteSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
 
 		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, routeStep.TokenInDenom, osmoDiscountedSpreadFactor)

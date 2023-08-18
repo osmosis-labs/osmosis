@@ -101,7 +101,7 @@ func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
 	return p.SpreadFactor
 }
 
-func (p Pool) GetTakerFee(ctx sdk.Context) sdk.Dec {
+func (p Pool) GetTakerFee() sdk.Dec {
 	return p.TakerFee
 }
 

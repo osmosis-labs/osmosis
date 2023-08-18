@@ -109,7 +109,7 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 	poolType := msg.GetPoolType()
 	poolManagerParams := k.GetParams(ctx)
 
-	takerFee := determineTakerFee(poolManagerParams, poolAssets, poolType)
+	takerFee := DetermineTakerFee(poolManagerParams, poolAssets, poolType)
 
 	// Create the pool with the given pool ID.
 	pool, err := msg.CreatePool(ctx, poolId, takerFee)
@@ -223,7 +223,7 @@ func parsePoolRouteWithKey(key []byte, value []byte) (types.ModuleRoute, error) 
 
 // determineTakerFee determines what the taker fee should be based on the pool type and denoms given.
 // This taker fee can be overridden by governance after the pool is created.
-func determineTakerFee(poolManagerParams types.Params, poolAssets sdk.Coins, poolType types.PoolType) sdk.Dec {
+func DetermineTakerFee(poolManagerParams types.Params, poolAssets sdk.Coins, poolType types.PoolType) sdk.Dec {
 	if poolType == types.Stableswap {
 		return poolManagerParams.StableswapTakerFee
 	} else {

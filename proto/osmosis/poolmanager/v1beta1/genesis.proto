@@ -17,24 +17,40 @@ message Params {
     (gogoproto.moretags) = "yaml:\"pool_creation_fee\"",
     (gogoproto.nullable) = false
   ];
+  // default_taker_fee is the fee used when creating a new pool that doesn't
+  // fall under a custom pool taker fee or stableswap taker fee category.
   string default_taker_fee = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.customname) = "DefaultTakerFee",
     (gogoproto.nullable) = false
   ];
+  // stableswap_taker_fee is the fee used when creating a new pool in which all
+  // the underlying tokens are present in the stablecoin_denoms paramater entry
+  // OR has a liquid_stake_denom_pairings entry.
   string stableswap_taker_fee = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.customname) = "StableswapTakerFee",
     (gogoproto.nullable) = false
   ];
-  repeated CustomPoolTakerFee trading_pair_taker_fee = 4 [
-    (gogoproto.customname) = "CustomPoolTakerFee",
-    (gogoproto.nullable) = false
-  ];
+  // osmo_taker_fee_distribution defines the distribution of taker fees
+  // generated in OSMO. As of this writing, it has two catagories:
+  // - staking_rewards: the percent of the taker fee that gets distributed to
+  //   stakers.
+  // - community_pool: the percent of the taker fee that gets sent to the
+  //   community pool.
   TakerFeeDistributionPercentage osmo_taker_fee_distribution = 5 [
     (gogoproto.customname) = "OsmoTakerFeeDistribution",
     (gogoproto.nullable) = false
   ];
+  // non_osmo_taker_fee_distribution defines the distribution of taker fees
+  // generated in non-OSMO. As of this writing, it has two catagories:
+  // - staking_rewards: the percent of the taker fee that gets swapped to OSMO
+  //   and then distirbuted to stakers.
+  // - community_pool: the percent of the taker fee that gets sent to the
+  //   community pool. Note: If the non-OSMO asset is an authorized_quote_denom,
+  //   that denom is sent directly to the community pool. Otherwise, it is
+  //   swapped to the community_pool_denom_to_swap_non_whitelisted_assets_to and
+  //   then sent to the community pool as that denom.
   TakerFeeDistributionPercentage non_osmo_taker_fee_distribution = 6 [
     (gogoproto.customname) = "NonOsmoTakerFeeDistribution",
     (gogoproto.nullable) = false
@@ -57,11 +73,15 @@ message Params {
             "yaml:\"community_pool_denom_to_swap_non_whitelisted_assets_to\"" ];
   // stablecoin_denoms is a list of denoms that are considered stablecoins.
   // This is used to determine if a pool should use the stableswap taker
-  // fee.bool LSTs are NOT apart of this catagory, even though they are eligible
-  // for stableswap taker fees. This is determined via the
+  // fee. Note: LSTs are NOT apart of this catagory, even though they are
+  // eligible for stableswap taker fees. This is determined via the
   // liquid_stake_denom_pairings field.
   repeated string stablecoin_denoms = 9
       [ (gogoproto.moretags) = "yaml:\"stablecoin_denoms\"" ];
+  // liquid_stake_denom_pairings is a list of pairings of a natural denom with
+  // its corresponding LST denoms. If a pool is created with a natural denom
+  // that is paired with an LST denom, then the pool will be considered a
+  // stableswap pool and will use the stableswap taker fee.
   repeated LiquidStakedTokenToUnderlyingDenom liquid_stake_denom_pairings = 10
       [ (gogoproto.moretags) = "yaml:\"liquid_stake_denom_pairings\"" ];
 }
@@ -74,16 +94,6 @@ message GenesisState {
   Params params = 2 [ (gogoproto.nullable) = false ];
   // pool_routes is the container of the mappings from pool id to pool type.
   repeated ModuleRoute pool_routes = 3 [ (gogoproto.nullable) = false ];
-}
-
-// CustomPoolTakerFee defines a custom taker fee for a specific pool.
-message CustomPoolTakerFee {
-  uint64 pool_id = 1 [ (gogoproto.customname) = "PoolId" ];
-  string taker_fee = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"taker_fee\"",
-    (gogoproto.nullable) = false
-  ];
 }
 
 // TakerFeeDistributionPercentage defines what percent of the taker fee category
@@ -101,6 +111,8 @@ message TakerFeeDistributionPercentage {
   ];
 }
 
+// LiquidStakedTokenToUnderlyingDenom defines a pairing of a single natural
+// denom with its corresponding LST denoms.
 message LiquidStakedTokenToUnderlyingDenom {
   repeated string liquid_staked_token_denoms = 1
       [ (gogoproto.moretags) = "yaml:\"liquid_staked_token_denoms\"" ];

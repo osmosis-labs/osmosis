@@ -92,7 +92,7 @@ func (p Pool) GetSpreadFactor(_ sdk.Context) sdk.Dec {
 	return p.PoolParams.SwapFee
 }
 
-func (p Pool) GetTakerFee(ctx sdk.Context) sdk.Dec {
+func (p Pool) GetTakerFee() sdk.Dec {
 	return p.PoolParams.TakerFee
 }
 
@@ -673,7 +673,6 @@ func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, spreadFactor sdk.Dec, token
 		totalShares.ToDec(),
 		tokenIn.Amount.ToDec(),
 		spreadFactor,
-		p.PoolParams.TakerFee,
 	).TruncateInt(), nil
 }
 
@@ -911,7 +910,6 @@ func (p *Pool) CalcTokenInShareAmountOut(
 		p.GetTotalShares().ToDec(),
 		shareOutAmount.ToDec(),
 		spreadFactor,
-		p.GetTakerFee(ctx),
 	).Ceil().TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
@@ -939,7 +937,6 @@ func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
 		p.GetTotalShares().ToDec(),
 		shareOutAmount.ToDec(),
 		p.GetSpreadFactor(ctx),
-		p.GetTakerFee(ctx),
 	).TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
@@ -971,7 +968,6 @@ func (p *Pool) ExitSwapExactAmountOut(
 		p.GetTotalShares().ToDec(),
 		tokenOut.Amount.ToDec(),
 		p.GetSpreadFactor(ctx),
-		p.GetTakerFee(ctx),
 		p.GetExitFee(ctx),
 	).TruncateInt()
 

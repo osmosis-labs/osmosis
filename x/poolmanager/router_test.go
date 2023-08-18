@@ -1374,7 +1374,7 @@ func (s *KeeperTestSuite) calcInGivenOutAmountAsSeparateSwaps(osmoFeeReduced boo
 			// utilize the routeSpreadFactor, sumOfSpreadFactors, and current pool swap fee to calculate the new reduced swap fee
 			spreadFactor := routeSpreadFactor.Mul((currentPoolSpreadFactor.Quo(sumOfSpreadFactors)))
 
-			takerFee := hopPool.GetTakerFee(cacheCtx)
+			takerFee := hopPool.GetTakerFee()
 
 			swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
 			s.Require().NoError(err)
@@ -1397,7 +1397,7 @@ func (s *KeeperTestSuite) calcInGivenOutAmountAsSeparateSwaps(osmoFeeReduced boo
 			s.Require().NoError(err)
 			updatedPoolSpreadFactor := hopPool.GetSpreadFactor(cacheCtx)
 
-			takerFee := hopPool.GetTakerFee(cacheCtx)
+			takerFee := hopPool.GetTakerFee()
 
 			swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
 			s.Require().NoError(err)
@@ -1439,7 +1439,7 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(osmoFeeReduced
 			// utilize the routeSpreadFactor, sumOfSpreadFactors, and current pool swap fee to calculate the new reduced swap fee
 			spreadFactor := routeSpreadFactor.Mul(pool.GetSpreadFactor(cacheCtx).Quo(sumOfSpreadFactors))
 
-			takerFee := pool.GetTakerFee(cacheCtx)
+			takerFee := pool.GetTakerFee()
 
 			nextTokenInAfterTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
 
@@ -1462,7 +1462,7 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(osmoFeeReduced
 			// utilize the routeSpreadFactor, sumOfSpreadFactors, and current pool swap fee to calculate the new reduced swap fee
 			spreadFactor := pool.GetSpreadFactor(cacheCtx)
 
-			takerFee := pool.GetTakerFee(cacheCtx)
+			takerFee := pool.GetTakerFee()
 
 			nextTokenInAfterTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
 
