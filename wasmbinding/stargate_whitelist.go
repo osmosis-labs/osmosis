@@ -105,6 +105,8 @@ func init() {
 	// lockup
 	setWhitelistedQuery("/osmosis.lockup.Query/ModuleBalance", &lockuptypes.ModuleBalanceResponse{})
 	setWhitelistedQuery("/osmosis.lockup.Query/ModuleLockedAmount", &lockuptypes.ModuleLockedAmountResponse{})
+	// Warning: it iterates over every single lock account has, which means this query can have unbounded gas
+	setWhitelistedQuery("/osmosis.lockup.Query/AccountLockedCoins", &lockuptypes.AccountLockedCoinsResponse{})
 	setWhitelistedQuery("/osmosis.lockup.Query/AccountUnlockableCoins", &lockuptypes.AccountUnlockableCoinsResponse{})
 	setWhitelistedQuery("/osmosis.lockup.Query/AccountUnlockingCoins", &lockuptypes.AccountUnlockingCoinsResponse{})
 	setWhitelistedQuery("/osmosis.lockup.Query/LockedDenom", &lockuptypes.LockedDenomResponse{})
