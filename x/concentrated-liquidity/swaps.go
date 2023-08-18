@@ -222,7 +222,7 @@ func (k Keeper) swapOutAmtGivenIn(
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, err
 	}
-
+	tokenIn = sdk.NewCoin(tokenIn.Denom, swapResult.AmountIn)
 	tokenOut := sdk.NewCoin(tokenOutDenom, swapResult.AmountOut)
 
 	if !tokenOut.Amount.IsPositive() {
