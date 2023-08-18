@@ -1038,11 +1038,11 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 
 	s.Eventually(
 		func() bool {
-			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := chainABNode.QueryPropTally(propNumber)
+			propTally, err := chainABNode.QueryPropTally(propNumber)
 			if err != nil {
 				return false
 			}
-			if abstainTotal.Int64()+noTotal.Int64()+noWithVetoTotal.Int64()+yesTotal.Int64() <= 0 {
+			if propTally.Abstain.Int64()+propTally.No.Int64()+propTally.NoWithVeto.Int64()+propTally.Yes.Int64() <= 0 {
 				return false
 			}
 			return true
@@ -1051,8 +1051,9 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 		10*time.Millisecond,
 		"Osmosis node failed to retrieve prop tally",
 	)
-	noTotal, _, _, _, _ := chainABNode.QueryPropTally(propNumber)
-	noTotalFinal, err := strconv.Atoi(noTotal.String())
+	propTally, err := chainABNode.QueryPropTally(propNumber)
+	s.Require().NoError(err)
+	noTotalFinal, err := strconv.Atoi(propTally.No.String())
 	s.NoError(err)
 
 	s.Eventually(
