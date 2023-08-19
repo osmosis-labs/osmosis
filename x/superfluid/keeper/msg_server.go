@@ -242,3 +242,14 @@ func (server msgServer) AddToConcentratedLiquiditySuperfluidPosition(goCtx conte
 
 	return &types.MsgAddToConcentratedLiquiditySuperfluidPositionResponse{PositionId: positionData.ID, Amount0: positionData.Amount0, Amount1: positionData.Amount1, LockId: newLockId, NewLiquidity: positionData.Liquidity}, nil
 }
+
+func (server msgServer) UnbondConvertAndStake(goCtx context.Context, msg *types.MsgUnbondConvertAndStake) (*types.MsgUnbondConvertAndStakeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	totalAmtConverted, err := server.keeper.UnbondConvertAndStake(ctx, msg.LockId, msg.Sender, msg.ValAddr, msg.MinAmtToStake, msg.SharesToConvert)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUnbondConvertAndStakeResponse{TotalAmtStaked: totalAmtConverted}, nil
+}

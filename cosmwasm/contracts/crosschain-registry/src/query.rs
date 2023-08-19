@@ -1,6 +1,7 @@
 use crate::state::{
-    CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_BECH32_PREFIX_REVERSE_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP,
-    CHANNEL_ON_CHAIN_CHAIN_MAP,
+    CHAIN_PFM_MAP, CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+    CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP, DENOM_ALIAS_MAP,
+    DENOM_ALIAS_REVERSE_MAP,
 };
 
 use cosmwasm_std::{Deps, StdError};
@@ -88,4 +89,42 @@ pub fn query_chain_from_channel_chain_pair(
     }
 
     Ok(chain.value)
+}
+
+pub fn query_chain_has_pfm(deps: Deps, chain: String) -> bool {
+    let chain = chain.to_lowercase();
+    if let Ok(chain_pfm) = CHAIN_PFM_MAP.load(deps.storage, &chain) {
+        deps.api.debug(&format!("{chain_pfm:?}"));
+        chain_pfm.is_validated()
+    } else {
+        false
+    }
+}
+
+pub fn query_denom_path_for_alias(deps: Deps, alias: &str) -> Result<String, StdError> {
+    let path = DENOM_ALIAS_REVERSE_MAP
+        .load(deps.storage, alias)
+        .map_err(|_| StdError::GenericErr {
+            msg: format!("alias {alias} cannot be found"),
+        })?;
+
+    if !path.enabled {
+        return Err(StdError::GenericErr {
+            msg: format!("alias {alias} is disabled"),
+        });
+    }
+
+    Ok(path.value)
+}
+
+pub fn query_alias_for_denom_path(deps: Deps, denom_path: &str) -> Result<String, StdError> {
+    let alias = DENOM_ALIAS_MAP.load(deps.storage, denom_path)?;
+
+    if !alias.enabled {
+        return Err(StdError::generic_err(format!(
+            "alias for path {denom_path} is disabled"
+        )));
+    }
+
+    Ok(alias.value)
 }
