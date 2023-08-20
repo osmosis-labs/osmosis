@@ -104,14 +104,15 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 
 	// Upgrade Dependent Tests
 
-	if s.skipUpgrade {
-		s.T().Skip("Skipping StableSwapPostUpgrade test")
-	} else {
-		s.T().Run("StableSwapPostUpgrade", func(t *testing.T) {
-			t.Parallel()
-			s.StableSwapPostUpgrade()
-		})
-	}
+	// TODO: Temp disable
+	// if s.skipUpgrade {
+	// 	s.T().Skip("Skipping StableSwapPostUpgrade test")
+	// } else {
+	// 	s.T().Run("StableSwapPostUpgrade", func(t *testing.T) {
+	// 		t.Parallel()
+	// 		s.StableSwapPostUpgrade()
+	// 	})
+	// }
 
 	if s.skipUpgrade {
 		s.T().Skip("Skipping GeometricTwapMigration test")

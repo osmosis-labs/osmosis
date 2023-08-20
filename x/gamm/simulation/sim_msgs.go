@@ -147,8 +147,10 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 	// calculate the minimum number of tokens received from input of tokenIn
 	// N.B. Calling the Msg calls it via the pool manager, which charges the taker fee.
 	// We therefore need to add the taker fee to the spread factor when calling the calc method.
-	totalFees := pool.GetSpreadFactor(ctx).Add(pool.GetTakerFee())
-	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, randomCoinSubset, coinOut.Denom, totalFees)
+	amountInAfterTakerFee := randomCoinSubset[0].Amount.ToDec().Mul(sdk.OneDec().Sub(pool.GetTakerFee()))
+	tokenInAfterTakerFee := sdk.NewCoin(randomCoinSubset[0].Denom, amountInAfterTakerFee.TruncateInt())
+
+	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenInAfterTakerFee), coinOut.Denom, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}
