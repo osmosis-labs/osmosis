@@ -10,8 +10,7 @@ import (
 
 const (
 	// Precomputed values for min and max tick
-	// With 9000000 ticks per order of magnitude, 10^-30 and 10^38
-	MinInitializedTick, MaxTick int64 = -270000000, 342000000
+	MinInitializedTick, MaxTick int64 = -108000000, 342000000
 	// If we consume all liquidity and cross the min initialized tick,
 	// our current tick will equal to MinInitializedTick - 1 with zero liquidity.
 	// However, note that this tick cannot be crossed. If current tick
@@ -28,12 +27,8 @@ const (
 )
 
 var (
-	// TODO: change these
-	MaxSpotPrice = sdk.MustNewDecFromStr("100000000000000000000000000000000000000")
-	MinSpotPrice = sdk.MustNewDecFromStr("0.000000000000000001") // 10^-12
-
-	MaxSpotPriceBigDec = osmomath.BigDecFromSDKDec(MaxSpotPrice)
-	MinSpotPriceBigDec = osmomath.SmallestDec()
+	MaxSpotPrice       = sdk.MustNewDecFromStr("100000000000000000000000000000000000000")
+	MinSpotPrice       = sdk.MustNewDecFromStr("0.000000000001") // 10^-12
 	MaxSqrtPrice       = osmomath.MustMonotonicSqrt(MaxSpotPrice)
 	MinSqrtPrice       = osmomath.MustMonotonicSqrt(MinSpotPrice)
 	MaxSqrtPriceBigDec = osmomath.BigDecFromSDKDec(MaxSqrtPrice)

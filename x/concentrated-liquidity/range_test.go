@@ -439,7 +439,7 @@ func (s *KeeperTestSuite) getInitialPositionAssets(pool types.ConcentratedPoolEx
 
 	// Calculate asset amounts that would be required to get the required spot price (rounding up on asset1 to ensure we stay in the intended tick)
 	asset0Amount := sdk.NewInt(100000000000000)
-	asset1Amount := osmomath.BigDecFromSDKDec(sdk.NewDecFromInt(asset0Amount)).Mul(requiredPrice).Ceil().SDKDec().TruncateInt()
+	asset1Amount := sdk.NewDecFromInt(asset0Amount).Mul(requiredPrice.SDKDec()).Ceil().TruncateInt()
 
 	assetCoins := sdk.NewCoins(
 		sdk.NewCoin(pool.GetToken0(), asset0Amount),

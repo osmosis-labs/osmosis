@@ -758,7 +758,7 @@ var (
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(12892)),
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(64417624)),
 			expectedTick: func() int64 {
-				tick, _ := math.SqrtPriceToTickRoundDownSpacing(sqrt4994, DefaultTickSpacing)
+				tick, _ := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt4994), DefaultTickSpacing)
 				return tick
 			}(),
 			// Since the next sqrt price is based on the price limit, we can calculate this directly.
@@ -896,7 +896,7 @@ var (
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(64417624)),
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000085792039652"),
 			expectedTick: func() int64 {
-				tick, _ := math.SqrtPriceToTickRoundDownSpacing(sqrt4994, DefaultTickSpacing)
+				tick, _ := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt4994), DefaultTickSpacing)
 				return tick
 			}(),
 			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.668238976219012614"),
@@ -2027,9 +2027,9 @@ func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.Concent
 
 	newLowerTick, newUpperTick := s.lowerUpperPricesToTick(test.newLowerPrice, test.newUpperPrice, pool.GetTickSpacing())
 
-	_, lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
+	lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
 	s.Require().NoError(err)
-	_, upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
+	upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
 	s.Require().NoError(err)
 
 	if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
@@ -2042,8 +2042,8 @@ func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.Concent
 }
 
 func (s *KeeperTestSuite) lowerUpperPricesToTick(lowerPrice, upperPrice sdk.Dec, tickSpacing uint64) (int64, int64) {
-	lowerSqrtPrice := osmomath.MustMonotonicSqrtBigDec(osmomath.BigDecFromSDKDec(lowerPrice))
-	newLowerTick, err := clmath.SqrtPriceToTickRoundDownSpacing(lowerSqrtPrice, tickSpacing)
+	lowerSqrtPrice := osmomath.MustMonotonicSqrt(lowerPrice)
+	newLowerTick, err := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(lowerSqrtPrice), tickSpacing)
 	s.Require().NoError(err)
 	upperSqrtPrice := osmomath.MustMonotonicSqrt(upperPrice)
 	newUpperTick, err := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(upperSqrtPrice), tickSpacing)

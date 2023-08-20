@@ -321,7 +321,7 @@ func iteratorToNextInitializedTickSqrtPriceTarget(nextInitTickIter db.Iterator, 
 	}
 
 	// Utilizing the next initialized tick, we find the corresponding nextInitializedTickSqrtPrice (the target sqrt price).
-	_, nextInitializedTickSqrtPrice, err := math.TickToSqrtPrice(nextInitializedTick)
+	nextInitializedTickSqrtPrice, err := math.TickToSqrtPrice(nextInitializedTick)
 	if err != nil {
 		return 0, osmomath.BigDec{}, osmomath.BigDec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextInitializedTick)
 	}

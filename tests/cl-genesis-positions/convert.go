@@ -134,20 +134,20 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			continue
 		}
 
-		sqrtPriceLower, err := osmomath.MonotonicSqrtBigDec(osmomath.NewBigDec(2))
+		sqrtPriceLower, err := lowerPrice.ApproxRoot(2)
 		if err != nil {
 			panic(err)
 		}
-		lowerTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPriceLower, pool.GetTickSpacing())
+		lowerTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrtPriceLower), pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}
 
-		sqrtPriceUpper, err := osmomath.MonotonicSqrtBigDec(osmomath.NewBigDec(2))
+		sqrtPriceUpper, err := upperPrice.ApproxRoot(2)
 		if err != nil {
 			panic(err)
 		}
-		upperTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPriceUpper, pool.GetTickSpacing())
+		upperTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrtPriceUpper), pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}

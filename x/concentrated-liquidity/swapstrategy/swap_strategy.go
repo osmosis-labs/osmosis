@@ -119,5 +119,10 @@ func GetSqrtPriceLimit(priceLimit sdk.Dec, zeroForOne bool) (osmomath.BigDec, er
 		return osmomath.BigDecFromSDKDec(types.MaxSqrtPrice), nil
 	}
 
-	return osmomath.MonotonicSqrtBigDec(osmomath.BigDecFromSDKDec(priceLimit))
+	sqrtPriceLimit, err := osmomath.MonotonicSqrt(priceLimit)
+	if err != nil {
+		return osmomath.BigDec{}, err
+	}
+
+	return osmomath.BigDecFromSDKDec(sqrtPriceLimit), nil
 }

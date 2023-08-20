@@ -63,7 +63,7 @@ func (s *KeeperTestSuite) CreatePositionTickSpacingsFromCurrentTick(poolId uint6
 
 // tickToSqrtPrice a helper to convert a tick to a sqrt price.
 func (s *KeeperTestSuite) tickToSqrtPrice(tick int64) osmomath.BigDec {
-	_, sqrtPrice, err := math.TickToSqrtPrice(tick)
+	sqrtPrice, err := math.TickToSqrtPrice(tick)
 	s.Require().NoError(err)
 	return sqrtPrice
 }

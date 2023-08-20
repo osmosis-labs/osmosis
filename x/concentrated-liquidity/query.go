@@ -152,7 +152,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	swapStrategy := swapstrategy.New(zeroForOne, osmomath.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
 	currentTick := p.GetCurrentTick()
-	_, currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick)
+	currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick)
 	if err != nil {
 		return []queryproto.TickLiquidityNet{}, err
 	}
@@ -162,7 +162,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	// function to validate that start tick and bound tick are
 	// between current tick and the min/max tick depending on the swap direction.
 	validateTickIsInValidRange := func(validateTick sdk.Int) error {
-		_, validateSqrtPrice, err := math.TickToSqrtPrice(validateTick.Int64())
+		validateSqrtPrice, err := math.TickToSqrtPrice(validateTick.Int64())
 		if err != nil {
 			return err
 		}

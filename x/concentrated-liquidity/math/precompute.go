@@ -36,9 +36,9 @@ var (
 // -1 => (0.1, 10^(types.ExponentAtPriceOne - 1), 9 * (types.ExponentAtPriceOne - 1))
 type tickExpIndexData struct {
 	// if price < initialPrice, we are not in this exponent range.
-	initialPrice osmomath.BigDec
+	initialPrice sdk.Dec
 	// if price >= maxPrice, we are not in this exponent range.
-	maxPrice osmomath.BigDec
+	maxPrice sdk.Dec
 	// TODO: Change to normal Dec, if min spot price increases.
 	// additive increment per tick here.
 	additiveIncrementPerTick osmomath.BigDec
@@ -50,13 +50,13 @@ var tickExpCache map[int64]*tickExpIndexData = make(map[int64]*tickExpIndexData)
 
 func buildTickExpCache() {
 	// build positive indices first
-	maxPrice := osmomathBigOneDec
+	maxPrice := sdkOneDec
 	curExpIndex := int64(0)
-	for maxPrice.LT(osmomath.BigDecFromSDKDec(types.MaxSpotPrice)) {
+	for maxPrice.LT(types.MaxSpotPrice) {
 		tickExpCache[curExpIndex] = &tickExpIndexData{
 			// price range 10^curExpIndex to 10^(curExpIndex + 1). (10, 100)
-			initialPrice:             osmomathBigTenDec.PowerInteger(uint64(curExpIndex)),
-			maxPrice:                 osmomathBigTenDec.PowerInteger(uint64(curExpIndex + 1)),
+			initialPrice:             sdkTenDec.Power(uint64(curExpIndex)),
+			maxPrice:                 sdkTenDec.Power(uint64(curExpIndex + 1)),
 			additiveIncrementPerTick: powTenBigDec(types.ExponentAtPriceOne + curExpIndex),
 			initialTick:              geometricExponentIncrementDistanceInTicks * curExpIndex,
 		}
@@ -64,13 +64,13 @@ func buildTickExpCache() {
 		curExpIndex += 1
 	}
 
-	minPrice := osmomathBigOneDec
+	minPrice := sdkOneDec
 	curExpIndex = -1
-	for minPrice.GT(osmomath.NewDecWithPrec(1, 30)) {
+	for minPrice.GT(types.MinSpotPrice) {
 		tickExpCache[curExpIndex] = &tickExpIndexData{
 			// price range 10^curExpIndex to 10^(curExpIndex + 1). (0.001, 0.01)
-			initialPrice:             powTenBigDec(curExpIndex),
-			maxPrice:                 powTenBigDec(curExpIndex + 1),
+			initialPrice:             powTenBigDec(curExpIndex).SDKDec(),
+			maxPrice:                 powTenBigDec(curExpIndex + 1).SDKDec(),
 			additiveIncrementPerTick: powTenBigDec(types.ExponentAtPriceOne + curExpIndex),
 			initialTick:              geometricExponentIncrementDistanceInTicks * curExpIndex,
 		}

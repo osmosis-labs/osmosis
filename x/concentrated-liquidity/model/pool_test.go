@@ -567,7 +567,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 	var (
 		tickToSqrtPrice = func(tick int64) osmomath.BigDec {
-			_, sqrtPrice, err := clmath.TickToSqrtPrice(tick)
+			sqrtPrice, err := clmath.TickToSqrtPrice(tick)
 			suite.Require().NoError(err)
 			return sqrtPrice
 		}
@@ -695,7 +695,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			pool := model.Pool{
 				CurrentTick: tc.currentTick,
 			}
-			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
+			currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
 			pool.CurrentSqrtPrice = currenTicktSqrtPrice
 
 			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
@@ -790,7 +790,7 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 				CurrentTick:          tc.currentTick,
 				CurrentTickLiquidity: defaultLiquidityAmt,
 			}
-			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
+			currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
 			pool.CurrentSqrtPrice = currenTicktSqrtPrice
 
 			wasUpdated := pool.UpdateLiquidityIfActivePosition(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
