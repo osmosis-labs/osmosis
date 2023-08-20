@@ -906,17 +906,17 @@ func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, tokenIn sdk.Coin, take
 }
 
 func (k Keeper) calcTakerFeeExactIn(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
-	takerFeeDec := tokenIn.Amount.ToDec().Mul(takerFee)
-	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, takerFeeDec.TruncateInt())
-	tokenInAfterTakerFee := sdk.NewCoin(tokenIn.Denom, tokenIn.Amount.Sub(takerFeeCoin.Amount))
+	amountInAfterTakerFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(takerFee))
+	tokenInAfterTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterTakerFee.TruncateInt())
+	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, tokenIn.Amount.Sub(tokenInAfterTakerFee.Amount))
 
 	return tokenInAfterTakerFee, takerFeeCoin
 }
 
 func (k Keeper) calcTakerFeeExactOut(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
-	takerFeeDec := tokenIn.Amount.ToDec().Mul(takerFee)
-	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, takerFeeDec.RoundInt())
-	tokenInAfterTakerFee := sdk.NewCoin(tokenIn.Denom, tokenIn.Amount.Add(takerFeeCoin.Amount))
+	amountInAfterTakerFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(takerFee))
+	tokenInAfterTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterTakerFee.RoundInt())
+	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, tokenIn.Amount.Add(tokenInAfterTakerFee.Amount))
 
 	return tokenInAfterTakerFee, takerFeeCoin
 }

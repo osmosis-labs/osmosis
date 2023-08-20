@@ -22,12 +22,14 @@ var defaultFeePerTx = sdk.NewInt(1000)
 // amountIn - amount being swapped
 // spreadFactor - pool's spread factor
 // poolLiquidity - current pool liquidity
-func calculateSpreadRewardGrowthGlobal(amountIn, spreadFactor, poolLiquidity sdk.Dec) sdk.Dec {
-	// First we get total spread reward charge for the swap (ΔY * spreadFactor)
-	spreadRewardChargeTotal := amountIn.Mul(spreadFactor)
+func calculateSpreadRewardGrowthGlobal(spreadRewardChargeTotal, poolLiquidity sdk.Dec) sdk.Dec {
+	// // First we get total spread reward charge for the swap (ΔY * spreadFactor)
+	// spreadRewardChargeTotal := amountIn.Mul(spreadFactor)
 
 	// Calculating spread reward growth global (dividing by pool liquidity to find spread reward growth per unit of virtual liquidity)
-	spreadRewardGrowthGlobal := spreadRewardChargeTotal.Quo(poolLiquidity)
+	spreadRewardGrowthGlobal := spreadRewardChargeTotal.QuoTruncate(poolLiquidity)
+	// fmt.Println("AAA1 spreadRewardGrowthGlobal: ", spreadRewardGrowthGlobal)
+	// fmt.Println("AAA2 poolLiquidity: ", poolLiquidity)
 	return spreadRewardGrowthGlobal
 }
 
@@ -108,10 +110,19 @@ func calculateUncollectedSpreadRewards(positionLiquidity, spreadRewardGrowthBelo
 	// Calculating spread reward growth inside range [-1200; 400]
 	spreadRewardGrowthInside := calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGrowthBelow, spreadRewardGrowthAbove)
 
+	// fmt.Println("spreadRewardGrowthInside: ", spreadRewardGrowthInside)
+	// fmt.Println("spreadRewardGrowthGlobal: ", spreadRewardGrowthGlobal)
+	// fmt.Println("spreadRewardGrowthBelow: ", spreadRewardGrowthBelow)
+	// fmt.Println("spreadRewardGrowthAbove: ", spreadRewardGrowthAbove)
+
 	// Calculating uncollected spread rewards
 	// Formula for finding uncollected spread rewards in time range [t1; t2]:
 	// F_u = position_liquidity * (spread_rewards_growth_inside_t2 - spread_rewards_growth_inside_t1).
 	spreadRewardsUncollected := positionLiquidity.Mul(spreadRewardGrowthInside.Sub(spreadRewardGrowthInsideLast))
+	// fmt.Println("spreadRewardsUncollected: ", spreadRewardsUncollected)
+	// fmt.Println("positionLiquidity: ", positionLiquidity)
+	// fmt.Println("spreadRewardGrowthInside: ", spreadRewardGrowthInside)
+	// fmt.Println("spreadRewardGrowthInsideLast: ", spreadRewardGrowthInsideLast)
 
 	return spreadRewardsUncollected
 }

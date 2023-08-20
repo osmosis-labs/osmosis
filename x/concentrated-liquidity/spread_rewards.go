@@ -245,12 +245,16 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 	if err != nil {
 		return nil, err
 	}
+	// fmt.Println("ADAM spreadRewardGrowthOutside", spreadRewardGrowthOutside)
+	// fmt.Println("ADAM spreadRewardAccumulator.GetValue() pre", spreadRewardAccumulator.GetValue())
 
 	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
 	spreadRewardsClaimed, forfeitedDust, err := updateAccumAndClaimRewards(spreadRewardAccumulator, positionKey, spreadRewardGrowthOutside)
 	if err != nil {
 		return nil, err
 	}
+	// fmt.Println("ADAM spreadRewardAccumulator.GetValue() post", spreadRewardAccumulator.GetValue())
+	// fmt.Println("ADAM spreadRewardsClaimed", spreadRewardsClaimed)
 
 	// add foreited dust back to the global accumulator
 	if !forfeitedDust.IsZero() {
@@ -266,8 +270,12 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 		// Total shares remaining can be zero if we claim in withdrawPosition for the last position in the pool.
 		// The shares are decremented in osmoutils/accum.ClaimRewards.
 		if !totalSharesRemaining.IsZero() {
+			// fmt.Println("ADAM forfeitedDust", forfeitedDust)
+			// fmt.Println("ADAM totalSharesRemaining", totalSharesRemaining)
 			forfeitedDustPerShare := forfeitedDust.QuoDecTruncate(totalSharesRemaining)
+			// fmt.Println("ADAM forfeitedDustPerShare", forfeitedDustPerShare)
 			spreadRewardAccumulator.AddToAccumulator(forfeitedDustPerShare)
+			// fmt.Println("ADAM spreadRewardAccumulator.GetValue()", spreadRewardAccumulator.GetValue())
 		}
 	}
 
@@ -303,7 +311,10 @@ func updatePositionToInitValuePlusGrowthOutside(accumulator *accum.AccumulatorOb
 	// - Then, during claiming in osmoutils.ClaimRewards, we perform the following computation:
 	// growth_global_at{current block time} - (growth_inside_at_{last time of update} + growth_outside_at_{current block time of update}})
 	// which ends up being equal to growth_inside_from_{last_time_of_update}_to_{current block time of update}}.
+	// fmt.Println("growthoutside in spread rewards claim", growthOutside)
+	// fmt.Println("position.AccumValuePerShare in spread rewards claim", position.AccumValuePerShare)
 	intervalAccumulationOutside := position.AccumValuePerShare.Add(growthOutside...)
+	// fmt.Println("intervalAccumulationOutside in spread rewards claim", intervalAccumulationOutside)
 	err = accumulator.SetPositionIntervalAccumulation(positionKey, intervalAccumulationOutside)
 	if err != nil {
 		return err

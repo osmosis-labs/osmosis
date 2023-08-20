@@ -103,7 +103,7 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 
 // CreateConcentratedPosition creates a concentrated position from [lowerTick; upperTick] in pool with id of poolId
 // token{0,1} - liquidity to create position with
-func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, tokens string, token0MinAmt, token1MinAmt int64, poolId uint64) uint64 {
+func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, tokens string, token0MinAmt, token1MinAmt int64, poolId uint64) (uint64, sdk.Dec) {
 	n.LogActionF("creating concentrated position")
 	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
 	// fees = 1250 (because 50,000 * 0.0025 = 1250)
@@ -114,9 +114,12 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 	positionID, err := extractPositionIdFromResponse(resp.Bytes())
 	require.NoError(n.t, err)
 
+	liquidity, err := extractLiquidityFromResponse(resp.Bytes())
+	require.NoError(n.t, err)
+
 	n.LogActionF("successfully created concentrated position from %s to %s", lowerTick, upperTick)
 
-	return positionID
+	return positionID, liquidity
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) int {
@@ -580,6 +583,10 @@ func GetPositionID(responseJson map[string]interface{}) (string, error) {
 	return ParseEvent(responseJson, "position_id")
 }
 
+func GetLiquidity(responseJson map[string]interface{}) (string, error) {
+	return ParseEvent(responseJson, "liquidity")
+}
+
 func ParseEvent(responseJson map[string]interface{}, field string) (string, error) {
 	logs, ok := responseJson["logs"].([]interface{})
 	if !ok {
@@ -854,6 +861,26 @@ func extractPositionIdFromResponse(responseBytes []byte) (uint64, error) {
 	positionID, err := strconv.ParseUint(positionIDString, 10, 64)
 	if err != nil {
 		return 0, err
+	}
+
+	return positionID, nil
+}
+
+func extractLiquidityFromResponse(responseBytes []byte) (sdk.Dec, error) {
+	var txResponse map[string]interface{}
+	err := json.Unmarshal(responseBytes, &txResponse)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	liquidityString, err := GetLiquidity(txResponse)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	positionID, err := sdk.NewDecFromStr(liquidityString)
+	if err != nil {
+		return sdk.Dec{}, err
 	}
 
 	return positionID, nil

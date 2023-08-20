@@ -113,7 +113,11 @@ func (ss *SwapState) updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal sdk.
 	// We round down here since we want to avoid overdistributing (the "spread factor charge" refers to
 	// the total spread factors that will be accrued to the spread factor accumulator)
 	spreadFactorsAccruedPerUnitOfLiquidity := spreadRewardChargeTotal.QuoTruncate(ss.liquidity)
+	// fmt.Println("AAA1 spreadRewardChargeTotal", spreadRewardChargeTotal)
+	// fmt.Println("AAA2 ss.liquidity", ss.liquidity)
 	ss.globalSpreadRewardGrowthPerUnitLiquidity.AddMut(spreadFactorsAccruedPerUnitOfLiquidity)
+	// fmt.Println("AAA3 spreadFactorsAccruedPerUnitOfLiquidity", spreadFactorsAccruedPerUnitOfLiquidity)
+	// fmt.Println("ADAM ss.globalSpreadRewardGrowthPerUnitLiquidity", ss.globalSpreadRewardGrowthPerUnitLiquidity)
 }
 
 func (k Keeper) SwapExactAmountIn(
@@ -349,6 +353,8 @@ func (k Keeper) computeOutAmtGivenIn(
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
 
+	fmt.Println("ADAM TokenIn", tokenInMin)
+
 	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(p, spreadFactor, tokenInMin.Denom, priceLimit)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
@@ -444,6 +450,7 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
 	spreadRewardGrowth := sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.globalSpreadRewardGrowthPerUnitLiquidity)
+	fmt.Println("ADAM spreadRewardGrowth", spreadRewardGrowth)
 	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(spreadRewardGrowth))
 
 	// Coin amounts require int values
