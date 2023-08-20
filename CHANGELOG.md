@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#6071](https://github.com/osmosis-labs/osmosis/pull/6071) reduce number of returns for UpdatePosition and TicksToSqrtPrice functions
 * [#5906](https://github.com/osmosis-labs/osmosis/pull/5906) Add `AccountLockedCoins` query in lockup module to stargate whitelist.
+* [#6053](https://github.com/osmosis-labs/osmosis/pull/6053) monotonic sqrt with 36 decimals
 
 ## v17.0.0
 
@@ -59,7 +60,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5983](https://github.com/osmosis-labs/osmosis/pull/5983) refactor(CL): 6 return values in CL CreatePosition with a struct
 * [#6004](https://github.com/osmosis-labs/osmosis/pull/6004) reduce number of returns for creating full range position
 * [#6018](https://github.com/osmosis-labs/osmosis/pull/6018) golangci: add unused parameters linter
-* [#6033](https://github.com/osmosis-labs/osmosis/pull/6033) change tick API from sdk.Dec to osmomath.BigDec
 
 ### Features
 
