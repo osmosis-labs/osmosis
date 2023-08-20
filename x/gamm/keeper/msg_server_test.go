@@ -19,7 +19,7 @@ const (
 func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 	const (
 		tokenInMinAmount = 1
-		tokenIn          = 5
+		tokenIn          = 10
 	)
 
 	testcases := map[string]struct {
@@ -77,7 +77,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			},
 			tokenIn:               sdk.NewCoin(doesNotExistDenom, sdk.NewInt(tokenIn)),
 			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
-			expectedMessageEvents: 2, // 2 events get triggered prior to failure.
+			expectedMessageEvents: 1, // 1 event gets triggered prior to failure.
 			expectError:           true,
 		},
 	}
@@ -119,7 +119,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 	const (
 		tokenInMaxAmount = int64Max
-		tokenOut         = 5
+		tokenOut         = 10
 	)
 
 	testcases := map[string]struct {

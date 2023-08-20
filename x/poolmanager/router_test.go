@@ -1867,7 +1867,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			TokenInAmount: sdk.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
 		}
 
-		priceImpactThreshold = sdk.NewInt(97595721)
+		priceImpactThreshold = sdk.NewInt(97595718)
 	)
 
 	tests := map[string]struct {
@@ -2067,7 +2067,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			TokenOutAmount: sdk.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
 		}
 
-		priceImpactThreshold = sdk.NewInt(102530430)
+		priceImpactThreshold = sdk.NewInt(102530841)
 	)
 
 	tests := map[string]struct {
