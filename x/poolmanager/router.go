@@ -101,15 +101,10 @@ func (k Keeper) RouteExactAmountIn(
 			return sdk.Int{}, err
 		}
 
-		fmt.Println("tokenInAfterTakerFee: ", tokenInAfterTakerFee)
-
 		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterTakerFee, routeStep.TokenOutDenom, _outMinAmount, spreadFactor)
-		fmt.Println("err: ", err)
 		if err != nil {
 			return sdk.Int{}, err
 		}
-
-		fmt.Println("iteration i: ", i)
 
 		// Chain output of current pool as the input for the next routed pool
 		tokenIn = sdk.NewCoin(routeStep.TokenOutDenom, tokenOutAmount)
