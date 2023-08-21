@@ -2,6 +2,8 @@
 package cosmwasmpool
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -78,7 +80,23 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 	if err != nil {
 		return nil, err
 	}
-	return cwPool, nil
+
+	poolI, err := asPoolI(cwPool)
+	if err != nil {
+		return nil, err
+	}
+	return poolI, nil
+}
+
+func asPoolI(cwPool types.CosmWasmExtension) (poolmanagertypes.PoolI, error) {
+	// Attempt to convert the concentratedPool to a poolmanagertypes.PoolI
+	pool, ok := cwPool.(poolmanagertypes.PoolI)
+	if !ok {
+		// If the conversion fails, return an error
+		return nil, fmt.Errorf("given pool does not implement CosmWasmExtension, implements %T", pool)
+	}
+	// Return the converted value
+	return pool, nil
 }
 
 // GetPools retrieves all pool objects stored in the keeper.

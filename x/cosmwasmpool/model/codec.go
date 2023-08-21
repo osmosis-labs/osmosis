@@ -23,10 +23,12 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		"osmosis.poolmanager.v1beta1.PoolI",
 		(*poolmanagertypes.PoolI)(nil),
 		&Pool{},
+		&CosmWasmPool{},
 	)
 	registry.RegisterInterface(
 		"osmosis.cosmwasmpool.v1beta1.CosmWasmExtension",
 		(*types.CosmWasmExtension)(nil),
+		&Pool{},
 		&CosmWasmPool{},
 	)
 

@@ -17,22 +17,26 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.CosmWasmExtension) {
 	osmoutils.MustSet(store, types.FormatPoolsPrefix(pool.GetId()), pool.GetStoreModel())
 }
 
+func (k Keeper) UnmarshalPool(bz []byte) (types.CosmWasmExtension, error) {
+	var acc types.CosmWasmExtension
+	return acc, k.cdc.UnmarshalInterface(bz, &acc)
+}
+
 // GetPoolById returns a CosmWasmExtension that corresponds to the requested pool id. Returns error if pool id is not found.
 func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.CosmWasmExtension, error) {
 	store := ctx.KVStore(k.storeKey)
-	pool := model.CosmWasmPool{}
-	key := types.FormatPoolsPrefix(poolId)
-	found, err := osmoutils.Get(store, key, &pool)
+	poolKey := types.FormatPoolsPrefix(poolId)
+
+	bz := store.Get(poolKey)
+
+	pool, err := k.UnmarshalPool(bz)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	if !found {
-		return nil, types.PoolNotFoundError{PoolId: poolId}
-	}
-	return &model.Pool{
-		CosmWasmPool: pool,
-		WasmKeeper:   k.wasmKeeper,
-	}, nil
+
+	pool.SetWasmKeeper(k.wasmKeeper)
+
+	return pool, nil
 }
 
 // GetSerializedPools retrieves all pool objects stored in the keeper.
