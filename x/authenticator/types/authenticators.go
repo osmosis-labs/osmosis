@@ -15,8 +15,8 @@ import (
 )
 
 type Authenticator[T any] interface {
-	GetAuthenticationData(tx sdk.Tx) (T, error)
-	Authenticate(ctx sdk.Context, authenticationData T, simulate bool) (err error)
+	GetAuthenticationData(tx sdk.Tx, simulate bool) (T, error)
+	Authenticate(ctx sdk.Context, authenticationData T) (err error)
 	ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData T) bool
 
 	// Optional Hooks. ToDo: Revisit this when adding the authenticator storage and messages
@@ -61,12 +61,16 @@ type SigVerificationData struct {
 	Signers    []sdk.AccAddress
 	Signatures []signing.SignatureV2
 	Tx         authsigning.Tx
+	simulate   bool
 }
 
 // GetAuthenticationData parses the signers and signatures from a transactiom
 // then returns a indexed list of both signers and signatures
 // NOTE: position in the array is used to associate the signer and signature
-func (c SigVerificationAuthenticator) GetAuthenticationData(tx sdk.Tx) (SigVerificationData, error) {
+func (c SigVerificationAuthenticator) GetAuthenticationData(
+	tx sdk.Tx,
+	simulate bool,
+) (SigVerificationData, error) {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
 		return SigVerificationData{},
@@ -106,7 +110,6 @@ func (c SigVerificationAuthenticator) GetAuthenticationData(tx sdk.Tx) (SigVerif
 func (c SigVerificationAuthenticator) Authenticate(
 	ctx sdk.Context,
 	verificationData SigVerificationData,
-	simulate bool,
 ) (err error) {
 	for i, sig := range verificationData.Signatures {
 		acc, err := authante.GetSignerAcc(ctx, c.ak, verificationData.Signers[i])
@@ -116,7 +119,7 @@ func (c SigVerificationAuthenticator) Authenticate(
 
 		// retrieve pubkey
 		pubKey := acc.GetPubKey()
-		if !simulate && pubKey == nil {
+		if !verificationData.simulate && pubKey == nil {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
@@ -142,7 +145,7 @@ func (c SigVerificationAuthenticator) Authenticate(
 		}
 
 		// no need to verify signatures on recheck tx
-		if !simulate && !ctx.IsReCheckTx() {
+		if !verificationData.simulate && !ctx.IsReCheckTx() {
 			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, c.Handler, verificationData.Tx)
 			if err != nil {
 				var errMsg string

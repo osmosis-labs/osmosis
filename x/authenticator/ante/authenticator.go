@@ -41,13 +41,13 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	sigVerificationAuthenticator := authenticatortypes.NewSigVerificationAuthenticator(ad.ak, ad.signModeHandler)
 
 	// Get the signer data from the tx
-	authData, err := sigVerificationAuthenticator.GetAuthenticationData(tx)
+	authData, err := sigVerificationAuthenticator.GetAuthenticationData(tx, simulate)
 	if err != nil {
 		return ctx, err
 	}
 
 	// Validate the signatures for each transaction in the array
-	err = sigVerificationAuthenticator.Authenticate(ctx, authData, simulate)
+	err = sigVerificationAuthenticator.Authenticate(ctx, authData)
 	if err != nil {
 		return ctx, err
 	}
