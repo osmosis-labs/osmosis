@@ -76,10 +76,7 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 		return sdk.Dec{}, types.TickIndexMaximumError{MaxTick: types.MaxTick}
 	}
 
-	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
-	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**exponentAtPriceOne)
-
-	// Use floor division to determine what the geometricExponent is now (the delta)
+	// Use floor division to determine what the geometricExponent is now (the delta from the starting exponentAtPriceOne)
 	geometricExponentDelta := tickIndex / geometricExponentIncrementDistanceInTicks
 
 	// Calculate the exponentAtCurrentTick from the starting exponentAtPriceOne and the geometricExponentDelta
