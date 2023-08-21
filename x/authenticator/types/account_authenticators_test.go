@@ -13,12 +13,12 @@ type MockAuthenticator struct {
 	authType string
 }
 
-func (m MockAuthenticator) GetAuthenticationData(tx sdk.Tx, messageIndex uint8) types.AuthenticatorData {
-	return "mock"
+func (m MockAuthenticator) GetAuthenticationData(tx sdk.Tx, messageIndex uint8, simulate bool) (types.AuthenticatorData, error) {
+	return "mock", nil
 }
 
-func (m MockAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData types.AuthenticatorData) bool {
-	return true
+func (m MockAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData types.AuthenticatorData) (bool, error) {
+	return true, nil
 }
 
 func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData types.AuthenticatorData) bool {
@@ -96,16 +96,16 @@ type MockAuthenticatorFail struct {
 	authType string
 }
 
-func (m MockAuthenticatorFail) GetAuthenticationData(tx sdk.Tx, messageIndex uint8) types.AuthenticatorData {
-	return "mock-fail"
+func (m MockAuthenticatorFail) GetAuthenticationData(tx sdk.Tx, messageIndex uint8, simulate bool) (types.AuthenticatorData, error) {
+	return "mock-fail", nil
 }
 
-func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData types.AuthenticatorData) bool {
-	return false
+func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData types.AuthenticatorData) (bool, error) {
+	return false, nil
 }
 
 func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData types.AuthenticatorData) bool {
-	return false
+	return true
 }
 
 func (m MockAuthenticatorFail) Type() string {
@@ -129,12 +129,12 @@ func TestMockAuthenticators(t *testing.T) {
 	var mockCtx sdk.Context
 
 	// Testing mockPass
-	dataPass := mockPass.GetAuthenticationData(mockTx, 0)
-	isAuthenticatedPass := mockPass.Authenticate(mockCtx, mockMsg, dataPass)
+	dataPass, _ := mockPass.GetAuthenticationData(mockTx, 0, false)
+	isAuthenticatedPass, _ := mockPass.Authenticate(mockCtx, mockMsg, dataPass)
 	require.True(t, isAuthenticatedPass)
 
 	// Testing mockFail
-	dataFail := mockFail.GetAuthenticationData(mockTx, 0)
-	isAuthenticatedFail := mockFail.Authenticate(mockCtx, mockMsg, dataFail)
+	dataFail, _ := mockFail.GetAuthenticationData(mockTx, 0, false)
+	isAuthenticatedFail, _ := mockFail.Authenticate(mockCtx, mockMsg, dataFail)
 	require.False(t, isAuthenticatedFail)
 }
