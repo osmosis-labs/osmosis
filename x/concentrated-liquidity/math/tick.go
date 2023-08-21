@@ -68,11 +68,6 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 		return sdk.OneDec(), nil
 	}
 
-	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
-	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**exponentAtPriceOne)
-	exponentAtPriceOne := types.ExponentAtPriceOne
-	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(-exponentAtPriceOne)).TruncateInt64()
-
 	// Check that the tick index is between min and max value
 	if tickIndex < types.MinCurrentTick {
 		return sdk.Dec{}, types.TickIndexMinimumError{MinTick: types.MinCurrentTick}
@@ -81,11 +76,14 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 		return sdk.Dec{}, types.TickIndexMaximumError{MaxTick: types.MaxTick}
 	}
 
+	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
+	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**exponentAtPriceOne)
+
 	// Use floor division to determine what the geometricExponent is now (the delta)
 	geometricExponentDelta := tickIndex / geometricExponentIncrementDistanceInTicks
 
 	// Calculate the exponentAtCurrentTick from the starting exponentAtPriceOne and the geometricExponentDelta
-	exponentAtCurrentTick := exponentAtPriceOne + geometricExponentDelta
+	exponentAtCurrentTick := types.ExponentAtPriceOne + geometricExponentDelta
 	if tickIndex < 0 {
 		// We must decrement the exponentAtCurrentTick when entering the negative tick range in order to constantly step up in precision when going further down in ticks
 		// Otherwise, from tick 0 to tick -(geometricExponentIncrementDistanceInTicks), we would use the same exponent as the exponentAtPriceOne
