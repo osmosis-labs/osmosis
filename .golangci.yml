@@ -48,6 +48,7 @@ linters-settings:
       - name: function-result-limit
         severity: warning
         disabled: false
+        # limits the number of returns to 4
         arguments: [4]
 
 issues:
