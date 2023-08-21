@@ -804,12 +804,6 @@ func updateAccumAndClaimRewards(accum *accum.AccumulatorObject, positionKey stri
 		return sdk.Coins{}, sdk.DecCoins{}, err
 	}
 
-	// position, _ := accum.GetPosition(accum1, positionKey)
-
-	// fmt.Println("positions unclaimed rewards total: ", position.UnclaimedRewardsTotal)
-	// fmt.Println("position.AccumValuePerShare: ", position.AccumValuePerShare)
-	// fmt.Println("position.NumShares: ", position.NumShares)
-
 	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
 	// Removes the position state from accum if remaining liquidity is zero for the position.
 	incentivesClaimedCurrAccum, dust, err := accum.ClaimRewards(positionKey)
