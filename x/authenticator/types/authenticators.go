@@ -55,7 +55,8 @@ func (c SigVerificationAuthenticator) SetSignModeHandler(sm *authsigning.SignMod
 	c.Handler = *sm
 }
 
-// NOTE: should have a SigVerification variable in the struct
+// SigVerificationData is used to package all the signature data and the tx
+// for use in the Authenticate function
 type SigVerificationData struct {
 	Signers    []sdk.AccAddress
 	Signatures []signing.SignatureV2
@@ -72,7 +73,7 @@ func (c SigVerificationAuthenticator) GetAuthenticationData(tx sdk.Tx) (SigVerif
 			sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
-	// Get all signers
+	// Get all signers for a transaction
 	signers := sigTx.GetSigners()
 
 	// stdSigs contains the sequence number, account number, and signatures.
@@ -100,6 +101,8 @@ func (c SigVerificationAuthenticator) GetAuthenticationData(tx sdk.Tx) (SigVerif
 	}, nil
 }
 
+// Authenticate takes a SignaturesVerificationData struct and validates
+// each signer and signature using Secp256k1 signature verification
 func (c SigVerificationAuthenticator) Authenticate(
 	ctx sdk.Context,
 	verificationData SigVerificationData,
