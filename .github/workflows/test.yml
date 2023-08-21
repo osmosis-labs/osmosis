@@ -110,6 +110,9 @@ jobs:
 
           # Remove containers with names starting with "hermes-relayer"
           docker ps -aqf "name=hermes-relayer*" | xargs -r docker rm -f
+
+          # Prune docker networks
+          docker network prune
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
