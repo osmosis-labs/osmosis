@@ -17,9 +17,47 @@ message Params {
     (gogoproto.moretags) = "yaml:\"pool_creation_fee\"",
     (gogoproto.nullable) = false
   ];
+  // taker_fee_params is the container of taker fee parameters.
+  TakerFeeParams taker_fee_params = 2
+      [ (gogoproto.moretags) = "yaml:\"taker_fee_params\"" ];
+  // authorized_quote_denoms is a list of quote denoms that can be used as
+  // token1 when creating a concentrated pool. We limit the quote assets to a
+  // small set for the purposes of having convinient price increments stemming
+  // from tick to price conversion. These increments are in a human readable
+  // magnitude only for token1 as a quote. For limit orders in the future, this
+  // will be a desirable property in terms of UX as to allow users to set limit
+  // orders at prices in terms of token1 (quote asset) that are easy to reason
+  // about.
+  repeated string authorized_quote_denoms = 3
+      [ (gogoproto.moretags) = "yaml:\"authorized_quote_denoms\"" ];
+  // community_pool_denom_to_swap_non_whitelisted_assets_to is the denom that
+  // taker fees that are not whitelisted will be swapped to when being sent to
+  // the community pool.
+  string community_pool_denom_to_swap_non_whitelisted_assets_to = 4
+      [ (gogoproto.moretags) =
+            "yaml:\"community_pool_denom_to_swap_non_whitelisted_assets_to\"" ];
+  // stablecoin_denoms is a list of denoms that are considered stablecoins.
+  // This is used to determine if a pool should use the stableswap taker
+  // fee.
+  repeated string stablecoin_denoms = 5
+      [ (gogoproto.moretags) = "yaml:\"stablecoin_denoms\"" ];
+}
+
+// GenesisState defines the poolmanager module's genesis state.
+message GenesisState {
+  // the next_pool_id
+  uint64 next_pool_id = 1;
+  // params is the container of poolmanager parameters.
+  Params params = 2 [ (gogoproto.nullable) = false ];
+  // pool_routes is the container of the mappings from pool id to pool type.
+  repeated ModuleRoute pool_routes = 3 [ (gogoproto.nullable) = false ];
+}
+
+// TakerFeeParams consolidates the taker fee parameters for the poolmanager.
+message TakerFeeParams {
   // default_taker_fee is the fee used when creating a new pool that doesn't
   // fall under a custom pool taker fee or stableswap taker fee category.
-  string default_taker_fee = 2 [
+  string default_taker_fee = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.customname) = "DefaultTakerFee",
     (gogoproto.nullable) = false
@@ -27,7 +65,7 @@ message Params {
   // stableswap_taker_fee is the fee used when creating a new pool in which all
   // the underlying tokens are present in the stablecoin_denoms paramater entry
   // OR has a liquid_stake_denom_pairings entry.
-  string stableswap_taker_fee = 3 [
+  string stableswap_taker_fee = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.customname) = "StableswapTakerFee",
     (gogoproto.nullable) = false
@@ -38,7 +76,7 @@ message Params {
   //   stakers.
   // - community_pool: the percent of the taker fee that gets sent to the
   //   community pool.
-  TakerFeeDistributionPercentage osmo_taker_fee_distribution = 5 [
+  TakerFeeDistributionPercentage osmo_taker_fee_distribution = 3 [
     (gogoproto.customname) = "OsmoTakerFeeDistribution",
     (gogoproto.nullable) = false
   ];
@@ -51,49 +89,10 @@ message Params {
   //   that denom is sent directly to the community pool. Otherwise, it is
   //   swapped to the community_pool_denom_to_swap_non_whitelisted_assets_to and
   //   then sent to the community pool as that denom.
-  TakerFeeDistributionPercentage non_osmo_taker_fee_distribution = 6 [
+  TakerFeeDistributionPercentage non_osmo_taker_fee_distribution = 4 [
     (gogoproto.customname) = "NonOsmoTakerFeeDistribution",
     (gogoproto.nullable) = false
   ];
-  // authorized_quote_denoms is a list of quote denoms that can be used as
-  // token1 when creating a concentrated pool. We limit the quote assets to a
-  // small set for the purposes of having convinient price increments stemming
-  // from tick to price conversion. These increments are in a human readable
-  // magnitude only for token1 as a quote. For limit orders in the future, this
-  // will be a desirable property in terms of UX as to allow users to set limit
-  // orders at prices in terms of token1 (quote asset) that are easy to reason
-  // about.
-  repeated string authorized_quote_denoms = 7
-      [ (gogoproto.moretags) = "yaml:\"authorized_quote_denoms\"" ];
-  // community_pool_denom_to_swap_non_whitelisted_assets_to is the denom that
-  // taker fees that are not whitelisted will be swapped to when being sent to
-  // the community pool.
-  string community_pool_denom_to_swap_non_whitelisted_assets_to = 8
-      [ (gogoproto.moretags) =
-            "yaml:\"community_pool_denom_to_swap_non_whitelisted_assets_to\"" ];
-  // stablecoin_denoms is a list of denoms that are considered stablecoins.
-  // This is used to determine if a pool should use the stableswap taker
-  // fee. Note: LSTs are NOT apart of this catagory, even though they are
-  // eligible for stableswap taker fees. This is determined via the
-  // liquid_stake_denom_pairings field.
-  repeated string stablecoin_denoms = 9
-      [ (gogoproto.moretags) = "yaml:\"stablecoin_denoms\"" ];
-  // liquid_stake_denom_pairings is a list of pairings of a natural denom with
-  // its corresponding LST denoms. If a pool is created with a natural denom
-  // that is paired with an LST denom, then the pool will be considered a
-  // stableswap pool and will use the stableswap taker fee.
-  repeated LiquidStakedTokenToUnderlyingDenom liquid_stake_denom_pairings = 10
-      [ (gogoproto.moretags) = "yaml:\"liquid_stake_denom_pairings\"" ];
-}
-
-// GenesisState defines the poolmanager module's genesis state.
-message GenesisState {
-  // the next_pool_id
-  uint64 next_pool_id = 1;
-  // params is the container of poolmanager parameters.
-  Params params = 2 [ (gogoproto.nullable) = false ];
-  // pool_routes is the container of the mappings from pool id to pool type.
-  repeated ModuleRoute pool_routes = 3 [ (gogoproto.nullable) = false ];
 }
 
 // TakerFeeDistributionPercentage defines what percent of the taker fee category

@@ -297,7 +297,7 @@ func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (
 		return sdk.Dec{}, err
 	}
 	if !found {
-		return k.GetParams(ctx).DefaultTakerFee, nil
+		return k.GetParams(ctx).TakerFeeParams.DefaultTakerFee, nil
 	}
 
 	return takerFee.Dec, nil
