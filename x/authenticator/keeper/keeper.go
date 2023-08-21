@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -34,36 +35,79 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, ps paramtypes.Subsp
 	}
 }
 
-func (k Keeper) UnmarshalAuthenticator(bz []byte) (types.Authenticator[any], error) {
-	var authenticator types.Authenticator[any]
-	// ToDo: register interfaces and concrete implementations
-	return authenticator, k.cdc.UnmarshalInterface(bz, &authenticator)
-}
-
-func (k Keeper) GetAuthenticatorsForAccount(ctx sdk.Context, account sdk.AccAddress) ([]types.Authenticator[any], error) {
-	return osmoutils.GatherValuesFromStorePrefix(
+func (k Keeper) GetAuthenticatorsForAccount(ctx sdk.Context, account sdk.AccAddress) ([]types.Authenticator, error) {
+	accountAuthenticators, err := osmoutils.GatherValuesFromStorePrefix(
 		ctx.KVStore(k.storeKey),
 		types.KeyAccount(account),
-		func(bz []byte) (types.Authenticator[any], error) {
-			authenticator, err := k.UnmarshalAuthenticator(bz)
+		func(bz []byte) (types.Authenticator, error) {
+			// unmarshall the authenticator
+			var authenticator types.AccountAuthenticator
+			err := k.cdc.UnmarshalInterface(bz, &authenticator)
+
 			if err != nil {
 				return nil, err
 			}
 
-			return authenticator, nil
+			return authenticator.AsAuthenticator(), nil
 		})
 
+	if err != nil {
+		return nil, err
+	}
+
+	return accountAuthenticators, nil
 }
 
-// Add an authenticator to an account
-func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticator types.Authenticator[any]) error {
+// GetNextAuthenticatorId returns the next authenticator id.
+func (k Keeper) GetNextAuthenticatorId(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyAccount(account)
-	// We probably need to create a proto for the authenticator. What should this contain? just type? (id and owner would be the keys)
-	bz, err := k.cdc.MarshalInterface(authenticator)
+	nextAuthenticatorId := gogotypes.UInt64Value{}
+	found, err := osmoutils.Get(store, types.KeyNextAccountAuthenticatorId(), &nextAuthenticatorId)
 	if err != nil {
-		return err
+		panic(err)
 	}
-	store.Set(key, bz)
+	if !found {
+		k.SetNextAuthenticatorId(ctx, 0)
+		return 0
+	}
+	return nextAuthenticatorId.Value
+}
+
+// SetNextAuthenticatorId sets next authenticator id.
+func (k Keeper) SetNextAuthenticatorId(ctx sdk.Context, authenticatorId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	osmoutils.MustSet(store, types.KeyNextAccountAuthenticatorId(), &gogotypes.UInt64Value{Value: authenticatorId})
+}
+
+// GetNextAuthenticatorIdAndIncrement returns the next authenticator id and increments it.
+func (k Keeper) GetNextAuthenticatorIdAndIncrement(ctx sdk.Context) uint64 {
+	nextAuthenticatorId := k.GetNextAuthenticatorId(ctx)
+	k.SetNextAuthenticatorId(ctx, nextAuthenticatorId+1)
+	return nextAuthenticatorId
+}
+
+// AddAuthenticator adds an authenticator to an account
+func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorType string) error {
+	if !types.IsAuthenticatorTypeRegistered(authenticatorType) {
+		return fmt.Errorf("authenticator type %s is not registered", authenticatorType)
+	}
+	nextId := k.GetNextAuthenticatorIdAndIncrement(ctx)
+	osmoutils.MustSet(ctx.KVStore(k.storeKey),
+		types.KeyAccountId(account, nextId), // ToDo: will this lead to any concurrency issues?
+		&types.AccountAuthenticator{
+			Id:   nextId,
+			Type: authenticatorType,
+		})
 	return nil
 }
+
+// RemoveAuthenticator removes an authenticator from an account
+func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorId uint64) error {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyAccountId(account, authenticatorId)
+	store.Delete(key)
+	return nil
+}
+
+// ToDo: Open questions:
+//  * Do we care about authenticator ordering?

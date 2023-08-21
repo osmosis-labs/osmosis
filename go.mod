@@ -47,12 +47,8 @@ require (
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
-	cosmossdk.io/api v0.5.0 // indirect
-	cosmossdk.io/core v0.9.0 // indirect
-	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	github.com/4meepo/tagalign v1.3.2 // indirect
 	github.com/Abirdcfly/dupword v0.0.12 // indirect
-	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/Djarvur/go-err113 v0.1.0 // indirect
 	github.com/GaijinEntertainment/go-exhaustruct/v3 v3.1.0 // indirect
 	github.com/OpenPeeDeeP/depguard/v2 v2.1.0 // indirect
@@ -61,29 +57,19 @@ require (
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/butuzov/mirror v1.1.0 // indirect
 	github.com/bytedance/sonic v1.10.0 // indirect
-	github.com/cockroachdb/errors v1.10.0 // indirect
-	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/pebble v0.0.0-20230525220056-bb4fc9527b3b // indirect
-	github.com/cockroachdb/redact v1.1.5 // indirect
-	github.com/cosmos/cosmos-db v1.0.0 // indirect
 	github.com/cosmos/iavl v0.19.5 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
-	github.com/getsentry/sentry-go v0.21.0 // indirect
 	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
-	github.com/kr/pretty v0.3.1 // indirect
-	github.com/kr/text v0.2.0 // indirect
-	github.com/linxGnu/grocksdb v1.7.16 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
 	github.com/nunnatsa/ginkgolinter v0.13.3 // indirect
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
-	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/sashamelentyev/interfacebloat v1.1.0 // indirect
 	github.com/sashamelentyev/usestdlibvars v1.23.0 // indirect
 	github.com/sivchari/nosnakecase v1.7.0 // indirect

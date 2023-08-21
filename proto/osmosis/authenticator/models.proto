@@ -1,0 +1,9 @@
+syntax = "proto3";
+package osmosis.authenticator;
+
+option go_package = "github.com/osmosis-labs/osmosis/v17/x/authenticator/types";
+
+message AccountAuthenticator {
+  uint64 id = 1;
+  string type = 2;
+}

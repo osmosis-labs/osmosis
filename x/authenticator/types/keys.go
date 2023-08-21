@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strings"
 )
 
 const (
@@ -16,21 +17,34 @@ const (
 	// RouterKey defines the module's message routing key
 	RouterKey = ModuleName
 
-	// MemStoreKey defines the in-memory store key
-	MemStoreKey = "mem_authenticator"
+	AttributeValueCategory        = ModuleName
+	AttributeKeyAuthenticatorType = "authenticator_type"
 )
 
 var (
-	// KeyAuthenticators
-	KeyAuthenticators = []byte{0x01}
+	KeyNextAccountAuthenticatorIdPrefix = []byte{0x01}
+	KeyAccountAuthenticatorsPrefix      = []byte{0x02}
 )
 
-func KeyAccount(account sdk.AccAddress) []byte {
-	// ToDo: Do we want to encode the authenticator id in the key and use two different prefixes??
-	accBech32 := sdk.MustBech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, account)
-	return []byte(fmt.Sprintf("%s%s", accBech32, KeySeparator))
+// buildKey creates a key by concatenating the provided elements with the key separator.
+func buildKey(elements ...interface{}) []byte {
+	strElements := make([]string, len(elements))
+	for i, element := range elements {
+		strElements[i] = fmt.Sprint(element)
+	}
+	return []byte(strings.Join(strElements, KeySeparator))
 }
 
-func KeyPrefix(p string) []byte {
-	return []byte(p)
+func KeyAccount(account sdk.AccAddress) []byte {
+	accBech32 := sdk.MustBech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, account)
+	return buildKey(KeyAccountAuthenticatorsPrefix, accBech32)
+}
+
+func KeyAccountId(account sdk.AccAddress, id uint64) []byte {
+	accBech32 := sdk.MustBech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, account)
+	return buildKey(KeyAccountAuthenticatorsPrefix, accBech32, id)
+}
+
+func KeyNextAccountAuthenticatorId() []byte {
+	return buildKey(KeyNextAccountAuthenticatorIdPrefix)
 }

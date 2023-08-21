@@ -8,10 +8,13 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-type Authenticator[T any] interface {
-	GetAuthenticationData(tx sdk.Tx, messageIndex uint8) T
-	Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData T) bool
-	ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData T) bool
+type AuthenticatorData interface{}
+
+type Authenticator interface {
+	Type() string
+	GetAuthenticationData(tx sdk.Tx, messageIndex uint8) AuthenticatorData
+	Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) bool
+	ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData AuthenticatorData) bool
 
 	// Optional Hooks. ToDo: Revisit this when adding the authenticator storage and messages
 	//OnAuthenticatorAdded(...) bool
@@ -32,7 +35,12 @@ type SigVerificationAuthenticator struct {
 //	c.signModeHandler = sm
 //}
 
-var _ Authenticator[SigVerificationData] = &SigVerificationAuthenticator{}
+var _ AuthenticatorData = &SigVerificationData{}
+var _ Authenticator = &SigVerificationAuthenticator{}
+
+func (c SigVerificationAuthenticator) Type() string {
+	return "SigVerificationAuthenticator"
+}
 
 type SigVerificationData struct {
 	Signer    []byte
@@ -40,7 +48,7 @@ type SigVerificationData struct {
 	// ToDo: we will probably need to provide the whole Tx's data here as signatures are over the whole tx
 }
 
-func (c SigVerificationAuthenticator) GetAuthenticationData(tx sdk.Tx, msgIndex uint8) SigVerificationData {
+func (c SigVerificationAuthenticator) GetAuthenticationData(tx sdk.Tx, msgIndex uint8) AuthenticatorData {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
 		return SigVerificationData{}
@@ -71,12 +79,16 @@ func (c SigVerificationAuthenticator) GetAuthenticationData(tx sdk.Tx, msgIndex 
 	}
 }
 
-func (c SigVerificationAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData SigVerificationData) bool {
+func (c SigVerificationAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) bool {
 	// TODO: Use signature verification abstraction here
 	return true
 }
 
-func (c SigVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData SigVerificationData) bool {
+func (c SigVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData AuthenticatorData) bool {
 	// To be executed in the post handler
 	return true
+}
+
+func NewSigVerificationAuthenticator() Authenticator {
+	return SigVerificationAuthenticator{}
 }
