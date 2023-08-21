@@ -1385,9 +1385,9 @@ func (s *KeeperTestSuite) calcInGivenOutAmountAsSeparateSwaps(osmoFeeReduced boo
 			s.Require().NoError(err)
 
 			tokenInCoin := sdk.NewCoin(hop.TokenInDenom, tokenInAmt)
-			tokenInCoinAfterTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactOut(tokenInCoin, takerFee)
+			tokenInCoinAfterAddTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactOut(tokenInCoin, takerFee)
 
-			nextTokenOut = tokenInCoinAfterTakerFee
+			nextTokenOut = tokenInCoinAfterAddTakerFee
 		}
 		return nextTokenOut
 	} else {
@@ -1408,9 +1408,9 @@ func (s *KeeperTestSuite) calcInGivenOutAmountAsSeparateSwaps(osmoFeeReduced boo
 			s.Require().NoError(err)
 
 			tokenInCoin := sdk.NewCoin(hop.TokenInDenom, tokenInAmt)
-			tokenInCoinAfterTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactOut(tokenInCoin, takerFee)
+			tokenInCoinAfterAddTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactOut(tokenInCoin, takerFee)
 
-			nextTokenOut = tokenInCoinAfterTakerFee
+			nextTokenOut = tokenInCoinAfterAddTakerFee
 		}
 		return nextTokenOut
 	}
@@ -1444,10 +1444,10 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(osmoFeeReduced
 			takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(cacheCtx, hop.TokenOutDenom, nextTokenIn.Denom)
 			s.Require().NoError(err)
 
-			nextTokenInAfterTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
+			nextTokenInAfterSubTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
 
 			// we then do individual swaps until we reach the end of the swap route
-			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterTakerFee, hop.TokenOutDenom, sdk.OneInt(), spreadFactor)
+			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterSubTakerFee, hop.TokenOutDenom, sdk.OneInt(), spreadFactor)
 			s.Require().NoError(err)
 
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
@@ -1468,10 +1468,10 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(osmoFeeReduced
 			takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(cacheCtx, hop.TokenOutDenom, nextTokenIn.Denom)
 			s.Require().NoError(err)
 
-			nextTokenInAfterTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
+			nextTokenInAfterSubTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
 
 			// we then do individual swaps until we reach the end of the swap route
-			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterTakerFee, hop.TokenOutDenom, sdk.OneInt(), spreadFactor)
+			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterSubTakerFee, hop.TokenOutDenom, sdk.OneInt(), spreadFactor)
 			s.Require().NoError(err)
 
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)

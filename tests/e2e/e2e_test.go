@@ -104,7 +104,6 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 
 	// Upgrade Dependent Tests
 
-	// TODO: Temp disable
 	if s.skipUpgrade {
 		s.T().Skip("Skipping StableSwapPostUpgrade test")
 	} else {

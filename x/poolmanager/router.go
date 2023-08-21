@@ -95,17 +95,12 @@ func (k Keeper) RouteExactAmountIn(
 			spreadFactor = routeSpreadFactor.MulRoundUp((spreadFactor.QuoRoundUp(sumOfSpreadFactors)))
 		}
 
-		takerFee, err := k.GetTradingPairTakerFee(ctx, routeStep.TokenOutDenom, tokenIn.Denom)
+		tokenInAfterSubTakerFee, err := k.extractTakerFeeAndDistribute(ctx, tokenIn, routeStep.TokenOutDenom, poolManagerParams, sender, true)
 		if err != nil {
 			return sdk.Int{}, err
 		}
 
-		tokenInAfterTakerFee, err := k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender, true)
-		if err != nil {
-			return sdk.Int{}, err
-		}
-
-		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterTakerFee, routeStep.TokenOutDenom, _outMinAmount, spreadFactor)
+		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterSubTakerFee, routeStep.TokenOutDenom, _outMinAmount, spreadFactor)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -220,18 +215,13 @@ func (k Keeper) SwapExactAmountIn(
 
 	spreadFactor := pool.GetSpreadFactor(ctx)
 
-	takerFee, err := k.GetTradingPairTakerFee(ctx, tokenOutDenom, tokenIn.Denom)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	tokenInAfterTakerFee, err := k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender, true)
+	tokenInAfterSubTakerFee, err := k.extractTakerFeeAndDistribute(ctx, tokenIn, tokenOutDenom, poolManagerParams, sender, true)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
 	// routeStep to the pool-specific SwapExactAmountIn implementation.
-	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterTakerFee, tokenOutDenom, tokenOutMinAmount, spreadFactor)
+	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterSubTakerFee, tokenOutDenom, tokenOutMinAmount, spreadFactor)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -334,11 +324,9 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 			return sdk.Int{}, err
 		}
 
-		fmt.Println("ADAM Taker gee: ", takerFee.String())
+		tokenInAfterSubTakerFee, _ := k.calcTakerFeeExactIn(tokenIn, takerFee)
 
-		tokenInAfterTakerFee, _ := k.calcTakerFeeExactIn(tokenIn, takerFee)
-
-		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenInAfterTakerFee, routeStep.TokenOutDenom, spreadFactor)
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenInAfterSubTakerFee, routeStep.TokenOutDenom, spreadFactor)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -445,16 +433,10 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		spreadFactor := pool.GetSpreadFactor(ctx)
-
 		// If we determined the routeStep is an osmo multi-hop and both route are incentivized,
 		// we modify the swap fee accordingly.
 		if isMultiHopRouted {
 			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
-		}
-
-		takerFee, err := k.GetTradingPairTakerFee(ctx, routeStep.TokenInDenom, _tokenOut.Denom)
-		if err != nil {
-			return sdk.Int{}, err
 		}
 
 		_tokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, routeStep.TokenInDenom, insExpected[i], _tokenOut, spreadFactor)
@@ -463,7 +445,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		tokenIn := sdk.NewCoin(routeStep.TokenInDenom, _tokenInAmount)
-		tokenInWithTakerFee, err := k.extractTakerFeeToFeePool(ctx, tokenIn, takerFee, poolManagerParams, sender, false)
+		tokenInAfterAddTakerFee, err := k.extractTakerFeeAndDistribute(ctx, tokenIn, _tokenOut.Denom, poolManagerParams, sender, false)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -472,7 +454,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		// whole method and will not change after the first iteration, we still iterate through the rest of the pools to execute their respective
 		// swaps.
 		if i == 0 {
-			tokenInAmount = tokenInWithTakerFee.Amount
+			tokenInAmount = tokenInAfterAddTakerFee.Amount
 		}
 	}
 
@@ -847,13 +829,18 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	return totalLiquidity, nil
 }
 
-// extractTakerFeeToFeePool takes in a pool and extracts the taker fee from the pool and sends it to the non native fee pool module account.
+// extractTakerFeeAndDistribute takes in a pool and extracts the taker fee from the pool and sends it to the non native fee pool module account.
 // Its important to note here that in the original swap, the taker fee + spread fee is sent to the pool's address, so this is why we
 // pull directly from the pool and not the user's account.
-func (k Keeper) extractTakerFeeToFeePool(ctx sdk.Context, tokenIn sdk.Coin, takerFee sdk.Dec, poolManagerParams types.Params, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
+func (k Keeper) extractTakerFeeAndDistribute(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, poolManagerParams types.Params, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
 	nonNativeFeeCollectorForStakingRewardsName := txfeestypes.NonNativeFeeCollectorForStakingRewardsName
 	nonNativeFeeCollectorForCommunityPoolName := txfeestypes.NonNativeFeeCollectorForCommunityPoolName
 	baseDenom := appparams.BaseCoinUnit
+
+	takerFee, err := k.GetTradingPairTakerFee(ctx, tokenIn.Denom, tokenOutDenom)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
 
 	var tokenInAfterTakerFee sdk.Coin
 	var takerFeeCoin sdk.Coin
