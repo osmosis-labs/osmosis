@@ -147,7 +147,12 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 	// calculate the minimum number of tokens received from input of tokenIn
 	// N.B. Calling the Msg calls it via the pool manager, which charges the taker fee.
 	// We therefore need to add the taker fee to the spread factor when calling the calc method.
-	amountInAfterTakerFee := randomCoinSubset[0].Amount.ToDec().Mul(sdk.OneDec().Sub(pool.GetTakerFee()))
+	takerFee, err := k.GetTradingPairTakerFee(ctx, coinIn.Denom, coinOut.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	amountInAfterTakerFee := randomCoinSubset[0].Amount.ToDec().Mul(sdk.OneDec().Sub(takerFee))
 	tokenInAfterTakerFee := sdk.NewCoin(randomCoinSubset[0].Denom, amountInAfterTakerFee.TruncateInt())
 
 	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenInAfterTakerFee), coinOut.Denom, pool.GetSpreadFactor(ctx))
@@ -190,7 +195,12 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 	// utilize CalcOutAmtGivenIn to calculate tokenOut and use tokenOut to calculate tokenInMax
 	// N.B. Calling the Msg calls it via the pool manager, which charges the taker fee.
 	// We therefore need to add the taker fee to the spread factor when calling the calc method.
-	totalFees := pool.GetSpreadFactor(ctx).Add(pool.GetTakerFee())
+	takerFee, err := k.GetTradingPairTakerFee(ctx, coinIn.Denom, coinOut.Denom)
+	if err != nil {
+		return nil, err
+	}
+	totalFees := pool.GetSpreadFactor(ctx).Add(takerFee)
+
 	tokenOut, err := pool.CalcOutAmtGivenIn(ctx, randomCoinInSubset, coinOut.Denom, totalFees)
 	if err != nil {
 		return nil, err

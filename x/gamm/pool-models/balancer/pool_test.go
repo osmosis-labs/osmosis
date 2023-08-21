@@ -19,7 +19,6 @@ import (
 
 var (
 	defaultSpreadFactor       = sdk.MustNewDecFromStr("0.025")
-	defaultTakerFee           = sdk.MustNewDecFromStr("0.0015")
 	defaultZeroExitFee        = sdk.ZeroDec()
 	defaultPoolId             = uint64(10)
 	defaultBalancerPoolParams = balancer.PoolParams{

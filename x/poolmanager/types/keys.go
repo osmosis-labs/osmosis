@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/gogo/protobuf/proto"
 )
@@ -20,11 +21,21 @@ var (
 
 	// SwapModuleRouterPrefix defines prefix to store pool id to swap module mappings.
 	SwapModuleRouterPrefix = []byte{0x02}
+
+	DenomTradePairPrefix = []byte{0x03}
 )
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.
 func FormatModuleRouteKey(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%d", SwapModuleRouterPrefix, poolId))
+}
+
+// FormatDenomTradePairKey serializes denom trade pair to bytes.
+// Denom trade pair is automatically sorted lexicographically.
+func FormatDenomTradePairKey(denom0, denom1 string) []byte {
+	denoms := []string{denom0, denom1}
+	sort.Strings(denoms)
+	return []byte(fmt.Sprintf("%s%s%s", DenomTradePairPrefix, denoms[0], denoms[1]))
 }
 
 // ParseModuleRouteFromBz parses the raw bytes into ModuleRoute.

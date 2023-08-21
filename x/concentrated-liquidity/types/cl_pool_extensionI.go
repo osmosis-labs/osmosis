@@ -27,7 +27,6 @@ type ConcentratedPoolExtension interface {
 	SetCurrentTick(newTick int64)
 	SetTickSpacing(newTickSpacing uint64)
 	SetLastLiquidityUpdate(newTime time.Time)
-	SetTakerFee(newTakerFee sdk.Dec)
 
 	UpdateLiquidity(newLiquidity sdk.Dec)
 	ApplySwap(newLiquidity sdk.Dec, newCurrentTick int64, newCurrentSqrtPrice osmomath.BigDec) error

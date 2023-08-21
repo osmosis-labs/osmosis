@@ -37,14 +37,6 @@ func (p CosmWasmPool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
 	panic("CosmWasmPool.GetSpreadFactor not implemented")
 }
 
-func (p CosmWasmPool) GetTakerFee() sdk.Dec {
-	return p.TakerFee
-}
-
-func (p *CosmWasmPool) SetTakerFee(newTakerFee sdk.Dec) {
-	p.TakerFee = newTakerFee
-}
-
 func (p CosmWasmPool) GetExitFee(ctx sdk.Context) sdk.Dec {
 	panic("CosmWasmPool.GetExitFee not implemented")
 }

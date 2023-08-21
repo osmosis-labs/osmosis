@@ -354,3 +354,7 @@ func asCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 	}
 	return cfmmPool, nil
 }
+
+func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (sdk.Dec, error) {
+	return k.poolManager.GetTradingPairTakerFee(ctx, denom0, denom1)
+}

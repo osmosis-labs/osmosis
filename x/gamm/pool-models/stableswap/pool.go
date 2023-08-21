@@ -90,10 +90,6 @@ func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
 	return p.PoolParams.SwapFee
 }
 
-func (p Pool) GetTakerFee() sdk.Dec {
-	return p.PoolParams.TakerFee
-}
-
 func (p Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
 	return p.PoolParams.ExitFee
 }
@@ -117,10 +113,6 @@ func (p Pool) GetScalingFactors() []uint64 {
 
 func (p Pool) GetType() poolmanagertypes.PoolType {
 	return poolmanagertypes.Stableswap
-}
-
-func (p *Pool) SetTakerFee(newTakerFee sdk.Dec) {
-	p.PoolParams.TakerFee = newTakerFee
 }
 
 // CONTRACT: scaling factors follow the same index with pool liquidity denoms

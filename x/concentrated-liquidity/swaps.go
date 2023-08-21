@@ -353,7 +353,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 	}
 
-	fmt.Println("ADAM TokenIn", tokenInMin)
+	// fmt.Println("ADAM TokenIn", tokenInMin)
 
 	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(p, spreadFactor, tokenInMin.Denom, priceLimit)
 	if err != nil {
@@ -450,7 +450,7 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
 	spreadRewardGrowth := sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.globalSpreadRewardGrowthPerUnitLiquidity)
-	fmt.Println("ADAM spreadRewardGrowth", spreadRewardGrowth)
+	// fmt.Println("ADAM spreadRewardGrowth", spreadRewardGrowth)
 	spreadRewardAccumulator.AddToAccumulator(sdk.NewDecCoins(spreadRewardGrowth))
 
 	// Coin amounts require int values

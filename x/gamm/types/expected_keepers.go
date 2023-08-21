@@ -95,6 +95,8 @@ type PoolManager interface {
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 
 	CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (poolmanagertypes.PoolI, error)
+
+	GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (sdk.Dec, error)
 }
 
 type PoolIncentivesKeeper interface {

@@ -303,6 +303,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 		tickSpacing     uint64 = 100
 		spreadFactor           = "0.001" // 0.1%
 		spreadFactorDec        = sdk.MustNewDecFromStr("0.001")
+		takerFee               = sdk.MustNewDecFromStr("0.0015")
 	)
 
 	chainAB, chainABNode, err := s.getChainCfgs()
@@ -407,9 +408,6 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	s.validateCLPosition(addr3position1, poolID, -160000, -20000)
 	// Second position third address
 	s.validateCLPosition(addr3position2, poolID, cltypes.MinInitializedTick, 140000)
-
-	// Note the pool's taker fee
-	takerFee := concentratedPool.GetTakerFee()
 
 	// Collect SpreadRewards
 

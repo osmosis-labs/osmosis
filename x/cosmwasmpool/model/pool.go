@@ -23,14 +23,13 @@ var (
 )
 
 // NewCosmWasmPool creates a new CosmWasm pool with the specified parameters.
-func NewCosmWasmPool(poolId uint64, codeId uint64, instantiateMsg []byte, takerFee sdk.Dec) *Pool {
+func NewCosmWasmPool(poolId uint64, codeId uint64, instantiateMsg []byte) *Pool {
 	pool := Pool{
 		CosmWasmPool: CosmWasmPool{
 			ContractAddress: "", // N.B. This is to be set in InitializePool()
 			PoolId:          poolId,
 			CodeId:          codeId,
 			InstantiateMsg:  instantiateMsg,
-			TakerFee:        takerFee,
 		},
 		WasmKeeper: nil, // N.B.: this is set in InitializePool().
 	}
@@ -64,10 +63,6 @@ func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
 	request := msg.GetSwapFeeQueryMsg{}
 	response := cosmwasmutils.MustQuery[msg.GetSwapFeeQueryMsg, msg.GetSwapFeeQueryMsgResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
 	return response.SwapFee
-}
-
-func (p Pool) GetTakerFee() sdk.Dec {
-	return p.TakerFee
 }
 
 // IsActive returns true if the pool is active

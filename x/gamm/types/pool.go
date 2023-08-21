@@ -57,7 +57,6 @@ type CFMMPoolI interface {
 	// GetExitFee returns the pool's exit fee, based on the current state.
 	// Pools may choose to make their exit fees dependent upon state.
 	GetExitFee(ctx sdk.Context) sdk.Dec
-	SetTakerFee(newTakerFee sdk.Dec)
 }
 
 // PoolAmountOutExtension is an extension of the PoolI

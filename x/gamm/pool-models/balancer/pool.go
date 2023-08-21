@@ -92,10 +92,6 @@ func (p Pool) GetSpreadFactor(_ sdk.Context) sdk.Dec {
 	return p.PoolParams.SwapFee
 }
 
-func (p Pool) GetTakerFee() sdk.Dec {
-	return p.PoolParams.TakerFee
-}
-
 func (p Pool) GetTotalPoolLiquidity(_ sdk.Context) sdk.Coins {
 	return poolAssetsCoins(p.PoolAssets)
 }
@@ -114,10 +110,6 @@ func (p Pool) GetTotalWeight() sdk.Int {
 
 func (p Pool) GetTotalShares() sdk.Int {
 	return p.TotalShares.Amount
-}
-
-func (p *Pool) SetTakerFee(newTakerFee sdk.Dec) {
-	p.PoolParams.TakerFee = newTakerFee
 }
 
 func (p *Pool) AddTotalShares(amt sdk.Int) {

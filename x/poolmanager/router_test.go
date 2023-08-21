@@ -1374,7 +1374,8 @@ func (s *KeeperTestSuite) calcInGivenOutAmountAsSeparateSwaps(osmoFeeReduced boo
 			// utilize the routeSpreadFactor, sumOfSpreadFactors, and current pool swap fee to calculate the new reduced swap fee
 			spreadFactor := routeSpreadFactor.Mul((currentPoolSpreadFactor.Quo(sumOfSpreadFactors)))
 
-			takerFee := hopPool.GetTakerFee()
+			takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(cacheCtx, hop.TokenInDenom, nextTokenOut.Denom)
+			s.Require().NoError(err)
 
 			swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
 			s.Require().NoError(err)
@@ -1397,7 +1398,8 @@ func (s *KeeperTestSuite) calcInGivenOutAmountAsSeparateSwaps(osmoFeeReduced boo
 			s.Require().NoError(err)
 			updatedPoolSpreadFactor := hopPool.GetSpreadFactor(cacheCtx)
 
-			takerFee := hopPool.GetTakerFee()
+			takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(cacheCtx, hop.TokenInDenom, nextTokenOut.Denom)
+			s.Require().NoError(err)
 
 			swapModule, err := s.App.PoolManagerKeeper.GetPoolModule(cacheCtx, hop.PoolId)
 			s.Require().NoError(err)
@@ -1439,7 +1441,8 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(osmoFeeReduced
 			// utilize the routeSpreadFactor, sumOfSpreadFactors, and current pool swap fee to calculate the new reduced swap fee
 			spreadFactor := routeSpreadFactor.Mul(pool.GetSpreadFactor(cacheCtx).Quo(sumOfSpreadFactors))
 
-			takerFee := pool.GetTakerFee()
+			takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(cacheCtx, hop.TokenOutDenom, nextTokenIn.Denom)
+			s.Require().NoError(err)
 
 			nextTokenInAfterTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
 
@@ -1462,7 +1465,8 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(osmoFeeReduced
 			// utilize the routeSpreadFactor, sumOfSpreadFactors, and current pool swap fee to calculate the new reduced swap fee
 			spreadFactor := pool.GetSpreadFactor(cacheCtx)
 
-			takerFee := pool.GetTakerFee()
+			takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(cacheCtx, hop.TokenOutDenom, nextTokenIn.Denom)
+			s.Require().NoError(err)
 
 			nextTokenInAfterTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
 
@@ -1867,7 +1871,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			TokenInAmount: sdk.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
 		}
 
-		priceImpactThreshold = sdk.NewInt(97595718)
+		priceImpactThreshold = sdk.NewInt(97469586)
 	)
 
 	tests := map[string]struct {
@@ -2067,7 +2071,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			TokenOutAmount: sdk.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
 		}
 
-		priceImpactThreshold = sdk.NewInt(102530841)
+		priceImpactThreshold = sdk.NewInt(102666473)
 	)
 
 	tests := map[string]struct {

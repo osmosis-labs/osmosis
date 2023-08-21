@@ -105,14 +105,10 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 	// Get the next pool ID and increment the pool ID counter.
 	poolId := k.getNextPoolIdAndIncrement(ctx)
 
-	poolAssets := msg.InitialLiquidity()
 	poolType := msg.GetPoolType()
-	poolManagerParams := k.GetParams(ctx)
-
-	takerFee := DetermineTakerFee(poolManagerParams, poolAssets, poolType)
 
 	// Create the pool with the given pool ID.
-	pool, err := msg.CreatePool(ctx, poolId, takerFee)
+	pool, err := msg.CreatePool(ctx, poolId)
 	if err != nil {
 		return nil, err
 	}
@@ -221,64 +217,88 @@ func parsePoolRouteWithKey(key []byte, value []byte) (types.ModuleRoute, error) 
 	return parsedValue, nil
 }
 
-// determineTakerFee determines what the taker fee should be based on the pool type and denoms given.
-// This taker fee can be overridden by governance after the pool is created.
-func DetermineTakerFee(poolManagerParams types.Params, poolAssets sdk.Coins, poolType types.PoolType) sdk.Dec {
-	if poolType == types.Stableswap {
-		return poolManagerParams.StableswapTakerFee
-	} else {
-		// Check if all denoms exist in the stable denom list in poolmanager params.
-		// As soon as one denom is not in the list, we know that the pool is not a stableswap pool
-		// and move on to the next check.
-		allAssetsAreStable := true
-		for _, asset := range poolAssets {
-			isStable := false
-			for _, stableDenom := range poolManagerParams.StablecoinDenoms {
-				if asset.Denom == stableDenom {
-					isStable = true
-					break
-				}
-			}
-			// If we reach here and isStable is still false,
-			// it means that the asset denom is not in the stable denom list
-			if !isStable {
-				allAssetsAreStable = false
-				break
-			}
-		}
+// // determineTakerFee determines what the taker fee should be based on the pool type and denoms given.
+// // This taker fee can be overridden by governance after the pool is created.
+// func DetermineTakerFee(poolManagerParams types.Params, poolAssets sdk.Coins, poolType types.PoolType) sdk.Dec {
+// 	if poolType == types.Stableswap {
+// 		return poolManagerParams.StableswapTakerFee
+// 	} else {
+// 		// Check if all denoms exist in the stable denom list in poolmanager params.
+// 		// As soon as one denom is not in the list, we know that the pool is not a stableswap pool
+// 		// and move on to the next check.
+// 		allAssetsAreStable := true
+// 		for _, asset := range poolAssets {
+// 			isStable := false
+// 			for _, stableDenom := range poolManagerParams.StablecoinDenoms {
+// 				if asset.Denom == stableDenom {
+// 					isStable = true
+// 					break
+// 				}
+// 			}
+// 			// If we reach here and isStable is still false,
+// 			// it means that the asset denom is not in the stable denom list
+// 			if !isStable {
+// 				allAssetsAreStable = false
+// 				break
+// 			}
+// 		}
 
-		if allAssetsAreStable {
-			// If we reach here, it means that all denoms are in the stable denom list
-			// Therefore, we know that the pool is a stableswap pool and set the taker fee to the stableswap fee.
-			return poolManagerParams.StableswapTakerFee
-		} else if len(poolAssets) == 2 {
-			// This brings us to our check, to see if this is an LST <> underlying denom pool.
-			isStableLSTPair := false
-			for _, asset := range poolAssets {
-				for i, lstDenom := range poolManagerParams.LiquidStakeDenomPairings {
-					if asset.Denom == lstDenom.UnderlyingTokenDenom {
-						for _, denom := range lstDenom.LiquidStakedTokenDenoms {
-							if (i == 0 && poolAssets[1].Denom == denom) ||
-								(i != 0 && poolAssets[0].Denom == denom) {
-								isStableLSTPair = true
-								break
-							}
-						}
-					}
-					if isStableLSTPair {
-						break
-					}
-				}
-				if isStableLSTPair {
-					break
-				}
-			}
-			if isStableLSTPair {
-				// If it is an LST <> underlying denom pool, we set the taker fee to the stableswap fee.
-				return poolManagerParams.StableswapTakerFee
-			}
-		}
+// 		if allAssetsAreStable {
+// 			// If we reach here, it means that all denoms are in the stable denom list
+// 			// Therefore, we know that the pool is a stableswap pool and set the taker fee to the stableswap fee.
+// 			return poolManagerParams.StableswapTakerFee
+// 		} else if len(poolAssets) == 2 {
+// 			// This brings us to our check, to see if this is an LST <> underlying denom pool.
+// 			isStableLSTPair := false
+// 			for _, asset := range poolAssets {
+// 				for i, lstDenom := range poolManagerParams.LiquidStakeDenomPairings {
+// 					if asset.Denom == lstDenom.UnderlyingTokenDenom {
+// 						for _, denom := range lstDenom.LiquidStakedTokenDenoms {
+// 							if (i == 0 && poolAssets[1].Denom == denom) ||
+// 								(i != 0 && poolAssets[0].Denom == denom) {
+// 								isStableLSTPair = true
+// 								break
+// 							}
+// 						}
+// 					}
+// 					if isStableLSTPair {
+// 						break
+// 					}
+// 				}
+// 				if isStableLSTPair {
+// 					break
+// 				}
+// 			}
+// 			if isStableLSTPair {
+// 				// If it is an LST <> underlying denom pool, we set the taker fee to the stableswap fee.
+// 				return poolManagerParams.StableswapTakerFee
+// 			}
+// 		}
+// 	}
+
+// 	return poolManagerParams.DefaultTakerFee
+// }
+
+// SetTradingPairTakerFee sets the taker fee for the given trading pair.
+func (k Keeper) SetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string, takerFee sdk.Dec) {
+	store := ctx.KVStore(k.storeKey)
+	osmoutils.MustSetDec(store, types.FormatDenomTradePairKey(denom0, denom1), takerFee)
+}
+
+// GetTradingPairTakerFee returns the taker fee for the given trading pair.
+// If the trading pair does not exist, it returns the default taker fee.
+func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (sdk.Dec, error) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.FormatDenomTradePairKey(denom0, denom1)
+
+	takerFee := &sdk.DecProto{}
+	found, err := osmoutils.Get(store, key, takerFee)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	if !found {
+		return k.GetParams(ctx).DefaultTakerFee, nil
 	}
 
-	return poolManagerParams.DefaultTakerFee
+	return takerFee.Dec, nil
 }
