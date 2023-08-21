@@ -100,7 +100,7 @@ jobs:
   e2e:
     needs: get_diff
     if: needs.get_diff.outputs.git_diff
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - name: Clean up Pre-Existing E2E Docker containers
@@ -110,9 +110,6 @@ jobs:
 
           # Remove containers with names starting with "hermes-relayer"
           docker ps -aqf "name=hermes-relayer*" | xargs -r docker rm -f
-
-          # Prune docker networks
-          docker network prune
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
@@ -163,6 +160,3 @@ jobs:
 
           # Remove containers with names starting with "hermes-relayer"
           docker ps -aqf "name=hermes-relayer*" | xargs -r docker rm -f
-
-          # Prune docker networks
-          docker network prune
