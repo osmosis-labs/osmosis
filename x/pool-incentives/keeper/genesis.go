@@ -53,6 +53,10 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 			poolToGauge.GaugeId = gaugeID
 			poolToGauge.PoolId = uint64(poolId)
 			poolToGauges.PoolToGauge = append(poolToGauges.PoolToGauge, poolToGauge)
+		} else if pool.GetType() == poolmanagertypes.CosmWasm {
+			// Cosmwasm pools currently have no after pool created hook to make
+			// internal gauges, so we skip them for now when exporting gauges.
+			continue
 		} else {
 			for _, duration := range lockableDurations {
 				gaugeID, err := k.GetPoolGaugeId(ctx, uint64(poolId), duration)
