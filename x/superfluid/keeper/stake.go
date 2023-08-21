@@ -311,62 +311,6 @@ func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, send
 	return k.undelegateCommon(ctx, sender, gammLockID)
 }
 
-// partialUndelegateCommon acts similarly to undelegateCommon, but undelegates a partial amount of the lock's delegation rather than the full amount. The amount
-// that is undelegated is placed in a new lock. This function returns the intermediary account associated with the original lock ID as well as the new lock that was created.
-// An error is returned if the amount to undelegate is greater than the locked amount.
-func (k Keeper) partialUndelegateCommon(ctx sdk.Context, sender string, lockID uint64, amountToUndelegate sdk.Coin) (intermediaryAcc types.SuperfluidIntermediaryAccount, newlock *lockuptypes.PeriodLock, err error) {
-	lock, err := k.lk.GetLockByID(ctx, lockID)
-	if err != nil {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, err
-	}
-	err = k.validateLockForSF(lock, sender)
-	if err != nil {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, err
-	}
-
-	if amountToUndelegate.Amount.GTE(lock.Coins[0].Amount) {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, fmt.Errorf("partial undelegate amount must be less than the locked amount")
-	}
-
-	// get the intermediate account associated with lock id, and delete the connection.
-	intermediaryAcc, found := k.GetIntermediaryAccountFromLockId(ctx, lockID)
-	if !found {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, types.ErrNotSuperfluidUsedLockup
-	}
-
-	// undelegate the desired lock amount, and burn the minted osmo.
-	amount, err := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, amountToUndelegate.Amount)
-	if err != nil {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, err
-	}
-	err = k.forceUndelegateAndBurnOsmoTokens(ctx, amount, intermediaryAcc)
-	if err != nil {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, err
-	}
-
-	// Move the funds from the old lock to a new lock with the remaining amount.
-	newLock, err := k.lk.SplitLock(ctx, *lock, sdk.NewCoins(amountToUndelegate), true)
-	if err != nil {
-		return types.SuperfluidIntermediaryAccount{}, &lockuptypes.PeriodLock{}, err
-	}
-
-	return intermediaryAcc, &newLock, nil
-}
-
-// partialSuperfluidUndelegate starts undelegating a portion of a superfluid delegated position for the given lock.
-// Undelegation is done instantly and the equivalent amount is sent to the module account
-// where it is burnt. Note that this method does not include unbonding the lock
-// itself.
-// nolint: unused
-func (k Keeper) partialSuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64, amountToUndelegate sdk.Coin) error {
-	intermediaryAcc, newLock, err := k.partialUndelegateCommon(ctx, sender, lockID, amountToUndelegate)
-	if err != nil {
-		return err
-	}
-	// Create a new synthetic lockup representing the unstaking side.
-	return k.createSyntheticLockup(ctx, newLock.ID, intermediaryAcc, unlockingStatus)
-}
-
 // SuperfluidUnbondLock unbonds the lock that has been used for superfluid staking.
 // This method would return an error if the underlying lock is not superfluid undelegating.
 func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, sender string) error {
