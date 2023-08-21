@@ -18,8 +18,10 @@ message Params {
     (gogoproto.nullable) = false
   ];
   // taker_fee_params is the container of taker fee parameters.
-  TakerFeeParams taker_fee_params = 2
-      [ (gogoproto.moretags) = "yaml:\"taker_fee_params\"" ];
+  TakerFeeParams taker_fee_params = 2 [
+    (gogoproto.moretags) = "yaml:\"taker_fee_params\"",
+    (gogoproto.nullable) = false
+  ];
   // authorized_quote_denoms is a list of quote denoms that can be used as
   // token1 when creating a concentrated pool. We limit the quote assets to a
   // small set for the purposes of having convinient price increments stemming

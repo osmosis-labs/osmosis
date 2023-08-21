@@ -83,7 +83,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
-			TakerFeeParams: &types.TakerFeeParams{
+			TakerFeeParams: types.TakerFeeParams{
 				DefaultTakerFee:             testDefaultTakerFee,
 				StableswapTakerFee:          testStableswapTakerFee,
 				OsmoTakerFeeDistribution:    testOsmoTakerFeeDistribution,
@@ -114,7 +114,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.App.PoolManagerKeeper.InitGenesis(s.Ctx, &types.GenesisState{
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
-			TakerFeeParams: &types.TakerFeeParams{
+			TakerFeeParams: types.TakerFeeParams{
 				DefaultTakerFee:             testDefaultTakerFee,
 				StableswapTakerFee:          testStableswapTakerFee,
 				OsmoTakerFeeDistribution:    testOsmoTakerFeeDistribution,

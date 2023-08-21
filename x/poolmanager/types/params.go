@@ -19,7 +19,6 @@ var (
 	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
 	KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo = []byte("CommunityPoolDenomToSwapNonWhitelistedAssetsTo")
 	KeyStablecoinDenoms                               = []byte("StablecoinDenoms")
-	KeyLiquidStakeDenomPairings                       = []byte("LiquidStakeDenomPairings")
 )
 
 // ParamTable for gamm module.
@@ -32,11 +31,10 @@ func NewParams(poolCreationFee sdk.Coins,
 	osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage,
 	authorizedQuoteDenoms []string,
 	communityPoolDenomToSwapNonWhitelistedAssetsTo string,
-	stablecoinDenoms []string,
-	liquidStakeDenomPairings []*LiquidStakedTokenToUnderlyingDenom) Params {
+	stablecoinDenoms []string) Params {
 	return Params{
 		PoolCreationFee: poolCreationFee,
-		TakerFeeParams: &TakerFeeParams{
+		TakerFeeParams: TakerFeeParams{
 			DefaultTakerFee:             defaultTakerFee,
 			StableswapTakerFee:          stableswapTakerFee,
 			OsmoTakerFeeDistribution:    osmoTakerFeeDistribution,
@@ -52,7 +50,7 @@ func NewParams(poolCreationFee sdk.Coins,
 func DefaultParams() Params {
 	return Params{
 		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
-		TakerFeeParams: &TakerFeeParams{
+		TakerFeeParams: TakerFeeParams{
 			DefaultTakerFee:    sdk.MustNewDecFromStr("0.0015"), // 0.15%
 			StableswapTakerFee: sdk.MustNewDecFromStr("0.0002"), // 0.02%
 			OsmoTakerFeeDistribution: TakerFeeDistributionPercentage{
