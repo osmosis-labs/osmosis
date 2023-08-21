@@ -767,13 +767,21 @@ func TestCalculatePriceToTick(t *testing.T) {
 			price:             osmomath.NewBigDec(100_000_100),
 			expectedTickIndex: 72000001,
 		},
-		"MinSpotPrice V1 -> MinCurrentTickV1": {
+		"MinSpotPrice V1 -> MinInitializedTick": {
 			price:             osmomath.BigDecFromSDKDec(types.MinSpotPrice),
-			expectedTickIndex: -9000000 * 12,
+			expectedTickIndex: types.MinInitializedTick,
 		},
-		"MinSpotPrice V1 - 1 ULP -> MinCurrentTick": {
+		"MinSpotPrice V1 - 10^-19 -> MinCurrentTick": {
 			price:             osmomath.BigDecFromSDKDec(types.MinSpotPrice).Sub(osmomath.NewDecWithPrec(1, 19)),
-			expectedTickIndex: -9000000*12 - 1,
+			expectedTickIndex: types.MinCurrentTick,
+		},
+		"MinSpotPrice V2 -> MinInitializedTick V2": {
+			price:             types.MinSpotPriceV2,
+			expectedTickIndex: types.MinInitializedTickV2,
+		},
+		"between MinSpotPrice V2 + 1 ULP -> MinInitializedTick V2 + 1": {
+			price:             types.MinSpotPriceV2.Add(smallestBigDec),
+			expectedTickIndex: types.MinInitializedTickV2 + 1,
 		},
 	}
 	for name, tc := range testCases {
@@ -781,9 +789,55 @@ func TestCalculatePriceToTick(t *testing.T) {
 			tickIndex, err := math.CalculatePriceToTick(tc.price)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedTickIndex, tickIndex)
+
+			// Only run tests on the BigDec version on range [MinCurrentTickV2, MinCurrentTick]
+			if tc.price.LT(osmomath.BigDecFromSDKDec(types.MinSpotPrice)) {
+				return
+			}
+
+			tickIndex, err = math.CalculatePriceToTick(tc.price)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedTickIndex, tickIndex)
 		})
 	}
 }
+
+// This test validates that 36 and 18 decimal CalculatePriceToTick
+// functions produce the same result in the original spot price range of
+// [10^-12, 10^38].
+// This is needed to make sure that we can remove the original 18 decimal
+// version completely.
+func TestCalculatePriceToTick_Dec_BigDec_Consistency(t *testing.T) {
+
+	t.Skip("TestCalculatePriceToTick_Dec_BigDec_Consistency is only for demo purposes. Remove this if want to confirm test results.")
+
+	price := osmomath.BigDecFromSDKDec(types.MinSpotPrice)
+	increment := osmomath.BigDecFromSDKDec(sdk.SmallestDec())
+	for price.LTE(osmomath.BigDecFromSDKDec(types.MaxSpotPrice)) {
+
+		for i := int64(0); i < math.PowTenInternal(-types.ExponentAtPriceOne).TruncateInt64(); i++ {
+			if price.GT(osmomath.BigDecFromSDKDec(types.MaxSpotPrice)) {
+				break
+			}
+
+			tickIndex, err := math.CalculatePriceToTick(price)
+			require.NoError(t, err)
+
+			tickIndexBigDec, err := math.CalculatePriceToTick(price)
+			require.NoError(t, err)
+
+			require.Equal(t, tickIndex, tickIndexBigDec)
+
+			price = price.Add(increment)
+		}
+
+		fmt.Println("price", price)
+
+		increment = increment.MulInt64(10)
+	}
+
+}
+
 func TestPowTenInternal(t *testing.T) {
 	testCases := map[string]struct {
 		exponent             int64
