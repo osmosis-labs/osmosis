@@ -32,11 +32,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 	poolAnys := []*codectypes.Any{}
 	for _, poolI := range pools {
-		cosmwasmPool, ok := poolI.(types.CosmWasmExtension)
-		if !ok {
-			panic("invalid pool type")
-		}
-		any, err := codectypes.NewAnyWithValue(cosmwasmPool)
+		poolI := poolI
+		any, err := codectypes.NewAnyWithValue(poolI)
 		if err != nil {
 			panic(err)
 		}
