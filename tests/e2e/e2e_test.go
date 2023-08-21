@@ -105,14 +105,14 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 	// Upgrade Dependent Tests
 
 	// TODO: Temp disable
-	// if s.skipUpgrade {
-	// 	s.T().Skip("Skipping StableSwapPostUpgrade test")
-	// } else {
-	// 	s.T().Run("StableSwapPostUpgrade", func(t *testing.T) {
-	// 		t.Parallel()
-	// 		s.StableSwapPostUpgrade()
-	// 	})
-	// }
+	if s.skipUpgrade {
+		s.T().Skip("Skipping StableSwapPostUpgrade test")
+	} else {
+		s.T().Run("StableSwapPostUpgrade", func(t *testing.T) {
+			t.Parallel()
+			s.StableSwapPostUpgrade()
+		})
+	}
 
 	if s.skipUpgrade {
 		s.T().Skip("Skipping GeometricTwapMigration test")
@@ -955,7 +955,7 @@ func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 		minAmountOut = "1"
 	)
 
-	coinAIn, coinBIn := fmt.Sprintf("20000%s", denomA), fmt.Sprintf("1%s", denomB)
+	coinAIn, coinBIn := fmt.Sprintf("20000%s", denomA), fmt.Sprintf("2%s", denomB)
 
 	chainABNode.BankSend(initialization.WalletFeeTokens.String(), sender, config.StableswapWallet[index])
 	chainABNode.BankSend(coinAIn, sender, config.StableswapWallet[index])
