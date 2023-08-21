@@ -17,7 +17,7 @@ Each version is identified by a specific id, name, tag, block height and softwar
 | `v14` | Neon      | `v14.0.1` | 7937500        | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v14.0.1/) | [401](https://www.mintscan.io/osmosis/proposals/401) |
 | `v15` | Sodium    | `v15.2.0` | 8732500        | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v15.2.0/) | [458](https://www.mintscan.io/osmosis/proposals/458) |
 | `v16` | Magnesium | `v16.1.1` | 10517000       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v16.1.1/) | [556](https://www.mintscan.io/osmosis/proposals/556) |
-| `v16` | Aluminum  | `v17.0.0` | 11126100       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v17.0.0/) | [556](https://www.mintscan.io/osmosis/proposals/586) |
+| `v17` | Aluminium | `v17.0.0` | 11126100       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v17.0.0/) | [556](https://www.mintscan.io/osmosis/proposals/586) |
 
 ## Upgrade Binaries
 
