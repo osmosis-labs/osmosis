@@ -627,7 +627,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 		sdk.ZeroDec(),
 		spreadRewardCharge_Swap2_Step2,
 		spreadRewardGrowthGlobal_Swap1,
-		spreadRewardGrowthGlobal, // cannot use spreadRewardGrowthGlobal, it was already increased by second swap's step
+		spreadRewardGrowthGlobal,
 	)
 
 	// Assert
@@ -712,18 +712,21 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	amountInToGetToTickBelowInitialized := liquidityBeforeSwap.Add(positionsAddress1[0].Position.Liquidity).Mul(fractionBelowNextInitializedTick)
 	amountInToGetToNextInitTick = liquidityBeforeSwap.Mul(fractionAtNextInitializedTick.SDKDec())
 
+	// Collect spread rewards for address1 position1 to avoid overhead computations (swap2 already asserted spread rewards are aggregated correctly from multiple swaps)
+	chainABNode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+
 	var (
 		// Swap parameters
 		uionInDec_Swap3_NoSpreadReward = amountInToGetToNextInitTick.Add(amountInToGetToTickBelowInitialized)                // amount of uion to move price from current to desired (not considering spreadFactor)
 		uionInDec_Swap3                = uionInDec_Swap3_NoSpreadReward.Quo(sdk.OneDec().Sub(spreadFactorDec)).TruncateDec() // consider spreadFactor
-		uionIn_Swap3                   = fmt.Sprintf("%suion", uionInDec_Swap3.String())
 
 		// Save variables from previous swaps
 		spreadRewardGrowthGlobal_Swap2                = spreadRewardGrowthGlobal.Clone()
-		spreadRewardGrowthInsideAddress1Position1Last = spreadRewardGrowthGlobal_Swap1.Add(spreadRewardCharge_Swap2_Step1)
+		spreadRewardGrowthInsideAddress1Position1Last = spreadRewardGrowthGlobal.Sub(spreadRewardCharge_Swap2_Step2).Clone()
 	)
-	// Collect spread rewards for address1 position1 to avoid overhead computations (swap2 already asserted spread rewards are aggregated correctly from multiple swaps)
-	chainABNode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+
+	uionInDec_Swap3_AddTakerFee := uionInDec_Swap3.Quo(sdk.OneDec().Sub(takerFee)).TruncateDec() // account for taker fee
+	uionIn_Swap3 := fmt.Sprintf("%suion", uionInDec_Swap3_AddTakerFee.String())
 
 	// Perform a swap
 	chainABNode.SwapExactAmountIn(uionIn_Swap3, outMinAmt, fmt.Sprintf("%d", poolID), denom1, initialization.ValidatorWalletName)
