@@ -126,3 +126,7 @@ func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error
 	}
 	return nil
 }
+
+func (k Keeper) GetPoolManagerKeeper() types.PoolManagerKeeper {
+	return k.poolmanagerKeeper
+}

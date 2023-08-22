@@ -86,9 +86,9 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			s.SetupTest()
 
 			if len(test.authorizedDenomsOverwrite) > 0 {
-				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+				params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 				params.AuthorizedQuoteDenoms = test.authorizedDenomsOverwrite
-				s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+				s.App.PoolManagerKeeper.SetParams(s.Ctx, params)
 			}
 
 			s.setListenerMockOnConcentratedLiquidityKeeper()

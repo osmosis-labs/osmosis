@@ -41,6 +41,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	spreadFactor := concentratedPool.GetSpreadFactor(ctx)
 	poolId := concentratedPool.GetId()
 	quoteAsset := concentratedPool.GetToken1()
+	poolManagerParams := k.poolmanagerKeeper.GetParams(ctx)
 
 	if !k.validateTickSpacing(params, tickSpacing) {
 		return types.UnauthorizedTickSpacingError{ProvidedTickSpacing: tickSpacing, AuthorizedTickSpacings: params.AuthorizedTickSpacing}
@@ -50,8 +51,8 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return types.UnauthorizedSpreadFactorError{ProvidedSpreadFactor: spreadFactor, AuthorizedSpreadFactors: params.AuthorizedSpreadFactors}
 	}
 
-	if !validateAuthorizedQuoteDenoms(quoteAsset, params.AuthorizedQuoteDenoms) {
-		return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: params.AuthorizedQuoteDenoms}
+	if !validateAuthorizedQuoteDenoms(quoteAsset, poolManagerParams.AuthorizedQuoteDenoms) {
+		return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: poolManagerParams.AuthorizedQuoteDenoms}
 	}
 
 	if err := k.createSpreadRewardAccumulator(ctx, poolId); err != nil {
