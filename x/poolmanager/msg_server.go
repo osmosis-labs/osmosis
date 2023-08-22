@@ -124,7 +124,7 @@ func (server msgServer) SetDenomPairTakerFee(goCtx context.Context, msg *types.M
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	for _, denomPair := range msg.DenomPairTakerFee {
-		err := server.keeper.SenderValidationSetDenomPairTakerFee(ctx, msg.Sender, denomPair.Denom_0, denomPair.Denom_1, denomPair.TakerFee)
+		err := server.keeper.SenderValidationSetDenomPairTakerFee(ctx, msg.Sender, denomPair.Denom0, denomPair.Denom1, denomPair.TakerFee)
 		if err != nil {
 			return nil, err
 		}

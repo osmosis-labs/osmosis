@@ -24,6 +24,13 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// Move the current authorized quote denoms from the concentrated liquidity params to the pool manager params.
+		// This is needed since the pool manager needs access to these denoms to determine if the taker fee should
+		// be swapped into OSMO or not.
+		// TODO: In v19 upgrade handler, delete this param from the concentrated liquidity params.
+		currentConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
+		defaultPoolManagerParams := poolmanagertypes.DefaultParams()
+		defaultPoolManagerParams.AuthorizedQuoteDenoms = currentConcentratedLiquidityParams.AuthorizedQuoteDenoms
 		keepers.PoolManagerKeeper.SetParams(ctx, poolmanagertypes.DefaultParams())
 
 		return migrations, nil

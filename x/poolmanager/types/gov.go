@@ -51,16 +51,16 @@ func (p *DenomPairTakerFeeProposal) ValidateBasic() error {
 	}
 
 	for _, record := range p.DenomPairTakerFee {
-		if record.Denom_0 == record.Denom_1 {
+		if record.Denom0 == record.Denom1 {
 			return fmt.Errorf("denom0 and denom1 must be different")
 		}
 
-		if sdk.ValidateDenom(record.Denom_0) != nil {
-			return fmt.Errorf("denom0 is invalid: %s", sdk.ValidateDenom(record.Denom_0))
+		if sdk.ValidateDenom(record.Denom0) != nil {
+			return fmt.Errorf("denom0 is invalid: %s", sdk.ValidateDenom(record.Denom0))
 		}
 
-		if sdk.ValidateDenom(record.Denom_1) != nil {
-			return fmt.Errorf("denom1 is invalid: %s", sdk.ValidateDenom(record.Denom_1))
+		if sdk.ValidateDenom(record.Denom1) != nil {
+			return fmt.Errorf("denom1 is invalid: %s", sdk.ValidateDenom(record.Denom1))
 		}
 
 		takerFee := record.TakerFee
@@ -75,7 +75,7 @@ func (p *DenomPairTakerFeeProposal) ValidateBasic() error {
 func (p DenomPairTakerFeeProposal) String() string {
 	recordsStr := ""
 	for _, record := range p.DenomPairTakerFee {
-		recordsStr = recordsStr + fmt.Sprintf("(Denom0: %s, Denom1: %s, TakerFee: %s) ", record.Denom_0, record.Denom_1, record.TakerFee.String())
+		recordsStr = recordsStr + fmt.Sprintf("(Denom0: %s, Denom1: %s, TakerFee: %s) ", record.Denom0, record.Denom1, record.TakerFee.String())
 	}
 
 	var b strings.Builder

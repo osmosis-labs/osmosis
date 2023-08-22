@@ -112,12 +112,3 @@ message TakerFeeDistributionPercentage {
     (gogoproto.nullable) = false
   ];
 }
-
-// LiquidStakedTokenToUnderlyingDenom defines a pairing of a single natural
-// denom with its corresponding LST denoms.
-message LiquidStakedTokenToUnderlyingDenom {
-  repeated string liquid_staked_token_denoms = 1
-      [ (gogoproto.moretags) = "yaml:\"liquid_staked_token_denoms\"" ];
-  string underlying_token_denom = 2
-      [ (gogoproto.moretags) = "yaml:\"underlying_token_denom\"" ];
-}

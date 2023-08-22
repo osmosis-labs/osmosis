@@ -357,6 +357,8 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	address2 := chainABNode.CreateWalletAndFund("addr2", fundTokens, chainAB)
 	address3 := chainABNode.CreateWalletAndFund("addr3", fundTokens, chainAB)
 
+	// When claiming rewards, a small portion of dust is forfeited and is redistributed to everyone. We must track the total
+	// liquidity across all positions (even if not active), in order to calculate how much to increase the reward growth global per share by.
 	totalLiquidity := sdk.ZeroDec()
 
 	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions

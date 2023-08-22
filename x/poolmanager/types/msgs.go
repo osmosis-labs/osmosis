@@ -180,10 +180,10 @@ func (msg MsgSetDenomPairTakerFee) ValidateBasic() error {
 	}
 
 	for _, denomPair := range msg.DenomPairTakerFee {
-		if err := sdk.ValidateDenom(denomPair.Denom_0); err != nil {
+		if err := sdk.ValidateDenom(denomPair.Denom0); err != nil {
 			return err
 		}
-		if err := sdk.ValidateDenom(denomPair.Denom_1); err != nil {
+		if err := sdk.ValidateDenom(denomPair.Denom1); err != nil {
 			return err
 		}
 		if denomPair.TakerFee.IsNegative() {

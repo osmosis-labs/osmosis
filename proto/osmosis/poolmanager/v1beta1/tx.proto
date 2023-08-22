@@ -131,8 +131,8 @@ message MsgSetDenomPairTakerFee {
 message MsgSetDenomPairTakerFeeResponse { bool success = 1; }
 
 message DenomPairTakerFee {
-  string denom_0 = 1 [ (gogoproto.moretags) = "yaml:\"denom_0\"" ];
-  string denom_1 = 2 [ (gogoproto.moretags) = "yaml:\"denom_1\"" ];
+  string denom0 = 1 [ (gogoproto.moretags) = "yaml:\"denom0\"" ];
+  string denom1 = 2 [ (gogoproto.moretags) = "yaml:\"denom1\"" ];
   string taker_fee = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"taker_fee\"",
