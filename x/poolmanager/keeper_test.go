@@ -29,7 +29,7 @@ var (
 		StakingRewards: sdk.MustNewDecFromStr("0.2"),
 		CommunityPool:  sdk.MustNewDecFromStr("0.8"),
 	}
-	testAdminAddresses                                 = []string{"osmo1qnpk2xwq6q5s6zj4qz4z2s6qz4z2s6qz4z2s6q"}
+	testAdminAddresses                                 = []string{"osmo106x8q2nv7xsg7qrec2zgdf3vvq0t3gn49zvaha", "osmo105l5r3rjtynn7lg362r2m9hkpfvmgmjtkglsn9"}
 	testCommunityPoolDenomToSwapNonWhitelistedAssetsTo = "uusdc"
 	testAuthorizedQuoteDenoms                          = []string{"uosmo", "uion", "uatom"}
 
