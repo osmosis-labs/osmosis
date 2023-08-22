@@ -42,7 +42,7 @@ var (
 	NewIntWithDecimal = sdkmath.NewIntWithDecimal
 	ZeroInt           = sdkmath.ZeroInt
 	OneInt            = sdkmath.OneInt
-	SDKIntEq          = sdkmath.IntEq
+	IntEq             = sdkmath.IntEq
 	MinInt            = sdkmath.MinInt
 	MaxInt            = sdkmath.MaxInt
 

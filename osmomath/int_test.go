@@ -384,9 +384,9 @@ func (s *intTestSuite) TestIntMod() {
 }
 
 func (s *intTestSuite) TestIntEq() {
-	_, resp, _, _, _ := IntEq(s.T(), ZeroBigInt(), ZeroBigInt())
+	_, resp, _, _, _ := BigIntEq(s.T(), ZeroBigInt(), ZeroBigInt())
 	s.Require().True(resp)
-	_, resp, _, _, _ = IntEq(s.T(), OneBigInt(), ZeroBigInt())
+	_, resp, _, _, _ = BigIntEq(s.T(), OneBigInt(), ZeroBigInt())
 	s.Require().False(resp)
 }
 

@@ -16,7 +16,7 @@ import (
 // * |a - b| / min(a, b) <= MultiplicativeTolerance
 //
 // Each check is respectively ignored if the entry is nil.
-// So AdditiveTolerance = SDKInt{} or ZeroSDKInt()
+// So AdditiveTolerance = Int{} or ZeroInt()
 // MultiplicativeTolerance = SDKDec{}
 // RoundingDir = RoundUnconstrained.
 // Note that if AdditiveTolerance == 0, then this is equivalent to a standard compare.

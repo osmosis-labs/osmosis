@@ -67,7 +67,7 @@ func TestBinarySearch(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.True(SDKIntEq(t, tc.expectedSolvedInput, actualSolvedInput))
+				require.True(IntEq(t, tc.expectedSolvedInput, actualSolvedInput))
 			}
 		})
 	}
