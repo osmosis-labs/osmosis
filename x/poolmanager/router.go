@@ -11,7 +11,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
 )
 
 // 1 << 256 - 1 where 256 is the max bit length defined for sdk.Int
@@ -827,112 +826,6 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	}
 	totalLiquidity := totalGammLiquidity.Add(totalConcentratedLiquidity...).Add(totalCosmwasmLiquidity...)
 	return totalLiquidity, nil
-}
-
-// extractTakerFeeAndDistribute takes in a pool and extracts the taker fee from the pool and sends it to the non native fee pool module account.
-// Its important to note here that in the original swap, the taker fee + spread fee is sent to the pool's address, so this is why we
-// pull directly from the pool and not the user's account.
-func (k Keeper) extractTakerFeeAndDistribute(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, poolManagerParams types.Params, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
-	nonNativeFeeCollectorForStakingRewardsName := txfeestypes.NonNativeFeeCollectorForStakingRewardsName
-	nonNativeFeeCollectorForCommunityPoolName := txfeestypes.NonNativeFeeCollectorForCommunityPoolName
-	baseDenom := appparams.BaseCoinUnit
-
-	takerFee, err := k.GetTradingPairTakerFee(ctx, tokenIn.Denom, tokenOutDenom)
-	if err != nil {
-		return sdk.Coin{}, err
-	}
-
-	var tokenInAfterTakerFee sdk.Coin
-	var takerFeeCoin sdk.Coin
-	if exactIn {
-		tokenInAfterTakerFee, takerFeeCoin = k.calcTakerFeeExactIn(tokenIn, takerFee)
-	} else {
-		tokenInAfterTakerFee, takerFeeCoin = k.calcTakerFeeExactOut(tokenIn, takerFee)
-	}
-
-	// N.B. We truncate from the community pool calculation, then remove that from the total, and use the remaining for staking rewards.
-	// If we truncate both, these can leave tokens in the users wallet when swapping and exact amount in, which is bad UX.
-
-	// We determine the distributution of the taker fee based on its denom
-	// If the denom is the base denom:
-	takerFeeAmtRemaining := takerFeeCoin.Amount
-	if takerFeeCoin.Denom == baseDenom {
-		// Community Pool:
-		if poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.CommunityPool.GT(sdk.ZeroDec()) {
-			// Osmo community pool funds is a direct send
-			osmoTakerFeeToCommunityPoolDec := takerFeeAmtRemaining.ToDec().Mul(poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.CommunityPool)
-			osmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, osmoTakerFeeToCommunityPoolDec.TruncateInt()))
-			err := k.communityPoolKeeper.FundCommunityPool(ctx, osmoTakerFeeToCommunityPoolCoins, sender)
-			if err != nil {
-				return sdk.Coin{}, err
-			}
-			takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(osmoTakerFeeToCommunityPoolCoins.AmountOf(baseDenom))
-		}
-		// Staking Rewards:
-		if poolManagerParams.TakerFeeParams.OsmoTakerFeeDistribution.StakingRewards.GT(sdk.ZeroDec()) {
-			// Osmo staking rewards funds are sent to the non native fee pool module account (even though its native, we want to distribute at the same time as the non native fee tokens)
-			// We could stream these rewards via the fee collector account, but this is decision to be made by governance.
-			osmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, takerFeeAmtRemaining))
-			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForStakingRewardsName, osmoTakerFeeToStakingRewardsCoins)
-			if err != nil {
-				return sdk.Coin{}, err
-			}
-		}
-
-		// If the denom is not the base denom:
-	} else {
-		// Community Pool:
-		if poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool.GT(sdk.ZeroDec()) {
-			denomIsWhitelisted := isDenomWhitelisted(takerFeeCoin.Denom, poolManagerParams.AuthorizedQuoteDenoms)
-			// If the non osmo denom is a whitelisted quote asset, we send to the community pool
-			if denomIsWhitelisted {
-				nonOsmoTakerFeeToCommunityPoolDec := takerFeeAmtRemaining.ToDec().Mul(poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool)
-				nonOsmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt()))
-				err := k.communityPoolKeeper.FundCommunityPool(ctx, nonOsmoTakerFeeToCommunityPoolCoins, sender)
-				if err != nil {
-					return sdk.Coin{}, err
-				}
-				takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(nonOsmoTakerFeeToCommunityPoolCoins.AmountOf(tokenIn.Denom))
-			} else {
-				// If the non osmo denom is not a whitelisted asset, we send to the non native fee pool for community pool module account.
-				// At epoch, this account swaps the non native, non whitelisted assets for XXX and sends to the community pool.
-				nonOsmoTakerFeeToCommunityPoolDec := takerFeeAmtRemaining.ToDec().Mul(poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool)
-				nonOsmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt()))
-				err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForCommunityPoolName, nonOsmoTakerFeeToCommunityPoolCoins)
-				if err != nil {
-					return sdk.Coin{}, err
-				}
-				takerFeeAmtRemaining = takerFeeAmtRemaining.Sub(nonOsmoTakerFeeToCommunityPoolCoins.AmountOf(tokenIn.Denom))
-			}
-		}
-		// Staking Rewards:
-		if poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards.GT(sdk.ZeroDec()) {
-			// Non Osmo staking rewards are sent to the non native fee pool module account
-			nonOsmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(takerFeeCoin.Denom, takerFeeAmtRemaining))
-			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForStakingRewardsName, nonOsmoTakerFeeToStakingRewardsCoins)
-			if err != nil {
-				return sdk.Coin{}, err
-			}
-		}
-	}
-
-	return tokenInAfterTakerFee, nil
-}
-
-func (k Keeper) calcTakerFeeExactIn(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
-	amountInAfterSubTakerFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(takerFee))
-	tokenInAfterSubTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterSubTakerFee.TruncateInt())
-	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, tokenIn.Amount.Sub(tokenInAfterSubTakerFee.Amount))
-
-	return tokenInAfterSubTakerFee, takerFeeCoin
-}
-
-func (k Keeper) calcTakerFeeExactOut(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
-	amountInAfterAddTakerFee := tokenIn.Amount.ToDec().Quo(sdk.OneDec().Sub(takerFee))
-	tokenInAfterAddTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterAddTakerFee.RoundInt())
-	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, tokenInAfterAddTakerFee.Amount.Sub(tokenIn.Amount))
-
-	return tokenInAfterAddTakerFee, takerFeeCoin
 }
 
 func isDenomWhitelisted(denom string, authorizedQuoteDenoms []string) bool {
