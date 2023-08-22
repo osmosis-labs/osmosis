@@ -429,7 +429,6 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	)
 	// Perform swap (not crossing initialized ticks)
 	chainABNode.SwapExactAmountIn(uosmoIn_Swap1, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
-
 	// Calculate and track global spread reward growth for swap 1
 	uosmoInDec_Swap1_SubTakerFee := uosmoInDec_Swap1.SDKDec().Mul(sdk.OneDec().Sub(takerFee)).TruncateDec()
 	uosmoInDec_Swap1_SubTakerFee_SubSpreadFactor := uosmoInDec_Swap1_SubTakerFee.Mul(sdk.OneDec().Sub(spreadFactorDec))
