@@ -1,9 +1,9 @@
 package osmomath
 
-var pointOne = OneSDKDec().QuoInt64(10)
+var pointOne = OneDec().QuoInt64(10)
 
 // SigFigRound rounds to a specified significant figure.
-func SigFigRound(d SDKDec, tenToSigFig SDKInt) SDKDec {
+func SigFigRound(d Dec, tenToSigFig Int) Dec {
 	if d.IsZero() {
 		return d
 	}
@@ -18,9 +18,9 @@ func SigFigRound(d SDKDec, tenToSigFig SDKInt) SDKDec {
 	}
 	// d * 10^k * 10^sigfig
 	dkSigFig := dTimesK.MulInt(tenToSigFig)
-	numerator := dkSigFig.RoundInt().ToDec()
+	numerator := ToDec(dkSigFig.RoundInt())
 
-	tenToK := NewSDKInt(10).ToDec().Power(k)
+	tenToK := ToDec(NewInt(10)).Power(k)
 	denominator := tenToSigFig.Mul(tenToK.TruncateInt())
 	return numerator.QuoInt(denominator)
 }

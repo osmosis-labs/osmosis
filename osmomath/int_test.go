@@ -25,30 +25,30 @@ func (s *intTestSuite) SetupSuite() {
 func (s *intTestSuite) TestFromInt64() {
 	for n := 0; n < 20; n++ {
 		r := rand.Int63()
-		s.Require().Equal(r, NewInt(r).Int64())
+		s.Require().Equal(r, NewBigInt(r).Int64())
 	}
 }
 
 func (s *intTestSuite) TestFromUint64() {
 	for n := 0; n < 20; n++ {
 		r := rand.Uint64()
-		s.Require().True(NewIntFromUint64(r).IsUint64())
-		s.Require().Equal(r, NewIntFromUint64(r).Uint64())
+		s.Require().True(NewBigIntFromUint64(r).IsUint64())
+		s.Require().Equal(r, NewBigIntFromUint64(r).Uint64())
 	}
 }
 
 func (s *intTestSuite) TestIntPanic() {
 	// Max Int = 2^1024-1 = 8.988466e+308
 	// Min Int = -(2^1024-1) = -8.988466e+308
-	s.Require().NotPanics(func() { NewIntWithDecimal(4, 307) })
-	i1 := NewIntWithDecimal(4, 307)
-	s.Require().NotPanics(func() { NewIntWithDecimal(5, 307) })
-	i2 := NewIntWithDecimal(5, 307)
-	s.Require().NotPanics(func() { NewIntWithDecimal(92, 306) })
-	i3 := NewIntWithDecimal(92, 306)
+	s.Require().NotPanics(func() { NewBigIntWithDecimal(4, 307) })
+	i1 := NewBigIntWithDecimal(4, 307)
+	s.Require().NotPanics(func() { NewBigIntWithDecimal(5, 307) })
+	i2 := NewBigIntWithDecimal(5, 307)
+	s.Require().NotPanics(func() { NewBigIntWithDecimal(92, 306) })
+	i3 := NewBigIntWithDecimal(92, 306)
 
-	s.Require().Panics(func() { NewIntWithDecimal(2, 308) })
-	s.Require().Panics(func() { NewIntWithDecimal(9, 340) })
+	s.Require().Panics(func() { NewBigIntWithDecimal(2, 308) })
+	s.Require().Panics(func() { NewBigIntWithDecimal(9, 340) })
 
 	// Overflow check
 	s.Require().NotPanics(func() { i1.Add(i1) })
@@ -82,18 +82,18 @@ func (s *intTestSuite) TestIntPanic() {
 	s.Require().Panics(func() { i3.Mul(i3.Neg()) })
 
 	// Bound check
-	intmax := NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1)))
+	intmax := NewBigIntFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1)))
 	intmin := intmax.Neg()
-	s.Require().NotPanics(func() { intmax.Add(ZeroInt()) })
-	s.Require().NotPanics(func() { intmin.Sub(ZeroInt()) })
-	s.Require().Panics(func() { intmax.Add(OneInt()) })
-	s.Require().Panics(func() { intmin.Sub(OneInt()) })
+	s.Require().NotPanics(func() { intmax.Add(ZeroBigInt()) })
+	s.Require().NotPanics(func() { intmin.Sub(ZeroBigInt()) })
+	s.Require().Panics(func() { intmax.Add(OneBigInt()) })
+	s.Require().Panics(func() { intmin.Sub(OneBigInt()) })
 
-	s.Require().NotPanics(func() { NewIntFromBigInt(nil) })
-	s.Require().True(NewIntFromBigInt(nil).IsNil())
+	s.Require().NotPanics(func() { NewBigIntFromBigInt(nil) })
+	s.Require().True(NewBigIntFromBigInt(nil).IsNil())
 
 	// Division-by-zero check
-	s.Require().Panics(func() { i1.Quo(NewInt(0)) })
+	s.Require().Panics(func() { i1.Quo(NewBigInt(0)) })
 
 	s.Require().NotPanics(func() { BigInt{}.BigInt() })
 }
@@ -105,17 +105,17 @@ func (s *intTestSuite) TestIntPanic() {
 func (s *intTestSuite) TestIdentInt() {
 	for d := 0; d < 1000; d++ {
 		n := rand.Int63()
-		i := NewInt(n)
+		i := NewBigInt(n)
 
-		ifromstr, ok := NewIntFromString(strconv.FormatInt(n, 10))
+		ifromstr, ok := NewBigIntFromString(strconv.FormatInt(n, 10))
 		s.Require().True(ok)
 
 		cases := []int64{
 			i.Int64(),
 			i.BigInt().Int64(),
 			ifromstr.Int64(),
-			NewIntFromBigInt(big.NewInt(n)).Int64(),
-			NewIntWithDecimal(n, 0).Int64(),
+			NewBigIntFromBigInt(big.NewInt(n)).Int64(),
+			NewBigIntWithDecimal(n, 0).Int64(),
 		}
 
 		for tcnum, tc := range cases {
@@ -141,9 +141,9 @@ func maxint(i1, i2 int64) int64 {
 func (s *intTestSuite) TestArithInt() {
 	for d := 0; d < 1000; d++ {
 		n1 := int64(rand.Int31())
-		i1 := NewInt(n1)
+		i1 := NewBigInt(n1)
 		n2 := int64(rand.Int31())
-		i2 := NewInt(n2)
+		i2 := NewBigInt(n2)
 
 		cases := []struct {
 			ires BigInt
@@ -157,8 +157,8 @@ func (s *intTestSuite) TestArithInt() {
 			{i1.SubRaw(n2), n1 - n2},
 			{i1.MulRaw(n2), n1 * n2},
 			{i1.QuoRaw(n2), n1 / n2},
-			{MinInt(i1, i2), minint(n1, n2)},
-			{MaxInt(i1, i2), maxint(n1, n2)},
+			{MinBigInt(i1, i2), minint(n1, n2)},
+			{MaxBigInt(i1, i2), maxint(n1, n2)},
 			{i1.Neg(), -n1},
 			{i1.Abs(), n1},
 			{i1.Neg().Abs(), n1},
@@ -173,9 +173,9 @@ func (s *intTestSuite) TestArithInt() {
 func (s *intTestSuite) TestCompInt() {
 	for d := 0; d < 1000; d++ {
 		n1 := int64(rand.Int31())
-		i1 := NewInt(n1)
+		i1 := NewBigInt(n1)
 		n2 := int64(rand.Int31())
-		i2 := NewInt(n2)
+		i2 := NewBigInt(n2)
 
 		cases := []struct {
 			ires bool
@@ -194,7 +194,7 @@ func (s *intTestSuite) TestCompInt() {
 }
 
 func randint() BigInt {
-	return NewInt(rand.Int63())
+	return NewBigInt(rand.Int63())
 }
 
 func (s *intTestSuite) TestImmutabilityAllInt() {
@@ -219,13 +219,13 @@ func (s *intTestSuite) TestImmutabilityAllInt() {
 
 	for i := 0; i < 1000; i++ {
 		n := rand.Int63()
-		ni := NewInt(n)
+		ni := NewBigInt(n)
 
 		for opnum, op := range ops {
 			op(&ni)
 
 			s.Require().Equal(n, ni.Int64(), "Int is modified by operation. tc #%d", opnum)
-			s.Require().Equal(NewInt(n), ni, "Int is modified by operation. tc #%d", opnum)
+			s.Require().Equal(NewBigInt(n), ni, "Int is modified by operation. tc #%d", opnum)
 		}
 	}
 }
@@ -239,47 +239,47 @@ func (s *intTestSuite) TestEncodingTableInt() {
 		rawBz  []byte
 	}{
 		{
-			NewInt(0),
+			NewBigInt(0),
 			[]byte("\"0\""),
 			[]byte{0x30},
 		},
 		{
-			NewInt(100),
+			NewBigInt(100),
 			[]byte("\"100\""),
 			[]byte{0x31, 0x30, 0x30},
 		},
 		{
-			NewInt(-100),
+			NewBigInt(-100),
 			[]byte("\"-100\""),
 			[]byte{0x2d, 0x31, 0x30, 0x30},
 		},
 		{
-			NewInt(51842),
+			NewBigInt(51842),
 			[]byte("\"51842\""),
 			[]byte{0x35, 0x31, 0x38, 0x34, 0x32},
 		},
 		{
-			NewInt(-51842),
+			NewBigInt(-51842),
 			[]byte("\"-51842\""),
 			[]byte{0x2d, 0x35, 0x31, 0x38, 0x34, 0x32},
 		},
 		{
-			NewInt(19513368),
+			NewBigInt(19513368),
 			[]byte("\"19513368\""),
 			[]byte{0x31, 0x39, 0x35, 0x31, 0x33, 0x33, 0x36, 0x38},
 		},
 		{
-			NewInt(-19513368),
+			NewBigInt(-19513368),
 			[]byte("\"-19513368\""),
 			[]byte{0x2d, 0x31, 0x39, 0x35, 0x31, 0x33, 0x33, 0x36, 0x38},
 		},
 		{
-			NewInt(999999999999),
+			NewBigInt(999999999999),
 			[]byte("\"999999999999\""),
 			[]byte{0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39},
 		},
 		{
-			NewInt(-999999999999),
+			NewBigInt(-999999999999),
 			[]byte("\"-999999999999\""),
 			[]byte{0x2d, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39},
 		},
@@ -305,35 +305,35 @@ func (s *intTestSuite) TestEncodingTableInt() {
 }
 
 func (s *intTestSuite) TestEncodingTableUint() {
-	var i SDKUint
+	var i Uint
 
 	cases := []struct {
-		i      SDKUint
+		i      Uint
 		jsonBz []byte
 		rawBz  []byte
 	}{
 		{
-			NewSDKUint(0),
+			NewUint(0),
 			[]byte("\"0\""),
 			[]byte{0x30},
 		},
 		{
-			NewSDKUint(100),
+			NewUint(100),
 			[]byte("\"100\""),
 			[]byte{0x31, 0x30, 0x30},
 		},
 		{
-			NewSDKUint(51842),
+			NewUint(51842),
 			[]byte("\"51842\""),
 			[]byte{0x35, 0x31, 0x38, 0x34, 0x32},
 		},
 		{
-			NewSDKUint(19513368),
+			NewUint(19513368),
 			[]byte("\"19513368\""),
 			[]byte{0x31, 0x39, 0x35, 0x31, 0x33, 0x33, 0x36, 0x38},
 		},
 		{
-			NewSDKUint(999999999999),
+			NewUint(999999999999),
 			[]byte("\"999999999999\""),
 			[]byte{0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39, 0x39},
 		},
@@ -374,19 +374,19 @@ func (s *intTestSuite) TestIntMod() {
 
 	for _, tt := range tests {
 		if tt.wantPanic {
-			s.Require().Panics(func() { NewInt(tt.x).Mod(NewInt(tt.y)) })
-			s.Require().Panics(func() { NewInt(tt.x).ModRaw(tt.y) })
+			s.Require().Panics(func() { NewBigInt(tt.x).Mod(NewBigInt(tt.y)) })
+			s.Require().Panics(func() { NewBigInt(tt.x).ModRaw(tt.y) })
 			return
 		}
-		s.Require().True(NewInt(tt.x).Mod(NewInt(tt.y)).Equal(NewInt(tt.ret)))
-		s.Require().True(NewInt(tt.x).ModRaw(tt.y).Equal(NewInt(tt.ret)))
+		s.Require().True(NewBigInt(tt.x).Mod(NewBigInt(tt.y)).Equal(NewBigInt(tt.ret)))
+		s.Require().True(NewBigInt(tt.x).ModRaw(tt.y).Equal(NewBigInt(tt.ret)))
 	}
 }
 
 func (s *intTestSuite) TestIntEq() {
-	_, resp, _, _, _ := IntEq(s.T(), ZeroInt(), ZeroInt())
+	_, resp, _, _, _ := IntEq(s.T(), ZeroBigInt(), ZeroBigInt())
 	s.Require().True(resp)
-	_, resp, _, _, _ = IntEq(s.T(), OneInt(), ZeroInt())
+	_, resp, _, _, _ = IntEq(s.T(), OneBigInt(), ZeroBigInt())
 	s.Require().False(resp)
 }
 
@@ -407,7 +407,7 @@ func TestRoundTripMarshalToInt(t *testing.T) {
 			t.Parallel()
 
 			var scratch [20]byte
-			iv := NewInt(value)
+			iv := NewBigInt(value)
 			n, err := iv.MarshalTo(scratch[:])
 			if err != nil {
 				t.Fatal(err)
@@ -426,7 +426,7 @@ func TestRoundTripMarshalToInt(t *testing.T) {
 func (s *intTestSuite) TestEncodingRandom() {
 	for i := 0; i < 1000; i++ {
 		n := rand.Int63()
-		ni := NewInt(n)
+		ni := NewBigInt(n)
 		var ri BigInt
 
 		str, err := ni.Marshal()
@@ -448,9 +448,9 @@ func (s *intTestSuite) TestEncodingRandom() {
 
 	for i := 0; i < 1000; i++ {
 		n := rand.Uint64()
-		ni := NewSDKUint(n)
+		ni := NewUint(n)
 
-		var ri SDKUint
+		var ri Uint
 
 		str, err := ni.Marshal()
 		s.Require().Nil(err)

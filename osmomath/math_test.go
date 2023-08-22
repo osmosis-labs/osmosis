@@ -8,86 +8,86 @@ import (
 )
 
 func TestAbsDifferenceWithSign(t *testing.T) {
-	decA, err := NewSDKDecFromStr("3.2")
+	decA, err := NewDecFromStr("3.2")
 	require.NoError(t, err)
-	decB, err := NewSDKDecFromStr("4.3432389")
+	decB, err := NewDecFromStr("4.3432389")
 	require.NoError(t, err)
 
 	s, b := AbsDifferenceWithSign(decA, decB)
 	require.True(t, b)
 
-	expectedDec, err := NewSDKDecFromStr("1.1432389")
+	expectedDec, err := NewDecFromStr("1.1432389")
 	require.NoError(t, err)
 	require.Equal(t, expectedDec, s)
 }
 
 func TestPowApprox(t *testing.T) {
 	testCases := []struct {
-		base           SDKDec
-		exp            SDKDec
-		powPrecision   SDKDec
-		expectedResult SDKDec
+		base           Dec
+		exp            Dec
+		powPrecision   Dec
+		expectedResult Dec
 	}{
 		{
 			// medium base, small exp
-			base:           MustNewSDKDecFromStr("0.8"),
-			exp:            MustNewSDKDecFromStr("0.32"),
-			powPrecision:   MustNewSDKDecFromStr("0.00000001"),
-			expectedResult: MustNewSDKDecFromStr("0.93108385"),
+			base:           MustNewDecFromStr("0.8"),
+			exp:            MustNewDecFromStr("0.32"),
+			powPrecision:   MustNewDecFromStr("0.00000001"),
+			expectedResult: MustNewDecFromStr("0.93108385"),
 		},
 		{
 			// zero exp
-			base:           MustNewSDKDecFromStr("0.8"),
-			exp:            ZeroSDKDec(),
-			powPrecision:   MustNewSDKDecFromStr("0.00001"),
-			expectedResult: OneSDKDec(),
+			base:           MustNewDecFromStr("0.8"),
+			exp:            ZeroDec(),
+			powPrecision:   MustNewDecFromStr("0.00001"),
+			expectedResult: OneDec(),
 		},
 		{
 			// zero base, this should panic
-			base:           ZeroSDKDec(),
-			exp:            OneSDKDec(),
-			powPrecision:   MustNewSDKDecFromStr("0.00001"),
-			expectedResult: ZeroSDKDec(),
+			base:           ZeroDec(),
+			exp:            OneDec(),
+			powPrecision:   MustNewDecFromStr("0.00001"),
+			expectedResult: ZeroDec(),
 		},
 		{
 			// large base, small exp
-			base:           MustNewSDKDecFromStr("1.9999"),
-			exp:            MustNewSDKDecFromStr("0.23"),
-			powPrecision:   MustNewSDKDecFromStr("0.000000001"),
-			expectedResult: MustNewSDKDecFromStr("1.172821461"),
+			base:           MustNewDecFromStr("1.9999"),
+			exp:            MustNewDecFromStr("0.23"),
+			powPrecision:   MustNewDecFromStr("0.000000001"),
+			expectedResult: MustNewDecFromStr("1.172821461"),
 		},
 		{
 			// large base, large integer exp
-			base:           MustNewSDKDecFromStr("1.777"),
-			exp:            MustNewSDKDecFromStr("20"),
-			powPrecision:   MustNewSDKDecFromStr("0.000000000001"),
-			expectedResult: MustNewSDKDecFromStr("98570.862372081602"),
+			base:           MustNewDecFromStr("1.777"),
+			exp:            MustNewDecFromStr("20"),
+			powPrecision:   MustNewDecFromStr("0.000000000001"),
+			expectedResult: MustNewDecFromStr("98570.862372081602"),
 		},
 		{
 			// medium base, large exp, high precision
-			base:           MustNewSDKDecFromStr("1.556"),
-			exp:            MustNewSDKDecFromStr("20.9123"),
-			powPrecision:   MustNewSDKDecFromStr("0.0000000000000001"),
-			expectedResult: MustNewSDKDecFromStr("10360.058421529811344618"),
+			base:           MustNewDecFromStr("1.556"),
+			exp:            MustNewDecFromStr("20.9123"),
+			powPrecision:   MustNewDecFromStr("0.0000000000000001"),
+			expectedResult: MustNewDecFromStr("10360.058421529811344618"),
 		},
 		{
 			// high base, large exp, high precision
-			base:           MustNewSDKDecFromStr("1.886"),
-			exp:            MustNewSDKDecFromStr("31.9123"),
-			powPrecision:   MustNewSDKDecFromStr("0.00000000000001"),
-			expectedResult: MustNewSDKDecFromStr("621110716.84727942280335811"),
+			base:           MustNewDecFromStr("1.886"),
+			exp:            MustNewDecFromStr("31.9123"),
+			powPrecision:   MustNewDecFromStr("0.00000000000001"),
+			expectedResult: MustNewDecFromStr("621110716.84727942280335811"),
 		},
 		{
 			// base equal one
-			base:           MustNewSDKDecFromStr("1"),
-			exp:            MustNewSDKDecFromStr("123"),
-			powPrecision:   MustNewSDKDecFromStr("0.00000001"),
-			expectedResult: OneSDKDec(),
+			base:           MustNewDecFromStr("1"),
+			exp:            MustNewDecFromStr("123"),
+			powPrecision:   MustNewDecFromStr("0.00000001"),
+			expectedResult: OneDec(),
 		},
 	}
 
 	for i, tc := range testCases {
-		var actualResult SDKDec
+		var actualResult Dec
 		ConditionalPanic(t, tc.base.IsZero(), func() {
 			fmt.Println(tc.base)
 			actualResult = PowApprox(tc.base, tc.exp, tc.powPrecision)
@@ -102,56 +102,56 @@ func TestPowApprox(t *testing.T) {
 
 func TestPow(t *testing.T) {
 	testCases := []struct {
-		base           SDKDec
-		exp            SDKDec
-		expectedResult SDKDec
+		base           Dec
+		exp            Dec
+		expectedResult Dec
 	}{
 		{
 			// medium base, small exp
-			base:           MustNewSDKDecFromStr("0.8"),
-			exp:            MustNewSDKDecFromStr("0.32"),
-			expectedResult: MustNewSDKDecFromStr("0.93108385"),
+			base:           MustNewDecFromStr("0.8"),
+			exp:            MustNewDecFromStr("0.32"),
+			expectedResult: MustNewDecFromStr("0.93108385"),
 		},
 		{
 			// zero exp
-			base:           MustNewSDKDecFromStr("0.8"),
-			exp:            ZeroSDKDec(),
-			expectedResult: OneSDKDec(),
+			base:           MustNewDecFromStr("0.8"),
+			exp:            ZeroDec(),
+			expectedResult: OneDec(),
 		},
 		{
 			// zero base, this should panic
-			base:           ZeroSDKDec(),
-			exp:            OneSDKDec(),
-			expectedResult: ZeroSDKDec(),
+			base:           ZeroDec(),
+			exp:            OneDec(),
+			expectedResult: ZeroDec(),
 		},
 		{
 			// large base, small exp
-			base:           MustNewSDKDecFromStr("1.9999"),
-			exp:            MustNewSDKDecFromStr("0.23"),
-			expectedResult: MustNewSDKDecFromStr("1.172821461"),
+			base:           MustNewDecFromStr("1.9999"),
+			exp:            MustNewDecFromStr("0.23"),
+			expectedResult: MustNewDecFromStr("1.172821461"),
 		},
 		{
 			// small base, large exp
-			base:           MustNewSDKDecFromStr("0.0000123"),
-			exp:            MustNewSDKDecFromStr("123"),
-			expectedResult: ZeroSDKDec(),
+			base:           MustNewDecFromStr("0.0000123"),
+			exp:            MustNewDecFromStr("123"),
+			expectedResult: ZeroDec(),
 		},
 		{
 			// large base, large exp
-			base:           MustNewSDKDecFromStr("1.777"),
-			exp:            MustNewSDKDecFromStr("20"),
-			expectedResult: MustNewSDKDecFromStr("98570.862372081602"),
+			base:           MustNewDecFromStr("1.777"),
+			exp:            MustNewDecFromStr("20"),
+			expectedResult: MustNewDecFromStr("98570.862372081602"),
 		},
 		{
 			// base equal one
-			base:           MustNewSDKDecFromStr("1"),
-			exp:            MustNewSDKDecFromStr("123"),
-			expectedResult: OneSDKDec(),
+			base:           MustNewDecFromStr("1"),
+			exp:            MustNewDecFromStr("123"),
+			expectedResult: OneDec(),
 		},
 	}
 
 	for i, tc := range testCases {
-		var actualResult SDKDec
+		var actualResult Dec
 		ConditionalPanic(t, tc.base.IsZero(), func() {
 			actualResult = Pow(tc.base, tc.exp)
 			require.True(

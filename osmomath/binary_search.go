@@ -21,8 +21,8 @@ import (
 // RoundingDir = RoundUnconstrained.
 // Note that if AdditiveTolerance == 0, then this is equivalent to a standard compare.
 type ErrTolerance struct {
-	AdditiveTolerance       SDKDec
-	MultiplicativeTolerance SDKDec
+	AdditiveTolerance       Dec
+	MultiplicativeTolerance Dec
 	RoundingDir             RoundingDirection
 }
 
@@ -30,8 +30,8 @@ type ErrTolerance struct {
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
-func (e ErrTolerance) Compare(expected SDKInt, actual SDKInt) int {
-	diff := expected.ToDec().Sub(actual.ToDec()).Abs()
+func (e ErrTolerance) Compare(expected Int, actual Int) int {
+	diff := ToDec(expected).Sub(actual.ToLegacyDec()).Abs()
 
 	comparisonSign := 0
 	if expected.GT(actual) {
@@ -69,12 +69,12 @@ func (e ErrTolerance) Compare(expected SDKInt, actual SDKInt) int {
 	}
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
-		minValue := MinSDKInt(expected.Abs(), actual.Abs())
+		minValue := MinInt(expected.Abs(), actual.Abs())
 		if minValue.IsZero() {
 			return comparisonSign
 		}
 
-		errTerm := diff.Quo(minValue.ToDec())
+		errTerm := diff.Quo(ToDec(minValue))
 		if errTerm.GT(e.MultiplicativeTolerance) {
 			return comparisonSign
 		}
@@ -161,15 +161,15 @@ func (e ErrTolerance) EqualCoins(expectedCoins sdk.Coins, actualCoins sdk.Coins)
 // Binary search inputs between [lowerbound, upperbound] to a monotonic increasing function f.
 // We stop once f(found_input) meets the ErrTolerance constraints.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.
-func BinarySearch(f func(SDKInt) (SDKInt, error),
-	lowerbound SDKInt,
-	upperbound SDKInt,
-	targetOutput SDKInt,
+func BinarySearch(f func(Int) (Int, error),
+	lowerbound Int,
+	upperbound Int,
+	targetOutput Int,
 	errTolerance ErrTolerance,
 	maxIterations int,
-) (SDKInt, error) {
+) (Int, error) {
 	var (
-		curEstimate, curOutput SDKInt
+		curEstimate, curOutput Int
 		err                    error
 	)
 
@@ -178,7 +178,7 @@ func BinarySearch(f func(SDKInt) (SDKInt, error),
 		curEstimate = lowerbound.Add(upperbound).QuoRaw(2)
 		curOutput, err = f(curEstimate)
 		if err != nil {
-			return SDKInt{}, err
+			return Int{}, err
 		}
 
 		compRes := errTolerance.Compare(targetOutput, curOutput)
@@ -191,7 +191,7 @@ func BinarySearch(f func(SDKInt) (SDKInt, error),
 		}
 	}
 
-	return SDKInt{}, errors.New("hit maximum iterations, did not converge fast enough")
+	return Int{}, errors.New("hit maximum iterations, did not converge fast enough")
 }
 
 // SdkDec

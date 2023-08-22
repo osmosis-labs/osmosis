@@ -16,11 +16,11 @@ const (
 	RoundBankers       RoundingDirection = 3
 )
 
-func DivIntByU64ToBigDec(i SDKInt, u uint64, round RoundingDirection) (BigDec, error) {
+func DivIntByU64ToBigDec(i Int, u uint64, round RoundingDirection) (BigDec, error) {
 	if u == 0 {
 		return BigDec{}, errors.New("div by zero")
 	}
-	d := BigDecFromSDKDec(i.ToDec())
+	d := BigDecFromSDKDec(ToDec(i))
 	if round == RoundUp {
 		return d.QuoRoundUp(NewBigDec(int64(u))), nil
 	} else if round == RoundDown {

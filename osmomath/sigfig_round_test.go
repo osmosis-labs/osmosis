@@ -9,25 +9,25 @@ import (
 
 func TestSigFigRound(t *testing.T) {
 	// sigfig = 8
-	tenToSigFig := NewSDKDec(10).Power(8).TruncateInt()
+	tenToSigFig := NewDec(10).Power(8).TruncateInt()
 
 	testCases := []struct {
 		name           string
-		decimal        SDKDec
-		tenToSigFig    SDKInt
-		expectedResult SDKDec
+		decimal        Dec
+		tenToSigFig    Int
+		expectedResult Dec
 	}{
 		{
 			name:           "Zero decimal",
-			decimal:        ZeroSDKDec(),
+			decimal:        ZeroDec(),
 			tenToSigFig:    tenToSigFig,
-			expectedResult: ZeroSDKDec(),
+			expectedResult: ZeroDec(),
 		},
 		{
 			name:           "Zero tenToSigFig",
-			decimal:        MustNewSDKDecFromStr("2.123"),
-			tenToSigFig:    ZeroSDKInt(),
-			expectedResult: ZeroSDKDec(),
+			decimal:        MustNewDecFromStr("2.123"),
+			tenToSigFig:    ZeroInt(),
+			expectedResult: ZeroDec(),
 		},
 		// With input, decimal >= 0.1. We have:
 		// 	- dTimesK = 63.045
@@ -38,9 +38,9 @@ func TestSigFigRound(t *testing.T) {
 		//  - result = numerator / denominator = 63
 		{
 			name:           "Big decimal, default tenToSigFig",
-			decimal:        MustNewSDKDecFromStr("63.045"),
+			decimal:        MustNewDecFromStr("63.045"),
 			tenToSigFig:    tenToSigFig,
-			expectedResult: MustNewSDKDecFromStr("63.045"),
+			expectedResult: MustNewDecFromStr("63.045"),
 		},
 		// With input, decimal < 0.1. We have:
 		// 	- dTimesK = 0.86724
@@ -51,9 +51,9 @@ func TestSigFigRound(t *testing.T) {
 		//  - result = numerator / denominator = 0.086724
 		{
 			name:           "Small decimal, default tenToSigFig",
-			decimal:        MustNewSDKDecFromStr("0.0867245957"),
+			decimal:        MustNewDecFromStr("0.0867245957"),
 			tenToSigFig:    tenToSigFig,
-			expectedResult: MustNewSDKDecFromStr("0.086724596"),
+			expectedResult: MustNewDecFromStr("0.086724596"),
 		},
 		// With input, decimal < 0.1. We have:
 		// 	- dTimesK = 0.86724
@@ -64,23 +64,23 @@ func TestSigFigRound(t *testing.T) {
 		//  - result = numerator / denominator = 0.087
 		{
 			name:           "Small decimal, random tenToSigFig",
-			decimal:        MustNewSDKDecFromStr("0.086724"),
-			tenToSigFig:    NewSDKInt(100),
-			expectedResult: MustNewSDKDecFromStr("0.087"),
+			decimal:        MustNewDecFromStr("0.086724"),
+			tenToSigFig:    NewInt(100),
+			expectedResult: MustNewDecFromStr("0.087"),
 		},
 		{
 			name:           "minimum decimal is still kept",
-			decimal:        NewSDKDecWithPrec(1, 18),
-			tenToSigFig:    NewSDKInt(10),
-			expectedResult: NewSDKDecWithPrec(1, 18),
+			decimal:        NewDecWithPrec(1, 18),
+			tenToSigFig:    NewInt(10),
+			expectedResult: NewDecWithPrec(1, 18),
 		},
 	}
 
 	for i, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			var actualResult SDKDec
-			ConditionalPanic(t, tc.tenToSigFig.Equal(ZeroSDKInt()), func() {
+			var actualResult Dec
+			ConditionalPanic(t, tc.tenToSigFig.Equal(ZeroInt()), func() {
 				actualResult = SigFigRound(tc.decimal, tc.tenToSigFig)
 				require.Equal(
 					t,

@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func generateRandomDecForEachBitlen(r *rand.Rand, numPerBitlen int) []SDKDec {
-	res := make([]SDKDec, (255+SDKDecimalPrecisionBits)*numPerBitlen)
+func generateRandomDecForEachBitlen(r *rand.Rand, numPerBitlen int) []Dec {
+	res := make([]Dec, (255+SDKDecimalPrecisionBits)*numPerBitlen)
 	for i := 0; i < 255+SDKDecimalPrecisionBits; i++ {
 		upperbound := big.NewInt(1)
 		upperbound.Lsh(upperbound, uint(i))
 		for j := 0; j < numPerBitlen; j++ {
 			v := big.NewInt(0).Rand(r, upperbound)
-			res[i*numPerBitlen+j] = NewSDKDecFromBigIntWithPrec(v, 18)
+			res[i*numPerBitlen+j] = NewDecFromBigIntWithPrec(v, 18)
 		}
 	}
 	return res
@@ -24,16 +24,16 @@ func generateRandomDecForEachBitlen(r *rand.Rand, numPerBitlen int) []SDKDec {
 
 func TestSdkApproxSqrtVectors(t *testing.T) {
 	testCases := []struct {
-		input    SDKDec
-		expected SDKDec
+		input    Dec
+		expected Dec
 	}{
-		{OneSDKDec(), OneSDKDec()},                                                   // 1.0 => 1.0
-		{NewSDKDecWithPrec(25, 2), NewSDKDecWithPrec(5, 1)},                          // 0.25 => 0.5
-		{NewSDKDecWithPrec(4, 2), NewSDKDecWithPrec(2, 1)},                           // 0.09 => 0.3
-		{NewSDKDecFromInt(NewSDKInt(9)), NewSDKDecFromInt(NewSDKInt(3))},             // 9 => 3
-		{NewSDKDecFromInt(NewSDKInt(2)), NewSDKDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
-		{smallestDec, NewSDKDecWithPrec(1, 9)},                                       // 10^-18 => 10^-9
-		{smallestDec.MulInt64(3), NewSDKDecWithPrec(1732050808, 18)},                 // 3*10^-18 => sqrt(3)*10^-9
+		{OneDec(), OneDec()},                                                // 1.0 => 1.0
+		{NewDecWithPrec(25, 2), NewDecWithPrec(5, 1)},                       // 0.25 => 0.5
+		{NewDecWithPrec(4, 2), NewDecWithPrec(2, 1)},                        // 0.09 => 0.3
+		{NewDecFromInt(NewInt(9)), NewDecFromInt(NewInt(3))},                // 9 => 3
+		{NewDecFromInt(NewInt(2)), NewDecWithPrec(1414213562373095049, 18)}, // 2 => 1.414213562373095049
+		{smallestDec, NewDecWithPrec(1, 9)},                                 // 10^-18 => 10^-9
+		{smallestDec.MulInt64(3), NewDecWithPrec(1732050808, 18)},           // 3*10^-18 => sqrt(3)*10^-9
 	}
 
 	for i, tc := range testCases {
@@ -43,7 +43,7 @@ func TestSdkApproxSqrtVectors(t *testing.T) {
 	}
 }
 
-func testMonotonicityAround(t *testing.T, x SDKDec) {
+func testMonotonicityAround(t *testing.T, x Dec) {
 	// test that sqrt(x) is monotonic around x
 	// i.e. sqrt(x-1) <= sqrt(x) <= sqrt(x+1)
 	sqrtX, err := MonotonicSqrt(x)
@@ -58,11 +58,11 @@ func testMonotonicityAround(t *testing.T, x SDKDec) {
 
 func TestSqrtMonotinicity(t *testing.T) {
 	type testcase struct {
-		smaller SDKDec
-		bigger  SDKDec
+		smaller Dec
+		bigger  Dec
 	}
 	testCases := []testcase{
-		{MustNewSDKDecFromStr("120.120060020005000000"), MustNewSDKDecFromStr("120.120060020005000001")},
+		{MustNewDecFromStr("120.120060020005000000"), MustNewDecFromStr("120.120060020005000001")},
 		{smallestDec, smallestDec.MulInt64(2)},
 	}
 	// create random test vectors for every bit-length
@@ -72,12 +72,12 @@ func TestSqrtMonotinicity(t *testing.T) {
 		upperbound.Lsh(upperbound, uint(i))
 		for j := 0; j < 100; j++ {
 			v := big.NewInt(0).Rand(r, upperbound)
-			d := NewSDKDecFromBigIntWithPrec(v, 18)
+			d := NewDecFromBigIntWithPrec(v, 18)
 			testCases = append(testCases, testcase{d, d.Add(smallestDec)})
 		}
 	}
 	for i := 0; i < 1024; i++ {
-		d := NewSDKDecWithPrec(int64(i), 18)
+		d := NewDecWithPrec(int64(i), 18)
 		testCases = append(testCases, testcase{d, d.Add(smallestDec)})
 	}
 
@@ -99,8 +99,8 @@ func TestSqrtMonotinicity(t *testing.T) {
 // and then setting x = sqrt(v)
 // this is because this is the set of values whose squares are perfectly representable.
 func TestPerfectSquares(t *testing.T) {
-	cases := []SDKDec{
-		NewSDKDec(100),
+	cases := []Dec{
+		NewDec(100),
 	}
 	r := rand.New(rand.NewSource(rand.Int63()))
 	tenToMin9 := big.NewInt(1_000_000_000)
@@ -110,7 +110,7 @@ func TestPerfectSquares(t *testing.T) {
 		for j := 0; j < 100; j++ {
 			v := big.NewInt(0).Rand(r, upperbound)
 			dec := big.NewInt(0).Rand(r, tenToMin9)
-			d := NewSDKDecFromBigInt(v).Add(NewSDKDecFromBigIntWithPrec(dec, 9))
+			d := NewDecFromBigInt(v).Add(NewDecFromBigIntWithPrec(dec, 9))
 			cases = append(cases, d.MulMut(d))
 		}
 	}
@@ -126,7 +126,7 @@ func TestPerfectSquares(t *testing.T) {
 }
 
 func TestSqrtRounding(t *testing.T) {
-	testCases := []SDKDec{
+	testCases := []Dec{
 		// TODO: uncomment when SDK supports dec from str with bigger bitlenghths.
 		// it works if you override the sdk panic locally.
 		// MustNewSDKDecFromStr("11662930532952632574132537947829685675668532938920838254939577167671385459971.396347723368091000"),

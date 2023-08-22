@@ -6,16 +6,16 @@ import (
 
 // Don't EVER change after initializing
 // TODO: Analyze choice here.
-var powPrecision, _ = NewSDKDecFromStr("0.00000001")
+var powPrecision, _ = NewDecFromStr("0.00000001")
 
 var (
-	one_half SDKDec = MustNewSDKDecFromStr("0.5")
-	one      SDKDec = OneSDKDec()
-	two      SDKDec = MustNewSDKDecFromStr("2")
+	one_half Dec = MustNewDecFromStr("0.5")
+	one      Dec = OneDec()
+	two      Dec = MustNewDecFromStr("2")
 
 	// https://www.wolframalpha.com/input?i=2.718281828459045235360287471352662498&assumption=%22ClashPrefs%22+-%3E+%7B%22Math%22%7D
 	// nolint: unused
-	eulersNumber = MustNewDecFromStr("2.718281828459045235360287471352662498")
+	eulersNumber = MustNewBigDecFromStr("2.718281828459045235360287471352662498")
 )
 
 // Returns the internal "power precision".
@@ -24,7 +24,7 @@ var (
 // *technically* the error term can be greater than this powPrecision,
 // but for small bases this bound applies. See comments in the PowApprox function
 // for more detail.
-func GetPowPrecision() SDKDec {
+func GetPowPrecision() Dec {
 	return powPrecision.Clone()
 }
 
@@ -32,7 +32,7 @@ func GetPowPrecision() SDKDec {
 
 // AbsDifferenceWithSign returns | a - b |, (a - b).sign()
 // a is mutated and returned.
-func AbsDifferenceWithSign(a, b SDKDec) (SDKDec, bool) {
+func AbsDifferenceWithSign(a, b Dec) (Dec, bool) {
 	if a.GTE(b) {
 		return a.SubMut(b), false
 	} else {
@@ -48,7 +48,7 @@ func AbsDifferenceWithSign(a, b SDKDec) (SDKDec, bool) {
 // However since the exponent is not an integer, we must do an approximation algorithm.
 // TODO: In the future, lets add some optimized routines for common exponents, e.g. for common wIn / wOut ratios
 // Many simple exponents like 2:1 pools.
-func Pow(base SDKDec, exp SDKDec) SDKDec {
+func Pow(base Dec, exp Dec) Dec {
 	// Exponentiation of a negative base with an arbitrary real exponent is not closed within the reals.
 	// You can see this by recalling that `i = (-1)^(.5)`. We have to go to complex numbers to define this.
 	// (And would have to implement complex logarithms)
@@ -81,13 +81,13 @@ func Pow(base SDKDec, exp SDKDec) SDKDec {
 
 // Contract: 0 < base <= 2
 // 0 <= exp < 1.
-func PowApprox(base SDKDec, exp SDKDec, precision SDKDec) SDKDec {
+func PowApprox(base Dec, exp Dec, precision Dec) Dec {
 	if !base.IsPositive() {
 		panic(fmt.Errorf("base must be greater than 0"))
 	}
 
 	if exp.IsZero() {
-		return OneSDKDec()
+		return OneDec()
 	}
 
 	// Common case optimization
@@ -131,12 +131,12 @@ func PowApprox(base SDKDec, exp SDKDec, precision SDKDec) SDKDec {
 
 	base = base.Clone()
 	x, xneg := AbsDifferenceWithSign(base, one)
-	term := OneSDKDec()
-	sum := OneSDKDec()
+	term := OneDec()
+	sum := OneDec()
 	negative := false
 
 	a := exp.Clone()
-	bigK := NewSDKDec(0)
+	bigK := NewDec(0)
 	// TODO: Document this computation via taylor expansion
 	for i := int64(1); term.GTE(precision); i++ {
 		// At each iteration, we need two values, i and i-1.
@@ -144,7 +144,7 @@ func PowApprox(base SDKDec, exp SDKDec, precision SDKDec) SDKDec {
 		// On this line, bigK == i-1.
 		c, cneg := AbsDifferenceWithSign(a, bigK)
 		// On this line, bigK == i.
-		bigK.Set(NewSDKDec(i)) // TODO: O(n) bigint allocation happens
+		bigK.Set(NewDec(i)) // TODO: O(n) bigint allocation happens
 		term.MulMut(c).MulMut(x).QuoMut(bigK)
 
 		// a is mutated on absDifferenceWithSign, reset
