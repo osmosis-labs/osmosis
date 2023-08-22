@@ -51,77 +51,53 @@ func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (typ
 			return types.ValidatorSetPreferences{}, err
 		}
 
-		existingDelsValSetFormatted, err := k.GetExistingStakingDelegations(ctx, delAddr)
-		if err != nil {
-			return types.ValidatorSetPreferences{}, err
+		existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
+		if len(existingDelegations) == 0 {
+			return types.ValidatorSetPreferences{}, fmt.Errorf("No Existing delegation")
 		}
 
-		return types.ValidatorSetPreferences{Preferences: existingDelsValSetFormatted}, nil
+		return types.ValidatorSetPreferences{Preferences: calculateSharesAndFormat(existingDelegations)}, nil
 	}
 
 	return valSet, nil
 }
 
-// GetExistingStakingDelegations returns the existing delegation that's not valset.
-// This function also formats the output into ValidatorSetPreference struct {valAddr, weight}.
-// The weight is calculated based on (valDelegation / totalDelegations) for each validator.
-// This method erros when given address does not have any existing delegations.
-func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delAddr sdk.AccAddress) ([]types.ValidatorPreference, error) {
-	var existingDelsValSetFormatted []types.ValidatorPreference
-
-	existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
-	if len(existingDelegations) == 0 {
-		return nil, fmt.Errorf("No Existing delegation")
+func (k Keeper) GetValSetPreferencesWithDelegations(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, error) {
+	delAddr, err := sdk.AccAddressFromBech32(delegator)
+	if err != nil {
+		return types.ValidatorSetPreferences{}, err
 	}
 
+	valSet, exists := k.GetValidatorSetPreference(ctx, delegator)
+	existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
+
+	// No existing delegations for a delegator when valSet does not exist
+	if !exists && len(existingDelegations) == 0 {
+		return types.ValidatorSetPreferences{}, fmt.Errorf("No Existing delegation to unbond from")
+	}
+
+	// Returning existing valSet when there are no existing delegations
+	if exists && len(existingDelegations) == 0 {
+		return valSet, nil
+	}
+
+	// this can either be valSet doesnot exist and existing delegations exist
+	// or valset exists and existing delegation exists
+	return types.ValidatorSetPreferences{Preferences: calculateSharesAndFormat(existingDelegations)}, nil
+}
+
+func calculateSharesAndFormat(existingDelegations []stakingtypes.Delegation) []types.ValidatorPreference {
 	existingTotalShares := sdk.NewDec(0)
-	// calculate total shares that currently exists
 	for _, existingDelegation := range existingDelegations {
 		existingTotalShares = existingTotalShares.Add(existingDelegation.Shares)
 	}
 
-	// for each delegation format it in types.ValidatorSetPreferences format
-	for _, existingDelegation := range existingDelegations {
-		existingDelsValSetFormatted = append(existingDelsValSetFormatted, types.ValidatorPreference{
+	existingDelsValSetFormatted := make([]types.ValidatorPreference, len(existingDelegations))
+	for i, existingDelegation := range existingDelegations {
+		existingDelsValSetFormatted[i] = types.ValidatorPreference{
 			ValOperAddress: existingDelegation.ValidatorAddress,
 			Weight:         existingDelegation.Shares.Quo(existingTotalShares),
-		})
-	}
-
-	return existingDelsValSetFormatted, nil
-}
-
-// getValsetDelegationsAndPreferences retrieves the validator preferences and
-// delegations for a given delegator. It returns the ValidatorSetPreferences,
-// a slice of Delegations, and an error if any issues occur during the process.
-//
-// The function first retrieves the validator set preferences associated with the delegator.
-// If preferences exist, it iterates over them and fetches each associated delegation,
-// adding it to a slice of delegations. If no preferences exist, it gets all delegator
-// delegations.
-func (k Keeper) getValsetDelegationsAndPreferences(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, []stakingtypes.Delegation, error) {
-	delAddr, err := sdk.AccAddressFromBech32(delegator)
-	if err != nil {
-		return types.ValidatorSetPreferences{}, nil, err
-	}
-
-	valSet, exists := k.GetValidatorSetPreference(ctx, delegator)
-	var delegations []stakingtypes.Delegation
-	if exists {
-		for _, val := range valSet.Preferences {
-			del, found := k.stakingKeeper.GetDelegation(ctx, delAddr, sdk.ValAddress(val.ValOperAddress))
-			if !found {
-				del = stakingtypes.Delegation{DelegatorAddress: delegator, ValidatorAddress: (val.ValOperAddress), Shares: sdk.ZeroDec()}
-			}
-			delegations = append(delegations, del)
 		}
 	}
-	if !exists {
-		delegations = k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
-		if len(delegations) == 0 {
-			return types.ValidatorSetPreferences{}, nil, fmt.Errorf("No Existing delegation to unbond from")
-		}
-	}
-
-	return valSet, delegations, nil
+	return existingDelsValSetFormatted
 }

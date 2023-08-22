@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	valPref "github.com/osmosis-labs/osmosis/v17/x/valset-pref"
@@ -210,7 +212,7 @@ func (s *KeeperTestSuite) TestIsPreferenceValid() {
 func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase() {
 	s.SetupTest()
 
-	valAddrs := s.SetupMultipleValidators(2)
+	valAddrs := s.SetupMultipleValidators(3)
 	valPreferences := []types.ValidatorPreference{
 		{
 			ValOperAddress: valAddrs[0],
@@ -251,6 +253,8 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase() {
 	// Delegate more token to the validator. This will cause valset and regular staking to go out of sync
 	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, sdk.NewInt(10_000_000), stakingtypes.Unbonded, validator, true)
 	s.Require().NoError(err)
+
+	fmt.Println("3 validators: ", valAddrs[0], valAddrs[1], valAddrs[2])
 
 	err = s.App.ValidatorSetPreferenceKeeper.UndelegateFromValidatorSet(s.Ctx, delegator.String(), coinToUnStake)
 	s.Require().NoError(err)
