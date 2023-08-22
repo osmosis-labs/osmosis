@@ -4,7 +4,7 @@ package osmosis.authenticator;
 import "gogoproto/gogo.proto";
 import "osmosis/authenticator/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/authenticator/types/genesis";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/authenticator/types/genesis";
 
 // GenesisState defines the authenticator module's genesis state.
 message GenesisState { Params params = 1 [ (gogoproto.nullable) = false ]; }

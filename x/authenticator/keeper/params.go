@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v17/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 )
 
 // GetParams get all parameters as types.Params
@@ -12,5 +12,5 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 
 // SetParams set the params
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramstore.SetParamSet(ctx, &params)
+	k.paramSpace.SetParamSet(ctx, &params)
 }

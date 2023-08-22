@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v17/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 	"github.com/stretchr/testify/require"
 )
 

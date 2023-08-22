@@ -13,9 +13,9 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v17/x/authenticator/client/cli"
-	"github.com/osmosis-labs/osmosis/v17/x/authenticator/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/client/cli"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/osmosis-labs/osmosis/v17/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v17/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 )
 
 func CmdQueryParams() *cobra.Command {
