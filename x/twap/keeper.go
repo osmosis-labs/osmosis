@@ -8,7 +8,7 @@ import (
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/v16/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
 )
 
 type Keeper struct {
@@ -73,7 +73,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	// These are ordered in increasing order, guaranteed by the iterator
 	// that is prefixed by time.
-	twapRecords, err := k.getAllHistoricalTimeIndexedTWAPs(ctx)
+	twapRecords, err := k.GetAllHistoricalTimeIndexedTWAPs(ctx)
 	if err != nil {
 		panic(err)
 	}

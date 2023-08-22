@@ -47,6 +47,8 @@ var (
 
 	KeyNextGlobalIncentiveRecordId = []byte{0x12}
 
+	KeyTotalLiquidity = []byte{0x13}
+
 	// TickPrefix + pool id
 	KeyTickPrefixByPoolIdLengthBytes = len(TickPrefix) + uint64ByteSize
 	// TickPrefix + pool id + sign byte(negative / positive prefix) + tick index: 18bytes in total
@@ -287,4 +289,8 @@ func MustGetPoolIdFromShareDenom(denom string) uint64 {
 		panic(err)
 	}
 	return poolId
+}
+
+func GetDenomPrefix(denom string) []byte {
+	return append(KeyTotalLiquidity, []byte(denom)...)
 }

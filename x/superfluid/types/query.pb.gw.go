@@ -555,8 +555,8 @@ func local_request_Query_UnpoolWhitelist_0(ctx context.Context, marshaler runtim
 
 }
 
-func request_Query_UserSuperfluidPositionsPerConcentratedPoolBreakdown_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq UserSuperfluidPositionsPerConcentratedPoolBreakdownRequest
+func request_Query_UserConcentratedSuperfluidPositionsDelegated_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UserConcentratedSuperfluidPositionsDelegatedRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -577,24 +577,13 @@ func request_Query_UserSuperfluidPositionsPerConcentratedPoolBreakdown_0(ctx con
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_address", err)
 	}
 
-	val, ok = pathParams["concentrated_pool_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "concentrated_pool_id")
-	}
-
-	protoReq.ConcentratedPoolId, err = runtime.Uint64(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "concentrated_pool_id", err)
-	}
-
-	msg, err := client.UserSuperfluidPositionsPerConcentratedPoolBreakdown(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.UserConcentratedSuperfluidPositionsDelegated(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Query_UserSuperfluidPositionsPerConcentratedPoolBreakdown_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq UserSuperfluidPositionsPerConcentratedPoolBreakdownRequest
+func local_request_Query_UserConcentratedSuperfluidPositionsDelegated_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UserConcentratedSuperfluidPositionsDelegatedRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -615,18 +604,61 @@ func local_request_Query_UserSuperfluidPositionsPerConcentratedPoolBreakdown_0(c
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_address", err)
 	}
 
-	val, ok = pathParams["concentrated_pool_id"]
+	msg, err := server.UserConcentratedSuperfluidPositionsDelegated(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Query_UserConcentratedSuperfluidPositionsUndelegating_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UserConcentratedSuperfluidPositionsUndelegatingRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["delegator_address"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "concentrated_pool_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_address")
 	}
 
-	protoReq.ConcentratedPoolId, err = runtime.Uint64(val)
+	protoReq.DelegatorAddress, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "concentrated_pool_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_address", err)
 	}
 
-	msg, err := server.UserSuperfluidPositionsPerConcentratedPoolBreakdown(ctx, &protoReq)
+	msg, err := client.UserConcentratedSuperfluidPositionsUndelegating(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Query_UserConcentratedSuperfluidPositionsUndelegating_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UserConcentratedSuperfluidPositionsUndelegatingRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["delegator_address"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "delegator_address")
+	}
+
+	protoReq.DelegatorAddress, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "delegator_address", err)
+	}
+
+	msg, err := server.UserConcentratedSuperfluidPositionsUndelegating(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -959,7 +991,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 
 	})
 
-	mux.Handle("GET", pattern_Query_UserSuperfluidPositionsPerConcentratedPoolBreakdown_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_UserConcentratedSuperfluidPositionsDelegated_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -970,7 +1002,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Query_UserSuperfluidPositionsPerConcentratedPoolBreakdown_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Query_UserConcentratedSuperfluidPositionsDelegated_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -978,7 +1010,30 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			return
 		}
 
-		forward_Query_UserSuperfluidPositionsPerConcentratedPoolBreakdown_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_UserConcentratedSuperfluidPositionsDelegated_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Query_UserConcentratedSuperfluidPositionsUndelegating_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Query_UserConcentratedSuperfluidPositionsUndelegating_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Query_UserConcentratedSuperfluidPositionsUndelegating_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1303,7 +1358,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
-	mux.Handle("GET", pattern_Query_UserSuperfluidPositionsPerConcentratedPoolBreakdown_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_UserConcentratedSuperfluidPositionsDelegated_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -1312,14 +1367,34 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Query_UserSuperfluidPositionsPerConcentratedPoolBreakdown_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Query_UserConcentratedSuperfluidPositionsDelegated_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Query_UserSuperfluidPositionsPerConcentratedPoolBreakdown_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_UserConcentratedSuperfluidPositionsDelegated_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Query_UserConcentratedSuperfluidPositionsUndelegating_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Query_UserConcentratedSuperfluidPositionsUndelegating_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Query_UserConcentratedSuperfluidPositionsUndelegating_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1355,7 +1430,9 @@ var (
 
 	pattern_Query_UnpoolWhitelist_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "unpool_whitelist"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_UserSuperfluidPositionsPerConcentratedPoolBreakdown_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"osmosis", "superfluid", "v1beta1", "user_superfluid_positions_per_pool", "delegator_address", "concentrated_pool_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_UserConcentratedSuperfluidPositionsDelegated_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "superfluid", "v1beta1", "account_delegated_cl_positions", "delegator_address"}, "", runtime.AssumeColonVerbOpt(false)))
+
+	pattern_Query_UserConcentratedSuperfluidPositionsUndelegating_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "superfluid", "v1beta1", "account_undelegating_cl_positions", "delegator_address"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
@@ -1387,5 +1464,7 @@ var (
 
 	forward_Query_UnpoolWhitelist_0 = runtime.ForwardResponseMessage
 
-	forward_Query_UserSuperfluidPositionsPerConcentratedPoolBreakdown_0 = runtime.ForwardResponseMessage
+	forward_Query_UserConcentratedSuperfluidPositionsDelegated_0 = runtime.ForwardResponseMessage
+
+	forward_Query_UserConcentratedSuperfluidPositionsUndelegating_0 = runtime.ForwardResponseMessage
 )

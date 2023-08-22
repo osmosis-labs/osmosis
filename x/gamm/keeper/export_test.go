@@ -3,8 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 // SetParams sets the total set of params.
@@ -19,6 +19,10 @@ func (k Keeper) SetPool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
 
 func (k Keeper) SetStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scalingFactors []uint64, sender string) error {
 	return k.setStableSwapScalingFactors(ctx, poolId, scalingFactors, sender)
+}
+
+func (k Keeper) SetStableSwapScalingFactorController(ctx sdk.Context, poolId uint64, controllerAddress string) error {
+	return k.setStableSwapScalingFactorController(ctx, poolId, controllerAddress)
 }
 
 func AsCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {

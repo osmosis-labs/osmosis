@@ -8,8 +8,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v16/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v17/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -183,6 +183,7 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 	if err != nil {
 		return sdk.Int{}, err
 	}
+	ctx.Logger().Info("distributeToModule", "module", types.ModuleName, "recepientModule", recipientModule, "distributionCoin", distributionCoin, "height", ctx.BlockHeight())
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, recipientModule, sdk.NewCoins(distributionCoin)); err != nil {
 		return sdk.Int{}, err
 	}

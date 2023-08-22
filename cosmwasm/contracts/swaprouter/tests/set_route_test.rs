@@ -96,10 +96,7 @@ test_set_route!(
 test_set_route!(
     pool_does_not_have_output_asset
     should failed_with
-    r#"Invalid Pool Route: "denom uosmo is not in pool id 1": execute wasm contract failed"#,
-    // confusing error message from chain, should state that:
-    // > `denom uatom is not in pool id 1": execute wasm contract failed`
-    // instead.
+    r#"Invalid Pool Route: "denom uatom is not in pool id 1": execute wasm contract failed"#,
 
     sender = Owner,
     msg = ExecuteMsg::SetRoute {
@@ -117,10 +114,7 @@ test_set_route!(
 test_set_route!(
     intermediary_pool_does_not_have_output_asset
     should failed_with
-    r#"Invalid Pool Route: "denom uosmo is not in pool id 1": execute wasm contract failed"#,
-    // confusing error message from chain, should state that:
-    // > `denom foocoin is not in pool id 1": execute wasm contract failed`
-    // instead.
+    r#"Invalid Pool Route: "denom foocoin is not in pool id 1": execute wasm contract failed"#,
 
     sender = Owner,
     msg = ExecuteMsg::SetRoute {

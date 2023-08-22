@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
 )
 
 type Querier struct {
@@ -19,6 +19,16 @@ type Querier struct {
 }
 
 var _ queryproto.QueryServer = Querier{}
+
+func (q Querier) UserUnbondingPositions(grpcCtx context.Context,
+	req *queryproto.UserUnbondingPositionsRequest,
+) (*queryproto.UserUnbondingPositionsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.UserUnbondingPositions(ctx, *req)
+}
 
 func (q Querier) UserPositions(grpcCtx context.Context,
 	req *queryproto.UserPositionsRequest,
@@ -108,6 +118,16 @@ func (q Querier) IncentiveRecords(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.IncentiveRecords(ctx, *req)
+}
+
+func (q Querier) GetTotalLiquidity(grpcCtx context.Context,
+	req *queryproto.GetTotalLiquidityRequest,
+) (*queryproto.GetTotalLiquidityResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.GetTotalLiquidity(ctx, *req)
 }
 
 func (q Querier) ClaimableSpreadRewards(grpcCtx context.Context,

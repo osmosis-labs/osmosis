@@ -11,9 +11,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appParams "github.com/osmosis-labs/osmosis/v16/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v16/x/valset-pref/types"
+	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
 )
 
 type valSet struct {
@@ -74,7 +74,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 	// get valset formatted delegation either from existing val set preference or existing delegations
 	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
 	if err != nil {
-		return fmt.Errorf("error upon getting delegation preference for addr %s", delegatorAddr)
+		return err
 	}
 
 	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
@@ -353,10 +353,11 @@ func (k Keeper) ForceUnlockBondedOsmo(ctx sdk.Context, lockID uint64, delegatorA
 	}
 
 	// Ensured the lock has no superfluid relation by checking that there are no synthetic locks
-	synthLocks, err := k.lockupKeeper.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
+	synthLocks, _, err := k.lockupKeeper.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
+	// TODO: use found
 	if synthLocks != (lockuptypes.SyntheticLock{}) {
 		return sdk.Coin{}, fmt.Errorf("cannot use DelegateBondedTokens being used for superfluid.")
 	}

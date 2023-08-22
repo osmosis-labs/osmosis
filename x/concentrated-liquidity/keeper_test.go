@@ -13,41 +13,46 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	concentrated_liquidity "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/clmocks"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	concentrated_liquidity "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/clmocks"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
-	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
 
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 )
 
 var (
 	DefaultMinTick, DefaultMaxTick       = types.MinInitializedTick, types.MaxTick
+	DefaultMinCurrentTick                = types.MinCurrentTick
 	DefaultLowerPrice                    = sdk.NewDec(4545)
 	DefaultLowerTick                     = int64(30545000)
 	DefaultUpperPrice                    = sdk.NewDec(5500)
 	DefaultUpperTick                     = int64(31500000)
 	DefaultCurrPrice                     = sdk.NewDec(5000)
 	DefaultCurrTick                int64 = 31000000
-	DefaultCurrSqrtPrice, _              = osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
-	DefaultZeroSpreadFactor              = sdk.ZeroDec()
-	DefaultSpreadRewardAccumCoins        = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
-	DefaultPositionId                    = uint64(1)
-	DefaultUnderlyingLockId              = uint64(0)
-	DefaultJoinTime                      = time.Unix(0, 0).UTC()
-	ETH                                  = "eth"
-	DefaultAmt0                          = sdk.NewInt(1000000)
-	DefaultAmt0Expected                  = sdk.NewInt(998976)
-	DefaultCoin0                         = sdk.NewCoin(ETH, DefaultAmt0)
-	USDC                                 = "usdc"
-	DefaultAmt1                          = sdk.NewInt(5000000000)
-	DefaultAmt1Expected                  = sdk.NewInt(5000000000)
-	DefaultCoin1                         = sdk.NewCoin(USDC, DefaultAmt1)
-	DefaultCoins                         = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+	DefaultCurrSqrtPrice                 = func() osmomath.BigDec {
+		curSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
+		return osmomath.BigDecFromSDKDec(curSqrtPrice)
+	}()
+
+	DefaultZeroSpreadFactor       = sdk.ZeroDec()
+	DefaultSpreadRewardAccumCoins = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+	DefaultPositionId             = uint64(1)
+	DefaultUnderlyingLockId       = uint64(0)
+	DefaultJoinTime               = time.Unix(0, 0).UTC()
+	ETH                           = "eth"
+	DefaultAmt0                   = sdk.NewInt(1000000)
+	DefaultAmt0Expected           = sdk.NewInt(998976)
+	DefaultCoin0                  = sdk.NewCoin(ETH, DefaultAmt0)
+	USDC                          = "usdc"
+	DefaultAmt1                   = sdk.NewInt(5000000000)
+	DefaultAmt1Expected           = sdk.NewInt(5000000000)
+	DefaultCoin1                  = sdk.NewCoin(USDC, DefaultAmt1)
+	DefaultCoins                  = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
 
 	// Both of the following liquidity values are calculated in x/concentrated-liquidity/python/swap_test.py
 	DefaultLiquidityAmt   = sdk.MustNewDecFromStr("1517882343.751510417627556287")
@@ -81,8 +86,16 @@ func TestConstants(t *testing.T) {
 	require.Equal(t, DefaultLiquidityAmt, liq)
 }
 
+type FuzzTestSuite struct {
+	positionData    []positionAndLiquidity
+	iteration       int
+	seed            int64
+	collectedErrors []error
+}
+
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
+	FuzzTestSuite
 	clk               *concentrated_liquidity.Keeper
 	authorizedUptimes []time.Duration
 }
@@ -117,11 +130,11 @@ func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, pro
 	}
 
 	s.FundAcc(owner, providedCoins.Add(roundingErrorCoins...))
-	positionId, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, providedCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, providedCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
-	liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, positionId)
+	liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, positionData.ID)
 	s.Require().NoError(err)
-	return liquidity, positionId
+	return liquidity, positionData.ID
 }
 
 // SetupDefaultPositions sets up four different positions to the given pool with different accounts for each position./
@@ -189,7 +202,7 @@ func (s *KeeperTestSuite) validateTickUpdates(poolId uint64, lowerTick int64, up
 }
 
 func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, currentTick int64, tickIndex int64, initialLiquidity sdk.Dec, spreadRewardGrowthOppositeDirectionOfTraversal sdk.DecCoins, uptimeTrackers []model.UptimeTracker, isLower bool) {
-	err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(ctx, validPoolId, currentTick, tickIndex, initialLiquidity, isLower)
+	_, err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(ctx, validPoolId, currentTick, tickIndex, initialLiquidity, isLower)
 	s.Require().NoError(err)
 
 	tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(ctx, validPoolId, tickIndex)
@@ -454,9 +467,9 @@ func (s *KeeperTestSuite) runFungifySetup(address sdk.AccAddress, numPositions i
 	// Set up fully charged positions
 	totalLiquidity := sdk.ZeroDec()
 	for i := 0; i < numPositions; i++ {
-		_, _, _, liquidityCreated, _, _, err := s.clk.CreatePosition(s.Ctx, defaultPoolId, address, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+		positionData, err := s.clk.CreatePosition(s.Ctx, defaultPoolId, address, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 		s.Require().NoError(err)
-		totalLiquidity = totalLiquidity.Add(liquidityCreated)
+		totalLiquidity = totalLiquidity.Add(positionData.Liquidity)
 	}
 
 	return pool, expectedPositionIds, totalLiquidity
@@ -482,7 +495,7 @@ func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64, rangeTestP
 	rand.Seed(2)
 
 	// TODO: add pool-related fuzz params (spread factor & number of pools)
-	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultSpreadFactor)
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, rangeTestParams.tickSpacing, rangeTestParams.spreadFactor)
 
 	// Run full state determined by params while asserting invariants at each intermediate step
 	s.setupRangesAndAssertInvariants(pool, ranges, rangeTestParams)

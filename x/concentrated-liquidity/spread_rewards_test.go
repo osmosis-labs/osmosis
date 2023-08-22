@@ -8,11 +8,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	clmath "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 const (
@@ -77,7 +77,7 @@ func (s *KeeperTestSuite) TestCreateAndGetSpreadRewardAccumulator() {
 				s.Require().NoError(err)
 			} else {
 				s.Require().Error(err)
-				s.Require().Equal(accum.AccumulatorObject{}, poolSpreadRewardAccumulator)
+				s.Require().Equal(&accum.AccumulatorObject{}, poolSpreadRewardAccumulator)
 			}
 		})
 	}
@@ -484,59 +484,48 @@ func (s *KeeperTestSuite) TestCalculateSpreadRewardGrowth() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick() {
-	const (
-		validPoolId = 1
-	)
+// Test what happens if somehow the accumulator didn't exist.
+// TODO: Does this test even matter? We should never be in a situation where the accumulator doesn't exist
+func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTickAccumDoesntExist() {
+	pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultZeroSpreadFactor)
+	s.Require().NoError(err)
 
+	// N.B.: we set the listener mock because we would like to avoid
+	// utilizing the production listeners, because we are testing a case that should be impossible
+	s.setListenerMockOnConcentratedLiquidityKeeper()
+
+	err = s.clk.SetPool(s.Ctx, &pool)
+	s.Require().NoError(err)
+
+	// System under test.
+	_, err = s.clk.GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(s.Ctx, &pool, 0)
+	s.Require().Error(err)
+	s.Require().ErrorIs(err, accum.AccumDoesNotExistError{AccumName: types.KeySpreadRewardPoolAccumulator(validPoolId)})
+}
+
+func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick() {
 	sqrtPrice := osmomath.MustMonotonicSqrt(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()))
 	initialPoolTick, err := clmath.SqrtPriceToTickRoundDownSpacing(sqrtPrice, DefaultTickSpacing)
 	s.Require().NoError(err)
+	initialGlobalSpreadRewardGrowth := oneEth
 
 	tests := map[string]struct {
-		poolId                          uint64
 		tick                            int64
 		initialGlobalSpreadRewardGrowth sdk.DecCoin
-		shouldAvoidCreatingAccum        bool
 
 		expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal sdk.DecCoins
-		expectError                                                       error
 	}{
 		"current tick > tick -> spread reward growth global": {
-			poolId:                          validPoolId,
-			tick:                            initialPoolTick - 1,
-			initialGlobalSpreadRewardGrowth: oneEth,
-
+			tick: initialPoolTick - 1,
 			expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth),
 		},
 		"current tick == tick -> spread reward growth global": {
-			poolId:                          validPoolId,
-			tick:                            initialPoolTick,
-			initialGlobalSpreadRewardGrowth: oneEth,
-
+			tick: initialPoolTick,
 			expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth),
 		},
 		"current tick < tick -> empty coins": {
-			poolId:                          validPoolId,
-			tick:                            initialPoolTick + 1,
-			initialGlobalSpreadRewardGrowth: oneEth,
-
+			tick: initialPoolTick + 1,
 			expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal: cl.EmptyCoins,
-		},
-		"pool does not exist": {
-			poolId:                          validPoolId + 1,
-			tick:                            initialPoolTick - 1,
-			initialGlobalSpreadRewardGrowth: oneEth,
-
-			expectError: types.PoolNotFoundError{PoolId: validPoolId + 1},
-		},
-		"accumulator does not exist": {
-			poolId:                          validPoolId,
-			tick:                            0,
-			initialGlobalSpreadRewardGrowth: oneEth,
-			shouldAvoidCreatingAccum:        true,
-
-			expectError: accum.AccumDoesNotExistError{AccumName: types.KeySpreadRewardPoolAccumulator(validPoolId)},
 		},
 	}
 
@@ -544,44 +533,12 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
-			ctx := s.Ctx
-			clKeeper := s.App.ConcentratedLiquidityKeeper
+			pool := s.preparePoolAndDefaultPosition()
+			s.AddToSpreadRewardAccumulator(pool.GetId(), initialGlobalSpreadRewardGrowth)
 
-			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultZeroSpreadFactor)
+			clpool, err := s.clk.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
-
-			// N.B.: we set the listener mock because we would like to avoid
-			// utilizing the production listeners. The production listeners
-			// are irrelevant in the context of the system under test. However,
-			// setting them up would require compromising being able to set up other
-			// edge case tests. For example, the test case where spread reward accumulator
-			// is not initialized.
-			s.setListenerMockOnConcentratedLiquidityKeeper()
-
-			err = clKeeper.SetPool(ctx, &pool)
-			s.Require().NoError(err)
-
-			if !tc.shouldAvoidCreatingAccum {
-				err = clKeeper.CreateSpreadRewardAccumulator(ctx, validPoolId)
-				s.Require().NoError(err)
-
-				// Setup test position to make sure that tick is initialized
-				// We also set up uptime accums to ensure position creation works as intended
-				err = clKeeper.CreateUptimeAccumulators(ctx, validPoolId)
-				s.Require().NoError(err)
-				s.SetupDefaultPosition(validPoolId)
-
-				s.AddToSpreadRewardAccumulator(validPoolId, tc.initialGlobalSpreadRewardGrowth)
-			}
-
-			// System under test.
-			initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, err := clKeeper.GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx, tc.poolId, tc.tick)
-
-			if tc.expectError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorIs(err, tc.expectError)
-				return
-			}
+			initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, err := s.clk.GetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(s.Ctx, clpool, tc.tick)
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal, initialSpreadRewardGrowthOppositeDirectionOfLastTraversal)
 		})
@@ -1245,10 +1202,10 @@ func (s *KeeperTestSuite) TestInitOrUpdateSpreadRewardAccumulatorPosition_Updati
 				s.crossTickAndChargeSpreadReward(poolId, DefaultLowerTick)
 			}
 
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick(), DefaultLowerTick, DefaultLiquidityAmt, false)
+			_, err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick(), DefaultLowerTick, DefaultLiquidityAmt, false)
 			s.Require().NoError(err)
 
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick(), DefaultUpperTick, DefaultLiquidityAmt, true)
+			_, err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick(), DefaultUpperTick, DefaultLiquidityAmt, true)
 			s.Require().NoError(err)
 
 			// InitOrUpdateSpreadRewardAccumulatorPosition #1 lower tick to upper tick
@@ -1460,39 +1417,40 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	s.Require().Error(err)
 
 	// Create position in the default range 1.
-	positionIdOne, _, _, liquidity, _, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	positionDataOne, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 
 	// Swap once.
 	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ := s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, 1)
 
 	// Withdraw half.
-	halfLiquidity := liquidity.Mul(sdk.NewDecWithPrec(5, 1))
-	_, _, err = concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, positionIdOne, halfLiquidity)
+	halfLiquidity := positionDataOne.Liquidity.Mul(sdk.NewDecWithPrec(5, 1))
+	_, _, err = concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, positionDataOne.ID, halfLiquidity)
 	s.Require().NoError(err)
 
 	// Collect spread rewards.
-	spreadRewardsCollected := s.collectSpreadRewardsAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionIdOne, sdk.NewCoins(), []string{USDC}, [][]int64{ticksActivatedAfterEachSwap})
+	spreadRewardsCollected := s.collectSpreadRewardsAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionDataOne.ID, sdk.NewCoins(), []string{USDC}, [][]int64{ticksActivatedAfterEachSwap})
 	expectedSpreadRewardsTruncated := totalSpreadRewardsExpected
 	for i, spreadRewardToken := range totalSpreadRewardsExpected {
 		// We run expected spread rewards through a cycle of divison and multiplication by liquidity to capture appropriate rounding behavior
-		expectedSpreadRewardsTruncated[i] = sdk.NewCoin(spreadRewardToken.Denom, spreadRewardToken.Amount.ToDec().QuoTruncate(liquidity).MulTruncate(liquidity).TruncateInt())
+		expectedSpreadRewardsTruncated[i] = sdk.NewCoin(spreadRewardToken.Denom, spreadRewardToken.Amount.ToDec().QuoTruncate(positionDataOne.Liquidity).MulTruncate(positionDataOne.Liquidity).TruncateInt())
 	}
 	s.Require().Equal(expectedSpreadRewardsTruncated, spreadRewardsCollected)
 
 	// Unclaimed rewards should be emptied since spread rewards were collected.
-	s.validatePositionSpreadRewardGrowth(pool.GetId(), positionIdOne, cl.EmptyCoins)
+	s.validatePositionSpreadRewardGrowth(pool.GetId(), positionDataOne.ID, cl.EmptyCoins)
 
 	// Create position in the default range 2.
-	positionIdTwo, _, _, fullLiquidity, _, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	positionDataTwo, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
+	fullLiquidity := positionDataTwo.Liquidity
 
 	// Swap once in the other direction.
 	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, 1)
 
 	// This should claim under the hood for position 2 since full liquidity is removed.
 	balanceBeforeWithdraw := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
-	amtDenom0, _, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, positionIdTwo, fullLiquidity)
+	amtDenom0, _, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, positionDataTwo.ID, positionDataTwo.Liquidity)
 	s.Require().NoError(err)
 	balanceAfterWithdraw := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
 
@@ -1502,20 +1460,20 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	s.Require().Equal(expectedPositionToWithdraw.String(), balanceAfterWithdraw.Sub(balanceBeforeWithdraw).Amount.Sub(amtDenom0).String())
 
 	// Validate cannot claim for withdrawn position.
-	_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, owner, positionIdTwo)
+	_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, owner, positionDataTwo.ID)
 	s.Require().Error(err)
 
-	spreadRewardsCollected = s.collectSpreadRewardsAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionIdOne, sdk.NewCoins(), []string{ETH}, [][]int64{ticksActivatedAfterEachSwap})
+	spreadRewardsCollected = s.collectSpreadRewardsAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionDataOne.ID, sdk.NewCoins(), []string{ETH}, [][]int64{ticksActivatedAfterEachSwap})
 
 	// total spread rewards * half liquidity / (full liquidity + half liquidity)
 	expectesSpreadRewardsCollected := totalSpreadRewardsExpected.AmountOf(ETH).ToDec().Mul(halfLiquidity.Quo(fullLiquidity.Add(halfLiquidity))).TruncateInt()
 	s.Require().Equal(expectesSpreadRewardsCollected.String(), spreadRewardsCollected.AmountOf(ETH).String())
 
 	// Create position in the default range 3.
-	positionIdThree, _, _, fullLiquidity, _, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	positionDataThree, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 
-	collectedThree, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, owner, positionIdThree)
+	collectedThree, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, owner, positionDataThree.ID)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.Coins(nil), collectedThree)
 }

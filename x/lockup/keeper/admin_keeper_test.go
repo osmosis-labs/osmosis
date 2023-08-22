@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v16/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v17/x/lockup/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

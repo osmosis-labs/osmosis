@@ -15,12 +15,21 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	v16 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v16"
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v16/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	v16 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v16"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+)
+
+var (
+	DAIIBCDenom         = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
+	defaultDaiAmount, _ = sdk.NewIntFromString("73000000000000000000000")
+	defaultDenom0mount  = sdk.NewInt(10000000000)
+	desiredDenom0       = "uosmo"
+	desiredDenom0Coin   = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
+	daiCoin             = sdk.NewCoin(DAIIBCDenom, defaultDaiAmount)
 )
 
 type UpgradeTestSuite struct {
@@ -65,7 +74,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 	multiplicativeTolerance := osmomath.ErrTolerance{
 		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
 	}
-
+	defaultDaiAmount, _ := sdk.NewIntFromString("73000000000000000000000")
 	testCases := []struct {
 		name         string
 		pre_upgrade  func()
@@ -79,11 +88,11 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Create earlier pools
 				for i := uint64(1); i < v16.DaiOsmoPoolId; i++ {
-					suite.PrepareBalancerPoolWithCoins(desiredDenom0Coin, daiCoin)
+					suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount))
 				}
 
 				// Create DAI / OSMO pool
-				suite.PrepareBalancerPoolWithCoins(daiCoin, desiredDenom0Coin)
+				suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount), sdk.NewCoin("uosmo", sdk.NewInt(10000000000)))
 
 			},
 			func() {
@@ -143,7 +152,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().Equal(v16.DAIIBCDenom, concentratedTypePool.GetToken1())
 
 				// Validate that the spot price of the CL pool is what we expect
-				suite.Require().Equal(0, multiplicativeTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(concentratedTypePool.GetCurrentSqrtPrice().Power(2)), osmomath.BigDecFromSDKDec(balancerSpotPrice)))
+				suite.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromSDKDec(balancerSpotPrice)))
 
 				// Validate that link was created.
 				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)

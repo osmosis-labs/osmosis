@@ -3,13 +3,18 @@ package concentrated_liquidity_test
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	sftypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestInitializePool() {
@@ -245,14 +250,15 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 	// set up default position to have proper spot price
 	s.SetupDefaultPosition(defaultPoolId)
 
-	spotPriceBaseUSDC, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, ETH, USDC)
-	s.Require().NoError(err)
-	s.Require().Equal(spotPriceBaseUSDC, DefaultCurrSqrtPrice.Power(2))
-
-	// test that we have correct values for reversed quote asset and base asset
+	// ETH is token0 so its price will be the DefaultCurrSqrtPrice squared
 	spotPriceBaseETH, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, USDC, ETH)
 	s.Require().NoError(err)
-	s.Require().Equal(spotPriceBaseETH, sdk.OneDec().Quo(DefaultCurrSqrtPrice.Power(2)))
+	s.Require().Equal(spotPriceBaseETH, DefaultCurrSqrtPrice.PowerInteger(2).SDKDec())
+
+	// test that we have correct values for reversed quote asset and base asset
+	spotPriceBaseUSDC, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, ETH, USDC)
+	s.Require().NoError(err)
+	s.Require().Equal(spotPriceBaseUSDC, osmomath.OneDec().Quo(DefaultCurrSqrtPrice.PowerInteger(2)).SDKDec())
 
 	// try getting spot price from a non-existent pool
 	spotPrice, err = s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId+1, USDC, ETH)
@@ -329,7 +335,7 @@ func (s *KeeperTestSuite) TestSetPool() {
 		CurrentTickLiquidity: sdk.ZeroDec(),
 		Token0:               ETH,
 		Token1:               USDC,
-		CurrentSqrtPrice:     sdk.OneDec(),
+		CurrentSqrtPrice:     osmomath.OneDec(),
 		CurrentTick:          0,
 		TickSpacing:          DefaultTickSpacing,
 		ExponentAtPriceOne:   -6,
@@ -464,11 +470,11 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 			concentratedPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(ETH, USDC)
 
 			// Create a position in the pool that is divisible by the tick spacing
-			_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), -100, 100)
+			_, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), -100, 100)
 			s.Require().NoError(err)
 
 			// Attempt to create a position that is not divisible by the tick spacing
-			_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
+			_, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
 			s.Require().Error(err)
 
 			// Alter the tick spacing of the pool
@@ -481,7 +487,7 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 			s.Require().NoError(err)
 
 			// Attempt to create a position that was previously not divisible by the tick spacing but now is
-			_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
+			_, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
 			if test.expectedCreatePositionErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, test.expectedCreatePositionErr.Error())
@@ -607,6 +613,102 @@ func (s *KeeperTestSuite) TestValidateTickSpacingUpdate() {
 			} else {
 				s.Require().False(validationResult)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
+	var (
+		defaultFooAsset balancer.PoolAsset = balancer.PoolAsset{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+		}
+		defaultBondDenomAsset balancer.PoolAsset = balancer.PoolAsset{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)),
+		}
+		defaultPoolAssets []balancer.PoolAsset = []balancer.PoolAsset{defaultFooAsset, defaultBondDenomAsset}
+		defaultAddress                         = s.TestAccs[0]
+		defaultFunds                           = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", sdk.NewInt(5000000000)))
+		defaultBlockTime                       = time.Unix(1, 1).UTC()
+		defaultLockedAmt                       = sdk.NewCoins(sdk.NewCoin("cl/pool/1", sdk.NewInt(10000)))
+	)
+
+	tests := []struct {
+		name           string
+		address        sdk.AccAddress
+		expectedResult []clmodel.PositionWithPeriodLock
+		expectedErr    error
+	}{
+		{
+			name:    "happy path",
+			address: defaultAddress,
+			expectedResult: []clmodel.PositionWithPeriodLock{
+				{
+					Position: clmodel.Position{
+						PositionId: 3,
+						Address:    defaultAddress.String(),
+						PoolId:     1,
+						LowerTick:  types.MinInitializedTick,
+						UpperTick:  types.MaxTick,
+						JoinTime:   defaultBlockTime,
+						Liquidity:  sdk.MustNewDecFromStr("10000.000000000000001000"),
+					},
+					Locks: lockuptypes.PeriodLock{
+
+						ID:       2,
+						Owner:    defaultAddress.String(),
+						Duration: time.Hour,
+						EndTime:  defaultBlockTime.Add(time.Hour),
+						Coins:    defaultLockedAmt,
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
+
+			clPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition(defaultFunds[0].Denom, defaultFunds[1].Denom)
+			clLockupDenom := types.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
+			err := s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, sftypes.SuperfluidAsset{
+				Denom:     clLockupDenom,
+				AssetType: sftypes.SuperfluidAssetTypeConcentratedShare,
+			})
+			s.Require().NoError(err)
+
+			// Create 3 locked positions
+			for i := 0; i < 3; i++ {
+				_, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), defaultAddress, defaultFunds, time.Hour)
+				s.Require().NoError(err)
+			}
+
+			// The query should return nothing since none of the locks are unlocking
+			positionsWithPeriodLock, err := s.App.ConcentratedLiquidityKeeper.GetUserUnbondingPositions(s.Ctx, tc.address)
+			s.Require().NoError(err)
+			s.Require().Nil(positionsWithPeriodLock)
+
+			// Begin unlocking the second lock only
+			lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, 2)
+			s.Require().NoError(err)
+			_, err = s.App.LockupKeeper.BeginUnlock(s.Ctx, 2, lock.Coins)
+			s.Require().NoError(err)
+
+			// The query should return the second lock only
+			positionsWithPeriodLock, err = s.App.ConcentratedLiquidityKeeper.GetUserUnbondingPositions(s.Ctx, tc.address)
+			if tc.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectedErr)
+				s.Require().Nil(positionsWithPeriodLock)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedResult, positionsWithPeriodLock)
 		})
 	}
 }

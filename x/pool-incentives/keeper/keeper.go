@@ -7,15 +7,15 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v16/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v16/x/pool-incentives/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 type Keeper struct {
@@ -185,13 +185,14 @@ func (k Keeper) GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration 
 
 	key := types.GetPoolGaugeIdInternalStoreKey(poolId, lockableDuration)
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(key)
 
-	if len(bz) == 0 {
+	if !store.Has(key) {
 		return 0, types.NoGaugeAssociatedWithPoolError{PoolId: poolId, Duration: lockableDuration}
 	}
 
-	return sdk.BigEndianToUint64(bz), nil
+	bz := store.Get(key)
+	gaugeId := sdk.BigEndianToUint64(bz)
+	return gaugeId, nil
 }
 
 // GetNoLockGaugeIdsFromPool returns all the NoLock gauge ids associated with the pool id.

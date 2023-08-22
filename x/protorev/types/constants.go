@@ -27,6 +27,9 @@ const MaxPoolPointsPerTx uint64 = 50
 // to the maximum execution time (in ms) of protorev per block
 const MaxPoolPointsPerBlock uint64 = 200
 
+// Max number of ticks we can move in a concentrated pool swap.
+const MaxTicksCrossed uint64 = 10
+
 // ---------------- Module Profit Splitting Constants ---------------- //
 
 // Year 1 (20% of total profit)

@@ -10,7 +10,7 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
-	types0 "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	types0 "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 // MockConcentratedPoolExtension is a mock of ConcentratedPoolExtension interface.
@@ -288,6 +288,20 @@ func (m *MockConcentratedPoolExtension) IsActive(ctx types.Context) bool {
 func (mr *MockConcentratedPoolExtensionMockRecorder) IsActive(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsActive", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).IsActive), ctx)
+}
+
+// IsCurrentTickInRange mocks base method.
+func (m *MockConcentratedPoolExtension) IsCurrentTickInRange(lowerTick, upperTick int64) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsCurrentTickInRange", lowerTick, upperTick)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsCurrentTickInRange indicates an expected call of IsCurrentTickInRange.
+func (mr *MockConcentratedPoolExtensionMockRecorder) IsCurrentTickInRange(lowerTick, upperTick interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsCurrentTickInRange", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).IsCurrentTickInRange), lowerTick, upperTick)
 }
 
 // ProtoMessage mocks base method.

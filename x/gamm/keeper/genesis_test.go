@@ -5,9 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v16/x/gamm/types/migration"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
 )
 
 var DefaultMigrationRecords = gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
@@ -70,7 +70,8 @@ func (s *KeeperTestSuite) TestGammInitGenesis() {
 	_, err = s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, 7)
 	s.Require().Error(err)
 
-	liquidity := s.App.GAMMKeeper.GetTotalLiquidity(s.Ctx)
+	liquidity, err := s.App.GAMMKeeper.GetTotalLiquidity(s.Ctx)
+	s.Require().NoError(err)
 	expectedLiquidity := sdk.NewCoins(sdk.NewInt64Coin("bar", 15000000), sdk.NewInt64Coin("baz", 15000000), sdk.NewInt64Coin("foo", 15000000), sdk.NewInt64Coin("uosmo", 15000000))
 	s.Require().Equal(expectedLiquidity.String(), liquidity.String())
 

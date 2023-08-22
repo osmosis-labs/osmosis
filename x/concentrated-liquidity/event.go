@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	types "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	types "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 // event is the interface all event types should be implementing

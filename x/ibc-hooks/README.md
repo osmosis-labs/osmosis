@@ -18,7 +18,7 @@ The cosmwasm `MsgExecuteContract` is defined [here](https://github.com/CosmWasm/
 
 ```go
 type MsgExecuteContract struct {
-	// Sender is the that actor that signed the messages
+	// Sender is the actor that committed the message in the sender chain
 	Sender string
 	// Contract is the address of the smart contract
 	Contract string
@@ -38,6 +38,8 @@ This is done by setting the sender to `Bech32(Hash("ibc-wasm-hook-intermediary" 
 * Contract: This field should be directly obtained from the ICS-20 packet metadata
 * Msg: This field should be directly obtained from the ICS-20 packet metadata.
 * Funds: This field is set to the amount of funds being sent over in the ICS 20 packet. One detail is that the denom in the packet is the counterparty chains representation of the denom, so we have to translate it to Osmosis' representation.
+
+> **_WARNING:_**  Due to a [bug](https://twitter.com/SCVSecurity/status/1682329758020022272) in the packet forward middleware, we cannot trust the sender from chains that use PFM. Until that is fixed, we recommend chains to not trust the sender on contracts executed via IBC hooks. 
 
 So our constructed cosmwasm message that we execute will look like:
 
@@ -180,6 +182,124 @@ pub enum SudoMsg {
 }
 ```
 
+### Async Acks
+
+IBC supports the ability to send an ack back to the sender of the packet asynchronously. This is useful for
+cases where the packet is received, but the ack is not immediately known. For example, if the packet is being
+forwarded to another chain, the ack may not be known until the packet is received on the other chain.
+
+Note this ACK does not imply full revertability. It is possible that unrevertable actions have occurred 
+even if there is an Ack Error. (This is distinct from the behavior of ICS-20 transfers). If you want to ensure 
+revertability, your contract should be implemented in a way that actions are not finalized until a success ack
+is received.
+
+#### Use case
+
+Async acks are useful in cases where the contract needs to wait for a response from another chain before
+returning a result to the caller. 
+
+For example, if you want to send tokens to another chain after the contract is executed you need to
+add a new ibc packet and wait for its ack. 
+
+In the synchronous acks case, the caller will receive an ack from the contract before the second packet 
+has been processed. This means that the caller will have to wait (and potentially track) if the second 
+packet has been processed successfully or not. 
+
+With async acks, you contract can take this responsibility and only send an ack to the caller once the 
+second packet has been processed
+
+#### Making contract Acks async
+
+To support this, we allow contracts to return an `IBCAsync` response from the function being executed when the
+packet is received. That response specifies that the ack should be handled asynchronously. 
+
+Concretely the contract should return:
+
+```rust
+#[cw_serde]
+pub struct OnRecvPacketAsyncResponse {
+    pub is_async_ack: bool,
+}
+```
+
+if `is_async_ack` is set to true, `OnRecvPacket` will return `nil` and the ack will not be written. Instead, the
+contract wil be stored as the "ack actor" for the packet so that only that contract is allowed to send an ack 
+for it.
+
+It is up to the contract developers to decide which conditions will trigger the ack to be sent. 
+
+#### Sending an async ack
+
+To send the async ack, the contract needs to send the MsgEmitIBCAck message to the chain. This message will 
+then make a sudo call to the contract requesting the ack and write the ack to state. 
+
+That message can be specified in the contract as: 
+
+```rust
+#[derive(
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    CosmwasmExt,
+)]
+#[proto_message(type_url = "/osmosis.ibchooks.MsgEmitIBCAck")]
+pub struct MsgEmitIBCAck {
+    #[prost(string, tag = "1")]
+    pub sender: ::prost::alloc::string::String,
+    #[prost(uint64, tag = "2")]
+    pub packet_sequence: u64,
+    #[prost(string, tag = "3")]
+    pub channel: ::prost::alloc::string::String,
+}
+```
+
+The contract is expected to implement the following sudo message handler:
+
+```rust
+#[cw_serde]
+pub enum IBCAsyncOptions {
+    #[serde(rename = "request_ack")]
+    RequestAck {
+        /// The source channel (osmosis side) of the IBC packet
+        source_channel: String,
+        /// The sequence number that the packet was sent with
+        packet_sequence: u64,
+    },
+}
+
+#[cw_serde]
+pub enum SudoMsg {
+    #[serde(rename = "ibc_async")]
+    IBCAsync(IBCAsyncOptions),
+}
+```
+
+and that sudo call should return an `IBCAckResponse`:
+
+```rust
+#[cw_serde]
+#[serde(tag = "type", content = "content")]
+pub enum IBCAck {
+    AckResponse{
+        packet: Packet,
+        contract_ack: ContractAck,
+    },
+    AckError {
+        packet: Packet,
+        error_description: String,
+        error_response: String,
+    }
+}
+```
+
+Note: the sudo call is required to potentially allow anyone to send the MsgEmitIBCAck message. For now, however,
+this is artificially limited so that the message can only be send by the same contract. This could be expanded in
+the future if needed. 
+
 # Testing strategy
 
-See go tests.
+See go tests.`

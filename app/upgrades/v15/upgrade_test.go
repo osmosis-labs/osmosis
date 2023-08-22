@@ -13,15 +13,15 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	v15 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v15"
-	gamm "github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
-	balancer "github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	v15 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v15"
+	gamm "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
+	balancer "github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 type UpgradeTestSuite struct {
@@ -90,7 +90,6 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 
 	ctx := suite.Ctx
 	gammKeeper := suite.App.GAMMKeeper
-	poolmanagerKeeper := suite.App.PoolManagerKeeper
 	// bankKeeper := suite.App.BankKeeper
 	testAccount := suite.TestAccs[0]
 
@@ -138,7 +137,7 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	balancerBalances := suite.App.BankKeeper.GetAllBalances(ctx, balancerPool.GetAddress())
 
 	// test migrating the balancer pool to a stable pool
-	v15.MigrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, suite.App.BankKeeper, poolID)
+	v15.MigrateBalancerPoolToSolidlyStable(ctx, gammKeeper, suite.App.BankKeeper, poolID)
 
 	// check that the pool is now a stable pool
 	stablepool, err := gammKeeper.GetCFMMPool(ctx, poolID)

@@ -13,13 +13,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v16/app"
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	clgenesis "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types/genesis"
+	"github.com/osmosis-labs/osmosis/v17/app"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	clgenesis "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types/genesis"
 )
 
 type BigBangPositions struct {
@@ -111,7 +111,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 	// Initialize first position to be 1:1 price
 	// this is because the first position must have non-zero token0 and token1 to initialize the price
 	// however, our data has first position with non-zero amount.
-	_, _, _, _, err = osmosis.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(osmosis.Ctx, pool.GetId(), osmosis.TestAccs[0], sdk.NewCoins(sdk.NewCoin(msgCreatePool.Denom0, sdk.NewInt(100)), sdk.NewCoin(msgCreatePool.Denom1, sdk.NewInt(100))))
+	_, err = osmosis.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(osmosis.Ctx, pool.GetId(), osmosis.TestAccs[0], sdk.NewCoins(sdk.NewCoin(msgCreatePool.Denom0, sdk.NewInt(100)), sdk.NewCoin(msgCreatePool.Denom1, sdk.NewInt(100))))
 	if err != nil {
 		panic(err)
 	}

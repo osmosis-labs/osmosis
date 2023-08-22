@@ -1,7 +1,7 @@
 keeper:
-  path: "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
+  path: "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client"
+client_path: "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client"
 queries:
   Pools:
     proto_wrapper:
@@ -59,3 +59,13 @@ queries:
       query_func: "k.CFMMPoolIdLinkFromConcentratedPoolId"
     cli:
       cmd: "CFMMPoolIdLinkFromConcentratedPoolId"
+  UserUnbondingPositions:
+    proto_wrapper:
+      query_func: "k.UserUnbondingPositions"
+    cli:
+      cmd: "UserUnbondingPositions"
+  GetTotalLiquidity:
+    proto_wrapper:
+      query_func: "k.GetTotalLiquidity"
+    cli:
+      cmd: "GetTotalLiquidity"

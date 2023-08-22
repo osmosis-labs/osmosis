@@ -3,7 +3,7 @@ package poolmanager
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 var IntMaxValue = intMaxValue
@@ -39,7 +39,7 @@ func (k Keeper) GetAllPoolRoutes(ctx sdk.Context) []types.ModuleRoute {
 }
 
 func (k Keeper) ValidateCreatedPool(ctx sdk.Context, poolId uint64, pool types.PoolI) error {
-	return k.validateCreatedPool(ctx, poolId, pool)
+	return k.validateCreatedPool(poolId, pool)
 }
 
 func (k Keeper) IsOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute, inDenom, outDenom string) (isRouted bool) {

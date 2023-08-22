@@ -12,6 +12,8 @@ class DecCoins:
         self.denom = denom
         self.amount = amount
 
+oneULPDec = Decimal(1) / Decimal(10 ** 18)
+oneULPBigDec = Decimal(1) / Decimal(10 ** 36)
 
 getcontext().prec = 60
 
@@ -29,6 +31,12 @@ def round_sdk_prec_down(number: Decimal):
 
 def round_sdk_prec_up(number: Decimal):
     return round_decimal(number, 18, ROUND_CEILING)
+
+def round_osmo_prec_down(number: Decimal):
+    return round_decimal(number, 36, ROUND_FLOOR)
+
+def round_osmo_prec_up(number: Decimal):
+    return round_decimal(number, 36, ROUND_CEILING)
 
 # --- CL liquidity functions ---
 
@@ -82,3 +90,44 @@ def get_liquidity_from_amounts(sqrt_price, sqrt_price_a, sqrt_price_b, amount0, 
         liquidity = liquidity1(amount1, sqrt_price_b, sqrt_price_a)
 
     return liquidity
+
+def get_next_sqrt_price_from_amount0_out_round_up(liquidity, sqrtPriceCurrent, tokenOut):
+    product_num = liquidity * sqrtPriceCurrent
+    product_num = round_osmo_prec_up(product_num)
+    product_den =  tokenOut * sqrtPriceCurrent
+    product_den = round_osmo_prec_up(product_den)
+    return round_osmo_prec_up(product_num / (liquidity - product_den))
+
+def get_next_sqrt_price_from_amount0_in_round_up(liquidity, sqrtPriceCurrent, tokenIn):
+    return round_osmo_prec_up(round_osmo_prec_up(liquidity * sqrtPriceCurrent) / (liquidity + round_osmo_prec_down(tokenIn * sqrtPriceCurrent)))
+
+def get_next_sqrt_price_from_amount1_out_round_down(liquidity, sqrtPriceCurrent, tokenOut):
+    return round_osmo_prec_down(sqrtPriceCurrent - round_osmo_prec_up(tokenOut / liquidity))
+
+def get_next_sqrt_price_from_amount1_in_round_down(liquidity, sqrtPriceCurrent, tokenIn):
+    return sqrtPriceCurrent + round_osmo_prec_down(tokenIn / liquidity)
+
+def calc_amount_zero_delta(liquidity, sqrtPriceA, sqrtPriceB, roundUp):
+    if sqrtPriceB > sqrtPriceA:
+        sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
+        
+    diff = sqrtPriceA - sqrtPriceB
+
+    product_num = liquidity * diff
+    product_denom = sqrtPriceA * sqrtPriceB
+
+    if roundUp:
+        return round_osmo_prec_up(round_osmo_prec_up(product_num) / round_osmo_prec_down(product_denom))
+
+    return round_osmo_prec_down(round_osmo_prec_down(product_num) / round_osmo_prec_up(product_denom))
+
+def calc_amount_one_delta(liquidity, sqrtPriceA, sqrtPriceB, roundUp):
+    if sqrtPriceB > sqrtPriceA:
+        sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
+
+    diff = sqrtPriceA - sqrtPriceB
+
+    if roundUp:
+        return round_osmo_prec_up(liquidity * diff) 
+
+    return round_osmo_prec_down(liquidity * diff) 

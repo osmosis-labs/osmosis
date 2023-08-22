@@ -4,13 +4,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 type ExpectedGlobalRewardValues struct {
-	TotalSpreadRewards sdk.Coins
-	TotalIncentives    sdk.Coins
+	ExpectedAdditiveSpreadRewardTolerance sdk.Dec
+	ExpectedAdditiveIncentivesTolerance   sdk.Dec
+	TotalSpreadRewards                    sdk.Coins
+	TotalIncentives                       sdk.Coins
 }
 
 // assertGlobalInvariants asserts all available global invariants (i.e. invariants that should hold on all valid states).
@@ -102,17 +104,33 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant(expectedGlobalRewardValues
 		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
 	}
 
-	// For global invariant checks, we simply ensure that any rounding error was in the pool's favor.
+	spreadRewardAdditiveTolerance := sdk.Dec{}
+	if !expectedGlobalRewardValues.ExpectedAdditiveSpreadRewardTolerance.IsNil() {
+		spreadRewardAdditiveTolerance = expectedGlobalRewardValues.ExpectedAdditiveSpreadRewardTolerance
+	}
+
+	incentivesAdditiveTolerance := sdk.Dec{}
+	if !expectedGlobalRewardValues.ExpectedAdditiveIncentivesTolerance.IsNil() {
+		incentivesAdditiveTolerance = expectedGlobalRewardValues.ExpectedAdditiveSpreadRewardTolerance
+	}
+
+	// We ensure that any rounding error was in the pool's favor by rounding down.
 	// This is to allow for cases where we slightly overround, which would otherwise fail here.
-	// TODO: create ErrTolerance type that allows for additive OR multiplicative tolerance to allow for
+	// TODO: multiplicative tolerance to allow for
 	// tightening this check further.
-	errTolerance := osmomath.ErrTolerance{
-		RoundingDir: osmomath.RoundDown,
+	spreadRewardErrTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: spreadRewardAdditiveTolerance,
+		RoundingDir:       osmomath.RoundDown,
+	}
+
+	incentivesErrTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: incentivesAdditiveTolerance,
+		RoundingDir:       osmomath.RoundDown,
 	}
 
 	// Assert total collected spread rewards and incentives equal to expected
-	s.Require().True(errTolerance.EqualCoins(expectedTotalSpreadRewards, totalCollectedSpread), "expected spread rewards vs. collected: %s vs. %s", expectedTotalSpreadRewards, totalCollectedSpread)
-	s.Require().True(errTolerance.EqualCoins(expectedTotalIncentives, totalCollectedIncentives), "expected incentives vs. collected: %s vs. %s", expectedTotalIncentives, totalCollectedIncentives)
+	s.Require().True(spreadRewardErrTolerance.EqualCoins(expectedTotalSpreadRewards, totalCollectedSpread), "expected spread rewards vs. collected: %s vs. %s", expectedTotalSpreadRewards, totalCollectedSpread)
+	s.Require().True(incentivesErrTolerance.EqualCoins(expectedTotalIncentives, totalCollectedIncentives), "expected incentives vs. collected: %s vs. %s", expectedTotalIncentives, totalCollectedIncentives)
 
 	// Refetch total pool balances across all pools
 	remainingPositions, finalTotalPoolLiquidity, remainingTotalSpreadRewards, remainingTotalIncentives := s.getAllPositionsAndPoolBalances(cachedCtx)

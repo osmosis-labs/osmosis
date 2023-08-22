@@ -4,14 +4,20 @@ use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response,
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, GetAddressFromAliasResponse, InstantiateMsg, QueryMsg};
-use crate::state::{Config, CONFIG, CONTRACT_ALIAS_MAP};
-use crate::{execute, query};
+use crate::msg::{
+    ExecuteMsg, GetAddressFromAliasResponse, IBCLifecycleComplete, InstantiateMsg, QueryMsg,
+    SudoMsg,
+};
+use crate::state::{ChainPFM, Config, CHAIN_PFM_MAP, CONFIG, CONTRACT_ALIAS_MAP};
+use crate::{execute, ibc_lifecycle, query};
 use registry::Registry;
 
 // version info for migration
 const CONTRACT_NAME: &str = "crates.io:crosschain-registry";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+// The name of the chain on which this contract is instantiated
+pub const CONTRACT_CHAIN: &str = "osmosis";
 
 #[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn instantiate(
@@ -27,6 +33,15 @@ pub fn instantiate(
     let state = Config { owner };
     CONFIG.save(deps.storage, &state)?;
 
+    CHAIN_PFM_MAP.save(
+        deps.storage,
+        CONTRACT_CHAIN,
+        &ChainPFM {
+            acknowledged: true,
+            validated: true,
+        },
+    )?;
+
     Ok(Response::new().add_attribute("method", "instantiate"))
 }
 
@@ -38,6 +53,10 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
+        ExecuteMsg::ModifyDenomAlias { operations } => {
+            execute::denom_alias_operations(deps, info.sender, operations)
+        }
+
         // Contract aliases
         ExecuteMsg::ModifyContractAlias { operations } => {
             execute::contract_alias_operations(deps, info.sender, operations)
@@ -73,12 +92,16 @@ pub fn execute(
                 env.block.time,
                 with_memo,
                 None,
+                false,
             )?;
             deps.api.debug(&format!("transfer_msg: {transfer_msg:?}"));
             Ok(Response::new()
                 .add_message(transfer_msg)
                 .add_attribute("method", "unwrap_coin"))
         }
+
+        ExecuteMsg::ProposePFM { chain } => execute::propose_pfm((deps, env, info), chain),
+        ExecuteMsg::ValidatePFM { chain } => execute::validate_pfm((deps, env, info), chain),
     }
 }
 
@@ -119,6 +142,30 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         }
         QueryMsg::GetChainNameFromBech32Prefix { prefix } => {
             to_binary(&query::query_chain_name_from_bech32_prefix(deps, prefix)?)
+        }
+        QueryMsg::HasPacketForwarding { chain } => {
+            to_binary(&query::query_chain_has_pfm(deps, chain))
+        }
+        QueryMsg::GetAliasForDenomPath { denom_path } => {
+            to_binary(&query::query_alias_for_denom_path(deps, &denom_path)?)
+        }
+        QueryMsg::GetDenomPathForAlias { alias } => {
+            to_binary(&query::query_denom_path_for_alias(deps, &alias)?)
+        }
+    }
+}
+
+#[cfg_attr(not(feature = "imported"), entry_point)]
+pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
+    match msg {
+        SudoMsg::IBCLifecycleComplete(IBCLifecycleComplete::IBCAck {
+            channel,
+            sequence,
+            ack,
+            success,
+        }) => ibc_lifecycle::receive_ack(deps, channel, sequence, ack, success),
+        SudoMsg::IBCLifecycleComplete(IBCLifecycleComplete::IBCTimeout { channel, sequence }) => {
+            ibc_lifecycle::receive_timeout(deps, channel, sequence)
         }
     }
 }
@@ -211,7 +258,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "osmosis".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "juno".to_string(),
             },
         )
@@ -224,7 +271,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetDestinationChainFromSourceChainViaChannel {
-                on_chain: "osmosis".to_string(),
+                on_chain: CONTRACT_CHAIN.to_string(),
                 via_channel: "channel-42".to_string(),
             },
         )
@@ -237,7 +284,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "osmosis".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "stargaze".to_string(),
             },
         )
@@ -250,7 +297,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetDestinationChainFromSourceChainViaChannel {
-                on_chain: "osmosis".to_string(),
+                on_chain: CONTRACT_CHAIN.to_string(),
                 via_channel: "channel-75".to_string(),
             },
         )
@@ -264,7 +311,7 @@ mod test {
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
                 source_chain: "stargaze".to_string(),
-                destination_chain: "osmosis".to_string(),
+                destination_chain: CONTRACT_CHAIN.to_string(),
             },
         )
         .unwrap();
@@ -282,14 +329,14 @@ mod test {
         )
         .unwrap();
         let destination_chain: String = from_binary(&destination_chain).unwrap();
-        assert_eq!("osmosis", destination_chain);
+        assert_eq!(CONTRACT_CHAIN, destination_chain);
 
         // Attempt to retrieve a link that doesn't exist and check that we get an error
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "osmosis".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "cerberus".to_string(),
             },
         );
@@ -299,7 +346,7 @@ mod test {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: execute::FullOperation::Disable,
-                source_chain: "OSMOSIS".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "JUNO".to_string(),
                 channel_id: Some("CHANNEL-42".to_string()),
                 new_source_chain: None,
@@ -316,7 +363,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "osmosis".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "juno".to_string(),
             },
         );
@@ -326,7 +373,7 @@ mod test {
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: execute::FullOperation::Enable,
-                source_chain: "OSMOSIS".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "JUNO".to_string(),
                 channel_id: Some("CHANNEL-42".to_string()),
                 new_source_chain: None,
@@ -342,7 +389,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "osmosis".to_string(),
+                source_chain: CONTRACT_CHAIN.to_string(),
                 destination_chain: "juno".to_string(),
             },
         )

@@ -21,7 +21,7 @@ Some important notes on joining as a genesis validator:
     active operators of the network. As explained in the [Osmosis: A Hub
     AMM](https://medium.com/osmosis/osmosis-a-hub-amm-c4c12788f94c)
     post, Osmosis is intended to be a fast iterating platform that
-    regularly add new features and modules through software upgrades. A
+    regularly adds new features and modules through software upgrades. A
     precise timeline for upgrade schedules does not exist, but
     validators are expected to be ready to upgrade the network
     potentially as frequently as a monthly basis early on. Furthermore,
@@ -36,6 +36,7 @@ Some important notes on joining as a genesis validator:
     recieve fairdrop OSMO. You can verify that a Cosmos address has
     received coins in the fairdrop by inputting an address here:
     <https://airdrop.osmosis.zone/>.
+    - **Note: The airdrop URL has been deprecated.** 
 
 ## Hardware
 
@@ -289,8 +290,7 @@ It will show an output something similar to:
 Genesis transaction written to "/Users/ubuntu/.osmosisd/config/gentx/gentx-eb3b1768d00e66ef83acb1eee59e1d3a35cf76fc.json"
 ```
 
-The result should look something like this [sample gentx
-file](%22/Users/sunnya97/.osmosisd/config/gentx/gentx-eb3b1768d00e66ef83acb1eee59e1d3a35cf76fc.json).
+The result should look something like this `/Users/sunnya97/.osmosisd/config/gentx/gentx-eb3b1768d00e66ef83acb1eee59e1d3a35cf76fc.json`.
 
 ### Submit Your GenTx
 
@@ -429,7 +429,7 @@ preinstall new binaries, and cosmovisor will automatically update them
 based on on-chain SoftwareUpgrade proposals.
 
 You should review the docs for cosmovisor located here:
-<https://docs.cosmos.network/master/run-node/cosmovisor.html>
+<https://docs.cosmos.network/main/tooling/cosmovisor>
 
 If you choose to use cosmovisor, please continue with these
 instructions:
@@ -582,7 +582,7 @@ investors, and may not under any circumstances be relied upon when
 making investment decisions.*
 
 This work, ["Osmosis Genesis Validators
-Guide"](https://github.com/osmosis-labs/networks/genesis-validators.md),
+Guide"](https://github.com/osmosis-labs/networks/blob/main/genesis-validators.md),
 is a derivative of ["Agoric Validator
 Guide"](https://github.com/Agoric/agoric-sdk/wiki/Validator-Guide) used
 under [CC BY](http://creativecommons.org/licenses/by/4.0/). The Agoric

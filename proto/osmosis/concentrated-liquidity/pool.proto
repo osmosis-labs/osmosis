@@ -9,7 +9,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model";
 
 message Pool {
   option (gogoproto.goproto_getters) = false;
@@ -40,7 +40,7 @@ message Pool {
   string token1 = 7;
 
   string current_sqrt_price = 8 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "github.com/osmosis-labs/osmosis/osmomath.BigDec",
     (gogoproto.moretags) = "yaml:\"spot_price\"",
     (gogoproto.nullable) = false
   ];

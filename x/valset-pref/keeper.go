@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/v16/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
 )
 
 type Keeper struct {
@@ -48,7 +48,6 @@ func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (typ
 		if err != nil {
 			return types.ValidatorSetPreferences{}, err
 		}
-
 		existingDelsValSetFormatted, err := k.GetExistingStakingDelegations(ctx, delAddr)
 		if err != nil {
 			return types.ValidatorSetPreferences{}, err
@@ -69,7 +68,7 @@ func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delAddr sdk.AccAd
 
 	existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
 	if len(existingDelegations) == 0 {
-		return nil, fmt.Errorf("No Existing delegation")
+		return nil, types.ErrNoDelegation
 	}
 
 	existingTotalShares := sdk.NewDec(0)

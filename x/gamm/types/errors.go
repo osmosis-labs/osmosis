@@ -21,7 +21,7 @@ type UnsortedPoolLiqError struct {
 }
 
 func (e UnsortedPoolLiqError) Error() string {
-	return fmt.Sprintf(`unsorted initial pool liquidity: %s. 
+	return fmt.Sprintf(`unsorted initial pool liquidity: %s.
 	Please sort and make sure scaling factor order matches initial liquidity coin order`, e.ActualLiquidity)
 }
 
@@ -48,6 +48,22 @@ type BalancerPoolMigrationLinkNotFoundError struct {
 
 func (e BalancerPoolMigrationLinkNotFoundError) Error() string {
 	return fmt.Sprintf("given PoolIdEntering (%d) does not have a canonical link for any balancer pool", e.PoolIdEntering)
+}
+
+type NoDesiredDenomInPoolError struct {
+	DesiredDenom string
+}
+
+func (e NoDesiredDenomInPoolError) Error() string {
+	return fmt.Sprintf("desired denom (%s) was not found in the pool", e.DesiredDenom)
+}
+
+type MustHaveTwoDenomsError struct {
+	NumDenoms int
+}
+
+func (e MustHaveTwoDenomsError) Error() string {
+	return fmt.Sprintf("can only have 2 denoms in CL pool, got (%d)", e.NumDenoms)
 }
 
 // x/gamm module sentinel errors.
@@ -90,4 +106,6 @@ var (
 	ErrInvalidScalingFactors      = errorsmod.Register(ModuleName, 64, "scaling factors cannot be 0 or use more than 63 bits")
 	ErrHitMaxScaledAssets         = errorsmod.Register(ModuleName, 65, "post-scaled pool assets can not exceed 10^34")
 	ErrHitMinScaledAssets         = errorsmod.Register(ModuleName, 66, "post-scaled pool assets can not be less than 1")
+	ErrNoGaugeToRedirect          = errorsmod.Register(ModuleName, 67, "could not find gauge to redirect")
+	ErrMustHaveTwoDenoms          = errorsmod.Register(ModuleName, 68, "can only have 2 denoms in CL pool")
 )

@@ -55,6 +55,22 @@ pub fn check_action_permission(
     Err(ContractError::Unauthorized {})
 }
 
+pub fn is_owner(deps: Deps, sender: &Addr) -> bool {
+    CONFIG
+        .load(deps.storage)
+        .map(|config| &config.owner == sender)
+        .map_err(|_| false)
+        .unwrap_or(false)
+}
+
+pub fn is_global_admin(deps: Deps, sender: &Addr) -> bool {
+    GLOBAL_ADMIN_MAP
+        .load(deps.storage, "osmosis")
+        .map(|global_admin| &global_admin == sender)
+        .map_err(|_| false)
+        .unwrap_or(false)
+}
+
 pub fn check_is_authorized(
     deps: Deps,
     sender: Addr,
@@ -125,6 +141,24 @@ pub fn check_is_chain_maintainer(
         }
     }
     Err(ContractError::Unauthorized {})
+}
+
+fn is_alphanumeric(string: &str) -> bool {
+    string.chars().all(|c| c.is_alphanumeric())
+}
+
+pub fn normalize_alias(alias: &str) -> Result<String, ContractError> {
+    if !is_alphanumeric(alias) {
+        return Err(ContractError::InvalidAlias {
+            alias: alias.into(),
+        });
+    }
+    if alias.is_empty() {
+        return Err(ContractError::MissingField {
+            field: "new_alias".to_string(),
+        });
+    }
+    Ok(alias.to_lowercase())
 }
 
 // Helper functions to deal with Vec values in cosmwasm maps

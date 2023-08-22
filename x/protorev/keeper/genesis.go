@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.
@@ -77,9 +77,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	// Set the number of pool points that have been consumed in the current block.
 	k.SetPointCountForBlock(ctx, genState.PointCountForBlock)
 
-	// Configure the pool weights for genesis. This roughly correlates to the ms of execution time
-	// by pool type.
-	k.SetPoolWeights(ctx, genState.PoolWeights)
+	// Configure the pool info for genesis.
+	k.SetInfoByPoolType(ctx, genState.InfoByPoolType)
 
 	// Set the profits that have been collected by Protorev.
 	for _, coin := range genState.Profits {
@@ -99,7 +98,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	genesis.Params = k.GetParams(ctx)
 
 	// Export the pool weights.
-	genesis.PoolWeights = k.GetPoolWeights(ctx)
+	genesis.InfoByPoolType = k.GetInfoByPoolType(ctx)
 
 	// Export the token pair arb routes (hot routes).
 	routes, err := k.GetAllTokenPairArbRoutes(ctx)

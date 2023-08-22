@@ -6,12 +6,12 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v4/keeper"
 
-	ibcratelimit "github.com/osmosis-labs/osmosis/v16/x/ibc-rate-limit"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v16/x/poolmanager"
+	gammkeeper "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v17/x/poolmanager"
 )
 
 func MigrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanager *poolmanager.Keeper) {
@@ -26,8 +26,8 @@ func SetICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
 	setICQParams(ctx, icqKeeper)
 }
 
-func MigrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanager *poolmanager.Keeper, bankKeeper bankkeeper.Keeper, poolId uint64) {
-	migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanager, bankKeeper, poolId)
+func MigrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, bankKeeper bankkeeper.Keeper, poolId uint64) {
+	migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, bankKeeper, poolId)
 }
 
 func SetRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper, wasmKeeper *wasmkeeper.Keeper) {

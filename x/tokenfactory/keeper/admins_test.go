@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v16/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
 )
 
 func (s *KeeperTestSuite) TestAdminMsgs() {
@@ -129,6 +129,15 @@ func (s *KeeperTestSuite) TestMintDenom() {
 			),
 			expectPass: true,
 		},
+		{
+			desc: "error: try minting non-tokenfactory denom",
+			mintMsg: *types.NewMsgMintTo(
+				s.TestAccs[0].String(),
+				sdk.NewInt64Coin("uosmo", 10),
+				s.TestAccs[1].String(),
+			),
+			expectPass: false,
+		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			_, err := s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), &tc.mintMsg)
@@ -213,6 +222,15 @@ func (s *KeeperTestSuite) TestBurnDenom() {
 			burnMsg: *types.NewMsgBurnFrom(
 				s.TestAccs[0].String(),
 				sdk.NewInt64Coin(s.defaultDenom, 10),
+				moduleAdress.String(),
+			),
+			expectPass: false,
+		},
+		{
+			desc: "fail case - burn non-tokenfactory denom",
+			burnMsg: *types.NewMsgBurnFrom(
+				s.TestAccs[0].String(),
+				sdk.NewInt64Coin("uosmo", 10),
 				moduleAdress.String(),
 			),
 			expectPass: false,

@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	v9 "github.com/osmosis-labs/osmosis/v16/app/upgrades/v9"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	v9 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v9"
 )
 
 type UpgradeTestSuite struct {

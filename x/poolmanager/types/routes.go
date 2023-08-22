@@ -92,6 +92,9 @@ type PoolModuleI interface {
 	// ValidatePermissionlessPoolCreationEnabled returns nil if permissionless pool creation in the module is enabled.
 	// Otherwise, returns an error.
 	ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error
+
+	// GetTotalLiquidity returns the total liquidity of all the pools in the module.
+	GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error)
 }
 
 type PoolIncentivesKeeperI interface {

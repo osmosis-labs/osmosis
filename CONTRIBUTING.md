@@ -343,7 +343,7 @@ You can also feel free to do `make format` if you're getting errors related to `
 
 There are several steps that go into a major release
 
-- The GitHub release is created via this [GitHub workflow](https://github.com/osmosis-labs/osmosis/blob/main/.github/workflows/release.yml). The workflow is manually triggered from the [osmosis-ci repository](https://github.com/osmosis-labs/osmosis-ci). The workflow uses the `make build-reproducible` command to create the `osmosisd` binaries using the default [Makefile](https://github.com/osmosis-labs/osmosis/blob/main/Makefile#L99).
+- The GitHub release is created in our private repo via this [GitHub workflow](https://github.com/osmosis-labs/osmosis-ci/blob/main/.github/workflows/create-release.yaml). The workflow is manually triggered from the [osmosis-ci repository](https://github.com/osmosis-labs/osmosis-ci). The workflow uses the `make build-reproducible` command to create the `osmosisd` binaries using the default [Makefile](https://github.com/osmosis-labs/osmosis/blob/main/Makefile#L99).
 
 - Make a PR to main, with a cosmovisor config, generated in tandem with the binaries from tool.
   - Should be its own PR, as it may get denied for Fork upgrades.

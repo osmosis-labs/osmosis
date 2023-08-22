@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
-	"github.com/osmosis-labs/osmosis/v16/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v17/tests/osmosisibctesting"
 )
 
 // Instantiate the cw20 and cw20-ics20 contract
@@ -104,7 +104,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	cw20IbcDenom := "ibc/134A49086C1164C78313D57E69E5A8656D8AE8CF6BB45B52F2DBFEFAE6EE30B8"
 
 	cw20Addr, cw20ics20Addr := suite.SetupCW20(ChainB)
-	swaprouterAddr, crosschainAddr := suite.SetupCrosschainSwaps(ChainA)
+	swaprouterAddr, crosschainAddr := suite.SetupCrosschainSwaps(ChainA, true)
 
 	chainA := suite.GetChain(ChainA)
 	chainB := suite.GetChain(ChainB)

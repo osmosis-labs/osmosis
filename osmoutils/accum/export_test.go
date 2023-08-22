@@ -21,7 +21,7 @@ func (accum AccumulatorObject) GetAllPositions() ([]Record, error) {
 }
 
 // Creates an accumulator object for testing purposes
-func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, totalShares sdk.Dec) AccumulatorObject {
+func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, totalShares sdk.Dec) *AccumulatorObject {
 	// We store an accumulator object in state even if unused in tests
 	// because position operations still require GetAccumulator to work
 	_ = MakeAccumulator(store, name)
@@ -32,7 +32,7 @@ func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, t
 		totalShares:   totalShares,
 	}
 	setAccumulator(&acc, value, totalShares)
-	return acc
+	return &acc
 }
 
 // Gets store from accumulator for testing purposes
@@ -55,7 +55,7 @@ func parseRecordFromBz(bz []byte) (record Record, err error) {
 }
 
 // WithPosition is a decorator test function to append a position with the given name to the given accumulator.
-func WithPosition(accum AccumulatorObject, name string, position Record) AccumulatorObject {
+func WithPosition(accum *AccumulatorObject, name string, position Record) *AccumulatorObject {
 	osmoutils.MustSet(accum.store, FormatPositionPrefixKey(accum.name, name), &position)
 	return accum
 }
@@ -82,6 +82,6 @@ func (accum AccumulatorObject) GetValueField() sdk.DecCoins {
 	return accum.valuePerShare
 }
 
-func InitOrUpdatePosition(accum AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
+func InitOrUpdatePosition(accum *AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
 	initOrUpdatePosition(accum, accumulatorValue, index, numShareUnits, unclaimedRewards, options)
 }

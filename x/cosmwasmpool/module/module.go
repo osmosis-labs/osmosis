@@ -15,14 +15,14 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
-	cosmwasmpool "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool"
-	moduleclient "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client"
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client/cli"
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client/grpc"
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v17/simulation/simtypes"
+	cosmwasmpool "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool"
+	moduleclient "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/client"
+	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/client/cli"
+	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/client/grpc"
+	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types"
 )
 
 var (
@@ -30,7 +30,9 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc codec.Codec
+}
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
@@ -89,9 +91,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: moduleclient.NewQuerier(am.k)})
 }
 
-func NewAppModule(cosmwasmpoolKeeper cosmwasmpool.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, cosmwasmpoolKeeper cosmwasmpool.Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		k:              cosmwasmpoolKeeper,
 	}
 }
@@ -118,7 +120,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genState types.GenesisState
 	cdc.MustUnmarshalJSON(gs, &genState)
-	am.k.InitGenesis(ctx, &genState)
+	am.k.InitGenesis(ctx, &genState, am.cdc)
 	return []abci.ValidatorUpdate{}
 }
 

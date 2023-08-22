@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -139,8 +139,9 @@ func (s *KeeperTestSuite) TestSyntheticLockupCreateGetDeleteAccumulation() {
 	})
 
 	expectedSynthLock := *synthLock
-	actualSynthLock, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, 1)
+	actualSynthLock, found, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, 1)
 	s.Require().NoError(err)
+	s.Require().True(found)
 	s.Require().Equal(expectedSynthLock, actualSynthLock)
 
 	allSynthLocks := s.App.LockupKeeper.GetAllSyntheticLockups(s.Ctx)

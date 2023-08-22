@@ -9,11 +9,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg/transmuter"
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/cosmwasm/msg/transmuter"
+	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/model"
 
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types"
 )
 
 const (
@@ -29,7 +29,7 @@ func (s *KeeperTestHelper) PrepareCosmWasmPool() cosmwasmpooltypes.CosmWasmExten
 	return s.PrepareCustomTransmuterPool(s.TestAccs[0], []string{DefaultTransmuterDenomA, DefaultTransmuterDenomB})
 }
 
-// PrepareCustomConcentratedPool sets up a concentrated liquidity pool with the custom parameters.
+// PrepareCustomTransmuterPool sets up a transmuter pool with the custom parameters.
 func (s *KeeperTestHelper) PrepareCustomTransmuterPool(owner sdk.AccAddress, denoms []string) cosmwasmpooltypes.CosmWasmExtension {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)

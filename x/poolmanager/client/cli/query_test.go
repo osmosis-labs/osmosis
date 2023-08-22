@@ -4,12 +4,12 @@ import (
 	gocontext "context"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v16/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v17/x/poolmanager/client/queryproto"
 )
 
 type QueryTestSuite struct {

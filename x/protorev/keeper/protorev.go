@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v16/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
@@ -118,7 +118,7 @@ func (k Keeper) DeleteBaseDenoms(ctx sdk.Context) {
 	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixBaseDenoms)
 }
 
-// GetPoolForDenomPair returns the id of the highest liquidty pool between the base denom and the denom to match
+// GetPoolForDenomPair returns the id of the highest liquidity pool between the base denom and the denom to match
 func (k Keeper) GetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDenomPairToPool)
 	key := types.GetKeyPrefixDenomPairToPool(baseDenom, denomToMatch)
@@ -448,17 +448,17 @@ func (k Keeper) SetMaxPointsPerBlock(ctx sdk.Context, maxPoints uint64) error {
 	return nil
 }
 
-// GetPoolWeights retrieves the weights of different pool types. The weight of a pool type roughly
-// corresponds to the amount of time it will take to simulate and execute a swap on that pool type (in ms).
-func (k Keeper) GetPoolWeights(ctx sdk.Context) types.PoolWeights {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolWeights)
-	poolWeights := &types.PoolWeights{}
-	osmoutils.MustGet(store, types.KeyPrefixPoolWeights, poolWeights)
+// GetInfoByPoolType retrieves the metadata about the different pool types. This is used to determine the execution costs of
+// different pool types when calculating the optimal route (in terms of time and gas consumption).
+func (k Keeper) GetInfoByPoolType(ctx sdk.Context) types.InfoByPoolType {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixInfoByPoolType)
+	poolWeights := &types.InfoByPoolType{}
+	osmoutils.MustGet(store, types.KeyPrefixInfoByPoolType, poolWeights)
 	return *poolWeights
 }
 
-// SetPoolWeights sets the weights of different pool types.
-func (k Keeper) SetPoolWeights(ctx sdk.Context, poolWeights types.PoolWeights) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolWeights)
-	osmoutils.MustSet(store, types.KeyPrefixPoolWeights, &poolWeights)
+// SetInfoByPoolType sets the pool type information.
+func (k Keeper) SetInfoByPoolType(ctx sdk.Context, poolWeights types.InfoByPoolType) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixInfoByPoolType)
+	osmoutils.MustSet(store, types.KeyPrefixInfoByPoolType, &poolWeights)
 }

@@ -2,6 +2,7 @@ package sumtree_test
 
 import (
 	"bytes"
+	"fmt"
 	"math/rand"
 	"sort"
 	"testing"
@@ -74,12 +75,16 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 	pairs := pairs{pair{[]byte("hello"), 100}}
 	suite.tree.Set([]byte("hello"), sdk.NewIntFromUint64(100))
 
+	seed := rand.Int63()
+	fmt.Printf("running seed %d: \n", seed)
+	r := rand.New(rand.NewSource(seed))
+
 	// tested up to 2000
 	for i := 0; i < 500; i++ {
 		// add a single element
-		key := make([]byte, rand.Int()%20)
-		value := rand.Uint64() % 100
-		rand.Read(key)
+		key := make([]byte, r.Int()%20)
+		value := r.Uint64() % 100
+		r.Read(key)
 		idx := sort.Search(len(pairs), func(n int) bool { return bytes.Compare(pairs[n].key, key) >= 0 })
 		if idx < len(pairs) {
 			if bytes.Equal(pairs[idx].key, key) {
@@ -126,8 +131,8 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 			right -= exact
 		}
 
-		if rand.Int()%2 == 0 {
-			idx := rand.Int() % len(pairs)
+		if r.Int()%2 == 0 {
+			idx := r.Int() % len(pairs)
 			pair := pairs[idx]
 			pairs = append(pairs[:idx], pairs[idx+1:]...)
 			suite.tree.Remove(pair.key)

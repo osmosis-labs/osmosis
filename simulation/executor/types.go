@@ -8,7 +8,7 @@ import (
 	legacysim "github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v17/simulation/simtypes"
 )
 
 // AppStateFn returns the app state json bytes and the genesis accounts

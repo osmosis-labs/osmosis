@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -87,11 +87,20 @@ func NewCreateGaugeCmd() *cobra.Command {
 				return err
 			}
 
-			distributeTo := lockuptypes.QueryCondition{
-				LockQueryType: lockuptypes.ByDuration,
-				Denom:         denom,
-				Duration:      duration,
-				Timestamp:     time.Unix(0, 0), // XXX check
+			var distributeTo lockuptypes.QueryCondition
+			// if poolId is 0 it is a guaranteed lock gauge
+			// if poolId is > 0 it is a guaranteed no-lock gauge
+			if poolId == 0 {
+				distributeTo = lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.ByDuration,
+					Denom:         denom,
+					Duration:      duration,
+					Timestamp:     time.Unix(0, 0), // XXX check
+				}
+			} else if poolId > 0 {
+				distributeTo = lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.NoLock,
+				}
 			}
 
 			msg := types.NewMsgCreateGauge(

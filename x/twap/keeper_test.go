@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v16/x/twap"
-	"github.com/osmosis-labs/osmosis/v16/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/x/twap"
+	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
 )
 
 // TODO: Consider switching this everywhere
@@ -383,7 +383,7 @@ func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, ty
 // - 3 records at time t
 // - 3 records t time t + 1 seconds
 // all returned records belong to the same pool with poolId
-func (s *TestSuite) createTestRecordsFromTimeInPool(t time.Time, poolId uint64) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord,
+func (s *TestSuite) CreateTestRecordsFromTimeInPool(t time.Time, poolId uint64) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord,
 	types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord,
 ) {
 	baseRecordAB := newEmptyPriceRecord(poolId, t, denom0, denom1)

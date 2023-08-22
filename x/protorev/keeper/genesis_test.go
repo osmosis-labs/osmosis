@@ -23,8 +23,8 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	params := s.App.ProtoRevKeeper.GetParams(s.Ctx)
 	s.Require().Equal(params, exportedGenesis.Params)
 
-	poolWeights := s.App.ProtoRevKeeper.GetPoolWeights(s.Ctx)
-	s.Require().Equal(poolWeights, exportedGenesis.PoolWeights)
+	poolInfo := s.App.ProtoRevKeeper.GetInfoByPoolType(s.Ctx)
+	s.Require().Equal(poolInfo, exportedGenesis.InfoByPoolType)
 
 	daysSinceGenesis, err := s.App.ProtoRevKeeper.GetDaysSinceModuleGenesis(s.Ctx)
 	s.Require().NoError(err)

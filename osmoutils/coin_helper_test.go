@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 )
 
 var (
@@ -32,6 +33,8 @@ func TestSubDecCoins(t *testing.T) {
 
 		expectedOutput []sdk.DecCoins
 		expectError    bool
+		// whether unsafe subtraction should panic
+		expectPanicUnsafe bool
 	}{
 		"[[100foo, 100bar], [100foo, 100bar]] - [[50foo, 50bar], [50foo, 100bar]]": {
 			firstInput:  []sdk.DecCoins{hundredEach, hundredEach},
@@ -69,19 +72,42 @@ func TestSubDecCoins(t *testing.T) {
 			expectedOutput: []sdk.DecCoins{},
 			expectError:    true,
 		},
+
+		"negative result": {
+			firstInput:  []sdk.DecCoins{fiftyEach},
+			secondInput: []sdk.DecCoins{hundredEach},
+
+			expectedOutput:    []sdk.DecCoins{{sdk.DecCoin{Denom: "bar", Amount: sdk.NewDec(-50)}, sdk.DecCoin{Denom: "foo", Amount: sdk.NewDec(-50)}}},
+			expectPanicUnsafe: true,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actualOutput, err := osmoutils.SubDecCoinArrays(tc.firstInput, tc.secondInput)
+
+			var (
+				actualOutput []sdk.DecCoins
+				err1         error
+			)
+			osmoassert.ConditionalPanic(t, tc.expectPanicUnsafe, func() {
+				actualOutput, err1 = osmoutils.SubDecCoinArrays(tc.firstInput, tc.secondInput)
+			})
+
+			actualOutputSafe, err2 := osmoutils.SafeSubDecCoinArrays(tc.firstInput, tc.secondInput)
 
 			if tc.expectError {
-				require.Error(t, err)
+				require.Error(t, err1)
+				require.Error(t, err2)
 				require.Equal(t, tc.expectedOutput, actualOutput)
+				require.Equal(t, tc.expectedOutput, actualOutputSafe)
 				return
 			}
 
-			require.NoError(t, err)
-			require.Equal(t, tc.expectedOutput, actualOutput)
+			require.NoError(t, err1)
+			require.NoError(t, err2)
+			if !tc.expectPanicUnsafe {
+				require.Equal(t, tc.expectedOutput, actualOutput)
+			}
+			require.Equal(t, tc.expectedOutput, actualOutputSafe)
 		})
 	}
 }

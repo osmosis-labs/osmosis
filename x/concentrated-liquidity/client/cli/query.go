@@ -5,8 +5,8 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -19,6 +19,9 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableIncentives)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetIncentiveRecords)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCFMMPoolIdLinkFromConcentratedPoolId)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetTickLiquidityNetInDirection)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetPoolAccumulatorRewards)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetTickAccumulatorTrackers)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
@@ -91,4 +94,40 @@ func GetCFMMPoolIdLinkFromConcentratedPoolId() (*osmocli.QueryDescriptor, *query
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} cfmm-pool-link-from-cl 1`,
 	}, &queryproto.CFMMPoolIdLinkFromConcentratedPoolIdRequest{}
+}
+
+func GetTotalLiquidity() (*osmocli.QueryDescriptor, *queryproto.GetTotalLiquidityRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "total-liquidity",
+		Short: "Query total liquidity across all concentrated pool",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} total-liquidity 1`,
+	}, &queryproto.GetTotalLiquidityRequest{}
+}
+
+func GetTickLiquidityNetInDirection() (*osmocli.QueryDescriptor, *queryproto.LiquidityNetInDirectionRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "liquidity-net-in-direction [pool-id] [token-in-denom] [start-tick] [use-current-tick] [bound-tick] [use-no-bound]",
+		Short: "Query liquidity net in direction",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} 4 uosmo "[-18000000]" true "[-9000000]" true`,
+	}, &queryproto.LiquidityNetInDirectionRequest{}
+}
+
+func GetPoolAccumulatorRewards() (*osmocli.QueryDescriptor, *queryproto.PoolAccumulatorRewardsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "pool-accumulator-rewards [pool-id]",
+		Short: "Query pool accumulator rewards",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} pool-accumulator-rewards 1`,
+	}, &queryproto.PoolAccumulatorRewardsRequest{}
+}
+
+func GetTickAccumulatorTrackers() (*osmocli.QueryDescriptor, *queryproto.TickAccumulatorTrackersRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "tick-accumulator-trackers [pool-id] [tick-index]",
+		Short: "Query tick accumulator trackers",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} tick-accumulator-trackers 1 "[-18000000]"`,
+	}, &queryproto.TickAccumulatorTrackersRequest{}
 }

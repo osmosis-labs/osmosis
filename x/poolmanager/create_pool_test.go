@@ -6,13 +6,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v16/app/apptesting"
-	clmodel "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/model"
-	cwmodel "github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	stableswap "github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	cwmodel "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	stableswap "github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 func (s *KeeperTestSuite) TestPoolCreationFee() {
@@ -107,7 +107,8 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 			s.Require().Equal(senderBal.String(), expectedSenderBal.String())
 
 			// check pool's liquidity is correctly increased
-			liquidity := gammKeeper.GetTotalLiquidity(s.Ctx)
+			liquidity, err := gammKeeper.GetTotalLiquidity(s.Ctx)
+			s.Require().NoError(err, "test: %v", test.name)
 			s.Require().Equal(expectedPoolTokens.String(), liquidity.String())
 		} else {
 			s.Require().Error(err, "test: %v", test.name)

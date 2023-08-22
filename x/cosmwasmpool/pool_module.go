@@ -5,10 +5,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v16/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 )
@@ -105,6 +105,23 @@ func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
 				return nil, err
 			}
 			return &pool, nil
+		},
+	)
+}
+
+// GetPoolsWithWasmKeeper behaves the same as GetPools, but it also sets the WasmKeeper field of the pool.
+func (k Keeper) GetPoolsWithWasmKeeper(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
+	return osmoutils.GatherValuesFromStorePrefix(
+		ctx.KVStore(k.storeKey), types.PoolsKey, func(value []byte) (poolmanagertypes.PoolI, error) {
+			pool := model.CosmWasmPool{}
+			err := k.cdc.Unmarshal(value, &pool)
+			if err != nil {
+				return nil, err
+			}
+			return &model.Pool{
+				CosmWasmPool: pool,
+				WasmKeeper:   k.wasmKeeper,
+			}, nil
 		},
 	)
 }
@@ -265,18 +282,41 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, err
 	}
 
+	contractAddr := sdk.MustAccAddressFromBech32(cosmwasmPool.GetContractAddress())
+
+	// Send token in max amount from sender to the pool
+	// We do this because sudo message does not support sending coins from the sender
+	// And we need to send the max amount because we do not know how much the contract will use.
+	if err := k.bankKeeper.SendCoins(ctx, sender, contractAddr, sdk.NewCoins(sdk.NewCoin(tokenInDenom, tokenInMaxAmount))); err != nil {
+		return sdk.Int{}, err
+	}
+
+	// Note that the contract sends the token out back to the sender after the swap
+	// As a result, we do not need to worry about sending token out here.
 	request := msg.NewSwapExactAmountOutSudoMsg(sender.String(), tokenInDenom, tokenOut, tokenInMaxAmount, swapFee)
 	response, err := cosmwasm.Sudo[msg.SwapExactAmountOutSudoMsg, msg.SwapExactAmountOutSudoMsgResponse](ctx, k.contractKeeper, cosmwasmPool.GetContractAddress(), request)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	// Send token in from sender to the pool
-	// We do this because sudo message does not support sending coins from the sender
-	// However, note that the contract sends the token back to the sender after the swap
-	// As a result, we do not need to worry about sending it back here.
-	if err := k.bankKeeper.SendCoins(ctx, sender, sdk.MustAccAddressFromBech32(cosmwasmPool.GetContractAddress()), sdk.NewCoins(sdk.NewCoin(tokenInDenom, response.TokenInAmount))); err != nil {
-		return sdk.Int{}, err
+	tokenInExcessiveAmount := tokenInMaxAmount.Sub(response.TokenInAmount)
+
+	// Do not send any coins if excessive amount is zero
+
+	// required amount should be less than or equal to max amount
+	if tokenInExcessiveAmount.IsNegative() {
+		return sdk.Int{}, types.NegativeExcessiveTokenInAmountError{
+			TokenInMaxAmount:       tokenInMaxAmount,
+			TokenInRequiredAmount:  response.TokenInAmount,
+			TokenInExcessiveAmount: tokenInExcessiveAmount,
+		}
+	}
+
+	// Send excessibe token in from pool back to sender
+	if tokenInExcessiveAmount.IsPositive() {
+		if err := k.bankKeeper.SendCoins(ctx, contractAddr, sender, sdk.NewCoins(sdk.NewCoin(tokenInDenom, tokenInExcessiveAmount))); err != nil {
+			return sdk.Int{}, err
+		}
 	}
 
 	return response.TokenInAmount, nil
@@ -337,4 +377,24 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 		return sdk.Coins{}, err
 	}
 	return pool.GetTotalPoolLiquidity(ctx), nil
+}
+
+// GetTotalLiquidity retrieves the total liquidity of all cw pools.
+func (k Keeper) GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
+	totalLiquidity := sdk.Coins{}
+	pools, err := k.GetPoolsWithWasmKeeper(ctx)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+	for _, poolI := range pools {
+		cosmwasmPool, ok := poolI.(types.CosmWasmExtension)
+		if !ok {
+			return nil, types.InvalidPoolTypeError{
+				ActualPool: poolI,
+			}
+		}
+		totalPoolLiquidity := cosmwasmPool.GetTotalPoolLiquidity(ctx)
+		totalLiquidity = totalLiquidity.Add(totalPoolLiquidity...)
+	}
+	return totalLiquidity, nil
 }

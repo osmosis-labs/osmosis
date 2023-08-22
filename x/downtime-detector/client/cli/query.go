@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v16/x/downtime-detector/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v16/x/downtime-detector/types"
+	"github.com/osmosis-labs/osmosis/v17/x/downtime-detector/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v17/x/downtime-detector/types"
 )
 
 func GetQueryCmd() *cobra.Command {
@@ -30,6 +30,7 @@ downtime-duration is a duration, but is restricted to a smaller set. Heres a few
 	}, &queryproto.RecoveredSinceDowntimeOfLengthRequest{}
 }
 
+//nolint:unparam
 func parseDowntimeDuration(arg string, _ *pflag.FlagSet) (any, osmocli.FieldReadLocation, error) {
 	dur, err := time.ParseDuration(arg)
 	if err != nil {

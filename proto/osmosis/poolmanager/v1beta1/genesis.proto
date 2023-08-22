@@ -8,7 +8,7 @@ import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/module_route.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types";
+option go_package = "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types";
 
 // Params holds parameters for the poolmanager module
 message Params {

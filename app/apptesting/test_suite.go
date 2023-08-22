@@ -31,15 +31,15 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v16/app"
+	"github.com/osmosis-labs/osmosis/v17/app"
 
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v16/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v16/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v17/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v17/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {
@@ -128,6 +128,18 @@ func (s *KeeperTestHelper) SetupTestForInitGenesis() {
 	s.Ctx = s.App.BaseApp.NewContext(true, tmtypes.Header{})
 	// TODO: not sure
 	s.hasUsedAbci = true
+}
+
+// RunTestCaseWithoutStateUpdates runs the testcase as a callback with the given name.
+// Does not persist any state changes. This is useful when test suite uses common state setup
+// but desures each test case to be run in isolation.
+func (s *KeeperTestHelper) RunTestCaseWithoutStateUpdates(name string, cb func(t *testing.T)) {
+	originalCtx := s.Ctx
+	s.Ctx, _ = s.Ctx.CacheContext()
+
+	s.T().Run(name, cb)
+
+	s.Ctx = originalCtx
 }
 
 func (s *KeeperTestHelper) SetEpochStartTime() {

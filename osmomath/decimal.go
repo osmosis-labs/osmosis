@@ -37,6 +37,7 @@ const (
 
 var (
 	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil)
+	precisionReuseSDK    = new(big.Int).Exp(big.NewInt(10), big.NewInt(sdk.Precision), nil)
 	fivePrecision        = new(big.Int).Quo(precisionReuse, big.NewInt(2))
 	precisionMultipliers []*big.Int
 	zeroInt              = big.NewInt(0)
@@ -305,6 +306,17 @@ func (d BigDec) MulTruncate(d2 BigDec) BigDec {
 	return BigDec{chopped}
 }
 
+// multiplication round up
+func (d BigDec) MulRoundUp(d2 BigDec) BigDec {
+	mul := new(big.Int).Mul(d.i, d2.i)
+	chopped := chopPrecisionAndRoundUpBigDec(mul)
+
+	if chopped.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return BigDec{chopped}
+}
+
 // multiplication
 func (d BigDec) MulInt(i BigInt) BigDec {
 	mul := new(big.Int).Mul(d.i, i.i)
@@ -381,7 +393,7 @@ func (d BigDec) QuoRoundUp(d2 BigDec) BigDec {
 	mul.Mul(mul, precisionReuse)
 
 	quo := new(big.Int).Quo(mul, d2.i)
-	chopped := chopPrecisionAndRoundUp(quo)
+	chopped := chopPrecisionAndRoundUpBigDec(quo)
 
 	if chopped.BitLen() > maxDecBitLen {
 		panic("Int overflow")
@@ -557,6 +569,13 @@ func (d BigDec) SDKDec() sdk.Dec {
 	return truncatedDec
 }
 
+// SDKDecRoundUp returns the Sdk.Dec representation of a BigDec.
+// Round up at precision end.
+// Values in any additional decimal places are truncated.
+func (d BigDec) SDKDecRoundUp() sdk.Dec {
+	return sdk.NewDecFromBigIntWithPrec(chopPrecisionAndRoundUpSDKDec(d.i), sdk.Precision)
+}
+
 // BigDecFromSdkDec returns the BigDec representation of an SDKDec.
 // Values in any additional decimal places are truncated.
 func BigDecFromSDKDec(d sdk.Dec) BigDec {
@@ -628,8 +647,18 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 	}
 }
 
+// chopPrecisionAndRoundUpBigDec removes a Precision amount of rightmost digits and rounds up.
+func chopPrecisionAndRoundUpBigDec(d *big.Int) *big.Int {
+	return chopPrecisionAndRoundUp(d, precisionReuse)
+}
+
+// chopPrecisionAndRoundUpSDKDec removes  sdk.Precision amount of rightmost digits and rounds up.
+func chopPrecisionAndRoundUpSDKDec(d *big.Int) *big.Int {
+	return chopPrecisionAndRoundUp(d, precisionReuseSDK)
+}
+
 // chopPrecisionAndRoundUp removes a Precision amount of rightmost digits and rounds up.
-func chopPrecisionAndRoundUp(d *big.Int) *big.Int {
+func chopPrecisionAndRoundUp(d *big.Int, precisionReuse *big.Int) *big.Int {
 	// remove the negative and add it back when returning
 	if d.Sign() == -1 {
 		// make d positive, compute chopped value, and then un-mutate d

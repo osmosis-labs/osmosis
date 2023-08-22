@@ -7,10 +7,10 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	cl "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v16/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v16/x/lockup/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
+	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -1042,8 +1042,9 @@ func (s *KeeperTestSuite) AddTokensToLockForSynth() {
 		}
 		// by GetSyntheticLockupByUnderlyingLockId
 		for i := uint64(1); i <= 3; i++ {
-			synthlockByLockup, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, i)
+			synthlockByLockup, found, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, i)
 			s.Require().NoError(err)
+			s.Require().True(found)
 			s.Require().Equal(synthlockByLockup, synthlocks[(int(i)-1)*3+int(i)])
 
 		}
@@ -1309,7 +1310,7 @@ func (s *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn() {
 		// Create a cl pool and a locked full range position
 		clPool := s.PrepareConcentratedPool()
 		clPoolId := clPool.GetId()
-		positionID, _, _, liquidity, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, addr, tc.positionCoins, time.Hour)
+		positionData, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, addr, tc.positionCoins, time.Hour)
 		s.Require().NoError(err)
 
 		// Refetch the cl pool post full range position creation
@@ -1320,7 +1321,7 @@ func (s *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn() {
 
 		// Check the supply of the cl asset before we slash it is equal to the liquidity created
 		clAssetSupplyPreSlash := s.App.BankKeeper.GetSupply(s.Ctx, clPoolPositionDenom)
-		s.Require().Equal(liquidity.TruncateInt().String(), clAssetSupplyPreSlash.Amount.String())
+		s.Require().Equal(positionData.Liquidity.TruncateInt().String(), clAssetSupplyPreSlash.Amount.String())
 
 		// Store the cl pool balance before the slash
 		clPoolBalancePreSlash := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
@@ -1330,15 +1331,15 @@ func (s *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn() {
 			Denom:    clPoolPositionDenom,
 			Duration: time.Second,
 		})
-		s.Require().Equal(liquidity.TruncateInt64(), acc.Int64())
+		s.Require().Equal(positionData.Liquidity.TruncateInt64(), acc.Int64())
 
 		// The lockup module account balance before the slash should match the liquidity added to the lock
 		lockupModuleBalancePreSlash := s.App.LockupKeeper.GetModuleBalance(s.Ctx)
-		s.Require().Equal(sdk.NewCoins(sdk.NewCoin(clPoolPositionDenom, liquidity.TruncateInt())), lockupModuleBalancePreSlash)
+		s.Require().Equal(sdk.NewCoins(sdk.NewCoin(clPoolPositionDenom, positionData.Liquidity.TruncateInt())), lockupModuleBalancePreSlash)
 
 		// Slash the cl shares and the underlying assets
 		// Figure out the underlying assets from the liquidity slash
-		position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionID)
+		position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionData.ID)
 		s.Require().NoError(err)
 
 		concentratedPool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, position.PoolId)
@@ -1503,8 +1504,9 @@ func (s *KeeperTestSuite) TestForceUnlock() {
 
 		// if it was superfluid delegated lock,
 		// confirm that we don't have associated synth lock
-		synthLock, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, lock.ID)
+		synthLock, found, err := s.App.LockupKeeper.GetSyntheticLockupByUnderlyingLockId(s.Ctx, lock.ID)
 		s.Require().NoError(err)
+		s.Require().False(found)
 		s.Require().Equal((lockuptypes.SyntheticLock{}), synthLock)
 
 		// check if lock is deleted by checking trying to get lock ID

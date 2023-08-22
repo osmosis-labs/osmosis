@@ -244,6 +244,32 @@ func (s *decimalTestSuite) TestSdkDec() {
 	}
 }
 
+func (s *decimalTestSuite) TestSdkDecRoundUp() {
+	tests := []struct {
+		d        osmomath.BigDec
+		want     sdk.Dec
+		expPanic bool
+	}{
+		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000000000"), false},
+		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000000000"), false},
+		{osmomath.NewBigDec(10), sdk.MustNewDecFromStr("10.000000000000000000"), false},
+		{osmomath.NewBigDec(12340), sdk.MustNewDecFromStr("12340.000000000000000000"), false},
+		{osmomath.NewDecWithPrec(12340, 4), sdk.MustNewDecFromStr("1.234000000000000000"), false},
+		{osmomath.NewDecWithPrec(12340, 5), sdk.MustNewDecFromStr("0.123400000000000000"), false},
+		{osmomath.NewDecWithPrec(12340, 8), sdk.MustNewDecFromStr("0.000123400000000000"), false},
+		{osmomath.NewDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), false},
+		{osmomath.NewDecWithPrec(1009009009009009009, 19), sdk.MustNewDecFromStr("0.100900900900900901"), false},
+	}
+	for tcIndex, tc := range tests {
+		if tc.expPanic {
+			s.Require().Panics(func() { tc.d.SDKDecRoundUp() })
+		} else {
+			value := tc.d.SDKDecRoundUp()
+			s.Require().Equal(tc.want, value, "bad SdkDec(), index: %v", tcIndex)
+		}
+	}
+}
+
 func (s *decimalTestSuite) TestBigDecFromSdkDec() {
 	tests := []struct {
 		d        sdk.Dec
@@ -356,40 +382,40 @@ func (s *decimalTestSuite) TestDecsEqual() {
 func (s *decimalTestSuite) TestArithmetic() {
 	tests := []struct {
 		d1, d2                                osmomath.BigDec
-		expMul, expMulTruncate                osmomath.BigDec
+		expMul, expMulTruncate, expMulRoundUp osmomath.BigDec
 		expQuo, expQuoRoundUp, expQuoTruncate osmomath.BigDec
 		expAdd, expSub                        osmomath.BigDec
 	}{
-		//  d1         d2         MUL    MulTruncate    QUO    QUORoundUp QUOTrunctate  ADD         SUB
-		{osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0)},
-		{osmomath.NewBigDec(1), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(1), osmomath.NewBigDec(1)},
-		{osmomath.NewBigDec(0), osmomath.NewBigDec(1), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(1), osmomath.NewBigDec(-1)},
-		{osmomath.NewBigDec(0), osmomath.NewBigDec(-1), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(-1), osmomath.NewBigDec(1)},
-		{osmomath.NewBigDec(-1), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1)},
+		//  d1         d2         MUL    MulTruncate   MulRoundUp    QUO    QUORoundUp QUOTrunctate  ADD         SUB
+		{osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(1), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(1), osmomath.NewBigDec(1)},
+		{osmomath.NewBigDec(0), osmomath.NewBigDec(1), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(1), osmomath.NewBigDec(-1)},
+		{osmomath.NewBigDec(0), osmomath.NewBigDec(-1), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(-1), osmomath.NewBigDec(1)},
+		{osmomath.NewBigDec(-1), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1)},
 
-		{osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(2), osmomath.NewBigDec(0)},
-		{osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(-2), osmomath.NewBigDec(0)},
-		{osmomath.NewBigDec(1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(0), osmomath.NewBigDec(2)},
-		{osmomath.NewBigDec(-1), osmomath.NewBigDec(1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(0), osmomath.NewBigDec(-2)},
+		{osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(2), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(-2), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(0), osmomath.NewBigDec(2)},
+		{osmomath.NewBigDec(-1), osmomath.NewBigDec(1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(0), osmomath.NewBigDec(-2)},
 
 		{
-			osmomath.NewBigDec(3), osmomath.NewBigDec(7), osmomath.NewBigDec(21), osmomath.NewBigDec(21),
+			osmomath.NewBigDec(3), osmomath.NewBigDec(7), osmomath.NewBigDec(21), osmomath.NewBigDec(21), osmomath.NewBigDec(21),
 			osmomath.MustNewDecFromStr("0.428571428571428571428571428571428571"), osmomath.MustNewDecFromStr("0.428571428571428571428571428571428572"), osmomath.MustNewDecFromStr("0.428571428571428571428571428571428571"),
 			osmomath.NewBigDec(10), osmomath.NewBigDec(-4),
 		},
 		{
-			osmomath.NewBigDec(2), osmomath.NewBigDec(4), osmomath.NewBigDec(8), osmomath.NewBigDec(8), osmomath.NewDecWithPrec(5, 1), osmomath.NewDecWithPrec(5, 1), osmomath.NewDecWithPrec(5, 1),
+			osmomath.NewBigDec(2), osmomath.NewBigDec(4), osmomath.NewBigDec(8), osmomath.NewBigDec(8), osmomath.NewBigDec(8), osmomath.NewDecWithPrec(5, 1), osmomath.NewDecWithPrec(5, 1), osmomath.NewDecWithPrec(5, 1),
 			osmomath.NewBigDec(6), osmomath.NewBigDec(-2),
 		},
 
-		{osmomath.NewBigDec(100), osmomath.NewBigDec(100), osmomath.NewBigDec(10000), osmomath.NewBigDec(10000), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(200), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(100), osmomath.NewBigDec(100), osmomath.NewBigDec(10000), osmomath.NewBigDec(10000), osmomath.NewBigDec(10000), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(200), osmomath.NewBigDec(0)},
 
 		{
-			osmomath.NewDecWithPrec(15, 1), osmomath.NewDecWithPrec(15, 1), osmomath.NewDecWithPrec(225, 2), osmomath.NewDecWithPrec(225, 2),
+			osmomath.NewDecWithPrec(15, 1), osmomath.NewDecWithPrec(15, 1), osmomath.NewDecWithPrec(225, 2), osmomath.NewDecWithPrec(225, 2), osmomath.NewDecWithPrec(225, 2),
 			osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(3), osmomath.NewBigDec(0),
 		},
 		{
-			osmomath.NewDecWithPrec(3333, 4), osmomath.NewDecWithPrec(333, 4), osmomath.NewDecWithPrec(1109889, 8), osmomath.NewDecWithPrec(1109889, 8),
+			osmomath.NewDecWithPrec(3333, 4), osmomath.NewDecWithPrec(333, 4), osmomath.NewDecWithPrec(1109889, 8), osmomath.NewDecWithPrec(1109889, 8), osmomath.NewDecWithPrec(1109889, 8),
 			osmomath.MustNewDecFromStr("10.009009009009009009009009009009009009"), osmomath.MustNewDecFromStr("10.009009009009009009009009009009009010"), osmomath.MustNewDecFromStr("10.009009009009009009009009009009009009"),
 			osmomath.NewDecWithPrec(3666, 4), osmomath.NewDecWithPrec(3, 1),
 		},
@@ -401,10 +427,12 @@ func (s *decimalTestSuite) TestArithmetic() {
 		resSub := tc.d1.Sub(tc.d2)
 		resMul := tc.d1.Mul(tc.d2)
 		resMulTruncate := tc.d1.MulTruncate(tc.d2)
+		resMulRoundUp := tc.d1.MulRoundUp(tc.d2)
 		s.Require().True(tc.expAdd.Equal(resAdd), "exp %v, res %v, tc %d", tc.expAdd, resAdd, tcIndex)
 		s.Require().True(tc.expSub.Equal(resSub), "exp %v, res %v, tc %d", tc.expSub, resSub, tcIndex)
 		s.Require().True(tc.expMul.Equal(resMul), "exp %v, res %v, tc %d", tc.expMul, resMul, tcIndex)
 		s.Require().True(tc.expMulTruncate.Equal(resMulTruncate), "exp %v, res %v, tc %d", tc.expMulTruncate, resMulTruncate, tcIndex)
+		s.Require().True(tc.expMulRoundUp.Equal(resMulRoundUp), "exp %v, res %v, tc %d", tc.expMulRoundUp, resMulRoundUp, tcIndex)
 
 		if tc.d2.IsZero() { // panic for divide by zero
 			s.Require().Panics(func() { tc.d1.Quo(tc.d2) })
@@ -421,6 +449,21 @@ func (s *decimalTestSuite) TestArithmetic() {
 				tc.expQuoTruncate.String(), resQuoTruncate.String(), tcIndex)
 		}
 	}
+}
+
+func (s *decimalTestSuite) TestMulRoundUp_RoundingAtPrecisionEnd() {
+	var (
+		a                = osmomath.MustNewDecFromStr("0.000000000000000000000000000000000009")
+		b                = osmomath.MustNewDecFromStr("0.000000000000000000000000000000000009")
+		expectedRoundUp  = osmomath.MustNewDecFromStr("0.000000000000000000000000000000000001")
+		expectedTruncate = osmomath.MustNewDecFromStr("0.000000000000000000000000000000000000")
+	)
+
+	actualRoundUp := a.MulRoundUp(b)
+	s.Require().Equal(expectedRoundUp.String(), actualRoundUp.String(), "exp %v, res %v", expectedRoundUp, actualRoundUp)
+
+	actualTruncate := a.MulTruncate(b)
+	s.Require().Equal(expectedTruncate.String(), actualTruncate.String(), "exp %v, res %v", expectedTruncate, actualTruncate)
 }
 
 func (s *decimalTestSuite) TestBankerRoundChop() {

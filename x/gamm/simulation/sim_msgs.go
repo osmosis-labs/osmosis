@@ -9,11 +9,11 @@ import (
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v16/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/keeper"
-	balancertypes "github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v16/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v16/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
+	balancertypes "github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
@@ -87,7 +87,7 @@ func RandomExitPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*balancertypes.MsgCreateBalancerPool, error) {
 	var poolAssets []balancertypes.PoolAsset
 	// find an address with two or more distinct denoms in their wallet
-	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
+	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(sim, ctx))
 	if !senderExists {
 		return nil, errors.New("no sender with two different denoms & pool creation fee exists")
 	}
@@ -405,7 +405,7 @@ func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.CFM
 	return minShareOutAmt, nil
 }
 
-func createPoolRestriction(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) simtypes.SimAccountConstraint {
+func createPoolRestriction(sim *simtypes.SimCtx, ctx sdk.Context) simtypes.SimAccountConstraint {
 	return func(acc legacysimulationtype.Account) bool {
 		accCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
 		hasTwoCoins := len(accCoins) >= 2

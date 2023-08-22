@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v16/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v17/x/mint/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -58,6 +58,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			return err
 		}
 
+		ctx.Logger().Info("AfterEpochEnd, minted coins", types.ModuleName, "mintedCoins", mintedCoins, "height", ctx.BlockHeight())
 		// send the minted coins to the fee collector account
 		err = k.DistributeMintedCoin(ctx, mintedCoin)
 		if err != nil {
