@@ -454,11 +454,11 @@ func ParseCoinsNoSort(coinsStr string) (sdk.Coins, error) {
 func NewCmdHandleDenomPairTakerFeeProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "denom-pair-taker-fee-proposal [denom-pairs-with-taker-fee] [flags]",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.ExactArgs(1),
 		Short: "Submit a denom pair taker fee proposal",
 		Long: strings.TrimSpace(`Submit a denom pair taker fee proposal.
 
-Pass in denom-pairs-with-taker-fee separated by commas would be parsed automatically to pairs of denomPairTakerFee records.
+Passing in denom-pairs-with-taker-fee separated by commas would be parsed automatically to pairs of denomPairTakerFee records.
 Ex) denom-pair-taker-fee-proposal uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosmo,0.0015 ->
 [uion<>uosmo, takerFee 0.16%]
 [stake<>uosmo, takerFee 0.5%]
@@ -508,6 +508,47 @@ Ex) denom-pair-taker-fee-proposal uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosm
 	return cmd
 }
 
+func NewSetDenomPairTakerFeeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set-denom-pair-taker-fee [flags]",
+		Short: "allows admin addresses to set the taker fee for a denom pair",
+		Long: strings.TrimSpace(`Allows admin addresses to set the taker fee for a denom pair.
+
+Passing in set-denom-pair-taker-fee separated by commas would be parsed automatically to pairs of denomPairTakerFee records.
+Ex) set-denom-pair-taker-fee uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosmo,0.0015 ->
+[uion<>uosmo, takerFee 0.16%]
+[stake<>uosmo, takerFee 0.5%]
+[uatom<>uosmo, removes from state since its being set to the default takerFee value]
+
+		`),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg, err := parseDenomPairTakerFeeArgToMsg(clientCtx, args[0])
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetCreatePool())
+	flags.AddTxFlagsToCmd(cmd)
+
+	_ = cmd.MarkFlagRequired(FlagPoolFile)
+
+	return cmd
+}
+
 func parseDenomPairTakerFeeArgToContent(cmd *cobra.Command, arg string) (govtypes.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
@@ -531,6 +572,20 @@ func parseDenomPairTakerFeeArgToContent(cmd *cobra.Command, arg string) (govtype
 	}
 
 	return content, nil
+}
+
+func parseDenomPairTakerFeeArgToMsg(clientCtx client.Context, arg string) (sdk.Msg, error) {
+	denomPairTakerFee, err := parsedenomPairTakerFee(arg)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := &types.MsgSetDenomPairTakerFee{
+		Sender:            clientCtx.GetFromAddress().String(),
+		DenomPairTakerFee: denomPairTakerFee,
+	}
+
+	return msg, nil
 }
 
 func parsedenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
