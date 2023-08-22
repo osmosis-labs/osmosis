@@ -50,7 +50,6 @@ func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (typ
 		if err != nil {
 			return types.ValidatorSetPreferences{}, err
 		}
-
 		existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
 		if len(existingDelegations) == 0 {
 			return types.ValidatorSetPreferences{}, fmt.Errorf("No Existing delegation")
