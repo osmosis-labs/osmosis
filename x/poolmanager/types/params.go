@@ -13,7 +13,6 @@ import (
 var (
 	KeyPoolCreationFee                                = []byte("PoolCreationFee")
 	KeyDefaultTakerFee                                = []byte("DefaultTakerFee")
-	KeyStableswapTakerFee                             = []byte("StableswapTakerFee")
 	KeyOsmoTakerFeeDistribution                       = []byte("OsmoTakerFeeDistribution")
 	KeyNonOsmoTakerFeeDistribution                    = []byte("NonOsmoTakerFeeDistribution")
 	KeyAdminAddresses                                 = []byte("AdminAddresses")
@@ -27,7 +26,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(poolCreationFee sdk.Coins,
-	defaultTakerFee, stableswapTakerFee sdk.Dec,
+	defaultTakerFee sdk.Dec,
 	osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage,
 	adminAddresses, authorizedQuoteDenoms []string,
 	communityPoolDenomToSwapNonWhitelistedAssetsTo string) Params {
@@ -35,7 +34,6 @@ func NewParams(poolCreationFee sdk.Coins,
 		PoolCreationFee: poolCreationFee,
 		TakerFeeParams: TakerFeeParams{
 			DefaultTakerFee:                                defaultTakerFee,
-			StableswapTakerFee:                             stableswapTakerFee,
 			OsmoTakerFeeDistribution:                       osmoTakerFeeDistribution,
 			NonOsmoTakerFeeDistribution:                    nonOsmoTakerFeeDistribution,
 			AdminAddresses:                                 adminAddresses,
@@ -50,8 +48,7 @@ func DefaultParams() Params {
 	return Params{
 		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
 		TakerFeeParams: TakerFeeParams{
-			DefaultTakerFee:    sdk.MustNewDecFromStr("0.0015"), // 0.15%
-			StableswapTakerFee: sdk.MustNewDecFromStr("0.0002"), // 0.02%
+			DefaultTakerFee: sdk.MustNewDecFromStr("0.0015"), // 0.15%
 			OsmoTakerFeeDistribution: TakerFeeDistributionPercentage{
 				StakingRewards: sdk.MustNewDecFromStr("1"), // 100%
 				CommunityPool:  sdk.MustNewDecFromStr("0"), // 0%
@@ -80,9 +77,6 @@ func (p Params) Validate() error {
 	if err := validateDefaultTakerFee(p.TakerFeeParams.DefaultTakerFee); err != nil {
 		return err
 	}
-	if err := validateStableswapTakerFee(p.TakerFeeParams.StableswapTakerFee); err != nil {
-		return err
-	}
 	if err := validateTakerFeeDistribution(p.TakerFeeParams.OsmoTakerFeeDistribution); err != nil {
 		return err
 	}
@@ -107,7 +101,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyPoolCreationFee, &p.PoolCreationFee, validatePoolCreationFee),
 		paramtypes.NewParamSetPair(KeyDefaultTakerFee, &p.TakerFeeParams.DefaultTakerFee, validateDefaultTakerFee),
-		paramtypes.NewParamSetPair(KeyStableswapTakerFee, &p.TakerFeeParams.StableswapTakerFee, validateStableswapTakerFee),
 		paramtypes.NewParamSetPair(KeyOsmoTakerFeeDistribution, &p.TakerFeeParams.OsmoTakerFeeDistribution, validateTakerFeeDistribution),
 		paramtypes.NewParamSetPair(KeyNonOsmoTakerFeeDistribution, &p.TakerFeeParams.NonOsmoTakerFeeDistribution, validateTakerFeeDistribution),
 		paramtypes.NewParamSetPair(KeyAdminAddresses, &p.TakerFeeParams.AdminAddresses, validateAdminAddresses),
@@ -140,22 +133,6 @@ func validateDefaultTakerFee(i interface{}) error {
 	// Ensure that the passed in discount rate is between 0 and 1.
 	if defaultTakerFee.IsNegative() || defaultTakerFee.GT(sdk.OneDec()) {
 		return fmt.Errorf("invalid default taker fee: %s", defaultTakerFee)
-	}
-
-	return nil
-}
-
-func validateStableswapTakerFee(i interface{}) error {
-	// Convert the given parameter to sdk.Dec.
-	stableswapTakerFee, ok := i.(sdk.Dec)
-
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	// Ensure that the passed in discount rate is between 0 and 1.
-	if stableswapTakerFee.IsNegative() || stableswapTakerFee.GT(sdk.OneDec()) {
-		return fmt.Errorf("invalid stableswap taker fee: %s", stableswapTakerFee)
 	}
 
 	return nil

@@ -59,7 +59,6 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 	poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.ZeroDec()
-	poolManagerParams.TakerFeeParams.StableswapTakerFee = sdk.ZeroDec()
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 
 	// Genesis on init should be the same as the default genesis

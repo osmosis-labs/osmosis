@@ -20,7 +20,6 @@ const testExpectedPoolId = 3
 var (
 	testPoolCreationFee          = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)}
 	testDefaultTakerFee          = sdk.MustNewDecFromStr("0.0015")
-	testStableswapTakerFee       = sdk.MustNewDecFromStr("0.0002")
 	testOsmoTakerFeeDistribution = types.TakerFeeDistributionPercentage{
 		StakingRewards: sdk.MustNewDecFromStr("0.3"),
 		CommunityPool:  sdk.MustNewDecFromStr("0.7"),
@@ -85,7 +84,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			PoolCreationFee: testPoolCreationFee,
 			TakerFeeParams: types.TakerFeeParams{
 				DefaultTakerFee:                                testDefaultTakerFee,
-				StableswapTakerFee:                             testStableswapTakerFee,
 				OsmoTakerFeeDistribution:                       testOsmoTakerFeeDistribution,
 				NonOsmoTakerFeeDistribution:                    testNonOsmoTakerFeeDistribution,
 				AdminAddresses:                                 testAdminAddresses,
@@ -101,7 +99,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.Require().Equal(uint64(testExpectedPoolId), s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx))
 	s.Require().Equal(testPoolCreationFee, params.PoolCreationFee)
 	s.Require().Equal(testDefaultTakerFee, params.TakerFeeParams.DefaultTakerFee)
-	s.Require().Equal(testStableswapTakerFee, params.TakerFeeParams.StableswapTakerFee)
 	s.Require().Equal(testOsmoTakerFeeDistribution, params.TakerFeeParams.OsmoTakerFeeDistribution)
 	s.Require().Equal(testNonOsmoTakerFeeDistribution, params.TakerFeeParams.NonOsmoTakerFeeDistribution)
 	s.Require().Equal(testAdminAddresses, params.TakerFeeParams.AdminAddresses)
@@ -116,7 +113,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 			PoolCreationFee: testPoolCreationFee,
 			TakerFeeParams: types.TakerFeeParams{
 				DefaultTakerFee:                                testDefaultTakerFee,
-				StableswapTakerFee:                             testStableswapTakerFee,
 				OsmoTakerFeeDistribution:                       testOsmoTakerFeeDistribution,
 				NonOsmoTakerFeeDistribution:                    testNonOsmoTakerFeeDistribution,
 				AdminAddresses:                                 testAdminAddresses,
@@ -132,7 +128,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.Require().Equal(uint64(testExpectedPoolId), genesis.NextPoolId)
 	s.Require().Equal(testPoolCreationFee, genesis.Params.PoolCreationFee)
 	s.Require().Equal(testDefaultTakerFee, genesis.Params.TakerFeeParams.DefaultTakerFee)
-	s.Require().Equal(testStableswapTakerFee, genesis.Params.TakerFeeParams.StableswapTakerFee)
 	s.Require().Equal(testOsmoTakerFeeDistribution, genesis.Params.TakerFeeParams.OsmoTakerFeeDistribution)
 	s.Require().Equal(testNonOsmoTakerFeeDistribution, genesis.Params.TakerFeeParams.NonOsmoTakerFeeDistribution)
 	s.Require().Equal(testAdminAddresses, genesis.Params.TakerFeeParams.AdminAddresses)

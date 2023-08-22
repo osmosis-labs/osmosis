@@ -53,21 +53,13 @@ message TakerFeeParams {
     (gogoproto.customname) = "DefaultTakerFee",
     (gogoproto.nullable) = false
   ];
-  // stableswap_taker_fee is the fee used when creating a new pool in which all
-  // the underlying tokens are present in the stablecoin_denoms paramater entry
-  // OR has a liquid_stake_denom_pairings entry.
-  string stableswap_taker_fee = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.customname) = "StableswapTakerFee",
-    (gogoproto.nullable) = false
-  ];
   // osmo_taker_fee_distribution defines the distribution of taker fees
   // generated in OSMO. As of this writing, it has two catagories:
   // - staking_rewards: the percent of the taker fee that gets distributed to
   //   stakers.
   // - community_pool: the percent of the taker fee that gets sent to the
   //   community pool.
-  TakerFeeDistributionPercentage osmo_taker_fee_distribution = 3 [
+  TakerFeeDistributionPercentage osmo_taker_fee_distribution = 2 [
     (gogoproto.customname) = "OsmoTakerFeeDistribution",
     (gogoproto.nullable) = false
   ];
@@ -80,7 +72,7 @@ message TakerFeeParams {
   //   that denom is sent directly to the community pool. Otherwise, it is
   //   swapped to the community_pool_denom_to_swap_non_whitelisted_assets_to and
   //   then sent to the community pool as that denom.
-  TakerFeeDistributionPercentage non_osmo_taker_fee_distribution = 4 [
+  TakerFeeDistributionPercentage non_osmo_taker_fee_distribution = 3 [
     (gogoproto.customname) = "NonOsmoTakerFeeDistribution",
     (gogoproto.nullable) = false
   ];
@@ -88,12 +80,12 @@ message TakerFeeParams {
   // custom taker fees for denom pairs. Governance also has the ability to set
   // and removecustom taker fees for denom pairs, but with the normal governance
   // delay.
-  repeated string admin_addresses = 5
+  repeated string admin_addresses = 4
       [ (gogoproto.moretags) = "yaml:\"admin_addresses\"" ];
   // community_pool_denom_to_swap_non_whitelisted_assets_to is the denom that
   // non-whitelisted taker fees will be swapped to before being sent to
   // the community pool.
-  string community_pool_denom_to_swap_non_whitelisted_assets_to = 6
+  string community_pool_denom_to_swap_non_whitelisted_assets_to = 5
       [ (gogoproto.moretags) =
             "yaml:\"community_pool_denom_to_swap_non_whitelisted_assets_to\"" ];
 }
