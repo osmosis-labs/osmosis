@@ -15,10 +15,11 @@ const (
 var _ sdk.Msg = &MsgCreateGauge{}
 
 // NewMsgCreateGauge creates a message to create a gauge with the provided parameters.
-func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) *MsgCreateGauge {
+func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, lockupDenom string, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) *MsgCreateGauge {
 	return &MsgCreateGauge{
 		IsPerpetual:       isPerpetual,
 		Owner:             owner.String(),
+		LockupDenom:       lockupDenom,
 		Coins:             coins,
 		StartTime:         startTime,
 		NumEpochsPaidOver: numEpochsPaidOver,
@@ -45,6 +46,9 @@ func (m MsgCreateGauge) ValidateBasic() error {
 	}
 	if m.IsPerpetual && m.NumEpochsPaidOver != 1 {
 		return errors.New("distribution period should be 1 epoch for perpetual gauge")
+	}
+	if m.PoolId == 0 {
+		return errors.New("pool id should be a valid PoolId")
 	}
 
 	return nil
@@ -80,6 +84,7 @@ func (m MsgAddToGauge) Type() string { return TypeMsgAddToGauge }
 
 // ValidateBasic checks that the add to gauge message is valid.
 func (m MsgAddToGauge) ValidateBasic() error {
+	// NOTE CHECK IF WE NEED TO VALIDATE THE DENOM HERE
 	if m.Owner == "" {
 		return errors.New("owner should be set")
 	}

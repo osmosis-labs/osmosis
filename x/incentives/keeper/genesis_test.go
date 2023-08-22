@@ -27,16 +27,19 @@ func TestIncentivesExportGenesis(t *testing.T) {
 
 	// create an address and fund with coins
 	addr := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
-	err := simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000)), sdk.NewCoin("uosmo", sdk.NewInt(1000000000000000000)), sdk.NewCoin("uatom", sdk.NewInt(1000000000000000000)))
+
+	simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
+
+	poolId, err := app.PoolManagerKeeper.CreatePool(ctx, PrepareBalancerPoolMsg())
 	require.NoError(t, err)
 
 	// mints LP tokens and send to address created earlier
 	// this ensures the supply exists on chain
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
-		Denom:         "lptoken",
-		Duration:      time.Second,
+		Denom:         "gamm/shares/1",
+		Duration:      defaultLockDuration,
 	}
 	mintLPtokens := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
 	err = simapp.FundAccount(app.BankKeeper, ctx, addr, mintLPtokens)
@@ -44,21 +47,21 @@ func TestIncentivesExportGenesis(t *testing.T) {
 
 	// create a gauge that distributes coins to earlier created LP token and duration
 	startTime := time.Now()
-	gaugeID, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, startTime, 1, 0)
+	gaugeID, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, distrTo.Denom, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000))), startTime, 1, poolId)
 	require.NoError(t, err)
 
 	// export genesis using default configurations
 	// ensure resulting genesis params match default params
 	genesis = app.IncentivesKeeper.ExportGenesis(ctx)
 	require.Equal(t, genesis.Params.DistrEpochIdentifier, "week")
-	require.Len(t, genesis.Gauges, 1)
+	require.Len(t, genesis.Gauges, 2)
 
 	// ensure the first gauge listed in the exported genesis explicitly matches expectation
-	require.Equal(t, genesis.Gauges[0], types.Gauge{
+	require.Equal(t, genesis.Gauges[1], types.Gauge{
 		Id:                gaugeID,
 		IsPerpetual:       true,
 		DistributeTo:      distrTo,
-		Coins:             coins,
+		Coins:             sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000))),
 		NumEpochsPaidOver: 1,
 		FilledEpochs:      0,
 		DistributedCoins:  sdk.Coins(nil),
@@ -81,7 +84,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "lptoken",
-		Duration:      time.Second,
+		Duration:      defaultLockDuration,
 	}
 	gauge := types.Gauge{
 		Id:                1,
@@ -104,7 +107,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 			time.Second,
 			time.Hour,
 			time.Hour * 3,
-			time.Hour * 7,
+			defaultLockDuration,
 		},
 	})
 

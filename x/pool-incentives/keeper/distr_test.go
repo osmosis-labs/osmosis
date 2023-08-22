@@ -17,9 +17,7 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 		// With minting 15000 stake to module, after AllocateAsset we get:
 		// expectedCommunityPool = 0 (All reward will be transferred to the gauges)
 		// 	expectedGaugesBalances in order:
-		//    gaue1_balance = 15000 * 100/(100+200+300) = 2500
-		//    gaue2_balance = 15000 * 200/(100+200+300) = 5000 (using the formula in the function gives the exact result 4999,9999999999995000. But TruncateInt return 4999. Is this the issue?)
-		//    gaue3_balance = 15000 * 300/(100+200+300) = 7500
+		//    gaue1_balance = 15000 * 100/(100) = 15000
 		{
 			name: "Allocated to the gauges proportionally",
 			testingDistrRecord: []types.DistrRecord{
@@ -27,29 +25,18 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 					GaugeId: 1,
 					Weight:  sdk.NewInt(100),
 				},
-				{
-					GaugeId: 2,
-					Weight:  sdk.NewInt(200),
-				},
-				{
-					GaugeId: 3,
-					Weight:  sdk.NewInt(300),
-				},
 			},
 			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15000)),
 			expectedGaugesBalances: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2500))),
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(4999))),
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(7500))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15000))),
 			},
 			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
 		},
 
 		// With minting 30000 stake to module, after AllocateAsset we get:
-		// 	expectedCommunityPool = 30000 * 700/(700+200+100) = 21000 stake (Cause gaugeId=0 the reward will be transferred to the community pool)
+		// 	expectedCommunityPool = 30000 * 700/(700+100) = 26250 stake (Cause gaugeId=0 the reward will be transferred to the community pool)
 		// 	expectedGaugesBalances in order:
-		//    gaue1_balance = 30000 * 100/(700+200+100) = 3000
-		//    gaue2_balance = 30000 * 200/(700+200+100) = 6000
+		//    gaue1_balance = 30000 * 100/(700+100) = 3750
 		{
 			name: "Community pool distribution when gaugeId is zero",
 			testingDistrRecord: []types.DistrRecord{
@@ -61,18 +48,13 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 					GaugeId: 1,
 					Weight:  sdk.NewInt(100),
 				},
-				{
-					GaugeId: 2,
-					Weight:  sdk.NewInt(200),
-				},
 			},
 			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30000)),
 			expectedGaugesBalances: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0))),
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000))),
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(6000))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3750))),
 			},
-			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(21000)),
+			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(26250)),
 		},
 		// With minting 30000 stake to module, after AllocateAsset we get:
 		// 	expectedCommunityPool = 30000 (Cause there are no gauges, all rewards are transferred to the community pool)
@@ -93,17 +75,15 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 			s.PrepareBalancerPool()
 
 			// LockableDurations should be 1, 3, 7 hours from the default genesis state.
-			lockableDurations := keeper.GetLockableDurations(s.Ctx)
-			s.Equal(3, len(lockableDurations))
+			lockableDurations, err := keeper.GetLongestLockableDuration(s.Ctx)
+			s.Require().NoError(err)
 
-			for i, duration := range lockableDurations {
-				s.Equal(duration, types.DefaultGenesisState().GetLockableDurations()[i])
-			}
+			s.Equal(lockableDurations, types.DefaultGenesisState().GetLockableDurations()[2])
 
 			feePoolOrigin := s.App.DistrKeeper.GetFeePool(s.Ctx)
 
 			// Create record
-			err := keeper.ReplaceDistrRecords(s.Ctx, test.testingDistrRecord...)
+			err = keeper.ReplaceDistrRecords(s.Ctx, test.testingDistrRecord...)
 			s.Require().NoError(err)
 
 			err = keeper.AllocateAsset(s.Ctx)

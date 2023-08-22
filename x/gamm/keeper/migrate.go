@@ -158,21 +158,9 @@ func (k Keeper) SetMigrationRecords(ctx sdk.Context, migrationInfo gammmigration
 // redirectDistributionRecord redirects the distribution record for the given balancer pool to the given concentrated pool.
 func (k Keeper) redirectDistributionRecord(ctx sdk.Context, cfmmPoolId, clPoolId uint64) error {
 	// Get CFMM gauges
-	cfmmGauges, err := k.poolIncentivesKeeper.GetGaugesForCFMMPool(ctx, cfmmPoolId)
+	longestDurationCfmmGauge, err := k.poolIncentivesKeeper.GetLongestDurationGaugeForCFMMPool(ctx, cfmmPoolId)
 	if err != nil {
 		return err
-	}
-
-	if len(cfmmGauges) == 0 {
-		return fmt.Errorf("no gauges found for cfmm pool %d", cfmmPoolId)
-	}
-
-	// Get longest gauge duration from CFMM pool.
-	longestDurationGauge := cfmmGauges[0]
-	for i := 1; i < len(cfmmGauges); i++ {
-		if cfmmGauges[i].DistributeTo.Duration > longestDurationGauge.DistributeTo.Duration {
-			longestDurationGauge = cfmmGauges[i]
-		}
 	}
 
 	// Get concentrated liquidity gauge duration.
@@ -187,7 +175,7 @@ func (k Keeper) redirectDistributionRecord(ctx sdk.Context, cfmmPoolId, clPoolId
 	// Iterate through all the distr records, and redirect the old balancer gauge to the new concentrated gauge.
 	distrInfo := k.poolIncentivesKeeper.GetDistrInfo(ctx)
 	for i, distrRecord := range distrInfo.Records {
-		if distrRecord.GaugeId == longestDurationGauge.Id {
+		if distrRecord.GaugeId == longestDurationCfmmGauge.Id {
 			distrInfo.Records[i].GaugeId = concentratedGaugeId
 		}
 	}

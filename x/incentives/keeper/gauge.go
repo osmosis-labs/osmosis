@@ -16,7 +16,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
@@ -96,7 +95,26 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 }
 
 // CreateGauge creates a gauge with the given parameters and sends coins to the gauge.
-func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
+//
+// For CL pools that create no lock gauges, we do the following: We don't need to specify
+// lockupDenom. The caller can set lockupDenom to empty, it will get overwritten to
+// types.NoLockExternalGaugeDenom(poolId). This denom formatting is useful for querying
+// internal vs external gauges associated with a pool.
+//
+// For all other types of pools, we create a gauge by duration lockable durations.
+// For GAMM type gauges, we use the longest lockable duration (14d).
+// For superfluid intermediary account gauge, we use the unbondingTime as duration.
+//
+// This function errors if;
+// - poolId is set to 0 in any case.
+// - lockupDenom is set and poolId is a CL pool
+// - invalid denom while creating a gauge by duration.
+// - other helper function errors.
+func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, lockupDenom string, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
+	if poolId == 0 {
+		return 0, fmt.Errorf("Invalid poolId, got %d", poolId)
+	}
+
 	// Get PoolType
 	pool, err := k.pmk.GetPool(ctx, poolId)
 	if err != nil {
@@ -104,32 +122,44 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	}
 
 	poolType := pool.GetType()
-	// If poolType = Cosmwasm return error
-	if poolType == poolmanagertypes.CosmWasm {
-		return 0, fmt.Errorf("Cannot create gauge using cosmwasm pool")
-	}
-
 	nextGaugeId := k.GetLastGaugeID(ctx) + 1
+
 	var distrTo lockuptypes.QueryCondition
 
-	// if poolType = CL do the ususal
 	if poolType == poolmanagertypes.Concentrated {
 		distrTo.LockQueryType = lockuptypes.NoLock
-		k.pik.SetPoolGaugeIdNoLock(ctx, poolId, nextGaugeId)
-	}
+		// for only internal CL incentives
+		if lockupDenom == types.NoLockInternalGaugeDenom(poolId) {
+			distrTo.Denom = lockupDenom
+			incentivesEpoch := k.GetEpochInfo(ctx)
+			// for internal incentive) We specify this duration so that we can query this duration in the IncentivizedPools() query.
+			distrTo.Duration = incentivesEpoch.Duration
 
-	// if poolType = Balancer populate the relevant lock information (appropriate denom, 2 week lock)
-	if poolType == poolmanagertypes.Balancer || poolType == poolmanagertypes.Stableswap {
+		} else {
+			// for all external CL incentives
+			if lockupDenom != "" {
+				return 0, fmt.Errorf("CL pools donot have lockup_denom. Needs to be empty.")
+			}
+
+			distrTo.Denom = types.NoLockExternalGaugeDenom(poolId)
+		}
+
+		k.pik.SetPoolGaugeIdNoLock(ctx, poolId, nextGaugeId)
+	} else {
+		// If the ID corresponds to a Classic pool, populate the relevant lock information (appropriate denom, 2 week lock)
 		longestDuration, err := k.pik.GetLongestLockableDuration(ctx)
 		if err != nil {
 			return 0, err
 		}
-
 		distrTo.LockQueryType = lockuptypes.ByDuration
-		distrTo.Duration = longestDuration
+		distrTo.Denom = lockupDenom
+
 		// Denom represents the token denomination we are looking to lock up
-		distrTo.Denom = gammtypes.GetPoolShareDenom(poolId) // TODO verify that this always holds
-		distrTo.Timestamp = ctx.BlockTime()
+		distrTo.Duration = longestDuration
+
+		if lockuptypes.IsStakingSyntheticDenom(distrTo.Denom) {
+			distrTo.Duration = k.sk.GetParams(ctx).UnbondingTime
+		}
 
 		// check if denom this gauge pays out to exists on-chain
 		// N.B.: The reason we check for osmovaloper is to account for gauges that pay out to

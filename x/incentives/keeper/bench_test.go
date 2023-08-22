@@ -80,6 +80,17 @@ func benchmarkDistributionLogic(b *testing.B, numAccts, numDenoms, numGauges, nu
 
 	r := rand.New(rand.NewSource(10))
 
+	// setup poolId
+	simapp.FundAccount(app.BankKeeper, ctx, sdk.AccAddress([]byte("addr1---------------")), sdk.NewCoins(
+		sdk.NewCoin("uosmo", sdk.NewInt(1000000000000000000)), sdk.NewCoin("uatom", sdk.NewInt(1000000000000000000)),
+	))
+
+	poolId, err := app.PoolManagerKeeper.CreatePool(ctx, PrepareBalancerPoolMsg())
+	if err != nil {
+		fmt.Printf("Create PoolError, %v\n", err)
+		b.FailNow()
+	}
+
 	// setup accounts with balances
 	addrs := []sdk.AccAddress{}
 	for i := 0; i < numAccts; i++ {
@@ -114,7 +125,7 @@ func benchmarkDistributionLogic(b *testing.B, numAccts, numDenoms, numGauges, nu
 			numEpochsPaidOver = uint64(r.Int63n(durationMillisecs/millisecsPerEpoch)) + 1
 		}
 
-		gaugeId, err := app.IncentivesKeeper.CreateGauge(ctx, isPerpetual, addr, rewards, distributeTo, startTime, numEpochsPaidOver, 0)
+		gaugeId, err := app.IncentivesKeeper.CreateGauge(ctx, isPerpetual, addr, distributeTo.Denom, rewards, startTime, numEpochsPaidOver, poolId)
 		if err != nil {
 			fmt.Printf("Create Gauge, %v\n", err)
 			b.FailNow()

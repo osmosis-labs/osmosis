@@ -10,7 +10,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -82,7 +81,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 
 	for _, tc := range tests {
 		s.SetupTest()
-
+		clPool := s.PrepareConcentratedPool()
 		testAccountPubkey := secp256k1.GenPrivKeyFromSecret([]byte("acc")).PubKey()
 		testAccountAddress := sdk.AccAddress(testAccountPubkey.Address())
 
@@ -102,19 +101,14 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 		}
 
 		s.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
-		distrTo := lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.ByDuration,
-			Denom:         defaultLPDenom,
-			Duration:      defaultLockDuration,
-		}
 
 		msg := &types.MsgCreateGauge{
 			IsPerpetual:       tc.isPerpetual,
 			Owner:             testAccountAddress.String(),
-			DistributeTo:      distrTo,
 			Coins:             tc.gaugeAddition,
 			StartTime:         time.Now(),
 			NumEpochsPaidOver: 1,
+			PoolId:            clPool.GetId(),
 		}
 		// System under test.
 		_, err := msgServer.CreateGauge(sdk.WrapSDKContext(ctx), msg)
@@ -221,7 +215,8 @@ func (s *KeeperTestSuite) TestAddToGauge_Fee() {
 
 		// System under test.
 		coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000)))
-		gaugeID, gauge, _, _ := s.SetupNewGauge(tc.isPerpetual, coins)
+		poolId := s.PrepareBalancerPool()
+		gaugeID, gauge, _, _ := s.SetupNewGauge(tc.isPerpetual, coins, poolId)
 		if tc.nonexistentGauge {
 			gaugeID = incentivesKeeper.GetLastGaugeID(s.Ctx) + 1
 		}

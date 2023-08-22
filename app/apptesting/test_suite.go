@@ -61,10 +61,11 @@ type KeeperTestHelper struct {
 }
 
 var (
-	SecondaryDenom       = "uion"
-	SecondaryAmount      = sdk.NewInt(100000000)
-	baseTestAccts        = []sdk.AccAddress{}
-	defaultTestStartTime = time.Now().UTC()
+	SecondaryDenom             = "uion"
+	SecondaryAmount            = sdk.NewInt(100000000)
+	baseTestAccts              = []sdk.AccAddress{}
+	defaultTestStartTime       = time.Now().UTC()
+	DefaultLongestlockDuration = time.Hour * 7
 )
 
 func init() {

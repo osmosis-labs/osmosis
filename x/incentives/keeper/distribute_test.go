@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestDistribute() {
 	oneKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
 	twoKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 2000)}
 	threeKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)}
-	fiveKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 5000)}
+	fourKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 4000)}
 	tests := []struct {
 		name                 string
 		users                []userLocks
@@ -54,7 +54,7 @@ func (s *KeeperTestSuite) TestDistribute() {
 		changeRewardReceiver []changeRewardReceiver
 		expectedRewards      []sdk.Coins
 	}{
-		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
+		// gauge 1 gives 2k coins. three locks, all eligible. 1k coins per lock.
 		// 1k should go to oneLockupUser and 2k to twoLockupUser.
 		{
 			name:            "One user with one lockup, another user with two lockups, single default gauge",
@@ -62,14 +62,13 @@ func (s *KeeperTestSuite) TestDistribute() {
 			gauges:          []perpGaugeDesc{defaultGauge},
 			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
 		},
-		// gauge 1 gives 3k coins. three locks, all eligible.
-		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
-		// 1k should to oneLockupUser and 5k to twoLockupUser.
+		// gauge 1 gives 2k coins, to longest duration lock
+		// 2k should to oneLockupUser and 4k to twoLockupUser.
 		{
 			name:            "One user with one lockup (default gauge), another user with two lockups (double length gauge)",
 			users:           []userLocks{oneLockupUser, twoLockupUser},
 			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
-			expectedRewards: []sdk.Coins{oneKRewardCoins, fiveKRewardCoins},
+			expectedRewards: []sdk.Coins{twoKRewardCoins, fourKRewardCoins},
 		},
 		// gauge 1 gives zero rewards.
 		// both oneLockupUser and twoLockupUser should get no rewards.
@@ -128,10 +127,9 @@ func (s *KeeperTestSuite) TestDistribute() {
 			},
 			expectedRewards: []sdk.Coins{twoKRewardCoins, oneKRewardCoins},
 		},
-		// gauge 1 gives 3k coins. three locks, all eligible.
-		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
+		// gauge 1 gives 2k coins. longest duration lock.
 		// Change all of oneLockupUser's reward recepient to twoLockupUser, vice versa.
-		// Rewards should be reversed, 5k should to oneLockupUser and 1k to twoLockupUser.
+		// Rewards should be reversed, 4k should to oneLockupUser and 2k to twoLockupUser.
 		{
 			name:   "Change Reward Receiver: One user with one lockup (default gauge), another user with two lockups (double length gauge)",
 			users:  []userLocks{oneLockupUser, twoLockupUser},
@@ -150,13 +148,14 @@ func (s *KeeperTestSuite) TestDistribute() {
 					newReceiverAccIndex: 0,
 				},
 			},
-			expectedRewards: []sdk.Coins{fiveKRewardCoins, oneKRewardCoins},
+			expectedRewards: []sdk.Coins{fourKRewardCoins, twoKRewardCoins},
 		},
 	}
 	for _, tc := range tests {
 		s.SetupTest()
+		poolId := s.PrepareBalancerPool()
 		// setup gauges and the locks defined in the above tests, then distribute to them
-		gauges := s.SetupGauges(tc.gauges, defaultLPDenom)
+		gauges := s.SetupGauges(tc.gauges, defaultLPDenom, poolId)
 		addrs := s.SetupUserLocks(tc.users)
 
 		// set up reward receiver if not nil
@@ -167,6 +166,7 @@ func (s *KeeperTestSuite) TestDistribute() {
 		_, err := s.App.IncentivesKeeper.Distribute(s.Ctx, gauges)
 		s.Require().NoError(err)
 		// check expected rewards against actual rewards received
+
 		for i, addr := range addrs {
 			bal := s.App.BankKeeper.GetAllBalances(s.Ctx, addr)
 			s.Require().Equal(tc.expectedRewards[i].String(), bal.String(), "test %v, person %d", tc.name, i)
@@ -438,16 +438,6 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		return tc
 	}
 
-	withPoolId := func(tc test, poolId uint64) test {
-		if poolId == defaultBalancerPool {
-			// If we do not set it, SetPoolGaugeIdInternalIncentive(...) errors with
-			// "zero duration is invalid"
-			tc.distrTo.Duration = time.Hour
-		}
-		tc.poolId = poolId
-		return tc
-	}
-
 	withError := func(tc test) test {
 		tc.expectErr = true
 		return tc
@@ -460,7 +450,6 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		"perpetual, 2 coins, paid over 1 epoch":      withIsPerpetual(withGaugeCoins(defaultTest, defaultBothCoins), true),
 		"non-perpetual, 1 coin, paid over 2 epochs":  withNumEpochs(defaultTest, 2),
 		"non-perpetual, 2 coins, paid over 3 epochs": withNumEpochs(withGaugeCoins(defaultTest, defaultBothCoins), 3),
-		"error: balancer pool id":                    withError(withPoolId(defaultTest, defaultBalancerPool)),
 		"error: inactive gauge":                      withError(withNumEpochs(defaultTest, 0)),
 	}
 
@@ -483,7 +472,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 			s.FundAcc(s.TestAccs[0], tc.gaugeCoins)
 
 			// Create gauge and get it from state
-			externalGaugeid, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, tc.isPerpertual, s.TestAccs[0], tc.gaugeCoins, tc.distrTo, tc.startTime, tc.numEpochsPaidOver, defaultCLPool)
+			externalGaugeid, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, tc.isPerpertual, s.TestAccs[0], tc.distrTo.Denom, tc.gaugeCoins, tc.startTime, tc.numEpochsPaidOver, defaultCLPool)
 			s.Require().NoError(err)
 			externalGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, externalGaugeid)
 			s.Require().NoError(err)
@@ -556,7 +545,7 @@ func (s *KeeperTestSuite) TestSyntheticDistribute() {
 	noRewardCoins := sdk.Coins{}
 	oneKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
 	twoKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 2000)}
-	fiveKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 5000)}
+	fourKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 4000)}
 	tests := []struct {
 		name            string
 		users           []userLocks
@@ -571,14 +560,13 @@ func (s *KeeperTestSuite) TestSyntheticDistribute() {
 			gauges:          []perpGaugeDesc{defaultGauge},
 			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
 		},
-		// gauge 1 gives 3k coins. three locks, all eligible.
-		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
-		// 1k should to oneLockupUser and 5k to twoLockupUser.
+		// gauge 1 gives 2k coins, longest duration lock.
+		// 2k should to oneLockupUser and 4k to twoLockupUser.
 		{
 			name:            "One user with one synthetic lockup (default gauge), another user with two synthetic lockups (double length gauge)",
 			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
 			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
-			expectedRewards: []sdk.Coins{oneKRewardCoins, fiveKRewardCoins},
+			expectedRewards: []sdk.Coins{twoKRewardCoins, fourKRewardCoins},
 		},
 		// gauge 1 gives zero rewards.
 		// both oneLockupUser and twoLockupUser should get no rewards.
@@ -600,9 +588,11 @@ func (s *KeeperTestSuite) TestSyntheticDistribute() {
 	}
 	for _, tc := range tests {
 		s.SetupTest()
+		poolId := s.PrepareBalancerPool()
 		// setup gauges and the synthetic locks defined in the above tests, then distribute to them
-		gauges := s.SetupGauges(tc.gauges, defaultLPSyntheticDenom)
+		gauges := s.SetupGauges(tc.gauges, defaultLPSyntheticDenom, poolId)
 		addrs := s.SetupUserSyntheticLocks(tc.users)
+
 		_, err := s.App.IncentivesKeeper.Distribute(s.Ctx, gauges)
 		s.Require().NoError(err)
 		// check expected rewards against actual rewards received
@@ -640,16 +630,21 @@ func (s *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	coins = s.App.IncentivesKeeper.GetModuleToDistributeCoins(s.Ctx)
 	s.Require().Equal(coins, gaugeCoins.Add(addCoins...))
 
+	// get Gauge
+	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID)
+	s.Require().NoError(err)
+
 	// create a new gauge
 	// check that the sum of coins yet to be distributed is equal to the gauge1 and gauge2 coins combined
-	_, _, gaugeCoins2, _ := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 1000)})
+	_, _, gaugeCoins2, _ := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 1000)}, 1) // we already set poolId when we call `SetupLockAndGauge`
 	coins = s.App.IncentivesKeeper.GetModuleToDistributeCoins(s.Ctx)
 	s.Require().Equal(coins, gaugeCoins.Add(addCoins...).Add(gaugeCoins2...))
 
 	// move all created gauges from upcoming to active
 	s.Ctx = s.Ctx.WithBlockTime(startTime)
-	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID)
+	gauge, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, 2)
 	s.Require().NoError(err)
+
 	err = s.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(s.Ctx, *gauge)
 	s.Require().NoError(err)
 
@@ -699,13 +694,15 @@ func (s *KeeperTestSuite) TestGetModuleDistributedCoins() {
 func (s *KeeperTestSuite) TestByDurationPerpetualGaugeDistribution_NoLockNoOp() {
 	s.SetupTest()
 
+	poolId := s.PrepareBalancerPool()
+
 	// setup a perpetual gauge with no associated locks
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	gaugeID, _, _, startTime := s.SetupNewGauge(true, coins)
+	gaugeID, _, _, startTime := s.SetupNewGauge(true, coins, poolId)
 
 	// ensure the created gauge has not completed distribution
 	gauges := s.App.IncentivesKeeper.GetNotFinishedGauges(s.Ctx)
-	s.Require().Len(gauges, 1)
+	s.Require().Len(gauges, 2)
 
 	// ensure the not finished gauge matches the previously created gauge
 	expectedGauge := types.Gauge{
@@ -714,7 +711,7 @@ func (s *KeeperTestSuite) TestByDurationPerpetualGaugeDistribution_NoLockNoOp() 
 		DistributeTo: lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "lptoken",
-			Duration:      time.Second,
+			Duration:      defaultLockDuration,
 		},
 		Coins:             coins,
 		NumEpochsPaidOver: 1,
@@ -722,7 +719,7 @@ func (s *KeeperTestSuite) TestByDurationPerpetualGaugeDistribution_NoLockNoOp() 
 		DistributedCoins:  sdk.Coins{},
 		StartTime:         startTime,
 	}
-	s.Require().Equal(gauges[0].String(), expectedGauge.String())
+	s.Require().Equal(gauges[1].String(), expectedGauge.String())
 
 	// move the created gauge from upcoming to active
 	s.Ctx = s.Ctx.WithBlockTime(startTime)
@@ -738,8 +735,8 @@ func (s *KeeperTestSuite) TestByDurationPerpetualGaugeDistribution_NoLockNoOp() 
 
 	// check state is same after distribution
 	gauges = s.App.IncentivesKeeper.GetNotFinishedGauges(s.Ctx)
-	s.Require().Len(gauges, 1)
-	s.Require().Equal(gauges[0].String(), expectedGauge.String())
+	s.Require().Len(gauges, 2)
+	s.Require().Equal(expectedGauge.String(), gauges[0].String())
 
 	// Check that gauge distribution state is not updated.
 	s.ValidateNotDistributedGauge(gaugeID)
@@ -749,13 +746,15 @@ func (s *KeeperTestSuite) TestByDurationPerpetualGaugeDistribution_NoLockNoOp() 
 func (s *KeeperTestSuite) TestByDurationNonPerpetualGaugeDistribution_NoLockNoOp() {
 	s.SetupTest()
 
+	poolId := s.PrepareBalancerPool()
+
 	// setup non-perpetual gauge with no associated locks
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	gaugeID, _, _, startTime := s.SetupNewGauge(false, coins)
+	gaugeID, _, _, startTime := s.SetupNewGauge(false, coins, poolId)
 
 	// ensure the created gauge has not completed distribution
 	gauges := s.App.IncentivesKeeper.GetNotFinishedGauges(s.Ctx)
-	s.Require().Len(gauges, 1)
+	s.Require().Len(gauges, 2)
 
 	// ensure the not finished gauge matches the previously created gauge
 	expectedGauge := types.Gauge{
@@ -764,7 +763,7 @@ func (s *KeeperTestSuite) TestByDurationNonPerpetualGaugeDistribution_NoLockNoOp
 		DistributeTo: lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "lptoken",
-			Duration:      time.Second,
+			Duration:      defaultLockDuration,
 		},
 		Coins:             coins,
 		NumEpochsPaidOver: 2,
@@ -772,7 +771,7 @@ func (s *KeeperTestSuite) TestByDurationNonPerpetualGaugeDistribution_NoLockNoOp
 		DistributedCoins:  sdk.Coins{},
 		StartTime:         startTime,
 	}
-	s.Require().Equal(gauges[0].String(), expectedGauge.String())
+	s.Require().Equal(gauges[1].String(), expectedGauge.String())
 
 	// move the created gauge from upcoming to active
 	s.Ctx = s.Ctx.WithBlockTime(startTime)
@@ -788,7 +787,7 @@ func (s *KeeperTestSuite) TestByDurationNonPerpetualGaugeDistribution_NoLockNoOp
 
 	// check state is same after distribution
 	gauges = s.App.IncentivesKeeper.GetNotFinishedGauges(s.Ctx)
-	s.Require().Len(gauges, 1)
+	s.Require().Len(gauges, 2)
 	s.Require().Equal(gauges[0].String(), expectedGauge.String())
 
 	// Check that gauge distribution state is not updated.
@@ -1082,10 +1081,8 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 
 func (s *KeeperTestSuite) CreateNoLockExternalGauges(clPoolId uint64, externalGaugeCoins sdk.Coins, gaugeCreator sdk.AccAddress, numEpochsPaidOver uint64) uint64 {
 	// Create 1 external no-lock gauge perpetual over 1 epochs MsgCreateGauge
-	clPoolExternalGaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, numEpochsPaidOver == 1, gaugeCreator, externalGaugeCoins,
-		lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.NoLock,
-		},
+	// Note: can leave lock_denom empty for CL gauges
+	clPoolExternalGaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, numEpochsPaidOver == 1, gaugeCreator, "", externalGaugeCoins,
 		s.Ctx.BlockTime(),
 		numEpochsPaidOver,
 		clPoolId,

@@ -132,7 +132,6 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankK
 		}
 
 		isPerpetual := r.Int()%2 == 0
-		distributeTo := genQueryCondition(r, ctx.BlockTime(), simCoins, types.DefaultGenesis().LockableDurations)
 		rewards := genRewardCoins(r, simCoins, types.CreateGaugeFee)
 		startTimeSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 		startTime := ctx.BlockTime().Add(time.Duration(startTimeSecs) * time.Second)
@@ -146,7 +145,6 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankK
 		msg := types.MsgCreateGauge{
 			Owner:             simAccount.Address.String(),
 			IsPerpetual:       isPerpetual,
-			DistributeTo:      distributeTo,
 			Coins:             rewards,
 			StartTime:         startTime,
 			NumEpochsPaidOver: numEpochsPaidOver,

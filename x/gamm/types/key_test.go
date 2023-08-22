@@ -65,3 +65,61 @@ func TestGetPoolIdFromShareDenom(t *testing.T) {
 		})
 	}
 }
+
+func TestGetPoolIdFromShareDenomForCLandGAMM(t *testing.T) {
+	tests := []struct {
+		name          string
+		denom         string
+		expectedId    uint64
+		expectedError string
+	}{
+		{
+			name:       "Valid GAMM pool id",
+			denom:      "gamm/pool/123",
+			expectedId: 123,
+		},
+		{
+			name:       "Valid CL pool id",
+			denom:      "cl/pool/22",
+			expectedId: 22,
+		},
+		{
+			name:          "Invalid GAMM pool id",
+			denom:         "gamm/pool/abc",
+			expectedId:    0,
+			expectedError: "strconv.Atoi: parsing \"bc\": invalid syntax",
+		},
+		{
+			name:          "Invalid cl id",
+			denom:         "cl/pool/abc",
+			expectedId:    0,
+			expectedError: "failed to convert poolIdStr to integer: strconv.Atoi: parsing \"abc\": invalid syntax",
+		},
+		{
+			name:          "Empty GAMM pool id",
+			denom:         "gamm/pool/",
+			expectedId:    0,
+			expectedError: "strconv.Atoi: parsing \"\": invalid syntax",
+		},
+		{
+			name:          "Empty cl pool id",
+			denom:         "cl/pool/",
+			expectedId:    0,
+			expectedError: "failed to convert poolIdStr to integer: strconv.Atoi: parsing \"\": invalid syntax",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			id, err := types.GetPoolIdFromShareDenomForCLandGAMM(tt.denom)
+			errStr := ""
+			if err != nil {
+				errStr = err.Error()
+			}
+			if id != tt.expectedId || errStr != tt.expectedError {
+				t.Errorf("GetPoolIdFromShareDenomForCLandGAMM(%q) = (%v, %q), want (%v, %q)",
+					tt.denom, id, errStr, tt.expectedId, tt.expectedError)
+			}
+		})
+	}
+}

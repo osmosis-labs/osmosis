@@ -394,6 +394,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ConcentratedLiquidityKeeper,
 		appKeepers.PoolManagerKeeper,
 		appKeepers.PoolIncentivesKeeper,
+		appKeepers.StakingKeeper,
 	)
 	appKeepers.ConcentratedLiquidityKeeper.SetIncentivesKeeper(appKeepers.IncentivesKeeper)
 	appKeepers.GAMMKeeper.SetIncentivesKeeper(appKeepers.IncentivesKeeper)

@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
@@ -67,4 +69,9 @@ type GAMMKeeper interface {
 
 type PoolManagerKeeper interface {
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
+}
+
+// StakingKeeper expected staking keeper.
+type StakingKeeper interface {
+	GetParams(ctx sdk.Context) stakingtypes.Params
 }

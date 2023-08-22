@@ -30,14 +30,20 @@ func GetTxCmd() *cobra.Command {
 // NewCreateGaugeCmd broadcasts a CreateGauge message.
 func NewCreateGaugeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-gauge [reward] [poolId] [flags]",
-		Short: "create a gauge to distribute rewards to users.",
-		Args:  cobra.ExactArgs(2),
+		Use:   "create-gauge [lockup_denom] [reward] [poolId]  [flags]",
+		Short: "create a gauge to distribute rewards to users. Note: If poolId is CL pool no need to specifiy lockup_denom",
+		Long: `Example:  
+		for CL: osmosisd tx incentives create-gauge  "" 100000uosmo 4 ...
+        for GAMM and other pooltype: osmosisd tx incentives create-gauge gamm/pool/1 100000uosmo 4 ... 
+		`,
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
+
+			lockupDenom := args[0]
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 			coins, err := sdk.ParseCoinsNormalized(args[1])
@@ -82,6 +88,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 			msg := types.NewMsgCreateGauge(
 				epochs == 1,
 				clientCtx.GetFromAddress(),
+				lockupDenom,
 				coins,
 				startTime,
 				epochs,

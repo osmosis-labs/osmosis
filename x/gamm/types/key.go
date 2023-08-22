@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 const (
@@ -47,6 +49,19 @@ func GetPoolIdFromShareDenom(denom string) (uint64, error) {
 		return 0, err
 	}
 	return uint64(number), nil
+}
+
+// GetPoolIdFromShareDenomForCLandGAMM performs the same action as GetPoolIdFromShareDenom but instead of only checking,
+// "gamm/pool/{id}" denom it also checks "cl/pool/{id}" and retrieves the {id} from the denom. This is later used in
+// superfluid GetOrCreateIntermediaryAccount where we create the gauge based on a give lock denoms poolId.
+func GetPoolIdFromShareDenomForCLandGAMM(denom string) (uint64, error) {
+	if strings.HasPrefix(denom, "gamm/") {
+		return GetPoolIdFromShareDenom(denom)
+	} else if strings.HasPrefix(denom, "cl/") {
+		return cltypes.GetPoolIdFromShareDenom(denom)
+	} else {
+		return 0, fmt.Errorf("Input denom (%s) did not match any valid prefixes", denom)
+	}
 }
 
 func GetDenomPrefix(denom string) []byte {

@@ -22,7 +22,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v17/x/poolmanager/client/queryproto"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
@@ -529,11 +528,8 @@ func createGauge(client cosmosclient.Client, poolId uint64, senderKeyringAccount
 	log.Println("creating CL gauge for pool id", expectedPoolId, "gaugeCoins", gaugeCoins)
 
 	msg := &incentivestypes.MsgCreateGauge{
-		IsPerpetual: false,
-		Owner:       senderAddress,
-		DistributeTo: lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.NoLock,
-		},
+		IsPerpetual:       false,
+		Owner:             senderAddress,
 		StartTime:         time.Now(),
 		Coins:             gaugeCoins,
 		NumEpochsPaidOver: 5,

@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 )
 
 var (
@@ -17,9 +16,9 @@ var (
 	defaultLPTokens          sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 10)}
 	defaultLPSyntheticTokens sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPSyntheticDenom, 10)}
 	defaultLiquidTokens      sdk.Coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
-	defaultLockDuration      time.Duration = time.Second
+	defaultLockDuration      time.Duration = time.Hour * 7
 	oneLockupUser            userLocks     = userLocks{
-		lockDurations: []time.Duration{time.Second},
+		lockDurations: []time.Duration{defaultLockDuration},
 		lockAmounts:   []sdk.Coins{defaultLPTokens},
 	}
 	twoLockupUser userLocks = userLocks{
@@ -27,7 +26,7 @@ var (
 		lockAmounts:   []sdk.Coins{defaultLPTokens, defaultLPTokens},
 	}
 	oneSyntheticLockupUser userLocks = userLocks{
-		lockDurations: []time.Duration{time.Second},
+		lockDurations: []time.Duration{defaultLockDuration},
 		lockAmounts:   []sdk.Coins{defaultLPSyntheticTokens},
 	}
 	twoSyntheticLockupUser userLocks = userLocks{
@@ -105,6 +104,7 @@ func (s *KeeperTestSuite) SetupUserSyntheticLocks(users []userLocks) (accs []sdk
 	coins := sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}
 	lockupID := uint64(1)
 	for i, user := range users {
+		fmt.Println(user.lockDurations)
 		s.Assert().Equal(len(user.lockDurations), len(user.lockAmounts))
 		totalLockAmt := user.lockAmounts[0]
 		for j := 1; j < len(user.lockAmounts); j++ {
@@ -122,20 +122,20 @@ func (s *KeeperTestSuite) SetupUserSyntheticLocks(users []userLocks) (accs []sdk
 }
 
 // SetupGauges takes an array of perpGaugeDesc structs. Then returns the corresponding array of Gauge structs.
-func (s *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc, denom string) []types.Gauge {
+func (s *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc, denom string, poolId uint64) []types.Gauge {
 	gauges := make([]types.Gauge, len(gaugeDescriptors))
 	perpetual := true
 	for i, desc := range gaugeDescriptors {
-		_, gaugePtr, _, _ := s.setupNewGaugeWithDuration(perpetual, desc.rewardAmount, desc.lockDuration, denom)
+		_, gaugePtr, _, _ := s.setupNewGaugeWithDefaultLockDuration(perpetual, desc.rewardAmount, denom, poolId)
 		gauges[i] = *gaugePtr
 	}
 	return gauges
 }
 
 // CreateGauge creates a gauge struct given the required params.
-func (s *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Gauge) {
+func (s *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coins sdk.Coins, lockupDenom string, startTime time.Time, numEpoch uint64, poolId uint64) (uint64, *types.Gauge) {
 	s.FundAcc(addr, coins)
-	gaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch, 0)
+	gaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, isPerpetual, addr, lockupDenom, coins, startTime, numEpoch, poolId)
 	s.Require().NoError(err)
 	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID)
 	s.Require().NoError(err)
@@ -158,62 +158,53 @@ func (s *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, durat
 	s.Require().NoError(err)
 }
 
-// setupNewGaugeWithDuration creates a gauge with the specified duration.
-func (s *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins sdk.Coins, duration time.Duration, denom string) (
+// setupNewGaugeWithDefaultLockDuration creates a gauge with the default lock duration.
+func (s *KeeperTestSuite) setupNewGaugeWithDefaultLockDuration(isPerpetual bool, coins sdk.Coins, denom string, poolId uint64) (
 	uint64, *types.Gauge, sdk.Coins, time.Time,
 ) {
 	addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
 	startTime2 := time.Now()
-	distrTo := lockuptypes.QueryCondition{
-		LockQueryType: lockuptypes.ByDuration,
-		Denom:         denom,
-		Duration:      duration,
-	}
 
 	// mints coins so supply exists on chain
-	mintCoins := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
+	mintCoins := sdk.Coins{sdk.NewInt64Coin(denom, 200)}
 	s.FundAcc(addr, mintCoins)
 
 	numEpochsPaidOver := uint64(2)
 	if isPerpetual {
 		numEpochsPaidOver = uint64(1)
 	}
-	gaugeID, gauge := s.CreateGauge(isPerpetual, addr, coins, distrTo, startTime2, numEpochsPaidOver)
+
+	gaugeID, gauge := s.CreateGauge(isPerpetual, addr, coins, denom, startTime2, numEpochsPaidOver, poolId)
 	return gaugeID, gauge, coins, startTime2
 }
 
 // SetupNewGauge creates a gauge with the default lock duration.
-func (s *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins) (uint64, *types.Gauge, sdk.Coins, time.Time) {
-	return s.setupNewGaugeWithDuration(isPerpetual, coins, defaultLockDuration, "lptoken")
+func (s *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins, poolId uint64) (uint64, *types.Gauge, sdk.Coins, time.Time) {
+	return s.setupNewGaugeWithDefaultLockDuration(isPerpetual, coins, "lptoken", poolId)
 }
 
 // setupNewGaugeWithDenom creates a gauge with the specified duration and denom.
-func (s *KeeperTestSuite) setupNewGaugeWithDenom(isPerpetual bool, coins sdk.Coins, duration time.Duration, denom string) (
+func (s *KeeperTestSuite) setupNewGaugeWithDenom(isPerpetual bool, coins sdk.Coins, duration time.Duration, denom string, poolId uint64) (
 	uint64, *types.Gauge, sdk.Coins, time.Time,
 ) {
 	addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
 	startTime2 := time.Now()
-	distrTo := lockuptypes.QueryCondition{
-		LockQueryType: lockuptypes.ByDuration,
-		Denom:         denom,
-		Duration:      duration,
-	}
 
 	// mints coins so supply exists on chain
-	mintCoins := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
+	mintCoins := sdk.Coins{sdk.NewInt64Coin(denom, 200)}
 	s.FundAcc(addr, mintCoins)
 
 	numEpochsPaidOver := uint64(2)
 	if isPerpetual {
 		numEpochsPaidOver = uint64(1)
 	}
-	gaugeID, gauge := s.CreateGauge(isPerpetual, addr, coins, distrTo, startTime2, numEpochsPaidOver)
+	gaugeID, gauge := s.CreateGauge(isPerpetual, addr, coins, denom, startTime2, numEpochsPaidOver, poolId)
 	return gaugeID, gauge, coins, startTime2
 }
 
 // SetupNewGaugeWithDenom creates a gauge with the specified duration and denom.
-func (s *KeeperTestSuite) SetupNewGaugeWithDenom(isPerpetual bool, coins sdk.Coins, denom string) (uint64, *types.Gauge, sdk.Coins, time.Time) {
-	return s.setupNewGaugeWithDenom(isPerpetual, coins, defaultLockDuration, denom)
+func (s *KeeperTestSuite) SetupNewGaugeWithDenom(isPerpetual bool, coins sdk.Coins, denom string, poolId uint64) (uint64, *types.Gauge, sdk.Coins, time.Time) {
+	return s.setupNewGaugeWithDenom(isPerpetual, coins, defaultLockDuration, denom, poolId)
 }
 
 // SetupManyLocks creates as many locks as the user defines.
@@ -236,12 +227,15 @@ func (s *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coins, 
 
 // SetupLockAndGauge creates both a lock and a gauge.
 func (s *KeeperTestSuite) SetupLockAndGauge(isPerpetual bool) (sdk.AccAddress, uint64, sdk.Coins, time.Time) {
+	// setup cfmm pool
+	cfmmPool := s.PrepareBalancerPool()
+
 	// create a gauge and locks
 	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
-	s.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
+	s.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, defaultLockDuration)
 
 	// create gauge
-	gaugeID, _, gaugeCoins, startTime := s.SetupNewGauge(isPerpetual, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, gaugeCoins, startTime := s.SetupNewGauge(isPerpetual, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, cfmmPool)
 
 	return lockOwner, gaugeID, gaugeCoins, startTime
 }

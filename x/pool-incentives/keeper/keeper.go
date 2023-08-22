@@ -7,14 +7,13 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
@@ -75,16 +74,11 @@ func (k Keeper) CreateLockablePoolGauges(ctx sdk.Context, poolId uint64) error {
 		ctx,
 		true,
 		k.accountKeeper.GetModuleAddress(types.ModuleName),
+		gammtypes.GetPoolShareDenom(poolId),
 		sdk.Coins{},
-		lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.ByDuration,
-			Denom:         gammtypes.GetPoolShareDenom(poolId),
-			Duration:      longestDuration,
-			Timestamp:     time.Time{},
-		},
 		ctx.BlockTime(),
 		1,
-		0,
+		poolId,
 	)
 	if err != nil {
 		return err
@@ -115,13 +109,8 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		ctx,
 		true,
 		k.accountKeeper.GetModuleAddress(types.ModuleName),
+		incentivestypes.NoLockInternalGaugeDenom(pool.GetId()),
 		sdk.Coins{},
-		lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.NoLock,
-			Denom:         incentivestypes.NoLockInternalGaugeDenom(pool.GetId()),
-			// We specify this duration so that we can query this duration in the IncentivizedPools() query.
-			Duration: incentivesEpochDuration,
-		},
 		ctx.BlockTime(),
 		1,
 		poolId,
@@ -230,28 +219,26 @@ func (k Keeper) GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDu
 	return sdk.BigEndianToUint64(bz), nil
 }
 
-// GetGaugesForCFMMPool returns the gauges associated with the given CFMM pool ID, by first retrieving
-// the lockable durations for the pool, then using them to query the pool incentives keeper for the
-// gauge IDs associated with each duration, and finally using the incentives keeper to retrieve the
-// actual gauges from the retrieved gauge IDs.
+// GetLongestDurationGaugeForCFMMPool returns the gauge associated with the given CFMM pool ID, by first retrieving
+// the longest lockable durations for the pool. It then uses the incentives keeper to retrieve the
+// actual gauges from the retrieved gauge ID.
 // CONTRACT: pool id must be assocated with a CFMM pool.
-func (k Keeper) GetGaugesForCFMMPool(ctx sdk.Context, poolId uint64) ([]incentivestypes.Gauge, error) {
-	lockableDurations := k.GetLockableDurations(ctx)
-	cfmmGauges := make([]incentivestypes.Gauge, 0, len(lockableDurations))
-	for _, duration := range lockableDurations {
-		gaugeId, err := k.GetPoolGaugeId(ctx, poolId, duration)
-		if err != nil {
-			return nil, err
-		}
-		gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, gaugeId)
-		if err != nil {
-			return nil, err
-		}
-
-		cfmmGauges = append(cfmmGauges, *gauge)
+func (k Keeper) GetLongestDurationGaugeForCFMMPool(ctx sdk.Context, poolId uint64) (incentivestypes.Gauge, error) {
+	lockableDurations, err := k.GetLongestLockableDuration(ctx)
+	if err != nil {
+		return incentivestypes.Gauge{}, err
 	}
 
-	return cfmmGauges, nil
+	gaugeId, err := k.GetPoolGaugeId(ctx, poolId, lockableDurations)
+	if err != nil {
+		return incentivestypes.Gauge{}, err
+	}
+	gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, gaugeId)
+	if err != nil {
+		return incentivestypes.Gauge{}, err
+	}
+
+	return *gauge, nil
 }
 
 func (k Keeper) SetLockableDurations(ctx sdk.Context, lockableDurations []time.Duration) {

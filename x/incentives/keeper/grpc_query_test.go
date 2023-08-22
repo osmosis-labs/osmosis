@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,9 +19,10 @@ var _ = suite.TestingSuite(nil)
 // TestGRPCGaugeByID tests querying gauges via gRPC returns the correct response.
 func (s *KeeperTestSuite) TestGRPCGaugeByID() {
 	s.SetupTest()
+	poolId := s.PrepareBalancerPool()
 
 	// create a gauge
-	gaugeID, _, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, poolId)
 
 	// ensure that querying for a gauge with an ID that doesn't exist returns an error.
 	res, err := s.querier.GaugeByID(sdk.WrapSDKContext(s.Ctx), &types.GaugeByIDRequest{Id: 1000})
@@ -37,7 +39,7 @@ func (s *KeeperTestSuite) TestGRPCGaugeByID() {
 		DistributeTo: lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "lptoken",
-			Duration:      time.Second,
+			Duration:      defaultLockDuration,
 		},
 		Coins:             coins,
 		NumEpochsPaidOver: 2,
@@ -45,32 +47,34 @@ func (s *KeeperTestSuite) TestGRPCGaugeByID() {
 		DistributedCoins:  sdk.Coins{},
 		StartTime:         startTime,
 	}
-	s.Require().Equal(res.Gauge.String(), expectedGauge.String())
+	s.Require().Equal(expectedGauge.String(), res.Gauge.String())
 }
 
 // TestGRPCGauges tests querying upcoming and active gauges via gRPC returns the correct response.
 func (s *KeeperTestSuite) TestGRPCGauges() {
 	s.SetupTest()
 
+	poolId := s.PrepareBalancerPool()
+
 	// ensure initially querying gauges returns no gauges
 	res, err := s.querier.Gauges(sdk.WrapSDKContext(s.Ctx), &types.GaugesRequest{})
 	s.Require().NoError(err)
-	s.Require().Len(res.Data, 0)
+	s.Require().Len(res.Data, 1)
 
 	// create a gauge
-	gaugeID, _, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, poolId)
 
 	// query gauges again, but this time expect the gauge created earlier in the response
 	res, err = s.querier.Gauges(sdk.WrapSDKContext(s.Ctx), &types.GaugesRequest{})
 	s.Require().NoError(err)
-	s.Require().Len(res.Data, 1)
+	s.Require().Len(res.Data, 2)
 	expectedGauge := types.Gauge{
 		Id:          gaugeID,
 		IsPerpetual: false,
 		DistributeTo: lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "lptoken",
-			Duration:      time.Second,
+			Duration:      defaultLockDuration,
 		},
 		Coins:             coins,
 		NumEpochsPaidOver: 2,
@@ -78,12 +82,12 @@ func (s *KeeperTestSuite) TestGRPCGauges() {
 		DistributedCoins:  sdk.Coins{},
 		StartTime:         startTime,
 	}
-	s.Require().Equal(res.Data[0].String(), expectedGauge.String())
+	s.Require().Equal(expectedGauge.String(), res.Data[1].String())
 
 	// create 10 more gauges
 	for i := 0; i < 10; i++ {
-		s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
-		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(time.Second))
+		s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, poolId)
+		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(defaultLockDuration))
 	}
 
 	// check that setting page request limit to 10 will only return 10 out of the 11 gauges
@@ -97,14 +101,16 @@ func (s *KeeperTestSuite) TestGRPCGauges() {
 func (s *KeeperTestSuite) TestGRPCActiveGauges() {
 	s.SetupTest()
 
+	poolId := s.PrepareBalancerPool()
+
 	// ensure initially querying active gauges returns no gauges
 	res, err := s.querier.ActiveGauges(sdk.WrapSDKContext(s.Ctx), &types.ActiveGaugesRequest{})
 	s.Require().NoError(err)
 	s.Require().Len(res.Data, 0)
 
 	// create a gauge and move it from upcoming to active
-	gaugeID, gauge, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
-	s.Ctx = s.Ctx.WithBlockTime(startTime.Add(time.Second))
+	gaugeID, gauge, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, poolId)
+	s.Ctx = s.Ctx.WithBlockTime(startTime.Add(defaultLockDuration))
 	err = s.querier.MoveUpcomingGaugeToActiveGauge(s.Ctx, *gauge)
 	s.Require().NoError(err)
 
@@ -118,7 +124,7 @@ func (s *KeeperTestSuite) TestGRPCActiveGauges() {
 		DistributeTo: lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "lptoken",
-			Duration:      time.Second,
+			Duration:      defaultLockDuration,
 		},
 		Coins:             coins,
 		NumEpochsPaidOver: 2,
@@ -126,12 +132,12 @@ func (s *KeeperTestSuite) TestGRPCActiveGauges() {
 		DistributedCoins:  sdk.Coins{},
 		StartTime:         startTime,
 	}
-	s.Require().Equal(res.Data[0].String(), expectedGauge.String())
+	s.Require().Equal(expectedGauge.String(), res.Data[0].String())
 
 	// create 20 more gauges
 	for i := 0; i < 20; i++ {
-		_, gauge, _, _ := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
-		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(time.Second))
+		_, gauge, _, _ := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, poolId)
+		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(defaultLockDuration))
 
 		// move the first 9 gauges from upcoming to active (now 10 active gauges, 30 total gauges)
 		if i < 9 {
@@ -154,6 +160,7 @@ func (s *KeeperTestSuite) TestGRPCActiveGauges() {
 // TestGRPCActiveGaugesPerDenom tests querying active gauges by denom via gRPC returns the correct response.
 func (s *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	s.SetupTest()
+	poolId := s.PrepareBalancerPool()
 
 	// ensure initially querying gauges by denom returns no gauges
 	res, err := s.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(s.Ctx), &types.ActiveGaugesPerDenomRequest{})
@@ -161,8 +168,8 @@ func (s *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	s.Require().Len(res.Data, 0)
 
 	// create a gauge
-	gaugeID, gauge, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
-	s.Ctx = s.Ctx.WithBlockTime(startTime.Add(time.Second))
+	gaugeID, gauge, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, poolId)
+	s.Ctx = s.Ctx.WithBlockTime(startTime.Add(defaultLockDuration))
 	err = s.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(s.Ctx, *gauge)
 	s.Require().NoError(err)
 
@@ -176,7 +183,7 @@ func (s *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 		DistributeTo: lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "lptoken",
-			Duration:      time.Second,
+			Duration:      defaultLockDuration,
 		},
 		Coins:             coins,
 		NumEpochsPaidOver: 2,
@@ -188,8 +195,8 @@ func (s *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 
 	// setup 20 more gauges with the pool denom
 	for i := 0; i < 20; i++ {
-		_, gauge, _, _ := s.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool")
-		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(time.Second))
+		_, gauge, _, _ := s.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool", poolId)
+		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(defaultLockDuration))
 
 		// move the first 10 of 20 gauges to an active status
 		if i < 10 {
@@ -218,25 +225,27 @@ func (s *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 func (s *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	s.SetupTest()
 
+	poolId := s.PrepareBalancerPool()
+
 	// ensure initially querying upcoming gauges returns no gauges
 	res, err := s.querier.UpcomingGauges(sdk.WrapSDKContext(s.Ctx), &types.UpcomingGaugesRequest{})
 	s.Require().NoError(err)
-	s.Require().Len(res.Data, 0)
+	s.Require().Len(res.Data, 1)
 
 	// create a gauge
-	gaugeID, _, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, poolId)
 
 	// query upcoming gauges again, but this time expect the gauge created earlier in the response
 	res, err = s.querier.UpcomingGauges(sdk.WrapSDKContext(s.Ctx), &types.UpcomingGaugesRequest{})
 	s.Require().NoError(err)
-	s.Require().Len(res.Data, 1)
+	s.Require().Len(res.Data, 2)
 	expectedGauge := types.Gauge{
 		Id:          gaugeID,
 		IsPerpetual: false,
 		DistributeTo: lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "lptoken",
-			Duration:      time.Second,
+			Duration:      defaultLockDuration,
 		},
 		Coins:             coins,
 		NumEpochsPaidOver: 2,
@@ -244,12 +253,12 @@ func (s *KeeperTestSuite) TestGRPCUpcomingGauges() {
 		DistributedCoins:  sdk.Coins{},
 		StartTime:         startTime,
 	}
-	s.Require().Equal(res.Data[0].String(), expectedGauge.String())
+	s.Require().Equal(expectedGauge.String(), res.Data[1].String())
 
 	// setup 20 more upcoming gauges
 	for i := 0; i < 20; i++ {
-		_, gauge, _, _ := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
-		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(time.Second))
+		_, gauge, _, _ := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, poolId)
+		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(defaultLockDuration))
 
 		// move the first 9 created gauges to an active status
 		// 1 + (20 -9) = 12 upcoming gauges
@@ -267,12 +276,13 @@ func (s *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	// query upcoming gauges with a page request of 15 should return 12 gauges
 	res, err = s.querier.UpcomingGauges(sdk.WrapSDKContext(s.Ctx), &types.UpcomingGaugesRequest{Pagination: &query.PageRequest{Limit: 15}})
 	s.Require().NoError(err)
-	s.Require().Len(res.Data, 12)
+	s.Require().Len(res.Data, 13)
 }
 
 // TestGRPCUpcomingGaugesPerDenom tests querying upcoming gauges by denom via gRPC returns the correct response.
 func (s *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	s.SetupTest()
+	poolId := s.PrepareBalancerPool()
 
 	// ensure initially querying upcoming gauges by denom returns no gauges
 	upcomingGaugeRequest := types.UpcomingGaugesPerDenomRequest{Denom: "lptoken", Pagination: nil}
@@ -281,7 +291,7 @@ func (s *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	s.Require().Len(res.UpcomingGauges, 0)
 
 	// create a gauge, and check upcoming gauge is working
-	gaugeID, gauge, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, gauge, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, poolId)
 
 	// query upcoming gauges by denom again, but this time expect the gauge created earlier in the response
 	res, err = s.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(s.Ctx), &upcomingGaugeRequest)
@@ -293,7 +303,7 @@ func (s *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 		DistributeTo: lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "lptoken",
-			Duration:      time.Second,
+			Duration:      defaultLockDuration,
 		},
 		Coins:             coins,
 		NumEpochsPaidOver: 2,
@@ -305,7 +315,7 @@ func (s *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 
 	// move gauge from upcoming to active
 	// ensure the query no longer returns a response
-	s.Ctx = s.Ctx.WithBlockTime(startTime.Add(time.Second))
+	s.Ctx = s.Ctx.WithBlockTime(startTime.Add(defaultLockDuration))
 	err = s.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(s.Ctx, *gauge)
 	s.Require().NoError(err)
 	res, err = s.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(s.Ctx), &upcomingGaugeRequest)
@@ -314,8 +324,8 @@ func (s *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 
 	// setup 20 more upcoming gauges with pool denom
 	for i := 0; i < 20; i++ {
-		_, gauge, _, _ := s.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool")
-		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(time.Second))
+		_, gauge, _, _ := s.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool", poolId)
+		s.Ctx = s.Ctx.WithBlockTime(startTime.Add(defaultLockDuration))
 
 		// move the first 10 created gauges from upcoming to active
 		// this leaves 10 upcoming gauges
@@ -423,6 +433,8 @@ func (s *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 func (s *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	s.SetupTest()
 
+	poolId := s.PrepareBalancerPool()
+
 	// ensure initially querying to distribute coins returns no coins
 	res, err := s.querier.ModuleToDistributeCoins(sdk.WrapSDKContext(s.Ctx), &types.ModuleToDistributeCoinsRequest{})
 	s.Require().NoError(err)
@@ -431,11 +443,11 @@ func (s *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	// create two locks with different durations
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
-	s.LockTokens(addr1, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
-	s.LockTokens(addr2, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, 2*time.Second)
+	s.LockTokens(addr1, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Hour*7)
+	s.LockTokens(addr2, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, 2*time.Hour*7)
 
 	// setup a non perpetual gauge
-	gaugeID, _, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, coins, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, poolId)
 	gauge, err := s.querier.GetGaugeByID(s.Ctx, gaugeID)
 	s.Require().NoError(err)
 	s.Require().NotNil(gauge)
@@ -488,14 +500,16 @@ func (s *KeeperTestSuite) TestGRPCToDistributeCoins() {
 func (s *KeeperTestSuite) TestGRPCDistributedCoins() {
 	s.SetupTest()
 
+	poolId := s.PrepareBalancerPool()
+
 	// create two locks with different durations
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
-	s.LockTokens(addr1, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
-	s.LockTokens(addr2, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, 2*time.Second)
+	s.LockTokens(addr1, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Hour*7)
+	s.LockTokens(addr2, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, 2*time.Hour*7)
 
 	// setup a non perpetual gauge
-	gaugeID, _, _, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, _, startTime := s.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, poolId)
 	gauge, err := s.querier.GetGaugeByID(s.Ctx, gaugeID)
 	s.Require().NoError(err)
 	s.Require().NotNil(gauge)
@@ -506,6 +520,7 @@ func (s *KeeperTestSuite) TestGRPCDistributedCoins() {
 	err = s.querier.MoveUpcomingGaugeToActiveGauge(s.Ctx, *gauge)
 	s.Require().NoError(err)
 
+	fmt.Println("GAUGE: ", gauge)
 	// distribute coins to stakers
 	distrCoins, err := s.querier.Distribute(s.Ctx, gauges)
 	s.Require().NoError(err)

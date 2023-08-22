@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 )
@@ -83,4 +84,22 @@ func (s *KeeperTestSuite) ValidateIncentiveRecord(poolId uint64, remainingCoin s
 	s.Require().Equal(emissionRateForPoolClPool, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
 	s.Require().Equal(types.DefaultConcentratedUptime, incentiveRecord.MinUptime)
 	s.Require().Equal(distributedDecCoin, incentiveRecord.GetIncentiveRecordBody().RemainingCoin)
+}
+
+func PrepareBalancerPoolMsg() balancer.MsgCreateBalancerPool {
+	msg := balancer.NewMsgCreateBalancerPool(sdk.AccAddress([]byte("addr1---------------")), balancer.PoolParams{
+		SwapFee: sdk.NewDec(0),
+		ExitFee: sdk.NewDec(0),
+	}, []balancer.PoolAsset{
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin("uosmo", sdk.NewInt(10)),
+		},
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin("uatom", sdk.NewInt(10)),
+		},
+	}, "")
+
+	return msg
 }

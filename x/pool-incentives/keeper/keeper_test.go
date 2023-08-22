@@ -36,45 +36,26 @@ func (s *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 
 	keeper := s.App.PoolIncentivesKeeper
 
-	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
-	lockableDurations := keeper.GetLockableDurations(s.Ctx)
-	s.Equal(3, len(lockableDurations))
+	// LockableDurations should be  7 hours from the default genesis state.
+	lockableDuration, err := keeper.GetLongestLockableDuration(s.Ctx)
+	s.Require().NoError(err)
 
-	for i := 0; i < 3; i++ {
-		poolId := s.PrepareBalancerPool()
-		pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
-		s.NoError(err)
+	poolId := s.PrepareBalancerPool()
+	pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
+	s.NoError(err)
 
-		poolLpDenom := gammtypes.GetPoolShareDenom(pool.GetId())
+	poolLpDenom := gammtypes.GetPoolShareDenom(pool.GetId())
 
-		// Same amount of gauges as lockableDurations must be created for every pool created.
-		gaugeId, err := keeper.GetPoolGaugeId(s.Ctx, poolId, lockableDurations[0])
-		s.NoError(err)
-		gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
-		s.NoError(err)
-		s.Equal(0, len(gauge.Coins))
-		s.Equal(true, gauge.IsPerpetual)
-		s.Equal(poolLpDenom, gauge.DistributeTo.Denom)
-		s.Equal(lockableDurations[0], gauge.DistributeTo.Duration)
+	// Same amount of gauges as lockableDurations must be created for every pool created.
+	gaugeId, err := keeper.GetPoolGaugeId(s.Ctx, poolId, lockableDuration)
+	s.NoError(err)
+	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
+	s.NoError(err)
+	s.Equal(0, len(gauge.Coins))
+	s.Equal(true, gauge.IsPerpetual)
+	s.Equal(poolLpDenom, gauge.DistributeTo.Denom)
+	s.Equal(lockableDuration, gauge.DistributeTo.Duration)
 
-		gaugeId, err = keeper.GetPoolGaugeId(s.Ctx, poolId, lockableDurations[1])
-		s.NoError(err)
-		gauge, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
-		s.NoError(err)
-		s.Equal(0, len(gauge.Coins))
-		s.Equal(true, gauge.IsPerpetual)
-		s.Equal(poolLpDenom, gauge.DistributeTo.Denom)
-		s.Equal(lockableDurations[1], gauge.DistributeTo.Duration)
-
-		gaugeId, err = keeper.GetPoolGaugeId(s.Ctx, poolId, lockableDurations[2])
-		s.NoError(err)
-		gauge, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
-		s.NoError(err)
-		s.Equal(0, len(gauge.Coins))
-		s.Equal(true, gauge.IsPerpetual)
-		s.Equal(poolLpDenom, gauge.DistributeTo.Denom)
-		s.Equal(lockableDurations[2], gauge.DistributeTo.Duration)
-	}
 }
 
 func (s *KeeperTestSuite) TestCreateConcentratePoolGauges() {
@@ -109,13 +90,14 @@ func (s *KeeperTestSuite) TestCreateConcentratePoolGauges() {
 }
 
 func (s *KeeperTestSuite) TestCreateLockablePoolGauges() {
-	durations := s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
+	durations, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+	s.Require().NoError(err)
 
 	tests := []struct {
 		name                      string
 		poolId                    uint64
 		isInvalidLockableDuration bool
-		expectedGaugeDurations    []time.Duration
+		expectedGaugeDurations    time.Duration
 		expectedGaugeIds          []uint64
 		expectedErr               bool
 	}{
@@ -123,13 +105,13 @@ func (s *KeeperTestSuite) TestCreateLockablePoolGauges() {
 			name:                   "Create Gauge with valid PoolId",
 			poolId:                 uint64(1),
 			expectedGaugeDurations: durations,
-			expectedGaugeIds:       []uint64{4, 5, 6}, // note: it's not 1,2,3 because we create 3 gauges during setup of s.PrepareBalancerPool()
+			expectedGaugeIds:       []uint64{2}, // note: 1 gauge created during setup using s.PrepareBalancerPool(), this is the other one
 			expectedErr:            false,
 		},
 		{
 			name:                   "Create Gauge with invalid PoolId",
 			poolId:                 uint64(0),
-			expectedGaugeDurations: nil,
+			expectedGaugeDurations: 0,
 			expectedGaugeIds:       []uint64{},
 			expectedErr:            true,
 		},
@@ -150,8 +132,8 @@ func (s *KeeperTestSuite) TestCreateLockablePoolGauges() {
 
 			// This should trigger error when creating a pool id <> gauge id internal incentive link.
 			if tc.isInvalidLockableDuration {
-				durations = []time.Duration{time.Duration(0)}
-				s.App.PoolIncentivesKeeper.SetLockableDurations(s.Ctx, durations)
+				durations = time.Duration(0)
+				s.App.PoolIncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{durations})
 			}
 
 			err := s.App.PoolIncentivesKeeper.CreateLockablePoolGauges(s.Ctx, tc.poolId)
@@ -161,24 +143,23 @@ func (s *KeeperTestSuite) TestCreateLockablePoolGauges() {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(tc.expectedGaugeDurations)
 
-				for idx, duration := range tc.expectedGaugeDurations {
-					actualGaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, tc.poolId, duration)
-					s.Require().NoError(err)
-					s.Require().Equal(tc.expectedGaugeIds[idx], actualGaugeId)
+				actualGaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, tc.poolId, tc.expectedGaugeDurations)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedGaugeIds[0], actualGaugeId)
 
-					// Get gauge information
-					gaugeInfo, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, actualGaugeId)
-					s.Require().NoError(err)
+				// Get gauge information
+				gaugeInfo, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, actualGaugeId)
+				s.Require().NoError(err)
 
-					s.Require().Equal(actualGaugeId, gaugeInfo.Id)
-					s.Require().True(gaugeInfo.IsPerpetual)
-					s.Require().Empty(gaugeInfo.Coins)
-					s.Require().Equal(duration, gaugeInfo.DistributeTo.Duration)
-					s.Require().Equal(s.Ctx.BlockTime(), gaugeInfo.StartTime)
-					s.Require().Equal(gammtypes.GetPoolShareDenom(poolId), gaugeInfo.DistributeTo.Denom)
-					s.Require().Equal(uint64(1), gaugeInfo.NumEpochsPaidOver)
-				}
+				s.Require().Equal(actualGaugeId, gaugeInfo.Id)
+				s.Require().True(gaugeInfo.IsPerpetual)
+				s.Require().Empty(gaugeInfo.Coins)
+				s.Require().Equal(tc.expectedGaugeDurations, gaugeInfo.DistributeTo.Duration)
+				s.Require().Equal(s.Ctx.BlockTime(), gaugeInfo.StartTime)
+				s.Require().Equal(gammtypes.GetPoolShareDenom(poolId), gaugeInfo.DistributeTo.Denom)
+				s.Require().Equal(uint64(1), gaugeInfo.NumEpochsPaidOver)
 			}
+
 		})
 	}
 }
@@ -250,7 +231,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedLiquidityPoolGauge() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGetGaugesForCFMMPool() {
+func (s *KeeperTestSuite) TestGetLongestDurationGaugeForCFMMPool() {
 	const validPoolId = 1
 
 	tests := map[string]struct {
@@ -263,7 +244,7 @@ func (s *KeeperTestSuite) TestGetGaugesForCFMMPool() {
 		},
 		"invalid pool id - error": {
 			poolId:      validPoolId + 1,
-			expectError: types.NoGaugeAssociatedWithPoolError{PoolId: 2, Duration: time.Hour},
+			expectError: types.NoGaugeAssociatedWithPoolError{PoolId: 2, Duration: time.Hour * 7},
 		},
 	}
 
@@ -274,7 +255,7 @@ func (s *KeeperTestSuite) TestGetGaugesForCFMMPool() {
 
 			s.PrepareBalancerPool()
 
-			gauges, err := s.App.PoolIncentivesKeeper.GetGaugesForCFMMPool(s.Ctx, tc.poolId)
+			gauge, err := s.App.PoolIncentivesKeeper.GetLongestDurationGaugeForCFMMPool(s.Ctx, tc.poolId)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -284,13 +265,13 @@ func (s *KeeperTestSuite) TestGetGaugesForCFMMPool() {
 
 			s.Require().NoError(err)
 
-			// Validate that  3 gauges for each lockable duration were created.
-			s.Require().Equal(3, len(gauges))
-			for i, lockableDuration := range s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx) {
-				s.Require().Equal(uint64(i+1), gauges[i].Id)
-				s.Require().Equal(lockableDuration, gauges[i].DistributeTo.Duration)
-				s.Require().True(gauges[i].IsActiveGauge(s.Ctx.BlockTime()))
-			}
+			lockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+			s.Require().NoError(err)
+
+			s.Require().Equal(uint64(1), gauge.Id)
+			s.Require().Equal(lockableDuration, gauge.DistributeTo.Duration)
+			s.Require().True(gauge.IsActiveGauge(s.Ctx.BlockTime()))
+
 		})
 	}
 }

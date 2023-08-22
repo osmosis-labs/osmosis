@@ -98,7 +98,7 @@ type PoolManager interface {
 }
 
 type PoolIncentivesKeeper interface {
-	GetGaugesForCFMMPool(ctx sdk.Context, poolId uint64) ([]incentivestypes.Gauge, error)
+	GetLongestDurationGaugeForCFMMPool(ctx sdk.Context, poolId uint64) (incentivestypes.Gauge, error)
 	GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration) (uint64, error)
 	GetDistrInfo(ctx sdk.Context) types.DistrInfo
 	SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo)

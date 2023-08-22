@@ -117,27 +117,22 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	poolId := s.PrepareBalancerPool()
 
 	durations := []time.Duration{
-		time.Second,
-		time.Minute,
 		time.Hour,
 	}
 	s.App.PoolIncentivesKeeper.SetLockableDurations(ctx, durations)
-	savedDurations := s.App.PoolIncentivesKeeper.GetLockableDurations(ctx)
-	s.Equal(savedDurations, durations)
-	var expectedPoolToGauges types.PoolToGauges
+	var expectedPoolToGauges []types.PoolToGauge
 	var gauge uint64
-	for _, duration := range durations {
-		gauge++
-		var poolToGauge types.PoolToGauge
-		poolToGauge.Duration = duration
-		poolToGauge.PoolId = poolId
-		poolToGauge.GaugeId = gauge
-		expectedPoolToGauges.PoolToGauge = append(expectedPoolToGauges.PoolToGauge, poolToGauge)
-	}
+
+	gauge++
+	var poolToGauge types.PoolToGauge
+	poolToGauge.Duration = time.Hour
+	poolToGauge.PoolId = poolId
+	poolToGauge.GaugeId = gauge
+	expectedPoolToGauges = append(expectedPoolToGauges, poolToGauge)
 
 	genesisExported := s.App.PoolIncentivesKeeper.ExportGenesis(ctx)
 	s.Equal(genesisExported.Params, genesis.Params)
 	s.Equal(genesisExported.LockableDurations, durations)
 	s.Equal(genesisExported.DistrInfo, genesis.DistrInfo)
-	s.Equal(genesisExported.PoolToGauges, &expectedPoolToGauges)
+	s.Equal(&expectedPoolToGauges, &genesisExported.PoolToGauges.PoolToGauge)
 }

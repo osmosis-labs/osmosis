@@ -2,7 +2,6 @@ package transmuter_test
 
 import (
 	"testing"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -10,7 +9,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	incentivetypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
 )
 
@@ -75,18 +73,14 @@ func (s *TransmuterSuite) TestFunctionalTransmuter() {
 
 	// Lock shares
 	shareCoins := sdk.NewCoins(shareCoin)
-	lockDuration := time.Hour
+	lockDuration := apptesting.DefaultLongestlockDuration
 	_, err := s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], shareCoins, lockDuration)
 	s.Require().NoError(err)
 
 	// Create gauge
 	incentive := sdk.NewCoins(sdk.NewCoin(uosmo, sdk.NewInt(1_000_000)))
 	s.FundAcc(s.TestAccs[1], incentive)
-	gaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, true, s.TestAccs[1], incentive, lockuptypes.QueryCondition{
-		LockQueryType: lockuptypes.ByDuration,
-		Denom:         expectedShareDenom,
-		Duration:      lockDuration,
-	}, s.Ctx.BlockTime(), 1, 0)
+	gaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, true, s.TestAccs[1], expectedShareDenom, incentive, s.Ctx.BlockTime(), 1, transmuter.GetId())
 	s.Require().NoError(err)
 	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
 	s.Require().NoError(err)

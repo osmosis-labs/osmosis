@@ -87,3 +87,33 @@ func NativeDenom(denom string) string {
 func IsSyntheticDenom(denom string) bool {
 	return NativeDenom(denom) != denom
 }
+
+// IsStakingSyntheticDenom checks if a given denom is StakingSyntheticDenom of not by splitting string.
+// This is only generate during intermediary accounts creation in superfluid
+// NOTE: Synthetic Denom = denom that contains "denom/superbonding"
+// NOTE: Super Synthethc denom = denom that contains "denom/superbonding/valAddr"
+func IsStakingSyntheticDenom(str string) bool {
+	splitted := strings.Split(str, "/")
+	indexOfSuperbonding := -1
+
+	for i, element := range splitted {
+		if element == "superbonding" {
+			indexOfSuperbonding = i
+			break
+		}
+	}
+
+	if indexOfSuperbonding == -1 || indexOfSuperbonding == len(splitted)-1 {
+		// "Either superbonding is not present or there is no text after superbonding"
+		return false
+	}
+
+	valAddr := splitted[indexOfSuperbonding+1]
+	_, err := sdk.ValAddressFromBech32(valAddr)
+	if err != nil {
+		// "validator address not formatted while checking isStakingSyntheticDenom
+		return false
+	}
+
+	return true
+}

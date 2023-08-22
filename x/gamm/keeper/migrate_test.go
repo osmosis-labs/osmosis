@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1132,24 +1131,12 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			desiredDenom0:        USDCIBCDenom,
 			expectError:          types.ErrMustHaveTwoDenoms,
 		},
-		"error: invalid denom durations": {
-			poolLiquidity:         sdk.NewCoins(desiredDenom0Coin, daiCoin),
-			cfmmPoolIdToLinkWith:  validPoolId,
-			desiredDenom0:         desiredDenom0,
-			setupInvalidDuraitons: true,
-			expectError:           types.ErrNoGaugeToRedirect,
-		},
 	}
 
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
-
-			if tc.setupInvalidDuraitons {
-				// Overwrite default lockable durations.
-				s.App.PoolIncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{})
-			}
 
 			balancerId := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
 
@@ -1160,7 +1147,7 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			s.Require().NoError(err)
 
 			// Get balancer gauges.
-			gaugeToRedirect, _ := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPool.GetId(), longestLockableDuration)
+			gaugeToRedirect, _ := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerId, longestLockableDuration)
 
 			gaugeToNotRedeirect, _ := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerId2, longestLockableDuration)
 

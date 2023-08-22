@@ -3,12 +3,13 @@ package keeper
 import (
 	"github.com/gogo/protobuf/proto"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 )
 
 func (k Keeper) GetAllIntermediaryAccounts(ctx sdk.Context) []types.SuperfluidIntermediaryAccount {
@@ -73,12 +74,13 @@ func (k Keeper) GetOrCreateIntermediaryAccount(ctx sdk.Context, denom, valAddr s
 	}
 	// Otherwise we create the intermediary account.
 	// first step, we create the gaugeID
-	gaugeID, err := k.ik.CreateGauge(ctx, true, accountAddr, sdk.Coins{}, lockuptypes.QueryCondition{
-		LockQueryType: lockuptypes.ByDuration,
-		// move this synthetic denom creation to a dedicated function
-		Denom:    stakingSyntheticDenom(denom, valAddr),
-		Duration: k.sk.GetParams(ctx).UnbondingTime,
-	}, ctx.BlockTime(), 1, 0)
+	poolId, err := gammtypes.GetPoolIdFromShareDenomForCLandGAMM(denom)
+	if err != nil {
+		return types.SuperfluidIntermediaryAccount{}, err
+	}
+	gaugeID, err := k.ik.CreateGauge(ctx, true, accountAddr, stakingSyntheticDenom(denom, valAddr),
+		sdk.Coins{},
+		ctx.BlockTime(), 1, poolId)
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())
 		return types.SuperfluidIntermediaryAccount{}, err

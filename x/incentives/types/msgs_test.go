@@ -9,7 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
@@ -35,7 +34,7 @@ func TestMsgCreateGauge(t *testing.T) {
 		properMsg := *incentivestypes.NewMsgCreateGauge(
 			false,
 			addr1,
-			distributeTo,
+			distributeTo.Denom,
 			sdk.Coins{},
 			time.Now(),
 			2,
@@ -75,38 +74,7 @@ func TestMsgCreateGauge(t *testing.T) {
 			}),
 			expectPass: false,
 		},
-		{
-			name: "empty distribution denom",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.Denom = ""
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
-			name: "invalid distribution denom",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.Denom = "111"
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
-			name: "invalid lock query type",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.LockQueryType = -1
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
-			name: "invalid lock query type",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.LockQueryType = -1
-				return msg
-			}),
-			expectPass: false,
-		},
+
 		{
 			name: "invalid distribution start time",
 			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
@@ -140,86 +108,6 @@ func TestMsgCreateGauge(t *testing.T) {
 				return msg
 			}),
 			expectPass: true,
-		},
-		{
-			name: "invalid: by time lock type",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.LockQueryType = lockuptypes.ByTime
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
-			name: "invalid: by duration with pool id set",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.LockQueryType = lockuptypes.ByDuration
-				msg.PoolId = 1
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
-			name: "invalid: no lock with pool id unset",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
-				msg.PoolId = 0
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
-			name: "valid no lock with pool id unset",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
-				msg.DistributeTo.Denom = ""
-				msg.DistributeTo.Duration = 0
-				msg.PoolId = 1
-				return msg
-			}),
-			expectPass: true,
-		},
-		{
-			name: "invalid due to denom being set",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
-				msg.DistributeTo.Denom = "stake"
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
-			name: "invalid due to external denom being set",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
-				// This is set by the system. Client should provide empty string.
-				msg.DistributeTo.Denom = types.NoLockExternalGaugeDenom(1)
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
-			name: "invalid due to internal denom being set",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
-				// This is set by the system when creating internal gauges.
-				// Client should provide empty string.
-				msg.DistributeTo.Denom = types.NoLockInternalGaugeDenom(1)
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
-			name: "invalid due to no lock with non-zero lock duration",
-			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
-				msg.DistributeTo.LockQueryType = lockuptypes.NoLock
-				msg.DistributeTo.Denom = ""
-				msg.PoolId = 1
-
-				// breaks
-				msg.DistributeTo.Duration = time.Hour
-				return msg
-			}),
-			expectPass: false,
 		},
 	}
 
@@ -324,13 +212,9 @@ func TestAuthzMsg(t *testing.T) {
 		{
 			name: "MsgCreateGauge",
 			incentivesMsg: &incentivestypes.MsgCreateGauge{
-				IsPerpetual: false,
-				Owner:       addr1,
-				DistributeTo: lockuptypes.QueryCondition{
-					LockQueryType: lockuptypes.ByDuration,
-					Denom:         "lptoken",
-					Duration:      time.Second,
-				},
+				IsPerpetual:       false,
+				Owner:             addr1,
+				LockupDenom:       "lptoken",
 				Coins:             sdk.NewCoins(coin),
 				StartTime:         someDate,
 				NumEpochsPaidOver: 1,

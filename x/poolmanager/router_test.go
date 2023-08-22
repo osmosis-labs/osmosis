@@ -2342,7 +2342,7 @@ func (s *KeeperTestSuite) TestIsOsmoRoutedMultihop() {
 				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
 				sdk.NewCoins(sdk.NewCoin(uosmo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)), // pool 2.
 			},
-			incentivizedGauges: []uint64{1, 4},
+			incentivizedGauges: []uint64{1, 2},
 			inDenom:            foo,
 			outDenom:           bar,
 

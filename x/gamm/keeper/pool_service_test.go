@@ -371,14 +371,15 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				s.Require().Equal(metadata.DenomUnits[1].Aliases, []string(nil))
 
 				// check AfterPoolCreated hook
-				for _, lockableDuration := range poolIncentivesKeeper.GetLockableDurations(s.Ctx) {
-					gaugeId, err := poolIncentivesKeeper.GetPoolGaugeId(s.Ctx, defaultPoolId, lockableDuration)
-					s.Require().NoError(err, "test: %v", test.name)
+				longestDuration, err := poolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+				s.Require().NoError(err)
 
-					poolIdFromPoolIncentives, err := poolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, gaugeId, lockableDuration)
-					s.Require().NoError(err, "test: %v", test.name)
-					s.Require().Equal(poolIdFromPoolIncentives, defaultPoolId)
-				}
+				gaugeId, err := poolIncentivesKeeper.GetPoolGaugeId(s.Ctx, defaultPoolId, longestDuration)
+				s.Require().NoError(err, "test: %v", test.name)
+
+				poolIdFromPoolIncentives, err := poolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, gaugeId, longestDuration)
+				s.Require().NoError(err, "test: %v", test.name)
+				s.Require().Equal(poolIdFromPoolIncentives, defaultPoolId)
 			} else {
 				s.Require().Error(err, "test: %v", test.name)
 			}
