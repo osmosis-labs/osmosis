@@ -37,19 +37,23 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
 
-	// Create the signature verification authenticator
-	sigVerificationAuthenticator := authenticatortypes.NewSigVerificationAuthenticator(ad.ak, ad.signModeHandler)
+	for i, msg := range tx.GetMsgs() {
 
-	// Get the signer data from the tx
-	authData, err := sigVerificationAuthenticator.GetAuthenticationData(tx, simulate)
-	if err != nil {
-		return ctx, err
-	}
+		// Todo: Replace getting the authenticator for something like this:
+		//ad.authenticatorKeeper.GetAuthenticatorsForAccount(msg.GetSigners()[0])  // ToDo: How do we deal with multiple signers?
+		authenticator := authenticatortypes.NewSigVerificationAuthenticator(ad.ak, ad.signModeHandler)
 
-	// Validate the signatures for each transaction in the array
-	err = sigVerificationAuthenticator.Authenticate(ctx, authData)
-	if err != nil {
-		return ctx, err
+		// Get the authentication data for the transaction
+		authData, err := authenticator.GetAuthenticationData(tx, uint8(i), simulate)
+		if err != nil {
+			return ctx, err
+		}
+
+		// Authenticate the message
+		_, err = authenticator.Authenticate(ctx, msg, authData)
+		if err != nil {
+			return ctx, err
+		}
 	}
 
 	return next(ctx, tx, simulate)

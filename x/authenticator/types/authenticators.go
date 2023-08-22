@@ -14,10 +14,13 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-type Authenticator[T any] interface {
-	GetAuthenticationData(tx sdk.Tx, simulate bool) (T, error)
-	Authenticate(ctx sdk.Context, authenticationData T) (err error)
-	ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData T) bool
+type AuthenticatorData interface{}
+
+type Authenticator interface {
+	Type() string
+	GetAuthenticationData(tx sdk.Tx, messageIndex uint8, simulate bool) (AuthenticatorData, error)
+	Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) (bool, error)
+	ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData AuthenticatorData) bool
 
 	// Optional Hooks. ToDo: Revisit this when adding the authenticator storage and messages
 	//OnAuthenticatorAdded(...) bool
@@ -26,12 +29,17 @@ type Authenticator[T any] interface {
 
 // Compile time type assertion for the SigVerificationData using the
 // SigVerificationAuthenticator struct
-var _ Authenticator[SigVerificationData] = &SigVerificationAuthenticator{}
+var _ Authenticator = &SigVerificationAuthenticator{}
+var _ AuthenticatorData = &SigVerificationData{}
 
 // Secp256k1 signature authenticator
 type SigVerificationAuthenticator struct {
 	ak      authante.AccountKeeper
 	Handler authsigning.SignModeHandler
+}
+
+func (c SigVerificationAuthenticator) Type() string {
+	return "SigVerification"
 }
 
 // NewSigVerificationAuthenticator creates a new SigVerificationAuthenticator
@@ -69,8 +77,9 @@ type SigVerificationData struct {
 // NOTE: position in the array is used to associate the signer and signature
 func (c SigVerificationAuthenticator) GetAuthenticationData(
 	tx sdk.Tx,
+	messageIndex uint8,
 	simulate bool,
-) (SigVerificationData, error) {
+) (AuthenticatorData, error) {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
 		return SigVerificationData{},
@@ -109,23 +118,28 @@ func (c SigVerificationAuthenticator) GetAuthenticationData(
 // each signer and signature using Secp256k1 signature verification
 func (c SigVerificationAuthenticator) Authenticate(
 	ctx sdk.Context,
-	verificationData SigVerificationData,
-) (err error) {
+	msg sdk.Msg,
+	authenticationData AuthenticatorData,
+) (success bool, err error) {
+	verificationData, ok := authenticationData.(SigVerificationData)
+	if !ok {
+		return false, nil //ToDo: add error
+	}
 	for i, sig := range verificationData.Signatures {
 		acc, err := authante.GetSignerAcc(ctx, c.ak, verificationData.Signers[i])
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		// retrieve pubkey
 		pubKey := acc.GetPubKey()
 		if !verificationData.simulate && pubKey == nil {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
+			return false, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
 		// Check account sequence number.
 		if sig.Sequence != acc.GetSequence() {
-			return sdkerrors.Wrapf(
+			return false, sdkerrors.Wrapf(
 				sdkerrors.ErrWrongSequence,
 				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
 			)
@@ -164,16 +178,15 @@ func (c SigVerificationAuthenticator) Authenticate(
 						chainID,
 					)
 				}
-				return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, errMsg)
+				return false, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, errMsg)
 
 			}
 		}
 	}
-
-	return
+	return true, nil
 }
 
-func (c SigVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData SigVerificationData) bool {
+func (c SigVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData AuthenticatorData) bool {
 	// To be executed in the post handler
 	return true
 }

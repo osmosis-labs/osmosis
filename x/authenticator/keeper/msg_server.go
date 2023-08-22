@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v17/x/authenticator/types"
 )
 
@@ -15,3 +17,45 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 var _ types.MsgServer = msgServer{}
+
+func (m msgServer) AddAuthenticator(goCtx context.Context, msg *types.MsgAddAuthenticator) (*types.MsgAddAuthenticatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.Keeper.AddAuthenticator(ctx, sender, msg.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeKeyAuthenticatorType, msg.Type),
+		),
+	})
+
+	return &types.MsgAddAuthenticatorResponse{
+		Success: true,
+	}, nil
+}
+
+func (m msgServer) RemoveAuthenticator(goCtx context.Context, msg *types.MsgRemoveAuthenticator) (*types.MsgRemoveAuthenticatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	err = m.Keeper.RemoveAuthenticator(ctx, sender, msg.Id)
+
+	return &types.MsgRemoveAuthenticatorResponse{
+		Success: true,
+	}, nil
+}
