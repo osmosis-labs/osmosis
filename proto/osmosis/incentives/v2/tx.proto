@@ -15,10 +15,7 @@ service Msg {
   rpc AddToGauge(MsgAddToGauge) returns (MsgAddToGaugeResponse);
 }
 
-// MsgCreateGauge creates a gague to distribute rewards to users
-// Deprecated: please use alternate in incentives/v2/tx.proto
 message MsgCreateGauge {
-  option deprecated = true;
   option (amino.name) = "osmosis/incentives/create-gauge";
 
   // is_perpetual shows if it's a perpetual or non-perpetual gauge
@@ -29,40 +26,29 @@ message MsgCreateGauge {
   bool is_perpetual = 1;
   // owner is the address of gauge creator
   string owner = 2 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-  // distribute_to show which lock the gauge should distribute to by time
-  // duration or by timestamp
-  osmosis.lockup.QueryCondition distribute_to = 3
-      [ (gogoproto.nullable) = false ];
+
   // coins are coin(s) to be distributed by the gauge
-  repeated cosmos.base.v1beta1.Coin coins = 4 [
+  repeated cosmos.base.v1beta1.Coin coins = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   // start_time is the distribution start time
-  google.protobuf.Timestamp start_time = 5 [
+  google.protobuf.Timestamp start_time = 4 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"timestamp\""
   ];
   // num_epochs_paid_over is the number of epochs distribution will be completed
   // over
-  uint64 num_epochs_paid_over = 6;
+  uint64 num_epochs_paid_over = 5;
 
-  // pool_id is the ID of the pool that the gauge is meant to be associated
-  // with. if pool_id is set, then the "QueryCondition.LockQueryType" must be
-  // "NoLock" with all other fields of the "QueryCondition.LockQueryType" struct
-  // unset, including "QueryCondition.Denom". However, note that, internally,
-  // the empty string in "QueryCondition.Denom" ends up being overwritten with
-  // incentivestypes.NoLockExternalGaugeDenom(<pool-id>) so that the gauges
-  // associated with a pool can be queried by this prefix if needed.
-  uint64 pool_id = 7;
+  uint64 pool_id = 6;
 }
+
 message MsgCreateGaugeResponse {}
 
 // MsgAddToGauge adds coins to a previously created gauge
-// Deprecated: please use alternate in incentives/v2/tx.proto
 message MsgAddToGauge {
-  option deprecated = true;
   option (amino.name) = "osmosis/incentives/add-to-gauge";
 
   // owner is the gauge owner's address

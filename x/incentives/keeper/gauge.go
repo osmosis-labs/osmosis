@@ -16,6 +16,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
@@ -95,75 +96,40 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 }
 
 // CreateGauge creates a gauge with the given parameters and sends coins to the gauge.
-// There can be 2 kinds of gauges for a given set of parameters:
-// * lockuptypes.ByDuration - a gauge that incentivizes one of the lockable durations.
-// For this gauge, the pool id must be 0. Fails if not.
-//
-// * lockuptypes.NoLock - a gauge that incentivizes pools without locking. Initially,
-// this is meant specifically for the concentrated liquidity pools. As a result,
-// if NoLock gauge is being created, the given pool id must be non-zero, the pool
-// at this id must exist and be of a concentrated liquidity type. Fails if not.
-// Additionally, lockuptypes.Denom must be either an empty string, signifying that
-// this is an external gauge, or be equal to types.NoLockInternalGaugeDenom(poolId).
-// If the denom is empty, it will get overwritten to types.NoLockExternalGaugeDenom(poolId).
-// This denom formatting is useful for querying internal vs external gauges associated with a pool.
-func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
-	// Ensure that this gauge's duration is one of the allowed durations on chain
-	durations := k.GetLockableDurations(ctx)
-	if distrTo.LockQueryType == lockuptypes.ByDuration {
-		durationOk := false
-		for _, duration := range durations {
-			if duration == distrTo.Duration {
-				durationOk = true
-				break
-			}
-		}
-		if !durationOk {
-			return 0, fmt.Errorf("invalid duration: %d", distrTo.Duration)
-		}
+func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
+	// Get PoolType
+	pool, err := k.pmk.GetPool(ctx, poolId)
+	if err != nil {
+		return 0, err
+	}
+
+	poolType := pool.GetType()
+	// If poolType = Cosmwasm return error
+	if poolType == poolmanagertypes.CosmWasm {
+		return 0, fmt.Errorf("Cannot create gauge using cosmwasm pool")
 	}
 
 	nextGaugeId := k.GetLastGaugeID(ctx) + 1
+	var distrTo lockuptypes.QueryCondition
 
-	// For no lock gauges, a pool id must be set.
-	// A pool with such id must exist and be a concentrated pool.
-	if distrTo.LockQueryType == lockuptypes.NoLock {
-		if poolId == 0 {
-			return 0, fmt.Errorf("'no lock' type gauges must have a pool id")
-		}
+	// if poolType = CL do the ususal
+	if poolType == poolmanagertypes.Concentrated {
+		distrTo.LockQueryType = lockuptypes.NoLock
+		k.pik.SetPoolGaugeIdNoLock(ctx, poolId, nextGaugeId)
+	}
 
-		// If not internal gauge denom, then must be set to ""
-		// and get overwritten with the external prefix + pool id
-		// for internal query purposes.
-		distrToDenom := distrTo.Denom
-		if distrToDenom != types.NoLockInternalGaugeDenom(poolId) {
-			// If denom is set, then fails.
-			if distrToDenom != "" {
-				return 0, fmt.Errorf("'no lock' type external gauges must have an empty denom set, was %s", distrToDenom)
-			}
-			distrTo.Denom = types.NoLockExternalGaugeDenom(poolId)
-		}
-
-		pool, err := k.pmk.GetPool(ctx, poolId)
+	// if poolType = Balancer populate the relevant lock information (appropriate denom, 2 week lock)
+	if poolType == poolmanagertypes.Balancer || poolType == poolmanagertypes.Stableswap {
+		longestDuration, err := k.pik.GetLongestLockableDuration(ctx)
 		if err != nil {
 			return 0, err
 		}
 
-		if pool.GetType() != poolmanagertypes.Concentrated {
-			return 0, fmt.Errorf("'no lock' type gauges must be created for concentrated pools only")
-		}
-
-		// Note that this is a general linking between the gauge and the pool
-		// for "NoLock" gauges. It occurs for both external and internal gauges.
-		// That being said, internal gauges have an additional linking
-		// by duration where duration is the incentives epoch duration.
-		// The internal incentive linking is set in x/pool-incentives CreateConcentratedLiquidityPoolGauge.
-		k.pik.SetPoolGaugeIdNoLock(ctx, poolId, nextGaugeId)
-	} else {
-		// For all other gauges, pool id must be 0.
-		if poolId != 0 {
-			return 0, fmt.Errorf("pool id must be 0 for gauges with lock")
-		}
+		distrTo.LockQueryType = lockuptypes.ByDuration
+		distrTo.Duration = longestDuration
+		// Denom represents the token denomination we are looking to lock up
+		distrTo.Denom = gammtypes.GetPoolShareDenom(poolId) // TODO verify that this always holds
+		distrTo.Timestamp = ctx.BlockTime()
 
 		// check if denom this gauge pays out to exists on-chain
 		// N.B.: The reason we check for osmovaloper is to account for gauges that pay out to
@@ -191,7 +157,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		return 0, err
 	}
 
-	err := k.setGauge(ctx, &gauge)
+	err = k.setGauge(ctx, &gauge)
 	if err != nil {
 		return 0, err
 	}

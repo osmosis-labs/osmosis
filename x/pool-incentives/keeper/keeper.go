@@ -63,33 +63,37 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// CreateLockablePoolGauges create multiple gauges based on lockableDurations.
+// CreateLockablePoolGauges creates one gauge based on the longest duration.
+// Currently we only support 14day incentives for CFMM pools. 1day and 7day incentives have been removed.
 func (k Keeper) CreateLockablePoolGauges(ctx sdk.Context, poolId uint64) error {
-	// Create the same number of gauges as there are LockableDurations
-	for _, lockableDuration := range k.GetLockableDurations(ctx) {
-		gaugeId, err := k.incentivesKeeper.CreateGauge(
-			ctx,
-			true,
-			k.accountKeeper.GetModuleAddress(types.ModuleName),
-			sdk.Coins{},
-			lockuptypes.QueryCondition{
-				LockQueryType: lockuptypes.ByDuration,
-				Denom:         gammtypes.GetPoolShareDenom(poolId),
-				Duration:      lockableDuration,
-				Timestamp:     time.Time{},
-			},
-			ctx.BlockTime(),
-			1,
-			0,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := k.SetPoolGaugeIdInternalIncentive(ctx, poolId, lockableDuration, gaugeId); err != nil {
-			return err
-		}
+	longestDuration, err := k.GetLongestLockableDuration(ctx)
+	if err != nil {
+		return err
 	}
+
+	gaugeId, err := k.incentivesKeeper.CreateGauge(
+		ctx,
+		true,
+		k.accountKeeper.GetModuleAddress(types.ModuleName),
+		sdk.Coins{},
+		lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         gammtypes.GetPoolShareDenom(poolId),
+			Duration:      longestDuration,
+			Timestamp:     time.Time{},
+		},
+		ctx.BlockTime(),
+		1,
+		0,
+	)
+	if err != nil {
+		return err
+	}
+
+	if err := k.SetPoolGaugeIdInternalIncentive(ctx, poolId, longestDuration, gaugeId); err != nil {
+		return err
+	}
+
 	return nil
 }
 
