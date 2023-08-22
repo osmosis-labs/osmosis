@@ -560,7 +560,7 @@ func parseDenomPairTakerFeeArgToContent(cmd *cobra.Command, arg string) (govtype
 		return nil, err
 	}
 
-	denomPairTakerFee, err := parsedenomPairTakerFee(arg)
+	denomPairTakerFee, err := ParseDenomPairTakerFee(arg)
 	if err != nil {
 		return nil, err
 	}
@@ -575,7 +575,7 @@ func parseDenomPairTakerFeeArgToContent(cmd *cobra.Command, arg string) (govtype
 }
 
 func parseDenomPairTakerFeeArgToMsg(clientCtx client.Context, arg string) (sdk.Msg, error) {
-	denomPairTakerFee, err := parsedenomPairTakerFee(arg)
+	denomPairTakerFee, err := ParseDenomPairTakerFee(arg)
 	if err != nil {
 		return nil, err
 	}
@@ -588,7 +588,7 @@ func parseDenomPairTakerFeeArgToMsg(clientCtx client.Context, arg string) (sdk.M
 	return msg, nil
 }
 
-func parsedenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
+func ParseDenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
 	denomPairTakerFeeRecords := strings.Split(arg, ",")
 
 	if len(denomPairTakerFeeRecords)%3 != 0 {
