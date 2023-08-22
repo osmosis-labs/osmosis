@@ -62,6 +62,13 @@ func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (typ
 	return valSet, nil
 }
 
+// GetValSetPreferencesWithDelegations fetches the delegator's validator set preferences
+// considering their existing delegations.
+// -If validator set preference does not exist and there are no existing delegations, it returns an error.
+// -If validator set preference exists and there are no existing delegations, it returns the existing preference.
+// -If there is a validator set preference and existing delegations, or existing delegations
+// but no validator set preference, it calculates the delegator's shares in each delegation
+// as a ratio of the total shares and returns it as part of ValidatorSetPreferences.
 func (k Keeper) GetValSetPreferencesWithDelegations(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, error) {
 	delAddr, err := sdk.AccAddressFromBech32(delegator)
 	if err != nil {
