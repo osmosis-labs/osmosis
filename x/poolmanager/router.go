@@ -34,7 +34,6 @@ func (k Keeper) RouteExactAmountIn(
 		routeSpreadFactor  sdk.Dec
 		sumOfSpreadFactors sdk.Dec
 	)
-	poolManagerParams := k.GetParams(ctx)
 
 	// Ensure that provided route is not empty and has valid denom format.
 	routeStep := types.SwapAmountInRoutes(route)
@@ -94,7 +93,7 @@ func (k Keeper) RouteExactAmountIn(
 			spreadFactor = routeSpreadFactor.MulRoundUp((spreadFactor.QuoRoundUp(sumOfSpreadFactors)))
 		}
 
-		tokenInAfterSubTakerFee, err := k.extractTakerFeeAndDistribute(ctx, tokenIn, routeStep.TokenOutDenom, poolManagerParams, sender, true)
+		tokenInAfterSubTakerFee, err := k.extractTakerFeeAndDistribute(ctx, tokenIn, routeStep.TokenOutDenom, sender, true)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -210,17 +209,13 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
 	}
 
-	poolManagerParams := k.GetParams(ctx)
-
-	spreadFactor := pool.GetSpreadFactor(ctx)
-
-	tokenInAfterSubTakerFee, err := k.extractTakerFeeAndDistribute(ctx, tokenIn, tokenOutDenom, poolManagerParams, sender, true)
+	tokenInAfterSubTakerFee, err := k.extractTakerFeeAndDistribute(ctx, tokenIn, tokenOutDenom, sender, true)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
 	// routeStep to the pool-specific SwapExactAmountIn implementation.
-	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterSubTakerFee, tokenOutDenom, tokenOutMinAmount, spreadFactor)
+	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterSubTakerFee, tokenOutDenom, tokenOutMinAmount, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -228,6 +223,11 @@ func (k Keeper) SwapExactAmountIn(
 	return tokenOutAmount, nil
 }
 
+// SwapExactAmountInNoTakerFee is an API for swapping an exact amount of tokens
+// as input to a pool to get a minimum amount of the desired token out.
+// This method does NOT charge a taker fee, and should only be used in the the
+// txfees hooks when swapping taker fees. This prevents us from charging taker fees
+// on taker fees.
 func (k Keeper) SwapExactAmountInNoTakerFee(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -255,10 +255,8 @@ func (k Keeper) SwapExactAmountInNoTakerFee(
 		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
 	}
 
-	spreadFactor := pool.GetSpreadFactor(ctx)
-
 	// routeStep to the pool-specific SwapExactAmountIn implementation.
-	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, spreadFactor)
+	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -354,7 +352,6 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
 	isMultiHopRouted, routeSpreadFactor, sumOfSpreadFactors := false, sdk.Dec{}, sdk.Dec{}
-	poolManagerParams := k.GetParams(ctx)
 
 	// Ensure that provided route is not empty and has valid denom format.
 	routeStep := types.SwapAmountOutRoutes(route)
@@ -444,7 +441,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		tokenIn := sdk.NewCoin(routeStep.TokenInDenom, _tokenInAmount)
-		tokenInAfterAddTakerFee, err := k.extractTakerFeeAndDistribute(ctx, tokenIn, _tokenOut.Denom, poolManagerParams, sender, false)
+		tokenInAfterAddTakerFee, err := k.extractTakerFeeAndDistribute(ctx, tokenIn, _tokenOut.Denom, sender, false)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -691,9 +688,9 @@ func (k Keeper) getOsmoRoutedMultihopTotalSpreadFactor(ctx sdk.Context, route ty
 		if poolErr != nil {
 			return sdk.Dec{}, sdk.Dec{}, poolErr
 		}
-		SpreadFactor := pool.GetSpreadFactor(ctx)
-		additiveSpreadFactor = additiveSpreadFactor.Add(SpreadFactor)
-		maxSpreadFactor = sdk.MaxDec(maxSpreadFactor, SpreadFactor)
+		spreadFactor := pool.GetSpreadFactor(ctx)
+		additiveSpreadFactor = additiveSpreadFactor.Add(spreadFactor)
+		maxSpreadFactor = sdk.MaxDec(maxSpreadFactor, spreadFactor)
 	}
 
 	// We divide by 2 to get the average since OSMO-routed multihops always have exactly 2 pools.
@@ -828,6 +825,8 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	return totalLiquidity, nil
 }
 
+// isDenomWhitelisted checks if the denom provided exists in the list of authorized quote denoms.
+// If it does, it returns true, otherwise false.
 func isDenomWhitelisted(denom string, authorizedQuoteDenoms []string) bool {
 	for _, authorizedQuoteDenom := range authorizedQuoteDenoms {
 		if denom == authorizedQuoteDenom {

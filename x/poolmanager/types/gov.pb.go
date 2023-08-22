@@ -23,6 +23,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// DenomPairTakerFeeProposal is a type for adding/removing a custom taker fee(s)
+// for one or more denom pairs.
 type DenomPairTakerFeeProposal struct {
 	Title             string              `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description       string              `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`

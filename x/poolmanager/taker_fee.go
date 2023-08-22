@@ -77,10 +77,11 @@ func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (
 // extractTakerFeeAndDistribute takes in a pool and extracts the taker fee from the pool and sends it to the non native fee pool module account.
 // Its important to note here that in the original swap, the taker fee + spread fee is sent to the pool's address, so this is why we
 // pull directly from the pool and not the user's account.
-func (k Keeper) extractTakerFeeAndDistribute(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, poolManagerParams types.Params, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
+func (k Keeper) extractTakerFeeAndDistribute(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
 	nonNativeFeeCollectorForStakingRewardsName := txfeestypes.NonNativeFeeCollectorForStakingRewardsName
 	nonNativeFeeCollectorForCommunityPoolName := txfeestypes.NonNativeFeeCollectorForCommunityPoolName
 	baseDenom := appparams.BaseCoinUnit
+	poolManagerParams := k.GetParams(ctx)
 
 	takerFee, err := k.GetTradingPairTakerFee(ctx, tokenIn.Denom, tokenOutDenom)
 	if err != nil {
