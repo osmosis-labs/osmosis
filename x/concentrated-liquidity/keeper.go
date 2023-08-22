@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 type Keeper struct {
@@ -127,6 +128,14 @@ func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error
 	return nil
 }
 
-func (k Keeper) GetPoolManagerKeeper() types.PoolManagerKeeper {
-	return k.poolmanagerKeeper
+// PoolManagerGetParams is a wrapper for poolmanager's GetParams, and is solely used
+// to get access to this method for use in sim_msgs.go for the CL module.
+func (k Keeper) PoolManagerGetParams(ctx sdk.Context) poolmanagertypes.Params {
+	return k.poolmanagerKeeper.GetParams(ctx)
+}
+
+// PoolManagerSetParams is a wrapper for poolmanager's SetParams, and is solely used
+// to get access to this method for use in sim_msgs.go for the CL module.
+func (k Keeper) PoolManagerSetParams(ctx sdk.Context, params poolmanagertypes.Params) {
+	k.poolmanagerKeeper.SetParams(ctx, params)
 }

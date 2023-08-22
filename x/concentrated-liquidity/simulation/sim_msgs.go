@@ -31,9 +31,9 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	k.SetParams(ctx, defaultParams)
 
 	// make sure the denoms are valid authorized quote denoms
-	poolManagerParams := k.GetPoolManagerKeeper().GetParams(ctx)
+	poolManagerParams := k.PoolManagerGetParams(ctx)
 	poolManagerParams.AuthorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, coin1.Denom, coin0.Denom)
-	k.GetPoolManagerKeeper().SetParams(ctx, poolManagerParams)
+	k.PoolManagerSetParams(ctx, poolManagerParams)
 
 	denomMetaData := banktypes.Metadata{
 		DenomUnits: []*banktypes.DenomUnit{{
