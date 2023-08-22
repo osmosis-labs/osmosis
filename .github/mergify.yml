@@ -47,7 +47,6 @@ pull_request_rules:
       - check-success=tests-go-01
       - check-success=tests-go-02
       - check-success=tests-go-03
-      - check-success=test-e2e-makefile
     actions:
       queue:
         name: default
