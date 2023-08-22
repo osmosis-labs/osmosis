@@ -52,7 +52,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			s.SetupTest()
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+			denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20)})
 
 			// Generate delegator addresses
 			delAddrs, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -285,7 +285,7 @@ func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
 			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -344,7 +344,7 @@ func (s *KeeperTestSuite) TestAfterAddTokensToLock_Event() {
 
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20)})
 
 	// setup superfluid delegations
 	_, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 1000000}}, denoms)

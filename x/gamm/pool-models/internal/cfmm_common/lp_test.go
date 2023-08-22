@@ -16,7 +16,7 @@ import (
 )
 
 // a helper function used to multiply coins
-func mulCoins(coins sdk.Coins, multiplier sdk.Dec) sdk.Coins {
+func mulCoins(coins sdk.Coins, multiplier osmomath.Dec) sdk.Coins {
 	outCoins := sdk.Coins{}
 	for _, coin := range coins {
 		outCoin := sdk.NewCoin(coin.Denom, multiplier.MulInt(coin.Amount).TruncateInt())

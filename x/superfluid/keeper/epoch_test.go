@@ -19,7 +19,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 	testCases := []struct {
 		name               string
 		asset              types.SuperfluidAsset
-		expectedMultiplier sdk.Dec
+		expectedMultiplier osmomath.Dec
 		removeStakingAsset bool
 		poolDoesNotExist   bool
 		expectedError      error
@@ -190,7 +190,7 @@ func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
 			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -251,7 +251,7 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 				// setup validators
 				valAddrs := s.SetupValidators(tc.validatorStats)
 
-				denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+				denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 				// setup superfluid delegations
 				delAddresses, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)

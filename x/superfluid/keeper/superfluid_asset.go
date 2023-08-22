@@ -33,7 +33,7 @@ func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, amount sdk.Int) sdk.In
 // y = x (1 - minRisk)
 // y / (1 - minRisk) = x
 
-func (k Keeper) UnriskAdjustOsmoValue(ctx sdk.Context, amount sdk.Dec) sdk.Dec {
+func (k Keeper) UnriskAdjustOsmoValue(ctx sdk.Context, amount osmomath.Dec) osmomath.Dec {
 	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
 	return amount.Quo(sdk.OneDec().Sub(minRiskFactor))
 }

@@ -19,7 +19,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(minimumRiskFactor sdk.Dec) Params {
+func NewParams(minimumRiskFactor osmomath.Dec) Params {
 	return Params{
 		MinimumRiskFactor: minimumRiskFactor,
 	}
@@ -45,7 +45,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 }
 
 func ValidateMinimumRiskFactor(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(osmomath.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

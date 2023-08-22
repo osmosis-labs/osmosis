@@ -27,7 +27,7 @@ type RangeTestParams struct {
 	// Base incentive amount to have on each incentive record
 	baseIncentiveAmount sdk.Int
 	// Base emission rate per second for incentive
-	baseEmissionRate sdk.Dec
+	baseEmissionRate osmomath.Dec
 	// Base denom for each incentive record (ID appended to this)
 	baseIncentiveDenom string
 	// List of addresses to swap from (randomly selected for each swap)
@@ -35,7 +35,7 @@ type RangeTestParams struct {
 
 	// -- Pool params --
 
-	spreadFactor sdk.Dec
+	spreadFactor osmomath.Dec
 	tickSpacing  uint64
 
 	// -- Fuzz params --
@@ -178,7 +178,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	// 1. Set up a position
 	// 2. Let time elapse
 	// 3. Execute a swap
-	totalLiquidity, totalAssets, totalTimeElapsed, allPositionIds, lastVisitedBlockIndex, cumulativeEmittedIncentives, lastIncentiveTrackerUpdate := sdk.ZeroDec(), sdk.NewCoins(), time.Duration(0), []uint64{}, 0, sdk.DecCoins{}, s.Ctx.BlockTime()
+	totalLiquidity, totalAssets, totalTimeElapsed, allPositionIds, lastVisitedBlockIndex, cumulativeEmittedIncentives, lastIncentiveTrackerUpdate := sdk.ZeroDec(), sdk.NewCoins(), time.Duration(0), []uint64{}, 0, osmomath.DecCoins{}, s.Ctx.BlockTime()
 	for curRange := range ranges {
 		curBlock := 0
 		startNumPositions := len(allPositionIds)
@@ -349,7 +349,7 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 		s.Require().NoError(err)
 
 		poolSpotPrice := pool.GetCurrentSqrtPrice().PowerInteger(2)
-		minSwapOutAmount := poolSpotPrice.Mul(osmomath.SmallestDec()).TruncateDec().SDKDec().TruncateInt()
+		minSwapOutAmount := poolSpotPrice.Mul(osmomath.SmallestBigDec()).TruncateDec().SDKDec().TruncateInt()
 		poolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
 		if poolBalances.AmountOf(swapOutDenom).LTE(minSwapOutAmount) {
 			return sdk.Coin{}, sdk.Coin{}
@@ -387,7 +387,7 @@ func (s *KeeperTestSuite) addRandomizedBlockTime(baseTimeToAdd time.Duration, fu
 
 // trackEmittedIncentives takes in a cumulative incentives distributed and the last time this number was updated.
 // CONTRACT: cumulativeTrackedIncentives has been updated immediately before each new incentive record that was created
-func (s *KeeperTestSuite) trackEmittedIncentives(cumulativeTrackedIncentives sdk.DecCoins, lastTrackerUpdateTime time.Time) (sdk.DecCoins, time.Time) {
+func (s *KeeperTestSuite) trackEmittedIncentives(cumulativeTrackedIncentives osmomath.DecCoins, lastTrackerUpdateTime time.Time) (osmomath.DecCoins, time.Time) {
 	// Fetch all incentive records across all pools
 	allPools, err := s.clk.GetPools(s.Ctx)
 	s.Require().NoError(err)

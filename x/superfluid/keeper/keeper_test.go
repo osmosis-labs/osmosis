@@ -129,7 +129,7 @@ func (s *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondStatus
 	return valAddrs
 }
 
-func (s *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sdk.Dec) ([]string, []uint64) {
+func (s *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []osmomath.Dec) ([]string, []uint64) {
 	pools := s.SetupGammPoolsWithBondDenomMultiplier(multipliers)
 
 	denoms := []string{}

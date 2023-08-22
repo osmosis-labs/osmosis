@@ -25,7 +25,7 @@ var (
 )
 
 // testing helper for price to tick, state machine only implements sqrt price to tick.
-func PriceToTick(price sdk.Dec) (int64, error) {
+func PriceToTick(price osmomath.Dec) (int64, error) {
 	tickDec, err := math.CalculatePriceToTickDec(price)
 	tickIndex := tickDec.TruncateInt64()
 	return tickIndex, err
@@ -33,7 +33,7 @@ func PriceToTick(price sdk.Dec) (int64, error) {
 
 // testing helper for price to tick round down spacing,
 // state machine only implements sqrt price to tick round dow spacing.
-func PriceToTickRoundDownSpacing(price sdk.Dec, tickSpacing uint64) (int64, error) {
+func PriceToTickRoundDownSpacing(price osmomath.Dec, tickSpacing uint64) (int64, error) {
 	tickIndex, err := PriceToTick(price)
 	if err != nil {
 		return 0, err
@@ -58,7 +58,7 @@ func PriceToTickRoundDownSpacing(price sdk.Dec, tickSpacing uint64) (int64, erro
 func TestTickToSqrtPrice(t *testing.T) {
 	testCases := map[string]struct {
 		tickIndex     int64
-		expectedPrice sdk.Dec
+		expectedPrice osmomath.Dec
 		expectedError error
 	}{
 		"Ten billionths cent increments at the millionths place: 1": {
@@ -229,8 +229,8 @@ func TestTicksToSqrtPrice(t *testing.T) {
 	testCases := map[string]struct {
 		lowerTickIndex     sdk.Int
 		upperTickIndex     sdk.Int
-		expectedLowerPrice sdk.Dec
-		expectedUpperPrice sdk.Dec
+		expectedLowerPrice osmomath.Dec
+		expectedUpperPrice osmomath.Dec
 		expectedError      error
 	}{
 		"Ten billionths cent increments at the millionths place": {
@@ -309,7 +309,7 @@ func TestPriceToTick(t *testing.T) {
 	)
 
 	testCases := map[string]struct {
-		price         sdk.Dec
+		price         osmomath.Dec
 		tickExpected  int64
 		expectedError error
 	}{
@@ -417,7 +417,7 @@ func TestPriceToTick(t *testing.T) {
 
 func TestPriceToTickRoundDown(t *testing.T) {
 	testCases := map[string]struct {
-		price        sdk.Dec
+		price        osmomath.Dec
 		tickSpacing  uint64
 		tickExpected int64
 	}{
@@ -496,8 +496,8 @@ func TestPriceToTickRoundDown(t *testing.T) {
 // TODO: Revisit this test, under the lens of bucket index.
 func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 	type testcase struct {
-		price          sdk.Dec
-		truncatedPrice sdk.Dec
+		price          osmomath.Dec
+		truncatedPrice osmomath.Dec
 		tickExpected   int64
 	}
 	testCases := map[string]testcase{
@@ -628,7 +628,7 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 
 func TestPriceToTick_ErrorCases(t *testing.T) {
 	testCases := map[string]struct {
-		price sdk.Dec
+		price osmomath.Dec
 	}{
 		"use negative price": {
 			price: sdk.OneDec().Neg(),
@@ -673,7 +673,7 @@ func TestTickToPrice_ErrorCases(t *testing.T) {
 
 func TestCalculatePriceToTick(t *testing.T) {
 	testCases := map[string]struct {
-		price             sdk.Dec
+		price             osmomath.Dec
 		expectedTickIndex int64
 	}{
 		"Price greater than 1": {
@@ -712,7 +712,7 @@ func TestCalculatePriceToTick(t *testing.T) {
 func TestPowTenInternal(t *testing.T) {
 	testCases := map[string]struct {
 		exponent             int64
-		expectedPowTenResult sdk.Dec
+		expectedPowTenResult osmomath.Dec
 	}{
 		"Power by 5": {
 			exponent:             5,
@@ -755,7 +755,7 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
-		sqrtPrice    sdk.Dec
+		sqrtPrice    osmomath.Dec
 		tickSpacing  uint64
 		tickExpected int64
 	}{

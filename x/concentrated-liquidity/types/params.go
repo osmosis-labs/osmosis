@@ -25,7 +25,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []sdk.Dec, discountRate sdk.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool) Params {
+func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomath.Dec, discountRate osmomath.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool) Params {
 	return Params{
 		AuthorizedTickSpacing:               authorizedTickSpacing,
 		AuthorizedSpreadFactors:             authorizedSpreadFactors,
@@ -126,11 +126,11 @@ func validateTicks(i interface{}) error {
 	return nil
 }
 
-// validateSpreadFactors validates that the given parameter is a slice of strings that can be converted to sdk.Decs.
+// validateSpreadFactors validates that the given parameter is a slice of strings that can be converted to osmomath.Decs.
 // If the parameter is not of the correct type or any of the strings cannot be converted, an error is returned.
 func validateSpreadFactors(i interface{}) error {
-	// Convert the given parameter to a slice of sdk.Decs.
-	_, ok := i.([]sdk.Dec)
+	// Convert the given parameter to a slice of osmomath.Decs.
+	_, ok := i.([]osmomath.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -177,10 +177,10 @@ func validateIsPermissionLessPoolCreationEnabled(i interface{}) error {
 	return nil
 }
 
-// validateBalancerSharesDiscount validates that the given parameter is a sdk.Dec. Returns error if the parameter is not of the correct type.
+// validateBalancerSharesDiscount validates that the given parameter is a osmomath.Dec. Returns error if the parameter is not of the correct type.
 func validateBalancerSharesDiscount(i interface{}) error {
-	// Convert the given parameter to sdk.Dec.
-	balancerSharesRewardDiscount, ok := i.(sdk.Dec)
+	// Convert the given parameter to osmomath.Dec.
+	balancerSharesRewardDiscount, ok := i.(osmomath.Dec)
 
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

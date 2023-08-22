@@ -39,8 +39,8 @@ type Pool struct {
 	Asset2       string
 	Amount1      sdk.Int
 	Amount2      sdk.Int
-	SpreadFactor sdk.Dec
-	ExitFee      sdk.Dec
+	SpreadFactor osmomath.Dec
+	ExitFee      osmomath.Dec
 	PoolId       uint64
 }
 
@@ -1080,7 +1080,7 @@ func (s *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, poolP
 }
 
 // createGAMMPool creates a balancer pool with the given pool assets and params
-func (s *KeeperTestSuite) createGAMMPool(poolAssets []balancer.PoolAsset, spreadFactor, exitFee sdk.Dec) uint64 {
+func (s *KeeperTestSuite) createGAMMPool(poolAssets []balancer.PoolAsset, spreadFactor, exitFee osmomath.Dec) uint64 {
 	poolParams := balancer.PoolParams{
 		SwapFee: spreadFactor,
 		ExitFee: exitFee,

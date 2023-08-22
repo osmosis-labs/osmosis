@@ -34,8 +34,8 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams returns new mint module parameters initialized to the given values.
 func NewParams(
-	mintDenom string, genesisEpochProvisions sdk.Dec, epochIdentifier string,
-	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
+	mintDenom string, genesisEpochProvisions osmomath.Dec, epochIdentifier string,
+	ReductionFactor osmomath.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
 	weightedDevRewardsReceivers []WeightedAddress, mintingRewardsDistributionStartEpoch int64,
 ) Params {
 	return Params{
@@ -122,13 +122,13 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 
 // GetInflationProportion returns the inflation proportion of epoch
 // provisions.
-func (p Params) GetInflationProportion() sdk.Dec {
+func (p Params) GetInflationProportion() osmomath.Dec {
 	return sdk.OneDec().Sub(p.GetDeveloperVestingProportion())
 }
 
 // GetDeveloperVestingProportion returns the developer vesting proportion of epoch
 // provisions.
-func (p Params) GetDeveloperVestingProportion() sdk.Dec {
+func (p Params) GetDeveloperVestingProportion() osmomath.Dec {
 	return p.DistributionProportions.DeveloperRewards
 }
 
@@ -149,7 +149,7 @@ func validateMintDenom(i interface{}) error {
 }
 
 func validateGenesisEpochProvisions(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(osmomath.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -175,7 +175,7 @@ func validateReductionPeriodInEpochs(i interface{}) error {
 }
 
 func validateReductionFactor(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(osmomath.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 func DefaultFeeString(cfg network.Config) string {
@@ -49,8 +51,8 @@ func ParseSdkIntFromString(s string, separator string) ([]sdk.Int, error) {
 	return parsedInts, nil
 }
 
-func ParseSdkDecFromString(s string, separator string) ([]sdk.Dec, error) {
-	var parsedDec []sdk.Dec
+func ParseSdkDecFromString(s string, separator string) ([]osmomath.Dec, error) {
+	var parsedDec []osmomath.Dec
 	for _, weightStr := range strings.Split(s, separator) {
 		weightStr = strings.TrimSpace(weightStr)
 

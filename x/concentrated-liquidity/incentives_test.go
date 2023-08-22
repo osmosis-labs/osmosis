@@ -121,16 +121,16 @@ var (
 )
 
 type ExpectedUptimes struct {
-	emptyExpectedAccumValues     []sdk.DecCoins
-	fiveHundredAccumValues       []sdk.DecCoins
-	hundredTokensSingleDenom     []sdk.DecCoins
-	hundredTokensMultiDenom      []sdk.DecCoins
-	twoHundredTokensMultiDenom   []sdk.DecCoins
-	threeHundredTokensMultiDenom []sdk.DecCoins
-	fourHundredTokensMultiDenom  []sdk.DecCoins
-	sixHundredTokensMultiDenom   []sdk.DecCoins
-	varyingTokensSingleDenom     []sdk.DecCoins
-	varyingTokensMultiDenom      []sdk.DecCoins
+	emptyExpectedAccumValues     []osmomath.DecCoins
+	fiveHundredAccumValues       []osmomath.DecCoins
+	hundredTokensSingleDenom     []osmomath.DecCoins
+	hundredTokensMultiDenom      []osmomath.DecCoins
+	twoHundredTokensMultiDenom   []osmomath.DecCoins
+	threeHundredTokensMultiDenom []osmomath.DecCoins
+	fourHundredTokensMultiDenom  []osmomath.DecCoins
+	sixHundredTokensMultiDenom   []osmomath.DecCoins
+	varyingTokensSingleDenom     []osmomath.DecCoins
+	varyingTokensMultiDenom      []osmomath.DecCoins
 }
 
 // getExpectedUptimes returns a base set of expected values for testing based on the number
@@ -138,15 +138,15 @@ type ExpectedUptimes struct {
 // of incentives-related tests if the supported uptimes are ever changed.
 func getExpectedUptimes() ExpectedUptimes {
 	expUptimes := ExpectedUptimes{
-		emptyExpectedAccumValues:     []sdk.DecCoins{},
-		hundredTokensSingleDenom:     []sdk.DecCoins{},
-		hundredTokensMultiDenom:      []sdk.DecCoins{},
-		twoHundredTokensMultiDenom:   []sdk.DecCoins{},
-		threeHundredTokensMultiDenom: []sdk.DecCoins{},
-		fourHundredTokensMultiDenom:  []sdk.DecCoins{},
-		sixHundredTokensMultiDenom:   []sdk.DecCoins{},
-		varyingTokensSingleDenom:     []sdk.DecCoins{},
-		varyingTokensMultiDenom:      []sdk.DecCoins{},
+		emptyExpectedAccumValues:     []osmomath.DecCoins{},
+		hundredTokensSingleDenom:     []osmomath.DecCoins{},
+		hundredTokensMultiDenom:      []osmomath.DecCoins{},
+		twoHundredTokensMultiDenom:   []osmomath.DecCoins{},
+		threeHundredTokensMultiDenom: []osmomath.DecCoins{},
+		fourHundredTokensMultiDenom:  []osmomath.DecCoins{},
+		sixHundredTokensMultiDenom:   []osmomath.DecCoins{},
+		varyingTokensSingleDenom:     []osmomath.DecCoins{},
+		varyingTokensMultiDenom:      []osmomath.DecCoins{},
 	}
 	for i := range types.SupportedUptimes {
 		expUptimes.emptyExpectedAccumValues = append(expUptimes.emptyExpectedAccumValues, cl.EmptyCoins)
@@ -164,7 +164,7 @@ func getExpectedUptimes() ExpectedUptimes {
 }
 
 // Helper for converting raw DecCoins accum values to pool proto compatible UptimeTrackers
-func wrapUptimeTrackers(accumValues []sdk.DecCoins) []model.UptimeTracker {
+func wrapUptimeTrackers(accumValues []osmomath.DecCoins) []model.UptimeTracker {
 	wrappedUptimeTrackers := []model.UptimeTracker{}
 	for _, accumValue := range accumValues {
 		wrappedUptimeTrackers = append(wrappedUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: accumValue})
@@ -174,7 +174,7 @@ func wrapUptimeTrackers(accumValues []sdk.DecCoins) []model.UptimeTracker {
 }
 
 // expectedIncentivesFromRate calculates the amount of incentives we expect to accrue based on the rate and time elapsed
-func expectedIncentivesFromRate(denom string, rate sdk.Dec, timeElapsed time.Duration, qualifyingLiquidity sdk.Dec) sdk.DecCoin {
+func expectedIncentivesFromRate(denom string, rate osmomath.Dec, timeElapsed time.Duration, qualifyingLiquidity osmomath.Dec) osmomath.DecCoin {
 	timeInSec := sdk.NewDec(int64(timeElapsed)).Quo(sdk.MustNewDecFromStr("1000000000"))
 	amount := rate.Mul(timeInSec).QuoTruncate(qualifyingLiquidity)
 
@@ -187,7 +187,7 @@ func expectedIncentivesFromRate(denom string, rate sdk.Dec, timeElapsed time.Dur
 // towards result. Takes in a multiplier parameter for further versatility in testing.
 //
 // Returns value as truncated sdk.Coins as the primary use of this helper is testing higher level incentives functions such as claiming.
-func expectedIncentivesFromUptimeGrowth(uptimeGrowths []sdk.DecCoins, positionShares sdk.Dec, timeInPool time.Duration, multiplier sdk.Int) sdk.Coins {
+func expectedIncentivesFromUptimeGrowth(uptimeGrowths []osmomath.DecCoins, positionShares osmomath.Dec, timeInPool time.Duration, multiplier sdk.Int) sdk.Coins {
 	// Sum up rewards from all inputs
 	totalRewards := sdk.Coins(nil)
 	for uptimeIndex, uptimeGrowth := range uptimeGrowths {
@@ -210,7 +210,7 @@ func chargeIncentiveRecord(incentiveRecord types.IncentiveRecord, timeElapsed ti
 }
 
 // Helper for adding a predetermined amount to each global uptime accum in clPool
-func addToUptimeAccums(ctx sdk.Context, poolId uint64, clKeeper *cl.Keeper, addValues []sdk.DecCoins) error {
+func addToUptimeAccums(ctx sdk.Context, poolId uint64, clKeeper *cl.Keeper, addValues []osmomath.DecCoins) error {
 	poolUptimeAccumulators, err := clKeeper.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return err
@@ -229,7 +229,7 @@ func withDenom(record types.IncentiveRecord, denom string) types.IncentiveRecord
 	return record
 }
 
-func withAmount(record types.IncentiveRecord, amount sdk.Dec) types.IncentiveRecord {
+func withAmount(record types.IncentiveRecord, amount osmomath.Dec) types.IncentiveRecord {
 	record.IncentiveRecordBody.RemainingCoin.Amount = amount
 
 	return record
@@ -247,7 +247,7 @@ func withMinUptime(record types.IncentiveRecord, minUptime time.Duration) types.
 	return record
 }
 
-func withEmissionRate(record types.IncentiveRecord, emissionRate sdk.Dec) types.IncentiveRecord {
+func withEmissionRate(record types.IncentiveRecord, emissionRate osmomath.Dec) types.IncentiveRecord {
 	record.IncentiveRecordBody.EmissionRate = emissionRate
 
 	return record
@@ -265,7 +265,7 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 	type initUptimeAccumTest struct {
 		poolId              uint64
 		initializePoolAccum bool
-		expectedAccumValues []sdk.DecCoins
+		expectedAccumValues []osmomath.DecCoins
 
 		expectedPass bool
 	}
@@ -285,7 +285,7 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 		"pool not initialized": {
 			initializePoolAccum: false,
 			poolId:              defaultPoolId,
-			expectedAccumValues: []sdk.DecCoins{},
+			expectedAccumValues: []osmomath.DecCoins{},
 			expectedPass:        false,
 		},
 	}
@@ -309,8 +309,8 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 					// Ensure number of uptime accumulators match supported uptimes
 					s.Require().Equal(len(tc.expectedAccumValues), len(poolUptimeAccumulators))
 
-					// Ensure that each uptime was initialized to the correct value (sdk.DecCoins(nil))
-					accumValues := []sdk.DecCoins{}
+					// Ensure that each uptime was initialized to the correct value (osmomath.DecCoins(nil))
+					accumValues := []osmomath.DecCoins{}
 					for _, accum := range poolUptimeAccumulators {
 						accumValues = append(accumValues, accum.GetValue())
 					}
@@ -378,9 +378,9 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 	type initUptimeAccumTest struct {
 		poolId               uint64
 		initializePoolAccums bool
-		addedAccumValues     []sdk.DecCoins
+		addedAccumValues     []osmomath.DecCoins
 		numTimesAdded        int
-		expectedAccumValues  []sdk.DecCoins
+		expectedAccumValues  []osmomath.DecCoins
 
 		expectedPass bool
 	}
@@ -438,7 +438,7 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 			poolId:               defaultPoolId,
 			addedAccumValues:     expectedUptimes.hundredTokensSingleDenom,
 			numTimesAdded:        1,
-			expectedAccumValues:  []sdk.DecCoins{},
+			expectedAccumValues:  []osmomath.DecCoins{},
 			expectedPass:         false,
 		},
 	}
@@ -475,7 +475,7 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 					// ensure number of uptime accumulators match supported uptimes
 					s.Require().Equal(len(tc.expectedAccumValues), len(poolUptimeAccumulatorValues))
 
-					// ensure that each uptime was initialized to the correct value (sdk.DecCoins(nil))
+					// ensure that each uptime was initialized to the correct value (osmomath.DecCoins(nil))
 					s.Require().Equal(tc.expectedAccumValues, poolUptimeAccumulatorValues)
 				} else {
 					s.Require().Error(err)
@@ -504,12 +504,12 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 	type calcAccruedIncentivesTest struct {
 		poolId               uint64
 		accumUptime          time.Duration
-		qualifyingLiquidity  sdk.Dec
+		qualifyingLiquidity  osmomath.Dec
 		timeElapsed          time.Duration
 		poolIncentiveRecords []types.IncentiveRecord
 		recordsCleared       bool
 
-		expectedResult           sdk.DecCoins
+		expectedResult           osmomath.DecCoins
 		expectedIncentiveRecords []types.IncentiveRecord
 		expectedPass             bool
 	}
@@ -521,7 +521,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
 
-			expectedResult: sdk.DecCoins{
+			expectedResult: osmomath.DecCoins{
 				expectedIncentivesFromRate(incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom, incentiveRecordOne.IncentiveRecordBody.EmissionRate, time.Hour, sdk.NewDec(100)),
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{chargeIncentiveRecord(incentiveRecordOne, time.Hour)},
@@ -534,7 +534,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOneWithStartTimeAfterBlockTime},
 
-			expectedResult:           sdk.DecCoins{},
+			expectedResult:           osmomath.DecCoins{},
 			expectedIncentiveRecords: []types.IncentiveRecord{incentiveRecordOneWithStartTimeAfterBlockTime},
 			expectedPass:             true,
 		},
@@ -545,7 +545,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo},
 
-			expectedResult: sdk.DecCoins{
+			expectedResult: osmomath.DecCoins{
 				// We only expect the first incentive record to qualify
 				expectedIncentivesFromRate(incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom, incentiveRecordOne.IncentiveRecordBody.EmissionRate, time.Hour, sdk.NewDec(100)),
 			},
@@ -570,7 +570,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			recordsCleared: true,
 
 			// We expect the fully incentive amount to be emitted
-			expectedResult: sdk.DecCoins{
+			expectedResult: osmomath.DecCoins{
 				sdk.NewDecCoinFromDec(incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom, incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Amount.QuoTruncate(sdk.NewDec(123))),
 			},
 
@@ -587,7 +587,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
 
-			expectedResult:           sdk.DecCoins{},
+			expectedResult:           osmomath.DecCoins{},
 			expectedIncentiveRecords: []types.IncentiveRecord{},
 			expectedPass:             false,
 		},
@@ -598,7 +598,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			timeElapsed:          time.Duration(0),
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
 
-			expectedResult:           sdk.DecCoins{},
+			expectedResult:           osmomath.DecCoins{},
 			expectedIncentiveRecords: []types.IncentiveRecord{},
 			expectedPass:             false,
 		},
@@ -629,7 +629,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOneWithDifferentStartTime, incentiveRecordOneWithDifferentDenom},
 
-			expectedResult: sdk.DecCoins{
+			expectedResult: osmomath.DecCoins{
 				// We expect both incentive record to qualify
 				expectedIncentivesFromRate(incentiveRecordOneWithDifferentStartTime.IncentiveRecordBody.RemainingCoin.Denom, incentiveRecordOne.IncentiveRecordBody.EmissionRate, time.Hour, sdk.NewDec(100)),
 				expectedIncentivesFromRate(incentiveRecordOneWithDifferentDenom.IncentiveRecordBody.RemainingCoin.Denom, incentiveRecordOne.IncentiveRecordBody.EmissionRate, time.Hour, sdk.NewDec(100)),
@@ -649,7 +649,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordOneWithDifferentMinUpTime},
 
-			expectedResult: sdk.DecCoins{
+			expectedResult: osmomath.DecCoins{
 				// We expect first incentive record to qualify
 				expectedIncentivesFromRate(incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom, incentiveRecordOne.IncentiveRecordBody.EmissionRate, time.Hour, sdk.NewDec(100)),
 			},
@@ -668,7 +668,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordOneWithDifferentDenom},
 
-			expectedResult: sdk.DecCoins{
+			expectedResult: osmomath.DecCoins{
 				// We expect both incentive record to qualify
 				expectedIncentivesFromRate(incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom, incentiveRecordOne.IncentiveRecordBody.EmissionRate, time.Hour, sdk.NewDec(100)),
 				expectedIncentivesFromRate(incentiveRecordOneWithDifferentDenom.IncentiveRecordBody.RemainingCoin.Denom, incentiveRecordOne.IncentiveRecordBody.EmissionRate, time.Hour, sdk.NewDec(100)),
@@ -737,7 +737,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 	})
 }
 
-func (s *KeeperTestSuite) setupBalancerPoolWithFractionLocked(pa []balancer.PoolAsset, fraction sdk.Dec) uint64 {
+func (s *KeeperTestSuite) setupBalancerPoolWithFractionLocked(pa []balancer.PoolAsset, fraction osmomath.Dec) uint64 {
 	balancerPoolId := s.PrepareCustomBalancerPool(pa, defaultBalancerPoolParams)
 	longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
 	s.Require().NoError(err)
@@ -768,7 +768,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 		expectedError            error
 	}
 
-	validateResult := func(ctx sdk.Context, err error, tc updateAccumToNow, balancerPoolId, poolId uint64, initUptimeAccumValues []sdk.DecCoins, qualifyingBalancerLiquidity sdk.Dec, qualifyingLiquidity sdk.Dec) []sdk.DecCoins {
+	validateResult := func(ctx sdk.Context, err error, tc updateAccumToNow, balancerPoolId, poolId uint64, initUptimeAccumValues []osmomath.DecCoins, qualifyingBalancerLiquidity osmomath.Dec, qualifyingLiquidity osmomath.Dec) []osmomath.DecCoins {
 		if tc.expectedError != nil {
 			s.Require().ErrorContains(err, tc.expectedError.Error())
 
@@ -793,7 +793,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 		// Calculate expected uptime deltas using qualifying liquidity deltas.
 		// Recall that uptime accumulators track emitted incentives / qualifying liquidity.
 		// Note: we test on all supported uptimes to ensure robustness, since even if only a subset is authorized they all technically get updated.
-		expectedUptimeDeltas := []sdk.DecCoins{}
+		expectedUptimeDeltas := []osmomath.DecCoins{}
 		for _, curSupportedUptime := range types.SupportedUptimes {
 			// Calculate expected incentives for the current uptime by emitting incentives from
 			// all incentive records to their respective uptime accumulators in the pool.
@@ -1181,7 +1181,7 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOppositeDirectionOfLastTrave
 
 	type getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick struct {
 		tick                            int64
-		expectedUptimeAccumulatorValues []sdk.DecCoins
+		expectedUptimeAccumulatorValues []osmomath.DecCoins
 	}
 	tests := map[string]getInitialUptimeGrowthOppositeDirectionOfLastTraversalForTick{
 		"uptime growth for tick <= currentTick": {
@@ -1231,12 +1231,12 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthRange() {
 		lowerTick                    int64
 		upperTick                    int64
 		currentTick                  int64
-		lowerTickUptimeGrowthOutside []sdk.DecCoins
-		upperTickUptimeGrowthOutside []sdk.DecCoins
-		globalUptimeGrowth           []sdk.DecCoins
+		lowerTickUptimeGrowthOutside []osmomath.DecCoins
+		upperTickUptimeGrowthOutside []osmomath.DecCoins
+		globalUptimeGrowth           []osmomath.DecCoins
 
-		expectedUptimeGrowthInside  []sdk.DecCoins
-		expectedUptimeGrowthOutside []sdk.DecCoins
+		expectedUptimeGrowthInside  []osmomath.DecCoins
+		expectedUptimeGrowthOutside []osmomath.DecCoins
 	}
 
 	tests := map[string]uptimeGrowthTest{
@@ -1561,22 +1561,22 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 	}
 
 	tests := map[string]struct {
-		positionLiquidity sdk.Dec
+		positionLiquidity osmomath.Dec
 
 		lowerTick               tick
 		upperTick               tick
 		positionId              uint64
 		currentTickIndex        int64
-		globalUptimeAccumValues []sdk.DecCoins
+		globalUptimeAccumValues []osmomath.DecCoins
 
 		// For testing updates on existing liquidity
 		existingPosition  bool
 		newLowerTick      tick
 		newUpperTick      tick
-		addToGlobalAccums []sdk.DecCoins
+		addToGlobalAccums []osmomath.DecCoins
 
-		expectedInitAccumValue   []sdk.DecCoins
-		expectedUnclaimedRewards []sdk.DecCoins
+		expectedInitAccumValue   []osmomath.DecCoins
+		expectedUnclaimedRewards []osmomath.DecCoins
 		expectedErr              error
 	}{
 		// New position tests
@@ -1713,7 +1713,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 
 			// We set up the global accum values such that the growth inside is equal to 100 of each denom
 			// for each uptime tracker. Let the uptime growth inside (UGI) = 100
-			globalUptimeAccumValues: []sdk.DecCoins{
+			globalUptimeAccumValues: []osmomath.DecCoins{
 				sdk.NewDecCoins(
 					// 100 + 100 + UGI = 300
 					sdk.NewDecCoin("bar", sdk.NewInt(300)),
@@ -1871,7 +1871,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		owner       sdk.AccAddress
 		lowerTick   int64
 		upperTick   int64
-		liquidity   sdk.Dec
+		liquidity   osmomath.Dec
 		joinTime    time.Time
 		collectTime time.Time
 		positionId  uint64
@@ -1891,9 +1891,9 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 
 	tests := map[string]struct {
 		// setup parameters
-		existingAccumLiquidity   []sdk.Dec
-		addedUptimeGrowthInside  []sdk.DecCoins
-		addedUptimeGrowthOutside []sdk.DecCoins
+		existingAccumLiquidity   []osmomath.Dec
+		addedUptimeGrowthInside  []osmomath.DecCoins
+		addedUptimeGrowthOutside []osmomath.DecCoins
 		currentTick              int64
 		numPositions             int
 
@@ -2295,7 +2295,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		},
 		"other liquidity on uptime accums: (lower < curr < upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick: 1,
-			existingAccumLiquidity: []sdk.Dec{
+			existingAccumLiquidity: []osmomath.Dec{
 				sdk.NewDec(99900123432),
 				sdk.NewDec(18942),
 				sdk.NewDec(0),
@@ -2315,7 +2315,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		},
 		"multiple positions in same range: (lower < curr < upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick: 1,
-			existingAccumLiquidity: []sdk.Dec{
+			existingAccumLiquidity: []osmomath.Dec{
 				sdk.NewDec(99900123432),
 				sdk.NewDec(18942),
 				sdk.NewDec(0),
@@ -2818,8 +2818,8 @@ func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
 	invalidPositionKey := types.KeySpreadRewardPositionAccumulator(2)
 	tests := map[string]struct {
 		poolId             uint64
-		growthInside       sdk.DecCoins
-		growthOutside      sdk.DecCoins
+		growthInside       osmomath.DecCoins
+		growthOutside      osmomath.DecCoins
 		invalidPositionKey bool
 		expectError        error
 	}{
@@ -2887,12 +2887,12 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 	uptimeHelper := getExpectedUptimes()
 	defaultSender := s.TestAccs[0]
 	tests := map[string]struct {
-		numShares         sdk.Dec
+		numShares         osmomath.Dec
 		positionIdCreate  uint64
 		positionIdClaim   uint64
 		defaultJoinTime   bool
-		growthInside      []sdk.DecCoins
-		growthOutside     []sdk.DecCoins
+		growthInside      []osmomath.DecCoins
+		growthOutside     []osmomath.DecCoins
 		forfeitIncentives bool
 		expectedError     error
 	}{
@@ -3063,7 +3063,7 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 		blockTimeElapsed                  time.Duration
 		minUptimeIncentiveRecord          time.Duration
 		expectedCoins                     sdk.Coins
-		expectedAccumulatorValuePostClaim sdk.DecCoins
+		expectedAccumulatorValuePostClaim osmomath.DecCoins
 	}{
 		{
 			name:                     "Claim with same blocktime",
@@ -3472,8 +3472,8 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		// defaults to defaultBalancerAssets
 		balancerPoolAssets []balancer.PoolAsset
 		// defaults sdk.OneDec()
-		portionOfSharesBonded        sdk.Dec
-		balancerSharesRewardDiscount sdk.Dec
+		portionOfSharesBonded        osmomath.Dec
+		balancerSharesRewardDiscount osmomath.Dec
 
 		noCanonicalBalancerPool bool
 		flipAsset0And1          bool
@@ -3486,10 +3486,10 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		if len(tc.balancerPoolAssets) == 0 {
 			tc.balancerPoolAssets = defaultBalancerAssets
 		}
-		if (tc.portionOfSharesBonded == sdk.Dec{}) {
+		if (tc.portionOfSharesBonded == osmomath.Dec{}) {
 			tc.portionOfSharesBonded = sdk.NewDec(1)
 		}
-		if (tc.balancerSharesRewardDiscount == sdk.Dec{}) {
+		if (tc.balancerSharesRewardDiscount == osmomath.Dec{}) {
 			tc.balancerSharesRewardDiscount = sdk.ZeroDec()
 		}
 		return tc
@@ -3743,7 +3743,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 	tests := map[string]struct {
 		existingConcentratedLiquidity sdk.Coins
 		balancerPoolAssets            []balancer.PoolAsset
-		uptimeGrowth                  []sdk.DecCoins
+		uptimeGrowth                  []osmomath.DecCoins
 
 		concentratedPoolDoesNotExist bool
 		balancerPoolDoesNotExist     bool
@@ -4077,11 +4077,11 @@ func (s *KeeperTestSuite) prepareSpreadRewardsAccumulator() *accum.AccumulatorOb
 func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
 	oldPos := "old"
 	newPos := "new"
-	emptyCoins := sdk.DecCoins(nil)
+	emptyCoins := osmomath.DecCoins(nil)
 
 	tests := map[string]struct {
-		growthOutside            sdk.DecCoins
-		expectedUnclaimedRewards sdk.DecCoins
+		growthOutside            osmomath.DecCoins
+		expectedUnclaimedRewards osmomath.DecCoins
 		numShares                int64
 	}{
 		"empty growth outside": {
@@ -4162,17 +4162,17 @@ func (s *KeeperTestSuite) TestGetUptimeTrackerValues() {
 	testCases := []struct {
 		name           string
 		input          []model.UptimeTracker
-		expectedOutput []sdk.DecCoins
+		expectedOutput []osmomath.DecCoins
 	}{
 		{
 			name:           "Empty uptime tracker",
 			input:          []model.UptimeTracker{},
-			expectedOutput: []sdk.DecCoins{},
+			expectedOutput: []osmomath.DecCoins{},
 		},
 		{
 			name:           "One uptime tracker",
 			input:          []model.UptimeTracker{{UptimeGrowthOutside: foo100}},
-			expectedOutput: []sdk.DecCoins{foo100},
+			expectedOutput: []osmomath.DecCoins{foo100},
 		},
 		{
 			name: "Multiple uptime trackers",
@@ -4181,7 +4181,7 @@ func (s *KeeperTestSuite) TestGetUptimeTrackerValues() {
 				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("fooa", sdk.NewInt(100)))},
 				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("foob", sdk.NewInt(100)))},
 			},
-			expectedOutput: []sdk.DecCoins{
+			expectedOutput: []osmomath.DecCoins{
 				foo100,
 				sdk.NewDecCoins(sdk.NewDecCoin("fooa", sdk.NewInt(100))),
 				sdk.NewDecCoins(sdk.NewDecCoin("foob", sdk.NewInt(100))),

@@ -86,11 +86,11 @@ func (p Pool) GetId() uint64 {
 	return p.Id
 }
 
-func (p Pool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
+func (p Pool) GetSpreadFactor(ctx sdk.Context) osmomath.Dec {
 	return p.PoolParams.SwapFee
 }
 
-func (p Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
+func (p Pool) GetExitFee(ctx sdk.Context) osmomath.Dec {
 	return p.PoolParams.ExitFee
 }
 
@@ -143,7 +143,7 @@ func (p Pool) scaleCoin(input sdk.Coin, roundingDirection osmomath.RoundingDirec
 
 // getDescaledPoolAmt descales the passed in amount
 // by the scaling factor of the passed in denom
-func (p Pool) getDescaledPoolAmt(denom string, amount osmomath.BigDec) sdk.Dec {
+func (p Pool) getDescaledPoolAmt(denom string, amount osmomath.BigDec) osmomath.Dec {
 	scalingFactor := p.GetScalingFactorByDenom(denom)
 
 	return amount.MulInt64(int64(scalingFactor)).SDKDec()
@@ -239,7 +239,7 @@ func (p *Pool) updatePoolForJoin(tokensIn sdk.Coins, newShares sdk.Int) {
 
 // TODO: These should all get moved to amm.go
 // CalcOutAmtGivenIn calculates expected output amount given input token
-func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, spreadFactor sdk.Dec) (tokenOut sdk.Coin, err error) {
+func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, spreadFactor osmomath.Dec) (tokenOut sdk.Coin, err error) {
 	if tokenIn.Len() != 1 {
 		return sdk.Coin{}, errors.New("stableswap CalcOutAmtGivenIn: tokenIn is of wrong length")
 	}
@@ -258,7 +258,7 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 }
 
 // SwapOutAmtGivenIn executes a swap given a desired input amount
-func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, spreadFactor sdk.Dec) (tokenOut sdk.Coin, err error) {
+func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, spreadFactor osmomath.Dec) (tokenOut sdk.Coin, err error) {
 	if err = validatePoolLiquidity(p.PoolLiquidity.Add(tokenIn...), p.ScalingFactors); err != nil {
 		return sdk.Coin{}, err
 	}
@@ -274,7 +274,7 @@ func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDen
 }
 
 // CalcInAmtGivenOut calculates input amount needed to receive given output
-func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, spreadFactor sdk.Dec) (tokenIn sdk.Coin, err error) {
+func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, spreadFactor osmomath.Dec) (tokenIn sdk.Coin, err error) {
 	if tokenOut.Len() != 1 {
 		return sdk.Coin{}, errors.New("stableswap CalcInAmtGivenOut: tokenOut is of wrong length")
 	}
@@ -295,7 +295,7 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 }
 
 // SwapInAmtGivenOut executes a swap given a desired output amount
-func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, spreadFactor sdk.Dec) (tokenIn sdk.Coin, err error) {
+func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, spreadFactor osmomath.Dec) (tokenIn sdk.Coin, err error) {
 	tokenIn, err = p.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, spreadFactor)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -312,7 +312,7 @@ func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 
 // SpotPrice calculates the approximate amount of `baseDenom` one would receive for
 // an input dx of `quoteDenom` (to simplify calculations, we approximate dx = 1)
-func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (sdk.Dec, error) {
+func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (osmomath.Dec, error) {
 	return p.spotPrice(quoteAssetDenom, baseAssetDenom)
 }
 
@@ -322,7 +322,7 @@ func (p Pool) Copy() Pool {
 	return p2
 }
 
-func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor osmomath.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
 	pCopy := p.Copy()
 	return pCopy.joinPoolSharesInternal(ctx, tokensIn, spreadFactor)
 }
@@ -332,7 +332,7 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, spreadFac
 //
 // Returns the number of shares created, the amount of coins actually joined into the pool as not all may tokens may be joinable.
 // If an all-asset join is not possible, returns an error.
-func (p Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+func (p Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor osmomath.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
 	// ensure that there aren't too many or too few assets in `tokensIn`
 	if tokensIn.Len() != p.NumAssets() || !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("no-swap joins require LP'ing with all assets in pool")
@@ -355,12 +355,12 @@ func (p Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, spre
 	return numShares, tokensJoined, nil
 }
 
-func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor sdk.Dec) (sdk.Int, error) {
+func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor osmomath.Dec) (sdk.Int, error) {
 	numShares, _, err := p.joinPoolSharesInternal(ctx, tokensIn, spreadFactor)
 	return numShares, err
 }
 
-func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor sdk.Dec) (sdk.Int, error) {
+func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor osmomath.Dec) (sdk.Int, error) {
 	newShares, tokensJoined, err := p.CalcJoinPoolNoSwapShares(ctx, tokensIn, spreadFactor)
 	if err != nil {
 		return sdk.Int{}, err
@@ -371,7 +371,7 @@ func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor 
 	return newShares, nil
 }
 
-func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
+func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee osmomath.Dec) (exitingCoins sdk.Coins, err error) {
 	exitingCoins, err = p.CalcExitPoolCoinsFromShares(ctx, exitingShares, exitFee)
 	if err != nil {
 		return sdk.Coins{}, err
@@ -387,7 +387,7 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 	return exitingCoins, nil
 }
 
-func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
+func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int, exitFee osmomath.Dec) (exitingCoins sdk.Coins, err error) {
 	return cfmm_common.CalcExitPool(ctx, &p, exitingShares, exitFee)
 }
 

@@ -28,11 +28,11 @@ var emptyOptions = &accum.Options{}
 func (k Keeper) getOrInitPosition(
 	ctx sdk.Context,
 	positionId uint64,
-) (sdk.Dec, error) {
+) (osmomath.Dec, error) {
 	if k.hasPosition(ctx, positionId) {
 		positionLiquidity, err := k.GetPositionLiquidity(ctx, positionId)
 		if err != nil {
-			return sdk.Dec{}, err
+			return osmomath.Dec{}, err
 		}
 		return positionLiquidity, nil
 	}
@@ -50,7 +50,7 @@ func (k Keeper) initOrUpdatePosition(
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
-	liquidityDelta sdk.Dec,
+	liquidityDelta osmomath.Dec,
 	joinTime time.Time,
 	positionId uint64,
 ) (err error) {
@@ -142,10 +142,10 @@ func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, prefix []byte, poolI
 }
 
 // GetPositionLiquidity checks if the provided positionId exists. Returns position liquidity if found. Error otherwise.
-func (k Keeper) GetPositionLiquidity(ctx sdk.Context, positionId uint64) (sdk.Dec, error) {
+func (k Keeper) GetPositionLiquidity(ctx sdk.Context, positionId uint64) (osmomath.Dec, error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	return position.Liquidity, nil
@@ -289,7 +289,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
 	joinTime time.Time,
-	liquidity sdk.Dec,
+	liquidity osmomath.Dec,
 	positionId uint64,
 	underlyingLockId uint64,
 ) error {
@@ -660,28 +660,28 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 // - all positions are unlocked
 // NOTE: It is only used by fungifyChargedPosition which we disabled for launch.
 // nolint: unused
-func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64, fullyChargedDuration time.Duration) (uint64, int64, int64, sdk.Dec, error) {
+func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64, fullyChargedDuration time.Duration) (uint64, int64, int64, osmomath.Dec, error) {
 	totalLiquidity := sdk.ZeroDec()
 
 	// Check we meet the minimum number of positions to combine.
 	if len(positionIds) < MinNumPositions {
-		return 0, 0, 0, sdk.Dec{}, types.PositionQuantityTooLowError{MinNumPositions: MinNumPositions, NumPositions: len(positionIds)}
+		return 0, 0, 0, osmomath.Dec{}, types.PositionQuantityTooLowError{MinNumPositions: MinNumPositions, NumPositions: len(positionIds)}
 	}
 
 	// Note the first position's params to use as the base for comparison.
 	basePosition, err := k.GetPosition(ctx, positionIds[0])
 	if err != nil {
-		return 0, 0, 0, sdk.Dec{}, err
+		return 0, 0, 0, osmomath.Dec{}, err
 	}
 
 	for i, positionId := range positionIds {
 		position, err := k.GetPosition(ctx, positionId)
 		if err != nil {
-			return 0, 0, 0, sdk.Dec{}, err
+			return 0, 0, 0, osmomath.Dec{}, err
 		}
 		// Check that the caller owns each of the positions.
 		if position.Address != owner.String() {
-			return 0, 0, 0, sdk.Dec{}, types.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: owner.String()}
+			return 0, 0, 0, osmomath.Dec{}, types.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: owner.String()}
 		}
 
 		// Check that each of the positions have no underlying lock.
@@ -690,27 +690,27 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		// it will not return an error but the connection will be persisted until a mutative method is called.
 		positionHasActiveUnderlyingLock, lockId, err := k.PositionHasActiveUnderlyingLock(ctx, positionId)
 		if err != nil {
-			return 0, 0, 0, sdk.Dec{}, err
+			return 0, 0, 0, osmomath.Dec{}, err
 		}
 		if positionHasActiveUnderlyingLock {
 			// Lock is not mature, return error.
-			return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{PositionId: position.PositionId, LockId: lockId}
+			return 0, 0, 0, osmomath.Dec{}, types.LockNotMatureError{PositionId: position.PositionId, LockId: lockId}
 		}
 
 		// Check that each of the positions are fully charged.
 		fullyChargedMinTimestamp := position.JoinTime.Add(fullyChargedDuration)
 		if fullyChargedMinTimestamp.After(ctx.BlockTime()) {
-			return 0, 0, 0, sdk.Dec{}, types.PositionNotFullyChargedError{PositionId: position.PositionId, PositionJoinTime: position.JoinTime, FullyChargedMinTimestamp: fullyChargedMinTimestamp}
+			return 0, 0, 0, osmomath.Dec{}, types.PositionNotFullyChargedError{PositionId: position.PositionId, PositionJoinTime: position.JoinTime, FullyChargedMinTimestamp: fullyChargedMinTimestamp}
 		}
 
 		// No need to check the first position against itself.
 		if i > 0 {
 			// Check that each of the positions are in the same pool and tick range.
 			if position.PoolId != basePosition.PoolId {
-				return 0, 0, 0, sdk.Dec{}, types.PositionsNotInSamePoolError{Position1PoolId: position.PoolId, Position2PoolId: basePosition.PoolId}
+				return 0, 0, 0, osmomath.Dec{}, types.PositionsNotInSamePoolError{Position1PoolId: position.PoolId, Position2PoolId: basePosition.PoolId}
 			}
 			if position.LowerTick != basePosition.LowerTick || position.UpperTick != basePosition.UpperTick {
-				return 0, 0, 0, sdk.Dec{}, types.PositionsNotInSameTickRangeError{Position1TickLower: position.LowerTick, Position1TickUpper: position.UpperTick, Position2TickLower: basePosition.LowerTick, Position2TickUpper: basePosition.UpperTick}
+				return 0, 0, 0, osmomath.Dec{}, types.PositionsNotInSameTickRangeError{Position1TickLower: position.LowerTick, Position1TickUpper: position.UpperTick, Position2TickLower: basePosition.LowerTick, Position2TickUpper: basePosition.UpperTick}
 			}
 		}
 
@@ -819,22 +819,22 @@ func (k Keeper) positionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positi
 // Returns error if:
 // - fails to retrieve data from the store.
 // - there is no full range liquidity in the pool.
-func (k Keeper) GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {
+func (k Keeper) GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (osmomath.Dec, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolIdLiquidityKey := types.KeyFullRangeLiquidityPrefix(poolId)
 	currentTotalFullRangeLiquidity, err := osmoutils.GetDec(store, poolIdLiquidityKey)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 	return currentTotalFullRangeLiquidity, nil
 }
 
 // updateFullRangeLiquidityInPool updates the total liquidity store that is currently in the full range of the pool.
-func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, liquidity sdk.Dec) error {
+func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, liquidity osmomath.Dec) error {
 	store := ctx.KVStore(k.storeKey)
 	// Get previous total liquidity.
 	poolIdLiquidityKey := types.KeyFullRangeLiquidityPrefix(poolId)
-	currentTotalFullRangeLiquidityDecProto := sdk.DecProto{}
+	currentTotalFullRangeLiquidityDecProto := osmomath.DecProto{}
 	found, err := osmoutils.Get(store, poolIdLiquidityKey, &currentTotalFullRangeLiquidityDecProto)
 	if err != nil {
 		return err

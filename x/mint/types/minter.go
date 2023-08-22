@@ -13,7 +13,7 @@ var (
 
 // NewMinter returns a new Minter object with the given epoch
 // provisions values.
-func NewMinter(epochProvisions sdk.Dec) Minter {
+func NewMinter(epochProvisions osmomath.Dec) Minter {
 	return Minter{
 		EpochProvisions: epochProvisions,
 	}
@@ -42,7 +42,7 @@ func (m Minter) Validate() error {
 }
 
 // NextEpochProvisions returns the epoch provisions.
-func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
+func (m Minter) NextEpochProvisions(params Params) osmomath.Dec {
 	return m.EpochProvisions.Mul(params.ReductionFactor)
 }
 
@@ -56,7 +56,7 @@ func (m Minter) EpochProvision(params Params) sdk.Coin {
 // GetInflationProvisions returns the inflation provisions.
 // These are calculated as the current epoch provisons * (1 - developer rewards proportion)
 // The returned denom is taken from input parameters.
-func (m Minter) GetInflationProvisions(params Params) sdk.DecCoin {
+func (m Minter) GetInflationProvisions(params Params) osmomath.DecCoin {
 	provisionAmt := m.EpochProvisions.Mul(params.GetInflationProportion())
 	return sdk.NewDecCoinFromDec(params.MintDenom, provisionAmt)
 }
@@ -64,7 +64,7 @@ func (m Minter) GetInflationProvisions(params Params) sdk.DecCoin {
 // GetDeveloperVestingEpochProvisions returns the developer vesting provisions.
 // These are calculated as the current epoch provisons * developer rewards proportion
 // The returned denom is taken from input parameters.
-func (m Minter) GetDeveloperVestingEpochProvisions(params Params) sdk.DecCoin {
+func (m Minter) GetDeveloperVestingEpochProvisions(params Params) osmomath.DecCoin {
 	provisionAmt := m.EpochProvisions.Mul(params.GetDeveloperVestingProportion())
 	return sdk.NewDecCoinFromDec(params.MintDenom, provisionAmt)
 }

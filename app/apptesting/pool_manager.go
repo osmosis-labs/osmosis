@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 	poolmanager "github.com/osmosis-labs/osmosis/v17/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
@@ -53,7 +54,7 @@ func (s *KeeperTestHelper) CreatePoolFromTypeWithCoins(poolType poolmanagertypes
 }
 
 // CreatePoolFromTypeWithCoinsAndSpreadFactor creates a pool with given type, initialized with the given coins as initial liquidity and spread factor.
-func (s *KeeperTestHelper) CreatePoolFromTypeWithCoinsAndSpreadFactor(poolType poolmanagertypes.PoolType, coins sdk.Coins, spreadFactor sdk.Dec) uint64 {
+func (s *KeeperTestHelper) CreatePoolFromTypeWithCoinsAndSpreadFactor(poolType poolmanagertypes.PoolType, coins sdk.Coins, spreadFactor osmomath.Dec) uint64 {
 	switch poolType {
 	case poolmanagertypes.Balancer:
 		poolId := s.PrepareCustomBalancerPoolFromCoins(coins, balancer.PoolParams{

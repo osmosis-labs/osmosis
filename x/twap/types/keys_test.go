@@ -73,7 +73,7 @@ func TestParseTwapFromBz(t *testing.T) {
 		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
 	}
 
-	withGeomAcc := func(r TwapRecord, acc sdk.Dec) TwapRecord {
+	withGeomAcc := func(r TwapRecord, acc osmomath.Dec) TwapRecord {
 		r.GeometricTwapAccumulator = acc
 		return r
 	}
@@ -87,7 +87,7 @@ func TestParseTwapFromBz(t *testing.T) {
 			false,
 		},
 		"with nil geometric twap accumulator -> set to zero": {
-			withGeomAcc(baseParseRecord, sdk.Dec{}),
+			withGeomAcc(baseParseRecord, osmomath.Dec{}),
 			true,
 		},
 		"with non-nil geometric twap accumulator -> not overwritten": {

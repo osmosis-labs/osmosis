@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
 )
 
@@ -69,7 +70,7 @@ func (s *KeeperTestSuite) TestCheckUndelegateTotalAmount() {
 	valAddrs := s.SetupMultipleValidators(3)
 	tests := []struct {
 		name        string
-		tokenAmt    sdk.Dec
+		tokenAmt    osmomath.Dec
 		existingSet []types.ValidatorPreference
 		expectPass  bool
 	}{
@@ -218,7 +219,7 @@ func (s *KeeperTestSuite) TestIsPreferenceValid() {
 	tests := []struct {
 		name             string
 		valSetPreference []types.ValidatorPreference
-		expectedWeights  []sdk.Dec
+		expectedWeights  []osmomath.Dec
 		expectPass       bool
 	}{
 		{
@@ -241,7 +242,7 @@ func (s *KeeperTestSuite) TestIsPreferenceValid() {
 					Weight:         sdk.MustNewDecFromStr("0.119"), // rounds to = 0.12
 				},
 			},
-			expectedWeights: []sdk.Dec{sdk.NewDecWithPrec(33, 2), sdk.ZeroDec(), sdk.NewDecWithPrec(54, 2), sdk.NewDecWithPrec(12, 2)},
+			expectedWeights: []osmomath.Dec{sdk.NewDecWithPrec(33, 2), sdk.ZeroDec(), sdk.NewDecWithPrec(54, 2), sdk.NewDecWithPrec(12, 2)},
 			expectPass:      true,
 		},
 		{

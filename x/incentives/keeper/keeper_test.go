@@ -48,7 +48,7 @@ func (s *KeeperTestSuite) ValidateNotDistributedGauge(gaugeID uint64) {
 	s.ValidateDistributedGauge(gaugeID, 0, sdk.Coins(nil))
 }
 
-func (s *KeeperTestSuite) ValidateIncentiveRecord(poolId uint64, remainingCoin sdk.DecCoin, emissionRate sdk.Dec, incentiveRecord cltypes.IncentiveRecord) {
+func (s *KeeperTestSuite) ValidateIncentiveRecord(poolId uint64, remainingCoin osmomath.DecCoin, emissionRate osmomath.Dec, incentiveRecord cltypes.IncentiveRecord) {
 	s.Require().Equal(poolId, incentiveRecord.PoolId)
 	s.Require().Equal(emissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
 	s.Require().Equal(types.DefaultConcentratedUptime, incentiveRecord.MinUptime)

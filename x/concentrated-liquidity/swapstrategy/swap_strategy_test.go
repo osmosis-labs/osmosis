@@ -42,14 +42,14 @@ var (
 	defaultSqrtPriceUpper   = sqrt5000
 	defaultAmountOne        = sdk.MustNewDecFromStr("66829187.967824033199646915")
 	defaultAmountZero       = sdk.MustNewDecFromStr("13369.999999999998920002")
-	defaultAmountZeroBigDec = osmomath.MustNewDecFromStr("13369.999999999998920003259839786649584880")
+	defaultAmountZeroBigDec = osmomath.MustNewBigDecFromStr("13369.999999999998920003259839786649584880")
 	defaultLiquidity        = sdk.MustNewDecFromStr("3035764687.503020836176699298")
 	defaultSpreadReward     = sdk.MustNewDecFromStr("0.03")
 	defaultTickSpacing      = uint64(100)
 	defaultAmountReserves   = sdk.NewInt(1_000_000_000)
 	DefaultCoins            = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves))
 	oneULPDec               = sdk.SmallestDec()
-	oneULPBigDec            = osmomath.SmallestDec()
+	oneULPBigDec            = osmomath.SmallestBigDec()
 )
 
 func TestStrategyTestSuite(t *testing.T) {
@@ -128,18 +128,18 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 	)
 
 	testCases := map[string]struct {
-		sqrtPriceCurrent sdk.Dec
-		sqrtPriceTarget  sdk.Dec
-		liquidity        sdk.Dec
-		amountIn         sdk.Dec
-		amountOut        sdk.Dec
+		sqrtPriceCurrent osmomath.Dec
+		sqrtPriceTarget  osmomath.Dec
+		liquidity        osmomath.Dec
+		amountIn         osmomath.Dec
+		amountOut        osmomath.Dec
 		zeroForOne       bool
-		spreadFactor     sdk.Dec
+		spreadFactor     osmomath.Dec
 
 		expectedSqrtPriceNextOutGivenIn osmomath.BigDec
 		expectedSqrtPriceNextInGivenOut osmomath.BigDec
-		expectedAmountIn                sdk.Dec
-		expectedAmountOut               sdk.Dec
+		expectedAmountIn                osmomath.Dec
+		expectedAmountOut               osmomath.Dec
 	}{
 		"1: one_for_zero__not_equal_target__no_spread_reward": {
 			sqrtPriceCurrent: sqrt5000,                                       // 5000
@@ -151,11 +151,11 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			spreadFactor:     sdk.ZeroDec(),
 
 			// get_next_sqrt_price_from_amount1_in_round_down(liquidity, sqrtPriceCurrent, tokenIn)
-			expectedSqrtPriceNextOutGivenIn: osmomath.MustNewDecFromStr("70.724513183069625078753200000000838853"), // approx 5001.96
+			expectedSqrtPriceNextOutGivenIn: osmomath.MustNewBigDecFromStr("70.724513183069625078753200000000838853"), // approx 5001.96
 
 			// tokenOut = round_sdk_prec_down(calc_amount_zero_delta(liquidity, Decimal('70.724513183069625078753200000000838853'), sqrtPriceCurrent, False))
 			// get_next_sqrt_price_from_amount0_out_round_up(liquidity, sqrtPriceCurrent, tokenOut)
-			expectedSqrtPriceNextInGivenOut: osmomath.MustNewDecFromStr("70.724513183069625078753199315615320286"), // approx 5001.96
+			expectedSqrtPriceNextInGivenOut: osmomath.MustNewBigDecFromStr("70.724513183069625078753199315615320286"), // approx 5001.96
 
 			expectedAmountIn:  sdk.NewDec(42000000),
 			expectedAmountOut: sdk.NewDec(8398),
@@ -170,11 +170,11 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			spreadFactor:     sdk.ZeroDec(),
 
 			// get_next_sqrt_price_from_amount0_in_round_up(liquidity, sqrtPriceCurrent, tokenIn)
-			expectedSqrtPriceNextOutGivenIn: osmomath.MustNewDecFromStr("70.688664163408836319222318760848762802"), // approx 4996.89
+			expectedSqrtPriceNextOutGivenIn: osmomath.MustNewBigDecFromStr("70.688664163408836319222318760848762802"), // approx 4996.89
 
 			// tokenOut = round_sdk_prec_down(calc_amount_one_delta(liquidity, Decimal('70.688664163408836319222318760848762802'), sqrtPriceCurrent, False))
 			// get_next_sqrt_price_from_amount1_out_round_down(liquidity, sqrtPriceCurrent, tokenOut)
-			expectedSqrtPriceNextInGivenOut: osmomath.MustNewDecFromStr("70.688664163408836319222318761064639455"), // approx 4996.89
+			expectedSqrtPriceNextInGivenOut: osmomath.MustNewBigDecFromStr("70.688664163408836319222318761064639455"), // approx 4996.89
 
 			expectedAmountIn:  sdk.NewDec(13370),
 			expectedAmountOut: sdk.NewDec(66829187),
@@ -189,11 +189,11 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 
 			zeroForOne: false,
 			// same as target
-			expectedSqrtPriceNextOutGivenIn: osmomath.MustNewDecFromStr("70.724513183069625078"), // approx 5001.96
+			expectedSqrtPriceNextOutGivenIn: osmomath.MustNewBigDecFromStr("70.724513183069625078"), // approx 5001.96
 
 			// tokenOut = round_sdk_prec_down(calc_amount_zero_delta(liquidity, Decimal('70.724513183069625078'), sqrtPriceCurrent, False))
 			// get_next_sqrt_price_from_amount0_out_round_up(liquidity, sqrtPriceCurrent, tokenOut)
-			expectedSqrtPriceNextInGivenOut: osmomath.MustNewDecFromStr("70.724513183069625077999998811165066229"), // approx 5001.96
+			expectedSqrtPriceNextInGivenOut: osmomath.MustNewBigDecFromStr("70.724513183069625077999998811165066229"), // approx 5001.96
 
 			expectedAmountIn:  sdk.NewDec(42000000),
 			expectedAmountOut: sdk.NewDec(8398),
@@ -208,11 +208,11 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			spreadFactor:     sdk.ZeroDec(),
 
 			// same as target
-			expectedSqrtPriceNextOutGivenIn: osmomath.MustNewDecFromStr("70.688664163408836320"), // approx 4996.89
+			expectedSqrtPriceNextOutGivenIn: osmomath.MustNewBigDecFromStr("70.688664163408836320"), // approx 4996.89
 
 			// tokenOut = round_sdk_prec_down(calc_amount_one_delta(liquidity, Decimal('70.688664163408836320'), sqrtPriceCurrent, False))
 			// get_next_sqrt_price_from_amount1_out_round_down(liquidity, sqrtPriceCurrent, tokenOut)
-			expectedSqrtPriceNextInGivenOut: osmomath.MustNewDecFromStr("70.688664163408836320000000000232703515"), // approx 4996.89
+			expectedSqrtPriceNextInGivenOut: osmomath.MustNewBigDecFromStr("70.688664163408836320000000000232703515"), // approx 4996.89
 
 			expectedAmountIn:  sdk.NewDec(13370),
 			expectedAmountOut: sdk.NewDec(66829187),
@@ -251,7 +251,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 func (suite *StrategyTestSuite) TestGetPriceLimit() {
 	tests := map[string]struct {
 		zeroForOne bool
-		expected   sdk.Dec
+		expected   osmomath.Dec
 	}{
 		"zero for one -> min": {
 			zeroForOne: true,

@@ -93,7 +93,7 @@ func (s *KeeperTestSuite) TestGetProportions() {
 
 	tests := []struct {
 		name          string
-		ratio         sdk.Dec
+		ratio         osmomath.Dec
 		expectedCoin  sdk.Coin
 		expectedError error
 		mintedCoin    sdk.Coin
@@ -326,7 +326,7 @@ func (s *KeeperTestSuite) TestDistributeToModule() {
 
 		recepientModule string
 		mintedCoin      sdk.Coin
-		proportion      sdk.Dec
+		proportion      osmomath.Dec
 
 		expectedError bool
 		expectPanic   bool
@@ -449,7 +449,7 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 		preMintCoin sdk.Coin
 
 		mintedCoin         sdk.Coin
-		proportion         sdk.Dec
+		proportion         osmomath.Dec
 		recepientAddresses []types.WeightedAddress
 
 		expectedError error

@@ -519,7 +519,7 @@ func (n *NodeConfig) QueryConcentratedPooIdLinkFromCFMM(cfmmPoolId uint64) uint6
 	return response.ConcentratedPoolId
 }
 
-func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (sdk.Dec, error) {
+func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (osmomath.Dec, error) {
 	path := "osmosis/twap/v1beta1/ArithmeticTwapToNow"
 
 	bz, err := n.QueryGRPCGateway(
@@ -530,7 +530,7 @@ func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAss
 		"start_time", startTime.Format(time.RFC3339Nano),
 	)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	var response twapqueryproto.ArithmeticTwapToNowResponse
@@ -539,7 +539,7 @@ func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAss
 	return response.ArithmeticTwap, nil
 }
 
-func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (sdk.Dec, error) {
+func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (osmomath.Dec, error) {
 	path := "osmosis/twap/v1beta1/ArithmeticTwap"
 
 	bz, err := n.QueryGRPCGateway(
@@ -551,7 +551,7 @@ func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset st
 		"end_time", endTime.Format(time.RFC3339Nano),
 	)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	var response twapqueryproto.ArithmeticTwapResponse
@@ -560,7 +560,7 @@ func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset st
 	return response.ArithmeticTwap, nil
 }
 
-func (n *NodeConfig) QueryGeometricTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (sdk.Dec, error) {
+func (n *NodeConfig) QueryGeometricTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (osmomath.Dec, error) {
 	path := "osmosis/twap/v1beta1/GeometricTwapToNow"
 
 	bz, err := n.QueryGRPCGateway(
@@ -571,7 +571,7 @@ func (n *NodeConfig) QueryGeometricTwapToNow(poolId uint64, baseAsset, quoteAsse
 		"start_time", startTime.Format(time.RFC3339Nano),
 	)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	var response twapqueryproto.GeometricTwapToNowResponse
@@ -580,7 +580,7 @@ func (n *NodeConfig) QueryGeometricTwapToNow(poolId uint64, baseAsset, quoteAsse
 	return response.GeometricTwap, nil
 }
 
-func (n *NodeConfig) QueryGeometricTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (sdk.Dec, error) {
+func (n *NodeConfig) QueryGeometricTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (osmomath.Dec, error) {
 	path := "osmosis/twap/v1beta1/GeometricTwap"
 
 	bz, err := n.QueryGRPCGateway(
@@ -592,7 +592,7 @@ func (n *NodeConfig) QueryGeometricTwap(poolId uint64, baseAsset, quoteAsset str
 		"end_time", endTime.Format(time.RFC3339Nano),
 	)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	var response twapqueryproto.GeometricTwapResponse

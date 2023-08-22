@@ -12,7 +12,7 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 		testingDistrRecord     []types.DistrRecord
 		mintedCoins            sdk.Coin
 		expectedGaugesBalances []sdk.Coins
-		expectedCommunityPool  sdk.DecCoin
+		expectedCommunityPool  osmomath.DecCoin
 	}{
 		// With minting 15000 stake to module, after AllocateAsset we get:
 		// expectedCommunityPool = 0 (All reward will be transferred to the gauges)

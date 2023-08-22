@@ -25,8 +25,8 @@ func TestBalancerPoolParams(t *testing.T) {
 	// errors or succeeds as intended. Furthermore, it checks that
 	// NewPool panics in the error case.
 	tests := []struct {
-		SpreadFactor sdk.Dec
-		ExitFee      sdk.Dec
+		SpreadFactor osmomath.Dec
+		ExitFee      osmomath.Dec
 		shouldErr    bool
 	}{
 		// Should work

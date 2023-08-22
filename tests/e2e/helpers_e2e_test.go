@@ -22,7 +22,7 @@ var defaultFeePerTx = sdk.NewInt(1000)
 // amountIn - amount being swapped
 // spreadFactor - pool's spread factor
 // poolLiquidity - current pool liquidity
-func calculateSpreadRewardGrowthGlobal(amountIn, spreadFactor, poolLiquidity sdk.Dec) sdk.Dec {
+func calculateSpreadRewardGrowthGlobal(amountIn, spreadFactor, poolLiquidity osmomath.Dec) osmomath.Dec {
 	// First we get total spread reward charge for the swap (ΔY * spreadFactor)
 	spreadRewardChargeTotal := amountIn.Mul(spreadFactor)
 
@@ -36,7 +36,7 @@ func calculateSpreadRewardGrowthGlobal(amountIn, spreadFactor, poolLiquidity sdk
 // spreadRewardGrowthBelow - spread reward growth below lower tick
 // spreadRewardGrowthAbove - spread reward growth above upper tick
 // Formula: spreadRewardGrowthGlobal - spreadRewardGrowthBelowLowerTick - spreadRewardGrowthAboveUpperTick
-func calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGrowthBelow, spreadRewardGrowthAbove sdk.Dec) sdk.Dec {
+func calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGrowthBelow, spreadRewardGrowthAbove osmomath.Dec) osmomath.Dec {
 	return spreadRewardGrowthGlobal.Sub(spreadRewardGrowthBelow).Sub(spreadRewardGrowthAbove)
 }
 
@@ -104,7 +104,7 @@ func (s *IntegrationTestSuite) getChainCfgs() (*chain.Config, *chain.NodeConfig,
 // spreadRewardGrowthAbove - spread reward growth above upper tick
 // spreadRewardGrowthInsideLast - amount of spread reward growth inside range at the time from which we want to calculate the amount of uncollected spread rewards
 // spreadRewardGrowthGlobal - variable for tracking global spread reward growth
-func calculateUncollectedSpreadRewards(positionLiquidity, spreadRewardGrowthBelow, spreadRewardGrowthAbove, spreadRewardGrowthInsideLast sdk.Dec, spreadRewardGrowthGlobal sdk.Dec) sdk.Dec {
+func calculateUncollectedSpreadRewards(positionLiquidity, spreadRewardGrowthBelow, spreadRewardGrowthAbove, spreadRewardGrowthInsideLast osmomath.Dec, spreadRewardGrowthGlobal osmomath.Dec) osmomath.Dec {
 	// Calculating spread reward growth inside range [-1200; 400]
 	spreadRewardGrowthInside := calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGrowthBelow, spreadRewardGrowthAbove)
 

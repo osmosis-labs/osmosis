@@ -19,7 +19,7 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 	params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 
 	// get raw pool creation fee(s) as DecCoins
-	poolCreationFeeDecCoins := sdk.DecCoins{}
+	poolCreationFeeDecCoins := osmomath.DecCoins{}
 	for _, coin := range params.PoolCreationFee {
 		poolCreationFeeDecCoins = poolCreationFeeDecCoins.Add(sdk.NewDecCoin(coin.Denom, coin.Amount))
 	}

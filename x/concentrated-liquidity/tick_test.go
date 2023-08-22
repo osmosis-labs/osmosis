@@ -26,7 +26,7 @@ func withPoolId(tick genesis.FullTick, poolId uint64) genesis.FullTick {
 	return tick
 }
 
-func withLiquidityNetandTickIndex(tick genesis.FullTick, tickIndex int64, liquidityNet sdk.Dec) genesis.FullTick {
+func withLiquidityNetandTickIndex(tick genesis.FullTick, tickIndex int64, liquidityNet osmomath.Dec) genesis.FullTick {
 	tick.TickIndex = tickIndex
 	tick.Info.LiquidityNet = liquidityNet
 
@@ -87,7 +87,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 	type param struct {
 		poolId           uint64
 		tickIndex        int64
-		liquidityIn      sdk.Dec
+		liquidityIn      osmomath.Dec
 		initLiquidityNet bool
 		upper            bool
 	}
@@ -96,8 +96,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		name                   string
 		param                  param
 		tickExists             bool
-		expectedLiquidityNet   sdk.Dec
-		expectedLiquidityGross sdk.Dec
+		expectedLiquidityNet   osmomath.Dec
+		expectedLiquidityGross osmomath.Dec
 		minimumGasConsumed     bool
 		expectedErr            error
 	}{
@@ -355,7 +355,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			if test.param.tickIndex <= 0 {
 				s.Require().Equal(defaultAccumCoins, tickInfoAfter.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
 			} else {
-				s.Require().Equal(sdk.DecCoins(nil), tickInfoAfter.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
+				s.Require().Equal(osmomath.DecCoins(nil), tickInfoAfter.SpreadRewardGrowthOppositeDirectionOfLastTraversal)
 			}
 
 			// Ensure that at least the minimum amount of gas was charged
@@ -384,7 +384,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 		name                     string
 		poolToGet                uint64
 		tickToGet                int64
-		preInitUptimeAccumValues []sdk.DecCoins
+		preInitUptimeAccumValues []osmomath.DecCoins
 		expectedTickInfo         model.TickInfo
 		expectedErr              error
 	}{
@@ -497,12 +497,12 @@ func (s *KeeperTestSuite) TestCrossTick() {
 		poolToGet                                                      uint64
 		preInitializedTickIndex                                        int64
 		tickToGet                                                      int64
-		initGlobalUptimeAccumValues                                    []sdk.DecCoins
-		globalUptimeAccumDelta                                         []sdk.DecCoins
+		initGlobalUptimeAccumValues                                    []osmomath.DecCoins
+		globalUptimeAccumDelta                                         []osmomath.DecCoins
 		expectedUptimeTrackers                                         []model.UptimeTracker
-		additiveSpreadFactor                                           sdk.DecCoin
-		expectedLiquidityDelta                                         sdk.Dec
-		expectedTickSpreadRewardGrowthOppositeDirectionOfLastTraversal sdk.DecCoins
+		additiveSpreadFactor                                           osmomath.DecCoin
+		expectedLiquidityDelta                                         osmomath.Dec
+		expectedTickSpreadRewardGrowthOppositeDirectionOfLastTraversal osmomath.DecCoins
 		expectedErr                                                    error
 	}{
 		{
@@ -610,7 +610,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 			if test.poolToGet == validPoolId {
 				s.FundAcc(s.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
-				 _, err := s.clk.CreatePosition(s.Ctx, test.poolToGet, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				_, err := s.clk.CreatePosition(s.Ctx, test.poolToGet, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
 			}
 

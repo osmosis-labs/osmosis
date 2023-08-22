@@ -11,8 +11,8 @@ var (
 	sdkOneDec      = sdk.OneDec()
 	sdkNineDec     = sdk.NewDec(9)
 	sdkTenDec      = sdk.NewDec(10)
-	powersOfTen    []sdk.Dec
-	negPowersOfTen []sdk.Dec
+	powersOfTen    []osmomath.Dec
+	negPowersOfTen []osmomath.Dec
 
 	osmomathBigOneDec = osmomath.NewBigDec(1)
 	osmomathBigTenDec = osmomath.NewBigDec(10)
@@ -36,9 +36,9 @@ var (
 // -1 => (0.1, 10^(types.ExponentAtPriceOne - 1), 9 * (types.ExponentAtPriceOne - 1))
 type tickExpIndexData struct {
 	// if price < initialPrice, we are not in this exponent range.
-	initialPrice sdk.Dec
+	initialPrice osmomath.Dec
 	// if price >= maxPrice, we are not in this exponent range.
-	maxPrice sdk.Dec
+	maxPrice osmomath.Dec
 	// TODO: Change to normal Dec, if min spot price increases.
 	// additive increment per tick here.
 	additiveIncrementPerTick osmomath.BigDec
@@ -81,12 +81,12 @@ func buildTickExpCache() {
 
 // Set precision multipliers
 func init() {
-	negPowersOfTen = make([]sdk.Dec, sdk.Precision+1)
+	negPowersOfTen = make([]osmomath.Dec, sdk.Precision+1)
 	for i := 0; i <= sdk.Precision; i++ {
 		negPowersOfTen[i] = sdkOneDec.Quo(sdkTenDec.Power(uint64(i)))
 	}
 	// 10^77 < sdk.MaxInt < 10^78
-	powersOfTen = make([]sdk.Dec, 78)
+	powersOfTen = make([]osmomath.Dec, 78)
 	for i := 0; i <= 77; i++ {
 		powersOfTen[i] = sdkTenDec.Power(uint64(i))
 	}

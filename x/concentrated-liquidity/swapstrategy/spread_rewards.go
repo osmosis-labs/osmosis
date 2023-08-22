@@ -22,7 +22,7 @@ import (
 //
 // If spread factor is negative, it panics.
 // If spread factor is 0, returns 0. Otherwise, computes and returns the spread factor charge per step.
-func computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget bool, amountIn, amountSpecifiedRemaining, spreadFactor sdk.Dec) sdk.Dec {
+func computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget bool, amountIn, amountSpecifiedRemaining, spreadFactor osmomath.Dec) osmomath.Dec {
 	spreadRewardChargeTotal := sdk.ZeroDec()
 
 	if spreadFactor.IsNegative() {
@@ -61,6 +61,6 @@ func computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget bool, amoun
 // Computes amountIn * spreadFactor / (1 - spreadFactor) where math operations round up
 // at precision end. This is necessary to ensure that the spread factor charge is always
 // rounded in favor of the pool.
-func computeSpreadRewardChargeFromAmountIn(amountIn sdk.Dec, spreadFactor sdk.Dec) sdk.Dec {
+func computeSpreadRewardChargeFromAmountIn(amountIn osmomath.Dec, spreadFactor osmomath.Dec) osmomath.Dec {
 	return amountIn.MulRoundUp(spreadFactor).QuoRoundupMut(sdk.OneDec().SubMut(spreadFactor))
 }

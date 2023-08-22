@@ -23,7 +23,7 @@ var (
 	baseQuoteAB, baseQuoteCA              = true, true
 	baseQuoteBA, baseQuoteAC, baseQuoteCB = false, false, false
 
-	ThreePlusOneThird sdk.Dec = sdk.MustNewDecFromStr("3.333333333333333333")
+	ThreePlusOneThird osmomath.Dec = sdk.MustNewDecFromStr("3.333333333333333333")
 
 	// base record is a record with t=baseTime, sp0=10(sp1=0.1) accumulators set to 0
 	baseRecord types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
@@ -42,7 +42,7 @@ var (
 	// accumA = 10 seconds * (spot price = 10) = OneSec * 10 * 10
 	// accumB = 10 seconds * (spot price = 0.1) = OneSec
 	// accumC = 10 seconds * (spot price = 20) = OneSec * 10 * 20
-	accumA, accumB, accumC sdk.Dec = OneSec.MulInt64(10 * 10), OneSec, OneSec.MulInt64(10 * 20)
+	accumA, accumB, accumC osmomath.Dec = OneSec.MulInt64(10 * 10), OneSec, OneSec.MulInt64(10 * 20)
 
 	// geomAccumAB = 10 seconds * (log_{1.0001}{spot price = 10})
 	geomAccumAB = geometricTenSecAccum.MulInt64(10)
@@ -181,7 +181,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 		recordsToSet []types.TwapRecord
 		ctxTime      time.Time
 		input        getTwapInput
-		expTwap      sdk.Dec
+		expTwap      osmomath.Dec
 		expectError  error
 		expectSpErr  time.Time
 	}{
@@ -384,7 +384,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 		recordsToSet []types.TwapRecord
 		ctxTime      time.Time
 		input        []getTwapInput
-		expTwap      []sdk.Dec
+		expTwap      []osmomath.Dec
 		expectError  error
 	}{
 		"(2 pairs of 3 records) start exact, end after second record": {
@@ -397,7 +397,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 			// A 10 for 10s, 5 for 10s = 150/20 = 7.5
 			// C 20 for 10s, 10 for 10s = 300/20 = 15
 			// B .1 for 10s, .2 for 10s = 3/20 = 0.15
-			expTwap: []sdk.Dec{sdk.NewDecWithPrec(75, 1), sdk.NewDec(15), sdk.NewDecWithPrec(15, 2)},
+			expTwap: []osmomath.Dec{sdk.NewDecWithPrec(75, 1), sdk.NewDec(15), sdk.NewDecWithPrec(15, 2)},
 		},
 		"(3 pairs of 3 record) start at second record, end after third record": {
 			recordsToSet: []types.TwapRecord{
@@ -410,7 +410,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 			// A 5 for 10s, 2 for 10s = 70/20 = 3.5
 			// C 10 for 10s, 4 for 10s = 140/20 = 7
 			// B .2 for 10s, .5 for 10s = 7/20 = 0.35
-			expTwap: []sdk.Dec{sdk.NewDecWithPrec(35, 1), sdk.NewDec(7), sdk.NewDecWithPrec(35, 2)},
+			expTwap: []osmomath.Dec{sdk.NewDecWithPrec(35, 1), sdk.NewDec(7), sdk.NewDecWithPrec(35, 2)},
 		},
 		// interpolate in time closer to second record
 		"(3 record) interpolate: get twap closer to second record": {
@@ -424,7 +424,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 			// A 5 for 5s, 2 for 10s = 45/15 = 3
 			// C 10 for 5s, 4 for 10s = 140/15 = 6
 			// B .2 for 5s, .5 for 10s = 7/15 = .4
-			expTwap: []sdk.Dec{sdk.NewDec(3), sdk.NewDec(6), sdk.NewDecWithPrec(4, 1)},
+			expTwap: []osmomath.Dec{sdk.NewDec(3), sdk.NewDec(6), sdk.NewDecWithPrec(4, 1)},
 		},
 	}
 	for name, test := range tests {
@@ -484,7 +484,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 		recordsToSet []types.TwapRecord
 		ctxTime      time.Time
 		input        getTwapInput
-		expTwap      sdk.Dec
+		expTwap      osmomath.Dec
 		expectError  error
 	}{
 		"(1 record at keep threshold); to now; ctxTime = at keep threshold; start time = end time = base keep threshold": {
@@ -583,7 +583,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 			s.preSetRecords(test.recordsToSet)
 			s.Ctx = s.Ctx.WithBlockTime(test.ctxTime)
 
-			var twap sdk.Dec
+			var twap osmomath.Dec
 			var err error
 
 			twap, err = s.twapkeeper.GetArithmeticTwap(s.Ctx, test.input.poolId,
@@ -627,7 +627,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod_ThreeAsset() {
 		recordsToSet []types.TwapRecord
 		ctxTime      time.Time
 		input        []getTwapInput
-		expTwap      []sdk.Dec
+		expTwap      []osmomath.Dec
 		expectError  error
 	}{
 		"(2 sets of 3 records); to now; with one directly at threshold, interpolated": {
@@ -640,7 +640,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod_ThreeAsset() {
 			// A 10 for 169200s, 30 for 3600s = 1800000/172800 = 10.416666
 			// C 20 for 169200s, 60 for 3600s = 100/172800 = 20.83333333
 			// B .1 for 169200s, .033 for 3600s = 17040/172800 = 0.0986111
-			expTwap: []sdk.Dec{sdk.MustNewDecFromStr("10.416666666666666666"), sdk.MustNewDecFromStr("20.833333333333333333"), sdk.MustNewDecFromStr("0.098611111111111111")},
+			expTwap: []osmomath.Dec{sdk.MustNewDecFromStr("10.416666666666666666"), sdk.MustNewDecFromStr("20.833333333333333333"), sdk.MustNewDecFromStr("0.098611111111111111")},
 		},
 		"(2 sets of 3 records); with end time; with one before keep threshold, interpolated": {
 			recordsToSet: []types.TwapRecord{
@@ -652,7 +652,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod_ThreeAsset() {
 			// A 10 for 169200000ms, 30 for 7199999ms = 1907999970/176399999 = 10.81632642
 			// C 20 for 169200000ms, 60 for 7199999ms = 3815999940/176399999 = 21.6326528
 			// B .1 for 169200000ms, .033 for 7199999ms = 17159999/176399999 = 0.09727891
-			expTwap: []sdk.Dec{sdk.MustNewDecFromStr("10.816326421861260894"), sdk.MustNewDecFromStr("21.632652843722521789"), sdk.MustNewDecFromStr("0.097278911927129130")},
+			expTwap: []osmomath.Dec{sdk.MustNewDecFromStr("10.816326421861260894"), sdk.MustNewDecFromStr("21.632652843722521789"), sdk.MustNewDecFromStr("0.097278911927129130")},
 		},
 	}
 
@@ -695,7 +695,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 		recordsToSet  []types.TwapRecord
 		ctxTime       time.Time
 		input         getTwapInput
-		expTwap       sdk.Dec
+		expTwap       osmomath.Dec
 		expectedError error
 	}{
 		"(1 record) start time = record time": {
@@ -763,7 +763,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			s.preSetRecords(test.recordsToSet)
 			s.Ctx = s.Ctx.WithBlockTime(test.ctxTime)
 
-			var twap sdk.Dec
+			var twap osmomath.Dec
 			var err error
 
 			// test the values of `GetArithmeticTwapToNow` if bool in test field is true
@@ -791,7 +791,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 		recordsToSet  []types.TwapRecord
 		ctxTime       time.Time
 		input         []getTwapInput
-		expTwap       []sdk.Dec
+		expTwap       []osmomath.Dec
 		expectedError error
 	}{
 		"(2 pairs of 3 records) to now: start time = second record time": {
@@ -804,7 +804,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 			// A 10 for 0s, 5 for 10s = 50/10 = 5
 			// C 20 for 0s, 10 for 10s = 100/10 = 10
 			// B .1 for 0s, .2 for 10s = 2/10 = 0.2
-			expTwap: []sdk.Dec{sdk.NewDec(5), sdk.NewDec(10), sdk.NewDecWithPrec(2, 1)},
+			expTwap: []osmomath.Dec{sdk.NewDec(5), sdk.NewDec(10), sdk.NewDecWithPrec(2, 1)},
 		},
 		"(2 pairs of 3 records) first record time < start time < second record time": {
 			recordsToSet: []types.TwapRecord{
@@ -816,7 +816,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 			// A 10 for 5s, 5 for 10s = 100/15 = 6 + 2/3 = 6.66666666
 			// C 20 for 5s, 10 for 10s = 200/15 = 13 + 1/3 = 13.333333
 			// B .1 for 5s, .2 for 10s = 2.5/15 = 0.1666666
-			expTwap: []sdk.Dec{ThreePlusOneThird.MulInt64(2), sdk.MustNewDecFromStr("13.333333333333333333"), sdk.MustNewDecFromStr("0.166666666666666666")},
+			expTwap: []osmomath.Dec{ThreePlusOneThird.MulInt64(2), sdk.MustNewDecFromStr("13.333333333333333333"), sdk.MustNewDecFromStr("0.166666666666666666")},
 		},
 	}
 	for name, test := range tests {

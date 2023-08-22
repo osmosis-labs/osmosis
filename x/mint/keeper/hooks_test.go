@@ -83,16 +83,16 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 		preExistingEpochNum     int64
 		mintDenom               string
 		epochIdentifier         string
-		genesisEpochProvisions  sdk.Dec
+		genesisEpochProvisions  osmomath.Dec
 		reductionPeriodInEpochs int64
-		reductionFactor         sdk.Dec
+		reductionFactor         osmomath.Dec
 		distributionProportions types.DistributionProportions
 		weightedAddresses       []types.WeightedAddress
 		mintStartEpoch          int64
 
 		// Expected results.
 		expectedLastReductionEpochNum int64
-		expectedDistribution          sdk.Dec
+		expectedDistribution          osmomath.Dec
 		expectedError                 bool
 	}{
 		"before start epoch - no distributions": {

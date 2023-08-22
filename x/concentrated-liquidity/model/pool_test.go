@@ -154,7 +154,7 @@ func (s *ConcentratedPoolTestSuite) TestSpotPrice() {
 	tests := []struct {
 		name              string
 		param             param
-		expectedSpotPrice sdk.Dec
+		expectedSpotPrice osmomath.Dec
 		expectedErr       error
 	}{
 		{
@@ -228,7 +228,7 @@ func (s *ConcentratedPoolTestSuite) TestUpdateLiquidity() {
 		CurrentTickLiquidity: DefaultLiquidityAmt,
 	}
 
-	// Try updating the liquidity with a zero sdk.Dec value.
+	// Try updating the liquidity with a zero osmomath.Dec value.
 	mock_pool.UpdateLiquidity(sdk.ZeroDec())
 
 	// Assert that the liquidity has not changed.
@@ -330,10 +330,10 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 
 	tests := []struct {
 		name             string
-		currentLiquidity sdk.Dec
+		currentLiquidity osmomath.Dec
 		currentTick      int64
 		currentSqrtPrice osmomath.BigDec
-		newLiquidity     sdk.Dec
+		newLiquidity     osmomath.Dec
 		newTick          int64
 		newSqrtPrice     osmomath.BigDec
 		expectErr        error
@@ -461,7 +461,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 		denom0       string
 		denom1       string
 		tickSpacing  uint64
-		spreadFactor sdk.Dec
+		spreadFactor osmomath.Dec
 	}
 
 	tests := []struct {
@@ -566,7 +566,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 
 func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 	var (
-		tickToSqrtPrice = func(tick int64) sdk.Dec {
+		tickToSqrtPrice = func(tick int64) osmomath.Dec {
 			_, sqrtPrice, err := clmath.TickToSqrtPrice(tick)
 			suite.Require().NoError(err)
 			return sqrtPrice
@@ -589,12 +589,12 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 		currentTick                 int64
 		lowerTick                   int64
 		upperTick                   int64
-		liquidityDelta              sdk.Dec
+		liquidityDelta              osmomath.Dec
 		shouldTestRoundingInvariant bool
 		expectError                 error
 
-		expectedAmount0 sdk.Dec
-		expectedAmount1 sdk.Dec
+		expectedAmount0 osmomath.Dec
+		expectedAmount1 osmomath.Dec
 	}{
 		"current in range, positive liquidity": {
 			currentTick:                 midtick,
@@ -740,7 +740,7 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 		currentTick    int64
 		lowerTick      int64
 		upperTick      int64
-		liquidityDelta sdk.Dec
+		liquidityDelta osmomath.Dec
 		expectError    error
 	}{
 		"current in range, positive liquidity": {

@@ -14,7 +14,7 @@ import (
 // We expose a common TWAP API to reduce duplication and avoid complexity.
 type twapStrategy interface {
 	// computeTwap calculates the TWAP with specific startRecord and endRecord.
-	computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec
+	computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) osmomath.Dec
 }
 
 type arithmetic struct {
@@ -27,8 +27,8 @@ type geometric struct {
 
 // computeTwap computes and returns an arithmetic TWAP between
 // two records given the quote asset.
-func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-	var accumDiff sdk.Dec
+func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) osmomath.Dec {
+	var accumDiff osmomath.Dec
 	if quoteAsset == startRecord.Asset0Denom {
 		accumDiff = endRecord.P0ArithmeticTwapAccumulator.Sub(startRecord.P0ArithmeticTwapAccumulator)
 	} else {
@@ -40,7 +40,7 @@ func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.T
 
 // computeTwap computes and returns a geometric TWAP between
 // two records given the quote asset.
-func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) osmomath.Dec {
 	accumDiff := endRecord.GeometricTwapAccumulator.Sub(startRecord.GeometricTwapAccumulator)
 
 	if accumDiff.IsZero() {
@@ -65,7 +65,7 @@ func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.Tw
 	// https://proofwiki.org/wiki/Geometric_Mean_of_Reciprocals_is_Reciprocal_of_Geometric_Mean
 	invertCase2 := !isExponentNegative && !isQuoteAsset0
 	if invertCase1 || invertCase2 {
-		result = osmomath.OneDec().Quo(result)
+		result = osmomath.OneBigDec().Quo(result)
 	}
 
 	// N.B. we round because this is the max number of significant figures supported

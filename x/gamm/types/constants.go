@@ -35,7 +35,7 @@ var (
 	// but don't directly import it due to import issues.
 	MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
 	// MinSpotPrice is the minimum supported spot price. Anything less than this will error.
-	// It is limited by sdk.Dec's precision.
+	// It is limited by osmomath.Dec's precision.
 	MinSpotPrice = sdk.SmallestDec()
 
 	// MultihopSpreadFactorMultiplierForOsmoPools if a spread factor multiplier for trades consists of just two OSMO pools during a single transaction.

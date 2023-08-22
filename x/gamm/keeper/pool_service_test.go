@@ -55,7 +55,7 @@ func (s *KeeperTestSuite) TestCreateBalancerPool() {
 	testAccount := s.TestAccs[0]
 
 	// get raw pool creation fee(s) as DecCoins
-	poolCreationFeeDecCoins := sdk.DecCoins{}
+	poolCreationFeeDecCoins := osmomath.DecCoins{}
 	for _, coin := range params.PoolCreationFee {
 		poolCreationFeeDecCoins = poolCreationFeeDecCoins.Add(sdk.NewDecCoin(coin.Denom, coin.Amount))
 	}
@@ -423,7 +423,7 @@ func (s *KeeperTestSuite) TestSpotPriceOverflow() {
 			poolId := s.PrepareBalancerPoolWithCoinsAndWeights(tc.poolLiquidity, tc.poolWeights)
 			pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
 			s.Require().NoError(err)
-			var poolSpotPrice sdk.Dec
+			var poolSpotPrice osmomath.Dec
 			var poolErr error
 			osmoassert.ConditionalPanic(s.T(), tc.panics, func() {
 				poolSpotPrice, poolErr = pool.SpotPrice(s.Ctx, tc.baseAssetDenom, tc.quoteAssetDenom)
@@ -437,7 +437,7 @@ func (s *KeeperTestSuite) TestSpotPriceOverflow() {
 			} else if tc.panics {
 				s.Require().ErrorIs(keeperErr, types.ErrSpotPriceInternal)
 				s.Require().Error(keeperErr)
-				s.Require().Equal(sdk.Dec{}, keeperSpotPrice)
+				s.Require().Equal(osmomath.Dec{}, keeperSpotPrice)
 			} else {
 				s.Require().NoError(poolErr)
 				s.Require().NoError(keeperErr)
@@ -834,8 +834,8 @@ func (s *KeeperTestSuite) TestActiveBalancerPool() {
 func (s *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 	testCases := []struct {
 		name              string
-		poolSpreadFactor  sdk.Dec
-		poolExitFee       sdk.Dec
+		poolSpreadFactor  osmomath.Dec
+		poolExitFee       osmomath.Dec
 		tokensIn          sdk.Coins
 		shareOutMinAmount sdk.Int
 		expectedSharesOut sdk.Int

@@ -39,7 +39,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	assetInDenom string,
 	assetOutDenom string,
 	initialCalcOut int64,
-	spreadFactor sdk.Dec,
+	spreadFactor osmomath.Dec,
 	errTolerance osmomath.ErrTolerance,
 ) {
 	initialOut := sdk.NewInt64Coin(assetOutDenom, initialCalcOut)
@@ -164,7 +164,7 @@ func TestSlippageRelationInGivenOut(
 }
 
 // returns true if the pool can accommodate an InGivenOut swap with `tokenOut` amount out, false otherwise
-func isWithinBounds(ctx sdk.Context, pool types.CFMMPoolI, tokenOut sdk.Coins, tokenInDenom string, spreadFactor sdk.Dec) (b bool) {
+func isWithinBounds(ctx sdk.Context, pool types.CFMMPoolI, tokenOut sdk.Coins, tokenInDenom string, spreadFactor osmomath.Dec) (b bool) {
 	b = true
 	defer func() {
 		if r := recover(); r != nil {

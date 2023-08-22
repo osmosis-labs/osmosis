@@ -88,7 +88,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coin
 
 var zeroDec = sdk.ZeroDec()
 var oneThirdSpotPriceUnits = sdk.NewDec(1).Quo(sdk.NewDec(3)).
-	MulIntMut(gammtypes.SpotPriceSigFigs).RoundInt().ToDec().QuoInt(gammtypes.SpotPriceSigFigs)
+	MulIntMut(osmomath.ToDec(gammtypes.SpotPriceSigFigs).RoundInt()).QuoInt(gammtypes.SpotPriceSigFigs)
 
 // PrepareBalancerPool returns a Balancer pool's pool-ID with pool params set in PrepareBalancerPoolWithPoolParams.
 func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
@@ -189,7 +189,7 @@ func (s *KeeperTestHelper) PrepareCustomBalancerPoolFromCoins(coins sdk.Coins, p
 }
 
 // Modify spotprice of a pool to target spotprice
-func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.Dec, baseDenom string) {
+func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice osmomath.Dec, baseDenom string) {
 	var quoteDenom string
 	int64Max := int64(^uint64(0) >> 1)
 
@@ -278,7 +278,7 @@ func (s *KeeperTestHelper) RunBasicJoin(poolId uint64) {
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestHelper) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, pool gammtypes.CFMMPoolI, targetSpotPrice sdk.Dec, baseDenom, quoteDenom string) (amountTrade sdk.Dec) {
+func (s *KeeperTestHelper) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, pool gammtypes.CFMMPoolI, targetSpotPrice osmomath.Dec, baseDenom, quoteDenom string) (amountTrade osmomath.Dec) {
 	blPool, ok := pool.(*balancer.Pool)
 	s.Require().True(ok)
 	quoteAsset, _ := blPool.GetPoolAsset(quoteDenom)
@@ -295,9 +295,9 @@ func (s *KeeperTestHelper) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, poo
 	// AmoutQuoteTokenNeedToTrade = AmoutQuoTokenNow * ((targetSpotPrice/spotPriceNow)^((weight_base/(weight_base + weight_quote))) -1 )
 
 	ratioPrice := targetSpotPrice.Quo(spotPriceNow)
-	ratioWeight := (baseAsset.Weight.ToDec()).Quo(baseAsset.Weight.ToDec().Add(quoteAsset.Weight.ToDec()))
+	ratioWeight := (osmomath.ToDec(baseAsset.Weight)).Quo(osmomath.ToDec(baseAsset.Weight).Add(osmomath.ToDec(quoteAsset.Weight)))
 
-	amountTrade = quoteAsset.Token.Amount.ToDec().Mul(osmomath.Pow(ratioPrice, ratioWeight).Sub(sdk.OneDec()))
+	amountTrade = osmomath.ToDec(quoteAsset.Token.Amount).Mul(osmomath.Pow(ratioPrice, ratioWeight).Sub(sdk.OneDec()))
 
 	return amountTrade
 }

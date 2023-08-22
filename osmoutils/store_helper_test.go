@@ -16,6 +16,7 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
@@ -1086,33 +1087,33 @@ func (s *TestSuite) TestMustSet() {
 func (s *TestSuite) TestMustGetDec() {
 	tests := map[string]struct {
 		// keys and values to preset
-		preSetKeyValues map[string]sdk.Dec
+		preSetKeyValues map[string]osmomath.Dec
 
 		// keys and values to attempt to get and validate
-		expectedGetKeyValues map[string]sdk.Dec
+		expectedGetKeyValues map[string]osmomath.Dec
 
 		expectPanic bool
 	}{
 		"valid get": {
-			preSetKeyValues: map[string]sdk.Dec{
+			preSetKeyValues: map[string]osmomath.Dec{
 				keyA: sdk.OneDec(),
 				keyB: sdk.OneDec().Add(sdk.OneDec()),
 				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
 			},
 
-			expectedGetKeyValues: map[string]sdk.Dec{
+			expectedGetKeyValues: map[string]osmomath.Dec{
 				keyA: sdk.OneDec(),
 				keyB: sdk.OneDec().Add(sdk.OneDec()),
 				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
 			},
 		},
 		"attempt to get non-existent key - panic": {
-			preSetKeyValues: map[string]sdk.Dec{
+			preSetKeyValues: map[string]osmomath.Dec{
 				keyA: sdk.OneDec(),
 				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
 			},
 
-			expectedGetKeyValues: map[string]sdk.Dec{
+			expectedGetKeyValues: map[string]osmomath.Dec{
 				keyA: sdk.OneDec(),
 				keyB: {}, // this one panics
 			},
@@ -1247,33 +1248,33 @@ func (s *TestSuite) TestHasAnyAtPrefix() {
 func (s *TestSuite) TestGetDec() {
 	tests := map[string]struct {
 		// keys and values to preset
-		preSetKeyValues map[string]sdk.Dec
+		preSetKeyValues map[string]osmomath.Dec
 
 		// keys and values to attempt to get and validate
-		expectedGetKeyValues map[string]sdk.Dec
+		expectedGetKeyValues map[string]osmomath.Dec
 
 		expectError error
 	}{
 		"valid get": {
-			preSetKeyValues: map[string]sdk.Dec{
+			preSetKeyValues: map[string]osmomath.Dec{
 				keyA: sdk.OneDec(),
 				keyB: sdk.OneDec().Add(sdk.OneDec()),
 				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
 			},
 
-			expectedGetKeyValues: map[string]sdk.Dec{
+			expectedGetKeyValues: map[string]osmomath.Dec{
 				keyA: sdk.OneDec(),
 				keyB: sdk.OneDec().Add(sdk.OneDec()),
 				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
 			},
 		},
 		"error: attempt to get non-existent key": {
-			preSetKeyValues: map[string]sdk.Dec{
+			preSetKeyValues: map[string]osmomath.Dec{
 				keyA: sdk.OneDec(),
 				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
 			},
 
-			expectedGetKeyValues: map[string]sdk.Dec{
+			expectedGetKeyValues: map[string]osmomath.Dec{
 				keyB: {},
 			},
 

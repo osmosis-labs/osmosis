@@ -28,11 +28,11 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 		param param
 		// Note: by default spread factor is zero in all tests
 		// It is only set to non-zero when this overwrite is non-nil
-		spreadFactorOverwrite sdk.Dec
+		spreadFactorOverwrite osmomath.Dec
 		// Note: this is the value by which the original spread factor is divided
 		// by if it is non-nil. This is done to test the case where the given
 		// parameter spread factor is reduced by more than allowed (max factor of 0.5)
-		spreadFactorOverwriteQuotient sdk.Dec
+		spreadFactorOverwriteQuotient osmomath.Dec
 		expectPass                    bool
 	}{
 		{

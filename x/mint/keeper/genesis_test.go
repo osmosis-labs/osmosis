@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestMintInitGenesis() {
 		isDeveloperModuleAccountCreated bool
 
 		expectPanic             bool
-		expectedEpochProvisions sdk.Dec
+		expectedEpochProvisions osmomath.Dec
 		// Deltas represent by how much a certain paramets
 		// has changed after calling InitGenesis()
 		expectedSupplyOffsetDelta           sdk.Int

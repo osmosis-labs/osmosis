@@ -13,12 +13,12 @@ import (
 // This function calculates the osmo equivalent worth of an LP share.
 // It is intended to eventually use the TWAP of the worth of an LP share
 // once that is exposed from the gamm module.
-func (k Keeper) calculateOsmoBackingPerShare(pool gammtypes.CFMMPoolI, osmoInPool sdk.Int) sdk.Dec {
+func (k Keeper) calculateOsmoBackingPerShare(pool gammtypes.CFMMPoolI, osmoInPool sdk.Int) osmomath.Dec {
 	twap := osmoInPool.ToDec().Quo(pool.GetTotalShares().ToDec())
 	return twap
 }
 
-func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom string, multiplier sdk.Dec) {
+func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom string, multiplier osmomath.Dec) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenMultiplier)
 	priceRecord := types.OsmoEquivalentMultiplierRecord{
@@ -53,7 +53,7 @@ func (k Keeper) DeleteOsmoEquivalentMultiplier(ctx sdk.Context, denom string) {
 	prefixStore.Delete([]byte(denom))
 }
 
-func (k Keeper) GetOsmoEquivalentMultiplier(ctx sdk.Context, denom string) sdk.Dec {
+func (k Keeper) GetOsmoEquivalentMultiplier(ctx sdk.Context, denom string) osmomath.Dec {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenMultiplier)
 	bz := prefixStore.Get([]byte(denom))

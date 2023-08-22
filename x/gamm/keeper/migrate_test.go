@@ -73,7 +73,7 @@ func (s *KeeperTestSuite) TestMigrate() {
 		expectedErr            error
 		sharesToCreate         sdk.Int
 		tokenOutMins           sdk.Coins
-		expectedLiquidity      sdk.Dec
+		expectedLiquidity      osmomath.Dec
 		setupPoolMigrationLink bool
 		errTolerance           osmomath.ErrTolerance
 	}{

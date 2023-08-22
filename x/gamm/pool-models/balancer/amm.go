@@ -56,7 +56,7 @@ func addPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
 }
 
 // assumes 0 < d < 1
-func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
+func poolAssetsMulDec(base []PoolAsset, d osmomath.Dec) []PoolAsset {
 	newWeights := make([]PoolAsset, len(base))
 	for i, asset := range base {
 		// TODO: This can adversarially panic at the moment! (as can Pool.TotalWeight)
@@ -97,8 +97,8 @@ func solveConstantFunctionInvariant(
 	tokenBalanceFixedAfter,
 	tokenWeightFixed,
 	tokenBalanceUnknownBefore,
-	tokenWeightUnknown sdk.Dec,
-) sdk.Dec {
+	tokenWeightUnknown osmomath.Dec,
+) osmomath.Dec {
 	// weightRatio = (weightX/weightY)
 	weightRatio := tokenWeightFixed.Quo(tokenWeightUnknown)
 
@@ -119,8 +119,8 @@ func calcPoolSharesOutGivenSingleAssetIn(
 	normalizedTokenWeightIn,
 	poolShares,
 	tokenAmountIn,
-	spreadFactor sdk.Dec,
-) sdk.Dec {
+	spreadFactor osmomath.Dec,
+) osmomath.Dec {
 	// deduct spread factor on the in asset.
 	// We don't charge spread factor on the token amount that we imagine as unswapped (the normalized weight).
 	// So effective_swapfee = spread factor * (1 - normalized_token_weight)
@@ -186,7 +186,7 @@ func updateIntermediaryPoolAssetsLiquidity(liquidity sdk.Coins, poolAssetsByDeno
 
 // feeRatio returns the fee ratio that is defined as follows:
 // 1 - ((1 - normalizedTokenWeightOut) * spreadFactor)
-func feeRatio(normalizedWeight, spreadFactor sdk.Dec) sdk.Dec {
+func feeRatio(normalizedWeight, spreadFactor osmomath.Dec) osmomath.Dec {
 	return sdk.OneDec().Sub((sdk.OneDec().Sub(normalizedWeight)).Mul(spreadFactor))
 }
 
@@ -197,8 +197,8 @@ func calcSingleAssetInGivenPoolSharesOut(
 	normalizedTokenWeightIn,
 	totalPoolSharesSupply,
 	sharesAmountOut,
-	spreadFactor sdk.Dec,
-) sdk.Dec {
+	spreadFactor osmomath.Dec,
+) osmomath.Dec {
 	// delta balanceIn is negative(tokens inside the pool increases)
 	// pool weight is always 1
 	tokenAmountIn := solveConstantFunctionInvariant(totalPoolSharesSupply.Add(sharesAmountOut), totalPoolSharesSupply, sdk.OneDec(), tokenBalanceIn, normalizedTokenWeightIn).Neg()
@@ -216,8 +216,8 @@ func calcPoolSharesInGivenSingleAssetOut(
 	totalPoolSharesSupply,
 	tokenAmountOut,
 	spreadFactor,
-	exitFee sdk.Dec,
-) sdk.Dec {
+	exitFee osmomath.Dec,
+) osmomath.Dec {
 	tokenAmountOutFeeIncluded := tokenAmountOut.Quo(feeRatio(normalizedTokenWeightOut, spreadFactor))
 
 	// delta poolSupply is positive(total pool shares decreases)

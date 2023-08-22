@@ -435,7 +435,7 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 // Returns error if parsing fails.
 func ParseCoinsNoSort(coinsStr string) (sdk.Coins, error) {
 	coinStrs := strings.Split(coinsStr, ",")
-	decCoins := make(sdk.DecCoins, len(coinStrs))
+	decCoins := make(osmomath.DecCoins, len(coinStrs))
 	for i, coinStr := range coinStrs {
 		coin, err := sdk.ParseDecCoin(coinStr)
 		if err != nil {

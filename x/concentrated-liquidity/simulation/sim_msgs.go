@@ -322,7 +322,7 @@ func RandomTickDivisibility(sim *osmosimtypes.SimCtx, minTick int64, maxTick int
 	return int64(-1), nil
 }
 
-func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper.Keeper) (sdk.AccAddress, sdk.Coin, sdk.Coin, uint64, sdk.Dec, error) {
+func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper.Keeper) (sdk.AccAddress, sdk.Coin, sdk.Coin, uint64, osmomath.Dec, error) {
 	rand := sim.GetRand()
 
 	authorizedTickSpacing := cltypes.AuthorizedTickSpacing
@@ -331,22 +331,22 @@ func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper
 	// find an address with two or more distinct denoms in their wallet
 	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(sim, ctx))
 	if !senderExists {
-		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, fmt.Errorf("no sender with two different denoms & pool creation fee exists")
+		return nil, sdk.Coin{}, sdk.Coin{}, 0, osmomath.Dec{}, fmt.Errorf("no sender with two different denoms & pool creation fee exists")
 	}
 
 	// get random 3 coins, use 2 to create pool and 1 for fees (stake denom).
 	poolCoins, ok := sim.GetRandSubsetOfKDenoms(ctx, sender, 3)
 	if !ok {
-		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, fmt.Errorf("provided sender with requested number of denoms does not exist")
+		return nil, sdk.Coin{}, sdk.Coin{}, 0, osmomath.Dec{}, fmt.Errorf("provided sender with requested number of denoms does not exist")
 	}
 
 	// check if the sender has sufficient amount for fees
 	if poolCoins.Add(PoolCreationFee).IsAnyGT(sim.BankKeeper().SpendableCoins(ctx, sender.Address)) {
-		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, errors.New("chose an account / creation amount that didn't pass fee limit")
+		return nil, sdk.Coin{}, sdk.Coin{}, 0, osmomath.Dec{}, errors.New("chose an account / creation amount that didn't pass fee limit")
 	}
 
 	if poolCoins[0].Denom == sdk.DefaultBondDenom || poolCoins[1].Denom == sdk.DefaultBondDenom {
-		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, fmt.Errorf("poolCoins contains denom stake which contains invalid metadata")
+		return nil, sdk.Coin{}, sdk.Coin{}, 0, osmomath.Dec{}, fmt.Errorf("poolCoins contains denom stake which contains invalid metadata")
 	}
 
 	coin0 := poolCoins[0]

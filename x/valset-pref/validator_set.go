@@ -18,7 +18,7 @@ import (
 
 type valSet struct {
 	ValAddr string
-	Amount  sdk.Dec
+	Amount  osmomath.Dec
 }
 
 // SetValidatorSetPreferences sets a new valset position for a delegator in modules state.
@@ -174,7 +174,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 }
 
 // CheckUndelegateTotalAmount checks if the tokenAmount equals the total amount calculated from valset weights.
-func (k Keeper) CheckUndelegateTotalAmount(tokenAmt sdk.Dec, existingSet []types.ValidatorPreference) error {
+func (k Keeper) CheckUndelegateTotalAmount(tokenAmt osmomath.Dec, existingSet []types.ValidatorPreference) error {
 	totalAmountFromWeights := sdk.NewDec(0)
 	for _, val := range existingSet {
 		totalAmountFromWeights = totalAmountFromWeights.Add(val.Weight.Mul(tokenAmt))
@@ -454,7 +454,7 @@ func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr string) (sdk.V
 // GetValSetStruct initializes valSet struct with valAddr, weight and amount.
 // It also creates an extra struct with zero amount, that can be appended to newValSet that will be created.
 // We do this to make sure the struct array length is the same to calculate their difference.
-func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares sdk.Dec) (valStruct valSet, valStructZeroAmt valSet) {
+func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares osmomath.Dec) (valStruct valSet, valStructZeroAmt valSet) {
 	val_struct := valSet{
 		ValAddr: validator.ValOperAddress,
 		Amount:  amountFromShares,

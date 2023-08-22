@@ -73,7 +73,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			})
 	)
 
-	withGeometricAcc := func(record TwapRecord, geometricAcc sdk.Dec) TwapRecord {
+	withGeometricAcc := func(record TwapRecord, geometricAcc osmomath.Dec) TwapRecord {
 		record.GeometricTwapAccumulator = geometricAcc
 		return record
 	}
@@ -99,7 +99,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			twapGenesis: NewGenesisState(basicParams, []TwapRecord{withGeometricAcc(baseRecord, sdk.NewDec(-1))}),
 		},
 		"invalid geometric twap acc is nil": {
-			twapGenesis: NewGenesisState(basicParams, []TwapRecord{withGeometricAcc(baseRecord, sdk.Dec{})}),
+			twapGenesis: NewGenesisState(basicParams, []TwapRecord{withGeometricAcc(baseRecord, osmomath.Dec{})}),
 			expectedErr: true,
 		},
 		"invalid genesis - pool ID doesn't exist": {

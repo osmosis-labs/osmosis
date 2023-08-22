@@ -13,7 +13,7 @@ func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 }
 
 func (k Keeper) GetOsmoRoutedMultihopTotalSpreadFactor(ctx sdk.Context, route types.MultihopRoute) (
-	totalPathSpreadFactor sdk.Dec, sumOfSpreadFactors sdk.Dec, err error,
+	totalPathSpreadFactor osmomath.Dec, sumOfSpreadFactors osmomath.Dec, err error,
 ) {
 	return k.getOsmoRoutedMultihopTotalSpreadFactor(ctx, route)
 }
@@ -58,7 +58,7 @@ func (k Keeper) CreateOsmoMultihopExpectedSwapOuts(
 	ctx sdk.Context,
 	route []types.SwapAmountOutRoute,
 	tokenOut sdk.Coin,
-	cumulativeRouteSwapFee, sumOfSwapFees sdk.Dec,
+	cumulativeRouteSwapFee, sumOfSwapFees osmomath.Dec,
 ) ([]sdk.Int, error) {
 	return k.createOsmoMultihopExpectedSwapOuts(ctx, route, tokenOut, cumulativeRouteSwapFee, sumOfSwapFees)
 }

@@ -230,7 +230,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 	return clGenesis, bankGenesis
 }
 
-func parsePrice(strPrice string) (result sdk.Dec) {
+func parsePrice(strPrice string) (result osmomath.Dec) {
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -250,7 +250,7 @@ func parsePrice(strPrice string) (result sdk.Dec) {
 			result = cltypes.MinSpotPrice
 		}
 	}()
-	result = osmomath.MustNewDecFromStr(strPrice).SDKDec()
+	result = osmomath.MustNewBigDecFromStr(strPrice).SDKDec()
 	return result
 }
 
@@ -262,7 +262,7 @@ func parseStringToInt(strInt string) (result sdk.Int, failedParsing bool) {
 			failedParsing = true
 		}
 	}()
-	result = osmomath.MustNewDecFromStr(strInt).SDKDec().MulInt64(int64(osmosisPrecision)).TruncateInt()
+	result = osmomath.MustNewBigDecFromStr(strInt).SDKDec().MulInt64(int64(osmosisPrecision)).TruncateInt()
 	return result, failedParsing
 }
 

@@ -12,6 +12,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
 
@@ -258,6 +259,6 @@ func (suite *UpgradeTestSuite) validateCons(coinsA, coinsB sdk.Coins) {
 	for _, coinA := range coinsA {
 		coinBAmount := coinsB.AmountOf(coinA.Denom)
 		// minor tolerance due to fees and rounding
-		osmoassert.DecApproxEq(suite.T(), coinBAmount.ToDec(), coinA.Amount.ToDec(), sdk.NewDec(2))
+		osmoassert.DecApproxEq(suite.T(), osmomath.ToDec(coinBAmount), osmomath.ToDec(coinA.Amount), sdk.NewDec(2))
 	}
 }

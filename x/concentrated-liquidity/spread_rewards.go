@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
-var emptyCoins = sdk.DecCoins(nil)
+var emptyCoins = osmomath.DecCoins(nil)
 
 // createSpreadRewardAccumulator creates an accumulator object in the store using the given poolId.
 // The accumulator is initialized with the default(zero) values.
@@ -43,7 +43,7 @@ func (k Keeper) GetSpreadRewardAccumulator(ctx sdk.Context, poolId uint64) (*acc
 // - fails to create a new position.
 // - fails to prepare the accumulator for update.
 // - fails to update the position's accumulator.
-func (k Keeper) initOrUpdatePositionSpreadRewardAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidityDelta sdk.Dec) error {
+func (k Keeper) initOrUpdatePositionSpreadRewardAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidityDelta osmomath.Dec) error {
 	// Get the spread reward accumulator for the position's pool.
 	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
 	if err != nil {
@@ -102,26 +102,26 @@ func (k Keeper) initOrUpdatePositionSpreadRewardAccumulator(ctx sdk.Context, poo
 // getSpreadRewardGrowthOutside returns the sum of spread reward growth above the upper tick and spread reward growth below the lower tick
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 // Currently, the call to GetTickInfo() may mutate state.
-func (k Keeper) getSpreadRewardGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
+func (k Keeper) getSpreadRewardGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (osmomath.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
-		return sdk.DecCoins{}, err
+		return osmomath.DecCoins{}, err
 	}
 	currentTick := pool.GetCurrentTick()
 
 	// get lower, upper tick info
 	lowerTickInfo, err := k.GetTickInfo(ctx, poolId, lowerTick)
 	if err != nil {
-		return sdk.DecCoins{}, err
+		return osmomath.DecCoins{}, err
 	}
 	upperTickInfo, err := k.GetTickInfo(ctx, poolId, upperTick)
 	if err != nil {
-		return sdk.DecCoins{}, err
+		return osmomath.DecCoins{}, err
 	}
 
 	poolSpreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
 	if err != nil {
-		return sdk.DecCoins{}, err
+		return osmomath.DecCoins{}, err
 	}
 	poolSpreadRewardGrowth := poolSpreadRewardAccumulator.GetValue()
 
@@ -137,12 +137,12 @@ func (k Keeper) getSpreadRewardGrowthOutside(ctx sdk.Context, poolId uint64, low
 //
 // The value is chosen as if all of the spread rewards earned to date had occurred below the tick.
 // Returns error if the pool with the given id does exist or if fails to get the spread reward accumulator.
-func (k Keeper) getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, pool types.ConcentratedPoolExtension, tick int64) (sdk.DecCoins, error) {
+func (k Keeper) getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick(ctx sdk.Context, pool types.ConcentratedPoolExtension, tick int64) (osmomath.DecCoins, error) {
 	currentTick := pool.GetCurrentTick()
 	if currentTick >= tick {
 		spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, pool.GetId())
 		if err != nil {
-			return sdk.DecCoins{}, err
+			return osmomath.DecCoins{}, err
 		}
 		return spreadRewardAccumulator.GetValue(), nil
 	}
@@ -279,7 +279,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 // 1. currentTick >= upperTick: If current Tick is GTE than the upper Tick, the spread reward growth would be pool spread reward growth - uppertick's spread reward growth outside
 // 2. currentTick < upperTick: If current tick is smaller than upper tick, spread reward growth would be the upper tick's spread reward growth outside
 // this goes vice versa for calculating spread reward growth for lower tick.
-func calculateSpreadRewardGrowth(targetTick int64, ticksSpreadRewardGrowthOppositeDirectionOfLastTraversal sdk.DecCoins, currentTick int64, spreadRewardsGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
+func calculateSpreadRewardGrowth(targetTick int64, ticksSpreadRewardGrowthOppositeDirectionOfLastTraversal osmomath.DecCoins, currentTick int64, spreadRewardsGrowthGlobal osmomath.DecCoins, isUpperTick bool) osmomath.DecCoins {
 	if (isUpperTick && currentTick >= targetTick) || (!isUpperTick && currentTick < targetTick) {
 		return spreadRewardsGrowthGlobal.Sub(ticksSpreadRewardGrowthOppositeDirectionOfLastTraversal)
 	}
@@ -290,7 +290,7 @@ func calculateSpreadRewardGrowth(targetTick int64, ticksSpreadRewardGrowthOpposi
 // as we must set the position's accumulator value to the sum of
 // - the spread reward/uptime growth inside at position creation time (position.InitAccumValue)
 // - spread reward/uptime growth outside at the current block time (spreadRewardGrowthOutside/uptimeGrowthOutside)
-func updatePositionToInitValuePlusGrowthOutside(accumulator *accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
+func updatePositionToInitValuePlusGrowthOutside(accumulator *accum.AccumulatorObject, positionKey string, growthOutside osmomath.DecCoins) error {
 	position, err := accum.GetPosition(accumulator, positionKey)
 	if err != nil {
 		return err

@@ -38,7 +38,7 @@ type CFMMTestCase struct {
 }
 
 var (
-	overflowDec           = osmomath.NewDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1)))
+	overflowDec           = osmomath.NewBigDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1)))
 	twoAssetCFMMTestCases = map[string]CFMMTestCase{
 		// sanity checks
 		"small pool small input": {
@@ -417,7 +417,7 @@ func TestStableSwapTestSuite(t *testing.T) {
 }
 
 func TestCFMMInvariantTwoAssets(t *testing.T) {
-	kErrTolerance := osmomath.OneDec()
+	kErrTolerance := osmomath.OneBigDec()
 
 	tests := twoAssetCFMMTestCases
 
@@ -442,7 +442,7 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 }
 
 func TestCFMMInvariantTwoAssetsDirect(t *testing.T) {
-	kErrTolerance := osmomath.OneDec()
+	kErrTolerance := osmomath.OneBigDec()
 
 	tests := twoAssetCFMMTestCases
 
@@ -512,13 +512,13 @@ func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 	scaled_y4_quo_k2 := scaled_y4_quo_k.Mul(scaled_y4_quo_k)
 
 	// let sqrt_term = sqrt(1 + scaled_y4_quo_k2)
-	sqrt_term, err := (osmomath.OneDec().Add(scaled_y4_quo_k2)).ApproxRoot(2)
+	sqrt_term, err := (osmomath.OneBigDec().Add(scaled_y4_quo_k2)).ApproxRoot(2)
 	if err != nil {
 		panic(err)
 	}
 
 	// let common_factor = [y^2 * 9k) * (sqrt_term + 1)]^(1/3)
-	common_factor, err := (y2.MulInt64(9).Mul(k).Mul((sqrt_term.Add(osmomath.OneDec())))).ApproxRoot(3)
+	common_factor, err := (y2.MulInt64(9).Mul(k).Mul((sqrt_term.Add(osmomath.OneBigDec())))).ApproxRoot(3)
 	if err != nil {
 		panic(err)
 	}
@@ -553,7 +553,7 @@ func cfmmConstant(xReserve, yReserve osmomath.BigDec) osmomath.BigDec {
 }
 
 func TestCFMMInvariantMultiAssets(t *testing.T) {
-	kErrTolerance := osmomath.OneDec()
+	kErrTolerance := osmomath.OneBigDec()
 
 	tests := multiAssetCFMMTestCases
 
@@ -588,7 +588,7 @@ func cfmmConstantMulti(xReserve, yReserve, u, v osmomath.BigDec) osmomath.BigDec
 }
 
 func TestCFMMInvariantMultiAssetsDirect(t *testing.T) {
-	kErrTolerance := osmomath.OneDec()
+	kErrTolerance := osmomath.OneBigDec()
 
 	tests := multiAssetCFMMTestCases
 
@@ -689,7 +689,7 @@ func solveCFMMMultiDirect(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) 
 }
 
 func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
-	kErrTolerance := osmomath.OneDec()
+	kErrTolerance := osmomath.OneBigDec()
 
 	tests := multiAssetCFMMTestCases
 
@@ -914,7 +914,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 				pool := createTestPool(suite.T(), tc.poolLiquidity, spreadFactorDec, exitFeeDec, tc.scalingFactors)
 				suite.Require().NotNil(pool)
 				errTolerance := osmomath.ErrTolerance{
-					AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12),
+					AdditiveTolerance: osmomath.Dec{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12),
 				}
 				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, tc.denomIn, tc.denomOut, tc.initialCalcOut, spreadFactorDec, errTolerance)
 			})
@@ -954,7 +954,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_Slippage_LiquidityRelation() {
 }
 
 func calcUReserve(remReserves []osmomath.BigDec) osmomath.BigDec {
-	uReserve := osmomath.OneDec()
+	uReserve := osmomath.OneBigDec()
 	for _, assetReserve := range remReserves {
 		uReserve = uReserve.Mul(assetReserve)
 	}
@@ -962,7 +962,7 @@ func calcUReserve(remReserves []osmomath.BigDec) osmomath.BigDec {
 }
 
 func calcWSumSquares(remReserves []osmomath.BigDec) osmomath.BigDec {
-	wSumSquares := osmomath.ZeroDec()
+	wSumSquares := osmomath.ZeroBigDec()
 	for _, assetReserve := range remReserves {
 		wSumSquares = wSumSquares.Add(assetReserve.Mul(assetReserve))
 	}
@@ -974,7 +974,7 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 		tokenIn        sdk.Coin
 		poolAssets     sdk.Coins
 		scalingFactors []uint64
-		spreadFactor   sdk.Dec
+		spreadFactor   osmomath.Dec
 		expectedOut    sdk.Int
 	}
 
@@ -1085,7 +1085,7 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 		tokensIn        sdk.Coins
 		poolAssets      sdk.Coins
 		scalingFactors  []uint64
-		spreadFactor    sdk.Dec
+		spreadFactor    osmomath.Dec
 		expNumShare     sdk.Int
 		expTokensJoined sdk.Coins
 		expPoolAssets   sdk.Coins
@@ -1198,7 +1198,7 @@ func TestSingleAssetJoinSpreadFactorRatio(t *testing.T) {
 		poolLiquidity  sdk.Coins
 		scalingFactors []uint64
 		tokenInDenom   string
-		expectedRatio  sdk.Dec
+		expectedRatio  osmomath.Dec
 	}
 	tests := map[string]testcase{
 		"godoc-example": {

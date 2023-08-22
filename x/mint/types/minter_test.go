@@ -25,7 +25,7 @@ var (
 // previously using sdk.Int operations:
 // BenchmarkEpochProvision-4 5000000 220 ns/op
 //
-// using sdk.Dec operations: (current implementation)
+// using osmomath.Dec operations: (current implementation)
 // BenchmarkEpochProvision-4 3000000 429 ns/op
 func BenchmarkEpochProvision(b *testing.B) {
 	b.ReportAllocs()

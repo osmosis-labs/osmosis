@@ -33,16 +33,16 @@ type lpTest struct {
 	amount0Expected                   sdk.Int
 	amount1Minimum                    sdk.Int
 	amount1Expected                   sdk.Int
-	liquidityAmount                   sdk.Dec
+	liquidityAmount                   osmomath.Dec
 	tickSpacing                       uint64
 	isNotFirstPosition                bool
 	isNotFirstPositionWithSameAccount bool
 	expectedError                     error
 
 	// spread reward related fields
-	preSetChargeSpreadRewards              sdk.DecCoin
-	expectedSpreadRewardGrowthOutsideLower sdk.DecCoins
-	expectedSpreadRewardGrowthOutsideUpper sdk.DecCoins
+	preSetChargeSpreadRewards              osmomath.DecCoin
+	expectedSpreadRewardGrowthOutsideLower osmomath.DecCoins
+	expectedSpreadRewardGrowthOutsideUpper osmomath.DecCoins
 }
 
 var (
@@ -329,7 +329,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 				liquidity, err := clKeeper.GetPositionLiquidity(s.Ctx, positionId)
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &types.PositionIdNotFoundError{PositionId: positionId})
-				s.Require().Equal(sdk.Dec{}, liquidity)
+				s.Require().Equal(osmomath.Dec{}, liquidity)
 				return
 			}
 
@@ -390,7 +390,7 @@ const (
 	unlocked
 )
 
-func (s *KeeperTestSuite) createPositionWithLockState(ls lockState, poolId uint64, owner sdk.AccAddress, providedCoins sdk.Coins, dur time.Duration) (uint64, sdk.Dec) {
+func (s *KeeperTestSuite) createPositionWithLockState(ls lockState, poolId uint64, owner sdk.AccAddress, providedCoins sdk.Coins, dur time.Duration) (uint64, osmomath.Dec) {
 	var (
 		positionData          cl.CreatePositionData
 		fullRangePositionData cltypes.CreateFullRangePositionData
@@ -680,7 +680,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, config.positionId)
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, types.PositionIdNotFoundError{PositionId: config.positionId})
-				s.Require().Equal(sdk.Dec{}, positionLiquidity)
+				s.Require().Equal(osmomath.Dec{}, positionLiquidity)
 
 				// check underlying stores were correctly deleted
 				emptyPositionStruct := clmodel.Position{}
@@ -1340,10 +1340,10 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		if !overwrite.joinTime.IsZero() {
 			dst.joinTime = overwrite.joinTime
 		}
-		if !overwrite.expectedSpreadRewardGrowthOutsideLower.IsEqual(sdk.DecCoins{}) {
+		if !overwrite.expectedSpreadRewardGrowthOutsideLower.IsEqual(osmomath.DecCoins{}) {
 			dst.expectedSpreadRewardGrowthOutsideLower = overwrite.expectedSpreadRewardGrowthOutsideLower
 		}
-		if !overwrite.expectedSpreadRewardGrowthOutsideUpper.IsEqual(sdk.DecCoins{}) {
+		if !overwrite.expectedSpreadRewardGrowthOutsideUpper.IsEqual(osmomath.DecCoins{}) {
 			dst.expectedSpreadRewardGrowthOutsideUpper = overwrite.expectedSpreadRewardGrowthOutsideUpper
 		}
 		if overwrite.positionId != 0 {
@@ -1505,12 +1505,12 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 		upperTick                 int64
 		joinTime                  time.Time
 		positionId                uint64
-		liquidityDelta            sdk.Dec
+		liquidityDelta            osmomath.Dec
 		amount0Expected           sdk.Int
 		amount1Expected           sdk.Int
-		expectedPositionLiquidity sdk.Dec
-		expectedTickLiquidity     sdk.Dec
-		expectedPoolLiquidity     sdk.Dec
+		expectedPositionLiquidity osmomath.Dec
+		expectedTickLiquidity     osmomath.Dec
+		expectedPoolLiquidity     osmomath.Dec
 		numPositions              int
 		expectedError             bool
 	}
@@ -1664,8 +1664,8 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				}
 
 				var (
-					expectedAmount0 sdk.Dec
-					expectedAmount1 sdk.Dec
+					expectedAmount0 osmomath.Dec
+					expectedAmount1 osmomath.Dec
 				)
 
 				// For the context of this test case, we are not testing the calculation of the amounts
@@ -1897,7 +1897,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			positionLiquidity, err := clKeeper.GetPositionLiquidity(s.Ctx, tc.positionId)
 			s.Require().Error(err)
 			s.Require().ErrorAs(err, &types.PositionIdNotFoundError{PositionId: tc.positionId})
-			s.Require().Equal(sdk.Dec{}, positionLiquidity)
+			s.Require().Equal(osmomath.Dec{}, positionLiquidity)
 
 			// 4. Check that pool has come back to original state
 
@@ -1961,7 +1961,7 @@ func (s *KeeperTestSuite) TestUninitializePool() {
 
 			actualSqrtPrice := pool.GetCurrentSqrtPrice()
 			actualTick := pool.GetCurrentTick()
-			s.Require().Equal(osmomath.ZeroDec(), actualSqrtPrice)
+			s.Require().Equal(osmomath.ZeroBigDec(), actualSqrtPrice)
 			s.Require().Equal(int64(0), actualTick)
 		})
 	}
@@ -2041,7 +2041,7 @@ func (s *KeeperTestSuite) TestValidatePositionUpdateById() {
 		updateInitiatorIndex    int
 		lowerTickGiven          int64
 		upperTickGiven          int64
-		liquidityDeltaGiven     sdk.Dec
+		liquidityDeltaGiven     osmomath.Dec
 		joinTimeGiven           time.Time
 		poolIdGiven             uint64
 		modifyPositionLiquidity bool

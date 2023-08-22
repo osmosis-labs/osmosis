@@ -12,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 )
 
-func createTestPool(t *testing.T, spreadFactor, exitFee sdk.Dec, poolAssets ...balancer.PoolAsset) *balancer.Pool {
+func createTestPool(t *testing.T, spreadFactor, exitFee osmomath.Dec, poolAssets ...balancer.PoolAsset) *balancer.Pool {
 	t.Helper()
 	pool, err := balancer.NewBalancerPool(
 		1,

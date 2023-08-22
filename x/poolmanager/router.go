@@ -30,8 +30,8 @@ func (k Keeper) RouteExactAmountIn(
 ) (tokenOutAmount sdk.Int, err error) {
 	var (
 		isMultiHopRouted   bool
-		routeSpreadFactor  sdk.Dec
-		sumOfSpreadFactors sdk.Dec
+		routeSpreadFactor  osmomath.Dec
+		sumOfSpreadFactors osmomath.Dec
 	)
 
 	// Ensure that provided route is not empty and has valid denom format.
@@ -221,8 +221,8 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 ) (tokenOutAmount sdk.Int, err error) {
 	var (
 		isMultiHopRouted   bool
-		routeSpreadFactor  sdk.Dec
-		sumOfSpreadFactors sdk.Dec
+		routeSpreadFactor  osmomath.Dec
+		sumOfSpreadFactors osmomath.Dec
 	)
 
 	// recover from panic
@@ -294,7 +294,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
-	isMultiHopRouted, routeSpreadFactor, sumOfSpreadFactors := false, sdk.Dec{}, sdk.Dec{}
+	isMultiHopRouted, routeSpreadFactor, sumOfSpreadFactors := false, osmomath.Dec{}, osmomath.Dec{}
 	// Ensure that provided route is not empty and has valid denom format.
 	routeStep := types.SwapAmountOutRoutes(route)
 	if err := routeStep.Validate(); err != nil {
@@ -484,15 +484,15 @@ func (k Keeper) RouteCalculateSpotPrice(
 	poolId uint64,
 	quoteAssetDenom string,
 	baseAssetDenom string,
-) (price sdk.Dec, err error) {
+) (price osmomath.Dec, err error) {
 	swapModule, err := k.GetPoolModule(ctx, poolId)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	price, err = swapModule.CalculateSpotPrice(ctx, poolId, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	return price, nil
@@ -503,7 +503,7 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	route []types.SwapAmountOutRoute,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
-	isMultiHopRouted, routeSpreadFactor, sumOfSpreadFactors := false, sdk.Dec{}, sdk.Dec{}
+	isMultiHopRouted, routeSpreadFactor, sumOfSpreadFactors := false, osmomath.Dec{}, osmomath.Dec{}
 	var insExpected []sdk.Int
 
 	// recover from panic
@@ -609,7 +609,7 @@ func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute,
 // a given route. For the former, it sets a lower bound of the highest swap fee pool in the route to ensure total
 // swap fees for a route are never more than halved.
 func (k Keeper) getOsmoRoutedMultihopTotalSpreadFactor(ctx sdk.Context, route types.MultihopRoute) (
-	totalPathSpreadFactor sdk.Dec, sumOfSpreadFactors sdk.Dec, err error,
+	totalPathSpreadFactor osmomath.Dec, sumOfSpreadFactors osmomath.Dec, err error,
 ) {
 	additiveSpreadFactor := sdk.ZeroDec()
 	maxSpreadFactor := sdk.ZeroDec()
@@ -617,12 +617,12 @@ func (k Keeper) getOsmoRoutedMultihopTotalSpreadFactor(ctx sdk.Context, route ty
 	for _, poolId := range route.PoolIds() {
 		swapModule, err := k.GetPoolModule(ctx, poolId)
 		if err != nil {
-			return sdk.Dec{}, sdk.Dec{}, err
+			return osmomath.Dec{}, osmomath.Dec{}, err
 		}
 
 		pool, poolErr := swapModule.GetPool(ctx, poolId)
 		if poolErr != nil {
-			return sdk.Dec{}, sdk.Dec{}, poolErr
+			return osmomath.Dec{}, osmomath.Dec{}, poolErr
 		}
 		SpreadFactor := pool.GetSpreadFactor(ctx)
 		additiveSpreadFactor = additiveSpreadFactor.Add(SpreadFactor)
@@ -680,7 +680,7 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 	ctx sdk.Context,
 	route []types.SwapAmountOutRoute,
 	tokenOut sdk.Coin,
-	cumulativeRouteSpreadFactor, sumOfSpreadFactors sdk.Dec,
+	cumulativeRouteSpreadFactor, sumOfSpreadFactors osmomath.Dec,
 ) ([]sdk.Int, error) {
 	insExpected := make([]sdk.Int, len(route))
 	for i := len(route) - 1; i >= 0; i-- {

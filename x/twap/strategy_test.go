@@ -17,7 +17,7 @@ type computeTwapTestCase struct {
 	endRecord      types.TwapRecord
 	twapStrategies []twap.TwapStrategy
 	quoteAsset     string
-	expTwap        sdk.Dec
+	expTwap        osmomath.Dec
 	expErr         bool
 	expPanic       bool
 }
@@ -318,7 +318,7 @@ func (s *TestSuite) TestComputeArithmeticStrategyTwap_ThreeAsset() {
 			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			endRecord:   newThreeAssetOneSidedRecord(tPlusOne, OneSec, true),
 			quoteAsset:  []string{denom0, denom0, denom1},
-			expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
+			expTwap:     []osmomath.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
 		},
 		"three asset. accumulator = 10*OneSec, t=5s. 0 base accum": testThreeAssetCaseFromDeltas(
 			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
@@ -356,7 +356,7 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap_ThreeAsset() {
 			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			endRecord:   newThreeAssetOneSidedRecord(tPlusOne, geometricTenSecAccum, true),
 			quoteAsset:  []string{denom0, denom0, denom1},
-			expTwap:     []sdk.Dec{sdk.NewDec(10), sdk.NewDec(10), sdk.NewDec(10)},
+			expTwap:     []osmomath.Dec{sdk.NewDec(10), sdk.NewDec(10), sdk.NewDec(10)},
 		},
 		"three asset. accumulator = 5*3Sec, t=3s, no start accum": testThreeAssetCaseFromDeltas(
 			sdk.ZeroDec(), fiveFor3Sec, 3*time.Second, five),

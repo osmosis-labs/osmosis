@@ -54,7 +54,7 @@ var (
 //	CalcJoinPoolShares with only one tokensIn.
 type calcJoinSharesTestCase struct {
 	name         string
-	spreadFactor sdk.Dec
+	spreadFactor osmomath.Dec
 	poolAssets   []balancer.PoolAsset
 	tokensIn     sdk.Coins
 	expectShares sdk.Int
@@ -637,7 +637,7 @@ func (s *KeeperTestSuite) TestBalancerSpotPrice() {
 		baseDenomPoolInput  sdk.Coin
 		quoteDenomPoolInput sdk.Coin
 		expectError         bool
-		expectedOutput      sdk.Dec
+		expectedOutput      osmomath.Dec
 	}{
 		{
 			name:                "equal value",
@@ -725,7 +725,7 @@ func (s *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 		baseDenomPoolInput  sdk.Coin
 		baseDenomWeight     sdk.Int
 		expectError         bool
-		expectedOutput      sdk.Dec
+		expectedOutput      osmomath.Dec
 	}{
 		{
 			name: "spot price check at max bitlen supply",

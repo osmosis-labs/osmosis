@@ -50,11 +50,11 @@ func (s *KeeperTestSuite) AssertPositionsDoNotExist(positionIds []uint64) {
 }
 
 // GetTotalAccruedRewardsByAccumulator returns the total accrued rewards for the given position on each uptime accumulator.
-func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64, requireHasPosition bool) []sdk.DecCoins {
+func (s *KeeperTestSuite) GetTotalAccruedRewardsByAccumulator(positionId uint64, requireHasPosition bool) []osmomath.DecCoins {
 	uptimeAccumulators, err := s.clk.GetUptimeAccumulators(s.Ctx, defaultPoolId)
 	s.Require().NoError(err)
 
-	unclaimedRewardsForEachUptimeNewPosition := make([]sdk.DecCoins, len(uptimeAccumulators))
+	unclaimedRewardsForEachUptimeNewPosition := make([]osmomath.DecCoins, len(uptimeAccumulators))
 
 	for i, uptimeAccum := range uptimeAccumulators {
 		newPositionName := string(types.KeyPositionId(positionId))
@@ -110,7 +110,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		upperTick      int64
 		joinTime       time.Time
 		positionId     uint64
-		liquidityDelta sdk.Dec
+		liquidityDelta osmomath.Dec
 	}
 
 	tests := []struct {
@@ -119,7 +119,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		positionExists       bool
 		timeElapsedSinceInit time.Duration
 		incentiveRecords     []types.IncentiveRecord
-		expectedLiquidity    sdk.Dec
+		expectedLiquidity    osmomath.Dec
 		expectedErr          error
 	}{
 		{
@@ -194,7 +194,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			if test.param.poolId == invalidPoolId {
 				s.Require().Error(err)
 				// Ensure that no accumulators are retrieved upon error
-				s.Require().Equal([]sdk.DecCoins{}, initUptimeAccumValues)
+				s.Require().Equal([]osmomath.DecCoins{}, initUptimeAccumValues)
 			} else {
 				s.Require().NoError(err)
 				// Ensure initial uptime accums are empty
@@ -285,7 +285,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Require().NoError(err)
 
 			// Setup for checks
-			actualUptimeAccumDelta, expectedUptimeAccumValueGrowth, expectedIncentiveRecords, _ := emptyAccumValues, emptyAccumValues, test.incentiveRecords, sdk.DecCoins{}
+			actualUptimeAccumDelta, expectedUptimeAccumValueGrowth, expectedIncentiveRecords, _ := emptyAccumValues, emptyAccumValues, test.incentiveRecords, osmomath.DecCoins{}
 
 			timeElapsedSec := sdk.NewDec(int64(test.timeElapsedSinceInit)).Quo(sdk.NewDec(10e8))
 			positionName := string(types.KeyPositionId(test.param.positionId))
@@ -339,7 +339,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 	tests := []struct {
 		name                      string
 		positionId                uint64
-		expectedPositionLiquidity sdk.Dec
+		expectedPositionLiquidity osmomath.Dec
 		expectedErr               error
 	}{
 		{
@@ -372,7 +372,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
-				s.Require().Equal(sdk.Dec{}, position.Liquidity)
+				s.Require().Equal(osmomath.Dec{}, position.Liquidity)
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(test.expectedPositionLiquidity, position.Liquidity)
@@ -757,7 +757,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 				positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, test.positionId)
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, types.PositionIdNotFoundError{PositionId: test.positionId})
-				s.Require().Equal(sdk.Dec{}, positionLiquidity)
+				s.Require().Equal(osmomath.Dec{}, positionLiquidity)
 
 				// Check that stores were deleted
 				// Retrieve the position from the store via position ID and compare to expected values.
@@ -1032,7 +1032,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			lockDuration := testFullChargeDuration + testFullChargeDuration + test.unlockBeforeBlockTimeMs
 			for _, pos := range test.setupFullyChargedPositions {
 				var (
-					liquidityCreated      sdk.Dec
+					liquidityCreated      osmomath.Dec
 					err                   error
 					positionData          cl.CreatePositionData
 					fullRangePositionData cltypes.CreateFullRangePositionData
@@ -1072,7 +1072,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 				s.Require().Equal(uint64(0), poolId)
 				s.Require().Equal(int64(0), lowerTick)
 				s.Require().Equal(int64(0), upperTick)
-				s.Require().Equal(sdk.Dec{}, liquidity)
+				s.Require().Equal(osmomath.Dec{}, liquidity)
 			} else {
 				s.Require().NoError(err)
 
@@ -1092,7 +1092,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			s.Require().NoError(err)
 
 			// Get the unclaimed rewards for all the positions that are being migrated
-			unclaimedRewardsForEachUptimeAcrossAllOldPositions := make([]sdk.DecCoins, len(types.SupportedUptimes))
+			unclaimedRewardsForEachUptimeAcrossAllOldPositions := make([]osmomath.DecCoins, len(types.SupportedUptimes))
 			for _, positionId := range test.positionIdsToMigrate {
 				unclaimedRewardsForPosition := s.GetTotalAccruedRewardsByAccumulator(positionId, false)
 				unclaimedRewardsForEachUptimeAcrossAllOldPositions, err = osmoutils.AddDecCoinArrays(unclaimedRewardsForEachUptimeAcrossAllOldPositions, unclaimedRewardsForPosition)
@@ -1112,7 +1112,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 				for _, posId := range test.positionIdsToMigrate {
 					positionLiquidity, err := s.clk.GetPositionLiquidity(s.Ctx, posId)
 					s.Require().ErrorIs(err, types.PositionIdNotFoundError{PositionId: posId})
-					s.Require().Equal(sdk.Dec{}, positionLiquidity)
+					s.Require().Equal(osmomath.Dec{}, positionLiquidity)
 				}
 
 				// --- New position assertions ---
@@ -2154,7 +2154,7 @@ func (s *KeeperTestSuite) TestSetPosition() {
 		lowerTick        int64
 		upperTick        int64
 		joinTime         time.Time
-		liquidity        sdk.Dec
+		liquidity        osmomath.Dec
 		positionId       uint64
 		underlyingLockId uint64
 	}{
@@ -2241,7 +2241,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		name                 string
 		positionCoins        sdk.Coins
 		lowerTick, upperTick int64
-		updateLiquidity      sdk.Dec
+		updateLiquidity      osmomath.Dec
 	}{
 		{
 			name:            "full range + position overlapping min tick. update liquidity upwards",

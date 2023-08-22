@@ -42,12 +42,12 @@ func (s *TestSuite) TestGetSpotPrices() {
 	testCases := map[string]struct {
 		poolID                uint64
 		prevErrTime           time.Time
-		mockSp0               sdk.Dec
-		mockSp1               sdk.Dec
+		mockSp0               osmomath.Dec
+		mockSp1               osmomath.Dec
 		mockSp0Err            error
 		mockSp1Err            error
-		expectedSp0           sdk.Dec
-		expectedSp1           sdk.Dec
+		expectedSp0           osmomath.Dec
+		expectedSp1           osmomath.Dec
 		expectedLatestErrTime time.Time
 	}{
 		"zero sp": {
@@ -172,7 +172,7 @@ func (s *TestSuite) TestUpdateRecord() {
 
 	spotPriceResOne := twapmock.SpotPriceResult{Sp: sdk.OneDec(), Err: nil}
 	spotPriceResOneErr := twapmock.SpotPriceResult{Sp: sdk.OneDec(), Err: errors.New("dummy err")}
-	spotPriceResOneErrNilDec := twapmock.SpotPriceResult{Sp: sdk.Dec{}, Err: errors.New("dummy err")}
+	spotPriceResOneErrNilDec := twapmock.SpotPriceResult{Sp: osmomath.Dec{}, Err: errors.New("dummy err")}
 	baseTime := time.Unix(2, 0).UTC()
 	updateTime := time.Unix(3, 0).UTC()
 	baseTimeMinusOne := time.Unix(1, 0).UTC()
@@ -229,10 +229,10 @@ func (s *TestSuite) TestUpdateRecord() {
 			s.Ctx = s.Ctx.WithBlockTime(updateTime.UTC())
 			test.record.PoolId = poolId
 			test.expRecord.PoolId = poolId
-			if (test.expRecord.P0LastSpotPrice == sdk.Dec{}) {
+			if (test.expRecord.P0LastSpotPrice == osmomath.Dec{}) {
 				test.expRecord.P0LastSpotPrice = test.spotPriceResult0.Sp
 			}
-			if (test.expRecord.P1LastSpotPrice == sdk.Dec{}) {
+			if (test.expRecord.P1LastSpotPrice == osmomath.Dec{}) {
 				test.expRecord.P1LastSpotPrice = test.spotPriceResult1.Sp
 			}
 			test.expRecord.Height = s.Ctx.BlockHeight()
@@ -374,7 +374,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 		testDenom0          string
 		testDenom1          string
 		testTime            time.Time
-		expectedAccumulator sdk.Dec
+		expectedAccumulator osmomath.Dec
 		expectedErr         error
 		expectedLastErrTime time.Time
 	}{
@@ -468,8 +468,8 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 	tests := map[string]struct {
 		recordsToPreSet       []types.TwapRecord
 		testTime              time.Time
-		expectedP0Accumulator []sdk.Dec
-		expectedP1Accumulator []sdk.Dec
+		expectedP0Accumulator []osmomath.Dec
+		expectedP1Accumulator []osmomath.Dec
 		expectedErr           error
 	}{
 		"call 1 second after existing record": {
@@ -479,7 +479,7 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 			// A 10 spot price * 1000ms = 10000
 			// A 10 spot price * 1000ms = 10000
 			// B .1 spot price * 1000ms = 100
-			expectedP0Accumulator: []sdk.Dec{
+			expectedP0Accumulator: []osmomath.Dec{
 				baseRecord[0].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
 				baseRecord[1].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
 				baseRecord[2].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
@@ -487,7 +487,7 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 			// B .1 spot price * 1000ms = 100
 			// C 20 spot price * 1000ms = 20000
 			// C 20 spot price * 1000ms = 20000
-			expectedP1Accumulator: []sdk.Dec{
+			expectedP1Accumulator: []osmomath.Dec{
 				baseRecord[0].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
 				baseRecord[1].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
 				baseRecord[2].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
@@ -504,7 +504,7 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 			// A 10 spot price * 1000ms = 10000
 			// A 10 spot price * 1000ms = 10000
 			// B .1 spot price * 1000ms = 100
-			expectedP0Accumulator: []sdk.Dec{
+			expectedP0Accumulator: []osmomath.Dec{
 				baseRecord[0].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
 				baseRecord[1].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
 				baseRecord[2].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
@@ -512,7 +512,7 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 			// B .1 spot price * 1000ms = 100
 			// C 20 spot price * 1000ms = 20000
 			// C 20 spot price * 1000ms = 20000
-			expectedP1Accumulator: []sdk.Dec{
+			expectedP1Accumulator: []osmomath.Dec{
 				baseRecord[0].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
 				baseRecord[1].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
 				baseRecord[2].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
@@ -569,7 +569,7 @@ type computeThreeAssetArithmeticTwapTestCase struct {
 	startRecord []types.TwapRecord
 	endRecord   []types.TwapRecord
 	quoteAsset  []string
-	expTwap     []sdk.Dec
+	expTwap     []osmomath.Dec
 	expErr      bool
 }
 
@@ -643,13 +643,13 @@ func (s *TestSuite) TestUpdateRecords() {
 	type spOverride struct {
 		baseDenom   string
 		quoteDenom  string
-		overrideSp  sdk.Dec
+		overrideSp  osmomath.Dec
 		overrideErr error
 	}
 
 	type expectedResults struct {
-		spotPriceA    sdk.Dec
-		spotPriceB    sdk.Dec
+		spotPriceA    osmomath.Dec
+		spotPriceB    osmomath.Dec
 		lastErrorTime time.Time
 		isMostRecent  bool
 	}
@@ -1361,7 +1361,7 @@ func (s *TestSuite) TestAfterCreatePool() {
 // This tests the behavior of computeArithmeticTwap, around error returning
 // when there has been an intermediate spot price error.
 func (s *TestSuite) TestComputeArithmeticTwapWithSpotPriceError() {
-	newOneSidedRecordWErrorTime := func(time time.Time, accum sdk.Dec, useP0 bool, errTime time.Time) types.TwapRecord {
+	newOneSidedRecordWErrorTime := func(time time.Time, accum osmomath.Dec, useP0 bool, errTime time.Time) types.TwapRecord {
 		record := newOneSidedRecord(time, accum, useP0)
 		record.LastErrorTime = errTime
 		return record
@@ -1439,8 +1439,8 @@ func (s *TestSuite) TestTwapLog() {
 
 	testcases := []struct {
 		name        string
-		price       sdk.Dec
-		expected    sdk.Dec
+		price       osmomath.Dec
+		expected    osmomath.Dec
 		expectPanic bool
 	}{
 		{
@@ -1453,7 +1453,7 @@ func (s *TestSuite) TestTwapLog() {
 		{
 			"zero price - panic",
 			sdk.ZeroDec(),
-			sdk.Dec{},
+			osmomath.Dec{},
 			true,
 		},
 		{
@@ -1479,7 +1479,7 @@ func (s *TestSuite) TestTwapLog() {
 	}
 }
 
-func testCaseFromDeltas(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
+func testCaseFromDeltas(s *TestSuite, startAccum, accumDiff osmomath.Dec, timeDelta time.Duration, expectedTwap osmomath.Dec) computeTwapTestCase {
 	return computeTwapTestCase{
 		newOneSidedRecord(baseTime, startAccum, true),
 		newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
@@ -1495,7 +1495,7 @@ func testCaseFromDeltas(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta t
 	}
 }
 
-func testCaseFromDeltasAsset1(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
+func testCaseFromDeltasAsset1(s *TestSuite, startAccum, accumDiff osmomath.Dec, timeDelta time.Duration, expectedTwap osmomath.Dec) computeTwapTestCase {
 	return computeTwapTestCase{
 		newOneSidedRecord(baseTime, startAccum, false),
 		newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), false),
@@ -1511,7 +1511,7 @@ func testCaseFromDeltasAsset1(s *TestSuite, startAccum, accumDiff sdk.Dec, timeD
 	}
 }
 
-func geometricTestCaseFromDeltas0(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
+func geometricTestCaseFromDeltas0(s *TestSuite, startAccum, accumDiff osmomath.Dec, timeDelta time.Duration, expectedTwap osmomath.Dec) computeTwapTestCase {
 	return computeTwapTestCase{
 		newOneSidedGeometricRecord(baseTime, startAccum),
 		newOneSidedGeometricRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff)),
@@ -1527,16 +1527,16 @@ func geometricTestCaseFromDeltas0(s *TestSuite, startAccum, accumDiff sdk.Dec, t
 	}
 }
 
-func geometricTestCaseFromDeltas1(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
+func geometricTestCaseFromDeltas1(s *TestSuite, startAccum, accumDiff osmomath.Dec, timeDelta time.Duration, expectedTwap osmomath.Dec) computeTwapTestCase {
 	return geometricTestCaseFromDeltas0(s, startAccum, accumDiff, timeDelta, sdk.OneDec().Quo(expectedTwap))
 }
 
-func testThreeAssetCaseFromDeltas(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeThreeAssetArithmeticTwapTestCase {
+func testThreeAssetCaseFromDeltas(startAccum, accumDiff osmomath.Dec, timeDelta time.Duration, expectedTwap osmomath.Dec) computeThreeAssetArithmeticTwapTestCase {
 	return computeThreeAssetArithmeticTwapTestCase{
 		newThreeAssetOneSidedRecord(baseTime, startAccum, true),
 		newThreeAssetOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
 		[]string{denom0, denom0, denom1},
-		[]sdk.Dec{expectedTwap, expectedTwap, expectedTwap},
+		[]osmomath.Dec{expectedTwap, expectedTwap, expectedTwap},
 		false,
 	}
 }

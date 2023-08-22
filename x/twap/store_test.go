@@ -534,9 +534,9 @@ func (s *TestSuite) TestAccumulatorOverflow() {
 	maxSpotPrice := gammtypes.MaxSpotPrice
 	tests := map[string]struct {
 		// timeDelta is duration in nano seconds.
-		// we use sdk.Dec here because time.Duration would automatically cap to
+		// we use osmomath.Dec here because time.Duration would automatically cap to
 		// time.duration.maxDuration without erroring.
-		timeDelta sdk.Dec
+		timeDelta osmomath.Dec
 		panics    bool
 	}{
 		"no overflow": {
@@ -553,7 +553,7 @@ func (s *TestSuite) TestAccumulatorOverflow() {
 		s.Run(name, func() {
 			s.SetupTest()
 
-			var accumulatorVal sdk.Dec
+			var accumulatorVal osmomath.Dec
 
 			fmt.Println(time.Duration(math.Pow(2, 128)))
 			if test.panics {

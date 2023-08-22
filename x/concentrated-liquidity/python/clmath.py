@@ -7,7 +7,7 @@ class Coin:
         self.amount = amount
 
 class DecCoins:
-    # Define this class based on what fields sdk.DecCoins has.
+    # Define this class based on what fields osmomath.DecCoins has.
     def __init__(self, denom: str, amount: Decimal):
         self.denom = denom
         self.amount = amount

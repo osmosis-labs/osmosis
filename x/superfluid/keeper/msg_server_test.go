@@ -64,7 +64,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 			lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
 			c := sdk.WrapSDKContext(s.Ctx)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// If there is no coinsToLock in the param, use pool denom
 			if test.param.coinsToLock.Empty() {
@@ -386,7 +386,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
 		// setup validators
 		valAddrs := s.SetupValidators(test.validatorStats)
 
-		denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+		denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20)})
 
 		// setup superfluid delegations
 		s.setupSuperfluidDelegations(valAddrs, test.superDelegations, denoms)
@@ -419,7 +419,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUnbondLock_Event() {
 	// setup validators
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 	// setup superfluid delegations
 	_, _, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 1000000}}, denoms)
@@ -454,7 +454,7 @@ func (s *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
 	// setup validators
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+	denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20)})
 
 	// whitelist designated pools
 	s.App.SuperfluidKeeper.SetUnpoolAllowedPools(s.Ctx, poolIds)

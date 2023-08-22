@@ -33,11 +33,11 @@ func (p CosmWasmPool) GetId() uint64 {
 	panic("CosmWasmPool.GetId not implemented")
 }
 
-func (p CosmWasmPool) GetSpreadFactor(ctx sdk.Context) sdk.Dec {
+func (p CosmWasmPool) GetSpreadFactor(ctx sdk.Context) osmomath.Dec {
 	panic("CosmWasmPool.GetSpreadFactor not implemented")
 }
 
-func (p CosmWasmPool) GetExitFee(ctx sdk.Context) sdk.Dec {
+func (p CosmWasmPool) GetExitFee(ctx sdk.Context) osmomath.Dec {
 	panic("CosmWasmPool.GetExitFee not implemented")
 }
 
@@ -45,7 +45,7 @@ func (p CosmWasmPool) IsActive(ctx sdk.Context) bool {
 	panic("CosmWasmPool.IsActive not implemented")
 }
 
-func (p CosmWasmPool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
+func (p CosmWasmPool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (osmomath.Dec, error) {
 	panic("CosmWasmPool.SpotPrice not implemented")
 }
 

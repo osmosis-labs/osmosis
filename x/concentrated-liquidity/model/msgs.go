@@ -24,7 +24,7 @@ func NewMsgCreateConcentratedPool(
 	denom0 string,
 	denom1 string,
 	tickSpacing uint64,
-	spreadFactor sdk.Dec,
+	spreadFactor osmomath.Dec,
 ) MsgCreateConcentratedPool {
 	return MsgCreateConcentratedPool{
 		Sender:       sender.String(),

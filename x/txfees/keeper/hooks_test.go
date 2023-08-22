@@ -45,7 +45,7 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		baseDenom    string
 		denoms       []string
 		poolTypes    []poolmanagertypes.PoolI
-		spreadFactor sdk.Dec
+		spreadFactor osmomath.Dec
 		expectPass   bool
 	}{
 		{

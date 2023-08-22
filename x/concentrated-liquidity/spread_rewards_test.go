@@ -27,7 +27,7 @@ type positionFields struct {
 	lowerTick  int64
 	upperTick  int64
 	positionId uint64
-	liquidity  sdk.Dec
+	liquidity  osmomath.Dec
 }
 
 var (
@@ -125,7 +125,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionSpreadRewardAccumulator() {
 		return posFields
 	}
 
-	withLiquidity := func(posFields positionFields, liquidity sdk.Dec) positionFields {
+	withLiquidity := func(posFields positionFields, liquidity osmomath.Dec) positionFields {
 		posFields.liquidity = liquidity
 		return posFields
 	}
@@ -137,7 +137,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionSpreadRewardAccumulator() {
 		name           string
 		positionFields positionFields
 
-		expectedLiquidity sdk.Dec
+		expectedLiquidity osmomath.Dec
 		expectedError     error
 	}
 	tests := []initSpreadRewardAccumTest{
@@ -249,11 +249,11 @@ func (s *KeeperTestSuite) TestGetSpreadRewardGrowthOutside() {
 		lowerTick                          int64
 		upperTick                          int64
 		currentTick                        int64
-		lowerTickSpreadRewardGrowthOutside sdk.DecCoins
-		upperTickSpreadRewardGrowthOutside sdk.DecCoins
-		globalSpreadRewardGrowth           sdk.DecCoin
+		lowerTickSpreadRewardGrowthOutside osmomath.DecCoins
+		upperTickSpreadRewardGrowthOutside osmomath.DecCoins
+		globalSpreadRewardGrowth           osmomath.DecCoin
 
-		expectedSpreadRewardGrowthOutside sdk.DecCoins
+		expectedSpreadRewardGrowthOutside osmomath.DecCoins
 		expectedError                     bool
 	}
 
@@ -437,7 +437,7 @@ func (s *KeeperTestSuite) TestCalculateSpreadRewardGrowth() {
 	type calcSpreadRewardGrowthTest struct {
 		isUpperTick                bool
 		isCurrentTickGTETargetTick bool
-		expectedSpreadRewardGrowth sdk.DecCoins
+		expectedSpreadRewardGrowth osmomath.DecCoins
 	}
 
 	tests := map[string]calcSpreadRewardGrowthTest{
@@ -511,9 +511,9 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 
 	tests := map[string]struct {
 		tick                            int64
-		initialGlobalSpreadRewardGrowth sdk.DecCoin
+		initialGlobalSpreadRewardGrowth osmomath.DecCoin
 
-		expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal sdk.DecCoins
+		expectedInitialSpreadRewardGrowthOppositeDirectionOfLastTraversal osmomath.DecCoins
 	}{
 		"current tick > tick -> spread reward growth global": {
 			tick: initialPoolTick - 1,
@@ -551,10 +551,10 @@ func (s *KeeperTestSuite) TestQueryAndCollectSpreadRewards() {
 
 	tests := map[string]struct {
 		// setup parameters.
-		initialLiquidity                   sdk.Dec
-		lowerTickSpreadRewardGrowthOutside sdk.DecCoins
-		upperTickSpreadRewardGrowthOutside sdk.DecCoins
-		globalSpreadRewardGrowth           sdk.DecCoins
+		initialLiquidity                   osmomath.Dec
+		lowerTickSpreadRewardGrowthOutside osmomath.DecCoins
+		upperTickSpreadRewardGrowthOutside osmomath.DecCoins
+		globalSpreadRewardGrowth           osmomath.DecCoins
 		currentTick                        int64
 		isInvalidPoolIdGiven               bool
 
@@ -865,11 +865,11 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 	tests := map[string]struct {
 		// setup parameters.
-		initialLiquidity                   sdk.Dec
-		lowerTickSpreadRewardGrowthOutside sdk.DecCoins
-		upperTickSpreadRewardGrowthOutside sdk.DecCoins
-		globalSpreadRewardGrowth           sdk.DecCoins
-		expectedReinvestedDustAmount       sdk.Dec
+		initialLiquidity                   osmomath.Dec
+		lowerTickSpreadRewardGrowthOutside osmomath.DecCoins
+		upperTickSpreadRewardGrowthOutside osmomath.DecCoins
+		globalSpreadRewardGrowth           osmomath.DecCoins
+		expectedReinvestedDustAmount       osmomath.Dec
 		currentTick                        int64
 		isInvalidPoolIdGiven               bool
 
@@ -879,7 +879,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 		positionIdToPrepare uint64
 
 		// expectations.
-		expectedInitAccumValue sdk.DecCoins
+		expectedInitAccumValue osmomath.DecCoins
 		expectedError          error
 	}{
 		"single swap left -> right: 2 ticks, one share, current tick > upper tick": {
@@ -1030,7 +1030,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 			currentTick: 5,
 
-			expectedInitAccumValue: sdk.DecCoins(nil),
+			expectedInitAccumValue: osmomath.DecCoins(nil),
 		},
 		"swap occurs below the position, current tick < lower tick": {
 			initialLiquidity: sdk.OneDec(),
@@ -1046,7 +1046,7 @@ func (s *KeeperTestSuite) TestPrepareClaimableSpreadRewards() {
 
 			currentTick: -13,
 
-			expectedInitAccumValue: sdk.DecCoins(nil),
+			expectedInitAccumValue: osmomath.DecCoins(nil),
 		},
 
 		// error cases.
@@ -1143,8 +1143,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateSpreadRewardAccumulatorPosition_Updati
 		doesSpreadRewardGrowBetweenSecondAndThirdCall bool
 		doesSpreadRewardGrowAfterThirdCall            bool
 
-		expectedUnclaimedRewardsPositionOne sdk.DecCoins
-		expectedUnclaimedRewardsPositionTwo sdk.DecCoins
+		expectedUnclaimedRewardsPositionOne osmomath.DecCoins
+		expectedUnclaimedRewardsPositionTwo osmomath.DecCoins
 	}
 
 	tests := map[string]updateSpreadRewardAccumPositionTest{
@@ -1256,7 +1256,7 @@ func (s *KeeperTestSuite) TestUpdatePosValueToInitValuePlusGrowthOutside() {
 	tests := []struct {
 		name                      string
 		poolId                    uint64
-		spreadRewardGrowthOutside sdk.DecCoins
+		spreadRewardGrowthOutside osmomath.DecCoins
 		invalidPositionKey        bool
 		expectError               error
 	}{
@@ -1542,7 +1542,7 @@ func (s *KeeperTestSuite) tickStatusInvariance(ticksActivatedAfterEachSwap [][]i
 
 // swapAndTrackXTimesInARow performs `numSwaps` swaps and tracks the tick activated after each swap.
 // It also returns the total spread rewards collected, the total token in, and the total token out.
-func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coin, coinOutDenom string, priceLimit sdk.Dec, numSwaps int) (ticksActivatedAfterEachSwap []int64, totalSpreadRewards sdk.Coins, totalTokenIn sdk.Coin, totalTokenOut sdk.Coin) {
+func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coin, coinOutDenom string, priceLimit osmomath.Dec, numSwaps int) (ticksActivatedAfterEachSwap []int64, totalSpreadRewards sdk.Coins, totalTokenIn sdk.Coin, totalTokenOut sdk.Coin) {
 	// Retrieve pool
 	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)

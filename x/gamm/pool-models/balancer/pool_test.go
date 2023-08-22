@@ -178,7 +178,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 	testCases := []struct {
 		name           string
-		spreadFactor   sdk.Dec
+		spreadFactor   osmomath.Dec
 		poolAssets     []balancer.PoolAsset
 		tokensIn       sdk.Coins
 		expectShares   sdk.Int
@@ -570,7 +570,7 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 				suite.Require().NotNil(pool)
 
 				errTolerance := osmomath.ErrTolerance{
-					AdditiveTolerance: sdk.OneDec(), MultiplicativeTolerance: sdk.Dec{},
+					AdditiveTolerance: sdk.OneDec(), MultiplicativeTolerance: osmomath.Dec{},
 				}
 				sut := func() {
 					test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, spreadFactorDec, errTolerance)

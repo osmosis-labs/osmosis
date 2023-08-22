@@ -1270,7 +1270,7 @@ func (s *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn() {
 	testCases := []struct {
 		name             string
 		positionCoins    sdk.Coins
-		liquidityToSlash sdk.Dec
+		liquidityToSlash osmomath.Dec
 		denomToSlash     string
 		expectError      bool
 	}{

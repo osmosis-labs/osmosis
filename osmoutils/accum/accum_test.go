@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	accumPackage "github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
@@ -37,7 +38,7 @@ func (suite *AccumTestSuite) MakeAndGetAccumulator(name string) *accumPackage.Ac
 	return accum
 }
 
-func (suite *AccumTestSuite) TotalSharesCheck(accum *accumPackage.AccumulatorObject, expected sdk.Dec) {
+func (suite *AccumTestSuite) TotalSharesCheck(accum *accumPackage.AccumulatorObject, expected osmomath.Dec) {
 	shareCount := accum.GetTotalShares()
 	suite.Require().Equal(expected.String(), shareCount.String())
 }
@@ -177,7 +178,7 @@ func (suite *AccumTestSuite) TestMakeAccumulatorWithValueAndShares() {
 		testName    string
 		accumName   string
 		accumValue  sdk.DecCoins
-		totalShares sdk.Dec
+		totalShares osmomath.Dec
 		expAccum    accumPackage.AccumulatorObject
 		expSetPass  bool
 		expGetPass  bool
@@ -234,7 +235,7 @@ func (suite *AccumTestSuite) TestNewPosition() {
 	tests := map[string]struct {
 		initialCoins     sdk.DecCoins
 		name             string
-		numShareUnits    sdk.Dec
+		numShareUnits    osmomath.Dec
 		options          *accumPackage.Options
 		expectedPosition accumPackage.Record
 	}{
@@ -315,7 +316,7 @@ func (suite *AccumTestSuite) TestNewPositionIntervalAccumulation() {
 	tests := map[string]struct {
 		accObject                    *accumPackage.AccumulatorObject
 		name                         string
-		numShareUnits                sdk.Dec
+		numShareUnits                osmomath.Dec
 		intervalAccumulationPerShare sdk.DecCoins
 		options                      *accumPackage.Options
 		expectedPosition             accumPackage.Record
@@ -546,9 +547,9 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 
 func (suite *AccumTestSuite) TestAddToPosition() {
 	type testcase struct {
-		startingNumShares        sdk.Dec
+		startingNumShares        osmomath.Dec
 		startingUnclaimedRewards sdk.DecCoins
-		newShares                sdk.Dec
+		newShares                osmomath.Dec
 
 		// accumInit and expAccumDelta specify the initial accum value
 		// and how much it has changed since the position being added
@@ -753,7 +754,7 @@ func (suite *AccumTestSuite) TestAddToPositionIntervalAccumulation() {
 	tests := map[string]struct {
 		accObject                    *accumPackage.AccumulatorObject
 		name                         string
-		numShareUnits                sdk.Dec
+		numShareUnits                osmomath.Dec
 		intervalAccumulationPerShare sdk.DecCoins
 		expectedPosition             accumPackage.Record
 		expectedError                error
@@ -820,9 +821,9 @@ func (suite *AccumTestSuite) TestAddToPositionIntervalAccumulation() {
 
 func (suite *AccumTestSuite) TestRemoveFromPosition() {
 	type testcase struct {
-		startingNumShares        sdk.Dec
+		startingNumShares        osmomath.Dec
 		startingUnclaimedRewards sdk.DecCoins
-		removedShares            sdk.Dec
+		removedShares            osmomath.Dec
 
 		// accumInit and expAccumDelta specify the initial accum value
 		// and how much it has changed since the position being added
@@ -1031,7 +1032,7 @@ func (suite *AccumTestSuite) TestRemoveFromPositionIntervalAccumulation() {
 	tests := map[string]struct {
 		accObject                    *accumPackage.AccumulatorObject
 		name                         string
-		numShareUnits                sdk.Dec
+		numShareUnits                osmomath.Dec
 		intervalAccumulationPerShare sdk.DecCoins
 		expectedPosition             accumPackage.Record
 		expectedError                error
@@ -1103,8 +1104,8 @@ func (suite *AccumTestSuite) TestRemoveFromPositionIntervalAccumulation() {
 
 func (suite *AccumTestSuite) TestGetPositionSize() {
 	type testcase struct {
-		numShares     sdk.Dec
-		changedShares sdk.Dec
+		numShares     osmomath.Dec
+		changedShares osmomath.Dec
 
 		// accumInit and expAccumDelta specify the initial accum value
 		// and how much it has changed since the position being added
@@ -1270,7 +1271,7 @@ func (suite *AccumTestSuite) TestUpdatePosition() {
 
 	tests := map[string]struct {
 		name             string
-		numShares        sdk.Dec
+		numShares        osmomath.Dec
 		expectedPosition accumPackage.Record
 		expectError      error
 	}{
@@ -1343,10 +1344,10 @@ func (suite *AccumTestSuite) TestUpdatePosition() {
 func (suite *AccumTestSuite) TestUpdatePositionIntervalAccumulation() {
 	tests := []struct {
 		testName                     string
-		initialShares                sdk.Dec
+		initialShares                osmomath.Dec
 		initialAccum                 sdk.DecCoins
 		accName                      string
-		numShareUnits                sdk.Dec
+		numShareUnits                osmomath.Dec
 		intervalAccumulationPerShare sdk.DecCoins
 		expectedPosition             accumPackage.Record
 		expectedError                error
@@ -1559,7 +1560,7 @@ func (suite *AccumTestSuite) TestGetTotalShares() {
 	// Run a number of NewPosition, AddToPosition, and RemoveFromPosition operations on each accum
 	testAddresses := []string{testAddressOne, testAddressTwo, testAddressThree}
 	accums := []*accumPackage.AccumulatorObject{accumOne, accumTwo}
-	expectedShares := []sdk.Dec{sdk.OneDec(), sdk.ZeroDec()}
+	expectedShares := []osmomath.Dec{sdk.OneDec(), sdk.ZeroDec()}
 
 	for i := 1; i <= 10; i++ {
 		// Cycle through accounts and accumulators

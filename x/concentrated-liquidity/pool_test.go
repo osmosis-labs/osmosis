@@ -103,7 +103,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				// Ensure that fee accumulator has been properly initialized
 				spreadRewardAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, test.poolI.GetId())
 				s.Require().NoError(err)
-				s.Require().Equal(sdk.DecCoins(nil), spreadRewardAccumulator.GetValue())
+				s.Require().Equal(osmomath.DecCoins(nil), spreadRewardAccumulator.GetValue())
 
 				// Ensure that uptime accumulators have been properly initialized
 				uptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, test.poolI.GetId())
@@ -245,7 +245,7 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 	spotPrice, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, ETH, USDC)
 	s.Require().Error(err)
 	s.Require().ErrorAs(err, &types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId})
-	s.Require().Equal(sdk.Dec{}, spotPrice)
+	s.Require().Equal(osmomath.Dec{}, spotPrice)
 
 	// set up default position to have proper spot price
 	s.SetupDefaultPosition(defaultPoolId)
@@ -258,7 +258,7 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 	// test that we have correct values for reversed quote asset and base asset
 	spotPriceBaseUSDC, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, ETH, USDC)
 	s.Require().NoError(err)
-	s.Require().Equal(spotPriceBaseUSDC, osmomath.OneDec().Quo(DefaultCurrSqrtPrice.PowerInteger(2)).SDKDec())
+	s.Require().Equal(spotPriceBaseUSDC, osmomath.OneBigDec().Quo(DefaultCurrSqrtPrice.PowerInteger(2)).SDKDec())
 
 	// try getting spot price from a non-existent pool
 	spotPrice, err = s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId+1, USDC, ETH)
@@ -271,7 +271,7 @@ func (s *KeeperTestSuite) TestValidateSpreadFactor() {
 	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
 	tests := []struct {
 		name         string
-		spreadFactor sdk.Dec
+		spreadFactor osmomath.Dec
 		expectValid  bool
 	}{
 		{
@@ -335,7 +335,7 @@ func (s *KeeperTestSuite) TestSetPool() {
 		CurrentTickLiquidity: sdk.ZeroDec(),
 		Token0:               ETH,
 		Token1:               USDC,
-		CurrentSqrtPrice:     osmomath.OneDec(),
+		CurrentSqrtPrice:     osmomath.OneBigDec(),
 		CurrentTick:          0,
 		TickSpacing:          DefaultTickSpacing,
 		ExponentAtPriceOne:   -6,

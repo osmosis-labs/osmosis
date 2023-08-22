@@ -34,7 +34,7 @@ type liquidityChangeEvent struct {
 	lowerTick      int64
 	upperTick      int64
 	joinTime       time.Time
-	liquidityDelta sdk.Dec
+	liquidityDelta osmomath.Dec
 	actualAmount0  sdk.Int
 	actualAmount1  sdk.Int
 }

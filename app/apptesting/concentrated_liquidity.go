@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 
@@ -44,10 +45,10 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndFullRangePosition(
 
 // createConcentratedPoolsFromCoinsWithSpreadFactor creates CL pools from given sets of coins and respective swap fees.
 // Where element 1 of the input corresponds to the first pool created, element 2 to the second pool created etc.
-func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor(poolDenoms [][]string, spreadFactor []sdk.Dec) {
+func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor(poolDenoms [][]string, spreadFactor []osmomath.Dec) {
 	for i, curPoolDenoms := range poolDenoms {
 		s.Require().Equal(2, len(curPoolDenoms))
-		var curSpreadFactor sdk.Dec
+		var curSpreadFactor osmomath.Dec
 		if len(spreadFactor) > i {
 			curSpreadFactor = spreadFactor[i]
 		} else {
@@ -64,7 +65,7 @@ func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePositionWithSpread
 // createConcentratedPoolsFromCoins creates CL pools from given sets of coins (with zero swap fees).
 // Where element 1 of the input corresponds to the first pool created, element 2 to the second pool created etc.
 func (s *KeeperTestHelper) CreateConcentratedPoolsAndFullRangePosition(poolDenoms [][]string) {
-	s.CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor(poolDenoms, []sdk.Dec{sdk.ZeroDec()})
+	s.CreateConcentratedPoolsAndFullRangePositionWithSpreadFactor(poolDenoms, []osmomath.Dec{sdk.ZeroDec()})
 }
 
 // PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition sets up a concentrated liquidity pool with custom denoms.
@@ -81,7 +82,7 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndLockedFullRangePos
 }
 
 // PrepareCustomConcentratedPool sets up a concentrated liquidity pool with the custom parameters.
-func (s *KeeperTestHelper) PrepareCustomConcentratedPool(owner sdk.AccAddress, denom0, denom1 string, tickSpacing uint64, spreadFactor sdk.Dec) types.ConcentratedPoolExtension {
+func (s *KeeperTestHelper) PrepareCustomConcentratedPool(owner sdk.AccAddress, denom0, denom1 string, tickSpacing uint64, spreadFactor osmomath.Dec) types.ConcentratedPoolExtension {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
@@ -112,7 +113,7 @@ func (s *KeeperTestHelper) PrepareMultipleConcentratedPools(poolsToCreate uint16
 }
 
 // CreateFullRangePosition creates a full range position and returns position id and the liquidity created.
-func (s *KeeperTestHelper) CreateFullRangePosition(pool types.ConcentratedPoolExtension, coins sdk.Coins) (uint64, sdk.Dec) {
+func (s *KeeperTestHelper) CreateFullRangePosition(pool types.ConcentratedPoolExtension, coins sdk.Coins) (uint64, osmomath.Dec) {
 	s.FundAcc(s.TestAccs[0], coins)
 	positionData, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, pool.GetId(), s.TestAccs[0], coins)
 	s.Require().NoError(err)
@@ -120,7 +121,7 @@ func (s *KeeperTestHelper) CreateFullRangePosition(pool types.ConcentratedPoolEx
 }
 
 // WithdrawFullRangePosition withdraws given liquidity from a position specified by id.
-func (s *KeeperTestHelper) WithdrawFullRangePosition(pool types.ConcentratedPoolExtension, positionId uint64, liquidityToRemove sdk.Dec) {
+func (s *KeeperTestHelper) WithdrawFullRangePosition(pool types.ConcentratedPoolExtension, positionId uint64, liquidityToRemove osmomath.Dec) {
 	clMsgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
 	_, err := clMsgServer.WithdrawPosition(sdk.WrapSDKContext(s.Ctx), &types.MsgWithdrawPosition{

@@ -32,8 +32,8 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 	type testcase struct {
 		name         string
 		txFee        sdk.Coins
-		minGasPrices sdk.DecCoins // if blank, set to 0
-		gasRequested uint64       // if blank, set to base gas
+		minGasPrices osmomath.DecCoins // if blank, set to 0
+		gasRequested uint64            // if blank, set to base gas
 		isCheckTx    bool
 		isSimulate   bool // if blank, is false
 		expectPass   bool

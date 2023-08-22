@@ -38,7 +38,7 @@ const (
 type AssetPair struct {
 	BaseAsset         string
 	QuoteAsset        string
-	SpreadFactor      sdk.Dec
+	SpreadFactor      osmomath.Dec
 	LinkedClassicPool uint64
 	Superfluid        bool
 }
@@ -439,7 +439,7 @@ func InitializeAssetPairsTestnet(ctx sdk.Context, keepers *keepers.AppKeepers) (
 
 // validateSpotPriceFallsInBounds ensures that after swapping in the OSMO for the baseAsset, the resulting spot price is within the
 // min and max spot price bounds of the concentrated liquidity module.
-func validateSpotPriceFallsInBounds(ctx sdk.Context, cfmmPool gammtypes.CFMMPoolI, keepers *keepers.AppKeepers, baseAsset, quoteAsset string, spreadFactor sdk.Dec) error {
+func validateSpotPriceFallsInBounds(ctx sdk.Context, cfmmPool gammtypes.CFMMPoolI, keepers *keepers.AppKeepers, baseAsset, quoteAsset string, spreadFactor osmomath.Dec) error {
 	// Check if swapping 0.1 OSMO results in a spot price less than the min or greater than the max
 	var respectiveBaseAsset sdk.Coin
 	var err error

@@ -184,7 +184,7 @@ func TestScaledSortedPoolReserves(t *testing.T) {
 			denoms:         [2]string{"foo", "bar"},
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10000000000, 10000000000},
-			expReserves:    []osmomath.BigDec{osmomath.NewDecWithPrec(1, 1).Quo(bigDecScalingMultiplier), osmomath.NewDecWithPrec(1, 1).Quo(bigDecScalingMultiplier)},
+			expReserves:    []osmomath.BigDec{osmomath.NewBigDecWithPrec(1, 1).Quo(bigDecScalingMultiplier), osmomath.NewBigDecWithPrec(1, 1).Quo(bigDecScalingMultiplier)},
 		},
 		"five asset pool, scaling factors = 1": {
 			denoms:         [2]string{"asset/c", "asset/d"},
@@ -293,12 +293,12 @@ func TestGetDescaledPoolAmts(t *testing.T) {
 		amount         osmomath.BigDec
 		poolAssets     sdk.Coins
 		scalingFactors []uint64
-		expResult      sdk.Dec
+		expResult      osmomath.Dec
 		expPanic       bool
 	}{
 		"pass in no denoms": {
 			denom:          "",
-			amount:         osmomath.ZeroDec(),
+			amount:         osmomath.ZeroBigDec(),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			expResult:      sdk.ZeroDec(),
@@ -468,7 +468,7 @@ func TestScaleCoin(t *testing.T) {
 			rounding:       osmomath.RoundDown,
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: []uint64{10000000000, 10_000_000_000},
-			expOutput:      osmomath.NewDecWithPrec(100, 10).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier)),
+			expOutput:      osmomath.NewBigDecWithPrec(100, 10).Quo(osmomath.NewBigDec(types.ScalingFactorMultiplier)),
 			expError:       false,
 		},
 		"five asset pool scaling factors = 1": {
@@ -699,7 +699,7 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 		tokenIn               sdk.Coins
 		expectedTokenOut      sdk.Coin
 		expectedPoolLiquidity sdk.Coins
-		spreadFactor          sdk.Dec
+		spreadFactor          osmomath.Dec
 		expError              bool
 	}{
 		"even pool basic trade": {
@@ -786,7 +786,7 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 		tokenOut              sdk.Coins
 		expectedTokenIn       sdk.Coin
 		expectedPoolLiquidity sdk.Coins
-		spreadFactor          sdk.Dec
+		spreadFactor          osmomath.Dec
 		expError              bool
 	}{
 		"even pool basic trade": {
@@ -855,7 +855,7 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 		poolAssets         sdk.Coins
 		unevenJoinedTokens sdk.Coins
 		scalingFactors     []uint64
-		spreadFactor       sdk.Dec
+		spreadFactor       osmomath.Dec
 	}
 
 	tests := map[string]testcase{
@@ -952,7 +952,7 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
 			// only for single asset join case
-			var swapRatio sdk.Dec
+			var swapRatio osmomath.Dec
 			var err error
 			if len(tc.tokensIn) == 1 {
 				swapRatio, err = p.singleAssetJoinSpreadFactorRatio(tc.tokensIn[0].Denom)
@@ -1206,7 +1206,7 @@ func TestStableswapSpotPrice(t *testing.T) {
 		poolAssets     sdk.Coins
 		scalingFactors []uint64
 		expectPass     bool
-		expectedPrice  sdk.Dec
+		expectedPrice  osmomath.Dec
 	}
 	tests := map[string]testcase{
 		"even two-asset pool": {
@@ -1344,8 +1344,8 @@ func TestStableswapSpotPrice(t *testing.T) {
 			if tc.expectPass {
 				require.NoError(t, err)
 
-				var expectedSpotPrice sdk.Dec
-				if (tc.expectedPrice != sdk.Dec{}) {
+				var expectedSpotPrice osmomath.Dec
+				if (tc.expectedPrice != osmomath.Dec{}) {
 					expectedSpotPrice = tc.expectedPrice
 				} else {
 					expectedSpotPrice, err = p.calcOutAmtGivenIn(sdk.NewInt64Coin(tc.baseDenom, 1), tc.quoteDenom, sdk.ZeroDec())

@@ -11,13 +11,13 @@ var onePercentSpreadFactor = sdk.NewDecWithPrec(1, 2)
 
 func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGivenIn() {
 	tests := map[string]struct {
-		currentSqrtPrice         sdk.Dec
+		currentSqrtPrice         osmomath.Dec
 		hasReachedTarget         bool
-		amountIn                 sdk.Dec
-		amountSpecifiedRemaining sdk.Dec
-		spreadFactor             sdk.Dec
+		amountIn                 osmomath.Dec
+		amountSpecifiedRemaining osmomath.Dec
+		spreadFactor             osmomath.Dec
 
-		expectedspreadRewardCharge sdk.Dec
+		expectedspreadRewardCharge osmomath.Dec
 		expectPanic                bool
 	}{
 		"reached target -> charge spread factor on amount in": {

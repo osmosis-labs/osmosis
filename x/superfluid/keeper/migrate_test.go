@@ -49,7 +49,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 		unlocking                bool
 		noLock                   bool
 		overwriteLockId          bool
-		percentOfSharesToMigrate sdk.Dec
+		percentOfSharesToMigrate osmomath.Dec
 		minExitCoins             sdk.Coins
 		expectedError            error
 	}
@@ -257,7 +257,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 	type sendTest struct {
 		overwriteValidatorAddress bool
 		overwriteLockId           bool
-		percentOfSharesToMigrate  sdk.Dec
+		percentOfSharesToMigrate  osmomath.Dec
 		tokenOutMins              sdk.Coins
 		expectedError             error
 	}
@@ -416,7 +416,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 	type sendTest struct {
 		unlocking                 bool
 		overwriteValidatorAddress bool
-		percentOfSharesToMigrate  sdk.Dec
+		percentOfSharesToMigrate  osmomath.Dec
 		tokenOutMins              sdk.Coins
 		expectedError             error
 	}
@@ -539,7 +539,7 @@ func (s *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated() {
 	defaultJoinTime := s.Ctx.BlockTime()
 	type sendTest struct {
 		unlocking                bool
-		percentOfSharesToMigrate sdk.Dec
+		percentOfSharesToMigrate osmomath.Dec
 		tokenOutMins             sdk.Coins
 		expectedError            error
 	}
@@ -615,7 +615,7 @@ func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated(
 	defaultJoinTime := s.Ctx.BlockTime()
 	type sendTest struct {
 		unlocking                bool
-		percentOfSharesToMigrate sdk.Dec
+		percentOfSharesToMigrate osmomath.Dec
 		tokenOutMins             sdk.Coins
 		expectedError            error
 	}
@@ -693,7 +693,7 @@ func (s *KeeperTestSuite) TestValidateMigration() {
 		overwriteSender           bool
 		overwriteSharesDenomValue string
 		overwriteLockId           bool
-		percentOfSharesToMigrate  sdk.Dec
+		percentOfSharesToMigrate  osmomath.Dec
 		tokenOutMins              sdk.Coins
 		expectedError             error
 	}
@@ -805,7 +805,7 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 		overwritePool             bool
 		overwritePoolId           bool
 		exitCoinsLengthIsTwo      bool
-		percentOfSharesToMigrate  sdk.Dec
+		percentOfSharesToMigrate  osmomath.Dec
 		tokenOutMins              sdk.Coins
 		expectedError             error
 	}
@@ -959,7 +959,7 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 	}
 }
 
-func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking, noLock bool, percentOfSharesToMigrate sdk.Dec) (joinPoolAmt sdk.Coins, balancerIntermediaryAcc types.SuperfluidIntermediaryAccount, balancerLock *lockuptypes.PeriodLock, poolCreateAcc, poolJoinAcc sdk.AccAddress, balancerPooId, clPoolId uint64, balancerPoolShareOut sdk.Coin, valAddr sdk.ValAddress) {
+func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking, noLock bool, percentOfSharesToMigrate osmomath.Dec) (joinPoolAmt sdk.Coins, balancerIntermediaryAcc types.SuperfluidIntermediaryAccount, balancerLock *lockuptypes.PeriodLock, poolCreateAcc, poolJoinAcc sdk.AccAddress, balancerPooId, clPoolId uint64, balancerPoolShareOut sdk.Coin, valAddr sdk.ValAddress) {
 	bankKeeper := s.App.BankKeeper
 	gammKeeper := s.App.GAMMKeeper
 	superfluidKeeper := s.App.SuperfluidKeeper
@@ -1084,7 +1084,7 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	return joinPoolAmt, balancerIntermediaryAcc, balancerLock, poolCreateAcc, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr
 }
 
-func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, concentratedLockId, poolIdEntering uint64, percentOfSharesToMigrate sdk.Dec, valAddr sdk.ValAddress, balancerLock lockuptypes.PeriodLock, expectSlash bool) {
+func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, concentratedLockId, poolIdEntering uint64, percentOfSharesToMigrate osmomath.Dec, valAddr sdk.ValAddress, balancerLock lockuptypes.PeriodLock, expectSlash bool) {
 	// Retrieve the concentrated lock and gamm lock prior to slashing.
 	concentratedLockPreSlash, err := s.App.LockupKeeper.GetLockByID(ctx, concentratedLockId)
 	s.Require().NoError(err)
@@ -1138,7 +1138,7 @@ func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, co
 
 func (s *KeeperTestSuite) ValidateMigrateResult(
 	positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering uint64,
-	percentOfSharesToMigrate, liquidityMigrated sdk.Dec,
+	percentOfSharesToMigrate, liquidityMigrated osmomath.Dec,
 	balancerLock lockuptypes.PeriodLock,
 	joinPoolAmt sdk.Coins,
 	balancerPoolShareOut, coinsToMigrate sdk.Coin,

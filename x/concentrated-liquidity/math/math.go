@@ -13,7 +13,7 @@ import (
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // Liquidity0 = amount0 * (sqrtPriceA * sqrtPriceB) / (sqrtPriceB - sqrtPriceA)
 // TODO: Define rounding properties we expect to hold for this function.
-func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB osmomath.BigDec) sdk.Dec {
+func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB osmomath.BigDec) osmomath.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
@@ -35,7 +35,7 @@ func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB osmomath.BigDec) sdk.Dec 
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
 // Liquidity1 = amount1 / (sqrtPriceB - sqrtPriceA)
-func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB osmomath.BigDec) sdk.Dec {
+func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB osmomath.BigDec) osmomath.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
@@ -173,7 +173,7 @@ func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amo
 
 // GetLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1
 // and returns the resulting liquidity from these inputs.
-func GetLiquidityFromAmounts(sqrtPrice osmomath.BigDec, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int) (liquidity sdk.Dec) {
+func GetLiquidityFromAmounts(sqrtPrice osmomath.BigDec, sqrtPriceA, sqrtPriceB osmomath.Dec, amount0, amount1 sdk.Int) (liquidity osmomath.Dec) {
 	sqrtPriceABigDec := osmomath.BigDecFromSDKDec(sqrtPriceA)
 	sqrtPriceBBigDec := osmomath.BigDecFromSDKDec(sqrtPriceB)
 
@@ -201,11 +201,11 @@ func GetLiquidityFromAmounts(sqrtPrice osmomath.BigDec, sqrtPriceA, sqrtPriceB s
 }
 
 // SquareRoundUp squares and rounds up at precision end.
-func SquareRoundUp(sqrtPrice sdk.Dec) sdk.Dec {
+func SquareRoundUp(sqrtPrice osmomath.Dec) osmomath.Dec {
 	return sqrtPrice.MulRoundUp(sqrtPrice)
 }
 
 // SquareTruncate squares and truncates at precision end.
-func SquareTruncate(sqrtPrice sdk.Dec) sdk.Dec {
+func SquareTruncate(sqrtPrice osmomath.Dec) osmomath.Dec {
 	return sqrtPrice.MulTruncate(sqrtPrice)
 }

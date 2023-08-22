@@ -35,7 +35,7 @@ func (e swapAmountsMismatchErr) Error() string {
 
 type positionAndLiquidity struct {
 	positionId   uint64
-	liquidity    sdk.Dec
+	liquidity    osmomath.Dec
 	accountIndex int
 }
 
@@ -238,7 +238,7 @@ func (s *KeeperTestSuite) swapNearTickBoundary(r *rand.Rand, pool types.Concentr
 }
 
 // change tick amount to be at, above or below the target amount
-func tickAmtChange(r *rand.Rand, targetAmount sdk.Dec) sdk.Dec {
+func tickAmtChange(r *rand.Rand, targetAmount osmomath.Dec) osmomath.Dec {
 	changeType := r.Intn(3)
 
 	// Generate a random percentage under 0.1%
@@ -536,7 +536,7 @@ func (s *KeeperTestSuite) removeRandomPosition(r *rand.Rand) {
 }
 
 // returns multiplier of the liqudity to withdraw
-func (s *KeeperTestSuite) choosePartialOrFullWithdraw(r *rand.Rand) sdk.Dec {
+func (s *KeeperTestSuite) choosePartialOrFullWithdraw(r *rand.Rand) osmomath.Dec {
 	multiplier := sdk.OneDec()
 	if r.Intn(2) == 0 {
 		// full withdraw

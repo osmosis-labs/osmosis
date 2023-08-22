@@ -97,13 +97,13 @@ var (
 
 // RandomizedGenState generates a random GenesisState for mint.
 func RandomizedGenState(simState *module.SimulationState) {
-	var epochProvisions sdk.Dec
+	var epochProvisions osmomath.Dec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, epochProvisionsKey, &epochProvisions, simState.Rand,
 		func(r *rand.Rand) { epochProvisions = genEpochProvisions(r) },
 	)
 
-	var reductionFactor sdk.Dec
+	var reductionFactor osmomath.Dec
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, reductionFactorKey, &reductionFactor, simState.Rand,
 		func(r *rand.Rand) { reductionFactor = genReductionFactor(r) },
@@ -141,11 +141,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(mintGenesis)
 }
 
-func genEpochProvisions(r *rand.Rand) sdk.Dec {
+func genEpochProvisions(r *rand.Rand) osmomath.Dec {
 	return sdk.NewDec(int64(r.Intn(maxInt64)))
 }
 
-func genReductionFactor(r *rand.Rand) sdk.Dec {
+func genReductionFactor(r *rand.Rand) osmomath.Dec {
 	return sdk.NewDecWithPrec(int64(r.Intn(10)), 1)
 }
 

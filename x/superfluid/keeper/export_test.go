@@ -19,7 +19,7 @@ func (k Keeper) ValidateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 	return k.validateLockForSFDelegate(ctx, lock, sender)
 }
 
-func (k Keeper) PrepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Dec) (sdk.AccAddress, sdk.Coins, error) {
+func (k Keeper) PrepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt osmomath.Dec) (sdk.AccAddress, sdk.Coins, error) {
 	return k.prepareConcentratedLockForSlash(ctx, lock, slashAmt)
 }
 

@@ -60,7 +60,7 @@ func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			locks := []lockuptypes.PeriodLock{}
 			slashFactor := sdk.NewDecWithPrec(5, 2)
@@ -166,7 +166,7 @@ func (s *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
 			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -207,7 +207,7 @@ func (s *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 func (s *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 	type prepareConcentratedLockTestCase struct {
 		name         string
-		slashPercent sdk.Dec
+		slashPercent osmomath.Dec
 		expectedErr  bool
 	}
 
@@ -272,7 +272,7 @@ func (s *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 			uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPoolId)
 			uptimePositionKey := string(cltypes.KeyPositionId(positionId))
 			s.Require().NoError(err)
-			numShares := make([]sdk.Dec, len(uptimeAccums))
+			numShares := make([]osmomath.Dec, len(uptimeAccums))
 			for i, uptimeAccum := range uptimeAccums {
 				position, err := accum.GetPosition(uptimeAccum, uptimePositionKey)
 				s.Require().NoError(err)

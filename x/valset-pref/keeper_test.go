@@ -52,7 +52,7 @@ func (s *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorPrefe
 	return valPreferences
 }
 
-func (s *KeeperTestSuite) GetDelegationRewards(ctx sdk.Context, valAddrStr string, delegator sdk.AccAddress) (sdk.DecCoins, stakingtypes.Validator) {
+func (s *KeeperTestSuite) GetDelegationRewards(ctx sdk.Context, valAddrStr string, delegator sdk.AccAddress) (osmomath.DecCoins, stakingtypes.Validator) {
 	valAddr, err := sdk.ValAddressFromBech32(valAddrStr)
 	s.Require().NoError(err)
 

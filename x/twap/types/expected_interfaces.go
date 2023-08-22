@@ -14,5 +14,5 @@ type PoolManagerInterface interface {
 		poolID uint64,
 		quoteAssetDenom string,
 		baseAssetDenom string,
-	) (price sdk.Dec, err error)
+	) (price osmomath.Dec, err error)
 }

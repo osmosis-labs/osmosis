@@ -41,7 +41,7 @@ func (s *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			locks := []lockuptypes.PeriodLock{}
 			slashFactor := s.App.SlashingKeeper.SlashFractionDoubleSign(s.Ctx)
@@ -97,28 +97,28 @@ func (s *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
 		validatorStats     []stakingtypes.BondStatus
 		delegatorNumber    int
 		superDelegations   []superfluidDelegation
-		expInterDelegation []sdk.Dec
+		expInterDelegation []osmomath.Dec
 	}{
 		{
 			"with single validator and single superfluid delegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			1,
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
-			[]sdk.Dec{sdk.NewDec(10000000)}, // 50% x 20 x 1000000
+			[]osmomath.Dec{sdk.NewDec(10000000)}, // 50% x 20 x 1000000
 		},
 		{
 			"with single validator and additional superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			1,
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 0, 1000000}},
-			[]sdk.Dec{sdk.NewDec(20000000)}, // 50% x 20 x 1000000 x 2
+			[]osmomath.Dec{sdk.NewDec(20000000)}, // 50% x 20 x 1000000 x 2
 		},
 		{
 			"with multiple validators and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			2,
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
-			[]sdk.Dec{sdk.NewDec(10000000), sdk.NewDec(10000000)}, // 50% x 20 x 1000000
+			[]osmomath.Dec{sdk.NewDec(10000000), sdk.NewDec(10000000)}, // 50% x 20 x 1000000
 		},
 	}
 
@@ -130,7 +130,7 @@ func (s *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
 			_, _, locks := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)

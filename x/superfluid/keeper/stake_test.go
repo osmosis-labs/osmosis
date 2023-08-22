@@ -30,37 +30,37 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 		name               string
 		validatorStats     []stakingtypes.BondStatus
 		superDelegations   []superfluidDelegation
-		expInterDelegation []sdk.Dec
+		expInterDelegation []osmomath.Dec
 	}{
 		{
 			"with single validator and single superfluid delegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
-			[]sdk.Dec{sdk.NewDec(10000000)}, // 50% x 20 x 1000000
+			[]osmomath.Dec{sdk.NewDec(10000000)}, // 50% x 20 x 1000000
 		},
 		{
 			"with single validator and additional superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 0, 1000000}},
-			[]sdk.Dec{sdk.NewDec(20000000)}, // 50% x 20 x 1000000 x 2
+			[]osmomath.Dec{sdk.NewDec(20000000)}, // 50% x 20 x 1000000 x 2
 		},
 		{
 			"with multiple validators and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
-			[]sdk.Dec{sdk.NewDec(10000000), sdk.NewDec(10000000)}, // 50% x 20 x 1000000
+			[]osmomath.Dec{sdk.NewDec(10000000), sdk.NewDec(10000000)}, // 50% x 20 x 1000000
 		},
 		{
 			"add unbonding validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonding},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
-			[]sdk.Dec{sdk.NewDec(10000000), sdk.NewDec(10000000)}, // 50% x 20 x 1000000
+			[]osmomath.Dec{sdk.NewDec(10000000), sdk.NewDec(10000000)}, // 50% x 20 x 1000000
 		},
 		{
 			"add unbonded validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
-			[]sdk.Dec{sdk.NewDec(10000000), sdk.NewDec(10000000)}, // 50% x 20 x 1000000
+			[]osmomath.Dec{sdk.NewDec(10000000), sdk.NewDec(10000000)}, // 50% x 20 x 1000000
 		},
 	}
 
@@ -73,7 +73,7 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// get pre-superfluid delgations osmo supply and supplyWithOffset
 			presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
@@ -267,7 +267,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 		superUnbondingLockIds []uint64
 		expSuperUnbondingErr  []bool
 		// expected amount of delegation to intermediary account
-		expInterDelegation []sdk.Dec
+		expInterDelegation []osmomath.Dec
 	}{
 		{
 			"with single validator and single superfluid delegation and single undelegation",
@@ -275,7 +275,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{1},
 			[]bool{false},
-			[]sdk.Dec{sdk.ZeroDec()},
+			[]osmomath.Dec{sdk.ZeroDec()},
 		},
 		// {
 		// 	"with single validator, single superfluid delegation, add more tokens to the lock, and single undelegation",
@@ -284,7 +284,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 		// 	[]uint64{1},
 		// 	[]uint64{1},
 		// 	[]bool{false},
-		// 	[]sdk.Dec{sdk.ZeroDec()},
+		// 	[]osmomath.Dec{sdk.ZeroDec()},
 		// },
 		{
 			"with single validator and additional superfluid delegations and single undelegation",
@@ -292,7 +292,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 0, 1000000}},
 			[]uint64{1},
 			[]bool{false},
-			[]sdk.Dec{sdk.ZeroDec()},
+			[]osmomath.Dec{sdk.ZeroDec()},
 		},
 		{
 			"with multiple validators and multiple superfluid delegations and multiple undelegations",
@@ -300,7 +300,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
 			[]bool{false, false},
-			[]sdk.Dec{sdk.ZeroDec()},
+			[]osmomath.Dec{sdk.ZeroDec()},
 		},
 		{
 			"add unbonding validator",
@@ -308,7 +308,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
 			[]bool{false, false},
-			[]sdk.Dec{sdk.ZeroDec()},
+			[]osmomath.Dec{sdk.ZeroDec()},
 		},
 		{
 			"add unbonded validator",
@@ -316,7 +316,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
 			[]bool{false, false},
-			[]sdk.Dec{sdk.ZeroDec()},
+			[]osmomath.Dec{sdk.ZeroDec()},
 		},
 		{
 			"undelegating not available lock id",
@@ -324,7 +324,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{2},
 			[]bool{true},
-			[]sdk.Dec{},
+			[]osmomath.Dec{},
 		},
 		{
 			"try undelegating twice for same lock id",
@@ -332,7 +332,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{1, 1},
 			[]bool{false, true},
-			[]sdk.Dec{sdk.ZeroDec()},
+			[]osmomath.Dec{sdk.ZeroDec()},
 		},
 	}
 
@@ -346,7 +346,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
 			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -440,7 +440,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 		superUnbondingLockIds []uint64
 		expSuperUnbondingErr  []bool
 		// expected amount of delegation to intermediary account
-		expInterDelegation []sdk.Dec
+		expInterDelegation []osmomath.Dec
 	}{
 		{
 			"with single validator and single superfluid delegation and single undelegation",
@@ -448,7 +448,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{1},
 			[]bool{false},
-			[]sdk.Dec{sdk.ZeroDec()},
+			[]osmomath.Dec{sdk.ZeroDec()},
 		},
 		{
 			"with single validator and additional superfluid delegations and single undelegation",
@@ -456,7 +456,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 0, 1000000}},
 			[]uint64{1},
 			[]bool{false},
-			[]sdk.Dec{sdk.ZeroDec()},
+			[]osmomath.Dec{sdk.ZeroDec()},
 		},
 		{
 			"with multiple validators and multiple superfluid delegations and multiple undelegations",
@@ -464,7 +464,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
 			[]bool{false, false},
-			[]sdk.Dec{sdk.ZeroDec()},
+			[]osmomath.Dec{sdk.ZeroDec()},
 		},
 		{
 			"add unbonding validator",
@@ -472,7 +472,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
 			[]bool{false, false},
-			[]sdk.Dec{sdk.ZeroDec()},
+			[]osmomath.Dec{sdk.ZeroDec()},
 		},
 		{
 			"add unbonded validator",
@@ -480,7 +480,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
 			[]bool{false, false},
-			[]sdk.Dec{sdk.ZeroDec()},
+			[]osmomath.Dec{sdk.ZeroDec()},
 		},
 		{
 			"undelegating not available lock id",
@@ -488,7 +488,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{2},
 			[]bool{true},
-			[]sdk.Dec{},
+			[]osmomath.Dec{},
 		},
 		{
 			"try undelegating twice for same lock id",
@@ -496,7 +496,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]uint64{1, 1},
 			[]bool{false, true},
-			[]sdk.Dec{sdk.ZeroDec()},
+			[]osmomath.Dec{sdk.ZeroDec()},
 		},
 	}
 
@@ -510,7 +510,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
 			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -605,7 +605,7 @@ func (s *KeeperTestSuite) TestSuperfluidUnbondLock() {
 	// setup validators
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 	// setup superfluid delegations
 	_, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 1000000}}, denoms)
@@ -764,7 +764,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 			// setup validators
 			valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
 			_, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, lockAmount}}, denoms)
@@ -897,49 +897,49 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 		validatorStats   []stakingtypes.BondStatus
 		superDelegations []superfluidDelegation
 		// denom of the superfluid asset is the key, multiplier is the value
-		multipliersByDenom map[string]sdk.Dec
+		multipliersByDenom map[string]osmomath.Dec
 	}{
 		{
 			"with single validator and single delegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
-			map[string]sdk.Dec{DefaultGammAsset: sdk.NewDec(10)},
+			map[string]osmomath.Dec{DefaultGammAsset: sdk.NewDec(10)},
 		},
 		{
 			"with single validator and additional delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 0, 1000000}},
-			map[string]sdk.Dec{DefaultGammAsset: sdk.NewDec(10)},
+			map[string]osmomath.Dec{DefaultGammAsset: sdk.NewDec(10)},
 		},
 		{
 			"with multiple validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
-			map[string]sdk.Dec{DefaultGammAsset: sdk.NewDec(10)},
+			map[string]osmomath.Dec{DefaultGammAsset: sdk.NewDec(10)},
 		},
 		{
 			"with single validator and multiple denom superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 1, 1000000}},
-			map[string]sdk.Dec{DefaultGammAsset: sdk.NewDec(10), "gamm/pool/2": sdk.NewDec(10)},
+			map[string]osmomath.Dec{DefaultGammAsset: sdk.NewDec(10), "gamm/pool/2": sdk.NewDec(10)},
 		},
 		{
 			"with multiple validators and multiple denom superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 1, 1, 1000000}},
-			map[string]sdk.Dec{DefaultGammAsset: sdk.NewDec(10), "gamm/pool/2": sdk.NewDec(10)},
+			map[string]osmomath.Dec{DefaultGammAsset: sdk.NewDec(10), "gamm/pool/2": sdk.NewDec(10)},
 		},
 		{
 			"zero price multiplier check",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
-			map[string]sdk.Dec{DefaultGammAsset: sdk.NewDec(0)},
+			map[string]osmomath.Dec{DefaultGammAsset: sdk.NewDec(0)},
 		},
 		{
 			"dust price multiplier check",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
-			map[string]sdk.Dec{DefaultGammAsset: sdk.NewDecWithPrec(1, 10)}, // 10^-10
+			map[string]osmomath.Dec{DefaultGammAsset: sdk.NewDecWithPrec(1, 10)}, // 10^-10
 		},
 	}
 
@@ -951,7 +951,7 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
 			_, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -959,7 +959,7 @@ func (s *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 
 			// we make a map of intermediary account to delegation shares to store delegation share
 			// before refreshing intermediary account delegations on epoch
-			interAccIndexToDenomShare := make(map[int]sdk.Dec)
+			interAccIndexToDenomShare := make(map[int]osmomath.Dec)
 			for accIndex, intermediaryAcc := range intermediaryAccs {
 				valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
 				s.Require().NoError(err)

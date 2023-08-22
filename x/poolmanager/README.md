@@ -247,7 +247,7 @@ type SwapI interface {
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
-		spreadFactor sdk.Dec,
+		spreadFactor osmomath.Dec,
 	) (sdk.Int, error)
 }
 ```

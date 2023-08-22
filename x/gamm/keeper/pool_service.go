@@ -26,30 +26,30 @@ func (k Keeper) CalculateSpotPrice(
 	poolID uint64,
 	quoteAssetDenom string,
 	baseAssetDenom string,
-) (spotPrice sdk.Dec, err error) {
+) (spotPrice osmomath.Dec, err error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	// defer to catch panics, in case something internal overflows.
 	defer func() {
 		if r := recover(); r != nil {
-			spotPrice = sdk.Dec{}
+			spotPrice = osmomath.Dec{}
 			err = types.ErrSpotPriceInternal
 		}
 	}()
 
 	spotPrice, err = pool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	// if spotPrice greater than max spot price, return an error
 	if spotPrice.GT(types.MaxSpotPrice) {
 		return types.MaxSpotPrice, types.ErrSpotPriceOverflow
 	} else if !spotPrice.IsPositive() {
-		return sdk.Dec{}, types.ErrSpotPriceInternal
+		return osmomath.Dec{}, types.ErrSpotPriceInternal
 	}
 
 	// we want to round this to `SpotPriceSigFigs` of precision

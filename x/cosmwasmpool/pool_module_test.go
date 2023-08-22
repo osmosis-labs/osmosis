@@ -169,7 +169,7 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 		tokenIn           sdk.Coin
 		tokenOutDenom     string
 		tokenOutMinAmount sdk.Int
-		swapFee           sdk.Dec
+		swapFee           osmomath.Dec
 		isInvalidPool     bool
 
 		expectedTokenOut     sdk.Coin
@@ -290,7 +290,7 @@ func (s *PoolModuleSuite) TestCalcInAmtGivenOut_SwapInAmtGivenOut() {
 		tokenOut         sdk.Coin
 		tokenInDenom     string
 		tokenInMaxAmount sdk.Int
-		swapFee          sdk.Dec
+		swapFee          osmomath.Dec
 		isInvalidPool    bool
 
 		expectedTokenIn      sdk.Coin
