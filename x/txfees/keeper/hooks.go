@@ -63,7 +63,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	// Non-native fee collector for community pool get swapped entirely into denom specified in the pool manager params.
 
 	poolManagerParams := k.poolManager.GetParams(ctx)
-	denomToSwapTo := poolManagerParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo
+	denomToSwapTo := poolManagerParams.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo
 
 	nonNativeFeeCollectorForCommunityPoolAddr := k.accountKeeper.GetModuleAddress(txfeestypes.NonNativeFeeCollectorForCommunityPoolName)
 	nonNativeFeeCollectorForCommunityPoolBalance := k.bankKeeper.GetAllBalances(ctx, nonNativeFeeCollectorForCommunityPoolAddr)

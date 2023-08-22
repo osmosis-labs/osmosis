@@ -32,17 +32,6 @@ message Params {
   // about.
   repeated string authorized_quote_denoms = 3
       [ (gogoproto.moretags) = "yaml:\"authorized_quote_denoms\"" ];
-  // community_pool_denom_to_swap_non_whitelisted_assets_to is the denom that
-  // taker fees that are not whitelisted will be swapped to when being sent to
-  // the community pool.
-  string community_pool_denom_to_swap_non_whitelisted_assets_to = 4
-      [ (gogoproto.moretags) =
-            "yaml:\"community_pool_denom_to_swap_non_whitelisted_assets_to\"" ];
-  // stablecoin_denoms is a list of denoms that are considered stablecoins.
-  // This is used to determine if a pool should use the stableswap taker
-  // fee.
-  repeated string stablecoin_denoms = 5
-      [ (gogoproto.moretags) = "yaml:\"stablecoin_denoms\"" ];
 }
 
 // GenesisState defines the poolmanager module's genesis state.
@@ -95,6 +84,18 @@ message TakerFeeParams {
     (gogoproto.customname) = "NonOsmoTakerFeeDistribution",
     (gogoproto.nullable) = false
   ];
+  // admin_addresses is a list of addresses that are allowed to set and remove
+  // custom taker fees for denom pairs. Governance also has the ability to set
+  // and removecustom taker fees for denom pairs, but with the normal governance
+  // delay.
+  repeated string admin_addresses = 5
+      [ (gogoproto.moretags) = "yaml:\"admin_addresses\"" ];
+  // community_pool_denom_to_swap_non_whitelisted_assets_to is the denom that
+  // non-whitelisted taker fees will be swapped to before being sent to
+  // the community pool.
+  string community_pool_denom_to_swap_non_whitelisted_assets_to = 6
+      [ (gogoproto.moretags) =
+            "yaml:\"community_pool_denom_to_swap_non_whitelisted_assets_to\"" ];
 }
 
 // TakerFeeDistributionPercentage defines what percent of the taker fee category

@@ -16,9 +16,9 @@ var (
 	KeyStableswapTakerFee                             = []byte("StableswapTakerFee")
 	KeyOsmoTakerFeeDistribution                       = []byte("OsmoTakerFeeDistribution")
 	KeyNonOsmoTakerFeeDistribution                    = []byte("NonOsmoTakerFeeDistribution")
-	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
+	KeyAdminAddresses                                 = []byte("AdminAddresses")
 	KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo = []byte("CommunityPoolDenomToSwapNonWhitelistedAssetsTo")
-	KeyStablecoinDenoms                               = []byte("StablecoinDenoms")
+	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
 )
 
 // ParamTable for gamm module.
@@ -29,20 +29,19 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(poolCreationFee sdk.Coins,
 	defaultTakerFee, stableswapTakerFee sdk.Dec,
 	osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage,
-	authorizedQuoteDenoms []string,
-	communityPoolDenomToSwapNonWhitelistedAssetsTo string,
-	stablecoinDenoms []string) Params {
+	adminAddresses, authorizedQuoteDenoms []string,
+	communityPoolDenomToSwapNonWhitelistedAssetsTo string) Params {
 	return Params{
 		PoolCreationFee: poolCreationFee,
 		TakerFeeParams: TakerFeeParams{
-			DefaultTakerFee:             defaultTakerFee,
-			StableswapTakerFee:          stableswapTakerFee,
-			OsmoTakerFeeDistribution:    osmoTakerFeeDistribution,
-			NonOsmoTakerFeeDistribution: nonOsmoTakerFeeDistribution,
+			DefaultTakerFee:                                defaultTakerFee,
+			StableswapTakerFee:                             stableswapTakerFee,
+			OsmoTakerFeeDistribution:                       osmoTakerFeeDistribution,
+			NonOsmoTakerFeeDistribution:                    nonOsmoTakerFeeDistribution,
+			AdminAddresses:                                 adminAddresses,
+			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: communityPoolDenomToSwapNonWhitelistedAssetsTo,
 		},
-		AuthorizedQuoteDenoms:                          authorizedQuoteDenoms,
-		CommunityPoolDenomToSwapNonWhitelistedAssetsTo: communityPoolDenomToSwapNonWhitelistedAssetsTo,
-		StablecoinDenoms:                               stablecoinDenoms,
+		AuthorizedQuoteDenoms: authorizedQuoteDenoms,
 	}
 }
 
@@ -61,16 +60,12 @@ func DefaultParams() Params {
 				StakingRewards: sdk.MustNewDecFromStr("0.67"), // 67%
 				CommunityPool:  sdk.MustNewDecFromStr("0.33"), // 33%
 			},
+			AdminAddresses: []string{},
+			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
 		},
-
 		AuthorizedQuoteDenoms: []string{
 			"uosmo",
 			"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", // ATOM
-			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", // DAI
-			"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
-		},
-		CommunityPoolDenomToSwapNonWhitelistedAssetsTo: "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
-		StablecoinDenoms: []string{
 			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", // DAI
 			"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
 		},
@@ -94,13 +89,13 @@ func (p Params) Validate() error {
 	if err := validateTakerFeeDistribution(p.TakerFeeParams.NonOsmoTakerFeeDistribution); err != nil {
 		return err
 	}
+	if err := validateAdminAddresses(p.TakerFeeParams.AdminAddresses); err != nil {
+		return err
+	}
+	if err := validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo(p.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo); err != nil {
+		return err
+	}
 	if err := validateAuthorizedQuoteDenoms(p.AuthorizedQuoteDenoms); err != nil {
-		return err
-	}
-	if err := validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo(p.CommunityPoolDenomToSwapNonWhitelistedAssetsTo); err != nil {
-		return err
-	}
-	if err := validateStablecoinDenoms(p.StablecoinDenoms); err != nil {
 		return err
 	}
 
@@ -115,9 +110,9 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyStableswapTakerFee, &p.TakerFeeParams.StableswapTakerFee, validateStableswapTakerFee),
 		paramtypes.NewParamSetPair(KeyOsmoTakerFeeDistribution, &p.TakerFeeParams.OsmoTakerFeeDistribution, validateTakerFeeDistribution),
 		paramtypes.NewParamSetPair(KeyNonOsmoTakerFeeDistribution, &p.TakerFeeParams.NonOsmoTakerFeeDistribution, validateTakerFeeDistribution),
+		paramtypes.NewParamSetPair(KeyAdminAddresses, &p.TakerFeeParams.AdminAddresses, validateAdminAddresses),
+		paramtypes.NewParamSetPair(KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo, &p.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo, validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
-		paramtypes.NewParamSetPair(KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo, &p.CommunityPoolDenomToSwapNonWhitelistedAssetsTo, validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo),
-		paramtypes.NewParamSetPair(KeyStablecoinDenoms, &p.StablecoinDenoms, validateStablecoinDenoms),
 	}
 }
 
@@ -184,6 +179,23 @@ func validateTakerFeeDistribution(i interface{}) error {
 	return nil
 }
 
+func validateAdminAddresses(i interface{}) error {
+	adminAddresses, ok := i.([]string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if len(adminAddresses) > 0 {
+		for _, adminAddress := range adminAddresses {
+			if _, err := sdk.AccAddressFromBech32(adminAddress); err != nil {
+				return fmt.Errorf("invalid account address: %s", adminAddress)
+			}
+		}
+	}
+
+	return nil
+}
+
 // validateAuthorizedQuoteDenoms validates a slice of authorized quote denoms.
 //
 // Parameters:
@@ -222,26 +234,6 @@ func validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo(i interface{}) error
 
 	if err := sdk.ValidateDenom(communityPoolDenomToSwapNonWhitelistedAssetsTo); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func validateStablecoinDenoms(i interface{}) error {
-	stablecoinDenoms, ok := i.([]string)
-
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if len(stablecoinDenoms) == 0 {
-		return fmt.Errorf("stablecoin denoms cannot be empty")
-	}
-
-	for _, denom := range stablecoinDenoms {
-		if err := sdk.ValidateDenom(denom); err != nil {
-			return err
-		}
 	}
 
 	return nil

@@ -29,9 +29,9 @@ var (
 		StakingRewards: sdk.MustNewDecFromStr("0.2"),
 		CommunityPool:  sdk.MustNewDecFromStr("0.8"),
 	}
-	testAuthorizedQuoteDenoms                          = []string{"uosmo", "uion", "uatom"}
+	testAdminAddresses                                 = []string{"osmo1qnpk2xwq6q5s6zj4qz4z2s6qz4z2s6qz4z2s6q"}
 	testCommunityPoolDenomToSwapNonWhitelistedAssetsTo = "uusdc"
-	testStablecoinDenoms                               = []string{"uusdc", "uusdt", "udai"}
+	testAuthorizedQuoteDenoms                          = []string{"uosmo", "uion", "uatom"}
 
 	testPoolRoute = []types.ModuleRoute{
 		{
@@ -84,14 +84,14 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
 			TakerFeeParams: types.TakerFeeParams{
-				DefaultTakerFee:             testDefaultTakerFee,
-				StableswapTakerFee:          testStableswapTakerFee,
-				OsmoTakerFeeDistribution:    testOsmoTakerFeeDistribution,
-				NonOsmoTakerFeeDistribution: testNonOsmoTakerFeeDistribution,
+				DefaultTakerFee:                                testDefaultTakerFee,
+				StableswapTakerFee:                             testStableswapTakerFee,
+				OsmoTakerFeeDistribution:                       testOsmoTakerFeeDistribution,
+				NonOsmoTakerFeeDistribution:                    testNonOsmoTakerFeeDistribution,
+				AdminAddresses:                                 testAdminAddresses,
+				CommunityPoolDenomToSwapNonWhitelistedAssetsTo: testCommunityPoolDenomToSwapNonWhitelistedAssetsTo,
 			},
-			AuthorizedQuoteDenoms:                          testAuthorizedQuoteDenoms,
-			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: testCommunityPoolDenomToSwapNonWhitelistedAssetsTo,
-			StablecoinDenoms:                               testStablecoinDenoms,
+			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
 		},
 		NextPoolId: testExpectedPoolId,
 		PoolRoutes: testPoolRoute,
@@ -104,9 +104,9 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.Require().Equal(testStableswapTakerFee, params.TakerFeeParams.StableswapTakerFee)
 	s.Require().Equal(testOsmoTakerFeeDistribution, params.TakerFeeParams.OsmoTakerFeeDistribution)
 	s.Require().Equal(testNonOsmoTakerFeeDistribution, params.TakerFeeParams.NonOsmoTakerFeeDistribution)
+	s.Require().Equal(testAdminAddresses, params.TakerFeeParams.AdminAddresses)
+	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, params.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
 	s.Require().Equal(testAuthorizedQuoteDenoms, params.AuthorizedQuoteDenoms)
-	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, params.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
-	s.Require().Equal(testStablecoinDenoms, params.StablecoinDenoms)
 	s.Require().Equal(testPoolRoute, s.App.PoolManagerKeeper.GetAllPoolRoutes(s.Ctx))
 }
 
@@ -115,14 +115,14 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 		Params: types.Params{
 			PoolCreationFee: testPoolCreationFee,
 			TakerFeeParams: types.TakerFeeParams{
-				DefaultTakerFee:             testDefaultTakerFee,
-				StableswapTakerFee:          testStableswapTakerFee,
-				OsmoTakerFeeDistribution:    testOsmoTakerFeeDistribution,
-				NonOsmoTakerFeeDistribution: testNonOsmoTakerFeeDistribution,
+				DefaultTakerFee:                                testDefaultTakerFee,
+				StableswapTakerFee:                             testStableswapTakerFee,
+				OsmoTakerFeeDistribution:                       testOsmoTakerFeeDistribution,
+				NonOsmoTakerFeeDistribution:                    testNonOsmoTakerFeeDistribution,
+				AdminAddresses:                                 testAdminAddresses,
+				CommunityPoolDenomToSwapNonWhitelistedAssetsTo: testCommunityPoolDenomToSwapNonWhitelistedAssetsTo,
 			},
-			AuthorizedQuoteDenoms:                          testAuthorizedQuoteDenoms,
-			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: testCommunityPoolDenomToSwapNonWhitelistedAssetsTo,
-			StablecoinDenoms:                               testStablecoinDenoms,
+			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
 		},
 		NextPoolId: testExpectedPoolId,
 		PoolRoutes: testPoolRoute,
@@ -135,8 +135,8 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.Require().Equal(testStableswapTakerFee, genesis.Params.TakerFeeParams.StableswapTakerFee)
 	s.Require().Equal(testOsmoTakerFeeDistribution, genesis.Params.TakerFeeParams.OsmoTakerFeeDistribution)
 	s.Require().Equal(testNonOsmoTakerFeeDistribution, genesis.Params.TakerFeeParams.NonOsmoTakerFeeDistribution)
+	s.Require().Equal(testAdminAddresses, genesis.Params.TakerFeeParams.AdminAddresses)
+	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, genesis.Params.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
 	s.Require().Equal(testAuthorizedQuoteDenoms, genesis.Params.AuthorizedQuoteDenoms)
-	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, genesis.Params.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
-	s.Require().Equal(testStablecoinDenoms, genesis.Params.StablecoinDenoms)
 	s.Require().Equal(testPoolRoute, genesis.PoolRoutes)
 }

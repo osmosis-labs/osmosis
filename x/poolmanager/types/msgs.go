@@ -12,6 +12,7 @@ const (
 	TypeMsgSwapExactAmountOut           = "swap_exact_amount_out"
 	TypeMsgSplitRouteSwapExactAmountIn  = "split_route_swap_exact_amount_in"
 	TypeMsgSplitRouteSwapExactAmountOut = "split_route_swap_exact_amount_out"
+	TypeMsgSetDenomPairTakerFee         = "set_denom_pair_taker_fee"
 )
 
 var _ sdk.Msg = &MsgSwapExactAmountIn{}
@@ -160,6 +161,47 @@ func (msg MsgSplitRouteSwapExactAmountOut) GetSignBytes() []byte {
 }
 
 func (msg MsgSplitRouteSwapExactAmountOut) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgSetDenomPairTakerFee{}
+
+func (msg MsgSetDenomPairTakerFee) Route() string { return RouterKey }
+func (msg MsgSetDenomPairTakerFee) Type() string  { return TypeMsgSetDenomPairTakerFee }
+
+func (msg MsgSetDenomPairTakerFee) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return InvalidSenderError{Sender: msg.Sender}
+	}
+
+	for _, denomPair := range msg.DenomPairTakerFee {
+		if err := sdk.ValidateDenom(denomPair.Denom_0); err != nil {
+			return err
+		}
+		if err := sdk.ValidateDenom(denomPair.Denom_1); err != nil {
+			return err
+		}
+		if denomPair.TakerFee.IsNegative() {
+			return nonPositiveAmountError{denomPair.TakerFee.String()}
+		}
+		if denomPair.TakerFee.GT(sdk.OneDec()) {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Taker fee %s is greater than 1", denomPair.TakerFee.String())
+		}
+	}
+
+	return nil
+}
+
+func (msg MsgSetDenomPairTakerFee) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgSetDenomPairTakerFee) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)
