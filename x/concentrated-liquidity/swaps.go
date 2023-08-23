@@ -306,10 +306,10 @@ func (k Keeper) swapSetup(ctx sdk.Context,
 // returns next initialized tick, next initialized tick sqrt price, implied sqrt price target, and error
 // the next initialized tick sqrt price return arg is unfortunately there due to some bigdec situations.
 // poolId as an argument is for debug info and should be removed in the future
-func iteratorToNextInitializedTickSqrtPriceTarget(nextInitTickIter db.Iterator, _poolId uint64, swapstrat swapstrategy.SwapStrategy) (int64, sdk.Dec, sdk.Dec, error) {
+func iteratorToNextInitializedTickSqrtPriceTarget(nextInitTickIter db.Iterator, _poolId uint64, swapstrat swapstrategy.SwapStrategy) (int64, osmomath.BigDec, osmomath.BigDec, error) {
 	// Iterator must be valid to be able to retrieve the next tick from it below.
 	if !nextInitTickIter.Valid() {
-		return 0, sdk.Dec{}, sdk.Dec{}, types.RanOutOfTicksForPoolError{PoolId: _poolId}
+		return 0, osmomath.BigDec{}, osmomath.BigDec{}, types.RanOutOfTicksForPoolError{PoolId: _poolId}
 	}
 	// We first check to see what the position of the nearest initialized tick is
 	// if zeroForOneStrategy, we look to the left of the tick the current sqrt price is at
@@ -317,13 +317,13 @@ func iteratorToNextInitializedTickSqrtPriceTarget(nextInitTickIter db.Iterator, 
 	// if no ticks are initialized (no users have created liquidity positions) then we return an error
 	nextInitializedTick, err := types.TickIndexFromBytes(nextInitTickIter.Key())
 	if err != nil {
-		return 0, sdk.Dec{}, sdk.Dec{}, err
+		return 0, osmomath.BigDec{}, osmomath.BigDec{}, err
 	}
 
 	// Utilizing the next initialized tick, we find the corresponding nextInitializedTickSqrtPrice (the target sqrt price).
 	_, nextInitializedTickSqrtPrice, err := math.TickToSqrtPrice(nextInitializedTick)
 	if err != nil {
-		return 0, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextInitializedTick)
+		return 0, osmomath.BigDec{}, osmomath.BigDec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextInitializedTick)
 	}
 
 	// If nextInitializedTickSqrtPrice exceeds the given price limit, we set the sqrtPriceTarget to the price limit.
@@ -366,7 +366,7 @@ func (k Keeper) computeOutAmtGivenIn(
 	// TODO: for now, we check if amountSpecifiedRemaining is GT 0.0000001. This is because there are times when the remaining
 	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
 	// in an infinite loop.
-	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(osmomath.BigDecFromSDKDec(sqrtPriceLimit)) {
+	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// Log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
@@ -402,21 +402,19 @@ func (k Keeper) computeOutAmtGivenIn(
 		// We add the amount of tokens we received (amountOut) from the ComputeSwapWithinBucketOutGivenIn(...) above to the amountCalculated accumulator
 		swapState.amountCalculated.AddMut(amountOut)
 
-		nextInitializedTickSqrtPriceBigDec := osmomath.BigDecFromSDKDec(nextInitializedTickSqrtPrice)
-
 		// If ComputeSwapWithinBucketOutGivenIn(...) calculated a computedSqrtPrice that is equal to the nextInitializedTickSqrtPrice, this means all liquidity in the current
 		// bucket has been consumed and we must move on to the next bucket to complete the swap
-		if nextInitializedTickSqrtPriceBigDec.Equal(computedSqrtPrice) {
+		if nextInitializedTickSqrtPrice.Equal(computedSqrtPrice) {
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
 				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInMin.Denom)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
-		} else if edgeCaseInequalityBasedOnSwapStrategy(swapStrategy.ZeroForOne(), nextInitializedTickSqrtPriceBigDec, computedSqrtPrice) {
+		} else if edgeCaseInequalityBasedOnSwapStrategy(swapStrategy.ZeroForOne(), nextInitializedTickSqrtPrice, computedSqrtPrice) {
 			// If, based on the swap strategy, the computedSqrtPrice matches the edge case inequality, we return an error.
 			// This is an edge case that occurs when swapping at/near tick boundaries that will be fixed in the next release.
 			// For now, we return an error and ask the user to try again with a different swap amount.
-			return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.ComputedSqrtPriceInequalityError{IsZeroForOne: swapStrategy.ZeroForOne(), ComputedSqrtPrice: computedSqrtPrice, NextInitializedTickSqrtPrice: nextInitializedTickSqrtPriceBigDec}
+			return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.ComputedSqrtPriceInequalityError{IsZeroForOne: swapStrategy.ZeroForOne(), ComputedSqrtPrice: computedSqrtPrice, NextInitializedTickSqrtPrice: nextInitializedTickSqrtPrice}
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise if the sqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...)
@@ -494,7 +492,7 @@ func (k Keeper) computeInAmtGivenOut(
 	// TODO: for now, we check if amountSpecifiedRemaining is GT 10^-18. This is because there are times when the remaining
 	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
 	// in an infinite loop.
-	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(osmomath.BigDecFromSDKDec(sqrtPriceLimit)) {
+	for swapState.amountSpecifiedRemaining.GT(smallestDec) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
@@ -526,21 +524,19 @@ func (k Keeper) computeInAmtGivenOut(
 		swapState.amountSpecifiedRemaining.SubMut(amountOut)
 		swapState.amountCalculated.AddMut(amountIn.Add(spreadRewardChargeTotal))
 
-		nextInitializedTickSqrtPriceBigDec := osmomath.BigDecFromSDKDec(nextInitializedTickSqrtPrice)
-
 		// If the ComputeSwapWithinBucketInGivenOut(...) calculated a computedSqrtPrice that is equal to the nextInitializedTickSqrtPrice, this means all liquidity in the current
 		// bucket has been consumed and we must move on to the next bucket by crossing a tick to complete the swap
-		if nextInitializedTickSqrtPriceBigDec.Equal(computedSqrtPrice) {
+		if nextInitializedTickSqrtPrice.Equal(computedSqrtPrice) {
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
 				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInDenom)
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
 			}
-		} else if edgeCaseInequalityBasedOnSwapStrategy(swapStrategy.ZeroForOne(), nextInitializedTickSqrtPriceBigDec, computedSqrtPrice) {
+		} else if edgeCaseInequalityBasedOnSwapStrategy(swapStrategy.ZeroForOne(), nextInitializedTickSqrtPrice, computedSqrtPrice) {
 			// If, based on the swap strategy, the computedSqrtPrice matches the edge case inequality, we return an error.
 			// This is an edge case that occurs when swapping at/near tick boundaries that will be fixed in the next release.
 			// For now, we return an error and ask the user to try again with a different swap amount.
-			return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.ComputedSqrtPriceInequalityError{IsZeroForOne: swapStrategy.ZeroForOne(), ComputedSqrtPrice: computedSqrtPrice, NextInitializedTickSqrtPrice: nextInitializedTickSqrtPriceBigDec}
+			return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.ComputedSqrtPriceInequalityError{IsZeroForOne: swapStrategy.ZeroForOne(), ComputedSqrtPrice: computedSqrtPrice, NextInitializedTickSqrtPrice: nextInitializedTickSqrtPrice}
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise, if the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...)
@@ -724,13 +720,13 @@ func checkDenomValidity(inDenom, outDenom, asset0, asset1 string) error {
 	return nil
 }
 
-func (k Keeper) setupSwapStrategy(p types.ConcentratedPoolExtension, spreadFactor sdk.Dec, tokenInDenom string, priceLimit sdk.Dec) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit sdk.Dec, err error) {
+func (k Keeper) setupSwapStrategy(p types.ConcentratedPoolExtension, spreadFactor sdk.Dec, tokenInDenom string, priceLimit sdk.Dec) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit osmomath.BigDec, err error) {
 	zeroForOne := getZeroForOne(tokenInDenom, p.GetToken0())
 
 	// take provided price limit and turn this into a sqrt price limit since formulas use sqrtPrice
 	sqrtPriceLimit, err = swapstrategy.GetSqrtPriceLimit(priceLimit, zeroForOne)
 	if err != nil {
-		return strategy, sdk.Dec{}, types.SqrtRootCalculationError{SqrtPriceLimit: sqrtPriceLimit}
+		return strategy, osmomath.BigDec{}, types.SqrtRootCalculationError{SqrtPriceLimit: sqrtPriceLimit}
 	}
 
 	// set the swap strategy
@@ -739,7 +735,7 @@ func (k Keeper) setupSwapStrategy(p types.ConcentratedPoolExtension, spreadFacto
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
 	if err := swapStrategy.ValidateSqrtPrice(sqrtPriceLimit, curSqrtPrice); err != nil {
-		return strategy, sdk.Dec{}, err
+		return strategy, osmomath.BigDec{}, err
 	}
 
 	return swapStrategy, sqrtPriceLimit, nil
@@ -870,10 +866,8 @@ func (k Keeper) ComputeMaxInAmtGivenMaxTicksCrossed(
 		totalTokenOut = totalTokenOut.Add(amountOut)
 
 		// Check if the tick needs to be updated
-		nextInitializedTickSqrtPriceBigDec := osmomath.BigDecFromSDKDec(nextInitializedTickSqrtPrice)
-
 		// We do not need to track spread rewards or uptime accums here since we are not actually swapping.
-		if nextInitializedTickSqrtPriceBigDec.Equal(computedSqrtPrice) {
+		if nextInitializedTickSqrtPrice.Equal(computedSqrtPrice) {
 			nextInitializedTickInfo, err := ParseTickFromBz(nextInitTickIter.Value())
 			if err != nil {
 				return sdk.Coin{}, sdk.Coin{}, err
@@ -886,11 +880,11 @@ func (k Keeper) ComputeMaxInAmtGivenMaxTicksCrossed(
 			swapState.liquidity.AddMut(liquidityNet)
 
 			swapState.tick = swapStrategy.UpdateTickAfterCrossing(nextInitializedTick)
-		} else if edgeCaseInequalityBasedOnSwapStrategy(swapStrategy.ZeroForOne(), nextInitializedTickSqrtPriceBigDec, computedSqrtPrice) {
+		} else if edgeCaseInequalityBasedOnSwapStrategy(swapStrategy.ZeroForOne(), nextInitializedTickSqrtPrice, computedSqrtPrice) {
 			return sdk.Coin{}, sdk.Coin{}, types.ComputedSqrtPriceInequalityError{
 				IsZeroForOne:                 swapStrategy.ZeroForOne(),
 				ComputedSqrtPrice:            computedSqrtPrice,
-				NextInitializedTickSqrtPrice: nextInitializedTickSqrtPriceBigDec,
+				NextInitializedTickSqrtPrice: nextInitializedTickSqrtPrice,
 			}
 		} else if !swapState.sqrtPrice.Equal(computedSqrtPrice) {
 			newTick, err := math.CalculateSqrtPriceToTick(computedSqrtPrice)

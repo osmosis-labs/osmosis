@@ -566,7 +566,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 
 func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 	var (
-		tickToSqrtPrice = func(tick int64) sdk.Dec {
+		tickToSqrtPrice = func(tick int64) osmomath.BigDec {
 			_, sqrtPrice, err := clmath.TickToSqrtPrice(tick)
 			suite.Require().NoError(err)
 			return sqrtPrice
@@ -576,13 +576,13 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 		defaultLiquidityDeltaBigDec = osmomath.NewBigDec(1000)
 
 		lowerTick            = int64(-99)
-		lowerSqrtPriceBigDec = osmomath.BigDecFromSDKDec(tickToSqrtPrice(lowerTick))
+		lowerSqrtPriceBigDec = tickToSqrtPrice(lowerTick)
 
 		midtick            = int64(2)
-		midSqrtPriceBigDec = osmomath.BigDecFromSDKDec(tickToSqrtPrice(midtick))
+		midSqrtPriceBigDec = tickToSqrtPrice(midtick)
 
 		uppertick            = int64(74)
-		upperSqrtPriceBigDec = osmomath.BigDecFromSDKDec(tickToSqrtPrice(uppertick))
+		upperSqrtPriceBigDec = tickToSqrtPrice(uppertick)
 	)
 
 	tests := map[string]struct {
@@ -696,7 +696,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 				CurrentTick: tc.currentTick,
 			}
 			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
-			pool.CurrentSqrtPrice = osmomath.BigDecFromSDKDec(currenTicktSqrtPrice)
+			pool.CurrentSqrtPrice = currenTicktSqrtPrice
 
 			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 
@@ -791,7 +791,7 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 				CurrentTickLiquidity: defaultLiquidityAmt,
 			}
 			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
-			pool.CurrentSqrtPrice = osmomath.BigDecFromSDKDec(currenTicktSqrtPrice)
+			pool.CurrentSqrtPrice = currenTicktSqrtPrice
 
 			wasUpdated := pool.UpdateLiquidityIfActivePosition(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 			if tc.lowerTick <= tc.currentTick && tc.currentTick <= tc.upperTick {
