@@ -7,6 +7,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
+
+	pooltypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 )
 
 func CreateUpgradeHandler(
@@ -21,6 +23,29 @@ func CreateUpgradeHandler(
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
 			return nil, err
+		}
+
+		poolsToRemoveIncentiveFrom := []uint64{1093, 1108, 1106, 1092, 1101, 1097}
+		longestDuration, err := keepers.PoolIncentivesKeeper.GetLongestLockableDuration(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		// check they have existing incentive record
+		for _, poolId := range poolsToRemoveIncentiveFrom {
+			gaugeId, err := keepers.PoolIncentivesKeeper.GetPoolGaugeId(ctx, poolId, longestDuration)
+			if err != nil {
+				return nil, err
+			}
+
+			distrRecord := pooltypes.DistrRecord{
+				GaugeId: gaugeId,
+				Weight:  sdk.NewInt(0), // this mean no incentives will be distribtued to this gauge
+			}
+			err = keepers.PoolIncentivesKeeper.ReplaceDistrRecords(ctx, distrRecord)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		return migrations, nil
