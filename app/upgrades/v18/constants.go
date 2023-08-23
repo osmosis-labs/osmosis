@@ -9,6 +9,9 @@ import (
 // UpgradeName defines the on-chain upgrade name for the Osmosis v17 upgrade.
 const UpgradeName = "v18"
 
+// We believe its all pools from pool 1 to 603.
+const MaxCorruptedAccumStoreId = 603
+
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
