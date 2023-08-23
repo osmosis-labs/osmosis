@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 
 	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
@@ -352,7 +355,25 @@ func (k Keeper) distributeInternal(
 	} else {
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
 		denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
-		lockSum := lockuptypes.SumLocksByDenom(locks, denom)
+		poolId, err := gammtypes.GetPoolIdFromShareDenom(gauge.DistributeTo.Denom)
+		minAmount := sdk.NewIntFromUint64(1)
+		if err == nil {
+			pool, err := k.pmk.GetPool(ctx, poolId)
+			if err != nil {
+				return nil, err
+			}
+			liq, err := k.pmk.GetTotalPoolLiquidity(ctx, poolId)
+			if err != nil {
+				return nil, err
+			}
+			pooltype := pool.GetType()
+			if pooltype == poolmanagertypes.Balancer {
+				poolB := pool.(*balancer.Pool)
+				shares := poolB.GetTotalShares()
+				minAmount = liq.AmountOf("uosmo").Quo(shares)
+			}
+		}
+		lockSum := lockuptypes.SumLocksByDenom(locks, denom, minAmount)
 
 		if lockSum.IsZero() {
 			return nil, nil
@@ -364,6 +385,9 @@ func (k Keeper) distributeInternal(
 			for _, coin := range remainCoins {
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 				denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
+				if denomLockAmt.LT(minAmount) {
+					continue
+				}
 				amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
 				if amt.IsPositive() {
 					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
@@ -392,6 +416,10 @@ func (k Keeper) distributeInternal(
 
 	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 	return totalDistrCoins, err
+}
+
+func (k Keeper) getMinGammAmountPerShare(ctx sdk.Context, denom string) {
+
 }
 
 // updateGaugePostDistribute increments the gauge's filled epochs field.

@@ -66,4 +66,5 @@ type GAMMKeeper interface {
 
 type PoolManagerKeeper interface {
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
+	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
 }

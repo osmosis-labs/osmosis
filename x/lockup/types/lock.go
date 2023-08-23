@@ -60,7 +60,7 @@ func (p PeriodLock) SingleCoin() (sdk.Coin, error) {
 	return p.Coins[0], nil
 }
 
-func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
+func SumLocksByDenom(locks []PeriodLock, denom string, minimum sdk.Int) sdk.Int {
 	sum := sdk.NewInt(0)
 	// validate the denom once, so we can avoid the expensive validate check in the hot loop.
 	err := sdk.ValidateDenom(denom)
@@ -68,7 +68,10 @@ func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
 		panic(fmt.Errorf("invalid denom used internally: %s, %v", denom, err))
 	}
 	for _, lock := range locks {
-		sum = sum.Add(lock.Coins.AmountOfNoDenomValidation(denom))
+		amount := lock.Coins.AmountOfNoDenomValidation(denom)
+		if amount.GTE(minimum) {
+			sum = sum.Add(amount)
+		}
 	}
 	return sum
 }
