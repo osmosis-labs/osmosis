@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -184,8 +182,6 @@ func (msg MsgSetDenomPairTakerFee) ValidateBasic() error {
 	if len(msg.DenomPairTakerFee) == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "Empty denom pair taker fee")
 	}
-
-	fmt.Println("msg.DenomPairTakerFee", msg.DenomPairTakerFee)
 
 	for _, denomPair := range msg.DenomPairTakerFee {
 		if err := sdk.ValidateDenom(denomPair.Denom0); err != nil {
