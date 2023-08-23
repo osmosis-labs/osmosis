@@ -8,6 +8,7 @@ import (
 	db "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/stableswap"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 
@@ -355,25 +356,29 @@ func (k Keeper) distributeInternal(
 	} else {
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
 		denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
-		fmt.Println("Debug sum, denom", denom)
 		poolId, err := gammtypes.GetPoolIdFromShareDenom(gauge.DistributeTo.Denom)
 		minAmount := sdk.NewIntFromUint64(0)
-		fmt.Println(err)
 		if err == nil {
-			fmt.Println("Debug sum computing sum")
 			pool, err := k.pmk.GetPool(ctx, poolId)
 			if err != nil {
 				return nil, err
 			}
-			fmt.Println("Debug sum pool got")
 			liq, err := k.pmk.GetTotalPoolLiquidity(ctx, poolId)
 			if err != nil {
 				return nil, err
 			}
 			pooltype := pool.GetType()
 			if pooltype == poolmanagertypes.Balancer {
-				fmt.Println("Debug sum Balancer type")
 				poolB := pool.(*balancer.Pool)
+				shares := poolB.GetTotalShares()
+				// shares = liq.AmountOf("uosmo")
+				// minAmount = shares * (100 / liq.AmountOf("uosmo"))
+				uosmoAmt := liq.AmountOf("uosmo")
+				if !uosmoAmt.IsZero() {
+					minAmount = shares.MulRaw(100_000_000).Quo(uosmoAmt)
+				}
+			} else if pooltype == poolmanagertypes.Stableswap {
+				poolB := pool.(*stableswap.Pool)
 				shares := poolB.GetTotalShares()
 				// shares = liq.AmountOf("uosmo")
 				// minAmount = shares * (100 / liq.AmountOf("uosmo"))
@@ -392,7 +397,7 @@ func (k Keeper) distributeInternal(
 
 		for _, lock := range locks {
 			distrCoins := sdk.Coins{}
-			ctx.Logger().Debug("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCons", remainCoins, "height", ctx.BlockHeight())
+			ctx.Logger().Debug("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCoins", remainCoins, "height", ctx.BlockHeight())
 			denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
 			if denomLockAmt.LT(minAmount) {
 				continue
