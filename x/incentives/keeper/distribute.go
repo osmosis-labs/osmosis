@@ -358,6 +358,7 @@ func (k Keeper) distributeInternal(
 		fmt.Println("Debug sum, denom", denom)
 		poolId, err := gammtypes.GetPoolIdFromShareDenom(gauge.DistributeTo.Denom)
 		minAmount := sdk.NewIntFromUint64(0)
+		fmt.Println(err)
 		if err == nil {
 			fmt.Println("Debug sum computing sum")
 			pool, err := k.pmk.GetPool(ctx, poolId)
