@@ -551,6 +551,24 @@ func (k Keeper) setMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []
 	return nil
 }
 
+func (k Keeper) RemoveIncentiveRecords(ctx sdk.Context, incentiveRecord types.IncentiveRecord) error {
+	store := ctx.KVStore(k.storeKey)
+
+	uptimeIndex, err := findUptimeIndex(incentiveRecord.MinUptime)
+	if err != nil {
+		return err
+	}
+
+	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, uptimeIndex, incentiveRecord.IncentiveId)
+	if !store.Has(key) {
+		return fmt.Errorf("incentive record not found")
+	}
+
+	store.Delete(key)
+
+	return nil
+}
+
 // GetIncentiveRecord gets the incentive record corresponding to the passed in values from store
 func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, minUptime time.Duration, incentiveRecordId uint64) (types.IncentiveRecord, error) {
 	store := ctx.KVStore(k.storeKey)
