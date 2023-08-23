@@ -26,28 +26,38 @@ func CreateUpgradeHandler(
 		}
 
 		poolsToRemoveIncentiveFrom := []uint64{1093, 1108, 1106, 1092, 1101, 1097}
-		longestDuration, err := keepers.PoolIncentivesKeeper.GetLongestLockableDuration(ctx)
+		err = DisableIncentiveForBalancerPool(ctx, keepers, poolsToRemoveIncentiveFrom)
 		if err != nil {
 			return nil, err
 		}
 
-		// check they have existing incentive record
-		for _, poolId := range poolsToRemoveIncentiveFrom {
-			gaugeId, err := keepers.PoolIncentivesKeeper.GetPoolGaugeId(ctx, poolId, longestDuration)
-			if err != nil {
-				return nil, err
-			}
-
-			distrRecord := pooltypes.DistrRecord{
-				GaugeId: gaugeId,
-				Weight:  sdk.NewInt(0), // this mean no incentives will be distribtued to this gauge
-			}
-			err = keepers.PoolIncentivesKeeper.ReplaceDistrRecords(ctx, distrRecord)
-			if err != nil {
-				return nil, err
-			}
-		}
-
 		return migrations, nil
 	}
+}
+
+func DisableIncentiveForBalancerPool(ctx sdk.Context, keepers *keepers.AppKeepers, poolsToRemoveIncentiveFrom []uint64) error {
+	longestDuration, err := keepers.PoolIncentivesKeeper.GetLongestLockableDuration(ctx)
+	if err != nil {
+		return err
+	}
+
+	// check they have existing incentive record
+	for _, poolId := range poolsToRemoveIncentiveFrom {
+		gaugeId, err := keepers.PoolIncentivesKeeper.GetPoolGaugeId(ctx, poolId, longestDuration)
+		if err != nil {
+			return err
+		}
+
+		distrRecord := pooltypes.DistrRecord{
+			GaugeId: gaugeId,
+			Weight:  sdk.NewInt(0), // this mean no incentives will be distribtued to this gauge
+		}
+		err = keepers.PoolIncentivesKeeper.ReplaceDistrRecords(ctx, distrRecord)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+
 }
