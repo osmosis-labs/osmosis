@@ -372,19 +372,19 @@ func (k Keeper) distributeInternal(
 				poolB := pool.(*balancer.Pool)
 				shares := poolB.GetTotalShares()
 				// shares = liq.AmountOf("uosmo")
-				// minAmount = shares * (100 / liq.AmountOf("uosmo"))
+				// minAmount = shares * (50 / liq.AmountOf("uosmo"))
 				uosmoAmt := liq.AmountOf("uosmo")
 				if !uosmoAmt.IsZero() {
-					minAmount = shares.MulRaw(100_000_000).Quo(uosmoAmt)
+					minAmount = shares.MulRaw(50_000_000).Quo(uosmoAmt)
 				}
 			} else if pooltype == poolmanagertypes.Stableswap {
 				poolB := pool.(*stableswap.Pool)
 				shares := poolB.GetTotalShares()
 				// shares = liq.AmountOf("uosmo")
-				// minAmount = shares * (100 / liq.AmountOf("uosmo"))
+				// minAmount = shares * (50 / liq.AmountOf("uosmo"))
 				uosmoAmt := liq.AmountOf("uosmo")
 				if !uosmoAmt.IsZero() {
-					minAmount = shares.MulRaw(100_000_000).Quo(uosmoAmt)
+					minAmount = shares.MulRaw(50_000_000).Quo(uosmoAmt)
 				}
 			}
 		}
