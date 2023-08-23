@@ -2612,10 +2612,58 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 // lower tick accumulator is greater than upper tick accumulator and current tick is above the position's range.
 func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	s.SetupTest()
+<<<<<<< HEAD
 	// Initialize pool with non-zero spread factor.
 	spreadFactor := sdk.NewDecWithPrec(3, 3)
 	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], DefaultCoin0.Denom, DefaultCoin1.Denom, 1, spreadFactor)
 	poolId := pool.GetId()
+=======
+
+	var (
+		// Initialize pool with non-zero spread factor.
+		spreadFactor     = sdk.NewDecWithPrec(3, 3)
+		pool             = s.PrepareCustomConcentratedPool(s.TestAccs[0], DefaultCoin0.Denom, DefaultCoin1.Denom, 1, spreadFactor)
+		poolId           = pool.GetId()
+		denom0           = pool.GetToken0()
+		denom1           = pool.GetToken1()
+		rewardsPerSecond = sdk.NewDec(1000)
+	)
+
+	_, err := s.clk.CreateIncentive(s.Ctx, poolId, s.TestAccs[0], sdk.NewCoin("uosmo", sdk.NewInt(1_000_000)), rewardsPerSecond, s.Ctx.BlockTime(), time.Nanosecond)
+	s.Require().NoError(err)
+
+	// Estimates how much to swap in to approximately reach the given tick
+	// in the zero for one direction (left). Assumes current sqrt price
+	// from the refeteched pool as well as its liquidity. Assumes that
+	// liquidity is constant between current tick and toTick.
+	estimateCoinZeroIn := func(toTick int64) sdk.Coin {
+		pool, err := s.clk.GetPoolById(s.Ctx, poolId)
+		s.Require().NoError(err)
+
+		s.Require().True(toTick < pool.GetCurrentTick())
+
+		amountZeroIn := math.CalcAmount0Delta(osmomath.BigDecFromSDKDec(pool.GetLiquidity()), pool.GetCurrentSqrtPrice(), s.tickToSqrtPrice(toTick), true)
+		coinZeroIn := sdk.NewCoin(denom0, amountZeroIn.SDKDec().TruncateInt())
+
+		return coinZeroIn
+	}
+
+	// Estimates how much to swap in to approximately reach the given tick
+	// in the one for zero direction (right). Assumes current sqrt price
+	// from the refeteched pool as well as its liquidity. Assumes that
+	// liquidity is constant between current tick and toTick.
+	estimateCoinOneIn := func(toTick int64) sdk.Coin {
+		pool, err := s.clk.GetPoolById(s.Ctx, poolId)
+		s.Require().NoError(err)
+
+		s.Require().True(toTick > pool.GetCurrentTick())
+
+		amountOneIn := math.CalcAmount1Delta(osmomath.BigDecFromSDKDec(pool.GetLiquidity()), pool.GetCurrentSqrtPrice(), s.tickToSqrtPrice(toTick), true)
+		coinOneIn := sdk.NewCoin(denom1, amountOneIn.SDKDec().TruncateInt())
+
+		return coinOneIn
+	}
+>>>>>>> 36e72019 (refactor(CL): change tick API from sdk.Dec to osmomath.BigDec (#6033))
 
 	// Create full range position
 	s.FundAcc(s.TestAccs[0], DefaultCoins)

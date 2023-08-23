@@ -48,6 +48,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5983](https://github.com/osmosis-labs/osmosis/pull/5983) refactor(CL): 6 return values in CL CreatePosition with a struct
 * [#5983](https://github.com/osmosis-labs/osmosis/pull/5983) refactor(CL): 6 return values in CL CreatePosition with a struct
 * [#6004](https://github.com/osmosis-labs/osmosis/pull/6004) reduce number of returns for creating full range position
+<<<<<<< HEAD
+=======
+* [#6018](https://github.com/osmosis-labs/osmosis/pull/6018) golangci: add unused parameters linter
+* [#6033](https://github.com/osmosis-labs/osmosis/pull/6033) change tick API from sdk.Dec to osmomath.BigDec
+>>>>>>> 36e72019 (refactor(CL): change tick API from sdk.Dec to osmomath.BigDec (#6033))
 
 ### Misc Improvements
 * [#5976](https://github.com/osmosis-labs/osmosis/pull/5976) chore[e2e]: faster epoch

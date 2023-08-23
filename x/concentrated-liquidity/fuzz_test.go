@@ -204,7 +204,7 @@ func (s *KeeperTestSuite) swapNearNextTickBoundary(r *rand.Rand, pool types.Conc
 func (s *KeeperTestSuite) swapNearInitializedTickBoundary(r *rand.Rand, pool types.ConcentratedPoolExtension, zfo bool) (didSwap bool, fatalErr bool) {
 	fmt.Println("swap type: near initialized tick boundary")
 
-	ss := swapstrategy.New(zfo, sdk.ZeroDec(), s.App.GetKey(types.ModuleName), sdk.ZeroDec())
+	ss := swapstrategy.New(zfo, osmomath.ZeroDec(), s.App.GetKey(types.ModuleName), sdk.ZeroDec())
 
 	iter := ss.InitializeNextTickIterator(s.Ctx, pool.GetId(), pool.GetCurrentTick())
 	defer iter.Close()
