@@ -83,7 +83,7 @@ impl TestEnv {
             &CrosschainInstantiate {
                 swap_contract: swaprouter_address.clone(),
                 governor: owner.address(),
-                registry_contract: registry_address.clone(),
+                registry_contract: registry_address,
             },
         );
 

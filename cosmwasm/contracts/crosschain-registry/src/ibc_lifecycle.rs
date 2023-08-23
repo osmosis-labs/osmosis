@@ -12,7 +12,7 @@ pub fn receive_ack(
     success: bool,
 ) -> Result<Response, ContractError> {
     deps.api
-        .debug(&format!("receive_ack: {}", registry_address));
+        .debug(&format!("receive_ack: {registry_address}"));
     let registry = Registry::new(deps.as_ref(), registry_address)?;
     let chain = registry.get_connected_chain(CONTRACT_CHAIN, source_channel.as_str())?;
     let mut chain_pfm = CHAIN_PFM_MAP.load(deps.storage, &chain).map_err(|_| {
@@ -38,7 +38,7 @@ pub fn receive_timeout(
     _sequence: u64,
 ) -> Result<Response, ContractError> {
     deps.api
-        .debug(&format!("receive_timeout: {}", registry_address));
+        .debug(&format!("receive_timeout: {registry_address}"));
     let registry = Registry::new(deps.as_ref(), registry_address)?;
     let chain = registry.get_connected_chain(CONTRACT_CHAIN, source_channel.as_str())?;
     CHAIN_PFM_MAP.remove(deps.storage, &chain);
