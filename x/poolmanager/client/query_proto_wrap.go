@@ -455,10 +455,7 @@ func (q Querier) estimateTradeBasedOnPriceImpactStableSwapPool(
 			InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
 			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
 		}, nil
-	} else if err != nil {
-		// If there is an error the tokenOut amount returned would be nil.
-		tokenOut = sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt())
-	} else {
+	} else if err == nil {
 		// Validate if the trade as is respects the price impact, if it does re-estimate it with a swap fee and return
 		// the result.
 		currTradePrice := sdk.NewDec(req.FromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
@@ -552,18 +549,18 @@ func (q Querier) estimateTradeBasedOnPriceImpactConcentratedLiquidity(
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
 
 	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, sdk.ZeroDec())
-
-	// If the tokenOut was returned to be zero it means the amount being traded is too small. We ignore the
-	// error output here as it could mean that the input is too large.
-	if tokenOut.IsZero() {
-		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-			InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
-			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
-		}, nil
-	}
-
 	// If there was no error we attempt to validate if the output is below the adjustedMaxPriceImpact.
 	if err == nil {
+
+		// If the tokenOut was returned to be zero it means the amount being traded is too small. We ignore the
+		// error output here as it could mean that the input is too large.
+		if tokenOut.IsZero() {
+			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+			}, nil
+		}
+
 		currTradePrice := sdk.NewDec(req.FromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
 		priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
 
@@ -593,16 +590,16 @@ func (q Querier) estimateTradeBasedOnPriceImpactConcentratedLiquidity(
 		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
 
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, currFromCoin, req.ToCoinDenom, sdk.ZeroDec())
-		// If the tokenOut was returned to be zero it means the amount being traded is too small. We ignore the
-		// error output here as it could mean that the input is too large.
-		if tokenOut.IsZero() {
-			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
-				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
-			}, nil
-		}
-
 		if err == nil {
+			// If the tokenOut was returned to be zero it means the amount being traded is too small. We ignore the
+			// error output here as it could mean that the input is too large.
+			if tokenOut.IsZero() {
+				return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+					InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+					OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+				}, nil
+			}
+
 			currTradePrice := sdk.NewDec(currFromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
 			priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
 
