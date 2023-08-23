@@ -225,9 +225,9 @@ func (k Keeper) SwapExactAmountIn(
 
 // SwapExactAmountInNoTakerFee is an API for swapping an exact amount of tokens
 // as input to a pool to get a minimum amount of the desired token out.
-// This method does NOT charge a taker fee, and should only be used in the the
-// txfees hooks when swapping taker fees. This prevents us from charging taker fees
-// on taker fees.
+// This method does NOT charge a taker fee, and should only be used in txfees hooks
+// when swapping taker fees. This prevents us from charging taker fees
+// on top of taker fees.
 func (k Keeper) SwapExactAmountInNoTakerFee(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -352,7 +352,6 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
 	isMultiHopRouted, routeSpreadFactor, sumOfSpreadFactors := false, sdk.Dec{}, sdk.Dec{}
-
 	// Ensure that provided route is not empty and has valid denom format.
 	routeStep := types.SwapAmountOutRoutes(route)
 	if err := routeStep.Validate(); err != nil {
