@@ -1,4 +1,4 @@
-package v17
+package v18
 
 import (
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
