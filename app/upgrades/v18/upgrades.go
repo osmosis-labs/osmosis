@@ -39,7 +39,7 @@ func CreateUpgradeHandler(
 		desiredEpochInfo := epochtypes.EpochInfo{}
 		for _, epoch := range epochs {
 			if epoch.Identifier == "day" {
-				epoch.Duration = time.Minute * 15
+				epoch.Duration = time.Minute * 45
 				desiredEpochInfo = epoch
 				keepers.EpochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
 			}
@@ -81,7 +81,7 @@ func CreateUpgradeHandler(
 			Denom:         "gamm/pool/3",
 			Duration:      time.Hour * 24 * 7,
 		})
-		ctx.Logger().Info("VALUE PRE: ", value)
+		ctx.Logger().Info(fmt.Sprintf("VALUE PRE: %v", value))
 
 		// Clear gamm/pool/3 denom accumulation store
 		keepers.LockupKeeper.ClearDenomAccumulationStore(ctx, pool3Denom)
@@ -97,7 +97,7 @@ func CreateUpgradeHandler(
 			Denom:         "gamm/pool/3",
 			Duration:      time.Hour * 24 * 7,
 		})
-		ctx.Logger().Info("VALUE POST: ", value)
+		ctx.Logger().Info(fmt.Sprintf("VALUE POST: %v", value))
 
 		return migrations, nil
 	}
