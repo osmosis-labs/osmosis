@@ -267,7 +267,7 @@ message EstimateTradeBasedOnPriceImpactRequest {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  string twap_price = 5 [
+  string external_price = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];

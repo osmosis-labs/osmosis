@@ -555,7 +555,7 @@ func TestEstimateTradeBasedOnPriceImpact(t *testing.T) {
 				ToCoinDenom:    "stake",
 				PoolId:         1,
 				MaxPriceImpact: sdk.MustNewDecFromStr("0.01"), // equivalent to 0.01
-				TwapPrice:      sdk.MustNewDecFromStr("0.02"), // equivalent to 0.02
+				ExternalPrice:  sdk.MustNewDecFromStr("0.02"), // equivalent to 0.02
 			},
 		},
 	}

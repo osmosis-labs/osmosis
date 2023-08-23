@@ -171,7 +171,7 @@ func GetCmdEstimateTradeBasedOnPriceImpact() (
 	*osmocli.QueryDescriptor, *queryproto.EstimateTradeBasedOnPriceImpactRequest,
 ) {
 	return &osmocli.QueryDescriptor{
-		Use:   "estimate-trade-based-on-price-impact  <fromCoin> <toCoinDenom> <poolId> <maxPriceImpact> <twapPrice>",
+		Use:   "estimate-trade-based-on-price-impact  <fromCoin> <toCoinDenom> <poolId> <maxPriceImpact> <externalPrice>",
 		Short: "Query estimate-trade-based-on-price-impact",
 		Long: `{{.Short}} 
 		{{.CommandPrefix}} estimate-trade-based-on-price-impact 100uosmo stosmo  833 0.001 1.00`,

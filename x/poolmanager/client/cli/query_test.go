@@ -67,7 +67,7 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 				FromCoin:       sdk.NewCoin("bar", sdk.NewInt(10)),
 				ToCoinDenom:    "baz",
 				MaxPriceImpact: sdk.MustNewDecFromStr("0.001"),
-				TwapPrice:      sdk.MustNewDecFromStr("1.02"),
+				ExternalPrice:  sdk.MustNewDecFromStr("1.02"),
 			},
 			&poolmanagerqueryproto.EstimateTradeBasedOnPriceImpactResponse{},
 		},
@@ -134,7 +134,7 @@ func (s *QueryTestSuite) TestSimplifiedQueries() {
 		ToCoinDenom:    "baz",
 		PoolId:         1,
 		MaxPriceImpact: sdk.MustNewDecFromStr("0.01"),
-		TwapPrice:      sdk.MustNewDecFromStr("0.02"),
+		ExternalPrice:  sdk.MustNewDecFromStr("0.02"),
 	}
 	output5 := &poolmanagerqueryproto.EstimateTradeBasedOnPriceImpactResponse{}
 	err = s.QueryHelper.Invoke(gocontext.Background(),
