@@ -205,6 +205,10 @@ func (d *distributionInfo) addLockRewards(owner, rewardReceiver string, rewards 
 // doDistributionSends utilizes provided distributionInfo to send coins from the module account to various recipients.
 func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) error {
 	numIDs := len(distrs.idToDecodedRewardReceiverAddr)
+	denomCost := 0
+	for _, coins := range distrs.idToDistrCoins {
+		denomCost += len(coins)
+	}
 	if numIDs > 0 {
 		ctx.Logger().Debug(fmt.Sprintf("Beginning distribution to %d users", numIDs))
 		// send rewards from the gauge to the reward receiver address
@@ -226,7 +230,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 				),
 			})
 		}
-		ctx.Logger().Debug(fmt.Sprintf("Finished Distributing to %d users", numIDs))
+		ctx.Logger().Debug(fmt.Sprintf("Finished Distributing to %d users. Denom-cost=%d", numIDs, denomCost))
 	}
 	return nil
 }
@@ -358,6 +362,7 @@ func (k Keeper) distributeInternal(
 		denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
 		poolId, err := gammtypes.GetPoolIdFromShareDenom(gauge.DistributeTo.Denom)
 		minAmount := sdk.NewIntFromUint64(0)
+		fmt.Println("debug find denom", denom, poolId, err)
 		if err == nil {
 			pool, err := k.pmk.GetPool(ctx, poolId)
 			if err != nil {
@@ -433,10 +438,6 @@ func (k Keeper) distributeInternal(
 
 	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 	return totalDistrCoins, err
-}
-
-func (k Keeper) getMinGammAmountPerShare(ctx sdk.Context, denom string) {
-
 }
 
 // updateGaugePostDistribute increments the gauge's filled epochs field.
