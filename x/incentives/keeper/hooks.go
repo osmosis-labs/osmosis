@@ -18,6 +18,7 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 // AfterEpochEnd is the epoch end hook.
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	params := k.GetParams(ctx)
+
 	if epochIdentifier == params.DistrEpochIdentifier {
 		// begin distribution if it's start time
 		gauges := k.GetUpcomingGauges(ctx)
@@ -34,6 +35,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			ctx.EventManager().IncreaseCapacity(2e6)
 		}
 
+		err := k.AllocateAcrossGauges(ctx)
+		if err != nil {
+			return err
+		}
+
 		// distribute due to epoch event
 		gauges = k.GetActiveGauges(ctx)
 		// only distribute to active gauges that are for native denoms
@@ -48,7 +54,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 
 		ctx.Logger().Info("AfterEpochEnd: distributing to gauges", "module", types.ModuleName, "numGauges", len(distrGauges), "height", ctx.BlockHeight())
-		_, err := k.Distribute(ctx, distrGauges)
+		_, err = k.Distribute(ctx, distrGauges)
 		if err != nil {
 			return err
 		}
