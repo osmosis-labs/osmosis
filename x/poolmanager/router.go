@@ -97,6 +97,9 @@ func (k Keeper) RouteExactAmountIn(
 			return sdk.Int{}, err
 		}
 
+		// Track volume for volume-splitting incentives
+		k.trackVolume(ctx, pool.GetId(), tokenIn)
+
 		// Chain output of current pool as the input for the next routed pool
 		tokenIn = sdk.NewCoin(routeStep.TokenOutDenom, tokenOutAmount)
 	}
@@ -377,16 +380,19 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
 		}
 
-		_tokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, routeStep.TokenInDenom, insExpected[i], _tokenOut, spreadFactor)
+		curTokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, routeStep.TokenInDenom, insExpected[i], _tokenOut, spreadFactor)
 		if swapErr != nil {
 			return sdk.Int{}, swapErr
 		}
+
+		// Track volume for volume-splitting incentives
+		k.trackVolume(ctx, pool.GetId(), sdk.NewCoin(routeStep.TokenInDenom, curTokenInAmount))
 
 		// Sets the final amount of tokens that need to be input into the first pool. Even though this is the final return value for the
 		// whole method and will not change after the first iteration, we still iterate through the rest of the pools to execute their respective
 		// swaps.
 		if i == 0 {
-			tokenInAmount = _tokenInAmount
+			tokenInAmount = curTokenInAmount
 		}
 	}
 
