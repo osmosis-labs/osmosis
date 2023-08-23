@@ -11,8 +11,7 @@ pub fn receive_ack(
     _ack: String,
     success: bool,
 ) -> Result<Response, ContractError> {
-    deps.api
-        .debug(&format!("receive_ack: {registry_address}"));
+    deps.api.debug(&format!("receive_ack: {registry_address}"));
     let registry = Registry::new(deps.as_ref(), registry_address)?;
     let chain = registry.get_connected_chain(CONTRACT_CHAIN, source_channel.as_str())?;
     let mut chain_pfm = CHAIN_PFM_MAP.load(deps.storage, &chain).map_err(|_| {

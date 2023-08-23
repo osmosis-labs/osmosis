@@ -1,7 +1,7 @@
 use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Env, MessageInfo};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
 use registry::msg::{Callback, SerializableJson};
-use registry::{RegistryError};
+use registry::RegistryError;
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
 use crate::checks::{
