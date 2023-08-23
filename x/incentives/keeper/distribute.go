@@ -355,19 +355,23 @@ func (k Keeper) distributeInternal(
 	} else {
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
 		denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
+		fmt.Println("Debug sum, denom", denom)
 		poolId, err := gammtypes.GetPoolIdFromShareDenom(gauge.DistributeTo.Denom)
-		minAmount := sdk.NewIntFromUint64(1)
+		minAmount := sdk.NewIntFromUint64(0)
 		if err == nil {
+			fmt.Println("Debug sum computing sum")
 			pool, err := k.pmk.GetPool(ctx, poolId)
 			if err != nil {
 				return nil, err
 			}
+			fmt.Println("Debug sum pool got")
 			liq, err := k.pmk.GetTotalPoolLiquidity(ctx, poolId)
 			if err != nil {
 				return nil, err
 			}
 			pooltype := pool.GetType()
 			if pooltype == poolmanagertypes.Balancer {
+				fmt.Println("Debug sum Balancer type")
 				poolB := pool.(*balancer.Pool)
 				shares := poolB.GetTotalShares()
 				// shares = liq.AmountOf("uosmo")
