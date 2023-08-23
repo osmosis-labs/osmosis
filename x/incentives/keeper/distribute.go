@@ -377,7 +377,10 @@ func (k Keeper) distributeInternal(
 				shares := poolB.GetTotalShares()
 				// shares = liq.AmountOf("uosmo")
 				// minAmount = shares * (100 / liq.AmountOf("uosmo"))
-				minAmount = shares.MulRaw(100_000_000).Quo(liq.AmountOf("uosmo"))
+				uosmoAmt := liq.AmountOf("uosmo")
+				if !uosmoAmt.IsZero() {
+					minAmount = shares.MulRaw(100_000_000).Quo(uosmoAmt)
+				}
 			}
 		}
 		lockSum := lockuptypes.SumLocksByDenom(locks, denom, minAmount)
