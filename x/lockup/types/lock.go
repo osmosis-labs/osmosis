@@ -69,6 +69,7 @@ func SumLocksByDenom(locks []PeriodLock, denom string, minimum sdk.Int) sdk.Int 
 	}
 	for _, lock := range locks {
 		amount := lock.Coins.AmountOfNoDenomValidation(denom)
+		fmt.Println("DEBUG_LOCK_AMT", amount)
 		if amount.GTE(minimum) {
 			sum = sum.Add(amount)
 		}

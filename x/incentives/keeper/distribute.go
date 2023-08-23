@@ -376,7 +376,7 @@ func (k Keeper) distributeInternal(
 			}
 		}
 		lockSum := lockuptypes.SumLocksByDenom(locks, denom, minAmount)
-		fmt.Println(lockSum, denom, minAmount)
+		fmt.Println("Debug sum", lockSum, denom, minAmount)
 
 		if lockSum.IsZero() {
 			return nil, nil
