@@ -572,7 +572,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 				s.Require().NoError(err)
 
 				curTick = test.currentPoolTick
-				curSqrtPrice = osmomath.BigDecFromSDKDec(sqrtPrice)
+				curSqrtPrice = sqrtPrice
 			}
 			pool.SetCurrentSqrtPrice(curSqrtPrice)
 			pool.SetCurrentTick(curTick)
