@@ -772,7 +772,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, setupForwardi
 	chain.StoreContractCode(&suite.Suite, "./bytecode/crosschain_swaps.wasm")
 
 	crosschainAddr := chain.InstantiateContract(&suite.Suite,
-		fmt.Sprintf(`{"swap_contract": "%s", "governor": "%s"}`, swaprouterAddr, owner),
+		fmt.Sprintf(`{"swap_contract": "%s", "governor": "%s", "registry_contract":"%s"}`, swaprouterAddr, owner, registryAddr),
 		3)
 
 	osmosisApp := chain.GetOsmosisApp()
