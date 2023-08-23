@@ -18,6 +18,7 @@ import (
 var (
 	OSMO        = "uosmo"
 	AKTIBCDenom = "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4"
+	pool3Denom  = "gamm/pool/3"
 )
 
 func CreateUpgradeHandler(
@@ -40,8 +41,8 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		// Clear all necessary accumulation stores
-		keepers.LockupKeeper.ClearAccumulationStores(ctx)
+		// Clear gamm/pool/3 denom accumulation store
+		keepers.LockupKeeper.ClearDenomAccumulationStore(ctx, pool3Denom)
 
 		// Remove the lockup created for pool 3 above
 		_, err = keepers.LockupKeeper.BeginUnlock(ctx, lock.GetID(), lock.GetCoins())
