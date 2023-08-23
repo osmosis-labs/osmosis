@@ -9,6 +9,8 @@ import (
 // UpgradeName defines the on-chain upgrade name for the Osmosis v17 upgrade.
 const UpgradeName = "v18"
 
+var accum_stores_to_fix = []int{3, 5, 7, 9, 15, 497}
+
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
