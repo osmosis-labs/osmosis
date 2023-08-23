@@ -29,6 +29,7 @@ func (h MultiEpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, 
 	for i := range h {
 		panicCatchingEpochHook(ctx, h[i].AfterEpochEnd, epochIdentifier, epochNumber)
 	}
+	ctx.Logger().Info("AfterEpochEnd finished")
 	return nil
 }
 
@@ -52,6 +53,9 @@ func panicCatchingEpochHook(
 	// TODO: Thread info for which hook this is, may be dependent on larger hook system refactoring
 	err := osmoutils.ApplyFuncIfNoError(ctx, wrappedHookFn)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("error in epoch hook %v", err))
+		ctx.Logger().Info(fmt.Sprintf("error in epoch hook %v", err))
+		fmt.Println(fmt.Sprintf("error in epoch hook %v", err))
+	} else {
+		ctx.Logger().Info("Epoch hook no error")
 	}
 }

@@ -58,7 +58,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		if err != nil {
 			return err
 		}
+
+		ctx.Logger().Info("FINISHED AfterEpochEnd inside if")
 	}
+
+	ctx.Logger().Info("FINISHED AfterEpochEnd outside if")
 	return nil
 }
 

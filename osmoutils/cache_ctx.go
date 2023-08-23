@@ -21,6 +21,8 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 	// Add a panic safeguard
 	defer func() {
 		if recoveryError := recover(); recoveryError != nil {
+			fmt.Println("Panic occurred during execution")
+			ctx.Logger().Info("Panic occurred during execution")
 			if isErr, _ := IsOutOfGasError(recoveryError); isErr {
 				// We panic with the same error, to replicate the normal tx execution flow.
 				panic(recoveryError)
