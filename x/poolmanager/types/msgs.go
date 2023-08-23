@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -183,12 +185,17 @@ func (msg MsgSetDenomPairTakerFee) ValidateBasic() error {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "Empty denom pair taker fee")
 	}
 
+	fmt.Println("msg.DenomPairTakerFee", msg.DenomPairTakerFee)
+
 	for _, denomPair := range msg.DenomPairTakerFee {
 		if err := sdk.ValidateDenom(denomPair.Denom0); err != nil {
 			return err
 		}
 		if err := sdk.ValidateDenom(denomPair.Denom1); err != nil {
 			return err
+		}
+		if denomPair.Denom0 == denomPair.Denom1 {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "Denom pair cannot consist of the same denoms")
 		}
 		if denomPair.TakerFee.IsNegative() {
 			return nonPositiveAmountError{denomPair.TakerFee.String()}
