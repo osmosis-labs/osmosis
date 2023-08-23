@@ -376,6 +376,7 @@ func (k Keeper) distributeInternal(
 			}
 		}
 		lockSum := lockuptypes.SumLocksByDenom(locks, denom, minAmount)
+		fmt.Println(lockSum, denom, minAmount)
 
 		if lockSum.IsZero() {
 			return nil, nil
@@ -384,12 +385,13 @@ func (k Keeper) distributeInternal(
 		for _, lock := range locks {
 			distrCoins := sdk.Coins{}
 			ctx.Logger().Debug("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCons", remainCoins, "height", ctx.BlockHeight())
+			denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
+			if denomLockAmt.LT(minAmount) {
+				continue
+			}
+
 			for _, coin := range remainCoins {
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-				denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
-				if denomLockAmt.LT(minAmount) {
-					continue
-				}
 				amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
 				if amt.IsPositive() {
 					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
