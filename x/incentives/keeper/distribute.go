@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v16/x/gamm/pool-models/balancer"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v16/x/gamm/types"
 
 	"github.com/osmosis-labs/osmosis/v16/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v16/x/lockup/types"
@@ -370,7 +370,9 @@ func (k Keeper) distributeInternal(
 			if pooltype == poolmanagertypes.Balancer {
 				poolB := pool.(*balancer.Pool)
 				shares := poolB.GetTotalShares()
-				minAmount = liq.AmountOf("uosmo").Quo(shares)
+				// shares = liq.AmountOf("uosmo")
+				// minAmount = shares * (100 / liq.AmountOf("uosmo"))
+				minAmount = shares.MulRaw(100_000_000).Quo(liq.AmountOf("uosmo"))
 			}
 		}
 		lockSum := lockuptypes.SumLocksByDenom(locks, denom, minAmount)
