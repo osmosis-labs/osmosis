@@ -383,11 +383,11 @@ func TestPriceToTick(t *testing.T) {
 		},
 		"price is greater than max spot price": {
 			price:         osmomath.BigDecFromSDKDec(types.MaxSpotPrice.Add(sdk.OneDec())),
-			expectedError: types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromSDKDec(types.MaxSpotPrice.Add(sdk.OneDec())), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
+			expectedError: types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromSDKDec(types.MaxSpotPrice.Add(sdk.OneDec())), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice},
 		},
 		"price is smaller than min spot price": {
 			price:         osmomath.BigDecFromSDKDec(types.MinSpotPrice.Quo(sdk.NewDec(10))),
-			expectedError: types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromSDKDec(types.MinSpotPrice.Quo(sdk.NewDec(10))), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
+			expectedError: types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromSDKDec(types.MinSpotPrice.Quo(sdk.NewDec(10))), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice},
 		},
 	}
 	for name, tc := range testCases {
@@ -800,6 +800,35 @@ func TestCalculatePriceToTick(t *testing.T) {
 			require.Equal(t, tc.expectedTickIndex, tickIndex)
 		})
 	}
+}
+
+// This test validates that conversions	at the new initialized boundary are sound.
+func TestSqrtPriceToTick_MinInitializedTickV2(t *testing.T) {
+	minSqrtPrice, err := osmomath.MonotonicSqrtBigDec(types.MinSpotPriceV2)
+	require.NoError(t, err)
+
+	tickIndex, err := math.CalculateSqrtPriceToTick(minSqrtPrice)
+	require.NoError(t, err)
+	require.Equal(t, types.MinInitializedTickV2, tickIndex)
+}
+
+// This test validates that tick conversion at the old initialized boundary is sound.
+func TestSqrtPriceToTick_MinInitializedTickV1(t *testing.T) {
+	minSqrtPrice, err := osmomath.MonotonicSqrt(types.MinSpotPrice)
+	require.NoError(t, err)
+
+	minSpotPrice := osmomath.BigDecFromSDKDec(minSqrtPrice)
+	tickIndex, err := math.CalculateSqrtPriceToTick(minSpotPrice)
+	require.NoError(t, err)
+	require.Equal(t, types.MinInitializedTick, tickIndex)
+
+	// Subtract one ULP given exponent at price one of -6.
+	minSpotPriceMinusULP := minSpotPrice.Sub(osmomath.NewDecWithPrec(1, 19+6))
+	tickIndex, err = math.CalculateSqrtPriceToTick(minSpotPriceMinusULP)
+	require.NoError(t, err)
+
+	// The tick index should be one less than the min initialized tick.
+	require.Equal(t, types.MinInitializedTick-1, tickIndex)
 }
 
 // This test validates that 36 and 18 decimal CalculatePriceToTick

@@ -42,7 +42,7 @@ type CreatePositionData struct {
 // - the liquidity delta is zero
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
-func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (positionDate CreatePositionData, err error) {
+func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, tokensProvided sdk.Coins, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (positionData CreatePositionData, err error) {
 	// Use the current blockTime as the position's join time.
 	joinTime := ctx.BlockTime()
 

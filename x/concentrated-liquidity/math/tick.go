@@ -37,16 +37,27 @@ func TickToSqrtPrice(tickIndex int64) (osmomath.BigDec, error) {
 		return osmomath.BigDec{}, err
 	}
 
-	// It is acceptable to truncate here as TickToPrice() function converts
-	// from sdk.Dec to osmomath.BigDec before returning.
-	price := priceBigDec.SDKDec()
+	// TODO: better refactor and test this
+	if tickIndex >= types.MinInitializedTick {
+		// It is acceptable to truncate here as TickToPrice() function converts
+		// from sdk.Dec to osmomath.BigDec before returning.
+		price := priceBigDec.SDKDec()
+
+		// Determine the sqrtPrice from the price
+		sqrtPrice, err := osmomath.MonotonicSqrt(price)
+		if err != nil {
+			return osmomath.BigDec{}, err
+		}
+		return osmomath.BigDecFromSDKDec(sqrtPrice), nil
+	}
 
 	// Determine the sqrtPrice from the price
-	sqrtPrice, err := osmomath.MonotonicSqrt(price)
+	sqrtPrice, err := osmomath.MonotonicSqrtBigDec(priceBigDec)
 	if err != nil {
 		return osmomath.BigDec{}, err
 	}
-	return osmomath.BigDecFromSDKDec(sqrtPrice), nil
+	return sqrtPrice, nil
+
 }
 
 // TickToPrice returns the price given a tickIndex
@@ -57,12 +68,12 @@ func TickToPrice(tickIndex int64) (osmomath.BigDec, error) {
 	}
 
 	if tickIndex == -270000000 {
-		return osmomath.SmallestDec(), nil
+		return types.MinSpotPriceV2, nil
 	}
 
 	// Check that the tick index is between min and max value
 	if tickIndex < types.MinCurrentTickV2 {
-		return osmomath.BigDec{}, types.TickIndexMinimumError{MinTick: types.MinCurrentTick}
+		return osmomath.BigDec{}, types.TickIndexMinimumError{MinTick: types.MinCurrentTickV2}
 	}
 	if tickIndex > types.MaxTick {
 		return osmomath.BigDec{}, types.TickIndexMaximumError{MaxTick: types.MaxTick}
@@ -106,7 +117,7 @@ func TickToPrice(tickIndex int64) (osmomath.BigDec, error) {
 	// defense in depth, this logic would not be reached due to use having checked if given tick is in between
 	// min tick and max tick.
 	if priceBigDec.GT(osmomath.BigDecFromSDKDec(types.MaxSpotPrice)) || priceBigDec.LT(types.MinSpotPriceV2) {
-		return osmomath.BigDec{}, types.PriceBoundError{ProvidedPrice: priceBigDec, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+		return osmomath.BigDec{}, types.PriceBoundError{ProvidedPrice: priceBigDec, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	return priceBigDec, nil
 }
@@ -119,6 +130,7 @@ func TickToPrice(tickIndex int64) (osmomath.BigDec, error) {
 // tickIndexModulus = tickIndex % tickSpacing = -7
 // tickIndexModulus = -7 + 10 = 3
 // tickIndex = -17 - 3 = -20
+// TODO: update unit tests
 func RoundDownTickToSpacing(tickIndex int64, tickSpacing int64) (int64, error) {
 	tickIndexModulus := tickIndex % tickSpacing
 	if tickIndexModulus < 0 {
@@ -131,8 +143,8 @@ func RoundDownTickToSpacing(tickIndex int64, tickSpacing int64) (int64, error) {
 
 	// Defense-in-depth check to ensure that the tick index is within the authorized range
 	// Should never get here.
-	if tickIndex > types.MaxTick || tickIndex < types.MinInitializedTick {
-		return 0, types.TickIndexNotWithinBoundariesError{ActualTick: tickIndex, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick}
+	if tickIndex > types.MaxTick || tickIndex < types.MinInitializedTickV2 {
+		return 0, types.TickIndexNotWithinBoundariesError{ActualTick: tickIndex, MinTick: types.MinInitializedTickV2, MaxTick: types.MaxTick}
 	}
 
 	return tickIndex, nil
@@ -180,7 +192,7 @@ func CalculatePriceToTickV1(priceBigDec osmomath.BigDec) (tickIndex int64, err e
 		return 0, fmt.Errorf("price must be greater than zero")
 	}
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return 0, types.PriceBoundError{ProvidedPrice: priceBigDec, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+		return 0, types.PriceBoundError{ProvidedPrice: priceBigDec, MinSpotPrice: osmomath.BigDecFromSDKDec(types.MinSpotPrice), MaxSpotPrice: types.MaxSpotPrice}
 	}
 	if price.Equal(sdkOneDec) {
 		return 0, nil
@@ -234,7 +246,7 @@ func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 		return 0, fmt.Errorf("price must be greater than zero")
 	}
 	if price.GT(osmomath.BigDecFromSDKDec(types.MaxSpotPrice)) || price.LT(types.MinSpotPriceV2) {
-		return 0, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+		return 0, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	if price.Equal(osmomathBigOneDec) {
 		return 0, nil
@@ -300,8 +312,8 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 	// We check this at max tick - 1 instead of max tick, since we expect the output to
 	// have some error that can push us over the tick boundary.
 	outOfBounds := false
-	if tick <= types.MinInitializedTick {
-		tick = types.MinInitializedTick + 1
+	if tick <= types.MinInitializedTickV2 {
+		tick = types.MinInitializedTickV2 + 1
 		outOfBounds = true
 	} else if tick >= types.MaxTick-1 {
 		tick = types.MaxTick - 2
