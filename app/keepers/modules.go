@@ -30,6 +30,7 @@ import (
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
 
 	_ "github.com/osmosis-labs/osmosis/v17/client/docs/statik"
+	authenticator "github.com/osmosis-labs/osmosis/v17/x/authenticator"
 	clclient "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/clmodule"
 	cwpoolclient "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/client"
@@ -120,4 +121,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	ibcratelimitmodule.AppModuleBasic{},
 	router.AppModuleBasic{},
 	cosmwasmpoolmodule.AppModuleBasic{},
+	authenticator.AppModuleBasic{},
 }

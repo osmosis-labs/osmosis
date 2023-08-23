@@ -71,6 +71,8 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v17/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v17/wasmbinding"
+	authenticatorkeeper "github.com/osmosis-labs/osmosis/v17/x/authenticator/keeper"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v17/x/authenticator/types"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
@@ -149,6 +151,7 @@ type AppKeepers struct {
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
+	AuthenticatorKeeper          *authenticatorkeeper.Keeper
 
 	// IBC modules
 	// transfer module
@@ -444,6 +447,13 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.LockupKeeper,
 	)
 
+	authenticatorKeeper := authenticatorkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[authenticatortypes.StoreKey],
+		appKeepers.GetSubspace(authenticatortypes.ModuleName),
+	)
+	appKeepers.AuthenticatorKeeper = &authenticatorKeeper
+
 	appKeepers.ValidatorSetPreferenceKeeper = &validatorSetPreferenceKeeper
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
@@ -676,6 +686,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
 	paramsKeeper.Subspace(cosmwasmpooltypes.ModuleName)
 	paramsKeeper.Subspace(ibchookstypes.ModuleName)
+	paramsKeeper.Subspace(authenticatortypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -794,5 +805,6 @@ func KVStoreKeys() []string {
 		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		cosmwasmpooltypes.StoreKey,
+		authenticatortypes.StoreKey,
 	}
 }
