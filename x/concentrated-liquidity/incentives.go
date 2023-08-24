@@ -171,6 +171,8 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 	// relaxed in the future.
 	// Note that we check denom compatibility later, and pool weights technically do not matter as they
 	// are analogous to changing the spot price, which is handled by our lower bounding.
+	// Note that due to low share ratio, the balancer token liquidity may be truncated to zero.
+	// Balancer liquidity may also upgrade in-full to CL.
 	if len(balancerPoolLiquidity) > 2 {
 		return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
 	}
