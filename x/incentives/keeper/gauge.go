@@ -171,6 +171,9 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		if !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "osmovaloper") {
 			return 0, fmt.Errorf("denom does not exist: %s", distrTo.Denom)
 		}
+
+		// for all external incentives by duration create general linking as well
+		k.pik.SetGeneralGaugeToPoolLink(ctx, nextGaugeId, longestDuration, poolId)
 	}
 
 	gauge := types.Gauge{

@@ -181,7 +181,7 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 			poolCreated:          true,
 			weights:              []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
 			perpetual:            true,
-			expectedRecordLength: 1,
+			expectedRecordLength: 2,
 		},
 		{
 			desc:                 "Non Perpetual",

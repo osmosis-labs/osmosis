@@ -869,17 +869,30 @@ func (s *KeeperTestSuite) TestCreateGauge() {
 			} else {
 				s.Require().NoError(err)
 
+				longestDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+				s.Require().NoError(err)
+
 				// get gauge from GaugeId
 				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeId)
 				s.Require().NoError(err)
 
+				// get the pool
 				pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, tc.gaugeField.poolId)
 				s.Require().NoError(err)
 
-				if pool.GetType() != poolmanagertypes.Concentrated {
-					s.Require().Equal(tc.gaugeField.lockupDenom, gauge.DistributeTo.Denom)
-				} else {
+				// do various checks baed on if the pool is
+				if pool.GetType() == poolmanagertypes.Concentrated {
+					poolId, err := s.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, gaugeId, 0)
+					s.Require().NoError(err)
+
+					s.Require().Equal(tc.gaugeField.poolId, poolId)
 					s.Require().Equal(tc.expectedClLockDenom, gauge.DistributeTo.Denom)
+				} else {
+					poolId, err := s.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, gaugeId, longestDuration)
+					s.Require().NoError(err)
+
+					s.Require().Equal(tc.gaugeField.poolId, poolId)
+					s.Require().Equal(tc.gaugeField.lockupDenom, gauge.DistributeTo.Denom)
 				}
 
 				s.Require().Equal(tc.gaugeField.numEpochPaidOver, gauge.NumEpochsPaidOver)
