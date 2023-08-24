@@ -126,7 +126,9 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 
 	var distrTo lockuptypes.QueryCondition
 
-	if poolType == poolmanagertypes.Concentrated {
+	// Add check for syntheticDenom when creating gauge during superfluid getOrCreateIntermediary
+	// account to incentivize staked accounts based on duration. This applies only to internal cases.
+	if poolType == poolmanagertypes.Concentrated && !lockuptypes.IsStakingSyntheticDenom(lockupDenom) {
 		distrTo.LockQueryType = lockuptypes.NoLock
 		// for only internal CL incentives
 		if lockupDenom == types.NoLockInternalGaugeDenom(poolId) {

@@ -37,11 +37,13 @@ func (s *KeeperTestSuite) SetupGroupGauge(clPoolId uint64, lockOwner sdk.AccAddr
 	internalGauges := s.setupNoLockInternalGauge(clPoolId, numOfNoLockGauges)
 
 	for i := uint64(1); i <= numOfLockGauges; i++ {
+		cfmmPool := s.PrepareBalancerPool()
+
 		// setup lock
-		s.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Hour*7)
+		s.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, defaultLockDuration)
 
 		// create gauge
-		gaugeID, _, _, _ := s.SetupNewGauge(true, sdk.NewCoins())
+		gaugeID, _, _, _ := s.SetupNewGauge(true, sdk.NewCoins(), cfmmPool)
 		internalGauges = append(internalGauges, gaugeID)
 	}
 

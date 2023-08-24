@@ -38,7 +38,7 @@ func TestMsgCreateGauge(t *testing.T) {
 			sdk.Coins{},
 			time.Now(),
 			2,
-			0,
+			1,
 		)
 
 		return after(properMsg)

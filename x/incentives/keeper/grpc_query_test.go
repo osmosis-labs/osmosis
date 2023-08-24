@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -520,7 +519,6 @@ func (s *KeeperTestSuite) TestGRPCDistributedCoins() {
 	err = s.querier.MoveUpcomingGaugeToActiveGauge(s.Ctx, *gauge)
 	s.Require().NoError(err)
 
-	fmt.Println("GAUGE: ", gauge)
 	// distribute coins to stakers
 	distrCoins, err := s.querier.Distribute(s.Ctx, gauges)
 	s.Require().NoError(err)

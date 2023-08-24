@@ -1224,7 +1224,7 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 		coins:            sdk.NewCoins(hundredKUosmo),
 		numEpochPaidOver: 1,
 		owner:            s.TestAccs[1],
-		internalGaugeIds: []uint64{2, 3, 4, 5},
+		internalGaugeIds: []uint64{2, 3, 4, 6},
 	}
 
 	tests := []struct {
@@ -1249,7 +1249,7 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 		},
 		{
 			name:                             "Valid case: Valid perp-GroupGauge Creation with only GAMM internal gauge and Distribution",
-			createGauge:                      s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{5}),
+			createGauge:                      s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{6}),
 			expectedCoinsPerInternalGauge:    sdk.NewCoins(hundredKUosmo),
 			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo),
 		},
@@ -1278,7 +1278,7 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 		},
 		{
 			name:                        "InValid case: Creating a GroupGauge with non-perpetual internalId",
-			createGauge:                 s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{2, 3, 4, 6}),
+			createGauge:                 s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{2, 3, 4, 7}),
 			expectCreateGroupGaugeError: true,
 		},
 	}
@@ -1292,10 +1292,11 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 			clPool := s.PrepareConcentratedPool()
 			lockOwner := sdk.AccAddress([]byte("addr1---------------"))
 			epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
+			// setup group gauge with 3 no-lock gauge and 1 lock gauge
 			s.SetupGroupGauge(clPool.GetId(), lockOwner, uint64(3), uint64(1))
 
 			//create 1 non-perp internal Gauge
-			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gauge id = 6
+			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gauge id = 7
 
 			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, tc.createGauge.coins, tc.createGauge.numEpochPaidOver, tc.createGauge.owner, tc.createGauge.internalGaugeIds, lockuptypes.ByGroup, types.Evenly) // gauge id = 6
 			if tc.expectCreateGroupGaugeError {
