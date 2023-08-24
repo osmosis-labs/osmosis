@@ -40,7 +40,7 @@ func CreateUpgradeHandler(
 		for _, epoch := range epochs {
 			if epoch.Identifier == "day" {
 				epoch.Duration = time.Minute * 45
-				epoch.StartTime = ctx.BlockTime().Add(time.Minute * -44)
+				epoch.CurrentEpochStartTime = ctx.BlockTime().Add(time.Minute * -44)
 				desiredEpochInfo = epoch
 				keepers.EpochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
 			}
