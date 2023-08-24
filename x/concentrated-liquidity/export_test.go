@@ -115,7 +115,7 @@ func (k Keeper) InitializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 }
 
 func (k Keeper) CollectSpreadRewards(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
-	return k.collectSpreadRewards(ctx, owner, positionId)
+	return k.CollectSpreadRewards(ctx, owner, positionId)
 }
 
 func (k Keeper) PrepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {

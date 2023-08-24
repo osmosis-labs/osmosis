@@ -150,9 +150,9 @@ func (k Keeper) getInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForT
 	return emptyCoins, nil
 }
 
-// collectSpreadRewards collects the spread reward earned by a position and sends them to the owner's account.
+// CollectSpreadRewards collects the spread reward earned by a position and sends them to the owner's account.
 // Returns error if the position with the given id does not exist or if fails to get the spread reward accumulator.
-func (k Keeper) collectSpreadRewards(ctx sdk.Context, sender sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) CollectSpreadRewards(ctx sdk.Context, sender sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Coins{}, err

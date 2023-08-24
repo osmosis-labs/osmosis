@@ -22,6 +22,10 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 )
 
+const userAddr = "osmo1urn0pnx8fl5kt89r5nzqd8htruq7skadc2xdk3"
+
+var clPoolId uint64
+
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }
@@ -76,6 +80,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		_, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, s.TestAccs[0], lpTokens)
 	})
 
+	s.preUpgradeDistributionFails()
+
 	// upgrade software
 	s.imitateUpgrade()
 	s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
@@ -90,14 +96,13 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	})
 	valueAfterClear.Equal(sdk.NewInt(shareStaysLocked))
 
-	s.ensurePostUpgradeDistributionWorks()
-
 	// Elapse time so that incentive distribution is triggered.
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour))
 
 	// Check that can LP and swap into pool 3 with no usses
 	// LP
-	_, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, s.TestAccs[0], lpTokens)
+	position, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, s.TestAccs[0], lpTokens)
+	fmt.Println(position)
 	s.Require().NoError(err)
 
 	// Refetch CL Pool
@@ -108,6 +113,8 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	toSwap := sdk.NewCoin(pool.GetToken0(), sdk.NewInt(100))
 	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], updatedCLPool, toSwap, pool.GetToken1(), sdk.NewInt(1), sdk.ZeroDec())
 	s.Require().NoError(err)
+
+	s.ensurePostUpgradeDistributionWorks()
 
 }
 
@@ -170,7 +177,7 @@ func (s *UpgradeTestSuite) setupCorruptedState() {
 	pool3Denom := "gamm/pool/3"
 
 	// join pool, create lock
-	addr, err := sdk.AccAddressFromBech32("osmo1urn0pnx8fl5kt89r5nzqd8htruq7skadc2xdk3")
+	addr, err := sdk.AccAddressFromBech32(userAddr)
 	s.Require().NoError(err)
 	keepers := &s.App.AppKeepers
 	err = keepers.BankKeeper.MintCoins(s.Ctx, protorevtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(v17.OSMO, sdk.NewInt(50000000000))))
@@ -234,6 +241,7 @@ func (suite *UpgradeTestSuite) ensurePreUpgradeDistributionPanics() {
 
 	// prepare CL pool with the same denom as pool 3, which is the pool we are testing with
 	clPool := suite.PrepareConcentratedPoolWithCoins(v17.OSMO, v17.AKTIBCDenom)
+	clPoolId = clPool.GetId()
 	balancerToCLPoolLink := []gammmigration.BalancerToConcentratedPoolLink{
 		{
 			BalancerPoolId: 3,
@@ -289,8 +297,24 @@ func (s *UpgradeTestSuite) clearDenomAccumulationStore(denom string) {
 	}
 }
 
+func (s *UpgradeTestSuite) preUpgradeDistributionFails() {
+	epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
+
+	// add block time so that rewards get distributed
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 25))
+	s.BeginNewBlock(false)
+	s.App.EpochsKeeper.BeforeEpochStart(s.Ctx, epochInfo.GetIdentifier(), 1)
+
+	s.Require().Panics(func() {
+		s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 1)
+	})
+}
+
 func (s *UpgradeTestSuite) ensurePostUpgradeDistributionWorks() {
 	epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
+
+	x := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
+	fmt.Println(x)
 
 	// add block time so that rewards get distributed
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 25))
@@ -299,7 +323,46 @@ func (s *UpgradeTestSuite) ensurePostUpgradeDistributionWorks() {
 
 	s.Require().NotPanics(func() {
 		s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 1)
+		s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 2)
 	})
+
+	s.EndBlock()
+
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 25))
+	s.BeginNewBlock(false)
+	s.App.EpochsKeeper.BeforeEpochStart(s.Ctx, epochInfo.GetIdentifier(), 2)
+
+	s.Require().NotPanics(func() {
+		s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 2)
+		s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 2)
+	})
+
+	s.EndBlock()
+
+	//// Run Third
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 50))
+	s.BeginNewBlock(false)
+	s.App.EpochsKeeper.BeforeEpochStart(s.Ctx, epochInfo.GetIdentifier(), 3)
+
+	s.Require().NotPanics(func() {
+		s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 3)
+		s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 3)
+	})
+
+	s.EndBlock()
+
+	clKeeper := s.App.ConcentratedLiquidityKeeper
+	incentives, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolId)
+	s.Require().NoError(err)
+	fmt.Println(incentives)
+	rewards, err := clKeeper.CollectSpreadRewards(s.Ctx, s.TestAccs[0], 2)
+	fmt.Println(rewards, err)
+	//a, b, err := clKeeper.GetClaimableIncentives(s.Ctx, positions[0])
+	//fmt.Println(a, b, err)
+
+	x = s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
+	fmt.Println(x)
+
 }
 
 type ByLinkedClassicPool []v17.AssetPair

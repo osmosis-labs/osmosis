@@ -251,7 +251,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	// Ensure we collect any outstanding spread factors and incentives prior to deleting the position from state. This claiming
 	// process also clears position records from spread factor and incentive accumulators.
 	if requestedLiquidityAmountToWithdraw.Equal(position.Liquidity) {
-		if _, err := k.collectSpreadRewards(ctx, owner, positionId); err != nil {
+		if _, err := k.CollectSpreadRewards(ctx, owner, positionId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 

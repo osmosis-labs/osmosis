@@ -140,7 +140,7 @@ func (server msgServer) CollectSpreadRewards(goCtx context.Context, msg *types.M
 
 	totalCollectedSpreadRewards := sdk.NewCoins()
 	for _, positionId := range msg.PositionIds {
-		collectedFees, err := server.keeper.collectSpreadRewards(ctx, sender, positionId)
+		collectedFees, err := server.keeper.CollectSpreadRewards(ctx, sender, positionId)
 		if err != nil {
 			return nil, err
 		}
