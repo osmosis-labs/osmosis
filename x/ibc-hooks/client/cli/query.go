@@ -83,10 +83,7 @@ $ %s query ibchooks wasm-hooks-sender channel-42 juno12smx2wdlyttvyzvzg54y2vnqwq
 			if bech32PrefixArg == "" {
 				bech32Prefix = config.GetBech32AccountAddrPrefix()
 			} else {
-				bech32Prefix, err = getBech32CustomPrefix(config, bech32PrefixArg)
-				if err != nil {
-					return err
-				}
+				bech32Prefix = bech32PrefixArg
 			}
 
 			senderBech32, err := keeper.DeriveIntermediateSender(channelID, originalSender, bech32Prefix, hashPrefix)
