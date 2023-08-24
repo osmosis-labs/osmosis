@@ -178,27 +178,6 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 	asset0Amount := balancerPoolLiquidity.AmountOf(clPool.GetToken0())
 	asset1Amount := balancerPoolLiquidity.AmountOf(clPool.GetToken1())
 
-	// // We ensure that the asset ordering is correct when passing Balancer assets into the CL pool.
-	// if balancerPoolLiquidity[0].Denom == clPool.GetToken0() {
-	// 	asset0Amount = balancerPoolLiquidity[0].Amount
-	// 	asset1Amount = balancerPoolLiquidity[1].Amount
-
-	// 	// Ensure second denom matches (bal1 -> CL1)
-	// 	if balancerPoolLiquidity[1].Denom != clPool.GetToken1() {
-	// 		return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
-	// 	}
-	// } else if balancerPoolLiquidity[0].Denom == clPool.GetToken1() {
-	// 	asset0Amount = balancerPoolLiquidity[1].Amount
-	// 	asset1Amount = balancerPoolLiquidity[0].Amount
-
-	// 	// Ensure second denom matches (bal1 -> CL0)
-	// 	if balancerPoolLiquidity[1].Denom != clPool.GetToken0() {
-	// 		return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
-	// 	}
-	// } else {
-	// 	return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
-	// }
-
 	// Calculate the amount of liquidity the Balancer amounts qualify in the CL pool. Note that since we use the CL spot price, this is
 	// safe against prices drifting apart between the two pools (we take the lower bound on the qualifying liquidity in this case).
 	// The `sqrtPriceLowerTick` and `sqrtPriceUpperTick` fields are set to the appropriate values for a full range position.
