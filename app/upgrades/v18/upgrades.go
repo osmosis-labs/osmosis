@@ -71,7 +71,7 @@ func CreateUpgradeHandler(
 		}
 		aktSharesDenom := fmt.Sprintf("gamm/pool/%d", aktGAMMPool.GetId())
 		shareCoins := sdk.NewCoins(sdk.NewCoin(aktSharesDenom, sharesOut))
-		lock, err := keepers.LockupKeeper.CreateLock(ctx, addr, shareCoins, time.Hour*24*7)
+		lock, err := keepers.LockupKeeper.CreateLock(ctx, addr, shareCoins, time.Hour*24*14)
 		if err != nil {
 			return nil, err
 		}
