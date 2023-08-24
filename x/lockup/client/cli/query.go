@@ -379,7 +379,14 @@ func GetCmdSumtreeSize() *cobra.Command {
 
 			size, err := queryClient.SumtreeSize(cmd.Context(), &types.SumTreeSizeRequest{Denom: denom})
 
-			fmt.Println(size.SumTreeSize)
+			fmt.Println("denom size", size.SumTreeSize)
+
+			total_size := 0
+			for i := 1; i <= 603; i += 1 {
+				size, _ := queryClient.SumtreeSize(cmd.Context(), &types.SumTreeSizeRequest{Denom: fmt.Sprintf("gamm/pool/%d", i)})
+				total_size += int(size.SumTreeSize)
+			}
+			fmt.Println("total size", total_size)
 			return err
 		},
 	}
