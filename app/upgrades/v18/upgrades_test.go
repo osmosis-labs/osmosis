@@ -2,6 +2,7 @@ package v18_test
 
 import (
 	"fmt"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	"sort"
 	"testing"
 	"time"
@@ -86,10 +87,17 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, clPoolId)
 	s.Require().NoError(err)
 
+	// LP
 	lpTokens := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), sdk.NewInt(1_000_000)), sdk.NewCoin(pool.GetToken1(), sdk.NewInt(1_000_000)))
 	s.FundAcc(s.TestAccs[0], lpTokens)
 	_, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, s.TestAccs[0], lpTokens)
 	s.Require().NoError(err)
+
+	// Swap
+	toSwap := sdk.NewCoin(pool.GetToken0(), sdk.NewInt(100))
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool.(poolmanagertypes.PoolI), toSwap, pool.GetToken1(), sdk.NewInt(1), sdk.ZeroDec())
+	s.Require().NoError(err)
+
 }
 
 func (suite *UpgradeTestSuite) imitateUpgrade() {
