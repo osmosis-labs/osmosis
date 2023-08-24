@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -279,4 +280,20 @@ func (k Keeper) GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []ty
 	unlockings := k.getLocksFromIterator(ctx, k.AccountLockIterator(ctx, true, addr))
 	notUnlockings := k.getLocksFromIterator(ctx, k.AccountLockIterator(ctx, false, addr))
 	return combineLocks(notUnlockings, unlockings)
+}
+
+func (k Keeper) ClearDenomAccumulationStore(ctx sdk.Context, denom string) {
+	// Get Prefix
+	capacity := len(types.KeyPrefixLockAccumulation) + len(denom) + 1
+	res := make([]byte, len(types.KeyPrefixLockAccumulation), capacity)
+	copy(res, types.KeyPrefixLockAccumulation)
+	res = append(res, []byte(denom+"/")...)
+
+	// Remove all keys with prefix
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), res)
+	iter := store.Iterator(nil, nil)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.Delete(iter.Key())
+	}
 }
