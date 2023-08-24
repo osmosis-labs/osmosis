@@ -106,7 +106,7 @@ Now, at the upgrade height, Cosmovisor will upgrade to the v18 binary
 
 ## Manual Option
 
-1. Wait for Osmosis to reach the upgrade height TODO
+1. Wait for Osmosis to reach the upgrade height 11155350
 
 2. Look for a panic message, followed by endless peer logs. Stop the daemon
 
