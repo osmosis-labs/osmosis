@@ -429,7 +429,9 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 	// Even though this exposes CL LPs to getting immediately diluted by a large Balancer position, this would
 	// require a lot of capital to be tied up in a two week bond, which is a viable tradeoff given the relative
 	// simplicity of this approach.
-	if balancerPoolId != 0 {
+	// It is possible that the balancer qualifying shares are zero if the bonded liquidity in the
+	// pool is extremely low. As a result, in that case we simply skip claiming.
+	if balancerPoolId != 0 && !qualifyingBalancerShares.IsZero() {
 		_, err := k.claimAndResetFullRangeBalancerPool(ctx, poolId, balancerPoolId, uptimeAccums)
 		if err != nil {
 			return err
