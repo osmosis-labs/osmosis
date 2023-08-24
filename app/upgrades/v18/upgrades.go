@@ -11,6 +11,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 )
 
+// OSMO / DAI CL pool ID
+const firstCLPoolId = 1066
+
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -24,7 +27,8 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
-		for id := 1; id <= MaxCorruptedAccumStoreId; id++ {
+
+		for id := 1; id < firstCLPoolId; id++ {
 			resetSumtree(keepers, ctx, uint64(id))
 		}
 		return migrations, nil
