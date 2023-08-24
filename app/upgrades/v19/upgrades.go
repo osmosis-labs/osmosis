@@ -1,6 +1,8 @@
 package v19
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 const (
@@ -31,6 +34,19 @@ func CreateUpgradeHandler(
 		for _, id := range accum_stores_to_fix {
 			resetSumtree(keepers, ctx, uint64(id))
 		}
+
+		epochs := keepers.EpochsKeeper.AllEpochInfos(ctx)
+		desiredEpochInfo := epochtypes.EpochInfo{}
+		for _, epoch := range epochs {
+			if epoch.Identifier == "day" {
+				epoch.Duration = time.Minute * 15
+				epoch.CurrentEpochStartTime = time.Now().Add(-epoch.Duration).Add(time.Minute)
+				desiredEpochInfo = epoch
+				keepers.EpochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
+			}
+		}
+		keepers.EpochsKeeper.SetEpochInfo(ctx, desiredEpochInfo)
+
 		return migrations, nil
 	}
 }
