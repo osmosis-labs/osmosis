@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	db "github.com/tendermint/tm-db"
@@ -282,6 +283,9 @@ func (k Keeper) distributeSyntheticInternal(
 func (k Keeper) distributeInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
+	if gauge.DistributeTo.Denom == "gamm/pool/1" || strings.HasPrefix(gauge.DistributeTo.Denom, "1/superbonding") {
+		return nil, nil
+	}
 	totalDistrCoins := sdk.NewCoins()
 
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
