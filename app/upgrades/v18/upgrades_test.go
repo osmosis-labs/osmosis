@@ -311,9 +311,6 @@ func (s *UpgradeTestSuite) preUpgradeDistributionFails() {
 func (s *UpgradeTestSuite) ensurePostUpgradeDistributionWorks(clPoolID, positionID uint64) {
 	epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
 
-	x := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
-	fmt.Println(x)
-
 	gagueId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPoolID, epochInfo.Duration)
 	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gagueId)
 	s.Require().NoError(err)
@@ -345,10 +342,6 @@ func (s *UpgradeTestSuite) ensurePostUpgradeDistributionWorks(clPoolID, position
 	s.Require().NoError(err)
 
 	s.Require().NotEmpty(actualRewards)
-
-	x = s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
-	fmt.Println(x)
-
 }
 
 type ByLinkedClassicPool []v17.AssetPair
