@@ -360,3 +360,30 @@ $ %s query lockup output-all-locks <max lock ID>
 
 	return cmd
 }
+
+// GetCmdSumtreeSize Gets size of sumtree
+func GetCmdSumtreeSize() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "sumtree-size <denom>",
+		Short: "get size of a sumtree",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			denom := args[0]
+			queryClient := types.NewQueryClient(clientCtx)
+
+			size, err := queryClient.SumtreeSize(cmd.Context(), &types.SumTreeSizeRequest{Denom: denom})
+
+			fmt.Println(size.SumTreeSize)
+			return err
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}

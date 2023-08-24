@@ -299,6 +299,19 @@ func (k Keeper) ClearAccumulationStores(ctx sdk.Context) {
 	k.clearKeysByPrefix(ctx, types.KeyPrefixLockAccumulation)
 }
 
+// GetParams returns the total set of lockup parameters.
+func (k Keeper) SumtreeSize(ctx sdk.Context, denom string) int64 {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, accumulationStorePrefix(denom))
+	defer iterator.Close()
+
+	count := 0
+	for ; iterator.Valid(); iterator.Next() {
+		count += 1
+	}
+	return int64(count)
+}
+
 func (k Keeper) BeginForceUnlockWithEndTime(ctx sdk.Context, lockID uint64, endTime time.Time) error {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {

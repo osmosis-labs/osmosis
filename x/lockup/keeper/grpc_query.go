@@ -340,3 +340,9 @@ func (q Querier) Params(goCtx context.Context, req *types.QueryParamsRequest) (*
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(ctx)}, nil
 }
+
+// Params returns module params
+func (q Querier) SumtreeSize(goCtx context.Context, req *types.SumTreeSizeRequest) (*types.SumTreeSizeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	return &types.SumTreeSizeResponse{SumTreeSize: q.Keeper.SumtreeSize(ctx, req.Denom)}, nil
+}

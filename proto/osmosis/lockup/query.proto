@@ -144,6 +144,11 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/osmosis/lockup/v1beta1/params";
   }
+  // Sumtree Size.
+  rpc SumtreeSize(SumTreeSizeRequest) returns (SumTreeSizeResponse) {
+    option (google.api.http).get =
+        "/osmosis/lockup/v1beta1/sumtree_size/{denom}";
+  }
 }
 
 message ModuleBalanceRequest {};
@@ -333,3 +338,6 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
+
+message SumTreeSizeRequest { string denom = 1; };
+message SumTreeSizeResponse { int64 sum_tree_size = 1; };
