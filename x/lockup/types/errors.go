@@ -13,6 +13,6 @@ var (
 	ErrSyntheticDurationLongerThanNative = errorsmod.Register(ModuleName, 3, "synthetic lockup duration should be shorter than native lockup duration")
 	ErrLockupNotFound                    = errorsmod.Register(ModuleName, 4, "lockup not found")
 	ErrRewardReceiverIsSame              = errorsmod.Register(ModuleName, 5, "reward receiver is the same")
-	ErrLockNotUnlocking                  = errorsmod.Register(ModuleName, 5, "lock is not unlocking")
 	ErrFailedToSetLock                   = errorsmod.Register(ModuleName, 6, "failed to set lock")
+	ErrLockNotUnlocking                  = errorsmod.Register(ModuleName, 7, "lock is not unlocking")
 )
