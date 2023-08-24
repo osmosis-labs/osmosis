@@ -16,6 +16,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	v17 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17"
 
+	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
@@ -49,6 +50,12 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 	// corrupt state to match mainnet state
 	suite.setupCorruptedState()
+
+	// with the corrupted state, distribution used to panic in the `AfterEpochEnd` hook,
+	// specifically from the one from incentives keeper.
+	// This method ensures that with the corrupted state, we have the same state where
+	// distribution would fail.
+	suite.ensurePreUpgradeDistributionPanics()
 
 	// upgrade software
 	suite.imitateUpgrade()
@@ -84,7 +91,6 @@ func (suite *UpgradeTestSuite) setupPoolsToMainnetState() {
 	// We sort both pairs because we use the test asset pairs to create initial state,
 	// then use the actual asset pairs to verify the result is correct.
 	sort.Sort(ByLinkedClassicPool(v17.AssetPairsForTestsOnly))
-	sort.Sort(ByLinkedClassicPool(v17.AssetPairs))
 
 	// Create earlier pools or dummy pools if needed
 	for _, assetPair := range v17.AssetPairsForTestsOnly {
@@ -172,6 +178,56 @@ func (s *UpgradeTestSuite) setupCorruptedState() {
 
 	s.Require().True(valueAfterClear.IsNegative())
 	s.Require().True(shareCoins[0].Amount.Neg().Equal(valueAfterClear))
+}
+
+// We want to ensure that with the corrupted state of the lockup accumulator,
+// `AfterEpochEnd` was panicing.
+// We can do this check by creating a CL pool, then trying to distribute using that specific
+// CL pool gauge. If our test setup was correct, this should panic.
+func (suite *UpgradeTestSuite) ensurePreUpgradeDistributionPanics() {
+	epochInfo := suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx)
+
+	// add pool 3 denom (AKT) ti authorized quote denom param.
+	clParams := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
+	authorizedQuoteDenom := append(clParams.AuthorizedQuoteDenoms, v17.AKTIBCDenom)
+	clParams.AuthorizedQuoteDenoms = authorizedQuoteDenom
+	suite.App.ConcentratedLiquidityKeeper.SetParams(suite.Ctx, clParams)
+
+	// prepare CL pool with the same denom as pool 3, which is the pool we are testing with
+	clPool := suite.PrepareConcentratedPoolWithCoins(v17.OSMO, v17.AKTIBCDenom)
+	balancerToCLPoolLink := []gammmigration.BalancerToConcentratedPoolLink{
+		{
+			BalancerPoolId: 3,
+			ClPoolId:       clPool.GetId(),
+		},
+	}
+
+	// set migration record between the new CL pool and the old pool(pool number 3)
+	migrationInfo := gammmigration.MigrationRecords{
+		BalancerToConcentratedPoolLinks: balancerToCLPoolLink,
+	}
+	suite.App.GAMMKeeper.SetMigrationRecords(suite.Ctx, migrationInfo)
+
+	// add new coins to the CL pool gauge so that it would be distributed after epoch ends then trigger panic
+	coinsToAdd := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000)))
+	gagueId, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, clPool.GetId(), epochInfo.Duration)
+	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gagueId)
+	suite.Require().NoError(err)
+
+	addr := sdk.AccAddress([]byte("addrx---------------"))
+	suite.FundAcc(addr, coinsToAdd)
+	err = suite.App.IncentivesKeeper.AddToGaugeRewards(suite.Ctx, addr, coinsToAdd, gauge.Id)
+	suite.Require().NoError(err)
+
+	// add block time so that rewards get distributed
+	suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(time.Hour * 25))
+	suite.BeginNewBlock(false)
+	suite.App.EpochsKeeper.BeforeEpochStart(suite.Ctx, epochInfo.GetIdentifier(), 1)
+
+	suite.Require().Panics(func() {
+		suite.App.IncentivesKeeper.AfterEpochEnd(suite.Ctx, epochInfo.GetIdentifier(), 1)
+	})
+
 }
 
 // clearDenomAccumulationStore clears denom accumulation store in the lockup keeper,
