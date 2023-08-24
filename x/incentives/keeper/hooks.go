@@ -24,7 +24,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		ctx.Logger().Info(fmt.Sprintf("x/incentives AfterEpochEnd, num upcoming gauges %d, %d", len(gauges), ctx.BlockHeight()))
 		for _, gauge := range gauges {
 			if !ctx.BlockTime().Before(gauge.StartTime) {
-				if err := k.moveUpcomingGaugeToActiveGauge(ctx, gauge); err != nil {
+				if err := k.MoveUpcomingGaugeToActiveGauge(ctx, gauge); err != nil {
 					return err
 				}
 			}

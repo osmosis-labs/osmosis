@@ -47,8 +47,8 @@ func (k Keeper) getDistributedCoinsFromIterator(ctx sdk.Context, iterator db.Ite
 	return k.getDistributedCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }
 
-// moveUpcomingGaugeToActiveGauge moves a gauge that has reached it's start time from an upcoming to an active status.
-func (k Keeper) moveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gauge) error {
+// MoveUpcomingGaugeToActiveGauge moves a gauge that has reached it's start time from an upcoming to an active status.
+func (k Keeper) MoveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gauge) error {
 	// validation for current time and distribution start time
 	if ctx.BlockTime().Before(gauge.StartTime) {
 		return fmt.Errorf("gauge is not able to start distribution yet: %s >= %s", ctx.BlockTime().String(), gauge.StartTime.String())

@@ -28,7 +28,7 @@ func (k Keeper) GetAllGaugeIDsByDenom(ctx sdk.Context, denom string) []uint64 {
 
 // MoveUpcomingGaugeToActiveGauge moves a gauge that has reached it's start time from an upcoming to an active status.
 func (k Keeper) MoveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gauge) error {
-	return k.moveUpcomingGaugeToActiveGauge(ctx, gauge)
+	return k.MoveUpcomingGaugeToActiveGauge(ctx, gauge)
 }
 
 // MoveActiveGaugeToFinishedGauge moves a gauge that has completed its distribution from an active to a finished status.

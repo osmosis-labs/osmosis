@@ -35,6 +35,19 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// Testnet issue where incentives gauges somehow got initialized as upcoming not active
+		// normally corrects on first epoch, but our first epoch is erroring (hence this fix)
+		// so superfluid never got tested.
+		gauges := keepers.IncentivesKeeper.GetUpcomingGauges(ctx)
+		ctx.Logger().Info(fmt.Sprintf("x/incentives AfterEpochEnd, num upcoming gauges %d, %d", len(gauges), ctx.BlockHeight()))
+		for _, gauge := range gauges {
+			if !ctx.BlockTime().Before(gauge.StartTime) {
+				if err := keepers.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(ctx, gauge); err != nil {
+					return nil, err
+				}
+			}
+		}
+
 		epochs := keepers.EpochsKeeper.AllEpochInfos(ctx)
 		desiredEpochInfo := epochtypes.EpochInfo{}
 		for _, epoch := range epochs {
