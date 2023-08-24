@@ -49,6 +49,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdNextLockID(),
 		osmocli.GetParams[*types.QueryParamsRequest](
 			types.ModuleName, types.NewQueryClient),
+		GetCmdSumtreeSize(),
 	)
 
 	return cmd
