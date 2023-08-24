@@ -44,34 +44,52 @@ func assertEqual(suite *UpgradeTestSuite, pre, post interface{}) {
 	suite.Require().Equal(pre, post)
 }
 
-func (suite *UpgradeTestSuite) TestUpgrade() {
+func (s *UpgradeTestSuite) TestUpgrade() {
 	// set up pools first to match v17 state(including linked cl pools)
-	suite.setupPoolsToMainnetState()
+	s.setupPoolsToMainnetState()
 
 	// corrupt state to match mainnet state
-	suite.setupCorruptedState()
+	s.setupCorruptedState()
 
 	// with the corrupted state, distribution used to panic in the `AfterEpochEnd` hook,
 	// specifically from the one from incentives keeper.
 	// This method ensures that with the corrupted state, we have the same state where
 	// distribution would fail.
-	suite.ensurePreUpgradeDistributionPanics()
+	s.ensurePreUpgradeDistributionPanics()
 
 	// upgrade software
-	suite.imitateUpgrade()
-	suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
-	suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(time.Hour * 24))
+	s.imitateUpgrade()
+	s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
 
 	// after the accum values have been resetted correctly after upgrade, we expect the accumulator store to be initialized with the correct value,
 	// which in our test case would be 10000(the amount that was locked)
-	valueAfterClear := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, lockuptypes.QueryCondition{
+	valueAfterClear := s.App.LockupKeeper.GetPeriodLocksAccumulation(s.Ctx, lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "gamm/pool/3",
 		Duration:      time.Hour * 24 * 14,
 	})
 	valueAfterClear.Equal(sdk.NewInt(shareStaysLocked))
 
-	suite.ensurePostUpgradeDistributionWorks()
+	s.ensurePostUpgradeDistributionWorks()
+
+	// Check that can LP and swap into pool 3 with no usses
+
+	migrationInfo, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
+	s.Require().NoError(err)
+
+	link := migrationInfo.BalancerToConcentratedPoolLinks[0]
+	s.Require().Equal(uint64(3), link.BalancerPoolId)
+
+	clPoolId := link.ClPoolId
+
+	pool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, clPoolId)
+	s.Require().NoError(err)
+
+	lpTokens := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), sdk.NewInt(1_000_000)), sdk.NewCoin(pool.GetToken1(), sdk.NewInt(1_000_000)))
+	s.FundAcc(s.TestAccs[0], lpTokens)
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, s.TestAccs[0], lpTokens)
+	s.Require().NoError(err)
 }
 
 func (suite *UpgradeTestSuite) imitateUpgrade() {
