@@ -776,6 +776,17 @@ func (s *KeeperTestSuite) TestCreateGauge() {
 			expectError: true,
 		},
 		{
+			name: "CL Pool Error: lockup denom IsStakingSyntheticDenom",
+			gaugeField: GaugeCreationFields{
+				isPerp:           true,
+				lockupDenom:      "cl/pool/59/superbonding/osmovaloper123",
+				numEpochPaidOver: 1,
+				poolId:           1,
+			},
+
+			expectError: true,
+		},
+		{
 			name: "Balancer Pool: Successful perp-gauge gauge creation ",
 			gaugeField: GaugeCreationFields{
 				isPerp:           true,
@@ -790,6 +801,15 @@ func (s *KeeperTestSuite) TestCreateGauge() {
 				isPerp:           false,
 				lockupDenom:      "gamm/pool/2",
 				numEpochPaidOver: 2,
+				poolId:           2,
+			},
+		},
+		{
+			name: "Balancer Pool: Successful creation with lockupDenom that IsStakingSyntheticDenom",
+			gaugeField: GaugeCreationFields{
+				isPerp:           true,
+				lockupDenom:      "cl/pool/59/superbonding/osmovaloper123",
+				numEpochPaidOver: 1,
 				poolId:           2,
 			},
 		},
