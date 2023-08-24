@@ -350,6 +350,14 @@ func (k Keeper) distributeInternal(
 			totalDistrCoins = totalDistrCoins.Add(remainCoinPerEpoch)
 		}
 	} else {
+		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
+		denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
+		lockSum := lockuptypes.SumLocksByDenom(locks, denom)
+
+		if lockSum.IsZero() {
+			return nil, nil
+		}
+
 		// In this case, remove redundant cases.
 		// Namely: gauge empty OR gauge coins undistributable.
 		if remainCoins.Empty() {
@@ -364,13 +372,6 @@ func (k Keeper) distributeInternal(
 			ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is perceived spam, skipping %d", gauge.Id))
 			err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 			return totalDistrCoins, err
-		}
-		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
-		denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
-		lockSum := lockuptypes.SumLocksByDenom(locks, denom)
-
-		if lockSum.IsZero() {
-			return nil, nil
 		}
 
 		for _, lock := range locks {
