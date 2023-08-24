@@ -394,7 +394,8 @@ func (k Keeper) distributeInternal(
 			// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
 			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
 			emissionRate := sdk.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
-			ctx.Logger().Debug("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
+
+			ctx.Logger().Info("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
 			_, err := k.clk.CreateIncentive(ctx,
 				pool.GetId(),
 				k.ak.GetModuleAddress(types.ModuleName),
@@ -407,6 +408,8 @@ func (k Keeper) distributeInternal(
 				// Only default uptime is supported at launch.
 				types.DefaultConcentratedUptime,
 			)
+
+			ctx.Logger().Info(fmt.Sprintf("distributeInternal CL for pool id %d finished", pool.GetId()))
 			if err != nil {
 				return nil, err
 			}
@@ -419,6 +422,22 @@ func (k Keeper) distributeInternal(
 
 		if lockSum.IsZero() {
 			return nil, nil
+		}
+
+		// In this case, remove redundant cases.
+		// Namely: gauge empty OR gauge coins undistributable.
+		if remainCoins.Empty() {
+			ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is empty, why is it being ran %d. Balancer code", gauge.Id))
+			err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+			return totalDistrCoins, err
+		}
+
+		// Remove some spam gauges, is state compatible.
+		// If they're to pool 1 they can't distr at this small of a quantity.
+		if remainCoins.Len() == 1 && remainCoins[0].Amount.LTE(sdk.NewInt(10)) && gauge.DistributeTo.Denom == "gamm/pool/1" && remainCoins[0].Denom != "uosmo" {
+			ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is perceived spam, skipping %d", gauge.Id))
+			err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+			return totalDistrCoins, err
 		}
 
 		for _, lock := range locks {
