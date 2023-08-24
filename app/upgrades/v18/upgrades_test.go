@@ -58,6 +58,25 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// distribution would fail.
 	s.ensurePreUpgradeDistributionPanics()
 
+	migrationInfo, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
+	s.Require().NoError(err)
+
+	link := migrationInfo.BalancerToConcentratedPoolLinks[0]
+	s.Require().Equal(uint64(3), link.BalancerPoolId)
+
+	clPoolId := link.ClPoolId
+
+	pool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, clPoolId)
+	s.Require().NoError(err)
+
+	// LP Fails before the upgrade
+	lpTokens := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), sdk.NewInt(1_000_000)), sdk.NewCoin(pool.GetToken1(), sdk.NewInt(1_000_000)))
+	s.FundAcc(s.TestAccs[0], lpTokens)
+	// require a panic
+	s.Require().Panics(func() {
+		_, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, s.TestAccs[0], lpTokens)
+	})
+
 	// upgrade software
 	s.imitateUpgrade()
 	s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
@@ -75,21 +94,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.ensurePostUpgradeDistributionWorks()
 
 	// Check that can LP and swap into pool 3 with no usses
-
-	migrationInfo, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
-	s.Require().NoError(err)
-
-	link := migrationInfo.BalancerToConcentratedPoolLinks[0]
-	s.Require().Equal(uint64(3), link.BalancerPoolId)
-
-	clPoolId := link.ClPoolId
-
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, clPoolId)
-	s.Require().NoError(err)
-
 	// LP
-	lpTokens := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), sdk.NewInt(1_000_000)), sdk.NewCoin(pool.GetToken1(), sdk.NewInt(1_000_000)))
-	s.FundAcc(s.TestAccs[0], lpTokens)
 	_, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, s.TestAccs[0], lpTokens)
 	s.Require().NoError(err)
 
