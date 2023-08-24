@@ -1,10 +1,10 @@
 # v17 to v18 Mainnet Upgrade Guide
 
-Osmosis v18 Gov Prop: <https://www.mintscan.io/osmosis/proposals/TODO>
+Osmosis v18 Gov Prop: <https://www.mintscan.io/osmosis/proposals/588>
 
-Countdown: <https://www.mintscan.io/osmosis/blocks/TODO>
+Countdown: <https://www.mintscan.io/osmosis/blocks/11155350>
 
-Height: TODO
+Height: 11155350
 
 ## Memory Requirements
 
