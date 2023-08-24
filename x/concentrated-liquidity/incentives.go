@@ -177,8 +177,17 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 		return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
 	}
 
-	asset0Amount := balancerPoolLiquidity.AmountOf(clPool.GetToken0())
-	asset1Amount := balancerPoolLiquidity.AmountOf(clPool.GetToken1())
+	denom0 := clPool.GetToken0()
+	denom1 := clPool.GetToken1()
+
+	// This check's purpose is to confirm that denoms are the same.
+	clCoins := totalBalancerPoolLiquidity.FilterDenoms([]string{denom0, denom1})
+	if len(clCoins) != 2 {
+		return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
+	}
+
+	asset0Amount := balancerPoolLiquidity.AmountOf(denom0)
+	asset1Amount := balancerPoolLiquidity.AmountOf(denom1)
 
 	// Calculate the amount of liquidity the Balancer amounts qualify in the CL pool. Note that since we use the CL spot price, this is
 	// safe against prices drifting apart between the two pools (we take the lower bound on the qualifying liquidity in this case).
