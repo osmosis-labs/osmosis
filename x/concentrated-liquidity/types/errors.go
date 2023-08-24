@@ -828,7 +828,7 @@ func (e RanOutOfTicksForPoolError) Error() string {
 }
 
 type SqrtRootCalculationError struct {
-	SqrtPriceLimit sdk.Dec
+	SqrtPriceLimit osmomath.BigDec
 }
 
 func (e SqrtRootCalculationError) Error() string {

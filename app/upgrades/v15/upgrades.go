@@ -1,7 +1,7 @@
 package v15
 
 import (
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 
@@ -63,7 +63,7 @@ func CreateUpgradeHandler(
 
 		// Stride stXXX/XXX pools are being migrated from the standard balancer curve to the
 		// solidly stable curve.
-		migrateBalancerPoolsToSolidlyStable(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper, keepers.BankKeeper)
+		migrateBalancerPoolsToSolidlyStable(ctx, keepers.GAMMKeeper, keepers.BankKeeper)
 
 		setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
 
@@ -79,15 +79,15 @@ func setICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
 	icqKeeper.SetParams(ctx, icqparams)
 }
 
-func migrateBalancerPoolsToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper, bankKeeper bankkeeper.Keeper) {
+func migrateBalancerPoolsToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, bankKeeper bankkeeper.Keeper) {
 	// migrate stOSMO_OSMOPoolId, stJUNO_JUNOPoolId, stSTARS_STARSPoolId
 	pools := []uint64{stOSMO_OSMOPoolId, stJUNO_JUNOPoolId, stSTARS_STARSPoolId}
 	for _, poolId := range pools {
-		migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, bankKeeper, poolId)
+		migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, bankKeeper, poolId)
 	}
 }
 
-func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper, bankKeeper bankkeeper.Keeper, poolId uint64) {
+func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, bankKeeper bankkeeper.Keeper, poolId uint64) {
 	// fetch the pool with the given poolId
 	balancerPool, err := gammKeeper.GetCFMMPool(ctx, poolId)
 	if err != nil {

@@ -185,13 +185,14 @@ func (k Keeper) GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration 
 
 	key := types.GetPoolGaugeIdInternalStoreKey(poolId, lockableDuration)
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(key)
 
-	if len(bz) == 0 {
+	if !store.Has(key) {
 		return 0, types.NoGaugeAssociatedWithPoolError{PoolId: poolId, Duration: lockableDuration}
 	}
 
-	return sdk.BigEndianToUint64(bz), nil
+	bz := store.Get(key)
+	gaugeId := sdk.BigEndianToUint64(bz)
+	return gaugeId, nil
 }
 
 // GetNoLockGaugeIdsFromPool returns all the NoLock gauge ids associated with the pool id.

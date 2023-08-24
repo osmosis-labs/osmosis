@@ -74,7 +74,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 	// get valset formatted delegation either from existing val set preference or existing delegations
 	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
 	if err != nil {
-		return fmt.Errorf("error upon getting delegation preference for addr %s", delegatorAddr)
+		return err
 	}
 
 	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)

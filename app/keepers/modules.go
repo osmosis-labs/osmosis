@@ -3,10 +3,10 @@ package keepers
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router"
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v4/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
-	"github.com/strangelove-ventures/packet-forward-middleware/v4/router"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"

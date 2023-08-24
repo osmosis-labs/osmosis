@@ -366,12 +366,12 @@ mod tests {
         // No acks
         query(deps.as_ref(), env.clone(), get_msg.clone()).unwrap_err();
 
-        let msg = SudoMsg::ReceiveAck {
+        let msg = SudoMsg::IBCLifecycleComplete(IBCLifecycleComplete::IBCAck {
             channel: format!("channel-0"),
             sequence: 1,
             ack: String::new(),
             success: true,
-        };
+        });
         let _res = sudo(deps.as_mut(), env.clone(), msg).unwrap();
 
         // should increase counter by 1
@@ -379,12 +379,12 @@ mod tests {
         let value: GetCountResponse = from_binary(&res).unwrap();
         assert_eq!(1, value.count);
 
-        let msg = SudoMsg::ReceiveAck {
+        let msg = SudoMsg::IBCLifecycleComplete(IBCLifecycleComplete::IBCAck {
             channel: format!("channel-0"),
             sequence: 1,
             ack: String::new(),
             success: true,
-        };
+        });
         let _res = sudo(deps.as_mut(), env.clone(), msg).unwrap();
 
         // should increase counter by 1

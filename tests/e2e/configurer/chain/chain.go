@@ -26,11 +26,10 @@ type Config struct {
 	VotingPeriod          float32
 	ExpeditedVotingPeriod float32
 	// upgrade proposal height for chain.
-	UpgradePropHeight    int64
-	LatestProposalNumber int
-	LatestLockNumber     int
-	NodeConfigs          []*NodeConfig
-	NodeTempConfigs      []*NodeConfig
+	UpgradePropHeight int64
+
+	NodeConfigs     []*NodeConfig
+	NodeTempConfigs []*NodeConfig
 
 	LatestCodeId int
 
@@ -227,6 +226,12 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	c.t.Log("successfully sent IBC tokens")
 }
 
+func (c *Config) GetAllChainNodes() []*NodeConfig {
+	nodeConfigs := make([]*NodeConfig, len(c.NodeConfigs))
+	copy(nodeConfigs, c.NodeConfigs)
+	return nodeConfigs
+}
+
 // GetDefaultNode returns the default node of the chain.
 // The default node is the first one created. Returns error if no
 // ndoes created.
@@ -251,21 +256,15 @@ func (c *Config) GetNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 
 func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	if nodeIndex > len(c.NodeConfigs) {
-		return nil, fmt.Errorf("node index (%d) is greter than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
+		return nil, fmt.Errorf("node index (%d) is greater than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
 	}
 	return c.NodeConfigs[nodeIndex], nil
 }
 
-func (c *Config) SubmitCreateConcentratedPoolProposal() (uint64, error) {
-	node, err := c.GetDefaultNode()
-	if err != nil {
-		return 0, err
-	}
+func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig) (uint64, error) {
+	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 
-	propNumber := node.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-	c.LatestProposalNumber += 1
-
-	node.DepositProposal(propNumber, false)
+	chainANode.DepositProposal(propNumber, false)
 
 	var wg sync.WaitGroup
 
@@ -280,12 +279,12 @@ func (c *Config) SubmitCreateConcentratedPoolProposal() (uint64, error) {
 	wg.Wait()
 
 	require.Eventually(c.t, func() bool {
-		status, err := node.QueryPropStatus(propNumber)
+		status, err := chainANode.QueryPropStatus(propNumber)
 		if err != nil {
 			return false
 		}
 		return status == proposalStatusPassed
-	}, time.Second*30, time.Millisecond*500)
-	poolId := node.QueryNumPools()
+	}, time.Second*30, 10*time.Millisecond)
+	poolId := chainANode.QueryNumPools()
 	return poolId, nil
 }

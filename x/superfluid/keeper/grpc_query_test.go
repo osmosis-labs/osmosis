@@ -313,7 +313,7 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 	expectedBondedLockIds := []uint64{}
 	expectedBondedTotalSharesLocked := sdk.Coins{}
 	for i := 0; i < 4; i++ {
-		posId, _, _, _, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, s.TestAccs[0], coins, duration)
+		positionData, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId, s.TestAccs[0], coins, duration)
 		s.Require().NoError(err)
 
 		lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
@@ -322,13 +322,13 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 		err = s.App.SuperfluidKeeper.SuperfluidDelegate(s.Ctx, lock.Owner, lock.ID, valAddrs[0].String())
 		s.Require().NoError(err)
 
-		expectedBondedPositionIds = append(expectedBondedPositionIds, posId)
+		expectedBondedPositionIds = append(expectedBondedPositionIds, positionData.ID)
 		expectedBondedLockIds = append(expectedBondedLockIds, lockId)
 		expectedBondedTotalSharesLocked = expectedBondedTotalSharesLocked.Add(lock.Coins[0])
 	}
 
 	// Create 1 position in pool 1 that is not superfluid delegated.
-	_, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, s.TestAccs[0], coins)
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, s.TestAccs[0], coins)
 	s.Require().NoError(err)
 
 	// Create 4 positions in pool 2 that are superfluid undelegating.
@@ -336,7 +336,7 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 	expectedUnbondingLockIds := []uint64{}
 	expectedUnbondingTotalSharesLocked := sdk.Coins{}
 	for i := 0; i < 4; i++ {
-		posId, _, _, _, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId2, s.TestAccs[0], coins, duration)
+		positionData, lockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPoolId2, s.TestAccs[0], coins, duration)
 		s.Require().NoError(err)
 
 		lock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
@@ -348,13 +348,13 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 		_, err = s.App.SuperfluidKeeper.SuperfluidUndelegateAndUnbondLock(s.Ctx, lockId, lock.Owner, lock.Coins[0].Amount)
 		s.Require().NoError(err)
 
-		expectedUnbondingPositionIds = append(expectedUnbondingPositionIds, posId)
+		expectedUnbondingPositionIds = append(expectedUnbondingPositionIds, positionData.ID)
 		expectedUnbondingLockIds = append(expectedUnbondingLockIds, lockId)
 		expectedUnbondingTotalSharesLocked = expectedUnbondingTotalSharesLocked.Add(lock.Coins[0])
 	}
 
 	// Create 1 position in pool 2 that is not superfluid delegated.
-	_, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId2, s.TestAccs[0], coins)
+	_, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId2, s.TestAccs[0], coins)
 	s.Require().NoError(err)
 
 	// Query the bonded positions.

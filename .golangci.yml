@@ -43,6 +43,7 @@ linters:
     - unconvert
     - unused
     - whitespace
+    - unparam
 
 issues:
   exclude-rules:

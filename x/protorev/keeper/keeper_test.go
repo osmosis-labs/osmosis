@@ -78,13 +78,6 @@ func (s *KeeperTestSuite) SetupTest() {
 		panic(err)
 	}
 
-	poolWeights := types.PoolWeights{
-		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
-		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
-		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
-	}
-	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, poolWeights)
-
 	// Configure the initial base denoms used for cyclic route building
 	baseDenomPriorities := []types.BaseDenom{
 		{
@@ -142,6 +135,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("gamm/pool/1", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin(apptesting.DefaultTransmuterDenomA, sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin(apptesting.DefaultTransmuterDenomB, sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("stake", sdk.NewInt(9000000000000000000)),
 	)
 	s.fundAllAccountsWith()
 	s.Commit()
@@ -911,10 +905,105 @@ func (s *KeeperTestSuite) setUpPools() {
 
 	// Create a cosmwasm pool for testing
 	// Pool 51
-	s.PrepareCosmWasmPool()
+	cwPool := s.PrepareCosmWasmPool()
+
+	// Add the new cosmwasm pool to the pool info
+	poolInfo := types.DefaultPoolTypeInfo
+	poolInfo.Cosmwasm.WeightMaps = []types.WeightMap{
+		{
+			ContractAddress: cwPool.GetContractAddress(),
+			Weight:          4,
+		},
+	}
+	s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, poolInfo)
+
+	// Create a duplicate pool for testing
+	// Pool 52
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("Atom", sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
+
+	// Create a duplicate pool for testing
+	// Pool 53
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("usdc", sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
+
+	// Create a duplicate pool for testing
+	// Pool 54
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("stake", sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
+
+	// Create a duplicate pool for testing
+	// Pool 55
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("stake", sdk.NewInt(100000000)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(1000000000)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
+
+	// Create a duplicate pool for testing
+	// Pool 56
+	s.createGAMMPool(
+		[]balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin("bitcoin", sdk.NewInt(100)),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin("Atom", sdk.NewInt(100)),
+				Weight: sdk.NewInt(1),
+			},
+		},
+		sdk.NewDecWithPrec(2, 3),
+		sdk.NewDecWithPrec(0, 2),
+	)
 
 	// Create a concentrated liquidity pool for range testing
-	// Pool 52
+	// Pool 58
 	// Create the CL pool
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], "epochTwo", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
 	fundCoins := sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(10_000_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000_000)))
@@ -922,7 +1011,7 @@ func (s *KeeperTestSuite) setUpPools() {
 	s.CreateFullRangePosition(clPool, fundCoins)
 
 	// Create a concentrated liquidity pool for range testing
-	// Pool 53
+	// Pool 59
 	// Create the CL pool
 	clPool = s.PrepareCustomConcentratedPool(s.TestAccs[0], "epochTwo", "uosmo", apptesting.DefaultTickSpacing, sdk.ZeroDec())
 	fundCoins = sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(2_000_000_000)), sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)))
@@ -948,9 +1037,9 @@ func (s *KeeperTestSuite) CreateCLPoolAndArbRouteWith_28000_Ticks() {
 	upperTick := int64(100)
 
 	for i := int64(0); i < 14000; i++ {
-		_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick-(100*i), upperTick-(100*i))
+		_, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick-(100*i), upperTick-(100*i))
 		s.Require().NoError(err)
-		_, _, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick+(100*i), upperTick+(100*i))
+		_, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[2], tokensProvided, amount0Min, amount1Min, lowerTick+(100*i), upperTick+(100*i))
 		s.Require().NoError(err)
 	}
 

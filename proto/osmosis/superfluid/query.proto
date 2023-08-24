@@ -125,6 +125,7 @@ service Query {
                                    "unpool_whitelist";
   }
 
+  // Returns all of a user's full range CL positions that are superfluid staked.
   rpc UserConcentratedSuperfluidPositionsDelegated(
       UserConcentratedSuperfluidPositionsDelegatedRequest)
       returns (UserConcentratedSuperfluidPositionsDelegatedResponse) {

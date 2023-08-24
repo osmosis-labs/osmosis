@@ -149,7 +149,7 @@ func CreateUpgradeHandler(
 
 		// Create a full range position via the community pool with the funds that were swapped.
 		fullRangeOsmoDaiCoins := sdk.NewCoins(respectiveOsmo, oneDai)
-		_, actualOsmoAmtUsed, actualDaiAmtUsed, _, err := keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeOsmoDaiCoins)
+		positionData, err := keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeOsmoDaiCoins)
 		if err != nil {
 			return nil, err
 		}
@@ -158,7 +158,7 @@ func CreateUpgradeHandler(
 
 		// Remove coins we used from the community pool to make the CL position
 		feePool := keepers.DistrKeeper.GetFeePool(ctx)
-		fulllRangeOsmoDaiCoinsUsed := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, actualOsmoAmtUsed), sdk.NewCoin(DAIIBCDenom, actualDaiAmtUsed))
+		fulllRangeOsmoDaiCoinsUsed := sdk.NewCoins(sdk.NewCoin(DesiredDenom0, positionData.Amount0), sdk.NewCoin(DAIIBCDenom, positionData.Amount1))
 		newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(fulllRangeOsmoDaiCoinsUsed...))
 		if negative {
 			return nil, fmt.Errorf("community pool cannot be negative: %s", newPool)

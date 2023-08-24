@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
+	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
@@ -757,7 +757,7 @@ var (
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(12892)),
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(64417624)),
 			expectedTick: func() int64 {
-				tick, _ := math.SqrtPriceToTickRoundDownSpacing(sqrt4994, DefaultTickSpacing)
+				tick, _ := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt4994), DefaultTickSpacing)
 				return tick
 			}(),
 			// Since the next sqrt price is based on the price limit, we can calculate this directly.
@@ -895,7 +895,7 @@ var (
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(64417624)),
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000085792039652"),
 			expectedTick: func() int64 {
-				tick, _ := math.SqrtPriceToTickRoundDownSpacing(sqrt4994, DefaultTickSpacing)
+				tick, _ := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt4994), DefaultTickSpacing)
 				return tick
 			}(),
 			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.668238976219012614"),
@@ -2026,9 +2026,9 @@ func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.Concent
 
 	newLowerTick, newUpperTick := s.lowerUpperPricesToTick(test.newLowerPrice, test.newUpperPrice, pool.GetTickSpacing())
 
-	_, lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
+	_, lowerSqrtPrice, err := clmath.TickToSqrtPrice(newLowerTick)
 	s.Require().NoError(err)
-	_, upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
+	_, upperSqrtPrice, err := clmath.TickToSqrtPrice(newUpperTick)
 	s.Require().NoError(err)
 
 	if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
@@ -2036,16 +2036,16 @@ func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.Concent
 		test.poolLiqAmount1 = DefaultAmt1
 	}
 
-	expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
+	expectedLiquidity := clmath.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 	return expectedLiquidity
 }
 
 func (s *KeeperTestSuite) lowerUpperPricesToTick(lowerPrice, upperPrice sdk.Dec, tickSpacing uint64) (int64, int64) {
 	lowerSqrtPrice := osmomath.MustMonotonicSqrt(lowerPrice)
-	newLowerTick, err := math.SqrtPriceToTickRoundDownSpacing(lowerSqrtPrice, tickSpacing)
+	newLowerTick, err := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(lowerSqrtPrice), tickSpacing)
 	s.Require().NoError(err)
 	upperSqrtPrice := osmomath.MustMonotonicSqrt(upperPrice)
-	newUpperTick, err := math.SqrtPriceToTickRoundDownSpacing(upperSqrtPrice, tickSpacing)
+	newUpperTick, err := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(upperSqrtPrice), tickSpacing)
 	s.Require().NoError(err)
 	return newLowerTick, newUpperTick
 }
@@ -2760,7 +2760,7 @@ func (s *KeeperTestSuite) setupSecondPosition(test SwapTest, pool types.Concentr
 	if !test.secondPositionLowerPrice.IsNil() {
 		newLowerTick, newUpperTick := s.lowerUpperPricesToTick(test.secondPositionLowerPrice, test.secondPositionUpperPrice, pool.GetTickSpacing())
 
-		_, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
+		_, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
 		s.Require().NoError(err)
 	}
 }
@@ -3395,7 +3395,7 @@ func (s *KeeperTestSuite) TestInfiniteSwapLoop_OutGivenIn() {
 
 	// Create position near min tick
 	s.FundAcc(positionOwner, DefaultRangeTestParams.baseAssets.Add(DefaultRangeTestParams.baseAssets...))
-	_, _, _, _, _, _, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), positionOwner, DefaultRangeTestParams.baseAssets, sdk.ZeroInt(), sdk.ZeroInt(), -108000000, -107999900)
+	_, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), positionOwner, DefaultRangeTestParams.baseAssets, sdk.ZeroInt(), sdk.ZeroInt(), -108000000, -107999900)
 	s.Require().NoError(err)
 
 	// Swap small amount to get current tick to position above, triggering the problematic function/branch (CalcAmount0Delta)
@@ -3506,7 +3506,9 @@ func (s *KeeperTestSuite) TestComputeMaxInAmtGivenMaxTicksCrossed() {
 
 func (s *KeeperTestSuite) createPositionAndFundAcc(clPool types.ConcentratedPoolExtension, lowerTick, upperTick int64) (amt0, amt1 sdk.Int) {
 	s.FundAcc(s.TestAccs[0], DefaultCoins)
-	_, amt0, amt1, _, _, _, _ = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	positionData, _ := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	amt0 = positionData.Amount0
+	amt1 = positionData.Amount1
 	return
 }
 

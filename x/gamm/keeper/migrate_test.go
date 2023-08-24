@@ -229,15 +229,15 @@ func (s *KeeperTestSuite) TestMigrate() {
 
 		// Migrate the user's gamm shares to a full range concentrated liquidity position
 		userBalancesBeforeMigration := s.App.BankKeeper.GetAllBalances(s.Ctx, test.param.sender)
-		positionId, amount0, amount1, _, poolIdLeaving, poolIdEntering, err := keeper.MigrateUnlockedPositionFromBalancerToConcentrated(s.Ctx, test.param.sender, sharesToMigrate, test.tokenOutMins)
+		positionData, migratedPools, err := keeper.MigrateUnlockedPositionFromBalancerToConcentrated(s.Ctx, test.param.sender, sharesToMigrate, test.tokenOutMins)
 		userBalancesAfterMigration := s.App.BankKeeper.GetAllBalances(s.Ctx, test.param.sender)
 		if test.expectedErr != nil {
 			s.Require().Error(err)
 			s.Require().ErrorContains(err, test.expectedErr.Error())
 
 			// Expect zero values for both pool ids
-			s.Require().Zero(poolIdLeaving)
-			s.Require().Zero(poolIdEntering)
+			s.Require().Zero(migratedPools.LeavingID)
+			s.Require().Zero(migratedPools.EnteringID)
 
 			// Assure the user's gamm shares still exist
 			userGammBalanceAfterFailedMigration := s.App.BankKeeper.GetBalance(s.Ctx, test.param.sender, "gamm/pool/1")
@@ -251,7 +251,7 @@ func (s *KeeperTestSuite) TestMigrate() {
 
 			// Assure the position was not created.
 			// TODO: When we implement lock breaking, we need to change time.Time{} to the lock's end time.
-			_, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, positionId)
+			_, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, positionData.ID)
 			s.Require().Error(err)
 			continue
 		}
@@ -259,19 +259,19 @@ func (s *KeeperTestSuite) TestMigrate() {
 
 		// Expect the poolIdLeaving to be the balancer pool id
 		// Expect the poolIdEntering to be the concentrated liquidity pool id
-		s.Require().Equal(balancerPoolId, poolIdLeaving)
-		s.Require().Equal(clPool.GetId(), poolIdEntering)
+		s.Require().Equal(balancerPoolId, migratedPools.LeavingID)
+		s.Require().Equal(clPool.GetId(), migratedPools.EnteringID)
 
 		// Determine how much of the user's balance was not used in the migration
 		// This amount should be returned to the user.
-		expectedUserFinalEthBalanceDiff := expectedCoinsOut.AmountOf(ETH).Sub(amount0)
-		expectedUserFinalUsdcBalanceDiff := expectedCoinsOut.AmountOf(USDC).Sub(amount1)
+		expectedUserFinalEthBalanceDiff := expectedCoinsOut.AmountOf(ETH).Sub(positionData.Amount0)
+		expectedUserFinalUsdcBalanceDiff := expectedCoinsOut.AmountOf(USDC).Sub(positionData.Amount1)
 		s.Require().Equal(userBalancesBeforeMigration.AmountOf(ETH).Add(expectedUserFinalEthBalanceDiff).String(), userBalancesAfterMigration.AmountOf(ETH).String())
 		s.Require().Equal(userBalancesBeforeMigration.AmountOf(USDC).Add(expectedUserFinalUsdcBalanceDiff).String(), userBalancesAfterMigration.AmountOf(USDC).String())
 
 		// Assure the expected position was created.
 		// TODO: When we implement lock breaking, we need to change time.Time{} to the lock's end time.
-		position, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, positionId)
+		position, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, positionData.ID)
 		s.Require().NoError(err)
 		s.Require().Equal(test.expectedLiquidity, position)
 
@@ -294,8 +294,8 @@ func (s *KeeperTestSuite) TestMigrate() {
 
 		// Assert user amount transferred to cl pool from gamm pool should be equal to the amount we migrated from the migrate message.
 		// This test is within 100 shares due to rounding that occurs from utilizing .000000000000000001 instead of 0.
-		s.Require().Equal(0, test.errTolerance.Compare(userEthBalanceTransferredToClPool.Amount, amount0))
-		s.Require().Equal(0, test.errTolerance.Compare(userUsdcBalanceTransferredToClPool.Amount, amount1))
+		s.Require().Equal(0, test.errTolerance.Compare(userEthBalanceTransferredToClPool.Amount, positionData.Amount0))
+		s.Require().Equal(0, test.errTolerance.Compare(userUsdcBalanceTransferredToClPool.Amount, positionData.Amount0))
 	}
 }
 

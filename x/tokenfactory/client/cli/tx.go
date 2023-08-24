@@ -35,14 +35,14 @@ func NewCreateDenomCmd() *cobra.Command {
 
 func NewMintCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgMint](&osmocli.TxCliDesc{
-		Use:   "mint [amount] [flags]",
+		Use:   "mint [amount] [mint-to-address] [flags]",
 		Short: "Mint a denom to an address. Must have admin authority to do so.",
 	})
 }
 
 func NewBurnCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgBurn](&osmocli.TxCliDesc{
-		Use:   "burn [amount] [flags]",
+		Use:   "burn [amount] [burn-from-address] [flags]",
 		Short: "Burn tokens from an address. Must have admin authority to do so.",
 	})
 }

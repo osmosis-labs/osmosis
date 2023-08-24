@@ -220,7 +220,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			expectPass: true,
 		},
 		{
-			name: "Two Pool Arb Route - Hot Route Build",
+			name: "Two Pool Arb Route",
 			params: param{
 				trades: []types.Trade{
 					{
@@ -236,15 +236,11 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
-						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
-						Amount: sdk.NewInt(218_149_058),
-					},
-					{
 						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(56_609_900),
+						Amount: sdk.NewInt(256_086_256),
 					},
 				},
-				expectedPoolPoints: 33,
+				expectedPoolPoints: 41,
 			},
 			expectPass: true,
 		},
@@ -265,15 +261,11 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
-						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
-						Amount: sdk.NewInt(218_149_058),
-					},
-					{
 						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(56_609_900),
+						Amount: sdk.NewInt(256_086_256),
 					},
 				},
-				expectedPoolPoints: 33,
+				expectedPoolPoints: 41,
 			},
 			expectPass: true,
 		},
@@ -294,15 +286,11 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
-						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
-						Amount: sdk.NewInt(218_149_058),
-					},
-					{
 						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(56_609_900),
+						Amount: sdk.NewInt(256_086_256),
 					},
 				},
-				expectedPoolPoints: 33,
+				expectedPoolPoints: 41,
 			},
 			expectPass: true,
 		},
@@ -323,15 +311,11 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
-						Denom:  "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
-						Amount: sdk.NewInt(218_149_058),
-					},
-					{
 						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(56_609_900),
+						Amount: sdk.NewInt(256_086_256),
 					},
 				},
-				expectedPoolPoints: 33,
+				expectedPoolPoints: 41,
 			},
 			expectPass: true,
 		},
@@ -342,7 +326,6 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 	s.Require().NoError(err)
 	err = s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100)
 	s.Require().NoError(err)
-	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
@@ -704,7 +687,6 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 	err := s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 40)
 	s.Require().NoError(err)
-	s.App.ProtoRevKeeper.SetPoolWeights(s.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
 
 	// Init a new account and fund it with tokens for gas fees
 	priv0, _, addr0 := testdata.KeyTestPubAddr()

@@ -62,9 +62,9 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
 
-	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
-	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v4/router/keeper"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router"
+	packetforwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/keeper"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/types"
 
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
@@ -246,8 +246,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Configure the hooks keeper
 	hooksKeeper := ibchookskeeper.NewKeeper(
 		appKeepers.keys[ibchookstypes.StoreKey],
+		appKeepers.GetSubspace(ibchookstypes.ModuleName),
+		appKeepers.IBCKeeper.ChannelKeeper,
+		nil,
 	)
-	appKeepers.IBCHooksKeeper = &hooksKeeper
+	appKeepers.IBCHooksKeeper = hooksKeeper
 
 	appKeepers.WireICS20PreWasmKeeper(appCodec, bApp, appKeepers.IBCHooksKeeper)
 
@@ -341,7 +344,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.DistrKeeper,
+		appKeepers.StakingKeeper,
+		appKeepers.ProtoRevKeeper,
 	)
+	appKeepers.PoolManagerKeeper.SetStakingKeeper(appKeepers.StakingKeeper)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)
 	appKeepers.ConcentratedLiquidityKeeper.SetPoolManagerKeeper(appKeepers.PoolManagerKeeper)
 	appKeepers.CosmwasmPoolKeeper.SetPoolManagerKeeper(appKeepers.PoolManagerKeeper)
@@ -365,6 +371,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ConcentratedLiquidityKeeper,
 	)
 	appKeepers.ProtoRevKeeper = &protorevKeeper
+	appKeepers.PoolManagerKeeper.SetProtorevKeeper(appKeepers.ProtoRevKeeper)
 
 	txFeesKeeper := txfeeskeeper.NewKeeper(
 		appKeepers.AccountKeeper,
@@ -390,11 +397,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.ConcentratedLiquidityKeeper.SetIncentivesKeeper(appKeepers.IncentivesKeeper)
 	appKeepers.GAMMKeeper.SetIncentivesKeeper(appKeepers.IncentivesKeeper)
-
-	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
-		appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
-		*appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, appKeepers.DistrKeeper, appKeepers.EpochsKeeper, appKeepers.LockupKeeper, appKeepers.GAMMKeeper, appKeepers.IncentivesKeeper,
-		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper), appKeepers.ConcentratedLiquidityKeeper)
 
 	mintKeeper := mintkeeper.NewKeeper(
 		appKeepers.keys[minttypes.StoreKey],
@@ -428,7 +430,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
 		appKeepers.GetSubspace(tokenfactorytypes.ModuleName),
 		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper.WithMintCoinsRestriction(tokenfactorytypes.NewTokenFactoryDenomMintCoinsRestriction()),
+		appKeepers.BankKeeper,
 		appKeepers.DistrKeeper,
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
@@ -442,6 +444,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 
 	appKeepers.ValidatorSetPreferenceKeeper = &validatorSetPreferenceKeeper
+
+	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
+		appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
+		*appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, appKeepers.DistrKeeper, appKeepers.EpochsKeeper, appKeepers.LockupKeeper, appKeepers.GAMMKeeper, appKeepers.IncentivesKeeper,
+		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper), appKeepers.ConcentratedLiquidityKeeper, appKeepers.PoolManagerKeeper, appKeepers.ValidatorSetPreferenceKeeper)
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
@@ -477,6 +484,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.Ics20WasmHooks.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.CosmwasmPoolKeeper.SetContractKeeper(appKeepers.ContractKeeper)
+	appKeepers.IBCHooksKeeper.ContractKeeper = appKeepers.ContractKeeper
 
 	// set token factory contract keeper
 	appKeepers.TokenFactoryKeeper.SetContractKeeper(appKeepers.ContractKeeper)
@@ -524,7 +532,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 //
 // Note that the forward middleware is only integrated on the "reveive" direction. It can be safely skipped when sending.
 // Note also that the forward middleware is called "router", but we are using the name "forward" for clarity
-// This may later be renamed upstream: https://github.com/strangelove-ventures/packet-forward-middleware/issues/10
+// This may later be renamed upstream: https://github.com/ibc-apps/middleware/packet-forward-middleware/issues/10
 //
 // After this, the wasm keeper is required to be set on both
 // appkeepers.WasmHooks AND appKeepers.RateLimitingICS4Wrapper
@@ -671,6 +679,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(icqtypes.ModuleName)
 	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
 	paramsKeeper.Subspace(cosmwasmpooltypes.ModuleName)
+	paramsKeeper.Subspace(ibchookstypes.ModuleName)
 
 	return paramsKeeper
 }

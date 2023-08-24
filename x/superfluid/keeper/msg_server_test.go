@@ -565,7 +565,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_Event
 
 			if !tc.isLastPositionInPool {
 				s.FundAcc(s.TestAccs[1], defaultFunds)
-				_, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, 1, s.TestAccs[1], defaultFunds)
+				_, err := concentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, 1, s.TestAccs[1], defaultFunds)
 				s.Require().NoError(err)
 			}
 

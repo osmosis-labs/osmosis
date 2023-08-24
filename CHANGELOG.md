@@ -42,6 +42,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### API breaks
+
+* [#6071](https://github.com/osmosis-labs/osmosis/pull/6071) reduce number of returns for UpdatePosition and TicksToSqrtPrice functions
+* [#5906](https://github.com/osmosis-labs/osmosis/pull/5906) Add `AccountLockedCoins` query in lockup module to stargate whitelist.
+
+## v17.0.0
+
+### API breaks
+
+* [#6014](https://github.com/osmosis-labs/osmosis/pull/6014) refactor: reduce the number of returns in superfluid migration
+* [#5983](https://github.com/osmosis-labs/osmosis/pull/5983) refactor(CL): 6 return values in CL CreatePosition with a struct
+* [#6004](https://github.com/osmosis-labs/osmosis/pull/6004) reduce number of returns for creating full range position
+* [#6018](https://github.com/osmosis-labs/osmosis/pull/6018) golangci: add unused parameters linter
+* [#6033](https://github.com/osmosis-labs/osmosis/pull/6033) change tick API from sdk.Dec to osmomath.BigDec
+
+### Features
+
+* [#5072](https://github.com/osmosis-labs/osmosis/pull/5072) IBC-hooks: Add support for async acks when processing onRecvPacket
+
 ### State Breaking
 
 * [#5532](https://github.com/osmosis-labs/osmosis/pull/5532) fix: Fix x/tokenfactory genesis import denoms reset x/bank existing denom metadata
@@ -52,27 +71,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5874](https://github.com/osmosis-labs/osmosis/pull/5874) Remove Partial Migration from superfluid migration to CL
 * [#5901](https://github.com/osmosis-labs/osmosis/pull/5901) Adding support for CW pools in ProtoRev
 * [#5937](https://github.com/osmosis-labs/osmosis/pull/5937) feat: add SetScalingFactorController gov prop
+* [#5949](https://github.com/osmosis-labs/osmosis/pull/5949) Add message to convert from superfluid / locks to native staking directly.
+* [#5939](https://github.com/osmosis-labs/osmosis/pull/5939) Fix: Flip existing twapRecords base/quote price denoms 
+* [#5938](https://github.com/osmosis-labs/osmosis/pull/5938) Chore: Fix valset amino codec
 
 ### BugFix
 
 * [#5831](https://github.com/osmosis-labs/osmosis/pull/5831) Fix superfluid_delegations query
 * [#5835](https://github.com/osmosis-labs/osmosis/pull/5835) Fix println's for "amountZeroInRemainingBigDec before fee" making it into production
-* [#5841] (https://github.com/osmosis-labs/osmosis/pull/5841) Fix protorev's out of gas erroring of the user's transcation.
-* [#5930] (https://github.com/osmosis-labs/osmosis/pull/5930) Updating Protorev Binary Search Range Logic with CL Pools
+* [#5841](https://github.com/osmosis-labs/osmosis/pull/5841) Fix protorev's out of gas erroring of the user's transcation.
+* [#5930](https://github.com/osmosis-labs/osmosis/pull/5930) Updating Protorev Binary Search Range Logic with CL Pools
+* [#5950](https://github.com/osmosis-labs/osmosis/pull/5950) fix: spot price for cosmwasm pool types
 
 ### Misc Improvements
 
 * [#5534](https://github.com/osmosis-labs/osmosis/pull/5534) fix: fix the account number of x/tokenfactory module account
 * [#5750](https://github.com/osmosis-labs/osmosis/pull/5750) feat: add cli commmand for converting proto structs to proto marshalled bytes
 * [#5889](https://github.com/osmosis-labs/osmosis/pull/5889) provides an API for protorev to determine max amountIn that can be swapped based on max ticks willing to be traversed
-* [#5849] (https://github.com/osmosis-labs/osmosis/pull/5849) CL: Lower gas for leaving a position and withdrawing rewards
+* [#5849](https://github.com/osmosis-labs/osmosis/pull/5849) CL: Lower gas for leaving a position and withdrawing rewards
 * [#5855](https://github.com/osmosis-labs/osmosis/pull/5855) feat(x/cosmwasmpool): Sending token_in_max_amount to the contract before running contract msg
-* [#5893] (https://github.com/osmosis-labs/osmosis/pull/5893) Export createPosition method in CL so other modules can use it in testing
-* [#5870] (https://github.com/osmosis-labs/osmosis/pull/5870) Remove v14/ separator in protorev rest endpoints
-* [#5923] (https://github.com/osmosis-labs/osmosis/pull/5923) CL: Lower gas for initializing ticks
-* [#5927] (https://github.com/osmosis-labs/osmosis/pull/5927) Add gas metering to x/tokenfactory trackBeforeSend hook
+* [#5893](https://github.com/osmosis-labs/osmosis/pull/5893) Export createPosition method in CL so other modules can use it in testing
+* [#5870](https://github.com/osmosis-labs/osmosis/pull/5870) Remove v14/ separator in protorev rest endpoints
+* [#5923](https://github.com/osmosis-labs/osmosis/pull/5923) CL: Lower gas for initializing ticks
+* [#5927](https://github.com/osmosis-labs/osmosis/pull/5927) Add gas metering to x/tokenfactory trackBeforeSend hook
 * [#5890](https://github.com/osmosis-labs/osmosis/pull/5890) feat: CreateCLPool & LinkCFMMtoCL pool into one gov-prop
+* [#5959](https://github.com/osmosis-labs/osmosis/pull/5959) allow testing with different chain-id's in E2E testing
 * [#5964](https://github.com/osmosis-labs/osmosis/pull/5964) fix e2e test concurrency bugs
+* [#5948] (https://github.com/osmosis-labs/osmosis/pull/5948) Parameterizing Pool Type Information in Protorev
+* [#6001](https://github.com/osmosis-labs/osmosis/pull/6001) feat: improve set-env CLI cmd\
+* [#5953] (https://github.com/osmosis-labs/osmosis/pull/5953) Supporting two pool routes in ProtoRev
+* [#6012](https://github.com/osmosis-labs/osmosis/pull/6012) chore: add autocomplete to makefile
+* [#6085](https://github.com/osmosis-labs/osmosis/pull/6085) (v18: feat) Volume-Split, setup gauges to split evenly
 
 ### Minor improvements & Bug Fixes
 

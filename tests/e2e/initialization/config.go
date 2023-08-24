@@ -438,10 +438,10 @@ func updatePoolManagerGenesis(appGenState map[string]json.RawMessage) func(*pool
 
 func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {
 	epochGenState.Epochs = []epochtypes.EpochInfo{
-		// override week epochs which are in default integrations, to be 2min
-		epochtypes.NewGenesisEpochInfo("week", time.Second*120),
-		// override day epochs which are in default integrations, to be 1min
-		epochtypes.NewGenesisEpochInfo("day", time.Second*60),
+		// override week epochs which are in default integrations, to be 60 seconds
+		epochtypes.NewGenesisEpochInfo("week", time.Second*60),
+		// override day epochs which are in default integrations, to be 5 seconds
+		epochtypes.NewGenesisEpochInfo("day", time.Second*5),
 	}
 }
 

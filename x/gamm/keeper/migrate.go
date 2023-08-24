@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,41 +21,44 @@ import (
 func (k Keeper) MigrateUnlockedPositionFromBalancerToConcentrated(ctx sdk.Context,
 	sender sdk.AccAddress, sharesToMigrate sdk.Coin,
 	tokenOutMins sdk.Coins,
-) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving, poolIdEntering uint64, err error) {
+) (cltypes.CreateFullRangePositionData, superfluidtypes.MigrationPoolIDs, error) {
 	// Get the balancer poolId by parsing the gamm share denom.
-	poolIdLeaving, err = types.GetPoolIdFromShareDenom(sharesToMigrate.Denom)
+	poolIdLeaving, err := types.GetPoolIdFromShareDenom(sharesToMigrate.Denom)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, superfluidtypes.MigrationPoolIDs{}, err
 	}
 
 	// Find the governance sanctioned link between the balancer pool and a concentrated pool.
-	poolIdEntering, err = k.GetLinkedConcentratedPoolID(ctx, poolIdLeaving)
+	poolIdEntering, err := k.GetLinkedConcentratedPoolID(ctx, poolIdLeaving)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, superfluidtypes.MigrationPoolIDs{}, err
 	}
 
 	// Get the concentrated pool from the message and type cast it to ConcentratedPoolExtension.
 	concentratedPool, err := k.concentratedLiquidityKeeper.GetConcentratedPoolById(ctx, poolIdEntering)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, superfluidtypes.MigrationPoolIDs{}, err
 	}
 
 	// Exit the balancer pool position.
 	exitCoins, err := k.ExitPool(ctx, sender, poolIdLeaving, sharesToMigrate.Amount, tokenOutMins)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, superfluidtypes.MigrationPoolIDs{}, err
 	}
 	// Defense in depth, ensuring we are returning exactly two coins.
 	if len(exitCoins) != 2 {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, fmt.Errorf("Balancer pool must have exactly two tokens")
+		return cltypes.CreateFullRangePositionData{}, superfluidtypes.MigrationPoolIDs{}, fmt.Errorf("Balancer pool must have exactly two tokens")
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, err = k.concentratedLiquidityKeeper.CreateFullRangePosition(ctx, concentratedPool.GetId(), sender, exitCoins)
+	positionData, err := k.concentratedLiquidityKeeper.CreateFullRangePosition(ctx, concentratedPool.GetId(), sender, exitCoins)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+		return cltypes.CreateFullRangePositionData{}, superfluidtypes.MigrationPoolIDs{}, err
 	}
-	return positionId, amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, nil
+	return positionData, superfluidtypes.MigrationPoolIDs{
+		LeavingID:  poolIdLeaving,
+		EnteringID: poolIdEntering,
+	}, nil
 }
 
 // GetAllMigrationInfo gets all existing links between Balancer Pool and Concentrated Pool,

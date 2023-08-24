@@ -24,16 +24,12 @@ func (k Keeper) GetRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, time tim
 	return k.getRecordAtOrBeforeTime(ctx, poolId, time, asset0Denom, asset1Denom)
 }
 
-func (k Keeper) GetAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
-	return k.getAllHistoricalTimeIndexedTWAPs(ctx)
+func (k Keeper) TrackChangedPool(ctx sdk.Context, poolId uint64) {
+	k.trackChangedPool(ctx, poolId)
 }
 
 func (k Keeper) GetAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
 	return k.getAllHistoricalPoolIndexedTWAPs(ctx)
-}
-
-func (k Keeper) TrackChangedPool(ctx sdk.Context, poolId uint64) {
-	k.trackChangedPool(ctx, poolId)
 }
 
 func (k Keeper) GetChangedPools(ctx sdk.Context) []uint64 {
