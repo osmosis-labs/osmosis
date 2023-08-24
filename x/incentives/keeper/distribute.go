@@ -317,6 +317,8 @@ func (k Keeper) distributeInternal(
 		// Get distribution epoch duration. This is used to calculate the emission rate.
 		currentEpoch := k.GetEpochInfo(ctx)
 
+		didAnyCreateIncentiveFail := false
+
 		// For every coin in the gauge, calculate the remaining reward per epoch
 		// and create a concentrated liquidity incentive record for it that
 		// is supposed to distribute over that epoch.
@@ -331,7 +333,10 @@ func (k Keeper) distributeInternal(
 			emissionRate := sdk.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
 
 			ctx.Logger().Info("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
-			_, err := k.clk.CreateIncentive(ctx,
+
+			cacheCtx, write := ctx.CacheContext()
+
+			_, err := k.clk.CreateIncentive(cacheCtx,
 				pool.GetId(),
 				k.ak.GetModuleAddress(types.ModuleName),
 				remainCoinPerEpoch,
@@ -346,11 +351,23 @@ func (k Keeper) distributeInternal(
 
 			ctx.Logger().Info(fmt.Sprintf("distributeInternal CL for pool id %d finished", pool.GetId()))
 			if err != nil {
-				return nil, err
+				ctx.Logger().Error(fmt.Sprintf("distributeInternal CL for pool id %d failed %v, skipping silently", pool.GetId(), err))
+				didAnyCreateIncentiveFail = true
+				break
+			} else {
+
+				// Write result of CreateIncentive() only on success.
+				write()
 			}
 
 			totalDistrCoins = totalDistrCoins.Add(remainCoinPerEpoch)
 		}
+
+		// Skip this gauge silently to avoid it breaking the entire incentives flows.
+		if didAnyCreateIncentiveFail {
+			return sdk.NewCoins(), nil
+		}
+
 	} else {
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
 		denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
