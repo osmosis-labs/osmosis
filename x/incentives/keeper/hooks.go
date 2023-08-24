@@ -22,13 +22,19 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// begin distribution if it's start time
 		gauges := k.GetUpcomingGauges(ctx)
 		ctx.Logger().Info(fmt.Sprintf("x/incentives AfterEpochEnd, num upcoming gauges %d, %d", len(gauges), ctx.BlockHeight()))
+		if len(gauges) > 0 {
+			ctx.Logger().Info(fmt.Sprintf("x/incentives AfterEpochEnd, candidate upcoming gauge id %d, %d", gauges[0].Id, ctx.BlockHeight()))
+		}
+		actuallyMoved := 0
 		for _, gauge := range gauges {
 			if !ctx.BlockTime().Before(gauge.StartTime) {
+				actuallyMoved += 1
 				if err := k.moveUpcomingGaugeToActiveGauge(ctx, gauge); err != nil {
 					return err
 				}
 			}
 		}
+		ctx.Logger().Info(fmt.Sprintf("x/incentives AfterEpochEnd, actually moved num upcoming gauges %d, %d", actuallyMoved, ctx.BlockHeight()))
 
 		if len(gauges) > 10 {
 			ctx.EventManager().IncreaseCapacity(2e6)

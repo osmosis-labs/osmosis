@@ -31,7 +31,10 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
-		for _, id := range accum_stores_to_fix {
+		// for _, id := range accum_stores_to_fix {
+		// 	resetSumtree(keepers, ctx, uint64(id))
+		// }
+		for id := 0; id <= 603; id++ {
 			resetSumtree(keepers, ctx, uint64(id))
 		}
 
