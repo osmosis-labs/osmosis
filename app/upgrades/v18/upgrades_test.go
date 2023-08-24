@@ -70,6 +70,8 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 		Duration:      time.Hour * 24 * 14,
 	})
 	valueAfterClear.Equal(sdk.NewInt(shareStaysLocked))
+
+	suite.ensurePostUpgradeDistributionWorks()
 }
 
 func (suite *UpgradeTestSuite) imitateUpgrade() {
@@ -248,6 +250,19 @@ func (s *UpgradeTestSuite) clearDenomAccumulationStore(denom string) {
 	for ; iter.Valid(); iter.Next() {
 		store.Delete(iter.Key())
 	}
+}
+
+func (s *UpgradeTestSuite) ensurePostUpgradeDistributionWorks() {
+	epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
+
+	// add block time so that rewards get distributed
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 25))
+	s.BeginNewBlock(false)
+	s.App.EpochsKeeper.BeforeEpochStart(s.Ctx, epochInfo.GetIdentifier(), 1)
+
+	s.Require().NotPanics(func() {
+		s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 1)
+	})
 }
 
 type ByLinkedClassicPool []v17.AssetPair
