@@ -241,7 +241,7 @@ func (suite *HooksTestSuite) TestDeriveIntermediateSender() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Test failed for case (channel=%s, originalSender=%s, bech32Prefix=%s).",
 			tc.channel, tc.originalSender, tc.bech32Prefix), func() {
-			actualAddress, err := ibchookskeeper.DeriveIntermediateSender(tc.channel, tc.originalSender, tc.bech32Prefix)
+			actualAddress, err := ibchookskeeper.DeriveIntermediateSender(tc.channel, tc.originalSender, tc.bech32Prefix, ibchookstypes.SenderPrefix)
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expectedAddress, actualAddress)
 		})
@@ -1888,7 +1888,7 @@ func (suite *HooksTestSuite) SendAndAckPacketThroughPath(packetPath []Direction,
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
 	suite.Require().NoError(err)
 
-	for i, _ := range packetPath {
+	for i := range packetPath {
 		packet = packetStack[len(packetStack)-i-1]
 		direction := packetPath[len(packetPath)-i-1]
 		// sender Acknowledges
