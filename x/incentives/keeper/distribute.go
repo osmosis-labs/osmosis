@@ -334,7 +334,7 @@ func (k Keeper) distributeInternal(
 			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
 			emissionRate := sdk.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
 
-			ctx.Logger().Debug("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
+			ctx.Logger().Info("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
 			_, err := k.clk.CreateIncentive(ctx,
 				pool.GetId(),
 				k.ak.GetModuleAddress(types.ModuleName),
@@ -347,6 +347,8 @@ func (k Keeper) distributeInternal(
 				// Only default uptime is supported at launch.
 				types.DefaultConcentratedUptime,
 			)
+
+			ctx.Logger().Info(fmt.Sprintf("distributeInternal CL for pool id %d finished", pool.GetId()))
 			if err != nil {
 				return nil, err
 			}
