@@ -938,7 +938,7 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 		// create a rebonded lock
 		splitLockID := k.GetLastLockID(ctx) + 1
 		k.SetLastLockID(ctx, splitLockID)
-		rebondedLock = types.NewPeriodLock(splitLockID, owner, lock.Duration, time.Time{}, coins)
+		rebondedLock = types.NewPeriodLock(splitLockID, owner, owner.String(), lock.Duration, time.Time{}, coins)
 
 		err = k.setLock(ctx, rebondedLock)
 		if err != nil {
@@ -950,7 +950,7 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 
 		// Restart lock timer and set back to the store
 		// Rebonded lock is the same lock as the original lock, but with an empty EndTime.
-		rebondedLock = types.NewPeriodLock(lock.ID, owner, lock.Duration, time.Time{}, lock.Coins)
+		rebondedLock = types.NewPeriodLock(lock.ID, owner, owner.String(), lock.Duration, time.Time{}, lock.Coins)
 		err = k.setLock(ctx, rebondedLock)
 		if err != nil {
 			return err
