@@ -10,10 +10,7 @@ import (
 )
 
 func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod, expeditedVotingPeriod time.Duration, forkHeight int) (*Chain, error) {
-	chain, err := new(id, dataDir)
-	if err != nil {
-		return nil, err
-	}
+	chain := new(id, dataDir)
 
 	for _, nodeConfig := range nodeConfigs {
 		newNode, err := newNode(chain, nodeConfig)
@@ -49,11 +46,7 @@ func InitSingleNode(chainId, dataDir string, existingGenesisDir string, nodeConf
 		return nil, errors.New("creating individual validator nodes after starting up chain is not currently supported")
 	}
 
-	chain, err := new(chainId, dataDir)
-	if err != nil {
-		return nil, err
-	}
-
+	chain := new(chainId, dataDir)
 	newNode, err := newNode(chain, nodeConfig)
 	if err != nil {
 		return nil, err

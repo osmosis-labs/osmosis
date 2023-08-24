@@ -82,7 +82,7 @@ func CreateUpgradeHandler(
 		fullRangeCoinsUsed := sdk.Coins{}
 
 		for _, assetPair := range assetPairs {
-			clPoolDenom, clPoolId, poolLink, coinsUsed, err := createCLPoolWithCommunityPoolPosition(ctx, keepers, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, communityPoolAddress)
+			clPoolDenom, clPoolId, poolLink, coinsUsed, err := createCLPoolWithCommunityPoolPosition(ctx, keepers, assetPair, communityPoolAddress)
 			if errors.Is(err, notEnoughLiquidityForSwapErr) {
 				continue
 			} else if err != nil {
@@ -138,22 +138,30 @@ func CreateUpgradeHandler(
 }
 
 // createCLPoolWithCommunityPoolPosition creates a CL pool for a given balancer pool and adds a full range position with the community pool.
-func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.AppKeepers, gammPoolId uint64, baseAsset string, spreadFactor sdk.Dec, communityPoolAddress sdk.AccAddress) (clPoolDenom string, clPoolId uint64, poolLink gammmigration.BalancerToConcentratedPoolLink, coinsUsed sdk.Coins, err error) {
+func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.AppKeepers, assetPair AssetPair, communityPoolAddress sdk.AccAddress) (clPoolDenom string, clPoolId uint64, poolLink gammmigration.BalancerToConcentratedPoolLink, coinsUsed sdk.Coins, err error) {
+	// Determine if base or quote asset is OSMO and save the non-OSMO asset.
+	osmoIn := sdk.NewCoin(OSMO, sdk.NewInt(100000))
+	nonOsmoAsset := ""
+	if assetPair.BaseAsset != OSMO {
+		nonOsmoAsset = assetPair.BaseAsset
+	} else {
+		nonOsmoAsset = assetPair.QuoteAsset
+	}
+
 	// Check if classic pool has enough liquidity to support a 0.1 OSMO swap before creating a CL pool.
 	// If not, skip the pool.
-	osmoIn := sdk.NewCoin(QuoteAsset, sdk.NewInt(100000))
-	linkedClassicPool, err := keepers.PoolManagerKeeper.GetPool(ctx, gammPoolId)
+	linkedClassicPool, err := keepers.PoolManagerKeeper.GetPool(ctx, assetPair.LinkedClassicPool)
 	if err != nil {
 		return "", 0, gammmigration.BalancerToConcentratedPoolLink{}, nil, err
 	}
-	_, err = keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, linkedClassicPool, osmoIn, baseAsset, spreadFactor)
+	_, err = keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, linkedClassicPool, osmoIn, nonOsmoAsset, assetPair.SpreadFactor)
 	if err != nil {
 		return "", 0, gammmigration.BalancerToConcentratedPoolLink{}, nil, err
 	}
 
 	// Create a concentrated liquidity pool for asset pair.
-	ctx.Logger().Info(fmt.Sprintf("Creating CL pool from poolID (%d), baseAsset (%s), spreadFactor (%s), tickSpacing (%d)", gammPoolId, baseAsset, spreadFactor, TickSpacing))
-	clPool, err := keepers.GAMMKeeper.CreateConcentratedPoolFromCFMM(ctx, gammPoolId, baseAsset, spreadFactor, TickSpacing)
+	ctx.Logger().Info(fmt.Sprintf("Creating CL pool from poolID (%d), baseAsset (%s), quoteAsset (%s) spreadFactor (%s), tickSpacing (%d)", assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.QuoteAsset, assetPair.SpreadFactor, TickSpacing))
+	clPool, err := keepers.GAMMKeeper.CreateConcentratedPoolFromCFMM(ctx, assetPair.LinkedClassicPool, assetPair.BaseAsset, assetPair.SpreadFactor, TickSpacing)
 	if err != nil {
 		return "", 0, gammmigration.BalancerToConcentratedPoolLink{}, nil, err
 	}
@@ -162,34 +170,34 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 
 	// Create pool link object.
 	poolLink = gammmigration.BalancerToConcentratedPoolLink{
-		BalancerPoolId: gammPoolId,
+		BalancerPoolId: assetPair.LinkedClassicPool,
 		ClPoolId:       clPoolId,
 	}
 
 	// Get community pool balance before swap and position creation
-	commPoolBalanceBaseAssetPre := keepers.BankKeeper.GetBalance(ctx, communityPoolAddress, baseAsset)
-	commPoolBalanceQuoteAssetPre := keepers.BankKeeper.GetBalance(ctx, communityPoolAddress, QuoteAsset)
+	commPoolBalanceBaseAssetPre := keepers.BankKeeper.GetBalance(ctx, communityPoolAddress, assetPair.BaseAsset)
+	commPoolBalanceQuoteAssetPre := keepers.BankKeeper.GetBalance(ctx, communityPoolAddress, assetPair.QuoteAsset)
 	commPoolBalancePre := sdk.NewCoins(commPoolBalanceBaseAssetPre, commPoolBalanceQuoteAssetPre)
 
-	// Swap 0.1 OSMO for baseAsset from the community pool.
-	respectiveBaseAssetInt, err := keepers.GAMMKeeper.SwapExactAmountIn(ctx, communityPoolAddress, linkedClassicPool, osmoIn, baseAsset, sdk.ZeroInt(), linkedClassicPool.GetSpreadFactor(ctx))
+	// Swap 0.1 OSMO for nonOsmoAsset from the community pool.
+	respectiveNonOsmoAssetInt, err := keepers.GAMMKeeper.SwapExactAmountIn(ctx, communityPoolAddress, linkedClassicPool, osmoIn, nonOsmoAsset, sdk.ZeroInt(), linkedClassicPool.GetSpreadFactor(ctx))
 	if err != nil {
 		return "", 0, gammmigration.BalancerToConcentratedPoolLink{}, nil, err
 	}
-	ctx.Logger().Info(fmt.Sprintf("Swapped %s for %s%s from the community pool", osmoIn.String(), respectiveBaseAssetInt.String(), baseAsset))
+	ctx.Logger().Info(fmt.Sprintf("Swapped %s for %s%s from the community pool", osmoIn.String(), respectiveNonOsmoAssetInt.String(), nonOsmoAsset))
 
-	respectiveBaseAsset := sdk.NewCoin(baseAsset, respectiveBaseAssetInt)
+	respectiveNonOsmoAsset := sdk.NewCoin(nonOsmoAsset, respectiveNonOsmoAssetInt)
 
 	// Create a full range position via the community pool with the funds we calculated above.
-	fullRangeCoins := sdk.NewCoins(respectiveBaseAsset, osmoIn)
+	fullRangeCoins := sdk.NewCoins(respectiveNonOsmoAsset, osmoIn)
 	_, err = keepers.ConcentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPoolId, communityPoolAddress, fullRangeCoins)
 	if err != nil {
 		return "", 0, gammmigration.BalancerToConcentratedPoolLink{}, nil, err
 	}
 
 	// Get community pool balance after swap and position creation
-	commPoolBalanceBaseAssetPost := keepers.BankKeeper.GetBalance(ctx, communityPoolAddress, baseAsset)
-	commPoolBalanceQuoteAssetPost := keepers.BankKeeper.GetBalance(ctx, communityPoolAddress, QuoteAsset)
+	commPoolBalanceBaseAssetPost := keepers.BankKeeper.GetBalance(ctx, communityPoolAddress, assetPair.BaseAsset)
+	commPoolBalanceQuoteAssetPost := keepers.BankKeeper.GetBalance(ctx, communityPoolAddress, assetPair.QuoteAsset)
 	commPoolBalancePost := sdk.NewCoins(commPoolBalanceBaseAssetPost, commPoolBalanceQuoteAssetPost)
 
 	// While we can be fairly certain the diff between these two is 0.2 OSMO, if for whatever reason

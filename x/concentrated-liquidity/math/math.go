@@ -173,28 +173,25 @@ func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amo
 
 // GetLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1
 // and returns the resulting liquidity from these inputs.
-func GetLiquidityFromAmounts(sqrtPrice osmomath.BigDec, sqrtPriceA, sqrtPriceB sdk.Dec, amount0, amount1 sdk.Int) (liquidity sdk.Dec) {
-	sqrtPriceABigDec := osmomath.BigDecFromSDKDec(sqrtPriceA)
-	sqrtPriceBBigDec := osmomath.BigDecFromSDKDec(sqrtPriceB)
-
+func GetLiquidityFromAmounts(sqrtPrice osmomath.BigDec, sqrtPriceA, sqrtPriceB osmomath.BigDec, amount0, amount1 sdk.Int) (liquidity sdk.Dec) {
 	// Reorder the prices so that sqrtPriceA is the smaller of the two.
 	// todo: Remove this.
-	if sqrtPriceABigDec.GT(sqrtPriceBBigDec) {
-		sqrtPriceABigDec, sqrtPriceBBigDec = sqrtPriceBBigDec, sqrtPriceABigDec
+	if sqrtPriceA.GT(sqrtPriceB) {
+		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 
-	if sqrtPrice.LTE(sqrtPriceABigDec) {
+	if sqrtPrice.LTE(sqrtPriceA) {
 		// If the current price is less than or equal to the lower tick, then we use the liquidity0 formula.
-		liquidity = Liquidity0(amount0, sqrtPriceABigDec, sqrtPriceBBigDec)
-	} else if sqrtPrice.LT(sqrtPriceBBigDec) {
+		liquidity = Liquidity0(amount0, sqrtPriceA, sqrtPriceB)
+	} else if sqrtPrice.LT(sqrtPriceB) {
 		// If the current price is between the lower and upper ticks (exclusive of both the lower and upper ticks,
 		// as both would trigger a division by zero), then we use the minimum of the liquidity0 and liquidity1 formulas.
-		liquidity0 := Liquidity0(amount0, sqrtPrice, sqrtPriceBBigDec)
-		liquidity1 := Liquidity1(amount1, sqrtPrice, sqrtPriceABigDec)
+		liquidity0 := Liquidity0(amount0, sqrtPrice, sqrtPriceB)
+		liquidity1 := Liquidity1(amount1, sqrtPrice, sqrtPriceA)
 		liquidity = sdk.MinDec(liquidity0, liquidity1)
 	} else {
 		// If the current price is greater than the upper tick, then we use the liquidity1 formula.
-		liquidity = Liquidity1(amount1, sqrtPriceBBigDec, sqrtPriceABigDec)
+		liquidity = Liquidity1(amount1, sqrtPriceB, sqrtPriceA)
 	}
 
 	return liquidity

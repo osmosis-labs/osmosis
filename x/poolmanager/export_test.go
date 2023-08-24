@@ -39,7 +39,7 @@ func (k Keeper) GetAllPoolRoutes(ctx sdk.Context) []types.ModuleRoute {
 }
 
 func (k Keeper) ValidateCreatedPool(ctx sdk.Context, poolId uint64, pool types.PoolI) error {
-	return k.validateCreatedPool(ctx, poolId, pool)
+	return k.validateCreatedPool(poolId, pool)
 }
 
 func (k Keeper) IsOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute, inDenom, outDenom string) (isRouted bool) {
@@ -61,4 +61,8 @@ func (k Keeper) CreateOsmoMultihopExpectedSwapOuts(
 	cumulativeRouteSwapFee, sumOfSwapFees sdk.Dec,
 ) ([]sdk.Int, error) {
 	return k.createOsmoMultihopExpectedSwapOuts(ctx, route, tokenOut, cumulativeRouteSwapFee, sumOfSwapFees)
+}
+
+func (k Keeper) TrackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
+	k.trackVolume(ctx, poolId, volumeGenerated)
 }

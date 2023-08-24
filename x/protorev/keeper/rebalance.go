@@ -249,14 +249,14 @@ func (k Keeper) CalculateUpperBoundForSearch(
 
 			// In the scenario where there are multiple CL pools in a route, we select the one that inputs
 			// the smaller amount to ensure we do not overstep the max ticks moved.
-			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenInDenom, route.StepSize)
+			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenInDenom)
 			if err != nil {
 				return sdk.ZeroInt(), err
 			}
 		case !intermidiateCoin.IsNil():
 			// If we have already seen a CL pool in the route, then simply propagate the intermediate coin up
 			// the route.
-			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenInDenom, route.StepSize)
+			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenInDenom)
 			if err != nil {
 				return sdk.ZeroInt(), err
 			}
@@ -284,7 +284,6 @@ func (k Keeper) executeSafeSwap(
 	poolID uint64,
 	outputCoin sdk.Coin,
 	tokenInDenom string,
-	stepSize sdk.Int,
 ) (sdk.Coin, error) {
 	liquidity, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolID)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/swapstrategy"
@@ -131,23 +132,15 @@ func AsConcentrated(poolI poolmanagertypes.PoolI) (types.ConcentratedPoolExtensi
 }
 
 func (k Keeper) ValidateSpreadFactor(ctx sdk.Context, params types.Params, spreadFactor sdk.Dec) bool {
-	return k.validateSpreadFactor(ctx, params, spreadFactor)
+	return k.validateSpreadFactor(params, spreadFactor)
 }
 
 func (k Keeper) ValidateTickSpacing(ctx sdk.Context, params types.Params, tickSpacing uint64) bool {
-	return k.validateTickSpacing(ctx, params, tickSpacing)
+	return k.validateTickSpacing(params, tickSpacing)
 }
 
 func (k Keeper) ValidateTickSpacingUpdate(ctx sdk.Context, pool types.ConcentratedPoolExtension, params types.Params, newTickSpacing uint64) bool {
-	return k.validateTickSpacingUpdate(ctx, pool, params, newTickSpacing)
-}
-
-func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
-	return k.fungifyChargedPosition(ctx, owner, positionIds)
-}
-
-func (k Keeper) ValidatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64, fullyChargedDuration time.Duration) (uint64, int64, int64, sdk.Dec, error) {
-	return k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds, fullyChargedDuration)
+	return k.validateTickSpacingUpdate(pool, params, newTickSpacing)
 }
 
 func (k Keeper) IsLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, error) {
@@ -170,7 +163,7 @@ func (k Keeper) SetPositionIdToLock(ctx sdk.Context, positionId, underlyingLockI
 	k.setPositionIdToLock(ctx, positionId, underlyingLockId)
 }
 
-func RoundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, priceTickUpper sdk.Dec, tickSpacing uint64) (int64, int64, error) {
+func RoundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, priceTickUpper osmomath.BigDec, tickSpacing uint64) (int64, int64, error) {
 	return roundTickToCanonicalPriceTick(lowerTick, upperTick, priceTickLower, priceTickUpper, tickSpacing)
 }
 
@@ -319,7 +312,7 @@ func (k Keeper) GetListenersUnsafe() types.ConcentratedLiquidityListeners {
 }
 
 func ValidateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuoteDenoms []string) bool {
-	return validateAuthorizedQuoteDenoms(ctx, denom1, authorizedQuoteDenoms)
+	return validateAuthorizedQuoteDenoms(denom1, authorizedQuoteDenoms)
 }
 
 func (k Keeper) ValidatePositionUpdateById(ctx sdk.Context, positionId uint64, updateInitiator sdk.AccAddress, lowerTickGiven int64, upperTickGiven int64, liquidityDeltaGiven sdk.Dec, joinTimeGiven time.Time, poolIdGiven uint64) error {
@@ -331,12 +324,12 @@ func (k Keeper) GetLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duratio
 }
 
 func (k Keeper) GetLargestSupportedUptimeDuration(ctx sdk.Context) time.Duration {
-	return k.getLargestSupportedUptimeDuration(ctx)
+	return k.getLargestSupportedUptimeDuration()
 }
 
 func (k Keeper) SetupSwapStrategy(ctx sdk.Context, p types.ConcentratedPoolExtension,
 	spreadFactor sdk.Dec, tokenInDenom string,
-	priceLimit sdk.Dec) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit sdk.Dec, err error) {
+	priceLimit sdk.Dec) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit osmomath.BigDec, err error) {
 	return k.setupSwapStrategy(p, spreadFactor, tokenInDenom, priceLimit)
 }
 
