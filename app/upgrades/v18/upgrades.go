@@ -24,7 +24,10 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
-		for id := 1; id <= MaxCorruptedAccumStoreId; id++ {
+
+		nextPoolId := keepers.PoolManagerKeeper.GetNextPoolId(ctx)
+
+		for id := uint64(1); id < nextPoolId; id++ {
 			resetSumtree(keepers, ctx, uint64(id))
 		}
 		return migrations, nil
