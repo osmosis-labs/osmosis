@@ -1,4 +1,4 @@
-package v17
+package v18
 
 import (
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
@@ -6,7 +6,7 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// UpgradeName defines the on-chain upgrade name for the Osmosis v17 upgrade.
+// UpgradeName defines the on-chain upgrade name for the Osmosis v18 upgrade.
 const UpgradeName = "v18"
 
 var Upgrade = upgrades.Upgrade{

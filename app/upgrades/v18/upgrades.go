@@ -1,17 +1,18 @@
-package v17
+package v18
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 )
 
-const (
-	mainnetChainID = "osmosis-1"
-)
+// OSMO / DAI CL pool ID
+const firstCLPoolId = 1066
 
 func CreateUpgradeHandler(
 	mm *module.Manager,
@@ -26,6 +27,15 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+
+		for id := 1; id < firstCLPoolId; id++ {
+			resetSumtree(keepers, ctx, uint64(id))
+		}
 		return migrations, nil
 	}
+}
+
+func resetSumtree(keepers *keepers.AppKeepers, ctx sdk.Context, id uint64) {
+	denom := gammtypes.GetPoolShareDenom(id)
+	keepers.LockupKeeper.RebuildAccumulationStoreForDenom(ctx, denom)
 }
