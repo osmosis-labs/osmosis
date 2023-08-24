@@ -1,0 +1,8 @@
+{
+    "binaries": {
+        "darwin/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v18.0.0/osmosisd-18.0.0-darwin-arm64?checksum=sha256:TODO",
+        "darwin/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v18.0.0/osmosisd-18.0.0-darwin-amd64?checksum=sha256:TODO",
+        "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v18.0.0/osmosisd-18.0.0-linux-arm64?checksum=sha256:TODO",
+        "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v18.0.0/osmosisd-18.0.0-linux-amd64?checksum=sha256:TODO"
+    }
+}
