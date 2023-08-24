@@ -31,7 +31,7 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingTypes.AccountKeeper,
-	bk osmosimtypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper,
+	bk osmosimtypes.BankKeeper, clk osmosimtypes.ConcentratedLiquidityKeeper, ek types.EpochKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgCreateGauge int
@@ -53,7 +53,7 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreateGauge,
-			SimulateMsgCreateGauge(ak, bk, ek, k),
+			SimulateMsgCreateGauge(ak, bk, clk, ek, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgAddToGauge,
@@ -120,7 +120,7 @@ func Max(x, y int) int {
 }
 
 // SimulateMsgCreateGauge generates and executes a MsgCreateGauge with random parameters
-func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKeeper, clk osmosimtypes.ConcentratedLiquidityKeeper, ek types.EpochKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -142,12 +142,25 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankK
 			numEpochsPaidOver = 1
 		}
 
+		clPools, err := clk.GetPools(ctx)
+		if err != nil {
+			return simtypes.OperationMsg{}, nil, err
+		}
+
+		numPools := len(clPools)
+		if numPools < 1 {
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgAddToGauge, "No pool exists"), nil, nil
+		}
+		randPool := clPools[rand.Intn(numPools)]
+
 		msg := types.MsgCreateGauge{
 			Owner:             simAccount.Address.String(),
 			IsPerpetual:       isPerpetual,
 			Coins:             rewards,
 			StartTime:         startTime,
 			NumEpochsPaidOver: numEpochsPaidOver,
+			PoolId:            randPool.GetId(),
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig

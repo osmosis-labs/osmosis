@@ -113,22 +113,25 @@ type AppModule struct {
 
 	keeper keeper.Keeper
 
-	accountKeeper stakingtypes.AccountKeeper
-	bankKeeper    osmosimtypes.BankKeeper
-	epochKeeper   types.EpochKeeper
+	accountKeeper               stakingtypes.AccountKeeper
+	bankKeeper                  osmosimtypes.BankKeeper
+	concentratedLiquidityKeeper osmosimtypes.ConcentratedLiquidityKeeper
+	epochKeeper                 types.EpochKeeper
 }
 
 // NewAppModule creates a new AppModule struct.
 func NewAppModule(keeper keeper.Keeper,
 	accountKeeper stakingtypes.AccountKeeper, bankKeeper osmosimtypes.BankKeeper,
+	concentratedLiquidityKeeper osmosimtypes.ConcentratedLiquidityKeeper,
 	epochKeeper types.EpochKeeper,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: NewAppModuleBasic(),
-		keeper:         keeper,
-		accountKeeper:  accountKeeper,
-		bankKeeper:     bankKeeper,
-		epochKeeper:    epochKeeper,
+		AppModuleBasic:              NewAppModuleBasic(),
+		keeper:                      keeper,
+		accountKeeper:               accountKeeper,
+		bankKeeper:                  bankKeeper,
+		concentratedLiquidityKeeper: concentratedLiquidityKeeper,
+		epochKeeper:                 epochKeeper,
 	}
 }
 
@@ -213,7 +216,7 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc,
-		am.accountKeeper, am.bankKeeper, am.epochKeeper, am.keeper,
+		am.accountKeeper, am.bankKeeper, am.concentratedLiquidityKeeper, am.epochKeeper, am.keeper,
 	)
 }
 

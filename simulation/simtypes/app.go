@@ -41,3 +41,7 @@ type BankKeeper interface {
 type PoolManagerKeeper interface {
 	CreatePool(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (uint64, error)
 }
+
+type ConcentratedLiquidityKeeper interface {
+	GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error)
+}
