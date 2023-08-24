@@ -79,7 +79,7 @@ func CreateUpgradeHandler(
 		value := keepers.LockupKeeper.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "gamm/pool/3",
-			Duration:      time.Hour * 24 * 7,
+			Duration:      time.Hour * 24 * 14,
 		})
 		ctx.Logger().Info(fmt.Sprintf("VALUE PRE: %v", value))
 
@@ -95,7 +95,7 @@ func CreateUpgradeHandler(
 		value = keepers.LockupKeeper.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "gamm/pool/3",
-			Duration:      time.Hour * 24 * 7,
+			Duration:      time.Hour * 24 * 14,
 		})
 		ctx.Logger().Info(fmt.Sprintf("VALUE POST: %v", value))
 
