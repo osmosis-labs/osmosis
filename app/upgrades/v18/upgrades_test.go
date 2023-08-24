@@ -102,7 +102,6 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// Check that can LP and swap into pool 3 with no usses
 	// LP
 	position, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPoolId, s.TestAccs[0], lpTokens)
-	fmt.Println(position)
 	s.Require().NoError(err)
 
 	// Refetch CL Pool
