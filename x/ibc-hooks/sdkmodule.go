@@ -3,6 +3,7 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
