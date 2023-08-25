@@ -282,15 +282,16 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 			return err
 		}
 
+		allocatedCoins, coinsToDistributeThisEpoch, err := k.syncGroupGaugeWeights(ctx, groupGauge.SplittingPolicy, gauge, groupGauge)
+		if err != nil {
+			return err
+		}
+
 		// only allow distribution if the GroupGauge is Active
 		if gauge.IsActiveGauge(currTime) {
-			coinsToDistributePerInternalGauge, coinsToDistributeThisEpoch, err := k.calcSplitPolicyCoins(ctx, groupGauge.SplittingPolicy, gauge, groupGauge)
-			if err != nil {
-				return err
-			}
-
-			for _, internalGaugeId := range groupGauge.InternalIds {
-				err = k.AddToGaugeRewardsFromGauge(ctx, groupGauge.GroupGaugeId, coinsToDistributePerInternalGauge, internalGaugeId)
+			for _, distrRecord := range groupGauge.Records {
+				moduleAccount := k.ak.GetModuleAddress(types.ModuleName)
+				err = k.AddToGaugeRewards(ctx, moduleAccount, allocatedCoins, distrRecord.GaugeId)
 				if err != nil {
 					return err
 				}
@@ -305,9 +306,9 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 	return nil
 }
 
-// calcSplitPolicyCoins calculates tokens to split given a policy and groupGauge.
+// syncGroupGaugeWeights updates the weights of the
 // TODO: add volume split policy
-func (k Keeper) calcSplitPolicyCoins(ctx sdk.Context, policy types.SplittingPolicy, groupGauge *types.Gauge, groupGaugeObj types.GroupGauge) (sdk.Coins, sdk.Coins, error) {
+func (k Keeper) syncGroupGaugeWeights(ctx sdk.Context, policy types.SplittingPolicy, groupGauge *types.Gauge, groupGaugeObj types.GroupGauge) (sdk.Int, error) {
 	if policy == types.Evenly {
 		remainCoins := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
 
@@ -323,9 +324,9 @@ func (k Keeper) calcSplitPolicyCoins(ctx sdk.Context, policy types.SplittingPoli
 			coinsDistPerInternalGauge = coinsDistPerInternalGauge.Add(sdk.NewCoin(coin.Denom, distPerGauge))
 		}
 
-		return coinsDistPerInternalGauge, coinsDistThisEpoch, nil
+		return sdk.Int{}, nil, coinsDistPerInternalGauge, coinsDistThisEpoch
 	} else {
-		return nil, nil, fmt.Errorf("GroupGauge id %d doesnot have enought coins to distribute.", &groupGauge.Id)
+		return sdk.Int{}, fmt.Errorf("GroupGauge id %d doesnot have enought coins to distribute.", &groupGauge.Id)
 	}
 
 }

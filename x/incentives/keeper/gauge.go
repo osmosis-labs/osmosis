@@ -18,6 +18,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
@@ -211,6 +212,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 // CreateGroupGauge creates a new gauge, that allocates rewards dynamically across its internal gauges based on the given splitting policy.
 // Note: we should expect that the internal gauges consist of the gauges that are automatically created for each pool upon pool creation, as even non-perpetual
 // external incentives would likely want to route through these.
+// TODO: change this to take in list of pool IDs instead and fetch the gauge IDs under the hood.
 func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64, gaugetype lockuptypes.LockQueryType, splittingPolicy types.SplittingPolicy) (uint64, error) {
 	if len(internalGaugeIds) == 0 {
 		return 0, fmt.Errorf("No internalGauge provided.")
@@ -226,16 +228,25 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	}
 
 	// check that all the internalGaugeIds exist
+	// TODO: when internal ids are pulled from pool IDs, initialize distr record with zero weight here.
 	internalGauges, err := k.GetGaugeFromIDs(ctx, internalGaugeIds)
 	if err != nil {
 		return 0, fmt.Errorf("Invalid internalGaugeIds, please make sure all the internalGauge have been created.")
 	}
 
 	// check that all internalGauges are perp
+	// TODO: check if they're default pool gauges instead (similar to in ExternalIncentives query).
+	// This doubles as a uniqueness check to avoid the spam vector of creating a group gauge that targets the same pool multiple times.
+	records := []poolincentivestypes.DistrRecord{}
 	for _, gauge := range internalGauges {
 		if !gauge.IsPerpetual {
 			return 0, fmt.Errorf("Internal Gauge id %d is non-perp, all internalGauge must be perpetual Gauge.", gauge.Id)
 		}
+
+		records = append(records, poolincentivestypes.DistrRecord{
+			GaugeId: gauge.Id,
+			Weight:  sdk.ZeroInt(),
+		})
 	}
 
 	nextGaugeId := k.GetLastGaugeID(ctx) + 1
@@ -261,7 +272,7 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 
 	newGroupGauge := types.GroupGauge{
 		GroupGaugeId:    nextGaugeId,
-		InternalIds:     internalGaugeIds,
+		Records:         records,
 		SplittingPolicy: splittingPolicy,
 	}
 
@@ -280,28 +291,12 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	return nextGaugeId, nil
 }
 
-// AddToGaugeRewardsFromGauge transfer coins from groupGaugeId to InternalGaugeId.
+// AddToGaugeRewardsFromGauge transfer coins from a group gauge to its internal gauges.
 // Prior to calling this function, we make sure that the internalGaugeId is linked with the associated groupGaugeId.
 // Note: we donot have to bankSend for this gauge transfer because all the available incentive has already been bank sent
 // when we create Group Gauge. Now we are just allocating funds from groupGauge to internalGauge.
-func (k Keeper) AddToGaugeRewardsFromGauge(ctx sdk.Context, groupGaugeId uint64, coins sdk.Coins, internalGaugeId uint64) error {
-	// check if the internalGaugeId is present in groupGauge
-	groupGaugeObj, err := k.GetGroupGaugeById(ctx, groupGaugeId)
-	if err != nil {
-		return err
-	}
-	found := false
-	for _, val := range groupGaugeObj.InternalIds {
-		if val == internalGaugeId {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		return fmt.Errorf("InternalGaugeId %d is not present in groupGauge: %v", internalGaugeId, groupGaugeObj.InternalIds)
-	}
-
+// CONTRACT: internalGaugeId should be present in the group gauge.
+func (k Keeper) addToGaugeRewardsFromGauge(ctx sdk.Context, groupGaugeId uint64, coins sdk.Coins, internalGaugeId uint64) error {
 	groupGauge, err := k.GetGaugeByID(ctx, groupGaugeId)
 	if err != nil {
 		return err

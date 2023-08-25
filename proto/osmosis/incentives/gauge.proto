@@ -6,6 +6,7 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/lockup/lock.proto";
+import "osmosis/pool-incentives/v1beta1/incentives.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v17/x/incentives/types";
 
@@ -63,7 +64,8 @@ enum SplittingPolicy {
 // internalGauges.
 message GroupGauge {
   uint64 group_gauge_id = 1;
-  repeated uint64 internal_ids = 2;
+  osmosis.poolincentives.v1beta1.DistrInfo distr_info = 2
+      [ (gogoproto.nullable) = false ];
   SplittingPolicy splitting_policy = 3;
 }
 
