@@ -1,6 +1,7 @@
 package superfluid
 
 import (
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
@@ -14,6 +15,11 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper) {
 		panic(err)
 	}
 	if numBlocksSinceEpochStart == 0 {
-		k.AfterEpochStartBeginBlock(ctx)
+		// catch any panics/errors in superfluid, and revert begin block logic if it occurs.
+		//nolint:errcheck
+		osmoutils.ApplyFuncIfNoError(ctx, func(ctx2 sdk.Context) error {
+			k.AfterEpochStartBeginBlock(ctx2)
+			return nil
+		})
 	}
 }
