@@ -1291,7 +1291,6 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 
 	// Instantiate the counter contract on chain A
 	contractAddr := s.UploadAndInstantiateCounter(chainA)
-	fmt.Println("contractAddr PacketForwarding", contractAddr)
 
 	transferAmount := int64(10)
 	validatorAddr := chainANode.GetWallet(initialization.ValidatorWalletName)

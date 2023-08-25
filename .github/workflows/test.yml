@@ -22,11 +22,9 @@ jobs:
   get_diff:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Check out repository code
+      - name: Check out repository code
         uses: actions/checkout@v3
-      -
-        name: Get git diff
+      - name: Get git diff
         uses: technote-space/get-diff-action@v6.1.2
         with:
           PATTERNS: |
@@ -143,19 +141,16 @@ jobs:
         uses: jwalton/gh-docker-logs@v2
         with:
           dest: "./logs"
-      -
-        name: Tar logs
+      - name: Tar logs
         if: failure()
         run: tar cvzf ./logs.tgz ./logs
-      -
-        name: Upload logs to GitHub
+      - name: Upload logs to GitHub
         uses: actions/upload-artifact@v3
         with:
           name: logs.tgz
           path: ./logs.tgz
         if: failure()
-      -
-        name: 🧹 Clean up Osmosis Home
+      - name: 🧹 Clean up Osmosis Home
         if: always()
         run: rm -rf $HOME/.osmosisd/ || true
       - name: Clean up E2E Docker containers

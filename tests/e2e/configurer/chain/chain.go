@@ -268,10 +268,6 @@ func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig) (u
 
 	var wg sync.WaitGroup
 
-	node.DepositProposal(propNumber, false)
-
-	var wg sync.WaitGroup
-
 	for _, n := range c.NodeConfigs {
 		wg.Add(1)
 		go func(nodeConfig *NodeConfig) {

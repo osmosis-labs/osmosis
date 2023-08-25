@@ -16,6 +16,8 @@ service Msg {
   rpc ChangeAdmin(MsgChangeAdmin) returns (MsgChangeAdminResponse);
   rpc SetDenomMetadata(MsgSetDenomMetadata)
       returns (MsgSetDenomMetadataResponse);
+  rpc SetBeforeSendHook(MsgSetBeforeSendHook)
+      returns (MsgSetBeforeSendHookResponse);
   rpc ForceTransfer(MsgForceTransfer) returns (MsgForceTransferResponse);
 }
 
@@ -100,10 +102,9 @@ message MsgSetBeforeSendHook {
       [ (gogoproto.moretags) = "yaml:\"cosmwasm_address\"" ];
 }
 
-// // MsgSetBeforeSendHookResponse defines the response structure for an
-// executed
-// // MsgSetBeforeSendHook message.
-// message MsgSetBeforeSendHookResponse {}
+// MsgSetBeforeSendHookResponse defines the response structure for an executed
+// MsgSetBeforeSendHook message.
+message MsgSetBeforeSendHookResponse {}
 
 // MsgSetDenomMetadata is the sdk.Msg type for allowing an admin account to set
 // the denom's bank metadata

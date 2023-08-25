@@ -83,11 +83,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5930](https://github.com/osmosis-labs/osmosis/pull/5930) Updating Protorev Binary Search Range Logic with CL Pools
 * [#5950](https://github.com/osmosis-labs/osmosis/pull/5950) fix: spot price for cosmwasm pool types
 
-### BugFix
-
-* [#5831](https://github.com/osmosis-labs/osmosis/pull/5831) Fix superfluid_delegations query
-* [#5835](https://github.com/osmosis-labs/osmosis/pull/5835) Fix println's for "amountZeroInRemainingBigDec before fee" making it into production
-
 ### Misc Improvements
 
 * [#5534](https://github.com/osmosis-labs/osmosis/pull/5534) fix: fix the account number of x/tokenfactory module account

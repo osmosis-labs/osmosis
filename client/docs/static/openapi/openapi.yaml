@@ -12113,9 +12113,12 @@ paths:
                             }
       tags:
         - Query
-  "/osmosis/superfluid/v1beta1/user_superfluid_positions_per_pool/{delegator_address}/{concentrated_pool_id}":
-    get:
-      operationId: UserSuperfluidPositionsPerConcentratedPoolBreakdown
+  "/osmosis/tokenfactory/v1beta1/denoms/{denom}/authority_metadata":
+      get:
+      summary: |-
+        DenomAuthorityMetadata defines a gRPC query method for fetching
+        DenomAuthorityMetadata for a particular denom.
+      operationId: DenomAuthorityMetadata
       responses:
         "200":
           description: A successful response.
@@ -12124,47 +12127,34 @@ paths:
               schema:
                 type: object
                 properties:
-                  cl_pool_user_position_records:
-                    type: array
-                    items:
+                  authority_metadata:
                       type: object
                       properties:
-                        validator_address:
+                        admin:
                           type: string
-                        position_id:
-                          type: string
-                          format: uint64
-                        lock_id:
-                          type: string
-                          format: uint64
-                        delegation_amount:
-                          type: object
-                          properties:
-                            denom:
-                              type: string
-                            amount:
-                              type: string
-                          description: >-
-                            Coin defines a token with a denomination and an amount.
+                          title: Can be empty for no admin, or a valid osmosis address
+                      description: >-
+                        DenomAuthorityMetadata specifies metadata for addresses that have specific 
+                        capabilities over a token factory denom. Right now there is only one Admin
+                        permission, but is planned to be extended to the future.
+                      description: >-
+                        QueryDenomAuthorityMetadataResponse defines the response structure for the
+
+                        DenomAuthorityMetadata gRPC query.
+                  equivalent_staked_amount:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
 
 
-                            NOTE: The amount field is an Int which implements the custom method
+                      NOTE: The amount field is an Int which implements the custom method
 
-                            signatures required by gogoproto.
-                        equivalent_staked_amount:
-                          type: object
-                          properties:
-                            denom:
-                              type: string
-                            amount:
-                              type: string
-                          description: >-
-                            Coin defines a token with a denomination and an amount.
-
-
-                            NOTE: The amount field is an Int which implements the custom method
-
-                            signatures required by gogoproto.
+                      signatures required by gogoproto.
         default:
           description: An unexpected error response.
           content:

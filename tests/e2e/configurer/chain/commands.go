@@ -217,15 +217,6 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) int {
 	proposalID, err := extractProposalIdFromResponse(resp.String())
 	require.NoError(n.t, err)
 
-	startIndex := strings.Index(resp.String(), `[{"key":"proposal_id","value":"`) + len(`[{"key":"proposal_id","value":"`)
-	endIndex := strings.Index(resp.String()[startIndex:], `"`)
-
-	// Extract the proposal ID substring
-	proposalIDStr := resp.String()[startIndex : startIndex+endIndex]
-
-	// Convert the proposal ID from string to int
-	proposalID, _ := strconv.Atoi(proposalIDStr)
-
 	n.LogActionF("successfully submitted param change proposal")
 
 	return proposalID
