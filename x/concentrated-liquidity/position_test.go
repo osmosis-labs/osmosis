@@ -2304,17 +2304,17 @@ func (s *KeeperTestSuite) TestMinSpotPriceMigration_CapitalEfficiency() {
 			expectedMultError: sdk.NewDecWithPrec(85, 2),
 		},
 		{
-			name:      "on-chain worst case in pool 1078",
+			name:      "on-chain worst case in pool 1111",
 			tokenZero: ETH,
 			tokenOne:  bondDenom,
-			// This yields a 0.038 spot price.
-			originalLPZero: 10000000,
-			originalLPOne:  380000,
+			// This yields a 6.6031e-05 spot price.
+			originalLPZero: 1000000000000,
+			originalLPOne:  66031000,
 
 			// This is a theoretical on-chain worst case scenario
-			// constructed from pool 1078 that has a spot price of 0.038 on
-			// 2023-08-23.
-			expectedMultError: sdk.NewDecWithPrec(11, 6),
+			// constructed from pool 1111 that has a spot price of 6.6031e-05 on
+			// 2023-08-25.
+			expectedMultError: sdk.NewDecWithPrec(12, 5),
 		},
 	}
 
