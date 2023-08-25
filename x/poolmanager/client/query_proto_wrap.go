@@ -339,7 +339,6 @@ func (q Querier) estimateTradeBasedOnPriceImpactBalancerPool(
 	swapModule types.PoolModuleI,
 	poolI types.PoolI,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
-
 	// There isn't a case where the tokenOut could be zero or an error is received but those possibilities are handled
 	// anyway.
 	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, sdk.ZeroDec())
@@ -441,7 +440,6 @@ func (q Querier) estimateTradeBasedOnPriceImpactStableSwapPool(
 	swapModule types.PoolModuleI,
 	poolI types.PoolI,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
-
 	var tokenOut sdk.Coin
 	var err error
 	err = osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
@@ -549,7 +547,6 @@ func (q Querier) estimateTradeBasedOnPriceImpactConcentratedLiquidity(
 	swapModule types.PoolModuleI,
 	poolI types.PoolI,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
-
 	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, sdk.ZeroDec())
 	// If there was no error we attempt to validate if the output is below the adjustedMaxPriceImpact.
 	if err == nil {
