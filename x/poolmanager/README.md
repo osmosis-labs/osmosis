@@ -344,7 +344,7 @@ The `EstimateTradeBasedOnPriceImpact` query allows users to estimate a trade for
 
 The response would be `EstimateTradeBasedOnPriceImpactResponse` which contains the following data:
 
-- **InputCoin**: (`sdk.Coin`): the actual input amount that would be trade-able under that price impact (might be the full amount).
+- **InputCoin**: (`sdk.Coin`): the actual input amount that would be tradeable under that price impact (might be the full amount).
 - **OutputCoin**: (`sdk.Coin`): the amount of the `ToCoinDenom` tokens being received for the actual `InputCoin` trade.
 
 With that data it is easier for any entity to fill in the `MsgSwapExactAmountIn` details. The response could be filled with a valid trade or an empty one, an empty one indicates that no trade could be estimated.
@@ -416,7 +416,7 @@ Here is the following process for the `estimateTradeBasedOnPriceImpactStableSwap
 
 6. If the new trade amount leads to a panic, the function adjusts the `highAmount` downwards to continue the search.
 
-7.  If the new trade amount does not cause an error or panic, and its `priceDeviation` is within limits, the function adjusts the `lowAmount` upwards to continue the search.
+7. If the new trade amount does not cause an error or panic, and its `priceDeviation` is within limits, the function adjusts the `lowAmount` upwards to continue the search.
 
 8.  If the loop completes without finding an acceptable trade amount, the function returns zero coins for both the input and the output.
 
@@ -451,9 +451,9 @@ Here is the following process for the `estimateTradeBasedOnPriceImpactConcentrat
 
 6. If no error occurs with the new trade amount and the `priceDeviation` is within limits, the function adjusts `lowAmount` upwards.
 
-7.  If an error occurs with the new trade amount, the function adjusts `highAmount` downwards to continue the search.
+7. If an error occurs with the new trade amount, the function adjusts `highAmount` downwards to continue the search.
 
-8.  If the loop completes without finding an acceptable trade amount, the function returns zero coins for both input and output.
+8. If the loop completes without finding an acceptable trade amount, the function returns zero coins for both input and output.
 
-9.  If a viable trade amount is found, the function performs a final estimation of `tokenOut` considering the swap fee and returns the estimated trade.
+9. If a viable trade amount is found, the function performs a final estimation of `tokenOut` considering the swap fee and returns the estimated trade.
 

@@ -1,11 +1,13 @@
 package client
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
@@ -322,7 +324,7 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 			ctx, req, spotPrice, adjustedMaxPriceImpact, swapModule, poolI,
 		)
 	default:
-		return nil, status.Error(codes.Internal, "pool not supported")
+		return nil, status.Error(codes.Internal, "pool type not supported")
 	}
 }
 
