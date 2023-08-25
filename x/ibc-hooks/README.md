@@ -2,6 +2,8 @@
 
 ## Wasm Hooks
 
+PROOF
+
 The wasm hook is an IBC middleware which is used to allow ICS-20 token transfers to initiate contract calls.
 This allows cross-chain contract calls, that involve token movement. 
 This is useful for a variety of usecases.
