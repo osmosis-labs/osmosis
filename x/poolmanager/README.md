@@ -433,8 +433,6 @@ The following is the example input/output when executing `CalcOutAmtGivenIn` on 
 
 Here is the following process for the `estimateTradeBasedOnPriceImpactConcentratedLiquidity` function:
 
-Certainly, here's a breakdown of how the function logic aligns with the expected document points:
-
 1. The function starts by attempting to estimate the output amount (`tokenOut`) for a given input amount (`req.FromCoin`), using the `CalcOutAmtGivenIn` method of the `swapModule`.
 
    1. If `tokenOut` is zero, it means the amount being traded is too small. The function returns zero coins for both input and output.
