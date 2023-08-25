@@ -66,7 +66,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 		if !found {
 			// continue if current delegation is 0, in case its really a dust delegation
 			// that becomes worth something after refresh.
-			k.Logger(ctx).Info(fmt.Sprintf("Existing delegation not found for %s with %s during superfluid refresh."+
+			k.Logger(ctx).Debug(fmt.Sprintf("Existing delegation not found for %s with %s during superfluid refresh."+
 				" It may have been previously bonded, but now unbonded.", mAddr.String(), acc.ValAddr))
 		} else {
 			currentAmount = validator.TokensFromShares(delegation.Shares).RoundInt()
@@ -95,7 +95,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 				ctx.Logger().Error("Error in forceUndelegateAndBurnOsmoTokens, state update reverted", err)
 			}
 		} else {
-			ctx.Logger().Info("Intermediary account already has correct delegation amount?" +
+			ctx.Logger().Debug("Intermediary account already has correct delegation amount?" +
 				" This with high probability implies the exact same spot price as the last epoch," +
 				"and no delegation changes.")
 		}
