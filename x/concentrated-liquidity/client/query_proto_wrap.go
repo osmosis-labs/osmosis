@@ -1,14 +1,12 @@
 package client
 
 import (
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
 	clquery "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method

@@ -5,13 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/stretchr/testify/require"
-
 	ibcchanneltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-
 	"github.com/osmosis-labs/osmosis/v17/app"
 	v8 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v9"
+	"github.com/stretchr/testify/require"
 )
 
 func noOpAnteDecorator() sdk.AnteHandler {

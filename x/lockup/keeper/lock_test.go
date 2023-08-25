@@ -6,12 +6,10 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable coins

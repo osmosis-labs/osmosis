@@ -7,7 +7,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	sdkrand "github.com/osmosis-labs/osmosis/v17/simulation/simtypes/random"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"

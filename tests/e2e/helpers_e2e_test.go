@@ -7,7 +7,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"

@@ -4,9 +4,8 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/client/cli"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseCoinsNoSort(t *testing.T) {

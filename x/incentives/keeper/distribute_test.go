@@ -5,13 +5,12 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
-
 	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	poolincentivetypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/stretchr/testify/suite"
 )
 
 var _ = suite.TestingSuite(nil)

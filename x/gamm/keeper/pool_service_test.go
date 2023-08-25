@@ -6,14 +6,13 @@ import (
 
 	_ "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-
 	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/stretchr/testify/require"
 )
 
 var (

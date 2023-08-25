@@ -3,10 +3,9 @@ package genesis_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types/genesis"
+	"github.com/stretchr/testify/require"
 )
 
 func TestValidateGenesis(t *testing.T) {

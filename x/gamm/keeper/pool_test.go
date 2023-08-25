@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
-
 	"github.com/osmosis-labs/osmosis/v17/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"

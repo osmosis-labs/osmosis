@@ -3,15 +3,13 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	osmoapp "github.com/osmosis-labs/osmosis/v17/app"
 	"github.com/osmosis-labs/osmosis/v17/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/mint/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 const (

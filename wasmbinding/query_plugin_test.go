@@ -15,19 +15,16 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	proto "github.com/golang/protobuf/proto" //nolint:staticcheck // we're intentionally using this deprecated package to be compatible with cosmos protos
+	"github.com/osmosis-labs/osmosis/v17/app"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v17/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	gammv2types "github.com/osmosis-labs/osmosis/v17/x/gamm/v2types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	gammv2types "github.com/osmosis-labs/osmosis/v17/x/gamm/v2types"
-
-	"github.com/osmosis-labs/osmosis/v17/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-
-	"github.com/osmosis-labs/osmosis/v17/wasmbinding"
 )
 
 type StargateTestSuite struct {

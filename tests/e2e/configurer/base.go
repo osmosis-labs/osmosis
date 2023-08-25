@@ -12,12 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/containers"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
+	"github.com/stretchr/testify/require"
 )
 
 // baseConfigurer is the base implementation for the

@@ -4,7 +4,6 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/types"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
-
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"

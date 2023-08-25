@@ -3,11 +3,10 @@ package gov_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
+	"github.com/stretchr/testify/suite"
 )
 
 type KeeperTestSuite struct {

@@ -2,7 +2,6 @@ package v11
 
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
-
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 )
 

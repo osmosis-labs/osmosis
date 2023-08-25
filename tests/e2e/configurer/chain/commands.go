@@ -12,27 +12,21 @@ import (
 	"sync"
 	"time"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	"github.com/tendermint/tendermint/libs/bytes"
-
+	app "github.com/osmosis-labs/osmosis/v17/app"
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
-
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/p2p"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-
-	app "github.com/osmosis-labs/osmosis/v17/app"
-
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 )
 
 // The value is returned as a string, so we have to unmarshal twice

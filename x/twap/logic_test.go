@@ -7,8 +7,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
@@ -17,6 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/twap"
 	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v17/x/twap/types/twapmock"
+	"github.com/stretchr/testify/require"
 )
 
 var (

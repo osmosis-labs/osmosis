@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	simapp "github.com/osmosis-labs/osmosis/v17/app"
 	"github.com/osmosis-labs/osmosis/v17/x/mint/simulation"
 	"github.com/osmosis-labs/osmosis/v17/x/mint/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDecodeStore(t *testing.T) {

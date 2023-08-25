@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
 )
 
 var _ = suite.TestingSuite(nil)

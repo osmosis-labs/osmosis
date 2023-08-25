@@ -9,9 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/joho/godotenv"
-	"github.com/spf13/cobra"
-
 	"github.com/osmosis-labs/osmosis/v17/app"
+	"github.com/spf13/cobra"
 )
 
 const (

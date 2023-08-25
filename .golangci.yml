@@ -20,7 +20,7 @@ linters:
     - forcetypeassert
     - goconst
     - gofmt
-    - goimports
+    - gci
     - goheader
     - gomodguard
     - goprintffuncname

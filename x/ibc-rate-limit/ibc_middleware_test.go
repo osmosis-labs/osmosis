@@ -7,19 +7,16 @@ import (
 	"testing"
 	"time"
 
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
-	"github.com/stretchr/testify/suite"
-
-	txfeetypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
-
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v17/tests/osmosisibctesting"
 	"github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+	"github.com/stretchr/testify/suite"
 )
 
 type MiddlewareTestSuite struct {

@@ -4,9 +4,8 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-
 	"github.com/osmosis-labs/osmosis/v17/x/mint/types"
+	"github.com/stretchr/testify/require"
 )
 
 // TestGetInflationProportion sanity checks that inflation

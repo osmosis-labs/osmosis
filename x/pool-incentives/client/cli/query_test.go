@@ -4,10 +4,9 @@ import (
 	gocontext "context"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
+	"github.com/stretchr/testify/suite"
 )
 
 type QueryTestSuite struct {

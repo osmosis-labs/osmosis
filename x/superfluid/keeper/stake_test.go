@@ -3,19 +3,17 @@ package keeper_test
 import (
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
+	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
-
-	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type superfluidDelegation struct {

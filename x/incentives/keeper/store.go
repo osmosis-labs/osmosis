@@ -5,12 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetLastGaugeID returns the last used gauge ID.

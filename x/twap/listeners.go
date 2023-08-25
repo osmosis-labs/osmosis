@@ -2,7 +2,6 @@ package twap
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"

@@ -3,10 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types"
+	"github.com/stretchr/testify/suite"
 )
 
 type CWPoolGovTypesSuite struct {

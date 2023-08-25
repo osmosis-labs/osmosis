@@ -8,14 +8,13 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	v10 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v10"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 const (

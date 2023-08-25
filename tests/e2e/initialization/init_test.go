@@ -8,9 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
+	"github.com/stretchr/testify/require"
 )
 
 const forkHeight = 10

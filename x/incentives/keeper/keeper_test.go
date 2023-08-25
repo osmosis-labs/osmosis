@@ -5,12 +5,11 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
+	"github.com/stretchr/testify/suite"
 )
 
 type KeeperTestSuite struct {

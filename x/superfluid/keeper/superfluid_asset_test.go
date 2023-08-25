@@ -1,9 +1,8 @@
 package keeper_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestSuperfluidAssetSetGetDeleteFlow() {

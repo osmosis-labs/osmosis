@@ -13,12 +13,10 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-
-	gammv2types "github.com/osmosis-labs/osmosis/v17/x/gamm/v2types"
-
 	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
 	downtimequerytypes "github.com/osmosis-labs/osmosis/v17/x/downtime-detector/client/queryproto"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	gammv2types "github.com/osmosis-labs/osmosis/v17/x/gamm/v2types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v17/x/mint/types"

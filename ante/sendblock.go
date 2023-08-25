@@ -3,11 +3,10 @@ package ante
 import (
 	"fmt"
 
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/spf13/cast"
-
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
 
 type SendBlockOptions struct {

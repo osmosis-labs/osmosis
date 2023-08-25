@@ -5,10 +5,9 @@ import (
 	"testing"
 
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 )
 
 type UpgradeTestSuite struct {

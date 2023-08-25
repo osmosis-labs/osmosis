@@ -4,12 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
@@ -18,6 +14,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var DefaultGammAsset = "gamm/pool/1"

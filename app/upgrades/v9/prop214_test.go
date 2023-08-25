@@ -3,10 +3,9 @@ package v9_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	v9 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v9"
+	"github.com/stretchr/testify/suite"
 )
 
 type UpgradeTestSuite struct {

@@ -1,10 +1,9 @@
 package types // noalias
 
 import (
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // AccountKeeper defines the contract required for account APIs.

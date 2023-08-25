@@ -3,9 +3,8 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenesisStateValidate(t *testing.T) {

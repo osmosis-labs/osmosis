@@ -5,9 +5,8 @@ import (
 	"embed"
 	"fmt"
 
-	_ "github.com/mattn/go-sqlite3"
-
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+	_ "github.com/mattn/go-sqlite3"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 

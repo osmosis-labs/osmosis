@@ -3,11 +3,10 @@ package txfees_test
 import (
 	"testing"
 
+	simapp "github.com/osmosis-labs/osmosis/v17/app"
 	"github.com/stretchr/testify/require"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	simapp "github.com/osmosis-labs/osmosis/v17/app"
 )
 
 func TestSetBaseDenomOnInitBlock(t *testing.T) {

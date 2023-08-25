@@ -5,25 +5,20 @@ import (
 	"fmt"
 	"time"
 
-	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/osmosis-labs/osmosis/v17/app/keepers"
+	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
-
-	"github.com/osmosis-labs/osmosis/v17/app/keepers"
-	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
-	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
-
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
 
 const (

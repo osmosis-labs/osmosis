@@ -7,15 +7,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/stretchr/testify/suite"
-
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
-
 	valPref "github.com/osmosis-labs/osmosis/v17/x/valset-pref"
+	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
+	"github.com/stretchr/testify/suite"
 )
 
 type KeeperTestSuite struct {

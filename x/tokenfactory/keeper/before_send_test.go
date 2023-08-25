@@ -5,10 +5,8 @@ import (
 	"os"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
-
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
 )
 
 type SendMsgTestCase struct {

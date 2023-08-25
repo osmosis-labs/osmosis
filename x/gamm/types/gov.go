@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
 )
 

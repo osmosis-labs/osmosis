@@ -8,8 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
 	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
@@ -17,6 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
+	"github.com/stretchr/testify/require"
 )
 
 type BenchTestSuite struct {

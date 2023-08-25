@@ -6,10 +6,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/v17/x/twap"
-
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v17/x/twap"
 	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
 )
 

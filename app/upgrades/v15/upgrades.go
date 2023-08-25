@@ -1,33 +1,28 @@
 package v15
 
 import (
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/types"
-
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/types"
 	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v4/keeper"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
-
-	"github.com/osmosis-labs/osmosis/v17/wasmbinding"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
-
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v17/wasmbinding"
 	gammkeeper "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
 	"github.com/osmosis-labs/osmosis/v17/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 func CreateUpgradeHandler(

@@ -5,15 +5,12 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	simapp "github.com/osmosis-labs/osmosis/v17/app"
+	pool_incentives "github.com/osmosis-labs/osmosis/v17/x/pool-incentives"
+	"github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	pool_incentives "github.com/osmosis-labs/osmosis/v17/x/pool-incentives"
-
-	simapp "github.com/osmosis-labs/osmosis/v17/app"
-
-	"github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 )
 
 var (

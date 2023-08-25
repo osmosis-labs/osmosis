@@ -2,7 +2,6 @@ package v6
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 )
 

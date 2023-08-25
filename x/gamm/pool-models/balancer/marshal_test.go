@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/require"
-
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
+	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPoolJson(t *testing.T) {

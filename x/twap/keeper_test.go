@@ -6,12 +6,11 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v17/x/twap"
 	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
+	"github.com/stretchr/testify/suite"
 )
 
 // TODO: Consider switching this everywhere

@@ -3,10 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
 	"github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDeconstructDenom(t *testing.T) {

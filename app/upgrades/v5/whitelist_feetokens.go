@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	gammkeeper "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/txfees/types"
 )

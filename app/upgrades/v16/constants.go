@@ -1,10 +1,8 @@
 package v16
 
 import (
-	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
-
 	store "github.com/cosmos/cosmos-sdk/store/types"
-
+	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types"
 )

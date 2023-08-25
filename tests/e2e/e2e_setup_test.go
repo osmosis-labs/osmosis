@@ -6,9 +6,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	configurer "github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer"
+	"github.com/stretchr/testify/suite"
 )
 
 const (

@@ -6,16 +6,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
-
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	osmosim "github.com/osmosis-labs/osmosis/v17/simulation/executor"
 	"github.com/osmosis-labs/osmosis/v17/simulation/simtypes/simlogger"
 	txfeetypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 )
 
 // Profile with:

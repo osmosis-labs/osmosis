@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"

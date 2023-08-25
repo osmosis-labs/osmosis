@@ -4,17 +4,13 @@ import (
 	"testing"
 	time "time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
+	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-
-	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 )
 
 // TestMsgCreateGauge tests if valid/invalid create gauge messages are properly validated/invalidated

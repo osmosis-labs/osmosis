@@ -4,15 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 // a helper function used to multiply coins

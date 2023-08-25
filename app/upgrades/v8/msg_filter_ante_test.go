@@ -5,11 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/stretchr/testify/require"
-
 	"github.com/osmosis-labs/osmosis/v17/app"
 	v8 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v8"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
+	"github.com/stretchr/testify/require"
 )
 
 func noOpAnteDecorator() sdk.AnteHandler {

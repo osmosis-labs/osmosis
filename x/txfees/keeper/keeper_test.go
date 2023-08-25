@@ -3,15 +3,12 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	osmosisapp "github.com/osmosis-labs/osmosis/v17/app"
-
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+	"github.com/stretchr/testify/suite"
 )
 
 type KeeperTestSuite struct {

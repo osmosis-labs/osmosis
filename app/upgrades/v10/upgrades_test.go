@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	v10 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v10"
+	"github.com/stretchr/testify/suite"
 )
 
 type UpgradeTestSuite struct {

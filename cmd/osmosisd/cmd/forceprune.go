@@ -7,16 +7,14 @@ import (
 	"os/exec"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
-
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
+	"github.com/tendermint/tendermint/config"
 	tmstore "github.com/tendermint/tendermint/store"
 	tmdb "github.com/tendermint/tm-db"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/tendermint/tendermint/config"
 )
 
 const (

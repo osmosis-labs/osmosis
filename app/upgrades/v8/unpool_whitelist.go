@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	gammkeeper "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper"
 )

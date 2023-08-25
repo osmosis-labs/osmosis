@@ -5,10 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMaxSpotPriceEquality(t *testing.T) {

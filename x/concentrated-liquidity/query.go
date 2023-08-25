@@ -6,8 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	db "github.com/tendermint/tm-db"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
@@ -15,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/swapstrategy"
 	types "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	db "github.com/tendermint/tm-db"
 )
 
 // This file contains query-related helper functions for the Concentrated Liquidity module

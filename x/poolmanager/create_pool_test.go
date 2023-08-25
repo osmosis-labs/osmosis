@@ -5,7 +5,6 @@ import (
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 	cwmodel "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/model"

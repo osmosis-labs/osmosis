@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
-
 	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
 )
 

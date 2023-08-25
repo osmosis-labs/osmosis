@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"

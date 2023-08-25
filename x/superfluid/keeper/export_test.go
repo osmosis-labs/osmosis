@@ -4,7 +4,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	types "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"

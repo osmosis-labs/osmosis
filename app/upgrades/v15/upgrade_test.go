@@ -11,17 +11,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
-
-	"github.com/stretchr/testify/suite"
-
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	v15 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v15"
 	gamm "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
 	balancer "github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/stretchr/testify/suite"
 )
 
 type UpgradeTestSuite struct {

@@ -5,15 +5,13 @@ import (
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 	valsettypes "github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GetTotalSyntheticAssetsLocked returns the total amount of the given denom locked.

@@ -6,22 +6,17 @@ import (
 	"strconv"
 	"time"
 
-	//nolint:staticcheck
-	"github.com/golang/protobuf/proto"
-	"github.com/spf13/cobra"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/wasmbinding"
-
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
+	//nolint:staticcheck
+	"github.com/golang/protobuf/proto"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v17/wasmbinding"
 	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
 	downtimequerytypes "github.com/osmosis-labs/osmosis/v17/x/downtime-detector/client/queryproto"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
@@ -34,6 +29,7 @@ import (
 	twapquerytypes "github.com/osmosis-labs/osmosis/v17/x/twap/client/queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
+	"github.com/spf13/cobra"
 )
 
 // convert requested proto struct into proto marshalled bytes

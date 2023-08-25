@@ -3,11 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
+	"github.com/stretchr/testify/require"
 )
 
 // TestDistrRecord is a test on the weights of distribution gauges.

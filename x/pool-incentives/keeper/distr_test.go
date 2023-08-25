@@ -1,9 +1,8 @@
 package keeper_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 )
 
 func (s *KeeperTestSuite) TestAllocateAsset() {

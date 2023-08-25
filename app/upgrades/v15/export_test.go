@@ -4,13 +4,10 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v4/keeper"
-
-	ibcratelimit "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit"
-
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
+	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v4/keeper"
 	gammkeeper "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit"
 	"github.com/osmosis-labs/osmosis/v17/x/poolmanager"
 )
 

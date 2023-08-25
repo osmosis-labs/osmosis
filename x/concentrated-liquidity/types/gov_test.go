@@ -5,9 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/require"
-
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCreateConcentratedLiquidityPoolsProposalMarshalUnmarshal(t *testing.T) {
