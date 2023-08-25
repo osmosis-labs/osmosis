@@ -271,8 +271,25 @@ func (k Keeper) distributeInternal(
 	if lockSum.IsZero() {
 		return nil, nil
 	}
-
+	
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+
+	// In this case, remove redundant cases.
+	// Namely: gauge empty OR gauge coins undistributable.
+	if remainCoins.Empty() {
+		ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is empty, why is it being ran %d. Balancer code", gauge.Id))
+		err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+		return totalDistrCoins, err
+	}
+
+	// Remove some spam gauges, is state compatible.
+	// If they're to pool 1 they can't distr at this small of a quantity.
+	if remainCoins.Len() == 1 && remainCoins[0].Amount.LTE(sdk.NewInt(10)) && gauge.DistributeTo.Denom == "gamm/pool/1" && remainCoins[0].Denom != "uosmo" {
+		ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is perceived spam, skipping %d", gauge.Id))
+		err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+		return totalDistrCoins, err
+	}
+
 	// if its a perpetual gauge, we set remaining epochs to 1.
 	// otherwise is is a non perpetual gauge and we determine how many epoch payouts are left
 	remainEpochs := uint64(1)
