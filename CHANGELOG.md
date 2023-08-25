@@ -42,6 +42,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+<<<<<<< HEAD
+=======
+### Misc Improvements
+
+* [#6161](https://github.com/osmosis-labs/osmosis/pull/6161) Reduce CPU time of epochs
+
+### API breaks
+
+* [#6071](https://github.com/osmosis-labs/osmosis/pull/6071) reduce number of returns for UpdatePosition and TicksToSqrtPrice functions
+* [#5906](https://github.com/osmosis-labs/osmosis/pull/5906) Add `AccountLockedCoins` query in lockup module to stargate whitelist.
+
+## v17.0.0
+
+### API breaks
+
+* [#6014](https://github.com/osmosis-labs/osmosis/pull/6014) refactor: reduce the number of returns in superfluid migration
+* [#5983](https://github.com/osmosis-labs/osmosis/pull/5983) refactor(CL): 6 return values in CL CreatePosition with a struct
+* [#6004](https://github.com/osmosis-labs/osmosis/pull/6004) reduce number of returns for creating full range position
+* [#6018](https://github.com/osmosis-labs/osmosis/pull/6018) golangci: add unused parameters linter
+* [#6033](https://github.com/osmosis-labs/osmosis/pull/6033) change tick API from sdk.Dec to osmomath.BigDec
+
+### Features
+
+* [#5072](https://github.com/osmosis-labs/osmosis/pull/5072) IBC-hooks: Add support for async acks when processing onRecvPacket
+
+>>>>>>> 19c3c508 (State compatible epoch speedup from v18 (#6161))
 ### State Breaking
 
 * [#5532](https://github.com/osmosis-labs/osmosis/pull/5532) fix: Fix x/tokenfactory genesis import denoms reset x/bank existing denom metadata
