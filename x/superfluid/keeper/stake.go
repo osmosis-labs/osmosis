@@ -82,7 +82,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			adjustment := refreshedAmount.Sub(currentAmount)
 			err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc)
 			if err != nil {
-				ctx.Logger().Error("AAA Error in mintOsmoTokensAndDelegate, state update reverted", err)
+				ctx.Logger().Error(fmt.Sprintf("BBB Error in mintOsmoTokensAndDelegate, state update reverted: %v", err))
 			}
 		} else if currentAmount.GT(refreshedAmount) {
 			// In this case, we want to change the IA's delegated balance to be refreshed Amount
@@ -93,7 +93,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 
 			err := k.forceUndelegateAndBurnOsmoTokens(ctx, adjustment, acc)
 			if err != nil {
-				ctx.Logger().Error("AAA Error in forceUndelegateAndBurnOsmoTokens, state update reverted", err)
+				ctx.Logger().Error(fmt.Sprintf("BBB Error in forceUndelegateAndBurnOsmoTokens, state update reverted: %v", err))
 			}
 		} else {
 			ctx.Logger().Debug("Intermediary account already has correct delegation amount?" +
