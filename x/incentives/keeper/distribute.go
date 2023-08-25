@@ -265,13 +265,9 @@ func (k Keeper) distributeInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
-	denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
-	lockSum := lockuptypes.SumLocksByDenom(locks, denom)
-
-	if lockSum.IsZero() {
-		return nil, nil
+	if len(locks) == 0 {
+			return nil, nil
 	}
-	
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
 
 	// In this case, remove redundant cases.
@@ -289,7 +285,14 @@ func (k Keeper) distributeInternal(
 		err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 		return totalDistrCoins, err
 	}
+	
+	denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
+	lockSum := lockuptypes.SumLocksByDenom(locks, denom)
 
+	if lockSum.IsZero() {
+		return nil, nil
+	}
+	
 	// if its a perpetual gauge, we set remaining epochs to 1.
 	// otherwise is is a non perpetual gauge and we determine how many epoch payouts are left
 	remainEpochs := uint64(1)
