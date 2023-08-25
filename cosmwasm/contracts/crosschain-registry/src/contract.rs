@@ -39,6 +39,7 @@ pub fn instantiate(
         &ChainPFM {
             acknowledged: true,
             validated: true,
+            initiator: None,
         },
     )?;
 

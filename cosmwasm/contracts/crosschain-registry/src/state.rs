@@ -63,6 +63,8 @@ pub struct ChainPFM {
     pub acknowledged: bool,
     /// The contract has validated that the received packet is as expected
     pub validated: bool,
+    /// The address that initiated the propose_pfm flow
+    pub initiator: Option<Addr>,
 }
 
 impl ChainPFM {
@@ -71,6 +73,14 @@ impl ChainPFM {
     /// not from the same packet that was forwarded by this contract.
     pub fn is_validated(&self) -> bool {
         self.acknowledged && self.validated
+    }
+
+    pub fn new(initiator: Addr) -> Self {
+        Self {
+            acknowledged: false,
+            validated: false,
+            initiator: Some(initiator),
+        }
     }
 }
 
