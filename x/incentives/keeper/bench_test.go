@@ -47,7 +47,6 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 // genQueryCondition takes coins and durations and returns a QueryConditon struct.
 func genQueryCondition(
 	r *rand.Rand,
-	blocktime time.Time,
 	coins sdk.Coins,
 	durationOptions []time.Duration,
 ) lockuptypes.QueryCondition {
@@ -102,7 +101,7 @@ func benchmarkDistributionLogic(b *testing.B, numAccts, numDenoms, numGauges, nu
 
 		// isPerpetual := r.Int()%2 == 0
 		isPerpetual := true
-		distributeTo := genQueryCondition(r, ctx.BlockTime(), simCoins, durationOptions)
+		distributeTo := genQueryCondition(r, simCoins, durationOptions)
 		rewards := genRewardCoins(r, simCoins)
 		startTime := ctx.BlockTime().Add(time.Duration(-1) * time.Second)
 		durationMillisecs := distributeTo.Duration.Milliseconds()

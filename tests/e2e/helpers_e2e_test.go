@@ -12,7 +12,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 )
 
 var defaultFeePerTx = sdk.NewInt(1000)
@@ -120,12 +119,6 @@ func (s *IntegrationTestSuite) updatedConcentratedPool(node *chain.NodeConfig, p
 	concentratedPool, err := node.QueryConcentratedPool(poolId)
 	s.Require().NoError(err)
 	return concentratedPool
-}
-
-func (s *IntegrationTestSuite) updatedCFMMPool(node *chain.NodeConfig, poolId uint64) gammtypes.CFMMPoolI {
-	cfmmPool, err := node.QueryCFMMPool(poolId)
-	s.Require().NoError(err)
-	return cfmmPool
 }
 
 // Assert returned positions:

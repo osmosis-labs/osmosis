@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v17/app"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -28,16 +27,15 @@ func FundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, acct sd
 }
 
 // we need to make this deterministic (same every test run), as content might affect gas costs
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
+func keyPubAddr() sdk.AccAddress {
 	key := ed25519.GenPrivKey()
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
-	return key, pub, addr
+	return addr
 }
 
 func RandomAccountAddress() sdk.AccAddress {
-	_, _, addr := keyPubAddr()
-	return addr
+	return keyPubAddr()
 }
 
 func RandomBech32AccountAddress() string {

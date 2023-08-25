@@ -296,7 +296,10 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 
 			// we distribute tokens from groupGauge to internal gauge therefore update groupGauge fields
 			// updates filledEpoch and distributedCoins
-			k.updateGaugePostDistribute(ctx, *gauge, coinsToDistributeThisEpoch)
+			err = k.updateGaugePostDistribute(ctx, *gauge, coinsToDistributeThisEpoch)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

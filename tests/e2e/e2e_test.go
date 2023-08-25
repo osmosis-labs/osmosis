@@ -32,7 +32,7 @@ import (
 )
 
 // TODO: Find more scalable way to do this
-func (s *IntegrationTestSuite) TestAllE2E() {
+func (s *IntegrationTestSuite) TestAllE2E() { //nolint:tparallel // bad things happen if we actually parallelize here.
 	// Zero Dependent Tests
 	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
 		t.Parallel()

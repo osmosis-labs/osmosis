@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	sdkrand "github.com/osmosis-labs/osmosis/v17/simulation/simtypes/random"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
@@ -155,7 +156,7 @@ func makeSimpleTwapInput(startTime time.Time, endTime time.Time, isQuoteTokenA b
 	return getTwapInput{1, quoteAssetDenom, baseAssetDenom, startTime, endTime}
 }
 
-func makeSimpleThreeAssetTwapInput(startTime time.Time, endTime time.Time, baseQuoteAB, baseQuoteCA, baseQuoteBC bool) []getTwapInput {
+func makeSimpleThreeAssetTwapInput(startTime time.Time, endTime time.Time, baseQuoteAB, baseQuoteBC bool) []getTwapInput {
 	var twapInput []getTwapInput
 	twapInput = formatSimpleTwapInput(twapInput, startTime, endTime, baseQuoteAB, denom0, denom1, 2)
 	twapInput = formatSimpleTwapInput(twapInput, startTime, endTime, baseQuoteAB, denom2, denom0, 2)
@@ -392,7 +393,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 				tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC,
 			},
 			ctxTime: tPlusOneMin,
-			input:   makeSimpleThreeAssetTwapInput(baseTime, baseTime.Add(20*time.Second), baseQuoteBA, baseQuoteCA, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapInput(baseTime, baseTime.Add(20*time.Second), baseQuoteBA, baseQuoteCB),
 			// A 10 for 10s, 5 for 10s = 150/20 = 7.5
 			// C 20 for 10s, 10 for 10s = 300/20 = 15
 			// B .1 for 10s, .2 for 10s = 3/20 = 0.15
@@ -405,7 +406,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 				tPlus20sp2ThreeAssetRecordAB, tPlus20sp2ThreeAssetRecordAC, tPlus20sp2ThreeAssetRecordBC,
 			},
 			ctxTime: tPlusOneMin,
-			input:   makeSimpleThreeAssetTwapInput(baseTime.Add(10*time.Second), baseTime.Add(30*time.Second), baseQuoteBA, baseQuoteCA, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapInput(baseTime.Add(10*time.Second), baseTime.Add(30*time.Second), baseQuoteBA, baseQuoteCB),
 			// A 5 for 10s, 2 for 10s = 70/20 = 3.5
 			// C 10 for 10s, 4 for 10s = 140/20 = 7
 			// B .2 for 10s, .5 for 10s = 7/20 = 0.35
@@ -419,7 +420,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 				tPlus20sp2ThreeAssetRecordAB, tPlus20sp2ThreeAssetRecordAC, tPlus20sp2ThreeAssetRecordBC,
 			},
 			ctxTime: tPlusOneMin,
-			input:   makeSimpleThreeAssetTwapInput(baseTime.Add(15*time.Second), baseTime.Add(30*time.Second), baseQuoteBA, baseQuoteAC, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapInput(baseTime.Add(15*time.Second), baseTime.Add(30*time.Second), baseQuoteBA, baseQuoteCB),
 			// A 5 for 5s, 2 for 10s = 45/15 = 3
 			// C 10 for 5s, 4 for 10s = 140/15 = 6
 			// B .2 for 5s, .5 for 10s = 7/15 = .4
@@ -635,7 +636,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod_ThreeAsset() {
 				recordBeforeKeepThresholdAB, recordBeforeKeepThresholdAC, recordBeforeKeepThresholdBC,
 			},
 			ctxTime: baseTimePlusKeepPeriod,
-			input:   makeSimpleThreeAssetTwapInput(baseTime, baseTimePlusKeepPeriod, baseQuoteBA, baseQuoteAC, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapInput(baseTime, baseTimePlusKeepPeriod, baseQuoteBA, baseQuoteCB),
 			// A 10 for 169200s, 30 for 3600s = 1800000/172800 = 10.416666
 			// C 20 for 169200s, 60 for 3600s = 100/172800 = 20.83333333
 			// B .1 for 169200s, .033 for 3600s = 17040/172800 = 0.0986111
@@ -647,7 +648,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod_ThreeAsset() {
 				recordBeforeKeepThresholdAB, recordBeforeKeepThresholdAC, recordBeforeKeepThresholdBC,
 			},
 			ctxTime: oneHourAfterKeepThreshold,
-			input:   makeSimpleThreeAssetTwapInput(baseTime, oneHourAfterKeepThreshold.Add(-time.Millisecond), baseQuoteBA, baseQuoteAC, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapInput(baseTime, oneHourAfterKeepThreshold.Add(-time.Millisecond), baseQuoteBA, baseQuoteCB),
 			// A 10 for 169200000ms, 30 for 7199999ms = 1907999970/176399999 = 10.81632642
 			// C 20 for 169200000ms, 60 for 7199999ms = 3815999940/176399999 = 21.6326528
 			// B .1 for 169200000ms, .033 for 7199999ms = 17159999/176399999 = 0.09727891
@@ -783,7 +784,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 
 func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 	makeSimpleThreeAssetTwapToNowInput := func(startTime time.Time, baseQuoteAB, baseQuoteAC, baseQuoteBC bool) []getTwapInput {
-		return makeSimpleThreeAssetTwapInput(startTime, startTime, baseQuoteAB, baseQuoteAC, baseQuoteBC)
+		return makeSimpleThreeAssetTwapInput(startTime, startTime, baseQuoteAB, baseQuoteBC)
 	}
 
 	tests := map[string]struct {

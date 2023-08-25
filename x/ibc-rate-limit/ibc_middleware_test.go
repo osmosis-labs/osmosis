@@ -261,7 +261,7 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	suite.Require().NoError(err)
 }
 
-func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed sdk.Int) {
+func (suite *MiddlewareTestSuite) initializeEscrow() (expectedSed sdk.Int) {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 
@@ -281,7 +281,7 @@ func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed s
 	_, _, err = suite.FullSendBToA(suite.MessageFromBToA(sdk.DefaultBondDenom, transferAmount.Sub(sendAmount)))
 	suite.Require().NoError(err)
 
-	return transferAmount, sendAmount
+	return sendAmount
 }
 
 func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {

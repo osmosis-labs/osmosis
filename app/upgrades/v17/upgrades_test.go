@@ -462,6 +462,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 					// Validate that the link is correct.
 					migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
+					suite.Require().NoError(err)
 					link := migrationInfo.BalancerToConcentratedPoolLinks[i-indexOffset]
 					suite.Require().Equal(gammPoolId, link.BalancerPoolId)
 					suite.Require().Equal(concentratedPool.GetId(), link.ClPoolId)

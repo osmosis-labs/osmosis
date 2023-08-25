@@ -14,7 +14,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
 const (
@@ -941,7 +940,7 @@ func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
 
 func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 	var (
-		positionData       cltypes.CreateFullRangePositionData
+		positionData       types.CreateFullRangePositionData
 		concentratedLockId uint64
 		err                error
 	)
