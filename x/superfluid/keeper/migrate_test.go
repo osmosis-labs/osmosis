@@ -1264,7 +1264,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 				positionCoins := sdk.NewCoins(sdk.NewCoin(DefaultCoin0.Denom, coin0Amt), sdk.NewCoin(DefaultCoin1.Denom, coin1Amt))
 				s.FundAcc(s.TestAccs[index], positionCoins)
 				totalFundsForPositionCreation = totalFundsForPositionCreation.Add(positionCoins...) // Track total funds used for position creation, to be used by invariant checks later
-				posInfoInternal := s.createBalancerPosition(s.TestAccs[index], balancerPoolId, lockDurationFn(i), balancerPoolShareDenom, positionCoins, positions.numAccounts-i, superfluidDelegate)
+				posInfoInternal := s.createBalancerPosition(s.TestAccs[index], balancerPoolId, lockDurationFn(i), balancerPoolShareDenom, positionCoins, superfluidDelegate)
 				positionInfos[posType] = append(positionInfos[posType], posInfoInternal) // Track position info for invariant checks later
 				callbackFn(index, posInfoInternal)
 			}
@@ -1399,7 +1399,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 // If `superfluidDelegate` is true, the function delegates the obtained shares to the default val module using `SuperfluidDelegateToDefaultVal`.
 //
 // The function returns a `positionInfo` struct with the created position's information.
-func (s *KeeperTestSuite) createBalancerPosition(acc sdk.AccAddress, balancerPoolId uint64, unbondingDuration time.Duration, balancerPoolShareDenom string, coins sdk.Coins, i int, superfluidDelegate bool) positionInfo {
+func (s *KeeperTestSuite) createBalancerPosition(acc sdk.AccAddress, balancerPoolId uint64, unbondingDuration time.Duration, balancerPoolShareDenom string, coins sdk.Coins, superfluidDelegate bool) positionInfo {
 	sharesOut, err := s.App.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, acc, balancerPoolId, coins, sdk.OneInt())
 	s.Require().NoError(err)
 	shareCoins := sdk.NewCoins(sdk.NewCoin(balancerPoolShareDenom, sharesOut))

@@ -7,6 +7,9 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -17,8 +20,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
 var (
@@ -244,7 +245,7 @@ func (s *KeeperTestSuite) addLiquidityToUptimeAccumulators(ctx sdk.Context, pool
 //   - If lowerTick <= currentTick < upperTick, we add to just the global accumulators.
 //
 //   - If lowerTick < upperTick <= currentTick, we add to the upper tick's trackers, but not the lower's.
-func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
+func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
 	s.Require().True(lowerTick <= upperTick)
 
 	// Note that we process adds to global accums at the end to ensure that they don't affect the behavior of uninitialized ticks.
@@ -289,7 +290,7 @@ func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uin
 //   - If lowerTick < upperTick <= currentTick, we add to both lowerTick and upperTick's uptime trackers,
 //     the former to put the growth below the tick range and the latter to keep both ticks consistent (since
 //     lowerTick's uptime trackers are a subset of upperTick's in this case).
-func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
+func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
 	s.Require().True(lowerTick <= upperTick)
 
 	// Note that we process adds to global accums at the end to ensure that they don't affect the behavior of uninitialized ticks.

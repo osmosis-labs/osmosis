@@ -1110,7 +1110,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			s.Require().NoError(err)
 
 			// Staking & Delegation check
-			s.delegationCheck(s.Ctx, sender, originalValAddr, valAddr, totalAmtConverted)
+			s.delegationCheck(sender, originalValAddr, valAddr, totalAmtConverted)
 
 			// Bank check
 			balanceAfterConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender).FilterDenoms([]string{"foo", "stake", "uosmo"})
@@ -1122,7 +1122,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			}
 
 			// lock check
-			s.lockCheck(*lock, valAddr.String(), true)
+			s.lockCheck(*lock, valAddr.String())
 		})
 	}
 }
@@ -1222,10 +1222,10 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 			s.Require().NoError(err)
 
 			// Staking & Delegation check
-			s.delegationCheck(s.Ctx, sender, originalValAddr, valAddr, totalAmtConverted)
+			s.delegationCheck(sender, originalValAddr, valAddr, totalAmtConverted)
 
 			// Lock check
-			s.lockCheck(*lock, valAddr.String(), true)
+			s.lockCheck(*lock, valAddr.String())
 
 			// Bank check
 			balanceAfterConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
@@ -1316,7 +1316,7 @@ func (s *KeeperTestSuite) TestConvertUnlockedToStake() {
 			s.Require().True(expectedBondDenomAmt.Equal(bondDenomPoolAmtAfterConvert))
 
 			// Staking & Delegation check
-			s.delegationCheck(s.Ctx, sender, sdk.ValAddress{}, valAddr, totalAmtConverted)
+			s.delegationCheck(sender, sdk.ValAddress{}, valAddr, totalAmtConverted)
 
 			// Bank check
 			balanceAfterConvertLockToStake := s.App.BankKeeper.GetBalance(s.Ctx, sender, shareOut.Denom)
@@ -1683,7 +1683,7 @@ func (s *KeeperTestSuite) SetupUnbondConvertAndStakeTest(ctx sdk.Context, superf
 // We check the following in this method:
 // - if superfluid staked previously, check if the original validator's delegation has been deleted.
 // - Cehck if the delegation of the new validator matches what's expected.
-func (s *KeeperTestSuite) delegationCheck(ctx sdk.Context, sender sdk.AccAddress, originalValAddr, newValAddr sdk.ValAddress, totalAmtConverted sdk.Int) {
+func (s *KeeperTestSuite) delegationCheck(sender sdk.AccAddress, originalValAddr, newValAddr sdk.ValAddress, totalAmtConverted sdk.Int) {
 	if !originalValAddr.Empty() {
 		// check if original superfluid staked lock's delgation is successfully deleted
 		_, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, originalValAddr)
@@ -1700,7 +1700,7 @@ func (s *KeeperTestSuite) delegationCheck(ctx sdk.Context, sender sdk.AccAddress
 // We check the following in this method:
 // - check if old synth lock has been deleted (both staking & unstaking)
 // - check if old lock has been successfully deleted.
-func (s *KeeperTestSuite) lockCheck(lock lockuptypes.PeriodLock, valAddr string, checkUnstakingSynthLock bool) {
+func (s *KeeperTestSuite) lockCheck(lock lockuptypes.PeriodLock, valAddr string) {
 	// The synthetic lockup should be deleted.
 	_, err := s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 	s.Require().Error(err)

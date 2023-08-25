@@ -1949,6 +1949,7 @@ func (suite *HooksTestSuite) TestSwapErrorAfterPreSwapUnwind() {
 	suite.Require().NotNil(res)
 
 	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
 	suite.SendAndAckPacketThroughPath([]Direction{AtoB, BtoC, CtoA}, packet)
 
 	recoverableQuery := fmt.Sprintf(`{"recoverable": {"addr": "%s"}}`, sender.address)
