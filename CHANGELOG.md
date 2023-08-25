@@ -42,72 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-<<<<<<< HEAD
-=======
 ### Misc Improvements
 
 * [#6161](https://github.com/osmosis-labs/osmosis/pull/6161) Reduce CPU time of epochs
-
-### API breaks
-
-* [#6071](https://github.com/osmosis-labs/osmosis/pull/6071) reduce number of returns for UpdatePosition and TicksToSqrtPrice functions
-* [#5906](https://github.com/osmosis-labs/osmosis/pull/5906) Add `AccountLockedCoins` query in lockup module to stargate whitelist.
-
-## v17.0.0
-
-### API breaks
-
-* [#6014](https://github.com/osmosis-labs/osmosis/pull/6014) refactor: reduce the number of returns in superfluid migration
-* [#5983](https://github.com/osmosis-labs/osmosis/pull/5983) refactor(CL): 6 return values in CL CreatePosition with a struct
-* [#6004](https://github.com/osmosis-labs/osmosis/pull/6004) reduce number of returns for creating full range position
-* [#6018](https://github.com/osmosis-labs/osmosis/pull/6018) golangci: add unused parameters linter
-* [#6033](https://github.com/osmosis-labs/osmosis/pull/6033) change tick API from sdk.Dec to osmomath.BigDec
-
-### Features
-
-* [#5072](https://github.com/osmosis-labs/osmosis/pull/5072) IBC-hooks: Add support for async acks when processing onRecvPacket
-
->>>>>>> 19c3c508 (State compatible epoch speedup from v18 (#6161))
-### State Breaking
-
-* [#5532](https://github.com/osmosis-labs/osmosis/pull/5532) fix: Fix x/tokenfactory genesis import denoms reset x/bank existing denom metadata
-
-### Misc Improvements
-
-* [#5534](https://github.com/osmosis-labs/osmosis/pull/5534) fix: fix the account number of x/tokenfactory module account
-* [#5750](https://github.com/osmosis-labs/osmosis/pull/5750) feat: add cli commmand for converting proto structs to proto marshalled bytes
-
-## v16.0.0
-Osmosis Labs is excited to announce the release of v16.0.0, a major upgrade that includes a number of new features and improvements like introduction of new modules, updates existing APIs, and dependency updates. This upgrade aims to enhance capital efficiency by introducing SuperCharged Liquidity, introduce custom liquidity pools backed by CosmWasm smart contracts, and improve overall functionality.
-
-New Modules and Features:
-
-SuperCharged Liquidity Module (x/concentrated-liquidity):
-- Introduces a game-changing pool model that enhances captical efficiency in Osmosis.
-
-CosmWasm Pool Module (x/cosmwasmpool):
-- Enables the creation and management of liquidity pools backed by CosmWasm smart contracts.
-
-ProtoRev Changes (x/protorev):
-- Modifies the payment schedule for the dev account from weekly to after every trade.
-- Triggers backruns, joinPool, and exitPool using hooks.
-
-TokenFactory before send hooks (x/tokenfactory):
-- This enhancement allows for executing custom logic before sending tokens, providing more flexibility
-and control over token transfers.
-
-
-### Security
-
-* Prevents a deadlock that new smart contracts could cause due to bugs in the SDK
-* Adds a new app.toml config called `query-gas-limit` that limits how much computational resources a query can require. Mitigates bugs where nodes were getting knocked off the network due to responding to long queries.
-
-### Bug fixes
-
-* Makes historic queries use the correct block timestamp
-* Fixes a bug where certain governance events weren't emitted
-* Adds mempool protection for Barberry bug
-* Various export genesis bug fixes
 
 ## v15.1.2
 
