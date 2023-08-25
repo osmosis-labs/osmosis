@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/swapstrategy"
@@ -142,14 +143,6 @@ func (k Keeper) ValidateTickSpacingUpdate(ctx sdk.Context, pool types.Concentrat
 	return k.validateTickSpacingUpdate(pool, params, newTickSpacing)
 }
 
-func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
-	return k.fungifyChargedPosition(ctx, owner, positionIds)
-}
-
-func (k Keeper) ValidatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64, fullyChargedDuration time.Duration) (uint64, int64, int64, sdk.Dec, error) {
-	return k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds, fullyChargedDuration)
-}
-
 func (k Keeper) IsLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, error) {
 	return k.isLockMature(ctx, underlyingLockId)
 }
@@ -170,7 +163,7 @@ func (k Keeper) SetPositionIdToLock(ctx sdk.Context, positionId, underlyingLockI
 	k.setPositionIdToLock(ctx, positionId, underlyingLockId)
 }
 
-func RoundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, priceTickUpper sdk.Dec, tickSpacing uint64) (int64, int64, error) {
+func RoundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, priceTickUpper osmomath.BigDec, tickSpacing uint64) (int64, int64, error) {
 	return roundTickToCanonicalPriceTick(lowerTick, upperTick, priceTickLower, priceTickUpper, tickSpacing)
 }
 
@@ -336,7 +329,7 @@ func (k Keeper) GetLargestSupportedUptimeDuration(ctx sdk.Context) time.Duration
 
 func (k Keeper) SetupSwapStrategy(ctx sdk.Context, p types.ConcentratedPoolExtension,
 	spreadFactor sdk.Dec, tokenInDenom string,
-	priceLimit sdk.Dec) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit sdk.Dec, err error) {
+	priceLimit sdk.Dec) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit osmomath.BigDec, err error) {
 	return k.setupSwapStrategy(p, spreadFactor, tokenInDenom, priceLimit)
 }
 

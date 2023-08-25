@@ -21,8 +21,18 @@ pub enum FailedDeliveryAction {
     /// An osmosis addres used to recover any tokens that get stuck in the
     /// contract due to IBC failures
     LocalRecoveryAddr(Addr),
+    //
     // Here we could potentially add new actions in the future
     // example: SendBackToSender, SwapBackAndReturn, etc
+    //
+    // If a failure occures, any tokens belonging (either before or after a
+    // swap) to the user will be sent to `SendTo.address` on `SendTo.chain`.
+    // If that send fails, the tokens will be recoverable by `SendTo.emergency_recover_addr`
+    // SendTo {
+    //     chain: String,
+    //     address: String,
+    //     emergency_recovery_addr: String,
+    // },
 }
 
 /// message type for `execute` entry_point

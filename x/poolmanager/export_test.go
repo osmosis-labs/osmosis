@@ -62,3 +62,7 @@ func (k Keeper) CreateOsmoMultihopExpectedSwapOuts(
 ) ([]sdk.Int, error) {
 	return k.createOsmoMultihopExpectedSwapOuts(ctx, route, tokenOut, cumulativeRouteSwapFee, sumOfSwapFees)
 }
+
+func (k Keeper) TrackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
+	k.trackVolume(ctx, poolId, volumeGenerated)
+}

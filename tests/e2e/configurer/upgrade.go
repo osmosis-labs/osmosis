@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
-	v17 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v17"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/containers"
@@ -138,30 +137,6 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	// Wait for all goroutines to complete
 	wg.Wait()
-
-	// START: CAN REMOVE POST v17 UPGRADE
-
-	v17SuperfluidAssets := v17GetSuperfluidAssets()
-
-	wg.Add(2)
-
-	// Chain A
-
-	go func() {
-		defer wg.Done()
-		chainANode.EnableSuperfluidAsset(chainA, v17SuperfluidAssets)
-	}()
-
-	// Chain B
-
-	go func() {
-		defer wg.Done()
-		chainBNode.EnableSuperfluidAsset(chainB, v17SuperfluidAssets)
-	}()
-
-	wg.Wait()
-
-	// END: CAN REMOVE POST v17 UPGRADE
 
 	var (
 		poolShareDenom             = make([]string, 2)
@@ -438,20 +413,3 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 	uc.t.Logf("upgrade successful on chain %s", chainConfig.Id)
 	return nil
 }
-
-// START: CAN REMOVE POST v17 UPGRADE
-
-func v17GetSuperfluidAssets() string {
-	assets := ""
-	for _, assetPair := range v17.AssetPairsForTestsOnly {
-		if assetPair.Superfluid {
-			assets += fmt.Sprintf("gamm/pool/%d,", assetPair.LinkedClassicPool)
-		}
-	}
-	if len(assets) > 0 {
-		assets = assets[:len(assets)-1]
-	}
-	return assets
-}
-
-// END: CAN REMOVE POST v17 UPGRADE
