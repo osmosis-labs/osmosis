@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Misc Improvements
+
+* [#6161](https://github.com/osmosis-labs/osmosis/pull/6161) Reduce CPU time of epochs
+
 ### API breaks
 
 * [#6014](https://github.com/osmosis-labs/osmosis/pull/6014) refactor: reduce the number of returns in superfluid migration
