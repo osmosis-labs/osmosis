@@ -264,6 +264,7 @@ func (k Keeper) distributeSyntheticInternal(
 func (k Keeper) distributeInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
+	totalDistrCoins := sdk.NewCoins()
 	if len(locks) == 0 {
 			return nil, nil
 	}
@@ -285,7 +286,6 @@ func (k Keeper) distributeInternal(
 		return totalDistrCoins, err
 	}
 	
-	totalDistrCoins := sdk.NewCoins()
 	denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
 	lockSum := lockuptypes.SumLocksByDenom(locks, denom)
 
