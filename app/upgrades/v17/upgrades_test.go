@@ -54,7 +54,7 @@ func dummyUpgrade(suite *UpgradeTestSuite) {
 	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
 }
 
-func dummyTwapRecord(poolId uint64, t time.Time, asset0 string, asset1 string, sp0, accum0, accum1, geomAccum sdk.Dec) types.TwapRecord {
+func dummyTwapRecord(poolId uint64, t time.Time, asset0 string, asset1 string, sp0, accum0, accum1, geomAccum sdk.Dec) types.TwapRecord { //nolint:unparam // funds always receives uosmo
 	return types.TwapRecord{
 		PoolId:      poolId,
 		Time:        t,

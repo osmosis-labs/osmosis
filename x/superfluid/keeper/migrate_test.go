@@ -1300,7 +1300,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 
 		// Some funds might not have been completely used when creating the above positions.
 		// We note them here and use them when tracking invariants at the very end.
-		unusedPositionCreationFunds := s.calculateUnusedPositionCreationFunds(positions.numAccounts, positions.numNoLock, DefaultCoin0.Denom, DefaultCoin1.Denom)
+		unusedPositionCreationFunds := s.calculateUnusedPositionCreationFunds(positions.numAccounts, DefaultCoin0.Denom, DefaultCoin1.Denom)
 
 		// Create CL pool
 		clPool := s.PrepareConcentratedPoolWithCoins(DefaultCoin0.Denom, DefaultCoin1.Denom)
@@ -1440,7 +1440,7 @@ func (s *KeeperTestSuite) createBalancerPosition(acc sdk.AccAddress, balancerPoo
 //
 // Returns:
 // - sdk.Coins: The total unused position creation funds as a `sdk.Coins` object.
-func (s *KeeperTestSuite) calculateUnusedPositionCreationFunds(numAccounts, numNoLock int, coin0Denom, coin1Denom string) sdk.Coins {
+func (s *KeeperTestSuite) calculateUnusedPositionCreationFunds(numAccounts int, coin0Denom, coin1Denom string) sdk.Coins {
 	unusedPositionCreationFunds := sdk.Coins{}
 	for i := 1; i < numAccounts; i++ {
 		balances := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[i])

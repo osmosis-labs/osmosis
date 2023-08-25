@@ -19,8 +19,8 @@ var (
 	// base asset as the lexicographically smaller denom and the quote as the larger. When
 	// set to false, this order is switched. These constants are provided to understand the
 	// base/quote asset for every test at a glance rather than a raw boolean value.
-	baseQuoteAB              = true
-	baseQuoteBA, baseQuoteCB = false, false
+	baseQuoteAB = true
+	baseQuoteBA = false
 
 	ThreePlusOneThird sdk.Dec = sdk.MustNewDecFromStr("3.333333333333333333")
 
@@ -782,7 +782,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 }
 
 func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
-	makeSimpleThreeAssetTwapToNowInput := func(startTime time.Time, baseQuoteAB, baseQuoteBC bool) []getTwapInput {
+	makeSimpleThreeAssetTwapToNowInput := func(startTime time.Time, baseQuoteAB bool) []getTwapInput {
 		return makeSimpleThreeAssetTwapInput(startTime, startTime, baseQuoteAB)
 	}
 
@@ -799,7 +799,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 				tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC,
 			},
 			ctxTime: tPlusOneMin,
-			input:   makeSimpleThreeAssetTwapToNowInput(baseTime.Add(10*time.Second), baseQuoteBA, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapToNowInput(baseTime.Add(10*time.Second), baseQuoteBA),
 			// A 10 for 0s, 5 for 10s = 50/10 = 5
 			// C 20 for 0s, 10 for 10s = 100/10 = 10
 			// B .1 for 0s, .2 for 10s = 2/10 = 0.2
@@ -811,7 +811,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 				tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC,
 			},
 			ctxTime: baseTime.Add(20 * time.Second),
-			input:   makeSimpleThreeAssetTwapToNowInput(baseTime.Add(5*time.Second), baseQuoteBA, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapToNowInput(baseTime.Add(5*time.Second), baseQuoteBA),
 			// A 10 for 5s, 5 for 10s = 100/15 = 6 + 2/3 = 6.66666666
 			// C 20 for 5s, 10 for 10s = 200/15 = 13 + 1/3 = 13.333333
 			// B .1 for 5s, .2 for 10s = 2.5/15 = 0.1666666

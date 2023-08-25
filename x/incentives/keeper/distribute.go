@@ -282,7 +282,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 
 		// only allow distribution if the GroupGauge is Active
 		if gauge.IsActiveGauge(currTime) {
-			coinsToDistributePerInternalGauge, coinsToDistributeThisEpoch, err := k.calcSplitPolicyCoins(ctx, groupGauge.SplittingPolicy, gauge, groupGauge)
+			coinsToDistributePerInternalGauge, coinsToDistributeThisEpoch, err := k.calcSplitPolicyCoins(groupGauge.SplittingPolicy, gauge, groupGauge)
 			if err != nil {
 				return err
 			}
@@ -308,7 +308,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 
 // calcSplitPolicyCoins calculates tokens to split given a policy and groupGauge.
 // TODO: add volume split policy
-func (k Keeper) calcSplitPolicyCoins(ctx sdk.Context, policy types.SplittingPolicy, groupGauge *types.Gauge, groupGaugeObj types.GroupGauge) (sdk.Coins, sdk.Coins, error) {
+func (k Keeper) calcSplitPolicyCoins(policy types.SplittingPolicy, groupGauge *types.Gauge, groupGaugeObj types.GroupGauge) (sdk.Coins, sdk.Coins, error) {
 	if policy == types.Evenly {
 		remainCoins := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
 
