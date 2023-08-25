@@ -82,7 +82,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			adjustment := refreshedAmount.Sub(currentAmount)
 			err = k.mintOsmoTokensAndDelegate(ctx, adjustment, acc)
 			if err != nil {
-				ctx.Logger().Error("Error in forceUndelegateAndBurnOsmoTokens, state update reverted", err)
+				ctx.Logger().Error("AAA Error in mintOsmoTokensAndDelegate, state update reverted", err)
 			}
 		} else if currentAmount.GT(refreshedAmount) {
 			// In this case, we want to change the IA's delegated balance to be refreshed Amount
@@ -93,7 +93,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 
 			err := k.forceUndelegateAndBurnOsmoTokens(ctx, adjustment, acc)
 			if err != nil {
-				ctx.Logger().Error("Error in forceUndelegateAndBurnOsmoTokens, state update reverted", err)
+				ctx.Logger().Error("AAA Error in forceUndelegateAndBurnOsmoTokens, state update reverted", err)
 			}
 		} else {
 			ctx.Logger().Debug("Intermediary account already has correct delegation amount?" +
@@ -449,6 +449,7 @@ func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
 func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, intermediaryAccount types.SuperfluidIntermediaryAccount) error {
 	validator, err := k.validateValAddrForDelegate(ctx, intermediaryAccount.ValAddr)
 	if err != nil {
+		fmt.Println("AAA Error in validateValAddrForDelegate", intermediaryAccount.ValAddr)
 		return err
 	}
 
@@ -457,11 +458,13 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 		coins := sdk.Coins{sdk.NewCoin(bondDenom, osmoAmount)}
 		err = k.bk.MintCoins(cacheCtx, types.ModuleName, coins)
 		if err != nil {
+			fmt.Println("AAA Error in MintCoins", types.ModuleName, coins)
 			return err
 		}
 		k.bk.AddSupplyOffset(cacheCtx, bondDenom, osmoAmount.Neg())
 		err = k.bk.SendCoinsFromModuleToAccount(cacheCtx, types.ModuleName, intermediaryAccount.GetAccAddress(), coins)
 		if err != nil {
+			fmt.Println("AAA Error in SendCoinsFromModuleToAccount", types.ModuleName, intermediaryAccount.GetAccAddress(), coins)
 			return err
 		}
 
@@ -471,6 +474,7 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 		_, err = k.sk.Delegate(cacheCtx,
 			intermediaryAccount.GetAccAddress(),
 			osmoAmount, stakingtypes.Unbonded, validator, true)
+		fmt.Println("AAA Error in Delegate", intermediaryAccount.GetAccAddress(), osmoAmount, stakingtypes.Unbonded, validator)
 		return err
 	})
 	return err
@@ -495,21 +499,25 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 	if err == stakingtypes.ErrNoDelegation {
 		return nil
 	} else if err != nil {
+		fmt.Println("AAA error in ValidateUnbondAmount", intermediaryAcc.GetAccAddress(), valAddr, osmoAmount)
 		return err
 	}
 	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 		undelegatedCoins, err := k.sk.InstantUndelegate(cacheCtx, intermediaryAcc.GetAccAddress(), valAddr, shares)
 		if err != nil {
+			fmt.Println("AAA error in InstantUndelegate", intermediaryAcc.GetAccAddress(), valAddr, shares)
 			return err
 		}
 
 		// TODO: Should we compare undelegatedCoins vs osmoAmount?
 		err = k.bk.SendCoinsFromAccountToModule(cacheCtx, intermediaryAcc.GetAccAddress(), types.ModuleName, undelegatedCoins)
 		if err != nil {
+			fmt.Println("AAA error in SendCoinsFromAccountToModule", intermediaryAcc.GetAccAddress(), types.ModuleName, undelegatedCoins)
 			return err
 		}
 		err = k.bk.BurnCoins(cacheCtx, types.ModuleName, undelegatedCoins)
 		if err != nil {
+			fmt.Println("error in BurnCoins", types.ModuleName, undelegatedCoins)
 			return err
 		}
 		bondDenom := k.sk.BondDenom(cacheCtx)
