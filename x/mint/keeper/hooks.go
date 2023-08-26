@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v17/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v19/x/mint/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"

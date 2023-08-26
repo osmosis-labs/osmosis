@@ -1,12 +1,12 @@
 package v16
 
 import (
-	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v16 upgrade.

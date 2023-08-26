@@ -12,7 +12,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/lockup/lock.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model";
 
 // Position contains position's id, address, pool id, lower tick, upper tick
 // join time, and liquidity.

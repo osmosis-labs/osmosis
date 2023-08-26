@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
-	superfluidkeeper "github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper"
+	gammkeeper "github.com/osmosis-labs/osmosis/v19/x/gamm/keeper"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/v19/x/superfluid/keeper"
 )
 
 const ustDenom = "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC"
