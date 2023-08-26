@@ -166,7 +166,7 @@ func (k Keeper) extractTakerFeeAndDistribute(ctx sdk.Context, tokenIn sdk.Coin, 
 }
 
 func (k Keeper) calcTakerFeeExactIn(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
-	amountInAfterSubTakerFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(takerFee))
+	amountInAfterSubTakerFee := tokenIn.Amount.ToDec().MulTruncate(sdk.OneDec().Sub(takerFee))
 	tokenInAfterSubTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterSubTakerFee.TruncateInt())
 	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, tokenIn.Amount.Sub(tokenInAfterSubTakerFee.Amount))
 
