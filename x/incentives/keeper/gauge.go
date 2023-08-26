@@ -18,7 +18,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
@@ -237,13 +236,16 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	// check that all internalGauges are perp
 	// TODO: check if they're default pool gauges instead (similar to in ExternalIncentives query).
 	// This doubles as a uniqueness check to avoid the spam vector of creating a group gauge that targets the same pool multiple times.
-	records := []poolincentivestypes.DistrRecord{}
+	//
+	// TODO (VS): abstract this initialization logic into a helper based on splitting policy. If VS, set initial values to osmo volume &
+	// error if any is 0.
+	records := []types.InternalGaugeRecord{}
 	for _, gauge := range internalGauges {
 		if !gauge.IsPerpetual {
 			return 0, fmt.Errorf("Internal Gauge id %d is non-perp, all internalGauge must be perpetual Gauge.", gauge.Id)
 		}
 
-		records = append(records, poolincentivestypes.DistrRecord{
+		records = append(records, types.InternalGaugeRecord{
 			GaugeId: gauge.Id,
 			Weight:  sdk.ZeroInt(),
 		})
@@ -270,10 +272,13 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 		return 0, err
 	}
 
+	// TODO: initialize using initGaugeInfoBySplittingPolicy
+	initialInternalGaugeInfo := types.InternalGaugeInfo{}
+
 	newGroupGauge := types.GroupGauge{
-		GroupGaugeId:    nextGaugeId,
-		Records:         records,
-		SplittingPolicy: splittingPolicy,
+		GroupGaugeId:      nextGaugeId,
+		InternalGaugeInfo: initialInternalGaugeInfo,
+		SplittingPolicy:   splittingPolicy,
 	}
 
 	k.SetGroupGauge(ctx, newGroupGauge)
@@ -289,6 +294,31 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	k.hooks.AfterCreateGauge(ctx, gauge.Id)
 
 	return nextGaugeId, nil
+}
+
+// initGaugeInfoBySplittingPolicy takes in a list of pool IDs and a splitting policy and returns a InternalGaugeInfo struct initialized based on the splitting policy.
+func (k Keeper) initGaugeInfoBySplittingPolicy(ctx sdk.Context, poolIds []uint64, splittingPolicy types.SplittingPolicy) (types.InternalGaugeInfo, error) {
+}
+
+// getWeightBySplittingPolicy takes in a pool ID, splitting policy, and current weight, and returns the updated weight (should be positive)
+func (k Keeper) getWeightBySplittingPolicy(ctx sdk.Context, poolId uint64, splittingPolicy types.SplittingPolicy, currentWeight sdk.Int) (sdk.Int, error) {
+	switch splittingPolicy {
+	case types.Evenly:
+		return sdk.OneInt(), nil
+	case types.Volume:
+		// Set the weight to diff between the current volume of the pool
+		totalVolume := k.pmk.GetOsmoVolumeForPool(ctx, poolId)
+
+		if totalVolume.LT(currentWeight) {
+			// TODO (VS): move this into an error type
+			return sdk.ZeroInt(), fmt.Errorf("Current volume %s is greater than total volume %s", currentWeight, totalVolume)
+		}
+
+		return totalVolume.Sub(currentWeight), nil
+	default:
+		// TODO (VS): move this into an error type
+		return sdk.ZeroInt(), fmt.Errorf("Unknown splitting policy")
+	}
 }
 
 // AddToGaugeRewardsFromGauge transfer coins from a group gauge to its internal gauges.

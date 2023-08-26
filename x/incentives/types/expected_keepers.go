@@ -66,4 +66,5 @@ type GAMMKeeper interface {
 
 type PoolManagerKeeper interface {
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
+	GetOsmoVolumeForPool(ctx sdk.Context, poolId uint64) sdk.Int
 }
