@@ -53,11 +53,12 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			}
 		}
 
-		ctx.Logger().Info("AfterEpochEnd: distributing to gauges", "module", types.ModuleName, "numGauges", len(distrGauges), "height", ctx.BlockHeight())
+		ctx.Logger().Info("x/incentives AfterEpochEnd: distributing to gauges", "module", types.ModuleName, "numGauges", len(distrGauges), "height", ctx.BlockHeight())
 		_, err = k.Distribute(ctx, distrGauges)
 		if err != nil {
 			return err
 		}
+		ctx.Logger().Info("x/incentives AfterEpochEnd finished distribution")
 	}
 	return nil
 }

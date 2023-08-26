@@ -19,6 +19,7 @@ jobs:
           files_ignore: |
             **/*.md
             **/*_test.go
+            **/*.py
             .github/workflows/*.yml
 
       - name: Check required labels
