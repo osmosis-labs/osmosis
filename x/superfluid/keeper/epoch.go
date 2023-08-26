@@ -32,7 +32,11 @@ func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {
 	k.MoveSuperfluidDelegationRewardToGauges(ctx)
 
 	ctx.Logger().Info("Distribute Superfluid gauges")
-	k.distributeSuperfluidGauges(ctx)
+	//nolint:errcheck
+	osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		k.distributeSuperfluidGauges(cacheCtx)
+		return nil
+	})
 
 	// Update all LP tokens multipliers for the upcoming epoch.
 	// This affects staking reward distribution until the next epochs rewards.
