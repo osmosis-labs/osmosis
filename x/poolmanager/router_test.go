@@ -1488,30 +1488,88 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 		poolId                 uint64
 		poolCoins              sdk.Coins
 		poolFee                sdk.Dec
+		takerFee               sdk.Dec
 		tokenIn                sdk.Coin
 		tokenOutDenom          string
 		tokenOutMinAmount      sdk.Int
 		expectedTokenOutAmount sdk.Int
-		swapWithNoTakerFee     bool
 		expectError            bool
 	}{
 		// Swap with taker fee:
 		//  - foo: 1000000000000
 		//  - bar: 1000000000000
 		//  - spreadFactor: 0.1%
-		//  - takerFee: 0.15%
+		//  - takerFee: 0.25%
 		//  - foo in: 100000
 		//  - bar amount out will be calculated according to the formula
 		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.9975%29%2810%5E12+-+x%29+%3D+10%5E24
 		{
-			name:                   "Swap - [foo -> bar], 0.1 percent fee",
+			name:                   "Swap - [foo -> bar], 0.1 percent swap fee, 0.25 percent taker fee",
 			poolId:                 1,
 			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
 			poolFee:                defaultPoolSpreadFactor,
+			takerFee:               sdk.MustNewDecFromStr("0.0025"), // 0.25%
 			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:      sdk.NewInt(1),
 			tokenOutDenom:          bar,
-			expectedTokenOutAmount: sdk.NewInt(99750),
+			expectedTokenOutAmount: sdk.NewInt(99650), // 10000 - 0.35%
+		},
+		// Swap with taker fee:
+		//  - foo: 1000000000000
+		//  - bar: 1000000000000
+		//  - spreadFactor: 0.1%
+		//  - takerFee: 0.25%
+		//  - bar in: 100000
+		//  - foo amount out: 10000 - 0.35%
+		{
+			name:                   "Swap - [foo -> bar], 0.1 percent swap fee, 0.25 percent taker fee",
+			poolId:                 1,
+			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:                defaultPoolSpreadFactor,
+			takerFee:               sdk.MustNewDecFromStr("0.0025"), // 0.25%
+			tokenIn:                sdk.NewCoin(bar, sdk.NewInt(100000)),
+			tokenOutMinAmount:      sdk.NewInt(1),
+			tokenOutDenom:          foo,
+			expectedTokenOutAmount: sdk.NewInt(99650), // 10000 - 0.35%
+		},
+		{
+			name:      "Swap - [foo -> bar], 0.1 percent swap fee, 0.33 percent taker fee",
+			poolId:    1,
+			poolCoins: sdk.NewCoins(sdk.NewCoin(foo, sdk.NewInt(2000000000000)), sdk.NewCoin(bar, sdk.NewInt(1000000000000))),
+			poolFee:   defaultPoolSpreadFactor,
+			takerFee:  sdk.MustNewDecFromStr("0.0033"), // 0.33%
+			// We capture the expected fees in the input token to simplify the process for calculating output.
+			// 100000 / (1 - 0.0043) = 100432
+			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100432)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			tokenOutDenom:     bar,
+			// Since spot price is 2 and the input after fees is 100000, the output should be 50000
+			// minus one due to truncation on rounding error.
+			expectedTokenOutAmount: sdk.NewInt(50000 - 1),
+		},
+		{
+			name:                   "Swap - [foo -> bar], 0 percent swap fee, 0 percent taker fee",
+			poolId:                 1,
+			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, sdk.NewInt(1000000000000)), sdk.NewCoin(bar, sdk.NewInt(1000000000000))),
+			poolFee:                sdk.ZeroDec(),
+			takerFee:               sdk.ZeroDec(),
+			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount:      sdk.NewInt(1),
+			tokenOutDenom:          bar,
+			expectedTokenOutAmount: sdk.NewInt(100000),
+		},
+		// 99% taker fee 99% swap fee
+		{
+			name:              "Swap - [foo -> bar], 99 percent swap fee, 99 percent taker fee",
+			poolId:            1,
+			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, sdk.NewInt(1000000000000)), sdk.NewCoin(bar, sdk.NewInt(1000000000000))),
+			poolFee:           sdk.MustNewDecFromStr("0.99"),
+			takerFee:          sdk.MustNewDecFromStr("0.99"),
+			tokenIn:           sdk.NewCoin(foo, sdk.NewInt(10000)),
+			tokenOutMinAmount: sdk.NewInt(1),
+			tokenOutDenom:     bar,
+			// 10000 * 0.01 * 0.01 = 1 swapped at a spot price of 1
+			expectedTokenOutAmount: sdk.NewInt(1),
 		},
 		// Swap with no taker fee:
 		//  - foo: 1000000000000
@@ -1528,7 +1586,6 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:      sdk.NewInt(1),
 			tokenOutDenom:          bar,
-			swapWithNoTakerFee:     true,
 			expectedTokenOutAmount: sdk.NewInt(99899),
 		},
 		{
@@ -1577,10 +1634,13 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			// execute the swap
 			var multihopTokenOutAmount sdk.Int
 			var err error
-			if tc.swapWithNoTakerFee {
-				multihopTokenOutAmount, err = poolmanagerKeeper.SwapExactAmountInNoTakerFee(s.Ctx, s.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
-			} else {
+			if (tc.takerFee != sdk.Dec{}) {
+				// If applicable, set taker fee. Note that denoms are reordered lexicographically before being stored.
+				poolmanagerKeeper.SetDenomPairTakerFee(s.Ctx, tc.poolCoins[0].Denom, tc.poolCoins[1].Denom, tc.takerFee)
+
 				multihopTokenOutAmount, err = poolmanagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
+			} else {
+				multihopTokenOutAmount, err = poolmanagerKeeper.SwapExactAmountInNoTakerFee(s.Ctx, s.TestAccs[0], tc.poolId, tc.tokenIn, tc.tokenOutDenom, tc.tokenOutMinAmount)
 			}
 			if tc.expectError {
 				s.Require().Error(err)
