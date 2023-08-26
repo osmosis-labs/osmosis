@@ -7,8 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/client/cli"
 	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+=======
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/cli"
+>>>>>>> main
 )
 
 func TestParseCoinsNoSort(t *testing.T) {

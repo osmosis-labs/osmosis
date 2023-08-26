@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/model";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/model";
 
 message CosmWasmPool {
   option (gogoproto.goproto_getters) = false;

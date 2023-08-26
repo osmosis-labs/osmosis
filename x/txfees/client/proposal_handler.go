@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/osmosis-labs/osmosis/v17/x/txfees/client/cli"
-	"github.com/osmosis-labs/osmosis/v17/x/txfees/client/rest"
+	"github.com/osmosis-labs/osmosis/v19/x/txfees/client/cli"
+	"github.com/osmosis-labs/osmosis/v19/x/txfees/client/rest"
 
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 )

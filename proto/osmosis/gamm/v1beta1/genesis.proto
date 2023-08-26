@@ -16,7 +16,7 @@ message Params {
   ];
 }
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/gamm/types";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/gamm/types";
 
 // GenesisState defines the gamm module's genesis state.
 message GenesisState {

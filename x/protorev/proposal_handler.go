@@ -7,8 +7,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
 func NewProtoRevProposalHandler(k keeper.Keeper) govtypes.Handler {

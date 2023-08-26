@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
-	stableswap "github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
+	stableswap "github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
 func baseCreatePoolMsgGen(sender sdk.AccAddress) *stableswap.MsgCreateStableswapPool {

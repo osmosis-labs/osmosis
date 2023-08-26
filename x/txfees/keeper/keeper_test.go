@@ -8,11 +8,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v17/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v19/app"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 	"github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+=======
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
+>>>>>>> main
 )
 
 type KeeperTestSuite struct {

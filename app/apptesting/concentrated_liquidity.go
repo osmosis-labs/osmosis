@@ -5,11 +5,16 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+=======
+	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+>>>>>>> main
 
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 )
 
 var (
