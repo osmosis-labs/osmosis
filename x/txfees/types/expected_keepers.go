@@ -71,7 +71,7 @@ type TxFeesKeeper interface {
 }
 
 type ProtorevKeeper interface {
-	GetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error)
+	GetPoolForDenomPairNoOrder(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error)
 }
 
 type DistributionKeeper interface {
