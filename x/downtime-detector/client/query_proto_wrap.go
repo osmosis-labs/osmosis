@@ -3,8 +3,8 @@ package client
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	downtimedetector "github.com/osmosis-labs/osmosis/v17/x/downtime-detector"
-	"github.com/osmosis-labs/osmosis/v17/x/downtime-detector/client/queryproto"
+	downtimedetector "github.com/osmosis-labs/osmosis/v19/x/downtime-detector"
+	"github.com/osmosis-labs/osmosis/v19/x/downtime-detector/client/queryproto"
 )
 
 type Querier struct {

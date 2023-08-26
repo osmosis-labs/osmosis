@@ -7,8 +7,8 @@ import (
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/v17/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v19/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 )
 
 func NewUpdateFeeTokenProposalHandler(k keeper.Keeper) govtypes.Handler {

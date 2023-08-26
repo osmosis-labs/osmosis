@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v19/x/tokenfactory/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )

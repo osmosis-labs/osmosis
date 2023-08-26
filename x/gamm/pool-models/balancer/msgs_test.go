@@ -8,10 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
-	balancer "github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
+	balancer "github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
 func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {

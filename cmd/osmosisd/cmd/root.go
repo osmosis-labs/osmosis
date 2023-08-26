@@ -15,7 +15,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/osmosis-labs/osmosis/v17/app/params"
+	"github.com/osmosis-labs/osmosis/v19/app/params"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -53,7 +53,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/config"
 
-	osmosis "github.com/osmosis-labs/osmosis/v17/app"
+	osmosis "github.com/osmosis-labs/osmosis/v19/app"
 )
 
 type AssetList struct {

@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 )
 
 type SuperfluidEventsTestSuite struct {
