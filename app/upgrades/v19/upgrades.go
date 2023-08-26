@@ -32,7 +32,8 @@ func CreateUpgradeHandler(
 		currentConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
 		defaultPoolManagerParams := poolmanagertypes.DefaultParams()
 		defaultPoolManagerParams.AuthorizedQuoteDenoms = currentConcentratedLiquidityParams.AuthorizedQuoteDenoms
-		keepers.PoolManagerKeeper.SetParams(ctx, poolmanagertypes.DefaultParams())
+		defaultPoolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.ZeroDec()
+		keepers.PoolManagerKeeper.SetParams(ctx, defaultPoolManagerParams)
 
 		return migrations, nil
 	}
