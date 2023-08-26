@@ -64,7 +64,7 @@ message TakerFeeParams {
     (gogoproto.nullable) = false
   ];
   // non_osmo_taker_fee_distribution defines the distribution of taker fees
-  // generated in non-OSMO. As of this writing, it has two catagories:
+  // generated in non-OSMO. As of this writing, it has two categories:
   // - staking_rewards: the percent of the taker fee that gets swapped to OSMO
   //   and then distirbuted to stakers.
   // - community_pool: the percent of the taker fee that gets sent to the
