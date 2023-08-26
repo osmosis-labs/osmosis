@@ -175,7 +175,7 @@ type TakerFeeParams struct {
 	//     community pool.
 	OsmoTakerFeeDistribution TakerFeeDistributionPercentage `protobuf:"bytes,2,opt,name=osmo_taker_fee_distribution,json=osmoTakerFeeDistribution,proto3" json:"osmo_taker_fee_distribution"`
 	// non_osmo_taker_fee_distribution defines the distribution of taker fees
-	// generated in non-OSMO. As of this writing, it has two catagories:
+	// generated in non-OSMO. As of this writing, it has two categories:
 	//   - staking_rewards: the percent of the taker fee that gets swapped to OSMO
 	//     and then distirbuted to stakers.
 	//   - community_pool: the percent of the taker fee that gets sent to the
@@ -186,8 +186,8 @@ type TakerFeeParams struct {
 	NonOsmoTakerFeeDistribution TakerFeeDistributionPercentage `protobuf:"bytes,3,opt,name=non_osmo_taker_fee_distribution,json=nonOsmoTakerFeeDistribution,proto3" json:"non_osmo_taker_fee_distribution"`
 	// admin_addresses is a list of addresses that are allowed to set and remove
 	// custom taker fees for denom pairs. Governance also has the ability to set
-	// and removecustom taker fees for denom pairs, but with the normal governance
-	// delay.
+	// and remove custom taker fees for denom pairs, but with the normal
+	// governance delay.
 	AdminAddresses []string `protobuf:"bytes,4,rep,name=admin_addresses,json=adminAddresses,proto3" json:"admin_addresses,omitempty" yaml:"admin_addresses"`
 	// community_pool_denom_to_swap_non_whitelisted_assets_to is the denom that
 	// non-whitelisted taker fees will be swapped to before being sent to

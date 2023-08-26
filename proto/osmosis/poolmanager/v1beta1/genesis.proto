@@ -78,8 +78,8 @@ message TakerFeeParams {
   ];
   // admin_addresses is a list of addresses that are allowed to set and remove
   // custom taker fees for denom pairs. Governance also has the ability to set
-  // and remove custom taker fees for denom pairs, but with the normal governance
-  // delay.
+  // and remove custom taker fees for denom pairs, but with the normal
+  // governance delay.
   repeated string admin_addresses = 4
       [ (gogoproto.moretags) = "yaml:\"admin_addresses\"" ];
   // community_pool_denom_to_swap_non_whitelisted_assets_to is the denom that
