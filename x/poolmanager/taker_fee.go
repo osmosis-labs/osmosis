@@ -5,11 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 )
 
 // SetDenomPairTakerFee sets the taker fee for the given trading pair.

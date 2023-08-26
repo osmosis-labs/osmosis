@@ -10,14 +10,9 @@ import (
 
 	osmosisapp "github.com/osmosis-labs/osmosis/v19/app"
 
-<<<<<<< HEAD
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
-	"github.com/osmosis-labs/osmosis/v17/x/txfees/types"
-=======
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	protorevtypes "github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
->>>>>>> main
 )
 
 type KeeperTestSuite struct {

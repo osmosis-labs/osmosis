@@ -7,7 +7,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 func TestDenomPairTakerFeeProposalMarshalUnmarshal(t *testing.T) {

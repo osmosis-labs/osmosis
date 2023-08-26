@@ -5,9 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v17/app/keepers"
-	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/app/keepers"
+	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 func CreateUpgradeHandler(

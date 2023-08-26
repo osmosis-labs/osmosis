@@ -7,16 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-<<<<<<< HEAD
-	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
-=======
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
->>>>>>> main
 )
 
 // 1 << 256 - 1 where 256 is the max bit length defined for sdk.Int
