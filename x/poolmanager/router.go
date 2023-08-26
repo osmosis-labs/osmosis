@@ -93,7 +93,7 @@ func (k Keeper) RouteExactAmountIn(
 			spreadFactor = routeSpreadFactor.MulRoundUp((spreadFactor.QuoRoundUp(sumOfSpreadFactors)))
 		}
 
-		tokenInAfterSubTakerFee, err := k.extractTakerFeeAndDistribute(ctx, tokenIn, routeStep.TokenOutDenom, sender, true)
+		tokenInAfterSubTakerFee, err := k.chargeTakerFee(ctx, tokenIn, routeStep.TokenOutDenom, sender, true)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -212,7 +212,7 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
 	}
 
-	tokenInAfterSubTakerFee, err := k.extractTakerFeeAndDistribute(ctx, tokenIn, tokenOutDenom, sender, true)
+	tokenInAfterSubTakerFee, err := k.chargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, true)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -443,7 +443,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		tokenIn := sdk.NewCoin(routeStep.TokenInDenom, curTokenInAmount)
-		tokenInAfterAddTakerFee, err := k.extractTakerFeeAndDistribute(ctx, tokenIn, _tokenOut.Denom, sender, false)
+		tokenInAfterAddTakerFee, err := k.chargeTakerFee(ctx, tokenIn, _tokenOut.Denom, sender, false)
 		if err != nil {
 			return sdk.Int{}, err
 		}
