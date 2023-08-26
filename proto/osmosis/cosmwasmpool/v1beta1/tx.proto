@@ -4,6 +4,6 @@ package osmosis.cosmwasmpool.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types";
 
 service Msg {}

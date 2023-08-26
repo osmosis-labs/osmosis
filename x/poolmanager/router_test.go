@@ -9,17 +9,17 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v17/tests/mocks"
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	cwpool "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool"
-	cwmodel "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/model"
-	gamm "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
-	"github.com/osmosis-labs/osmosis/v17/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/tests/mocks"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	cwpool "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool"
+	cwmodel "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/model"
+	gamm "github.com/osmosis-labs/osmosis/v19/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 type poolSetup struct {

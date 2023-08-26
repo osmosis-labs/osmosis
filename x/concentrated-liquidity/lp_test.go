@@ -9,11 +9,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	types "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	types "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 type lpTest struct {

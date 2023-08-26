@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
 // BenchmarkEpochHook benchmarks the epoch hook. In particular, it benchmarks the UpdatePools function.

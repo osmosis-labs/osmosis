@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 )
 
 // MsgFilterDecorator defines an AnteHandler decorator for the v8 upgrade that
