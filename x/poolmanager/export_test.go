@@ -70,3 +70,7 @@ func (k Keeper) CalcTakerFeeExactIn(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coi
 func (k Keeper) CalcTakerFeeExactOut(tokenOut sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
 	return k.calcTakerFeeExactOut(tokenOut, takerFee)
 }
+
+func (k Keeper) TrackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
+	k.trackVolume(ctx, poolId, volumeGenerated)
+}

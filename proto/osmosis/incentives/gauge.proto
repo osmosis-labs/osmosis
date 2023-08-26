@@ -50,6 +50,23 @@ message Gauge {
   ];
 }
 
+// SplittingPolicy determines the way we want to split incentives in groupGauges
+enum SplittingPolicy {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  Volume = 0;
+  Evenly = 1;
+}
+
+// Gauge is an object that stores GroupGaugeId as well as internalGaugeIds. We
+// linked these two together so that we can distribute tokens from groupGauge to
+// internalGauges.
+message GroupGauge {
+  uint64 group_gauge_id = 1;
+  repeated uint64 internal_ids = 2;
+  SplittingPolicy splitting_policy = 3;
+}
+
 message LockableDurationsInfo {
   // List of incentivised durations that gauges will pay out to
   repeated google.protobuf.Duration lockable_durations = 1 [
