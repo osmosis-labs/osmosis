@@ -225,7 +225,6 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 			},
 
 			expectedSetDenomPairTakerFeeEvent: 2,
-			expectedMessageEvents:             1,
 		},
 		"valid case: one pair": {
 			denomPairTakerFeeMessage: types.MsgSetDenomPairTakerFee{
@@ -240,7 +239,6 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 			},
 
 			expectedSetDenomPairTakerFeeEvent: 1,
-			expectedMessageEvents:             1,
 		},
 		"error: not admin account": {
 			denomPairTakerFeeMessage: types.MsgSetDenomPairTakerFee{
@@ -282,9 +280,8 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 			} else {
 				s.Require().NoError(err)
 				s.AssertEventEmitted(s.Ctx, types.TypeMsgSetDenomPairTakerFee, tc.expectedSetDenomPairTakerFeeEvent)
-				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, 1)
 			}
-
 		})
 	}
 }
