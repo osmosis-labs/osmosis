@@ -295,6 +295,22 @@ func (k Keeper) clearKeysByPrefix(ctx sdk.Context, prefix []byte) {
 	}
 }
 
+func (k Keeper) RebuildAccumulationStoreForDenom(ctx sdk.Context, denom string) {
+	prefix := accumulationStorePrefix(denom)
+	k.clearKeysByPrefix(ctx, prefix)
+	locks := k.GetLocksDenom(ctx, denom)
+	mapDurationToAmount := make(map[time.Duration]sdk.Int)
+	for _, lock := range locks {
+		if v, ok := mapDurationToAmount[lock.Duration]; ok {
+			mapDurationToAmount[lock.Duration] = v.Add(lock.Coins.AmountOf(denom))
+		} else {
+			mapDurationToAmount[lock.Duration] = lock.Coins.AmountOf(denom)
+		}
+	}
+
+	k.writeDurationValuesToAccumTree(ctx, denom, mapDurationToAmount)
+}
+
 func (k Keeper) ClearAccumulationStores(ctx sdk.Context) {
 	k.clearKeysByPrefix(ctx, types.KeyPrefixLockAccumulation)
 }
@@ -599,23 +615,27 @@ func (k Keeper) InitializeAllLocks(ctx sdk.Context, locks []types.PeriodLock) er
 	sort.Strings(denoms)
 	for _, denom := range denoms {
 		curDurationMap := accumulationStoreEntries[denom]
-		durations := make([]time.Duration, 0, len(curDurationMap))
-		for duration := range curDurationMap {
-			durations = append(durations, duration)
-		}
-		sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })
-		// now that we have a sorted list of durations for this denom,
-		// add them all to accumulation store
-		msg := fmt.Sprintf("Setting accumulation entries for locks for %s, there are %d distinct durations",
-			denom, len(durations))
-		ctx.Logger().Info(msg)
-		for _, d := range durations {
-			amt := curDurationMap[d]
-			k.accumulationStore(ctx, denom).Increase(accumulationKey(d), amt)
-		}
+		k.writeDurationValuesToAccumTree(ctx, denom, curDurationMap)
 	}
 
 	return nil
+}
+
+func (k Keeper) writeDurationValuesToAccumTree(ctx sdk.Context, denom string, durationValueMap map[time.Duration]sdk.Int) {
+	durations := make([]time.Duration, 0, len(durationValueMap))
+	for duration := range durationValueMap {
+		durations = append(durations, duration)
+	}
+	sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })
+	// now that we have a sorted list of durations for this denom,
+	// add them all to accumulation store
+	msg := fmt.Sprintf("Setting accumulation entries for locks for %s, there are %d distinct durations",
+		denom, len(durations))
+	ctx.Logger().Info(msg)
+	for _, d := range durations {
+		amt := durationValueMap[d]
+		k.accumulationStore(ctx, denom).Increase(accumulationKey(d), amt)
+	}
 }
 
 func (k Keeper) InitializeAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.SyntheticLock) error {
