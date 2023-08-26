@@ -6,7 +6,7 @@ import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/swap_route.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/gamm/types";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/gamm/types";
 
 service Msg {
   rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);

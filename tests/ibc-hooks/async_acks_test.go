@@ -12,7 +12,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/app"
+	"github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
 

@@ -16,7 +16,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
 )
 
 // Manager defines a simulation manager that provides the high level utility
