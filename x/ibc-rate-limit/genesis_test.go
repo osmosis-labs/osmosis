@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v18/x/ibc-rate-limit/types"
 )
 
 type GenesisTestSuite struct {

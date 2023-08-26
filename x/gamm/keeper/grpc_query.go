@@ -15,10 +15,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/v2types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v18/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v18/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v18/x/gamm/v2types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
 )
 
 var _ types.QueryServer = Querier{}

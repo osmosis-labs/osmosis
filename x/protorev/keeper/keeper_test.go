@@ -9,15 +9,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v17/x/protorev"
-	protorevkeeper "github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v18/x/protorev"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v18/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v18/x/protorev/types"
 
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v18/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v18/x/gamm/pool-models/stableswap"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v17/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v18/app"
 )
 
 type KeeperTestSuite struct {
