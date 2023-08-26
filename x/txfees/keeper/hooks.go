@@ -14,14 +14,14 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 
 // at the end of each epoch, swap all non-OSMO fees into OSMO and transfer to fee module account
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-	defaultTxFeesDenom, _ := k.GetBaseDenom(ctx)
+	defaultFeesDenom, _ := k.GetBaseDenom(ctx)
 
 	nonNativeFeeCollectorForStakingRewardsAddr := k.accountKeeper.GetModuleAddress(txfeestypes.NonNativeFeeCollectorForStakingRewardsName)
 	nonNativeFeeCollectorForStakingRewardsBalance := k.bankKeeper.GetAllBalances(ctx, nonNativeFeeCollectorForStakingRewardsAddr)
 
 	// Non-native fee collector for staking rewards get swapped entirely into base denom.
 	for _, coin := range nonNativeFeeCollectorForStakingRewardsBalance {
-		if coin.Denom == defaultTxFeesDenom {
+		if coin.Denom == defaultFeesDenom {
 			continue
 		}
 
@@ -30,7 +30,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			continue
 		}
 
-		poolId, err := k.protorevKeeper.GetPoolForDenomPair(ctx, defaultTxFeesDenom, coin.Denom)
+		poolId, err := k.protorevKeeper.GetPoolForDenomPair(ctx, defaultFeesDenom, coin.Denom)
 		if err != nil {
 			// The pool route either doesn't exist or is disabled in protorev.
 			// It will just accrue in the non-native fee collector account.
@@ -48,13 +48,13 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 			// We swap without charging a taker fee / sending to the non native fee collector, since these are funds that
 			// are accruing from the taker fee itself.
-			_, err := k.poolManager.SwapExactAmountInNoTakerFee(cacheCtx, nonNativeFeeCollectorForStakingRewardsAddr, poolId, coinBalance, defaultTxFeesDenom, minAmountOut)
+			_, err := k.poolManager.SwapExactAmountInNoTakerFee(cacheCtx, nonNativeFeeCollectorForStakingRewardsAddr, poolId, coinBalance, defaultFeesDenom, minAmountOut)
 			return err
 		})
 	}
 
 	// Now that the rewards have been swapped, transfer any base denom existing in the non-native fee collector to the fee collector (indirectly distributing to stakers)
-	baseDenomCoins := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, nonNativeFeeCollectorForStakingRewardsAddr, defaultTxFeesDenom))
+	baseDenomCoins := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, nonNativeFeeCollectorForStakingRewardsAddr, defaultFeesDenom))
 	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeFeeCollectorForStakingRewardsName, txfeestypes.FeeCollectorName, baseDenomCoins)
 		return err
