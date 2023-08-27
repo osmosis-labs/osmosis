@@ -139,8 +139,9 @@ var (
 	}
 )
 
-func (s *KeeperTestSuite) withTakerFees(pools []poolSetup, indices []uint64, updatedFees []sdk.Dec) []poolSetup {
-	s.Require().Equal(len(indices), len(updatedFees))
+// withTakerFees overrides the taker fees for the given pool setup info at the given indices and returns the full set of updated pool setup info.
+func (s *KeeperTestSuite) withTakerFees(pools []poolSetup, indicesToUpdate []uint64, updatedFees []sdk.Dec) []poolSetup {
+	s.Require().Equal(len(indicesToUpdate), len(updatedFees))
 
 	// Deep copy pools
 	copiedPools := make([]poolSetup, len(pools))
@@ -149,7 +150,7 @@ func (s *KeeperTestSuite) withTakerFees(pools []poolSetup, indices []uint64, upd
 	}
 
 	// Update taker fees on copied pools
-	for i, index := range indices {
+	for i, index := range indicesToUpdate {
 		copiedPools[index].takerFee = updatedFees[i]
 	}
 
