@@ -1909,9 +1909,23 @@ func (s *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSpreadF
 	}
 }
 
+// withInput takes in a types.SwapAmountInSplitRoute and returns it with the given input amount as TokenInAmount
+func withInputSwapIn(route types.SwapAmountInSplitRoute, input sdk.Int) types.SwapAmountInSplitRoute {
+	route.TokenInAmount = input
+	return route
+}
+
+// withInput takes in a types.SwapAmountOutSplitRoute and returns it with the given input amount as TokenInAmount
+func withInputSwapOut(route types.SwapAmountOutSplitRoute, input sdk.Int) types.SwapAmountOutSplitRoute {
+	route.TokenOutAmount = input
+	return route
+}
+
 // TestSplitRouteExactAmountIn tests the splitRouteExactAmountIn function.
 func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 	var (
+		// Note: all pools have the default amount of 10_000_000_000 in each asset,
+		// meaning in their initial state they have a spot price of 1.
 		defaultSingleRouteOneHop = []types.SwapAmountInSplitRoute{
 			{
 				Pools: []types.SwapAmountInRoute{
@@ -1937,6 +1951,20 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 
 		defaultSingleRouteTwoHops = types.SwapAmountInSplitRoute{
 			Pools:         defaultTwoHopRoutes,
+			TokenInAmount: twentyFiveBaseUnitsAmount,
+		}
+
+		fooUosmoBazTwoHops = types.SwapAmountInSplitRoute{
+			Pools: []types.SwapAmountInRoute{
+				{
+					PoolId:        fooUosmoPoolId,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        bazUosmoPoolId,
+					TokenOutDenom: baz,
+				},
+			},
 			TokenInAmount: twentyFiveBaseUnitsAmount,
 		}
 
@@ -1967,6 +1995,9 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		tokenInDenom      string
 		tokenOutMinAmount sdk.Int
 
+		takerFee         sdk.Dec
+		checkExactOutput bool
+
 		// This value was taken from the actual result
 		// and not manually calculated. This is acceptable
 		// for this test because we are not testing the math
@@ -1985,6 +2016,18 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 		},
+		"valid solo route one hop (exact output check)": {
+			routes: []types.SwapAmountInSplitRoute{
+				withInputSwapIn(defaultSingleRouteOneHop[0], sdk.NewInt(1000)),
+			},
+			tokenInDenom:      foo,
+			tokenOutMinAmount: sdk.OneInt(),
+
+			takerFee:         sdk.MustNewDecFromStr("0.003"),
+			checkExactOutput: true,
+			// We expect the output to truncate
+			expectedTokenOutEstimate: sdk.NewInt(996),
+		},
 		"valid solo route multi hop": {
 			routes:            []types.SwapAmountInSplitRoute{defaultSingleRouteTwoHops},
 			tokenInDenom:      foo,
@@ -2002,6 +2045,23 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 
 			// 1x from single route two hops and 3x from single route three hops
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount.MulRaw(4),
+		},
+		"valid split route multi hop (exact output check)": {
+			routes: []types.SwapAmountInSplitRoute{
+				withInputSwapIn(defaultSingleRouteTwoHops, sdk.NewInt(1000)),
+				withInputSwapIn(fooUosmoBazTwoHops, sdk.NewInt(1000)),
+			},
+			tokenInDenom:      foo,
+			tokenOutMinAmount: sdk.OneInt(),
+
+			takerFee:         sdk.MustNewDecFromStr("0.0035"),
+			checkExactOutput: true,
+			// We charge taker fee on each hop and expect the output to truncate
+			// The output of first hop: (1 - 0.0035) * 1000 = 996.5, truncated to 996
+			// which has an additional truncation after the swap executes, leaving 995.
+			// The second hop is similar: (1 - 0.0035) * 995 = 991.5, truncated to 991
+			// which has an additional truncation after the swap executes, leaving 990.
+			expectedTokenOutEstimate: sdk.NewInt(990 + 990),
 		},
 
 		"valid split route multi hop with price impact protection that would fail individual route if given per multihop": {
@@ -2077,6 +2137,11 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			for _, pool := range defaultValidPools {
 				s.CreatePoolFromTypeWithCoins(pool.poolType, pool.initialLiquidity)
 
+				if (tc.takerFee != sdk.Dec{}) {
+					// If applicable, set taker fee. Note that denoms are reordered lexicographically before being stored.
+					k.SetDenomPairTakerFee(s.Ctx, pool.initialLiquidity[0].Denom, pool.initialLiquidity[1].Denom, tc.takerFee)
+				}
+
 				// Fund sender with initial liqudity
 				// If not valid, we don't fund to trigger an error case.
 				if !tc.isInvalidSender {
@@ -2093,15 +2158,21 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			}
 			s.Require().NoError(err)
 
-			// Note, we use a 1% error tolerance with rounding down
+			// Note, we use a 1% error tolerance with rounding down by default
 			// because we initialize the reserves 1:1 so by performing
 			// the swap we don't expect the price to change significantly.
 			// As a result, we roughly expect the amount out to be the same
 			// as the amount in given in another token. However, the actual
 			// amount must be stricly less than the given due to price impact.
+			multiplicativeTolerance := sdk.OneDec()
+			if tc.checkExactOutput {
+				// We set to a small value instead of zero since zero is a special case
+				// where multiplicative tolerance is skipped/not considered
+				multiplicativeTolerance = sdk.NewDecWithPrec(1, 8)
+			}
 			errTolerance := osmomath.ErrTolerance{
 				RoundingDir:             osmomath.RoundDown,
-				MultiplicativeTolerance: sdk.NewDec(1),
+				MultiplicativeTolerance: multiplicativeTolerance,
 			}
 
 			s.Require().Equal(0, errTolerance.Compare(tc.expectedTokenOutEstimate, tokenOut), fmt.Sprintf("expected %s, got %s", tc.expectedTokenOutEstimate, tokenOut))
@@ -2133,6 +2204,20 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 				PoolId:       barBazPoolId,
 				TokenInDenom: bar,
 			},
+		}
+
+		fooUosmoBazTwoHops = types.SwapAmountOutSplitRoute{
+			Pools: []types.SwapAmountOutRoute{
+				{
+					PoolId:       fooUosmoPoolId,
+					TokenInDenom: foo,
+				},
+				{
+					PoolId:       bazUosmoPoolId,
+					TokenInDenom: uosmo,
+				},
+			},
+			TokenOutAmount: twentyFiveBaseUnitsAmount,
 		}
 
 		defaultSingleRouteTwoHops = types.SwapAmountOutSplitRoute{
@@ -2167,6 +2252,9 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 		tokenOutDenom    string
 		tokenInMaxAmount sdk.Int
 
+		checkExactOutput bool
+		takerFee         sdk.Dec
+
 		// This value was taken from the actual result
 		// and not manually calculated. This is acceptable
 		// for this test because we are not testing the math
@@ -2174,7 +2262,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 		// The math should be tested per-module.
 		// We keep this assertion to make sure that the
 		// actual result is within a reasonable range.
-		expectedTokenOutEstimate sdk.Int
+		expectedTokenInEstimate sdk.Int
 
 		expectError error
 	}{
@@ -2183,14 +2271,27 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			tokenOutDenom:    bar,
 			tokenInMaxAmount: poolmanager.IntMaxValue,
 
-			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
+			expectedTokenInEstimate: twentyFiveBaseUnitsAmount,
+		},
+		"valid solo route one hop (exact output check)": {
+			routes: []types.SwapAmountOutSplitRoute{
+				withInputSwapOut(defaultSingleRouteOneHop[0], sdk.NewInt(1000)),
+			},
+			tokenOutDenom:    bar,
+			tokenInMaxAmount: poolmanager.IntMaxValue,
+
+			takerFee:         sdk.MustNewDecFromStr("0.003"),
+			checkExactOutput: true,
+
+			// (1000 / (1 - 0.003)) = 1003.009, rounded up = 1004
+			expectedTokenInEstimate: sdk.NewInt(1004),
 		},
 		"valid solo route multi hop": {
 			routes:           []types.SwapAmountOutSplitRoute{defaultSingleRouteTwoHops},
 			tokenOutDenom:    baz,
 			tokenInMaxAmount: poolmanager.IntMaxValue,
 
-			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
+			expectedTokenInEstimate: twentyFiveBaseUnitsAmount,
 		},
 		"valid split route multi hop": {
 			routes: []types.SwapAmountOutSplitRoute{
@@ -2201,7 +2302,25 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			tokenInMaxAmount: poolmanager.IntMaxValue,
 
 			// 1x from single route two hops and 3x from single route three hops
-			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount.MulRaw(4),
+			expectedTokenInEstimate: twentyFiveBaseUnitsAmount.MulRaw(4),
+		},
+		"valid split route multi hop (exact output check)": {
+			routes: []types.SwapAmountOutSplitRoute{
+				withInputSwapOut(defaultSingleRouteTwoHops, sdk.NewInt(1000)),
+				withInputSwapOut(fooUosmoBazTwoHops, sdk.NewInt(1000)),
+			},
+			tokenOutDenom:    baz,
+			tokenInMaxAmount: poolmanager.IntMaxValue,
+
+			takerFee:         sdk.MustNewDecFromStr("0.0035"),
+			checkExactOutput: true,
+
+			// We charge taker fee on each hop and expect the output to round up at each step
+			// The output of first hop: (1000 / (1 - 0.0035)) = 1003.51, rounded up = 1004
+			// which has an additional rounding up after the swap executes, leaving 1005.
+			// The second hop is similar: (1005 / (1 - 0.0035)) = 1008.52, rounded up = 1009
+			// which has an additional rounding up after the swap executes, leaving 1010.
+			expectedTokenInEstimate: sdk.NewInt(1010 + 1010),
 		},
 
 		"valid split route multi hop with price impact protection that would fail individual route if given per multihop": {
@@ -2214,7 +2333,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			// every route individually would fail, but the split route should succeed
 			tokenInMaxAmount: priceImpactThreshold,
 
-			expectedTokenOutEstimate: priceImpactThreshold,
+			expectedTokenInEstimate: priceImpactThreshold,
 		},
 
 		"error: price impact protection triggerred": {
@@ -2279,6 +2398,11 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			for _, pool := range defaultValidPools {
 				s.CreatePoolFromTypeWithCoins(pool.poolType, pool.initialLiquidity)
 
+				if (tc.takerFee != sdk.Dec{}) {
+					// If applicable, set taker fee. Note that denoms are reordered lexicographically before being stored.
+					k.SetDenomPairTakerFee(s.Ctx, pool.initialLiquidity[0].Denom, pool.initialLiquidity[1].Denom, tc.takerFee)
+				}
+
 				// Fund sender with initial liqudity
 				// If not valid, we don't fund to trigger an error case.
 				if !tc.isInvalidSender {
@@ -2286,7 +2410,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 				}
 			}
 
-			tokenOut, err := k.SplitRouteExactAmountOut(s.Ctx, sender, tc.routes, tc.tokenOutDenom, tc.tokenInMaxAmount)
+			tokenIn, err := k.SplitRouteExactAmountOut(s.Ctx, sender, tc.routes, tc.tokenOutDenom, tc.tokenInMaxAmount)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -2301,12 +2425,18 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			// As a result, we roughly expect the amount in to be the same
 			// as the amount out given of another token. However, the actual
 			// amount must be stricly greater than the given due to price impact.
+			multiplicativeTolerance := sdk.OneDec()
+			if tc.checkExactOutput {
+				// We set to a small value instead of zero since zero is a special case
+				// where multiplicative tolerance is skipped/not considered
+				multiplicativeTolerance = sdk.NewDecWithPrec(1, 8)
+			}
 			errTolerance := osmomath.ErrTolerance{
 				RoundingDir:             osmomath.RoundUp,
-				MultiplicativeTolerance: sdk.NewDec(1),
+				MultiplicativeTolerance: multiplicativeTolerance,
 			}
 
-			s.Require().Equal(0, errTolerance.Compare(tc.expectedTokenOutEstimate, tokenOut), fmt.Sprintf("expected %s, got %s", tc.expectedTokenOutEstimate, tokenOut))
+			s.Require().Equal(0, errTolerance.Compare(tc.expectedTokenInEstimate, tokenIn), fmt.Sprintf("expected %s, got %s", tc.expectedTokenInEstimate, tokenIn))
 		})
 	}
 }
