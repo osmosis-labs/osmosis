@@ -118,69 +118,215 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	}
 }
 
-func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom() {
+func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 	s.Setup()
 
-	var (
-		defaultTxFeesDenom, _ = s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
-		defaultPoolCoins      = sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin(defaultTxFeesDenom, sdk.NewInt(100)))
-		defaultBalanceToSwap  = sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)))
+	const (
+		preSwapDenom = "foo"
 	)
 
-	tests := []struct {
-		name                string
-		denomToSwapTo       string
-		poolCoins           sdk.Coins
-		preFundCoins        sdk.Coins
-		feeCollectorAddress sdk.AccAddress
-		expectPass          bool
-	}{
-		{
-			name:          "happy path",
-			denomToSwapTo: defaultTxFeesDenom,
-			poolCoins:     defaultPoolCoins,
-			preFundCoins:  defaultBalanceToSwap,
-		},
+	var (
+		defaultTxFeesDenom, _      = s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+		defaultPoolCoins           = sdk.NewCoins(sdk.NewCoin(preSwapDenom, sdk.NewInt(100)), sdk.NewCoin(defaultTxFeesDenom, sdk.NewInt(100)))
+		defaultBalanceToSwap       = sdk.NewCoins(sdk.NewCoin(preSwapDenom, sdk.NewInt(100)))
+		defaultProtorevLinkDenoms  = []string{preSwapDenom, defaultTxFeesDenom}
+		reversedProtorevLinkDenoms = []string{defaultTxFeesDenom, preSwapDenom}
+	)
 
-		// TODO: add more test cases
-		// - pool does not exist for denom pair but protorev has it set for a pair
-		// - error in swap due to no liquidity
-		// - same denom in balance as denomToSwapTo
-		// - no pool exists for denom pair in protorev
-		// - many tokens in balance, some get swapped, others don't
-		// - different order of denoms in SetPoolForDenomPair()
+	validateFinalBalance := func(expectedEndBalanceDenoms []string, testAccount sdk.AccAddress) {
+		// Check balance
+		balances := s.App.BankKeeper.GetAllBalances(s.Ctx, testAccount)
+
+		// Validate that the final denoms in the balance are as expected per test configuration.
+		// On success, swapped to denomToSwapTo. On failure, kept as is.
+		s.Require().Len(balances, len(expectedEndBalanceDenoms))
+		for i, actualDenomInBalance := range expectedEndBalanceDenoms {
+			s.Require().Contains(expectedEndBalanceDenoms[i], actualDenomInBalance)
+		}
 	}
 
-	for _, tc := range tests {
-		tc := tc
+	// tests SwapNonNativeFeeToDenom success and silent error cases
+	// where there is only one token in the initial balance.
+	s.Run("simple cases", func() {
+		tests := []struct {
+			name                string
+			denomToSwapTo       string
+			poolCoins           sdk.Coins
+			preFundCoins        sdk.Coins
+			protoRevLinkDenoms  []string
+			feeCollectorAddress sdk.AccAddress
 
-		s.Run(tc.name, func() {
-			s.Setup()
+			doNotCreatePool   bool
+			doNotAddLiquidity bool
 
-			// Sets up account with no balance
-			testAccount := apptesting.CreateRandomAccounts(1)[0]
+			expectedEndBalanceDenoms []string
 
-			// Create a pool to be swapped against
-			poolId := s.PrepareConcentratedPoolWithCoins(tc.poolCoins[0].Denom, tc.poolCoins[1].Denom).GetId()
+			expectPass bool
+		}{
+			{
+				name:               "happy path",
+				denomToSwapTo:      defaultTxFeesDenom,
+				poolCoins:          defaultPoolCoins,
+				preFundCoins:       defaultBalanceToSwap,
+				protoRevLinkDenoms: defaultProtorevLinkDenoms,
 
-			s.FundAcc(s.TestAccs[0], tc.poolCoins)
-			_, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolId, s.TestAccs[0], tc.poolCoins)
-			s.Require().NoError(err)
+				// Swap happened.
+				expectedEndBalanceDenoms: []string{defaultTxFeesDenom},
+			},
+			{
+				name:               "happy path with protorev link denoms reversed",
+				denomToSwapTo:      defaultTxFeesDenom,
+				poolCoins:          defaultPoolCoins,
+				preFundCoins:       defaultBalanceToSwap,
+				protoRevLinkDenoms: reversedProtorevLinkDenoms,
 
-			// Set the pool for the denom pair
-			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, tc.poolCoins[0].Denom, tc.poolCoins[1].Denom, poolId)
+				// Swap happened.
+				expectedEndBalanceDenoms: []string{defaultTxFeesDenom},
+			},
+			{
+				name:               "error in swap due to pool not created but pool id to denom pair link set. No swap happens and no error/panic",
+				denomToSwapTo:      defaultTxFeesDenom,
+				poolCoins:          defaultPoolCoins,
+				preFundCoins:       defaultBalanceToSwap,
+				protoRevLinkDenoms: defaultProtorevLinkDenoms,
 
-			// Fund the account with the preFundCoins
-			s.FundAcc(testAccount, tc.preFundCoins)
+				doNotCreatePool: true,
 
-			s.App.TxFeesKeeper.SwapNonNativeFeeToDenom(s.Ctx, tc.denomToSwapTo, testAccount)
+				// Swap did not happen.
+				expectedEndBalanceDenoms: []string{preSwapDenom},
+			},
+			{
+				name:               "error in swap due to no liquidity. No swap happens and no error/panic",
+				denomToSwapTo:      defaultTxFeesDenom,
+				poolCoins:          defaultPoolCoins,
+				preFundCoins:       defaultBalanceToSwap,
+				protoRevLinkDenoms: defaultProtorevLinkDenoms,
 
-			// Check balance
-			balances := s.App.BankKeeper.GetAllBalances(s.Ctx, testAccount)
-			s.Require().Len(balances, 1)
+				doNotAddLiquidity: true,
 
-			// Check that the denomToSwapTo is the denom of the balance
-			s.Require().Equal(balances[0].Denom, tc.denomToSwapTo)
-		})
-	}
+				// Swap did not happen.
+				expectedEndBalanceDenoms: []string{preSwapDenom},
+			},
+			{
+				name:               "same denom in balance as denomToSwapTo - no-op",
+				denomToSwapTo:      defaultTxFeesDenom,
+				poolCoins:          defaultPoolCoins,
+				preFundCoins:       defaultPoolCoins.FilterDenoms([]string{defaultTxFeesDenom}),
+				protoRevLinkDenoms: defaultProtorevLinkDenoms,
+
+				// Swap did not happen but denomToSwapTo was already in balance.
+				expectedEndBalanceDenoms: []string{defaultTxFeesDenom},
+			},
+			{
+				name:          "no pool exists for denom pair in protorev - no-op",
+				denomToSwapTo: defaultTxFeesDenom,
+				poolCoins:     defaultPoolCoins,
+				preFundCoins:  defaultBalanceToSwap,
+				// Note no protorev link denoms set.
+
+				// Swap did not happen.
+				expectedEndBalanceDenoms: []string{preSwapDenom},
+			},
+		}
+
+		for _, tc := range tests {
+			tc := tc
+
+			s.Run(tc.name, func() {
+				s.Setup()
+
+				// Sets up account with no balance
+				testAccount := apptesting.CreateRandomAccounts(1)[0]
+
+				poolId := uint64(1)
+				if !tc.doNotCreatePool || !tc.doNotAddLiquidity {
+					// Create a pool to be swapped against.
+					poolId := s.PrepareConcentratedPoolWithCoins(tc.poolCoins[0].Denom, tc.poolCoins[1].Denom).GetId()
+
+					// Add liquidity
+					if !tc.doNotAddLiquidity {
+						s.FundAcc(s.TestAccs[0], tc.poolCoins)
+						_, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolId, s.TestAccs[0], tc.poolCoins)
+						s.Require().NoError(err)
+					}
+				}
+
+				// Set the pool for the denom pair per configuration.
+				if len(tc.protoRevLinkDenoms) > 0 {
+					s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, tc.poolCoins[0].Denom, tc.poolCoins[1].Denom, poolId)
+				}
+
+				// Fund the account with the preFundCoins
+				s.FundAcc(testAccount, tc.preFundCoins)
+
+				// System under test.
+				s.App.TxFeesKeeper.SwapNonNativeFeeToDenom(s.Ctx, tc.denomToSwapTo, testAccount)
+
+				// Check balance
+				validateFinalBalance(tc.expectedEndBalanceDenoms, testAccount)
+			})
+		}
+	})
+
+	// tests SwapNonNativeFeeToDenom with multiple tokens
+	// in the initial balance. Some of these tokens sucessfully swap, others do not and are silently skipped.
+	// The denomToSwapTo in the initial balance is also silently skipped
+	s.Run("multiple tokens", func() {
+		s.Setup()
+
+		const (
+			otherPreSwapDenom       = "bar"
+			denomWithNoPool         = "baz"
+			denomWithNoProtorevLink = "qux"
+		)
+
+		denomToSwapTo := defaultTxFeesDenom
+
+		preFundCoins := sdk.NewCoins(
+			sdk.NewCoin(preSwapDenom, sdk.NewInt(100)),            // first pool with a link to denom pair in protorev (gets swapped)
+			sdk.NewCoin(denomToSwapTo, sdk.NewInt(300)),           // denomToSwapTo (left as is in balane)
+			sdk.NewCoin(denomWithNoPool, sdk.NewInt(400)),         // no pool exists, silently skipped
+			sdk.NewCoin(denomWithNoProtorevLink, sdk.NewInt(500)), // pool with no link to denom pair in protorev, silently skipped
+			sdk.NewCoin(otherPreSwapDenom, sdk.NewInt(600)),       // second pool with a link to denom pair in protorev (gets swapped)
+		)
+
+		// Note: preSwapDenom and otherPreSwapDenom get swapped to denomToSwapTo.
+		// Other denoms are silently skipped.
+		expectedEndBalanceDenoms := []string{denomToSwapTo, denomWithNoPool, denomWithNoProtorevLink}
+
+		// Create 2 pools:
+		// denomToSwapTo and preSwapDenom
+		// otherPreSwapDenom and preSwapDenom
+		poolIdOne := s.PrepareConcentratedPoolWithCoins(denomToSwapTo, preSwapDenom).GetId()
+		poolIdTwo := s.PrepareConcentratedPoolWithCoins(otherPreSwapDenom, denomToSwapTo).GetId()
+
+		// Add liquidity to both pools
+		poolOneCoins := sdk.NewCoins(sdk.NewCoin(preSwapDenom, sdk.NewInt(100)), sdk.NewCoin(denomToSwapTo, sdk.NewInt(100)))
+		poolTwoCoins := sdk.NewCoins(sdk.NewCoin(otherPreSwapDenom, sdk.NewInt(100)), sdk.NewCoin(denomToSwapTo, sdk.NewInt(100)))
+		s.FundAcc(s.TestAccs[0], poolOneCoins.Add(poolTwoCoins...))
+
+		_, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolIdOne, s.TestAccs[0], poolOneCoins)
+		s.Require().NoError(err)
+
+		_, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolIdTwo, s.TestAccs[0], poolTwoCoins)
+		s.Require().NoError(err)
+
+		// Set the link where denoms are base - quote ordered.
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, poolOneCoins[0].Denom, poolOneCoins[1].Denom, poolIdOne)
+
+		// Set the link where denoms are quote - base ordered.
+		s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, poolTwoCoins[1].Denom, poolTwoCoins[0].Denom, poolIdTwo)
+
+		// Sets up account with no balance
+		testAccount := apptesting.CreateRandomAccounts(1)[0]
+
+		// Fund the account with the preFundCoins
+		s.FundAcc(testAccount, preFundCoins)
+
+		// System under test.
+		s.App.TxFeesKeeper.SwapNonNativeFeeToDenom(s.Ctx, denomToSwapTo, testAccount)
+
+		// Check balance
+		validateFinalBalance(expectedEndBalanceDenoms, testAccount)
+	})
 }

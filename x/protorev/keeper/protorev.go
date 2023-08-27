@@ -136,7 +136,6 @@ func (k Keeper) GetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch str
 // GetPoolForDenomPairNoOrder returns the id of the pool between the two denoms.
 // It is order-independent. That is, tokenA can either be a base or a quote. Both cases are handled.
 // If no pool exists, an error is returned.
-// TODO: unit test
 func (k Keeper) GetPoolForDenomPairNoOrder(ctx sdk.Context, tokenA, tokenB string) (uint64, error) {
 	poolId, err := k.GetPoolForDenomPair(ctx, tokenA, tokenB)
 	if err != nil {
