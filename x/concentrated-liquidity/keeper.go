@@ -9,7 +9,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 type Keeper struct {
@@ -128,14 +127,18 @@ func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error
 	return nil
 }
 
-// PoolManagerGetParams is a wrapper for poolmanager's GetParams, and is solely used
-// to get access to this method for use in sim_msgs.go for the CL module.
-func (k Keeper) PoolManagerGetParams(ctx sdk.Context) poolmanagertypes.Params {
-	return k.poolmanagerKeeper.GetParams(ctx)
+// GetAuthorizedQuoteDenoms gets the authorized quote denoms from the poolmanager keeper.
+// This method is meant to be used for getting access to x/poolmanager params
+// for use in sim_msgs.go for the CL module.
+func (k Keeper) GetAuthorizedQuoteDenoms(ctx sdk.Context) []string {
+	return k.poolmanagerKeeper.GetParams(ctx).AuthorizedQuoteDenoms
 }
 
-// PoolManagerSetParams is a wrapper for poolmanager's SetParams, and is solely used
-// to get access to this method for use in sim_msgs.go for the CL module.
-func (k Keeper) PoolManagerSetParams(ctx sdk.Context, params poolmanagertypes.Params) {
+// SetAuthorizedQuoteDenoms sets the authorized quote denoms in the poolmanager keeper.
+// This method is meant to be used for getting access to x/poolmanager params
+// for use in sim_msgs.go for the CL module.
+func (k Keeper) SetAuthorizedQuoteDenoms(ctx sdk.Context, authorizedQuoteDenoms []string) {
+	params := k.poolmanagerKeeper.GetParams(ctx)
+	params.AuthorizedQuoteDenoms = authorizedQuoteDenoms
 	k.poolmanagerKeeper.SetParams(ctx, params)
 }

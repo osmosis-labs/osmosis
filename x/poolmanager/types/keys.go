@@ -40,7 +40,7 @@ func FormatModuleRouteKey(poolId uint64) []byte {
 func FormatDenomTradePairKey(denom0, denom1 string) []byte {
 	denoms := []string{denom0, denom1}
 	sort.Strings(denoms)
-	return []byte(fmt.Sprintf("%s%s%s", DenomTradePairPrefix, denoms[0], denoms[1]))
+	return []byte(fmt.Sprintf("%s%s%s%s%s", DenomTradePairPrefix, KeySeparator, denoms[0], KeySeparator, denoms[1]))
 }
 
 // ParseModuleRouteFromBz parses the raw bytes into ModuleRoute.

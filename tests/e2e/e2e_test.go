@@ -44,6 +44,12 @@ var (
 
 // TODO: Find more scalable way to do this
 func (s *IntegrationTestSuite) TestAllE2E() {
+	// Reset the default taker fee to 0.15%, so we can actually run tests with it activated
+	s.T().Run("SetDefaultTakerFeeBothChains", func(t *testing.T) {
+		s.T().Log("resetting the default taker fee to 0.15%")
+		s.SetDefaultTakerFeeBothChains()
+	})
+
 	// Zero Dependent Tests
 	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
 		t.Parallel()
@@ -1816,4 +1822,37 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	// uosmo = 2_000_000
 	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
+}
+
+func (s *IntegrationTestSuite) SetDefaultTakerFeeBothChains() {
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// Chain A
+
+	go func() {
+		defer wg.Done()
+		chainA, chainANode, err := s.getChainACfgs()
+		s.Require().NoError(err)
+		s.SetDefaultTakerFee(chainA, chainANode)
+	}()
+
+	// Chain B
+
+	go func() {
+		defer wg.Done()
+		chainB, chainBNode, err := s.getChainBCfgs()
+		s.Require().NoError(err)
+		s.SetDefaultTakerFee(chainB, chainBNode)
+	}()
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+}
+
+func (s *IntegrationTestSuite) SetDefaultTakerFee(chain *chain.Config, chainNode *chain.NodeConfig) {
+	// Change the parameter to set the default taker fee to a non zero value
+
+	err := chainNode.ParamChangeProposal("poolmanager", string(poolmanagertypes.KeyDefaultTakerFee), json.RawMessage(`"0.001500000000000000"`), chain)
+	s.Require().NoError(err)
 }

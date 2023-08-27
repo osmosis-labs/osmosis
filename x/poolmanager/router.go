@@ -104,7 +104,7 @@ func (k Keeper) RouteExactAmountIn(
 		}
 
 		// Track volume for volume-splitting incentives
-		k.trackVolume(ctx, pool.GetId(), tokenInAfterSubTakerFee)
+		k.trackVolume(ctx, pool.GetId(), tokenIn)
 
 		// Chain output of current pool as the input for the next routed pool
 		tokenIn = sdk.NewCoin(routeStep.TokenOutDenom, tokenOutAmount)
@@ -449,7 +449,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		}
 
 		// Track volume for volume-splitting incentives
-		k.trackVolume(ctx, pool.GetId(), sdk.NewCoin(routeStep.TokenInDenom, tokenInAfterAddTakerFee.Amount))
+		k.trackVolume(ctx, pool.GetId(), sdk.NewCoin(routeStep.TokenInDenom, tokenIn.Amount))
 
 		// Sets the final amount of tokens that need to be input into the first pool. Even though this is the final return value for the
 		// whole method and will not change after the first iteration, we still iterate through the rest of the pools to execute their respective
