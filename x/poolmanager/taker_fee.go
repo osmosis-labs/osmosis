@@ -176,7 +176,7 @@ func (k Keeper) calcTakerFeeExactIn(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coi
 
 func (k Keeper) calcTakerFeeExactOut(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
 	amountInAfterAddTakerFee := tokenIn.Amount.ToDec().Quo(sdk.OneDec().Sub(takerFee))
-	tokenInAfterAddTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterAddTakerFee.Ceil().TruncateInt())
+	tokenInAfterAddTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterAddTakerFee.RoundInt())
 	takerFeeCoin := sdk.NewCoin(tokenIn.Denom, tokenInAfterAddTakerFee.Amount.Sub(tokenIn.Amount))
 
 	return tokenInAfterAddTakerFee, takerFeeCoin

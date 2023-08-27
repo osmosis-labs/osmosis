@@ -1530,7 +1530,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			tokenIn:                sdk.NewCoin(bar, sdk.NewInt(100000)),
 			tokenOutMinAmount:      sdk.NewInt(1),
 			tokenOutDenom:          foo,
-			expectedTokenOutAmount: sdk.NewInt(99650), // 10000 - 0.35%
+			expectedTokenOutAmount: sdk.NewInt(99650), // 100000 - 0.35%
 		},
 		{
 			name:      "Swap - [foo -> bar], 0.1 percent swap fee, 0.33 percent taker fee",
@@ -1634,6 +1634,8 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			// execute the swap
 			var multihopTokenOutAmount sdk.Int
 			var err error
+			// TODO: move the denom pair set out and only run SwapExactAmountIn.
+			// SwapExactAmountInNoTakerFee should be in a different test.
 			if (tc.takerFee != sdk.Dec{}) {
 				// If applicable, set taker fee. Note that denoms are reordered lexicographically before being stored.
 				poolmanagerKeeper.SetDenomPairTakerFee(s.Ctx, tc.poolCoins[0].Denom, tc.poolCoins[1].Denom, tc.takerFee)
