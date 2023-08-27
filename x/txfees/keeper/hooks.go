@@ -92,7 +92,6 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 				// Skip this denom and move on to the next one.
 				continue
 			}
-
 		}
 
 		// Do the swap of this fee token denom to base denom.
