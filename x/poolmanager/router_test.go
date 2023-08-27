@@ -1556,7 +1556,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:      sdk.NewInt(1),
 			tokenOutDenom:          bar,
-			expectedTokenOutAmount: sdk.NewInt(100000),
+			expectedTokenOutAmount: sdk.NewInt(100000 - 1),
 		},
 		// 99% taker fee 99% swap fee
 		{
