@@ -48,7 +48,7 @@ func DefaultParams() Params {
 	return Params{
 		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
 		TakerFeeParams: TakerFeeParams{
-			DefaultTakerFee: sdk.MustNewDecFromStr("0.0015"), // 0.15%
+			DefaultTakerFee: sdk.ZeroDec(), // 0%
 			OsmoTakerFeeDistribution: TakerFeeDistributionPercentage{
 				StakingRewards: sdk.MustNewDecFromStr("1"), // 100%
 				CommunityPool:  sdk.MustNewDecFromStr("0"), // 0%

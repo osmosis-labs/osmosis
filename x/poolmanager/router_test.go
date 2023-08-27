@@ -41,7 +41,7 @@ var (
 	pointOneFivePercent     = sdk.MustNewDecFromStr("0.0015")
 	pointThreePercent       = sdk.MustNewDecFromStr("0.003")
 	pointThreeFivePercent   = sdk.MustNewDecFromStr("0.0035")
-	defaultTakerFee         = pointOneFivePercent
+	defaultTakerFee         = sdk.ZeroDec()
 	defaultSwapAmount       = sdk.NewInt(1000000)
 	gammKeeperType          = reflect.TypeOf(&gamm.Keeper{})
 	concentratedKeeperType  = reflect.TypeOf(&cl.Keeper{})
@@ -2014,7 +2014,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			TokenInAmount: sdk.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
 		}
 
-		priceImpactThreshold = sdk.NewInt(97469586)
+		priceImpactThreshold = sdk.NewInt(97866545)
 	)
 
 	tests := map[string]struct {
@@ -2307,7 +2307,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			TokenOutAmount: sdk.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
 		}
 
-		priceImpactThreshold = sdk.NewInt(102666473)
+		priceImpactThreshold = sdk.NewInt(102239504)
 	)
 
 	tests := map[string]struct {
@@ -2346,8 +2346,8 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			tokenOutDenom:    bar,
 			tokenInMaxAmount: poolmanager.IntMaxValue,
 
-			// (1000 / (1 - 0.003)) = 1003.009, rounded up = 1004
-			expectedTokenInEstimate: sdk.NewInt(1004),
+			// (1000 / (1 - 0.003)) = 1003.009, rounded up = 1004. Post swap rounded up to 1005.
+			expectedTokenInEstimate: sdk.NewInt(1005),
 			checkExactOutput:        true,
 		},
 		"valid solo route multi hop": {
@@ -2412,10 +2412,9 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			//  Route 1 expected input: 1006
 			// Route 2:
 			// 	Hop 1: 1000 / (1 - 0.0015) = 1001.5, rounded up to 1002. Post swap rounded up to 1003.
-			// 	Hop 2: 1003 / (1 - 0.003) = 1006.01, rounded bankers to 1006. Post swap rounded up to 1007.
-			//  Route 2 expected input: 1007
-			// NOTE: the bankers rounding on output taker fees seems an arbitrary (but safe) decision that should likely be revisited to strictly round up.
-			expectedTokenInEstimate: sdk.NewInt(1006 + 1007),
+			// 	Hop 2: 1003 / (1 - 0.003) = 1006.01, rounded up to 1007. Post swap rounded up to 1008.
+			//  Route 2 expected input: 1008
+			expectedTokenInEstimate: sdk.NewInt(1006 + 1008),
 			checkExactOutput:        true,
 		},
 
