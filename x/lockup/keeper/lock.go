@@ -311,6 +311,10 @@ func (k Keeper) RebuildAccumulationStoreForDenom(ctx sdk.Context, denom string) 
 	k.writeDurationValuesToAccumTree(ctx, denom, mapDurationToAmount)
 }
 
+func (k Keeper) RebuildSuperfluidAccumulationStoresForDenom(ctx sdk.Context, denom string) {
+	k.RebuildAccumulationStoreForDenom(ctx, denom)
+}
+
 func (k Keeper) ClearAccumulationStores(ctx sdk.Context) {
 	k.clearKeysByPrefix(ctx, types.KeyPrefixLockAccumulation)
 }
