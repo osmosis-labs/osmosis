@@ -37,5 +37,5 @@ func CreateUpgradeHandler(
 
 func resetSuperfluidSumtree(keepers *keepers.AppKeepers, ctx sdk.Context, id uint64) {
 	denom := gammtypes.GetPoolShareDenom(id)
-	keepers.LockupKeeper.RebuildAccumulationStoreForDenom(ctx, denom)
+	keepers.LockupKeeper.RebuildSuperfluidAccumulationStoresForDenom(ctx, denom)
 }
