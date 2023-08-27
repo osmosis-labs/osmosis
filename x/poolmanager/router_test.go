@@ -20,6 +20,7 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 )
 
 type poolSetup struct {
@@ -28,11 +29,21 @@ type poolSetup struct {
 	takerFee         sdk.Dec
 }
 
+type expectedTakerFees struct {
+	communityPoolQuoteAssets    sdk.Coins
+	communityPoolNonQuoteAssets sdk.Coins
+	stakingRewardAssets         sdk.Coins
+}
+
 const (
 	foo   = "foo"
 	bar   = "bar"
 	baz   = "baz"
 	uosmo = "uosmo"
+
+	// Not an authorized quote denom
+	// ("abc" ensures its always first lexicographically which simplifies setup)
+	abc = "abc"
 )
 
 var (
@@ -46,6 +57,14 @@ var (
 	gammKeeperType          = reflect.TypeOf(&gamm.Keeper{})
 	concentratedKeeperType  = reflect.TypeOf(&cl.Keeper{})
 	cosmwasmKeeperType      = reflect.TypeOf(&cwpool.Keeper{})
+	zeroTakerFeeDistr       = expectedTakerFees{
+		communityPoolQuoteAssets:    sdk.NewCoins(),
+		communityPoolNonQuoteAssets: sdk.NewCoins(),
+		stakingRewardAssets:         sdk.NewCoins(),
+	}
+	communityPoolAddrName = "distribution"
+	stakingAddrName       = txfeestypes.NonNativeFeeCollectorForStakingRewardsName
+	nonQuoteCommAddrName  = txfeestypes.NonNativeFeeCollectorForCommunityPoolName
 
 	defaultPoolInitAmount     = sdk.NewInt(10_000_000_000)
 	twentyFiveBaseUnitsAmount = sdk.NewInt(25_000_000)
@@ -54,6 +73,7 @@ var (
 	barCoin   = sdk.NewCoin(bar, defaultPoolInitAmount)
 	bazCoin   = sdk.NewCoin(baz, defaultPoolInitAmount)
 	uosmoCoin = sdk.NewCoin(uosmo, defaultPoolInitAmount)
+	abcCoin   = sdk.NewCoin(abc, defaultPoolInitAmount)
 
 	// Note: These are initialized in such a way as it makes
 	// it easier to reason about the test cases.
@@ -69,6 +89,10 @@ var (
 	barUosmoPoolId = barBazPoolId + 1
 	bazUosmoCoins  = sdk.NewCoins(bazCoin, uosmoCoin)
 	bazUosmoPoolId = barUosmoPoolId + 1
+	fooAbcCoins    = sdk.NewCoins(abcCoin, fooCoin)
+	fooAbcPoolId   = bazUosmoPoolId + 1
+	bazAbcCoins    = sdk.NewCoins(abcCoin, bazCoin)
+	bazAbcPoolId   = fooAbcPoolId + 1
 
 	defaultValidPools = []poolSetup{
 		{
@@ -99,6 +123,17 @@ var (
 		{
 			poolType:         types.Concentrated,
 			initialLiquidity: bazUosmoCoins,
+			takerFee:         defaultTakerFee,
+		},
+		// Note that abc is not an authorized quote denom
+		{
+			poolType:         types.Balancer,
+			initialLiquidity: fooAbcCoins,
+			takerFee:         defaultTakerFee,
+		},
+		{
+			poolType:         types.Concentrated,
+			initialLiquidity: bazAbcCoins,
 			takerFee:         defaultTakerFee,
 		},
 	}
@@ -1982,14 +2017,14 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			TokenInAmount: twentyFiveBaseUnitsAmount,
 		}
 
-		fooUosmoBazTwoHops = types.SwapAmountInSplitRoute{
+		fooAbcBazTwoHops = types.SwapAmountInSplitRoute{
 			Pools: []types.SwapAmountInRoute{
 				{
-					PoolId:        fooUosmoPoolId,
-					TokenOutDenom: uosmo,
+					PoolId:        fooAbcPoolId,
+					TokenOutDenom: abc,
 				},
 				{
-					PoolId:        bazUosmoPoolId,
+					PoolId:        bazAbcPoolId,
 					TokenOutDenom: baz,
 				},
 			},
@@ -2032,6 +2067,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		// We keep this assertion to make sure that the
 		// actual result is within a reasonable range.
 		expectedTokenOutEstimate sdk.Int
+		expectedTakerFees        expectedTakerFees
 		checkExactOutput         bool
 
 		expectError error
@@ -2042,6 +2078,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			tokenOutMinAmount: sdk.OneInt(),
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
+			expectedTakerFees:        zeroTakerFeeDistr,
 		},
 		"valid solo route one hop (exact output check)": {
 			// Set the pool we swap through to have a 0.3% taker fee
@@ -2056,6 +2093,20 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			// We expect the output to truncate
 			expectedTokenOutEstimate: sdk.NewInt(996),
 			checkExactOutput:         true,
+
+			// We expect total taker fees to be 3foo (0.3% of 1000foo)
+			// Of this, 67% goes towards community pool and 33% towards stakers.
+			// The community pool allocation is truncated in favor of staking reward allocation.
+			expectedTakerFees: expectedTakerFees{
+				// Since foo is a quote denom, we expect the full community pool allocation
+				// to be in the quote asset address.
+				// That being said, since 33% of 3 is technically less than 1, we expect the
+				// community pool allocation to be truncated to zero, leaving the full amount in
+				// staking rewards.
+				communityPoolQuoteAssets:    sdk.NewCoins(),
+				communityPoolNonQuoteAssets: sdk.NewCoins(),
+				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(foo, sdk.NewInt(3))),
+			},
 		},
 		"valid solo route multi hop": {
 			routes:            []types.SwapAmountInSplitRoute{defaultSingleRouteTwoHops},
@@ -2063,6 +2114,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			tokenOutMinAmount: sdk.OneInt(),
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
+			expectedTakerFees:        zeroTakerFeeDistr,
 		},
 		"valid split route multi hop": {
 			routes: []types.SwapAmountInSplitRoute{
@@ -2074,57 +2126,91 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 
 			// 1x from single route two hops and 3x from single route three hops
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount.MulRaw(4),
+			expectedTakerFees:        zeroTakerFeeDistr,
 		},
 		"valid split route multi hop (exact output check)": {
 			// Set the pools we swap through to all have a 0.35% taker fee
 			setupPools: s.withTakerFees(
 				defaultValidPools,
-				[]uint64{0, 2, 3, 5},
+				[]uint64{0, 3, 6, 7},
 				[]sdk.Dec{pointThreeFivePercent, pointThreeFivePercent, pointThreeFivePercent, pointThreeFivePercent},
 			),
 			routes: []types.SwapAmountInSplitRoute{
 				withInputSwapIn(defaultSingleRouteTwoHops, sdk.NewInt(1000)),
-				withInputSwapIn(fooUosmoBazTwoHops, sdk.NewInt(1000)),
+				withInputSwapIn(fooAbcBazTwoHops, sdk.NewInt(1000)),
 			},
 			tokenInDenom:      foo,
 			tokenOutMinAmount: sdk.OneInt(),
 
 			// We charge taker fee on each hop and expect the output to truncate
-			// The output of first hop: (1 - 0.0035) * 1000 = 996.5, truncated to 996
+			// The output of first hop: (1 - 0.0035) * 1000 = 996.5, truncated to 996 (4foo taker fee)
 			// which has an additional truncation after the swap executes, leaving 995.
-			// The second hop is similar: (1 - 0.0035) * 995 = 991.5, truncated to 991
+			// The second hop is similar: (1 - 0.0035) * 995 = 991.5, truncated to 991 (4bar taker fee)
 			// which has an additional truncation after the swap executes, leaving 990.
 			expectedTokenOutEstimate: sdk.NewInt(990 + 990),
 			checkExactOutput:         true,
+
+			// Expected taker fees from calculation above are:
+			// * [4foo, 4bar] for first route
+			// * [4foo, 4abc] for second route
+			// Due to truncation, 4 units of fees get distributed 1 to community pool, 3 to stakers.
+			// Recall that foo and bar are quote assets, while abc is not.
+			expectedTakerFees: expectedTakerFees{
+				// 1foo & 1bar from first route, 1foo from second route
+				// Total: 2foo, 1bar
+				communityPoolQuoteAssets: sdk.NewCoins(sdk.NewCoin(foo, sdk.NewInt(2)), sdk.NewCoin(bar, sdk.NewInt(1))),
+				// 1abc from second route
+				// Total: 1abc
+				communityPoolNonQuoteAssets: sdk.NewCoins(sdk.NewCoin(abc, sdk.NewInt(1))),
+				// 3foo & 3bar from first route, 3foo & 3abc from second route
+				// Total: 6foo, 3bar, 3abc
+				stakingRewardAssets: sdk.NewCoins(sdk.NewCoin(foo, sdk.NewInt(6)), sdk.NewCoin(bar, sdk.NewInt(3)), sdk.NewCoin(abc, sdk.NewInt(3))),
+			},
 		},
 		"split route multi hop with different taker fees (exact output check)": {
 			// Set the pools we swap through to all have a 0.35% taker fee
 			setupPools: s.withTakerFees(
 				defaultValidPools,
-				[]uint64{0, 2, 3, 5},
+				[]uint64{0, 3, 6, 7},
 				[]sdk.Dec{pointThreeFivePercent, sdk.ZeroDec(), pointOneFivePercent, pointThreePercent},
 			),
 			routes: []types.SwapAmountInSplitRoute{
 				withInputSwapIn(defaultSingleRouteTwoHops, sdk.NewInt(1000)),
-				withInputSwapIn(fooUosmoBazTwoHops, sdk.NewInt(1000)),
+				withInputSwapIn(fooAbcBazTwoHops, sdk.NewInt(1000)),
 			},
 			tokenInDenom:      foo,
 			tokenOutMinAmount: sdk.OneInt(),
 
 			// Route 1:
 			// 	Hop 1: (1 - 0.0035) * 1000 = 996.5, truncated to 996. Post swap truncated to 995.
+			//    * 4foo taker fee
 			// 	Hop 2: 995 input with no fee = 995 output since spot price is 1. Post swap truncated to 994.
-			//  Route 1 output: 994
+			//    * No taker fee
+			//  Route 1 output: 994 (Taker fees: 4foo)
 			// Route 2:
 			// 	Hop 1: (1 - 0.0015) * 1000 = 998.5, truncated to 998. Post swap truncated to 997.
+			//    * 2foo taker fee
 			// 	Hop 2: (1 - 0.003) * 997 = 994.009, truncated to 994. Post swap truncated to 993.
-			//  Route 2 output: 993
+			//    * 3abc taker fee
+			//  Route 2 output: 993 (Taker fees: 2foo, 3abc)
 			expectedTokenOutEstimate: sdk.NewInt(994 + 993),
 			checkExactOutput:         true,
+
+			// Expected taker fees from calculation above are:
+			// * [4foo] for first route
+			// * [2foo, 3abc] for second route
+			// Due to truncation, 4 units of fees get distributed 1 to community pool, 3 to stakers.
+			// Anything less than 3 units goes full to stakers.
+			// Recall that foo and bar are quote assets, while abc is not.
+			expectedTakerFees: expectedTakerFees{
+				// 1foo from first route, everything from second route is truncated
+				communityPoolQuoteAssets:    sdk.NewCoins(sdk.NewCoin(foo, sdk.NewInt(1))),
+				communityPoolNonQuoteAssets: sdk.NewCoins(),
+				// 3foo from first route, 2foo & 3abc from second route
+				// Total: 5foo, 3abc
+				stakingRewardAssets: sdk.NewCoins(sdk.NewCoin(foo, sdk.NewInt(5)), sdk.NewCoin(abc, sdk.NewInt(3))),
+			},
 		},
-
-		// Different taker fees, including 0
-
 		"valid split route multi hop with price impact protection that would fail individual route if given per multihop": {
 			routes: []types.SwapAmountInSplitRoute{
 				defaultSingleRouteTwoHops,
@@ -2136,6 +2222,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			tokenOutMinAmount: priceImpactThreshold,
 
 			expectedTokenOutEstimate: priceImpactThreshold,
+			expectedTakerFees:        zeroTakerFeeDistr,
 		},
 
 		"error: price impact protection triggered": {
@@ -2192,6 +2279,8 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		s.Run(name, func() {
 			s.SetupTest()
 			k := s.App.PoolManagerKeeper
+			ak := s.App.AccountKeeper
+			bk := s.App.BankKeeper
 
 			sender := s.TestAccs[1]
 
@@ -2212,6 +2301,9 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 					s.FundAcc(sender, pool.initialLiquidity)
 				}
 			}
+
+			// Log starting community pool balance to compare against
+			initCommunityPoolBalances := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
 
 			tokenOut, err := k.SplitRouteExactAmountIn(s.Ctx, sender, tc.routes, tc.tokenInDenom, tc.tokenOutMinAmount)
 
@@ -2239,7 +2331,21 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 				MultiplicativeTolerance: multiplicativeTolerance,
 			}
 
+			// Ensure output amount is within tolerance
 			s.Require().Equal(0, errTolerance.Compare(tc.expectedTokenOutEstimate, tokenOut), fmt.Sprintf("expected %s, got %s", tc.expectedTokenOutEstimate, tokenOut))
+
+			// -- Ensure taker fee distributions have properly executed --
+
+			// We expect all taker fees collected in quote assets to be sent directly to the community pool address.
+			newCommunityPoolBalances := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
+			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(newCommunityPoolBalances.Sub(initCommunityPoolBalances)...))
+
+			// We expect all taker fees collected in non-quote assets to be sent to the non-quote asset address
+			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolNonQuoteAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))...))
+
+			// We expect all taker fees intended for staking reward distributions (both quote and non quote) to be collected in the same address
+			// to ensure distributions are executed together.
+			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.stakingRewardAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(stakingAddrName))...))
 		})
 	}
 }
