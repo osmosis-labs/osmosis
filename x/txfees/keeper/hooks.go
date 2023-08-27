@@ -78,6 +78,12 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 			continue
 		}
 
+		// Search for the denom pair route via the protorev store.
+		// Since OSMO is one of the protorev denoms, many of the routes will exist in this store.
+		// There will be times when this store does not know about a route, but this is acceptable
+		// since this will likely be a very small value of a relatively unknown token. If this begins
+		// to accrue more value, we can always manually register the route and it will get swapped in
+		// the next epoch.
 		poolId, err := k.protorevKeeper.GetPoolForDenomPairNoOrder(ctx, denomToSwapTo, coin.Denom)
 		if err != nil {
 			if err != nil {
