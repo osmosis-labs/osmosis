@@ -45,6 +45,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 
 	return &types.GenesisState{
 		Params: params,
-		Pools:  poolAnys,
+		// TODO: this is likely because amino is being used directly
+		// (instead of codec.LegacyAmino which is preferred) or
+		// UnpackInterfacesMessage is not defined for some type which
+		// contains a protobuf Any either directly or via one of its members.
+		// To see a stacktrace of where the error is coming from,
+		// set the var Debug = true in codec/types/compat.go
+		//Pools:  poolAnys,
 	}
 }
