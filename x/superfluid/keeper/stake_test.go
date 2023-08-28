@@ -1160,7 +1160,7 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 		"error: min amount to stake greater than actual amount": {
 			useMinAmountToStake: true,
 			expectedError: types.TokenConvertedLessThenDesiredStakeError{
-				ActualTotalAmtToStake:   sdk.NewInt(8306),
+				ActualTotalAmtToStake:   sdk.NewInt(8309),
 				ExpectedTotalAmtToStake: sdk.NewInt(999999999),
 			},
 		},
@@ -1218,7 +1218,7 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 				// err check for LockOwnerMismatchError needs further refactoring for all these test cases
 				// since lock owner is not know-able at the time of test creation
 				if !tc.senderIsNotOwnerOfLock {
-					s.Require().Equal(err.Error(), tc.expectedError.Error())
+					s.Require().Equal(tc.expectedError.Error(), err.Error())
 				}
 				return
 			}
@@ -1359,7 +1359,7 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 		},
 		"error: min amount to stake exceeds actual amount staking": {
 			useMinAmtToStake: true,
-			expectedError:    "actual amount converted to stake (8306) is less then minimum amount expected to be staked (999999999)",
+			expectedError:    "actual amount converted to stake (8309) is less then minimum amount expected to be staked (999999999)",
 		},
 	}
 

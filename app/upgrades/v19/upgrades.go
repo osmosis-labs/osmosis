@@ -9,8 +9,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
-	v18 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v18"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+
+	v18 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v18"
 )
 
 const lastPoolToCorrect = v18.FirstCLPoolId - 1
@@ -40,7 +41,6 @@ func CreateUpgradeHandler(
 		// TODO: In v20 upgrade handler, delete this param from the concentrated liquidity params.
 		currentConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
 		defaultPoolManagerParams := poolmanagertypes.DefaultParams()
-
 		defaultPoolManagerParams.AuthorizedQuoteDenoms = currentConcentratedLiquidityParams.AuthorizedQuoteDenoms
 		defaultPoolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.ZeroDec()
 		keepers.PoolManagerKeeper.SetParams(ctx, defaultPoolManagerParams)
