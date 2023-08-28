@@ -395,6 +395,7 @@ $ %s query lockup output-all-locks <max lock ID>
 			file, err := os.Create("AccumDebugResponse.csv")
 			if err != nil {
 				// handle the error here
+				fmt.Println(err)
 				return err
 			}
 			defer file.Close()
@@ -425,6 +426,7 @@ $ %s query lockup output-all-locks <max lock ID>
 
 				err = writer.Write([]string{key, value, denom, accum})
 				if err != nil {
+					fmt.Println(err)
 					return err
 				}
 			}
