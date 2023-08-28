@@ -150,4 +150,3 @@ pub enum SudoMsg {
     #[serde(rename = "ibc_lifecycle_complete")]
     IBCLifecycleComplete(IBCLifecycleComplete),
 }
-
