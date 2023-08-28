@@ -39,10 +39,8 @@ func CreateUpgradeHandler(
 		// so the right move in this case is to move this parameter upwards in order to prevent circular dependencies.
 		// TODO: In v20 upgrade handler, delete this param from the concentrated liquidity params.
 		currentConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
-		currentPoolManagerParams := keepers.PoolManagerKeeper.GetParams(ctx)
 
 		defaultPoolManagerParams := poolmanagertypes.DefaultParams()
-		defaultPoolManagerParams.PoolCreationFee = currentPoolManagerParams.PoolCreationFee
 		defaultPoolManagerParams.AuthorizedQuoteDenoms = currentConcentratedLiquidityParams.AuthorizedQuoteDenoms
 		defaultPoolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.ZeroDec()
 		keepers.PoolManagerKeeper.SetParams(ctx, defaultPoolManagerParams)
