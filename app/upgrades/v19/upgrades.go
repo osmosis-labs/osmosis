@@ -9,8 +9,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
-	v18 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v18"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+
+	v18 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v18"
 )
 
 const lastPoolToCorrect = v18.FirstCLPoolId - 1
