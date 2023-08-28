@@ -9,8 +9,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	v18 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v18"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 const lastPoolToCorrect = v18.FirstCLPoolId - 1
@@ -28,8 +28,8 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
-    
-    for id := 1; id <= lastPoolToCorrect; id++ {
+
+		for id := 1; id <= lastPoolToCorrect; id++ {
 			resetSuperfluidSumtree(keepers, ctx, uint64(id))
 		}
 
