@@ -1,4 +1,4 @@
-package v18
+package v19
 
 import (
 	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
@@ -7,7 +7,7 @@ import (
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v18 upgrade.
-const UpgradeName = "v18"
+const UpgradeName = "v19"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
