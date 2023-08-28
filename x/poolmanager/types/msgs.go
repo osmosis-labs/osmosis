@@ -179,10 +179,6 @@ func (msg MsgSetDenomPairTakerFee) ValidateBasic() error {
 		return InvalidSenderError{Sender: msg.Sender}
 	}
 
-	if len(msg.DenomPairTakerFee) == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "Empty denom pair taker fee")
-	}
-
 	return validateDenomPairTakerFees(msg.DenomPairTakerFee)
 }
 
