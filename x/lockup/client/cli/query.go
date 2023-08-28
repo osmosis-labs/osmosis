@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -47,6 +48,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdSyntheticLockupByLockupID(),
 		GetCmdAccountLockedDuration(),
 		GetCmdNextLockID(),
+		GetCmdOutputAccumValues(),
 		osmocli.GetParams[*types.QueryParamsRequest](
 			types.ModuleName, types.NewQueryClient),
 	)
@@ -352,6 +354,81 @@ $ %s query lockup output-all-locks <max lock ID>
 			}
 
 			fmt.Println("Writing to lock_export.json")
+			return nil
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdOutputLocksJson outputs all locks into a file called lock_export.json.
+func GetCmdOutputAccumValues() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "output-total-accums <max pool ID>",
+		Short: "output-total-accums into a csv file",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`output-total-accums into a csv file.
+Example:
+$ %s query lockup output-all-locks <max lock ID>
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			_ = queryClient
+
+			maxPoolID, err := strconv.ParseInt(args[0], 10, 32)
+			if err != nil {
+				return err
+			}
+			data, nil := queryClient.AccumDebug(cmd.Context(), &types.AccumDebugRequest{MaxPoolId: uint64(maxPoolID)})
+
+			// Create a file
+			file, err := os.Create("AccumDebugResponse.csv")
+			if err != nil {
+				// handle the error here
+				return err
+			}
+			defer file.Close()
+
+			writer := csv.NewWriter(file)
+			defer writer.Flush()
+
+			// Write CSV header
+			writer.Write([]string{"Key", "Value", "Denom", "Accum"})
+			for i := 0; i < len(data.Keys); i++ {
+				key := ""
+				value := ""
+				denom := ""
+				accum := ""
+
+				if i < len(data.Keys) {
+					key = data.Keys[i]
+				}
+				if i < len(data.Values) {
+					value = data.Values[i]
+				}
+				if i < len(data.Denoms) {
+					denom = data.Denoms[i]
+				}
+				if i < len(data.Accums) {
+					accum = data.Accums[i].String()
+				}
+
+				err = writer.Write([]string{key, value, denom, accum})
+				if err != nil {
+					return err
+				}
+			}
+
 			return nil
 		},
 	}

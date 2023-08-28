@@ -903,3 +903,52 @@ func (k Keeper) getCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
 	}
 	return coins
 }
+
+func (k Keeper) AccumDebug(ctx sdk.Context, maxPoolId int) *types.AccumDebugResponse {
+	resp := types.AccumDebugResponse{
+		Keys:   []string{},
+		Values: []string{},
+		Denoms: []string{},
+		Accums: []sdk.Int{},
+	}
+	store := ctx.KVStore(k.storeKey)
+	// Add keys/values for all locks
+	for id := 1; id <= maxPoolId; id++ {
+		denom := fmt.Sprintf("gamm/pool/%d", id)
+		resp.Denoms = append(resp.Denoms, denom)
+		prefix := accumulationStorePrefix(denom)
+		iterator := sdk.KVStorePrefixIterator(store, prefix)
+		for ; iterator.Valid(); iterator.Next() {
+			resp.Keys = append(resp.Keys, string(iterator.Key()))
+			resp.Values = append(resp.Values, string(iterator.Value()))
+		}
+		iterator.Close()
+	}
+	// Add accums for all denoms
+	baseDenomIndex := len(resp.Denoms)
+	superfluidDenoms := map[string]bool{}
+	for i := 0; i < baseDenomIndex; i += 1 {
+		denom := resp.Denoms[i]
+		locks := k.GetLocksDenom(ctx, denom)
+		for _, lock := range locks {
+			synthLock, found, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+			if err != nil || !found {
+				continue
+			}
+
+			superfluidDenoms[synthLock.SynthDenom] = true
+		}
+	}
+	superfluidDenomsSlice := []string{}
+	for denom := range superfluidDenoms {
+		superfluidDenomsSlice = append(superfluidDenomsSlice, denom)
+	}
+	sort.Strings(superfluidDenomsSlice)
+	resp.Denoms = append(resp.Denoms, superfluidDenomsSlice...)
+	for _, denom := range resp.Denoms {
+		accum := k.accumulationStore(ctx, denom).SubsetAccumulation(nil, nil)
+		resp.Accums = append(resp.Accums, accum)
+	}
+
+	return &resp
+}

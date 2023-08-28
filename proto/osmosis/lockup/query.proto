@@ -144,6 +144,11 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/osmosis/lockup/v1beta1/params";
   }
+
+  // Params returns lockup params.
+  rpc AccumDebug(AccumDebugRequest) returns (AccumDebugResponse) {
+    option (google.api.http).get = "/osmosis/lockup/v1beta1/AccumDebug";
+  }
 }
 
 message ModuleBalanceRequest {};
@@ -332,4 +337,16 @@ message AccountLockedLongerDurationDenomResponse {
 message QueryParamsRequest {}
 message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+message AccumDebugRequest { uint64 max_pool_id = 1; }
+message AccumDebugResponse {
+  repeated string keys = 1 [ (gogoproto.nullable) = false ];
+  repeated string values = 2 [ (gogoproto.nullable) = false ];
+  repeated string denoms = 3 [ (gogoproto.nullable) = false ];
+  repeated string accums = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
 }

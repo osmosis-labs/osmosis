@@ -340,3 +340,9 @@ func (q Querier) Params(goCtx context.Context, req *types.QueryParamsRequest) (*
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(ctx)}, nil
 }
+
+// Params returns module params
+func (q Querier) AccumDebug(goCtx context.Context, req *types.AccumDebugRequest) (*types.AccumDebugResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	return q.Keeper.AccumDebug(ctx, int(req.MaxPoolId)), nil
+}
