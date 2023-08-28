@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
-	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 // 1 << 256 - 1 where 256 is the max bit length defined for sdk.Int
@@ -96,6 +96,9 @@ func (k Keeper) RouteExactAmountIn(
 		if err != nil {
 			return sdk.Int{}, err
 		}
+
+		// Track volume for volume-splitting incentives
+		k.trackVolume(ctx, pool.GetId(), tokenIn)
 
 		// Chain output of current pool as the input for the next routed pool
 		tokenIn = sdk.NewCoin(routeStep.TokenOutDenom, tokenOutAmount)
@@ -377,16 +380,19 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
 		}
 
-		_tokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, routeStep.TokenInDenom, insExpected[i], _tokenOut, spreadFactor)
+		curTokenInAmount, swapErr := swapModule.SwapExactAmountOut(ctx, sender, pool, routeStep.TokenInDenom, insExpected[i], _tokenOut, spreadFactor)
 		if swapErr != nil {
 			return sdk.Int{}, swapErr
 		}
+
+		// Track volume for volume-splitting incentives
+		k.trackVolume(ctx, pool.GetId(), sdk.NewCoin(routeStep.TokenInDenom, curTokenInAmount))
 
 		// Sets the final amount of tokens that need to be input into the first pool. Even though this is the final return value for the
 		// whole method and will not change after the first iteration, we still iterate through the rest of the pools to execute their respective
 		// swaps.
 		if i == 0 {
-			tokenInAmount = _tokenInAmount
+			tokenInAmount = curTokenInAmount
 		}
 	}
 
@@ -740,4 +746,94 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	}
 	totalLiquidity := totalGammLiquidity.Add(totalConcentratedLiquidity...).Add(totalCosmwasmLiquidity...)
 	return totalLiquidity, nil
+}
+
+// nolint: unused
+// trackVolume converts the input token into OSMO units and adds it to the global tracked volume for the given pool ID.
+// Fails quietly if an OSMO paired pool cannot be found, although this should only happen in rare scenarios where OSMO is
+// removed as a base denom from the protorev module (which this function relies on).
+//
+// CONTRACT: `volumeGenerated` corresponds to one of the denoms in the pool
+// CONTRACT: pool with `poolId` exists
+func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
+	// If the denom is already denominated in uosmo, we can just use it directly
+	OSMO := k.stakingKeeper.BondDenom(ctx)
+	if volumeGenerated.Denom == OSMO {
+		k.addVolume(ctx, poolId, volumeGenerated)
+		return
+	}
+
+	// Get the most liquid OSMO-paired pool with `volumeGenerated`'s denom using `GetPoolForDenomPair`
+	osmoPairedPoolId, err := k.protorevKeeper.GetPoolForDenomPair(ctx, OSMO, volumeGenerated.Denom)
+
+	// If no pool is found, fail quietly.
+	//
+	// This is a rare scenario that should only happen if OSMO-paired pools are all removed from the protorev module.
+	// Since this removal scenario is all-or-nothing, this is functionally equiavalent to freezing the tracked volume amounts
+	// where they were prior to the disabling, which seems an appropriate response.
+	//
+	// This branch would also get triggered in the case where there is a token that has no OSMO-paired pool on the entire chain.
+	// We simply do not track volume in these cases. Importantly, volume splitting gauge logic should prevent a gauge from being
+	// created for such a pool that includes such a token, although it is okay to no-op in these cases regardless.
+	if err != nil {
+		return
+	}
+
+	// Since we want to ultimately multiply the volume by this spot price, we want to quote OSMO in terms of the input token.
+	// This is so that once we multiply the volume by the spot price, we get the volume in units of OSMO.
+	osmoPerInputToken, err := k.RouteCalculateSpotPrice(ctx, osmoPairedPoolId, OSMO, volumeGenerated.Denom)
+
+	// We expect that if a pool is found, there should always be an available spot price as well.
+	// That being said, if there is an error finding the spot price, we fail quietly and leave tracked volume unchanged.
+	// This is because we do not want to escalate an issue with finding spot price to locking all swaps involving the given asset.
+	if err != nil {
+		return
+	}
+
+	// Multiply `volumeGenerated.Amount.ToDec()` by this spot price.
+	// While rounding does not particularly matter here, we round down to ensure that we do not overcount volume.
+	volumeInOsmo := volumeGenerated.Amount.ToDec().Mul(osmoPerInputToken).TruncateInt()
+
+	// Add this new volume to the global tracked volume for the pool ID
+	k.addVolume(ctx, poolId, sdk.NewCoin(OSMO, volumeInOsmo))
+}
+
+// nolint: unused
+// addVolume adds the given volume to the global tracked volume for the given pool ID.
+func (k Keeper) addVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
+	// Get the current volume for the pool ID
+	currentTotalVolume := k.GetTotalVolumeForPool(ctx, poolId)
+
+	// Add newly generated volume to existing volume and set updated volume in state
+	newTotalVolume := currentTotalVolume.Add(volumeGenerated)
+	k.setVolume(ctx, poolId, newTotalVolume)
+}
+
+// nolint: unused
+// setVolume sets the given volume to the global tracked volume for the given pool ID.
+func (k Keeper) setVolume(ctx sdk.Context, poolId uint64, totalVolume sdk.Coins) {
+	storedVolume := types.TrackedVolume{Amount: totalVolume}
+	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyPoolVolume(poolId), &storedVolume)
+}
+
+// GetTotalVolumeForPool gets the total OSMO-denominated historical volume for a given pool ID.
+func (k Keeper) GetTotalVolumeForPool(ctx sdk.Context, poolId uint64) sdk.Coins {
+	var currentTrackedVolume types.TrackedVolume
+	volumeFound, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyPoolVolume(poolId), &currentTrackedVolume)
+	if err != nil {
+		// We can only encounter an error if a database or serialization errors occurs, so we panic here.
+		// Normally this would be handled by `osmoutils.MustGet`, but since we want to specifically use `osmoutils.Get`,
+		// we also have to manually panic here.
+		panic(err)
+	}
+
+	// If no volume was found, we treat the existing volume as 0.
+	// While we can technically require volume to exist, we would need to store empty coins in state for each pool (past and present),
+	// which is a high storage cost to pay for a weak guardrail.
+	currentTotalVolume := sdk.NewCoins()
+	if volumeFound {
+		currentTotalVolume = currentTrackedVolume.Amount
+	}
+
+	return currentTotalVolume
 }

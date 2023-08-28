@@ -5,7 +5,7 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	twaptypes "github.com/osmosis-labs/osmosis/v17/x/twap/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v19/x/twap/types"
 )
 
 // GenerateKeys generates new keys (KV Store, Transient store, and memory store).

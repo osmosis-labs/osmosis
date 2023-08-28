@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	types "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	types "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 )
 
 const noUnderlyingLockId = uint64(0)
@@ -521,7 +521,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	// Calculate the initial tick from the initial spot price
 	// We round down here so that the tick is rounded to
 	// the nearest possible value given the tick spacing.
-	initialTick, err := math.SqrtPriceToTickRoundDownSpacing(initialCurSqrtPrice, pool.GetTickSpacing())
+	initialTick, err := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(initialCurSqrtPrice), pool.GetTickSpacing())
 	if err != nil {
 		return err
 	}

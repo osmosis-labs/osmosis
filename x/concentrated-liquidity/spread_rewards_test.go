@@ -8,11 +8,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 const (
@@ -505,7 +505,7 @@ func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLas
 
 func (s *KeeperTestSuite) TestGetInitialSpreadRewardGrowthOppositeDirectionOfLastTraversalForTick() {
 	sqrtPrice := osmomath.MustMonotonicSqrt(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()))
-	initialPoolTick, err := clmath.SqrtPriceToTickRoundDownSpacing(sqrtPrice, DefaultTickSpacing)
+	initialPoolTick, err := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrtPrice), DefaultTickSpacing)
 	s.Require().NoError(err)
 	initialGlobalSpreadRewardGrowth := oneEth
 

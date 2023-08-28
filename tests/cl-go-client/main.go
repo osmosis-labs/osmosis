@@ -18,13 +18,13 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	clqueryproto "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v17/x/poolmanager/client/queryproto"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	clqueryproto "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

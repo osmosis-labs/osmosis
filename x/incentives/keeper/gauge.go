@@ -16,9 +16,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -208,6 +208,129 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	return gauge.Id, nil
 }
 
+// CreateGroupGauge creates a new gauge, that allocates rewards dynamically across its internal gauges based on the given splitting policy.
+// Note: we should expect that the internal gauges consist of the gauges that are automatically created for each pool upon pool creation, as even non-perpetual
+// external incentives would likely want to route through these.
+func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64, gaugetype lockuptypes.LockQueryType, splittingPolicy types.SplittingPolicy) (uint64, error) {
+	if len(internalGaugeIds) == 0 {
+		return 0, fmt.Errorf("No internalGauge provided.")
+	}
+
+	if gaugetype != lockuptypes.ByGroup {
+		return 0, fmt.Errorf("Invalid gauge type needs to be ByGroup, got %s.", gaugetype)
+	}
+
+	// TODO: remove this check once volume splitting is implemented
+	if splittingPolicy != types.Evenly {
+		return 0, fmt.Errorf("Invalid splitting policy, needs to be Evenly got %s", splittingPolicy)
+	}
+
+	// check that all the internalGaugeIds exist
+	internalGauges, err := k.GetGaugeFromIDs(ctx, internalGaugeIds)
+	if err != nil {
+		return 0, fmt.Errorf("Invalid internalGaugeIds, please make sure all the internalGauge have been created.")
+	}
+
+	// check that all internalGauges are perp
+	for _, gauge := range internalGauges {
+		if !gauge.IsPerpetual {
+			return 0, fmt.Errorf("Internal Gauge id %d is non-perp, all internalGauge must be perpetual Gauge.", gauge.Id)
+		}
+	}
+
+	nextGaugeId := k.GetLastGaugeID(ctx) + 1
+
+	gauge := types.Gauge{
+		Id:          nextGaugeId,
+		IsPerpetual: numEpochPaidOver == 1,
+		DistributeTo: lockuptypes.QueryCondition{
+			LockQueryType: gaugetype,
+		},
+		Coins:             coins,
+		StartTime:         ctx.BlockTime(),
+		NumEpochsPaidOver: numEpochPaidOver,
+	}
+
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, gauge.Coins); err != nil {
+		return 0, err
+	}
+
+	if err := k.setGauge(ctx, &gauge); err != nil {
+		return 0, err
+	}
+
+	newGroupGauge := types.GroupGauge{
+		GroupGaugeId:    nextGaugeId,
+		InternalIds:     internalGaugeIds,
+		SplittingPolicy: splittingPolicy,
+	}
+
+	k.SetGroupGauge(ctx, newGroupGauge)
+	k.SetLastGaugeID(ctx, gauge.Id)
+
+	// TODO: check if this is necessary, will investigate this in following PR.
+	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
+	activeOrUpcomingGauge := true
+
+	if err := k.CreateGaugeRefKeys(ctx, &gauge, combinedKeys, activeOrUpcomingGauge); err != nil {
+		return 0, err
+	}
+	k.hooks.AfterCreateGauge(ctx, gauge.Id)
+
+	return nextGaugeId, nil
+}
+
+// AddToGaugeRewardsFromGauge transfer coins from groupGaugeId to InternalGaugeId.
+// Prior to calling this function, we make sure that the internalGaugeId is linked with the associated groupGaugeId.
+// Note: we donot have to bankSend for this gauge transfer because all the available incentive has already been bank sent
+// when we create Group Gauge. Now we are just allocating funds from groupGauge to internalGauge.
+func (k Keeper) AddToGaugeRewardsFromGauge(ctx sdk.Context, groupGaugeId uint64, coins sdk.Coins, internalGaugeId uint64) error {
+	// check if the internalGaugeId is present in groupGauge
+	groupGaugeObj, err := k.GetGroupGaugeById(ctx, groupGaugeId)
+	if err != nil {
+		return err
+	}
+	found := false
+	for _, val := range groupGaugeObj.InternalIds {
+		if val == internalGaugeId {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("InternalGaugeId %d is not present in groupGauge: %v", internalGaugeId, groupGaugeObj.InternalIds)
+	}
+
+	groupGauge, err := k.GetGaugeByID(ctx, groupGaugeId)
+	if err != nil {
+		return err
+	}
+
+	internalGauge, err := k.GetGaugeByID(ctx, internalGaugeId)
+	if err != nil {
+		return err
+	}
+
+	if internalGauge.IsFinishedGauge(ctx.BlockTime()) {
+		return errors.New("gauge is already completed")
+	}
+
+	// check if there is sufficient funds in groupGauge to make the transfer
+	remainingCoins := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
+	if remainingCoins.IsAllLT(coins) {
+		return fmt.Errorf("group gauge id: %d doesnot have enough tokens to transfer", groupGaugeId)
+	}
+
+	internalGauge.Coins = internalGauge.Coins.Add(coins...)
+	err = k.setGauge(ctx, internalGauge)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // AddToGaugeRewards adds coins to gauge.
 func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error {
 	gauge, err := k.GetGaugeByID(ctx, gaugeID)
@@ -230,6 +353,7 @@ func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins s
 	if err != nil {
 		return err
 	}
+
 	k.hooks.AfterAddToGauge(ctx, gauge.Id)
 	return nil
 }

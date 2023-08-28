@@ -4,14 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 func (suite *StrategyTestSuite) setupNewOneForZeroSwapStrategy(sqrtPriceLimit sdk.Dec, spread sdk.Dec) swapstrategy.SwapStrategy {
 	suite.SetupTest()
-	return swapstrategy.New(false, sqrtPriceLimit, suite.App.GetKey(types.ModuleName), spread)
+	return swapstrategy.New(false, osmomath.BigDecFromSDKDec(sqrtPriceLimit), suite.App.GetKey(types.ModuleName), spread)
 }
 
 func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_OneForZero() {
@@ -40,8 +40,8 @@ func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_OneForZero() {
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			strategy := suite.setupNewOneForZeroSwapStrategy(tc.sqrtPriceLimit, zero)
-			actualSqrtTargetPrice := strategy.GetSqrtTargetPrice(tc.nextTickSqrtPrice)
-			suite.Require().Equal(tc.expectedResult, actualSqrtTargetPrice)
+			actualSqrtTargetPrice := strategy.GetSqrtTargetPrice(osmomath.BigDecFromSDKDec(tc.nextTickSqrtPrice))
+			suite.Require().Equal(osmomath.BigDecFromSDKDec(tc.expectedResult), actualSqrtTargetPrice)
 		})
 	}
 }
@@ -133,7 +133,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 		"5: custom amounts at high price levels - reach target": {
 			sqrtPriceCurrent: osmomath.BigDecFromSDKDec(sqrt(100_000_000)),
 			sqrtPriceTarget:  sqrt(100_000_100),
-			liquidity:        math.GetLiquidityFromAmounts(osmomath.OneDec(), sqrt(100_000_000), sqrt(100_000_100), defaultAmountZero.TruncateInt(), defaultAmountOne.TruncateInt()),
+			liquidity:        math.GetLiquidityFromAmounts(osmomath.OneDec(), osmomath.BigDecFromSDKDec(sqrt(100_000_000)), osmomath.BigDecFromSDKDec(sqrt(100_000_100)), defaultAmountZero.TruncateInt(), defaultAmountOne.TruncateInt()),
 
 			// this value is exactly enough to reach the target
 			amountOneInRemaining: sdk.NewDec(1336900668450),
@@ -208,7 +208,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 		tc := tc
 		suite.Run(name, func() {
 			strategy := suite.setupNewOneForZeroSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
-			sqrtPriceNext, amountInConsumed, amountZeroOut, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketOutGivenIn(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountOneInRemaining)
+			sqrtPriceNext, amountInConsumed, amountZeroOut, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketOutGivenIn(tc.sqrtPriceCurrent, osmomath.BigDecFromSDKDec(tc.sqrtPriceTarget), tc.liquidity, tc.amountOneInRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.expectedAmountInConsumed, amountInConsumed)
@@ -424,7 +424,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			strategy := suite.setupNewOneForZeroSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
-			sqrtPriceNext, amountZeroOutConsumed, amountOneIn, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketInGivenOut(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountZeroOutRemaining)
+			sqrtPriceNext, amountZeroOutConsumed, amountOneIn, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketInGivenOut(tc.sqrtPriceCurrent, osmomath.BigDecFromSDKDec(tc.sqrtPriceTarget), tc.liquidity, tc.amountZeroOutRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.expectedAmountZeroOutConsumed.String(), amountZeroOutConsumed.String())

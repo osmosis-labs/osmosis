@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 type RangeTestParams struct {
@@ -439,7 +439,7 @@ func (s *KeeperTestSuite) getInitialPositionAssets(pool types.ConcentratedPoolEx
 
 	// Calculate asset amounts that would be required to get the required spot price (rounding up on asset1 to ensure we stay in the intended tick)
 	asset0Amount := sdk.NewInt(100000000000000)
-	asset1Amount := sdk.NewDecFromInt(asset0Amount).Mul(requiredPrice).Ceil().TruncateInt()
+	asset1Amount := sdk.NewDecFromInt(asset0Amount).Mul(requiredPrice.SDKDec()).Ceil().TruncateInt()
 
 	assetCoins := sdk.NewCoins(
 		sdk.NewCoin(pool.GetToken0(), asset0Amount),

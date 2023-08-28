@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -758,7 +758,7 @@ var (
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(12892)),
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(64417624)),
 			expectedTick: func() int64 {
-				tick, _ := math.SqrtPriceToTickRoundDownSpacing(sqrt4994, DefaultTickSpacing)
+				tick, _ := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt4994), DefaultTickSpacing)
 				return tick
 			}(),
 			// Since the next sqrt price is based on the price limit, we can calculate this directly.
@@ -896,7 +896,7 @@ var (
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(64417624)),
 			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000085792039652"),
 			expectedTick: func() int64 {
-				tick, _ := math.SqrtPriceToTickRoundDownSpacing(sqrt4994, DefaultTickSpacing)
+				tick, _ := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt4994), DefaultTickSpacing)
 				return tick
 			}(),
 			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.668238976219012614"),
@@ -2043,10 +2043,10 @@ func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.Concent
 
 func (s *KeeperTestSuite) lowerUpperPricesToTick(lowerPrice, upperPrice sdk.Dec, tickSpacing uint64) (int64, int64) {
 	lowerSqrtPrice := osmomath.MustMonotonicSqrt(lowerPrice)
-	newLowerTick, err := clmath.SqrtPriceToTickRoundDownSpacing(lowerSqrtPrice, tickSpacing)
+	newLowerTick, err := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(lowerSqrtPrice), tickSpacing)
 	s.Require().NoError(err)
 	upperSqrtPrice := osmomath.MustMonotonicSqrt(upperPrice)
-	newUpperTick, err := clmath.SqrtPriceToTickRoundDownSpacing(upperSqrtPrice, tickSpacing)
+	newUpperTick, err := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(upperSqrtPrice), tickSpacing)
 	s.Require().NoError(err)
 	return newLowerTick, newUpperTick
 }

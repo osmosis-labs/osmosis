@@ -13,16 +13,16 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	concentrated_liquidity "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/clmocks"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	concentrated_liquidity "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/clmocks"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 )
 
 var (
@@ -65,10 +65,10 @@ var (
 	sqrt4999                                       = sdk.MustNewDecFromStr("70.703606697254136613")
 	sqrt5500                                       = sdk.MustNewDecFromStr("74.161984870956629488")
 	sqrt6250                                       = sdk.MustNewDecFromStr("79.056941504209483300")
-	DefaultExponentConsecutivePositionLowerTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt5500, DefaultTickSpacing)
-	DefaultExponentConsecutivePositionUpperTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt6250, DefaultTickSpacing)
-	DefaultExponentOverlappingPositionLowerTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt4000, DefaultTickSpacing)
-	DefaultExponentOverlappingPositionUpperTick, _ = math.SqrtPriceToTickRoundDownSpacing(sqrt4999, DefaultTickSpacing)
+	DefaultExponentConsecutivePositionLowerTick, _ = math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt5500), DefaultTickSpacing)
+	DefaultExponentConsecutivePositionUpperTick, _ = math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt6250), DefaultTickSpacing)
+	DefaultExponentOverlappingPositionLowerTick, _ = math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt4000), DefaultTickSpacing)
+	DefaultExponentOverlappingPositionUpperTick, _ = math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt4999), DefaultTickSpacing)
 	BAR                                            = "bar"
 	FOO                                            = "foo"
 	InsufficientFundsError                         = fmt.Errorf("insufficient funds")
@@ -82,7 +82,7 @@ func TestConstants(t *testing.T) {
 	lowerSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultLowerPrice)
 	upperSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultUpperPrice)
 	liq := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice,
-		lowerSqrtPrice, upperSqrtPrice, DefaultAmt0, DefaultAmt1)
+		osmomath.BigDecFromSDKDec(lowerSqrtPrice), osmomath.BigDecFromSDKDec(upperSqrtPrice), DefaultAmt0, DefaultAmt1)
 	require.Equal(t, DefaultLiquidityAmt, liq)
 }
 

@@ -11,15 +11,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 )
 
 var (
@@ -1056,7 +1057,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 					clPool, err = clKeeper.GetPoolById(s.Ctx, clPool.GetId())
 					s.Require().NoError(err)
 					if tc.canonicalBalancerPoolAssets != nil {
-						qualifyingBalancerLiquidityPreDiscount := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.canonicalBalancerPoolAssets[0].Token.Amount, tc.canonicalBalancerPoolAssets[1].Token.Amount)
+						qualifyingBalancerLiquidityPreDiscount := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), osmomath.BigDecFromSDKDec(types.MinSqrtPrice), osmomath.BigDecFromSDKDec(types.MaxSqrtPrice), tc.canonicalBalancerPoolAssets[0].Token.Amount, tc.canonicalBalancerPoolAssets[1].Token.Amount)
 						qualifyingBalancerLiquidity = (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingBalancerLiquidityPreDiscount)
 						qualifyingLiquidity = qualifyingLiquidity.Add(qualifyingBalancerLiquidity)
 
@@ -3591,7 +3592,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 				s.Require().NoError(err)
 				asset0BalancerAmount := tc.balancerPoolAssets[0].Token.Amount.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
 				asset1BalancerAmount := tc.balancerPoolAssets[1].Token.Amount.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
-				qualifyingSharesPreDiscount := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, asset1BalancerAmount, asset0BalancerAmount)
+				qualifyingSharesPreDiscount := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), osmomath.BigDecFromSDKDec(types.MinSqrtPrice), osmomath.BigDecFromSDKDec(types.MaxSqrtPrice), asset1BalancerAmount, asset0BalancerAmount)
 				qualifyingShares := (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingSharesPreDiscount)
 
 				// TODO: clean this check up (will likely require refactoring the whole test)

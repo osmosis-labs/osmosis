@@ -11,12 +11,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"golang.org/x/exp/slices"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
 // createUptimeAccumulators creates accumulator objects in store for each supported uptime for the given poolId.
@@ -171,36 +172,28 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64,
 	// relaxed in the future.
 	// Note that we check denom compatibility later, and pool weights technically do not matter as they
 	// are analogous to changing the spot price, which is handled by our lower bounding.
-	if len(balancerPoolLiquidity) != 2 {
+	// Note that due to low share ratio, the balancer token liquidity may be truncated to zero.
+	// Balancer liquidity may also upgrade in-full to CL.
+	if len(balancerPoolLiquidity) > 2 {
 		return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
 	}
 
-	// We ensure that the asset ordering is correct when passing Balancer assets into the CL pool.
-	var asset0Amount, asset1Amount sdk.Int
-	if balancerPoolLiquidity[0].Denom == clPool.GetToken0() {
-		asset0Amount = balancerPoolLiquidity[0].Amount
-		asset1Amount = balancerPoolLiquidity[1].Amount
+	denom0 := clPool.GetToken0()
+	denom1 := clPool.GetToken1()
 
-		// Ensure second denom matches (bal1 -> CL1)
-		if balancerPoolLiquidity[1].Denom != clPool.GetToken1() {
-			return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
-		}
-	} else if balancerPoolLiquidity[0].Denom == clPool.GetToken1() {
-		asset0Amount = balancerPoolLiquidity[1].Amount
-		asset1Amount = balancerPoolLiquidity[0].Amount
-
-		// Ensure second denom matches (bal1 -> CL0)
-		if balancerPoolLiquidity[1].Denom != clPool.GetToken0() {
-			return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
-		}
-	} else {
+	// This check's purpose is to confirm that denoms are the same.
+	clCoins := totalBalancerPoolLiquidity.FilterDenoms([]string{denom0, denom1})
+	if len(clCoins) != 2 {
 		return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
 	}
+
+	asset0Amount := balancerPoolLiquidity.AmountOf(denom0)
+	asset1Amount := balancerPoolLiquidity.AmountOf(denom1)
 
 	// Calculate the amount of liquidity the Balancer amounts qualify in the CL pool. Note that since we use the CL spot price, this is
 	// safe against prices drifting apart between the two pools (we take the lower bound on the qualifying liquidity in this case).
 	// The `sqrtPriceLowerTick` and `sqrtPriceUpperTick` fields are set to the appropriate values for a full range position.
-	qualifyingFullRangeSharesPreDiscount := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, asset0Amount, asset1Amount)
+	qualifyingFullRangeSharesPreDiscount := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), osmomath.BigDecFromSDKDec(types.MinSqrtPrice), osmomath.BigDecFromSDKDec(types.MaxSqrtPrice), asset0Amount, asset1Amount)
 
 	// Get discount ratio from governance-set discount rate.
 	// Note that discount rate is the amount that is being discounted by (e.g. 0.05 for a 5% discount), while discount ratio is what
@@ -437,7 +430,9 @@ func (k Keeper) updateGivenPoolUptimeAccumulatorsToNow(ctx sdk.Context, pool typ
 	// Even though this exposes CL LPs to getting immediately diluted by a large Balancer position, this would
 	// require a lot of capital to be tied up in a two week bond, which is a viable tradeoff given the relative
 	// simplicity of this approach.
-	if balancerPoolId != 0 {
+	// It is possible that the balancer qualifying shares are zero if the bonded liquidity in the
+	// pool is extremely low. As a result, in that case we simply skip claiming.
+	if balancerPoolId != 0 && !qualifyingBalancerShares.IsZero() {
 		_, err := k.claimAndResetFullRangeBalancerPool(ctx, poolId, balancerPoolId, uptimeAccums)
 		if err != nil {
 			return err

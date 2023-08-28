@@ -10,7 +10,8 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
-	types0 "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	osmomath "github.com/osmosis-labs/osmosis/osmomath"
+	types0 "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 // MockConcentratedPoolExtension is a mock of ConcentratedPoolExtension interface.
@@ -37,7 +38,7 @@ func (m *MockConcentratedPoolExtension) EXPECT() *MockConcentratedPoolExtensionM
 }
 
 // ApplySwap mocks base method.
-func (m *MockConcentratedPoolExtension) ApplySwap(newLiquidity types.Dec, newCurrentTick int64, newCurrentSqrtPrice types.Dec) error {
+func (m *MockConcentratedPoolExtension) ApplySwap(newLiquidity types.Dec, newCurrentTick int64, newCurrentSqrtPrice osmomath.BigDec) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ApplySwap", newLiquidity, newCurrentTick, newCurrentSqrtPrice)
 	ret0, _ := ret[0].(error)
@@ -95,10 +96,10 @@ func (mr *MockConcentratedPoolExtensionMockRecorder) GetAddress() *gomock.Call {
 }
 
 // GetCurrentSqrtPrice mocks base method.
-func (m *MockConcentratedPoolExtension) GetCurrentSqrtPrice() types.Dec {
+func (m *MockConcentratedPoolExtension) GetCurrentSqrtPrice() osmomath.BigDec {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCurrentSqrtPrice")
-	ret0, _ := ret[0].(types.Dec)
+	ret0, _ := ret[0].(osmomath.BigDec)
 	return ret0
 }
 
@@ -220,6 +221,20 @@ func (mr *MockConcentratedPoolExtensionMockRecorder) GetSpreadRewardsAddress() *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpreadRewardsAddress", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetSpreadRewardsAddress))
 }
 
+// GetTakerFee mocks base method.
+func (m *MockConcentratedPoolExtension) GetTakerFee() types.Dec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTakerFee")
+	ret0, _ := ret[0].(types.Dec)
+	return ret0
+}
+
+// GetTakerFee indicates an expected call of GetTakerFee.
+func (mr *MockConcentratedPoolExtensionMockRecorder) GetTakerFee() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTakerFee", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetTakerFee))
+}
+
 // GetTickSpacing mocks base method.
 func (m *MockConcentratedPoolExtension) GetTickSpacing() uint64 {
 	m.ctrl.T.Helper()
@@ -329,7 +344,7 @@ func (mr *MockConcentratedPoolExtensionMockRecorder) Reset() *gomock.Call {
 }
 
 // SetCurrentSqrtPrice mocks base method.
-func (m *MockConcentratedPoolExtension) SetCurrentSqrtPrice(newSqrtPrice types.Dec) {
+func (m *MockConcentratedPoolExtension) SetCurrentSqrtPrice(newSqrtPrice osmomath.BigDec) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetCurrentSqrtPrice", newSqrtPrice)
 }
@@ -362,6 +377,18 @@ func (m *MockConcentratedPoolExtension) SetLastLiquidityUpdate(newTime time.Time
 func (mr *MockConcentratedPoolExtensionMockRecorder) SetLastLiquidityUpdate(newTime interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLastLiquidityUpdate", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).SetLastLiquidityUpdate), newTime)
+}
+
+// SetTakerFee mocks base method.
+func (m *MockConcentratedPoolExtension) SetTakerFee(newTakerFee types.Dec) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetTakerFee", newTakerFee)
+}
+
+// SetTakerFee indicates an expected call of SetTakerFee.
+func (mr *MockConcentratedPoolExtensionMockRecorder) SetTakerFee(newTakerFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTakerFee", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).SetTakerFee), newTakerFee)
 }
 
 // SetTickSpacing mocks base method.

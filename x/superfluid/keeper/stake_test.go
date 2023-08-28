@@ -5,12 +5,12 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/simapp"

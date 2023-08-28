@@ -11,10 +11,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 const (
@@ -141,7 +141,7 @@ func (s *ConcentratedPoolTestSuite) TestString() {
 	pool, err := model.NewConcentratedLiquidityPool(1, "foo", "bar", DefaultTickSpacing, DefaultSpreadFactor)
 	s.Require().NoError(err)
 	poolString := pool.String()
-	s.Require().Equal(poolString, "{\"address\":\"osmo19e2mf7cywkv7zaug6nk5f87d07fxrdgrladvymh2gwv5crvm3vnsuewhh7\",\"incentives_address\":\"osmo156gncm3w2hdvuxxaejue8nejxgdgsrvdf7jftntuhxnaarhxcuas4ywjxf\",\"spread_rewards_address\":\"osmo10t3u6ze74jn7et6rluuxyf9vr2arykewmhcx67svg6heuu0gte2syfudcv\",\"id\":1,\"current_tick_liquidity\":\"0.000000000000000000\",\"token0\":\"foo\",\"token1\":\"bar\",\"current_sqrt_price\":\"0.000000000000000000000000000000000000\",\"tick_spacing\":1,\"exponent_at_price_one\":-6,\"spread_factor\":\"0.010000000000000000\",\"last_liquidity_update\":\"0001-01-01T00:00:00Z\"}")
+	s.Require().Equal("{\"address\":\"osmo19e2mf7cywkv7zaug6nk5f87d07fxrdgrladvymh2gwv5crvm3vnsuewhh7\",\"incentives_address\":\"osmo156gncm3w2hdvuxxaejue8nejxgdgsrvdf7jftntuhxnaarhxcuas4ywjxf\",\"spread_rewards_address\":\"osmo10t3u6ze74jn7et6rluuxyf9vr2arykewmhcx67svg6heuu0gte2syfudcv\",\"id\":1,\"current_tick_liquidity\":\"0.000000000000000000\",\"token0\":\"foo\",\"token1\":\"bar\",\"current_sqrt_price\":\"0.000000000000000000000000000000000000\",\"tick_spacing\":1,\"exponent_at_price_one\":-6,\"spread_factor\":\"0.010000000000000000\",\"last_liquidity_update\":\"0001-01-01T00:00:00Z\"}", poolString)
 }
 
 // TestSpotPrice tests the SpotPrice method of the ConcentratedPoolTestSuite.
@@ -566,7 +566,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 
 func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 	var (
-		tickToSqrtPrice = func(tick int64) sdk.Dec {
+		tickToSqrtPrice = func(tick int64) osmomath.BigDec {
 			_, sqrtPrice, err := clmath.TickToSqrtPrice(tick)
 			suite.Require().NoError(err)
 			return sqrtPrice
@@ -576,13 +576,13 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 		defaultLiquidityDeltaBigDec = osmomath.NewBigDec(1000)
 
 		lowerTick            = int64(-99)
-		lowerSqrtPriceBigDec = osmomath.BigDecFromSDKDec(tickToSqrtPrice(lowerTick))
+		lowerSqrtPriceBigDec = tickToSqrtPrice(lowerTick)
 
 		midtick            = int64(2)
-		midSqrtPriceBigDec = osmomath.BigDecFromSDKDec(tickToSqrtPrice(midtick))
+		midSqrtPriceBigDec = tickToSqrtPrice(midtick)
 
 		uppertick            = int64(74)
-		upperSqrtPriceBigDec = osmomath.BigDecFromSDKDec(tickToSqrtPrice(uppertick))
+		upperSqrtPriceBigDec = tickToSqrtPrice(uppertick)
 	)
 
 	tests := map[string]struct {
@@ -696,7 +696,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 				CurrentTick: tc.currentTick,
 			}
 			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
-			pool.CurrentSqrtPrice = osmomath.BigDecFromSDKDec(currenTicktSqrtPrice)
+			pool.CurrentSqrtPrice = currenTicktSqrtPrice
 
 			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 
@@ -791,7 +791,7 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 				CurrentTickLiquidity: defaultLiquidityAmt,
 			}
 			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
-			pool.CurrentSqrtPrice = osmomath.BigDecFromSDKDec(currenTicktSqrtPrice)
+			pool.CurrentSqrtPrice = currenTicktSqrtPrice
 
 			wasUpdated := pool.UpdateLiquidityIfActivePosition(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 			if tc.lowerTick <= tc.currentTick && tc.currentTick <= tc.upperTick {

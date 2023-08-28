@@ -21,20 +21,20 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v17/x/ibc-rate-limit/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
-	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
-	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
+	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
 var (
@@ -491,8 +491,8 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	s.Require().NoError(err)
 	_, sqrtPriceAtNextInitializedTick, err := clmath.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
-	sqrtPriceAfterNextInitializedTickBigDec := osmomath.BigDecFromSDKDec(sqrtPriceAfterNextInitializedTick)
-	sqrtPriceAtNextInitializedTickBigDec := osmomath.BigDecFromSDKDec(sqrtPriceAtNextInitializedTick)
+	sqrtPriceAfterNextInitializedTickBigDec := sqrtPriceAfterNextInitializedTick
+	sqrtPriceAtNextInitializedTickBigDec := sqrtPriceAtNextInitializedTick
 
 	// Calculate Δ(sqrtPrice):
 	// deltaSqrtPriceAfterNextInitializedTick = ΔsqrtP(40300) - ΔsqrtP(40000)
@@ -635,7 +635,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	s.Require().NoError(err)
 	_, sqrtPriceAtNextInitializedTick, err = clmath.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
-	sqrtPriceAtNextInitializedTickBigDec = osmomath.BigDecFromSDKDec(sqrtPriceAtNextInitializedTick)
+	sqrtPriceAtNextInitializedTickBigDec = sqrtPriceAtNextInitializedTick
 
 	// Calculate numerators
 	numeratorBelowNextInitializedTick := sqrtPriceAtNextInitializedTick.Sub(sqrtPricebBelowNextInitializedTick)
@@ -650,7 +650,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	fractionAtNextInitializedTick := numeratorNextInitializedTick.Quo(denominatorNextInitializedTick)
 
 	// Calculate amounts of uionIn needed
-	amountInToGetToTickBelowInitialized := liquidityBeforeSwap.Add(positionsAddress1[0].Position.Liquidity).Mul(fractionBelowNextInitializedTick)
+	amountInToGetToTickBelowInitialized := liquidityBeforeSwap.Add(positionsAddress1[0].Position.Liquidity).Mul(fractionBelowNextInitializedTick.SDKDec())
 	amountInToGetToNextInitTick = liquidityBeforeSwap.Mul(fractionAtNextInitializedTick.SDKDec())
 
 	var (

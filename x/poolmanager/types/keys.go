@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	ModuleName = "poolmanager"
+	ModuleName   = "poolmanager"
+	KeySeparator = "|"
 
 	StoreKey = ModuleName
 
@@ -20,6 +21,9 @@ var (
 
 	// SwapModuleRouterPrefix defines prefix to store pool id to swap module mappings.
 	SwapModuleRouterPrefix = []byte{0x02}
+
+	// KeyPoolVolumePrefix defines prefix to store pool volume.
+	KeyPoolVolumePrefix = []byte{0x03}
 )
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.
@@ -36,4 +40,9 @@ func ParseModuleRouteFromBz(bz []byte) (ModuleRoute, error) {
 		return ModuleRoute{}, err
 	}
 	return moduleRoute, err
+}
+
+// KeyPoolVolume returns the key for the pool volume corresponding to the given poolId.
+func KeyPoolVolume(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s", KeyPoolVolumePrefix, KeySeparator, poolId, KeySeparator))
 }

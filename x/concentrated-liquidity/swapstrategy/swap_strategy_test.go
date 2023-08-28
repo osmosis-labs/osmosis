@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 type StrategyTestSuite struct {
@@ -222,13 +222,13 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 	for name, tc := range testCases {
 		tc := tc
 		suite.Run(name, func() {
-			sut := swapstrategy.New(tc.zeroForOne, sdk.ZeroDec(), suite.App.GetKey(types.ModuleName), sdk.ZeroDec())
-			sqrtPriceNextOutGivenIn, amountInOutGivenIn, amountOutOutGivenIn, _ := sut.ComputeSwapWithinBucketOutGivenIn(osmomath.BigDecFromSDKDec(tc.sqrtPriceCurrent), tc.sqrtPriceTarget, tc.liquidity, tc.amountIn)
+			sut := swapstrategy.New(tc.zeroForOne, osmomath.ZeroDec(), suite.App.GetKey(types.ModuleName), sdk.ZeroDec())
+			sqrtPriceNextOutGivenIn, amountInOutGivenIn, amountOutOutGivenIn, _ := sut.ComputeSwapWithinBucketOutGivenIn(osmomath.BigDecFromSDKDec(tc.sqrtPriceCurrent), osmomath.BigDecFromSDKDec(tc.sqrtPriceTarget), tc.liquidity, tc.amountIn)
 			suite.Require().Equal(tc.expectedSqrtPriceNextOutGivenIn.String(), sqrtPriceNextOutGivenIn.String())
 
 			fmt.Println("amountOutOutGivenIn", amountOutOutGivenIn)
 
-			sqrtPriceNextInGivenOut, amountOutInGivenOut, amountInInGivenOut, _ := sut.ComputeSwapWithinBucketInGivenOut(osmomath.BigDecFromSDKDec(tc.sqrtPriceCurrent), tc.sqrtPriceTarget, tc.liquidity, amountOutOutGivenIn)
+			sqrtPriceNextInGivenOut, amountOutInGivenOut, amountInInGivenOut, _ := sut.ComputeSwapWithinBucketInGivenOut(osmomath.BigDecFromSDKDec(tc.sqrtPriceCurrent), osmomath.BigDecFromSDKDec(tc.sqrtPriceTarget), tc.liquidity, amountOutOutGivenIn)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNextInGivenOut.String(), sqrtPriceNextInGivenOut.String())
 

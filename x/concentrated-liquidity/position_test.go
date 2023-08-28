@@ -10,12 +10,12 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 const (
@@ -2033,7 +2033,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 
 		s.Require().True(toTick < pool.GetCurrentTick())
 
-		amountZeroIn := math.CalcAmount0Delta(osmomath.BigDecFromSDKDec(pool.GetLiquidity()), pool.GetCurrentSqrtPrice(), osmomath.BigDecFromSDKDec(s.tickToSqrtPrice(toTick)), true)
+		amountZeroIn := math.CalcAmount0Delta(osmomath.BigDecFromSDKDec(pool.GetLiquidity()), pool.GetCurrentSqrtPrice(), s.tickToSqrtPrice(toTick), true)
 		coinZeroIn := sdk.NewCoin(denom0, amountZeroIn.SDKDec().TruncateInt())
 
 		return coinZeroIn
@@ -2049,7 +2049,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 
 		s.Require().True(toTick > pool.GetCurrentTick())
 
-		amountOneIn := math.CalcAmount1Delta(osmomath.BigDecFromSDKDec(pool.GetLiquidity()), pool.GetCurrentSqrtPrice(), osmomath.BigDecFromSDKDec(s.tickToSqrtPrice(toTick)), true)
+		amountOneIn := math.CalcAmount1Delta(osmomath.BigDecFromSDKDec(pool.GetLiquidity()), pool.GetCurrentSqrtPrice(), s.tickToSqrtPrice(toTick), true)
 		coinOneIn := sdk.NewCoin(denom1, amountOneIn.SDKDec().TruncateInt())
 
 		return coinOneIn

@@ -8,8 +8,8 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 // zeroForOneStrategy implements the swapStrategy interface.
@@ -19,7 +19,7 @@ import (
 // With this strategy, we are moving to the left of the current
 // tick index and square root price.
 type zeroForOneStrategy struct {
-	sqrtPriceLimit sdk.Dec
+	sqrtPriceLimit osmomath.BigDec
 	storeKey       sdk.StoreKey
 	spreadFactor   sdk.Dec
 }
@@ -31,7 +31,7 @@ func (s zeroForOneStrategy) ZeroForOne() bool { return true }
 // GetSqrtTargetPrice returns the target square root price given the next tick square root price.
 // If the given nextTickSqrtPrice is less than the sqrt price limit, the sqrt price limit is returned.
 // Otherwise, the input nextTickSqrtPrice is returned.
-func (s zeroForOneStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.Dec {
+func (s zeroForOneStrategy) GetSqrtTargetPrice(nextTickSqrtPrice osmomath.BigDec) osmomath.BigDec {
 	if nextTickSqrtPrice.LT(s.sqrtPriceLimit) {
 		return s.sqrtPriceLimit
 	}
@@ -57,13 +57,12 @@ func (s zeroForOneStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.De
 //
 // ZeroForOne details:
 // - zeroForOneStrategy assumes moving to the left of the current square root price.
-func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent osmomath.BigDec, sqrtPriceTarget, liquidity, amountZeroInRemaining sdk.Dec) (osmomath.BigDec, sdk.Dec, sdk.Dec, sdk.Dec) {
+func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget osmomath.BigDec, liquidity, amountZeroInRemaining sdk.Dec) (osmomath.BigDec, sdk.Dec, sdk.Dec, sdk.Dec) {
 	liquidityBigDec := osmomath.BigDecFromSDKDec(liquidity)
-	sqrtPriceTargetBigDec := osmomath.BigDecFromSDKDec(sqrtPriceTarget)
 	amountZeroInRemainingBigDec := osmomath.BigDecFromSDKDec(amountZeroInRemaining)
 
 	// Estimate the amount of token zero needed until the target sqrt price is reached.
-	amountZeroIn := math.CalcAmount0Delta(liquidityBigDec, sqrtPriceTargetBigDec, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
+	amountZeroIn := math.CalcAmount0Delta(liquidityBigDec, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 
 	// Calculate sqrtPriceNext on the amount of token remaining after spread reward.
 	amountZeroInRemainingLessSpreadReward := amountZeroInRemainingBigDec.Mul(oneBigDec.Sub(osmomath.BigDecFromSDKDec(s.spreadFactor)))
@@ -72,13 +71,13 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent o
 	// If have more of the amount remaining after spread reward than estimated until target,
 	// bound the next sqrtPriceNext by the target sqrt price.
 	if amountZeroInRemainingLessSpreadReward.GTE(amountZeroIn) {
-		sqrtPriceNext = sqrtPriceTargetBigDec
+		sqrtPriceNext = sqrtPriceTarget
 	} else {
 		// Otherwise, compute the next sqrt price based on the amount remaining after spread reward.
 		sqrtPriceNext = math.GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidityBigDec, amountZeroInRemainingLessSpreadReward)
 	}
 
-	hasReachedTarget := sqrtPriceTargetBigDec.Equal(sqrtPriceNext)
+	hasReachedTarget := sqrtPriceTarget.Equal(sqrtPriceNext)
 
 	// If the sqrt price target was not reached, recalculate how much of the amount remaining after spread reward was needed
 	// to complete the swap step. This implies that some of the amount remaining after spread reward is left over after the
@@ -121,13 +120,12 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent o
 //
 // ZeroForOne details:
 // - zeroForOneStrategy assumes moving to the left of the current square root price.
-func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent osmomath.BigDec, sqrtPriceTarget, liquidity, amountOneRemainingOut sdk.Dec) (osmomath.BigDec, sdk.Dec, sdk.Dec, sdk.Dec) {
+func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, sqrtPriceTarget osmomath.BigDec, liquidity, amountOneRemainingOut sdk.Dec) (osmomath.BigDec, sdk.Dec, sdk.Dec, sdk.Dec) {
 	liquidityBigDec := osmomath.BigDecFromSDKDec(liquidity)
-	sqrtPriceTargetBigDec := osmomath.BigDecFromSDKDec(sqrtPriceTarget)
 	amountOneRemainingOutBigDec := osmomath.BigDecFromSDKDec(amountOneRemainingOut)
 
 	// Estimate the amount of token one needed until the target sqrt price is reached.
-	amountOneOut := math.CalcAmount1Delta(liquidityBigDec, sqrtPriceTargetBigDec, sqrtPriceCurrent, false)
+	amountOneOut := math.CalcAmount1Delta(liquidityBigDec, sqrtPriceTarget, sqrtPriceCurrent, false)
 
 	// Calculate sqrtPriceNext on the amount of token remaining. Note that the
 	// spread reward is not charged as amountRemaining is amountOut, and we only charge spread reward on
@@ -136,13 +134,13 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent o
 	// If have more of the amount remaining after spread reward than estimated until target,
 	// bound the next sqrtPriceNext by the target sqrt price.
 	if amountOneRemainingOutBigDec.GTE(amountOneOut) {
-		sqrtPriceNext = sqrtPriceTargetBigDec
+		sqrtPriceNext = sqrtPriceTarget
 	} else {
 		// Otherwise, compute the next sqrt price based on the amount remaining after spread reward.
 		sqrtPriceNext = math.GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidityBigDec, amountOneRemainingOutBigDec)
 	}
 
-	hasReachedTarget := sqrtPriceTargetBigDec.Equal(sqrtPriceNext)
+	hasReachedTarget := sqrtPriceTarget.Equal(sqrtPriceNext)
 
 	// If the sqrt price target was not reached, recalculate how much of the amount remaining after spread reward was needed
 	// to complete the swap step. This implies that some of the amount remaining after spread reward is left over after the
@@ -252,12 +250,10 @@ func (s zeroForOneStrategy) UpdateTickAfterCrossing(nextTick int64) int64 {
 // zeroForOneStrategy assumes moving to the left of the current square root price.
 // Therefore, the following invariant must hold:
 // types.MinSqrtRatio <= sqrtPrice <= current square root price
-func (s zeroForOneStrategy) ValidateSqrtPrice(sqrtPrice sdk.Dec, currentSqrtPrice osmomath.BigDec) error {
-	sqrtPriceBigDec := osmomath.BigDecFromSDKDec(sqrtPrice)
-
+func (s zeroForOneStrategy) ValidateSqrtPrice(sqrtPrice osmomath.BigDec, currentSqrtPrice osmomath.BigDec) error {
 	// check that the price limit is below the current sqrt price but not lower than the minimum sqrt price if we are swapping asset0 for asset1
-	if sqrtPriceBigDec.GT(currentSqrtPrice) || sqrtPrice.LT(types.MinSqrtPrice) {
-		return types.SqrtPriceValidationError{SqrtPriceLimit: sqrtPriceBigDec, LowerBound: types.MinSqrtPriceBigDec, UpperBound: currentSqrtPrice}
+	if sqrtPrice.GT(currentSqrtPrice) || sqrtPrice.LT(osmomath.BigDecFromSDKDec(types.MinSqrtPrice)) {
+		return types.SqrtPriceValidationError{SqrtPriceLimit: sqrtPrice, LowerBound: types.MinSqrtPriceBigDec, UpperBound: currentSqrtPrice}
 	}
 	return nil
 }

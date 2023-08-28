@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	flag "github.com/spf13/pflag"
 
-	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
 // ------------ types/functions to handle a SetHotRoutes CLI TX ------------ //

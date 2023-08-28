@@ -1,8 +1,8 @@
 package v12
 
 import (
-	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
-	twaptypes "github.com/osmosis-labs/osmosis/v17/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
+	twaptypes "github.com/osmosis-labs/osmosis/v19/x/twap/types"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 )

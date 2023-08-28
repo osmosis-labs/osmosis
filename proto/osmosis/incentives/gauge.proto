@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/lockup/lock.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/incentives/types";
 
 // Gauge is an object that stores and distributes yields to recipients who
 // satisfy certain conditions. Currently gauges support conditions around the
@@ -48,6 +48,23 @@ message Gauge {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+}
+
+// SplittingPolicy determines the way we want to split incentives in groupGauges
+enum SplittingPolicy {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  Volume = 0;
+  Evenly = 1;
+}
+
+// Gauge is an object that stores GroupGaugeId as well as internalGaugeIds. We
+// linked these two together so that we can distribute tokens from groupGauge to
+// internalGauges.
+message GroupGauge {
+  uint64 group_gauge_id = 1;
+  repeated uint64 internal_ids = 2;
+  SplittingPolicy splitting_policy = 3;
 }
 
 message LockableDurationsInfo {

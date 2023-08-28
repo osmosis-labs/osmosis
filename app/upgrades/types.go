@@ -7,7 +7,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v17/app/keepers"
+	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 )
 
 // BaseAppParamManager defines an interrace that BaseApp is expected to fullfil

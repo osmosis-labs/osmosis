@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 import "amino/amino.proto";
 import "osmosis/gamm/pool-models/stableswap/stableswap_pool.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap";
 
 service Msg {
   rpc CreateStableswapPool(MsgCreateStableswapPool)

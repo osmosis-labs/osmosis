@@ -5,7 +5,7 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -20,6 +20,8 @@ type Keeper struct {
 	bankKeeper           types.BankI
 	accountKeeper        types.AccountI
 	communityPoolKeeper  types.CommunityPoolI
+	stakingKeeper        types.StakingKeeper
+	protorevKeeper       types.ProtorevKeeper
 
 	// routes is a map to get the pool module by id.
 	routes map[types.PoolType]types.PoolModuleI
@@ -33,7 +35,7 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI, stakingKeeper types.StakingKeeper, protorevKeeper types.ProtorevKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -61,6 +63,8 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper
 		communityPoolKeeper: communityPoolKeeper,
 		routes:              routesMap,
 		poolModules:         routesList,
+		stakingKeeper:       stakingKeeper,
+		protorevKeeper:      protorevKeeper,
 	}
 }
 
@@ -116,4 +120,14 @@ func (k Keeper) SetNextPoolId(ctx sdk.Context, poolId uint64) {
 // SetPoolIncentivesKeeper sets pool incentives keeper
 func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeperI) {
 	k.poolIncentivesKeeper = poolIncentivesKeeper
+}
+
+// SetStakingKeeper sets staking keeper
+func (k *Keeper) SetStakingKeeper(stakingKeeper types.StakingKeeper) {
+	k.stakingKeeper = stakingKeeper
+}
+
+// SetProtorevKeeper sets protorev keeper
+func (k *Keeper) SetProtorevKeeper(protorevKeeper types.ProtorevKeeper) {
+	k.protorevKeeper = protorevKeeper
 }

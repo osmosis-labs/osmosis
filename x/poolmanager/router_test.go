@@ -9,17 +9,17 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v17/tests/mocks"
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	cwpool "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool"
-	cwmodel "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/model"
-	gamm "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
-	"github.com/osmosis-labs/osmosis/v17/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/tests/mocks"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	cwpool "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool"
+	cwmodel "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/model"
+	gamm "github.com/osmosis-labs/osmosis/v19/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 type poolSetup struct {
@@ -2732,6 +2732,255 @@ func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.expectedSwapIns, actualSwapOuts)
 			}
+		})
+	}
+}
+
+// runMultipleTrackVolumes runs TrackVolume on the same pool multiple times
+func (s *KeeperTestSuite) runMultipleTrackVolumes(poolId uint64, volume sdk.Coin, times int64) {
+	for i := 0; i < int(times); i++ {
+		s.App.PoolManagerKeeper.TrackVolume(s.Ctx, poolId, volume)
+	}
+}
+
+// Testing strategy:
+// 1. If applicable, create an OSMO-paired pool
+// 2. Set OSMO-paired pool as canonical for that denom pair in state
+// 3. Run `trackVolume` on test input amount (cases include both OSMO and non-OSMO volumes)
+// 4. Assert correct amount was added to pool volume
+func (s *KeeperTestSuite) TestTrackVolume() {
+	hundred := sdk.NewInt(100)
+	hundredFoo := sdk.NewCoin(foo, hundred)
+	hundredUosmo := sdk.NewCoin(uosmo, hundred)
+	oneRun := int64(1)
+	threeRuns := int64(3)
+
+	tests := map[string]struct {
+		generatedVolume     sdk.Coin
+		timesRun            int64
+		osmoPairedPoolType  types.PoolType
+		osmoPairedPoolCoins sdk.Coins
+
+		expectedVolume sdk.Int
+	}{
+		"Happy path: volume denominated in OSMO": {
+			generatedVolume: hundredUosmo,
+			timesRun:        oneRun,
+
+			expectedVolume: hundred.MulRaw(oneRun),
+		},
+
+		// --- Pricing against balancer pool ---
+
+		"Non-OSMO volume priced with balancer pool": {
+			generatedVolume:    hundredFoo,
+			timesRun:           oneRun,
+			osmoPairedPoolType: types.Balancer,
+			// Spot price = 1
+			osmoPairedPoolCoins: fooUosmoCoins,
+
+			expectedVolume: hundred.MulRaw(oneRun),
+		},
+		"Non-OSMO volume priced with balancer pool, multiple runs": {
+			generatedVolume:    hundredFoo,
+			timesRun:           threeRuns,
+			osmoPairedPoolType: types.Balancer,
+			// Spot price = 1
+			osmoPairedPoolCoins: fooUosmoCoins,
+
+			expectedVolume: hundred.MulRaw(threeRuns),
+		},
+		"Non-OSMO volume priced with balancer pool, large spot price": {
+			generatedVolume:    hundredFoo,
+			timesRun:           oneRun,
+			osmoPairedPoolType: types.Balancer,
+			// 100 foo corresponds to 1000 osmo (spot price = 10)
+			osmoPairedPoolCoins: sdk.NewCoins(
+				sdk.NewCoin(foo, sdk.NewInt(100)),
+				sdk.NewCoin(uosmo, sdk.NewInt(1000)),
+			),
+
+			expectedVolume: sdk.NewInt(10).Mul(hundred).MulRaw(oneRun),
+		},
+		"Non-OSMO volume priced with balancer pool, small spot price": {
+			generatedVolume:    hundredFoo,
+			timesRun:           oneRun,
+			osmoPairedPoolType: types.Balancer,
+			// 100 foo corresponds to 10 osmo (spot price = 0.1)
+			osmoPairedPoolCoins: sdk.NewCoins(
+				sdk.NewCoin(foo, sdk.NewInt(100)),
+				sdk.NewCoin(uosmo, sdk.NewInt(10)),
+			),
+
+			expectedVolume: hundred.MulRaw(oneRun).Quo(sdk.NewInt(10)),
+		},
+		"Non-OSMO volume priced with balancer pool, large spot price, multiple runs": {
+			generatedVolume:    hundredFoo,
+			timesRun:           threeRuns,
+			osmoPairedPoolType: types.Balancer,
+			// 100 foo corresponds to 1000 osmo (spot price = 10)
+			osmoPairedPoolCoins: sdk.NewCoins(
+				sdk.NewCoin(foo, sdk.NewInt(100)),
+				sdk.NewCoin(uosmo, sdk.NewInt(1000)),
+			),
+
+			expectedVolume: sdk.NewInt(10).Mul(hundred).MulRaw(threeRuns),
+		},
+		"Non-OSMO volume priced with balancer pool, small spot price, multiple runs": {
+			generatedVolume:    hundredFoo,
+			timesRun:           threeRuns,
+			osmoPairedPoolType: types.Balancer,
+			// 100 foo corresponds to 10 osmo (spot price = 0.1)
+			osmoPairedPoolCoins: sdk.NewCoins(
+				sdk.NewCoin(foo, sdk.NewInt(100)),
+				sdk.NewCoin(uosmo, sdk.NewInt(10)),
+			),
+
+			expectedVolume: hundred.MulRaw(threeRuns).Quo(sdk.NewInt(10)),
+		},
+
+		// --- Pricing against CL pool ---
+
+		"Non-OSMO volume priced with concentrated pool, multiple runs": {
+			generatedVolume:    hundredFoo,
+			timesRun:           threeRuns,
+			osmoPairedPoolType: types.Concentrated,
+			// Spot price = 1
+			osmoPairedPoolCoins: fooUosmoCoins,
+
+			expectedVolume: hundred.MulRaw(threeRuns),
+		},
+		"Non-OSMO volume priced with concentrated pool, large spot price": {
+			generatedVolume:    hundredFoo,
+			timesRun:           oneRun,
+			osmoPairedPoolType: types.Concentrated,
+			// 100 foo corresponds to 1000 osmo (spot price = 10)
+			osmoPairedPoolCoins: sdk.NewCoins(
+				sdk.NewCoin(foo, sdk.NewInt(100)),
+				sdk.NewCoin(uosmo, sdk.NewInt(1000)),
+			),
+
+			expectedVolume: sdk.NewInt(10).Mul(hundred).MulRaw(oneRun),
+		},
+		"Non-OSMO volume priced with concentrated pool, small spot price": {
+			generatedVolume:    hundredFoo,
+			timesRun:           oneRun,
+			osmoPairedPoolType: types.Concentrated,
+			// 100 foo corresponds to 10 osmo (spot price = 0.1)
+			osmoPairedPoolCoins: sdk.NewCoins(
+				sdk.NewCoin(foo, sdk.NewInt(100)),
+				sdk.NewCoin(uosmo, sdk.NewInt(10)),
+			),
+
+			expectedVolume: hundred.MulRaw(oneRun).Quo(sdk.NewInt(10)),
+		},
+		"Non-OSMO volume priced with concentrated pool, large spot price, multiple runs": {
+			generatedVolume:    hundredFoo,
+			timesRun:           threeRuns,
+			osmoPairedPoolType: types.Concentrated,
+			// 100 foo corresponds to 1000 osmo (spot price = 10)
+			osmoPairedPoolCoins: sdk.NewCoins(
+				sdk.NewCoin(foo, sdk.NewInt(100)),
+				sdk.NewCoin(uosmo, sdk.NewInt(1000)),
+			),
+
+			expectedVolume: sdk.NewInt(10).Mul(hundred).MulRaw(threeRuns),
+		},
+		"Non-OSMO volume priced with concentrated pool, small spot price, multiple runs": {
+			generatedVolume:    hundredFoo,
+			timesRun:           threeRuns,
+			osmoPairedPoolType: types.Concentrated,
+			// 100 foo corresponds to 10 osmo (spot price = 0.1)
+			osmoPairedPoolCoins: sdk.NewCoins(
+				sdk.NewCoin(foo, sdk.NewInt(100)),
+				sdk.NewCoin(uosmo, sdk.NewInt(10)),
+			),
+
+			expectedVolume: hundred.MulRaw(threeRuns).Quo(sdk.NewInt(10)),
+		},
+
+		// --- Pricing against cosmwasm pool ---
+
+		"Non-OSMO volume priced with CosmWasm pool, multiple runs": {
+			generatedVolume:    hundredFoo,
+			timesRun:           threeRuns,
+			osmoPairedPoolType: types.CosmWasm,
+			// Spot price = 1 since our test CW pool is a 1:1 transmuter
+			osmoPairedPoolCoins: fooUosmoCoins,
+
+			expectedVolume: hundred.MulRaw(threeRuns),
+		},
+
+		// --- Edge cases ---
+
+		"OSMO denominated volume, no volume added": {
+			generatedVolume:     sdk.NewCoin(uosmo, sdk.NewInt(0)),
+			timesRun:            oneRun,
+			osmoPairedPoolType:  types.Balancer,
+			osmoPairedPoolCoins: fooUosmoCoins,
+
+			expectedVolume: sdk.NewInt(0),
+		},
+		"Non-OSMO volume priced with balancer pool, no volume added": {
+			generatedVolume:     sdk.NewCoin(foo, sdk.NewInt(0)),
+			timesRun:            oneRun,
+			osmoPairedPoolType:  types.Balancer,
+			osmoPairedPoolCoins: fooUosmoCoins,
+
+			expectedVolume: sdk.NewInt(0),
+		},
+		"Added volume truncated to zero (no volume added)": {
+			generatedVolume:    sdk.NewCoin(foo, sdk.NewInt(1)),
+			timesRun:           oneRun,
+			osmoPairedPoolType: types.Balancer,
+			// 100 foo corresponds to 10 osmo (spot price = 0.1)
+			osmoPairedPoolCoins: sdk.NewCoins(
+				sdk.NewCoin(foo, sdk.NewInt(100)),
+				sdk.NewCoin(uosmo, sdk.NewInt(10)),
+			),
+
+			expectedVolume: sdk.NewInt(0),
+		},
+		"Non-OSMO denominated volume, no OSMO-paired pool": {
+			generatedVolume: hundredFoo,
+			timesRun:        oneRun,
+
+			// Note that we expect this to fail quietly and track zero volume,
+			// as described in the function spec/comments.
+			expectedVolume: sdk.NewInt(0),
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			// --- Setup ---
+
+			// Create target pool to track volume for.
+			// Note that the actual contents or type of this pool do not matter for this test as we just need the ID.
+			targetPoolId := s.PrepareBalancerPool()
+
+			// If applicable, create an OSMO-paired pool and set it in protorev
+			if tc.osmoPairedPoolCoins != nil {
+				osmoPairedPoolId := s.CreatePoolFromTypeWithCoins(tc.osmoPairedPoolType, tc.osmoPairedPoolCoins)
+				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, uosmo, foo, osmoPairedPoolId)
+			}
+
+			// --- System under test ---
+
+			// Run TrackVolume the specified number of times. Note that this function fails quietly in all error cases.
+			s.runMultipleTrackVolumes(targetPoolId, tc.generatedVolume, tc.timesRun)
+
+			// --- Assertions ---
+
+			// Assert that the correct amount of volume was added to the pool tracker
+
+			// Note that the units should always be in OSMO, even if the input volume was in another token.
+			//
+			// We wrap with sdk.NewCoins() to sanitize the outputs for comparison in case they are empty.
+			totalVolume := s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, targetPoolId)
+			s.Require().Equal(sdk.NewCoins(sdk.NewCoin(uosmo, tc.expectedVolume)), sdk.NewCoins(totalVolume...))
 		})
 	}
 }

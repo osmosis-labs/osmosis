@@ -13,13 +13,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v17/app"
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	clgenesis "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types/genesis"
+	"github.com/osmosis-labs/osmosis/v19/app"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	clgenesis "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types/genesis"
 )
 
 type BigBangPositions struct {
@@ -138,7 +138,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		if err != nil {
 			panic(err)
 		}
-		lowerTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPriceLower, pool.GetTickSpacing())
+		lowerTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrtPriceLower), pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}
@@ -147,7 +147,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		if err != nil {
 			panic(err)
 		}
-		upperTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPriceUpper, pool.GetTickSpacing())
+		upperTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrtPriceUpper), pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}

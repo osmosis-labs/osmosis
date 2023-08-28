@@ -7,9 +7,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v17/x/twap"
-	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v19/x/twap"
+	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
 )
 
 type computeTwapTestCase struct {

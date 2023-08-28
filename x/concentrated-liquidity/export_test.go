@@ -5,11 +5,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 const (
@@ -162,7 +163,7 @@ func (k Keeper) SetPositionIdToLock(ctx sdk.Context, positionId, underlyingLockI
 	k.setPositionIdToLock(ctx, positionId, underlyingLockId)
 }
 
-func RoundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, priceTickUpper sdk.Dec, tickSpacing uint64) (int64, int64, error) {
+func RoundTickToCanonicalPriceTick(lowerTick, upperTick int64, priceTickLower, priceTickUpper osmomath.BigDec, tickSpacing uint64) (int64, int64, error) {
 	return roundTickToCanonicalPriceTick(lowerTick, upperTick, priceTickLower, priceTickUpper, tickSpacing)
 }
 
@@ -328,7 +329,7 @@ func (k Keeper) GetLargestSupportedUptimeDuration(ctx sdk.Context) time.Duration
 
 func (k Keeper) SetupSwapStrategy(ctx sdk.Context, p types.ConcentratedPoolExtension,
 	spreadFactor sdk.Dec, tokenInDenom string,
-	priceLimit sdk.Dec) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit sdk.Dec, err error) {
+	priceLimit sdk.Dec) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit osmomath.BigDec, err error) {
 	return k.setupSwapStrategy(p, spreadFactor, tokenInDenom, priceLimit)
 }
 

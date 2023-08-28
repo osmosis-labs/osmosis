@@ -2,9 +2,13 @@ package keeper
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
+	"github.com/gogo/protobuf/proto"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -100,4 +104,42 @@ func (k Keeper) deleteGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) 
 // addGaugeIDForDenom adds the provided ID to the list of gauge ID's associated with the provided denom.
 func (k Keeper) addGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) error {
 	return k.addGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), ID)
+}
+
+// SetGroupGauge sets groupGroup for a specific key.
+// TODO: explore if we can store this better, this has GroupGaugeId in key and value
+func (k Keeper) SetGroupGauge(ctx sdk.Context, groupGauge types.GroupGauge) {
+	store := ctx.KVStore(k.storeKey)
+	osmoutils.MustSet(store, types.KeyGroupGaugeForId(groupGauge.GroupGaugeId), &groupGauge)
+}
+
+// GetAllGroupGauges gets all the groupGauges that is in state.
+func (k Keeper) GetAllGroupGauges(ctx sdk.Context) ([]types.GroupGauge, error) {
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GroupGaugePrefix), k.ParseGroupGaugeFromBz)
+}
+
+func (k Keeper) ParseGroupGaugeFromBz(bz []byte) (groupGauge types.GroupGauge, err error) {
+	if len(bz) == 0 {
+		return types.GroupGauge{}, errors.New("group gauge not found")
+	}
+	err = proto.Unmarshal(bz, &groupGauge)
+
+	return groupGauge, err
+}
+
+// GetGroupGaugeById gets groupGauge struct for a given groupGaugeId.
+func (k Keeper) GetGroupGaugeById(ctx sdk.Context, groupGaugeId uint64) (types.GroupGauge, error) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyGroupGaugeForId(groupGaugeId)
+	bz := store.Get(key)
+	if bz == nil {
+		return types.GroupGauge{}, nil
+	}
+
+	var getGroupGauge types.GroupGauge
+	if err := proto.Unmarshal(bz, &getGroupGauge); err != nil {
+		return types.GroupGauge{}, nil
+	}
+
+	return getGroupGauge, nil
 }

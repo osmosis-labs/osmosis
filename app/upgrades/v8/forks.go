@@ -3,7 +3,7 @@ package v8
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/app/keepers"
+	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 )
 
 // RunForkLogic executes height-gated on-chain fork logic for the Osmosis v8

@@ -10,11 +10,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/swapstrategy"
-	types "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/swapstrategy"
+	types "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 // This file contains query-related helper functions for the Concentrated Liquidity module
@@ -23,7 +23,7 @@ import (
 func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, error) {
 	// use false for zeroForOne since we're going from lower tick -> upper tick
 	zeroForOne := false
-	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+	swapStrategy := swapstrategy.New(zeroForOne, osmomath.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
 	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
 	// we do -1 to make min tick inclusive.
@@ -149,7 +149,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	}
 
 	liquidityDepths := []queryproto.TickLiquidityNet{}
-	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+	swapStrategy := swapstrategy.New(zeroForOne, osmomath.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
 	currentTick := p.GetCurrentTick()
 	_, currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick)
@@ -168,7 +168,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 		}
 		ctx.Logger().Debug(fmt.Sprintf("validateTick %s; validate sqrtPrice %s\n", validateTick.String(), validateSqrtPrice.String()))
 
-		if err := swapStrategy.ValidateSqrtPrice(validateSqrtPrice, osmomath.BigDecFromSDKDec(currentTickSqrtPrice)); err != nil {
+		if err := swapStrategy.ValidateSqrtPrice(validateSqrtPrice, currentTickSqrtPrice); err != nil {
 			return err
 		}
 
