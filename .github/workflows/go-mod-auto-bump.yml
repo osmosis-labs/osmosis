@@ -1,0 +1,69 @@
+# This workflow is used in order to automatically update go.mod in case one of:
+# * osmoutils
+# * osmomath
+# * x/ibc-hooks
+# * x/epochs
+# is updated when a push to a branch happens
+
+name: Go Mod Auto Version Update
+on: 
+  push:
+    branches-ignore:
+      - 'main'
+    paths: 
+      - osmoutils/**
+      - osmomath/**
+      - x/ibc-hooks/**
+      - x/epochs/**
+
+jobs:
+  update_go_mod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with: 
+          fetch-depth: 0
+          token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+
+      - name: Set GH config
+        run: |
+          git config user.email "github-actions@github.com"
+          git config user.name "github-actions"
+
+      # Setup Go
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.19.0'
+
+      # Extracts the name of the current branch
+      - name: Extract Current Branch
+        id: extract_branch
+        run: |
+          echo "CURRENT_BRANCH=$(echo ${GITHUB_REF} | sed 's|refs/heads/||')" >> $GITHUB_OUTPUT
+
+      - name: Fetch main branch
+        run: git fetch origin main:main
+
+      - name: Get latest commit on main branch
+        id: main_commit
+        run: |
+          echo "LATEST_MAIN_COMMIT=$(git rev-parse main)" >> $GITHUB_OUTPUT
+      
+      - name: Run script
+        run: |
+          COMMIT_AFTER_PUSH=${{ github.event.after }}
+          bash ./scripts/update-go-mod.sh ${{ steps.main_commit.outputs.LATEST_MAIN_COMMIT }} $COMMIT_AFTER_PUSH
+
+      - name: Add Changes 
+        id: add_changes
+        run: |
+          git add go.mod go.sum
+          echo ANY_CHANGES_ADDED=$(git diff --name-only --cached) >> $GITHUB_OUTPUT
+
+      - name: Commit and Push Changes
+        if: ${{ steps.add_changes.outputs.ANY_CHANGES_ADDED != '' }}
+        run: |
+          git commit -m "Auto: update go.mod after push to ${{ steps.extract_branch.outputs.CURRENT_BRANCH }} that modified dependencies locally"
+          git push origin ${{ steps.extract_branch.outputs.CURRENT_BRANCH }}
