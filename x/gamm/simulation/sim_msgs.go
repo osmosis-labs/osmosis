@@ -145,7 +145,18 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 	randomCoinSubset := sim.RandSubsetCoins(sdk.NewCoins(sdk.NewCoin(accCoinIn.Denom, accCoinIn.Amount)))
 
 	// calculate the minimum number of tokens received from input of tokenIn
-	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, randomCoinSubset, coinOut.Denom, pool.GetSpreadFactor(ctx))
+
+	// N.B. Calling MsgSwapExactAmountIn executes the swap via the pool manager, which charges the taker fee.
+	// We therefore need to remove the taker fee from the amountIn before calling the calc method.
+	takerFee, err := k.GetTradingPairTakerFee(ctx, coinIn.Denom, coinOut.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	amountInAfterSubTakerFee := randomCoinSubset[0].Amount.ToDec().Mul(sdk.OneDec().Sub(takerFee))
+	tokenInAfterSubTakerFee := sdk.NewCoin(randomCoinSubset[0].Denom, amountInAfterSubTakerFee.TruncateInt())
+
+	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenInAfterSubTakerFee), coinOut.Denom, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -191,6 +202,16 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 	if err != nil {
 		return nil, err
 	}
+
+	// N.B. Calling MsgSwapExactAmountOut executes the swap via the pool manager, which charges the taker fee.
+	// We therefore need to add the taker fee to the amountIn after calling the calc method.
+	takerFee, err := k.GetTradingPairTakerFee(ctx, coinIn.Denom, coinOut.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	amountInAfterAddTakerFee := tokenInMax.Amount.ToDec().Quo(sdk.OneDec().Sub(takerFee))
+	tokenInMax = sdk.NewCoin(tokenInMax.Denom, amountInAfterAddTakerFee.TruncateInt())
 
 	return &types.MsgSwapExactAmountOut{
 		Sender:           senderAcc.Address.String(),

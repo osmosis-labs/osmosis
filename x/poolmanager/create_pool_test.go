@@ -65,9 +65,9 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 		poolmanagerKeeper := s.App.PoolManagerKeeper
 
 		// set pool creation fee
-		poolmanagerKeeper.SetParams(s.Ctx, types.Params{
-			PoolCreationFee: test.poolCreationFee,
-		})
+		newParams := params
+		newParams.PoolCreationFee = test.poolCreationFee
+		poolmanagerKeeper.SetParams(s.Ctx, newParams)
 
 		// fund sender test account
 		sender, err := sdk.AccAddressFromBech32(test.msg.Sender)

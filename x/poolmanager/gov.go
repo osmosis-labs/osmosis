@@ -1,7 +1,6 @@
 package poolmanager
 
 import (
-	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +11,10 @@ import (
 )
 
 func (k Keeper) HandleDenomPairTakerFeeProposal(ctx sdk.Context, p *types.DenomPairTakerFeeProposal) error {
-	return errors.New("TODO: unimplemented")
+	for _, denomPair := range p.DenomPairTakerFee {
+		k.SetDenomPairTakerFee(ctx, denomPair.Denom0, denomPair.Denom1, denomPair.TakerFee)
+	}
+	return nil
 }
 
 func NewPoolManagerProposalHandler(k Keeper) govtypes.Handler {

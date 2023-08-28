@@ -7,8 +7,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
@@ -92,7 +93,12 @@ func (k Keeper) RouteExactAmountIn(
 			spreadFactor = routeSpreadFactor.MulRoundUp((spreadFactor.QuoRoundUp(sumOfSpreadFactors)))
 		}
 
-		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, routeStep.TokenOutDenom, _outMinAmount, spreadFactor)
+		tokenInAfterSubTakerFee, err := k.chargeTakerFee(ctx, tokenIn, routeStep.TokenOutDenom, sender, true)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+
+		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterSubTakerFee, routeStep.TokenOutDenom, _outMinAmount, spreadFactor)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -206,10 +212,54 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
 	}
 
-	spreadFactor := pool.GetSpreadFactor(ctx)
+	tokenInAfterSubTakerFee, err := k.chargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, true)
+	if err != nil {
+		return sdk.Int{}, err
+	}
 
 	// routeStep to the pool-specific SwapExactAmountIn implementation.
-	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, spreadFactor)
+	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterSubTakerFee, tokenOutDenom, tokenOutMinAmount, pool.GetSpreadFactor(ctx))
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	return tokenOutAmount, nil
+}
+
+// SwapExactAmountInNoTakerFee is an API for swapping an exact amount of tokens
+// as input to a pool to get a minimum amount of the desired token out.
+// This method does NOT charge a taker fee, and should only be used in txfees hooks
+// when swapping taker fees. This prevents us from charging taker fees
+// on top of taker fees.
+func (k Keeper) SwapExactAmountInNoTakerFee(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	poolId uint64,
+	tokenIn sdk.Coin,
+	tokenOutDenom string,
+	tokenOutMinAmount sdk.Int,
+) (tokenOutAmount sdk.Int, err error) {
+	// Get the pool-specific module implementation to ensure that
+	// swaps are routed to the pool type corresponding to pool ID's pool.
+	swapModule, err := k.GetPoolModule(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// Get pool as a general pool type. Note that the underlying function used
+	// still varies with the pool type.
+	pool, poolErr := swapModule.GetPool(ctx, poolId)
+	if poolErr != nil {
+		return sdk.Int{}, poolErr
+	}
+
+	// Check if pool has swaps enabled.
+	if !pool.IsActive(ctx) {
+		return sdk.Int{}, fmt.Errorf("pool %d is not active", pool.GetId())
+	}
+
+	// routeStep to the pool-specific SwapExactAmountIn implementation.
+	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, pool.GetSpreadFactor(ctx))
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -269,7 +319,14 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 			spreadFactor = routeSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
 		}
 
-		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenIn, routeStep.TokenOutDenom, spreadFactor)
+		takerFee, err := k.GetTradingPairTakerFee(ctx, routeStep.TokenOutDenom, tokenIn.Denom)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+
+		tokenInAfterSubTakerFee, _ := k.calcTakerFeeExactIn(tokenIn, takerFee)
+
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, tokenInAfterSubTakerFee, routeStep.TokenOutDenom, spreadFactor)
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -385,14 +442,20 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 			return sdk.Int{}, swapErr
 		}
 
+		tokenIn := sdk.NewCoin(routeStep.TokenInDenom, curTokenInAmount)
+		tokenInAfterAddTakerFee, err := k.chargeTakerFee(ctx, tokenIn, _tokenOut.Denom, sender, false)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+
 		// Track volume for volume-splitting incentives
-		k.trackVolume(ctx, pool.GetId(), sdk.NewCoin(routeStep.TokenInDenom, curTokenInAmount))
+		k.trackVolume(ctx, pool.GetId(), sdk.NewCoin(routeStep.TokenInDenom, tokenIn.Amount))
 
 		// Sets the final amount of tokens that need to be input into the first pool. Even though this is the final return value for the
 		// whole method and will not change after the first iteration, we still iterate through the rest of the pools to execute their respective
 		// swaps.
 		if i == 0 {
-			tokenInAmount = curTokenInAmount
+			tokenInAmount = tokenInAfterAddTakerFee.Amount
 		}
 	}
 
@@ -630,9 +693,9 @@ func (k Keeper) getOsmoRoutedMultihopTotalSpreadFactor(ctx sdk.Context, route ty
 		if poolErr != nil {
 			return sdk.Dec{}, sdk.Dec{}, poolErr
 		}
-		SpreadFactor := pool.GetSpreadFactor(ctx)
-		additiveSpreadFactor = additiveSpreadFactor.Add(SpreadFactor)
-		maxSpreadFactor = sdk.MaxDec(maxSpreadFactor, SpreadFactor)
+		spreadFactor := pool.GetSpreadFactor(ctx)
+		additiveSpreadFactor = additiveSpreadFactor.Add(spreadFactor)
+		maxSpreadFactor = sdk.MaxDec(maxSpreadFactor, spreadFactor)
 	}
 
 	// We divide by 2 to get the average since OSMO-routed multihops always have exactly 2 pools.
@@ -669,13 +732,22 @@ func (k Keeper) createMultihopExpectedSwapOuts(
 			return nil, err
 		}
 
-		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, routeStep.TokenInDenom, poolI.GetSpreadFactor(ctx))
+		spreadFactor := poolI.GetSpreadFactor(ctx)
+
+		takerFee, err := k.GetTradingPairTakerFee(ctx, routeStep.TokenInDenom, tokenOut.Denom)
 		if err != nil {
 			return nil, err
 		}
 
-		insExpected[i] = tokenIn.Amount
-		tokenOut = tokenIn
+		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, routeStep.TokenInDenom, spreadFactor)
+		if err != nil {
+			return nil, err
+		}
+
+		tokenInAfterTakerFee, _ := k.calcTakerFeeExactOut(tokenIn, takerFee)
+
+		insExpected[i] = tokenInAfterTakerFee.Amount
+		tokenOut = tokenInAfterTakerFee
 	}
 
 	return insExpected, nil
@@ -703,13 +775,23 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 		}
 
 		spreadFactor := poolI.GetSpreadFactor(ctx)
-		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, routeStep.TokenInDenom, cumulativeRouteSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors))))
+
+		takerFee, err := k.GetTradingPairTakerFee(ctx, routeStep.TokenInDenom, tokenOut.Denom)
 		if err != nil {
 			return nil, err
 		}
 
-		insExpected[i] = tokenIn.Amount
-		tokenOut = tokenIn
+		osmoDiscountedSpreadFactor := cumulativeRouteSpreadFactor.Mul((spreadFactor.Quo(sumOfSpreadFactors)))
+
+		tokenIn, err := swapModule.CalcInAmtGivenOut(ctx, poolI, tokenOut, routeStep.TokenInDenom, osmoDiscountedSpreadFactor)
+		if err != nil {
+			return nil, err
+		}
+
+		tokenInAfterTakerFee, _ := k.calcTakerFeeExactOut(tokenIn, takerFee)
+
+		insExpected[i] = tokenInAfterTakerFee.Amount
+		tokenOut = tokenInAfterTakerFee
 	}
 
 	return insExpected, nil
@@ -746,6 +828,17 @@ func (k Keeper) TotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	}
 	totalLiquidity := totalGammLiquidity.Add(totalConcentratedLiquidity...).Add(totalCosmwasmLiquidity...)
 	return totalLiquidity, nil
+}
+
+// isDenomWhitelisted checks if the denom provided exists in the list of authorized quote denoms.
+// If it does, it returns true, otherwise false.
+func isDenomWhitelisted(denom string, authorizedQuoteDenoms []string) bool {
+	for _, authorizedQuoteDenom := range authorizedQuoteDenoms {
+		if denom == authorizedQuoteDenom {
+			return true
+		}
+	}
+	return false
 }
 
 // nolint: unused

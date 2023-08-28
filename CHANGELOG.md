@@ -63,6 +63,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#6162](https://github.com/osmosis-labs/osmosis/pull/6162) allow zero qualifying balancer shares in CL incentives
 
+### Features
+
+* [#6034](https://github.com/osmosis-labs/osmosis/pull/6034) feat(spike): taker fee
 ## v18.0.0
 
 Fixes mainnet bugs w/ incorrect accumulation sumtrees, and CL handling for a balancer pool with 0 bonded shares.
