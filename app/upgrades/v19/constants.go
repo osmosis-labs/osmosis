@@ -7,7 +7,7 @@ import (
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v18 upgrade.
-const UpgradeName = "v19"
+const UpgradeName = "v20"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
