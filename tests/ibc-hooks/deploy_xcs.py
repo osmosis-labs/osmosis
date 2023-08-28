@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import glob
+import hashlib
 import itertools
 import os
 from collections import defaultdict
@@ -254,7 +255,9 @@ def get_denom_aliases():
                 # Skip non-alphanumeric aliases as contract doesn't support them. Consider supporting this in the future
                 if not base_denom.isalnum():
                     continue
-                result[base_denom] = f'{channel_info}/{base_denom}'
+
+                ibc_hash = hashlib.sha256(f'{channel_info}/{base_denom}'.encode('utf-8')).hexdigest().upper()
+                result[base_denom] = f'ibc/{ibc_hash}'
 
     return result
 
