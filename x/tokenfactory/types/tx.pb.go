@@ -140,7 +140,9 @@ func (m *MsgCreateDenomResponse) GetNewTokenDenom() string {
 }
 
 // MsgMint is the sdk.Msg type for allowing an admin account to mint
-// more of a token.  For now, we only support minting to the sender account
+// more of a token.
+// Only the admin of the token factory denom has permission to mint unless
+// the denom does not have any admin.
 type MsgMint struct {
 	Sender        string     `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	Amount        types.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount" yaml:"amount"`
@@ -238,7 +240,9 @@ func (m *MsgMintResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgMintResponse proto.InternalMessageInfo
 
 // MsgBurn is the sdk.Msg type for allowing an admin account to burn
-// a token.  For now, we only support burning from the sender account.
+// a token.
+// Only the admin of the token factory denom has permission to burn unless
+// the denom does not have any admin.
 type MsgBurn struct {
 	Sender          string     `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	Amount          types.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount" yaml:"amount"`
