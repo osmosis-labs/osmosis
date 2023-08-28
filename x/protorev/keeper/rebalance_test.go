@@ -609,8 +609,8 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 
 			maxProfitInputCoin, maxProfitAmount, optimalRoute := s.App.ProtoRevKeeper.IterateRoutes(s.Ctx, routes, &remainingPoolPoints, &remainingBlockPoolPoints)
 			if test.expectPass {
-				s.Require().Equal(test.params.expectedMaxProfitAmount, maxProfitAmount)
-				s.Require().Equal(test.params.expectedMaxProfitInputCoin, maxProfitInputCoin)
+				s.Require().Equal(test.params.expectedMaxProfitAmount.String(), maxProfitAmount.String())
+				s.Require().Equal(test.params.expectedMaxProfitInputCoin.String(), maxProfitInputCoin.String())
 				s.Require().Equal(test.params.expectedOptimalRoute, optimalRoute)
 			}
 		})
@@ -737,6 +737,7 @@ func (s *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 }
 
 func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
+	s.SetupTest()
 	s.Run("Extended search on stable pools", func() {
 		route := keeper.RouteMetaData{
 			Route:    extendedRangeRoute,
