@@ -37,7 +37,8 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		poolmanagerParams := poolmanagertypes.NewParams(keepers.GAMMKeeper.GetParams(ctx).PoolCreationFee)
+		poolmanagerParams := keepers.PoolManagerKeeper.GetParams(ctx)
+		poolmanagerParams.PoolCreationFee = keepers.GAMMKeeper.GetParams(ctx).PoolCreationFee
 
 		keepers.PoolManagerKeeper.SetParams(ctx, poolmanagerParams)
 		keepers.PacketForwardKeeper.SetParams(ctx, packetforwardtypes.DefaultParams())

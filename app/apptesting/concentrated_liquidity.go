@@ -7,6 +7,7 @@ import (
 
 	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 )
@@ -139,6 +140,9 @@ func (s *KeeperTestHelper) SetupConcentratedLiquidityDenomsAndPoolCreation() {
 	// modify authorized quote denoms to include test denoms.
 	defaultParams := types.DefaultParams()
 	defaultParams.IsPermissionlessPoolCreationEnabled = true
-	defaultParams.AuthorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE, WBTC)
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
+
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	poolManagerParams.AuthorizedQuoteDenoms = append(poolmanagertypes.DefaultParams().AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE, WBTC)
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 }

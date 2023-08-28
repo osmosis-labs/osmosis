@@ -1,8 +1,6 @@
 package types
 
 import (
-	"errors"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -176,8 +174,12 @@ func (msg MsgSetDenomPairTakerFee) Route() string { return RouterKey }
 func (msg MsgSetDenomPairTakerFee) Type() string  { return TypeMsgSetDenomPairTakerFee }
 
 func (msg MsgSetDenomPairTakerFee) ValidateBasic() error {
-	// TODO:
-	return errors.New("not implemented")
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return InvalidSenderError{Sender: msg.Sender}
+	}
+
+	return validateDenomPairTakerFees(msg.DenomPairTakerFee)
 }
 
 func (msg MsgSetDenomPairTakerFee) GetSignBytes() []byte {

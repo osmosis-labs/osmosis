@@ -22,12 +22,11 @@ var defaultFeePerTx = sdk.NewInt(1000)
 // amountIn - amount being swapped
 // spreadFactor - pool's spread factor
 // poolLiquidity - current pool liquidity
-func calculateSpreadRewardGrowthGlobal(amountIn, spreadFactor, poolLiquidity sdk.Dec) sdk.Dec {
+func calculateSpreadRewardGrowthGlobal(spreadRewardChargeTotal, poolLiquidity sdk.Dec) sdk.Dec {
 	// First we get total spread reward charge for the swap (ΔY * spreadFactor)
-	spreadRewardChargeTotal := amountIn.Mul(spreadFactor)
 
 	// Calculating spread reward growth global (dividing by pool liquidity to find spread reward growth per unit of virtual liquidity)
-	spreadRewardGrowthGlobal := spreadRewardChargeTotal.Quo(poolLiquidity)
+	spreadRewardGrowthGlobal := spreadRewardChargeTotal.QuoTruncate(poolLiquidity)
 	return spreadRewardGrowthGlobal
 }
 

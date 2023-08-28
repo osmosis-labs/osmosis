@@ -13,13 +13,13 @@ const (
 	// FeeCollectorName the module account name for the fee collector account address.
 	FeeCollectorName = "fee_collector"
 
-	// NonNativeFeeCollectorForStakingRewardsName the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
+	// FeeCollectorForStakingRewardsName the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
 	// These fees go to the staking rewards pool.
-	NonNativeFeeCollectorForStakingRewardsName = "non_native_fee_collector"
+	FeeCollectorForStakingRewardsName = "non_native_fee_collector"
 
-	// NonNativeFeeCollectorForCommunityPoolName the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
+	// FeeCollectorForCommunityPoolName the module account name for the alt fee collector account address (used for auto-swapping non-OSMO tx fees).
 	// These fees go to the community pool.
-	NonNativeFeeCollectorForCommunityPoolName = "non_native_fee_collector_community_pool"
+	FeeCollectorForCommunityPoolName = "non_native_fee_collector_community_pool"
 
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName

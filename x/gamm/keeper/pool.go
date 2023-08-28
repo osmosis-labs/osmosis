@@ -354,3 +354,9 @@ func asCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 	}
 	return cfmmPool, nil
 }
+
+// GetTradingPairTakerFee is a wrapper for poolmanager's GetTradingPairTakerFee, and is solely used
+// to get access to this method for use in sim_msgs.go for the GAMM module.
+func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (sdk.Dec, error) {
+	return k.poolManager.GetTradingPairTakerFee(ctx, denom0, denom1)
+}

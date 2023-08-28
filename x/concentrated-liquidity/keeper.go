@@ -126,3 +126,19 @@ func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error
 	}
 	return nil
 }
+
+// GetAuthorizedQuoteDenoms gets the authorized quote denoms from the poolmanager keeper.
+// This method is meant to be used for getting access to x/poolmanager params
+// for use in sim_msgs.go for the CL module.
+func (k Keeper) GetAuthorizedQuoteDenoms(ctx sdk.Context) []string {
+	return k.poolmanagerKeeper.GetParams(ctx).AuthorizedQuoteDenoms
+}
+
+// SetAuthorizedQuoteDenoms sets the authorized quote denoms in the poolmanager keeper.
+// This method is meant to be used for getting access to x/poolmanager params
+// for use in sim_msgs.go for the CL module.
+func (k Keeper) SetAuthorizedQuoteDenoms(ctx sdk.Context, authorizedQuoteDenoms []string) {
+	params := k.poolmanagerKeeper.GetParams(ctx)
+	params.AuthorizedQuoteDenoms = authorizedQuoteDenoms
+	k.poolmanagerKeeper.SetParams(ctx, params)
+}

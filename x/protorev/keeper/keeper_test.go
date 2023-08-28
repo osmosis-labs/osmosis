@@ -57,6 +57,10 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
 
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	poolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.ZeroDec()
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+
 	// Genesis on init should be the same as the default genesis
 	exportDefaultGenesis := s.App.ProtoRevKeeper.ExportGenesis(s.Ctx)
 	s.Require().Equal(exportDefaultGenesis, types.DefaultGenesis())

@@ -30,6 +30,8 @@ type BankKeeper interface {
 // PoolManagerKeeper defines the interface needed to be fulfilled for
 // the poolmanager keeper.
 type PoolManagerKeeper interface {
+	GetParams(ctx sdk.Context) (params poolmanagertypes.Params)
+	SetParams(ctx sdk.Context, params poolmanagertypes.Params)
 	CreatePool(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (uint64, error)
 	GetNextPoolId(ctx sdk.Context) uint64
 	CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (poolmanagertypes.PoolI, error)
