@@ -816,7 +816,7 @@ func (k Keeper) setVolume(ctx sdk.Context, poolId uint64, totalVolume sdk.Coins)
 	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyPoolVolume(poolId), &storedVolume)
 }
 
-// GetTotalVolumeForPool gets the total OSMO-denominated historical volume for a given pool ID.
+// GetTotalVolumeForPool gets the total historical volume in all supported denominations for a given pool ID.
 func (k Keeper) GetTotalVolumeForPool(ctx sdk.Context, poolId uint64) sdk.Coins {
 	var currentTrackedVolume types.TrackedVolume
 	volumeFound, err := osmoutils.Get(ctx.KVStore(k.storeKey), types.KeyPoolVolume(poolId), &currentTrackedVolume)
@@ -836,4 +836,10 @@ func (k Keeper) GetTotalVolumeForPool(ctx sdk.Context, poolId uint64) sdk.Coins 
 	}
 
 	return currentTotalVolume
+}
+
+// GetOsmoVolumeForPool gets the total OSMO-denominated historical volume for a given pool ID.
+func (k Keeper) GetOsmoVolumeForPool(ctx sdk.Context, poolId uint64) sdk.Int {
+	totalVolume := k.GetTotalVolumeForPool(ctx, poolId)
+	return totalVolume.AmountOf(k.stakingKeeper.BondDenom(ctx))
 }
