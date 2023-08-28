@@ -2169,7 +2169,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			},
 		},
 		"split route multi hop with different taker fees (exact output check)": {
-			// Set the pools we swap through to all have a 0.35% taker fee
+			// Set the pools we swap through to all have varying taker fees
 			setupPools: s.withTakerFees(
 				defaultValidPools,
 				[]uint64{0, 3, 6, 7},
