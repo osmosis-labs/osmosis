@@ -314,6 +314,8 @@ func (k Keeper) RebuildAccumulationStoreForDenom(ctx sdk.Context, denom string) 
 func (k Keeper) RebuildSuperfluidAccumulationStoresForDenom(ctx sdk.Context, denom string) {
 	superfluidPrefix := denom + "/super"
 	superfluidStorePrefix := accumulationStorePrefix(superfluidPrefix)
+	// remove trailing slash
+	superfluidStorePrefix = superfluidStorePrefix[0 : len(superfluidStorePrefix)-1]
 	k.clearKeysByPrefix(ctx, superfluidStorePrefix)
 
 	accumulationStoreEntries := make(map[string]map[time.Duration]sdk.Int)
