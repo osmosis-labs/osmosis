@@ -106,6 +106,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 
 	// Swap
 	toSwap := sdk.NewCoin(pool.GetToken0(), sdk.NewInt(100))
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(toSwap))
 	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], updatedCLPool, toSwap, pool.GetToken1(), sdk.NewInt(1), sdk.ZeroDec())
 	s.Require().NoError(err)
 
@@ -233,7 +234,7 @@ func (suite *UpgradeTestSuite) ensurePreUpgradeDistributionPanics() {
 	suite.App.ConcentratedLiquidityKeeper.SetParams(suite.Ctx, clParams)
 
 	// prepare CL pool with the same denom as pool 3, which is the pool we are testing with
-	clPool := suite.PrepareConcentratedPoolWithCoins(v17.OSMO, v17.AKTIBCDenom)
+	clPool := suite.PrepareConcentratedPoolWithCoins(v17.AKTIBCDenom, v17.OSMO)
 	balancerToCLPoolLink := []gammmigration.BalancerToConcentratedPoolLink{
 		{
 			BalancerPoolId: 3,
