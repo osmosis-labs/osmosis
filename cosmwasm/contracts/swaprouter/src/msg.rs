@@ -30,6 +30,7 @@ pub enum ExecuteMsg {
         input_coin: Coin,
         output_denom: String,
         slippage: Slippage,
+        route: Option<Vec<SwapAmountInRoute>>,
     },
 }
 

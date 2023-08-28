@@ -1078,6 +1078,7 @@ dependencies = [
  "cw-storage-plus",
  "cw-utils",
  "cw2",
+ "osmosis-std 0.16.2",
  "registry",
  "serde-json-wasm",
  "swaprouter",

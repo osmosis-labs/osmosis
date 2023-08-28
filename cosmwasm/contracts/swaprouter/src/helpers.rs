@@ -81,9 +81,15 @@ pub fn generate_swap_msg(
     sender: Addr,
     input_token: Coin,
     min_output_token: Coin,
+    route: Option<Vec<SwapAmountInRoute>>,
 ) -> Result<MsgSwapExactAmountIn, ContractError> {
-    // get trade route
-    let route = ROUTING_TABLE.load(deps.storage, (&input_token.denom, &min_output_token.denom))?;
+    let route = match route {
+        Some(route) => route,
+        None => {
+            // get trade route
+            ROUTING_TABLE.load(deps.storage, (&input_token.denom, &min_output_token.denom))?
+        }
+    };
     Ok(MsgSwapExactAmountIn {
         sender: sender.into_string(),
         routes: route,
@@ -99,11 +105,19 @@ pub fn calculate_min_output_from_twap(
     now: Timestamp,
     window: Option<u64>,
     percentage_impact: Decimal,
+    route: Option<Vec<SwapAmountInRoute>>,
 ) -> Result<Coin, ContractError> {
     // get trade route
-    let route = ROUTING_TABLE
-        .load(deps.storage, (&input_token.denom, &output_denom))
-        .unwrap_or_default();
+    let route = match route {
+        Some(route) => route,
+        None => {
+            // get trade route
+            ROUTING_TABLE
+                .load(deps.storage, (&input_token.denom, &output_denom))
+                .unwrap_or_default()
+        }
+    };
+
     if route.is_empty() {
         return Err(ContractError::InvalidPoolRoute {
             reason: format!("No route found for {} -> {output_denom}", input_token.denom),

@@ -67,6 +67,7 @@ fn crosschain_swap() {
         receiver: "osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89".to_string(),
         on_failed_delivery: FailedDeliveryAction::DoNothing,
         next_memo: None,
+        route,
     };
     let funds: &[Coin] = &[Coin::new(10000, "uosmo")];
     println!("{}", serde_json_wasm::to_string(&msg).unwrap());

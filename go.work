@@ -14,3 +14,4 @@ use .
 
 use ./x/epochs
 
+replace github.com/CosmWasm/wasmd => ../wasmd

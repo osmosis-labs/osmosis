@@ -262,8 +262,6 @@ def get_denom_aliases():
     return result
 
 
-
-
 async def setup_registry(moniker, deployer, gov, pools, dry_run=False):
     registry_id = get_code_id(
         await osmosisd(f"tx wasm store {REGISTRY_PATH} --from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run))
