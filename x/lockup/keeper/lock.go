@@ -311,6 +311,38 @@ func (k Keeper) RebuildAccumulationStoreForDenom(ctx sdk.Context, denom string) 
 	k.writeDurationValuesToAccumTree(ctx, denom, mapDurationToAmount)
 }
 
+func (k Keeper) RebuildSuperfluidAccumulationStoresForDenom(ctx sdk.Context, denom string) {
+	superfluidPrefix := denom + "/super"
+	superfluidStorePrefix := accumulationStorePrefix(superfluidPrefix)
+	k.clearKeysByPrefix(ctx, superfluidStorePrefix)
+
+	accumulationStoreEntries := make(map[string]map[time.Duration]sdk.Int)
+	locks := k.GetLocksDenom(ctx, denom)
+	for _, lock := range locks {
+		synthLock, found, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
+		if err != nil || !found {
+			continue
+		}
+
+		var curDurationMap map[time.Duration]sdk.Int
+		if durationMap, ok := accumulationStoreEntries[synthLock.SynthDenom]; ok {
+			curDurationMap = durationMap
+		} else {
+			curDurationMap = make(map[time.Duration]sdk.Int)
+		}
+		newAmt := lock.Coins.AmountOf(denom)
+		if curAmt, ok := curDurationMap[synthLock.Duration]; ok {
+			newAmt = newAmt.Add(curAmt)
+		}
+		curDurationMap[synthLock.Duration] = newAmt
+		accumulationStoreEntries[synthLock.SynthDenom] = curDurationMap
+	}
+
+	for synthDenom, durationMap := range accumulationStoreEntries {
+		k.writeDurationValuesToAccumTree(ctx, synthDenom, durationMap)
+	}
+}
+
 func (k Keeper) ClearAccumulationStores(ctx sdk.Context) {
 	k.clearKeysByPrefix(ctx, types.KeyPrefixLockAccumulation)
 }
