@@ -5,10 +5,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	v18 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v18"
 )
+
+const lastPoolToCorrect = v18.FirstCLPoolId - 1
 
 func CreateUpgradeHandler(
 	mm *module.Manager,
@@ -22,6 +27,10 @@ func CreateUpgradeHandler(
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
 			return nil, err
+		}
+    
+    for id := 1; id <= lastPoolToCorrect; id++ {
+			resetSuperfluidSumtree(keepers, ctx, uint64(id))
 		}
 
 		// Move the current authorized quote denoms from the concentrated liquidity params to the pool manager params.
@@ -37,4 +46,9 @@ func CreateUpgradeHandler(
 
 		return migrations, nil
 	}
+}
+
+func resetSuperfluidSumtree(keepers *keepers.AppKeepers, ctx sdk.Context, id uint64) {
+	denom := gammtypes.GetPoolShareDenom(id)
+	keepers.LockupKeeper.RebuildSuperfluidAccumulationStoresForDenom(ctx, denom)
 }
