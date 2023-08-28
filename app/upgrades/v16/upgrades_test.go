@@ -15,12 +15,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	v16 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v16"
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
+	v16 "github.com/osmosis-labs/osmosis/v18/app/upgrades/v16"
+	cltypes "github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v18/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v18/x/protorev/types"
 )
 
 var (

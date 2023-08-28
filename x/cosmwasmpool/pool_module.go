@@ -5,10 +5,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v18/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v18/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v18/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 )

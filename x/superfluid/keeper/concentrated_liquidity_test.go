@@ -8,10 +8,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v17/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v18/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v18/x/superfluid/types"
 )
 
 func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
