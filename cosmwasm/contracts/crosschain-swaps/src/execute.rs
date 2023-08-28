@@ -134,6 +134,7 @@ pub fn unwrap_or_swap_and_forward(
 /// the result to the receiver.
 ///
 ///
+#[allow(clippy::too_many_arguments)]
 pub fn swap_and_forward(
     ctx: (DepsMut, Env, MessageInfo),
     swap_coin: Coin,
