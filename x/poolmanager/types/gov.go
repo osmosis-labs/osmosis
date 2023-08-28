@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -50,25 +49,7 @@ func (p *DenomPairTakerFeeProposal) ValidateBasic() error {
 		return err
 	}
 
-	for _, record := range p.DenomPairTakerFee {
-		if record.Denom0 == record.Denom1 {
-			return fmt.Errorf("denom0 and denom1 must be different")
-		}
-
-		if sdk.ValidateDenom(record.Denom0) != nil {
-			return fmt.Errorf("denom0 is invalid: %s", sdk.ValidateDenom(record.Denom0))
-		}
-
-		if sdk.ValidateDenom(record.Denom1) != nil {
-			return fmt.Errorf("denom1 is invalid: %s", sdk.ValidateDenom(record.Denom1))
-		}
-
-		takerFee := record.TakerFee
-		if takerFee.IsNegative() || takerFee.GTE(sdk.OneDec()) {
-			return fmt.Errorf("taker fee must be between 0 and 1: %s", takerFee.String())
-		}
-	}
-	return nil
+	return validateDenomPairTakerFees(p.DenomPairTakerFee)
 }
 
 // String returns a string containing the denom pair taker fee proposal.
