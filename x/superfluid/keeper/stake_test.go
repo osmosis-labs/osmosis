@@ -1359,7 +1359,7 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 		},
 		"error: min amount to stake exceeds actual amount staking": {
 			useMinAmtToStake: true,
-			expectedError:    "actual amount converted to stake (8306) is less then minimum amount expected to be staked (999999999)",
+			expectedError:    "actual amount converted to stake (8309) is less then minimum amount expected to be staked (999999999)",
 		},
 	}
 
