@@ -1763,7 +1763,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforeSwap) is not equal to the block time.
-	chainAB.WaitForNumHeights(2)
+	chainAB.WaitForNumHeights(4)
 
 	s.T().Log("querying for the first geometric TWAP to now (before swap)")
 	// Assume base = uosmo, quote = stake
@@ -1799,7 +1799,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	// uosmo = 1_000_000 + 1_000_000 = 2_000_000
 
 	timeAfterSwap := chainABNode.QueryLatestBlockTime()
-	chainAB.WaitForNumHeights(1)
+	chainAB.WaitForNumHeights(4)
 	timeAfterSwapPlus1Height := chainABNode.QueryLatestBlockTime()
 
 	s.T().Log("querying for the TWAP from after swap to now")
