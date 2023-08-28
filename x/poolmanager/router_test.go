@@ -63,8 +63,8 @@ var (
 		stakingRewardAssets:         sdk.NewCoins(),
 	}
 	communityPoolAddrName = "distribution"
-	stakingAddrName       = txfeestypes.NonNativeFeeCollectorForStakingRewardsName
-	nonQuoteCommAddrName  = txfeestypes.NonNativeFeeCollectorForCommunityPoolName
+	stakingAddrName       = txfeestypes.FeeCollectorForStakingRewardsName
+	nonQuoteCommAddrName  = txfeestypes.FeeCollectorForCommunityPoolName
 
 	defaultPoolInitAmount     = sdk.NewInt(10_000_000_000)
 	twentyFiveBaseUnitsAmount = sdk.NewInt(25_000_000)
@@ -1557,6 +1557,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 		tokenOutDenom          string
 		tokenOutMinAmount      sdk.Int
 		expectedTokenOutAmount sdk.Int
+		swapWithNoTakerFee     bool
 		expectError            bool
 	}{
 		// Swap with taker fee:
@@ -1639,6 +1640,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 		//  - foo: 1000000000000
 		//  - bar: 1000000000000
 		//  - spreadFactor: 0.1%
+		//  - takerFee: 0.15%
 		//  - foo in: 100000
 		//  - bar amount out will be calculated according to the formula
 		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.999%29%2810%5E12+-+x%29+%3D+10%5E24
@@ -1650,6 +1652,24 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:      sdk.NewInt(1),
 			tokenOutDenom:          bar,
+			expectedTokenOutAmount: sdk.NewInt(99750),
+		},
+		// Swap with no taker fee:
+		//  - foo: 1000000000000
+		//  - bar: 1000000000000
+		//  - spreadFactor: 0.1%
+		//  - foo in: 100000
+		//  - bar amount out will be calculated according to the formula
+		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.999%29%2810%5E12+-+x%29+%3D+10%5E24
+		{
+			name:                   "Swap - [foo -> bar], 0.1 percent fee",
+			poolId:                 1,
+			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
+			poolFee:                defaultPoolSpreadFactor,
+			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
+			tokenOutMinAmount:      sdk.NewInt(1),
+			tokenOutDenom:          bar,
+			swapWithNoTakerFee:     true,
 			expectedTokenOutAmount: sdk.NewInt(99899),
 		},
 		{
@@ -2050,7 +2070,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			TokenInAmount: sdk.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
 		}
 
-		priceImpactThreshold = sdk.NewInt(97866545)
+		priceImpactThreshold = sdk.NewInt(97469586)
 	)
 
 	tests := map[string]struct {
@@ -2414,7 +2434,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			TokenOutAmount: sdk.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
 		}
 
-		priceImpactThreshold = sdk.NewInt(102239504)
+		priceImpactThreshold = sdk.NewInt(102666473)
 	)
 
 	tests := map[string]struct {

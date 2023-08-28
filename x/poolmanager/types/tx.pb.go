@@ -529,6 +529,8 @@ func (m *MsgSetDenomPairTakerFeeResponse) GetSuccess() bool {
 }
 
 type DenomPairTakerFee struct {
+	// denom0 and denom1 get automatically lexigographically sorted
+	// when being stored, so the order of input here does not matter.
 	Denom0   string                                 `protobuf:"bytes,1,opt,name=denom0,proto3" json:"denom0,omitempty" yaml:"denom0"`
 	Denom1   string                                 `protobuf:"bytes,2,opt,name=denom1,proto3" json:"denom1,omitempty" yaml:"denom1"`
 	TakerFee github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=taker_fee,json=takerFee,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"taker_fee" yaml:"taker_fee"`

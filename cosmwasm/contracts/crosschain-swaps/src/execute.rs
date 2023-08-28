@@ -1,10 +1,12 @@
 use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Env, MessageInfo};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
 use registry::msg::{Callback, SerializableJson};
-use registry::{Registry, RegistryError};
+use registry::RegistryError;
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
-use crate::checks::{check_is_contract_governor, ensure_key_missing, validate_receiver};
+use crate::checks::{
+    check_is_contract_governor, ensure_key_missing, get_registry, validate_receiver,
+};
 use crate::consts::{MsgReplyID, CALLBACK_KEY};
 use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction};
 use registry::proto::MsgTransferResponse;
@@ -44,7 +46,7 @@ pub fn unwrap_or_swap_and_forward(
 
     deps.api
         .debug(&format!("executing unwrap or swap and forward"));
-    let registry = Registry::default(deps.as_ref());
+    let registry = get_registry(deps.as_ref())?;
 
     // Check the path that the coin took to get to the current chain.
     // Each element in the path is an IBC hop.
@@ -61,7 +63,7 @@ pub fn unwrap_or_swap_and_forward(
 
     // If the path is larger than 2, we need to unwrap this token first
     if path.len() > 2 {
-        let registry = Registry::default(deps.as_ref());
+        let registry = get_registry(deps.as_ref())?;
         let ibc_transfer = registry.unwrap_coin_into(
             swap_coin,
             env.contract.address.to_string(),
@@ -157,7 +159,7 @@ pub fn swap_and_forward(
 
     // Validate that the swapped token can be unwrapped. If it can't, abort
     // early to avoid swapping unnecessarily
-    let registry = Registry::default(deps.as_ref());
+    let registry = get_registry(deps.as_ref())?;
     registry.unwrap_coin_into(
         Coin::new(1, output_denom.clone()),
         valid_receiver.to_string(),
@@ -249,7 +251,7 @@ pub fn handle_swap_reply(
     // callback so this contract can track the IBC send
     let memo = build_memo(swap_msg_state.forward_to.next_memo, contract_addr.as_str())?;
 
-    let registry = Registry::default(deps.as_ref());
+    let registry = get_registry(deps.as_ref())?;
     let ibc_transfer = registry.unwrap_coin_into(
         Coin::new(
             swap_response.amount.into(),
@@ -442,6 +444,7 @@ mod tests {
 
     static CREATOR_ADDRESS: &str = "creator";
     static SWAPCONTRACT_ADDRESS: &str = "swapcontract";
+    static REGISTRY_ADDRESS: &str = "registrycontract";
 
     // test helper
     #[allow(unused_assignments)]
@@ -449,6 +452,7 @@ mod tests {
         let msg = InstantiateMsg {
             governor: String::from(CREATOR_ADDRESS),
             swap_contract: String::from(SWAPCONTRACT_ADDRESS),
+            registry_contract: String::from(REGISTRY_ADDRESS),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
 

@@ -58,6 +58,9 @@ pub enum ContractError {
     )]
     PFMValidationAlreadyInProgress { chain: String },
 
+    #[error("No initiator found this validation. The validation has already completed.")]
+    PFMNoInitiator {},
+
     #[error("authorized address already exists for source chain: {source_chain:?}")]
     ChainAuthorizedAddressAlreadyExists { source_chain: String },
 
