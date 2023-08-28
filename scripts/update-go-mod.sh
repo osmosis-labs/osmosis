@@ -36,6 +36,19 @@ update_epochs=$?
 if [ $update_osmoutils -eq 1 ]
 then 
 	go get github.com/osmosis-labs/osmosis/osmoutils@$commit_after
+
+    # x/epochs depends on osmoutils
+    cd x/epochs
+    go get github.com/osmosis-labs/osmosis/osmoutils@$commit_after
+    go mod tidy
+
+    # x/ibc-hooks depends on osmoutils
+    cd ../ibc-hooks
+    go get github.com/osmosis-labs/osmosis/osmoutils@$commit_after
+    go mod tidy
+    
+    # return to root
+    cd ../..
 fi
 
 if [ $update_osmomath -eq 1 ]
@@ -54,3 +67,4 @@ then
 fi
 
 go mod tidy
+go work sync
