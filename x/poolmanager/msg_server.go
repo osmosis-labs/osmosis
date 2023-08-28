@@ -2,6 +2,7 @@ package poolmanager
 
 import (
 	"context"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -118,4 +119,8 @@ func (server msgServer) SplitRouteSwapExactAmountOut(goCtx context.Context, msg 
 	})
 
 	return &types.MsgSplitRouteSwapExactAmountOutResponse{TokenInAmount: tokenInAmount}, nil
+}
+
+func (server msgServer) SetDenomPairTakerFee(goCtx context.Context, msg *types.MsgSetDenomPairTakerFee) (*types.MsgSetDenomPairTakerFeeResponse, error) {
+	return nil, errors.New("not implemented")
 }
