@@ -422,7 +422,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 
 				// Check that the number of trades is correct
 				numOfTrades, _ := s.App.ProtoRevKeeper.GetNumberOfTrades(s.Ctx)
-				s.Require().Equal(tc.params.expectedNumOfTrades, numOfTrades)
+				s.Require().Equal(tc.params.expectedNumOfTrades.String(), numOfTrades.String())
 
 				// Check that the profits are correct
 				profits := s.App.ProtoRevKeeper.GetAllProfits(s.Ctx)
