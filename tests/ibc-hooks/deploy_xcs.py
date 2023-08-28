@@ -60,23 +60,25 @@ class Command(object):
         return stdout, stderr
 
 
-ENV = "mainnet"
 SWAPROUTER_CODE_ID = None
 CROSSCHAIN_SWAPS_CODE_ID = None
 SWAPROUTER_PATH = './bytecode/swaprouter.wasm'
 REGISTRY_PATH = './bytecode/crosschain_registry.wasm'
 CROSSCHAIN_SWAPS_PATH = './bytecode/crosschain_swaps.wasm'
-OWN_CHAIN = "osmosis"
 
+ENV = "edgenet"
 match ENV:
     case "testnet":
         BASE_API = "https://api.testnet.osmosis.zone"
         osmosisd = Command(node="https://rpc.testnet.osmosis.zone:443", keyring_backend="test", chain_id="osmo-test-5")
         CHANNEL_PREFIX_MAP = []
         CHAIN_REGISTRY_PATH = "~/devel/chain-registry/testnets"
-        OWN_CHAIN = "osmosistestnet"
         # SWAPROUTER_CODE_ID = 6477
         # CROSSCHAIN_SWAPS_CODE_ID = 6478
+    case "edgenet":
+        BASE_API = "https://api-osmosis.imperator.co"
+        osmosisd = Command(node="https://rpc.edgenet.osmosis.zone:443", keyring_backend="test", chain_id="edgenet")
+        CHAIN_REGISTRY_PATH = "~/devel/chain-registry"
     case "mainnet":
         SWAPROUTER_CODE_ID = 10
         CROSSCHAIN_SWAPS_CODE_ID = 31
@@ -109,7 +111,12 @@ def build_swap_router_messages(pools):
     messages = []
     for pool in pools:
         pool_id = pool["pool_id"]
-        for token0, token1 in itertools.combinations(pool["pool_tokens"].values(), 2):
+        if isinstance(pool["pool_tokens"], dict):
+            assets = pool["pool_tokens"].values()
+        else:
+            assets = pool["pool_tokens"]
+
+        for token0, token1 in itertools.combinations(assets, 2):
             messages.append(
                 {"set_route": {
                     "input_denom": token0["denom"],
@@ -235,12 +242,18 @@ def get_denom_aliases():
         # Now handle the asset list for each other_chain
         assetlist_path = f"{CHAIN_REGISTRY_PATH}/{other_chain}/assetlist.json"
 
+        if not os.path.exists(assetlist_path):
+            continue
+
         with open(assetlist_path, 'r') as file:
             asset_content = json.load(file)
             for asset in asset_content['assets']:
                 if asset.get("type_asset"):
                     continue
                 base_denom = asset['base']
+                # Skip non-alphanumeric aliases as contract doesn't support them. Consider supporting this in the future
+                if not base_denom.isalnum():
+                    continue
                 result[base_denom] = f'{channel_info}/{base_denom}'
 
     return result
@@ -290,7 +303,7 @@ async def setup_registry(moniker, deployer, gov, pools, dry_run=False):
 
     # set denom aliases
     msg = json.dumps({
-        "modify_denom_aliases": {"operations": [{
+        "modify_denom_alias": {"operations": [{
             "operation": "set",
             "full_denom_path": full_denom_path,
             "alias": alias
@@ -370,9 +383,8 @@ async def deploy(dry_run=False, moniker="deployer"):
     # normalize the deployer address
     deployer = deployer.strip()
 
-    # print(pools)
+    print(pools)
     registry_addr = await setup_registry(moniker, deployer, gov, pools, dry_run=dry_run)
-    return registry_addr
 
     # Store the contracts
     swaprouter_addr = await setup_swaprouter(moniker, deployer, gov, pools, dry_run=dry_run)
