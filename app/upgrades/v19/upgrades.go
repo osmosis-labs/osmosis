@@ -1,9 +1,11 @@
-package v18
+package v19
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
@@ -34,6 +36,6 @@ func CreateUpgradeHandler(
 }
 
 func resetSuperfluidSumtree(keepers *keepers.AppKeepers, ctx sdk.Context, id uint64) {
-	// denom := gammtypes.GetPoolShareDenom(id)
-	// keepers.LockupKeeper.RebuildAccumulationStoreForDenom(ctx, denom)
+	denom := gammtypes.GetPoolShareDenom(id)
+	keepers.LockupKeeper.RebuildSuperfluidAccumulationStoresForDenom(ctx, denom)
 }
