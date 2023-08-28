@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
@@ -40,10 +41,10 @@ var (
 	defaultIncentiveAmount   = sdk.NewDec(2 << 60)
 	defaultIncentiveRecordId = uint64(1)
 
-	testEmissionOne   = sdk.MustNewDecFromStr("0.000001")
-	testEmissionTwo   = sdk.MustNewDecFromStr("0.0783")
-	testEmissionThree = sdk.MustNewDecFromStr("165.4")
-	testEmissionFour  = sdk.MustNewDecFromStr("57.93")
+	testEmissionOne   = osmomath.MustNewDecFromStr("0.000001")
+	testEmissionTwo   = osmomath.MustNewDecFromStr("0.0783")
+	testEmissionThree = osmomath.MustNewDecFromStr("165.4")
+	testEmissionFour  = osmomath.MustNewDecFromStr("57.93")
 
 	defaultBlockTime  = time.Unix(1, 1).UTC()
 	defaultTimeBuffer = time.Hour
@@ -101,7 +102,7 @@ var (
 	emptyIncentiveRecord = types.IncentiveRecord{
 		PoolId: validPoolId,
 		IncentiveRecordBody: types.IncentiveRecordBody{
-			RemainingCoin: sdk.NewDecCoinFromDec("emptyDenom", sdk.ZeroDec()),
+			RemainingCoin: sdk.NewDecCoinFromDec("emptyDenom", osmomath.ZeroDec()),
 			EmissionRate:  testEmissionFour,
 			StartTime:     defaultStartTime,
 		},
@@ -109,13 +110,13 @@ var (
 		IncentiveId: defaultIncentiveRecordId + 4,
 	}
 
-	testQualifyingDepositsOne = sdk.NewInt(50)
+	testQualifyingDepositsOne = osmomath.NewInt(50)
 
 	defaultBalancerAssets = []balancer.PoolAsset{
-		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
-		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
+		{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(100))},
+		{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(100))},
 	}
-	defaultConcentratedAssets = sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))
+	defaultConcentratedAssets = sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)), sdk.NewCoin("bar", osmomath.NewInt(100)))
 	defaultBalancerPoolParams = balancer.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}
 	invalidPoolId             = uint64(10)
 )
@@ -156,8 +157,8 @@ func getExpectedUptimes() ExpectedUptimes {
 		expUptimes.threeHundredTokensMultiDenom = append(expUptimes.threeHundredTokensMultiDenom, sdk.NewDecCoins(cl.TwoHundredFooCoins.Add(cl.HundredFooCoins), cl.TwoHundredBarCoins.Add(cl.HundredBarCoins)))
 		expUptimes.fourHundredTokensMultiDenom = append(expUptimes.fourHundredTokensMultiDenom, sdk.NewDecCoins(cl.TwoHundredFooCoins.Add(cl.TwoHundredFooCoins), cl.TwoHundredBarCoins.Add(cl.TwoHundredBarCoins)))
 		expUptimes.sixHundredTokensMultiDenom = append(expUptimes.sixHundredTokensMultiDenom, sdk.NewDecCoins(cl.TwoHundredFooCoins.Add(cl.TwoHundredFooCoins).Add(cl.TwoHundredFooCoins), cl.TwoHundredBarCoins.Add(cl.TwoHundredBarCoins).Add(cl.TwoHundredBarCoins)))
-		expUptimes.varyingTokensSingleDenom = append(expUptimes.varyingTokensSingleDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", sdk.NewInt(int64(i))))))
-		expUptimes.varyingTokensMultiDenom = append(expUptimes.varyingTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", sdk.NewInt(int64(i)))), cl.HundredBarCoins.Add(sdk.NewDecCoin("bar", sdk.NewInt(int64(i*3))))))
+		expUptimes.varyingTokensSingleDenom = append(expUptimes.varyingTokensSingleDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", osmomath.NewInt(int64(i))))))
+		expUptimes.varyingTokensMultiDenom = append(expUptimes.varyingTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", osmomath.NewInt(int64(i)))), cl.HundredBarCoins.Add(sdk.NewDecCoin("bar", osmomath.NewInt(int64(i*3))))))
 	}
 
 	return expUptimes
@@ -174,8 +175,8 @@ func wrapUptimeTrackers(accumValues []sdk.DecCoins) []model.UptimeTracker {
 }
 
 // expectedIncentivesFromRate calculates the amount of incentives we expect to accrue based on the rate and time elapsed
-func expectedIncentivesFromRate(denom string, rate sdk.Dec, timeElapsed time.Duration, qualifyingLiquidity sdk.Dec) sdk.DecCoin {
-	timeInSec := sdk.NewDec(int64(timeElapsed)).Quo(sdk.MustNewDecFromStr("1000000000"))
+func expectedIncentivesFromRate(denom string, rate osmomath.Dec, timeElapsed time.Duration, qualifyingLiquidity osmomath.Dec) sdk.DecCoin {
+	timeInSec := sdk.NewDec(int64(timeElapsed)).Quo(osmomath.MustNewDecFromStr("1000000000"))
 	amount := rate.Mul(timeInSec).QuoTruncate(qualifyingLiquidity)
 
 	return sdk.NewDecCoinFromDec(denom, amount)
@@ -187,12 +188,12 @@ func expectedIncentivesFromRate(denom string, rate sdk.Dec, timeElapsed time.Dur
 // towards result. Takes in a multiplier parameter for further versatility in testing.
 //
 // Returns value as truncated sdk.Coins as the primary use of this helper is testing higher level incentives functions such as claiming.
-func expectedIncentivesFromUptimeGrowth(uptimeGrowths []sdk.DecCoins, positionShares sdk.Dec, timeInPool time.Duration, multiplier sdk.Int) sdk.Coins {
+func expectedIncentivesFromUptimeGrowth(uptimeGrowths []sdk.DecCoins, positionShares osmomath.Dec, timeInPool time.Duration, multiplier sdk.Int) sdk.Coins {
 	// Sum up rewards from all inputs
 	totalRewards := sdk.Coins(nil)
 	for uptimeIndex, uptimeGrowth := range uptimeGrowths {
 		if timeInPool >= types.SupportedUptimes[uptimeIndex] {
-			curRewards := uptimeGrowth.MulDecTruncate(positionShares).MulDecTruncate(multiplier.ToDec())
+			curRewards := uptimeGrowth.MulDecTruncate(positionShares).MulDecTruncate(multiplier.ToLegacyDec())
 			totalRewards = totalRewards.Add(sdk.NormalizeCoins(curRewards)...)
 		}
 	}
@@ -229,7 +230,7 @@ func withDenom(record types.IncentiveRecord, denom string) types.IncentiveRecord
 	return record
 }
 
-func withAmount(record types.IncentiveRecord, amount sdk.Dec) types.IncentiveRecord {
+func withAmount(record types.IncentiveRecord, amount osmomath.Dec) types.IncentiveRecord {
 	record.IncentiveRecordBody.RemainingCoin.Amount = amount
 
 	return record
@@ -247,7 +248,7 @@ func withMinUptime(record types.IncentiveRecord, minUptime time.Duration) types.
 	return record
 }
 
-func withEmissionRate(record types.IncentiveRecord, emissionRate sdk.Dec) types.IncentiveRecord {
+func withEmissionRate(record types.IncentiveRecord, emissionRate osmomath.Dec) types.IncentiveRecord {
 	record.IncentiveRecordBody.EmissionRate = emissionRate
 
 	return record
@@ -504,7 +505,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 	type calcAccruedIncentivesTest struct {
 		poolId               uint64
 		accumUptime          time.Duration
-		qualifyingLiquidity  sdk.Dec
+		qualifyingLiquidity  osmomath.Dec
 		timeElapsed          time.Duration
 		poolIncentiveRecords []types.IncentiveRecord
 		recordsCleared       bool
@@ -574,8 +575,8 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 				sdk.NewDecCoinFromDec(incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom, incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Amount.QuoTruncate(sdk.NewDec(123))),
 			},
 
-			// Incentive record should have zero remaining amount
-			expectedIncentiveRecords: []types.IncentiveRecord{withAmount(withEmissionRate(incentiveRecordOne, sdk.NewDec(2<<60)), sdk.ZeroDec())},
+			// Incentive record should have zero remaining amountosmomath.ZeroDec
+			expectedIncentiveRecords: []types.IncentiveRecord{withAmount(withEmissionRate(incentiveRecordOne, sdk.NewDec(2<<60)), osmomath.ZeroDec())},
 			expectedPass:             true,
 		},
 
@@ -714,7 +715,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 				s.PrepareConcentratedPool()
 
 				// system under test
-				actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, sdk.NewDec(int64(tc.timeElapsed)).Quo(sdk.MustNewDecFromStr("1000000000")), tc.poolIncentiveRecords)
+				actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, sdk.NewDec(int64(tc.timeElapsed)).Quo(osmomath.MustNewDecFromStr("1000000000")), tc.poolIncentiveRecords)
 				if tc.expectedPass {
 					s.Require().NoError(err)
 
@@ -737,11 +738,11 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 	})
 }
 
-func (s *KeeperTestSuite) setupBalancerPoolWithFractionLocked(pa []balancer.PoolAsset, fraction sdk.Dec) uint64 {
+func (s *KeeperTestSuite) setupBalancerPoolWithFractionLocked(pa []balancer.PoolAsset, fraction osmomath.Dec) uint64 {
 	balancerPoolId := s.PrepareCustomBalancerPool(pa, defaultBalancerPoolParams)
 	longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
 	s.Require().NoError(err)
-	lockAmt := gammtypes.InitPoolSharesSupply.ToDec().Mul(fraction).TruncateInt()
+	lockAmt := gammtypes.InitPoolSharesSupply.ToLegacyDec().Mul(fraction).TruncateInt()
 	lockCoins := sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), lockAmt))
 	_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], lockCoins, longestLockableDuration)
 	s.Require().NoError(err)
@@ -768,7 +769,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 		expectedError            error
 	}
 
-	validateResult := func(ctx sdk.Context, err error, tc updateAccumToNow, balancerPoolId, poolId uint64, initUptimeAccumValues []sdk.DecCoins, qualifyingBalancerLiquidity sdk.Dec, qualifyingLiquidity sdk.Dec) []sdk.DecCoins {
+	validateResult := func(ctx sdk.Context, err error, tc updateAccumToNow, balancerPoolId, poolId uint64, initUptimeAccumValues []sdk.DecCoins, qualifyingBalancerLiquidity osmomath.Dec, qualifyingLiquidity osmomath.Dec) []sdk.DecCoins {
 		if tc.expectedError != nil {
 			s.Require().ErrorContains(err, tc.expectedError.Error())
 
@@ -903,8 +904,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			timeElapsed:          time.Hour * 1000,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
 			canonicalBalancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("eth", sdk.NewInt(100000000))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("usdc", sdk.NewInt(100000000))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("eth", osmomath.NewInt(100000000))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("usdc", osmomath.NewInt(100000000))},
 			},
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
@@ -917,8 +918,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			timeElapsed:          time.Hour * 1000,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour},
 			canonicalBalancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("eth", sdk.NewInt(100000000))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("usdc", sdk.NewInt(100000000))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("eth", osmomath.NewInt(100000000))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("usdc", osmomath.NewInt(100000000))},
 			},
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
@@ -937,8 +938,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree},
 			canonicalBalancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("eth", sdk.NewInt(432218877))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("usdc", sdk.NewInt(19836275))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("eth", osmomath.NewInt(432218877))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("usdc", osmomath.NewInt(19836275))},
 			},
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
@@ -977,7 +978,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			expectedError: types.ErrInvalidBalancerPoolLiquidityError{
 				ClPoolId:              1,
 				BalancerPoolId:        2,
-				BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("foo", sdk.NewInt(100))),
+				BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("bar", osmomath.NewInt(100)), sdk.NewCoin("foo", osmomath.NewInt(100))),
 			},
 		},
 		"invalid canonical balancer pool (incorrect number of assets)": {
@@ -985,9 +986,9 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
 			canonicalBalancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("baz", sdk.NewInt(100))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(100))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(100))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("baz", osmomath.NewInt(100))},
 			},
 			isInvalidBalancerPool: true,
 
@@ -998,7 +999,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			expectedError: types.ErrInvalidBalancerPoolLiquidityError{
 				ClPoolId:              1,
 				BalancerPoolId:        2,
-				BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("baz", sdk.NewInt(100)), sdk.NewCoin("foo", sdk.NewInt(100))),
+				BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("bar", osmomath.NewInt(100)), sdk.NewCoin("baz", osmomath.NewInt(100)), sdk.NewCoin("foo", osmomath.NewInt(100))),
 			},
 		},
 	}
@@ -1018,7 +1019,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				balancerPoolId := uint64(0)
 				if tc.canonicalBalancerPoolAssets != nil {
 					// Create balancer pool and bond its shares
-					balancerPoolId = s.setupBalancerPoolWithFractionLocked(tc.canonicalBalancerPoolAssets, sdk.OneDec())
+					balancerPoolId = s.setupBalancerPoolWithFractionLocked(tc.canonicalBalancerPoolAssets, osmomath.OneDec())
 					s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx,
 						gammmigration.MigrationRecords{
 							BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
@@ -1043,12 +1044,12 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				initUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, clPool.GetId())
 				s.Require().NoError(err)
 
-				// Add qualifying and non-qualifying liquidity to the pool
-				qualifyingLiquidity, qualifyingBalancerLiquidity := sdk.ZeroDec(), sdk.ZeroDec()
+				// Add qualifying and non-qualifying liquidity to thosmomath.ZeroDecosmomath.ZeroDec
+				qualifyingLiquidity, qualifyingBalancerLiquidity := osmomath.ZeroDec(), osmomath.ZeroDec()
 				if !tc.isInvalidBalancerPool {
 					depositedCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsOne), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsOne))
 					s.FundAcc(testAddressOne, depositedCoins)
-					positionData, err := clKeeper.CreatePosition(s.Ctx, clPool.GetId(), testAddressOne, depositedCoins, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick()-100, clPool.GetCurrentTick()+100)
+					positionData, err := clKeeper.CreatePosition(s.Ctx, clPool.GetId(), testAddressOne, depositedCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), clPool.GetCurrentTick()-100, clPool.GetCurrentTick()+100)
 					s.Require().NoError(err)
 					qualifyingLiquidity = positionData.Liquidity
 
@@ -1057,7 +1058,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 					s.Require().NoError(err)
 					if tc.canonicalBalancerPoolAssets != nil {
 						qualifyingBalancerLiquidityPreDiscount := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.canonicalBalancerPoolAssets[0].Token.Amount, tc.canonicalBalancerPoolAssets[1].Token.Amount)
-						qualifyingBalancerLiquidity = (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingBalancerLiquidityPreDiscount)
+						qualifyingBalancerLiquidity = (osmomath.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingBalancerLiquidityPreDiscount)
 						qualifyingLiquidity = qualifyingLiquidity.Add(qualifyingBalancerLiquidity)
 
 						actualLiquidityAdded0, actualLiquidityAdded1, err := clPool.CalcActualAmounts(s.Ctx, types.MinInitializedTick, types.MaxTick, qualifyingBalancerLiquidity)
@@ -1224,7 +1225,7 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOppositeDirectionOfLastTrave
 
 // Test uptime growth inside and outside range.
 func (s *KeeperTestSuite) TestGetUptimeGrowthRange() {
-	defaultInitialLiquidity := sdk.OneDec()
+	defaultInitialLiquidity := osmomath.OneDec()
 	uptimeHelper := getExpectedUptimes()
 
 	type uptimeGrowthTest struct {
@@ -1561,7 +1562,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 	}
 
 	tests := map[string]struct {
-		positionLiquidity sdk.Dec
+		positionLiquidity osmomath.Dec
 
 		lowerTick               tick
 		upperTick               tick
@@ -1716,39 +1717,39 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 			globalUptimeAccumValues: []sdk.DecCoins{
 				sdk.NewDecCoins(
 					// 100 + 100 + UGI = 300
-					sdk.NewDecCoin("bar", sdk.NewInt(300)),
+					sdk.NewDecCoin("bar", osmomath.NewInt(300)),
 					// 100 + 100 + UGI = 300
-					sdk.NewDecCoin("foo", sdk.NewInt(300)),
+					sdk.NewDecCoin("foo", osmomath.NewInt(300)),
 				),
 				sdk.NewDecCoins(
 					// 100 + 103 + UGI = 303
-					sdk.NewDecCoin("bar", sdk.NewInt(303)),
+					sdk.NewDecCoin("bar", osmomath.NewInt(303)),
 					// 100 + 101 + UGI = 301
-					sdk.NewDecCoin("foo", sdk.NewInt(301)),
+					sdk.NewDecCoin("foo", osmomath.NewInt(301)),
 				),
 				sdk.NewDecCoins(
 					// 100 + 106 + UGI = 306
-					sdk.NewDecCoin("bar", sdk.NewInt(306)),
+					sdk.NewDecCoin("bar", osmomath.NewInt(306)),
 					// 100 + 102 + UGI = 302
-					sdk.NewDecCoin("foo", sdk.NewInt(302)),
+					sdk.NewDecCoin("foo", osmomath.NewInt(302)),
 				),
 				sdk.NewDecCoins(
 					// 100 + 109 + UGI = 309
-					sdk.NewDecCoin("bar", sdk.NewInt(309)),
+					sdk.NewDecCoin("bar", osmomath.NewInt(309)),
 					// 100 + 103 + UGI = 303
-					sdk.NewDecCoin("foo", sdk.NewInt(303)),
+					sdk.NewDecCoin("foo", osmomath.NewInt(303)),
 				),
 				sdk.NewDecCoins(
 					// 100 + 112 + UGI = 312
-					sdk.NewDecCoin("bar", sdk.NewInt(312)),
+					sdk.NewDecCoin("bar", osmomath.NewInt(312)),
 					// 100 + 104 + UGI = 304
-					sdk.NewDecCoin("foo", sdk.NewInt(304)),
+					sdk.NewDecCoin("foo", osmomath.NewInt(304)),
 				),
 				sdk.NewDecCoins(
 					// 100 + 115 + UGI = 315
-					sdk.NewDecCoin("bar", sdk.NewInt(315)),
+					sdk.NewDecCoin("bar", osmomath.NewInt(315)),
 					// 100 + 105 + UGI = 305
-					sdk.NewDecCoin("foo", sdk.NewInt(305)),
+					sdk.NewDecCoin("foo", osmomath.NewInt(305)),
 				),
 			},
 			// Equal to 100 of foo and bar in each uptime tracker (UGI)
@@ -1786,9 +1787,9 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 
 				clPool := s.PrepareConcentratedPool()
 
-				// Initialize lower, upper, and current ticks
-				s.initializeTick(s.Ctx, test.currentTickIndex, test.lowerTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.lowerTick.uptimeTrackers, true)
-				s.initializeTick(s.Ctx, test.currentTickIndex, test.upperTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.upperTick.uptimeTrackers, false)
+				// Initialize lower, upper, and current ticksosmomath.ZeroDec
+				s.initializeTick(s.Ctx, test.currentTickIndex, test.lowerTick.tickIndex, osmomath.ZeroDec(), cl.EmptyCoins, test.lowerTick.uptimeTrackers, true)
+				s.initializeTick(s.Ctx, test.currentTickIndex, test.upperTick.tickIndex, osmomath.ZeroDec(), cl.EmptyCoins, test.upperTick.uptimeTrackers, false)
 				clPool.SetCurrentTick(test.currentTickIndex)
 				err := s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, clPool)
 				s.Require().NoError(err)
@@ -1803,9 +1804,8 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptimeAccumulators() {
 					s.Require().NoError(err)
 					err = s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, DefaultJoinTime, test.positionLiquidity, DefaultPositionId, DefaultUnderlyingLockId)
 					s.Require().NoError(err)
-
-					s.initializeTick(s.Ctx, test.currentTickIndex, test.newLowerTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.newLowerTick.uptimeTrackers, true)
-					s.initializeTick(s.Ctx, test.currentTickIndex, test.newUpperTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.newUpperTick.uptimeTrackers, false)
+					s.initializeTick(s.Ctx, test.currentTickIndex, test.newLowerTick.tickIndex, osmomath.ZeroDec(), cl.EmptyCoins, test.newLowerTick.uptimeTrackers, true)
+					s.initializeTick(s.Ctx, test.currentTickIndex, test.newUpperTick.tickIndex, osmomath.ZeroDec(), cl.EmptyCoins, test.newUpperTick.uptimeTrackers, false)
 					clPool.SetCurrentTick(test.currentTickIndex)
 					err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, clPool)
 					s.Require().NoError(err)
@@ -1871,7 +1871,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		owner       sdk.AccAddress
 		lowerTick   int64
 		upperTick   int64
-		liquidity   sdk.Dec
+		liquidity   osmomath.Dec
 		joinTime    time.Time
 		collectTime time.Time
 		positionId  uint64
@@ -1891,7 +1891,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 
 	tests := map[string]struct {
 		// setup parameters
-		existingAccumLiquidity   []sdk.Dec
+		existingAccumLiquidity   []osmomath.Dec
 		addedUptimeGrowthInside  []sdk.DecCoins
 		addedUptimeGrowthOutside []sdk.DecCoins
 		currentTick              int64
@@ -2295,7 +2295,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		},
 		"other liquidity on uptime accums: (lower < curr < upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick: 1,
-			existingAccumLiquidity: []sdk.Dec{
+			existingAccumLiquidity: []osmomath.Dec{
 				sdk.NewDec(99900123432),
 				sdk.NewDec(18942),
 				sdk.NewDec(0),
@@ -2315,7 +2315,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 		},
 		"multiple positions in same range: (lower < curr < upper) uptime growth both inside and outside range, 1D time in position": {
 			currentTick: 1,
-			existingAccumLiquidity: []sdk.Dec{
+			existingAccumLiquidity: []osmomath.Dec{
 				sdk.NewDec(99900123432),
 				sdk.NewDec(18942),
 				sdk.NewDec(0),
@@ -2506,7 +2506,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom,
-					sdk.NewInt(8),
+					osmomath.NewInt(8),
 				),
 			),
 			recordToSet: withAmount(incentiveRecordOne, sdk.NewDec(8)),
@@ -2576,25 +2576,25 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom,
-					sdk.ZeroInt(),
+					osmomath.ZeroInt(),
 				),
 			),
-			recordToSet: withAmount(incentiveRecordOne, sdk.ZeroDec()),
+			recordToSet: withAmount(incentiveRecordOne, osmomath.ZeroDec()),
 
-			expectedError: types.InvalidIncentiveCoinError{PoolId: 1, IncentiveCoin: sdk.NewCoin(incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom, sdk.ZeroInt())},
+			expectedError: types.InvalidIncentiveCoinError{PoolId: 1, IncentiveCoin: sdk.NewCoin(incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom, osmomath.ZeroInt())},
 		},
 		"invalid incentive coin (negative)": {
 			poolId: defaultPoolId,
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom,
-					sdk.ZeroInt(),
+					osmomath.ZeroInt(),
 				),
 			),
-			recordToSet:              withAmount(incentiveRecordOne, sdk.ZeroDec()),
+			recordToSet:              withAmount(incentiveRecordOne, osmomath.ZeroDec()),
 			useNegativeIncentiveCoin: true,
 
-			expectedError: types.InvalidIncentiveCoinError{PoolId: 1, IncentiveCoin: sdk.Coin{Denom: incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom, Amount: sdk.NewInt(-1)}},
+			expectedError: types.InvalidIncentiveCoinError{PoolId: 1, IncentiveCoin: sdk.Coin{Denom: incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Denom, Amount: osmomath.NewInt(-1)}},
 		},
 		"start time too early": {
 			poolId: defaultPoolId,
@@ -2616,9 +2616,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingCoin.Amount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: withEmissionRate(incentiveRecordOne, sdk.ZeroDec()),
-
-			expectedError: types.NonPositiveEmissionRateError{PoolId: 1, EmissionRate: sdk.ZeroDec()},
+			recordToSet: withEmissionRate(incentiveRecordOne, osmomath.ZeroDec()),
+			expectedError: types.NonPositiveEmissionRateError{PoolId: 1, EmissionRate: osmomath.ZeroDec()},
 		},
 		"negative emission rate": {
 			poolId: defaultPoolId,
@@ -2702,7 +2701,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 				incentiveCoin := sdk.NewCoin(tc.recordToSet.IncentiveRecordBody.RemainingCoin.Denom, tc.recordToSet.IncentiveRecordBody.RemainingCoin.Amount.Ceil().RoundInt())
 
 				if tc.useNegativeIncentiveCoin {
-					incentiveCoin = sdk.Coin{Denom: tc.recordToSet.IncentiveRecordBody.RemainingCoin.Denom, Amount: sdk.NewInt(-1)}
+					incentiveCoin = sdk.Coin{Denom: tc.recordToSet.IncentiveRecordBody.RemainingCoin.Denom, Amount: osmomath.NewInt(-1)}
 				}
 
 				// Set the next incentive record id.
@@ -2762,8 +2761,8 @@ func (s *KeeperTestSuite) TestCreateIncentive_NewId() {
 		pool          = s.PrepareConcentratedPool()
 		poolId        = pool.GetId()
 		sender        = s.TestAccs[0]
-		incentiveCoin = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000000000))
-		emissionRate  = sdk.NewDecWithPrec(1, 2)
+		incentiveCoin = sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1000000000000))
+		emissionRate  = osmomath.NewDecWithPrec(1, 2)
 		startTime     = s.Ctx.BlockTime()
 		minUptime     = types.DefaultAuthorizedUptimes[0]
 
@@ -2842,7 +2841,7 @@ func (s *KeeperTestSuite) TestUpdateAccumAndClaimRewards() {
 				positionKey := validPositionKey
 
 				// Initialize position accumulator.
-				err := poolSpreadRewardsAccumulator.NewPosition(positionKey, sdk.OneDec(), nil)
+				err := poolSpreadRewardsAccumulator.NewPosition(positionKey, osmomath.OneDec(), nil)
 				s.Require().NoError(err)
 
 				// Record the initial position accumulator value.
@@ -2887,7 +2886,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 	uptimeHelper := getExpectedUptimes()
 	defaultSender := s.TestAccs[0]
 	tests := map[string]struct {
-		numShares         sdk.Dec
+		numShares         osmomath.Dec
 		positionIdCreate  uint64
 		positionIdClaim   uint64
 		defaultJoinTime   bool
@@ -2902,7 +2901,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			defaultJoinTime:  true,
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
-			numShares:        sdk.OneDec(),
+			numShares:        osmomath.OneDec(),
 		},
 		"claim and forfeit rewards (2 shares)": {
 			positionIdCreate:  DefaultPositionId,
@@ -2918,7 +2917,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			positionIdClaim:   DefaultPositionId,
 			defaultJoinTime:   true,
 			forfeitIncentives: true,
-			numShares:         sdk.OneDec(),
+			numShares:         osmomath.OneDec(),
 		},
 		"claim and forfeit rewards with varying amounts and different denoms": {
 			positionIdCreate:  DefaultPositionId,
@@ -2927,7 +2926,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			growthInside:      uptimeHelper.varyingTokensMultiDenom,
 			growthOutside:     uptimeHelper.varyingTokensSingleDenom,
 			forfeitIncentives: true,
-			numShares:         sdk.OneDec(),
+			numShares:         osmomath.OneDec(),
 		},
 
 		// error catching
@@ -2938,7 +2937,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			defaultJoinTime:  true,
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
-			numShares:        sdk.OneDec(),
+			numShares:        osmomath.OneDec(),
 
 			expectedError: types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
 		},
@@ -2949,7 +2948,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			defaultJoinTime:  false,
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
-			numShares:        sdk.OneDec(),
+			numShares:        osmomath.OneDec(),
 
 			expectedError: types.NegativeDurationError{Duration: time.Hour * 336 * -1},
 		},
@@ -3074,19 +3073,19 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 		{
 			name:                     "Claim after 1 minute, 1ns uptime",
 			blockTimeElapsed:         time.Minute,
-			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(59))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
+			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, osmomath.NewInt(59))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
 			minUptimeIncentiveRecord: time.Nanosecond,
 		},
 		{
 			name:                     "Claim after 1 hr, 1ns uptime",
 			blockTimeElapsed:         time.Hour,
-			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(3599))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
+			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, osmomath.NewInt(3599))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
 			minUptimeIncentiveRecord: time.Nanosecond,
 		},
 		{
 			name:                     "Claim after 24 hours, 1ns uptime",
 			blockTimeElapsed:         time.Hour * 24,
-			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(9999))), //  after 24hr > 2hr46min = 9999usdc.999999999901820104 ~ 9999usdc
+			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, osmomath.NewInt(9999))), //  after 24hr > 2hr46min = 9999usdc.999999999901820104 ~ 9999usdc
 			minUptimeIncentiveRecord: time.Nanosecond,
 		},
 		{
@@ -3110,7 +3109,7 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 		{
 			name:                     "Claim after 24 hours, 1d uptime",
 			blockTimeElapsed:         time.Hour * 24,
-			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, sdk.NewInt(9999))), //  after 24hr > 2hr46min = 9999usdc.999999999901820104 ~ 9999usdc
+			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, osmomath.NewInt(9999))), //  after 24hr > 2hr46min = 9999usdc.999999999901820104 ~ 9999usdc
 			minUptimeIncentiveRecord: time.Hour * 24,
 		},
 	}
@@ -3120,7 +3119,7 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 			// Init suite for the test.
 			s.SetupTest()
 
-			requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1_000_000)), sdk.NewCoin(USDC, sdk.NewInt(5_000_000_000)))
+			requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, osmomath.NewInt(1_000_000)), sdk.NewCoin(USDC, osmomath.NewInt(5_000_000_000)))
 			s.FundAcc(s.TestAccs[0], requiredBalances)
 			s.FundAcc(s.TestAccs[1], requiredBalances)
 
@@ -3128,7 +3127,7 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 			pool := s.PrepareConcentratedPool()
 
 			// Set up position
-			positionOneData, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], requiredBalances, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+			positionOneData, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], requiredBalances, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 			s.Require().NoError(err)
 
 			// Set incentives for pool to ensure accumulators work correctly
@@ -3237,7 +3236,7 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentives_LiquidityChange_Varying
 		// Create CL pool
 		pool := s.PrepareConcentratedPool()
 
-		expectedAmount := sdk.NewInt(60 * 60 * 24) // 1 day in seconds * 1 per second
+		expectedAmount := osmomath.NewInt(60 * 60 * 24) // 1 day in seconds * 1 per second
 
 		oneUUSDCCoin := sdk.NewCoin(USDC, sdk.OneInt())
 		// -1 for acceptable rounding error
@@ -3248,7 +3247,7 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentives_LiquidityChange_Varying
 		// 1. by directly calling CollectIncentives
 		// 2. by calling WithdrawPosition
 		// 3. by calling CollectIncentives
-		s.FundAcc(pool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount.Mul(sdk.NewInt(3)))))
+		s.FundAcc(pool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount.Mul(osmomath.NewInt(3)))))
 		// Set incentives for pool to ensure accumulators work correctly
 		testIncentiveRecord := types.IncentiveRecord{
 			PoolId: 1,
@@ -3263,7 +3262,7 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentives_LiquidityChange_Varying
 		s.Require().NoError(err)
 
 		// Set up position
-		positionOneData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+		positionOneData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 		s.Require().NoError(err)
 
 		// Increase block time by the fully charged duration (first time)
@@ -3278,7 +3277,7 @@ func (s *KeeperTestSuite) TestFunctional_ClaimIncentives_LiquidityChange_Varying
 		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
 
 		// Create another position
-		positionTwoData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+		positionTwoData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 		s.Require().NoError(err)
 
 		// Increase block time by the fully charged duration (third time)
@@ -3461,19 +3460,19 @@ func (s *KeeperTestSuite) TestFindUptimeIndex() {
 // on pool-wide supported uptimes.
 func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 	defaultBalancerAssets := []balancer.PoolAsset{
-		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(1000000000))},
-		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(1000000000))},
+		{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(1000000000))},
+		{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(1000000000))},
 	}
-	defaultConcentratedAssets := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))
+	defaultConcentratedAssets := sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)), sdk.NewCoin("bar", osmomath.NewInt(100)))
 
 	type testcase struct {
 		// defaults to defaultConcentratedAssets
 		existingConcentratedLiquidity sdk.Coins
 		// defaults to defaultBalancerAssets
 		balancerPoolAssets []balancer.PoolAsset
-		// defaults sdk.OneDec()
-		portionOfSharesBonded        sdk.Dec
-		balancerSharesRewardDiscount sdk.Dec
+		// defaults osmomath.OneDec()
+		portionOfSharesBonded        osmomath.Dec
+		balancerSharesRewardDiscount osmomath.Dec
 
 		noCanonicalBalancerPool bool
 		flipAsset0And1          bool
@@ -3486,11 +3485,11 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		if len(tc.balancerPoolAssets) == 0 {
 			tc.balancerPoolAssets = defaultBalancerAssets
 		}
-		if (tc.portionOfSharesBonded == sdk.Dec{}) {
+		if (tc.portionOfSharesBonded == osmomath.Dec{}) {
 			tc.portionOfSharesBonded = sdk.NewDec(1)
 		}
-		if (tc.balancerSharesRewardDiscount == sdk.Dec{}) {
-			tc.balancerSharesRewardDiscount = sdk.ZeroDec()
+		if (tc.balancerSharesRewardDiscount == osmomath.Dec{}) {
+			tc.balancerSharesRewardDiscount = osmomath.ZeroDec()
 		}
 		return tc
 	}
@@ -3511,42 +3510,42 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		"same spot price, different total share amount": {
 			// 100 existing shares and 200 shares added from balancer
 			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(200))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(200))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(200))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(200))},
 			},
 		},
 		"different spot price between balancer and CL pools (excess asset0)": {
 			// 100 existing shares and 100 shares added from balancer. We expect only the even portion of
 			// the Balancer pool to be joined, with the remaining 50foo not qualifying.
 			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(150))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(150))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(100))},
 			},
 		},
 		"different spot price between balancer and CL pools (excess asset1)": {
 			// 100 existing shares and 100 shares added from balancer. We expect only the even portion of
 			// the Balancer pool to be joined, with the remaining 50bar not qualifying.
 			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(150))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(100))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(150))},
 			},
 		},
 		"same spot price, different total share amount, only half bonded": {
 			// 100 existing shares and 200 shares added from balancer
 			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(200))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(200))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(200))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(200))},
 			},
-			portionOfSharesBonded: sdk.MustNewDecFromStr("0.5"),
+			portionOfSharesBonded: osmomath.MustNewDecFromStr("0.5"),
 		},
 		"different spot price between balancer and CL pools (excess asset1), only partially bonded": {
 			// 100 existing shares and 100 shares added from balancer. We expect only the even portion of
 			// the Balancer pool to be joined, with the remaining 50bar not qualifying.
 			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(150))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(100))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(150))},
 			},
-			portionOfSharesBonded: sdk.MustNewDecFromStr("0.1"),
+			portionOfSharesBonded: osmomath.MustNewDecFromStr("0.1"),
 		},
 		"no canonical balancer pool": {
 			// 100 existing shares and 100 shares added from balancer
@@ -3566,9 +3565,9 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 				var clPool types.ConcentratedPoolExtension
 				if tc.flipAsset0And1 {
-					clPool = s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[1].Denom, tc.existingConcentratedLiquidity[0].Denom, DefaultTickSpacing, sdk.ZeroDec())
+					clPool = s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[1].Denom, tc.existingConcentratedLiquidity[0].Denom, DefaultTickSpacing, osmomath.ZeroDec())
 				} else {
-					clPool = s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
+					clPool = s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, osmomath.ZeroDec())
 				}
 
 				// Set up an existing full range position. Note that the second return value is the position ID, not an error.
@@ -3589,10 +3588,10 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 				// Calculate balancer share amount for full range
 				updatedClPool, err := s.clk.GetPoolById(s.Ctx, clPool.GetId())
 				s.Require().NoError(err)
-				asset0BalancerAmount := tc.balancerPoolAssets[0].Token.Amount.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
-				asset1BalancerAmount := tc.balancerPoolAssets[1].Token.Amount.ToDec().Mul(tc.portionOfSharesBonded).TruncateInt()
+				asset0BalancerAmount := tc.balancerPoolAssets[0].Token.Amount.ToLegacyDec().Mul(tc.portionOfSharesBonded).TruncateInt()
+				asset1BalancerAmount := tc.balancerPoolAssets[1].Token.Amount.ToLegacyDec().Mul(tc.portionOfSharesBonded).TruncateInt()
 				qualifyingSharesPreDiscount := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, asset1BalancerAmount, asset0BalancerAmount)
-				qualifyingShares := (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingSharesPreDiscount)
+				qualifyingShares := (osmomath.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingSharesPreDiscount)
 
 				// TODO: clean this check up (will likely require refactoring the whole test)
 				clearOutQualifyingShares := tc.noCanonicalBalancerPool
@@ -3645,7 +3644,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 }
 
 func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools() {
-	existingConcentratedAssets := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))
+	existingConcentratedAssets := sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)), sdk.NewCoin("bar", osmomath.NewInt(100)))
 
 	type testcase struct {
 		// defaults to defaultBalancerAssets
@@ -3666,11 +3665,11 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools
 		"canonical balancer pool has invalid number of assets": {
 			// 100 existing shares and 100 shares added from balancer
 			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(100))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("baz", sdk.NewInt(100))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(100))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(100))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("baz", osmomath.NewInt(100))},
 			},
-			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)), sdk.NewCoin("baz", sdk.NewInt(100)))},
+			expectedError: types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: 1, BalancerPoolId: 2, BalancerPoolLiquidity: sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)), sdk.NewCoin("bar", osmomath.NewInt(100)), sdk.NewCoin("baz", osmomath.NewInt(100)))},
 		},
 		"invalid concentrated pool ID": {
 			// 100 existing shares and 100 shares added from balancer
@@ -3681,9 +3680,9 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools
 	// create invalid denom test cases. Either denom1, denom2 or both are invalid
 	denomSelector := [][]string{{"foo", "invalid1"}, {"bar", "invalid2"}}
 	for i := 0; i < 2; i++ {
-		pa1 := balancer.PoolAsset{Weight: sdk.NewInt(1), Token: sdk.NewCoin(denomSelector[0][i], sdk.NewInt(100))}
+		pa1 := balancer.PoolAsset{Weight: osmomath.NewInt(1), Token: sdk.NewCoin(denomSelector[0][i], osmomath.NewInt(100))}
 		for j := 1 - i; j < 2; j++ {
-			pa2 := balancer.PoolAsset{Weight: sdk.NewInt(1), Token: sdk.NewCoin(denomSelector[1][j], sdk.NewInt(100))}
+			pa2 := balancer.PoolAsset{Weight: osmomath.NewInt(1), Token: sdk.NewCoin(denomSelector[1][j], osmomath.NewInt(100))}
 			testname := fmt.Sprintf("canonical balancer pool; denom1_invalid=%v; denom2_invalid=%v", i == 1, j == 1)
 			tests[testname] = testcase{
 				balancerPoolAssets: []balancer.PoolAsset{pa1, pa2},
@@ -3698,13 +3697,13 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRangeWithNonExistentPools
 				if len(tc.balancerPoolAssets) == 0 {
 					tc.balancerPoolAssets = defaultBalancerAssets
 				}
-				clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], existingConcentratedAssets[0].Denom, existingConcentratedAssets[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
+				clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], existingConcentratedAssets[0].Denom, existingConcentratedAssets[1].Denom, DefaultTickSpacing, osmomath.ZeroDec())
 
 				// Set up an existing full range position. Note that the second return value is the position ID, not an error.
 				s.SetupPosition(clPool.GetId(), s.TestAccs[0], existingConcentratedAssets, DefaultMinTick, DefaultMaxTick, false)
 
 				// If a canonical balancer pool exists, we create it and link it with the CL pool
-				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, sdk.OneDec())
+				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, osmomath.OneDec())
 
 				if tc.noBalancerPoolWithID {
 					balancerPoolId = invalidPoolId
@@ -3774,8 +3773,8 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			// 100 existing shares and 200 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(200))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(200))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(200))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(200))},
 			},
 			uptimeGrowth: uptimeHelper.emptyExpectedAccumValues,
 		},
@@ -3784,8 +3783,8 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			// Note that only 200foo/200bar qualify, and the remaining 50bar is not counted
 			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(200))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(250))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(200))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(250))},
 			},
 			uptimeGrowth: uptimeHelper.emptyExpectedAccumValues,
 		},
@@ -3794,21 +3793,21 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			// Note that only 200foo/200bar qualify, and the remaining 50foo is not counted
 			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(250))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(200))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(250))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(200))},
 			},
 			uptimeGrowth: uptimeHelper.emptyExpectedAccumValues,
 		},
 		"rounding check: large and imbalanced CL amounts": {
-			existingConcentratedLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(2<<60)), sdk.NewCoin("bar", sdk.NewInt(2<<61))),
+			existingConcentratedLiquidity: sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(2<<60)), sdk.NewCoin("bar", osmomath.NewInt(2<<61))),
 			balancerPoolAssets:            defaultBalancerAssets,
 			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 		},
 		"rounding check: large and imbalanced balancer amounts": {
 			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(2<<61))},
-				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(2<<60))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(2<<61))},
+				{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(2<<60))},
 			},
 			uptimeGrowth: uptimeHelper.hundredTokensMultiDenom,
 		},
@@ -3849,7 +3848,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 
 			insufficientPoolBalance: true,
-			expectedError:           errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(57000))),
+			expectedError:           errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", osmomath.ZeroInt()), sdk.NewCoin("bar", osmomath.NewInt(57000))),
 		},
 	}
 	s.runMultipleAuthorizedUptimes(func() {
@@ -3859,7 +3858,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 				// Set up CL pool with appropriate liquidity
 				s.SetupTest()
-				clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
+				clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, osmomath.ZeroDec())
 				clPoolId := clPool.GetId()
 
 				// Set up an existing full range position.
@@ -3867,7 +3866,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 				initialLiquidity, _ := s.SetupPosition(clPoolId, s.TestAccs[0], tc.existingConcentratedLiquidity, DefaultMinTick, DefaultMaxTick, false)
 
 				// Create and bond shares for balancer pool to be linked with CL pool in happy path cases
-				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, sdk.OneDec())
+				balancerPoolId := s.setupBalancerPoolWithFractionLocked(tc.balancerPoolAssets, osmomath.OneDec())
 
 				// Invalidate pool IDs if needed for error cases
 				if tc.balancerPoolDoesNotExist {
@@ -3885,8 +3884,8 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 						},
 					})
 
-				// Add balancer shares to CL accumulatores
-				addedLiquidity := sdk.ZeroDec()
+				// Add balancer shosmomath.ZeroDecaccumulatores
+				addedLiquidity := osmomath.ZeroDec()
 				if !tc.balSharesNotAddedToAccums {
 					// Get uptime accums for the cl pool.
 					uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
@@ -3941,7 +3940,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 						// are technically cleared even though in production this process would have been
 						// reverted.
 						if tc.insufficientPoolBalance {
-							addedLiquidity = sdk.ZeroDec()
+							addedLiquidity = osmomath.ZeroDec()
 						}
 
 						expectedLiquidity := initialLiquidity.Add(addedLiquidity)
@@ -4158,7 +4157,7 @@ func (s *KeeperTestSuite) TestMoveRewardsToSamePositionAndDeleteOldAcc() {
 
 // TestGetUptimeTrackerValues tests getter for tick-level uptime trackers.
 func (s *KeeperTestSuite) TestGetUptimeTrackerValues() {
-	foo100 := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(100)))
+	foo100 := sdk.NewDecCoins(sdk.NewDecCoin("foo", osmomath.NewInt(100)))
 	testCases := []struct {
 		name           string
 		input          []model.UptimeTracker
@@ -4178,13 +4177,13 @@ func (s *KeeperTestSuite) TestGetUptimeTrackerValues() {
 			name: "Multiple uptime trackers",
 			input: []model.UptimeTracker{
 				{UptimeGrowthOutside: foo100},
-				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("fooa", sdk.NewInt(100)))},
-				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("foob", sdk.NewInt(100)))},
+				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("fooa", osmomath.NewInt(100)))},
+				{UptimeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin("foob", osmomath.NewInt(100)))},
 			},
 			expectedOutput: []sdk.DecCoins{
 				foo100,
-				sdk.NewDecCoins(sdk.NewDecCoin("fooa", sdk.NewInt(100))),
-				sdk.NewDecCoins(sdk.NewDecCoin("foob", sdk.NewInt(100))),
+				sdk.NewDecCoins(sdk.NewDecCoin("fooa", osmomath.NewInt(100))),
+				sdk.NewDecCoins(sdk.NewDecCoin("foob", osmomath.NewInt(100))),
 			},
 		},
 	}

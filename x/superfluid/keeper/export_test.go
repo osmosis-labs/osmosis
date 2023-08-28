@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	types "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
@@ -19,7 +20,7 @@ func (k Keeper) ValidateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 	return k.validateLockForSFDelegate(ctx, lock, sender)
 }
 
-func (k Keeper) PrepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Dec) (sdk.AccAddress, sdk.Coins, error) {
+func (k Keeper) PrepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt osmomath.Dec) (sdk.AccAddress, sdk.Coins, error) {
 	return k.prepareConcentratedLockForSlash(ctx, lock, slashAmt)
 }
 

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
@@ -17,7 +18,7 @@ import (
 // See https://github.com/osmosis-labs/osmosis/issues/864
 func (k Keeper) BeginUnwindSuperfluidAsset(ctx sdk.Context, epochNum int64, asset types.SuperfluidAsset) {
 	// Right now set the TWAP to 0, and delete the asset.
-	k.SetOsmoEquivalentMultiplier(ctx, epochNum, asset.Denom, sdk.ZeroDec())
+	k.SetOsmoEquivalentMultiplier(ctx, epochNum, asset.Denom, osmomath.ZeroDec())
 	k.DeleteSuperfluidAsset(ctx, asset.Denom)
 }
 
@@ -26,16 +27,16 @@ func (k Keeper) BeginUnwindSuperfluidAsset(ctx sdk.Context, epochNum int64, asse
 // It will move towards per pool functions.
 func (k Keeper) GetRiskAdjustedOsmoValue(ctx sdk.Context, amount sdk.Int) sdk.Int {
 	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
-	return amount.Sub(amount.ToDec().Mul(minRiskFactor).RoundInt())
+	return amount.Sub(amount.ToLegacyDec().Mul(minRiskFactor).RoundInt())
 }
 
 // y = x - (x * minRisk)
 // y = x (1 - minRisk)
 // y / (1 - minRisk) = x
 
-func (k Keeper) UnriskAdjustOsmoValue(ctx sdk.Context, amount sdk.Dec) sdk.Dec {
+func (k Keeper) UnriskAdjustOsmoValue(ctx sdk.Context, amount osmomath.Dec) osmomath.Dec {
 	minRiskFactor := k.GetParams(ctx).MinimumRiskFactor
-	return amount.Quo(sdk.OneDec().Sub(minRiskFactor))
+	return amount.Quo(osmomath.OneDec().Sub(minRiskFactor))
 }
 
 func (k Keeper) AddNewSuperfluidAsset(ctx sdk.Context, asset types.SuperfluidAsset) error {

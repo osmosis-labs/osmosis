@@ -5,6 +5,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -209,7 +211,7 @@ func (ptr *ptr) pull(key []byte) {
 }
 
 func (node Node) accumulate() (res sdk.Int) {
-	res = sdk.ZeroInt()
+	res = osmomath.ZeroInt()
 	for _, child := range node.Children {
 		res = res.Add(child.Accumulation)
 	}

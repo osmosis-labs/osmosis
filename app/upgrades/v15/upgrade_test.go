@@ -17,6 +17,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	v15 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v15"
 	gamm "github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
@@ -29,10 +30,10 @@ type UpgradeTestSuite struct {
 }
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
-	sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-	sdk.NewCoin("foo", sdk.NewInt(10000000)),
-	sdk.NewCoin("bar", sdk.NewInt(10000000)),
-	sdk.NewCoin("baz", sdk.NewInt(10000000)),
+	sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
+	sdk.NewCoin("foo", osmomath.NewInt(10000000)),
+	sdk.NewCoin("bar", osmomath.NewInt(10000000)),
+	sdk.NewCoin("baz", osmomath.NewInt(10000000)),
 )
 
 func (suite *UpgradeTestSuite) SetupTest() {
@@ -97,8 +98,8 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	suite.FundAcc(testAccount, DefaultAcctFunds)
 
 	// Create the balancer pool
-	spreadFactor := sdk.MustNewDecFromStr("0.003")
-	exitFee := sdk.ZeroDec()
+	spreadFactor := osmomath.MustNewDecFromStr("0.003")
+	exitFee := osmomath.ZeroDec()
 	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		balancer.NewMsgCreateBalancerPool(suite.TestAccs[0],
@@ -108,12 +109,12 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 			},
 			[]balancer.PoolAsset{
 				{
-					Weight: sdk.NewInt(100),
-					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+					Weight: osmomath.NewInt(100),
+					Token:  sdk.NewCoin("foo", osmomath.NewInt(5000000)),
 				},
 				{
-					Weight: sdk.NewInt(200),
-					Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+					Weight: osmomath.NewInt(200),
+					Token:  sdk.NewCoin("bar", osmomath.NewInt(5000000)),
 				},
 			},
 			""),
@@ -121,8 +122,8 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	suite.Require().NoError(err)
 
 	// join the pool
-	shareOutAmount := sdk.NewInt(1_000_000_000_000_000)
-	tokenInMaxs := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000000)), sdk.NewCoin("bar", sdk.NewInt(5000000)))
+	shareOutAmount := osmomath.NewInt(1_000_000_000_000_000)
+	tokenInMaxs := sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(5000000)), sdk.NewCoin("bar", osmomath.NewInt(5000000)))
 	tokenIn, sharesOut, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
 	suite.Require().NoError(err)
 
@@ -258,6 +259,6 @@ func (suite *UpgradeTestSuite) validateCons(coinsA, coinsB sdk.Coins) {
 	for _, coinA := range coinsA {
 		coinBAmount := coinsB.AmountOf(coinA.Denom)
 		// minor tolerance due to fees and rounding
-		osmoassert.DecApproxEq(suite.T(), coinBAmount.ToDec(), coinA.Amount.ToDec(), sdk.NewDec(2))
+		osmoassert.DecApproxEq(suite.T(), coinBAmount.ToLegacyDec(), coinA.Amount.ToLegacyDec(), sdk.NewDec(2))
 	}
 }

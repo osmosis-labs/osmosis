@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
@@ -32,8 +33,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 	}{
 		"zero hops": {
 			routes:            []poolmanagertypes.SwapAmountInRoute{},
-			tokenIn:           sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
-			tokenOutMinAmount: sdk.NewInt(tokenInMinAmount),
+			tokenIn:           sdk.NewCoin("foo", osmomath.NewInt(tokenIn)),
+			tokenOutMinAmount: osmomath.NewInt(tokenInMinAmount),
 			expectError:       true,
 		},
 		"one hop": {
@@ -43,8 +44,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 					TokenOutDenom: "bar",
 				},
 			},
-			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
-			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
+			tokenIn:               sdk.NewCoin("foo", osmomath.NewInt(tokenIn)),
+			tokenOutMinAmount:     osmomath.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    1,
 			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
@@ -59,8 +60,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 					TokenOutDenom: "baz",
 				},
 			},
-			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
-			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
+			tokenIn:               sdk.NewCoin("foo", osmomath.NewInt(tokenIn)),
+			tokenOutMinAmount:     osmomath.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    2,
 			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
@@ -75,8 +76,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 					TokenOutDenom: "baz",
 				},
 			},
-			tokenIn:           sdk.NewCoin(doesNotExistDenom, sdk.NewInt(tokenIn)),
-			tokenOutMinAmount: sdk.NewInt(tokenInMinAmount),
+			tokenIn:           sdk.NewCoin(doesNotExistDenom, osmomath.NewInt(tokenIn)),
+			tokenOutMinAmount: osmomath.NewInt(tokenInMinAmount),
 			expectError:       true,
 		},
 	}
@@ -131,8 +132,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 	}{
 		"zero hops": {
 			routes:           []poolmanagertypes.SwapAmountOutRoute{},
-			tokenOut:         sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
-			tokenInMaxAmount: sdk.NewInt(tokenInMaxAmount),
+			tokenOut:         sdk.NewCoin("foo", osmomath.NewInt(tokenOut)),
+			tokenInMaxAmount: osmomath.NewInt(tokenInMaxAmount),
 			expectError:      true,
 		},
 		"one hop": {
@@ -142,8 +143,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 					TokenInDenom: "bar",
 				},
 			},
-			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
-			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
+			tokenOut:              sdk.NewCoin("foo", osmomath.NewInt(tokenOut)),
+			tokenInMaxAmount:      osmomath.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    1,
 			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
@@ -158,8 +159,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 					TokenInDenom: "baz",
 				},
 			},
-			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
-			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
+			tokenOut:              sdk.NewCoin("foo", osmomath.NewInt(tokenOut)),
+			tokenInMaxAmount:      osmomath.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    2,
 			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
@@ -174,8 +175,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 					TokenInDenom: "baz",
 				},
 			},
-			tokenOut:         sdk.NewCoin(doesNotExistDenom, sdk.NewInt(tokenOut)),
-			tokenInMaxAmount: sdk.NewInt(tokenInMaxAmount),
+			tokenOut:         sdk.NewCoin(doesNotExistDenom, osmomath.NewInt(tokenOut)),
+			tokenInMaxAmount: osmomath.NewInt(tokenInMaxAmount),
 			expectError:      true,
 		},
 	}
@@ -230,20 +231,20 @@ func (s *KeeperTestSuite) TestJoinPool_Events() {
 	}{
 		"successful join": {
 			poolId:         1,
-			shareOutAmount: sdk.NewInt(shareOut),
+			shareOutAmount: osmomath.NewInt(shareOut),
 			tokenInMaxs: sdk.NewCoins(
-				sdk.NewCoin("foo", sdk.NewInt(tokenInMaxAmount)),
-				sdk.NewCoin("bar", sdk.NewInt(tokenInMaxAmount)),
-				sdk.NewCoin("baz", sdk.NewInt(tokenInMaxAmount)),
-				sdk.NewCoin("uosmo", sdk.NewInt(tokenInMaxAmount)),
+				sdk.NewCoin("foo", osmomath.NewInt(tokenInMaxAmount)),
+				sdk.NewCoin("bar", osmomath.NewInt(tokenInMaxAmount)),
+				sdk.NewCoin("baz", osmomath.NewInt(tokenInMaxAmount)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(tokenInMaxAmount)),
 			),
 			expectedAddLiquidityEvents: 1,
 			expectedMessageEvents:      3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"tokenInMaxs do not match all tokens in pool - invalid join": {
 			poolId:         1,
-			shareOutAmount: sdk.NewInt(shareOut),
-			tokenInMaxs:    sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenInMaxAmount))),
+			shareOutAmount: osmomath.NewInt(shareOut),
+			tokenInMaxs:    sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(tokenInMaxAmount))),
 			expectError:    true,
 		},
 	}
@@ -297,15 +298,15 @@ func (s *KeeperTestSuite) TestExitPool_Events() {
 	}{
 		"successful exit": {
 			poolId:                        1,
-			shareInAmount:                 sdk.NewInt(shareIn),
+			shareInAmount:                 osmomath.NewInt(shareIn),
 			tokenOutMins:                  sdk.NewCoins(),
 			expectedRemoveLiquidityEvents: 1,
 			expectedMessageEvents:         3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"invalid tokenOutMins": {
 			poolId:        1,
-			shareInAmount: sdk.NewInt(shareIn),
-			tokenOutMins:  sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenOutMinAmount))),
+			shareInAmount: osmomath.NewInt(shareIn),
+			tokenOutMins:  sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(tokenOutMinAmount))),
 			expectError:   true,
 		},
 	}
@@ -324,12 +325,12 @@ func (s *KeeperTestSuite) TestExitPool_Events() {
 			joinPoolResponse, err := msgServer.JoinPool(sdk.WrapSDKContext(ctx), &types.MsgJoinPool{
 				Sender:         sender,
 				PoolId:         tc.poolId,
-				ShareOutAmount: sdk.NewInt(shareIn),
+				ShareOutAmount: osmomath.NewInt(shareIn),
 				TokenInMaxs: sdk.NewCoins(
-					sdk.NewCoin("foo", sdk.NewInt(int64Max)),
-					sdk.NewCoin("bar", sdk.NewInt(int64Max)),
-					sdk.NewCoin("baz", sdk.NewInt(int64Max)),
-					sdk.NewCoin("uosmo", sdk.NewInt(int64Max)),
+					sdk.NewCoin("foo", osmomath.NewInt(int64Max)),
+					sdk.NewCoin("bar", osmomath.NewInt(int64Max)),
+					sdk.NewCoin("baz", osmomath.NewInt(int64Max)),
+					sdk.NewCoin("uosmo", osmomath.NewInt(int64Max)),
 				),
 			})
 			s.Require().NoError(err)

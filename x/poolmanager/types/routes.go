@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -46,7 +47,7 @@ type PoolModuleI interface {
 		poolId uint64,
 		quoteAssetDenom string,
 		baseAssetDenom string,
-	) (price sdk.Dec, err error)
+	) (price osmomath.Dec, err error)
 
 	SwapExactAmountIn(
 		ctx sdk.Context,
@@ -55,7 +56,7 @@ type PoolModuleI interface {
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
-		spreadFactor sdk.Dec,
+		spreadFactor osmomath.Dec,
 	) (sdk.Int, error)
 	// CalcOutAmtGivenIn calculates the amount of tokenOut given tokenIn and the pool's current state.
 	// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
@@ -64,7 +65,7 @@ type PoolModuleI interface {
 		poolI PoolI,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
-		spreadFactor sdk.Dec,
+		spreadFactor osmomath.Dec,
 	) (tokenOut sdk.Coin, err error)
 
 	SwapExactAmountOut(
@@ -74,7 +75,7 @@ type PoolModuleI interface {
 		tokenInDenom string,
 		tokenInMaxAmount sdk.Int,
 		tokenOut sdk.Coin,
-		spreadFactor sdk.Dec,
+		spreadFactor osmomath.Dec,
 	) (tokenInAmount sdk.Int, err error)
 	// CalcInAmtGivenOut calculates the amount of tokenIn given tokenOut and the pool's current state.
 	// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
@@ -83,7 +84,7 @@ type PoolModuleI interface {
 		poolI PoolI,
 		tokenOut sdk.Coin,
 		tokenInDenom string,
-		spreadFactor sdk.Dec,
+		spreadFactor osmomath.Dec,
 	) (tokenIn sdk.Coin, err error)
 
 	// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs

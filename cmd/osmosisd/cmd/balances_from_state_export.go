@@ -12,6 +12,7 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
@@ -52,8 +53,8 @@ func newDerivedAccount(address string) DerivedAccount {
 	return DerivedAccount{
 		Address:        address,
 		LiquidBalances: sdk.Coins{},
-		Staked:         sdk.ZeroInt(),
-		UnbondingStake: sdk.ZeroInt(),
+		Staked:         osmomath.ZeroInt(),
+		UnbondingStake: osmomath.ZeroInt(),
 		Bonded:         sdk.Coins{},
 	}
 }
@@ -211,7 +212,7 @@ Example:
 					acc = newDerivedAccount(address)
 				}
 
-				unbondingOsmos := sdk.NewInt(0)
+				unbondingOsmos := osmomath.NewInt(0)
 				for _, entry := range unbonding.Entries {
 					unbondingOsmos = unbondingOsmos.Add(entry.Balance)
 				}
@@ -371,7 +372,7 @@ Example:
 			// iterate through all accounts, leave out accounts that do not meet the user provided min stake amount
 			for _, r := range deriveSnapshot.Accounts {
 				var csvRow []string
-				if r.Staked.GT(sdk.NewInt(minStakeAmount)) {
+				if r.Staked.GT(osmomath.NewInt(minStakeAmount)) {
 					csvRow = append(csvRow, r.Address, r.Staked.String())
 					if err := writer.Write(csvRow); err != nil {
 						return err

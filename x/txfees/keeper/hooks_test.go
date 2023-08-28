@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v17/x/txfees/types"
@@ -45,7 +46,7 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		baseDenom    string
 		denoms       []string
 		poolTypes    []poolmanagertypes.PoolI
-		spreadFactor sdk.Dec
+		spreadFactor osmomath.Dec
 		expectPass   bool
 	}{
 		{
@@ -54,7 +55,7 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			baseDenom:    baseDenom,
 			denoms:       []string{uion},
 			poolTypes:    []poolmanagertypes.PoolI{uionPool},
-			spreadFactor: sdk.MustNewDecFromStr("0"),
+			spreadFactor: osmomath.MustNewDecFromStr("0"),
 		},
 		{
 			name:         "Multiple non-osmo fee token: TxFees AfterEpochEnd",
@@ -62,11 +63,11 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			baseDenom:    baseDenom,
 			denoms:       []string{atom, ust},
 			poolTypes:    []poolmanagertypes.PoolI{atomPool, ustPool},
-			spreadFactor: sdk.MustNewDecFromStr("0"),
+			spreadFactor: osmomath.MustNewDecFromStr("0"),
 		},
 	}
 
-	finalOutputAmount := sdk.NewInt(0)
+	finalOutputAmount := osmomath.NewInt(0)
 
 	for _, tc := range tests {
 		tc := tc

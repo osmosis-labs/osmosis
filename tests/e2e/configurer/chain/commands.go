@@ -15,6 +15,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/tendermint/tendermint/libs/bytes"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v17/app/params"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
@@ -358,9 +359,9 @@ func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords s
 
 func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
 	n.LogActionF("depositing on proposal: %d", proposalNumber)
-	deposit := sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.MinDepositValue)).String()
+	deposit := sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.MinDepositValue)).String()
 	if isExpedited {
-		deposit = sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.MinExpeditedDepositValue)).String()
+		deposit = sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.MinExpeditedDepositValue)).String()
 	}
 	cmd := []string{"osmosisd", "tx", "gov", "deposit", fmt.Sprintf("%d", proposalNumber), deposit, "--from=val"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -678,7 +679,7 @@ func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token
 }
 
 func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
-	propNumber := n.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	propNumber := n.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)))
 	n.DepositProposal(propNumber, false)
 
 	var wg sync.WaitGroup

@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
 
@@ -13,12 +14,12 @@ import (
 // This function calculates the osmo equivalent worth of an LP share.
 // It is intended to eventually use the TWAP of the worth of an LP share
 // once that is exposed from the gamm module.
-func (k Keeper) calculateOsmoBackingPerShare(pool gammtypes.CFMMPoolI, osmoInPool sdk.Int) sdk.Dec {
-	twap := osmoInPool.ToDec().Quo(pool.GetTotalShares().ToDec())
+func (k Keeper) calculateOsmoBackingPerShare(pool gammtypes.CFMMPoolI, osmoInPool sdk.Int) osmomath.Dec {
+	twap := osmoInPool.ToLegacyDec().Quo(pool.GetTotalShares().ToLegacyDec())
 	return twap
 }
 
-func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom string, multiplier sdk.Dec) {
+func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom string, multiplier osmomath.Dec) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenMultiplier)
 	priceRecord := types.OsmoEquivalentMultiplierRecord{
@@ -36,13 +37,13 @@ func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom 
 func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) (sdk.Int, error) {
 	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
 	if multiplier.IsZero() {
-		return sdk.ZeroInt(), nil
+		return osmomath.ZeroInt(), nil
 	}
 
-	decAmt := multiplier.Mul(amount.ToDec())
+	decAmt := multiplier.Mul(amount.ToLegacyDec())
 	_, err := k.GetSuperfluidAsset(ctx, denom)
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return osmomath.ZeroInt(), err
 	}
 	return k.GetRiskAdjustedOsmoValue(ctx, decAmt.RoundInt()), nil
 }
@@ -53,12 +54,12 @@ func (k Keeper) DeleteOsmoEquivalentMultiplier(ctx sdk.Context, denom string) {
 	prefixStore.Delete([]byte(denom))
 }
 
-func (k Keeper) GetOsmoEquivalentMultiplier(ctx sdk.Context, denom string) sdk.Dec {
+func (k Keeper) GetOsmoEquivalentMultiplier(ctx sdk.Context, denom string) osmomath.Dec {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixTokenMultiplier)
 	bz := prefixStore.Get([]byte(denom))
 	if bz == nil {
-		return sdk.ZeroDec()
+		return osmomath.ZeroDec()
 	}
 	priceRecord := types.OsmoEquivalentMultiplierRecord{}
 	err := proto.Unmarshal(bz, &priceRecord)

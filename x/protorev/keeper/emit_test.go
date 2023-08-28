@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
@@ -29,9 +30,9 @@ func (s *KeeperTestSuite) TestBackRunEvent() {
 			},
 			remainingTxPoolPoints:    100,
 			remainingBlockPoolPoints: 100,
-			profit:                   sdk.NewInt(100),
-			tokenOutAmount:           sdk.NewInt(100),
-			inputCoin:                sdk.NewCoin("uosmo", sdk.NewInt(100)),
+			profit:                   osmomath.NewInt(100),
+			tokenOutAmount:           osmomath.NewInt(100),
+			inputCoin:                sdk.NewCoin("uosmo", osmomath.NewInt(100)),
 		},
 	}
 

@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
@@ -21,7 +22,7 @@ import (
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating a lower tick, we add the liquidityIn from the LiquidityNet
 // WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
-func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityDelta sdk.Dec, upper bool) (tickIsEmpty bool, err error) {
+func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityDelta osmomath.Dec, upper bool) (tickIsEmpty bool, err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return false, err
@@ -77,9 +78,9 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 // CONTRACT: the caller validates that the pool with the given id exists.
 // CONTRACT: caller is responsible for the uptimeAccums to be up-to-date.
 // CONTRACT: uptimeAccums are associated with the given pool id.
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo, swapStateSpreadRewardGrowth sdk.DecCoin, spreadRewardAccumValue sdk.DecCoins, uptimeAccums []*accum.AccumulatorObject) (liquidityDelta sdk.Dec, err error) {
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo, swapStateSpreadRewardGrowth sdk.DecCoin, spreadRewardAccumValue sdk.DecCoins, uptimeAccums []*accum.AccumulatorObject) (liquidityDelta osmomath.Dec, err error) {
 	if tickInfo == nil {
-		return sdk.Dec{}, types.ErrNextTickInfoNil
+		return osmomath.Dec{}, types.ErrNextTickInfoNil
 	}
 
 	// subtract tick's spread reward growth opposite direction of last traversal from current spread reward growth global, including the spread reward growth of the current swap.
@@ -152,7 +153,7 @@ func (k Keeper) makeInitialTickInfo(ctx sdk.Context, poolId uint64, tickIndex in
 		initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeTrackerValue})
 	}
 
-	return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, UptimeTrackers: model.UptimeTrackers{List: initialUptimeTrackers}}, nil
+	return model.TickInfo{LiquidityGross: osmomath.ZeroDec(), LiquidityNet: osmomath.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: initialSpreadRewardGrowthOppositeDirectionOfLastTraversal, UptimeTrackers: model.UptimeTrackers{List: initialUptimeTrackers}}, nil
 }
 
 func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tickInfo *model.TickInfo) {
@@ -209,7 +210,7 @@ func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int
 // the first tick (given our precision) that is able to represent this price is -161000000, so we use this tick instead.
 //
 // This really only applies to very small tick values, as the increment of a single tick continues to get smaller as the tick value gets smaller.
-func roundTickToCanonicalPriceTick(lowerTick, upperTick int64, sqrtPriceTickLower, sqrtPriceTickUpper sdk.Dec, tickSpacing uint64) (int64, int64, error) {
+func roundTickToCanonicalPriceTick(lowerTick, upperTick int64, sqrtPriceTickLower, sqrtPriceTickUpper osmomath.Dec, tickSpacing uint64) (int64, int64, error) {
 	newLowerTick, err := math.SqrtPriceToTickRoundDownSpacing(sqrtPriceTickLower, tickSpacing)
 	if err != nil {
 		return 0, 0, err

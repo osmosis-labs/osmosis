@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
@@ -322,13 +323,13 @@ func (k Keeper) distributeInternal(
 		// is supposed to distribute over that epoch.
 		for _, remainCoin := range remainCoins {
 			// remaining coin amount per epoch.
-			remainAmountPerEpoch := remainCoin.Amount.Quo(sdk.NewIntFromUint64(remainEpochs))
+			remainAmountPerEpoch := remainCoin.Amount.Quo(osmomath.NewIntFromUint64(remainEpochs))
 			remainCoinPerEpoch := sdk.NewCoin(remainCoin.Denom, remainAmountPerEpoch)
 
 			// emissionRate calculates amount of tokens to emit per second
 			// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
 			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
-			emissionRate := sdk.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
+			emissionRate := sdk.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(osmomath.NewInt(1000)))
 
 			ctx.Logger().Debug("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
 			_, err := k.clk.CreateIncentive(ctx,
@@ -364,7 +365,7 @@ func (k Keeper) distributeInternal(
 			for _, coin := range remainCoins {
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 				denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
-				amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
+				amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(osmomath.NewInt(int64(remainEpochs))))
 				if amt.IsPositive() {
 					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
 					distrCoins = distrCoins.Add(newlyDistributedCoin)

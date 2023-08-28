@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	valPref "github.com/osmosis-labs/osmosis/v17/x/valset-pref"
 	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/client/queryproto"
@@ -28,15 +29,15 @@ func (s *QueryTestSuite) SetupSuite() {
 	preferences := []types.ValidatorPreference{
 		{
 			ValOperAddress: valAddrs[0],
-			Weight:         sdk.NewDecWithPrec(5, 1),
+			Weight:         osmomath.NewDecWithPrec(5, 1),
 		},
 		{
 			ValOperAddress: valAddrs[1],
-			Weight:         sdk.NewDecWithPrec(3, 1),
+			Weight:         osmomath.NewDecWithPrec(3, 1),
 		},
 		{
 			ValOperAddress: valAddrs[2],
-			Weight:         sdk.NewDecWithPrec(2, 1),
+			Weight:         osmomath.NewDecWithPrec(2, 1),
 		},
 	}
 

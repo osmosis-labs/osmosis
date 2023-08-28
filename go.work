@@ -13,3 +13,6 @@ use ./tests/cl-genesis-positions
 use .
 
 use ./x/epochs
+
+// TODO: remove
+replace github.com/cosmos/cosmos-sdk => ../cosmos-sdk

@@ -3,14 +3,15 @@ package poolmanager_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	poolmanagerKeeper "github.com/osmosis-labs/osmosis/v17/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 )
 
 var (
-	amount     = sdk.NewInt(100)
-	min_amount = sdk.ZeroInt()
-	max_amount = sdk.NewInt(10000000)
+	amount     = osmomath.NewInt(100)
+	min_amount = osmomath.ZeroInt()
+	max_amount = osmomath.NewInt(10000000)
 
 	pool1_in = types.SwapAmountInRoute{PoolId: 1, TokenOutDenom: "bar"}
 	pool2_in = types.SwapAmountInRoute{PoolId: 2, TokenOutDenom: "baz"}

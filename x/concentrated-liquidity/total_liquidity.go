@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
@@ -37,7 +38,7 @@ func (k Keeper) GetDenomLiquidity(ctx sdk.Context, denom string) sdk.Int {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetDenomPrefix(denom))
 	if bz == nil {
-		return sdk.NewInt(0)
+		return osmomath.NewInt(0)
 	}
 
 	var amount sdk.Int

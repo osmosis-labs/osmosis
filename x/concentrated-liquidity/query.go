@@ -23,7 +23,7 @@ import (
 func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, error) {
 	// use false for zeroForOne since we're going from lower tick -> upper tick
 	zeroForOne := false
-	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+	swapStrategy := swapstrategy.New(zeroForOne, osmomath.ZeroDec(), k.storeKey, osmomath.ZeroDec())
 
 	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
 	// we do -1 to make min tick inclusive.
@@ -142,14 +142,14 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	if boundTick.IsNil() {
 		if zeroForOne {
-			boundTick = sdk.NewInt(types.MinInitializedTick)
+			boundTick = osmomath.NewInt(types.MinInitializedTick)
 		} else {
-			boundTick = sdk.NewInt(types.MaxTick)
+			boundTick = osmomath.NewInt(types.MaxTick)
 		}
 	}
 
 	liquidityDepths := []queryproto.TickLiquidityNet{}
-	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+	swapStrategy := swapstrategy.New(zeroForOne, osmomath.ZeroDec(), k.storeKey, osmomath.ZeroDec())
 
 	currentTick := p.GetCurrentTick()
 	_, currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick)
@@ -168,7 +168,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 		}
 		ctx.Logger().Debug(fmt.Sprintf("validateTick %s; validate sqrtPrice %s\n", validateTick.String(), validateSqrtPrice.String()))
 
-		if err := swapStrategy.ValidateSqrtPrice(validateSqrtPrice, osmomath.BigDecFromSDKDec(currentTickSqrtPrice)); err != nil {
+		if err := swapStrategy.ValidateSqrtPrice(validateSqrtPrice, osmomath.BigDecFromDec(currentTickSqrtPrice)); err != nil {
 			return err
 		}
 
@@ -181,7 +181,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	}
 
 	ctx.Logger().Debug("validating start tick")
-	if err := validateTickIsInValidRange(sdk.NewInt(startTick)); err != nil {
+	if err := validateTickIsInValidRange(osmomath.NewInt(startTick)); err != nil {
 		return []queryproto.TickLiquidityNet{}, fmt.Errorf("failed validating start tick (%d) with current sqrt price of (%s): %w", startTick, currentTickSqrtPrice, err)
 	}
 

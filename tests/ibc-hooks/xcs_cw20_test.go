@@ -9,6 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/tests/osmosisibctesting"
 )
 
@@ -122,7 +124,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	osmosisAppB := chainB.GetOsmosisApp()
 
 	// Send some cwtoken tokens from B to A via the new path
-	amount := sdk.NewInt(defaultPoolAmount)
+	amount := osmomath.NewInt(defaultPoolAmount)
 	suite.TransferCW20Tokens(path, cw20Addr, cw20ics20Addr, chainA.SenderAccount.GetAddress(), amount.String(), "")
 
 	// Create a pool for that token
@@ -162,7 +164,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	)
 	xcsMsg = fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
 
-	transferMsg := NewMsgTransfer(sdk.NewCoin(stakeAB, sdk.NewInt(10)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), suite.pathAB.EndpointB.ChannelID, xcsMsg)
+	transferMsg := NewMsgTransfer(sdk.NewCoin(stakeAB, osmomath.NewInt(10)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), suite.pathAB.EndpointB.ChannelID, xcsMsg)
 	_, recvResult, _, _ := suite.FullSend(transferMsg, BtoA)
 
 	packet, err = ibctesting.ParsePacketFromEvents(recvResult.GetEvents())

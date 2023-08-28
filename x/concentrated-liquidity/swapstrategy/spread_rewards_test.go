@@ -3,21 +3,22 @@ package swapstrategy_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/swapstrategy"
 )
 
-var onePercentSpreadFactor = sdk.NewDecWithPrec(1, 2)
+var onePercentSpreadFactor = osmomath.NewDecWithPrec(1, 2)
 
 func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGivenIn() {
 	tests := map[string]struct {
-		currentSqrtPrice         sdk.Dec
+		currentSqrtPrice         osmomath.Dec
 		hasReachedTarget         bool
-		amountIn                 sdk.Dec
-		amountSpecifiedRemaining sdk.Dec
-		spreadFactor             sdk.Dec
+		amountIn                 osmomath.Dec
+		amountSpecifiedRemaining osmomath.Dec
+		spreadFactor             osmomath.Dec
 
-		expectedspreadRewardCharge sdk.Dec
+		expectedspreadRewardCharge osmomath.Dec
 		expectPanic                bool
 	}{
 		"reached target -> charge spread factor on amount in": {
@@ -35,21 +36,20 @@ func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGiven
 			amountSpecifiedRemaining: sdk.NewDec(100),
 			spreadFactor:             onePercentSpreadFactor,
 
-			expectedspreadRewardCharge: sdk.MustNewDecFromStr("95"),
+			expectedspreadRewardCharge: osmomath.MustNewDecFromStr("95"),
 		},
 		"zero spread factor": {
-			hasReachedTarget:         true,
-			amountIn:                 five,
-			amountSpecifiedRemaining: sdk.NewDec(100),
-			spreadFactor:             sdk.ZeroDec(),
-
-			expectedspreadRewardCharge: sdk.ZeroDec(),
+			hasReachedTarget:           true,
+			amountIn:                   five,
+			amountSpecifiedRemaining:   sdk.NewDec(100),
+			spreadFactor:               osmomath.ZeroDec(),
+			expectedspreadRewardCharge: osmomath.ZeroDec(),
 		},
 		"negative spread factor - panic": {
 			hasReachedTarget:         false,
 			amountIn:                 sdk.NewDec(100),
 			amountSpecifiedRemaining: five,
-			spreadFactor:             sdk.OneDec().Neg(),
+			spreadFactor:             osmomath.OneDec().Neg(),
 
 			expectPanic: true,
 		},

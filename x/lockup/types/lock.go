@@ -6,6 +6,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // defaultOwnerReceiverPlaceholder is used as a place holder for default owner receiver for the
@@ -61,7 +63,7 @@ func (p PeriodLock) SingleCoin() (sdk.Coin, error) {
 }
 
 func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
-	sum := sdk.NewInt(0)
+	sum := osmomath.NewInt(0)
 	// validate the denom once, so we can avoid the expensive validate check in the hot loop.
 	err := sdk.ValidateDenom(denom)
 	if err != nil {

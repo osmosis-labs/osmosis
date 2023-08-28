@@ -26,30 +26,30 @@ func (k Keeper) CalculateSpotPrice(
 	poolID uint64,
 	quoteAssetDenom string,
 	baseAssetDenom string,
-) (spotPrice sdk.Dec, err error) {
+) (spotPrice osmomath.Dec, err error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	// defer to catch panics, in case something internal overflows.
 	defer func() {
 		if r := recover(); r != nil {
-			spotPrice = sdk.Dec{}
+			spotPrice = osmomath.Dec{}
 			err = types.ErrSpotPriceInternal
 		}
 	}()
 
 	spotPrice, err = pool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	// if spotPrice greater than max spot price, return an error
 	if spotPrice.GT(types.MaxSpotPrice) {
 		return types.MaxSpotPrice, types.ErrSpotPriceOverflow
 	} else if !spotPrice.IsPositive() {
-		return sdk.Dec{}, types.ErrSpotPriceInternal
+		return osmomath.Dec{}, types.ErrSpotPriceInternal
 	}
 
 	// we want to round this to `SpotPriceSigFigs` of precision
@@ -141,35 +141,35 @@ func (k Keeper) JoinPoolNoSwap(
 	// all pools handled within this method are pointer references, `JoinPool` directly updates the pools
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
-		return nil, sdk.ZeroInt(), err
+		return nil, osmomath.ZeroInt(), err
 	}
 
 	// we do an abstract calculation on the lp liquidity coins needed to have
 	// the designated amount of given shares of the pool without performing swap
 	neededLpLiquidity, err := getMaximalNoSwapLPAmount(ctx, pool, shareOutAmount)
 	if err != nil {
-		return nil, sdk.ZeroInt(), err
+		return nil, osmomath.ZeroInt(), err
 	}
 
 	// check that needed lp liquidity does not exceed the given `tokenInMaxs` parameter. Return error if so.
 	// if tokenInMaxs == 0, don't do this check.
 	if tokenInMaxs.Len() != 0 {
 		if !(neededLpLiquidity.DenomsSubsetOf(tokenInMaxs)) {
-			return nil, sdk.ZeroInt(), errorsmod.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs does not include all the tokens that are part of the target pool,"+
+			return nil, osmomath.ZeroInt(), errorsmod.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs does not include all the tokens that are part of the target pool,"+
 				" upperbound: %v, needed %v", tokenInMaxs, neededLpLiquidity)
 		} else if !(tokenInMaxs.DenomsSubsetOf(neededLpLiquidity)) {
-			return nil, sdk.ZeroInt(), errorsmod.Wrapf(types.ErrDenomNotFoundInPool, "TokenInMaxs includes tokens that are not part of the target pool,"+
+			return nil, osmomath.ZeroInt(), errorsmod.Wrapf(types.ErrDenomNotFoundInPool, "TokenInMaxs includes tokens that are not part of the target pool,"+
 				" input tokens: %v, pool tokens %v", tokenInMaxs, neededLpLiquidity)
 		}
 		if !(tokenInMaxs.IsAllGTE(neededLpLiquidity)) {
-			return nil, sdk.ZeroInt(), errorsmod.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
+			return nil, osmomath.ZeroInt(), errorsmod.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
 				" upperbound: %v, needed %v", tokenInMaxs, neededLpLiquidity)
 		}
 	}
 
 	sharesOut, err = pool.JoinPoolNoSwap(ctx, neededLpLiquidity, pool.GetSpreadFactor(ctx))
 	if err != nil {
-		return nil, sdk.ZeroInt(), err
+		return nil, osmomath.ZeroInt(), err
 	}
 	// sanity check, don't return error as not worth halting the LP. We know its not too much.
 	if sharesOut.LT(shareOutAmount) {
@@ -190,8 +190,8 @@ func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.CFMMPoolI, shareOutAmo
 	totalSharesAmount := pool.GetTotalShares()
 	// shareRatio is the desired number of shares, divided by the total number of
 	// shares currently in the pool. It is intended to be used in scenarios where you want
-	shareRatio := shareOutAmount.ToDec().QuoInt(totalSharesAmount)
-	if shareRatio.LTE(sdk.ZeroDec()) {
+	shareRatio := shareOutAmount.ToLegacyDec().QuoInt(totalSharesAmount)
+	if shareRatio.LTE(osmomath.ZeroDec()) {
 		return sdk.Coins{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted. "+
 			"(debug: getMaximalNoSwapLPAmount share ratio is zero or negative)")
 	}
@@ -201,8 +201,8 @@ func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.CFMMPoolI, shareOutAmo
 
 	for _, coin := range poolLiquidity {
 		// (coin.Amt * shareRatio).Ceil()
-		neededAmt := coin.Amount.ToDec().Mul(shareRatio).Ceil().RoundInt()
-		if neededAmt.LTE(sdk.ZeroInt()) {
+		neededAmt := coin.Amount.ToLegacyDec().Mul(shareRatio).Ceil().RoundInt()
+		if neededAmt.LTE(osmomath.ZeroInt()) {
 			return sdk.Coins{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted")
 		}
 		neededCoin := sdk.Coin{Denom: coin.Denom, Amount: neededAmt}
@@ -239,21 +239,21 @@ func (k Keeper) JoinSwapExactAmountIn(
 	sharesOut, err = pool.JoinPool(ctx, tokensIn, pool.GetSpreadFactor(ctx))
 	switch {
 	case err != nil:
-		return sdk.ZeroInt(), err
+		return osmomath.ZeroInt(), err
 
 	case sharesOut.LT(shareOutMinAmount):
-		return sdk.ZeroInt(), errorsmod.Wrapf(
+		return osmomath.ZeroInt(), errorsmod.Wrapf(
 			types.ErrLimitMinAmount,
 			"too much slippage; needed a minimum of %s shares to pass, got %s",
 			shareOutMinAmount, sharesOut,
 		)
 
-	case sharesOut.LTE(sdk.ZeroInt()):
-		return sdk.ZeroInt(), errorsmod.Wrapf(types.ErrInvalidMathApprox, "share amount is zero or negative")
+	case sharesOut.LTE(osmomath.ZeroInt()):
+		return osmomath.ZeroInt(), errorsmod.Wrapf(types.ErrInvalidMathApprox, "share amount is zero or negative")
 	}
 
 	if err := k.applyJoinPoolStateChange(ctx, pool, sender, sharesOut, tokensIn); err != nil {
-		return sdk.ZeroInt(), err
+		return osmomath.ZeroInt(), err
 	}
 
 	return sharesOut, nil
@@ -300,7 +300,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 
 	err = k.applyJoinPoolStateChange(ctx, pool, sender, shareOutAmount, tokenIn)
 	if err != nil {
-		return sdk.ZeroInt(), err
+		return osmomath.ZeroInt(), err
 	}
 	return tokenInAmount, nil
 }
@@ -320,7 +320,7 @@ func (k Keeper) ExitPool(
 	totalSharesAmount := pool.GetTotalShares()
 	if shareInAmount.GTE(totalSharesAmount) {
 		return sdk.Coins{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "Trying to exit >= the number of shares contained in the pool.")
-	} else if shareInAmount.LTE(sdk.ZeroInt()) {
+	} else if shareInAmount.LTE(osmomath.ZeroInt()) {
 		return sdk.Coins{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "Trying to exit a negative amount of shares")
 	}
 	exitFee := pool.GetExitFee(ctx)
@@ -369,7 +369,7 @@ func (k Keeper) ExitSwapShareAmountIn(
 		if coin.Denom == tokenOutDenom {
 			continue
 		}
-		swapOut, err := k.SwapExactAmountIn(ctx, sender, pool, coin, tokenOutDenom, sdk.ZeroInt(), spreadFactor)
+		swapOut, err := k.SwapExactAmountIn(ctx, sender, pool, coin, tokenOutDenom, osmomath.ZeroInt(), spreadFactor)
 		if err != nil {
 			return sdk.Int{}, err
 		}

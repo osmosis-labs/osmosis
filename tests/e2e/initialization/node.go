@@ -29,6 +29,7 @@ import (
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	osmosisApp "github.com/osmosis-labs/osmosis/v17/app"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
 )
@@ -76,9 +77,9 @@ func (n *internalNode) configDir() string {
 func (n *internalNode) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
 	description := stakingtypes.NewDescription(n.moniker, "", "", "", "")
 	commissionRates := stakingtypes.CommissionRates{
-		Rate:          sdk.MustNewDecFromStr("0.1"),
-		MaxRate:       sdk.MustNewDecFromStr("0.2"),
-		MaxChangeRate: sdk.MustNewDecFromStr("0.01"),
+		Rate:          osmomath.MustNewDecFromStr("0.1"),
+		MaxRate:       osmomath.MustNewDecFromStr("0.2"),
+		MaxChangeRate: osmomath.MustNewDecFromStr("0.01"),
 	}
 
 	// get the initial validator min self delegation

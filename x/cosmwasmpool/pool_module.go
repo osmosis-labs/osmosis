@@ -4,6 +4,7 @@ package cosmwasmpool
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/cosmwasm/msg"
 	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/model"
@@ -167,10 +168,10 @@ func (k Keeper) CalculateSpotPrice(
 	poolId uint64,
 	quoteAssetDenom string,
 	baseAssetDenom string,
-) (price sdk.Dec, err error) {
+) (price osmomath.Dec, err error) {
 	cosmwasmPool, err := k.GetPoolById(ctx, poolId)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	return cosmwasmPool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
@@ -197,7 +198,7 @@ func (k Keeper) SwapExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
-	swapFee sdk.Dec,
+	swapFee osmomath.Dec,
 ) (sdk.Int, error) {
 	cosmwasmPool, err := k.asCosmwasmPool(pool)
 	if err != nil {
@@ -238,7 +239,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 	poolI poolmanagertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
-	swapFee sdk.Dec,
+	swapFee osmomath.Dec,
 ) (tokenOut sdk.Coin, err error) {
 	cosmwasmPool, err := k.asCosmwasmPool(poolI)
 	if err != nil {
@@ -275,7 +276,7 @@ func (k Keeper) SwapExactAmountOut(
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
-	swapFee sdk.Dec,
+	swapFee osmomath.Dec,
 ) (tokenInAmount sdk.Int, err error) {
 	cosmwasmPool, err := k.asCosmwasmPool(pool)
 	if err != nil {
@@ -339,7 +340,7 @@ func (k Keeper) CalcInAmtGivenOut(
 	poolI poolmanagertypes.PoolI,
 	tokenOut sdk.Coin,
 	tokenInDenom string,
-	swapFee sdk.Dec,
+	swapFee osmomath.Dec,
 ) (tokenIn sdk.Coin, err error) {
 	cosmwasmPool, err := k.asCosmwasmPool(poolI)
 	if err != nil {

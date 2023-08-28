@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
@@ -464,7 +465,7 @@ func NewUnbondConvertAndStake() *cobra.Command {
 					sharesToConvert = coins
 				}
 			} else {
-				minAmtToStake = sdk.ZeroInt()
+				minAmtToStake = osmomath.ZeroInt()
 				sharesToConvert = sdk.Coin{}
 			}
 

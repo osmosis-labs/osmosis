@@ -13,34 +13,34 @@ import (
 // TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks by
 // individually calling `TickToSqrtPrice` method.
 // Returns error if fails to calculate price.
-func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
+func TicksToSqrtPrice(lowerTick, upperTick int64) (osmomath.Dec, osmomath.Dec, error) {
 	if lowerTick >= upperTick {
-		return sdk.Dec{}, sdk.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
+		return osmomath.Dec{}, osmomath.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
 	}
 	_, sqrtPriceUpperTick, err := TickToSqrtPrice(upperTick)
 	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, err
+		return osmomath.Dec{}, osmomath.Dec{}, err
 	}
 	_, sqrtPriceLowerTick, err := TickToSqrtPrice(lowerTick)
 	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, err
+		return osmomath.Dec{}, osmomath.Dec{}, err
 	}
 	return sqrtPriceLowerTick, sqrtPriceUpperTick, nil
 }
 
 // TickToSqrtPrice returns the sqrtPrice given a tickIndex
-// If tickIndex is zero, the function returns sdk.OneDec().
+// If tickIndex is zero, the function returns osmomath.OneDec().
 // It is the combination of calling TickToPrice followed by Sqrt.
-func TickToSqrtPrice(tickIndex int64) (sdk.Dec, sdk.Dec, error) {
+func TickToSqrtPrice(tickIndex int64) (osmomath.Dec, osmomath.Dec, error) {
 	price, err := TickToPrice(tickIndex)
 	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, err
+		return osmomath.Dec{}, osmomath.Dec{}, err
 	}
 
 	// Determine the sqrtPrice from the price
 	sqrtPrice, err := osmomath.MonotonicSqrt(price)
 	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, err
+		return osmomath.Dec{}, osmomath.Dec{}, err
 	}
 	return price, sqrtPrice, nil
 }
@@ -58,14 +58,14 @@ func TickToSqrtPriceBigDec(tickIndex int64) (osmomath.BigDec, error) {
 	if err != nil {
 		return osmomath.BigDec{}, err
 	}
-	return osmomath.BigDecFromSDKDec(sqrtPrice), nil
+	return osmomath.BigDecFromDec(sqrtPrice), nil
 }
 
 // TickToPrice returns the price given a tickIndex
-// If tickIndex is zero, the function returns sdk.OneDec().
-func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
+// If tickIndex is zero, the function returns osmomath.OneDec().
+func TickToPrice(tickIndex int64) (price osmomath.Dec, err error) {
 	if tickIndex == 0 {
-		return sdk.OneDec(), nil
+		return osmomath.OneDec(), nil
 	}
 
 	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
@@ -75,10 +75,10 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 
 	// Check that the tick index is between min and max value
 	if tickIndex < types.MinCurrentTick {
-		return sdk.Dec{}, types.TickIndexMinimumError{MinTick: types.MinCurrentTick}
+		return osmomath.Dec{}, types.TickIndexMinimumError{MinTick: types.MinCurrentTick}
 	}
 	if tickIndex > types.MaxTick {
-		return sdk.Dec{}, types.TickIndexMaximumError{MaxTick: types.MaxTick}
+		return osmomath.Dec{}, types.TickIndexMaximumError{MaxTick: types.MaxTick}
 	}
 
 	// Use floor division to determine what the geometricExponent is now (the delta)
@@ -100,12 +100,12 @@ func TickToPrice(tickIndex int64) (price sdk.Dec, err error) {
 	numAdditiveTicks := tickIndex - (geometricExponentDelta * geometricExponentIncrementDistanceInTicks)
 
 	// Finally, we can calculate the price
-	price = PowTenInternal(geometricExponentDelta).Add(osmomath.NewBigDec(numAdditiveTicks).Mul(currentAdditiveIncrementInTicks).SDKDec())
+	price = PowTenInternal(geometricExponentDelta).Add(osmomath.NewBigDec(numAdditiveTicks).Mul(currentAdditiveIncrementInTicks).Dec())
 
 	// defense in depth, this logic would not be reached due to use having checked if given tick is in between
 	// min tick and max tick.
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+		return osmomath.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	return price, nil
 }
@@ -139,8 +139,8 @@ func RoundDownTickToSpacing(tickIndex int64, tickSpacing int64) (int64, error) {
 
 // SqrtPriceToTickRoundDown converts the given sqrt price to its corresponding tick rounded down
 // to the nearest tick spacing.
-func SqrtPriceToTickRoundDownSpacing(sqrtPrice sdk.Dec, tickSpacing uint64) (int64, error) {
-	tickIndex, err := CalculateSqrtPriceToTick(osmomath.BigDecFromSDKDec(sqrtPrice))
+func SqrtPriceToTickRoundDownSpacing(sqrtPrice osmomath.Dec, tickSpacing uint64) (int64, error) {
+	tickIndex, err := CalculateSqrtPriceToTick(osmomath.BigDecFromDec(sqrtPrice))
 	if err != nil {
 		return 0, err
 	}
@@ -154,8 +154,8 @@ func SqrtPriceToTickRoundDownSpacing(sqrtPrice sdk.Dec, tickSpacing uint64) (int
 }
 
 // powTen treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
-// This is because the sdk.Dec.Power function does not support negative exponents
-func PowTenInternal(exponent int64) sdk.Dec {
+// This is because the osmomath.Dec.Power function does not support negative exponents
+func PowTenInternal(exponent int64) osmomath.Dec {
 	if exponent >= 0 {
 		return powersOfTen[exponent]
 	}
@@ -169,15 +169,15 @@ func powTenBigDec(exponent int64) osmomath.BigDec {
 	return bigNegPowersOfTen[-exponent]
 }
 
-func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec, err error) {
+func CalculatePriceToTickDec(price osmomath.Dec) (tickIndex osmomath.Dec, err error) {
 	if price.IsNegative() {
-		return sdk.ZeroDec(), fmt.Errorf("price must be greater than zero")
+		return osmomath.ZeroDec(), fmt.Errorf("price must be greater than zero")
 	}
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return sdk.ZeroDec(), types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+		return osmomath.ZeroDec(), types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	if price.Equal(sdkOneDec) {
-		return sdk.ZeroDec(), nil
+		return osmomath.ZeroDec(), nil
 	}
 
 	// The approach here is to try determine which "geometric spacing" are we in.
@@ -205,7 +205,7 @@ func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec, err error) {
 	// We know were between (geoSpacing.initialPrice, geoSpacing.endPrice)
 	// The number of ticks that need to be filled by our current spacing is
 	// (price - geoSpacing.initialPrice) / geoSpacing.additiveIncrementPerTick
-	priceInThisExponent := osmomath.BigDecFromSDKDec(price.Sub(geoSpacing.initialPrice))
+	priceInThisExponent := osmomath.BigDecFromDec(price.Sub(geoSpacing.initialPrice))
 	ticksFilledByCurrentSpacing := priceInThisExponent.Quo(geoSpacing.additiveIncrementPerTick)
 	// we get the bucket index by:
 	// * taking the bucket index of the smallest price in this tick
@@ -213,7 +213,7 @@ func CalculatePriceToTickDec(price sdk.Dec) (tickIndex sdk.Dec, err error) {
 	// We leave rounding of this to the caller
 	// (NOTE: You'd expect it to be number of ticks "completely" filled by the current spacing,
 	// which would be truncation. However price may have errors, hence it being callers job)
-	tickIndex = ticksFilledByCurrentSpacing.SDKDec()
+	tickIndex = ticksFilledByCurrentSpacing.Dec()
 	tickIndex = tickIndex.Add(sdk.NewDec(geoSpacing.initialTick))
 	return tickIndex, nil
 }
@@ -226,8 +226,8 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 	price := sqrtPrice.Mul(sqrtPrice)
 
 	// It is acceptable to truncate price as the minimum we support is
-	// 10**-12 which is above the smallest value of sdk.Dec.
-	priceDec := price.SDKDec()
+	// 10**-12 which is above the smallest value of osmomath.Dec.
+	priceDec := price.Dec()
 
 	tick, err := CalculatePriceToTickDec(priceDec)
 	if err != nil {

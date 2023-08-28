@@ -8,6 +8,7 @@ import (
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v17/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
@@ -101,8 +102,8 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 
 	// TODO: pseudo-randomly generate swap and exit fees
 	poolParams := &balancertypes.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.ZeroDec(),
+		SwapFee: osmomath.NewDecWithPrec(1, 2),
+		ExitFee: osmomath.ZeroDec(),
 	}
 
 	// from the above selected account, determine the token type and respective weight needed to make the pool
@@ -318,7 +319,7 @@ func RandomExitSwapExternAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sd
 		Sender:           sender.Address.String(),
 		PoolId:           pool_id,
 		TokenOut:         tokenOut,
-		ShareInMaxAmount: gammShares.Amount.Quo(sdk.NewInt(2)),
+		ShareInMaxAmount: gammShares.Amount.Quo(osmomath.NewInt(2)),
 	}, nil
 }
 
@@ -360,8 +361,8 @@ func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.
 		Sender:            sender.Address.String(),
 		PoolId:            pool_id,
 		TokenOutDenom:     tokenOut.Denom,
-		ShareInAmount:     gammShares.Amount.Quo(sdk.NewInt(2)),
-		TokenOutMinAmount: tokenOut.Amount.Quo(sdk.NewInt(2)),
+		ShareInAmount:     gammShares.Amount.Quo(osmomath.NewInt(2)),
+		TokenOutMinAmount: tokenOut.Amount.Quo(osmomath.NewInt(2)),
 	}, nil
 }
 
@@ -375,8 +376,8 @@ func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.CFM
 
 	// shareRatio is the desired number of shares, divided by the total number of
 	// shares currently in the pool. It is intended to be used in scenarios where you want
-	shareRatio := minShareOutAmt.ToDec().QuoInt(totalSharesAmount)
-	if shareRatio.LTE(sdk.ZeroDec()) {
+	shareRatio := minShareOutAmt.ToLegacyDec().QuoInt(totalSharesAmount)
+	if shareRatio.LTE(osmomath.ZeroDec()) {
 		return sdk.Int{}, fmt.Errorf("share ratio is zero or negative")
 	}
 
@@ -384,8 +385,8 @@ func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.CFM
 	neededLpLiquidity := sdk.Coins{}
 
 	for _, coin := range poolLiquidity {
-		neededAmt := coin.Amount.ToDec().Mul(shareRatio).Ceil().RoundInt()
-		if neededAmt.LTE(sdk.ZeroInt()) {
+		neededAmt := coin.Amount.ToLegacyDec().Mul(shareRatio).Ceil().RoundInt()
+		if neededAmt.LTE(osmomath.ZeroInt()) {
 			return sdk.Int{}, fmt.Errorf("Too few shares out wanted")
 		}
 		neededCoin := sdk.Coin{Denom: coin.Denom, Amount: neededAmt}
@@ -418,12 +419,12 @@ func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
 	pools, err := k.GetPoolsAndPoke(ctx)
 	if err != nil {
-		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
+		return 0, nil, sdk.NewCoin("denom", osmomath.ZeroInt()), sdk.NewCoin("denom", osmomath.ZeroInt()), []string{}, "", err
 	}
 
 	numPools := len(pools)
 	if numPools == 0 {
-		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", fmt.Errorf("no pools exist")
+		return 0, nil, sdk.NewCoin("denom", osmomath.ZeroInt()), sdk.NewCoin("denom", osmomath.ZeroInt()), []string{}, "", fmt.Errorf("no pools exist")
 	}
 
 	rand := sim.GetRand()

@@ -219,13 +219,13 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
             poolAssets: []balancer.PoolAsset {
                 {
                     Token:  sdk.NewInt64Coin("uosmo", 1e12),
-                    Weight: sdk.NewInt(100),
+                    Weight: osmomath.NewInt(100),
                 },
             },
             expectedPoolAssetsByDenom: map[string]balancer.PoolAsset {
                 "uosmo": {
                     Token:  sdk.NewInt64Coin("uosmo", 1e12),
-                    Weight: sdk.NewInt(100),
+                    Weight: osmomath.NewInt(100),
                 },
             },
         },
@@ -234,10 +234,10 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
             poolAssets: []balancer.PoolAsset {
                 {
                     Token:  sdk.NewInt64Coin("uosmo", 1e12),
-                    Weight: sdk.NewInt(100),
+                    Weight: osmomath.NewInt(100),
                 }, {
                     Token:  sdk.NewInt64Coin("uosmo", 123),
-                    Weight: sdk.NewInt(400),
+                    Weight: osmomath.NewInt(400),
                 },
             },
             err: fmt.Errorf(balancer.ErrMsgFormatRepeatingPoolAssetsNotAllowed, "uosmo"),

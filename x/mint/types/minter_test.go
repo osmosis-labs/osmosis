@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,7 +12,7 @@ import (
 )
 
 var (
-	defaultDeveloperVestingProportion = sdk.NewDecWithPrec(3, 1)
+	defaultDeveloperVestingProportion = osmomath.NewDecWithPrec(3, 1)
 	defaultProvisionsAmount           = sdk.NewDec(10)
 	defaultParams                     = types.Params{
 		MintDenom: sdk.DefaultBondDenom,
@@ -25,7 +26,7 @@ var (
 // previously using sdk.Int operations:
 // BenchmarkEpochProvision-4 5000000 220 ns/op
 //
-// using sdk.Dec operations: (current implementation)
+// using osmomath.Dec operations: (current implementation)
 // BenchmarkEpochProvision-4 3000000 429 ns/op
 func BenchmarkEpochProvision(b *testing.B) {
 	b.ReportAllocs()
@@ -100,7 +101,7 @@ func TestGetInflationProvisions(t *testing.T) {
 		minter = types.NewMinter(defaultProvisionsAmount)
 
 		expectedDenom           = defaultParams.MintDenom
-		expectedInflationAmount = defaultProvisionsAmount.Mul(sdk.OneDec().Sub(defaultDeveloperVestingProportion))
+		expectedInflationAmount = defaultProvisionsAmount.Mul(osmomath.OneDec().Sub(defaultDeveloperVestingProportion))
 	)
 
 	// System under test

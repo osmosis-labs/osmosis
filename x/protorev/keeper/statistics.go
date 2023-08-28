@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
@@ -19,12 +20,12 @@ func (k Keeper) GetNumberOfTrades(ctx sdk.Context) (sdk.Int, error) {
 
 	bz := store.Get(types.KeyPrefixNumberOfTrades)
 	if len(bz) == 0 {
-		return sdk.ZeroInt(), fmt.Errorf("no trades have been executed by the protorev module")
+		return osmomath.ZeroInt(), fmt.Errorf("no trades have been executed by the protorev module")
 	}
 
 	trades := sdk.Int{}
 	if err := trades.Unmarshal(bz); err != nil {
-		return sdk.ZeroInt(), err
+		return osmomath.ZeroInt(), err
 	}
 
 	return trades, nil
@@ -52,12 +53,12 @@ func (k Keeper) GetProfitsByDenom(ctx sdk.Context, denom string) (sdk.Coin, erro
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return sdk.NewCoin(denom, sdk.ZeroInt()), fmt.Errorf("no profits for denom %s", denom)
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), fmt.Errorf("no profits for denom %s", denom)
 	}
 
 	profits := sdk.Coin{}
 	if err := profits.Unmarshal(bz); err != nil {
-		return sdk.NewCoin(denom, sdk.ZeroInt()), err
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), err
 	}
 
 	return profits, nil
@@ -129,12 +130,12 @@ func (k Keeper) GetTradesByRoute(ctx sdk.Context, route []uint64) (sdk.Int, erro
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return sdk.ZeroInt(), fmt.Errorf("no trades for route %d", route)
+		return osmomath.ZeroInt(), fmt.Errorf("no trades for route %d", route)
 	}
 
 	trades := sdk.Int{}
 	if err := trades.Unmarshal(bz); err != nil {
-		return sdk.ZeroInt(), err
+		return osmomath.ZeroInt(), err
 	}
 	return trades, nil
 }
@@ -162,12 +163,12 @@ func (k Keeper) GetProfitsByRoute(ctx sdk.Context, route []uint64, denom string)
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return sdk.NewCoin(denom, sdk.ZeroInt()), fmt.Errorf("no profits for route %d", route)
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), fmt.Errorf("no profits for route %d", route)
 	}
 
 	profits := sdk.Coin{}
 	if err := profits.Unmarshal(bz); err != nil {
-		return sdk.NewCoin(denom, sdk.ZeroInt()), err
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), err
 	}
 
 	return profits, nil

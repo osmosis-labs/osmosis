@@ -4,6 +4,8 @@ import (
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // GetConcentratedLockupDenomFromPoolId returns the concentrated lockup denom for a given pool id.
@@ -18,7 +20,7 @@ type CreateFullRangePositionData struct {
 	ID        uint64
 	Amount0   sdk.Int
 	Amount1   sdk.Int
-	Liquidity sdk.Dec
+	Liquidity osmomath.Dec
 }
 
 // UpdatePositionData represents the return data from updating a position.

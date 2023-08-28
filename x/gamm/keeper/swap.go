@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/events"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
@@ -25,7 +26,7 @@ func (k Keeper) SwapExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
-	spreadFactor sdk.Dec,
+	spreadFactor osmomath.Dec,
 ) (tokenOutAmount sdk.Int, err error) {
 	if tokenIn.Denom == tokenOutDenom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
@@ -85,7 +86,7 @@ func (k Keeper) SwapExactAmountOut(
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
-	spreadFactor sdk.Dec,
+	spreadFactor osmomath.Dec,
 ) (tokenInAmount sdk.Int, err error) {
 	if tokenInDenom == tokenOut.Denom {
 		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
@@ -119,7 +120,7 @@ func (k Keeper) SwapExactAmountOut(
 	}
 	tokenInAmount = tokenIn.Amount
 
-	if tokenInAmount.LTE(sdk.ZeroInt()) {
+	if tokenInAmount.LTE(osmomath.ZeroInt()) {
 		return sdk.Int{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
 
@@ -141,7 +142,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 	poolI poolmanagertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
-	spreadFactor sdk.Dec,
+	spreadFactor osmomath.Dec,
 ) (tokenOut sdk.Coin, err error) {
 	cfmmPool, err := asCFMMPool(poolI)
 	if err != nil {
@@ -157,7 +158,7 @@ func (k Keeper) CalcInAmtGivenOut(
 	poolI poolmanagertypes.PoolI,
 	tokenOut sdk.Coin,
 	tokenInDenom string,
-	spreadFactor sdk.Dec,
+	spreadFactor osmomath.Dec,
 ) (tokenIn sdk.Coin, err error) {
 	cfmmPool, err := asCFMMPool(poolI)
 	if err != nil {

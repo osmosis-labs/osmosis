@@ -179,7 +179,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		// calculate multiplier and set it
-		multiplier := osmoPoolAsset.ToDec().Quo(fullRangeLiquidity)
+		multiplier := osmoPoolAsset.ToLegacyDec().Quo(fullRangeLiquidity)
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: Consider deleting superfluid asset type native

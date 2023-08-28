@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	types "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
@@ -34,7 +35,7 @@ type liquidityChangeEvent struct {
 	lowerTick      int64
 	upperTick      int64
 	joinTime       time.Time
-	liquidityDelta sdk.Dec
+	liquidityDelta osmomath.Dec
 	actualAmount0  sdk.Int
 	actualAmount1  sdk.Int
 }

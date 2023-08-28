@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
 
@@ -146,23 +147,23 @@ func (s *KeeperTestSuite) TestGetDeveloperFees() {
 	s.Require().Equal(sdk.Coin{}, atomFees)
 
 	// Should be able to set the fees
-	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
+	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)))
 	s.Require().NoError(err)
-	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin("Atom", sdk.NewInt(100)))
+	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin("Atom", osmomath.NewInt(100)))
 	s.Require().NoError(err)
-	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin("weth", sdk.NewInt(100)))
+	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin("weth", osmomath.NewInt(100)))
 	s.Require().NoError(err)
 
 	// Should be able to get the fees
 	osmoFees, err = s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, types.OsmosisDenomination)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)), osmoFees)
+	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)), osmoFees)
 	atomFees, err = s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, "Atom")
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin("Atom", sdk.NewInt(100)), atomFees)
+	s.Require().Equal(sdk.NewCoin("Atom", osmomath.NewInt(100)), atomFees)
 	wethFees, err := s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, "weth")
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin("weth", sdk.NewInt(100)), wethFees)
+	s.Require().Equal(sdk.NewCoin("weth", osmomath.NewInt(100)), wethFees)
 
 	fees, err = s.App.ProtoRevKeeper.GetAllDeveloperFees(s.Ctx)
 	s.Require().NoError(err)
@@ -173,13 +174,13 @@ func (s *KeeperTestSuite) TestGetDeveloperFees() {
 
 // TestDeleteDeveloperFees tests the DeleteDeveloperFees function.
 func (s *KeeperTestSuite) TestDeleteDeveloperFees() {
-	err := s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
+	err := s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)))
 	s.Require().NoError(err)
 
 	// Should be able to get the fees
 	osmoFees, err := s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, types.OsmosisDenomination)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)), osmoFees)
+	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)), osmoFees)
 
 	// Should be able to delete the fees
 	s.App.ProtoRevKeeper.DeleteDeveloperFees(s.Ctx, types.OsmosisDenomination)

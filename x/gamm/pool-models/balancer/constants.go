@@ -2,6 +2,8 @@ package balancer
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 var (
@@ -11,7 +13,7 @@ var (
 	// The weight used in the balancer equation is then creator-specified-weight * GuaranteedWeightPrecision.
 	// This is done so that LBP's / smooth weight changes can actually happen smoothly,
 	// without complex precision loss / edge effects.
-	MaxUserSpecifiedWeight sdk.Int = sdk.NewIntFromUint64(1 << 20)
+	MaxUserSpecifiedWeight sdk.Int = osmomath.NewIntFromUint64(1 << 20)
 	// Scaling factor for every weight. The pool weight is:
 	// weight_in_MsgCreateBalancerPool * GuaranteedWeightPrecision
 	//

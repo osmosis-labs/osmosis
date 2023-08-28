@@ -6,6 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
@@ -61,7 +62,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			continue
 		}
 
-		currentAmount := sdk.NewInt(0)
+		currentAmount := osmomath.NewInt(0)
 		delegation, found := k.sk.GetDelegation(ctx, mAddr, valAddress)
 		if !found {
 			// continue if current delegation is 0, in case its really a dust delegation
@@ -715,7 +716,7 @@ func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAd
 
 	// check lock owner is sender
 	if lock.Owner != sender.String() {
-		return sdk.ZeroInt(), types.LockOwnerMismatchError{
+		return osmomath.ZeroInt(), types.LockOwnerMismatchError{
 			LockId:        lock.ID,
 			LockOwner:     lock.Owner,
 			ProvidedOwner: sender.String(),
@@ -807,11 +808,11 @@ func (k Keeper) convertGammSharesToOsmoAndStake(
 	originalBondDenomAmt := exitCoins.AmountOf(bondDenom)
 
 	// track how much non-uosmo tokens we have converted to uosmo
-	totalAmtCoverted = sdk.ZeroInt()
+	totalAmtCoverted = osmomath.ZeroInt()
 
 	// iterate over non-bond denom coins and swap them into bond denom
 	for _, coinToConvert := range nonOsmoCoins {
-		tokenOutAmt, err := k.pmk.SwapExactAmountIn(ctx, sender, poolIdLeaving, coinToConvert, bondDenom, sdk.ZeroInt())
+		tokenOutAmt, err := k.pmk.SwapExactAmountIn(ctx, sender, poolIdLeaving, coinToConvert, bondDenom, osmomath.ZeroInt())
 		if err != nil {
 			return sdk.Int{}, err
 		}

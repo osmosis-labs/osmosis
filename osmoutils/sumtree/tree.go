@@ -9,6 +9,8 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+
 	store "github.com/cosmos/cosmos-sdk/store"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,7 +30,7 @@ type Tree struct {
 func NewTree(store store.KVStore, m uint8) Tree {
 	tree := Tree{store, m}
 	if tree.IsEmpty() {
-		tree.Set(nil, sdk.ZeroInt())
+		tree.Set(nil, osmomath.ZeroInt())
 	}
 	return tree
 }
@@ -140,7 +142,7 @@ func (t Tree) Get(key []byte) sdk.Int {
 	res := new(Leaf)
 	keybz := t.leafKey(key)
 	if !t.store.Has(keybz) {
-		return sdk.ZeroInt()
+		return osmomath.ZeroInt()
 	}
 	bz := t.store.Get(keybz)
 	err := proto.Unmarshal(bz, res)
@@ -209,7 +211,7 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 // right: all leaves under nodePointer with key > provided key
 // Note that the equalities here are _exclusive_.
 func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Int, exact sdk.Int, right sdk.Int) {
-	left, exact, right = sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt()
+	left, exact, right = osmomath.ZeroInt(), osmomath.ZeroInt(), osmomath.ZeroInt()
 	if ptr.isLeaf() {
 		var leaf Leaf
 		bz := ptr.tree.store.Get(ptr.tree.leafKey(ptr.key))

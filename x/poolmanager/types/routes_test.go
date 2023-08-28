@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 const (
@@ -15,7 +17,7 @@ const (
 )
 
 var (
-	twentyFiveBaseUnitsAmount = sdk.NewInt(25_000_000)
+	twentyFiveBaseUnitsAmount = osmomath.NewInt(25_000_000)
 
 	// Note: These are iniialized in such a way as it makes
 	// it easier to reason about the test cases.
@@ -71,7 +73,7 @@ var (
 				TokenOutDenom: baz,
 			},
 		},
-		TokenInAmount: sdk.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
+		TokenInAmount: osmomath.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
 	}
 
 	// Amount out default routes
@@ -119,7 +121,7 @@ var (
 				TokenInDenom: uosmo,
 			},
 		},
-		TokenOutAmount: sdk.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
+		TokenOutAmount: osmomath.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
 	}
 )
 

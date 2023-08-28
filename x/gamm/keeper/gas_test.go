@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 
@@ -64,10 +65,10 @@ func (s *KeeperTestSuite) TestJoinPoolGas() {
 
 	// mint some assets to the accounts
 	s.FundAcc(defaultAddr, sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000000)),
-		sdk.NewCoin("foo", sdk.NewInt(10000000000000000)),
-		sdk.NewCoin("bar", sdk.NewInt(10000000000000000)),
-		sdk.NewCoin("baz", sdk.NewInt(10000000000000000)),
+		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000000)),
+		sdk.NewCoin("foo", osmomath.NewInt(10000000000000000)),
+		sdk.NewCoin("bar", osmomath.NewInt(10000000000000000)),
+		sdk.NewCoin("baz", osmomath.NewInt(10000000000000000)),
 	))
 
 	firstJoinGas := s.measureJoinPoolGas(defaultAddr, poolId, minShareOutAmount, defaultCoins)
@@ -87,7 +88,7 @@ func (s *KeeperTestSuite) TestJoinPoolGas() {
 func (s *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	// mint some usomo to account
 	s.FundAcc(defaultAddr, sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(1000000000000000000)),
+		sdk.NewCoin("uosmo", osmomath.NewInt(1000000000000000000)),
 	))
 
 	// number of distinct denom to test
@@ -95,7 +96,7 @@ func (s *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 
 	// create pools prior to testing JoinPool using distinct denom
 	coins := sdk.NewCoins(
-		sdk.NewCoin("randToken1", sdk.NewInt(100)),
+		sdk.NewCoin("randToken1", osmomath.NewInt(100)),
 	)
 	s.FundAcc(defaultAddr, coins)
 	defaultPoolParams := balancer.PoolParams{
@@ -105,18 +106,18 @@ func (s *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	for i := 1; i <= denomNumber; i++ {
 		randToken := "randToken" + strconv.Itoa(i+1)
 		prevRandToken := "randToken" + strconv.Itoa(i)
-		coins := sdk.NewCoins(sdk.NewCoin(randToken, sdk.NewInt(100)))
+		coins := sdk.NewCoins(sdk.NewCoin(randToken, osmomath.NewInt(100)))
 
 		s.FundAcc(defaultAddr, coins)
 
 		poolAssets := []balancer.PoolAsset{
 			{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin(prevRandToken, sdk.NewInt(10)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin(prevRandToken, osmomath.NewInt(10)),
 			},
 			{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin(randToken, sdk.NewInt(10)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin(randToken, osmomath.NewInt(10)),
 			},
 		}
 		msg := balancer.NewMsgCreateBalancerPool(defaultAddr, defaultPoolParams, poolAssets, "")

@@ -14,7 +14,7 @@ import (
 const errMsgFormatSharesLargerThanMax = "cannot exit all shares in a pool. Attempted to exit %s shares, max allowed is %s"
 
 // CalcExitPool returns how many tokens should come out, when exiting k LP shares against a "standard" CFMM
-func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares sdk.Int, exitFee sdk.Dec) (sdk.Coins, error) {
+func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares sdk.Int, exitFee osmomath.Dec) (sdk.Coins, error) {
 	totalShares := pool.GetTotalShares()
 	if exitingShares.GTE(totalShares) {
 		return sdk.Coins{}, errorsmod.Wrapf(types.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, exitingShares, totalShares.Sub(sdk.OneInt()))
@@ -22,13 +22,13 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares sdk.Int, 
 
 	// refundedShares = exitingShares * (1 - exit fee)
 	// with 0 exit fee optimization
-	var refundedShares sdk.Dec
+	var refundedShares osmomath.Dec
 	if !exitFee.IsZero() {
 		// exitingShares * (1 - exit fee)
-		oneSubExitFee := sdk.OneDec().Sub(exitFee)
+		oneSubExitFee := osmomath.OneDec().Sub(exitFee)
 		refundedShares = oneSubExitFee.MulIntMut(exitingShares)
 	} else {
-		refundedShares = exitingShares.ToDec()
+		refundedShares = exitingShares.ToLegacyDec()
 	}
 
 	shareOutRatio := refundedShares.QuoInt(totalShares)
@@ -39,7 +39,7 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares sdk.Int, 
 	for _, asset := range poolLiquidity {
 		// round down here, due to not wanting to over-exit
 		exitAmt := shareOutRatio.MulInt(asset.Amount).TruncateInt()
-		if exitAmt.LTE(sdk.ZeroInt()) {
+		if exitAmt.LTE(osmomath.ZeroInt()) {
 			continue
 		}
 		if exitAmt.GTE(asset.Amount) {
@@ -64,9 +64,9 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares sdk.Int, 
 //  2. get the minimal share ratio that would work as the benchmark for all tokens.
 //  3. calculate the number of shares that could be joined (total share * min share ratio), return the remaining coins
 func MaximalExactRatioJoin(p types.CFMMPoolI, ctx sdk.Context, tokensIn sdk.Coins) (numShares sdk.Int, remCoins sdk.Coins, err error) {
-	coinShareRatios := make([]sdk.Dec, len(tokensIn))
+	coinShareRatios := make([]osmomath.Dec, len(tokensIn))
 	minShareRatio := sdk.MaxSortableDec
-	maxShareRatio := sdk.ZeroDec()
+	maxShareRatio := osmomath.ZeroDec()
 
 	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
 	totalShares := p.GetTotalShares()
@@ -75,7 +75,7 @@ func MaximalExactRatioJoin(p types.CFMMPoolI, ctx sdk.Context, tokensIn sdk.Coin
 		// Note: QuoInt implements floor division, unlike Quo
 		// This is because it calls the native golang routine big.Int.Quo
 		// https://pkg.go.dev/math/big#Int.Quo
-		shareRatio := coin.Amount.ToDec().QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
+		shareRatio := coin.Amount.ToLegacyDec().QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
 		if shareRatio.LT(minShareRatio) {
 			minShareRatio = shareRatio
 		}
@@ -135,8 +135,8 @@ func BinarySearchSingleAssetJoin(
 	// upperbound of number of LP shares = existingShares * tokenIn.Amount / pool.totalLiquidity.AmountOf(tokenIn.Denom)
 	existingTokenLiquidity := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenIn.Denom)
 	existingLPShares := pool.GetTotalShares()
-	LPShareUpperBound := existingLPShares.Mul(tokenIn.Amount).ToDec().QuoInt(existingTokenLiquidity).Ceil().TruncateInt()
-	LPShareLowerBound := sdk.ZeroInt()
+	LPShareUpperBound := existingLPShares.Mul(tokenIn.Amount).ToLegacyDec().QuoInt(existingTokenLiquidity).Ceil().TruncateInt()
+	LPShareLowerBound := osmomath.ZeroInt()
 
 	// Creates a pool with tokenIn liquidity added, where it created `sharesIn` number of shares.
 	// Returns how many tokens you'd get, if you then exited all of `sharesIn` for tokenIn.Denom
@@ -145,17 +145,17 @@ func BinarySearchSingleAssetJoin(
 		poolWithUpdatedLiquidity := poolWithAddedLiquidityAndShares(tokenIn, sharesIn)
 		swapToDenom := tokenIn.Denom
 		// so now due to correctness of exitPool, we exitPool and swap all remaining assets to base asset
-		exitFee := sdk.ZeroDec()
+		exitFee := osmomath.ZeroDec()
 		exitedCoins, err := poolWithUpdatedLiquidity.ExitPool(ctx, sharesIn, exitFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}
 
-		return SwapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom, sdk.ZeroDec())
+		return SwapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom, osmomath.ZeroDec())
 	}
 
 	// We accept an additive tolerance of 1 LP share error and round down
-	errTolerance := osmomath.ErrTolerance{AdditiveTolerance: sdk.OneDec(), MultiplicativeTolerance: sdk.Dec{}, RoundingDir: osmomath.RoundDown}
+	errTolerance := osmomath.ErrTolerance{AdditiveTolerance: osmomath.OneDec(), MultiplicativeTolerance: osmomath.Dec{}, RoundingDir: osmomath.RoundDown}
 
 	numLPShares, err = osmomath.BinarySearch(
 		estimateCoinOutGivenShares,
@@ -169,7 +169,7 @@ func BinarySearchSingleAssetJoin(
 
 // SwapAllCoinsToSingleAsset iterates through each token in the input set and trades it against the same pool sequentially
 func SwapAllCoinsToSingleAsset(pool types.CFMMPoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string,
-	spreadFactor sdk.Dec,
+	spreadFactor osmomath.Dec,
 ) (sdk.Int, error) {
 	tokenOutAmt := inTokens.AmountOfNoDenomValidation(swapToDenom)
 	for _, coin := range inTokens {

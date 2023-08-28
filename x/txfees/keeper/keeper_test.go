@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	osmosisapp "github.com/osmosis-labs/osmosis/v17/app"
 
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
@@ -40,13 +41,13 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	for _, acc := range s.TestAccs {
 		s.FundAcc(acc,
 			sdk.NewCoins(
-				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(100000000000000000)), // Needed for pool creation fee
-				sdk.NewCoin("uion", sdk.NewInt(10000000)),
-				sdk.NewCoin("atom", sdk.NewInt(10000000)),
-				sdk.NewCoin("ust", sdk.NewInt(10000000)),
-				sdk.NewCoin("foo", sdk.NewInt(10000000)),
-				sdk.NewCoin("bar", sdk.NewInt(10000000)),
+				sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(100000000000000000)), // Needed for pool creation fee
+				sdk.NewCoin("uion", osmomath.NewInt(10000000)),
+				sdk.NewCoin("atom", osmomath.NewInt(10000000)),
+				sdk.NewCoin("ust", osmomath.NewInt(10000000)),
+				sdk.NewCoin("foo", osmomath.NewInt(10000000)),
+				sdk.NewCoin("bar", osmomath.NewInt(10000000)),
 			))
 	}
 }

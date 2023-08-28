@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/pflag"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
@@ -252,11 +253,11 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 		var err error
 		if typeStr == "types.Coin" {
 			v, err = ParseCoin(arg, fType.Name)
-		} else if typeStr == "types.Int" {
+		} else if typeStr == "math.Int" {
 			v, err = ParseSdkInt(arg, fType.Name)
 		} else if typeStr == "time.Time" {
 			v, err = ParseUnixTime(arg, fType.Name)
-		} else if typeStr == "types.Dec" {
+		} else if typeStr == "math.LegacyDec" {
 			v, err = ParseSdkDec(arg, fType.Name)
 		} else {
 			return fmt.Errorf("struct field type not recognized. Got type %v", fType)
@@ -341,10 +342,10 @@ func ParseSdkInt(arg string, fieldName string) (sdk.Int, error) {
 	return i, nil
 }
 
-func ParseSdkDec(arg, fieldName string) (sdk.Dec, error) {
+func ParseSdkDec(arg, fieldName string) (osmomath.Dec, error) {
 	i, err := sdk.NewDecFromStr(arg)
 	if err != nil {
-		return sdk.Dec{}, fmt.Errorf("could not parse %s as sdk.Dec for field %s: %w", arg, fieldName, err)
+		return osmomath.Dec{}, fmt.Errorf("could not parse %s as osmomath.Dec for field %s: %w", arg, fieldName, err)
 	}
 	return i, nil
 }

@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 )
 
@@ -81,7 +82,7 @@ func TestValidateBalancerSharesDiscount(t *testing.T) {
 			expectError: true,
 		},
 		"error: negative discount rate on boundary": {
-			i:           sdk.NewDecWithPrec(-1, 18),
+			i:           osmomath.NewDecWithPrec(-1, 18),
 			expectError: true,
 		},
 		"error: discount rate > 1": {
@@ -89,7 +90,7 @@ func TestValidateBalancerSharesDiscount(t *testing.T) {
 			expectError: true,
 		},
 		"error: discount rate > 1 on boundary": {
-			i:           sdk.NewDec(1).Add(sdk.NewDecWithPrec(1, 18)),
+			i:           sdk.NewDec(1).Add(osmomath.NewDecWithPrec(1, 18)),
 			expectError: true,
 		},
 	}

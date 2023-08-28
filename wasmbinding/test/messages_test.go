@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v17/wasmbinding"
 	"github.com/osmosis-labs/osmosis/v17/wasmbinding/bindings"
@@ -227,7 +228,7 @@ func TestMint(t *testing.T) {
 		"zero amount": {
 			mint: &bindings.MintTokens{
 				Denom:         validDenomStr,
-				Amount:        sdk.ZeroInt(),
+				Amount:        osmomath.ZeroInt(),
 				MintToAddress: lucky.String(),
 			},
 			expErr: true,
@@ -351,7 +352,7 @@ func TestBurn(t *testing.T) {
 		"zero amount": {
 			burn: &bindings.BurnTokens{
 				Denom:           validDenomStr,
-				Amount:          sdk.ZeroInt(),
+				Amount:          osmomath.ZeroInt(),
 				BurnFromAddress: creator.String(),
 			},
 			expErr: true,

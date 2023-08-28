@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
 
@@ -248,51 +249,51 @@ func (s *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 		expectError bool
 	}{
 		"fee + base denom gauge coin == acount balance, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee / 2,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee/2))),
 		},
 		"fee + base denom gauge coin < acount balance, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee/2 - 1,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee/2))),
 		},
 		"fee + base denom gauge coin > acount balance, error": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee/2 + 1,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee/2))),
 
 			expectError: true,
 		},
 		"fee + base denom gauge coin < acount balance, custom values, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(11793193112)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(11793193112)),
 			feeToCharge:          55,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(328812))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(328812))),
 		},
 		"account funded with coins other than base denom, error": {
-			accountBalanceToFund: sdk.NewCoin("usdc", sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin("usdc", osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee/2))),
 
 			expectError: true,
 		},
 		"fee == account balance, no gauge coins, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee,
 		},
 		"gauge coins == account balance, no fee, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee))),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee))),
 		},
 		"fee == account balance, gauge coins in denom other than base, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(baseFee*2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin("usdc", osmomath.NewInt(baseFee*2))),
 		},
 		"fee + gauge coins == account balance, multiple gauge coins, one in denom other than base, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee / 2,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(baseFee*2)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin("usdc", osmomath.NewInt(baseFee*2)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee/2))),
 		},
 	}
 
@@ -312,7 +313,7 @@ func (s *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 			oldBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount
 
 			// System under test.
-			err := incentivesKeepers.ChargeFeeIfSufficientFeeDenomBalance(ctx, testAccount, sdk.NewInt(tc.feeToCharge), tc.gaugeCoins)
+			err := incentivesKeepers.ChargeFeeIfSufficientFeeDenomBalance(ctx, testAccount, osmomath.NewInt(tc.feeToCharge), tc.gaugeCoins)
 
 			// Assertions.
 			newBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount
@@ -325,7 +326,7 @@ func (s *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 				s.Require().NoError(err)
 
 				// check account balance changed.
-				expectedNewBalanceAmount := oldBalanceAmount.Sub(sdk.NewInt(tc.feeToCharge))
+				expectedNewBalanceAmount := oldBalanceAmount.Sub(osmomath.NewInt(tc.feeToCharge))
 				s.Require().Equal(expectedNewBalanceAmount.String(), newBalanceAmount.String())
 			}
 		})
@@ -346,8 +347,8 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 			name:  "valid case: valid gauge",
 			owner: s.TestAccs[0],
 			coinsToAdd: sdk.NewCoins(
-				sdk.NewCoin("uosmo", sdk.NewInt(100000)),
-				sdk.NewCoin("atom", sdk.NewInt(99999)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+				sdk.NewCoin("atom", osmomath.NewInt(99999)),
 			),
 			gaugeId:            1,
 			minimumGasConsumed: uint64(2 * types.BaseGasFeeForAddRewardToGauge),
@@ -358,14 +359,14 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 			name:  "valid case: valid gauge with >4 denoms",
 			owner: s.TestAccs[0],
 			coinsToAdd: sdk.NewCoins(
-				sdk.NewCoin("uosmo", sdk.NewInt(100000)),
-				sdk.NewCoin("atom", sdk.NewInt(99999)),
-				sdk.NewCoin("mars", sdk.NewInt(88888)),
-				sdk.NewCoin("akash", sdk.NewInt(77777)),
-				sdk.NewCoin("eth", sdk.NewInt(6666)),
-				sdk.NewCoin("usdc", sdk.NewInt(555)),
-				sdk.NewCoin("dai", sdk.NewInt(4444)),
-				sdk.NewCoin("ust", sdk.NewInt(3333)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+				sdk.NewCoin("atom", osmomath.NewInt(99999)),
+				sdk.NewCoin("mars", osmomath.NewInt(88888)),
+				sdk.NewCoin("akash", osmomath.NewInt(77777)),
+				sdk.NewCoin("eth", osmomath.NewInt(6666)),
+				sdk.NewCoin("usdc", osmomath.NewInt(555)),
+				sdk.NewCoin("dai", osmomath.NewInt(4444)),
+				sdk.NewCoin("ust", osmomath.NewInt(3333)),
 			),
 			gaugeId:            1,
 			minimumGasConsumed: uint64(8 * types.BaseGasFeeForAddRewardToGauge),
@@ -376,8 +377,8 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 			name:  "invalid case: gauge Id is not valid",
 			owner: s.TestAccs[0],
 			coinsToAdd: sdk.NewCoins(
-				sdk.NewCoin("uosmo", sdk.NewInt(100000)),
-				sdk.NewCoin("atom", sdk.NewInt(99999)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+				sdk.NewCoin("atom", osmomath.NewInt(99999)),
 			),
 			gaugeId:            0,
 			minimumGasConsumed: uint64(0),
@@ -453,8 +454,8 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 
 	var (
 		defaultCoins = sdk.NewCoins(
-			sdk.NewCoin("uosmo", sdk.NewInt(100000)),
-			sdk.NewCoin("atom", sdk.NewInt(99999)),
+			sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+			sdk.NewCoin("atom", osmomath.NewInt(99999)),
 		)
 
 		defaultTime = time.Unix(0, 0)

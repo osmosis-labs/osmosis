@@ -26,9 +26,9 @@ func newTwapRecord(k types.PoolManagerInterface, ctx sdk.Context, poolId uint64,
 		Time:                        ctx.BlockTime(),
 		P0LastSpotPrice:             sp0,
 		P1LastSpotPrice:             sp1,
-		P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
-		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
-		GeometricTwapAccumulator:    sdk.ZeroDec(),
+		P0ArithmeticTwapAccumulator: osmomath.ZeroDec(),
+		P1ArithmeticTwapAccumulator: osmomath.ZeroDec(),
+		GeometricTwapAccumulator:    osmomath.ZeroDec(),
 		LastErrorTime:               lastErrorTime,
 	}, nil
 }
@@ -44,7 +44,7 @@ func getSpotPrices(
 	poolId uint64,
 	denom0, denom1 string,
 	previousErrorTime time.Time,
-) (sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
+) (sp0 osmomath.Dec, sp1 osmomath.Dec, latestErrTime time.Time) {
 	latestErrTime = previousErrorTime
 	// sp0 = denom0 quote, denom1 base.
 	sp0, err0 := k.RouteCalculateSpotPrice(ctx, poolId, denom0, denom1)
@@ -55,11 +55,11 @@ func getSpotPrices(
 		// In the event of an error, we just sanity replace empty values with zero values
 		// so that the numbers can be still be calculated within TWAPs over error values
 		// TODO: Should we be using the last spot price?
-		if (sp0 == sdk.Dec{}) {
-			sp0 = sdk.ZeroDec()
+		if (sp0 == osmomath.Dec{}) {
+			sp0 = osmomath.ZeroDec()
 		}
-		if (sp1 == sdk.Dec{}) {
-			sp1 = sdk.ZeroDec()
+		if (sp1 == osmomath.Dec{}) {
+			sp1 = osmomath.ZeroDec()
 		}
 	}
 	if sp0.GT(types.MaxSpotPrice) {
@@ -278,7 +278,7 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 // if (endRecord.Time == startRecord.Time) returns endRecord.LastSpotPrice
 // else returns
 // (endRecord.Accumulator - startRecord.Accumulator) / (endRecord.Time - startRecord.Time)
-func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, strategy twapStrategy) (sdk.Dec, error) {
+func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, strategy twapStrategy) (osmomath.Dec, error) {
 	// see if we need to return an error, due to spot price issues
 	var err error = nil
 	if endRecord.LastErrorTime.After(startRecord.Time) ||
@@ -300,10 +300,10 @@ func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 
 // twapLog returns the logarithm of the given spot price, base 2.
 // Panics if zero is given.
-func twapLog(price sdk.Dec) sdk.Dec {
+func twapLog(price osmomath.Dec) osmomath.Dec {
 	if price.IsZero() {
 		panic("twap: cannot take logarithm of zero")
 	}
 
-	return osmomath.BigDecFromSDKDec(price).LogBase2().SDKDec()
+	return osmomath.BigDecFromDec(price).LogBase2().Dec()
 }

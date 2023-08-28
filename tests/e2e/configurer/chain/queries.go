@@ -19,6 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
@@ -358,7 +359,7 @@ func (n *NodeConfig) QuerySupplyOf(denom string) (sdk.Int, error) {
 
 	var supplyResp banktypes.QuerySupplyOfResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &supplyResp); err != nil {
-		return sdk.NewInt(0), err
+		return osmomath.NewInt(0), err
 	}
 	return supplyResp.Amount.Amount, nil
 }
@@ -450,7 +451,7 @@ func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.I
 
 	var balancesResp govtypes.QueryTallyResultResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
-		return sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), err
+		return osmomath.ZeroInt(), osmomath.ZeroInt(), osmomath.ZeroInt(), osmomath.ZeroInt(), err
 	}
 	noTotal := balancesResp.Tally.No
 	yesTotal := balancesResp.Tally.Yes
@@ -519,7 +520,7 @@ func (n *NodeConfig) QueryConcentratedPooIdLinkFromCFMM(cfmmPoolId uint64) uint6
 	return response.ConcentratedPoolId
 }
 
-func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (sdk.Dec, error) {
+func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (osmomath.Dec, error) {
 	path := "osmosis/twap/v1beta1/ArithmeticTwapToNow"
 
 	bz, err := n.QueryGRPCGateway(
@@ -530,7 +531,7 @@ func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAss
 		"start_time", startTime.Format(time.RFC3339Nano),
 	)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	var response twapqueryproto.ArithmeticTwapToNowResponse
@@ -539,7 +540,7 @@ func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAss
 	return response.ArithmeticTwap, nil
 }
 
-func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (sdk.Dec, error) {
+func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (osmomath.Dec, error) {
 	path := "osmosis/twap/v1beta1/ArithmeticTwap"
 
 	bz, err := n.QueryGRPCGateway(
@@ -551,7 +552,7 @@ func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset st
 		"end_time", endTime.Format(time.RFC3339Nano),
 	)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	var response twapqueryproto.ArithmeticTwapResponse
@@ -560,7 +561,7 @@ func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset st
 	return response.ArithmeticTwap, nil
 }
 
-func (n *NodeConfig) QueryGeometricTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (sdk.Dec, error) {
+func (n *NodeConfig) QueryGeometricTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (osmomath.Dec, error) {
 	path := "osmosis/twap/v1beta1/GeometricTwapToNow"
 
 	bz, err := n.QueryGRPCGateway(
@@ -571,7 +572,7 @@ func (n *NodeConfig) QueryGeometricTwapToNow(poolId uint64, baseAsset, quoteAsse
 		"start_time", startTime.Format(time.RFC3339Nano),
 	)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	var response twapqueryproto.GeometricTwapToNowResponse
@@ -580,7 +581,7 @@ func (n *NodeConfig) QueryGeometricTwapToNow(poolId uint64, baseAsset, quoteAsse
 	return response.GeometricTwap, nil
 }
 
-func (n *NodeConfig) QueryGeometricTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (sdk.Dec, error) {
+func (n *NodeConfig) QueryGeometricTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (osmomath.Dec, error) {
 	path := "osmosis/twap/v1beta1/GeometricTwap"
 
 	bz, err := n.QueryGRPCGateway(
@@ -592,7 +593,7 @@ func (n *NodeConfig) QueryGeometricTwap(poolId uint64, baseAsset, quoteAsset str
 		"end_time", endTime.Format(time.RFC3339Nano),
 	)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	var response twapqueryproto.GeometricTwapResponse

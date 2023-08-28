@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 )
@@ -224,7 +225,7 @@ func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 
 			baseDenom := types.BaseDenom{
 				Denom:    tc.swapDenom,
-				StepSize: sdk.NewInt(1_000_000),
+				StepSize: osmomath.NewInt(1_000_000),
 			}
 			routeMetaData, err := s.App.ProtoRevKeeper.BuildHighestLiquidityRoute(s.Ctx, baseDenom, tc.swapIn, tc.swapOut, tc.poolId)
 
@@ -257,7 +258,7 @@ func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
 			description: "two pool route can be created with base as token out",
 			swapDenom: types.BaseDenom{
 				Denom:    types.OsmosisDenomination,
-				StepSize: sdk.NewInt(1_000_000),
+				StepSize: osmomath.NewInt(1_000_000),
 			},
 			tokenIn:  "stake",
 			tokenOut: types.OsmosisDenomination,
@@ -272,7 +273,7 @@ func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
 			description: "two pool route can be created with base as token in",
 			swapDenom: types.BaseDenom{
 				Denom:    types.OsmosisDenomination,
-				StepSize: sdk.NewInt(1_000_000),
+				StepSize: osmomath.NewInt(1_000_000),
 			},
 			tokenIn:  types.OsmosisDenomination,
 			tokenOut: "stake",
@@ -287,7 +288,7 @@ func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
 			description: "two pool route where swap is on the highest liquidity pool",
 			swapDenom: types.BaseDenom{
 				Denom:    types.OsmosisDenomination,
-				StepSize: sdk.NewInt(1_000_000),
+				StepSize: osmomath.NewInt(1_000_000),
 			},
 			tokenIn:       "stake",
 			tokenOut:      types.OsmosisDenomination,
@@ -299,7 +300,7 @@ func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
 			description: "trade executes on pool not tracked by the module",
 			swapDenom: types.BaseDenom{
 				Denom:    types.OsmosisDenomination,
-				StepSize: sdk.NewInt(1_000_000),
+				StepSize: osmomath.NewInt(1_000_000),
 			},
 			tokenIn:       "stake",
 			tokenOut:      types.OsmosisDenomination,
@@ -359,7 +360,7 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 					{4, "bitcoin", "Atom"},
 				},
 			},
-			expectedStepSize:        []sdk.Int{sdk.NewInt(1_000_000)},
+			expectedStepSize:        []sdk.Int{osmomath.NewInt(1_000_000)},
 			expectedRoutePoolPoints: []uint64{6},
 			hasRoutes:               true,
 		},
@@ -376,7 +377,7 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 					{10, "test/2", "Atom"},
 				},
 			},
-			expectedStepSize:        []sdk.Int{sdk.NewInt(1_000_000)},
+			expectedStepSize:        []sdk.Int{osmomath.NewInt(1_000_000)},
 			expectedRoutePoolPoints: []uint64{8},
 			hasRoutes:               true,
 		},

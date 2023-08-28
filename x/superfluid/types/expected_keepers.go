@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
@@ -73,9 +74,9 @@ type StakingKeeper interface {
 	BondDenom(ctx sdk.Context) string
 	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
 	GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool)
-	ValidateUnbondAmount(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) (shares sdk.Dec, err error)
-	Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc stakingtypes.BondStatus, validator stakingtypes.Validator, subtractAccount bool) (newShares sdk.Dec, err error)
-	InstantUndelegate(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec) (sdk.Coins, error)
+	ValidateUnbondAmount(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int) (shares osmomath.Dec, err error)
+	Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc stakingtypes.BondStatus, validator stakingtypes.Validator, subtractAccount bool) (newShares osmomath.Dec, err error)
+	InstantUndelegate(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount osmomath.Dec) (sdk.Coins, error)
 	GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, found bool)
 	UnbondingTime(ctx sdk.Context) time.Duration
 	GetParams(ctx sdk.Context) stakingtypes.Params
@@ -108,16 +109,16 @@ type EpochKeeper interface {
 
 type ConcentratedKeeper interface {
 	GetPosition(ctx sdk.Context, positionId uint64) (model.Position, error)
-	SetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, liquidity sdk.Dec, positionId uint64, underlyingLockId uint64) error
-	UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) (cltypes.UpdatePositionData, error)
+	SetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, liquidity osmomath.Dec, positionId uint64, underlyingLockId uint64) error
+	UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta osmomath.Dec, joinTime time.Time, positionId uint64) (cltypes.UpdatePositionData, error)
 	GetConcentratedPoolById(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
 	CreateFullRangePositionLocked(ctx sdk.Context, clPoolId uint64, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionData cltypes.CreateFullRangePositionData, concentratedLockID uint64, err error)
 	CreateFullRangePositionUnlocking(ctx sdk.Context, clPoolId uint64, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionData cltypes.CreateFullRangePositionData, concentratedLockID uint64, err error)
 	GetPositionIdToLockId(ctx sdk.Context, underlyingLockId uint64) (uint64, error)
-	GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (sdk.Dec, error)
+	GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (osmomath.Dec, error)
 	PositionHasActiveUnderlyingLock(ctx sdk.Context, positionId uint64) (bool, uint64, error)
 	HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error)
-	WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error)
+	WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw osmomath.Dec) (amtDenom0, amtDenom1 sdk.Int, err error)
 	GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId uint64) ([]model.Position, error)
 	GetLockIdFromPositionId(ctx sdk.Context, positionId uint64) (uint64, error)
 }

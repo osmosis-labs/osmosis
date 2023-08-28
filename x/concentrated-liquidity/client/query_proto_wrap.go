@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
 	clquery "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
@@ -131,12 +132,12 @@ func (q Querier) LiquidityNetInDirection(ctx sdk.Context, req clquery.LiquidityN
 
 	var startTick sdk.Int
 	if !req.UseCurTick {
-		startTick = sdk.NewInt(req.StartTick)
+		startTick = osmomath.NewInt(req.StartTick)
 	}
 
 	var boundTick sdk.Int
 	if !req.UseNoBound {
-		boundTick = sdk.NewInt(req.BoundTick)
+		boundTick = osmomath.NewInt(req.BoundTick)
 	}
 
 	liquidityDepths, err := q.Keeper.GetTickLiquidityNetInDirection(

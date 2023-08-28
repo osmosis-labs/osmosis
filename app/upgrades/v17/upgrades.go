@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -140,7 +141,7 @@ func CreateUpgradeHandler(
 // createCLPoolWithCommunityPoolPosition creates a CL pool for a given balancer pool and adds a full range position with the community pool.
 func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.AppKeepers, assetPair AssetPair, communityPoolAddress sdk.AccAddress) (clPoolDenom string, clPoolId uint64, poolLink gammmigration.BalancerToConcentratedPoolLink, coinsUsed sdk.Coins, err error) {
 	// Determine if base or quote asset is OSMO and save the non-OSMO asset.
-	osmoIn := sdk.NewCoin(OSMO, sdk.NewInt(100000))
+	osmoIn := sdk.NewCoin(OSMO, osmomath.NewInt(100000))
 	nonOsmoAsset := ""
 	if assetPair.BaseAsset != OSMO {
 		nonOsmoAsset = assetPair.BaseAsset
@@ -180,7 +181,7 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 	commPoolBalancePre := sdk.NewCoins(commPoolBalanceBaseAssetPre, commPoolBalanceQuoteAssetPre)
 
 	// Swap 0.1 OSMO for nonOsmoAsset from the community pool.
-	respectiveNonOsmoAssetInt, err := keepers.GAMMKeeper.SwapExactAmountIn(ctx, communityPoolAddress, linkedClassicPool, osmoIn, nonOsmoAsset, sdk.ZeroInt(), linkedClassicPool.GetSpreadFactor(ctx))
+	respectiveNonOsmoAssetInt, err := keepers.GAMMKeeper.SwapExactAmountIn(ctx, communityPoolAddress, linkedClassicPool, osmoIn, nonOsmoAsset, osmomath.ZeroInt(), linkedClassicPool.GetSpreadFactor(ctx))
 	if err != nil {
 		return "", 0, gammmigration.BalancerToConcentratedPoolLink{}, nil, err
 	}
