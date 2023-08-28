@@ -911,18 +911,18 @@ func (k Keeper) AccumDebug(ctx sdk.Context, maxPoolId int) *types.AccumDebugResp
 		Denoms: []string{},
 		Accums: []sdk.Int{},
 	}
-	store := ctx.KVStore(k.storeKey)
+	// store := ctx.KVStore(k.storeKey)
 	// Add keys/values for all locks
 	for id := 1; id <= maxPoolId; id++ {
 		denom := fmt.Sprintf("gamm/pool/%d", id)
 		resp.Denoms = append(resp.Denoms, denom)
-		prefix := accumulationStorePrefix(denom)
-		iterator := sdk.KVStorePrefixIterator(store, prefix)
-		for ; iterator.Valid(); iterator.Next() {
-			resp.Keys = append(resp.Keys, string(iterator.Key()))
-			resp.Values = append(resp.Values, string(iterator.Value()))
-		}
-		iterator.Close()
+		// prefix := accumulationStorePrefix(denom)
+		// iterator := sdk.KVStorePrefixIterator(store, prefix)
+		// for ; iterator.Valid(); iterator.Next() {
+		// 	resp.Keys = append(resp.Keys, string(iterator.Key()))
+		// 	resp.Values = append(resp.Values, string(iterator.Value()))
+		// }
+		// iterator.Close()
 	}
 	// Add accums for all denoms
 	baseDenomIndex := len(resp.Denoms)
@@ -945,8 +945,9 @@ func (k Keeper) AccumDebug(ctx sdk.Context, maxPoolId int) *types.AccumDebugResp
 	}
 	sort.Strings(superfluidDenomsSlice)
 	resp.Denoms = append(resp.Denoms, superfluidDenomsSlice...)
+	durationKey := accumulationKey(0)
 	for _, denom := range resp.Denoms {
-		accum := k.accumulationStore(ctx, denom).SubsetAccumulation(nil, nil)
+		accum := k.accumulationStore(ctx, denom).SubsetAccumulation(durationKey, nil)
 		resp.Accums = append(resp.Accums, accum)
 	}
 
