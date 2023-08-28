@@ -31,7 +31,7 @@ type ErrTolerance struct {
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
 func (e ErrTolerance) Compare(expected Int, actual Int) int {
-	diff := ToDec(expected).Sub(actual.ToLegacyDec()).Abs()
+	diff := expected.ToLegacyDec().Sub(actual.ToLegacyDec()).Abs()
 
 	comparisonSign := 0
 	if expected.GT(actual) {
@@ -74,7 +74,7 @@ func (e ErrTolerance) Compare(expected Int, actual Int) int {
 			return comparisonSign
 		}
 
-		errTerm := diff.Quo(ToDec(minValue))
+		errTerm := diff.Quo(minValue.ToLegacyDec())
 		if errTerm.GT(e.MultiplicativeTolerance) {
 			return comparisonSign
 		}

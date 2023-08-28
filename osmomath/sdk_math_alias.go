@@ -53,12 +53,3 @@ var (
 	MinDec = sdkmath.LegacyMinDec
 	MaxDec = sdkmath.LegacyMaxDec
 )
-
-// ToDec is a function to convert Int to Dec
-// Note that the upstream SDK implements this inconviniently as ToLegacyDec()
-// Since we cannot create an alias for a method outside of the repository, a short function
-// wrapper is added.
-// TODO: create a ToDec() alias in the upstream.
-func ToDec(i Int) Dec {
-	return i.ToLegacyDec()
-}
