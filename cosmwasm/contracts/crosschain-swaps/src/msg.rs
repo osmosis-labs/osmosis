@@ -11,6 +11,9 @@ pub struct InstantiateMsg {
 
     /// This should be an instance of the Osmosis swaprouter contract
     pub swap_contract: String,
+
+    /// This should be an instance of the Osmosis registry contract
+    pub registry_contract: String,
 }
 
 /// An enum specifying what resolution the user expects in the case of a bad IBC

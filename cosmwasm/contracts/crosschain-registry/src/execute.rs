@@ -5,7 +5,7 @@ use crate::state::{
     CONTRACT_ALIAS_MAP, DENOM_ALIAS_MAP, DENOM_ALIAS_REVERSE_MAP, GLOBAL_ADMIN_MAP,
 };
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{Addr, BankMsg, DepsMut, Env, MessageInfo, Response};
 use cw_storage_plus::Map;
 use registry::msg::Callback;
 use registry::{Registry, RegistryError};
@@ -58,8 +58,10 @@ pub fn propose_pfm(
     // enforce lowercase
     let chain = chain.to_lowercase();
 
+    let own_addr = env.contract.address;
+
     // validation
-    let registry = Registry::default(deps.as_ref());
+    let registry = Registry::new(deps.as_ref(), own_addr.to_string())?;
     let coin = cw_utils::one_coin(&info)?;
     let native_chain = registry.get_native_chain(&coin.denom)?;
 
@@ -83,7 +85,7 @@ pub fn propose_pfm(
             // If sender is the contract governor, then they are authorized to do do this to any chain
             // Otherwise, they must be authorized to do manage the chain they are attempting to modify
             let user_permission =
-                check_is_authorized(deps.as_ref(), info.sender, Some(chain.clone()))?;
+                check_is_authorized(deps.as_ref(), info.sender.clone(), Some(chain.clone()))?;
             check_action_permission(FullOperation::Change, user_permission)?;
         } else {
             return Err(ContractError::PFMValidationAlreadyInProgress {
@@ -93,12 +95,10 @@ pub fn propose_pfm(
     };
 
     // Store the chain to validate
-    CHAIN_PFM_MAP.save(deps.storage, &chain, &ChainPFM::default())?;
-
-    let own_addr = env.contract.address;
+    CHAIN_PFM_MAP.save(deps.storage, &chain, &ChainPFM::new(info.sender))?;
 
     // redeclaring (shadowing) registry to avoid issues with the borrow checker
-    let registry = Registry::default(deps.as_ref());
+    let registry = Registry::new(deps.as_ref(), own_addr.to_string())?;
     let ibc_transfer = registry.unwrap_coin_into(
         coin,
         own_addr.to_string(),
@@ -120,7 +120,7 @@ pub fn validate_pfm(
     ctx: (DepsMut, Env, MessageInfo),
     chain: String,
 ) -> Result<Response, ContractError> {
-    let (deps, _env, _info) = ctx;
+    let (deps, _env, info) = ctx;
 
     let chain = chain.to_lowercase();
 
@@ -146,11 +146,23 @@ pub fn validate_pfm(
         }
     })?;
 
+    let initiator = match chain_pfm.initiator {
+        Some(initiator) => initiator,
+        None => return Err(ContractError::PFMNoInitiator {}),
+    };
+
+    let coin = cw_utils::one_coin(&info)?;
+    let bank_msg = BankMsg::Send {
+        to_address: initiator.to_string(),
+        amount: vec![coin],
+    };
+
     chain_pfm.validated = true;
+    chain_pfm.initiator = None;
 
     CHAIN_PFM_MAP.save(deps.storage, &chain, &chain_pfm)?;
 
-    Ok(Response::default())
+    Ok(Response::default().add_message(bank_msg))
 }
 
 // Set, change, or remove a contract alias to an address
