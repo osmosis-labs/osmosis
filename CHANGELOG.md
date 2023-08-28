@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### API breaks
+
+* [#6182](https://github.com/osmosis-labs/osmosis/pull/6182) change import paths to v18
+
 ## v18.0.0
 
 Fixes mainnet bugs w/ incorrect accumulation sumtrees, and CL handling for a balancer pool with 0 bonded shares.
