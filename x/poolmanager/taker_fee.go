@@ -163,7 +163,8 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 
 	return tokenInAfterTakerFee, nil
 }
-
+// Returns remaining amount in to swap, and takerFeeCoins.
+// returns (1 - takerFee) * tokenIn, takerFee * tokenIn
 func (k Keeper) calcTakerFeeExactIn(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
 	amountInAfterSubTakerFee := tokenIn.Amount.ToDec().MulTruncate(sdk.OneDec().Sub(takerFee))
 	tokenInAfterSubTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterSubTakerFee.TruncateInt())
@@ -172,6 +173,8 @@ func (k Keeper) calcTakerFeeExactIn(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coi
 	return tokenInAfterSubTakerFee, takerFeeCoin
 }
 
+Returns takerFee adjusted required amountIn, and takerFeeCoins.
+Computed as tokenIn / (1 - takerFee), tokenIn * (1 - / (1 - takerFee))
 func (k Keeper) calcTakerFeeExactOut(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
 	amountInAfterAddTakerFee := tokenIn.Amount.ToDec().Quo(sdk.OneDec().Sub(takerFee))
 	tokenInAfterAddTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterAddTakerFee.RoundInt())
