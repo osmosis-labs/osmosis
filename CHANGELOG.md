@@ -55,26 +55,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v18.0.0
 
-### Misc Improvements
-
-* [#6161](https://github.com/osmosis-labs/osmosis/pull/6161) Reduce CPU time of epochs
-
-### Bug Fixes
-
-* [#6162](https://github.com/osmosis-labs/osmosis/pull/6162) allow zero qualifying balancer shares in CL incentives
-
-## v18.0.0
-
 Fixes mainnet bugs w/ incorrect accumulation sumtrees, and CL handling for a balancer pool with 0 bonded shares.
 
 ### Improvements
 
 * [#6144](https://github.com/osmosis-labs/osmosis/pull/6144) perf: Speedup compute time of Epoch
 * [#6144](https://github.com/osmosis-labs/osmosis/pull/6144) misc: Move many Superfluid info logs to debug logs
+* [#6161](https://github.com/osmosis-labs/osmosis/pull/6161) Reduce CPU time of epochs
 
 ### API breaks
 
 * [#6071](https://github.com/osmosis-labs/osmosis/pull/6071) reduce number of returns for UpdatePosition and TicksToSqrtPrice functions
+
+### Bug Fixes
+
+* [#6162](https://github.com/osmosis-labs/osmosis/pull/6162) allow zero qualifying balancer shares in CL incentives
 
 ## v17.0.0
 
