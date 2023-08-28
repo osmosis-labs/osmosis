@@ -16,7 +16,7 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	defaultFeesDenom, _ := k.GetBaseDenom(ctx)
 
-	nonNativeStakingCollectorAddress := k.accountKeeper.GetModuleAddress(txfeestypes.NonNativeFeeCollectorForStakingRewardsName)
+	nonNativeStakingCollectorAddress := k.accountKeeper.GetModuleAddress(txfeestypes.FeeCollectorForStakingRewardsName)
 
 	// Non-native fee collector for staking rewards get swapped entirely into base denom.
 	k.swapNonNativeFeeToDenom(ctx, defaultFeesDenom, nonNativeStakingCollectorAddress)
@@ -24,7 +24,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	// Now that the rewards have been swapped, transfer any base denom existing in the non-native fee collector to the fee collector (indirectly distributing to stakers)
 	baseDenomCoins := sdk.NewCoins(k.bankKeeper.GetBalance(ctx, nonNativeStakingCollectorAddress, defaultFeesDenom))
 	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.NonNativeFeeCollectorForStakingRewardsName, txfeestypes.FeeCollectorName, baseDenomCoins)
+		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, txfeestypes.FeeCollectorForStakingRewardsName, txfeestypes.FeeCollectorName, baseDenomCoins)
 		return err
 	})
 
@@ -33,7 +33,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	denomToSwapTo := poolManagerParams.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo
 	// Only non-whitelisted assets should exist here since we do direct community pool funds when calculating the taker fee if
 	// the input is a whitelisted asset.
-	nonNativeCommunityPoolCollectorAddress := k.accountKeeper.GetModuleAddress(txfeestypes.NonNativeFeeCollectorForCommunityPoolName)
+	nonNativeCommunityPoolCollectorAddress := k.accountKeeper.GetModuleAddress(txfeestypes.FeeCollectorForCommunityPoolName)
 	k.swapNonNativeFeeToDenom(ctx, denomToSwapTo, nonNativeCommunityPoolCollectorAddress)
 
 	// Now that the non whitelisted assets have been swapped, fund the community pool with the denom we swapped to.
