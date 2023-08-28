@@ -179,29 +179,7 @@ func (msg MsgSetDenomPairTakerFee) ValidateBasic() error {
 		return InvalidSenderError{Sender: msg.Sender}
 	}
 
-	if len(msg.DenomPairTakerFee) == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "Empty denom pair taker fee")
-	}
-
-	for _, denomPair := range msg.DenomPairTakerFee {
-		if err := sdk.ValidateDenom(denomPair.Denom0); err != nil {
-			return err
-		}
-		if err := sdk.ValidateDenom(denomPair.Denom1); err != nil {
-			return err
-		}
-		if denomPair.Denom0 == denomPair.Denom1 {
-			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "Denom pair cannot consist of the same denoms")
-		}
-		if denomPair.TakerFee.IsNegative() {
-			return nonPositiveAmountError{denomPair.TakerFee.String()}
-		}
-		if denomPair.TakerFee.GT(sdk.OneDec()) {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Taker fee %s is greater than 1", denomPair.TakerFee.String())
-		}
-	}
-
-	return nil
+	return validateDenomPairTakerFees(msg.DenomPairTakerFee)
 }
 
 func (msg MsgSetDenomPairTakerFee) GetSignBytes() []byte {

@@ -10,6 +10,7 @@ use crate::msg::FailedDeliveryAction;
 pub struct Config {
     pub governor: Addr,
     pub swap_contract: Addr,
+    pub registry_contract: Addr,
 }
 
 #[cw_serde]

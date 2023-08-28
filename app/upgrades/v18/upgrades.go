@@ -12,7 +12,7 @@ import (
 )
 
 // OSMO / DAI CL pool ID
-const firstCLPoolId = 1066
+const FirstCLPoolId = 1066
 
 func CreateUpgradeHandler(
 	mm *module.Manager,
@@ -28,7 +28,7 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		for id := 1; id < firstCLPoolId; id++ {
+		for id := 1; id < FirstCLPoolId; id++ {
 			resetSumtree(keepers, ctx, uint64(id))
 		}
 		return migrations, nil

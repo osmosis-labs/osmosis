@@ -162,8 +162,7 @@ impl<'a> Registry<'a> {
             registry_contract: match option_env!("REGISTRY_CONTRACT") {
                 Some(registry_contract) => registry_contract.to_string(),
                 None => {
-                    "REGISTRY_CONTRACT not set at compile time. Use Registry::new(contract_addr)."
-                        .to_string()
+                    panic!("REGISTRY_CONTRACT not set at compile time. Use Registry::new(contract_addr).")
                 }
             },
         }

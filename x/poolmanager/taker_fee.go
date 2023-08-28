@@ -77,8 +77,8 @@ func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (
 // chargeTakerFee extracts the taker fee from the given tokenIn and sends it to the appropriate
 // module account. It returns the tokenIn after the taker fee has been extracted.
 func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
-	nonNativeFeeCollectorForStakingRewardsName := txfeestypes.NonNativeFeeCollectorForStakingRewardsName
-	nonNativeFeeCollectorForCommunityPoolName := txfeestypes.NonNativeFeeCollectorForCommunityPoolName
+	feeCollectorForStakingRewardsName := txfeestypes.FeeCollectorForStakingRewardsName
+	feeCollectorForCommunityPoolName := txfeestypes.FeeCollectorForCommunityPoolName
 	defaultTakerFeeDenom := appparams.BaseCoinUnit
 	poolManagerParams := k.GetParams(ctx)
 
@@ -118,7 +118,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 			// Osmo staking rewards funds are sent to the non native fee pool module account (even though its native, we want to distribute at the same time as the non native fee tokens)
 			// We could stream these rewards via the fee collector account, but this is decision to be made by governance.
 			osmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(defaultTakerFeeDenom, takerFeeAmtRemaining))
-			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForStakingRewardsName, osmoTakerFeeToStakingRewardsCoins)
+			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, feeCollectorForStakingRewardsName, osmoTakerFeeToStakingRewardsCoins)
 			if err != nil {
 				return sdk.Coin{}, err
 			}
@@ -143,7 +143,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 				// At epoch, this account swaps the non native, non whitelisted assets for XXX and sends to the community pool.
 				nonOsmoTakerFeeToCommunityPoolDec := takerFeeAmtRemaining.ToDec().Mul(poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.CommunityPool)
 				nonOsmoTakerFeeToCommunityPoolCoins := sdk.NewCoins(sdk.NewCoin(tokenIn.Denom, nonOsmoTakerFeeToCommunityPoolDec.TruncateInt()))
-				err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForCommunityPoolName, nonOsmoTakerFeeToCommunityPoolCoins)
+				err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, feeCollectorForCommunityPoolName, nonOsmoTakerFeeToCommunityPoolCoins)
 				if err != nil {
 					return sdk.Coin{}, err
 				}
@@ -154,7 +154,7 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 		if poolManagerParams.TakerFeeParams.NonOsmoTakerFeeDistribution.StakingRewards.GT(sdk.ZeroDec()) {
 			// Non Osmo staking rewards are sent to the non native fee pool module account
 			nonOsmoTakerFeeToStakingRewardsCoins := sdk.NewCoins(sdk.NewCoin(takerFeeCoin.Denom, takerFeeAmtRemaining))
-			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, nonNativeFeeCollectorForStakingRewardsName, nonOsmoTakerFeeToStakingRewardsCoins)
+			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, feeCollectorForStakingRewardsName, nonOsmoTakerFeeToStakingRewardsCoins)
 			if err != nil {
 				return sdk.Coin{}, err
 			}
@@ -164,6 +164,8 @@ func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom 
 	return tokenInAfterTakerFee, nil
 }
 
+// Returns remaining amount in to swap, and takerFeeCoins.
+// returns (1 - takerFee) * tokenIn, takerFee * tokenIn
 func (k Keeper) calcTakerFeeExactIn(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
 	amountInAfterSubTakerFee := tokenIn.Amount.ToDec().MulTruncate(sdk.OneDec().Sub(takerFee))
 	tokenInAfterSubTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterSubTakerFee.TruncateInt())
@@ -172,6 +174,8 @@ func (k Keeper) calcTakerFeeExactIn(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coi
 	return tokenInAfterSubTakerFee, takerFeeCoin
 }
 
+// Returns takerFee adjusted required amountIn, and takerFeeCoins.
+// Computed as tokenIn / (1 - takerFee), tokenIn * (1 - / (1 - takerFee))
 func (k Keeper) calcTakerFeeExactOut(tokenIn sdk.Coin, takerFee sdk.Dec) (sdk.Coin, sdk.Coin) {
 	amountInAfterAddTakerFee := tokenIn.Amount.ToDec().Quo(sdk.OneDec().Sub(takerFee))
 	tokenInAfterAddTakerFee := sdk.NewCoin(tokenIn.Denom, amountInAfterAddTakerFee.RoundInt())
