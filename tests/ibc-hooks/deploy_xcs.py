@@ -344,7 +344,7 @@ async def setup_swaprouter(moniker, deployer, gov, pools, dry_run=False):
         if not isinstance(result, dict) or result['code'] != 0:
             print(message)
             print(result, err)
-            if ENV == 'testnet':
+            if ENV != 'mainnet':
                 print("!!!!!!!!!!!!!!!!!!!!!")
                 continue
             raise Exception("Error setting up swaprouter")
