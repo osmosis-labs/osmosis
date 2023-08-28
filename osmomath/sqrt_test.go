@@ -10,14 +10,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func generateRandomDecForEachBitlen(r *rand.Rand, numPerBitlen int) []sdk.Dec {
-	res := make([]sdk.Dec, (255+sdk.DecimalPrecisionBits)*numPerBitlen)
+func generateRandomDecForEachBitlenDec(r *rand.Rand, numPerBitlen int) []sdk.Dec {
+	return generateRandomDecForEachBitlen[sdk.Dec](r, numPerBitlen, sdk.NewDecFromBigIntWithPrec, sdk.Precision)
+}
+
+func generateRandomDecForEachBitlen[T any](r *rand.Rand, numPerBitlen int, constructor func(*big.Int, int64) T, precision int64) []T {
+	res := make([]T, (255+sdk.DecimalPrecisionBits)*numPerBitlen)
 	for i := 0; i < 255+sdk.DecimalPrecisionBits; i++ {
 		upperbound := big.NewInt(1)
 		upperbound.Lsh(upperbound, uint(i))
 		for j := 0; j < numPerBitlen; j++ {
 			v := big.NewInt(0).Rand(r, upperbound)
-			res[i*numPerBitlen+j] = sdk.NewDecFromBigIntWithPrec(v, 18)
+			res[i*numPerBitlen+j] = constructor(v, precision)
 		}
 	}
 	return res
@@ -133,7 +137,7 @@ func TestSqrtRounding(t *testing.T) {
 		// sdk.MustNewDecFromStr("11662930532952632574132537947829685675668532938920838254939577167671385459971.396347723368091000"),
 	}
 	r := rand.New(rand.NewSource(rand.Int63()))
-	testCases = append(testCases, generateRandomDecForEachBitlen(r, 10)...)
+	testCases = append(testCases, generateRandomDecForEachBitlenDec(r, 10)...)
 	for _, i := range testCases {
 		sqrt, err := MonotonicSqrt(i)
 		require.NoError(t, err, "smaller: %s", i)
@@ -150,7 +154,7 @@ func TestSqrtRounding(t *testing.T) {
 // benchmarks the SDK square root across bit-lengths, for comparison with the new square root.
 func BenchmarkSqrt(b *testing.B) {
 	r := rand.New(rand.NewSource(1))
-	vectors := generateRandomDecForEachBitlen(r, 1)
+	vectors := generateRandomDecForEachBitlenDec(r, 1)
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < len(vectors); j++ {
 			a, _ := vectors[j].ApproxSqrt()
@@ -162,7 +166,7 @@ func BenchmarkSqrt(b *testing.B) {
 // benchmarks the new square root across bit-lengths, for comparison with the SDK square root.
 func BenchmarkMonotonicSqrt(b *testing.B) {
 	r := rand.New(rand.NewSource(1))
-	vectors := generateRandomDecForEachBitlen(r, 1)
+	vectors := generateRandomDecForEachBitlenDec(r, 1)
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < len(vectors); j++ {
 			a, _ := MonotonicSqrt(vectors[j])

@@ -70,6 +70,7 @@ Fixes mainnet bugs w/ incorrect accumulation sumtrees, and CL handling for a bal
 ### Bug Fixes
 
 * [#6162](https://github.com/osmosis-labs/osmosis/pull/6162) allow zero qualifying balancer shares in CL incentives
+* [#6053](https://github.com/osmosis-labs/osmosis/pull/6053) monotonic sqrt with 36 decimals
 
 ## v17.0.0
 
