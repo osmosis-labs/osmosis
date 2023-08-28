@@ -244,7 +244,7 @@ version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "20b42021d8488665b1a0d9748f1f81df7235362d194f44481e2e61bf376b77b4"
 dependencies = [
- "prost 0.11.6",
+ "prost 0.11.9",
  "prost-types",
  "tendermint-proto",
 ]
@@ -372,10 +372,10 @@ dependencies = [
  "cw-utils",
  "cw2",
  "enum-repr",
- "itertools",
- "osmosis-std",
+ "itertools 0.11.0",
+ "osmosis-std 0.16.2",
  "osmosis-testing",
- "prost 0.11.6",
+ "prost 0.11.9",
  "registry",
  "schemars",
  "serde",
@@ -437,7 +437,7 @@ dependencies = [
  "cw-storage-plus",
  "cw-utils",
  "derivative",
- "itertools",
+ "itertools 0.10.5",
  "k256",
  "prost 0.9.0",
  "schemars",
@@ -831,6 +831,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -991,8 +1000,24 @@ checksum = "10d6fe6ac7fcba45ed61d738091d33c838c4cabbcf4892dc7aa56d19d39cc976"
 dependencies = [
  "chrono",
  "cosmwasm-std",
- "osmosis-std-derive",
- "prost 0.11.6",
+ "osmosis-std-derive 0.13.2",
+ "prost 0.11.9",
+ "prost-types",
+ "schemars",
+ "serde",
+ "serde-cw-value",
+]
+
+[[package]]
+name = "osmosis-std"
+version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75895e4db1a81ca29118e366365744f64314938327e4eedba8e6e462fb15e94f"
+dependencies = [
+ "chrono",
+ "cosmwasm-std",
+ "osmosis-std-derive 0.16.2",
+ "prost 0.11.9",
  "prost-types",
  "schemars",
  "serde",
@@ -1005,8 +1030,21 @@ version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a455e262a6fdfd3914f3a4e11e6bc0ce491901cb9d507d7856d7ef6e129e90c6"
 dependencies = [
- "itertools",
+ "itertools 0.10.5",
  "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "osmosis-std-derive"
+version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f47f0b2f22adb341bb59e5a3a1b464dde033181954bd055b9ae86d6511ba465b"
+dependencies = [
+ "itertools 0.10.5",
+ "proc-macro2",
+ "prost-types",
  "quote",
  "syn",
 ]
@@ -1021,8 +1059,8 @@ dependencies = [
  "bindgen",
  "cosmrs",
  "cosmwasm-std",
- "osmosis-std",
- "prost 0.11.6",
+ "osmosis-std 0.13.2",
+ "prost 0.11.9",
  "serde",
  "serde_json",
  "thiserror",
@@ -1110,12 +1148,12 @@ dependencies = [
 
 [[package]]
 name = "prost"
-version = "0.11.6"
+version = "0.11.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21dc42e00223fc37204bd4aa177e69420c604ca4a183209a8f9de30c6d934698"
+checksum = "0b82eaa1d779e9a4bc1c3217db8ffbeabaae1dca241bf70183242128d48681cd"
 dependencies = [
  "bytes",
- "prost-derive 0.11.6",
+ "prost-derive 0.11.9",
 ]
 
 [[package]]
@@ -1125,7 +1163,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9cc1a3263e07e0bf68e96268f37665207b49560d98739662cdfaae215c720fe"
 dependencies = [
  "anyhow",
- "itertools",
+ "itertools 0.10.5",
  "proc-macro2",
  "quote",
  "syn",
@@ -1133,12 +1171,12 @@ dependencies = [
 
 [[package]]
 name = "prost-derive"
-version = "0.11.6"
+version = "0.11.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8bda8c0881ea9f722eb9629376db3d0b903b462477c1aafcb0566610ac28ac5d"
+checksum = "e5d2d8d10f3c6ded6da8b05b5fb3b8a5082514344d56c9f871412d29b4e075b4"
 dependencies = [
  "anyhow",
- "itertools",
+ "itertools 0.10.5",
  "proc-macro2",
  "quote",
  "syn",
@@ -1146,12 +1184,11 @@ dependencies = [
 
 [[package]]
 name = "prost-types"
-version = "0.11.6"
+version = "0.11.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5e0526209433e96d83d750dd81a99118edbc55739e7e61a46764fd2ad537788"
+checksum = "213622a1460818959ac1181aaeb2dc9c7f63df720db7d788b3e24eacd1983e13"
 dependencies = [
- "bytes",
- "prost 0.11.6",
+ "prost 0.11.9",
 ]
 
 [[package]]
@@ -1203,10 +1240,10 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "hex",
- "itertools",
- "osmosis-std",
- "osmosis-std-derive",
- "prost 0.11.6",
+ "itertools 0.11.0",
+ "osmosis-std 0.16.2",
+ "osmosis-std-derive 0.13.2",
+ "prost 0.11.9",
  "schemars",
  "serde",
  "serde-cw-value",
@@ -1477,7 +1514,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "cw2",
- "osmosis-std",
+ "osmosis-std 0.16.2",
  "osmosis-testing",
  "schemars",
  "serde",
@@ -1522,7 +1559,7 @@ dependencies = [
  "k256",
  "num-traits",
  "once_cell",
- "prost 0.11.6",
+ "prost 0.11.9",
  "prost-types",
  "ripemd160",
  "serde",
@@ -1548,7 +1585,7 @@ dependencies = [
  "flex-error",
  "num-derive",
  "num-traits",
- "prost 0.11.6",
+ "prost 0.11.9",
  "prost-types",
  "serde",
  "serde_bytes",

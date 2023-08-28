@@ -1,4 +1,4 @@
-use osmosis_std::types::osmosis::gamm::v1beta1::{MsgSwapExactAmountIn, SwapAmountInRoute};
+use osmosis_std::types::osmosis::poolmanager::v1beta1::{MsgSwapExactAmountIn, SwapAmountInRoute};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 

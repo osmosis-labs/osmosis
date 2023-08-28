@@ -2,8 +2,8 @@ use std::ops::{Div, Mul};
 
 use cosmwasm_std::{Addr, Coin, Decimal, Deps, Timestamp, Uint128};
 use osmosis_std::shim::Timestamp as OsmosisTimestamp;
-use osmosis_std::types::osmosis::gamm::v1beta1::{
-    MsgSwapExactAmountIn, QueryTotalPoolLiquidityRequest, SwapAmountInRoute,
+use osmosis_std::types::osmosis::poolmanager::v1beta1::{
+    MsgSwapExactAmountIn, SwapAmountInRoute, TotalPoolLiquidityRequest,
 };
 use osmosis_std::types::osmosis::twap::v1beta1::TwapQuerier;
 
@@ -33,7 +33,7 @@ pub fn validate_pool_route(
 
     // make sure that this route actually works
     for route_part in &pool_route {
-        let liquidity = QueryTotalPoolLiquidityRequest {
+        let liquidity = TotalPoolLiquidityRequest {
             pool_id: route_part.pool_id,
         }
         .query(&deps.querier)
