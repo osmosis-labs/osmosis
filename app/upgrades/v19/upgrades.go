@@ -9,6 +9,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
+<<<<<<< HEAD
+=======
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+
+	v18 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v18"
+>>>>>>> afcdf429 (feat(taker fees): Implement taker fee collection and tracking tests (#6183))
 )
 
 // OSMO / DAI CL pool ID
@@ -31,6 +37,21 @@ func CreateUpgradeHandler(
 		for id := 1; id < lastPoolToCorrect; id++ {
 			resetSuperfluidSumtree(keepers, ctx, uint64(id))
 		}
+<<<<<<< HEAD
+=======
+
+		// Move the current authorized quote denoms from the concentrated liquidity params to the pool manager params.
+		// This needs to be moved because the pool manager requires access to these denoms to determine if the taker fee should
+		// be swapped into OSMO or not. The concentrated liquidity module already requires access to the pool manager keeper,
+		// so the right move in this case is to move this parameter upwards in order to prevent circular dependencies.
+		// TODO: In v20 upgrade handler, delete this param from the concentrated liquidity params.
+		currentConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
+		defaultPoolManagerParams := poolmanagertypes.DefaultParams()
+		defaultPoolManagerParams.AuthorizedQuoteDenoms = currentConcentratedLiquidityParams.AuthorizedQuoteDenoms
+		defaultPoolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.ZeroDec()
+		keepers.PoolManagerKeeper.SetParams(ctx, defaultPoolManagerParams)
+
+>>>>>>> afcdf429 (feat(taker fees): Implement taker fee collection and tracking tests (#6183))
 		return migrations, nil
 	}
 }

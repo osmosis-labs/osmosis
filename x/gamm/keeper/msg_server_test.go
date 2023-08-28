@@ -75,9 +75,16 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 					TokenOutDenom: "baz",
 				},
 			},
+<<<<<<< HEAD
 			tokenIn:           sdk.NewCoin(doesNotExistDenom, sdk.NewInt(tokenIn)),
 			tokenOutMinAmount: sdk.NewInt(tokenInMinAmount),
 			expectError:       true,
+=======
+			tokenIn:               sdk.NewCoin(doesNotExistDenom, sdk.NewInt(tokenIn)),
+			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
+			expectedMessageEvents: 2, // 2 event gets triggered prior to failure.
+			expectError:           true,
+>>>>>>> afcdf429 (feat(taker fees): Implement taker fee collection and tracking tests (#6183))
 		},
 	}
 

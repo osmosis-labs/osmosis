@@ -180,8 +180,13 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	// checks to make sure a separate module account has been set to collect fees not in base token
+<<<<<<< HEAD
 	if addrNonNativeFee := dfd.ak.GetModuleAddress(types.NonNativeFeeCollectorForStakingRewardsName); addrNonNativeFee == nil {
 		return ctx, fmt.Errorf("non native fee collector module account (%s) has not been set", types.NonNativeFeeCollectorForStakingRewardsName)
+=======
+	if addrNonNativeFee := dfd.ak.GetModuleAddress(types.FeeCollectorForStakingRewardsName); addrNonNativeFee == nil {
+		return ctx, fmt.Errorf("fee collector module account for staking rewards (%s) has not been set", types.FeeCollectorForStakingRewardsName)
+>>>>>>> afcdf429 (feat(taker fees): Implement taker fee collection and tracking tests (#6183))
 	}
 
 	// fee can be in any denom (checked for validity later)

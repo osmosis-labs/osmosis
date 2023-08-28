@@ -29,6 +29,28 @@ func NewParams(poolCreationFee sdk.Coins) Params {
 func DefaultParams() Params {
 	return Params{
 		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
+<<<<<<< HEAD
+=======
+		TakerFeeParams: TakerFeeParams{
+			DefaultTakerFee: sdk.ZeroDec(), // 0%
+			OsmoTakerFeeDistribution: TakerFeeDistributionPercentage{
+				StakingRewards: sdk.MustNewDecFromStr("1"), // 100%
+				CommunityPool:  sdk.MustNewDecFromStr("0"), // 0%
+			},
+			NonOsmoTakerFeeDistribution: TakerFeeDistributionPercentage{
+				StakingRewards: sdk.MustNewDecFromStr("0.67"), // 67%
+				CommunityPool:  sdk.MustNewDecFromStr("0.33"), // 33%
+			},
+			AdminAddresses: []string{},
+			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
+		},
+		AuthorizedQuoteDenoms: []string{
+			"uosmo",
+			"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", // ATOM
+			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", // DAI
+			"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
+		},
+>>>>>>> afcdf429 (feat(taker fees): Implement taker fee collection and tracking tests (#6183))
 	}
 }
 

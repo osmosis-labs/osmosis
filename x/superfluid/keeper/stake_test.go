@@ -1218,7 +1218,7 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 				// err check for LockOwnerMismatchError needs further refactoring for all these test cases
 				// since lock owner is not know-able at the time of test creation
 				if !tc.senderIsNotOwnerOfLock {
-					s.Require().Equal(err.Error(), tc.expectedError.Error())
+					s.Require().Equal(tc.expectedError.Error(), err.Error())
 				}
 				return
 			}
