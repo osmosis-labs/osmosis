@@ -29,12 +29,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
-	v17 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v17"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
 	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
 var (
@@ -134,15 +134,6 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.T().Run("AddToExistingLockPostUpgrade", func(t *testing.T) {
 			t.Parallel()
 			s.AddToExistingLockPostUpgrade()
-		})
-	}
-
-	if s.skipUpgrade {
-		s.T().Skip("Skipping ConcentratedLiquidity_CanonicalPools test")
-	} else {
-		s.T().Run("ConcentratedLiquidity_CanonicalPools", func(t *testing.T) {
-			t.Parallel()
-			s.ConcentratedLiquidity_CanonicalPools()
 		})
 	}
 
@@ -333,8 +324,6 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	err = chainABNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainAB)
 	s.Require().NoError(err)
 
-<<<<<<< HEAD
-=======
 	// Update the protorev admin address to a known wallet we can control
 	adminWalletAddr := chainABNode.CreateWalletAndFund("admin", []string{"4000000uosmo"}, chainAB)
 	err = chainABNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainAB)
@@ -343,7 +332,6 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Update the weight of CL pools so that this test case is not back run by protorev.
 	chainABNode.SetMaxPoolPointsPerTx(7, adminWalletAddr)
 
->>>>>>> 5c8fd80f (feat(spike): taker fee (#6034))
 	// Confirm that the parameter has been changed.
 	isPermisionlessCreationEnabledStr = chainABNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
 	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
@@ -1833,68 +1821,6 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
 }
 
-<<<<<<< HEAD
-// START: CAN REMOVE POST v17 UPGRADE
-
-// Tests that v17 upgrade correctly creates the canonical pools in the upgrade handler.
-func (s *IntegrationTestSuite) ConcentratedLiquidity_CanonicalPools() {
-	if s.skipUpgrade {
-		s.T().Skip("Skipping v17 canonical pools creation test because upgrade is not enabled")
-	}
-
-	_, chainABNode, err := s.getChainCfgs()
-	s.Require().NoError(err)
-
-	for _, assetPair := range v17.AssetPairsForTestsOnly {
-		expectedSpreadFactor := assetPair.SpreadFactor
-		concentratedPoolId := chainABNode.QueryConcentratedPooIdLinkFromCFMM(assetPair.LinkedClassicPool)
-		concentratedPool := s.updatedConcentratedPool(chainABNode, concentratedPoolId)
-
-		s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
-		s.Require().Equal(assetPair.BaseAsset, concentratedPool.GetToken0())
-		s.Require().Equal(assetPair.QuoteAsset, concentratedPool.GetToken1())
-		s.Require().Equal(uint64(v17.TickSpacing), concentratedPool.GetTickSpacing())
-		s.Require().Equal(expectedSpreadFactor.String(), concentratedPool.GetSpreadFactor(sdk.Context{}).String())
-
-		superfluidAssets := chainABNode.QueryAllSuperfluidAssets()
-
-		found := false
-		for _, superfluidAsset := range superfluidAssets {
-			if superfluidAsset.Denom == cltypes.GetConcentratedLockupDenomFromPoolId(concentratedPoolId) {
-				found = true
-				break
-			}
-		}
-
-		if assetPair.Superfluid {
-			s.Require().True(found, "concentrated liquidity pool denom not found in superfluid assets")
-		} else {
-			s.Require().False(found, "concentrated liquidity pool denom found in superfluid assets")
-		}
-
-		// This spot price is taken from the balancer pool that was initiated pre upgrade.
-		balancerPool := s.updatedCFMMPool(chainABNode, assetPair.LinkedClassicPool)
-		expectedSpotPrice, err := balancerPool.SpotPrice(sdk.Context{}, assetPair.QuoteAsset, assetPair.BaseAsset)
-		s.Require().NoError(err)
-
-		// Margin of error should be slightly larger than the gamm pool's spread factor, as the gamm pool is used to
-		// swap through when creating the initial position. The below implies a 0.1% margin of error.
-		tollerance := expectedSpreadFactor.Add(sdk.MustNewDecFromStr("0.0001"))
-		multiplicativeTolerance := osmomath.ErrTolerance{
-			MultiplicativeTolerance: tollerance,
-		}
-
-		s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(expectedSpotPrice), concentratedPool.GetCurrentSqrtPrice().PowerInteger(2)))
-	}
-
-	// Check that the community pool module account possesses positions for all the canonical pools.
-	communityPoolAddress := chainABNode.QueryCommunityPoolModuleAccount()
-	positions := chainABNode.QueryConcentratedPositions(communityPoolAddress)
-	s.Require().Len(positions, len(v17.AssetPairsForTestsOnly))
-}
-
-// END: CAN REMOVE POST v17 UPGRADE
-=======
 func (s *IntegrationTestSuite) SetDefaultTakerFeeBothChains() {
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -1927,4 +1853,3 @@ func (s *IntegrationTestSuite) SetDefaultTakerFee(chain *chain.Config, chainNode
 	err := chainNode.ParamChangeProposal("poolmanager", string(poolmanagertypes.KeyDefaultTakerFee), json.RawMessage(`"0.001500000000000000"`), chain)
 	s.Require().NoError(err)
 }
->>>>>>> 5c8fd80f (feat(spike): taker fee (#6034))

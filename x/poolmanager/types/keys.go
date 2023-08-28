@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	ModuleName = "poolmanager"
+	ModuleName   = "poolmanager"
+	KeySeparator = "|"
 
 	StoreKey = ModuleName
 
@@ -21,15 +22,12 @@ var (
 
 	// SwapModuleRouterPrefix defines prefix to store pool id to swap module mappings.
 	SwapModuleRouterPrefix = []byte{0x02}
-<<<<<<< HEAD
-=======
 
 	// KeyPoolVolumePrefix defines prefix to store pool volume.
 	KeyPoolVolumePrefix = []byte{0x03}
 
 	// DenomTradePairPrefix defines prefix to store denom trade pair for taker fee.
 	DenomTradePairPrefix = []byte{0x04}
->>>>>>> 5c8fd80f (feat(spike): taker fee (#6034))
 )
 
 // ModuleRouteToBytes serializes moduleRoute to bytes.
