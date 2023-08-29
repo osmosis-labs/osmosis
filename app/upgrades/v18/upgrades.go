@@ -10,8 +10,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v17/app/keepers"
 	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -52,7 +50,7 @@ func CreateUpgradeHandler(
 		desiredEpochInfo := epochtypes.EpochInfo{}
 		for _, epoch := range epochs {
 			if epoch.Identifier == "day" {
-				epoch.Duration = time.Minute * 3
+				epoch.Duration = time.Minute * 7
 				epoch.CurrentEpochStartTime = time.Now().Add(-epoch.Duration).Add(time.Minute)
 				desiredEpochInfo = epoch
 				keepers.EpochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
@@ -60,58 +58,8 @@ func CreateUpgradeHandler(
 		}
 		keepers.EpochsKeeper.SetEpochInfo(ctx, desiredEpochInfo)
 
-		addr, err := sdk.AccAddressFromBech32("osmo1urn0pnx8fl5kt89r5nzqd8htruq7skadc2xdk3")
-		if err != nil {
-			return nil, err
-		}
-
-		err = keepers.BankKeeper.MintCoins(ctx, protorevtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(OSMO, sdk.NewInt(50000000000))))
-		if err != nil {
-			return nil, err
-		}
-		err = keepers.BankKeeper.SendCoinsFromModuleToAccount(ctx, protorevtypes.ModuleName, addr, sdk.NewCoins(sdk.NewCoin(OSMO, sdk.NewInt(50000000000))))
-		if err != nil {
-			return nil, err
-		}
-
-		aktGAMMPool, err := keepers.GAMMKeeper.GetPool(ctx, 3)
-		if err != nil {
-			return nil, err
-		}
-
-		sharesOut, err := keepers.GAMMKeeper.JoinSwapExactAmountIn(ctx, addr, aktGAMMPool.GetId(), sdk.NewCoins(sdk.NewCoin(OSMO, sdk.NewInt(50000000000))), sdk.ZeroInt())
-		if err != nil {
-			return nil, err
-		}
-		aktSharesDenom := fmt.Sprintf("gamm/pool/%d", aktGAMMPool.GetId())
-		shareCoins := sdk.NewCoins(sdk.NewCoin(aktSharesDenom, sharesOut))
-		lock, err := keepers.LockupKeeper.CreateLock(ctx, addr, shareCoins, time.Hour*24*14)
-		if err != nil {
-			return nil, err
-		}
-
-		value := keepers.LockupKeeper.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.ByDuration,
-			Denom:         "gamm/pool/3",
-			Duration:      time.Hour * 24 * 14,
-		})
-		ctx.Logger().Info(fmt.Sprintf("VALUE PRE: %v", value))
-
 		// Clear gamm/pool/3 denom accumulation store
 		keepers.LockupKeeper.ClearDenomAccumulationStore(ctx, pool3Denom)
-
-		// Remove the lockup created for pool 3 above
-		err = keepers.LockupKeeper.ForceUnlock(ctx, lock)
-		if err != nil {
-			return nil, err
-		}
-
-		value = keepers.LockupKeeper.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.ByDuration,
-			Denom:         "gamm/pool/3",
-			Duration:      time.Hour * 24 * 14,
-		})
-		ctx.Logger().Info(fmt.Sprintf("VALUE POST: %v", value))
 
 		return migrations, nil
 	}
