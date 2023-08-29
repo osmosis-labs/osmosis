@@ -26,7 +26,7 @@ func (app *OsmosisApp) ExportAppStateAndValidators(
 		return servertypes.ExportedApp{}, fmt.Errorf("forZeroHeight not supported")
 	}
 
-	genState := app.mm.ExportGenesisForModules(ctx, app.appCodec, modulesToExport)
+	genState := app.ExportState(ctx)
 	appState, err := json.MarshalIndent(genState, "", "  ")
 	if err != nil {
 		return servertypes.ExportedApp{}, err
@@ -42,5 +42,15 @@ func (app *OsmosisApp) ExportAppStateAndValidators(
 }
 
 func (app *OsmosisApp) ExportState(ctx sdk.Context) map[string]json.RawMessage {
-	return app.mm.ExportGenesis(ctx, app.AppCodec())
+	genesisData := make(map[string]json.RawMessage)
+	for _, moduleName := range app.mm.OrderExportGenesis {
+		// NOTE: the wasm module is making the export is making the
+		// export state machine run out of RAM, skip it to allow state
+		// export
+		if moduleName == "wasm" {
+			continue
+		}
+		genesisData[moduleName] = app.mm.Modules[moduleName].ExportGenesis(ctx, app.AppCodec())
+	}
+	return genesisData
 }
