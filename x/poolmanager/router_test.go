@@ -3486,8 +3486,6 @@ func (s *KeeperTestSuite) TestTakerFee() {
 	)
 
 	tests := map[string]struct {
-		isInvalidSender   bool
-		setupPools        []poolSetup
 		routes            []types.SwapAmountInSplitRoute
 		tokenInDenom      string
 		tokenOutMinAmount sdk.Int
@@ -3562,12 +3560,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 
 			sender := s.TestAccs[1]
 
-			setupPools := defaultValidPools
-			if tc.setupPools != nil {
-				setupPools = tc.setupPools
-			}
-
-			for _, pool := range setupPools {
+			for _, pool := range defaultValidPools {
 				poolId := s.CreatePoolFromTypeWithCoins(pool.poolType, pool.initialLiquidity)
 
 				// Set taker fee for pool/pair
@@ -3577,10 +3570,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, pool.initialLiquidity[0].Denom, pool.initialLiquidity[1].Denom, poolId)
 
 				// Fund sender with initial liqudity
-				// If not valid, we don't fund to trigger an error case.
-				if !tc.isInvalidSender {
-					s.FundAcc(sender, pool.initialLiquidity)
-				}
+				s.FundAcc(sender, pool.initialLiquidity)
 			}
 
 			// Log starting balances to compare against
