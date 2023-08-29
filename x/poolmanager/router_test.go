@@ -93,6 +93,8 @@ var (
 	fooAbcPoolId   = bazUosmoPoolId + 1
 	bazAbcCoins    = sdk.NewCoins(abcCoin, bazCoin)
 	bazAbcPoolId   = fooAbcPoolId + 1
+	uosmoAbcCoins  = sdk.NewCoins(abcCoin, uosmoCoin)
+	uosmoAbcPoolId = bazAbcPoolId + 1
 
 	defaultValidPools = []poolSetup{
 		{
@@ -134,6 +136,11 @@ var (
 		{
 			poolType:         types.Concentrated,
 			initialLiquidity: bazAbcCoins,
+			takerFee:         defaultTakerFee,
+		},
+		{
+			poolType:         types.Balancer,
+			initialLiquidity: uosmoAbcCoins,
 			takerFee:         defaultTakerFee,
 		},
 	}
@@ -3429,6 +3436,206 @@ func (s *KeeperTestSuite) TestTrackVolume() {
 			// We wrap with sdk.NewCoins() to sanitize the outputs for comparison in case they are empty.
 			totalVolume := s.App.PoolManagerKeeper.GetTotalVolumeForPool(s.Ctx, targetPoolId)
 			s.Require().Equal(sdk.NewCoins(sdk.NewCoin(uosmo, tc.expectedVolume)), sdk.NewCoins(totalVolume...))
+		})
+	}
+}
+
+// TestTakerFee tests starting from the swap that the taker fee is taken from and ends at the after epoch end hook,
+// ensuring the resulting values are swapped as intended and sent to the correct destinations.
+func (s *KeeperTestSuite) TestTakerFee() {
+	var (
+		nonZeroTakerFee = sdk.MustNewDecFromStr("0.0015")
+		// Note: all pools have the default amount of 10_000_000_000 in each asset,
+		// meaning in their initial state they have a spot price of 1.
+		quoteNativeDenomRoute = []types.SwapAmountInSplitRoute{
+			{
+				Pools: []types.SwapAmountInRoute{
+					{
+						PoolId:        fooUosmoPoolId,
+						TokenOutDenom: foo,
+					},
+				},
+				TokenInAmount: twentyFiveBaseUnitsAmount,
+			},
+		}
+		quoteQuoteDenomRoute = []types.SwapAmountInSplitRoute{
+			{
+				Pools: []types.SwapAmountInRoute{
+					{
+						PoolId:        fooBarPoolId,
+						TokenOutDenom: bar,
+					},
+				},
+				TokenInAmount: twentyFiveBaseUnitsAmount,
+			},
+		}
+		quoteNonquoteDenomRoute = []types.SwapAmountInSplitRoute{
+			{
+				Pools: []types.SwapAmountInRoute{
+					{
+						PoolId:        fooAbcPoolId,
+						TokenOutDenom: foo,
+					},
+				},
+				TokenInAmount: twentyFiveBaseUnitsAmount,
+			},
+		}
+		totalExpectedTakerFee = sdk.NewDecFromInt(twentyFiveBaseUnitsAmount).Mul(nonZeroTakerFee)
+		osmoTakerFeeDistr     = s.App.PoolManagerKeeper.GetParams(s.Ctx).TakerFeeParams.OsmoTakerFeeDistribution
+		nonOsmoTakerFeeDistr  = s.App.PoolManagerKeeper.GetParams(s.Ctx).TakerFeeParams.NonOsmoTakerFeeDistribution
+	)
+
+	tests := map[string]struct {
+		routes            []types.SwapAmountInSplitRoute
+		tokenInDenom      string
+		tokenOutMinAmount sdk.Int
+
+		expectedTokenOutEstimate                            sdk.Int
+		expectedTakerFees                                   expectedTakerFees
+		expectedCommunityPoolBalancesDelta                  sdk.Coins // actual community pool
+		expectedCommunityPoolFeeCollectorBalanceDelta       sdk.Coins // where non whitelisted fees are staged prior to being swapped and sent to community pool
+		expectedStakingRewardFeeCollectorMainBalanceDelta   sdk.Coins // where fees are staged prior to being distributed to stakers
+		expectedStakingRewardFeeCollectorTxfeesBalanceDelta sdk.Coins // where tx fees are initially sent, swapped, and then sent to main fee collector
+
+		expectError error
+	}{
+		"native denom taker fee": {
+			routes:            quoteNativeDenomRoute,
+			tokenInDenom:      uosmo,
+			tokenOutMinAmount: sdk.OneInt(),
+
+			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
+			expectedTakerFees: expectedTakerFees{
+				communityPoolQuoteAssets:    sdk.NewCoins(),
+				communityPoolNonQuoteAssets: sdk.NewCoins(),
+				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(uosmo, totalExpectedTakerFee.Mul(osmoTakerFeeDistr.StakingRewards).TruncateInt())),
+			},
+			// full native denom set in the main fee collector addr
+			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(uosmo, totalExpectedTakerFee.Mul(osmoTakerFeeDistr.StakingRewards).TruncateInt())),
+		},
+		"quote denom taker fee": {
+			routes:            quoteQuoteDenomRoute,
+			tokenInDenom:      foo,
+			tokenOutMinAmount: sdk.OneInt(),
+
+			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
+			expectedTakerFees: expectedTakerFees{
+				communityPoolQuoteAssets:    sdk.NewCoins(sdk.NewCoin(foo, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).TruncateInt())),
+				communityPoolNonQuoteAssets: sdk.NewCoins(),
+				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(foo, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).TruncateInt())),
+			},
+			// since foo is whitelisted token, it is sent directly to community pool
+			expectedCommunityPoolBalancesDelta: sdk.NewCoins(sdk.NewCoin(foo, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).TruncateInt())),
+			// foo swapped for uosmo, uosmo sent to main fee collector, 1 uosmo diff due to slippage from swap
+			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(uosmo, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).Sub(sdk.OneDec()).TruncateInt())),
+		},
+		"non quote denom taker fee": {
+			routes:            quoteNonquoteDenomRoute,
+			tokenInDenom:      abc,
+			tokenOutMinAmount: sdk.OneInt(),
+
+			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
+			expectedTakerFees: expectedTakerFees{
+				communityPoolQuoteAssets:    sdk.NewCoins(),
+				communityPoolNonQuoteAssets: sdk.NewCoins(sdk.NewCoin(abc, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).TruncateInt())),
+				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(abc, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).TruncateInt())),
+			},
+			// since abc is not whitelisted token, it gets swapped for `CommunityPoolDenomToSwapNonWhitelistedAssetsTo`, which is set to baz, 1 baz diff due to slippage from swap
+			expectedCommunityPoolBalancesDelta: sdk.NewCoins(sdk.NewCoin(baz, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).Sub(sdk.OneDec()).TruncateInt())),
+			// abc swapped for uosmo, uosmo sent to main fee collector, 1 uosmo diff due to slippage from swap
+			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(uosmo, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).Sub(sdk.OneDec()).TruncateInt())),
+		},
+	}
+
+	s.PrepareBalancerPool()
+	s.PrepareConcentratedPool()
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+			k := s.App.PoolManagerKeeper
+			ak := s.App.AccountKeeper
+			bk := s.App.BankKeeper
+
+			sender := s.TestAccs[1]
+
+			for _, pool := range defaultValidPools {
+				poolId := s.CreatePoolFromTypeWithCoins(pool.poolType, pool.initialLiquidity)
+
+				// Set taker fee for pool/pair
+				k.SetDenomPairTakerFee(s.Ctx, pool.initialLiquidity[0].Denom, pool.initialLiquidity[1].Denom, nonZeroTakerFee)
+
+				// Set the denom pair as a pool route in protorev
+				s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, pool.initialLiquidity[0].Denom, pool.initialLiquidity[1].Denom, poolId)
+
+				// Fund sender with initial liqudity
+				s.FundAcc(sender, pool.initialLiquidity)
+			}
+
+			// Log starting balances to compare against
+			communityPoolBalancesPreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
+			stakingRewardFeeCollectorMainBalancePreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(txfeestypes.FeeCollectorName))
+			stakingRewardFeeCollectorTxfeesBalancePreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(stakingAddrName))
+			commPoolFeeCollectorBalancePreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))
+
+			// Execute swap
+			tokenOut, err := k.SplitRouteExactAmountIn(s.Ctx, sender, tc.routes, tc.tokenInDenom, tc.tokenOutMinAmount)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectError.Error())
+				return
+			}
+			s.Require().NoError(err)
+
+			// Note, we use a 1% error tolerance with rounding down by default
+			// because we initialize the reserves 1:1 so by performing
+			// the swap we don't expect the price to change significantly.
+			// As a result, we roughly expect the amount out to be the same
+			// as the amount in given in another token. However, the actual
+			// amount must be stricly less than the given due to price impact.
+			multiplicativeTolerance := sdk.OneDec()
+			errTolerance := osmomath.ErrTolerance{
+				RoundingDir:             osmomath.RoundDown,
+				MultiplicativeTolerance: multiplicativeTolerance,
+			}
+
+			// Ensure output amount is within tolerance
+			s.Require().Equal(0, errTolerance.Compare(tc.expectedTokenOutEstimate, tokenOut), fmt.Sprintf("expected %s, got %s", tc.expectedTokenOutEstimate, tokenOut))
+
+			// -- Ensure taker fee distributions have properly executed --
+
+			// We expect all taker fees collected in quote assets to be sent directly to the community pool address.
+			communityPoolBalancesAfterSwap := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
+			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(communityPoolBalancesAfterSwap.Sub(communityPoolBalancesPreHook)...))
+
+			// We expect all taker fees collected in non-quote assets to be sent to the non-quote asset address txfees community pool address
+			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolNonQuoteAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))...))
+
+			// We expect all taker fees intended for staking reward distributions (both quote and non quote) to be collected in the same address
+			// to ensure distributions are executed together.
+			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.stakingRewardAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(stakingAddrName))...))
+
+			// Run the afterEpochEnd hook from txfees directly
+			s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "day", 1)
+
+			// Store balances after hook
+			communityPoolBalancesPostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
+			stakingRewardFeeCollectorMainBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(txfeestypes.FeeCollectorName))
+			stakingRewardFeeCollectorTxfeesBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(stakingAddrName))
+			commPoolFeeCollectorBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))
+
+			communityPoolBalancesDelta := communityPoolBalancesPostHook.Sub(communityPoolBalancesPreHook)
+			commPoolFeeCollectorBalanceDelta := commPoolFeeCollectorBalancePostHook.Sub(commPoolFeeCollectorBalancePreHook)
+			stakingRewardFeeCollectorMainBalanceDelta := stakingRewardFeeCollectorMainBalancePostHook.Sub(stakingRewardFeeCollectorMainBalancePreHook)
+			stakingRewardFeeCollectorTxfeesBalanceDelta := stakingRewardFeeCollectorTxfeesBalancePostHook.Sub(stakingRewardFeeCollectorTxfeesBalancePreHook)
+
+			// Ensure balances are as expected
+			s.Require().Equal(tc.expectedCommunityPoolBalancesDelta, communityPoolBalancesDelta)
+			s.Require().Equal(tc.expectedCommunityPoolFeeCollectorBalanceDelta, commPoolFeeCollectorBalanceDelta) // should always be empty after hook if all routes exist
+			s.Require().Equal(tc.expectedStakingRewardFeeCollectorMainBalanceDelta, stakingRewardFeeCollectorMainBalanceDelta)
+			s.Require().Equal(tc.expectedStakingRewardFeeCollectorTxfeesBalanceDelta, stakingRewardFeeCollectorTxfeesBalanceDelta) // should always be empty after hook if all routes exist
 		})
 	}
 }

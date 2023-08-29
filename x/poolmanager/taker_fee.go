@@ -17,6 +17,8 @@ import (
 // it is deleted from state.
 func (k Keeper) SetDenomPairTakerFee(ctx sdk.Context, denom0, denom1 string, takerFee sdk.Dec) {
 	store := ctx.KVStore(k.storeKey)
+	// if given taker fee is equal to the default taker fee,
+	// delete whatever we have in current state to use default taker fee.
 	if takerFee.Equal(k.GetParams(ctx).TakerFeeParams.DefaultTakerFee) {
 		store.Delete(types.FormatDenomTradePairKey(denom0, denom1))
 		return
