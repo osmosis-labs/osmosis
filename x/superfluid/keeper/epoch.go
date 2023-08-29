@@ -143,7 +143,6 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 			return k.updateConcentratedOsmoEquivalentMultiplier(cacheCtx, asset, newEpochNumber)
 		})
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
-	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		return errors.New("SuperfluidAssetTypeNative is unsupported")
 	}
 	return nil

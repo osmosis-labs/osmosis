@@ -527,7 +527,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 			ctx.Logger().Debug("distributeSyntheticInternal, gauge id %d, %d", "module", types.ModuleName, "gaugeId", gauge.Id, "height", ctx.BlockHeight())
 			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
 		} else {
-			// Do not distributed if LockQueryType = Group, because if we distribute here we will be double distributing.
+			// Do not distribute if LockQueryType = Group, because if we distribute here we will be double distributing.
 			if gauge.DistributeTo.LockQueryType == lockuptypes.ByGroup {
 				continue
 			}
