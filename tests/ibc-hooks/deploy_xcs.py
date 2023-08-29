@@ -67,7 +67,7 @@ SWAPROUTER_PATH = './bytecode/swaprouter.wasm'
 REGISTRY_PATH = './bytecode/crosschain_registry.wasm'
 CROSSCHAIN_SWAPS_PATH = './bytecode/crosschain_swaps.wasm'
 
-ENV = "edgenet"
+ENV = "testnet"
 match ENV:
     case "testnet":
         BASE_API = "https://api.testnet.osmosis.zone"
@@ -262,10 +262,10 @@ def get_denom_aliases():
     return result
 
 
-async def setup_registry(moniker, deployer, gov, pools, dry_run=False):
+async def setup_registry(moniker, owner, gov, pools, dry_run=False):
     registry_id = get_code_id(
         await osmosisd(f"tx wasm store {REGISTRY_PATH} --from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run))
-    msg = '{"owner": "%s"}' % deployer
+    msg = '{"owner": "%s"}' % owner
     registry_addr = get_address(await osmosisd(
         f'tx wasm instantiate {registry_id}',
         msg,
@@ -324,14 +324,14 @@ async def setup_registry(moniker, deployer, gov, pools, dry_run=False):
     return registry_addr
 
 
-async def setup_swaprouter(moniker, deployer, gov, pools, dry_run=False):
+async def setup_swaprouter(moniker, owner, gov, pools, dry_run=False):
     if SWAPROUTER_CODE_ID:
         swaprouter_id = SWAPROUTER_CODE_ID
     else:
         swaprouter_id = get_code_id(
             await osmosisd(f"tx wasm store {SWAPROUTER_PATH} --from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run))
 
-    msg = '{"owner": "%s"}' % deployer
+    msg = '{"owner": "%s"}' % owner
     swaprouter_addr = get_address(await osmosisd(
         f'tx wasm instantiate {swaprouter_id}',
         msg,
@@ -358,7 +358,7 @@ async def setup_swaprouter(moniker, deployer, gov, pools, dry_run=False):
     return swaprouter_addr
 
 
-async def setup_xcs(moniker, deployer, swaprouter_addr, registry_addr, gov, dry_run=False):
+async def setup_xcs(moniker, governor, swaprouter_addr, registry_addr, gov, dry_run=False):
     if CROSSCHAIN_SWAPS_CODE_ID:
         xcs_id = CROSSCHAIN_SWAPS_CODE_ID
     else:
@@ -366,7 +366,7 @@ async def setup_xcs(moniker, deployer, swaprouter_addr, registry_addr, gov, dry_
             await osmosisd(f"tx wasm store {CROSSCHAIN_SWAPS_PATH} --from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run))
 
     msg = '{"governor": "%s", "swap_contract": "%s", "registry_contract": "%s"}' % (
-        deployer, swaprouter_addr, registry_addr)
+        governor, swaprouter_addr, registry_addr)
     xcs_addr = get_address(await osmosisd(
         f'tx wasm instantiate {xcs_id}',
         msg,
@@ -375,7 +375,7 @@ async def setup_xcs(moniker, deployer, swaprouter_addr, registry_addr, gov, dry_
     return xcs_addr
 
 
-async def deploy(dry_run=False, moniker="deployer"):
+async def deploy(dry_run=False, moniker="deployer", owner=None):
     (deployer, _), gov, pools = await asyncio.gather(
         osmosisd(f"keys show {moniker} -a", node=False, chain_id=False, block=False, as_json=False, print_cmd=False),
         get_gov_addr(),
@@ -383,6 +383,12 @@ async def deploy(dry_run=False, moniker="deployer"):
     )
     # normalize the deployer address
     deployer = deployer.strip()
+
+    owner = owner or deployer
+    if not owner:
+        raise ValueError("owner is required")
+    else:
+        print(f'Owner set to {owner}')
 
     print(pools)
     registry_addr = await setup_registry(moniker, deployer, gov, pools, dry_run=dry_run)
@@ -402,12 +408,15 @@ def main():
     # Add the deployer argument with default value "deployer" and type str
     parser.add_argument('--deployer', default="deployer", type=str,
                         help='The name of the deployer account, default is "deployer".')
+    # Add the deployer argument with default value "deployer" and type str
+    parser.add_argument('--owner', default=None, type=str,
+                        help='The owner account. Will default to the deployer if omitted')
 
     # Parse the command-line arguments
     args = parser.parse_args()
 
     # Call the deploy function with the dry_run argument
-    asyncio.run(deploy(dry_run=args.dry_run, moniker=args.deployer))
+    asyncio.run(deploy(dry_run=args.dry_run, moniker=args.deployer, owner=args.owner))
 
 
 if __name__ == "__main__":
