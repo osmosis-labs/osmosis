@@ -26,22 +26,22 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, gen *types.GenesisState, unpacker 
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	params := k.GetParams(ctx)
 
-	pools, err := k.GetPools(ctx)
-	if err != nil {
-		panic(err)
-	}
-	poolAnys := []*codectypes.Any{}
-	for _, poolI := range pools {
-		cosmwasmPool, ok := poolI.(types.CosmWasmExtension)
-		if !ok {
-			panic("invalid pool type")
-		}
-		any, err := codectypes.NewAnyWithValue(cosmwasmPool)
-		if err != nil {
-			panic(err)
-		}
-		poolAnys = append(poolAnys, any)
-	}
+	//  pools, err := k.GetPools(ctx)
+	//  if err != nil {
+	//  	panic(err)
+	//  }
+	//	poolAnys := []*codectypes.Any{}
+	//	for _, poolI := range pools {
+	//		cosmwasmPool, ok := poolI.(types.CosmWasmExtension)
+	//		if !ok {
+	//			panic("invalid pool type")
+	//		}
+	//		any, err := codectypes.NewAnyWithValue(cosmwasmPool)
+	//		if err != nil {
+	//			panic(err)
+	//		}
+	//		poolAnys = append(poolAnys, any)
+	//	}
 
 	return &types.GenesisState{
 		Params: params,
