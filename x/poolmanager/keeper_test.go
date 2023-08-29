@@ -50,6 +50,18 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.Setup()
+<<<<<<< HEAD
+=======
+
+	// Set the bond denom to be uosmo to make volume tracking tests more readable.
+	skParams := s.App.StakingKeeper.GetParams(s.Ctx)
+	skParams.BondDenom = "uosmo"
+	s.App.StakingKeeper.SetParams(s.Ctx, skParams)
+	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "uosmo")
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	poolManagerParams.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo = "baz"
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+>>>>>>> 7d8ee0ec (test: full test for taker fee (#6223))
 }
 
 // createBalancerPoolsFromCoinsWithSpreadFactor creates balancer pools from given sets of coins and respective spread factors.
