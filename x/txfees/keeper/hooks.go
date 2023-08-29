@@ -12,7 +12,15 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 	return nil
 }
 
-// at the end of each epoch, swap all non-OSMO fees into OSMO and transfer to fee module account
+// at the end of each epoch, swap all non-OSMO fees into the desired denom and send either to fee collector or community pool.
+// Staking fee collector for staking rewards.
+// - All non-native rewards that have a pool with liquidity and a link set in protorev get swapped to native denom
+// - All resulting native tokens get sent to the fee collector.
+// - Any non-native tokens that did not have associated pool stay in the balance of staking fee collector.
+// Community pool fee collector.
+// - All non-native rewards that have a pool with liquidity and a link set in protorev get swapped to a denom configured by parameter.
+// - All resulting parameter denom tokens get sent to the community pool.
+// - Any non-native tokens that did not have associated pool stay in the balance of community pool fee collector.
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	defaultFeesDenom, _ := k.GetBaseDenom(ctx)
 
