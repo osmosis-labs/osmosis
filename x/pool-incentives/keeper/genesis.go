@@ -57,7 +57,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 			for _, duration := range lockableDurations {
 				gaugeID, err := k.GetPoolGaugeId(ctx, uint64(poolId), duration)
 				if err != nil {
-					panic(err)
+					// TODO: This error happens on pool export for CosmWasm
+					// assocated pools, to fix this we need to assign
+					// a gauge to cosmwasm pools on creation
+
+					ctx.Logger().Error(err.Error())
+					// panic(err)
 				}
 				var poolToGauge types.PoolToGauge
 				poolToGauge.Duration = duration
