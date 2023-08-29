@@ -60,16 +60,6 @@ func (q Querier) ArithmeticTwapToNow(grpcCtx context.Context,
 	return q.Q.ArithmeticTwapToNow(ctx, *req)
 }
 
-func (q Querier) ExtraArithmeticTwap(grpcCtx context.Context,
-	req *queryproto.ArithmeticTwapRequest,
-) (*queryproto.ArithmeticTwapResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.ExtraArithmeticTwap(ctx, *req)
-}
-
 func (q Querier) ArithmeticTwap(grpcCtx context.Context,
 	req *queryproto.ArithmeticTwapRequest,
 ) (*queryproto.ArithmeticTwapResponse, error) {
