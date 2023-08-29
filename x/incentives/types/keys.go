@@ -65,11 +65,3 @@ func NoLockExternalGaugeDenom(poolId uint64) string {
 func NoLockInternalGaugeDenom(poolId uint64) string {
 	return fmt.Sprintf("%s%d", NoLockInternalPrefix, poolId)
 }
-<<<<<<< HEAD
-=======
-
-// KeyGroupGaugeForId returns key for a given groupGaugeId.
-func KeyGroupGaugeForId(groupGaugeId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s", GroupGaugePrefix, "|", groupGaugeId, "|"))
-}
->>>>>>> 32cdadfa (Fix panic edge case in superfluid AfterEpochEnd hook by surrounding CL multipler update with ApplyFuncIfNoError (#6231))

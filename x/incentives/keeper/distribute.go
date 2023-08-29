@@ -266,72 +266,6 @@ func (k Keeper) distributeSyntheticInternal(
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
 }
 
-<<<<<<< HEAD
-=======
-// AllocateAcrossGauges gets all the active groupGauges and distributes tokens evenly based on the internalGauges set for that
-// groupGauge. After each iteration we update the groupGauge by modifying filledEpoch and distributed coins.
-func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
-	currTime := ctx.BlockTime()
-
-	groupGauges, err := k.GetAllGroupGauges(ctx)
-	if err != nil {
-		return err
-	}
-
-	for _, groupGauge := range groupGauges {
-		gauge, err := k.GetGaugeByID(ctx, groupGauge.GroupGaugeId)
-		if err != nil {
-			return err
-		}
-
-		// only allow distribution if the GroupGauge is Active
-		if gauge.IsActiveGauge(currTime) {
-			coinsToDistributePerInternalGauge, coinsToDistributeThisEpoch, err := k.calcSplitPolicyCoins(ctx, groupGauge.SplittingPolicy, gauge, groupGauge)
-			if err != nil {
-				return err
-			}
-
-			for _, internalGaugeId := range groupGauge.InternalIds {
-				err = k.AddToGaugeRewardsFromGauge(ctx, groupGauge.GroupGaugeId, coinsToDistributePerInternalGauge, internalGaugeId)
-				if err != nil {
-					return err
-				}
-			}
-
-			// we distribute tokens from groupGauge to internal gauge therefore update groupGauge fields
-			// updates filledEpoch and distributedCoins
-			k.updateGaugePostDistribute(ctx, *gauge, coinsToDistributeThisEpoch)
-		}
-	}
-
-	return nil
-}
-
-// calcSplitPolicyCoins calculates tokens to split given a policy and groupGauge.
-// TODO: add volume split policy
-func (k Keeper) calcSplitPolicyCoins(ctx sdk.Context, policy types.SplittingPolicy, groupGauge *types.Gauge, groupGaugeObj types.GroupGauge) (sdk.Coins, sdk.Coins, error) {
-	if policy == types.Evenly {
-		remainCoins := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
-
-		var coinsDistPerInternalGauge, coinsDistThisEpoch sdk.Coins
-		for _, coin := range remainCoins {
-			epochDiff := groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs
-			internalGaugeLen := len(groupGaugeObj.InternalIds)
-
-			distPerEpoch := coin.Amount.Quo(sdk.NewIntFromUint64(epochDiff))
-			distPerGauge := distPerEpoch.Quo(sdk.NewInt(int64(internalGaugeLen)))
-
-			coinsDistThisEpoch = coinsDistThisEpoch.Add(sdk.NewCoin(coin.Denom, distPerEpoch))
-			coinsDistPerInternalGauge = coinsDistPerInternalGauge.Add(sdk.NewCoin(coin.Denom, distPerGauge))
-		}
-
-		return coinsDistPerInternalGauge, coinsDistThisEpoch, nil
-	} else {
-		return nil, nil, fmt.Errorf("GroupGauge id %d doesnot have enought coins to distribute.", &groupGauge.Id)
-	}
-}
-
->>>>>>> 32cdadfa (Fix panic edge case in superfluid AfterEpochEnd hook by surrounding CL multipler update with ApplyFuncIfNoError (#6231))
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
 // It handles any kind of gauges:
@@ -530,14 +464,6 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 			ctx.Logger().Debug("distributeSyntheticInternal, gauge id %d, %d", "module", types.ModuleName, "gaugeId", gauge.Id, "height", ctx.BlockHeight())
 			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
 		} else {
-<<<<<<< HEAD
-=======
-			// Do not distribute if LockQueryType = Group, because if we distribute here we will be double distributing.
-			if gauge.DistributeTo.LockQueryType == lockuptypes.ByGroup {
-				continue
-			}
-
->>>>>>> 32cdadfa (Fix panic edge case in superfluid AfterEpochEnd hook by surrounding CL multipler update with ApplyFuncIfNoError (#6231))
 			gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
 		}
 		if err != nil {
