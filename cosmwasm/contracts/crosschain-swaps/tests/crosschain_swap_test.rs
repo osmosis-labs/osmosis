@@ -6,17 +6,16 @@ use std::str::FromStr;
 
 use cosmwasm_std::{Addr, Coin, Decimal};
 use osmosis_std::types::osmosis::poolmanager::v1beta1::SwapAmountInRoute;
-use osmosis_testing::cosmrs::proto::cosmos::bank::v1beta1::QueryAllBalancesRequest;
+use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::QueryAllBalancesRequest;
 
 use crosschain_swaps::msg::{ExecuteMsg as CrossChainExecute, FailedDeliveryAction};
-use osmosis_testing::{Account, Bank, Module, Wasm};
+use osmosis_test_tube::{Account, Bank, Module, Wasm};
 use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, Slippage};
 use test_env::*;
 
 const INITIAL_AMOUNT: u128 = 1_000_000_000_000;
 
 #[test]
-#[ignore] // Issues interacting with the chain via osmosis-test-tube (as opposed to the older osmosis-testing)
 fn crosschain_swap() {
     let TestEnv {
         app,
@@ -99,7 +98,7 @@ fn crosschain_swap() {
 }
 
 fn get_amount(
-    balances: &Vec<osmosis_testing::cosmrs::proto::cosmos::base::v1beta1::Coin>,
+    balances: &Vec<osmosis_test_tube::osmosis_std::types::cosmos::base::v1beta1::Coin>,
     denom: &str,
 ) -> u128 {
     balances

@@ -1,7 +1,7 @@
 mod test_env;
 use cosmwasm_std::Coin;
 use osmosis_std::types::osmosis::poolmanager::v1beta1::SwapAmountInRoute;
-use osmosis_testing::{Module, RunnerError, Wasm};
+use osmosis_test_tube::{Module, RunnerError, Wasm};
 use swaprouter::msg::{ExecuteMsg, GetRouteResponse, QueryMsg};
 use test_env::*;
 
@@ -179,7 +179,6 @@ test_set_route!(
 macro_rules! test_set_route {
     ($test_name:ident should succeed, sender = Owner, msg = $msg:expr) => {
         #[test]
-        #[ignore] // Issues interacting with the chain via osmosis-test-tube (as opposed to the older osmosis-testing)
         fn $test_name() {
             test_set_route_success_case($msg)
         }
@@ -187,7 +186,6 @@ macro_rules! test_set_route {
 
     ($test_name:ident should failed_with $err:expr, sender = $sender:ident, msg = $msg:expr) => {
         #[test]
-        #[ignore] // Issues interacting with the chain via osmosis-test-tube (as opposed to the older osmosis-testing)
         fn $test_name() {
             test_set_route_failed_case(Sender::$sender, $msg, $err)
         }

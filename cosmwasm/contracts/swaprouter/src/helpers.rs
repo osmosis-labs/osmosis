@@ -37,8 +37,11 @@ pub fn validate_pool_route(
             pool_id: route_part.pool_id,
         }
         .query(&deps.querier)
-        .map_err(|_e| ContractError::QueryError {
-            val: format!("Couldn't query liquidity for pool {}", route_part.pool_id),
+        .map_err(|e| {
+            deps.api.debug(&format!("{:?}", e));
+            ContractError::QueryError {
+                val: format!("Couldn't query liquidity for pool {}", route_part.pool_id),
+            }
         })?
         .liquidity;
 
