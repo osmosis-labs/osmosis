@@ -17,12 +17,13 @@ import (
 
 func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 	testCases := []struct {
-		name               string
-		asset              types.SuperfluidAsset
-		expectedMultiplier sdk.Dec
-		removeStakingAsset bool
-		poolDoesNotExist   bool
-		expectedError      error
+		name                  string
+		asset                 types.SuperfluidAsset
+		expectedMultiplier    sdk.Dec
+		removeStakingAsset    bool
+		poolDoesNotExist      bool
+		expectedError         error
+		expectedZeroMultipler bool
 	}{
 		{
 			name:               "update LP token Osmo equivalent successfully",
@@ -50,13 +51,15 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			name:             "update concentrated share Osmo equivalent with pool unexpectedly deleted",
 			asset:            types.SuperfluidAsset{Denom: cltypes.GetConcentratedLockupDenomFromPoolId(1), AssetType: types.SuperfluidAssetTypeConcentratedShare},
 			poolDoesNotExist: true,
-			expectedError:    cltypes.PoolNotFoundError{PoolId: 1},
+			// Note: this does not error since CL errors are surrounded in `ApplyFuncIfNoError`
+			expectedZeroMultipler: true,
 		},
 		{
 			name:               "update concentrated share Osmo equivalent with pool unexpectedly removed Osmo",
 			asset:              types.SuperfluidAsset{Denom: cltypes.GetConcentratedLockupDenomFromPoolId(1), AssetType: types.SuperfluidAssetTypeConcentratedShare},
 			removeStakingAsset: true,
-			expectedError:      errors.New("pool has unexpectedly removed OSMO as one of its underlying assets"),
+			// Note: this does not error since CL errors are surrounded in `ApplyFuncIfNoError`
+			expectedZeroMultipler: true,
 		},
 	}
 
@@ -106,7 +109,13 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 
 				// Check that multiplier was set correctly
 				multiplier := superfluidKeeper.GetOsmoEquivalentMultiplier(ctx, tc.asset.Denom)
-				s.Require().NotEqual(multiplier, sdk.ZeroDec())
+
+				if !tc.expectedZeroMultipler {
+					s.Require().NotEqual(multiplier, sdk.ZeroDec())
+				} else {
+					// Zero on success is expected on CL errors since those are surrounded with `ApplyFuncIfNoError`
+					s.Require().Equal(multiplier, sdk.ZeroDec())
+				}
 			}
 		})
 	}
