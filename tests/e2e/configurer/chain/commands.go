@@ -42,6 +42,13 @@ type params struct {
 	Value    string `json:"value"`
 }
 
+func (n *NodeConfig) SetMaxPoolPointsPerTx(maxPoolPoints int, from string) {
+	n.LogActionF("setting max pool points per tx for protorev at %d points", maxPoolPoints)
+	cmd := []string{"osmosisd", "tx", "protorev", "set-max-pool-points-per-tx", fmt.Sprintf("%d", maxPoolPoints), fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=5000uosmo"}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+}
+
 func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 	n.LogActionF("creating balancer pool from file %s", poolFile)
 	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=5000uosmo"}

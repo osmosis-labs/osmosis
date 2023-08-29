@@ -180,8 +180,8 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	// checks to make sure a separate module account has been set to collect fees not in base token
-	if addrNonNativeFee := dfd.ak.GetModuleAddress(types.NonNativeFeeCollectorForStakingRewardsName); addrNonNativeFee == nil {
-		return ctx, fmt.Errorf("non native fee collector module account (%s) has not been set", types.NonNativeFeeCollectorForStakingRewardsName)
+	if addrNonNativeFee := dfd.ak.GetModuleAddress(types.FeeCollectorForStakingRewardsName); addrNonNativeFee == nil {
+		return ctx, fmt.Errorf("non native fee collector module account (%s) has not been set", types.FeeCollectorForStakingRewardsName)
 	}
 
 	// fee can be in any denom (checked for validity later)
@@ -248,8 +248,8 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	} else {
-		// sends to NonNativeFeeCollectorForStakingRewardsName module account
-		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.NonNativeFeeCollectorForStakingRewardsName, fees)
+		// sends to FeeCollectorForStakingRewardsName module account
+		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorForStakingRewardsName, fees)
 		if err != nil {
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}

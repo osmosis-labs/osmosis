@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
@@ -91,12 +92,12 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 				_, _, addr0 := testdata.KeyTestPubAddr()
 				err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.Coins{coin})
 				s.NoError(err)
-				err = s.App.BankKeeper.SendCoinsFromAccountToModule(s.Ctx, addr0, types.NonNativeFeeCollectorForStakingRewardsName, sdk.Coins{coin})
+				err = s.App.BankKeeper.SendCoinsFromAccountToModule(s.Ctx, addr0, types.FeeCollectorForStakingRewardsName, sdk.Coins{coin})
 				s.NoError(err)
 			}
 
 			// checks the balance of the non-native denom in module account
-			moduleAddrNonNativeFee := s.App.AccountKeeper.GetModuleAddress(types.NonNativeFeeCollectorForStakingRewardsName)
+			moduleAddrNonNativeFee := s.App.AccountKeeper.GetModuleAddress(types.FeeCollectorForStakingRewardsName)
 			s.Equal(s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddrNonNativeFee), tc.coins)
 
 			// End of epoch, so all the non-osmo fee amount should be swapped to osmo and transfer to fee module account
@@ -112,7 +113,74 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			// non-osmos module account should be empty as all the funds should be transferred to osmo module
 			s.Empty(s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddrNonNativeFee))
 			// check that the total osmo amount has been transferred to module account
-			s.Equal(moduleBaseDenomBalance.Amount, finalOutputAmount)
+			s.Equal(moduleBaseDenomBalance.Amount.String(), finalOutputAmount.String())
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom() {
+	s.Setup()
+
+	var (
+		defaultTxFeesDenom, _ = s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+		defaultPoolCoins      = sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin(defaultTxFeesDenom, sdk.NewInt(100)))
+		defaultBalanceToSwap  = sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)))
+	)
+
+	tests := []struct {
+		name                string
+		denomToSwapTo       string
+		poolCoins           sdk.Coins
+		preFundCoins        sdk.Coins
+		feeCollectorAddress sdk.AccAddress
+		expectPass          bool
+	}{
+		{
+			name:          "happy path",
+			denomToSwapTo: defaultTxFeesDenom,
+			poolCoins:     defaultPoolCoins,
+			preFundCoins:  defaultBalanceToSwap,
+		},
+
+		// TODO: add more test cases
+		// - pool does not exist for denom pair but protorev has it set for a pair
+		// - error in swap due to no liquidity
+		// - same denom in balance as denomToSwapTo
+		// - no pool exists for denom pair in protorev
+		// - many tokens in balance, some get swapped, others don't
+		// - different order of denoms in SetPoolForDenomPair()
+	}
+
+	for _, tc := range tests {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			s.Setup()
+
+			// Sets up account with no balance
+			testAccount := apptesting.CreateRandomAccounts(1)[0]
+
+			// Create a pool to be swapped against
+			poolId := s.PrepareConcentratedPoolWithCoins(tc.poolCoins[0].Denom, tc.poolCoins[1].Denom).GetId()
+
+			s.FundAcc(s.TestAccs[0], tc.poolCoins)
+			_, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolId, s.TestAccs[0], tc.poolCoins)
+			s.Require().NoError(err)
+
+			// Set the pool for the denom pair
+			s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, tc.poolCoins[0].Denom, tc.poolCoins[1].Denom, poolId)
+
+			// Fund the account with the preFundCoins
+			s.FundAcc(testAccount, tc.preFundCoins)
+
+			s.App.TxFeesKeeper.SwapNonNativeFeeToDenom(s.Ctx, tc.denomToSwapTo, testAccount)
+
+			// Check balance
+			balances := s.App.BankKeeper.GetAllBalances(s.Ctx, testAccount)
+			s.Require().Len(balances, 1)
+
+			// Check that the denomToSwapTo is the denom of the balance
+			s.Require().Equal(balances[0].Denom, tc.denomToSwapTo)
 		})
 	}
 }

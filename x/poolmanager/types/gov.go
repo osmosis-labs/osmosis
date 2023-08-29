@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -45,7 +44,12 @@ func (p *DenomPairTakerFeeProposal) ProposalType() string {
 
 // ValidateBasic validates a governance proposal's abstract and basic contents
 func (p *DenomPairTakerFeeProposal) ValidateBasic() error {
-	return errors.New("TODO: unimplemented")
+	err := govtypes.ValidateAbstract(p)
+	if err != nil {
+		return err
+	}
+
+	return validateDenomPairTakerFees(p.DenomPairTakerFee)
 }
 
 // String returns a string containing the denom pair taker fee proposal.
