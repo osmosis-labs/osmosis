@@ -3190,8 +3190,6 @@ func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 		})
 	}
 }
-<<<<<<< HEAD
-=======
 
 // runMultipleTrackVolumes runs TrackVolume on the same pool multiple times
 func (s *KeeperTestSuite) runMultipleTrackVolumes(poolId uint64, volume sdk.Coin, times int64) {
@@ -3641,4 +3639,3 @@ func (s *KeeperTestSuite) TestTakerFee() {
 		})
 	}
 }
->>>>>>> 7d8ee0ec (test: full test for taker fee (#6223))
