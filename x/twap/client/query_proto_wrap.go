@@ -30,6 +30,31 @@ func (q Querier) ArithmeticTwap(ctx sdk.Context,
 	return &queryproto.ArithmeticTwapResponse{ArithmeticTwap: twap}, err
 }
 
+func (q Querier) ExtraArithmeticTwap(ctx sdk.Context,
+	req queryproto.ArithmeticTwapRequest,
+) (*queryproto.ArithmeticTwapResponse, error) {
+	if req.EndTime == nil {
+		req.EndTime = &time.Time{}
+	}
+	if (*req.EndTime == time.Time{}) {
+		*req.EndTime = ctx.BlockTime()
+	}
+
+	var twap sdk.Dec
+	var err error
+
+	recordHistoryKeepPeriod := q.K.GetParams(ctx).RecordHistoryKeepPeriod
+	// Check if [start, end] range in record keep period, use default GetArithmeticTwap
+	if !req.EndTime.After(ctx.BlockTime()) && !req.StartTime.Before(ctx.BlockTime().Add(-recordHistoryKeepPeriod)) {
+		twap, err = q.K.GetArithmeticTwap(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime, *req.EndTime)
+	} else {
+		twap, err = q.K.GetExtraArithmeticTwap(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime, *req.EndTime)
+	}
+	
+
+	return &queryproto.ArithmeticTwapResponse{ArithmeticTwap: twap}, err
+}
+
 func (q Querier) ArithmeticTwapToNow(ctx sdk.Context,
 	req queryproto.ArithmeticTwapToNowRequest,
 ) (*queryproto.ArithmeticTwapToNowResponse, error) {
