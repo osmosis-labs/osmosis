@@ -60,7 +60,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 					// TODO: This error happens on pool export for CosmWasm
 					// assocated pools, to fix this we need to assign
 					// a gauge to cosmwasm pools on creation
-					ctx.Logger().Error(err.Error())
+
+					// remove logging
+					// ctx.Logger().Error(err.Error())
 					continue
 				}
 				var poolToGauge types.PoolToGauge
