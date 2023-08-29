@@ -3574,7 +3574,6 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			}
 
 			// Log starting balances to compare against
-			initCommunityPoolBalances := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
 			communityPoolBalancesPreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
 			stakingRewardFeeCollectorMainBalancePreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(txfeestypes.FeeCollectorName))
 			stakingRewardFeeCollectorTxfeesBalancePreHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(stakingAddrName))
@@ -3609,7 +3608,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 
 			// We expect all taker fees collected in quote assets to be sent directly to the community pool address.
 			communityPoolBalancesAfterSwap := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
-			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(communityPoolBalancesAfterSwap.Sub(initCommunityPoolBalances)...))
+			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(communityPoolBalancesAfterSwap.Sub(communityPoolBalancesPreHook)...))
 
 			// We expect all taker fees collected in non-quote assets to be sent to the non-quote asset address txfees community pool address
 			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolNonQuoteAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))...))
