@@ -21,6 +21,9 @@ service Query {
   rpc ArithmeticTwap(ArithmeticTwapRequest) returns (ArithmeticTwapResponse) {
     option (google.api.http).get = "/osmosis/twap/v1beta1/ArithmeticTwap";
   }
+  rpc ExtraArithmeticTwap(ArithmeticTwapRequest) returns (ArithmeticTwapResponse) {
+    option (google.api.http).get = "/osmosis/twap/v1beta1/ExtraArithmeticTwap";
+  }
   rpc ArithmeticTwapToNow(ArithmeticTwapToNowRequest)
       returns (ArithmeticTwapToNowResponse) {
     option (google.api.http).get = "/osmosis/twap/v1beta1/ArithmeticTwapToNow";
