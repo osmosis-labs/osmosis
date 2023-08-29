@@ -28,9 +28,11 @@ pub fn instantiate(
     // validate swaprouter contract and owner addresses and save to config
     let swap_contract = deps.api.addr_validate(&msg.swap_contract)?;
     let governor = deps.api.addr_validate(&msg.governor)?;
+    let registry_contract = deps.api.addr_validate(&msg.registry_contract)?;
     let state = Config {
         swap_contract,
         governor,
+        registry_contract,
     };
     CONFIG.save(deps.storage, &state)?;
 

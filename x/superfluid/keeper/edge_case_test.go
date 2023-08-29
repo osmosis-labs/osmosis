@@ -7,7 +7,7 @@ import (
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 )
 
 func (s *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {

@@ -22,7 +22,7 @@ import (
 	txfeetypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 
 	"github.com/stretchr/testify/suite"
 
@@ -33,9 +33,9 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 
-	"github.com/osmosis-labs/osmosis/v17/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v19/tests/osmosisibctesting"
 
-	"github.com/osmosis-labs/osmosis/v17/tests/ibc-hooks/testutils"
+	"github.com/osmosis-labs/osmosis/v19/tests/ibc-hooks/testutils"
 )
 
 type HooksTestSuite struct {
@@ -773,7 +773,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, setupForwardi
 	chain.StoreContractCode(&suite.Suite, "./bytecode/crosschain_swaps.wasm")
 
 	crosschainAddr := chain.InstantiateContract(&suite.Suite,
-		fmt.Sprintf(`{"swap_contract": "%s", "governor": "%s"}`, swaprouterAddr, owner),
+		fmt.Sprintf(`{"swap_contract": "%s", "governor": "%s", "registry_contract":"%s"}`, swaprouterAddr, owner, registryAddr),
 		3)
 
 	osmosisApp := chain.GetOsmosisApp()

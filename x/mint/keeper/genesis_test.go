@@ -5,8 +5,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v17/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v19/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/mint/types"
 )
 
 var customGenesis = types.NewGenesisState(

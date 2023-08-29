@@ -1,7 +1,7 @@
 package v10
 
 import (
-	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
 )
 
 // Last executed block on the v9 code was 4713064.

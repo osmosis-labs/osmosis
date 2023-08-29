@@ -6,7 +6,7 @@ import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/swap_route.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types";
 
 service Msg {
   rpc SwapExactAmountIn(MsgSwapExactAmountIn)
@@ -17,6 +17,8 @@ service Msg {
       returns (MsgSplitRouteSwapExactAmountInResponse);
   rpc SplitRouteSwapExactAmountOut(MsgSplitRouteSwapExactAmountOut)
       returns (MsgSplitRouteSwapExactAmountOutResponse);
+  rpc SetDenomPairTakerFee(MsgSetDenomPairTakerFee)
+      returns (MsgSetDenomPairTakerFeeResponse);
 }
 
 // ===================== MsgSwapExactAmountIn
@@ -111,6 +113,31 @@ message MsgSplitRouteSwapExactAmountOutResponse {
   string token_in_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== MsgSetDenomPairTakerFee
+message MsgSetDenomPairTakerFee {
+  option (amino.name) = "osmosis/poolmanager/set-denom-pair-taker-fee";
+
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated DenomPairTakerFee denom_pair_taker_fee = 2 [
+    (gogoproto.moretags) = "yaml:\"denom_pair_taker_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgSetDenomPairTakerFeeResponse { bool success = 1; }
+
+message DenomPairTakerFee {
+  // denom0 and denom1 get automatically lexigographically sorted
+  // when being stored, so the order of input here does not matter.
+  string denom0 = 1 [ (gogoproto.moretags) = "yaml:\"denom0\"" ];
+  string denom1 = 2 [ (gogoproto.moretags) = "yaml:\"denom1\"" ];
+  string taker_fee = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"taker_fee\"",
     (gogoproto.nullable) = false
   ];
 }

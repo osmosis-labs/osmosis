@@ -12,10 +12,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
 // BenchmarkBalancerSwapHighestLiquidityArb benchmarks a balancer swap that creates a single three hop arbitrage
@@ -422,7 +422,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 
 				// Check that the number of trades is correct
 				numOfTrades, _ := s.App.ProtoRevKeeper.GetNumberOfTrades(s.Ctx)
-				s.Require().Equal(tc.params.expectedNumOfTrades, numOfTrades)
+				s.Require().Equal(tc.params.expectedNumOfTrades.String(), numOfTrades.String())
 
 				// Check that the profits are correct
 				profits := s.App.ProtoRevKeeper.GetAllProfits(s.Ctx)

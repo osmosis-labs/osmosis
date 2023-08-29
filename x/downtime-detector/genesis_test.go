@@ -3,7 +3,7 @@ package downtimedetector_test
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v17/x/downtime-detector/types"
+	"github.com/osmosis-labs/osmosis/v19/x/downtime-detector/types"
 )
 
 func (s *KeeperTestSuite) TestImportExport() {

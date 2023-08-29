@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/protorev/types";
 
 // TokenPairArbRoutes tracks all of the hot routes for a given pair of tokens
 message TokenPairArbRoutes {

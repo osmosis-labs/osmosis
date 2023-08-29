@@ -16,12 +16,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	downtimedetector "github.com/osmosis-labs/osmosis/v17/x/downtime-detector"
-	downtimeclient "github.com/osmosis-labs/osmosis/v17/x/downtime-detector/client"
-	downtimecli "github.com/osmosis-labs/osmosis/v17/x/downtime-detector/client/cli"
-	"github.com/osmosis-labs/osmosis/v17/x/downtime-detector/client/grpc"
-	"github.com/osmosis-labs/osmosis/v17/x/downtime-detector/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v17/x/downtime-detector/types"
+	downtimedetector "github.com/osmosis-labs/osmosis/v19/x/downtime-detector"
+	downtimeclient "github.com/osmosis-labs/osmosis/v19/x/downtime-detector/client"
+	downtimecli "github.com/osmosis-labs/osmosis/v19/x/downtime-detector/client/cli"
+	"github.com/osmosis-labs/osmosis/v19/x/downtime-detector/client/grpc"
+	"github.com/osmosis-labs/osmosis/v19/x/downtime-detector/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/x/downtime-detector/types"
 )
 
 var (

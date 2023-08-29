@@ -8,12 +8,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
 var defaultFeePerTx = sdk.NewInt(1000)
@@ -22,12 +22,11 @@ var defaultFeePerTx = sdk.NewInt(1000)
 // amountIn - amount being swapped
 // spreadFactor - pool's spread factor
 // poolLiquidity - current pool liquidity
-func calculateSpreadRewardGrowthGlobal(amountIn, spreadFactor, poolLiquidity sdk.Dec) sdk.Dec {
+func calculateSpreadRewardGrowthGlobal(spreadRewardChargeTotal, poolLiquidity sdk.Dec) sdk.Dec {
 	// First we get total spread reward charge for the swap (ΔY * spreadFactor)
-	spreadRewardChargeTotal := amountIn.Mul(spreadFactor)
 
 	// Calculating spread reward growth global (dividing by pool liquidity to find spread reward growth per unit of virtual liquidity)
-	spreadRewardGrowthGlobal := spreadRewardChargeTotal.Quo(poolLiquidity)
+	spreadRewardGrowthGlobal := spreadRewardChargeTotal.QuoTruncate(poolLiquidity)
 	return spreadRewardGrowthGlobal
 }
 

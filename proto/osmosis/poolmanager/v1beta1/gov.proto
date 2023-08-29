@@ -1,0 +1,20 @@
+syntax = "proto3";
+package osmosis.poolmanager.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/poolmanager/v1beta1/tx.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types";
+
+// DenomPairTakerFeeProposal is a type for adding/removing a custom taker fee(s)
+// for one or more denom pairs.
+message DenomPairTakerFeeProposal {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+
+  repeated osmosis.poolmanager.v1beta1.DenomPairTakerFee denom_pair_taker_fee =
+      3 [ (gogoproto.nullable) = false ];
+}

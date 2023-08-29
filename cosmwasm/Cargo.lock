@@ -366,6 +366,7 @@ dependencies = [
  "bech32",
  "cosmwasm-schema",
  "cosmwasm-std",
+ "crosschain-registry",
  "cw-multi-test",
  "cw-storage-plus",
  "cw-utils",
