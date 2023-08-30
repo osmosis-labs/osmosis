@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO: move this into types and have it exported
 func stakingSyntheticDenom(denom, valAddr string) string {
 	return fmt.Sprintf("%s/superbonding/%s", denom, valAddr)
 }

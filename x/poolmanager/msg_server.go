@@ -119,25 +119,3 @@ func (server msgServer) SplitRouteSwapExactAmountOut(goCtx context.Context, msg 
 
 	return &types.MsgSplitRouteSwapExactAmountOutResponse{TokenInAmount: tokenInAmount}, nil
 }
-
-func (server msgServer) SetDenomPairTakerFee(goCtx context.Context, msg *types.MsgSetDenomPairTakerFee) (*types.MsgSetDenomPairTakerFeeResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	for _, denomPair := range msg.DenomPairTakerFee {
-		err := server.keeper.SenderValidationSetDenomPairTakerFee(ctx, msg.Sender, denomPair.Denom0, denomPair.Denom1, denomPair.TakerFee)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// Set denom pair taker fee event is handled in each iteration of the loop above
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-	})
-
-	return &types.MsgSetDenomPairTakerFeeResponse{Success: true}, nil
-}

@@ -105,8 +105,6 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 	// Get the next pool ID and increment the pool ID counter.
 	poolId := k.getNextPoolIdAndIncrement(ctx)
 
-	poolType := msg.GetPoolType()
-
 	// Create the pool with the given pool ID.
 	pool, err := msg.CreatePool(ctx, poolId)
 	if err != nil {
@@ -114,7 +112,7 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 	}
 
 	// Store the pool ID to pool type mapping in state.
-	k.SetPoolRoute(ctx, poolId, poolType)
+	k.SetPoolRoute(ctx, poolId, msg.GetPoolType())
 
 	// Validates the pool address and pool ID stored match what was expected.
 	if err := k.validateCreatedPool(poolId, pool); err != nil {
@@ -122,7 +120,7 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 	}
 
 	// Run the respective pool type's initialization logic.
-	swapModule := k.routes[poolType]
+	swapModule := k.routes[msg.GetPoolType()]
 	if err := swapModule.InitializePool(ctx, pool, msg.PoolCreator()); err != nil {
 		return nil, err
 	}
