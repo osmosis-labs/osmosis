@@ -2,9 +2,10 @@ package ibc_hooks_test
 
 import (
 	"fmt"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctesting "github.com/cosmos/ibc-go/v4/testing"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 )
 
 // This sets up PFM on chainB and tests that it works as expected. We assume ChainA is osmosis

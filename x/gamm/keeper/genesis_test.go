@@ -2,8 +2,8 @@ package keeper_test
 
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
@@ -85,7 +85,7 @@ func (s *KeeperTestSuite) TestGammExportGenesis() {
 	ctx := s.Ctx
 
 	acc1 := s.TestAccs[0]
-	err := simapp.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
+	err := testutil.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
@@ -130,7 +130,7 @@ func (s *KeeperTestSuite) TestMarshalUnmarshalGenesis() {
 	ctx := s.Ctx
 
 	acc1 := s.TestAccs[0]
-	err := simapp.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
+	err := testutil.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),

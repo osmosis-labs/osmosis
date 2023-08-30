@@ -27,7 +27,7 @@ var (
 // 	"math/rand"
 // 	"time"
 
-// 	"github.com/cosmos/cosmos-sdk/simapp"
+// 	"cosmossdk.io/simapp"
 // 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 // 	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"

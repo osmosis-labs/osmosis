@@ -22,7 +22,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 )
 
 type IntegrationTestSuite struct {
@@ -167,6 +166,13 @@ func TestNewSwapExactAmountOutCmd(t *testing.T) {
 // 	}
 // }
 
+func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := []string{from.String(), to.String(), amount.String()}
+	args = append(args, extraArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, bankcli.NewSendTxCmd(), args)
+}
+
 func TestNewSwapExactAmountInCmd(t *testing.T) {
 	desc, _ := cli.NewSwapExactAmountInCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgSwapExactAmountIn]{
@@ -263,7 +269,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 
-	_, err = banktestutil.MsgSendExec(
+	_, err = MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		newAddr,

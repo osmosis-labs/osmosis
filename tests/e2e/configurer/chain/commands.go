@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	"github.com/tendermint/tendermint/libs/bytes"
 
 	appparams "github.com/osmosis-labs/osmosis/v19/app/params"

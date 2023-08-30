@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
+	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -122,7 +122,7 @@ func SetupSimulation(dirPrefix, dbName string) (cfg Config, db dbm.DB, logger lo
 	}
 
 	config := NewConfigFromFlags()
-	config.InitializationConfig.ChainID = helpers.SimAppChainID
+	config.InitializationConfig.ChainID = sims.SimAppChainID
 
 	if FlagVerboseValue {
 		logger = log.TestingLogger()

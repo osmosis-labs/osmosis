@@ -7,9 +7,16 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+<<<<<<< Updated upstream
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 	"github.com/osmosis-labs/osmosis/v19/tests/osmosisibctesting"
+=======
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+
+	"github.com/osmosis-labs/osmosis/v17/tests/osmosisibctesting"
+>>>>>>> Stashed changes
 )
 
 // Instantiate the cw20 and cw20-ics20 contract
