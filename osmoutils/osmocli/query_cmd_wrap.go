@@ -39,6 +39,18 @@ type QueryDescriptor struct {
 	numArgs    int
 }
 
+var _ Descriptor = &QueryDescriptor{}
+
+// Implement Descriptor interface
+func (desc QueryDescriptor) GetCustomFlagOverrides() map[string]string {
+	return desc.CustomFlagOverrides
+}
+
+// Implement Descriptor interface
+func (desc *QueryDescriptor) AttachToUse(str string) {
+	desc.Use += str
+}
+
 func QueryIndexCmd(moduleName string) *cobra.Command {
 	cmd := IndexCmd(moduleName)
 	cmd.Short = fmt.Sprintf("Querying commands for the %s module", moduleName)
@@ -89,6 +101,7 @@ func BuildQueryCli[reqP proto.Message, querier any](desc *QueryDescriptor, newQu
 		}
 	}
 
+	attachFieldsToUse[reqP](desc)
 	cmd := &cobra.Command{
 		Use:   desc.Use,
 		Short: desc.Short,

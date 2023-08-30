@@ -36,7 +36,7 @@ func GetQueryCmd() *cobra.Command {
 // GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
 func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *queryproto.EstimateSwapExactAmountInRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "estimate-swap-exact-amount-in <poolID> <tokenIn>",
+		Use:   "estimate-swap-exact-amount-in",
 		Short: "Query estimate-swap-exact-amount-in",
 		Long: `Query estimate-swap-exact-amount-in.{{.ExampleHeader}}
 {{.CommandPrefix}} estimate-swap-exact-amount-in 1  1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
@@ -50,7 +50,7 @@ func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *queryproto.Es
 // GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output.
 func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *queryproto.EstimateSwapExactAmountOutRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "estimate-swap-exact-amount-out <poolID> <tokenOut>",
+		Use:   "estimate-swap-exact-amount-out",
 		Short: "Query estimate-swap-exact-amount-out",
 		Long: `Query estimate-swap-exact-amount-out.{{.ExampleHeader}}
 {{.CommandPrefix}} estimate-swap-exact-amount-out 1 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
@@ -82,7 +82,7 @@ func GetCmdAllPools() (*osmocli.QueryDescriptor, *queryproto.AllPoolsRequest) {
 // GetCmdPool returns pool information.
 func GetCmdPool() (*osmocli.QueryDescriptor, *queryproto.PoolRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "pool [poolID]",
+		Use:   "pool",
 		Short: "Query pool",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} pool 1`,
@@ -91,7 +91,7 @@ func GetCmdPool() (*osmocli.QueryDescriptor, *queryproto.PoolRequest) {
 
 func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *queryproto.SpotPriceRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "spot-price <pool-ID> [base-asset-denom] [quote-asset-denom]",
+		Use:   "spot-price",
 		Short: "Query spot-price",
 		Long: `Query spot-price
 {{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
@@ -138,7 +138,7 @@ func EstimateSwapExactAmountOutParseArgs(args []string, fs *flag.FlagSet) (proto
 // GetCmdEstimateSinglePoolSwapExactAmountIn returns estimation of output coin when amount of x token input.
 func GetCmdEstimateSinglePoolSwapExactAmountIn() (*osmocli.QueryDescriptor, *queryproto.EstimateSinglePoolSwapExactAmountInRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "estimate-single-pool-swap-exact-amount-in <poolID> <tokenIn> <tokenOutDenom>",
+		Use:   "estimate-single-pool-swap-exact-amount-in",
 		Short: "Query estimate-single-pool-swap-exact-amount-in",
 		Long: `Query estimate-single-pool-swap-exact-amount-in.{{.ExampleHeader}}
 {{.CommandPrefix}} estimate-single-pool-swap-exact-amount-in 1 1000stake uosmo`,
@@ -149,7 +149,7 @@ func GetCmdEstimateSinglePoolSwapExactAmountIn() (*osmocli.QueryDescriptor, *que
 // GetCmdEstimateSinglePoolSwapExactAmountOut returns estimation of input coin to get exact amount of x token output.
 func GetCmdEstimateSinglePoolSwapExactAmountOut() (*osmocli.QueryDescriptor, *queryproto.EstimateSinglePoolSwapExactAmountOutRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "estimate-single-pool-swap-exact-amount-out <poolID> <tokenInDenom> <tokenOut>",
+		Use:   "estimate-single-pool-swap-exact-amount-out",
 		Short: "Query estimate-single-pool-swap-exact-amount-out",
 		Long: `Query estimate-single-pool-swap-exact-amount-out.{{.ExampleHeader}}
 {{.CommandPrefix}} estimate-single-pool-swap-exact-amount-out 1 uosmo 1000stake`,
@@ -159,7 +159,7 @@ func GetCmdEstimateSinglePoolSwapExactAmountOut() (*osmocli.QueryDescriptor, *qu
 
 func GetCmdTotalPoolLiquidity() (*osmocli.QueryDescriptor, *queryproto.TotalPoolLiquidityRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "total-pool-liquidity [poolID]",
+		Use:   "total-pool-liquidity",
 		Short: "Query total-pool-liquidity",
 		Long: `{{.Short}} 
 		{{.CommandPrefix}} total-pool-liquidity 1`,
