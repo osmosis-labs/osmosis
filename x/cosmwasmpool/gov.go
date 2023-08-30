@@ -6,11 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
+	govtypes "github.com/osmosis-labs/osmosis/v19/x/gov/types"
 )
 
 func NewCosmWasmPoolProposalHandler(k Keeper) govtypes.Handler {

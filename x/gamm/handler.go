@@ -4,10 +4,10 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	govtypes "github.com/osmosis-labs/osmosis/v19/x/gov/types"
 )
 
 // NewGammProposalHandler is a handler for governance proposals for the GAMM module.

@@ -4,25 +4,29 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-var _ govtypes.Router = (*router)(nil)
+var _ Router = (*router)(nil)
 
 // Router implements a governance Handler router.
 //
 // TODO: Use generic router (ref #3976).
-type Router govtypes.Router
+type Router interface {
+	AddRoute(r string, h Handler) (rtr Router)
+	HasRoute(r string) bool
+	GetRoute(path string) (h Handler)
+	Seal()
+}
 
 type router struct {
-	routes map[string]govtypes.Handler
+	routes map[string]Handler
 	sealed bool
 }
 
 // NewRouter creates a new Router interface instance
-func NewRouter() govtypes.Router {
+func NewRouter() Router {
 	return &router{
-		routes: make(map[string]govtypes.Handler),
+		routes: make(map[string]Handler),
 	}
 }
 
@@ -37,7 +41,7 @@ func (rtr *router) Seal() {
 
 // AddRoute adds a governance handler for a given path. It returns the Router
 // so AddRoute calls can be linked. It will panic if the router is sealed.
-func (rtr *router) AddRoute(path string, h govtypes.Handler) govtypes.Router {
+func (rtr *router) AddRoute(path string, h Handler) Router {
 	if rtr.sealed {
 		panic("router sealed; cannot add route handler")
 	}
@@ -59,7 +63,7 @@ func (rtr *router) HasRoute(path string) bool {
 }
 
 // GetRoute returns a Handler for a given path.
-func (rtr *router) GetRoute(path string) govtypes.Handler {
+func (rtr *router) GetRoute(path string) Handler {
 	if !rtr.HasRoute(path) {
 		panic(fmt.Sprintf("route \"%s\" does not exist", path))
 	}

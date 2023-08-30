@@ -4,8 +4,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	govtypes "github.com/osmosis-labs/osmosis/v19/x/gov/types"
 	"github.com/osmosis-labs/osmosis/v19/x/txfees/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 )
