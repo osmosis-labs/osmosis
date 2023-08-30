@@ -38,6 +38,7 @@ cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RX
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
 collectd.org v0.3.0/go.mod h1:A/8DzQBkF6abtvrT2j/AU/4tiBgJWYyh0y/oB/4MlWE=
+cosmossdk.io/math v1.1.2 h1:ORZetZCTyWkI5GlZ6CZS28fMHi83ZYf+A2vVnHNzZBM=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0-rc.1 h1:m0VOOB23frXZvAOK44usCgLWvtsxIoMCTBGJZlpmGfU=
 filippo.io/edwards25519 v1.0.0-rc.1/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=
@@ -684,8 +685,7 @@ github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJ
 github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
-github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230703010110-ed4eb883f2a6 h1:oUhTd/4OcubK8u8GN36GdppGYGglCOLGUy5FiFsEk8M=
-github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230703010110-ed4eb883f2a6/go.mod h1:9KGhMg+7ZWgZ50Wa/x8w/jN19O0TSqYLlqUj+2wwxLU=
+github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230829222007-529c69c19915 h1:1VDV+B0rHSrbHjZz7P1tEjZTb2nro/GAhbOT8RAoQcw=
 github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230621002052-afb82fbaa312 h1:7Y/948riUlpIfFSAUIx0rmRy3B+Mdk6alHwOa8lTNXY=
 github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230621002052-afb82fbaa312/go.mod h1:JTym95/bqrSnG5MPcXr1YDhv43JdCeo3p+iDbazoX68=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230623115558-38aaab07d343 h1:7V2b3+mSnLnK0Px+Dl3vnxAQgk4SV8e9ohfJ/tKsq0M=
@@ -857,8 +857,6 @@ github.com/tendermint/go-amino v0.16.0 h1:GyhmgQKvqF82e2oZeuMSp9JTN0N09emoSZlb2l
 github.com/tendermint/go-amino v0.16.0/go.mod h1:TQU0M1i/ImAo+tYpZi73AU3V/dKeCoMC9Sphe2ZwGME=
 github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b h1:Y3ZPG6gdDCAV2sdGkD759ji/09GzaNu1X3qKTmZIbTo=
 github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b/go.mod h1:ADqbS9NOSnBRK9R2RtYC61CdsHmVMD/yXAzcMuPexbU=
-github.com/tidwall/btree v1.6.0 h1:LDZfKfQIBHGHWSwckhXI0RPSXzlo+KYdjK7FWSqOzzg=
-github.com/tidwall/btree v1.6.0/go.mod h1:twD9XRA5jj9VUQGELzDO4HPQTNJsoWWfYEL+EUQ2cKY=
 github.com/tidwall/gjson v1.12.1/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
 github.com/tidwall/gjson v1.14.0/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
 github.com/tidwall/match v1.1.1/go.mod h1:eRSPERbgtNPcGhD8UCthc6PmLEQXEWd3PRB5JTxsfmM=
@@ -1372,4 +1370,5 @@ rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
 rsc.io/tmplfunc v0.0.3/go.mod h1:AG3sTPzElb1Io3Yg4voV9AGZJuleGAwaVRxL9M49PhA=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
+sigs.k8s.io/yaml v1.3.0 h1:a2VclLzOGrwOHDiV8EfBGhvjHvP46CtW5j6POvhYGGo=
 sourcegraph.com/sourcegraph/appdash v0.0.0-20190731080439-ebfcffb1b5c0/go.mod h1:hI742Nqp5OhwiqlzhgfbWU4mW4yO10fP+LoT9WOswdU=

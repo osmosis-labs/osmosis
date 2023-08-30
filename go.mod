@@ -46,6 +46,7 @@ require (
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
+	cosmossdk.io/math v1.1.2 // indirect
 	github.com/4meepo/tagalign v1.3.2 // indirect
 	github.com/Abirdcfly/dupword v0.0.12 // indirect
 	github.com/Djarvur/go-err113 v0.1.0 // indirect
@@ -331,7 +332,7 @@ replace (
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/529c69c199151ca2ed8b1edfe5d15b83acd2b47e
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230703010110-ed4eb883f2a6
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230829222007-529c69c19915
 
 	// N.B. v0.19.5 contains a breaking change to the IAVL API
 	github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.4
