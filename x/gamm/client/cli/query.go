@@ -52,7 +52,7 @@ var customRouterFlagOverride = map[string]string{
 // nolint: staticcheck
 func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "pool [poolID]",
+		Use:   "pool",
 		Short: "Query pool",
 		// Deprecated: use x/poolmanager's Pool query.
 		// nolint: staticcheck
@@ -164,7 +164,7 @@ $ %s query gamm pool-params 1
 
 func GetCmdTotalShares() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryTotalSharesRequest](
-		"total-share [poolID]",
+		"total-share",
 		"Query total-share",
 		`Query total-share.
 Example:
@@ -189,7 +189,7 @@ Example:
 // Deprecated: use alternate in x/poolmanager.
 func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "spot-price <pool-ID> [quote-asset-denom] [base-asset-denom]",
+		Use:   "spot-price",
 		Short: "Query spot-price (LEGACY, arguments are reversed!!)",
 		Long: `Query spot price (Legacy).{{.ExampleHeader}}
 {{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
@@ -200,7 +200,7 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) 
 // Deprecated: use alternate in x/poolmanager.
 func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountInRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
+		Use:   "estimate-swap-exact-amount-in",
 		Short: "Query estimate-swap-exact-amount-in",
 		Long: `Query estimate-swap-exact-amount-in.{{.ExampleHeader}}
 {{.CommandPrefix}} estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
@@ -214,7 +214,7 @@ func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySw
 // Deprecated: use alternate in x/poolmanager.
 func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountOutRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",
+		Use:   "estimate-swap-exact-amount-out",
 		Short: "Query estimate-swap-exact-amount-out",
 		Long: `Query estimate-swap-exact-amount-out.{{.ExampleHeader}}
 {{.CommandPrefix}} estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
@@ -317,7 +317,7 @@ $ %s query gamm pools-with-filter <min_liquidity> <pool_type>
 // GetCmdPoolType returns pool type given pool id.
 func GetCmdPoolType() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryPoolTypeRequest](
-		"pool-type <pool_id>",
+		"pool-type",
 		"Query pool type",
 		`Query pool type
 Example:
@@ -330,7 +330,7 @@ Example:
 // GetConcentratedPoolIdLinkFromCFMMRequest returns concentrated pool id that is linked to the given cfmm pool id.
 func GetConcentratedPoolIdLinkFromCFMMRequest() (*osmocli.QueryDescriptor, *types.QueryConcentratedPoolIdLinkFromCFMMRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "cl-pool-link-from-cfmm [poolID]",
+		Use:   "cl-pool-link-from-cfmm",
 		Short: "Query concentrated pool id link from cfmm pool id",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} cl-pool-link-from-cfmm 1`,
@@ -342,7 +342,7 @@ func GetConcentratedPoolIdLinkFromCFMMRequest() (*osmocli.QueryDescriptor, *type
 // nolint: staticcheck
 func GetCmdTotalPoolLiquidity() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryTotalPoolLiquidityRequest](
-		"total-pool-liquidity [poolID]",
+		"total-pool-liquidity",
 		"Query total-pool-liquidity",
 		`Query total-pool-liquidity.
 Example:

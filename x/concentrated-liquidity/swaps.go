@@ -61,6 +61,14 @@ type SwapState struct {
 	swapStrategy swapstrategy.SwapStrategy
 }
 
+// SwapResult represents the result from computing
+// the swap state.
+type SwapResult struct {
+	AmountIn      sdk.Int
+	AmountOut     sdk.Int
+	SpreadRewards sdk.Dec
+}
+
 // swapNoProgressLimit is the maximum number of iterations that can be performed
 // without progressing the swap state. If this limit is reached, the swap is
 // considered to have failed.
@@ -210,10 +218,12 @@ func (k Keeper) swapOutAmtGivenIn(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 ) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
-	tokenIn, tokenOut, poolUpdates, totalSpreadFactors, err := k.computeOutAmtGivenIn(ctx, pool.GetId(), tokenIn, tokenOutDenom, spreadFactor, priceLimit)
+	swapResult, poolUpdates, err := k.computeOutAmtGivenIn(ctx, pool.GetId(), tokenIn, tokenOutDenom, spreadFactor, priceLimit)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, err
 	}
+	tokenIn = sdk.NewCoin(tokenIn.Denom, swapResult.AmountIn)
+	tokenOut := sdk.NewCoin(tokenOutDenom, swapResult.AmountOut)
 
 	if !tokenOut.Amount.IsPositive() {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, types.InvalidAmountCalculatedError{Amount: tokenOut.Amount}
@@ -221,7 +231,7 @@ func (k Keeper) swapOutAmtGivenIn(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, pool, SwapDetails{sender, tokenIn, tokenOut}, poolUpdates, totalSpreadFactors); err != nil {
+	if err := k.updatePoolForSwap(ctx, pool, SwapDetails{sender, tokenIn, tokenOut}, poolUpdates, swapResult.SpreadRewards); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, err
 	}
 
@@ -239,10 +249,12 @@ func (k *Keeper) swapInAmtGivenOut(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 ) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
-	tokenIn, tokenOut, poolUpdates, totalSpreadFactors, err := k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, pool.GetId())
+	swapResult, poolUpdates, err := k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, pool.GetId())
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, err
 	}
+	tokenIn := sdk.NewCoin(tokenInDenom, swapResult.AmountIn)
+	tokenOut := sdk.NewCoin(desiredTokenOut.Denom, swapResult.AmountOut)
 
 	// check that the tokenOut calculated is both valid and less than specified limit
 	if !tokenIn.Amount.IsPositive() {
@@ -251,7 +263,7 @@ func (k *Keeper) swapInAmtGivenOut(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, pool, SwapDetails{sender, tokenIn, tokenOut}, poolUpdates, totalSpreadFactors); err != nil {
+	if err := k.updatePoolForSwap(ctx, pool, SwapDetails{sender, tokenIn, tokenOut}, poolUpdates, swapResult.SpreadRewards); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, err
 	}
 
@@ -266,11 +278,11 @@ func (k Keeper) CalcOutAmtGivenIn(
 	spreadFactor sdk.Dec,
 ) (tokenOut sdk.Coin, err error) {
 	cacheCtx, _ := ctx.CacheContext()
-	_, tokenOut, _, _, err = k.computeOutAmtGivenIn(cacheCtx, poolI.GetId(), tokenIn, tokenOutDenom, spreadFactor, sdk.ZeroDec())
+	swapResult, _, err := k.computeOutAmtGivenIn(cacheCtx, poolI.GetId(), tokenIn, tokenOutDenom, spreadFactor, sdk.ZeroDec())
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	return tokenOut, nil
+	return sdk.NewCoin(tokenOutDenom, swapResult.AmountOut), nil
 }
 
 func (k Keeper) CalcInAmtGivenOut(
@@ -279,13 +291,13 @@ func (k Keeper) CalcInAmtGivenOut(
 	tokenOut sdk.Coin,
 	tokenInDenom string,
 	spreadFactor sdk.Dec,
-) (tokenIn sdk.Coin, err error) {
+) (sdk.Coin, error) {
 	cacheCtx, _ := ctx.CacheContext()
-	tokenIn, _, _, _, err = k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, sdk.ZeroDec(), poolI.GetId())
+	swapResult, _, err := k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, sdk.ZeroDec(), poolI.GetId())
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	return tokenIn, nil
+	return sdk.NewCoin(tokenInDenom, swapResult.AmountIn), nil
 }
 
 func (k Keeper) swapSetup(ctx sdk.Context,
@@ -343,15 +355,15 @@ func (k Keeper) computeOutAmtGivenIn(
 	tokenOutDenom string,
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
-) (tokenIn, tokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadFactors sdk.Dec, err error) {
+) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
 	p, spreadRewardAccumulator, uptimeAccums, err := k.swapSetup(ctx, poolId, tokenInMin.Denom, tokenOutDenom)
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+		return SwapResult{}, PoolUpdates{}, err
 	}
 
 	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(p, spreadFactor, tokenInMin.Denom, priceLimit)
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+		return SwapResult{}, PoolUpdates{}, err
 	}
 
 	// initialize swap state with the following parameters:
@@ -373,7 +385,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		// get next initialized tick, and its implied sqrtPriceTarget
 		nextInitializedTick, nextInitializedTickSqrtPrice, sqrtPriceTarget, err := iteratorToNextInitializedTickSqrtPriceTarget(nextInitTickIter, poolId, swapStrategy)
 		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+			return SwapResult{}, PoolUpdates{}, err
 		}
 
 		// Utilizing the bucket's liquidity and knowing the sqrt price target, we calculate how much tokenOut we get from the tokenIn
@@ -386,7 +398,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		)
 
 		if err := validateSwapProgressAndAmountConsumption(computedSqrtPrice, sqrtPriceStart, amountIn, amountOut); err != nil {
-			return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+			return SwapResult{}, PoolUpdates{}, err
 		}
 
 		// Update the spread reward growth for the entire swap using the total spread factors charged.
@@ -408,19 +420,19 @@ func (k Keeper) computeOutAmtGivenIn(
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
 				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInMin.Denom)
 			if err != nil {
-				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+				return SwapResult{}, PoolUpdates{}, err
 			}
 		} else if edgeCaseInequalityBasedOnSwapStrategy(swapStrategy.ZeroForOne(), nextInitializedTickSqrtPrice, computedSqrtPrice) {
 			// If, based on the swap strategy, the computedSqrtPrice matches the edge case inequality, we return an error.
 			// This is an edge case that occurs when swapping at/near tick boundaries that will be fixed in the next release.
 			// For now, we return an error and ask the user to try again with a different swap amount.
-			return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.ComputedSqrtPriceInequalityError{IsZeroForOne: swapStrategy.ZeroForOne(), ComputedSqrtPrice: computedSqrtPrice, NextInitializedTickSqrtPrice: nextInitializedTickSqrtPrice}
+			return SwapResult{}, PoolUpdates{}, types.ComputedSqrtPriceInequalityError{IsZeroForOne: swapStrategy.ZeroForOne(), ComputedSqrtPrice: computedSqrtPrice, NextInitializedTickSqrtPrice: nextInitializedTickSqrtPrice}
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise if the sqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...)
 			newTick, err := math.CalculateSqrtPriceToTick(computedSqrtPrice)
 			if err != nil {
-				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+				return SwapResult{}, PoolUpdates{}, err
 			}
 			swapState.tick = newTick
 		}
@@ -429,7 +441,7 @@ func (k Keeper) computeOutAmtGivenIn(
 		// See definition of swapNoProgressLimit for more details.
 		if amountIn.IsZero() {
 			if swapNoProgressIterationCount >= swapNoProgressLimit {
-				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.SwapNoProgressError{PoolId: poolId, UserProvidedCoin: tokenInMin}
+				return SwapResult{}, PoolUpdates{}, types.SwapNoProgressError{PoolId: poolId, UserProvidedCoin: tokenInMin}
 			}
 			swapNoProgressIterationCount++
 		}
@@ -437,7 +449,7 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	// Note, this should be impossible to reach but we leave it as a defense-in-depth measure.
 	if swapState.amountSpecifiedRemaining.IsNegative() {
-		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.OverChargeSwapOutGivenInError{AmountSpecifiedRemaining: swapState.amountSpecifiedRemaining}
+		return SwapResult{}, PoolUpdates{}, types.OverChargeSwapOutGivenInError{AmountSpecifiedRemaining: swapState.amountSpecifiedRemaining}
 	}
 
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
@@ -446,17 +458,18 @@ func (k Keeper) computeOutAmtGivenIn(
 
 	// Coin amounts require int values
 	// Round amountIn up to avoid under charging
-	amt0 := (tokenInMin.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining)).Ceil().TruncateInt()
+	amountIn := (tokenInMin.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining)).Ceil().TruncateInt()
 	// Round amountOut down to avoid over distributing.
-	amt1 := swapState.amountCalculated.TruncateInt()
+	amountOut := swapState.amountCalculated.TruncateInt()
 
-	ctx.Logger().Debug("final amount in", amt0)
-	ctx.Logger().Debug("final amount out", amt1)
+	ctx.Logger().Debug("final amount in", amountIn)
+	ctx.Logger().Debug("final amount out", amountOut)
 
-	tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)
-	tokenOut = sdk.NewCoin(tokenOutDenom, amt1)
-
-	return tokenIn, tokenOut, PoolUpdates{swapState.tick, swapState.liquidity, swapState.sqrtPrice}, swapState.globalSpreadRewardGrowth, nil
+	return SwapResult{
+		AmountIn:      amountIn,
+		AmountOut:     amountOut,
+		SpreadRewards: swapState.globalSpreadRewardGrowth,
+	}, PoolUpdates{swapState.tick, swapState.liquidity, swapState.sqrtPrice}, nil
 }
 
 // computeInAmtGivenOut calculates tokens to be swapped in given the desired token out and spread factor deducted. It also returns
@@ -470,15 +483,15 @@ func (k Keeper) computeInAmtGivenOut(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 	poolId uint64,
-) (tokenIn, tokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadFactors sdk.Dec, err error) {
+) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
 	p, spreadRewardAccumulator, uptimeAccums, err := k.swapSetup(ctx, poolId, tokenInDenom, desiredTokenOut.Denom)
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+		return SwapResult{}, PoolUpdates{}, err
 	}
 
 	swapStrategy, sqrtPriceLimit, err := k.setupSwapStrategy(p, spreadFactor, tokenInDenom, priceLimit)
 	if err != nil {
-		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+		return SwapResult{}, PoolUpdates{}, err
 	}
 
 	// initialize swap state with the following parameters:
@@ -498,7 +511,7 @@ func (k Keeper) computeInAmtGivenOut(
 
 		nextInitializedTick, nextInitializedTickSqrtPrice, sqrtPriceTarget, err := iteratorToNextInitializedTickSqrtPriceTarget(nextInitTickIter, poolId, swapStrategy)
 		if err != nil {
-			return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+			return SwapResult{}, PoolUpdates{}, err
 		}
 
 		// Utilizing the bucket's liquidity and knowing the sqrt price target, we calculate the how much tokenOut we get from the tokenIn
@@ -511,7 +524,7 @@ func (k Keeper) computeInAmtGivenOut(
 		)
 
 		if err := validateSwapProgressAndAmountConsumption(computedSqrtPrice, sqrtPriceStart, amountIn, amountOut); err != nil {
-			return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+			return SwapResult{}, PoolUpdates{}, err
 		}
 
 		swapState.updateSpreadRewardGrowthGlobal(spreadRewardChargeTotal)
@@ -530,19 +543,19 @@ func (k Keeper) computeInAmtGivenOut(
 			swapState, err = k.swapCrossTickLogic(ctx, swapState, swapStrategy,
 				nextInitializedTick, nextInitTickIter, p, spreadRewardAccumulator, uptimeAccums, tokenInDenom)
 			if err != nil {
-				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+				return SwapResult{}, PoolUpdates{}, err
 			}
 		} else if edgeCaseInequalityBasedOnSwapStrategy(swapStrategy.ZeroForOne(), nextInitializedTickSqrtPrice, computedSqrtPrice) {
 			// If, based on the swap strategy, the computedSqrtPrice matches the edge case inequality, we return an error.
 			// This is an edge case that occurs when swapping at/near tick boundaries that will be fixed in the next release.
 			// For now, we return an error and ask the user to try again with a different swap amount.
-			return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.ComputedSqrtPriceInequalityError{IsZeroForOne: swapStrategy.ZeroForOne(), ComputedSqrtPrice: computedSqrtPrice, NextInitializedTickSqrtPrice: nextInitializedTickSqrtPrice}
+			return SwapResult{}, PoolUpdates{}, types.ComputedSqrtPriceInequalityError{IsZeroForOne: swapStrategy.ZeroForOne(), ComputedSqrtPrice: computedSqrtPrice, NextInitializedTickSqrtPrice: nextInitializedTickSqrtPrice}
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise, if the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...)
 			swapState.tick, err = math.CalculateSqrtPriceToTick(computedSqrtPrice)
 			if err != nil {
-				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, err
+				return SwapResult{}, PoolUpdates{}, err
 			}
 		}
 
@@ -550,7 +563,7 @@ func (k Keeper) computeInAmtGivenOut(
 		// See definition of swapNoProgressLimit for more details.
 		if amountOut.IsZero() {
 			if swapNoProgressIterationCount >= swapNoProgressLimit {
-				return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, types.SwapNoProgressError{PoolId: poolId, UserProvidedCoin: desiredTokenOut}
+				return SwapResult{}, PoolUpdates{}, types.SwapNoProgressError{PoolId: poolId, UserProvidedCoin: desiredTokenOut}
 			}
 			swapNoProgressIterationCount++
 		}
@@ -558,7 +571,7 @@ func (k Keeper) computeInAmtGivenOut(
 
 	// Note, this should be impossible to reach but we leave it as a defense-in-depth measure.
 	if swapState.amountSpecifiedRemaining.IsNegative() {
-		return sdk.Coin{}, sdk.Coin{}, PoolUpdates{}, sdk.Dec{}, fmt.Errorf("over charged problem swap in given out by %s", swapState.amountSpecifiedRemaining)
+		return SwapResult{}, PoolUpdates{}, fmt.Errorf("over charged problem swap in given out by %s", swapState.amountSpecifiedRemaining)
 	}
 
 	// Add spread reward growth per share to the pool-global spread reward accumulator.
@@ -566,18 +579,19 @@ func (k Keeper) computeInAmtGivenOut(
 
 	// coin amounts require int values
 	// Round amount in up to avoid under charging the user.
-	amt0 := swapState.amountCalculated.Ceil().TruncateInt()
+	amountIn := swapState.amountCalculated.Ceil().TruncateInt()
 
 	// Round amount out down to avoid over charging the pool.
-	amt1 := desiredTokenOut.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining).TruncateInt()
+	amountOut := desiredTokenOut.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining).TruncateInt()
 
-	ctx.Logger().Debug("final amount in", amt0)
-	ctx.Logger().Debug("final amount out", amt1)
+	ctx.Logger().Debug("final amount in", amountIn)
+	ctx.Logger().Debug("final amount out", amountOut)
 
-	tokenIn = sdk.NewCoin(tokenInDenom, amt0)
-	tokenOut = sdk.NewCoin(desiredTokenOut.Denom, amt1)
-
-	return tokenIn, tokenOut, PoolUpdates{swapState.tick, swapState.liquidity, swapState.sqrtPrice}, swapState.globalSpreadRewardGrowth, nil
+	return SwapResult{
+		AmountIn:      amountIn,
+		AmountOut:     amountOut,
+		SpreadRewards: swapState.globalSpreadRewardGrowth,
+	}, PoolUpdates{swapState.tick, swapState.liquidity, swapState.sqrtPrice}, nil
 }
 
 func emitSwapDebugLogs(ctx sdk.Context, swapState SwapState, reachedPrice osmomath.BigDec, amountIn, amountOut, spreadCharge sdk.Dec) {

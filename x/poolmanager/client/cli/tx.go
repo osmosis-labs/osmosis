@@ -44,7 +44,7 @@ func NewTxCmd() *cobra.Command {
 
 func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn) {
 	return &osmocli.TxCliDesc{
-		Use:     "swap-exact-amount-in [token-in] [token-out-min-amount]",
+		Use:     "swap-exact-amount-in",
 		Short:   "swap exact amount in",
 		Example: "osmosisd tx poolmanager swap-exact-amount-in 2000000uosmo 1 --swap-route-pool-ids 5 --swap-route-denoms uion --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo",
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
@@ -57,7 +57,7 @@ func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn)
 func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOut) {
 	// Can't get rid of this parser without a break, because the args are out of order.
 	return &osmocli.TxCliDesc{
-		Use:              "swap-exact-amount-out [token-out] [token-in-max-amount]",
+		Use:              "swap-exact-amount-out",
 		Short:            "swap exact amount out",
 		Example:          "osmosisd tx poolmanager swap-exact-amount-out 100uion 1000000 --swap-route-pool-ids 1 --swap-route-denoms uosmo --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo",
 		NumArgs:          2,
@@ -68,7 +68,7 @@ func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOu
 
 func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteSwapExactAmountIn) {
 	return &osmocli.TxCliDesc{
-		Use:   "split-route-swap-exact-amount-in [token-in-denom] [token-out-min-amount] [flags]",
+		Use:   "split-route-swap-exact-amount-in",
 		Short: "split route swap exact amount in",
 		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-in uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
 		- routes.json
@@ -114,7 +114,7 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 
 func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRouteSwapExactAmountOut) {
 	return &osmocli.TxCliDesc{
-		Use:   "split-route-swap-exact-amount-out [token-out-denom] [token-in-max-amount] [flags]",
+		Use:   "split-route-swap-exact-amount-out",
 		Short: "split route swap exact amount out",
 		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-out uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
 		- routes.json
