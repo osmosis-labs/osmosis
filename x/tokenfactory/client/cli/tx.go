@@ -28,28 +28,28 @@ func GetTxCmd() *cobra.Command {
 
 func NewCreateDenomCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgCreateDenom](&osmocli.TxCliDesc{
-		Use:   "create-denom [subdenom] [flags]",
+		Use:   "create-denom",
 		Short: "create a new denom from an account. (Costs osmo though!)",
 	})
 }
 
 func NewMintCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgMint](&osmocli.TxCliDesc{
-		Use:   "mint [amount] [mint-to-address] [flags]",
+		Use:   "mint",
 		Short: "Mint a denom to an address. Must have admin authority to do so.",
 	})
 }
 
 func NewBurnCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgBurn](&osmocli.TxCliDesc{
-		Use:   "burn [amount] [burn-from-address] [flags]",
+		Use:   "burn",
 		Short: "Burn tokens from an address. Must have admin authority to do so.",
 	})
 }
 
 func NewChangeAdminCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgChangeAdmin](&osmocli.TxCliDesc{
-		Use:   "change-admin [denom] [new-admin-address] [flags]",
+		Use:   "change-admin",
 		Short: "Changes the admin address for a factory-created denom. Must have admin authority to do so.",
 	})
 }

@@ -53,7 +53,7 @@ func NewQueryNumberOfTradesCmd() (*osmocli.QueryDescriptor, *types.QueryGetProto
 // NewQueryProfitsByDenomCmd returns the command to query the profits of protorev by denom
 func NewQueryProfitsByDenomCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevProfitsByDenomRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "profits-by-denom [denom]",
+		Use:   "profits-by-denom",
 		Short: "Query the profits of protorev by denom",
 		Long:  `{{.Short}}{{.ExampleHeader}}{{.CommandPrefix}} profits-by-denom uosmo`,
 	}, &types.QueryGetProtoRevProfitsByDenomRequest{}
@@ -70,9 +70,9 @@ func NewQueryAllProfitsCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevA
 // NewQueryStatisticsByRoute returns the command to query the statistics of protorev by route
 func NewQueryStatisticsByRouteCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevStatisticsByRouteRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:                "statistics-by-route [route]",
+		Use:                "statistics-by-route",
 		Short:              "Query statistics about a specific arbitrage route",
-		Long:               `{{.Short}}{{.ExampleHeader}}{{.CommandPrefix}} statistics-by-route [1,2,3]`,
+		Long:               `{{.Short}}{{.ExampleHeader}}{{.CommandPrefix}} statistics-by-route [1,2,3] `,
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{"Route": parseRoute},
 	}, &types.QueryGetProtoRevStatisticsByRouteRequest{}
 }
@@ -152,7 +152,7 @@ func NewQueryInfoByPoolTypeCmd() (*osmocli.QueryDescriptor, *types.QueryGetProto
 // NewQueryPoolCmd returns the command to query the pool id for a given denom pair stored via the highest liquidity method in ProtoRev
 func NewQueryPoolCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevPoolRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "pool [base_denom] [other_denom]",
+		Use:   "pool",
 		Short: "Query the pool id for a given denom pair stored via the highest liquidity method in ProtoRev",
 	}, &types.QueryGetProtoRevPoolRequest{}
 }

@@ -83,21 +83,21 @@ func NewSuperfluidDelegateCmd() *cobra.Command {
 
 func NewSuperfluidUndelegateCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgSuperfluidUndelegate](&osmocli.TxCliDesc{
-		Use:   "undelegate [lock_id] [flags]",
+		Use:   "undelegate",
 		Short: "superfluid undelegate a lock from a validator",
 	})
 }
 
 func NewSuperfluidUnbondLockCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgSuperfluidUnbondLock](&osmocli.TxCliDesc{
-		Use:   "unbond-lock [lock_id] [flags]",
+		Use:   "unbond-lock",
 		Short: "unbond lock that has been superfluid staked",
 	})
 }
 
 func NewSuperfluidUndelegateAndUnbondLockCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgSuperfluidUndelegateAndUnbondLock](&osmocli.TxCliDesc{
-		Use:   "undelegate-and-unbond-lock [lock_id] [coin]",
+		Use:   "undelegate-and-unbond-lock",
 		Short: "superfluid undelegate and unbond lock for the given amount of coin",
 	})
 }
@@ -307,7 +307,7 @@ func NewCmdLockAndSuperfluidDelegate() *cobra.Command {
 
 func NewCmdUnPoolWhitelistedPool() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgUnPoolWhitelistedPool](&osmocli.TxCliDesc{
-		Use:   "unpool-whitelisted-pool [pool_id] [flags]",
+		Use:   "unpool-whitelisted-pool",
 		Short: "unpool whitelisted pool",
 	})
 }
@@ -368,7 +368,7 @@ func NewCmdUpdateUnpoolWhitelistProposal() *cobra.Command {
 
 func NewCreateFullRangePositionAndSuperfluidDelegateCmd() (*osmocli.TxCliDesc, *types.MsgCreateFullRangePositionAndSuperfluidDelegate) {
 	return &osmocli.TxCliDesc{
-		Use:     "create-full-range-position-and-sf-delegate [coins] [val_addr] [pool-id]",
+		Use:     "create-full-range-position-and-sf-delegate",
 		Short:   "creates a full range concentrated position and superfluid delegates it to the provided validator",
 		Example: "create-full-range-position-and-sf-delegate 100000000uosmo,10000udai 45 --from val --chain-id osmosis-1",
 	}, &types.MsgCreateFullRangePositionAndSuperfluidDelegate{}
@@ -411,7 +411,7 @@ func parseUpdateUnpoolWhitelistArgsToContent(flags *flag.FlagSet) (govtypes.Cont
 
 func NewAddToConcentratedLiquiditySuperfluidPositionCmd() (*osmocli.TxCliDesc, *types.MsgAddToConcentratedLiquiditySuperfluidPosition) {
 	return &osmocli.TxCliDesc{
-		Use:     "add-to-superfluid-cl-position [position-id] [token-0] [token-1]",
+		Use:     "add-to-superfluid-cl-position",
 		Short:   "add to an existing superfluid staked concentrated liquidity position",
 		Example: "add-to-superfluid-cl-position 10 1000000000uosmo 10000000uion",
 	}, &types.MsgAddToConcentratedLiquiditySuperfluidPosition{}
@@ -419,7 +419,7 @@ func NewAddToConcentratedLiquiditySuperfluidPositionCmd() (*osmocli.TxCliDesc, *
 
 func NewUnlockAndMigrateSharesToFullRangeConcentratedPositionCmd() (*osmocli.TxCliDesc, *types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) {
 	return &osmocli.TxCliDesc{
-		Use:     "unlock-and-migrate-to-cl [lock-id] [shares-to-migrate] [token-out-mins]",
+		Use:     "unlock-and-migrate-to-cl",
 		Short:   "unlock and migrate gamm shares to full range concentrated position",
 		Example: "unlock-and-migrate-cl 10 25000000000gamm/pool/2 1000000000uosmo,10000000uion",
 	}, &types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}

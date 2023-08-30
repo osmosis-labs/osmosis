@@ -110,6 +110,8 @@ Fixes mainnet bugs w/ incorrect accumulation sumtrees, and CL handling for a bal
 * [#5964](https://github.com/osmosis-labs/osmosis/pull/5964) fix e2e test concurrency bugs
 * [#5948](https://github.com/osmosis-labs/osmosis/pull/5948) Parameterizing Pool Type Information in Protorev
 * [#6001](https://github.com/osmosis-labs/osmosis/pull/6001) feat: improve set-env CLI cmd
+* [#6005](https://github.com/osmosis-labs/osmosis/pull/6005) osmocli: parse Use field's arguments dynamically
+
 * [#6012](https://github.com/osmosis-labs/osmosis/pull/6012) chore: add autocomplete to makefile
 
 ### Minor improvements & Bug Fixes

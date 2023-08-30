@@ -30,7 +30,7 @@ func NewTxCmd() *cobra.Command {
 
 func NewCreateCWPoolCmd() (*osmocli.TxCliDesc, *model.MsgCreateCosmWasmPool) {
 	return &osmocli.TxCliDesc{
-		Use:              "create-pool [code-id] [instantiate-msg] [sender]",
+		Use:              "create-pool",
 		Short:            "create a cosmwasm pool",
 		Example:          "osmosisd tx cosmwasmpool create-pool 1 uion,uosmo --from lo-test1 --keyring-backend test --chain-id localosmosis --fees 875uosmo -b=block",
 		NumArgs:          2,
