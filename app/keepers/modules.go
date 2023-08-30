@@ -2,12 +2,13 @@ package keepers
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router"
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v4/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
 
+	"github.com/CosmWasm/wasmd/x/wasm/client/cli"
+	"github.com/CosmWasm/wasmd/x/wasm/client/rest" //nolint:staticcheck
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
@@ -58,7 +59,20 @@ import (
 )
 
 var ProposalHandlers = []govclient.ProposalHandler{
-	wasmclient.ProposalHandlers,
+	// WASM Proposal Handlers
+	govclient.NewProposalHandler(cli.ProposalStoreCodeCmd, rest.StoreCodeProposalHandler),
+	govclient.NewProposalHandler(cli.ProposalInstantiateContractCmd, rest.InstantiateProposalHandler),
+	govclient.NewProposalHandler(cli.ProposalMigrateContractCmd, rest.MigrateProposalHandler),
+	govclient.NewProposalHandler(cli.ProposalExecuteContractCmd, rest.ExecuteProposalHandler),
+	govclient.NewProposalHandler(cli.ProposalSudoContractCmd, rest.SudoProposalHandler),
+	govclient.NewProposalHandler(cli.ProposalUpdateContractAdminCmd, rest.UpdateContractAdminProposalHandler),
+	govclient.NewProposalHandler(cli.ProposalClearContractAdminCmd, rest.ClearContractAdminProposalHandler),
+	govclient.NewProposalHandler(cli.ProposalPinCodesCmd, rest.PinCodeProposalHandler),
+	govclient.NewProposalHandler(cli.ProposalUnpinCodesCmd, rest.UnpinCodeProposalHandler),
+	govclient.NewProposalHandler(cli.ProposalUpdateInstantiateConfigCmd, rest.UpdateInstantiateConfigProposalHandler),
+	govclient.NewProposalHandler(cli.ProposalStoreAndInstantiateContractCmd, rest.EmptyRestHandler),
+	govclient.NewProposalHandler(cli.ProposalInstantiateContract2Cmd, rest.EmptyRestHandler),
+	// WASM Proposal Handlers end
 	paramsclient.ProposalHandler,
 	distrclient.ProposalHandler,
 	upgradeclient.ProposalHandler,

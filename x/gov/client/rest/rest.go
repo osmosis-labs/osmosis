@@ -1,14 +1,13 @@
 package rest
 
 import (
-	"net/http"
-
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 )
 
 // REST Variable names
@@ -23,10 +22,7 @@ const (
 
 // ProposalRESTHandler defines a REST handler implemented in another module. The
 // sub-route is mounted on the governance REST handler.
-type ProposalRESTHandler struct {
-	SubRoute string
-	Handler  func(http.ResponseWriter, *http.Request)
-}
+type ProposalRESTHandler = govrest.ProposalRESTHandler
 
 func RegisterHandlers(clientCtx client.Context, rtr *mux.Router, phs []ProposalRESTHandler) {
 	r := clientrest.WithHTTPDeprecationHeaders(rtr)
