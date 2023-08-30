@@ -16,6 +16,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 )
 
 const (
@@ -2242,4 +2243,155 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	s.SetupTest()
 
 	s.clk.InitGenesis(s.Ctx, *export)
+}
+
+// TestMinSpotPriceMigration_CapitalEfficiency this test is a supplement
+// to the TDD in: https://hackmd.io/FrJNXgqySVyCxorFmNzgAA
+// that bounds the worst case decrease in full range liquidity when
+// we lowe the min spot price from 10^-12 to 10^-30.
+//
+// Note that there are 2 cases.
+//
+// Case 1: spot price > 1. In this case, liquidity is determined by
+// token X which is on the right side of the price range. As a result,
+// lowering the min spot price has negligeble effects.
+//
+// Case 2: spot price < 1. In this case, liquidity is determined by Y which is
+// on the right side of the price range. As a result, lowering min spot price
+// affects the liquidity amount more. Since the effect is largest whenever
+// the spot price is as close to the original min spot price as possible,
+// we construct a test case as a theoretical worst case scenario.
+//
+// Run with:
+//
+//	go test -timeout 10s -run TestKeeperTestSuite/TestMinSpotPriceMigration_CapitalEfficiency_Case1  github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity -count=1
+func (s *KeeperTestSuite) TestMinSpotPriceMigration_CapitalEfficiency() {
+	s.SetupTest()
+
+	const bondDenom = "stake"
+
+	type testCase struct {
+		name           string
+		tokenZero      string
+		tokenOne       string
+		originalLPZero int64
+		originalLPOne  int64
+
+		// We bound multiplicative error by this value.
+		expectedMultError sdk.Dec
+	}
+
+	testCases := []testCase{
+		{
+			name:      "case 1: token 1 is bond denom",
+			tokenZero: ETH,
+			tokenOne:  bondDenom,
+			// This yields a 1.000001 spot price.
+			originalLPZero: 1_000_000,
+			originalLPOne:  1_000_001,
+
+			expectedMultError: sdk.NewDecWithPrec(11, 6),
+		},
+		{
+			name:      "case 2: token 1 is bond denom",
+			tokenZero: ETH,
+			tokenOne:  bondDenom,
+			// This yields a 2e-12 spot price.
+			originalLPZero: 1_000_000_000_000 * 1_000_000,
+			originalLPOne:  2 * 1_000_000,
+
+			// This is a theoretical worst case scenario.
+			expectedMultError: sdk.NewDecWithPrec(85, 2),
+		},
+		{
+			name:      "on-chain worst case in pool 1078",
+			tokenZero: ETH,
+			tokenOne:  bondDenom,
+			// This yields a 0.038 spot price.
+			originalLPZero: 10000000,
+			originalLPOne:  380000,
+
+			// This is a theoretical on-chain worst case scenario
+			// constructed from pool 1078 that has a spot price of 0.038 on
+			// 2023-08-23.
+			expectedMultError: sdk.NewDecWithPrec(5, 6),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.tokenZero, tc.tokenOne, DefaultTickSpacing, sdk.ZeroDec())
+
+			// Create the original LP position on range [10^-12, 10^38]
+			originalLP := sdk.NewCoins(sdk.NewCoin(tc.tokenZero, sdk.NewInt(tc.originalLPZero)), sdk.NewCoin(tc.tokenOne, sdk.NewInt(tc.originalLPOne)))
+			s.FundAcc(s.TestAccs[0], originalLP)
+			originalPositionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], originalLP, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
+			s.Require().NoError(err)
+
+			// Set superfluid multiplier from the original LP position
+			sfDenom := types.GetConcentratedLockupDenomFromPoolId(pool.GetId())
+			err = s.App.SuperfluidKeeper.UpdateOsmoEquivalentMultipliers(s.Ctx, superfluidtypes.SuperfluidAsset{
+				Denom:     sfDenom,
+				AssetType: superfluidtypes.SuperfluidAssetTypeConcentratedShare,
+			}, 1)
+			s.Require().NoError(err)
+
+			// Remove the original position
+			amount0, amount1, err := s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, s.TestAccs[0], originalPositionData.ID, originalPositionData.Liquidity)
+			s.Require().NoError(err)
+
+			// Sub one to account for rounding errors.
+			s.Require().Equal(originalPositionData.Amount0.Sub(sdk.OneInt()), amount0)
+			s.Require().Equal(originalPositionData.Amount1.Sub(sdk.OneInt()), amount1)
+
+			// Create a new position on range [10^-30, 10^38]
+			newLP := sdk.NewCoins(sdk.NewCoin(tc.tokenZero, amount0), sdk.NewCoin(tc.tokenOne, amount1))
+			s.FundAcc(s.TestAccs[0], newLP)
+			newPositionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], newLP, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTickV2, types.MaxTick)
+			s.Require().NoError(err)
+
+			// This check shows that if we lower min spot price, the liquidity amount will stay roughly the same. The proof is in TDD:
+			// https://hackmd.io/FrJNXgqySVyCxorFmNzgAA
+			// For each case, the bounds are selected from proof in the TDD above.
+			liquidityTolerance := osmomath.ErrTolerance{MultiplicativeTolerance: tc.expectedMultError}
+			s.Require().Equal(0, liquidityTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(originalPositionData.Liquidity), osmomath.BigDecFromSDKDec(newPositionData.Liquidity)), "original liquidity: %s, new liquidity: %s", originalPositionData.Liquidity, newPositionData.Liquidity)
+
+			// Similarly, compare actual amounts
+			s.Require().Equal(0, liquidityTolerance.Compare(originalPositionData.Amount0, newPositionData.Amount0))
+			s.Require().Equal(0, liquidityTolerance.Compare(originalPositionData.Amount1, newPositionData.Amount1))
+
+			// Test superfluid multiplier
+			originalMultiplier := s.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(s.Ctx, sfDenom)
+
+			// Force remove the original liquidity.
+			err = s.App.ConcentratedLiquidityKeeper.UpdateFullRangeLiquidityInPool(s.Ctx, pool.GetId(), originalPositionData.Liquidity.Neg())
+			s.Require().NoError(err)
+
+			// Force set the new liquidity.
+			err = s.App.ConcentratedLiquidityKeeper.UpdateFullRangeLiquidityInPool(s.Ctx, pool.GetId(), newPositionData.Liquidity)
+			s.Require().NoError(err)
+
+			// Confirm that the full range liquidity is the same as the new position's liquidity.
+			fullRangeLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetFullRangeLiquidityInPool(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+			s.Require().Equal(newPositionData.Liquidity, fullRangeLiquidity)
+
+			// Update the SF multiplier.
+			err = s.App.SuperfluidKeeper.UpdateOsmoEquivalentMultipliers(s.Ctx, superfluidtypes.SuperfluidAsset{
+				Denom:     sfDenom,
+				AssetType: superfluidtypes.SuperfluidAssetTypeConcentratedShare,
+			}, 1)
+			s.Require().NoError(err)
+
+			newMultiplier := s.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(s.Ctx, sfDenom)
+
+			// The new SF multiplier is roughly the same.
+			sfMultiplierTolerance := osmomath.ErrTolerance{MultiplicativeTolerance: tc.expectedMultError}
+			expectedSFMultiplier := osmomath.BigDecFromSDKDec(originalMultiplier)
+			actualSFMultiplier := osmomath.BigDecFromSDKDec(newMultiplier)
+			s.Require().Equal(0, sfMultiplierTolerance.CompareBigDec(expectedSFMultiplier, actualSFMultiplier), "original multiplier: %s, new multiplier: %s", originalMultiplier, newMultiplier)
+		})
+	}
 }

@@ -22,19 +22,16 @@ var (
 	closestPriceBelowMaxPriceDefaultTickSpacing = types.MaxSpotPrice.Sub(sdk.NewDec(10).PowerMut(uint64(len(types.MaxSpotPrice.TruncateInt().String()) - 1 - int(-types.ExponentAtPriceOne) - 1)))
 	// min tick + 10 ^ -expoentAtPriceOne
 	closestTickAboveMinPriceDefaultTickSpacing = sdk.NewInt(types.MinInitializedTick).Add(sdk.NewInt(10).ToDec().Power(uint64(types.ExponentAtPriceOne * -1)).TruncateInt())
-)
 
-// testing helper for price to tick, state machine only implements sqrt price to tick.
-func PriceToTick(price osmomath.BigDec) (int64, error) {
-	tickDec, err := math.CalculatePriceToTickDec(price)
-	tickIndex := tickDec.TruncateInt64()
-	return tickIndex, err
-}
+	smallestBigDec = osmomath.SmallestDec()
+	bigOneDec      = osmomath.OneDec()
+	bigTenDec      = osmomath.NewBigDec(10)
+)
 
 // testing helper for price to tick round down spacing,
 // state machine only implements sqrt price to tick round dow spacing.
 func PriceToTickRoundDownSpacing(price osmomath.BigDec, tickSpacing uint64) (int64, error) {
-	tickIndex, err := PriceToTick(price)
+	tickIndex, err := math.CalculatePriceToTick(price)
 	if err != nil {
 		return 0, err
 	}
@@ -209,7 +206,7 @@ func TestTickToSqrtPrice(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			price, sqrtPrice, err := math.TickToSqrtPrice(tc.tickIndex)
+			sqrtPrice, err := math.TickToSqrtPrice(tc.tickIndex)
 			if tc.expectedError != nil {
 				require.Error(t, err)
 				require.Equal(t, tc.expectedError.Error(), err.Error())
@@ -219,7 +216,6 @@ func TestTickToSqrtPrice(t *testing.T) {
 			expectedSqrtPrice, err := osmomath.MonotonicSqrt(tc.expectedPrice)
 			require.NoError(t, err)
 
-			require.Equal(t, osmomath.BigDecFromSDKDec(tc.expectedPrice).String(), price.String())
 			require.Equal(t, osmomath.BigDecFromSDKDec(expectedSqrtPrice).String(), sqrtPrice.String())
 		})
 	}
@@ -387,11 +383,11 @@ func TestPriceToTick(t *testing.T) {
 		},
 		"price is greater than max spot price": {
 			price:         osmomath.BigDecFromSDKDec(types.MaxSpotPrice.Add(sdk.OneDec())),
-			expectedError: types.PriceBoundError{ProvidedPrice: types.MaxSpotPrice.Add(sdk.OneDec()), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
+			expectedError: types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromSDKDec(types.MaxSpotPrice.Add(sdk.OneDec())), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice},
 		},
 		"price is smaller than min spot price": {
 			price:         osmomath.BigDecFromSDKDec(types.MinSpotPrice.Quo(sdk.NewDec(10))),
-			expectedError: types.PriceBoundError{ProvidedPrice: types.MinSpotPrice.Quo(sdk.NewDec(10)), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
+			expectedError: types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromSDKDec(types.MinSpotPrice.Quo(sdk.NewDec(10))), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice},
 		},
 	}
 	for name, tc := range testCases {
@@ -399,7 +395,7 @@ func TestPriceToTick(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 			// surpress error here, we only listen to errors from system under test.
-			tick, _ := PriceToTick(tc.price)
+			tick, _ := math.CalculatePriceToTick(tc.price)
 
 			// With tick spacing of one, no rounding should occur.
 			tickRoundDown, err := PriceToTickRoundDownSpacing(tc.price, one)
@@ -587,7 +583,7 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			// 1. Compute tick from price.
-			tickFromPrice, err := PriceToTick(tc.price)
+			tickFromPrice, err := math.CalculatePriceToTick(tc.price)
 			require.NoError(t, err)
 			require.Equal(t, tc.tickExpected, tickFromPrice)
 
@@ -603,14 +599,14 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 			require.Equal(t, expectedPrice, price)
 
 			// 3. Compute tick from inverse price (inverse tick)
-			inverseTickFromPrice, err := PriceToTick(price)
+			inverseTickFromPrice, err := math.CalculatePriceToTick(price)
 			require.NoError(t, err)
 
 			// Make sure original tick and inverse tick match.
 			require.Equal(t, tickFromPrice, inverseTickFromPrice)
 
 			// 4. Validate PriceToTick and TickToSqrtPrice functions
-			_, sqrtPrice, err := math.TickToSqrtPrice(tickFromPrice)
+			sqrtPrice, err := math.TickToSqrtPrice(tickFromPrice)
 			require.NoError(t, err)
 
 			// TODO: investigate this separately
@@ -644,12 +640,83 @@ func TestPriceToTick_ErrorCases(t *testing.T) {
 		tc := tc
 
 		t.Run(name, func(t *testing.T) {
-			tickFromPrice, err := PriceToTick(tc.price)
+			tickFromPrice, err := math.CalculatePriceToTick(tc.price)
 			require.Error(t, err)
 			require.Equal(t, tickFromPrice, int64(0))
 		})
 	}
 }
+
+func TestTickToPrice_SuccessCases(t *testing.T) {
+	testCases := map[string]struct {
+		tickIndex     int64
+		expectedPrice osmomath.BigDec
+		expectedErr   error
+	}{
+		"tick index is Max tick": {
+			tickIndex:     types.MaxTick,
+			expectedPrice: osmomath.BigDecFromSDKDec(types.MaxSpotPrice),
+		},
+		"tick index is between Min tick V1 and Max tick": {
+			tickIndex:     123456,
+			expectedPrice: osmomath.OneDec().Add(osmomath.NewBigDec(123456).Mul(osmomath.NewDecWithPrec(1, 6))),
+		},
+		"tick index is V1 MinInitializedTick": {
+			tickIndex:     types.MinInitializedTick,
+			expectedPrice: osmomath.BigDecFromSDKDec(types.MinSpotPrice),
+		},
+		"tick index is V1 MinCurrentTick": {
+			tickIndex:     types.MinCurrentTick,
+			expectedPrice: osmomath.BigDecFromSDKDec(types.MinSpotPrice).Sub(osmomath.NewDecWithPrec(1, 13+(-types.ExponentAtPriceOne))),
+		},
+		"tick index is V2 MinInitializedTick": {
+			tickIndex:     types.MinInitializedTickV2,
+			expectedPrice: types.MinSpotPriceV2,
+		},
+		"tick index is V2 MinCurrentTickV2": {
+			tickIndex:     types.MinCurrentTickV2,
+			expectedPrice: types.MinSpotPriceV2,
+		},
+		"tick index is V2 MinInitializedTick + 1": {
+			tickIndex:     types.MinInitializedTickV2 + 1,
+			expectedPrice: types.MinSpotPriceV2.Add(smallestBigDec),
+		},
+		"tick index is V2 MinInitializedTick + 2": {
+			tickIndex:     types.MinInitializedTickV2 + 2,
+			expectedPrice: types.MinSpotPriceV2.Add(smallestBigDec).Add(smallestBigDec),
+		},
+		// Computed in Python:
+		// geometricExponentIncrementDistanceInTicks = 9000000
+		// tickIndex = -9000000 * 18 - 123456
+		// geometricExponentDelta = tickIndex // geometricExponentIncrementDistanceInTicks + 1 # add one because Python is a floor division when Go is truncation towards zero.
+		// exponentAtCurrentTick = -6 + geometricExponentDelta - 1
+		// currentAdditiveIncrementInTicks = 10**exponentAtCurrentTick
+		// numAdditiveTicks = tickIndex - (geometricExponentDelta * geometricExponentIncrementDistanceInTicks)
+		// 10**geometricExponentDelta + numAdditiveTicks * currentAdditiveIncrementInTicks
+		// 9.876544e-19
+		"tick index is between V2 MinInitializedTick and V1 MinInitializedTick": {
+			tickIndex:     -9000000*18 - 123456,
+			expectedPrice: osmomath.NewDecWithPrec(9876544, 6+19), // 6 for number of digits after, 18 for geometric multiplier and 1 for negative ticks
+		},
+	}
+	for name, tc := range testCases {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			price, err := math.TickToPrice(tc.tickIndex)
+
+			if tc.expectedErr != nil {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			require.Equal(t, tc.expectedPrice, price)
+		})
+	}
+}
+
 func TestTickToPrice_ErrorCases(t *testing.T) {
 	testCases := map[string]struct {
 		tickIndex int64
@@ -700,15 +767,106 @@ func TestCalculatePriceToTick(t *testing.T) {
 			price:             osmomath.NewBigDec(100_000_100),
 			expectedTickIndex: 72000001,
 		},
+		"MinSpotPrice V1 -> MinInitializedTick": {
+			price:             osmomath.BigDecFromSDKDec(types.MinSpotPrice),
+			expectedTickIndex: types.MinInitializedTick,
+		},
+		"MinSpotPrice V1 - 10^-19 -> MinCurrentTick": {
+			price:             osmomath.BigDecFromSDKDec(types.MinSpotPrice).Sub(osmomath.NewDecWithPrec(1, 19)),
+			expectedTickIndex: types.MinCurrentTick,
+		},
+		"MinSpotPrice V2 -> MinInitializedTick V2": {
+			price:             types.MinSpotPriceV2,
+			expectedTickIndex: types.MinInitializedTickV2,
+		},
+		"between MinSpotPrice V2 + 1 ULP -> MinInitializedTick V2 + 1": {
+			price:             types.MinSpotPriceV2.Add(smallestBigDec),
+			expectedTickIndex: types.MinInitializedTickV2 + 1,
+		},
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			tickIndex, err := PriceToTick(tc.price)
-			require.Equal(t, tc.expectedTickIndex, tickIndex)
+			tickIndex, err := math.CalculatePriceToTick(tc.price)
 			require.NoError(t, err)
+			require.Equal(t, tc.expectedTickIndex, tickIndex)
+
+			// Only run tests on the BigDec version on range [MinCurrentTickV2, MinCurrentTick]
+			if tc.price.LT(osmomath.BigDecFromSDKDec(types.MinSpotPrice)) {
+				return
+			}
+
+			tickIndex, err = math.CalculatePriceToTick(tc.price)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedTickIndex, tickIndex)
 		})
 	}
 }
+
+// This test validates that conversions	at the new initialized boundary are sound.
+func TestSqrtPriceToTick_MinInitializedTickV2(t *testing.T) {
+	minSqrtPrice, err := osmomath.MonotonicSqrtBigDec(types.MinSpotPriceV2)
+	require.NoError(t, err)
+
+	tickIndex, err := math.CalculateSqrtPriceToTick(minSqrtPrice)
+	require.NoError(t, err)
+	require.Equal(t, types.MinInitializedTickV2, tickIndex)
+}
+
+// This test validates that tick conversion at the old initialized boundary is sound.
+func TestSqrtPriceToTick_MinInitializedTickV1(t *testing.T) {
+	minSqrtPrice, err := osmomath.MonotonicSqrt(types.MinSpotPrice)
+	require.NoError(t, err)
+
+	minSpotPrice := osmomath.BigDecFromSDKDec(minSqrtPrice)
+	tickIndex, err := math.CalculateSqrtPriceToTick(minSpotPrice)
+	require.NoError(t, err)
+	require.Equal(t, types.MinInitializedTick, tickIndex)
+
+	// Subtract one ULP given exponent at price one of -6.
+	minSpotPriceMinusULP := minSpotPrice.Sub(osmomath.NewDecWithPrec(1, 19+6))
+	tickIndex, err = math.CalculateSqrtPriceToTick(minSpotPriceMinusULP)
+	require.NoError(t, err)
+
+	// The tick index should be one less than the min initialized tick.
+	require.Equal(t, types.MinInitializedTick-1, tickIndex)
+}
+
+// This test validates that 36 and 18 decimal CalculatePriceToTick
+// functions produce the same result in the original spot price range of
+// [10^-12, 10^38].
+// This is needed to make sure that we can remove the original 18 decimal
+// version completely.
+func TestCalculatePriceToTick_Dec_BigDec_Consistency(t *testing.T) {
+
+	// t.Skip("TestCalculatePriceToTick_Dec_BigDec_Consistency is only for demo purposes. Remove this if want to confirm test results.")
+
+	price := osmomath.BigDecFromSDKDec(types.MinSpotPrice)
+	increment := osmomath.BigDecFromSDKDec(sdk.SmallestDec())
+	for price.LTE(osmomath.BigDecFromSDKDec(types.MaxSpotPrice)) {
+
+		for i := int64(0); i < math.PowTenInternal(-types.ExponentAtPriceOne).TruncateInt64(); i++ {
+			if price.GT(osmomath.BigDecFromSDKDec(types.MaxSpotPrice)) {
+				break
+			}
+
+			tickIndex, err := math.CalculatePriceToTickV1(price)
+			require.NoError(t, err)
+
+			tickIndexBigDec, err := math.CalculatePriceToTick(price)
+			require.NoError(t, err)
+
+			require.Equal(t, tickIndex, tickIndexBigDec)
+
+			price = price.Add(increment)
+		}
+
+		fmt.Println("price", price)
+
+		increment = increment.MulInt64(10)
+	}
+
+}
+
 func TestPowTenInternal(t *testing.T) {
 	testCases := map[string]struct {
 		exponent             int64
@@ -739,21 +897,21 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 	sdkULP := osmomath.BigDecFromSDKDec(sdk.SmallestDec())
 
 	// Compute reference values that need to be satisfied
-	_, sqp1, err := math.TickToSqrtPrice(1)
+	sqp1, err := math.TickToSqrtPrice(1)
 	require.NoError(t, err)
-	_, sqp99, err := math.TickToSqrtPrice(99)
+	sqp99, err := math.TickToSqrtPrice(99)
 	require.NoError(t, err)
-	_, sqp100, err := math.TickToSqrtPrice(100)
+	sqp100, err := math.TickToSqrtPrice(100)
 	require.NoError(t, err)
-	_, sqpn100, err := math.TickToSqrtPrice(-100)
+	sqpn100, err := math.TickToSqrtPrice(-100)
 	require.NoError(t, err)
-	_, sqpn101, err := math.TickToSqrtPrice(-101)
+	sqpn101, err := math.TickToSqrtPrice(-101)
 	require.NoError(t, err)
-	_, sqpMaxTickSubOne, err := math.TickToSqrtPrice(types.MaxTick - 1)
+	sqpMaxTickSubOne, err := math.TickToSqrtPrice(types.MaxTick - 1)
 	require.NoError(t, err)
-	_, sqpMinTickPlusOne, err := math.TickToSqrtPrice(types.MinInitializedTick + 1)
+	sqpMinTickPlusOne, err := math.TickToSqrtPrice(types.MinInitializedTick + 1)
 	require.NoError(t, err)
-	_, sqpMinTickPlusTwo, err := math.TickToSqrtPrice(types.MinInitializedTick + 2)
+	sqpMinTickPlusTwo, err := math.TickToSqrtPrice(types.MinInitializedTick + 2)
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
@@ -879,12 +1037,12 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 
 			// Ensure returned bucket properly encapsulates given sqrt price, skipping the upper bound
 			// check if we're on the max tick
-			_, inverseSqrtPrice, err := math.TickToSqrtPrice(tickIndex)
+			inverseSqrtPrice, err := math.TickToSqrtPrice(tickIndex)
 			require.NoError(t, err)
 			require.True(t, inverseSqrtPrice.LTE(tc.sqrtPrice))
 
 			if tc.tickExpected != types.MaxTick {
-				_, inverseSqrtPriceTickAbove, err := math.TickToSqrtPrice(tickIndex + int64(tc.tickSpacing))
+				inverseSqrtPriceTickAbove, err := math.TickToSqrtPrice(tickIndex + int64(tc.tickSpacing))
 				require.NoError(t, err)
 				require.True(t, inverseSqrtPriceTickAbove.GT(tc.sqrtPrice))
 			}
