@@ -43105,7 +43105,7 @@ components:
 
                 was set, its value is undefined otherwise
       description: QueryAllowancesResponse is the response type for the Query/Allowances RPC method.
-    cosmos.gov.v1beta1.Deposit:
+    osmosis.gov.v1beta1.Deposit:
       type: object
       properties:
         proposal_id:
@@ -43132,7 +43132,7 @@ components:
       description: |-
         Deposit defines an amount deposited by an account address to an active
         proposal.
-    cosmos.gov.v1beta1.DepositParams:
+    osmosis.gov.v1beta1.DepositParams:
       type: object
       properties:
         min_deposit:
@@ -43179,7 +43179,7 @@ components:
           type: string
           description: The ratio representing the proportion of the deposit value that must be paid at proposal submission.
       description: DepositParams defines the params for deposits on governance proposals.
-    cosmos.gov.v1beta1.Proposal:
+    osmosis.gov.v1beta1.Proposal:
       type: object
       properties:
         proposal_id:
@@ -43411,7 +43411,7 @@ components:
         is_expedited:
           type: boolean
       description: Proposal defines the core field members of a governance proposal.
-    cosmos.gov.v1beta1.ProposalStatus:
+    osmosis.gov.v1beta1.ProposalStatus:
       type: string
       enum:
         - PROPOSAL_STATUS_UNSPECIFIED
@@ -43440,7 +43440,7 @@ components:
 
          - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
         failed.
-    cosmos.gov.v1beta1.ProposalVotingPeriod:
+    osmosis.gov.v1beta1.ProposalVotingPeriod:
       type: object
       properties:
         proposal_type:
@@ -43451,7 +43451,7 @@ components:
         ProposalVotingPeriod defines custom voting periods for a unique governance
 
         proposal type.
-    cosmos.gov.v1beta1.QueryDepositResponse:
+    osmosis.gov.v1beta1.QueryDepositResponse:
       type: object
       properties:
         deposit:
@@ -43483,7 +43483,7 @@ components:
 
             proposal.
       description: QueryDepositResponse is the response type for the Query/Deposit RPC method.
-    cosmos.gov.v1beta1.QueryDepositsResponse:
+    osmosis.gov.v1beta1.QueryDepositsResponse:
       type: object
       properties:
         deposits:
@@ -43534,7 +43534,7 @@ components:
 
                 was set, its value is undefined otherwise
       description: QueryDepositsResponse is the response type for the Query/Deposits RPC method.
-    cosmos.gov.v1beta1.QueryParamsResponse:
+    osmosis.gov.v1beta1.QueryParamsResponse:
       type: object
       properties:
         voting_params:
@@ -43639,7 +43639,7 @@ components:
               format: byte
               description: "Minimum proportion of Yes votes for an expedited proposal to reach quorum. Default value: 0.67."
       description: QueryParamsResponse is the response type for the Query/Params RPC method.
-    cosmos.gov.v1beta1.QueryProposalResponse:
+    osmosis.gov.v1beta1.QueryProposalResponse:
       type: object
       properties:
         proposal:
@@ -43875,7 +43875,7 @@ components:
               type: boolean
           description: Proposal defines the core field members of a governance proposal.
       description: QueryProposalResponse is the response type for the Query/Proposal RPC method.
-    cosmos.gov.v1beta1.QueryProposalsResponse:
+    osmosis.gov.v1beta1.QueryProposalsResponse:
       type: object
       properties:
         proposals:
@@ -44132,7 +44132,7 @@ components:
       description: |-
         QueryProposalsResponse is the response type for the Query/Proposals RPC
         method.
-    cosmos.gov.v1beta1.QueryTallyResultResponse:
+    osmosis.gov.v1beta1.QueryTallyResultResponse:
       type: object
       properties:
         tally:
@@ -44148,7 +44148,7 @@ components:
               type: string
           description: TallyResult defines a standard tally for a governance proposal.
       description: QueryTallyResultResponse is the response type for the Query/Tally RPC method.
-    cosmos.gov.v1beta1.QueryVoteResponse:
+    osmosis.gov.v1beta1.QueryVoteResponse:
       type: object
       properties:
         vote:
@@ -44208,7 +44208,7 @@ components:
             Vote defines a vote on a governance proposal.
             A Vote consists of a proposal ID, the voter, and the vote option.
       description: QueryVoteResponse is the response type for the Query/Vote RPC method.
-    cosmos.gov.v1beta1.QueryVotesResponse:
+    osmosis.gov.v1beta1.QueryVotesResponse:
       type: object
       properties:
         votes:
@@ -44288,7 +44288,7 @@ components:
 
                 was set, its value is undefined otherwise
       description: QueryVotesResponse is the response type for the Query/Votes RPC method.
-    cosmos.gov.v1beta1.TallyParams:
+    osmosis.gov.v1beta1.TallyParams:
       type: object
       properties:
         quorum:
@@ -44316,7 +44316,7 @@ components:
           format: byte
           description: "Minimum proportion of Yes votes for an expedited proposal to reach quorum. Default value: 0.67."
       description: TallyParams defines the params for tallying votes on governance proposals.
-    cosmos.gov.v1beta1.TallyResult:
+    osmosis.gov.v1beta1.TallyResult:
       type: object
       properties:
         yes:
@@ -44328,7 +44328,7 @@ components:
         no_with_veto:
           type: string
       description: TallyResult defines a standard tally for a governance proposal.
-    cosmos.gov.v1beta1.Vote:
+    osmosis.gov.v1beta1.Vote:
       type: object
       properties:
         proposal_id:
@@ -44384,7 +44384,7 @@ components:
       description: |-
         Vote defines a vote on a governance proposal.
         A Vote consists of a proposal ID, the voter, and the vote option.
-    cosmos.gov.v1beta1.VoteOption:
+    osmosis.gov.v1beta1.VoteOption:
       type: string
       enum:
         - VOTE_OPTION_UNSPECIFIED
@@ -44402,7 +44402,7 @@ components:
          - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
          - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
          - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
-    cosmos.gov.v1beta1.VotingParams:
+    osmosis.gov.v1beta1.VotingParams:
       type: object
       properties:
         voting_period:
@@ -44426,7 +44426,7 @@ components:
           type: string
           description: Length of the expedited voting period.
       description: VotingParams defines the params for voting on governance proposals.
-    cosmos.gov.v1beta1.WeightedVoteOption:
+    osmosis.gov.v1beta1.WeightedVoteOption:
       type: object
       properties:
         option:

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"

@@ -10,10 +10,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v4/keeper"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
+
+	govtypes "github.com/osmosis-labs/osmosis/v19/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/v19/wasmbinding"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit"

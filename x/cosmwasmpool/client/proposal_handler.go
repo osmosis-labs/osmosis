@@ -7,8 +7,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/client/cli"
 
-	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
-	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+	govclient "github.com/osmosis-labs/osmosis/v19/x/gov/client"
+	govrest "github.com/osmosis-labs/osmosis/v19/x/gov/client/rest"
 )
 
 var (

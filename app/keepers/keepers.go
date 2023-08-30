@@ -20,8 +20,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -31,11 +29,11 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
+
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
-
 	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
 	downtimedetector "github.com/osmosis-labs/osmosis/v19/x/downtime-detector"
@@ -75,6 +73,8 @@ import (
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v19/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	govkeeper "github.com/osmosis-labs/osmosis/v19/x/gov/keeper"
+	govtypes "github.com/osmosis-labs/osmosis/v19/x/gov/types"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
 	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v19/x/lockup/keeper"
@@ -516,7 +516,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {
-		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(appKeepers.WasmKeeper, wasmEnabledProposals))
+		//govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(appKeepers.WasmKeeper, wasmEnabledProposals))
 	}
 
 	govKeeper := govkeeper.NewKeeper(

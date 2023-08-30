@@ -9,10 +9,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+
+	govtypes "github.com/osmosis-labs/osmosis/v19/x/gov/types"
 
 	gammv2types "github.com/osmosis-labs/osmosis/v19/x/gamm/v2types"
 
@@ -64,9 +65,9 @@ func init() {
 	setWhitelistedQuery("/cosmos.distribution.v1beta1.Query/ValidatorCommission", &distributiontypes.QueryValidatorCommissionResponse{})
 
 	// gov
-	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Deposit", &govtypes.QueryDepositResponse{})
-	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Params", &govtypes.QueryParamsResponse{})
-	setWhitelistedQuery("/cosmos.gov.v1beta1.Query/Vote", &govtypes.QueryVoteResponse{})
+	setWhitelistedQuery("/osmosis.gov.v1beta1.Query/Deposit", &govtypes.QueryDepositResponse{})
+	setWhitelistedQuery("/osmosis.gov.v1beta1.Query/Params", &govtypes.QueryParamsResponse{})
+	setWhitelistedQuery("/osmosis.gov.v1beta1.Query/Vote", &govtypes.QueryVoteResponse{})
 
 	// slashing
 	setWhitelistedQuery("/cosmos.slashing.v1beta1.Query/Params", &slashingtypes.QueryParamsResponse{})

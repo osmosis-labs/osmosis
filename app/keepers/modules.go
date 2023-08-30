@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -19,7 +18,6 @@ import (
 	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -37,6 +35,8 @@ import (
 	downtimemodule "github.com/osmosis-labs/osmosis/v19/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm"
 	gammclient "github.com/osmosis-labs/osmosis/v19/x/gamm/client"
+	"github.com/osmosis-labs/osmosis/v19/x/gov"
+	govclient "github.com/osmosis-labs/osmosis/v19/x/gov/client"
 	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/ibcratelimitmodule"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives"
 	"github.com/osmosis-labs/osmosis/v19/x/lockup"
@@ -56,6 +56,30 @@ import (
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 
+var ProposalHandlers = []govclient.ProposalHandler{
+	wasmclient.ProposalHandlers,
+	paramsclient.ProposalHandler,
+	distrclient.ProposalHandler,
+	upgradeclient.ProposalHandler,
+	upgradeclient.CancelProposalHandler,
+	poolincentivesclient.UpdatePoolIncentivesHandler,
+	poolincentivesclient.ReplacePoolIncentivesHandler,
+	ibcclientclient.UpdateClientProposalHandler,
+	ibcclientclient.UpgradeProposalHandler,
+	superfluidclient.SetSuperfluidAssetsProposalHandler,
+	superfluidclient.RemoveSuperfluidAssetsProposalHandler,
+	superfluidclient.UpdateUnpoolWhitelistProposalHandler,
+	gammclient.ReplaceMigrationRecordsProposalHandler,
+	gammclient.UpdateMigrationRecordsProposalHandler,
+	gammclient.CreateCLPoolAndLinkToCFMMProposalHandler,
+	gammclient.SetScalingFactorControllerProposalHandler,
+	clclient.CreateConcentratedLiquidityPoolProposalHandler,
+	clclient.TickSpacingDecreaseProposalHandler,
+	cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
+	cwpoolclient.MigratePoolContractsProposalHandler,
+	txfeesclient.SubmitUpdateFeeTokenProposalHandler,
+}
+
 // AppModuleBasics returns ModuleBasics for the module BasicManager.
 var AppModuleBasics = []module.AppModuleBasic{
 	auth.AppModuleBasic{},
@@ -66,31 +90,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	mint.AppModuleBasic{},
 	downtimemodule.AppModuleBasic{},
 	distr.AppModuleBasic{},
-	gov.NewAppModuleBasic(
-		append(
-			wasmclient.ProposalHandlers,
-			paramsclient.ProposalHandler,
-			distrclient.ProposalHandler,
-			upgradeclient.ProposalHandler,
-			upgradeclient.CancelProposalHandler,
-			poolincentivesclient.UpdatePoolIncentivesHandler,
-			poolincentivesclient.ReplacePoolIncentivesHandler,
-			ibcclientclient.UpdateClientProposalHandler,
-			ibcclientclient.UpgradeProposalHandler,
-			superfluidclient.SetSuperfluidAssetsProposalHandler,
-			superfluidclient.RemoveSuperfluidAssetsProposalHandler,
-			superfluidclient.UpdateUnpoolWhitelistProposalHandler,
-			gammclient.ReplaceMigrationRecordsProposalHandler,
-			gammclient.UpdateMigrationRecordsProposalHandler,
-			gammclient.CreateCLPoolAndLinkToCFMMProposalHandler,
-			gammclient.SetScalingFactorControllerProposalHandler,
-			clclient.CreateConcentratedLiquidityPoolProposalHandler,
-			clclient.TickSpacingDecreaseProposalHandler,
-			cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
-			cwpoolclient.MigratePoolContractsProposalHandler,
-			txfeesclient.SubmitUpdateFeeTokenProposalHandler,
-		)...,
-	),
+	gov.NewAppModuleBasic(ProposalHandlers...),
 	params.AppModuleBasic{},
 	crisis.AppModuleBasic{},
 	slashing.AppModuleBasic{},

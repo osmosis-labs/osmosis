@@ -12,10 +12,11 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
+
+	govtypes "github.com/osmosis-labs/osmosis/v19/x/gov/types"
+	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/types"
 )
 
 func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {

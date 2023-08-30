@@ -9,8 +9,9 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+
+	govtypes "github.com/osmosis-labs/osmosis/v19/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/types"

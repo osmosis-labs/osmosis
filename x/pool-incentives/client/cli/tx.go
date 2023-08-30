@@ -9,8 +9,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	govcli "github.com/osmosis-labs/osmosis/v19/x/gov/client/cli"
+	govtypes "github.com/osmosis-labs/osmosis/v19/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"

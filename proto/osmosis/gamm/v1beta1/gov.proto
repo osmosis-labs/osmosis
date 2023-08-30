@@ -19,7 +19,7 @@ message ReplaceMigrationRecordsProposal {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
   option (amino.name) = "osmosis/ReplaceMigrationRecordsProposal";
-  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+  option (cosmos_proto.implements_interface) = "osmosis.gov.v1beta1.Content";
 
   string title = 1;
   string description = 2;
@@ -51,7 +51,7 @@ message UpdateMigrationRecordsProposal {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
   option (amino.name) = "osmosis/UpdateMigrationRecordsProposal";
-  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+  option (cosmos_proto.implements_interface) = "osmosis.gov.v1beta1.Content";
 
   string title = 1;
   string description = 2;
@@ -86,7 +86,7 @@ message CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal {
   option (gogoproto.goproto_stringer) = false;
   option (amino.name) =
       "osmosis/CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal";
-  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+  option (cosmos_proto.implements_interface) = "osmosis.gov.v1beta1.Content";
 
   string title = 1;
   string description = 2;
@@ -104,7 +104,7 @@ message SetScalingFactorControllerProposal {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
   option (amino.name) = "osmosis/SetScalingFactorControllerProposal";
-  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+  option (cosmos_proto.implements_interface) = "osmosis.gov.v1beta1.Content";
 
   string title = 1;
   string description = 2;

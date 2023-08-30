@@ -11,10 +11,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	govcli "github.com/osmosis-labs/osmosis/v19/x/gov/client/cli"
+	govtypes "github.com/osmosis-labs/osmosis/v19/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/cosmwasm/msg"

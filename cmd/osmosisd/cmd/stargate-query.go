@@ -18,9 +18,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	govtypes "github.com/osmosis-labs/osmosis/v19/x/gov/types"
 
 	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
 	downtimequerytypes "github.com/osmosis-labs/osmosis/v19/x/downtime-detector/client/queryproto"
