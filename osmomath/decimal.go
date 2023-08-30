@@ -20,13 +20,13 @@ type BigDec struct {
 
 const (
 	// number of decimal places
-	Precision = 36
+	PrecisionBigDec = 36
 
 	// bytes required to represent the above precision
 	// Ceiling[Log2[10**Precision - 1]]
-	DecimalPrecisionBits = 120
+	BigDecimalPrecisionBits = 120
 
-	maxDecBitLen = maxBitLen + DecimalPrecisionBits
+	maxDecBitLen = maxBitLen + BigDecimalPrecisionBits
 
 	// max number of iterations in ApproxRoot function
 	maxApproxRootIterations = 100
@@ -36,8 +36,8 @@ const (
 )
 
 var (
-	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision), nil)
-	precisionReuseSDK    = new(big.Int).Exp(big.NewInt(10), big.NewInt(sdk.Precision), nil)
+	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionBigDec), nil)
+	precisionReuseSDK    = new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionDec), nil)
 	fivePrecision        = new(big.Int).Quo(precisionReuse, big.NewInt(2))
 	precisionMultipliers []*big.Int
 	zeroInt              = big.NewInt(0)
@@ -46,14 +46,14 @@ var (
 
 	// log_2(e)
 	// From: https://www.wolframalpha.com/input?i=log_2%28e%29+with+37+digits
-	logOfEbase2 = MustNewDecFromStr("1.442695040888963407359924681001892137")
+	logOfEbase2 = MustNewBigDecFromStr("1.442695040888963407359924681001892137")
 
 	// log_2(1.0001)
 	// From: https://www.wolframalpha.com/input?i=log_2%281.0001%29+to+33+digits
-	tickLogOf2 = MustNewDecFromStr("0.000144262291094554178391070900057480")
+	tickLogOf2 = MustNewBigDecFromStr("0.000144262291094554178391070900057480")
 	// initialized in init() since requires
 	// precision to be defined.
-	twoBigDec BigDec = MustNewDecFromStr("2")
+	twoBigDec BigDec = MustNewBigDecFromStr("2")
 )
 
 // Decimal errors
@@ -65,8 +65,8 @@ var (
 
 // Set precision multipliers
 func init() {
-	precisionMultipliers = make([]*big.Int, Precision+1)
-	for i := 0; i <= Precision; i++ {
+	precisionMultipliers = make([]*big.Int, PrecisionBigDec+1)
+	for i := 0; i <= PrecisionBigDec; i++ {
 		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
 	}
 }
@@ -75,36 +75,36 @@ func precisionInt() *big.Int {
 	return new(big.Int).Set(precisionReuse)
 }
 
-func ZeroDec() BigDec     { return BigDec{new(big.Int).Set(zeroInt)} }
-func OneDec() BigDec      { return BigDec{precisionInt()} }
-func SmallestDec() BigDec { return BigDec{new(big.Int).Set(oneInt)} }
+func ZeroBigDec() BigDec     { return BigDec{new(big.Int).Set(zeroInt)} }
+func OneBigDec() BigDec      { return BigDec{precisionInt()} }
+func SmallestBigDec() BigDec { return BigDec{new(big.Int).Set(oneInt)} }
 
 // calculate the precision multiplier
 func calcPrecisionMultiplier(prec int64) *big.Int {
-	if prec > Precision {
-		panic(fmt.Sprintf("too much precision, maximum %v, provided %v", Precision, prec))
+	if prec > PrecisionBigDec {
+		panic(fmt.Sprintf("too much precision, maximum %v, provided %v", PrecisionBigDec, prec))
 	}
-	zerosToAdd := Precision - prec
+	zerosToAdd := PrecisionBigDec - prec
 	multiplier := new(big.Int).Exp(tenInt, big.NewInt(zerosToAdd), nil)
 	return multiplier
 }
 
 // get the precision multiplier, do not mutate result
 func precisionMultiplier(prec int64) *big.Int {
-	if prec > Precision {
-		panic(fmt.Sprintf("too much precision, maximum %v, provided %v", Precision, prec))
+	if prec > PrecisionBigDec {
+		panic(fmt.Sprintf("too much precision, maximum %v, provided %v", PrecisionBigDec, prec))
 	}
 	return precisionMultipliers[prec]
 }
 
 // create a new NewBigDec from integer assuming whole number
 func NewBigDec(i int64) BigDec {
-	return NewDecWithPrec(i, 0)
+	return NewBigDecWithPrec(i, 0)
 }
 
 // create a new BigDec from integer with decimal place at prec
 // CONTRACT: prec <= Precision
-func NewDecWithPrec(i, prec int64) BigDec {
+func NewBigDecWithPrec(i, prec int64) BigDec {
 	return BigDec{
 		new(big.Int).Mul(big.NewInt(i), precisionMultiplier(prec)),
 	}
@@ -112,13 +112,13 @@ func NewDecWithPrec(i, prec int64) BigDec {
 
 // create a new BigDec from big integer assuming whole numbers
 // CONTRACT: prec <= Precision
-func NewDecFromBigInt(i *big.Int) BigDec {
-	return NewDecFromBigIntWithPrec(i, 0)
+func NewBigDecFromBigInt(i *big.Int) BigDec {
+	return NewBigDecFromBigIntWithPrec(i, 0)
 }
 
 // create a new BigDec from big integer assuming whole numbers
 // CONTRACT: prec <= Precision
-func NewDecFromBigIntWithPrec(i *big.Int, prec int64) BigDec {
+func NewBigDecFromBigIntWithPrec(i *big.Int, prec int64) BigDec {
 	return BigDec{
 		new(big.Int).Mul(i, precisionMultiplier(prec)),
 	}
@@ -126,13 +126,13 @@ func NewDecFromBigIntWithPrec(i *big.Int, prec int64) BigDec {
 
 // create a new BigDec from big integer assuming whole numbers
 // CONTRACT: prec <= Precision
-func NewDecFromInt(i BigInt) BigDec {
-	return NewDecFromIntWithPrec(i, 0)
+func NewBigDecFromInt(i BigInt) BigDec {
+	return NewBigDecFromIntWithPrec(i, 0)
 }
 
 // create a new BigDec from big integer with decimal place at prec
 // CONTRACT: prec <= Precision
-func NewDecFromIntWithPrec(i BigInt, prec int64) BigDec {
+func NewBigDecFromIntWithPrec(i BigInt, prec int64) BigDec {
 	return BigDec{
 		new(big.Int).Mul(i.BigInt(), precisionMultiplier(prec)),
 	}
@@ -154,7 +154,7 @@ func NewDecFromIntWithPrec(i BigInt, prec int64) BigDec {
 // are provided in the string than the constant Precision.
 //
 // CONTRACT - This function does not mutate the input str.
-func NewDecFromStr(str string) (BigDec, error) {
+func NewBigDecFromStr(str string) (BigDec, error) {
 	if len(str) == 0 {
 		return BigDec{}, ErrEmptyDecimalStr
 	}
@@ -184,12 +184,12 @@ func NewDecFromStr(str string) (BigDec, error) {
 		return BigDec{}, ErrInvalidDecimalStr
 	}
 
-	if lenDecs > Precision {
-		return BigDec{}, fmt.Errorf("invalid precision; max: %d, got: %d", Precision, lenDecs)
+	if lenDecs > PrecisionBigDec {
+		return BigDec{}, fmt.Errorf("invalid precision; max: %d, got: %d", PrecisionBigDec, lenDecs)
 	}
 
 	// add some extra zero's to correct to the Precision factor
-	zerosToAdd := Precision - lenDecs
+	zerosToAdd := PrecisionBigDec - lenDecs
 	zeros := fmt.Sprintf(`%0`+strconv.Itoa(zerosToAdd)+`s`, "")
 	combinedStr += zeros
 
@@ -208,8 +208,8 @@ func NewDecFromStr(str string) (BigDec, error) {
 }
 
 // Decimal from string, panic on error
-func MustNewDecFromStr(s string) BigDec {
-	dec, err := NewDecFromStr(s)
+func MustNewBigDecFromStr(s string) BigDec {
+	dec, err := NewBigDecFromStr(s)
 	if err != nil {
 		panic(err)
 	}
@@ -435,21 +435,21 @@ func (d BigDec) ApproxRoot(root uint64) (guess BigDec, err error) {
 		return absRoot.MulInt64(-1), err
 	}
 
-	if root == 1 || d.IsZero() || d.Equal(OneDec()) {
+	if root == 1 || d.IsZero() || d.Equal(OneBigDec()) {
 		return d, nil
 	}
 
 	if root == 0 {
-		return OneDec(), nil
+		return OneBigDec(), nil
 	}
 
-	rootInt := NewIntFromUint64(root)
-	guess, delta := OneDec(), OneDec()
+	rootInt := NewBigIntFromUint64(root)
+	guess, delta := OneBigDec(), OneBigDec()
 
-	for iter := 0; delta.Abs().GT(SmallestDec()) && iter < maxApproxRootIterations; iter++ {
+	for iter := 0; delta.Abs().GT(SmallestBigDec()) && iter < maxApproxRootIterations; iter++ {
 		prev := guess.PowerInteger(root - 1)
 		if prev.IsZero() {
-			prev = SmallestDec()
+			prev = SmallestBigDec()
 		}
 		delta = d.Quo(prev)
 		delta = delta.Sub(guess)
@@ -502,24 +502,24 @@ func (d BigDec) String() string {
 
 	// TODO: Remove trailing zeros
 	// case 1, purely decimal
-	if inputSize <= Precision {
-		bzStr = make([]byte, Precision+2)
+	if inputSize <= PrecisionBigDec {
+		bzStr = make([]byte, PrecisionBigDec+2)
 
 		// 0. prefix
 		bzStr[0] = byte('0')
 		bzStr[1] = byte('.')
 
 		// set relevant digits to 0
-		for i := 0; i < Precision-inputSize; i++ {
+		for i := 0; i < PrecisionBigDec-inputSize; i++ {
 			bzStr[i+2] = byte('0')
 		}
 
 		// set final digits
-		copy(bzStr[2+(Precision-inputSize):], bzInt)
+		copy(bzStr[2+(PrecisionBigDec-inputSize):], bzInt)
 	} else {
 		// inputSize + 1 to account for the decimal point that is being added
 		bzStr = make([]byte, inputSize+1)
-		decPointPlace := inputSize - Precision
+		decPointPlace := inputSize - PrecisionBigDec
 
 		copy(bzStr, bzInt[:decPointPlace])                   // pre-decimal digits
 		bzStr[decPointPlace] = byte('.')                     // decimal point
@@ -549,10 +549,10 @@ func (d BigDec) MustFloat64() float64 {
 	}
 }
 
-// SdkDec returns the Sdk.Dec representation of a BigDec.
+// Dec returns the osmomath.Dec representation of a BigDec.
 // Values in any additional decimal places are truncated.
-func (d BigDec) SDKDec() sdk.Dec {
-	precisionDiff := Precision - sdk.Precision
+func (d BigDec) Dec() Dec {
+	precisionDiff := PrecisionBigDec - PrecisionDec
 	precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(precisionDiff)), nil)
 
 	if precisionDiff < 0 {
@@ -564,40 +564,40 @@ func (d BigDec) SDKDec() sdk.Dec {
 	intRepresentation := new(big.Int).Quo(d.BigInt(), precisionFactor)
 
 	// convert int representation back to SDK Dec precision
-	truncatedDec := sdk.NewDecFromBigIntWithPrec(intRepresentation, sdk.Precision)
+	truncatedDec := NewDecFromBigIntWithPrec(intRepresentation, PrecisionDec)
 
 	return truncatedDec
 }
 
-// SDKDecRoundUp returns the Sdk.Dec representation of a BigDec.
+// DecRoundUp returns the osmomath.Dec representation of a BigDec.
 // Round up at precision end.
 // Values in any additional decimal places are truncated.
-func (d BigDec) SDKDecRoundUp() sdk.Dec {
-	return sdk.NewDecFromBigIntWithPrec(chopPrecisionAndRoundUpSDKDec(d.i), sdk.Precision)
+func (d BigDec) DecRoundUp() Dec {
+	return NewDecFromBigIntWithPrec(chopPrecisionAndRoundUpDec(d.i), PrecisionDec)
 }
 
-// BigDecFromSdkDec returns the BigDec representation of an SDKDec.
+// BigDecFromDec returns the BigDec representation of an Dec.
 // Values in any additional decimal places are truncated.
-func BigDecFromSDKDec(d sdk.Dec) BigDec {
-	return NewDecFromBigIntWithPrec(d.BigInt(), sdk.Precision)
+func BigDecFromDec(d Dec) BigDec {
+	return NewBigDecFromBigIntWithPrec(d.BigInt(), PrecisionDec)
 }
 
-// BigDecFromSdkDecSlice returns the []BigDec representation of an []SDKDec.
+// BigDecFromDecSlice returns the []BigDec representation of an []Dec.
 // Values in any additional decimal places are truncated.
-func BigDecFromSDKDecSlice(ds []sdk.Dec) []BigDec {
+func BigDecFromDecSlice(ds []Dec) []BigDec {
 	result := make([]BigDec, len(ds))
 	for i, d := range ds {
-		result[i] = NewDecFromBigIntWithPrec(d.BigInt(), sdk.Precision)
+		result[i] = NewBigDecFromBigIntWithPrec(d.BigInt(), PrecisionDec)
 	}
 	return result
 }
 
-// BigDecFromSdkDecSlice returns the []BigDec representation of an []SDKDec.
+// BigDecFromDecSlice returns the []BigDec representation of an []Dec.
 // Values in any additional decimal places are truncated.
-func BigDecFromSDKDecCoinSlice(ds []sdk.DecCoin) []BigDec {
+func BigDecFromDecCoinSlice(ds []sdk.DecCoin) []BigDec {
 	result := make([]BigDec, len(ds))
 	for i, d := range ds {
-		result[i] = NewDecFromBigIntWithPrec(d.Amount.BigInt(), sdk.Precision)
+		result[i] = NewBigDecFromBigIntWithPrec(d.Amount.BigInt(), PrecisionDec)
 	}
 	return result
 }
@@ -652,8 +652,8 @@ func chopPrecisionAndRoundUpBigDec(d *big.Int) *big.Int {
 	return chopPrecisionAndRoundUp(d, precisionReuse)
 }
 
-// chopPrecisionAndRoundUpSDKDec removes  sdk.Precision amount of rightmost digits and rounds up.
-func chopPrecisionAndRoundUpSDKDec(d *big.Int) *big.Int {
+// chopPrecisionAndRoundUpDec removes  sdk.Precision amount of rightmost digits and rounds up.
+func chopPrecisionAndRoundUpDec(d *big.Int) *big.Int {
 	return chopPrecisionAndRoundUp(d, precisionReuseSDK)
 }
 
@@ -696,7 +696,7 @@ func (d BigDec) RoundInt64() int64 {
 
 // RoundInt round the decimal using bankers rounding
 func (d BigDec) RoundInt() BigInt {
-	return NewIntFromBigInt(chopPrecisionAndRoundNonMutative(d.i))
+	return NewBigIntFromBigInt(chopPrecisionAndRoundNonMutative(d.i))
 }
 
 // chopPrecisionAndTruncate is similar to chopPrecisionAndRound,
@@ -716,12 +716,12 @@ func (d BigDec) TruncateInt64() int64 {
 
 // TruncateInt truncates the decimals from the number and returns an Int
 func (d BigDec) TruncateInt() BigInt {
-	return NewIntFromBigInt(chopPrecisionAndTruncate(d.i))
+	return NewBigIntFromBigInt(chopPrecisionAndTruncate(d.i))
 }
 
 // TruncateDec truncates the decimals from the number and returns a Dec
 func (d BigDec) TruncateDec() BigDec {
-	return NewDecFromBigInt(chopPrecisionAndTruncate(d.i))
+	return NewBigDecFromBigInt(chopPrecisionAndTruncate(d.i))
 }
 
 // Ceil returns the smallest interger value (as a decimal) that is greater than
@@ -734,19 +734,19 @@ func (d BigDec) Ceil() BigDec {
 
 	// no need to round with a zero remainder regardless of sign
 	if rem.Cmp(zeroInt) == 0 {
-		return NewDecFromBigInt(quo)
+		return NewBigDecFromBigInt(quo)
 	}
 
 	if rem.Sign() == -1 {
-		return NewDecFromBigInt(quo)
+		return NewBigDecFromBigInt(quo)
 	}
 
-	return NewDecFromBigInt(quo.Add(quo, oneInt))
+	return NewBigDecFromBigInt(quo.Add(quo, oneInt))
 }
 
 // MaxSortableDec is the largest Dec that can be passed into SortableDecBytes()
 // Its negative form is the least Dec that can be passed in.
-var MaxSortableDec = OneDec().Quo(SmallestDec())
+var MaxSortableDec = OneBigDec().Quo(SmallestBigDec())
 
 // ValidSortableDec ensures that a Dec is within the sortable bounds,
 // a BigDec can't have a precision of less than 10^-18.
@@ -773,9 +773,9 @@ func SortableDecBytes(dec BigDec) []byte {
 	}
 	// We move the negative sign to the front of all the left padded 0s, to make negative numbers come before positive numbers
 	if dec.IsNegative() {
-		return append([]byte("-"), []byte(fmt.Sprintf(fmt.Sprintf("%%0%ds", Precision*2+1), dec.Abs().String()))...)
+		return append([]byte("-"), []byte(fmt.Sprintf(fmt.Sprintf("%%0%ds", PrecisionBigDec*2+1), dec.Abs().String()))...)
 	}
-	return []byte(fmt.Sprintf(fmt.Sprintf("%%0%ds", Precision*2+1), dec.String()))
+	return []byte(fmt.Sprintf(fmt.Sprintf("%%0%ds", PrecisionBigDec*2+1), dec.String()))
 }
 
 // reuse nil values
@@ -808,7 +808,7 @@ func (d *BigDec) UnmarshalJSON(bz []byte) error {
 	}
 
 	// TODO: Reuse dec allocation
-	newDec, err := NewDecFromStr(text)
+	newDec, err := NewBigDecFromStr(text)
 	if err != nil {
 		return err
 	}
@@ -898,16 +898,16 @@ func DecsEqual(d1s, d2s []BigDec) bool {
 	return true
 }
 
-// MinDec gets minimum decimal between two
-func MinDec(d1, d2 BigDec) BigDec {
+// MinBigDec gets minimum decimal between two
+func MinBigDec(d1, d2 BigDec) BigDec {
 	if d1.LT(d2) {
 		return d1
 	}
 	return d2
 }
 
-// MaxDec gets maximum decimal between two
-func MaxDec(d1, d2 BigDec) BigDec {
+// MaxBigDec gets maximum decimal between two
+func MaxBigDec(d1, d2 BigDec) BigDec {
 	if d1.LT(d2) {
 		return d2
 	}
@@ -939,30 +939,30 @@ func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bo
 func (x BigDec) LogBase2() BigDec {
 	// create a new decimal to avoid mutating
 	// the receiver's int buffer.
-	xCopy := ZeroDec()
+	xCopy := ZeroBigDec()
 	xCopy.i = new(big.Int).Set(x.i)
-	if xCopy.LTE(ZeroDec()) {
+	if xCopy.LTE(ZeroBigDec()) {
 		panic(fmt.Sprintf("log is not defined at <= 0, given (%s)", xCopy))
 	}
 
 	// Normalize x to be 1 <= x < 2.
 
 	// y is the exponent that results in a whole multiple of 2.
-	y := ZeroDec()
+	y := ZeroBigDec()
 
 	// repeat until: x >= 1.
-	for xCopy.LT(OneDec()) {
+	for xCopy.LT(OneBigDec()) {
 		xCopy.i.Lsh(xCopy.i, 1)
-		y = y.Sub(OneDec())
+		y = y.Sub(OneBigDec())
 	}
 
 	// repeat until: x < 2.
 	for xCopy.GTE(twoBigDec) {
 		xCopy.i.Rsh(xCopy.i, 1)
-		y = y.Add(OneDec())
+		y = y.Add(OneBigDec())
 	}
 
-	b := OneDec().Quo(twoBigDec)
+	b := OneBigDec().Quo(twoBigDec)
 
 	// N.B. At this point x is a positive real number representing
 	// mantissa of the log. We estimate it using the following
@@ -1005,7 +1005,7 @@ func (x BigDec) TickLog() BigDec {
 // log_a(x) custom base logarithm
 // Formula: log_a(b) = log_2(b) / log_2(a)
 func (x BigDec) CustomBaseLog(base BigDec) BigDec {
-	if base.LTE(ZeroDec()) || base.Equal(OneDec()) {
+	if base.LTE(ZeroBigDec()) || base.Equal(OneBigDec()) {
 		panic(fmt.Sprintf("log is not defined at base <= 0 or base == 1, base given (%s)", base))
 	}
 
@@ -1030,9 +1030,9 @@ func (d BigDec) PowerInteger(power uint64) BigDec {
 // algorithm for performing the calculation.
 func (d BigDec) PowerIntegerMut(power uint64) BigDec {
 	if power == 0 {
-		return OneDec()
+		return OneBigDec()
 	}
-	tmp := OneDec()
+	tmp := OneBigDec()
 
 	for i := power; i > 1; {
 		if i%2 != 0 {
@@ -1069,12 +1069,12 @@ func (d BigDec) Power(power BigDec) BigDec {
 		return d.PowerInteger(power.TruncateInt().Uint64())
 	}
 	if power.IsZero() {
-		return OneDec()
+		return OneBigDec()
 	}
 	if d.IsZero() {
-		return ZeroDec()
+		return ZeroBigDec()
 	}
-	if d.LT(OneDec()) {
+	if d.LT(OneBigDec()) {
 		panic(fmt.Sprintf("Power() is not supported for base < 1, base was (%s)", d))
 	}
 	if d.Equal(twoBigDec) {

@@ -13,6 +13,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 
@@ -26,7 +27,7 @@ const (
 )
 
 var (
-	stakeAmt = sdk.NewInt(100000000)
+	stakeAmt = osmomath.NewInt(100000000)
 )
 
 type UpgradeTestSuite struct {
@@ -42,7 +43,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 }
 
 func (s *UpgradeTestSuite) TestUpgrade() {
-	initialTokenBonded := sdk.NewInt(100)
+	initialTokenBonded := osmomath.NewInt(100)
 	s.Setup()
 
 	// prepare superfluid delegation
@@ -105,7 +106,7 @@ func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lock
 	superfluidVal := s.SetupValidator(stakingtypes.Bonded)
 
 	// create single pool with bond denom
-	pools := s.SetupGammPoolsWithBondDenomMultiplier([]sdk.Dec{sdk.NewDec(20)})
+	pools := s.SetupGammPoolsWithBondDenomMultiplier([]osmomath.Dec{sdk.NewDec(20)})
 
 	// we only created one pool, we will use this pool for all the continued tests
 	pool := pools[0]

@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
 
@@ -95,7 +96,7 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokensProvided:  sdk.Coins{sdk.Coin{Denom: "stake", Amount: sdk.NewInt(-10)}, sdk.NewCoin("osmo", sdk.OneInt())},
+				TokensProvided:  sdk.Coins{sdk.Coin{Denom: "stake", Amount: osmomath.NewInt(-10)}, sdk.NewCoin("osmo", sdk.OneInt())},
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -108,7 +109,7 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokensProvided:  sdk.Coins{sdk.NewCoin("stake", sdk.OneInt()), sdk.Coin{Denom: "osmo", Amount: sdk.NewInt(-10)}},
+				TokensProvided:  sdk.Coins{sdk.NewCoin("stake", sdk.OneInt()), sdk.Coin{Denom: "osmo", Amount: osmomath.NewInt(-10)}},
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -121,7 +122,7 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", sdk.ZeroInt()), sdk.NewCoin("osmo", sdk.ZeroInt())),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", osmomath.ZeroInt()), sdk.NewCoin("osmo", osmomath.ZeroInt())),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -134,7 +135,7 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       10,
 				UpperTick:       10,
-				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", sdk.ZeroInt()), sdk.NewCoin("osmo", sdk.ZeroInt())),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", osmomath.ZeroInt()), sdk.NewCoin("osmo", osmomath.ZeroInt())),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},
@@ -148,8 +149,8 @@ func TestMsgCreatePosition(t *testing.T) {
 				LowerTick:       1,
 				UpperTick:       10,
 				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()), sdk.NewCoin("osmo", sdk.OneInt())),
-				TokenMinAmount0: sdk.NewInt(-1),
-				TokenMinAmount1: sdk.NewInt(-1),
+				TokenMinAmount0: osmomath.NewInt(-1),
+				TokenMinAmount1: osmomath.NewInt(-1),
 			},
 			expectPass: false,
 		},
@@ -161,8 +162,8 @@ func TestMsgCreatePosition(t *testing.T) {
 				LowerTick:       1,
 				UpperTick:       10,
 				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()), sdk.NewCoin("osmo", sdk.OneInt())),
-				TokenMinAmount0: sdk.ZeroInt(),
-				TokenMinAmount1: sdk.ZeroInt(),
+				TokenMinAmount0: osmomath.ZeroInt(),
+				TokenMinAmount1: osmomath.ZeroInt(),
 			},
 			expectPass: true,
 		},
@@ -286,7 +287,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 			msg: types.MsgWithdrawPosition{
 				PositionId:      1,
 				Sender:          addr1,
-				LiquidityAmount: sdk.OneDec(),
+				LiquidityAmount: osmomath.OneDec(),
 			},
 			expectPass: true,
 		},
@@ -295,7 +296,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 			msg: types.MsgWithdrawPosition{
 				PositionId:      1,
 				Sender:          invalidAddr.String(),
-				LiquidityAmount: sdk.OneDec(),
+				LiquidityAmount: osmomath.OneDec(),
 			},
 			expectPass: false,
 		},
@@ -336,7 +337,7 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       int64(10000),
 				UpperTick:       int64(20000),
-				TokensProvided:  sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000)), sdk.NewCoin("bar", sdk.NewInt(1000))),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(1000)), sdk.NewCoin("bar", osmomath.NewInt(1000))),
 				TokenMinAmount0: sdk.OneInt(),
 				TokenMinAmount1: sdk.OneInt(),
 			},

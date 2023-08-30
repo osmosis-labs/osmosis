@@ -21,15 +21,15 @@ type ConcentratedPoolExtension interface {
 	GetCurrentTick() int64
 	GetExponentAtPriceOne() int64
 	GetTickSpacing() uint64
-	GetLiquidity() sdk.Dec
+	GetLiquidity() osmomath.Dec
 	GetLastLiquidityUpdate() time.Time
 	SetCurrentSqrtPrice(newSqrtPrice osmomath.BigDec)
 	SetCurrentTick(newTick int64)
 	SetTickSpacing(newTickSpacing uint64)
 	SetLastLiquidityUpdate(newTime time.Time)
 
-	UpdateLiquidity(newLiquidity sdk.Dec)
-	ApplySwap(newLiquidity sdk.Dec, newCurrentTick int64, newCurrentSqrtPrice osmomath.BigDec) error
-	CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) (actualAmountDenom0 sdk.Dec, actualAmountDenom1 sdk.Dec, err error)
-	UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool
+	UpdateLiquidity(newLiquidity osmomath.Dec)
+	ApplySwap(newLiquidity osmomath.Dec, newCurrentTick int64, newCurrentSqrtPrice osmomath.BigDec) error
+	CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta osmomath.Dec) (actualAmountDenom0 osmomath.Dec, actualAmountDenom1 osmomath.Dec, err error)
+	UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta osmomath.Dec) bool
 }

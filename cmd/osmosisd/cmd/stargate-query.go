@@ -244,7 +244,7 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 			v.PoolId = poolId
 			sdkInt, ok := sdk.NewIntFromString(structArguments[1])
 			if !ok {
-				return nil, fmt.Errorf("failed to parse to sdk.Int")
+				return nil, fmt.Errorf("failed to parse to osmomath.Int")
 			}
 			v.ShareInAmount = sdkInt
 			return v, nil

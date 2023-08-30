@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	types "github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
@@ -19,7 +20,7 @@ func (k Keeper) ValidateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 	return k.validateLockForSFDelegate(ctx, lock, sender)
 }
 
-func (k Keeper) PrepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Dec) (sdk.AccAddress, sdk.Coins, error) {
+func (k Keeper) PrepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt osmomath.Dec) (sdk.AccAddress, sdk.Coins, error) {
 	return k.prepareConcentratedLockForSlash(ctx, lock, slashAmt)
 }
 
@@ -47,7 +48,7 @@ func (k Keeper) ValidateMigration(ctx sdk.Context, sender sdk.AccAddress, lockId
 	return k.validateMigration(ctx, sender, lockId, sharesToMigrate)
 }
 
-func (k Keeper) AddToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (cltypes.CreateFullRangePositionData, uint64, error) {
+func (k Keeper) AddToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added osmomath.Int) (cltypes.CreateFullRangePositionData, uint64, error) {
 	return k.addToConcentratedLiquiditySuperfluidPosition(ctx, owner, positionId, amount0Added, amount1Added)
 }
 
@@ -64,23 +65,23 @@ func (k Keeper) DistributeSuperfluidGauges(ctx sdk.Context) {
 }
 
 func (k Keeper) ConvertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, lockId uint64,
-	minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, err error) {
+	minAmtToStake osmomath.Int) (totalAmtConverted osmomath.Int, err error) {
 	return k.convertLockToStake(ctx, sender, valAddr, lockId, minAmtToStake)
 }
 
 func (k Keeper) ConvertGammSharesToOsmoAndStake(
 	ctx sdk.Context,
 	sender sdk.AccAddress, valAddr string,
-	poolIdLeaving uint64, exitCoins sdk.Coins, minAmtToStake sdk.Int, originalSuperfluidValAddr string,
-) (totalAmtCoverted sdk.Int, err error) {
+	poolIdLeaving uint64, exitCoins sdk.Coins, minAmtToStake osmomath.Int, originalSuperfluidValAddr string,
+) (totalAmtCoverted osmomath.Int, err error) {
 	return k.convertGammSharesToOsmoAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake, originalSuperfluidValAddr)
 }
 
 func (k Keeper) ConvertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, sharesToStake sdk.Coin,
-	minAmtToStake sdk.Int) (totalAmtConverted sdk.Int, err error) {
+	minAmtToStake osmomath.Int) (totalAmtConverted osmomath.Int, err error) {
 	return k.convertUnlockedToStake(ctx, sender, valAddr, sharesToStake, minAmtToStake)
 }
 
-func (k Keeper) DelegateBaseOnValsetPref(ctx sdk.Context, sender sdk.AccAddress, valAddr, originalSuperfluidValAddr string, totalAmtToStake sdk.Int) error {
+func (k Keeper) DelegateBaseOnValsetPref(ctx sdk.Context, sender sdk.AccAddress, valAddr, originalSuperfluidValAddr string, totalAmtToStake osmomath.Int) error {
 	return k.delegateBaseOnValsetPref(ctx, sender, valAddr, originalSuperfluidValAddr, totalAmtToStake)
 }

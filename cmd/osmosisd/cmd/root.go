@@ -15,6 +15,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/params"
 
 	"github.com/spf13/cast"
@@ -726,7 +727,7 @@ func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[strin
 			if err != nil {
 				return "", err
 			}
-			transformedCoinValue := coinDec.Mul(sdk.MustNewDecFromStr("10").Power(denomUnitMap.Exponent))
+			transformedCoinValue := coinDec.Mul(osmomath.MustNewDecFromStr("10").Power(denomUnitMap.Exponent))
 			transformedCoinValueInt := transformedCoinValue.TruncateInt()
 			transformedCoinValueStr := transformedCoinValueInt.String()
 			return transformedCoinValueStr + assetMap[coinDenom].Base, nil

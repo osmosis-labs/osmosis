@@ -18,6 +18,7 @@ import (
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
 	v101 "github.com/osmosis-labs/osmosis/osmoutils/sumtree/legacy/v101"
 )
@@ -56,7 +57,7 @@ func compareBranch(oldValueBz []byte, valueBz []byte) (err error) {
 }
 
 func compareLeaf(oldValueBz []byte, valueBz []byte) (err error) {
-	oldValue := sdk.ZeroInt()
+	oldValue := osmomath.ZeroInt()
 	value := sumtree.Leaf{}
 	err = json.Unmarshal(oldValueBz, &oldValue)
 	if err != nil {

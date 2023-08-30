@@ -196,7 +196,7 @@ func (k Keeper) updateConcentratedOsmoEquivalentMultiplier(ctx sdk.Context, asse
 	}
 
 	// calculate multiplier and set it
-	multiplier := osmoPoolAsset.ToDec().Quo(fullRangeLiquidity)
+	multiplier := osmoPoolAsset.ToLegacyDec().Quo(fullRangeLiquidity)
 	k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
 
 	return nil

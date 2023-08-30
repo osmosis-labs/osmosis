@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
@@ -75,7 +76,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			if tc.removeStakingAsset {
 				stakeDenom = "bar"
 			}
-			poolCoins := sdk.NewCoins(sdk.NewCoin(stakeDenom, sdk.NewInt(1000000000000000000)), sdk.NewCoin("foo", sdk.NewInt(1000000000000000000)))
+			poolCoins := sdk.NewCoins(sdk.NewCoin(stakeDenom, osmomath.NewInt(1000000000000000000)), sdk.NewCoin("foo", osmomath.NewInt(1000000000000000000)))
 
 			// Ensure that the multiplier is zero before the test
 			multiplier := superfluidKeeper.GetOsmoEquivalentMultiplier(ctx, tc.asset.Denom)
@@ -207,7 +208,7 @@ func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 
 			// allocate rewards to designated validators
 			for _, valIndex := range tc.rewardedVals {
-				s.AllocateRewardsToValidator(valAddrs[valIndex], sdk.NewInt(20000))
+				s.AllocateRewardsToValidator(valAddrs[valIndex], osmomath.NewInt(20000))
 			}
 
 			// move intermediary account delegation rewards to gauges
@@ -284,7 +285,7 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 
 				// allocate rewards to designated validators
 				for _, valIndex := range tc.rewardedVals {
-					s.AllocateRewardsToValidator(valAddrs[valIndex], sdk.NewInt(20000))
+					s.AllocateRewardsToValidator(valAddrs[valIndex], osmomath.NewInt(20000))
 				}
 
 				// move intermediary account delegation rewards to gauges

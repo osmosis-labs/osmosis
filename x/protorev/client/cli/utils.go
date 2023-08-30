@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	flag "github.com/spf13/pflag"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
@@ -75,7 +76,7 @@ func (release *createArbRoutesInput) extractTokenPairArbRoutes() []types.TokenPa
 
 		for _, arbRoute := range hotRoute.ArbRoutes {
 			currentArbRoute := types.Route{}
-			currentArbRoute.StepSize = sdk.NewIntFromUint64(arbRoute.StepSize)
+			currentArbRoute.StepSize = osmomath.NewIntFromUint64(arbRoute.StepSize)
 
 			for _, trade := range arbRoute.Trades {
 				currentTrade := types.Trade{}
@@ -270,7 +271,7 @@ func BuildSetBaseDenomsMsg(clientCtx client.Context, args []string, fs *flag.Fla
 	for _, baseDenom := range *input {
 		baseDenoms = append(baseDenoms, types.BaseDenom{
 			Denom:    baseDenom.Denom,
-			StepSize: sdk.NewIntFromUint64(baseDenom.StepSize),
+			StepSize: osmomath.NewIntFromUint64(baseDenom.StepSize),
 		})
 	}
 

@@ -5,6 +5,8 @@ import (
 
 	"github.com/spf13/cast"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -14,19 +16,19 @@ import (
 
 // DefaultMinGasPriceForArbitrageTx represents minimum gas price
 // for arbitrage transactions.
-var DefaultMinGasPriceForArbitrageTx = sdk.ZeroDec()
+var DefaultMinGasPriceForArbitrageTx = osmomath.ZeroDec()
 
 var (
-	DefaultMinGasPriceForHighGasTx = sdk.ZeroDec()
+	DefaultMinGasPriceForHighGasTx = osmomath.ZeroDec()
 	DefaultMaxGasWantedPerTx       = uint64(25 * 1000 * 1000)
 	DefaultHighGasTxThreshold      = uint64(1 * 1000 * 1000)
 )
 
 type MempoolFeeOptions struct {
 	MaxGasWantedPerTx         uint64
-	MinGasPriceForArbitrageTx sdk.Dec
+	MinGasPriceForArbitrageTx osmomath.Dec
 	HighGasTxThreshold        uint64
-	MinGasPriceForHighGasTx   sdk.Dec
+	MinGasPriceForHighGasTx   osmomath.Dec
 }
 
 func NewDefaultMempoolFeeOptions() MempoolFeeOptions {
@@ -59,15 +61,15 @@ func parseMaxGasWantedPerTx(opts servertypes.AppOptions) uint64 {
 	return value
 }
 
-func parseMinGasPriceForArbitrageTx(opts servertypes.AppOptions) sdk.Dec {
+func parseMinGasPriceForArbitrageTx(opts servertypes.AppOptions) osmomath.Dec {
 	return parseDecFromConfig(opts, "arbitrage-min-gas-fee", DefaultMinGasPriceForArbitrageTx.Clone())
 }
 
-func parseMinGasPriceForHighGasTx(opts servertypes.AppOptions) sdk.Dec {
+func parseMinGasPriceForHighGasTx(opts servertypes.AppOptions) osmomath.Dec {
 	return parseDecFromConfig(opts, "min-gas-price-for-high-gas-tx", DefaultMinGasPriceForHighGasTx.Clone())
 }
 
-func parseDecFromConfig(opts servertypes.AppOptions, optName string, defaultValue sdk.Dec) sdk.Dec {
+func parseDecFromConfig(opts servertypes.AppOptions, optName string, defaultValue osmomath.Dec) osmomath.Dec {
 	valueInterface := opts.Get("osmosis-mempool." + optName)
 	value := defaultValue
 	if valueInterface != nil {

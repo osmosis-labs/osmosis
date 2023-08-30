@@ -21,6 +21,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
@@ -178,7 +179,7 @@ func NewMsgNewSplitRouteSwapExactAmountOut(fs *flag.FlagSet) ([]types.SwapAmount
 	var splitRouteProto []types.SwapAmountOutSplitRoute
 	for _, route := range splitRouteJSONdata.Route {
 		protoRoute := types.SwapAmountOutSplitRoute{
-			TokenOutAmount: sdk.NewInt(route.TokenOutAmount),
+			TokenOutAmount: osmomath.NewInt(route.TokenOutAmount),
 		}
 		protoRoute.Pools = append(protoRoute.Pools, route.Pools...)
 		splitRouteProto = append(splitRouteProto, protoRoute)
@@ -207,7 +208,7 @@ func NewMsgNewSplitRouteSwapExactAmountIn(fs *flag.FlagSet) ([]types.SwapAmountI
 	var splitRouteProto []types.SwapAmountInSplitRoute
 	for _, route := range splitRouteJSONdata.Route {
 		protoRoute := types.SwapAmountInSplitRoute{
-			TokenInAmount: sdk.NewInt(route.TokenInAmount),
+			TokenInAmount: osmomath.NewInt(route.TokenInAmount),
 		}
 		protoRoute.Pools = append(protoRoute.Pools, route.Pools...)
 		splitRouteProto = append(splitRouteProto, protoRoute)

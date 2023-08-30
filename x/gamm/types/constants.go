@@ -2,6 +2,8 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 const (
@@ -22,7 +24,7 @@ const (
 
 var (
 	// OneShare represents the amount of subshares in a single pool share.
-	OneShare = sdk.NewIntWithDecimal(1, OneShareExponent)
+	OneShare = osmomath.NewIntWithDecimal(1, OneShareExponent)
 
 	// InitPoolSharesSupply is the amount of new shares to initialize a pool with.
 	InitPoolSharesSupply = OneShare.MulRaw(100)
@@ -33,13 +35,13 @@ var (
 	// Internal note: Ctrl+F for MaxSpotPrice in code if ever changed.
 	// Other tests depend on being equal to MaxSpotPrice,
 	// but don't directly import it due to import issues.
-	MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
+	MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(osmomath.OneDec())
 	// MinSpotPrice is the minimum supported spot price. Anything less than this will error.
-	// It is limited by sdk.Dec's precision.
+	// It is limited by osmomath.Dec's precision.
 	MinSpotPrice = sdk.SmallestDec()
 
 	// MultihopSpreadFactorMultiplierForOsmoPools if a spread factor multiplier for trades consists of just two OSMO pools during a single transaction.
-	MultihopSpreadFactorMultiplierForOsmoPools = sdk.NewDecWithPrec(5, 1) // 0.5
+	MultihopSpreadFactorMultiplierForOsmoPools = osmomath.NewDecWithPrec(5, 1) // 0.5
 
 	// Maximum amount per asset after the application of scaling factors should be 10e34.
 	StableswapMaxScaledAmtPerAsset = sdk.NewDec(10).Power(34).TruncateInt()

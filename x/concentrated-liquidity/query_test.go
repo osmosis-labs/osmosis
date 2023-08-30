@@ -174,8 +174,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		poolId          uint64
 		tokenIn         string
 		currentPoolTick int64
-		startTick       sdk.Int
-		boundTick       sdk.Int
+		startTick       osmomath.Int
+		boundTick       osmomath.Int
 
 		// expected values
 		expectedLiquidityDepths []queryproto.TickLiquidityNet
@@ -190,7 +190,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:    defaultPoolId,
 			tokenIn:   ETH,
-			boundTick: sdk.Int{},
+			boundTick: osmomath.Int{},
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(10),
@@ -207,7 +207,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:    defaultPoolId,
 			tokenIn:   USDC,
-			boundTick: sdk.Int{},
+			boundTick: osmomath.Int{},
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(-10),
@@ -226,7 +226,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:    defaultPoolId,
 			tokenIn:   ETH,
-			boundTick: sdk.Int{},
+			boundTick: osmomath.Int{},
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(10),
@@ -245,7 +245,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:    defaultPoolId,
 			tokenIn:   USDC,
-			boundTick: sdk.Int{},
+			boundTick: osmomath.Int{},
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(20),
@@ -272,7 +272,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:    defaultPoolId,
 			tokenIn:   ETH,
-			boundTick: sdk.NewInt(-15),
+			boundTick: osmomath.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(20),
@@ -289,7 +289,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:                  defaultPoolId,
 			tokenIn:                 ETH,
-			boundTick:               sdk.NewInt(-5),
+			boundTick:               osmomath.NewInt(-5),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{},
 		},
 		{
@@ -303,7 +303,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:    defaultPoolId,
 			tokenIn:   USDC,
-			boundTick: sdk.NewInt(10),
+			boundTick: osmomath.NewInt(10),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(-20),
@@ -324,7 +324,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:    defaultPoolId,
 			tokenIn:   ETH,
-			boundTick: sdk.Int{},
+			boundTick: osmomath.Int{},
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(20),
@@ -349,7 +349,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:    defaultPoolId,
 			tokenIn:   USDC,
-			boundTick: sdk.Int{},
+			boundTick: osmomath.Int{},
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(40),
@@ -378,8 +378,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			tokenIn:         ETH,
 			currentPoolTick: 10,
-			startTick:       sdk.NewInt(10),
-			boundTick:       sdk.NewInt(-15),
+			startTick:       osmomath.NewInt(10),
+			boundTick:       osmomath.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(-20),
@@ -400,8 +400,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			tokenIn:         ETH,
 			currentPoolTick: 21,
-			startTick:       sdk.NewInt(10),
-			boundTick:       sdk.NewInt(-15),
+			startTick:       osmomath.NewInt(10),
+			boundTick:       osmomath.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 
@@ -424,8 +424,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			tokenIn:         USDC,
 			currentPoolTick: 5,
-			startTick:       sdk.NewInt(5),
-			boundTick:       sdk.NewInt(15),
+			startTick:       osmomath.NewInt(5),
+			boundTick:       osmomath.NewInt(15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(-20),
@@ -442,8 +442,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			tokenIn:         USDC,
 			currentPoolTick: -50,
-			startTick:       sdk.NewInt(5),
-			boundTick:       sdk.NewInt(15),
+			startTick:       osmomath.NewInt(5),
+			boundTick:       osmomath.NewInt(15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 					LiquidityNet: sdk.NewDec(-20),
@@ -462,7 +462,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:        5,
 			tokenIn:       "invalid_token",
-			boundTick:     sdk.NewInt(-5),
+			boundTick:     osmomath.NewInt(-5),
 			expectedError: true,
 		},
 		{
@@ -474,7 +474,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:        defaultPoolId,
 			tokenIn:       "invalid_token",
-			boundTick:     sdk.NewInt(-5),
+			boundTick:     osmomath.NewInt(-5),
 			expectedError: true,
 		},
 		{
@@ -488,7 +488,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:        defaultPoolId,
 			tokenIn:       USDC,
-			boundTick:     sdk.NewInt(-5),
+			boundTick:     osmomath.NewInt(-5),
 			expectedError: true,
 		},
 		{
@@ -500,7 +500,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:        defaultPoolId,
 			tokenIn:       USDC,
-			boundTick:     sdk.NewInt(DefaultMaxTick + 1),
+			boundTick:     osmomath.NewInt(DefaultMaxTick + 1),
 			expectedError: true,
 		},
 		{
@@ -512,7 +512,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			poolId:        defaultPoolId,
 			tokenIn:       ETH,
-			boundTick:     sdk.NewInt(DefaultMinCurrentTick - 1),
+			boundTick:     osmomath.NewInt(DefaultMinCurrentTick - 1),
 			expectedError: true,
 		},
 		{
@@ -524,8 +524,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			tokenIn:         ETH,
 			currentPoolTick: 10,
-			startTick:       sdk.NewInt(21),
-			boundTick:       sdk.NewInt(-15),
+			startTick:       osmomath.NewInt(21),
+			boundTick:       osmomath.NewInt(-15),
 			expectedError:   true,
 		},
 		{
@@ -537,8 +537,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 
 			tokenIn:         USDC,
 			currentPoolTick: 5,
-			startTick:       sdk.NewInt(-50),
-			boundTick:       sdk.NewInt(15),
+			startTick:       osmomath.NewInt(-50),
+			boundTick:       osmomath.NewInt(15),
 			expectedError:   true,
 		},
 	}
@@ -561,12 +561,12 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Force initialize current sqrt price to 1.
 			// Normally, initialized during position creation.
 			// We only initialize ticks in this test for simplicity.
-			curPrice := sdk.OneDec()
+			curPrice := osmomath.OneDec()
 			// TODO: consider adding tests for GetTickLiquidityNetInDirection
 			// with tick spacing > 1, requiring price to tick conversion with rounding.
-			curTick, err := math.CalculateSqrtPriceToTick(osmomath.BigDecFromSDKDec(osmomath.MustMonotonicSqrt(curPrice)))
+			curTick, err := math.CalculateSqrtPriceToTick(osmomath.BigDecFromDec(osmomath.MustMonotonicSqrt(curPrice)))
 			s.Require().NoError(err)
-			var curSqrtPrice osmomath.BigDec = osmomath.OneDec()
+			var curSqrtPrice osmomath.BigDec = osmomath.OneBigDec()
 			if test.currentPoolTick > 0 {
 				_, sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
 				s.Require().NoError(err)

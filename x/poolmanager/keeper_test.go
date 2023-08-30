@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
@@ -19,14 +20,14 @@ const testExpectedPoolId = 3
 
 var (
 	testPoolCreationFee          = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)}
-	testDefaultTakerFee          = sdk.MustNewDecFromStr("0.0015")
+	testDefaultTakerFee          = osmomath.MustNewDecFromStr("0.0015")
 	testOsmoTakerFeeDistribution = types.TakerFeeDistributionPercentage{
-		StakingRewards: sdk.MustNewDecFromStr("0.3"),
-		CommunityPool:  sdk.MustNewDecFromStr("0.7"),
+		StakingRewards: osmomath.MustNewDecFromStr("0.3"),
+		CommunityPool:  osmomath.MustNewDecFromStr("0.7"),
 	}
 	testNonOsmoTakerFeeDistribution = types.TakerFeeDistributionPercentage{
-		StakingRewards: sdk.MustNewDecFromStr("0.2"),
-		CommunityPool:  sdk.MustNewDecFromStr("0.8"),
+		StakingRewards: osmomath.MustNewDecFromStr("0.2"),
+		CommunityPool:  osmomath.MustNewDecFromStr("0.8"),
 	}
 	testAdminAddresses                                 = []string{"osmo106x8q2nv7xsg7qrec2zgdf3vvq0t3gn49zvaha", "osmo105l5r3rjtynn7lg362r2m9hkpfvmgmjtkglsn9"}
 	testCommunityPoolDenomToSwapNonWhitelistedAssetsTo = "uusdc"
@@ -64,12 +65,12 @@ func (s *KeeperTestSuite) SetupTest() {
 // createBalancerPoolsFromCoinsWithSpreadFactor creates balancer pools from given sets of coins and respective spread factors.
 // Where element 1 of the input corresponds to the first pool created,
 // element 2 to the second pool created, up until the last element.
-func (s *KeeperTestSuite) createBalancerPoolsFromCoinsWithSpreadFactor(poolCoins []sdk.Coins, spreadFactor []sdk.Dec) {
+func (s *KeeperTestSuite) createBalancerPoolsFromCoinsWithSpreadFactor(poolCoins []sdk.Coins, spreadFactor []osmomath.Dec) {
 	for i, curPoolCoins := range poolCoins {
 		s.FundAcc(s.TestAccs[0], curPoolCoins)
 		s.PrepareCustomBalancerPoolFromCoins(curPoolCoins, balancer.PoolParams{
 			SwapFee: spreadFactor[i],
-			ExitFee: sdk.ZeroDec(),
+			ExitFee: osmomath.ZeroDec(),
 		})
 	}
 }
@@ -81,8 +82,8 @@ func (s *KeeperTestSuite) createBalancerPoolsFromCoins(poolCoins []sdk.Coins) {
 	for _, curPoolCoins := range poolCoins {
 		s.FundAcc(s.TestAccs[0], curPoolCoins)
 		s.PrepareCustomBalancerPoolFromCoins(curPoolCoins, balancer.PoolParams{
-			SwapFee: sdk.ZeroDec(),
-			ExitFee: sdk.ZeroDec(),
+			SwapFee: osmomath.ZeroDec(),
+			ExitFee: osmomath.ZeroDec(),
 		})
 	}
 }

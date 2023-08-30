@@ -3,12 +3,13 @@ package accum
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 // initOrUpdatePosition creates a new position or override an existing position
 // at accumulator's current value with a specific number of shares and unclaimed rewards
-func initOrUpdatePosition(accum *AccumulatorObject, accumulatorValuePerShare sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewardsTotal sdk.DecCoins, options *Options) {
+func initOrUpdatePosition(accum *AccumulatorObject, accumulatorValuePerShare sdk.DecCoins, index string, numShareUnits osmomath.Dec, unclaimedRewardsTotal sdk.DecCoins, options *Options) {
 	position := Record{
 		NumShares:             numShareUnits,
 		AccumValuePerShare:    accumulatorValuePerShare,

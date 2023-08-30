@@ -4,6 +4,8 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 var (
@@ -13,7 +15,7 @@ var (
 
 // NewMinter returns a new Minter object with the given epoch
 // provisions values.
-func NewMinter(epochProvisions sdk.Dec) Minter {
+func NewMinter(epochProvisions osmomath.Dec) Minter {
 	return Minter{
 		EpochProvisions: epochProvisions,
 	}
@@ -42,7 +44,7 @@ func (m Minter) Validate() error {
 }
 
 // NextEpochProvisions returns the epoch provisions.
-func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
+func (m Minter) NextEpochProvisions(params Params) osmomath.Dec {
 	return m.EpochProvisions.Mul(params.ReductionFactor)
 }
 

@@ -5,13 +5,16 @@ import (
 	"math/rand"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	smallestBigDec = SmallestBigDec()
+)
+
 func generateRandomDecForEachBitlenBigDec(r *rand.Rand, numPerBitlen int) []BigDec {
-	return generateRandomDecForEachBitlen[BigDec](r, numPerBitlen, NewDecFromBigIntWithPrec, Precision)
+	return generateRandomDecForEachBitlen[BigDec](r, numPerBitlen, NewBigDecFromBigIntWithPrec, PrecisionBigDec)
 }
 
 func TestSdkApproxSqrtVectors_BigDec(t *testing.T) {
@@ -19,13 +22,13 @@ func TestSdkApproxSqrtVectors_BigDec(t *testing.T) {
 		input    BigDec
 		expected BigDec
 	}{
-		{OneDec(), OneDec()},                                                                    // 1.0 => 1.0
-		{NewDecWithPrec(25, 2), NewDecWithPrec(5, 1)},                                           // 0.25 => 0.5
-		{NewDecWithPrec(4, 2), NewDecWithPrec(2, 1)},                                            // 0.09 => 0.3
-		{NewDecFromInt(NewInt(9)), NewDecFromInt(NewInt(3))},                                    // 9 => 3
-		{NewDecFromInt(NewInt(2)), MustNewDecFromStr("1.414213562373095048801688724209698079")}, // 2 => 1.414213562373095048801688724209698079
-		{smallestBigDec, NewDecWithPrec(1, 18)},                                                 // 10^-36 => 10^-18
-		{smallestBigDec.MulInt64(3), NewDecWithPrec(1732050807568877294, 36)},                   // 3*10^-36 => sqrt(3)*10^-18
+		{OneBigDec(), OneBigDec()},                                                                       // 1.0 => 1.0
+		{NewBigDecWithPrec(25, 2), NewBigDecWithPrec(5, 1)},                                              // 0.25 => 0.5
+		{NewBigDecWithPrec(4, 2), NewBigDecWithPrec(2, 1)},                                               // 0.09 => 0.3
+		{NewBigDecFromInt(NewBigInt(9)), NewBigDecFromInt(NewBigInt(3))},                                 // 9 => 3
+		{NewBigDecFromInt(NewBigInt(2)), MustNewBigDecFromStr("1.414213562373095048801688724209698079")}, // 2 => 1.414213562373095048801688724209698079
+		{smallestBigDec, NewBigDecWithPrec(1, 18)},                                                       // 10^-36 => 10^-18
+		{smallestBigDec.MulInt64(3), NewBigDecWithPrec(1732050807568877294, 36)},                         // 3*10^-36 => sqrt(3)*10^-18
 	}
 
 	for i, tc := range testCases {
@@ -54,22 +57,22 @@ func TestSqrtMonotinicity_BigDec(t *testing.T) {
 		bigger  BigDec
 	}
 	testCases := []testcase{
-		{MustNewDecFromStr("120.120060020005000000"), MustNewDecFromStr("120.120060020005000001")},
+		{MustNewBigDecFromStr("120.120060020005000000"), MustNewBigDecFromStr("120.120060020005000001")},
 		{smallestBigDec, smallestBigDec.MulInt64(2)},
 	}
 	// create random test vectors for every bit-length
 	r := rand.New(rand.NewSource(rand.Int63()))
-	for i := 0; i < 255+sdk.DecimalPrecisionBits; i++ {
+	for i := 0; i < 255+DecimalPrecisionBits; i++ {
 		upperbound := big.NewInt(1)
 		upperbound.Lsh(upperbound, uint(i))
 		for j := 0; j < 100; j++ {
 			v := big.NewInt(0).Rand(r, upperbound)
-			d := NewDecFromBigIntWithPrec(v, 36)
+			d := NewBigDecFromBigIntWithPrec(v, 36)
 			testCases = append(testCases, testcase{d, d.Add(smallestBigDec)})
 		}
 	}
 	for i := 0; i < 1024; i++ {
-		d := NewDecWithPrec(int64(i), 18)
+		d := NewBigDecWithPrec(int64(i), 18)
 		testCases = append(testCases, testcase{d, d.Add(smallestBigDec)})
 	}
 
@@ -102,7 +105,7 @@ func TestPerfectSquares_BigDec(t *testing.T) {
 		for j := 0; j < 100; j++ {
 			v := big.NewInt(0).Rand(r, upperbound)
 			dec := big.NewInt(0).Rand(r, tenToMin9)
-			d := NewDecFromBigInt(v).Add(NewDecFromBigIntWithPrec(dec, 9))
+			d := NewBigDecFromBigInt(v).Add(NewBigDecFromBigIntWithPrec(dec, 9))
 			cases = append(cases, d.MulMut(d))
 		}
 	}
@@ -119,7 +122,7 @@ func TestPerfectSquares_BigDec(t *testing.T) {
 
 func TestSqrtRounding_BigDec(t *testing.T) {
 	testCases := []BigDec{
-		MustNewDecFromStr("11662930532952632574132537947829685675668532938920838254939577167671385459971.396347723368091000"),
+		MustNewBigDecFromStr("11662930532952632574132537947829685675668532938920838254939577167671385459971.396347723368091000"),
 	}
 	r := rand.New(rand.NewSource(rand.Int63()))
 	testCases = append(testCases, generateRandomDecForEachBitlenBigDec(r, 10)...)

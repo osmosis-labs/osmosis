@@ -6,6 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 const (
@@ -24,11 +26,11 @@ var (
 		Asset1Denom:                 denom1,
 		Height:                      3,
 		Time:                        tPlusOne.Add(time.Second),
-		P0LastSpotPrice:             sdk.OneDec(),
-		P1LastSpotPrice:             sdk.OneDec(),
-		P0ArithmeticTwapAccumulator: sdk.OneDec(),
-		P1ArithmeticTwapAccumulator: sdk.OneDec(),
-		GeometricTwapAccumulator:    sdk.OneDec(),
+		P0LastSpotPrice:             osmomath.OneDec(),
+		P1LastSpotPrice:             osmomath.OneDec(),
+		P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+		P1ArithmeticTwapAccumulator: osmomath.OneDec(),
+		GeometricTwapAccumulator:    osmomath.OneDec(),
 	}
 )
 
@@ -52,11 +54,11 @@ func TestGenesisState_Validate(t *testing.T) {
 					Asset1Denom:                 denom1,
 					Height:                      2,
 					Time:                        tPlusOne,
-					P0LastSpotPrice:             sdk.OneDec(),
-					P1LastSpotPrice:             sdk.OneDec(),
-					P0ArithmeticTwapAccumulator: sdk.OneDec(),
-					P1ArithmeticTwapAccumulator: sdk.OneDec(),
-					GeometricTwapAccumulator:    sdk.OneDec(),
+					P0LastSpotPrice:             osmomath.OneDec(),
+					P1LastSpotPrice:             osmomath.OneDec(),
+					P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+					P1ArithmeticTwapAccumulator: osmomath.OneDec(),
+					GeometricTwapAccumulator:    osmomath.OneDec(),
 				},
 				{
 					PoolId:                      basePoolId,
@@ -64,16 +66,16 @@ func TestGenesisState_Validate(t *testing.T) {
 					Asset1Denom:                 denom1,
 					Height:                      3,
 					Time:                        tPlusOne.Add(time.Second),
-					P0LastSpotPrice:             sdk.OneDec(),
-					P1LastSpotPrice:             sdk.OneDec(),
-					P0ArithmeticTwapAccumulator: sdk.OneDec(),
-					P1ArithmeticTwapAccumulator: sdk.OneDec(),
-					GeometricTwapAccumulator:    sdk.OneDec(),
+					P0LastSpotPrice:             osmomath.OneDec(),
+					P1LastSpotPrice:             osmomath.OneDec(),
+					P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+					P1ArithmeticTwapAccumulator: osmomath.OneDec(),
+					GeometricTwapAccumulator:    osmomath.OneDec(),
 				},
 			})
 	)
 
-	withGeometricAcc := func(record TwapRecord, geometricAcc sdk.Dec) TwapRecord {
+	withGeometricAcc := func(record TwapRecord, geometricAcc osmomath.Dec) TwapRecord {
 		record.GeometricTwapAccumulator = geometricAcc
 		return record
 	}
@@ -99,7 +101,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			twapGenesis: NewGenesisState(basicParams, []TwapRecord{withGeometricAcc(baseRecord, sdk.NewDec(-1))}),
 		},
 		"invalid geometric twap acc is nil": {
-			twapGenesis: NewGenesisState(basicParams, []TwapRecord{withGeometricAcc(baseRecord, sdk.Dec{})}),
+			twapGenesis: NewGenesisState(basicParams, []TwapRecord{withGeometricAcc(baseRecord, osmomath.Dec{})}),
 			expectedErr: true,
 		},
 		"invalid genesis - pool ID doesn't exist": {
@@ -112,10 +114,10 @@ func TestGenesisState_Validate(t *testing.T) {
 						Asset1Denom:                 "test2",
 						Height:                      1,
 						Time:                        baseTime,
-						P0LastSpotPrice:             sdk.OneDec(),
-						P1LastSpotPrice:             sdk.OneDec(),
-						P0ArithmeticTwapAccumulator: sdk.OneDec(),
-						P1ArithmeticTwapAccumulator: sdk.OneDec(),
+						P0LastSpotPrice:             osmomath.OneDec(),
+						P1LastSpotPrice:             osmomath.OneDec(),
+						P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+						P1ArithmeticTwapAccumulator: osmomath.OneDec(),
 					},
 				}),
 
@@ -207,7 +209,7 @@ func TestTWAPRecord_Validate(t *testing.T) {
 		"invalid p0 last spot price: zero": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
-				r.P0LastSpotPrice = sdk.ZeroDec()
+				r.P0LastSpotPrice = osmomath.ZeroDec()
 				return r
 			}(),
 
@@ -216,7 +218,7 @@ func TestTWAPRecord_Validate(t *testing.T) {
 		"invalid p0 last spot price: negative": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
-				r.P0LastSpotPrice = sdk.OneDec().Neg()
+				r.P0LastSpotPrice = osmomath.OneDec().Neg()
 				return r
 			}(),
 
@@ -227,7 +229,7 @@ func TestTWAPRecord_Validate(t *testing.T) {
 				r := baseRecord
 				r.LastErrorTime = r.Time
 				r.P0LastSpotPrice = sdk.NewDec(5)
-				r.P1LastSpotPrice = sdk.ZeroDec() // note that this one is zero due to spot price error.
+				r.P1LastSpotPrice = osmomath.ZeroDec() // note that this one is zero due to spot price error.
 				return r
 			}(),
 
@@ -237,8 +239,8 @@ func TestTWAPRecord_Validate(t *testing.T) {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
 				r.LastErrorTime = r.Time
-				r.P0LastSpotPrice = sdk.ZeroDec() // note that this one is zero due to spot price error.
-				r.P1LastSpotPrice = sdk.ZeroDec() // note that this one is zero due to spot price error.
+				r.P0LastSpotPrice = osmomath.ZeroDec() // note that this one is zero due to spot price error.
+				r.P1LastSpotPrice = osmomath.ZeroDec() // note that this one is zero due to spot price error.
 				return r
 			}(),
 
@@ -249,7 +251,7 @@ func TestTWAPRecord_Validate(t *testing.T) {
 				r := baseRecord
 				r.LastErrorTime = r.Time
 				r.P0LastSpotPrice = sdk.NewDec(5)
-				r.P1LastSpotPrice = sdk.NewDecWithPrec(2, 1)
+				r.P1LastSpotPrice = osmomath.NewDecWithPrec(2, 1)
 				return r
 			}(),
 
@@ -263,9 +265,9 @@ func TestTWAPRecord_Validate(t *testing.T) {
 					Asset1Denom:                 denom1,
 					Height:                      3,
 					Time:                        tPlusOne.Add(time.Second),
-					P1LastSpotPrice:             sdk.OneDec(),
-					P0ArithmeticTwapAccumulator: sdk.OneDec(),
-					P1ArithmeticTwapAccumulator: sdk.OneDec(),
+					P1LastSpotPrice:             osmomath.OneDec(),
+					P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+					P1ArithmeticTwapAccumulator: osmomath.OneDec(),
 				}
 				return r
 			}(),
@@ -280,9 +282,9 @@ func TestTWAPRecord_Validate(t *testing.T) {
 					Asset1Denom:                 denom1,
 					Height:                      3,
 					Time:                        tPlusOne.Add(time.Second),
-					P0LastSpotPrice:             sdk.OneDec(),
-					P0ArithmeticTwapAccumulator: sdk.OneDec(),
-					P1ArithmeticTwapAccumulator: sdk.OneDec(),
+					P0LastSpotPrice:             osmomath.OneDec(),
+					P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+					P1ArithmeticTwapAccumulator: osmomath.OneDec(),
 				}
 				return r
 			}(),
@@ -292,7 +294,7 @@ func TestTWAPRecord_Validate(t *testing.T) {
 		"invalid p0 arithmetic accum: negative": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
-				r.P0ArithmeticTwapAccumulator = sdk.OneDec().Neg()
+				r.P0ArithmeticTwapAccumulator = osmomath.OneDec().Neg()
 				return r
 			}(),
 
@@ -306,9 +308,9 @@ func TestTWAPRecord_Validate(t *testing.T) {
 					Asset1Denom:                 denom1,
 					Height:                      3,
 					Time:                        tPlusOne.Add(time.Second),
-					P0LastSpotPrice:             sdk.OneDec(),
-					P1LastSpotPrice:             sdk.OneDec(),
-					P1ArithmeticTwapAccumulator: sdk.OneDec(),
+					P0LastSpotPrice:             osmomath.OneDec(),
+					P1LastSpotPrice:             osmomath.OneDec(),
+					P1ArithmeticTwapAccumulator: osmomath.OneDec(),
 				}
 				return r
 			}(),
@@ -323,9 +325,9 @@ func TestTWAPRecord_Validate(t *testing.T) {
 					Asset1Denom:                 denom1,
 					Height:                      3,
 					Time:                        tPlusOne.Add(time.Second),
-					P0LastSpotPrice:             sdk.OneDec(),
-					P1LastSpotPrice:             sdk.OneDec(),
-					P0ArithmeticTwapAccumulator: sdk.OneDec(),
+					P0LastSpotPrice:             osmomath.OneDec(),
+					P1LastSpotPrice:             osmomath.OneDec(),
+					P0ArithmeticTwapAccumulator: osmomath.OneDec(),
 				}
 				return r
 			}(),
@@ -339,10 +341,10 @@ func TestTWAPRecord_Validate(t *testing.T) {
 					Asset1Denom:                 denom1,
 					Height:                      3,
 					Time:                        tPlusOne.Add(time.Second),
-					P0LastSpotPrice:             sdk.OneDec(),
-					P1LastSpotPrice:             sdk.OneDec(),
-					P0ArithmeticTwapAccumulator: sdk.OneDec(),
-					P1ArithmeticTwapAccumulator: sdk.OneDec(),
+					P0LastSpotPrice:             osmomath.OneDec(),
+					P1LastSpotPrice:             osmomath.OneDec(),
+					P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+					P1ArithmeticTwapAccumulator: osmomath.OneDec(),
 				}
 				return r
 			}(),

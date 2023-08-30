@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
 	balancer "github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
@@ -23,18 +24,18 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 	createMsg := func(after func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 		testPoolAsset := []balancer.PoolAsset{
 			{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("test", sdk.NewInt(100)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin("test", osmomath.NewInt(100)),
 			},
 			{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("test2", sdk.NewInt(100)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin("test2", osmomath.NewInt(100)),
 			},
 		}
 
 		poolParams := &balancer.PoolParams{
-			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.ZeroDec(),
+			SwapFee: osmomath.NewDecWithPrec(1, 2),
+			ExitFee: osmomath.ZeroDec(),
 		}
 
 		msg := &balancer.MsgCreateBalancerPool{
@@ -108,7 +109,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		{
 			name: "has the PoolAsset that includes 0 weight",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
-				msg.PoolAssets[0].Weight = sdk.NewInt(0)
+				msg.PoolAssets[0].Weight = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -116,7 +117,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		{
 			name: "has a PoolAsset that includes a negative weight",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
-				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
+				msg.PoolAssets[0].Weight = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -124,7 +125,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		{
 			name: "has a PoolAsset that includes a negative weight",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
-				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
+				msg.PoolAssets[0].Weight = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -132,7 +133,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		{
 			name: "has a PoolAsset that includes a zero coin",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
-				msg.PoolAssets[0].Token = sdk.NewCoin("test1", sdk.NewInt(0))
+				msg.PoolAssets[0].Token = sdk.NewCoin("test1", osmomath.NewInt(0))
 				return msg
 			}),
 			expectPass: false,
@@ -142,7 +143,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolAssets[0].Token = sdk.Coin{
 					Denom:  "test1",
-					Amount: sdk.NewInt(-10),
+					Amount: osmomath.NewInt(-10),
 				}
 				return msg
 			}),
@@ -152,8 +153,8 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 			name: "negative spread factor with zero exit fee",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolParams = &balancer.PoolParams{
-					SwapFee: sdk.NewDecWithPrec(-1, 2),
-					ExitFee: sdk.NewDecWithPrec(0, 0),
+					SwapFee: osmomath.NewDecWithPrec(-1, 2),
+					ExitFee: osmomath.NewDecWithPrec(0, 0),
 				}
 				return msg
 			}),
@@ -195,8 +196,8 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 			name: "zero spread factor, zero exit fee",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolParams = &balancer.PoolParams{
-					ExitFee: sdk.NewDecWithPrec(0, 0),
-					SwapFee: sdk.NewDecWithPrec(0, 0),
+					ExitFee: osmomath.NewDecWithPrec(0, 0),
+					SwapFee: osmomath.NewDecWithPrec(0, 0),
 				}
 				return msg
 			}),
@@ -205,7 +206,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		{
 			name: "too large of a weight",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
-				msg.PoolAssets[0].Weight = sdk.NewInt(1 << 21)
+				msg.PoolAssets[0].Weight = osmomath.NewInt(1 << 21)
 				return msg
 			}),
 			expectPass: false,
@@ -218,12 +219,12 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		// 			Duration:  time.Hour,
 		// 			TargetPoolWeights: []PoolAsset{
 		// 				{
-		// 					Weight: sdk.NewInt(200),
-		// 					Token:  sdk.NewCoin("test", sdk.NewInt(1)),
+		// 					Weight: osmomath.NewInt(200),
+		// 					Token:  sdk.NewCoin("test", osmomath.NewInt(1)),
 		// 				},
 		// 				{
-		// 					Weight: sdk.NewInt(50),
-		// 					Token:  sdk.NewCoin("test2", sdk.NewInt(1)),
+		// 					Weight: osmomath.NewInt(50),
+		// 					Token:  sdk.NewCoin("test2", osmomath.NewInt(1)),
 		// 				},
 		// 			},
 		// 		}
@@ -251,7 +252,7 @@ func (s *KeeperTestSuite) TestMsgCreateBalancerPool() {
 		"basic success test": {
 			msg: balancer.MsgCreateBalancerPool{
 				Sender:             s.TestAccs[0].String(),
-				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.ZeroDec()},
+				PoolParams:         &balancer.PoolParams{SwapFee: osmomath.NewDecWithPrec(1, 2), ExitFee: osmomath.ZeroDec()},
 				PoolAssets:         apptesting.DefaultPoolAssets,
 				FuturePoolGovernor: "",
 			},
@@ -260,7 +261,7 @@ func (s *KeeperTestSuite) TestMsgCreateBalancerPool() {
 		"error due to negative spread factor": {
 			msg: balancer.MsgCreateBalancerPool{
 				Sender:             s.TestAccs[0].String(),
-				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2).Neg(), ExitFee: sdk.ZeroDec()},
+				PoolParams:         &balancer.PoolParams{SwapFee: osmomath.NewDecWithPrec(1, 2).Neg(), ExitFee: osmomath.ZeroDec()},
 				PoolAssets:         apptesting.DefaultPoolAssets,
 				FuturePoolGovernor: "",
 			},

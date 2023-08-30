@@ -12,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 )
 
-func createTestPool(t *testing.T, spreadFactor, exitFee sdk.Dec, poolAssets ...balancer.PoolAsset) *balancer.Pool {
+func createTestPool(t *testing.T, spreadFactor, exitFee osmomath.Dec, poolAssets ...balancer.PoolAsset) *balancer.Pool {
 	t.Helper()
 	pool, err := balancer.NewBalancerPool(
 		1,
@@ -26,7 +26,7 @@ func createTestPool(t *testing.T, spreadFactor, exitFee sdk.Dec, poolAssets ...b
 	return &pool
 }
 
-func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int) {
+func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares osmomath.Int) {
 	t.Helper()
 	allowedErrRatioDec, err := sdk.NewDecFromStr(allowedErrRatio)
 	require.NoError(t, err)

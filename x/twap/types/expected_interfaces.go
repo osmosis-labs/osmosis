@@ -1,6 +1,10 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+)
 
 // AmmInterface is the functionality needed from a given pool ID, in order to maintain records and serve TWAPs.
 type PoolManagerInterface interface {
@@ -14,5 +18,5 @@ type PoolManagerInterface interface {
 		poolID uint64,
 		quoteAssetDenom string,
 		baseAssetDenom string,
-	) (price sdk.Dec, err error)
+	) (price osmomath.Dec, err error)
 }
