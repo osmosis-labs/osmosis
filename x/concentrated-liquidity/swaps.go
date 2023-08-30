@@ -426,7 +426,7 @@ func (k Keeper) computeOutAmtGivenIn(
 			// If, based on the swap strategy, the computedSqrtPrice matches the edge case inequality, we return an error.
 			// This is an edge case that occurs when swapping at/near tick boundaries that will be fixed in the next release.
 			// For now, we return an error and ask the user to try again with a different swap amount.
-			return SwapResult{}, PoolUpdates{}, types.ComputedSqrtPriceInequalityError{IsZeroForOne: swapStrategy.ZeroForOne(), ComputedSqrtPrice: computedSqrtPrice, NextInitializedTickSqrtPrice: nextInitializedTickSqrtPriceBigDec}
+			return SwapResult{}, PoolUpdates{}, types.ComputedSqrtPriceInequalityError{IsZeroForOne: swapStrategy.ZeroForOne(), ComputedSqrtPrice: computedSqrtPrice, NextInitializedTickSqrtPrice: nextInitializedTickSqrtPrice}
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise if the sqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketOutGivenIn(...)
@@ -549,7 +549,7 @@ func (k Keeper) computeInAmtGivenOut(
 			// If, based on the swap strategy, the computedSqrtPrice matches the edge case inequality, we return an error.
 			// This is an edge case that occurs when swapping at/near tick boundaries that will be fixed in the next release.
 			// For now, we return an error and ask the user to try again with a different swap amount.
-			return SwapResult{}, PoolUpdates{}, types.ComputedSqrtPriceInequalityError{IsZeroForOne: swapStrategy.ZeroForOne(), ComputedSqrtPrice: computedSqrtPrice, NextInitializedTickSqrtPrice: nextInitializedTickSqrtPriceBigDec}
+			return SwapResult{}, PoolUpdates{}, types.ComputedSqrtPriceInequalityError{IsZeroForOne: swapStrategy.ZeroForOne(), ComputedSqrtPrice: computedSqrtPrice, NextInitializedTickSqrtPrice: nextInitializedTickSqrtPrice}
 		} else if !sqrtPriceStart.Equal(computedSqrtPrice) {
 			// Otherwise, if the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...) does not equal the sqrtPriceStart we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the computedSqrtPrice calculated from ComputeSwapWithinBucketInGivenOut(...)
