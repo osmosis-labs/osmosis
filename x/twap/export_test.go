@@ -28,10 +28,6 @@ func (k Keeper) TrackChangedPool(ctx sdk.Context, poolId uint64) {
 	k.trackChangedPool(ctx, poolId)
 }
 
-func (k Keeper) GetAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
-	return k.getAllHistoricalPoolIndexedTWAPs(ctx)
-}
-
 func (k Keeper) GetChangedPools(ctx sdk.Context) []uint64 {
 	return k.getChangedPools(ctx)
 }
@@ -110,4 +106,8 @@ func (k *Keeper) SetAmmInterface(poolManagerInterface types.PoolManagerInterface
 
 func (k *Keeper) AfterCreatePool(ctx sdk.Context, poolId uint64) error {
 	return k.afterCreatePool(ctx, poolId)
+}
+
+func (k Keeper) GetAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
+	return k.getAllHistoricalPoolIndexedTWAPs(ctx)
 }
