@@ -15,7 +15,7 @@ func createTestPool(t *testing.T, poolLiquidity sdk.Coins, spreadFactor, exitFee
 
 	pool, err := NewStableswapPool(1, PoolParams{
 		SwapFee: spreadFactor,
-		ExitFee:      exitFee,
+		ExitFee: exitFee,
 	}, poolLiquidity, scalingFactors, "", "")
 
 	require.NoError(t, err)

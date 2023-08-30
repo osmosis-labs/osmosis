@@ -124,7 +124,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 
 func NewAddToGaugeCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgAddToGauge](&osmocli.TxCliDesc{
-		Use:   "add-to-gauge [gauge_id] [rewards] [flags]",
+		Use:   "add-to-gauge",
 		Short: "add coins to gauge to distribute more rewards to users",
 	})
 }
