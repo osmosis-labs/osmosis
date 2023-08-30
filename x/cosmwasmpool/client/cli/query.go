@@ -34,7 +34,7 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *queryproto.PoolsRequest) {
 
 func GetCmdContractInfoByPoolId() (*osmocli.QueryDescriptor, *queryproto.ContractInfoByPoolIdRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "contract-info [pool-id]",
+		Use:   "contract-info",
 		Short: "Query contract info by pool id",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} pools`,
