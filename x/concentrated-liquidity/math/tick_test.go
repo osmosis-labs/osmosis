@@ -732,43 +732,6 @@ func TestCalculatePriceToTick(t *testing.T) {
 	}
 }
 
-// This test validates that 36 and 18 decimal CalculatePriceToTick
-// functions produce the same result in the original spot price range of
-// [10^-12, 10^38].
-// This is needed to make sure that we can remove the original 18 decimal
-// version completely.
-func TestCalculatePriceToTick_Dec_BigDec_Consistency(t *testing.T) {
-
-	// TODO: remove https://github.com/osmosis-labs/osmosis/issues/6247
-	t.Skip("TestCalculatePriceToTick_Dec_BigDec_Consistency is only for demo purposes. Remove this if want to confirm test results.")
-
-	price := types.MinSpotPriceBigDec
-	increment := osmomath.BigDecFromSDKDec(sdk.SmallestDec())
-	for price.LTE(osmomath.BigDecFromSDKDec(types.MaxSpotPrice)) {
-
-		for i := int64(0); i < math.PowTenInternal(-types.ExponentAtPriceOne).TruncateInt64(); i++ {
-			if price.GT(osmomath.BigDecFromSDKDec(types.MaxSpotPrice)) {
-				break
-			}
-
-			tickIndex, err := math.CalculatePriceToTickV1(price)
-			require.NoError(t, err)
-
-			tickIndexBigDec, err := math.CalculatePriceToTick(price)
-			require.NoError(t, err)
-
-			require.Equal(t, tickIndex, tickIndexBigDec)
-
-			price = price.Add(increment)
-		}
-
-		fmt.Println("price", price)
-
-		increment = increment.MulInt64(10)
-	}
-
-}
-
 func TestPowTenInternal(t *testing.T) {
 	testCases := map[string]struct {
 		exponent             int64

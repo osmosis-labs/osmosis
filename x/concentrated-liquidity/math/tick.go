@@ -152,61 +152,6 @@ func powTenBigDec(exponent int64) osmomath.BigDec {
 	return bigNegPowersOfTen[-exponent]
 }
 
-// CalculatePriceToTickV1 computes tick from price using 18 decimal math under the hood.
-// TODO: remove
-func CalculatePriceToTickV1(priceBigDec osmomath.BigDec) (tickIndex int64, err error) {
-	// It is acceptable to truncate price as the minimum we support is
-	// 10**-12 which is above the smallest value of sdk.Dec.
-	price := priceBigDec.SDKDec()
-
-	if price.IsNegative() {
-		return 0, fmt.Errorf("price must be greater than zero")
-	}
-	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return 0, types.PriceBoundError{ProvidedPrice: priceBigDec, MinSpotPrice: types.MinSpotPriceBigDec, MaxSpotPrice: types.MaxSpotPrice}
-	}
-	if price.Equal(sdkOneDec) {
-		return 0, nil
-	}
-
-	// The approach here is to try determine which "geometric spacing" are we in.
-	// There is one geometric spacing for every power of ten.
-	// If price > 1, we search for the first geometric spacing w/ a max price greater than our price.
-	// If price < 1, we search for the first geometric spacing w/ a min price smaller than our price.
-	// TODO: We can optimize by using smarter search algorithms
-	var geoSpacing *tickExpIndexData
-	if price.GT(sdkOneDec) {
-		index := 0
-		geoSpacing = tickExpCache[int64(index)]
-		for geoSpacing.maxPrice.SDKDec().LT(price) {
-			index += 1
-			geoSpacing = tickExpCache[int64(index)]
-		}
-	} else {
-		index := -1
-		geoSpacing = tickExpCache[int64(index)]
-		for geoSpacing.initialPrice.SDKDec().GT(price) {
-			index -= 1
-			geoSpacing = tickExpCache[int64(index)]
-		}
-	}
-
-	// We know were between (geoSpacing.initialPrice, geoSpacing.endPrice)
-	// The number of ticks that need to be filled by our current spacing is
-	// (price - geoSpacing.initialPrice) / geoSpacing.additiveIncrementPerTick
-	priceInThisExponent := osmomath.BigDecFromSDKDec(price.Sub(geoSpacing.initialPrice.SDKDec()))
-	ticksFilledByCurrentSpacing := priceInThisExponent.Quo(geoSpacing.additiveIncrementPerTick)
-	// we get the bucket index by:
-	// * taking the bucket index of the smallest price in this tick
-	// * adding to it the number of ticks filled by the current spacing
-	// We leave rounding of this to the caller
-	// (NOTE: You'd expect it to be number of ticks "completely" filled by the current spacing,
-	// which would be truncation. However price may have errors, hence it being callers job)
-	tickIndexDec := ticksFilledByCurrentSpacing.SDKDec()
-	tickIndex = tickIndexDec.Add(sdk.NewDec(geoSpacing.initialTick)).TruncateInt64()
-	return tickIndex, nil
-}
-
 // CalculatePriceToTick calculates tickIndex from price. Contrary to CalculatePriceToTickV1,
 // it uses BigDec in internal calculations
 func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
