@@ -380,7 +380,8 @@ type DepositParams struct {
 	MaxDepositPeriod time.Duration `protobuf:"bytes,2,opt,name=max_deposit_period,json=maxDepositPeriod,proto3,stdduration" json:"max_deposit_period,omitempty" yaml:"max_deposit_period"`
 	//  Minimum expedited deposit for a proposal to enter voting period.
 	MinExpeditedDeposit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=min_expedited_deposit,json=minExpeditedDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"min_expedited_deposit,omitempty" yaml:"min_expedited_deposit"`
-	//  The ratio representing the proportion of the deposit value that must be paid at proposal submission.
+	//  The ratio representing the proportion of the deposit value that must be
+	//  paid at proposal submission.
 	MinInitialDepositRatio github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=min_initial_deposit_ratio,json=minInitialDepositRatio,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"min_initial_deposit_ratio,omitempty"`
 }
 
@@ -468,9 +469,11 @@ type TallyParams struct {
 	//  Minimum value of Veto votes to Total votes ratio for proposal to be
 	//  vetoed. Default value: 1/3.
 	VetoThreshold github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=veto_threshold,json=vetoThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"veto_threshold,omitempty" yaml:"veto_threshold"`
-	//  Minimum proportion of Yes votes for an expedited proposal to pass. Default value: 0.67.
+	//  Minimum proportion of Yes votes for an expedited proposal to pass. Default
+	//  value: 0.67.
 	ExpeditedThreshold github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=expedited_threshold,json=expeditedThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"expedited_threshold,omitempty"`
-	//  Minimum proportion of Yes votes for an expedited proposal to reach quorum. Default value: 0.67.
+	//  Minimum proportion of Yes votes for an expedited proposal to reach quorum.
+	//  Default value: 0.67.
 	ExpeditedQuorum github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=expedited_quorum,json=expeditedQuorum,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"expedited_quorum,omitempty"`
 }
 

@@ -432,7 +432,8 @@ type MsgClient interface {
 	SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error)
 	// Vote defines a method to add a vote on a specific proposal.
 	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
-	// VoteWeighted defines a method to add a weighted vote on a specific proposal.
+	// VoteWeighted defines a method to add a weighted vote on a specific
+	// proposal.
 	//
 	// Since: cosmos-sdk 0.43
 	VoteWeighted(ctx context.Context, in *MsgVoteWeighted, opts ...grpc.CallOption) (*MsgVoteWeightedResponse, error)
@@ -490,7 +491,8 @@ type MsgServer interface {
 	SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error)
 	// Vote defines a method to add a vote on a specific proposal.
 	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
-	// VoteWeighted defines a method to add a weighted vote on a specific proposal.
+	// VoteWeighted defines a method to add a weighted vote on a specific
+	// proposal.
 	//
 	// Since: cosmos-sdk 0.43
 	VoteWeighted(context.Context, *MsgVoteWeighted) (*MsgVoteWeightedResponse, error)
