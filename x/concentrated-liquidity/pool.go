@@ -11,6 +11,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
@@ -164,10 +165,10 @@ func (k Keeper) CalculateSpotPrice(
 	}
 
 	if price.IsZero() {
-		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromSDKDec(price), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromSDKDec(price), MinSpotPrice: types.MinSpotPriceBigDec, MaxSpotPrice: types.MaxSpotPrice}
 	}
 
 	return price, nil
