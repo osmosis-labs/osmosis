@@ -10,10 +10,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 func (k Keeper) MarshalPool(pool poolmanagertypes.PoolI) ([]byte, error) {
@@ -353,4 +353,10 @@ func asCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 		return nil, fmt.Errorf("given pool does not implement CFMMPoolI, implements %T", pool)
 	}
 	return cfmmPool, nil
+}
+
+// GetTradingPairTakerFee is a wrapper for poolmanager's GetTradingPairTakerFee, and is solely used
+// to get access to this method for use in sim_msgs.go for the GAMM module.
+func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (sdk.Dec, error) {
+	return k.poolManager.GetTradingPairTakerFee(ctx, denom0, denom1)
 }

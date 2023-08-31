@@ -10,13 +10,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	clmath "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
 )
 
 type BenchTestSuite struct {

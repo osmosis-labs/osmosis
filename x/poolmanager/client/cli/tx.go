@@ -14,14 +14,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/spf13/cobra"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -41,7 +44,7 @@ func NewTxCmd() *cobra.Command {
 
 func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn) {
 	return &osmocli.TxCliDesc{
-		Use:     "swap-exact-amount-in [token-in] [token-out-min-amount]",
+		Use:     "swap-exact-amount-in",
 		Short:   "swap exact amount in",
 		Example: "osmosisd tx poolmanager swap-exact-amount-in 2000000uosmo 1 --swap-route-pool-ids 5 --swap-route-denoms uion --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo",
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
@@ -54,7 +57,7 @@ func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn)
 func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOut) {
 	// Can't get rid of this parser without a break, because the args are out of order.
 	return &osmocli.TxCliDesc{
-		Use:              "swap-exact-amount-out [token-out] [token-in-max-amount]",
+		Use:              "swap-exact-amount-out",
 		Short:            "swap exact amount out",
 		Example:          "osmosisd tx poolmanager swap-exact-amount-out 100uion 1000000 --swap-route-pool-ids 1 --swap-route-denoms uosmo --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo",
 		NumArgs:          2,
@@ -65,7 +68,7 @@ func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOu
 
 func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteSwapExactAmountIn) {
 	return &osmocli.TxCliDesc{
-		Use:   "split-route-swap-exact-amount-in [token-in-denom] [token-out-min-amount] [flags]",
+		Use:   "split-route-swap-exact-amount-in",
 		Short: "split route swap exact amount in",
 		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-in uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
 		- routes.json
@@ -111,7 +114,7 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 
 func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRouteSwapExactAmountOut) {
 	return &osmocli.TxCliDesc{
-		Use:   "split-route-swap-exact-amount-out [token-out-denom] [token-in-max-amount] [flags]",
+		Use:   "split-route-swap-exact-amount-out",
 		Short: "split route swap exact amount out",
 		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-out uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
 		- routes.json
@@ -445,4 +448,174 @@ func ParseCoinsNoSort(coinsStr string) (sdk.Coins, error) {
 		decCoins[i] = coin
 	}
 	return sdk.NormalizeCoins(decCoins), nil
+}
+
+// NewCmdHandleDenomPairTakerFeeProposal implements a command handler for denom pair taker fee proposal
+func NewCmdHandleDenomPairTakerFeeProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "denom-pair-taker-fee-proposal [denom-pairs-with-taker-fee] [flags]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Submit a denom pair taker fee proposal",
+		Long: strings.TrimSpace(`Submit a denom pair taker fee proposal.
+
+Passing in denom-pairs-with-taker-fee separated by commas would be parsed automatically to pairs of denomPairTakerFee records.
+Ex) denom-pair-taker-fee-proposal uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosmo,0.0015 ->
+[uion<>uosmo, takerFee 0.16%]
+[stake<>uosmo, takerFee 0.5%]
+[uatom<>uosmo, removes from state since its being set to the default takerFee value]
+
+		`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			content, err := parseDenomPairTakerFeeArgToContent(cmd, args[0])
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+
+	return cmd
+}
+
+func NewSetDenomPairTakerFeeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set-denom-pair-taker-fee [flags]",
+		Short: "allows admin addresses to set the taker fee for a denom pair",
+		Long: strings.TrimSpace(`Allows admin addresses to set the taker fee for a denom pair.
+
+Passing in set-denom-pair-taker-fee separated by commas would be parsed automatically to pairs of denomPairTakerFee records.
+Ex) set-denom-pair-taker-fee uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosmo,0.0015 ->
+[uion<>uosmo, takerFee 0.16%]
+[stake<>uosmo, takerFee 0.5%]
+[uatom<>uosmo, removes from state since its being set to the default takerFee value]
+
+		`),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg, err := parseDenomPairTakerFeeArgToMsg(clientCtx, args[0])
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetCreatePool())
+	flags.AddTxFlagsToCmd(cmd)
+
+	_ = cmd.MarkFlagRequired(FlagPoolFile)
+
+	return cmd
+}
+
+func parseDenomPairTakerFeeArgToContent(cmd *cobra.Command, arg string) (govtypes.Content, error) {
+	title, err := cmd.Flags().GetString(govcli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	if err != nil {
+		return nil, err
+	}
+
+	denomPairTakerFee, err := ParseDenomPairTakerFee(arg)
+	if err != nil {
+		return nil, err
+	}
+
+	content := &types.DenomPairTakerFeeProposal{
+		Title:             title,
+		Description:       description,
+		DenomPairTakerFee: denomPairTakerFee,
+	}
+
+	return content, nil
+}
+
+func parseDenomPairTakerFeeArgToMsg(clientCtx client.Context, arg string) (sdk.Msg, error) {
+	denomPairTakerFee, err := ParseDenomPairTakerFee(arg)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := &types.MsgSetDenomPairTakerFee{
+		Sender:            clientCtx.GetFromAddress().String(),
+		DenomPairTakerFee: denomPairTakerFee,
+	}
+
+	return msg, nil
+}
+
+func ParseDenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
+	denomPairTakerFeeRecords := strings.Split(arg, ",")
+
+	if len(denomPairTakerFeeRecords)%3 != 0 {
+		return nil, fmt.Errorf("denomPairTakerFeeRecords must be a list of denom0, denom1, and takerFee separated by commas")
+	}
+
+	finaldenomPairTakerFeeRecordsRecords := []types.DenomPairTakerFee{}
+	i := 0
+	for i < len(denomPairTakerFeeRecords) {
+		denom0 := denomPairTakerFeeRecords[i]
+		denom1 := denomPairTakerFeeRecords[i+1]
+
+		takerFeeStr := denomPairTakerFeeRecords[i+2]
+		takerFee, err := sdk.NewDecFromStr(takerFeeStr)
+		if err != nil {
+			return nil, err
+		}
+
+		finaldenomPairTakerFeeRecordsRecords = append(finaldenomPairTakerFeeRecordsRecords, types.DenomPairTakerFee{
+			Denom0:   denom0,
+			Denom1:   denom1,
+			TakerFee: takerFee,
+		})
+
+		// increase counter by the next 3
+		i = i + 3
+	}
+
+	return finaldenomPairTakerFeeRecordsRecords, nil
 }

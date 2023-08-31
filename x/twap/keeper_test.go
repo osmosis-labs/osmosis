@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v17/x/twap"
-	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/twap"
+	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
 )
 
 // TODO: Consider switching this everywhere
@@ -43,9 +43,9 @@ func (s *TestSuite) SetupTest() {
 	s.twapkeeper = s.App.TwapKeeper
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 	// add x/twap test specific denoms
-	concentratedLiquidityParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-	concentratedLiquidityParams.AuthorizedQuoteDenoms = append(concentratedLiquidityParams.AuthorizedQuoteDenoms, denom0, denom1, denom2)
-	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, concentratedLiquidityParams)
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	poolManagerParams.AuthorizedQuoteDenoms = append(poolManagerParams.AuthorizedQuoteDenoms, denom0, denom1, denom2)
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 }
 
 var (

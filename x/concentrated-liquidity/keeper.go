@@ -8,7 +8,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 type Keeper struct {
@@ -125,4 +125,20 @@ func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error
 		return types.ErrPermissionlessPoolCreationDisabled
 	}
 	return nil
+}
+
+// GetAuthorizedQuoteDenoms gets the authorized quote denoms from the poolmanager keeper.
+// This method is meant to be used for getting access to x/poolmanager params
+// for use in sim_msgs.go for the CL module.
+func (k Keeper) GetAuthorizedQuoteDenoms(ctx sdk.Context) []string {
+	return k.poolmanagerKeeper.GetParams(ctx).AuthorizedQuoteDenoms
+}
+
+// SetAuthorizedQuoteDenoms sets the authorized quote denoms in the poolmanager keeper.
+// This method is meant to be used for getting access to x/poolmanager params
+// for use in sim_msgs.go for the CL module.
+func (k Keeper) SetAuthorizedQuoteDenoms(ctx sdk.Context, authorizedQuoteDenoms []string) {
+	params := k.poolmanagerKeeper.GetParams(ctx)
+	params.AuthorizedQuoteDenoms = authorizedQuoteDenoms
+	k.poolmanagerKeeper.SetParams(ctx, params)
 }

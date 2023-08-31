@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v17/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v19/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"

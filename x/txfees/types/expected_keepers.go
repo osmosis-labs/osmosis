@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 // SpotPriceCalculator defines the contract that must be fulfilled by a spot price calculator
@@ -30,6 +30,17 @@ type PoolManager interface {
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
 	) (sdk.Int, error)
+
+	SwapExactAmountInNoTakerFee(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		poolId uint64,
+		tokenIn sdk.Coin,
+		tokenOutDenom string,
+		tokenOutMinAmount sdk.Int,
+	) (sdk.Int, error)
+
+	GetParams(ctx sdk.Context) (params poolmanagertypes.Params)
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.
@@ -48,6 +59,7 @@ type FeegrantKeeper interface {
 type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 }
 
@@ -56,4 +68,12 @@ type TxFeesKeeper interface {
 	ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin, error)
 	GetBaseDenom(ctx sdk.Context) (denom string, err error)
 	GetFeeToken(ctx sdk.Context, denom string) (FeeToken, error)
+}
+
+type ProtorevKeeper interface {
+	GetPoolForDenomPairNoOrder(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error)
+}
+
+type DistributionKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }

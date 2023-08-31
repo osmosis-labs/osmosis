@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
 func createTestPool(t *testing.T, poolLiquidity sdk.Coins, spreadFactor, exitFee sdk.Dec, scalingFactors []uint64) types.CFMMPoolI {
@@ -15,7 +15,7 @@ func createTestPool(t *testing.T, poolLiquidity sdk.Coins, spreadFactor, exitFee
 
 	pool, err := NewStableswapPool(1, PoolParams{
 		SwapFee: spreadFactor,
-		ExitFee:      exitFee,
+		ExitFee: exitFee,
 	}, poolLiquidity, scalingFactors, "", "")
 
 	require.NoError(t, err)

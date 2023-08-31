@@ -7,8 +7,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 type AccountKeeper interface {
@@ -30,6 +30,8 @@ type BankKeeper interface {
 // PoolManagerKeeper defines the interface needed to be fulfilled for
 // the poolmanager keeper.
 type PoolManagerKeeper interface {
+	GetParams(ctx sdk.Context) (params poolmanagertypes.Params)
+	SetParams(ctx sdk.Context, params poolmanagertypes.Params)
 	CreatePool(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (uint64, error)
 	GetNextPoolId(ctx sdk.Context) uint64
 	CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (poolmanagertypes.PoolI, error)

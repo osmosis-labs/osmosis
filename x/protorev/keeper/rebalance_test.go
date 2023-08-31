@@ -3,12 +3,12 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
-	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
+	protorevtypes "github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
 // Mainnet Arb Route - 2 Asset, Same Weights (Block: 5905150)
@@ -609,8 +609,8 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 
 			maxProfitInputCoin, maxProfitAmount, optimalRoute := s.App.ProtoRevKeeper.IterateRoutes(s.Ctx, routes, &remainingPoolPoints, &remainingBlockPoolPoints)
 			if test.expectPass {
-				s.Require().Equal(test.params.expectedMaxProfitAmount, maxProfitAmount)
-				s.Require().Equal(test.params.expectedMaxProfitInputCoin, maxProfitInputCoin)
+				s.Require().Equal(test.params.expectedMaxProfitAmount.String(), maxProfitAmount.String())
+				s.Require().Equal(test.params.expectedMaxProfitInputCoin.String(), maxProfitInputCoin.String())
 				s.Require().Equal(test.params.expectedOptimalRoute, optimalRoute)
 			}
 		})
@@ -737,6 +737,7 @@ func (s *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 }
 
 func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
+	s.SetupTest()
 	s.Run("Extended search on stable pools", func() {
 		route := keeper.RouteMetaData{
 			Route:    extendedRangeRoute,

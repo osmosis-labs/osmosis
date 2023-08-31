@@ -18,20 +18,20 @@ jobs:
         name: Check out repository code
         uses: actions/checkout@v3
       -
+        uses: technote-space/get-diff-action@v6.1.2
+        with:
+            PATTERNS: |
+             **/**.go
+             go.mod
+             go.sum
+             .github/**
+             Makefile
+      -
         name: 🐿 Setup Golang
         uses: actions/setup-go@v4
         with:
           go-version: ${{env.GO_VERSION}}
-      -
-        uses: technote-space/get-diff-action@v6.1.2
-        if: env.GIT_DIFF
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-            .github/**
-            Makefile
+
       -
         name: Run golangci-lint
         if: env.GIT_DIFF

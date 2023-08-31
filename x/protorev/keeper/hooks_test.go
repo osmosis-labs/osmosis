@@ -3,10 +3,10 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
 // Tests the hook implementation that is called after swapping

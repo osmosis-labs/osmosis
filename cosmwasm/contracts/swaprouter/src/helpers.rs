@@ -2,8 +2,8 @@ use std::ops::{Div, Mul};
 
 use cosmwasm_std::{Addr, Coin, Decimal, Deps, Timestamp, Uint128};
 use osmosis_std::shim::Timestamp as OsmosisTimestamp;
-use osmosis_std::types::osmosis::gamm::v1beta1::{
-    MsgSwapExactAmountIn, QueryTotalPoolLiquidityRequest, SwapAmountInRoute,
+use osmosis_std::types::osmosis::poolmanager::v1beta1::{
+    MsgSwapExactAmountIn, SwapAmountInRoute, TotalPoolLiquidityRequest,
 };
 use osmosis_std::types::osmosis::twap::v1beta1::TwapQuerier;
 
@@ -33,12 +33,15 @@ pub fn validate_pool_route(
 
     // make sure that this route actually works
     for route_part in &pool_route {
-        let liquidity = QueryTotalPoolLiquidityRequest {
+        let liquidity = TotalPoolLiquidityRequest {
             pool_id: route_part.pool_id,
         }
         .query(&deps.querier)
-        .map_err(|_e| ContractError::QueryError {
-            val: format!("Couldn't query liquidity for pool {}", route_part.pool_id),
+        .map_err(|e| {
+            deps.api.debug(&format!("{:?}", e));
+            ContractError::QueryError {
+                val: format!("Couldn't query liquidity for pool {}", route_part.pool_id),
+            }
         })?
         .liquidity;
 
@@ -81,9 +84,15 @@ pub fn generate_swap_msg(
     sender: Addr,
     input_token: Coin,
     min_output_token: Coin,
+    route: Option<Vec<SwapAmountInRoute>>,
 ) -> Result<MsgSwapExactAmountIn, ContractError> {
-    // get trade route
-    let route = ROUTING_TABLE.load(deps.storage, (&input_token.denom, &min_output_token.denom))?;
+    let route = match route {
+        Some(route) => route,
+        None => {
+            // get trade route
+            ROUTING_TABLE.load(deps.storage, (&input_token.denom, &min_output_token.denom))?
+        }
+    };
     Ok(MsgSwapExactAmountIn {
         sender: sender.into_string(),
         routes: route,
@@ -99,11 +108,19 @@ pub fn calculate_min_output_from_twap(
     now: Timestamp,
     window: Option<u64>,
     percentage_impact: Decimal,
+    route: Option<Vec<SwapAmountInRoute>>,
 ) -> Result<Coin, ContractError> {
     // get trade route
-    let route = ROUTING_TABLE
-        .load(deps.storage, (&input_token.denom, &output_denom))
-        .unwrap_or_default();
+    let route = match route {
+        Some(route) => route,
+        None => {
+            // get trade route
+            ROUTING_TABLE
+                .load(deps.storage, (&input_token.denom, &output_denom))
+                .unwrap_or_default()
+        }
+    };
+
     if route.is_empty() {
         return Err(ContractError::InvalidPoolRoute {
             reason: format!("No route found for {} -> {output_denom}", input_token.denom),

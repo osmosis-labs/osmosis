@@ -7,10 +7,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -95,6 +95,8 @@ type PoolManager interface {
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 
 	CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (poolmanagertypes.PoolI, error)
+
+	GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (sdk.Dec, error)
 }
 
 type PoolIncentivesKeeper interface {

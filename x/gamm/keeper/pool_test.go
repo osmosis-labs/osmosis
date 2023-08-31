@@ -7,12 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 
-	"github.com/osmosis-labs/osmosis/v17/tests/mocks"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/tests/mocks"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 var (
@@ -30,7 +30,7 @@ var (
 // 	"github.com/cosmos/cosmos-sdk/simapp"
 // 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-// 	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+// 	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 // )
 
 // func (s *KeeperTestSuite) TestCleanupPool() {

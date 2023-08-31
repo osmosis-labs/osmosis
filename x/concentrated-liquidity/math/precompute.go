@@ -4,12 +4,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 var (
 	sdkOneDec      = sdk.OneDec()
-	sdkNineDec     = sdk.NewDec(9)
 	sdkTenDec      = sdk.NewDec(10)
 	powersOfTen    []sdk.Dec
 	negPowersOfTen []sdk.Dec

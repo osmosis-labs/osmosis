@@ -7,10 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/x/twap"
+	"github.com/osmosis-labs/osmosis/v19/x/twap"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
 )
 
 // TestTrackChangedPool takes a list of poolIds as test cases, and runs one list per block.

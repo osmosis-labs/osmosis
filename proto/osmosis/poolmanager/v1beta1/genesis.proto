@@ -8,7 +8,7 @@ import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/poolmanager/v1beta1/module_route.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types";
 
 // Params holds parameters for the poolmanager module
 message Params {
@@ -17,6 +17,21 @@ message Params {
     (gogoproto.moretags) = "yaml:\"pool_creation_fee\"",
     (gogoproto.nullable) = false
   ];
+  // taker_fee_params is the container of taker fee parameters.
+  TakerFeeParams taker_fee_params = 2 [
+    (gogoproto.moretags) = "yaml:\"taker_fee_params\"",
+    (gogoproto.nullable) = false
+  ];
+  // authorized_quote_denoms is a list of quote denoms that can be used as
+  // token1 when creating a concentrated pool. We limit the quote assets to a
+  // small set for the purposes of having convinient price increments stemming
+  // from tick to price conversion. These increments are in a human readable
+  // magnitude only for token1 as a quote. For limit orders in the future, this
+  // will be a desirable property in terms of UX as to allow users to set limit
+  // orders at prices in terms of token1 (quote asset) that are easy to reason
+  // about.
+  repeated string authorized_quote_denoms = 3
+      [ (gogoproto.moretags) = "yaml:\"authorized_quote_denoms\"" ];
 }
 
 // GenesisState defines the poolmanager module's genesis state.
@@ -27,4 +42,65 @@ message GenesisState {
   Params params = 2 [ (gogoproto.nullable) = false ];
   // pool_routes is the container of the mappings from pool id to pool type.
   repeated ModuleRoute pool_routes = 3 [ (gogoproto.nullable) = false ];
+}
+
+// TakerFeeParams consolidates the taker fee parameters for the poolmanager.
+message TakerFeeParams {
+  // default_taker_fee is the fee used when creating a new pool that doesn't
+  // fall under a custom pool taker fee or stableswap taker fee category.
+  string default_taker_fee = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customname) = "DefaultTakerFee",
+    (gogoproto.nullable) = false
+  ];
+  // osmo_taker_fee_distribution defines the distribution of taker fees
+  // generated in OSMO. As of this writing, it has two catagories:
+  // - staking_rewards: the percent of the taker fee that gets distributed to
+  //   stakers.
+  // - community_pool: the percent of the taker fee that gets sent to the
+  //   community pool.
+  TakerFeeDistributionPercentage osmo_taker_fee_distribution = 2 [
+    (gogoproto.customname) = "OsmoTakerFeeDistribution",
+    (gogoproto.nullable) = false
+  ];
+  // non_osmo_taker_fee_distribution defines the distribution of taker fees
+  // generated in non-OSMO. As of this writing, it has two categories:
+  // - staking_rewards: the percent of the taker fee that gets swapped to OSMO
+  //   and then distirbuted to stakers.
+  // - community_pool: the percent of the taker fee that gets sent to the
+  //   community pool. Note: If the non-OSMO asset is an authorized_quote_denom,
+  //   that denom is sent directly to the community pool. Otherwise, it is
+  //   swapped to the community_pool_denom_to_swap_non_whitelisted_assets_to and
+  //   then sent to the community pool as that denom.
+  TakerFeeDistributionPercentage non_osmo_taker_fee_distribution = 3 [
+    (gogoproto.customname) = "NonOsmoTakerFeeDistribution",
+    (gogoproto.nullable) = false
+  ];
+  // admin_addresses is a list of addresses that are allowed to set and remove
+  // custom taker fees for denom pairs. Governance also has the ability to set
+  // and remove custom taker fees for denom pairs, but with the normal
+  // governance delay.
+  repeated string admin_addresses = 4
+      [ (gogoproto.moretags) = "yaml:\"admin_addresses\"" ];
+  // community_pool_denom_to_swap_non_whitelisted_assets_to is the denom that
+  // non-whitelisted taker fees will be swapped to before being sent to
+  // the community pool.
+  string community_pool_denom_to_swap_non_whitelisted_assets_to = 5
+      [ (gogoproto.moretags) =
+            "yaml:\"community_pool_denom_to_swap_non_whitelisted_assets_to\"" ];
+}
+
+// TakerFeeDistributionPercentage defines what percent of the taker fee category
+// gets distributed to the available categories.
+message TakerFeeDistributionPercentage {
+  string staking_rewards = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"staking_rewards\"",
+    (gogoproto.nullable) = false
+  ];
+  string community_pool = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"community_pool\"",
+    (gogoproto.nullable) = false
+  ];
 }

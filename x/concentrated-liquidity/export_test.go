@@ -7,10 +7,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 const (
@@ -72,7 +72,7 @@ func (k Keeper) ComputeOutAmtGivenIn(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 
-) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadRewards sdk.Dec, err error) {
+) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
 	return k.computeOutAmtGivenIn(ctx, poolId, tokenInMin, tokenOutDenom, spreadFactor, priceLimit)
 }
 
@@ -95,7 +95,7 @@ func (k Keeper) ComputeInAmtGivenOut(
 	priceLimit sdk.Dec,
 	poolId uint64,
 
-) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadRewards sdk.Dec, err error) {
+) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
 	return k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, poolId)
 }
 

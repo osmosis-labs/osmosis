@@ -9,9 +9,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v17/app"
-	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v19/app"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"

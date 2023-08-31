@@ -12,6 +12,7 @@ const (
 	TypeMsgSwapExactAmountOut           = "swap_exact_amount_out"
 	TypeMsgSplitRouteSwapExactAmountIn  = "split_route_swap_exact_amount_in"
 	TypeMsgSplitRouteSwapExactAmountOut = "split_route_swap_exact_amount_out"
+	TypeMsgSetDenomPairTakerFee         = "set_denom_pair_taker_fee"
 )
 
 var _ sdk.Msg = &MsgSwapExactAmountIn{}
@@ -160,6 +161,32 @@ func (msg MsgSplitRouteSwapExactAmountOut) GetSignBytes() []byte {
 }
 
 func (msg MsgSplitRouteSwapExactAmountOut) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgSetDenomPairTakerFee{}
+
+func (msg MsgSetDenomPairTakerFee) Route() string { return RouterKey }
+func (msg MsgSetDenomPairTakerFee) Type() string  { return TypeMsgSetDenomPairTakerFee }
+
+func (msg MsgSetDenomPairTakerFee) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return InvalidSenderError{Sender: msg.Sender}
+	}
+
+	return validateDenomPairTakerFees(msg.DenomPairTakerFee)
+}
+
+func (msg MsgSetDenomPairTakerFee) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgSetDenomPairTakerFee) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)

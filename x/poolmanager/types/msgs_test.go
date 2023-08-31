@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
-	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 var (
@@ -548,6 +548,92 @@ func TestMsgSplitRouteSwapExactAmountOut(t *testing.T) {
 		"empty routes": {
 			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountOut) types.MsgSplitRouteSwapExactAmountOut {
 				msg.Routes = []types.SwapAmountOutSplitRoute{}
+				return msg
+			}),
+			expectError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+
+			if tc.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestMsgSetDenomPairTakerFee(t *testing.T) {
+	createMsg := func(after func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+		properMsg := types.MsgSetDenomPairTakerFee{
+			Sender: addr1,
+			DenomPairTakerFee: []types.DenomPairTakerFee{
+				{
+					Denom0:   "uosmo",
+					Denom1:   "uatom",
+					TakerFee: sdk.MustNewDecFromStr("0.003"),
+				},
+				{
+					Denom0:   "uosmo",
+					Denom1:   "uion",
+					TakerFee: sdk.MustNewDecFromStr("0.006"),
+				},
+			},
+		}
+
+		return after(properMsg)
+	}
+
+	msg := createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), types.RouterKey)
+	require.Equal(t, msg.Type(), types.TypeMsgSetDenomPairTakerFee)
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
+	tests := map[string]struct {
+		msg         types.MsgSetDenomPairTakerFee
+		expectError bool
+	}{
+		"valid": {
+			msg: createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+				// Do nothing
+				return msg
+			}),
+		},
+		"invalid sender": {
+			msg: createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+				msg.Sender = ""
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid denom0": {
+			msg: createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+				msg.DenomPairTakerFee[0].Denom0 = ""
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid denom1": {
+			msg: createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+				msg.DenomPairTakerFee[0].Denom1 = ""
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid denom0 = denom1": {
+			msg: createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+				msg.DenomPairTakerFee[0].Denom0 = msg.DenomPairTakerFee[0].Denom1
 				return msg
 			}),
 			expectError: true,

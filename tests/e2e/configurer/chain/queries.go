@@ -19,18 +19,26 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v17/x/poolmanager/client/queryproto"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v17/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
-	twapqueryproto "github.com/osmosis-labs/osmosis/v17/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v19/x/twap/client/queryproto"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
+
+// PropTallyResult is the result of a proposal tally.
+type PropTallyResult struct {
+	Yes        sdk.Int
+	No         sdk.Int
+	Abstain    sdk.Int
+	NoWithVeto sdk.Int
+}
 
 // QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.
 func (n *NodeConfig) QueryProtoRevNumberOfTrades() (sdk.Int, error) {
@@ -443,21 +451,31 @@ func (n *NodeConfig) QueryWasmSmartArray(contract string, msg string) (resultArr
 	return resultArray, nil
 }
 
-func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
+func (n *NodeConfig) QueryPropTally(proposalNumber int) (PropTallyResult, error) {
 	path := fmt.Sprintf("cosmos/gov/v1beta1/proposals/%d/tally", proposalNumber)
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
 	var balancesResp govtypes.QueryTallyResultResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
-		return sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), err
+		return PropTallyResult{
+			Yes:        sdk.ZeroInt(),
+			No:         sdk.ZeroInt(),
+			Abstain:    sdk.ZeroInt(),
+			NoWithVeto: sdk.ZeroInt(),
+		}, err
 	}
 	noTotal := balancesResp.Tally.No
 	yesTotal := balancesResp.Tally.Yes
 	noWithVetoTotal := balancesResp.Tally.NoWithVeto
 	abstainTotal := balancesResp.Tally.Abstain
 
-	return noTotal, yesTotal, noWithVetoTotal, abstainTotal, nil
+	return PropTallyResult{
+		Yes:        yesTotal,
+		No:         noTotal,
+		Abstain:    abstainTotal,
+		NoWithVeto: noWithVetoTotal,
+	}, nil
 }
 
 func (n *NodeConfig) QueryPropStatus(proposalNumber int) (string, error) {

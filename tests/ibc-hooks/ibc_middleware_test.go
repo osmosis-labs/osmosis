@@ -16,12 +16,12 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v17/x/mint/types"
-	txfeetypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v19/x/mint/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 
 	"github.com/stretchr/testify/suite"
 
@@ -32,9 +32,9 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 
-	"github.com/osmosis-labs/osmosis/v17/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v19/tests/osmosisibctesting"
 
-	"github.com/osmosis-labs/osmosis/v17/tests/ibc-hooks/testutils"
+	"github.com/osmosis-labs/osmosis/v19/tests/ibc-hooks/testutils"
 )
 
 type HooksTestSuite struct {
@@ -772,7 +772,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, setupForwardi
 	chain.StoreContractCode(&suite.Suite, "./bytecode/crosschain_swaps.wasm")
 
 	crosschainAddr := chain.InstantiateContract(&suite.Suite,
-		fmt.Sprintf(`{"swap_contract": "%s", "governor": "%s"}`, swaprouterAddr, owner),
+		fmt.Sprintf(`{"swap_contract": "%s", "governor": "%s", "registry_contract":"%s"}`, swaprouterAddr, owner, registryAddr),
 		3)
 
 	osmosisApp := chain.GetOsmosisApp()
@@ -1670,6 +1670,8 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 		address: accountB,
 	}
 
+	var customRoute string
+
 	testCases := []struct {
 		name              string
 		sender            ChainActorDefinition
@@ -1779,6 +1781,30 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 		},
 
 		{
+			name:          "Swap two IBC'd tokens with specified route",
+			sender:        actorChainB,
+			swapFor:       suite.GetIBCDenom(ChainC, ChainA, "token0"),
+			receiver:      actorChainB,
+			receivedToken: suite.GetIBCDenom(ChainC, ChainB, "token0"),
+			setupInitialToken: func() string {
+				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainC, ChainA})
+				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainB, ChainA})
+
+				token0BA := suite.GetIBCDenom(ChainB, ChainA, "token0")
+				token0CA := suite.GetIBCDenom(ChainC, ChainA, "token0")
+
+				// Setup pool
+				poolId := suite.CreateIBCPoolOnChain(ChainA, token0BA, token0CA, sdk.NewInt(defaultPoolAmount))
+
+				customRoute = fmt.Sprintf(`[{"pool_id": "%d", "token_out_denom": "%s"}]`, poolId, token0CA)
+
+				return "token0"
+			},
+			relayChain: []Direction{AtoC, CtoB},
+			requireAck: []bool{false, true},
+		},
+
+		{
 			name:    "Swap two IBC'd tokens with unwrapping before and after",
 			sender:  actorChainB,
 			swapFor: suite.GetIBCDenom(ChainB, ChainA, "token0"),
@@ -1812,6 +1838,7 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 		suite.Run(tc.name, func() {
 			senderChain := suite.GetChain(tc.sender.Chain)
 			receiverChain := suite.GetChain(tc.receiver.Chain)
+			customRoute = "" // reset the custom route
 
 			initialToken := tc.setupInitialToken()
 
@@ -1824,8 +1851,13 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 			receivedTokenBalance := receiverChain.GetOsmosisApp().BankKeeper.GetBalance(receiverChain.GetContext(), tc.receiver.address, tc.receivedToken)
 
 			// Generate swap instructions for the contract
-			swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"%s","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s/%s", "on_failed_delivery": "do_nothing", "next_memo":{}}}`,
-				tc.swapFor, tc.receiver.name, tc.receiver.address,
+			var extra string
+			if customRoute != "" {
+				extra = fmt.Sprintf(`,"route": %s`, customRoute)
+			}
+
+			swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"%s","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s/%s", "on_failed_delivery": "do_nothing", "next_memo":{}%s}}`,
+				tc.swapFor, tc.receiver.name, tc.receiver.address, extra,
 			)
 			// Generate full memo
 			msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)

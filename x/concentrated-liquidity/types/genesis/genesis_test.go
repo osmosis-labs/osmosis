@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types/genesis"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types/genesis"
 )
 
 func TestValidateGenesis(t *testing.T) {
