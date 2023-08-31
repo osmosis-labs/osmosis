@@ -287,14 +287,6 @@ func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolEx
 	return k.updatePoolForSwap(ctx, pool, swapDetails, poolUpdates, totalSpreadRewards)
 }
 
-func (k Keeper) PrepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64, uptimeAccums []*accum.AccumulatorObject) (uint64, sdk.Dec, error) {
-	return k.prepareBalancerPoolAsFullRange(ctx, clPoolId, uptimeAccums)
-}
-
-func (k Keeper) ClaimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64, uptimeAccums []*accum.AccumulatorObject) (sdk.Coins, error) {
-	return k.claimAndResetFullRangeBalancerPool(ctx, clPoolId, balPoolId, uptimeAccums)
-}
-
 func (k Keeper) UninitializePool(ctx sdk.Context, poolId uint64) error {
 	return k.uninitializePool(ctx, poolId)
 }

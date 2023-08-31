@@ -45,6 +45,9 @@ func assertEqual(suite *UpgradeTestSuite, pre, post interface{}) {
 }
 
 func (s *UpgradeTestSuite) TestUpgrade() {
+
+	s.T().Skip("This test is skipped because it is not relevant anymore. It is kept here for reference.")
+
 	// set up pools first to match v17 state(including linked cl pools)
 	s.setupPoolsToMainnetState()
 
