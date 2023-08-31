@@ -516,7 +516,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {
-		//govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(appKeepers.WasmKeeper, wasmEnabledProposals))
+		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(appKeepers.WasmKeeper, wasmEnabledProposals))
 	}
 
 	govKeeper := govkeeper.NewKeeper(

@@ -12,11 +12,11 @@ import (
 // governance module.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*Content)(nil), nil)
-	cdc.RegisterConcrete(&MsgSubmitProposal{}, "cosmos-sdk/MsgSubmitProposal", nil)
-	cdc.RegisterConcrete(&MsgDeposit{}, "cosmos-sdk/MsgDeposit", nil)
-	cdc.RegisterConcrete(&MsgVote{}, "cosmos-sdk/MsgVote", nil)
-	cdc.RegisterConcrete(&MsgVoteWeighted{}, "cosmos-sdk/MsgVoteWeighted", nil)
-	cdc.RegisterConcrete(&TextProposal{}, "cosmos-sdk/TextProposal", nil)
+	cdc.RegisterConcrete(&MsgSubmitProposal{}, "osmosis/MsgSubmitProposal", nil)
+	cdc.RegisterConcrete(&MsgDeposit{}, "osmosis/MsgDeposit", nil)
+	cdc.RegisterConcrete(&MsgVote{}, "osmosis/MsgVote", nil)
+	cdc.RegisterConcrete(&MsgVoteWeighted{}, "osmosis/MsgVoteWeighted", nil)
+	cdc.RegisterConcrete(&TextProposal{}, "osmosis/TextProposal", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
