@@ -1,0 +1,7 @@
+---
+library: false
+warnOnImplicitThis: false
+name: osmoql
+version: 0.0.1
+dependencies:
+  codeql/go-all: 0.3.6
