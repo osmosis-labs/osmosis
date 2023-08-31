@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type KeeperTestSuite struct {
@@ -21,7 +22,8 @@ func TestKeeperTestSuite(t *testing.T) {
 func (s *KeeperTestSuite) SetupTest() {
 	s.Reset()
 	// ToDo: when wired up, modify for s.App.AuthenticatorKeeper. Tests will fail for now because the store key doesn't exist
-	s.Keeper = keeper.NewKeeper(s.App.AppCodec(), s.App.GetKey(types.StoreKey), s.App.ParamsKeeper.Subspace(types.ModuleName))
+	ss, _ := s.App.ParamsKeeper.GetSubspace(types.ModuleName)
+	s.Keeper = keeper.NewKeeper(s.App.AppCodec(), s.App.GetKey(types.StoreKey), ss)
 
 	// Register the SigVerificationAuthenticator
 	types.InitializeAuthenticators([]types.Authenticator{types.SigVerificationAuthenticator{}})
@@ -30,8 +32,6 @@ func (s *KeeperTestSuite) SetupTest() {
 // ToDo: more and better tests
 
 func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
-	s.T().Skip("skipping until this is wired up") // TODO: remove this line when this test is wired up
-
 	msgServer := keeper.NewMsgServerImpl(s.Keeper)
 	ctx := s.Ctx
 
@@ -50,7 +50,6 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 }
 
 func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
-	s.T().Skip("skipping until this is wired up") // TODO: remove this line when this test is wired up
 	msgServer := keeper.NewMsgServerImpl(s.Keeper)
 	ctx := s.Ctx
 

@@ -61,6 +61,8 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
 	_ "github.com/osmosis-labs/osmosis/v19/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
+	authenticator "github.com/osmosis-labs/osmosis/v19/x/authenticator"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/clmodule"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	cwpoolmodule "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/module"
@@ -123,6 +125,7 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:                    {authtypes.Staking},
 	poolmanagertypes.ModuleName:                   nil,
 	cosmwasmpooltypes.ModuleName:                  nil,
+	authenticatortypes.ModuleName:            nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -186,6 +189,8 @@ func appModules(
 		icq.NewAppModule(*app.AppKeepers.ICQKeeper),
 		packetforward.NewAppModule(app.PacketForwardKeeper),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
+		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
+		authenticator.NewAppModule(appCodec, *app.AuthenticatorKeeper),
 	}
 }
 
@@ -273,6 +278,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		icqtypes.ModuleName,
 		packetforwardtypes.ModuleName,
 		cosmwasmpooltypes.ModuleName,
+		authenticatortypes.ModuleName,
 	}
 }
 
