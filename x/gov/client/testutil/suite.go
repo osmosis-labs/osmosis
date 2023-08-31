@@ -4,16 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -21,7 +17,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
-	"github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/client/cli"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/types"
 )
@@ -31,24 +26,6 @@ type IntegrationTestSuite struct {
 
 	cfg     network.Config
 	network *network.Network
-}
-
-// NewAppConstructor returns a new osmoapp AppConstructor
-func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor {
-	return func(val network.Validator) servertypes.Application {
-		db := dbm.NewMemDB()
-		return osmoapp.NewOsmosisApp(
-			log.NewNopLogger(),
-			db,
-			nil,
-			true,
-			map[int64]bool{},
-			val.Ctx.Config.RootDir,
-			0,
-			simapp.EmptyAppOptions{},
-			osmoapp.EmptyWasmOpts,
-		)
-	}
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
