@@ -5,11 +5,11 @@ mod test_env;
 use std::str::FromStr;
 
 use cosmwasm_std::{Addr, Coin, Decimal};
-use osmosis_std::types::osmosis::gamm::v1beta1::SwapAmountInRoute;
-use osmosis_testing::cosmrs::proto::cosmos::bank::v1beta1::QueryAllBalancesRequest;
+use osmosis_std::types::osmosis::poolmanager::v1beta1::SwapAmountInRoute;
+use osmosis_test_tube::osmosis_std::types::cosmos::bank::v1beta1::QueryAllBalancesRequest;
 
 use crosschain_swaps::msg::{ExecuteMsg as CrossChainExecute, FailedDeliveryAction};
-use osmosis_testing::{Account, Bank, Module, Wasm};
+use osmosis_test_tube::{Account, Bank, Module, Wasm};
 use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, Slippage};
 use test_env::*;
 
@@ -67,6 +67,7 @@ fn crosschain_swap() {
         receiver: "osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89".to_string(),
         on_failed_delivery: FailedDeliveryAction::DoNothing,
         next_memo: None,
+        route: None,
     };
     let funds: &[Coin] = &[Coin::new(10000, "uosmo")];
     println!("{}", serde_json_wasm::to_string(&msg).unwrap());
@@ -97,7 +98,7 @@ fn crosschain_swap() {
 }
 
 fn get_amount(
-    balances: &Vec<osmosis_testing::cosmrs::proto::cosmos::base::v1beta1::Coin>,
+    balances: &Vec<osmosis_test_tube::osmosis_std::types::cosmos::base::v1beta1::Coin>,
     denom: &str,
 ) -> u128 {
     balances

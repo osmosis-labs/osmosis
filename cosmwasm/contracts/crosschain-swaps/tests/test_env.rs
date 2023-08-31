@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use cosmwasm_std::Coin;
 use crosschain_registry::msg::InstantiateMsg as RegistryInstantiate;
 use crosschain_swaps::msg::InstantiateMsg as CrosschainInstantiate;
-use osmosis_testing::{Account, OsmosisTestApp, SigningAccount};
-use osmosis_testing::{Gamm, Module, Wasm};
+use osmosis_test_tube::{Account, OsmosisTestApp, SigningAccount};
+use osmosis_test_tube::{Gamm, Module, Wasm};
 use serde::Serialize;
 use swaprouter::msg::InstantiateMsg as SwapRouterInstantiate;
 

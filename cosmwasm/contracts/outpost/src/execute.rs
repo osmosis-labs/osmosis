@@ -33,6 +33,7 @@ pub fn execute_swap(
         on_failed_delivery,
         #[cfg(feature = "callbacks")]
         callback,
+        route,
     } = user_msg;
     let config = CONFIG.load(deps.storage)?;
 
@@ -52,6 +53,7 @@ pub fn execute_swap(
         slippage,
         next_memo,
         on_failed_delivery,
+        route,
     };
 
     let msg = WasmHookExecute {

@@ -1,5 +1,6 @@
 use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Env, MessageInfo};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
+use osmosis_std::types::osmosis::poolmanager::v1beta1::SwapAmountInRoute;
 use registry::msg::{Callback, SerializableJson};
 use registry::RegistryError;
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
@@ -40,6 +41,7 @@ pub fn unwrap_or_swap_and_forward(
     receiver: &str,
     next_memo: Option<SerializableJson>,
     failed_delivery_action: FailedDeliveryAction,
+    route: Option<Vec<SwapAmountInRoute>>,
 ) -> Result<Response, ContractError> {
     let (deps, env, info) = ctx;
     let swap_coin = cw_utils::one_coin(&info)?;
@@ -79,6 +81,7 @@ pub fn unwrap_or_swap_and_forward(
                     slippage,
                     next_memo,
                     on_failed_delivery: failed_delivery_action.clone(),
+                    route,
                 })?
                 .into(),
             }),
@@ -123,6 +126,7 @@ pub fn unwrap_or_swap_and_forward(
         receiver,
         next_memo,
         failed_delivery_action,
+        route,
     )
 }
 
@@ -130,6 +134,7 @@ pub fn unwrap_or_swap_and_forward(
 /// the result to the receiver.
 ///
 ///
+#[allow(clippy::too_many_arguments)]
 pub fn swap_and_forward(
     ctx: (DepsMut, Env, MessageInfo),
     swap_coin: Coin,
@@ -138,6 +143,7 @@ pub fn swap_and_forward(
     receiver: &str,
     next_memo: Option<SerializableJson>,
     failed_delivery_action: FailedDeliveryAction,
+    route: Option<Vec<SwapAmountInRoute>>,
 ) -> Result<Response, ContractError> {
     let (deps, env, _) = ctx;
 
@@ -176,6 +182,7 @@ pub fn swap_and_forward(
         input_coin: swap_coin.clone(),
         output_denom,
         slippage,
+        route,
     };
     let msg = wasm_execute(config.swap_contract, &swap_msg, vec![swap_coin])?;
 
