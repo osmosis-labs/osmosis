@@ -7,15 +7,20 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
+	"github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/client/cli"
 	govtestutil "github.com/osmosis-labs/osmosis/v19/x/gov/client/testutil"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/types"
@@ -28,10 +33,37 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
+// NewAppConstructor returns a new osmoapp AppConstructor
+func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor {
+	return func(val network.Validator) servertypes.Application {
+		db := dbm.NewMemDB()
+		return osmoapp.NewOsmosisApp(
+			log.NewNopLogger(),
+			db,
+			nil,
+			true,
+			map[int64]bool{},
+			val.Ctx.Config.RootDir,
+			0,
+			simapp.EmptyAppOptions{},
+			osmoapp.EmptyWasmOpts,
+		)
+	}
+}
+
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
+	app := osmoapp.Setup(false)
 	s.cfg = network.DefaultConfig()
+	encCfg := osmoapp.MakeEncodingConfig()
+	s.cfg.Codec = encCfg.Marshaler
+	s.cfg.TxConfig = encCfg.TxConfig
+	s.cfg.LegacyAmino = encCfg.Amino
+	s.cfg.InterfaceRegistry = encCfg.InterfaceRegistry
+
+	s.cfg.GenesisState = osmoapp.ModuleBasics.DefaultGenesis(app.AppCodec())
+	s.cfg.AppConstructor = NewAppConstructor(encCfg)
 	s.cfg.NumValidators = 1
 
 	s.network = network.New(s.T(), s.cfg)
@@ -422,13 +454,15 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 		name       string
 		url        string
 		expErr     bool
-		respType   proto.Message
-		expectResp proto.Message
+		respType   *types.QueryParamsResponse
+		expectResp *types.QueryParamsResponse
 	}{
 		{
 			"request params with empty params type",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/params/%s", val.APIAddress, ""),
-			true, nil, nil,
+			true,
+			&types.QueryParamsResponse{},
+			&types.QueryParamsResponse{},
 		},
 		{
 			"get deposit params",
