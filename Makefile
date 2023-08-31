@@ -111,6 +111,7 @@ endif
 check_version:
 	@echo "Go version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION)"
 	@if [ $(GO_MAJOR_VERSION) -gt $(GO_MINIMUM_MAJOR_VERSION) ]; then \
+		echo "Go version is sufficient"; \
 		exit 0; \
 	elif [ $(GO_MAJOR_VERSION) -lt $(GO_MINIMUM_MAJOR_VERSION) ]; then \
 		echo '$(GO_VERSION_ERR_MSG)'; \
