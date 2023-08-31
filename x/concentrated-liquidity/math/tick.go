@@ -210,9 +210,6 @@ func CalculatePriceToTickV1(priceBigDec osmomath.BigDec) (tickIndex int64, err e
 // CalculatePriceToTick calculates tickIndex from price. Contrary to CalculatePriceToTickV1,
 // it uses BigDec in internal calculations
 func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
-	// It is acceptable to truncate price as the minimum we support is
-	// 10**-12 which is above the smallest value of sdk.Dec.
-
 	if price.IsNegative() {
 		return 0, fmt.Errorf("price must be greater than zero")
 	}
@@ -227,6 +224,8 @@ func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 	// the old version of the function that operated on decimal with precision of 18.
 	if price.GTE(types.MinSpotPriceBigDec) {
 		// TODO: implement efficient big decimal truncation.
+		// It is acceptable to truncate price as the minimum we support is
+		// 10**-12 which is above the smallest value of sdk.Dec.
 		price = osmomath.BigDecFromSDKDec(price.SDKDec())
 	}
 
