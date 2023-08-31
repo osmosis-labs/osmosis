@@ -296,23 +296,30 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+		feeCoins := spendable.FilterDenoms([]string{sdk.DefaultBondDenom})
+		fees, err := simtypes.RandomFees(r, ctx, feeCoins)
 
-		txCtx := simulation.OperationInput{
-			R:               r,
-			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-			Cdc:             nil,
-			Msg:             msg,
-			MsgType:         msg.Type(),
-			Context:         ctx,
-			SimAccount:      simAccount,
-			AccountKeeper:   ak,
-			Bankkeeper:      bk,
-			ModuleName:      types.ModuleName,
-			CoinsSpentInMsg: spendable,
+		coins, hasNeg := spendable.SafeSub(fees)
+		if !hasNeg {
+			if err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
+			}
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		txCtx := simulation.OperationInput{
+			R:             r,
+			App:           app,
+			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:           nil,
+			Msg:           msg,
+			MsgType:       msg.Type(),
+			Context:       ctx,
+			SimAccount:    simAccount,
+			AccountKeeper: ak,
+			ModuleName:    types.ModuleName,
+		}
+
+		return simulation.GenAndDeliverTx(txCtx, coins)
 	}
 }
 
@@ -349,23 +356,30 @@ func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeepe
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+		feeCoins := spendable.FilterDenoms([]string{sdk.DefaultBondDenom})
+		fees, err := simtypes.RandomFees(r, ctx, feeCoins)
 
-		txCtx := simulation.OperationInput{
-			R:               r,
-			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
-			Cdc:             nil,
-			Msg:             msg,
-			MsgType:         msg.Type(),
-			Context:         ctx,
-			SimAccount:      simAccount,
-			AccountKeeper:   ak,
-			Bankkeeper:      bk,
-			ModuleName:      types.ModuleName,
-			CoinsSpentInMsg: spendable,
+		coins, hasNeg := spendable.SafeSub(fees)
+		if !hasNeg {
+			if err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
+			}
 		}
 
-		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+		txCtx := simulation.OperationInput{
+			R:             r,
+			App:           app,
+			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:           nil,
+			Msg:           msg,
+			MsgType:       msg.Type(),
+			Context:       ctx,
+			SimAccount:    simAccount,
+			AccountKeeper: ak,
+			ModuleName:    types.ModuleName,
+		}
+
+		return simulation.GenAndDeliverTx(txCtx, coins)
 	}
 }
 

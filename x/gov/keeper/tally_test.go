@@ -6,15 +6,15 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/types"
 )
 
-func SetupProposal(t *testing.T, ctx sdk.Context, app *simapp.SimApp, isExpedited bool) uint64 {
+func SetupProposal(t *testing.T, ctx sdk.Context, app *osmoapp.OsmosisApp, isExpedited bool) uint64 {
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, isExpedited)
 	require.NoError(t, err)
@@ -27,7 +27,7 @@ func SetupProposal(t *testing.T, ctx sdk.Context, app *simapp.SimApp, isExpedite
 }
 
 func TestTallyNoOneVotes(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	createValidators(t, ctx, app, []int64{5, 5, 5})
@@ -49,12 +49,12 @@ func TestTallyNoOneVotes(t *testing.T) {
 }
 
 func TestTallyNoQuorum(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	createValidators(t, ctx, app, []int64{2, 5, 0})
 
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000000))
+	addrs := osmoapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000000))
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
@@ -74,7 +74,7 @@ func TestTallyNoQuorum(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrs, _ := createValidators(t, ctx, app, []int64{5, 5, 5})
@@ -100,7 +100,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 }
 
 func TestTallyOnlyValidators51No(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{5, 6, 0})
@@ -124,7 +124,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 }
 
 func TestTallyOnlyValidators51Yes(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{5, 6, 0})
@@ -149,7 +149,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsVetoed(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{6, 6, 7})
@@ -175,7 +175,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{6, 6, 7})
@@ -201,7 +201,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{6, 6, 7})
@@ -227,7 +227,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{5, 6, 7})
@@ -253,7 +253,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 }
 
 func TestTallyDelgatorOverride(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrs, valAddrs := createValidators(t, ctx, app, []int64{5, 6, 7})
@@ -265,7 +265,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	_, err := app.StakingKeeper.Delegate(ctx, addrs[4], delTokens, stakingtypes.Unbonded, val1, true)
 	require.NoError(t, err)
 
-	_ = staking.EndBlocker(ctx, app.StakingKeeper)
+	_ = staking.EndBlocker(ctx, *app.StakingKeeper)
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
@@ -289,7 +289,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorInherit(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
@@ -301,7 +301,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	_, err := app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val3, true)
 	require.NoError(t, err)
 
-	_ = staking.EndBlocker(ctx, app.StakingKeeper)
+	_ = staking.EndBlocker(ctx, *app.StakingKeeper)
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
@@ -324,7 +324,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleOverride(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
@@ -340,7 +340,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val2, true)
 	require.NoError(t, err)
 
-	_ = staking.EndBlocker(ctx, app.StakingKeeper)
+	_ = staking.EndBlocker(ctx, *app.StakingKeeper)
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
@@ -364,7 +364,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleInherit(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	createValidators(t, ctx, app, []int64{25, 6, 7})
@@ -382,7 +382,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val3, true)
 	require.NoError(t, err)
 
-	_ = staking.EndBlocker(ctx, app.StakingKeeper)
+	_ = staking.EndBlocker(ctx, *app.StakingKeeper)
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)
@@ -405,7 +405,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 }
 
 func TestTallyJailedValidator(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrs, valAddrs := createValidators(t, ctx, app, []int64{25, 6, 7})
@@ -421,7 +421,7 @@ func TestTallyJailedValidator(t *testing.T) {
 	_, err = app.StakingKeeper.Delegate(ctx, addrs[3], delTokens, stakingtypes.Unbonded, val3, true)
 	require.NoError(t, err)
 
-	_ = staking.EndBlocker(ctx, app.StakingKeeper)
+	_ = staking.EndBlocker(ctx, *app.StakingKeeper)
 
 	consAddr, err := val2.GetConsAddr()
 	require.NoError(t, err)
@@ -448,7 +448,7 @@ func TestTallyJailedValidator(t *testing.T) {
 }
 
 func TestTallyValidatorMultipleDelegations(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrs, valAddrs := createValidators(t, ctx, app, []int64{10, 10, 10})
@@ -490,7 +490,7 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 // proposal is expedited, proposal passes when quorum is greater than expedited
 // quorum = 1.000000000000000000 regular_quorum = 0.334000000000000000 expedited_quorum = 0.667000000000000000
 func TestTallyExpeditedQuorum1(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addrs, _ := createValidators(t, ctx, app, []int64{10, 10, 10})
@@ -512,7 +512,7 @@ func TestTallyExpeditedQuorum1(t *testing.T) {
 // proposal is expedited, proposal fails when quorum is lower than expedited quorum but higher than regular quorum
 // quorum = 0.600000000000000000 regular_quorum = 0.334000000000000000 expedited_quorum = 0.667000000000000000
 func TestTallyExpeditedQuorum2(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	proposalID := SetupProposal(t, ctx, app, true)
 
@@ -542,7 +542,7 @@ func TestTallyExpeditedQuorum2(t *testing.T) {
 // proposal is expeditd, proposals fails when quorum is lower than regular quorum
 // quorum = 0.166666666666666667 regular_quorum = 0.334000000000000000 expedited_quorum = 0.667000000000000000
 func TestTallyExpeditedQuorum3(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	proposalID := SetupProposal(t, ctx, app, true)
 
@@ -571,7 +571,7 @@ func TestTallyExpeditedQuorum3(t *testing.T) {
 // proposal is regular, proposal passes when quorum is greater than regular quorum but lower than expedited quorum
 // quorum = 0.600000000000000000 regular_quorum = 0.334000000000000000 expedited_quorum = 0.667000000000000000
 func TestTallyExpeditedQuorum4(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs, valAddrs := createValidators(t, ctx, app, []int64{10, 10, 10})
 	proposalID := SetupProposal(t, ctx, app, false)

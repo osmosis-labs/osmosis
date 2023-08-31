@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/simulation"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/types"
 )
@@ -23,7 +23,7 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Marshaler
+	cdc := osmoapp.MakeEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
 	endTime := time.Now().UTC()

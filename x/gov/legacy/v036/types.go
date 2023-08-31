@@ -132,5 +132,5 @@ func ValidateAbstract(c Content) error {
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*Content)(nil), nil)
-	cdc.RegisterConcrete(TextProposal{}, "cosmos-sdk/TextProposal", nil)
+	cdc.RegisterConcrete(TextProposal{}, "osmosis/TextProposal", nil)
 }

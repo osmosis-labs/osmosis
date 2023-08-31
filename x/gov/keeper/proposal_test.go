@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -184,10 +182,7 @@ func (suite *KeeperTestSuite) TestGetVotingPeriod() {
 	)
 
 	votingParams := suite.app.GovKeeper.GetVotingParams(suite.ctx)
-	votingParams.ProposalVotingPeriods = append(votingParams.ProposalVotingPeriods, types.ProposalVotingPeriod{
-		ProposalType: proto.MessageName(&paramproposal.ParameterChangeProposal{}),
-		VotingPeriod: time.Hour,
-	})
+	votingParams.VotingPeriod = time.Hour
 	suite.app.GovKeeper.SetVotingParams(suite.ctx, votingParams)
 
 	// require a non-registered proposal type returns the base voting period

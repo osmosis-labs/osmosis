@@ -6,9 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,14 +14,15 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/gov"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/types"
 )
 
 func TestImportExportQueues(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	addrs := simapp.AddTestAddrs(app, ctx, 2, valTokens)
+	addrs := osmoapp.AddTestAddrs(app, ctx, 2, valTokens)
 
 	SortAddresses(addrs)
 
@@ -53,12 +52,12 @@ func TestImportExportQueues(t *testing.T) {
 	require.True(t, proposal1.Status == types.StatusDepositPeriod)
 	require.True(t, proposal2.Status == types.StatusVotingPeriod)
 
-	authGenState := auth.ExportGenesis(ctx, app.AccountKeeper)
+	authGenState := auth.ExportGenesis(ctx, *app.AccountKeeper)
 	bankGenState := app.BankKeeper.ExportGenesis(ctx)
 
 	// export the state and import it into a new app
-	govGenState := gov.ExportGenesis(ctx, app.GovKeeper)
-	genesisState := simapp.NewDefaultGenesisState(app.AppCodec())
+	govGenState := gov.ExportGenesis(ctx, *app.GovKeeper)
+	genesisState := osmoapp.ModuleBasics.DefaultGenesis(app.AppCodec())
 
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenState)
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenState)
@@ -69,8 +68,7 @@ func TestImportExportQueues(t *testing.T) {
 		panic(err)
 	}
 
-	db := dbm.NewMemDB()
-	app2 := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, simapp.DefaultNodeHome, 0, simapp.MakeTestEncodingConfig(), simapp.EmptyAppOptions{})
+	app2 := osmoapp.Setup(false)
 
 	app2.InitChain(
 		abci.RequestInitChain{
@@ -103,7 +101,7 @@ func TestImportExportQueues(t *testing.T) {
 	require.Equal(t, app2.GovKeeper.GetDepositParams(ctx2).MinDeposit, app2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
 
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
-	gov.EndBlocker(ctx2, app2.GovKeeper)
+	gov.EndBlocker(ctx2, *app2.GovKeeper)
 
 	proposal1, ok = app2.GovKeeper.GetProposal(ctx2, proposalID1)
 	require.False(t, ok)
@@ -114,10 +112,10 @@ func TestImportExportQueues(t *testing.T) {
 }
 
 func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	require.Panics(t, func() {
-		gov.InitGenesis(ctx, app.AccountKeeper, app.BankKeeper, app.GovKeeper, &types.GenesisState{
+		gov.InitGenesis(ctx, app.AccountKeeper, app.BankKeeper, *app.GovKeeper, &types.GenesisState{
 			Deposits: types.Deposits{
 				{
 					ProposalId: 1234,
@@ -135,9 +133,9 @@ func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 }
 
 func TestEqualProposals(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	addrs := simapp.AddTestAddrs(app, ctx, 2, valTokens)
+	addrs := osmoapp.AddTestAddrs(app, ctx, 2, valTokens)
 
 	SortAddresses(addrs)
 

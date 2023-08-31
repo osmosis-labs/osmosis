@@ -9,23 +9,24 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 
+	"github.com/osmosis-labs/osmosis/v19/app"
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/gov"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/types"
 )
 
 func TestTickExpiredDepositPeriod(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
+	addrs := osmoapp.AddTestAddrs(app, ctx, 10, valTokens)
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	govHandler := gov.NewHandler(app.GovKeeper)
+	govHandler := gov.NewHandler(*app.GovKeeper)
 
 	inactiveQueue := app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -62,7 +63,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.True(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	gov.EndBlocker(ctx, app.GovKeeper)
+	gov.EndBlocker(ctx, *app.GovKeeper)
 
 	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -70,14 +71,14 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
+	addrs := osmoapp.AddTestAddrs(app, ctx, 10, valTokens)
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	govHandler := gov.NewHandler(app.GovKeeper)
+	govHandler := gov.NewHandler(*app.GovKeeper)
 
 	inactiveQueue := app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -125,7 +126,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.True(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	gov.EndBlocker(ctx, app.GovKeeper)
+	gov.EndBlocker(ctx, *app.GovKeeper)
 
 	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -139,7 +140,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.True(t, inactiveQueue.Valid())
 	inactiveQueue.Close()
 
-	gov.EndBlocker(ctx, app.GovKeeper)
+	gov.EndBlocker(ctx, *app.GovKeeper)
 
 	inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -147,14 +148,14 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 }
 
 func TestTickPassedDepositPeriod(t *testing.T) {
-	app := simapp.Setup(false)
+	app := app.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
+	addrs := osmoapp.AddTestAddrs(app, ctx, 10, valTokens)
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	govHandler := gov.NewHandler(app.GovKeeper)
+	govHandler := gov.NewHandler(*app.GovKeeper)
 
 	inactiveQueue := app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.False(t, inactiveQueue.Valid())
@@ -223,16 +224,16 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 			depositMultiplier := getDepositMultiplier(tc.isExpedited)
 
-			app := simapp.Setup(false)
+			app := app.Setup(false)
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-			addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
+			addrs := osmoapp.AddTestAddrs(app, ctx, 10, valTokens)
 
 			SortAddresses(addrs)
 
 			header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 			app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-			govHandler := gov.NewHandler(app.GovKeeper)
+			govHandler := gov.NewHandler(*app.GovKeeper)
 
 			inactiveQueue := app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.False(t, inactiveQueue.Valid())
@@ -289,7 +290,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 			activeQueue.Close()
 
-			gov.EndBlocker(ctx, app.GovKeeper)
+			gov.EndBlocker(ctx, *app.GovKeeper)
 
 			activeQueue = app.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 
@@ -336,14 +337,14 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 			depositMultiplier := getDepositMultiplier(tc.isExpedited)
 
-			app := simapp.Setup(false)
+			app := app.Setup(false)
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-			addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens.Mul(sdk.NewInt(depositMultiplier)))
+			addrs := osmoapp.AddTestAddrs(app, ctx, 10, valTokens.Mul(sdk.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
 
-			handler := gov.NewHandler(app.GovKeeper)
-			stakingHandler := staking.NewHandler(app.StakingKeeper)
+			handler := gov.NewHandler(*app.GovKeeper)
+			stakingHandler := staking.NewHandler(*app.StakingKeeper)
 
 			header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 			app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -351,7 +352,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			valAddr := sdk.ValAddress(addrs[0])
 
 			createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-			staking.EndBlocker(ctx, app.StakingKeeper)
+			staking.EndBlocker(ctx, *app.StakingKeeper)
 
 			macc := app.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)
@@ -379,7 +380,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			newHeader.Time = ctx.BlockHeader().Time.Add(app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod).Add(app.GovKeeper.GetVotingParams(ctx).VotingPeriod)
 			ctx = ctx.WithBlockHeader(newHeader)
 
-			gov.EndBlocker(ctx, app.GovKeeper)
+			gov.EndBlocker(ctx, *app.GovKeeper)
 
 			macc = app.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)
@@ -418,9 +419,9 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 
 			depositMultiplier := getDepositMultiplier(true)
 
-			app := simapp.Setup(false)
+			app := app.Setup(false)
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-			addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens.Mul(sdk.NewInt(depositMultiplier)))
+			addrs := osmoapp.AddTestAddrs(app, ctx, 10, valTokens.Mul(sdk.NewInt(depositMultiplier)))
 
 			SortAddresses(addrs)
 
@@ -429,12 +430,12 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 
 			valAddr := sdk.ValAddress(addrs[0])
 
-			stakingHandler := staking.NewHandler(app.StakingKeeper)
-			govHandler := gov.NewHandler(app.GovKeeper)
+			stakingHandler := staking.NewHandler(*app.StakingKeeper)
+			govHandler := gov.NewHandler(*app.GovKeeper)
 
 			// Create a validator so that able to vote on proposal.
 			createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-			staking.EndBlocker(ctx, app.StakingKeeper)
+			staking.EndBlocker(ctx, *app.StakingKeeper)
 
 			inactiveQueue := app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 			require.False(t, inactiveQueue.Valid())
@@ -501,7 +502,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			}
 
 			// Here the expedited proposal is converted to regular after expiry.
-			gov.EndBlocker(ctx, app.GovKeeper)
+			gov.EndBlocker(ctx, *app.GovKeeper)
 
 			activeQueue = app.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 
@@ -566,7 +567,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			}
 
 			// Here we validate the converted regular proposal
-			gov.EndBlocker(ctx, app.GovKeeper)
+			gov.EndBlocker(ctx, *app.GovKeeper)
 
 			macc = app.GovKeeper.GetGovernanceAccount(ctx)
 			require.NotNil(t, macc)
@@ -602,20 +603,20 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
-	app := simapp.Setup(false)
+	app := app.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	addrs := simapp.AddTestAddrs(app, ctx, 1, valTokens)
+	addrs := osmoapp.AddTestAddrs(app, ctx, 1, valTokens)
 
 	SortAddresses(addrs)
 
-	stakingHandler := staking.NewHandler(app.StakingKeeper)
+	stakingHandler := staking.NewHandler(*app.StakingKeeper)
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	valAddr := sdk.ValAddress(addrs[0])
 
 	createValidators(t, stakingHandler, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-	staking.EndBlocker(ctx, app.StakingKeeper)
+	staking.EndBlocker(ctx, *app.StakingKeeper)
 
 	// Create a proposal where the handler will pass for the test proposal
 	// because the value of contextKeyBadProposal is true.
@@ -626,7 +627,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10)))
 	newDepositMsg := types.NewMsgDeposit(addrs[0], proposal.ProposalId, proposalCoins)
 
-	handleAndCheck(t, gov.NewHandler(app.GovKeeper), ctx, newDepositMsg)
+	handleAndCheck(t, gov.NewHandler(*app.GovKeeper), ctx, newDepositMsg)
 
 	err = app.GovKeeper.AddVote(ctx, proposal.ProposalId, addrs[0], types.NewNonSplitVoteOption(types.OptionYes))
 	require.NoError(t, err)
@@ -640,7 +641,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	ctx = ctx.WithValue(contextKeyBadProposal, false)
 
 	// validate that the proposal fails/has been rejected
-	gov.EndBlocker(ctx, app.GovKeeper)
+	gov.EndBlocker(ctx, *app.GovKeeper)
 }
 
 // With expedited proposal's minimum deposit set higher than the default deposit, we must

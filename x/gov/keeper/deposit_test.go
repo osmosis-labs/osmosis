@@ -7,9 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v19/app"
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/types"
 )
 
@@ -31,7 +32,7 @@ func TestDeposits(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		app := simapp.Setup(false)
+		app := osmoapp.Setup(false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 		// With expedited proposals the minimum deposit is higer, so we must
@@ -42,7 +43,7 @@ func TestDeposits(t *testing.T) {
 			depositMultiplier = types.DefaultMinExpeditedDepositTokens.Quo(types.DefaultMinDepositTokens).Int64()
 		}
 
-		TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000000*depositMultiplier))
+		TestAddrs := osmoapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000000*depositMultiplier))
 
 		tp := TestProposal
 		proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, tc.isExpedited)
@@ -214,10 +215,10 @@ func TestValidateInitialDeposit(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			app := simapp.Setup(false)
-			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+			osmosisApp := app.Setup(false)
+			ctx := osmosisApp.BaseApp.NewContext(false, tmproto.Header{})
 
-			govKeeper := app.GovKeeper
+			govKeeper := osmosisApp.GovKeeper
 
 			params := types.DefaultDepositParams()
 			params.MinDeposit = tc.minDeposit

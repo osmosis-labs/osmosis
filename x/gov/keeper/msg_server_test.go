@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/types"
 )
@@ -59,17 +60,17 @@ func TestSubmitProposal_InitialDeposit(t *testing.T) {
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			app := simapp.Setup(false)
+			app := osmoapp.Setup(false)
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 			govKeeper := app.GovKeeper
-			msgServer := keeper.NewMsgServerImpl(govKeeper)
+			msgServer := keeper.NewMsgServerImpl(*govKeeper)
 
 			params := types.DefaultDepositParams()
 			params.MinDeposit = tc.minDeposit
 			params.MinInitialDepositRatio = tc.minInitialDepositRatio
 			govKeeper.SetDepositParams(ctx, params)
 
-			address := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(0))[0]
+			address := osmoapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(0))[0]
 			simapp.FundAccount(app.BankKeeper, ctx, address, tc.accountBalance)
 
 			msg, err := types.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address)

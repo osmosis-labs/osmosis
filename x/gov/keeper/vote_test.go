@@ -6,17 +6,17 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/types"
 )
 
 func TestVotes(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(30000000))
+	addrs := osmoapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(30000000))
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, false)

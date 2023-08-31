@@ -7,25 +7,25 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"
 	v036params "github.com/cosmos/cosmos-sdk/x/params/legacy/v036"
 	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/legacy/v038"
 
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
 	v036gov "github.com/osmosis-labs/osmosis/v19/x/gov/legacy/v036"
 	v040gov "github.com/osmosis-labs/osmosis/v19/x/gov/legacy/v040"
 )
 
 func TestMigrate(t *testing.T) {
-	encodingConfig := simapp.MakeTestEncodingConfig()
+	encodingConfig := osmoapp.MakeEncodingConfig()
 	clientCtx := client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
 		WithJSONCodec(encodingConfig.Marshaler)
 
-	recipient, err := sdk.AccAddressFromBech32("cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh")
+	recipient, err := sdk.AccAddressFromBech32("osmo1xgxjcz6jknxx3pkpq0mdgewn2c2n2vnaqff3yn")
 	require.NoError(t, err)
 	govGenState := v036gov.GenesisState{
 		Proposals: []v036gov.Proposal{
@@ -135,7 +135,7 @@ func TestMigrate(t *testing.T) {
 					}
 				],
 				"description": "bar_community",
-				"recipient": "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh",
+				"recipient": "osmo1xgxjcz6jknxx3pkpq0mdgewn2c2n2vnaqff3yn",
 				"title": "foo_community"
 			},
 			"deposit_end_time": "0001-01-01T00:00:00Z",

@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/gov"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/types"
@@ -45,16 +45,16 @@ func (h *MockGovHooksReceiver) AfterProposalVotingPeriodEnded(ctx sdk.Context, p
 }
 
 func TestHooks(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	minDeposit := app.GovKeeper.GetDepositParams(ctx).MinDeposit
-	addrs := simapp.AddTestAddrs(app, ctx, 1, minDeposit[0].Amount)
+	addrs := osmoapp.AddTestAddrs(app, ctx, 1, minDeposit[0].Amount)
 
 	govHooksReceiver := MockGovHooksReceiver{}
 
 	keeper.UnsafeSetHooks(
-		&app.GovKeeper, types.NewMultiGovHooks(&govHooksReceiver),
+		app.GovKeeper, types.NewMultiGovHooks(&govHooksReceiver),
 	)
 
 	require.False(t, govHooksReceiver.AfterProposalSubmissionValid)
@@ -71,7 +71,7 @@ func TestHooks(t *testing.T) {
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod).Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
-	gov.EndBlocker(ctx, app.GovKeeper)
+	gov.EndBlocker(ctx, *app.GovKeeper)
 
 	require.True(t, govHooksReceiver.AfterProposalFailedMinDepositValid)
 
@@ -90,6 +90,6 @@ func TestHooks(t *testing.T) {
 	newHeader = ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(app.GovKeeper.GetVotingParams(ctx).VotingPeriod).Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
-	gov.EndBlocker(ctx, app.GovKeeper)
+	gov.EndBlocker(ctx, *app.GovKeeper)
 	require.True(t, govHooksReceiver.AfterProposalVotingPeriodEndedValid)
 }

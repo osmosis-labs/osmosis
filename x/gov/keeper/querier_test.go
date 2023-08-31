@@ -11,9 +11,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/types"
 )
@@ -146,12 +146,12 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, quer
 }
 
 func TestQueries(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	legacyQuerierCdc := app.LegacyAmino()
-	querier := keeper.NewQuerier(app.GovKeeper, legacyQuerierCdc)
+	querier := keeper.NewQuerier(*app.GovKeeper, legacyQuerierCdc)
 
-	TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(20000001))
+	TestAddrs := osmoapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(20000001))
 
 	oneCoins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1))
 	consCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10)))
@@ -305,7 +305,7 @@ func TestQueries(t *testing.T) {
 }
 
 func TestPaginatedVotesQuery(t *testing.T) {
-	app := simapp.Setup(false)
+	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	legacyQuerierCdc := app.LegacyAmino()
 
@@ -340,7 +340,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 		app.GovKeeper.SetVote(ctx, vote)
 	}
 
-	querier := keeper.NewQuerier(app.GovKeeper, legacyQuerierCdc)
+	querier := keeper.NewQuerier(*app.GovKeeper, legacyQuerierCdc)
 
 	// keeper preserves consistent order for each query, but this is not the insertion order
 	all := getQueriedVotes(t, ctx, legacyQuerierCdc, querier, proposal.ProposalId, 1, 0)

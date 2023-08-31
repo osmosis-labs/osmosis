@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/types"
 )
 
@@ -350,7 +350,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
 
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+	addrs := osmoapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 
 	var (
 		req      *types.QueryVotesRequest

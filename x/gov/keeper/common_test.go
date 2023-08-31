@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/gov/types"
 )
 
@@ -18,20 +18,20 @@ var (
 	TestProposal = types.NewTextProposal("Test", "description")
 )
 
-func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(30000000))
-	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
-	pks := simapp.CreateTestPubKeys(5)
-	cdc := simapp.MakeTestEncodingConfig().Marshaler
+func createValidators(t *testing.T, ctx sdk.Context, app *osmoapp.OsmosisApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+	addrs := osmoapp.AddTestAddrsIncremental(app, ctx, 5, sdk.NewInt(30000000))
+	valAddrs := osmoapp.ConvertAddrsToValAddrs(addrs)
+	pks := osmoapp.CreateTestPubKeys(5)
+	cdc := osmoapp.MakeEncodingConfig().Marshaler
 
-	app.StakingKeeper = stakingkeeper.NewKeeper(
+	sk := stakingkeeper.NewKeeper(
 		cdc,
 		app.GetKey(stakingtypes.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.GetSubspace(stakingtypes.ModuleName),
 	)
-
+	app.StakingKeeper = &sk
 	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})
 	require.NoError(t, err)
 	val2, err := stakingtypes.NewValidator(valAddrs[1], pks[1], stakingtypes.Description{})
@@ -53,7 +53,7 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 	_, _ = app.StakingKeeper.Delegate(ctx, addrs[1], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[1]), stakingtypes.Unbonded, val2, true)
 	_, _ = app.StakingKeeper.Delegate(ctx, addrs[2], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[2]), stakingtypes.Unbonded, val3, true)
 
-	_ = staking.EndBlocker(ctx, app.StakingKeeper)
+	_ = staking.EndBlocker(ctx, *app.StakingKeeper)
 
 	return addrs, valAddrs
 }
