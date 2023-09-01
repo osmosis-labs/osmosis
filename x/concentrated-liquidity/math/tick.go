@@ -157,7 +157,6 @@ func powTenBigDec(exponent int64) osmomath.BigDec {
 	return bigNegPowersOfTen[-exponent]
 }
 
-
 // CalculatePriceToTick calculates tickIndex from price. Contrary to CalculatePriceToTickV1,
 // it uses BigDec in internal calculations
 func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {

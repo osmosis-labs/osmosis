@@ -164,7 +164,6 @@ func (k Keeper) CalculateSpotPrice(
 	}
 
 	if price.IsZero() {
-
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromSDKDec(price), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
