@@ -210,7 +210,7 @@ func (k Keeper) pruneRecords(ctx sdk.Context) error {
 // pre-condition: newTime >= record.Time
 func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {
 	// return the given record: no need to calculate and update the accumulator if record time matches.
-	if record.Time.Equal(newTime) {
+	if types.CanonicalTimeMs(record.Time) == types.CanonicalTimeMs(newTime) {
 		return record
 	}
 	newRecord := record
@@ -286,9 +286,9 @@ func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 		startRecord.LastErrorTime.Equal(startRecord.Time) {
 		err = errors.New("twap: error in pool spot price occurred between start and end time, twap result may be faulty")
 	}
-	timeDelta := endRecord.Time.Sub(startRecord.Time)
+	timeDelta := types.CanonicalTimeMs(endRecord.Time) - types.CanonicalTimeMs(startRecord.Time)
 	// if time difference is 0, then return the last spot price based off of start.
-	if timeDelta == time.Duration(0) {
+	if timeDelta == 0 {
 		if quoteAsset == startRecord.Asset0Denom {
 			return endRecord.P0LastSpotPrice, err
 		}
