@@ -1078,11 +1078,14 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	)
 }
 
+// Note: do not use chain B in this test as it has taker fee set.
+// This TWAP test depends on specific values that might be affected
+// by the taker fee.
 func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() {
-	chainAB, chainABNode, err := s.getChainCfgs()
+	chainA, chainANode, err := s.getChainACfgs()
 	s.Require().NoError(err)
 
-	poolId, err := chainAB.SubmitCreateConcentratedPoolProposal(chainABNode)
+	poolId, err := chainA.SubmitCreateConcentratedPoolProposal(chainANode)
 	s.NoError(err)
 	fmt.Println("poolId", poolId)
 
@@ -1096,7 +1099,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	var concentratedPool cltypes.ConcentratedPoolExtension
 	s.Eventually(
 		func() bool {
-			concentratedPool = s.updatedConcentratedPool(chainABNode, poolId)
+			concentratedPool = s.updatedConcentratedPool(chainANode, poolId)
 			s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 			s.Require().Equal(expectedDenom0, concentratedPool.GetToken0())
 			s.Require().Equal(expectedDenom1, concentratedPool.GetToken1())
@@ -1113,45 +1116,45 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	fundTokens := []string{"100000000stake", "100000000uosmo"}
 
 	// Get address to create positions
-	address1 := chainABNode.CreateWalletAndFund("address1", fundTokens, chainAB)
+	address1 := chainANode.CreateWalletAndFund("address1", fundTokens, chainA)
 
 	// We add 5 ms to avoid landing directly on block time in twap. If block time
 	// is provided as start time, the latest spot price is used. Otherwise
 	// interpolation is done.
-	timeBeforePositionCreationBeforeSwap := chainABNode.QueryLatestBlockTime().Add(5 * time.Millisecond)
+	timeBeforePositionCreationBeforeSwap := chainANode.QueryLatestBlockTime().Add(5 * time.Millisecond)
 	s.T().Log("geometric twap, start time ", timeBeforePositionCreationBeforeSwap.Unix())
 
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforePositionCreationBeforeSwap) is not equal to the block time.
-	chainAB.WaitForNumHeights(1)
+	chainA.WaitForNumHeights(1)
 
 	// Check initial TWAP
 	// We expect this to error since there is no spot price yet.
 	s.T().Log("initial twap check")
-	initialTwapBOverA, err := chainABNode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeBeforePositionCreationBeforeSwap)
+	initialTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeBeforePositionCreationBeforeSwap)
 	s.Require().Error(err)
 	s.Require().Equal(osmomath.Dec{}, initialTwapBOverA)
 
 	// Create a position and check that TWAP now returns a value.
 	s.T().Log("creating first position")
-	chainABNode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,20000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
-	timeAfterPositionCreationBeforeSwap := chainABNode.QueryLatestBlockTime()
-	chainAB.WaitForNumHeights(2)
-	firstPositionTwapBOverA, err := chainABNode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterPositionCreationBeforeSwap)
+	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,20000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
+	timeAfterPositionCreationBeforeSwap := chainANode.QueryLatestBlockTime()
+	chainA.WaitForNumHeights(2)
+	firstPositionTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterPositionCreationBeforeSwap)
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.MustNewDecFromStr("0.5"), firstPositionTwapBOverA)
 
 	// Run a swap and check that the TWAP updates.
 	s.T().Log("run swap")
 	coinAIn := fmt.Sprintf("1000000%s", concentratedPool.GetToken0())
-	chainABNode.SwapExactAmountIn(coinAIn, "1", fmt.Sprintf("%d", concentratedPool.GetId()), concentratedPool.GetToken1(), address1)
+	chainANode.SwapExactAmountIn(coinAIn, "1", fmt.Sprintf("%d", concentratedPool.GetId()), concentratedPool.GetToken1(), address1)
 
-	timeAfterSwap := chainABNode.QueryLatestBlockTime()
-	chainAB.WaitForNumHeights(1)
-	timeAfterSwapPlus1Height := chainABNode.QueryLatestBlockTime()
+	timeAfterSwap := chainANode.QueryLatestBlockTime()
+	chainA.WaitForNumHeights(1)
+	timeAfterSwapPlus1Height := chainANode.QueryLatestBlockTime()
 
 	s.T().Log("querying for the TWAP after swap")
-	afterSwapTwapBOverA, err := chainABNode.QueryGeometricTwap(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwap, timeAfterSwapPlus1Height)
+	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwap, timeAfterSwapPlus1Height)
 	s.Require().NoError(err)
 
 	// We swap stake so uosmo's supply will decrease and stake will increase.
@@ -1160,22 +1163,22 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 
 	// Remove the position and check that TWAP returns an error.
 	s.T().Log("removing first position (pool is drained)")
-	positions := chainABNode.QueryConcentratedPositions(address1)
-	chainABNode.WithdrawPosition(address1, positions[0].Position.Liquidity.String(), positions[0].Position.PositionId)
-	chainAB.WaitForNumHeights(1)
+	positions := chainANode.QueryConcentratedPositions(address1)
+	chainANode.WithdrawPosition(address1, positions[0].Position.Liquidity.String(), positions[0].Position.PositionId)
+	chainA.WaitForNumHeights(1)
 
 	s.T().Log("querying for the TWAP from after pool drained")
-	afterRemoveTwapBOverA, err := chainABNode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapPlus1Height)
+	afterRemoveTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapPlus1Height)
 	s.Require().Error(err)
 	s.Require().Equal(osmomath.Dec{}, afterRemoveTwapBOverA)
 
 	// Create a position and check that TWAP now returns a value.
 	// Should be equal to 1 since the position contains equal amounts of both tokens.
 	s.T().Log("creating position")
-	chainABNode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
-	chainAB.WaitForNumHeights(1)
-	timeAfterSwapRemoveAndCreatePlus1Height := chainABNode.QueryLatestBlockTime()
-	secondTwapBOverA, err := chainABNode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapRemoveAndCreatePlus1Height)
+	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
+	chainA.WaitForNumHeights(1)
+	timeAfterSwapRemoveAndCreatePlus1Height := chainANode.QueryLatestBlockTime()
+	secondTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapRemoveAndCreatePlus1Height)
 	s.Require().NoError(err)
 	s.Require().Equal(osmomath.NewDec(1), secondTwapBOverA)
 }
@@ -1740,6 +1743,9 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 // Assuming base asset is uosmo, the initial twap is 2
 // Upon swapping 1_000_000 uosmo for stake, supply changes, making uosmo less expensive.
 // As a result of the swap, twap changes to 0.5.
+// Note: do not use chain B in this test as it has taker fee set.
+// This TWAP test depends on specific values that might be affected
+// by the taker fee.
 func (s *IntegrationTestSuite) GeometricTWAP() {
 	const (
 		// This pool contains 1_000_000 uosmo and 2_000_000 stake.
