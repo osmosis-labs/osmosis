@@ -2,6 +2,7 @@ package types
 
 // List of registered authenticators
 var registeredAuthenticators []Authenticator
+var defaultAuhenticatorIndex int = -1
 
 func ResetAuthenticators() {
 	registeredAuthenticators = []Authenticator{}
@@ -49,4 +50,19 @@ func (a AccountAuthenticator) AsAuthenticator() Authenticator {
 		}
 	}
 	return nil
+}
+
+func SetDefaultAuthenticatorIndex(index int) {
+	defaultAuhenticatorIndex = index
+	if defaultAuhenticatorIndex < 0 || defaultAuhenticatorIndex >= len(registeredAuthenticators) {
+		panic("Invalid default authenticator index")
+	}
+}
+
+func GetDefaultAuthenticator() Authenticator {
+	if defaultAuhenticatorIndex < 0 {
+		// ToDo: Instead of panicing maybe return a FalseAuthenticator that never authenticates?
+		panic("Default authenticator not set")
+	}
+	return registeredAuthenticators[defaultAuhenticatorIndex]
 }

@@ -125,6 +125,8 @@ func (c SigVerificationAuthenticator) Authenticate(
 	if !ok {
 		return false, nil //ToDo: add error
 	}
+
+	// TODO: modify this to validate the signature of a specific message
 	for i, sig := range verificationData.Signatures {
 		acc, err := authante.GetSignerAcc(ctx, c.ak, verificationData.Signers[i])
 		if err != nil {

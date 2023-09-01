@@ -18,6 +18,7 @@ import (
 	txfeestypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 
 	authante "github.com/osmosis-labs/osmosis/v19/x/authenticator/ante"
+	authenticators "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 )
 
 // Link to default ante handler used by cosmos sdk:
@@ -26,7 +27,8 @@ func NewAnteHandler(
 	appOpts servertypes.AppOptions,
 	wasmConfig wasm.Config,
 	txCounterStoreKey sdk.StoreKey,
-	ak ante.AccountKeeper,
+	accountKeeper ante.AccountKeeper,
+	authenticatorKeeper *authenticators.Keeper,
 	bankKeeper txfeestypes.BankKeeper,
 	txFeesKeeper *txfeeskeeper.Keeper,
 	spotPriceCalculator txfeestypes.SpotPriceCalculator,
@@ -38,7 +40,7 @@ func NewAnteHandler(
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
 	sendblockOptions := osmoante.NewSendBlockOptions(appOpts)
 	sendblockDecorator := osmoante.NewSendBlockDecorator(sendblockOptions)
-	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*txFeesKeeper, ak, bankKeeper, nil)
+	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*txFeesKeeper, accountKeeper, bankKeeper, nil)
 	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(wasmConfig.SimulationGasLimit),
@@ -51,15 +53,14 @@ func NewAnteHandler(
 		sendblockDecorator,
 		ante.NewValidateBasicDecorator(),
 		ante.TxTimeoutHeightDecorator{},
-		ante.NewValidateMemoDecorator(ak),
-		ante.NewConsumeGasForTxSizeDecorator(ak),
+		ante.NewValidateMemoDecorator(accountKeeper),
+		ante.NewConsumeGasForTxSizeDecorator(accountKeeper),
 		deductFeeDecorator,
-		ante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
-		ante.NewValidateSigCountDecorator(ak),
-		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
-		//ante.NewSigVerificationDecorator(ak, signModeHandler),
-		authante.NewAuthenticatorDecorator(ak, signModeHandler),
-		ante.NewIncrementSequenceDecorator(ak),
+		ante.NewSetPubKeyDecorator(accountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
+		ante.NewValidateSigCountDecorator(accountKeeper),
+		ante.NewSigGasConsumeDecorator(accountKeeper, sigGasConsumer),
+		authante.NewAuthenticatorDecorator(accountKeeper, authenticatorKeeper, signModeHandler),
+		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewAnteDecorator(channelKeeper),
 	)
 }
