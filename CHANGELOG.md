@@ -45,6 +45,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### API Breaks
 
 * [#6256](https://github.com/osmosis-labs/osmosis/pull/6256) Refactor CalcPriceToTick to operate on BigDec price to support new price range.
+### State Breaking
+
+### Bug Fixes
+
+### Misc Improvements
+* [#6267](https://github.com/osmosis-labs/osmosis/pull/6267) codeql: add codeql query to look for usages of native go's binary operators between sdk/osmo numerical types (ex: sdk.Dec == sdk.Dec)
+
+### Minor improvements & Bug Fixes
+
+### Security
 
 ## v19.0.0
 
