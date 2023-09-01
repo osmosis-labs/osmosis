@@ -25,7 +25,7 @@ type preparePoolConfig struct {
 	coin0        sdk.Coin
 	coin1        sdk.Coin
 	tickSpacing  uint64
-	spreadFactor sdk.Dec
+	spreadFactor osmomath.Dec
 }
 
 // preparePositionConfig defines the parameters for creating a new position

@@ -1097,7 +1097,7 @@ func (s *KeeperTestSuite) CreateNoLockExternalGauges(clPoolId uint64, externalGa
 }
 
 func (s *KeeperTestSuite) IncentivizeInternalGauge(poolIds []uint64, epochDuration time.Duration, removeDistrRecord bool) {
-	var weight sdk.Int
+	var weight osmomath.Int
 	if !removeDistrRecord {
 		weight = osmomath.NewInt(100)
 	} else {

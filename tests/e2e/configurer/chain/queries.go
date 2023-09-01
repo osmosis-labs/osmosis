@@ -35,10 +35,10 @@ import (
 
 // PropTallyResult is the result of a proposal tally.
 type PropTallyResult struct {
-	Yes        sdk.Int
-	No         sdk.Int
-	Abstain    sdk.Int
-	NoWithVeto sdk.Int
+	Yes        osmomath.Int
+	No         osmomath.Int
+	Abstain    osmomath.Int
+	NoWithVeto osmomath.Int
 }
 
 // QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.

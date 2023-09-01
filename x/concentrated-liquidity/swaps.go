@@ -64,9 +64,9 @@ type SwapState struct {
 // SwapResult represents the result from computing
 // the swap state.
 type SwapResult struct {
-	AmountIn      sdk.Int
-	AmountOut     sdk.Int
-	SpreadRewards sdk.Dec
+	AmountIn      osmomath.Int
+	AmountOut     osmomath.Int
+	SpreadRewards osmomath.Dec
 }
 
 // swapNoProgressLimit is the maximum number of iterations that can be performed
