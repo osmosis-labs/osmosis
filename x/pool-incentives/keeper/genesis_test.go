@@ -4,12 +4,16 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+<<<<<<< HEAD
 	pool_incentives "github.com/osmosis-labs/osmosis/v18/x/pool-incentives"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	pool_incentives "github.com/osmosis-labs/osmosis/v19/x/pool-incentives"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 
 	simapp "github.com/osmosis-labs/osmosis/v18/app"
 
@@ -28,11 +32,11 @@ var (
 			time.Hour,
 		},
 		DistrInfo: &types.DistrInfo{
-			TotalWeight: sdk.NewInt(1),
+			TotalWeight: osmomath.NewInt(1),
 			Records: []types.DistrRecord{
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(1),
+					Weight:  osmomath.NewInt(1),
 				},
 			},
 		},

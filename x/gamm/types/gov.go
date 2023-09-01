@@ -7,7 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+<<<<<<< HEAD
 	gammmigration "github.com/osmosis-labs/osmosis/v18/x/gamm/types/migration"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 const (
@@ -192,7 +197,7 @@ func (p *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) ValidateBasic() 
 		}
 
 		spreadFactor := record.SpreadFactor
-		if spreadFactor.IsNegative() || spreadFactor.GTE(sdk.OneDec()) {
+		if spreadFactor.IsNegative() || spreadFactor.GTE(osmomath.OneDec()) {
 			return fmt.Errorf("Invalid Spread factor")
 		}
 

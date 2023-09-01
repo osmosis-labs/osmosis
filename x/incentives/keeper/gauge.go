@@ -16,9 +16,16 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v18/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -358,7 +365,7 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 // gaugeCoins might not have a coin of tx base denom. In that case, fee is only compared to balance.
 // The fee is sent to the community pool.
 // Returns nil on success, error otherwise.
-func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) (err error) {
+func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee osmomath.Int, gaugeCoins sdk.Coins) (err error) {
 	feeDenom, err := k.tk.GetBaseDenom(ctx)
 	if err != nil {
 		return err

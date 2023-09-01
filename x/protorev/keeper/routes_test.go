@@ -1,10 +1,16 @@
 package keeper_test
 
 import (
+<<<<<<< HEAD
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v18/x/protorev/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 type TestRoute struct {
@@ -203,7 +209,7 @@ func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 
 			baseDenom := types.BaseDenom{
 				Denom:    tc.swapDenom,
-				StepSize: sdk.NewInt(1_000_000),
+				StepSize: osmomath.NewInt(1_000_000),
 			}
 			routeMetaData, err := s.App.ProtoRevKeeper.BuildHighestLiquidityRoute(s.Ctx, baseDenom, tc.swapIn, tc.swapOut, tc.poolId)
 
@@ -221,6 +227,102 @@ func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 	}
 }
 
+<<<<<<< HEAD
+=======
+// TestBuildTwoPoolRoute tests the BuildTwoPoolRoute function
+func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
+	cases := []struct {
+		description   string
+		swapDenom     types.BaseDenom
+		tokenIn       string
+		tokenOut      string
+		poolId        uint64
+		expectedRoute []TestRoute
+		hasRoute      bool
+	}{
+		{
+			description: "two pool route can be created with base as token out",
+			swapDenom: types.BaseDenom{
+				Denom:    types.OsmosisDenomination,
+				StepSize: osmomath.NewInt(1_000_000),
+			},
+			tokenIn:  "stake",
+			tokenOut: types.OsmosisDenomination,
+			poolId:   54,
+			expectedRoute: []TestRoute{
+				{PoolId: 54, InputDenom: types.OsmosisDenomination, OutputDenom: "stake"},
+				{PoolId: 55, InputDenom: "stake", OutputDenom: types.OsmosisDenomination},
+			},
+			hasRoute: true,
+		},
+		{
+			description: "two pool route can be created with base as token in",
+			swapDenom: types.BaseDenom{
+				Denom:    types.OsmosisDenomination,
+				StepSize: osmomath.NewInt(1_000_000),
+			},
+			tokenIn:  types.OsmosisDenomination,
+			tokenOut: "stake",
+			poolId:   54,
+			expectedRoute: []TestRoute{
+				{PoolId: 55, InputDenom: types.OsmosisDenomination, OutputDenom: "stake"},
+				{PoolId: 54, InputDenom: "stake", OutputDenom: types.OsmosisDenomination},
+			},
+			hasRoute: true,
+		},
+		{
+			description: "two pool route where swap is on the highest liquidity pool",
+			swapDenom: types.BaseDenom{
+				Denom:    types.OsmosisDenomination,
+				StepSize: osmomath.NewInt(1_000_000),
+			},
+			tokenIn:       "stake",
+			tokenOut:      types.OsmosisDenomination,
+			poolId:        55,
+			expectedRoute: []TestRoute{},
+			hasRoute:      false,
+		},
+		{
+			description: "trade executes on pool not tracked by the module",
+			swapDenom: types.BaseDenom{
+				Denom:    types.OsmosisDenomination,
+				StepSize: osmomath.NewInt(1_000_000),
+			},
+			tokenIn:       "stake",
+			tokenOut:      types.OsmosisDenomination,
+			poolId:        1000000,
+			expectedRoute: []TestRoute{},
+			hasRoute:      false,
+		},
+	}
+
+	for _, tc := range cases {
+		s.Run(tc.description, func() {
+			routeMetaData, err := s.App.ProtoRevKeeper.BuildTwoPoolRoute(
+				s.Ctx,
+				tc.swapDenom,
+				tc.tokenIn,
+				tc.tokenOut,
+				tc.poolId,
+			)
+
+			if tc.hasRoute {
+				s.Require().NoError(err)
+				s.Require().Equal(len(tc.expectedRoute), len(routeMetaData.Route.PoolIds()))
+
+				for index, trade := range tc.expectedRoute {
+					s.Require().Equal(trade.PoolId, routeMetaData.Route[index].PoolId)
+					s.Require().Equal(trade.OutputDenom, routeMetaData.Route[index].TokenOutDenom)
+				}
+			} else {
+				s.Require().Equal(len(tc.expectedRoute), len(routeMetaData.Route.PoolIds()))
+				s.Require().Error(err)
+			}
+		})
+	}
+}
+
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 // TestBuildHotRoutes tests the BuildHotRoutes function
 func (s *KeeperTestSuite) TestBuildHotRoutes() {
 	cases := []struct {
@@ -229,7 +331,7 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 		swapOut                 string
 		poolId                  uint64
 		expectedRoutes          [][]TestRoute
-		expectedStepSize        []sdk.Int
+		expectedStepSize        []osmomath.Int
 		expectedRoutePoolPoints []uint64
 		hasRoutes               bool
 	}{
@@ -245,7 +347,7 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 					{4, "bitcoin", "Atom"},
 				},
 			},
-			expectedStepSize:        []sdk.Int{sdk.NewInt(1_000_000)},
+			expectedStepSize:        []osmomath.Int{osmomath.NewInt(1_000_000)},
 			expectedRoutePoolPoints: []uint64{6},
 			hasRoutes:               true,
 		},
@@ -262,7 +364,7 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 					{10, "test/2", "Atom"},
 				},
 			},
-			expectedStepSize:        []sdk.Int{sdk.NewInt(1_000_000)},
+			expectedStepSize:        []osmomath.Int{osmomath.NewInt(1_000_000)},
 			expectedRoutePoolPoints: []uint64{8},
 			hasRoutes:               true,
 		},

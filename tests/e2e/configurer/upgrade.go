@@ -10,12 +10,21 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	appparams "github.com/osmosis-labs/osmosis/v18/app/params"
 	v17 "github.com/osmosis-labs/osmosis/v18/app/upgrades/v17"
 	"github.com/osmosis-labs/osmosis/v18/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v18/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v18/tests/e2e/containers"
 	"github.com/osmosis-labs/osmosis/v18/tests/e2e/initialization"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 type UpgradeSettings struct {
@@ -303,7 +312,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		uc.t.Logf("Lock and add to existing lock for both regular and superfluid lockups on chainA")
-		chainANode.LockAndAddToExistingLock(chainA, sdk.NewInt(1000000000000000000), poolShareDenom[0], config.LockupWallet[0], config.LockupWalletSuperfluid[0])
+		chainANode.LockAndAddToExistingLock(chainA, osmomath.NewInt(1000000000000000000), poolShareDenom[0], config.LockupWallet[0], config.LockupWalletSuperfluid[0])
 	}()
 
 	// Chain B
@@ -324,7 +333,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		uc.t.Logf("Lock and add to existing lock for both regular and superfluid lockups on chainB")
-		chainBNode.LockAndAddToExistingLock(chainB, sdk.NewInt(1000000000000000000), poolShareDenom[1], config.LockupWallet[1], config.LockupWalletSuperfluid[1])
+		chainBNode.LockAndAddToExistingLock(chainB, osmomath.NewInt(1000000000000000000), poolShareDenom[1], config.LockupWallet[1], config.LockupWalletSuperfluid[1])
 	}()
 
 	wg.Wait()
@@ -385,7 +394,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 			return err
 		}
 		chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
-		propNumber := node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+		propNumber := node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)))
 
 		node.DepositProposal(propNumber, false)
 

@@ -3,7 +3,12 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/protorev/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 // Used in v16 upgrade, can be removed in v17
@@ -35,7 +40,7 @@ func (k Keeper) SendDeveloperFeesToDeveloperAccount(ctx sdk.Context) error {
 
 // Deprecated: Can be removed in v16
 // UpdateDeveloperFees updates the fees that developers can withdraw from the module account
-func (k Keeper) UpdateDeveloperFees(ctx sdk.Context, denom string, profit sdk.Int) error {
+func (k Keeper) UpdateDeveloperFees(ctx sdk.Context, denom string, profit osmomath.Int) error {
 	daysSinceGenesis, err := k.GetDaysSinceModuleGenesis(ctx)
 	if err != nil {
 		return err
@@ -53,7 +58,7 @@ func (k Keeper) UpdateDeveloperFees(ctx sdk.Context, denom string, profit sdk.In
 	// Get the developer fees for the denom, if not there then set it to 0 and initialize it
 	currentDeveloperFee, err := k.GetDeveloperFees(ctx, denom)
 	if err != nil {
-		currentDeveloperFee = sdk.NewCoin(denom, sdk.ZeroInt())
+		currentDeveloperFee = sdk.NewCoin(denom, osmomath.ZeroInt())
 	}
 	currentDeveloperFee.Amount = currentDeveloperFee.Amount.Add(profit)
 
@@ -80,7 +85,7 @@ func (k Keeper) SendDeveloperFee(ctx sdk.Context, arbProfit sdk.Coin) error {
 	}
 
 	// Initialize the developer profit to 0
-	devProfit := sdk.NewCoin(arbProfit.Denom, sdk.ZeroInt())
+	devProfit := sdk.NewCoin(arbProfit.Denom, osmomath.ZeroInt())
 
 	// Calculate the developer fee
 	if daysSinceGenesis < types.Phase1Length {

@@ -3,15 +3,22 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v18/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v18/x/protorev/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 // TestMsgSetHotRoutes tests the MsgSetHotRoutes message.
 func (s *KeeperTestSuite) TestMsgSetHotRoutes() {
-	validStepSize := sdk.NewInt(1_000_000)
-	invalidStepSize := sdk.NewInt(0)
+	validStepSize := osmomath.NewInt(1_000_000)
+	invalidStepSize := osmomath.NewInt(0)
 
 	testCases := []struct {
 		description       string
@@ -579,7 +586,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
-					StepSize: sdk.NewInt(1_000_000),
+					StepSize: osmomath.NewInt(1_000_000),
 				},
 			},
 			false,
@@ -591,7 +598,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			[]types.BaseDenom{
 				{
 					Denom:    "Atom",
-					StepSize: sdk.NewInt(1_000_000),
+					StepSize: osmomath.NewInt(1_000_000),
 				},
 			},
 			false,
@@ -603,7 +610,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
-					StepSize: sdk.NewInt(0),
+					StepSize: osmomath.NewInt(0),
 				},
 			},
 			false,
@@ -615,7 +622,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
-					StepSize: sdk.NewInt(1_000_000),
+					StepSize: osmomath.NewInt(1_000_000),
 				},
 			},
 			true,
@@ -627,7 +634,7 @@ func (s *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
-					StepSize: sdk.NewInt(1_000_000),
+					StepSize: osmomath.NewInt(1_000_000),
 				},
 			},
 			true,

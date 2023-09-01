@@ -7,10 +7,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
 	valPref "github.com/osmosis-labs/osmosis/v18/x/valset-pref"
 	"github.com/osmosis-labs/osmosis/v18/x/valset-pref/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v18/x/valset-pref/types"
+=======
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	valPref "github.com/osmosis-labs/osmosis/v19/x/valset-pref"
+	"github.com/osmosis-labs/osmosis/v19/x/valset-pref/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 type QueryTestSuite struct {
@@ -28,15 +36,15 @@ func (s *QueryTestSuite) SetupSuite() {
 	preferences := []types.ValidatorPreference{
 		{
 			ValOperAddress: valAddrs[0],
-			Weight:         sdk.NewDecWithPrec(5, 1),
+			Weight:         osmomath.NewDecWithPrec(5, 1),
 		},
 		{
 			ValOperAddress: valAddrs[1],
-			Weight:         sdk.NewDecWithPrec(3, 1),
+			Weight:         osmomath.NewDecWithPrec(3, 1),
 		},
 		{
 			ValOperAddress: valAddrs[2],
-			Weight:         sdk.NewDecWithPrec(2, 1),
+			Weight:         osmomath.NewDecWithPrec(2, 1),
 		},
 	}
 

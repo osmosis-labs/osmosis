@@ -11,11 +11,17 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	osmosim "github.com/osmosis-labs/osmosis/v18/simulation/executor"
 	"github.com/osmosis-labs/osmosis/v18/simulation/simtypes/simlogger"
 	txfeetypes "github.com/osmosis-labs/osmosis/v18/x/txfees/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	osmosim "github.com/osmosis-labs/osmosis/v19/simulation/executor"
+	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes/simlogger"
+	txfeetypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 // Profile with:
@@ -49,7 +55,7 @@ func TestFullAppSimulation(t *testing.T) {
 func fullAppSimulation(tb testing.TB, is_testing bool) {
 	tb.Helper()
 	// TODO: Get SDK simulator fixed to have min fees possible
-	txfeetypes.ConsensusMinFee = sdk.ZeroDec()
+	txfeetypes.ConsensusMinFee = osmomath.ZeroDec()
 	config, db, logger, cleanup, err := osmosim.SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
@@ -85,7 +91,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	// 	t.Skip("skipping application simulation")
 	// }
 	// TODO: Get SDK simulator fixed to have min fees possible
-	txfeetypes.ConsensusMinFee = sdk.ZeroDec()
+	txfeetypes.ConsensusMinFee = osmomath.ZeroDec()
 
 	config := osmosim.NewConfigFromFlags()
 	config.ExportConfig.ExportParamsPath = ""

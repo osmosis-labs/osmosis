@@ -7,7 +7,12 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/lockup/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -219,7 +224,7 @@ func (k Keeper) GetLocksDenom(ctx sdk.Context, denom string) []types.PeriodLock 
 }
 
 // GetLockedDenom Returns the total amount of denom that are locked.
-func (k Keeper) GetLockedDenom(ctx sdk.Context, denom string, duration time.Duration) sdk.Int {
+func (k Keeper) GetLockedDenom(ctx sdk.Context, denom string, duration time.Duration) osmomath.Int {
 	totalAmtLocked := k.GetPeriodLocksAccumulation(ctx, types.QueryCondition{
 		LockQueryType: types.ByDuration,
 		Denom:         denom,

@@ -5,9 +5,16 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	cltypes "github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v18/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -26,7 +33,7 @@ type BankKeeper interface {
 // LockupKeeper defines the expected interface needed to retrieve locks.
 type LockupKeeper interface {
 	GetLocksLongerThanDurationDenom(ctx sdk.Context, denom string, duration time.Duration) []lockuptypes.PeriodLock
-	GetPeriodLocksAccumulation(ctx sdk.Context, query lockuptypes.QueryCondition) sdk.Int
+	GetPeriodLocksAccumulation(ctx sdk.Context, query lockuptypes.QueryCondition) osmomath.Int
 	GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []lockuptypes.PeriodLock
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
 }
@@ -47,7 +54,7 @@ type TxFeesKeeper interface {
 }
 
 type ConcentratedLiquidityKeeper interface {
-	CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveCoin sdk.Coin, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration) (cltypes.IncentiveRecord, error)
+	CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveCoin sdk.Coin, emissionRate osmomath.Dec, startTime time.Time, minUptime time.Duration) (cltypes.IncentiveRecord, error)
 	GetConcentratedPoolById(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
 }
 

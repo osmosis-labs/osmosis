@@ -7,8 +7,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v18/x/gamm/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 type QueryTestSuite struct {
@@ -32,10 +38,10 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		uosmoDenom = apptesting.DefaultPoolAssets[3].Token.Denom
 
 		basicValidTokensIn = sdk.NewCoins(
-			sdk.NewCoin(fooDenom, sdk.OneInt()),
-			sdk.NewCoin(barDenom, sdk.OneInt()),
-			sdk.NewCoin(bazDenom, sdk.OneInt()),
-			sdk.NewCoin(uosmoDenom, sdk.OneInt()))
+			sdk.NewCoin(fooDenom, osmomath.OneInt()),
+			sdk.NewCoin(barDenom, osmomath.OneInt()),
+			sdk.NewCoin(bazDenom, osmomath.OneInt()),
+			sdk.NewCoin(uosmoDenom, osmomath.OneInt()))
 	)
 
 	testCases := []struct {
@@ -113,7 +119,7 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		{
 			"Query exit pool coins from shares",
 			"/osmosis.gamm.v1beta1.Query/CalcExitPoolCoinsFromShares",
-			&types.QueryCalcExitPoolCoinsFromSharesRequest{PoolId: 1, ShareInAmount: sdk.OneInt()},
+			&types.QueryCalcExitPoolCoinsFromSharesRequest{PoolId: 1, ShareInAmount: osmomath.OneInt()},
 			&types.QueryCalcExitPoolCoinsFromSharesResponse{},
 		},
 	}

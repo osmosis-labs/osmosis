@@ -8,8 +8,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/mint/simulation"
 	"github.com/osmosis-labs/osmosis/v18/x/mint/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/mint/simulation"
+	"github.com/osmosis-labs/osmosis/v19/x/mint/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -56,7 +62,7 @@ func TestRandomizedGenState(t *testing.T) {
 	)
 
 	// Epoch provisions from Minter.
-	epochProvisionsDec, err := sdk.NewDecFromStr(expectedEpochProvisionsStr)
+	epochProvisionsDec, err := osmomath.NewDecFromStr(expectedEpochProvisionsStr)
 	require.NoError(t, err)
 	require.Equal(t, epochProvisionsDec, mintGenesis.Minter.EpochProvisions)
 
@@ -64,7 +70,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, simulation.ExpectedEpochIdentifier, mintGenesis.Params.EpochIdentifier)
 
 	// Reduction factor.
-	reductionFactorDec, err := sdk.NewDecFromStr(expectedReductionFactorStr)
+	reductionFactorDec, err := osmomath.NewDecFromStr(expectedReductionFactorStr)
 	require.NoError(t, err)
 	require.Equal(t, reductionFactorDec, mintGenesis.Params.ReductionFactor)
 

@@ -6,8 +6,14 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v18/x/lockup/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -248,51 +254,51 @@ func (s *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 		expectError bool
 	}{
 		"fee + base denom gauge coin == acount balance, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee / 2,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee/2))),
 		},
 		"fee + base denom gauge coin < acount balance, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee/2 - 1,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee/2))),
 		},
 		"fee + base denom gauge coin > acount balance, error": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee/2 + 1,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee/2))),
 
 			expectError: true,
 		},
 		"fee + base denom gauge coin < acount balance, custom values, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(11793193112)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(11793193112)),
 			feeToCharge:          55,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(328812))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(328812))),
 		},
 		"account funded with coins other than base denom, error": {
-			accountBalanceToFund: sdk.NewCoin("usdc", sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin("usdc", osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee/2))),
 
 			expectError: true,
 		},
 		"fee == account balance, no gauge coins, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee,
 		},
 		"gauge coins == account balance, no fee, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee))),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee))),
 		},
 		"fee == account balance, gauge coins in denom other than base, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(baseFee*2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin("usdc", osmomath.NewInt(baseFee*2))),
 		},
 		"fee + gauge coins == account balance, multiple gauge coins, one in denom other than base, success": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee)),
 			feeToCharge:          baseFee / 2,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(baseFee*2)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin("usdc", osmomath.NewInt(baseFee*2)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(baseFee/2))),
 		},
 	}
 
@@ -312,7 +318,7 @@ func (s *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 			oldBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount
 
 			// System under test.
-			err := incentivesKeepers.ChargeFeeIfSufficientFeeDenomBalance(ctx, testAccount, sdk.NewInt(tc.feeToCharge), tc.gaugeCoins)
+			err := incentivesKeepers.ChargeFeeIfSufficientFeeDenomBalance(ctx, testAccount, osmomath.NewInt(tc.feeToCharge), tc.gaugeCoins)
 
 			// Assertions.
 			newBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount
@@ -325,7 +331,7 @@ func (s *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 				s.Require().NoError(err)
 
 				// check account balance changed.
-				expectedNewBalanceAmount := oldBalanceAmount.Sub(sdk.NewInt(tc.feeToCharge))
+				expectedNewBalanceAmount := oldBalanceAmount.Sub(osmomath.NewInt(tc.feeToCharge))
 				s.Require().Equal(expectedNewBalanceAmount.String(), newBalanceAmount.String())
 			}
 		})
@@ -346,8 +352,8 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 			name:  "valid case: valid gauge",
 			owner: s.TestAccs[0],
 			coinsToAdd: sdk.NewCoins(
-				sdk.NewCoin("uosmo", sdk.NewInt(100000)),
-				sdk.NewCoin("atom", sdk.NewInt(99999)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+				sdk.NewCoin("atom", osmomath.NewInt(99999)),
 			),
 			gaugeId:            1,
 			minimumGasConsumed: uint64(2 * types.BaseGasFeeForAddRewardToGauge),
@@ -358,14 +364,14 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 			name:  "valid case: valid gauge with >4 denoms",
 			owner: s.TestAccs[0],
 			coinsToAdd: sdk.NewCoins(
-				sdk.NewCoin("uosmo", sdk.NewInt(100000)),
-				sdk.NewCoin("atom", sdk.NewInt(99999)),
-				sdk.NewCoin("mars", sdk.NewInt(88888)),
-				sdk.NewCoin("akash", sdk.NewInt(77777)),
-				sdk.NewCoin("eth", sdk.NewInt(6666)),
-				sdk.NewCoin("usdc", sdk.NewInt(555)),
-				sdk.NewCoin("dai", sdk.NewInt(4444)),
-				sdk.NewCoin("ust", sdk.NewInt(3333)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+				sdk.NewCoin("atom", osmomath.NewInt(99999)),
+				sdk.NewCoin("mars", osmomath.NewInt(88888)),
+				sdk.NewCoin("akash", osmomath.NewInt(77777)),
+				sdk.NewCoin("eth", osmomath.NewInt(6666)),
+				sdk.NewCoin("usdc", osmomath.NewInt(555)),
+				sdk.NewCoin("dai", osmomath.NewInt(4444)),
+				sdk.NewCoin("ust", osmomath.NewInt(3333)),
 			),
 			gaugeId:            1,
 			minimumGasConsumed: uint64(8 * types.BaseGasFeeForAddRewardToGauge),
@@ -376,8 +382,8 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 			name:  "invalid case: gauge Id is not valid",
 			owner: s.TestAccs[0],
 			coinsToAdd: sdk.NewCoins(
-				sdk.NewCoin("uosmo", sdk.NewInt(100000)),
-				sdk.NewCoin("atom", sdk.NewInt(99999)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+				sdk.NewCoin("atom", osmomath.NewInt(99999)),
 			),
 			gaugeId:            0,
 			minimumGasConsumed: uint64(0),
@@ -453,8 +459,8 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 
 	var (
 		defaultCoins = sdk.NewCoins(
-			sdk.NewCoin("uosmo", sdk.NewInt(100000)),
-			sdk.NewCoin("atom", sdk.NewInt(99999)),
+			sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+			sdk.NewCoin("atom", osmomath.NewInt(99999)),
 		)
 
 		defaultTime = time.Unix(0, 0)
@@ -582,3 +588,193 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 		})
 	}
 }
+<<<<<<< HEAD
+=======
+
+func (s *KeeperTestSuite) TestCreateGroupGauge() {
+	coinsToAdd := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))
+	tests := []struct {
+		name             string
+		coins            sdk.Coins
+		numEpochPaidOver uint64
+		internalGaugeIds []uint64
+		gaugeType        lockuptypes.LockQueryType
+		splittiingPolicy types.SplittingPolicy
+		expectErr        bool
+	}{
+		{
+			name:             "Happy case: created valid gauge",
+			coins:            coinsToAdd,
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{2, 3, 4},
+			gaugeType:        lockuptypes.ByGroup,
+			splittiingPolicy: types.Evenly,
+			expectErr:        false,
+		},
+
+		{
+			name:             "Error: Invalid InternalGauge Id",
+			coins:            coinsToAdd,
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{2, 3, 4, 5},
+			gaugeType:        lockuptypes.ByGroup,
+			splittiingPolicy: types.Evenly,
+			expectErr:        true,
+		},
+		{
+			name:             "Error: owner doesnot have enough funds",
+			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{2, 3, 4},
+			gaugeType:        lockuptypes.ByGroup,
+			splittiingPolicy: types.Evenly,
+			expectErr:        true,
+		},
+		{
+			name:             "Error: One of the internal Gauge is non-perp",
+			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{2, 3, 4, 5},
+			gaugeType:        lockuptypes.ByGroup,
+			splittiingPolicy: types.Evenly,
+			expectErr:        true,
+		},
+		{
+			name:             "Error: No InternalGaugeIds provided",
+			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{},
+			splittiingPolicy: types.Evenly,
+			gaugeType:        lockuptypes.ByGroup,
+			expectErr:        true,
+		},
+		{
+			name:             "Error: Invalid Splitting Policy",
+			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{},
+			gaugeType:        lockuptypes.ByGroup,
+			splittiingPolicy: types.Volume,
+			expectErr:        true,
+		},
+		{
+			name:             "Error: Invalid gauge type",
+			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
+			numEpochPaidOver: 1,
+			internalGaugeIds: []uint64{},
+			gaugeType:        lockuptypes.NoLock,
+			splittiingPolicy: types.Evenly,
+			expectErr:        true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))) // 1,000 osmo
+			clPool := s.PrepareConcentratedPool()                                                      // gaugeid = 1
+
+			// create 3 perp-internal Gauge
+			for i := 0; i <= 2; i++ {
+				s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(1)) // gauge id = 2,3,4
+			}
+
+			//create 1 non-perp internal Gauge
+			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gauge id = 5
+
+			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[1], tc.internalGaugeIds, tc.gaugeType, tc.splittiingPolicy) // gauge id = 6
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				// check that the gauge has been create with right value
+				groupGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, groupGaugeId)
+				s.Require().NoError(err)
+
+				s.Require().Equal(groupGauge.Coins, tc.coins)
+				s.Require().Equal(groupGauge.NumEpochsPaidOver, tc.numEpochPaidOver)
+				s.Require().Equal(groupGauge.IsPerpetual, true)
+				s.Require().Equal(groupGauge.DistributeTo.LockQueryType, lockuptypes.ByGroup)
+
+				// check that GroupGauge has been added to state
+				groupGaugeObj, err := s.App.IncentivesKeeper.GetGroupGaugeById(s.Ctx, groupGaugeId)
+				s.Require().NoError(err)
+
+				s.Require().Equal(groupGaugeObj.InternalIds, tc.internalGaugeIds)
+			}
+
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestAddToGaugeRewardsFromGauge() {
+	coinsToTransfer := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))
+	tests := []struct {
+		name            string
+		groupGaugeId    uint64
+		internalGaugeId uint64
+		coinsToTransfer sdk.Coins
+		expectErr       bool
+	}{
+		{
+			name:            "Happy case: Valid gaugeId with valid Internal GaugeId",
+			groupGaugeId:    3,
+			internalGaugeId: 2,
+			coinsToTransfer: coinsToTransfer,
+			expectErr:       false,
+		},
+		{
+			name:            "Error: InternalGauge is not present in groupGauge",
+			groupGaugeId:    3,
+			internalGaugeId: 1,
+			coinsToTransfer: coinsToTransfer,
+			expectErr:       true,
+		},
+		{
+			name:            "Error: Not enough tokens to transfer",
+			groupGaugeId:    3,
+			internalGaugeId: 2,
+			coinsToTransfer: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
+			expectErr:       true,
+		},
+		{
+			name:            "Error: GroupGaugeId doesnot exist",
+			groupGaugeId:    5,
+			internalGaugeId: 2,
+			coinsToTransfer: coinsToTransfer,
+			expectErr:       true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))) // 1,000 osmo
+			clPool := s.PrepareConcentratedPool()                                                      // gaugeid = 1
+
+			// create internal Gauge
+			internalGauge1 := s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(1)) // gauge id = 2
+
+			// create group gauge
+			_, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))), uint64(1), s.TestAccs[1], []uint64{internalGauge1}, lockuptypes.ByGroup, types.Evenly) // gauge id = 3
+			s.Require().NoError(err)
+
+			err = s.App.IncentivesKeeper.AddToGaugeRewardsFromGauge(s.Ctx, tc.groupGaugeId, tc.coinsToTransfer, tc.internalGaugeId)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				// check that the coins have been transferred
+				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, tc.groupGaugeId)
+				s.Require().NoError(err)
+
+				s.Require().Equal(gauge.Coins, tc.coinsToTransfer)
+
+			}
+		})
+	}
+
+}
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))

@@ -5,8 +5,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v18/x/protorev/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 type RouteMetaData struct {
@@ -15,7 +21,7 @@ type RouteMetaData struct {
 	// The number of pool points that were consumed to build the route
 	PoolPoints uint64
 	// The step size that should be used in the binary search for the optimal swap amount
-	StepSize sdk.Int
+	StepSize osmomath.Int
 }
 
 // BuildRoutes builds all of the possible arbitrage routes given the tokenIn, tokenOut and poolId that were used in the swap.

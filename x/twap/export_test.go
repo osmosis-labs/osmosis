@@ -52,15 +52,15 @@ func (k Keeper) GetInterpolatedRecord(ctx sdk.Context, poolId uint64, asset0Deno
 	return k.getInterpolatedRecord(ctx, poolId, t, asset0Denom, asset1Denom)
 }
 
-func ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, strategy twapStrategy) (sdk.Dec, error) {
+func ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, strategy twapStrategy) (osmomath.Dec, error) {
 	return computeTwap(startRecord, endRecord, quoteAsset, strategy)
 }
 
-func (as arithmetic) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+func (as arithmetic) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) osmomath.Dec {
 	return as.computeTwap(startRecord, endRecord, quoteAsset)
 }
 
-func (gs geometric) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+func (gs geometric) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) osmomath.Dec {
 	return gs.computeTwap(startRecord, endRecord, quoteAsset)
 }
 
@@ -72,18 +72,18 @@ func NewTwapRecord(k types.PoolManagerInterface, ctx sdk.Context, poolId uint64,
 	return newTwapRecord(k, ctx, poolId, denom0, denom1)
 }
 
-func TwapLog(x sdk.Dec) sdk.Dec {
+func TwapLog(x osmomath.Dec) osmomath.Dec {
 	return twapLog(x)
 }
 
 // twapPow exponentiates 2 to the given exponent.
 // Used as a test-helper for the power function used in geometric twap.
-func TwapPow(exponent sdk.Dec) sdk.Dec {
-	exp2 := osmomath.Exp2(osmomath.BigDecFromSDKDec(exponent.Abs()))
+func TwapPow(exponent osmomath.Dec) osmomath.Dec {
+	exp2 := osmomath.Exp2(osmomath.BigDecFromDec(exponent.Abs()))
 	if exponent.IsNegative() {
-		return osmomath.OneDec().Quo(exp2).SDKDec()
+		return osmomath.OneBigDec().Quo(exp2).Dec()
 	}
-	return exp2.SDKDec()
+	return exp2.Dec()
 }
 
 func GetSpotPrices(
@@ -92,7 +92,7 @@ func GetSpotPrices(
 	poolId uint64,
 	denom0, denom1 string,
 	previousErrorTime time.Time,
-) (sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
+) (sp0 osmomath.Dec, sp1 osmomath.Dec, latestErrTime time.Time) {
 	return getSpotPrices(ctx, k, poolId, denom0, denom1, previousErrorTime)
 }
 

@@ -11,8 +11,14 @@ import (
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
+<<<<<<< HEAD
 	appparams "github.com/osmosis-labs/osmosis/v18/app/params"
 	"github.com/osmosis-labs/osmosis/v18/tests/e2e/configurer/config"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 
 	"github.com/osmosis-labs/osmosis/v18/tests/e2e/containers"
 	"github.com/osmosis-labs/osmosis/v18/tests/e2e/initialization"
@@ -262,7 +268,7 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 }
 
 func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig) (uint64, error) {
-	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)))
 
 	chainANode.DepositProposal(propNumber, false)
 

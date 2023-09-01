@@ -3,8 +3,14 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
@@ -12,7 +18,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	k.SetLockableDurations(ctx, genState.LockableDurations)
 	if genState.DistrInfo == nil {
 		k.SetDistrInfo(ctx, types.DistrInfo{
-			TotalWeight: sdk.NewInt(0),
+			TotalWeight: osmomath.NewInt(0),
 			Records:     nil,
 		})
 	} else {

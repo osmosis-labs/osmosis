@@ -5,9 +5,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+<<<<<<< HEAD
 	clqueryproto "github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/client/queryproto"
 	cltypes "github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v18/x/lockup/types"
+=======
+	clqueryproto "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 // test-specific helper descriptor

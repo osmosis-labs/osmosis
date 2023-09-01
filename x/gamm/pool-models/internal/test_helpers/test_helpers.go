@@ -39,7 +39,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	assetInDenom string,
 	assetOutDenom string,
 	initialCalcOut int64,
-	spreadFactor sdk.Dec,
+	spreadFactor osmomath.Dec,
 	errTolerance osmomath.ErrTolerance,
 ) {
 	initialOut := sdk.NewInt64Coin(assetOutDenom, initialCalcOut)
@@ -49,26 +49,26 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	require.NoError(t, err)
 
 	// we expect that any output less than 1 will always be rounded up
-	require.True(t, actualTokenIn.Amount.GTE(sdk.OneInt()))
+	require.True(t, actualTokenIn.Amount.GTE(osmomath.OneInt()))
 
 	inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(actualTokenIn), assetOutDenom, spreadFactor)
 	require.NoError(t, err)
 
 	require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
 
-	expected := initialOut.Amount.ToDec()
-	actual := inverseTokenOut.Amount.ToDec()
+	expected := initialOut.Amount.ToLegacyDec()
+	actual := inverseTokenOut.Amount.ToLegacyDec()
 
 	// If the pool is extremely imbalanced (specifically in the case of stableswap),
 	// we expect there to be drastically amplified error that will fall outside our usual bounds.
 	// Since these cases are effectively unusable by design, we only really care about whether
 	// they are safe i.e. round correctly.
-	preFeeTokenIn := actualTokenIn.Amount.ToDec().Mul((sdk.OneDec().Sub(spreadFactor))).Ceil().TruncateInt()
-	if preFeeTokenIn.Equal(sdk.OneInt()) {
+	preFeeTokenIn := actualTokenIn.Amount.ToLegacyDec().Mul((osmomath.OneDec().Sub(spreadFactor))).Ceil().TruncateInt()
+	if preFeeTokenIn.Equal(osmomath.OneInt()) {
 		require.True(t, actual.GT(expected))
 	} else {
-		if expected.Sub(actual).Abs().GT(sdk.OneDec()) {
-			compRes := errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(expected), osmomath.BigDecFromSDKDec(actual))
+		if expected.Sub(actual).Abs().GT(osmomath.OneDec()) {
+			compRes := errTolerance.CompareBigDec(osmomath.BigDecFromDec(expected), osmomath.BigDecFromDec(actual))
 			require.True(t, compRes == 0, "expected %s, actual %s, not within error tolerance %v",
 				expected, actual, errTolerance)
 		}
@@ -139,7 +139,7 @@ func TestSlippageRelationInGivenOut(
 	for !isWithinBounds(ctx, curPool, swapOutAmt, swapInDenom, fee) {
 		// increase pool liquidity by 10x
 		for i, coin := range initLiquidity {
-			curLiquidity[i] = sdk.NewCoin(coin.Denom, coin.Amount.Mul(sdk.NewInt(10)))
+			curLiquidity[i] = sdk.NewCoin(coin.Denom, coin.Amount.Mul(osmomath.NewInt(10)))
 		}
 		curPool = createPoolWithLiquidity(ctx, curLiquidity)
 	}
@@ -164,7 +164,7 @@ func TestSlippageRelationInGivenOut(
 }
 
 // returns true if the pool can accommodate an InGivenOut swap with `tokenOut` amount out, false otherwise
-func isWithinBounds(ctx sdk.Context, pool types.CFMMPoolI, tokenOut sdk.Coins, tokenInDenom string, spreadFactor sdk.Dec) (b bool) {
+func isWithinBounds(ctx sdk.Context, pool types.CFMMPoolI, tokenOut sdk.Coins, tokenInDenom string, spreadFactor osmomath.Dec) (b bool) {
 	b = true
 	defer func() {
 		if r := recover(); r != nil {

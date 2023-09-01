@@ -188,3 +188,58 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 	}
 	return nil
 }
+<<<<<<< HEAD
+=======
+
+// updateConcentratedOsmoEquivalentMultiplier runs the logic for updating the OSMO equivalent multiplier for a concentrated liquidity pool.
+func (k Keeper) updateConcentratedOsmoEquivalentMultiplier(ctx sdk.Context, asset types.SuperfluidAsset, newEpochNumber int64) error {
+	// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
+	poolId := cltypes.MustGetPoolIdFromShareDenom(asset.Denom)
+	pool, err := k.clk.GetConcentratedPoolById(ctx, poolId)
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+		// Pool has unexpectedly removed Osmo from its assets.
+		k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+		return err
+	}
+
+	// get underlying assets from all liquidity in a full range position
+	// note: this is not the same as the total liquidity in the pool, as this includes positions not in the full range
+	bondDenom := k.sk.BondDenom(ctx)
+	fullRangeLiquidity, err := k.clk.GetFullRangeLiquidityInPool(ctx, poolId)
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+		return fmt.Errorf("failed to retrieve full range liquidity from pool (%d): %w", poolId, err)
+	}
+
+	position := model.Position{
+		LowerTick: cltypes.MinInitializedTick,
+		UpperTick: cltypes.MaxTick,
+		Liquidity: fullRangeLiquidity,
+	}
+	// Note that the returned amounts are rounded up. This should be fine as they both are used for calculating the multiplier.
+	asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(ctx, position, pool)
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+		k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+		return err
+	}
+	assets := sdk.NewCoins(asset0, asset1)
+
+	// get OSMO amount from underlying assets
+	osmoPoolAsset := assets.AmountOf(bondDenom)
+	if osmoPoolAsset.IsZero() {
+		// Pool has unexpectedly removed OSMO from its assets.
+		err := errors.New("pool has unexpectedly removed OSMO as one of its underlying assets")
+		k.Logger(ctx).Error(err.Error())
+		k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+		return err
+	}
+
+	// calculate multiplier and set it
+	multiplier := osmoPoolAsset.ToLegacyDec().Quo(fullRangeLiquidity)
+	k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
+
+	return nil
+}
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))

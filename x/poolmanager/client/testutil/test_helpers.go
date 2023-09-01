@@ -5,9 +5,16 @@ import (
 	"fmt"
 	"testing"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/app"
 	poolmanagercli "github.com/osmosis-labs/osmosis/v18/x/poolmanager/client/cli"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app"
+	poolmanagercli "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/cli"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -21,7 +28,7 @@ import (
 var commonArgs = []string{
 	fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 	fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-	fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+	fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10))).String()),
 }
 
 // MsgCreatePool broadcast a pool creation message.

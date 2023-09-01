@@ -1,9 +1,14 @@
 package keeper_test
 
 import (
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 func (s *KeeperTestSuite) TestSuperfluidAssetSetGetDeleteFlow() {
@@ -48,7 +53,7 @@ func (s *KeeperTestSuite) TestGetRiskAdjustedOsmoValue() {
 
 	adjustedValue := s.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(
 		s.Ctx,
-		sdk.NewInt(100),
+		osmomath.NewInt(100),
 	)
-	s.Require().Equal(sdk.NewInt(50), adjustedValue)
+	s.Require().Equal(osmomath.NewInt(50), adjustedValue)
 }

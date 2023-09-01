@@ -8,21 +8,35 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v18/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v18/tests/e2e/util"
 	"github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v18/x/gamm/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
-var defaultFeePerTx = sdk.NewInt(1000)
+var defaultFeePerTx = osmomath.NewInt(1000)
 
 // calculateSpreadRewardGrowthGlobal calculates spread reward growth global per unit of virtual liquidity based on swap parameters:
 // amountIn - amount being swapped
 // spreadFactor - pool's spread factor
 // poolLiquidity - current pool liquidity
+<<<<<<< HEAD
 func calculateSpreadRewardGrowthGlobal(amountIn, spreadFactor, poolLiquidity sdk.Dec) sdk.Dec {
+=======
+func calculateSpreadRewardGrowthGlobal(spreadRewardChargeTotal, poolLiquidity osmomath.Dec) osmomath.Dec {
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 	// First we get total spread reward charge for the swap (ΔY * spreadFactor)
 	spreadRewardChargeTotal := amountIn.Mul(spreadFactor)
 
@@ -36,7 +50,7 @@ func calculateSpreadRewardGrowthGlobal(amountIn, spreadFactor, poolLiquidity sdk
 // spreadRewardGrowthBelow - spread reward growth below lower tick
 // spreadRewardGrowthAbove - spread reward growth above upper tick
 // Formula: spreadRewardGrowthGlobal - spreadRewardGrowthBelowLowerTick - spreadRewardGrowthAboveUpperTick
-func calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGrowthBelow, spreadRewardGrowthAbove sdk.Dec) sdk.Dec {
+func calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGrowthBelow, spreadRewardGrowthAbove osmomath.Dec) osmomath.Dec {
 	return spreadRewardGrowthGlobal.Sub(spreadRewardGrowthBelow).Sub(spreadRewardGrowthAbove)
 }
 
@@ -104,7 +118,7 @@ func (s *IntegrationTestSuite) getChainCfgs() (*chain.Config, *chain.NodeConfig,
 // spreadRewardGrowthAbove - spread reward growth above upper tick
 // spreadRewardGrowthInsideLast - amount of spread reward growth inside range at the time from which we want to calculate the amount of uncollected spread rewards
 // spreadRewardGrowthGlobal - variable for tracking global spread reward growth
-func calculateUncollectedSpreadRewards(positionLiquidity, spreadRewardGrowthBelow, spreadRewardGrowthAbove, spreadRewardGrowthInsideLast sdk.Dec, spreadRewardGrowthGlobal sdk.Dec) sdk.Dec {
+func calculateUncollectedSpreadRewards(positionLiquidity, spreadRewardGrowthBelow, spreadRewardGrowthAbove, spreadRewardGrowthInsideLast osmomath.Dec, spreadRewardGrowthGlobal osmomath.Dec) osmomath.Dec {
 	// Calculating spread reward growth inside range [-1200; 400]
 	spreadRewardGrowthInside := calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGrowthBelow, spreadRewardGrowthAbove)
 

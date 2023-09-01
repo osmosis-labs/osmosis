@@ -3,17 +3,21 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/mint/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/mint/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 // TestGetInflationProportion sanity checks that inflation
 // proportion equals to 1 - developer vesting proportion.
 func TestGetInflationProportion(t *testing.T) {
-	developerVestingProportion := sdk.NewDecWithPrec(4, 1)
-	expectedInflationProportion := sdk.OneDec().Sub(developerVestingProportion)
+	developerVestingProportion := osmomath.NewDecWithPrec(4, 1)
+	expectedInflationProportion := osmomath.OneDec().Sub(developerVestingProportion)
 
 	params := types.Params{
 		DistributionProportions: types.DistributionProportions{
@@ -29,7 +33,7 @@ func TestGetInflationProportion(t *testing.T) {
 // vesting proportion equals to the value set by
 // parameter for dev rewards.
 func TestGetDeveloperVestingProportion(t *testing.T) {
-	expectedDevVestingProportion := sdk.NewDecWithPrec(4, 1)
+	expectedDevVestingProportion := osmomath.NewDecWithPrec(4, 1)
 
 	params := types.Params{
 		DistributionProportions: types.DistributionProportions{

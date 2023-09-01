@@ -5,7 +5,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/twap/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 // GetArithmeticTwap returns an arithmetic time weighted average price.
@@ -41,7 +46,7 @@ func (k Keeper) GetArithmeticTwap(
 	quoteAssetDenom string,
 	startTime time.Time,
 	endTime time.Time,
-) (sdk.Dec, error) {
+) (osmomath.Dec, error) {
 	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, k.GetArithmeticStrategy())
 }
 
@@ -52,7 +57,7 @@ func (k Keeper) GetGeometricTwap(
 	quoteAssetDenom string,
 	startTime time.Time,
 	endTime time.Time,
-) (sdk.Dec, error) {
+) (osmomath.Dec, error) {
 	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, k.GetGeometricStrategy())
 }
 
@@ -64,7 +69,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 	baseAssetDenom string,
 	quoteAssetDenom string,
 	startTime time.Time,
-) (sdk.Dec, error) {
+) (osmomath.Dec, error) {
 	return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, k.GetArithmeticStrategy())
 }
 
@@ -74,7 +79,7 @@ func (k Keeper) GetGeometricTwapToNow(
 	baseAssetDenom string,
 	quoteAssetDenom string,
 	startTime time.Time,
-) (sdk.Dec, error) {
+) (osmomath.Dec, error) {
 	return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, k.GetGeometricStrategy())
 }
 
@@ -88,22 +93,22 @@ func (k Keeper) getTwap(
 	startTime time.Time,
 	endTime time.Time,
 	strategy twapStrategy,
-) (sdk.Dec, error) {
+) (osmomath.Dec, error) {
 	if startTime.After(endTime) {
-		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: endTime}
+		return osmomath.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: endTime}
 	}
 	if endTime.Equal(ctx.BlockTime()) {
 		return k.getTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, strategy)
 	} else if endTime.After(ctx.BlockTime()) {
-		return sdk.Dec{}, types.EndTimeInFutureError{EndTime: endTime, BlockTime: ctx.BlockTime()}
+		return osmomath.Dec{}, types.EndTimeInFutureError{EndTime: endTime, BlockTime: ctx.BlockTime()}
 	}
 	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 	endRecord, err := k.getInterpolatedRecord(ctx, poolId, endTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	return computeTwap(startRecord, endRecord, quoteAssetDenom, strategy)
@@ -118,18 +123,18 @@ func (k Keeper) getTwapToNow(
 	quoteAssetDenom string,
 	startTime time.Time,
 	strategy twapStrategy,
-) (sdk.Dec, error) {
+) (osmomath.Dec, error) {
 	if startTime.After(ctx.BlockTime()) {
-		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: ctx.BlockTime()}
+		return osmomath.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: ctx.BlockTime()}
 	}
 
 	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 	endRecord, err := k.GetBeginBlockAccumulatorRecord(ctx, poolId, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	return computeTwap(startRecord, endRecord, quoteAssetDenom, strategy)

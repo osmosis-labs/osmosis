@@ -6,9 +6,16 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	cl "github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity"
 	clquery "github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/model"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	clquery "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method
@@ -129,14 +136,14 @@ func (q Querier) LiquidityNetInDirection(ctx sdk.Context, req clquery.LiquidityN
 		return nil, status.Error(codes.InvalidArgument, "tokenIn is empty")
 	}
 
-	var startTick sdk.Int
+	var startTick osmomath.Int
 	if !req.UseCurTick {
-		startTick = sdk.NewInt(req.StartTick)
+		startTick = osmomath.NewInt(req.StartTick)
 	}
 
-	var boundTick sdk.Int
+	var boundTick osmomath.Int
 	if !req.UseNoBound {
-		boundTick = sdk.NewInt(req.BoundTick)
+		boundTick = osmomath.NewInt(req.BoundTick)
 	}
 
 	liquidityDepths, err := q.Keeper.GetTickLiquidityNetInDirection(

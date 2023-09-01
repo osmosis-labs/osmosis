@@ -3,8 +3,14 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	gammtypes "github.com/osmosis-labs/osmosis/v18/x/gamm/types"
 	minttypes "github.com/osmosis-labs/osmosis/v18/x/mint/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v19/x/mint/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 type Hooks struct {
@@ -28,11 +34,11 @@ func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, pool
 }
 
 // AfterJoinPool hook is a noop.
-func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
+func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount osmomath.Int) {
 }
 
 // AfterExitPool hook is a noop.
-func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
+func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount osmomath.Int, exitCoins sdk.Coins) {
 }
 
 // AfterCFMMSwap hook is a noop.

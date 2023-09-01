@@ -5,9 +5,14 @@ import (
 	"math"
 	"time"
 
+<<<<<<< HEAD
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v18/x/twap"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/twap"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 
 	gammtypes "github.com/osmosis-labs/osmosis/v18/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v18/x/twap/types"
@@ -162,11 +167,11 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 	defaultInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, denom0, denom1} }
 	wrongPoolIdInputAt := func(t time.Time) getRecordInput { return getRecordInput{2, t, denom0, denom1} }
 	defaultRevInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, denom1, denom0} }
-	baseRecord := withPrice0Set(newEmptyPriceRecord(1, baseTime, denom0, denom1), sdk.OneDec())
+	baseRecord := withPrice0Set(newEmptyPriceRecord(1, baseTime, denom0, denom1), osmomath.OneDec())
 	tMin1 := baseTime.Add(-time.Second)
-	tMin1Record := withPrice0Set(newEmptyPriceRecord(1, tMin1, denom0, denom1), sdk.OneDec())
+	tMin1Record := withPrice0Set(newEmptyPriceRecord(1, tMin1, denom0, denom1), osmomath.OneDec())
 	tPlus1 := baseTime.Add(time.Second)
-	tPlus1Record := withPrice0Set(newEmptyPriceRecord(1, tPlus1, denom0, denom1), sdk.OneDec())
+	tPlus1Record := withPrice0Set(newEmptyPriceRecord(1, tPlus1, denom0, denom1), osmomath.OneDec())
 
 	tests := map[string]struct {
 		recordsToSet   []types.TwapRecord
@@ -534,18 +539,18 @@ func (s *TestSuite) TestAccumulatorOverflow() {
 	maxSpotPrice := gammtypes.MaxSpotPrice
 	tests := map[string]struct {
 		// timeDelta is duration in nano seconds.
-		// we use sdk.Dec here because time.Duration would automatically cap to
-		// time.duration.maxDuration without erroring.
-		timeDelta sdk.Dec
+		// we use osmomath.Dec here because time.Duration would automatically cap to
+		// time.duosmomath.DecmaxDuration without erroring.
+		timeDelta osmomath.Dec
 		panics    bool
 	}{
 		"no overflow": {
 			// 2562047h47m16.854775807s in duration, this is over 292 years.
-			timeDelta: sdk.NewDec(2).Power(128),
+			timeDelta: osmomath.NewDec(2).Power(128),
 			panics:    false,
 		},
 		"overflow": {
-			timeDelta: sdk.NewDec(2).Power(129),
+			timeDelta: osmomath.NewDec(2).Power(129),
 			panics:    true,
 		},
 	}
@@ -553,7 +558,7 @@ func (s *TestSuite) TestAccumulatorOverflow() {
 		s.Run(name, func() {
 			s.SetupTest()
 
-			var accumulatorVal sdk.Dec
+			var accumulatorVal osmomath.Dec
 
 			fmt.Println(time.Duration(math.Pow(2, 128)))
 			if test.panics {

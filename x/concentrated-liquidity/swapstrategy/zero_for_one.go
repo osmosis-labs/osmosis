@@ -21,7 +21,7 @@ import (
 type zeroForOneStrategy struct {
 	sqrtPriceLimit osmomath.BigDec
 	storeKey       sdk.StoreKey
-	spreadFactor   sdk.Dec
+	spreadFactor   osmomath.Dec
 }
 
 var _ SwapStrategy = (*zeroForOneStrategy)(nil)
@@ -57,15 +57,15 @@ func (s zeroForOneStrategy) GetSqrtTargetPrice(nextTickSqrtPrice osmomath.BigDec
 //
 // ZeroForOne details:
 // - zeroForOneStrategy assumes moving to the left of the current square root price.
-func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget osmomath.BigDec, liquidity, amountZeroInRemaining sdk.Dec) (osmomath.BigDec, sdk.Dec, sdk.Dec, sdk.Dec) {
-	liquidityBigDec := osmomath.BigDecFromSDKDec(liquidity)
-	amountZeroInRemainingBigDec := osmomath.BigDecFromSDKDec(amountZeroInRemaining)
+func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget osmomath.BigDec, liquidity, amountZeroInRemaining osmomath.Dec) (osmomath.BigDec, osmomath.Dec, osmomath.Dec, osmomath.Dec) {
+	liquidityBigDec := osmomath.BigDecFromDec(liquidity)
+	amountZeroInRemainingBigDec := osmomath.BigDecFromDec(amountZeroInRemaining)
 
 	// Estimate the amount of token zero needed until the target sqrt price is reached.
 	amountZeroIn := math.CalcAmount0Delta(liquidityBigDec, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 
 	// Calculate sqrtPriceNext on the amount of token remaining after spread reward.
-	amountZeroInRemainingLessSpreadReward := amountZeroInRemainingBigDec.Mul(oneBigDec.Sub(osmomath.BigDecFromSDKDec(s.spreadFactor)))
+	amountZeroInRemainingLessSpreadReward := amountZeroInRemainingBigDec.Mul(oneBigDec.Sub(osmomath.BigDecFromDec(s.spreadFactor)))
 
 	var sqrtPriceNext osmomath.BigDec
 	// If have more of the amount remaining after spread reward than estimated until target,
@@ -90,14 +90,14 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 	amountOneOut := math.CalcAmount1Delta(liquidityBigDec, sqrtPriceNext, sqrtPriceCurrent, false)
 
 	// Round up to charge user more in pool's favor.
-	amountZeroInFinal := amountZeroIn.SDKDecRoundUp()
+	amountZeroInFinal := amountZeroIn.DecRoundUp()
 
 	// Handle spread rewards.
 	// Note that spread reward is always charged on the amount in.
 	spreadRewardChargeTotal := computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountZeroInFinal, amountZeroInRemaining, s.spreadFactor)
 
 	// Round down amount out to give user less in pool's favor.
-	return sqrtPriceNext, amountZeroInFinal, amountOneOut.SDKDec(), spreadRewardChargeTotal
+	return sqrtPriceNext, amountZeroInFinal, amountOneOut.Dec(), spreadRewardChargeTotal
 }
 
 // ComputeSwapWithinBucketInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total spread reward charge on token in.
@@ -120,9 +120,9 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 //
 // ZeroForOne details:
 // - zeroForOneStrategy assumes moving to the left of the current square root price.
-func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, sqrtPriceTarget osmomath.BigDec, liquidity, amountOneRemainingOut sdk.Dec) (osmomath.BigDec, sdk.Dec, sdk.Dec, sdk.Dec) {
-	liquidityBigDec := osmomath.BigDecFromSDKDec(liquidity)
-	amountOneRemainingOutBigDec := osmomath.BigDecFromSDKDec(amountOneRemainingOut)
+func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, sqrtPriceTarget osmomath.BigDec, liquidity, amountOneRemainingOut osmomath.Dec) (osmomath.BigDec, osmomath.Dec, osmomath.Dec, osmomath.Dec) {
+	liquidityBigDec := osmomath.BigDecFromDec(liquidity)
+	amountOneRemainingOutBigDec := osmomath.BigDecFromDec(amountOneRemainingOut)
 
 	// Estimate the amount of token one needed until the target sqrt price is reached.
 	amountOneOut := math.CalcAmount1Delta(liquidityBigDec, sqrtPriceTarget, sqrtPriceCurrent, false)
@@ -153,7 +153,7 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 	amountZeroIn := math.CalcAmount0Delta(liquidityBigDec, sqrtPriceNext, sqrtPriceCurrent, true)
 
 	// Round up to charge user more in pool's favor.
-	amountZeroInFinal := amountZeroIn.SDKDecRoundUp()
+	amountZeroInFinal := amountZeroIn.DecRoundUp()
 
 	// Handle spread rewards.
 	// Note that spread reward is always charged on the amount in.
@@ -175,7 +175,7 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, 
 	}
 
 	// Round down amount out to give user less in pool's favor.
-	return sqrtPriceNext, amountOneOut.SDKDec(), amountZeroInFinal, spreadRewardChargeTotal
+	return sqrtPriceNext, amountOneOut.Dec(), amountZeroInFinal, spreadRewardChargeTotal
 }
 
 // InitializeNextTickIterator returns iterator that searches for the next tick given currentTickIndex.
@@ -228,7 +228,7 @@ func (s zeroForOneStrategy) InitializeNextTickIterator(ctx sdk.Context, poolId u
 // When we move to the left, we must be crossing upper ticks first where
 // liquidity delta tracks the amount of liquidity being removed. So the sign must be
 // negative.
-func (s zeroForOneStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.Dec {
+func (s zeroForOneStrategy) SetLiquidityDeltaSign(deltaLiquidity osmomath.Dec) osmomath.Dec {
 	return deltaLiquidity.Neg()
 }
 
@@ -252,7 +252,7 @@ func (s zeroForOneStrategy) UpdateTickAfterCrossing(nextTick int64) int64 {
 // types.MinSqrtRatio <= sqrtPrice <= current square root price
 func (s zeroForOneStrategy) ValidateSqrtPrice(sqrtPrice osmomath.BigDec, currentSqrtPrice osmomath.BigDec) error {
 	// check that the price limit is below the current sqrt price but not lower than the minimum sqrt price if we are swapping asset0 for asset1
-	if sqrtPrice.GT(currentSqrtPrice) || sqrtPrice.LT(osmomath.BigDecFromSDKDec(types.MinSqrtPrice)) {
+	if sqrtPrice.GT(currentSqrtPrice) || sqrtPrice.LT(osmomath.BigDecFromDec(types.MinSqrtPrice)) {
 		return types.SqrtPriceValidationError{SqrtPriceLimit: sqrtPrice, LowerBound: types.MinSqrtPriceBigDec, UpperBound: currentSqrtPrice}
 	}
 	return nil

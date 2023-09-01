@@ -5,10 +5,14 @@ import (
 	"time"
 
 	proto "github.com/gogo/protobuf/proto"
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/pool-incentives/types"
+=======
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 )
 
 func TestParamsMarshalUnmarshal(t *testing.T) {
@@ -72,32 +76,32 @@ func TestDistrInfoMarshalUnmarshal(t *testing.T) {
 	}{
 		{ // empty records
 			info: &types.DistrInfo{
-				TotalWeight: sdk.NewInt(0),
+				TotalWeight: osmomath.NewInt(0),
 				Records:     []types.DistrRecord(nil),
 			},
 		},
 		{ // one record
 			info: &types.DistrInfo{
-				TotalWeight: sdk.NewInt(1),
+				TotalWeight: osmomath.NewInt(1),
 				Records: []types.DistrRecord{
 					{
 						GaugeId: 1,
-						Weight:  sdk.NewInt(1),
+						Weight:  osmomath.NewInt(1),
 					},
 				},
 			},
 		},
 		{ // two records
 			info: &types.DistrInfo{
-				TotalWeight: sdk.NewInt(2),
+				TotalWeight: osmomath.NewInt(2),
 				Records: []types.DistrRecord{
 					{
 						GaugeId: 1,
-						Weight:  sdk.NewInt(1),
+						Weight:  osmomath.NewInt(1),
 					},
 					{
 						GaugeId: 2,
-						Weight:  sdk.NewInt(1),
+						Weight:  osmomath.NewInt(1),
 					},
 				},
 			},
@@ -124,7 +128,7 @@ func TestDistrRecordMarshalUnmarshal(t *testing.T) {
 		{ // filled struct
 			info: &types.DistrRecord{
 				GaugeId: 1,
-				Weight:  sdk.NewInt(1),
+				Weight:  osmomath.NewInt(1),
 			},
 		},
 	}

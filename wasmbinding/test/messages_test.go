@@ -6,9 +6,16 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v18/wasmbinding"
 	"github.com/osmosis-labs/osmosis/v18/wasmbinding/bindings"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v19/wasmbinding/bindings"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 
 	"github.com/stretchr/testify/require"
 )
@@ -186,7 +193,7 @@ func TestMint(t *testing.T) {
 	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
 	require.Empty(t, balances)
 
-	amount, ok := sdk.NewIntFromString("8080")
+	amount, ok := osmomath.NewIntFromString("8080")
 	require.True(t, ok)
 
 	specs := map[string]struct {
@@ -227,7 +234,7 @@ func TestMint(t *testing.T) {
 		"zero amount": {
 			mint: &bindings.MintTokens{
 				Denom:         validDenomStr,
-				Amount:        sdk.ZeroInt(),
+				Amount:        osmomath.ZeroInt(),
 				MintToAddress: lucky.String(),
 			},
 			expErr: true,
@@ -301,7 +308,7 @@ func TestBurn(t *testing.T) {
 
 	validDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), validDenom.Subdenom)
 	emptyDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), emptyDenom.Subdenom)
-	mintAmount, ok := sdk.NewIntFromString("8080")
+	mintAmount, ok := osmomath.NewIntFromString("8080")
 	require.True(t, ok)
 
 	specs := map[string]struct {
@@ -351,7 +358,7 @@ func TestBurn(t *testing.T) {
 		"zero amount": {
 			burn: &bindings.BurnTokens{
 				Denom:           validDenomStr,
-				Amount:          sdk.ZeroInt(),
+				Amount:          osmomath.ZeroInt(),
 				BurnFromAddress: creator.String(),
 			},
 			expErr: true,

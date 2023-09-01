@@ -3,8 +3,14 @@ package twap
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v18/x/gamm/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -52,11 +58,11 @@ func (hook *gammhook) AfterCFMMSwap(ctx sdk.Context, sender sdk.AccAddress, pool
 	hook.k.trackChangedPool(ctx, poolId)
 }
 
-func (hook *gammhook) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
+func (hook *gammhook) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount osmomath.Int) {
 	hook.k.trackChangedPool(ctx, poolId)
 }
 
-func (hook *gammhook) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
+func (hook *gammhook) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount osmomath.Int, exitCoins sdk.Coins) {
 	hook.k.trackChangedPool(ctx, poolId)
 }
 

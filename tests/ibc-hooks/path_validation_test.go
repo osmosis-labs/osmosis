@@ -2,9 +2,12 @@ package ibc_hooks_test
 
 import (
 	"fmt"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // This sets up PFM on chainB and tests that it works as expected. We assume ChainA is osmosis
@@ -22,16 +25,23 @@ func (suite *HooksTestSuite) SetupAndTestPFM(chainBId Chain, chainBName string, 
 	forwarding := suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
 	suite.Require().False(forwarding.Bool())
 
-	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), targetChain.SenderAccount.GetAddress().String(), sendFrom.String(), suite.GetSenderChannel(chainBId, ChainA), "")
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", osmomath.NewInt(2000)), targetChain.SenderAccount.GetAddress().String(), sendFrom.String(), suite.GetSenderChannel(chainBId, ChainA), "")
 	suite.FullSend(transferMsg, reverseDirection)
 	tokenBA := suite.GetIBCDenom(chainBId, ChainA, "token0")
 
 	ctx := suite.chainA.GetContext()
 
 	msg := fmt.Sprintf(`{"propose_pfm":{"chain": "%s"}}`, chainBName)
-	_, err := contractKeeper.Execute(ctx, registryAddr, sendFrom, []byte(msg), sdk.NewCoins(sdk.NewCoin(tokenBA, sdk.NewInt(1))))
+	_, err := contractKeeper.Execute(ctx, registryAddr, sendFrom, []byte(msg), sdk.NewCoins(sdk.NewCoin(tokenBA, osmomath.NewInt(1))))
 	suite.Require().NoError(err)
 
+<<<<<<< HEAD
+=======
+	// Check that the funds were sent to the contract
+	intermediateBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), sendFrom, tokenBA)
+	suite.Require().Equal(balance.Amount, intermediateBalance.Amount.Add(osmomath.NewInt(1)))
+
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 	forwarding = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
 	suite.Require().False(forwarding.Bool())
 

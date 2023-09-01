@@ -7,8 +7,14 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+<<<<<<< HEAD
 	lockuptypes "github.com/osmosis-labs/osmosis/v18/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 type AccountKeeper interface {
@@ -38,7 +44,7 @@ type PoolManagerKeeper interface {
 type GAMMKeeper interface {
 	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
 	GetLinkedBalancerPoolID(ctx sdk.Context, poolIdEntering uint64) (uint64, error)
-	GetTotalPoolShares(ctx sdk.Context, poolId uint64) (sdk.Int, error)
+	GetTotalPoolShares(ctx sdk.Context, poolId uint64) (osmomath.Int, error)
 }
 
 type PoolIncentivesKeeper interface {
@@ -60,7 +66,7 @@ type LockupKeeper interface {
 	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 	CreateLockNoSend(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
-	GetLockedDenom(ctx sdk.Context, denom string, duration time.Duration) sdk.Int
+	GetLockedDenom(ctx sdk.Context, denom string, duration time.Duration) osmomath.Int
 }
 
 // CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.

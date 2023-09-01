@@ -7,9 +7,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+<<<<<<< HEAD
 	appParams "github.com/osmosis-labs/osmosis/v18/app/params"
 	clmodel "github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
+	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 func TestMsgCreateConcentratedPool(t *testing.T) {
@@ -82,7 +89,7 @@ func TestMsgCreateConcentratedPool(t *testing.T) {
 				Denom0:       ETH,
 				Denom1:       USDC,
 				TickSpacing:  DefaultTickSpacing,
-				SpreadFactor: sdk.ZeroDec().Sub(sdk.SmallestDec()),
+				SpreadFactor: osmomath.ZeroDec().Sub(osmomath.SmallestDec()),
 			},
 			expectPass: false,
 		},
@@ -93,7 +100,7 @@ func TestMsgCreateConcentratedPool(t *testing.T) {
 				Denom0:       ETH,
 				Denom1:       USDC,
 				TickSpacing:  DefaultTickSpacing,
-				SpreadFactor: sdk.OneDec(),
+				SpreadFactor: osmomath.OneDec(),
 			},
 			expectPass: false,
 		},

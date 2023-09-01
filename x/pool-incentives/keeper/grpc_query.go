@@ -10,9 +10,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	incentivetypes "github.com/osmosis-labs/osmosis/v18/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v18/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 var _ types.QueryServer = Querier{}
@@ -37,9 +44,9 @@ func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
-	totalWeightDec := distrInfo.TotalWeight.ToDec()
-	incentivePercentage := sdk.NewDec(0)
-	percentMultiplier := sdk.NewInt(100)
+	totalWeightDec := distrInfo.TotalWeight.ToLegacyDec()
+	incentivePercentage := osmomath.NewDec(0)
+	percentMultiplier := osmomath.NewInt(100)
 
 	pool, err := q.Keeper.poolmanagerKeeper.GetPool(sdkCtx, req.PoolId)
 	if err != nil {
@@ -57,7 +64,7 @@ func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) 
 		for _, record := range distrInfo.Records {
 			if record.GaugeId == gaugeId {
 				// Pool incentive % = (gauge_id_weight / sum_of_all_pool_gauge_weight) * 100
-				incentivePercentage = record.Weight.ToDec().Quo(totalWeightDec).MulInt(percentMultiplier)
+				incentivePercentage = record.Weight.ToLegacyDec().Quo(totalWeightDec).MulInt(percentMultiplier)
 			}
 		}
 
@@ -84,7 +91,7 @@ func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) 
 		for _, record := range distrInfo.Records {
 			if record.GaugeId == gaugeId {
 				// Pool incentive % = (gauge_id_weight / sum_of_all_pool_gauge_weight) * 100
-				incentivePercentage = record.Weight.ToDec().Quo(totalWeightDec).MulInt(percentMultiplier)
+				incentivePercentage = record.Weight.ToLegacyDec().Quo(totalWeightDec).MulInt(percentMultiplier)
 			}
 		}
 

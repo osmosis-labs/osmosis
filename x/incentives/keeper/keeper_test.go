@@ -7,10 +7,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
 	cltypes "github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v18/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v18/x/incentives/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 type KeeperTestSuite struct {
@@ -48,7 +56,15 @@ func (s *KeeperTestSuite) ValidateNotDistributedGauge(gaugeID uint64) {
 	s.ValidateDistributedGauge(gaugeID, 0, sdk.Coins(nil))
 }
 
+<<<<<<< HEAD
 func (s *KeeperTestSuite) ValidateIncentiveRecord(poolId uint64, remainingCoin sdk.DecCoin, emissionRate sdk.Dec, incentiveRecord cltypes.IncentiveRecord) {
+=======
+func (s *KeeperTestSuite) ValidateIncentiveRecord(poolId uint64, remainingCoin sdk.Coin, incentiveRecord cltypes.IncentiveRecord) {
+	epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
+	distributedDecCoin := sdk.NewDecCoinFromCoin(remainingCoin)
+	emissionRateForPoolClPool := distributedDecCoin.Amount.QuoTruncate(osmomath.NewDec(epochInfo.Duration.Milliseconds()).QuoInt(osmomath.NewInt(1000)))
+
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 	s.Require().Equal(poolId, incentiveRecord.PoolId)
 	s.Require().Equal(emissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
 	s.Require().Equal(types.DefaultConcentratedUptime, incentiveRecord.MinUptime)

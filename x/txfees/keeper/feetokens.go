@@ -5,7 +5,12 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/txfees/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -38,20 +43,20 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 // Spot Price Calculation: spotPrice / (1 - spreadFactor),
 // where spotPrice is defined as:
 // (tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)
-func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, error) {
+func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (osmomath.Dec, error) {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	feeToken, err := k.GetFeeToken(ctx, inputDenom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	spotPrice, err := k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 	return spotPrice, nil
 }

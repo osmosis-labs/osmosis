@@ -23,7 +23,7 @@ import (
 func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, error) {
 	// use false for zeroForOne since we're going from lower tick -> upper tick
 	zeroForOne := false
-	swapStrategy := swapstrategy.New(zeroForOne, osmomath.ZeroDec(), k.storeKey, sdk.ZeroDec())
+	swapStrategy := swapstrategy.New(zeroForOne, osmomath.ZeroBigDec(), k.storeKey, osmomath.ZeroDec())
 
 	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
 	// we do -1 to make min tick inclusive.
@@ -95,8 +95,8 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 // * ctx (sdk.Context): The context for the SDK.
 // * poolId (uint64): The ID of the pool for which the liquidity needs to be checked.
 // * tokenIn (string): The token denom that determines the swap direction and strategy.
-// * userGivenStartTick (sdk.Int): The starting tick for grabbing liquidities. If not provided, the current tick of the pool is used.
-// * boundTick (sdk.Int): An optional bound tick to limit the range of the queryproto. If not provided, the minimum or maximum tick will be used, depending on the strategy.
+// * userGivenStartTick (osmomath.Int): The starting tick for grabbing liquidities. If not provided, the current tick of the pool is used.
+// * boundTick (osmomath.Int): An optional bound tick to limit the range of the queryproto. If not provided, the minimum or maximum tick will be used, depending on the strategy.
 //
 // Returns:
 
@@ -109,7 +109,7 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 // Errors:
 // * types.PoolNotFoundError: If the given pool does not exist.
 // * types.TokenInDenomNotInPoolError: If the given tokenIn is not an asset in the pool.
-func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, tokenIn string, userGivenStartTick sdk.Int, boundTick sdk.Int) ([]queryproto.TickLiquidityNet, error) {
+func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, tokenIn string, userGivenStartTick osmomath.Int, boundTick osmomath.Int) ([]queryproto.TickLiquidityNet, error) {
 	// get min and max tick for the pool
 	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -142,14 +142,14 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	if boundTick.IsNil() {
 		if zeroForOne {
-			boundTick = sdk.NewInt(types.MinInitializedTick)
+			boundTick = osmomath.NewInt(types.MinInitializedTick)
 		} else {
-			boundTick = sdk.NewInt(types.MaxTick)
+			boundTick = osmomath.NewInt(types.MaxTick)
 		}
 	}
 
 	liquidityDepths := []queryproto.TickLiquidityNet{}
-	swapStrategy := swapstrategy.New(zeroForOne, osmomath.ZeroDec(), k.storeKey, sdk.ZeroDec())
+	swapStrategy := swapstrategy.New(zeroForOne, osmomath.ZeroBigDec(), k.storeKey, osmomath.ZeroDec())
 
 	currentTick := p.GetCurrentTick()
 	_, currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick)
@@ -161,7 +161,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	// function to validate that start tick and bound tick are
 	// between current tick and the min/max tick depending on the swap direction.
-	validateTickIsInValidRange := func(validateTick sdk.Int) error {
+	validateTickIsInValidRange := func(validateTick osmomath.Int) error {
 		_, validateSqrtPrice, err := math.TickToSqrtPrice(validateTick.Int64())
 		if err != nil {
 			return err
@@ -181,7 +181,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	}
 
 	ctx.Logger().Debug("validating start tick")
-	if err := validateTickIsInValidRange(sdk.NewInt(startTick)); err != nil {
+	if err := validateTickIsInValidRange(osmomath.NewInt(startTick)); err != nil {
 		return []queryproto.TickLiquidityNet{}, fmt.Errorf("failed validating start tick (%d) with current sqrt price of (%s): %w", startTick, currentTickSqrtPrice, err)
 	}
 

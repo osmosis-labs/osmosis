@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
@@ -21,7 +22,7 @@ func (accum AccumulatorObject) GetAllPositions() ([]Record, error) {
 }
 
 // Creates an accumulator object for testing purposes
-func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, totalShares sdk.Dec) *AccumulatorObject {
+func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, totalShares osmomath.Dec) *AccumulatorObject {
 	// We store an accumulator object in state even if unused in tests
 	// because position operations still require GetAccumulator to work
 	_ = MakeAccumulator(store, name)
@@ -72,7 +73,7 @@ func (o *Options) Validate() error {
 
 // WARNING: only used in tests to make sure that receiver is mutated.
 // Do not move out of export_test.go and do not use in production code.
-func (accum AccumulatorObject) GetTotalShareField() sdk.Dec {
+func (accum AccumulatorObject) GetTotalShareField() osmomath.Dec {
 	return accum.totalShares
 }
 
@@ -82,6 +83,6 @@ func (accum AccumulatorObject) GetValueField() sdk.DecCoins {
 	return accum.valuePerShare
 }
 
-func InitOrUpdatePosition(accum *AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
+func InitOrUpdatePosition(accum *AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits osmomath.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
 	initOrUpdatePosition(accum, accumulatorValue, index, numShareUnits, unclaimedRewards, options)
 }

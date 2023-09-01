@@ -7,12 +7,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/protorev/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 func TestMsgSetHotRoutes(t *testing.T) {
-	validStepSize := sdk.NewInt(1_000_000)
-	invalidStepSize := sdk.NewInt(0)
+	validStepSize := osmomath.NewInt(1_000_000)
+	invalidStepSize := osmomath.NewInt(0)
 	cases := []struct {
 		description string
 		admin       string
@@ -628,7 +633,7 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 			[]types.BaseDenom{
 				{
 					Denom:    "Atom",
-					StepSize: sdk.NewInt(10),
+					StepSize: osmomath.NewInt(10),
 				},
 			},
 			false,
@@ -639,7 +644,7 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
-					StepSize: sdk.NewInt(0),
+					StepSize: osmomath.NewInt(0),
 				},
 			},
 			false,
@@ -650,11 +655,11 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
-					StepSize: sdk.NewInt(1),
+					StepSize: osmomath.NewInt(1),
 				},
 				{
 					Denom:    types.OsmosisDenomination,
-					StepSize: sdk.NewInt(1),
+					StepSize: osmomath.NewInt(1),
 				},
 			},
 			false,
@@ -665,7 +670,7 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
-					StepSize: sdk.NewInt(1),
+					StepSize: osmomath.NewInt(1),
 				},
 			},
 			true,
@@ -676,15 +681,15 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
-					StepSize: sdk.NewInt(1),
+					StepSize: osmomath.NewInt(1),
 				},
 				{
 					Denom:    "Atom",
-					StepSize: sdk.NewInt(1),
+					StepSize: osmomath.NewInt(1),
 				},
 				{
 					Denom:    "testDenom",
-					StepSize: sdk.NewInt(1),
+					StepSize: osmomath.NewInt(1),
 				},
 			},
 			true,
@@ -695,11 +700,11 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
-					StepSize: sdk.NewInt(1),
+					StepSize: osmomath.NewInt(1),
 				},
 				{
 					Denom:    "Atom",
-					StepSize: sdk.NewInt(1),
+					StepSize: osmomath.NewInt(1),
 				},
 				{
 					Denom: "testDenom",

@@ -5,9 +5,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v18/x/gamm/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v18/x/gamm/types/migration"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 var DefaultMigrationRecords = gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
@@ -86,34 +93,34 @@ func (s *KeeperTestSuite) TestGammExportGenesis() {
 
 	acc1 := s.TestAccs[0]
 	err := simapp.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
 	))
 	s.Require().NoError(err)
 
 	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.ZeroDec(),
+		SwapFee: osmomath.NewDecWithPrec(1, 2),
+		ExitFee: osmomath.ZeroDec(),
 	}, []balancer.PoolAsset{{
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(100),
+		Token:  sdk.NewCoin("foo", osmomath.NewInt(10000)),
 	}, {
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(100),
+		Token:  sdk.NewCoin("bar", osmomath.NewInt(10000)),
 	}}, "")
 	_, err = s.App.PoolManagerKeeper.CreatePool(ctx, msg)
 	s.Require().NoError(err)
 
 	msg = balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.ZeroDec(),
+		SwapFee: osmomath.NewDecWithPrec(1, 2),
+		ExitFee: osmomath.ZeroDec(),
 	}, []balancer.PoolAsset{{
-		Weight: sdk.NewInt(70),
-		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(70),
+		Token:  sdk.NewCoin("foo", osmomath.NewInt(10000)),
 	}, {
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(100),
+		Token:  sdk.NewCoin("bar", osmomath.NewInt(10000)),
 	}}, "")
 	_, err = s.App.PoolManagerKeeper.CreatePool(ctx, msg)
 	s.Require().NoError(err)
@@ -131,21 +138,21 @@ func (s *KeeperTestSuite) TestMarshalUnmarshalGenesis() {
 
 	acc1 := s.TestAccs[0]
 	err := simapp.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
 	))
 	s.Require().NoError(err)
 
 	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.ZeroDec(),
+		SwapFee: osmomath.NewDecWithPrec(1, 2),
+		ExitFee: osmomath.ZeroDec(),
 	}, []balancer.PoolAsset{{
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(100),
+		Token:  sdk.NewCoin("foo", osmomath.NewInt(10000)),
 	}, {
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(100),
+		Token:  sdk.NewCoin("bar", osmomath.NewInt(10000)),
 	}}, "")
 	_, err = s.App.PoolManagerKeeper.CreatePool(ctx, msg)
 	s.Require().NoError(err)

@@ -3,8 +3,14 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 // SetParams sets the total set of params.
@@ -34,7 +40,7 @@ func (k Keeper) UnmarshalPoolLegacy(bz []byte) (poolmanagertypes.PoolI, error) {
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
-func GetMaximalNoSwapLPAmount(ctx sdk.Context, pool types.CFMMPoolI, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
+func GetMaximalNoSwapLPAmount(ctx sdk.Context, pool types.CFMMPoolI, shareOutAmount osmomath.Int) (neededLpLiquidity sdk.Coins, err error) {
 	return getMaximalNoSwapLPAmount(ctx, pool, shareOutAmount)
 }
 

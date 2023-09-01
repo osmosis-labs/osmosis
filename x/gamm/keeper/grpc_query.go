@@ -15,10 +15,18 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v18/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v18/x/gamm/v2types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/v2types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 var _ types.QueryServer = Querier{}
@@ -252,7 +260,7 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 	exitFee := pool.GetExitFee(sdkCtx)
 
 	totalSharesAmount := pool.GetTotalShares()
-	if req.ShareInAmount.GTE(totalSharesAmount) || req.ShareInAmount.LTE(sdk.ZeroInt()) {
+	if req.ShareInAmount.GTE(totalSharesAmount) || req.ShareInAmount.LTE(osmomath.ZeroInt()) {
 		return nil, errorsmod.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
 	}
 

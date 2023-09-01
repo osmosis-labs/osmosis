@@ -9,8 +9,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/incentives/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v18/x/incentives/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 
 	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
 
@@ -306,7 +312,7 @@ func TestAuthzMsg(t *testing.T) {
 	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
-	coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
+	coin := sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1))
 	someDate := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
 
 	testCases := []struct {

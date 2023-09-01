@@ -5,7 +5,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/lockup/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 func (s *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
@@ -527,7 +532,7 @@ func (s *KeeperTestSuite) TestLockedDenom() {
 			sdk.WrapSDKContext(s.Ctx),
 			&types.LockedDenomRequest{Denom: "stake", Duration: duration})
 		s.Require().NoError(err)
-		s.Require().Equal(res.Amount, sdk.NewInt(expectedAmount))
+		s.Require().Equal(res.Amount, osmomath.NewInt(expectedAmount))
 	}
 
 	// lock coins

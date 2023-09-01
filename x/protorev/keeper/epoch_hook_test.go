@@ -5,10 +5,16 @@ import (
 	"strings"
 	"testing"
 
+<<<<<<< HEAD
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v18/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v18/x/protorev/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 // BenchmarkEpochHook benchmarks the epoch hook. In particular, it benchmarks the UpdatePools function.
@@ -144,7 +150,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			},
 			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochOne": {
-					"uosmo": {Liquidity: sdk.NewInt(2000000), PoolId: 47},
+					"uosmo": {Liquidity: osmomath.NewInt(2000000), PoolId: 47},
 				},
 			},
 		},
@@ -162,7 +168,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			},
 			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochTwo": {
-					"uosmo": {Liquidity: sdk.Int(sdk.NewUintFromString("999999000000000001000000000000000000")), PoolId: 50},
+					"uosmo": {Liquidity: osmomath.Int(osmomath.NewUintFromString("999999000000000001000000000000000000")), PoolId: 50},
 				},
 			},
 		},

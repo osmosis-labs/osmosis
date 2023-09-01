@@ -4,7 +4,12 @@ import (
 	"math/rand"
 	"time"
 
+<<<<<<< HEAD
 	osmosimtypes "github.com/osmosis-labs/osmosis/v18/simulation/simtypes"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
@@ -63,12 +68,12 @@ func WeightedOperations(
 }
 
 // genRewardCoins generates a random number of coin denoms with a respective random value for each coin.
-func genRewardCoins(r *rand.Rand, coins sdk.Coins, fee sdk.Int) (res sdk.Coins) {
+func genRewardCoins(r *rand.Rand, coins sdk.Coins, fee osmomath.Int) (res sdk.Coins) {
 	numCoins := 1 + r.Intn(Min(coins.Len(), 1))
 	denomIndices := r.Perm(numCoins)
 	for i := 0; i < numCoins; i++ {
 		var (
-			amt sdk.Int
+			amt osmomath.Int
 			err error
 		)
 		denom := coins[denomIndices[i]].Denom

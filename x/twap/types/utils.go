@@ -5,10 +5,10 @@ import (
 	"sort"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
-var MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
+var MaxSpotPrice = osmomath.NewDec(2).Power(128).Sub(osmomath.OneDec())
 
 // GetAllUniqueDenomPairs returns all unique pairs of denoms, where for every pair
 // (X, Y), X < Y.
@@ -37,13 +37,13 @@ func GetAllUniqueDenomPairs(denoms []string) []DenomPair {
 // SpotPriceMulDuration returns the spot price multiplied by the time delta,
 // that is the spot price between the current and last TWAP record.
 // A single second accounts for 1_000_000_000 when converted to int64.
-func SpotPriceMulDuration(sp sdk.Dec, timeDeltaMs int64) sdk.Dec {
+func SpotPriceMulDuration(sp osmomath.Dec, timeDeltaMs int64) osmomath.Dec {
 	return sp.MulInt64(timeDeltaMs)
 }
 
-// AccumDiffDivDuration returns the accumulated difference divided by the the
+// AccumDiffDivDuration returns the osmomath.Decated difference dividosmomath.Deche the
 // time delta, that is the spot price between the current and last TWAP record.
-func AccumDiffDivDuration(accumDiff sdk.Dec, timeDeltaMs int64) sdk.Dec {
+func AccumDiffDivDuration(accumDiff osmomath.Dec, timeDeltaMs int64) osmomath.Dec {
 	return accumDiff.QuoInt64(timeDeltaMs)
 }
 

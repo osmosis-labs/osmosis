@@ -8,9 +8,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v18/x/superfluid/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v18/x/superfluid/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 type SuperfluidEventsTestSuite struct {
@@ -212,7 +219,7 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidIncreaseDelegationEven
 		"basic valid": {
 			ctx:    suite.CreateTestContext(),
 			lockID: 1,
-			amount: sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(100))),
+			amount: sdk.NewCoins(sdk.NewCoin(testDenomA, osmomath.NewInt(100))),
 		},
 		"context with no event manager": {
 			ctx: sdk.Context{},
@@ -220,7 +227,7 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidIncreaseDelegationEven
 		"valid with multiple tokens in and out": {
 			ctx:    suite.CreateTestContext(),
 			lockID: 1,
-			amount: sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(100)), sdk.NewCoin(testDenomB, sdk.NewInt(10))),
+			amount: sdk.NewCoins(sdk.NewCoin(testDenomA, osmomath.NewInt(100)), sdk.NewCoin(testDenomB, osmomath.NewInt(10))),
 		},
 	}
 

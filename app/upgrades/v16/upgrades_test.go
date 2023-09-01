@@ -25,8 +25,8 @@ import (
 
 var (
 	DAIIBCDenom         = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
-	defaultDaiAmount, _ = sdk.NewIntFromString("73000000000000000000000")
-	defaultDenom0mount  = sdk.NewInt(10000000000)
+	defaultDaiAmount, _ = osmomath.NewIntFromString("73000000000000000000000")
+	defaultDenom0mount  = osmomath.NewInt(10000000000)
 	desiredDenom0       = "uosmo"
 	desiredDenom0Coin   = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
 	daiCoin             = sdk.NewCoin(DAIIBCDenom, defaultDaiAmount)
@@ -72,9 +72,9 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 	// Allow 0.01% margin of error.
 	multiplicativeTolerance := osmomath.ErrTolerance{
-		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
+		MultiplicativeTolerance: osmomath.MustNewDecFromStr("0.0001"),
 	}
-	defaultDaiAmount, _ := sdk.NewIntFromString("73000000000000000000000")
+	defaultDaiAmount, _ := osmomath.NewIntFromString("73000000000000000000000")
 	testCases := []struct {
 		name         string
 		pre_upgrade  func()
@@ -88,11 +88,11 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Create earlier pools
 				for i := uint64(1); i < v16.DaiOsmoPoolId; i++ {
-					suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)), sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount))
+					suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)), sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount))
 				}
 
 				// Create DAI / OSMO pool
-				suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount), sdk.NewCoin("uosmo", sdk.NewInt(10000000000)))
+				suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount), sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)))
 
 			},
 			func() {
@@ -100,7 +100,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				stakingParams.BondDenom = "uosmo"
 				suite.App.StakingKeeper.SetParams(suite.Ctx, stakingParams)
 
-				oneDai := sdk.NewCoins(sdk.NewCoin(v16.DAIIBCDenom, sdk.NewInt(1000000000000000000)))
+				oneDai := sdk.NewCoins(sdk.NewCoin(v16.DAIIBCDenom, osmomath.NewInt(1000000000000000000)))
 
 				// Send one dai to the community pool (this is true in current mainnet)
 				suite.FundAcc(suite.TestAccs[0], oneDai)
@@ -111,7 +111,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				// Determine approx how much OSMO will be used from community pool when 1 DAI used.
 				daiOsmoGammPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, v16.DaiOsmoPoolId)
 				suite.Require().NoError(err)
-				respectiveOsmo, err := suite.App.GAMMKeeper.CalcOutAmtGivenIn(suite.Ctx, daiOsmoGammPool, oneDai[0], v16.DesiredDenom0, sdk.ZeroDec())
+				respectiveOsmo, err := suite.App.GAMMKeeper.CalcOutAmtGivenIn(suite.Ctx, daiOsmoGammPool, oneDai[0], v16.DesiredDenom0, osmomath.ZeroDec())
 				suite.Require().NoError(err)
 
 				// Retrieve the community pool balance before the upgrade
@@ -152,7 +152,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().Equal(v16.DAIIBCDenom, concentratedTypePool.GetToken1())
 
 				// Validate that the spot price of the CL pool is what we expect
-				suite.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromSDKDec(balancerSpotPrice)))
+				suite.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromDec(balancerSpotPrice)))
 
 				// Validate that link was created.
 				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
@@ -182,7 +182,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Validate that expedited quorum was set to 2/3
 				expQuorum := suite.App.GovKeeper.GetTallyParams(suite.Ctx).ExpeditedQuorum
-				suite.Require().Equal(sdk.NewDec(2).Quo(sdk.NewDec(3)), expQuorum)
+				suite.Require().Equal(osmomath.NewDec(2).Quo(osmomath.NewDec(3)), expQuorum)
 
 				// Validate that cw pool module address is allowed to upload contract code
 				allowedAddresses := suite.App.WasmKeeper.GetParams(suite.Ctx).CodeUploadAccess.Addresses
@@ -227,12 +227,12 @@ func upgradeProtorevSetup(suite *UpgradeTestSuite) error {
 	account := apptesting.CreateRandomAccounts(1)[0]
 	suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
-	devFee := sdk.NewCoin("uosmo", sdk.NewInt(1000000))
+	devFee := sdk.NewCoin("uosmo", osmomath.NewInt(1000000))
 	if err := suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, devFee); err != nil {
 		return err
 	}
 
-	fundCoin := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000)))
+	fundCoin := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000000)))
 
 	if err := suite.App.AppKeepers.BankKeeper.MintCoins(suite.Ctx, protorevtypes.ModuleName, fundCoin); err != nil {
 		return err
@@ -245,7 +245,7 @@ func verifyProtorevUpdateSuccess(suite *UpgradeTestSuite) {
 	// Ensure balance was transferred to the developer account
 	devAcc, err := suite.App.ProtoRevKeeper.GetDeveloperAccount(suite.Ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal(suite.App.BankKeeper.GetBalance(suite.Ctx, devAcc, "uosmo"), sdk.NewCoin("uosmo", sdk.NewInt(1000000)))
+	suite.Require().Equal(suite.App.BankKeeper.GetBalance(suite.Ctx, devAcc, "uosmo"), sdk.NewCoin("uosmo", osmomath.NewInt(1000000)))
 
 	// Ensure developer fees are empty
 	coins, err := suite.App.ProtoRevKeeper.GetAllDeveloperFees(suite.Ctx)

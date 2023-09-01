@@ -57,7 +57,7 @@ func dummyUpgrade(suite *UpgradeTestSuite) {
 	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
 }
 
-func dummyTwapRecord(poolId uint64, t time.Time, asset0 string, asset1 string, sp0, accum0, accum1, geomAccum sdk.Dec) types.TwapRecord {
+func dummyTwapRecord(poolId uint64, t time.Time, asset0 string, asset1 string, sp0, accum0, accum1, geomAccum osmomath.Dec) types.TwapRecord {
 	return types.TwapRecord{
 		PoolId:      poolId,
 		Time:        t,
@@ -65,7 +65,7 @@ func dummyTwapRecord(poolId uint64, t time.Time, asset0 string, asset1 string, s
 		Asset1Denom: asset1,
 
 		P0LastSpotPrice:             sp0,
-		P1LastSpotPrice:             sdk.OneDec().Quo(sp0),
+		P1LastSpotPrice:             osmomath.OneDec().Quo(sp0),
 		P0ArithmeticTwapAccumulator: accum0,
 		P1ArithmeticTwapAccumulator: accum1,
 		GeometricTwapAccumulator:    geomAccum,
@@ -86,7 +86,7 @@ func assertEqual(suite *UpgradeTestSuite, pre, post interface{}) {
 func (suite *UpgradeTestSuite) TestUpgrade() {
 	// Allow 0.1% margin of error.
 	multiplicativeTolerance := osmomath.ErrTolerance{
-		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.001"),
+		MultiplicativeTolerance: osmomath.MustNewDecFromStr("0.001"),
 	}
 
 	testCases := []struct {
@@ -114,17 +114,17 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					// If LinkedClassicPool is specified, but it's smaller than the current pool ID,
 					// create dummy pools to fill the gap.
 					for lastPoolID+1 < poolID {
-						poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(10000000000)), sdk.NewCoin(assetPair.QuoteAsset, sdk.NewInt(10000000000)))
+						poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, osmomath.NewInt(10000000000)), sdk.NewCoin(assetPair.QuoteAsset, osmomath.NewInt(10000000000)))
 						suite.PrepareBalancerPoolWithCoins(poolCoins...)
 						lastPoolID++
 					}
 
 					// Now create the pool with the correct pool ID.
-					poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(10000000000)), sdk.NewCoin(assetPair.QuoteAsset, sdk.NewInt(10000000000)))
+					poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, osmomath.NewInt(10000000000)), sdk.NewCoin(assetPair.QuoteAsset, osmomath.NewInt(10000000000)))
 					suite.PrepareBalancerPoolWithCoins(poolCoins...)
 
 					// 0.1 OSMO used to get the respective base asset amount, 0.1 OSMO used to create the position
-					osmoIn := sdk.NewCoin(v17.OSMO, sdk.NewInt(100000).MulRaw(2))
+					osmoIn := sdk.NewCoin(v17.OSMO, osmomath.NewInt(100000).MulRaw(2))
 
 					// Add the amount of osmo that will be used to the expectedCoinsUsedInUpgradeHandler.
 					expectedCoinsUsedInUpgradeHandler = expectedCoinsUsedInUpgradeHandler.Add(osmoIn)
@@ -145,43 +145,43 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				existingPool := suite.PrepareConcentratedPoolWithCoins("ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo")
 				existingPool2 := suite.PrepareConcentratedPoolWithCoins("akash", "uosmo")
-				existingBalancerPoolId := suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("atom", sdk.NewInt(10000000000)), sdk.NewCoin("uosmo", sdk.NewInt(10000000000)))
+				existingBalancerPoolId := suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("atom", osmomath.NewInt(10000000000)), sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)))
 
 				// create few TWAP records for the pools
-				t1 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(10),
-					sdk.OneDec().MulInt64(10*10),
-					sdk.OneDec().MulInt64(3),
-					sdk.ZeroDec())
+				t1 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", osmomath.NewDec(10),
+					osmomath.OneDec().MulInt64(10*10),
+					osmomath.OneDec().MulInt64(3),
+					osmomath.ZeroDec())
 
-				t2 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*10), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(30),
-					sdk.OneDec().MulInt64(10*10+10),
-					sdk.OneDec().MulInt64(5),
-					sdk.ZeroDec())
+				t2 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*10), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", osmomath.NewDec(30),
+					osmomath.OneDec().MulInt64(10*10+10),
+					osmomath.OneDec().MulInt64(5),
+					osmomath.ZeroDec())
 
-				t3 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(20),
-					sdk.OneDec().MulInt64(10*10+10*5),
-					sdk.OneDec().MulInt64(10),
-					sdk.ZeroDec())
+				t3 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", osmomath.NewDec(20),
+					osmomath.OneDec().MulInt64(10*10+10*5),
+					osmomath.OneDec().MulInt64(10),
+					osmomath.ZeroDec())
 
-				t4 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour*24), "akash", "uosmo", sdk.NewDec(10),
-					sdk.OneDec().MulInt64(10*10*10),
-					sdk.OneDec().MulInt64(5),
-					sdk.ZeroDec())
+				t4 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour*24), "akash", "uosmo", osmomath.NewDec(10),
+					osmomath.OneDec().MulInt64(10*10*10),
+					osmomath.OneDec().MulInt64(5),
+					osmomath.ZeroDec())
 
-				t5 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour), "akash", "uosmo", sdk.NewDec(20),
-					sdk.OneDec().MulInt64(10),
-					sdk.OneDec().MulInt64(2),
-					sdk.ZeroDec())
+				t5 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour), "akash", "uosmo", osmomath.NewDec(20),
+					osmomath.OneDec().MulInt64(10),
+					osmomath.OneDec().MulInt64(2),
+					osmomath.ZeroDec())
 
-				t6 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Hour), "atom", "uosmo", sdk.NewDec(10),
-					sdk.OneDec().MulInt64(10),
-					sdk.OneDec().MulInt64(10),
-					sdk.ZeroDec())
+				t6 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Hour), "atom", "uosmo", osmomath.NewDec(10),
+					osmomath.OneDec().MulInt64(10),
+					osmomath.OneDec().MulInt64(10),
+					osmomath.ZeroDec())
 
-				t7 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Minute*20), "atom", "uosmo", sdk.NewDec(50),
-					sdk.OneDec().MulInt64(10*5),
-					sdk.OneDec().MulInt64(5),
-					sdk.ZeroDec())
+				t7 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Minute*20), "atom", "uosmo", osmomath.NewDec(50),
+					osmomath.OneDec().MulInt64(10*5),
+					osmomath.OneDec().MulInt64(5),
+					osmomath.ZeroDec())
 
 				// store TWAP records
 				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, t1)
@@ -296,7 +296,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					suite.Require().Equal(assetPair.QuoteAsset, concentratedTypePool.GetToken1())
 
 					// Validate that the spot price of the CL pool is what we expect
-					suite.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromSDKDec(balancerSpotPrice)))
+					suite.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromDec(balancerSpotPrice)))
 
 					// Validate that the link is correct.
 					migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
@@ -353,11 +353,11 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					// For testnet, we create a CL pool for ANY balancer pool.
 					// The only thing we use the assetPair list here for to select some pools to enable superfluid for.
 					for lastPoolID+1 < poolID {
-						poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(10000000000)), sdk.NewCoin(assetPair.QuoteAsset, sdk.NewInt(10000000000)))
+						poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, osmomath.NewInt(10000000000)), sdk.NewCoin(assetPair.QuoteAsset, osmomath.NewInt(10000000000)))
 						suite.PrepareBalancerPoolWithCoins(poolCoins...)
 
 						// 0.1 OSMO used to get the respective base asset amount, 0.1 OSMO used to create the position
-						osmoIn := sdk.NewCoin(v17.OSMO, sdk.NewInt(100000).MulRaw(2))
+						osmoIn := sdk.NewCoin(v17.OSMO, osmomath.NewInt(100000).MulRaw(2))
 
 						// Add the amount of osmo that will be used to the expectedCoinsUsedInUpgradeHandler.
 						expectedCoinsUsedInUpgradeHandler = expectedCoinsUsedInUpgradeHandler.Add(osmoIn)
@@ -463,7 +463,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 					suite.Require().Equal(quoteAsset, concentratedTypePool.GetToken1())
 
 					// Validate that the spot price of the CL pool is what we expect
-					suite.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromSDKDec(balancerSpotPrice)))
+					suite.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromDec(balancerSpotPrice)))
 
 					// Validate that the link is correct.
 					migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)

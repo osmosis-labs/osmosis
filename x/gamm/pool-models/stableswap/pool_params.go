@@ -1,9 +1,14 @@
 package stableswap
 
 import (
+<<<<<<< HEAD
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v18/x/gamm/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 func (params PoolParams) Validate() error {
@@ -11,7 +16,7 @@ func (params PoolParams) Validate() error {
 		return types.ErrNegativeExitFee
 	}
 
-	if params.ExitFee.GTE(sdk.OneDec()) {
+	if params.ExitFee.GTE(osmomath.OneDec()) {
 		return types.ErrTooMuchExitFee
 	}
 
@@ -19,7 +24,7 @@ func (params PoolParams) Validate() error {
 		return types.ErrNegativeSpreadFactor
 	}
 
-	if params.SwapFee.GTE(sdk.OneDec()) {
+	if params.SwapFee.GTE(osmomath.OneDec()) {
 		return types.ErrTooMuchSpreadFactor
 	}
 	return nil

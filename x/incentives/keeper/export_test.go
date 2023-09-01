@@ -3,7 +3,12 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/incentives/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 // AddGaugeRefByKey appends the provided gauge ID into an array associated with the provided key.
@@ -37,6 +42,6 @@ func (k Keeper) MoveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 }
 
 // ChargeFeeIfSufficientFeeDenomBalance see chargeFeeIfSufficientFeeDenomBalance spec.
-func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) error {
+func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee osmomath.Int, gaugeCoins sdk.Coins) error {
 	return k.chargeFeeIfSufficientFeeDenomBalance(ctx, address, fee, gaugeCoins)
 }

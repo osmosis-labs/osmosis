@@ -7,8 +7,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v18/x/gamm/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 
 	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v18/app/params"
@@ -31,8 +37,8 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				PoolId:        1,
 				TokenOutDenom: "test2",
 			}},
-			TokenIn:           sdk.NewCoin("test", sdk.NewInt(100)),
-			TokenOutMinAmount: sdk.NewInt(200),
+			TokenIn:           sdk.NewCoin("test", osmomath.NewInt(100)),
+			TokenOutMinAmount: osmomath.NewInt(200),
 		}
 
 		return after(properMsg)
@@ -105,7 +111,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		{
 			name: "zero amount token",
 			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
-				msg.TokenIn.Amount = sdk.NewInt(0)
+				msg.TokenIn.Amount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -113,7 +119,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		{
 			name: "negative amount token",
 			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
-				msg.TokenIn.Amount = sdk.NewInt(-10)
+				msg.TokenIn.Amount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -121,7 +127,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		{
 			name: "zero amount criteria",
 			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
-				msg.TokenOutMinAmount = sdk.NewInt(0)
+				msg.TokenOutMinAmount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -129,7 +135,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		{
 			name: "negative amount criteria",
 			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
-				msg.TokenOutMinAmount = sdk.NewInt(-10)
+				msg.TokenOutMinAmount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -161,8 +167,8 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				PoolId:       1,
 				TokenInDenom: "test2",
 			}},
-			TokenOut:         sdk.NewCoin("test", sdk.NewInt(100)),
-			TokenInMaxAmount: sdk.NewInt(200),
+			TokenOut:         sdk.NewCoin("test", osmomath.NewInt(100)),
+			TokenInMaxAmount: osmomath.NewInt(200),
 		}
 
 		return after(properMsg)
@@ -235,7 +241,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		{
 			name: "zero amount token",
 			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
-				msg.TokenOut.Amount = sdk.NewInt(0)
+				msg.TokenOut.Amount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -243,7 +249,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		{
 			name: "negative amount token",
 			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
-				msg.TokenOut.Amount = sdk.NewInt(-10)
+				msg.TokenOut.Amount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -251,7 +257,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		{
 			name: "zero amount criteria",
 			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
-				msg.TokenInMaxAmount = sdk.NewInt(0)
+				msg.TokenInMaxAmount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -259,7 +265,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		{
 			name: "negative amount criteria",
 			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
-				msg.TokenInMaxAmount = sdk.NewInt(-10)
+				msg.TokenInMaxAmount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -285,8 +291,8 @@ func TestMsgJoinPool(t *testing.T) {
 		properMsg := gammtypes.MsgJoinPool{
 			Sender:         addr1,
 			PoolId:         1,
-			ShareOutAmount: sdk.NewInt(10),
-			TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(10)), sdk.NewCoin("test2", sdk.NewInt(20))),
+			ShareOutAmount: osmomath.NewInt(10),
+			TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("test1", osmomath.NewInt(10)), sdk.NewCoin("test2", osmomath.NewInt(20))),
 		}
 
 		return after(properMsg)
@@ -327,7 +333,7 @@ func TestMsgJoinPool(t *testing.T) {
 		{
 			name: "negative requirement",
 			msg: createMsg(func(msg gammtypes.MsgJoinPool) gammtypes.MsgJoinPool {
-				msg.ShareOutAmount = sdk.NewInt(-10)
+				msg.ShareOutAmount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -335,7 +341,7 @@ func TestMsgJoinPool(t *testing.T) {
 		{
 			name: "zero amount",
 			msg: createMsg(func(msg gammtypes.MsgJoinPool) gammtypes.MsgJoinPool {
-				msg.TokenInMaxs[1].Amount = sdk.NewInt(0)
+				msg.TokenInMaxs[1].Amount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -343,7 +349,7 @@ func TestMsgJoinPool(t *testing.T) {
 		{
 			name: "negative amount",
 			msg: createMsg(func(msg gammtypes.MsgJoinPool) gammtypes.MsgJoinPool {
-				msg.TokenInMaxs[1].Amount = sdk.NewInt(-10)
+				msg.TokenInMaxs[1].Amount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -385,8 +391,8 @@ func TestMsgExitPool(t *testing.T) {
 		properMsg := gammtypes.MsgExitPool{
 			Sender:        addr1,
 			PoolId:        1,
-			ShareInAmount: sdk.NewInt(10),
-			TokenOutMins:  sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(10)), sdk.NewCoin("test2", sdk.NewInt(20))),
+			ShareInAmount: osmomath.NewInt(10),
+			TokenOutMins:  sdk.NewCoins(sdk.NewCoin("test1", osmomath.NewInt(10)), sdk.NewCoin("test2", osmomath.NewInt(20))),
 		}
 		return after(properMsg)
 	}
@@ -426,7 +432,7 @@ func TestMsgExitPool(t *testing.T) {
 		{
 			name: "negative requirement",
 			msg: createMsg(func(msg gammtypes.MsgExitPool) gammtypes.MsgExitPool {
-				msg.ShareInAmount = sdk.NewInt(-10)
+				msg.ShareInAmount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -434,7 +440,7 @@ func TestMsgExitPool(t *testing.T) {
 		{
 			name: "zero amount",
 			msg: createMsg(func(msg gammtypes.MsgExitPool) gammtypes.MsgExitPool {
-				msg.TokenOutMins[1].Amount = sdk.NewInt(0)
+				msg.TokenOutMins[1].Amount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -442,7 +448,7 @@ func TestMsgExitPool(t *testing.T) {
 		{
 			name: "negative amount",
 			msg: createMsg(func(msg gammtypes.MsgExitPool) gammtypes.MsgExitPool {
-				msg.TokenOutMins[1].Amount = sdk.NewInt(-10)
+				msg.TokenOutMins[1].Amount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -484,8 +490,8 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		properMsg := gammtypes.MsgJoinSwapExternAmountIn{
 			Sender:            addr1,
 			PoolId:            1,
-			TokenIn:           sdk.NewCoin("test", sdk.NewInt(100)),
-			ShareOutMinAmount: sdk.NewInt(100),
+			TokenIn:           sdk.NewCoin("test", osmomath.NewInt(100)),
+			ShareOutMinAmount: osmomath.NewInt(100),
 		}
 		return after(properMsg)
 	}
@@ -533,7 +539,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		{
 			name: "zero amount",
 			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
-				msg.TokenIn.Amount = sdk.NewInt(0)
+				msg.TokenIn.Amount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -541,7 +547,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		{
 			name: "negative amount",
 			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
-				msg.TokenIn.Amount = sdk.NewInt(-10)
+				msg.TokenIn.Amount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -549,7 +555,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		{
 			name: "zero criteria",
 			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
-				msg.ShareOutMinAmount = sdk.NewInt(0)
+				msg.ShareOutMinAmount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -557,7 +563,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		{
 			name: "negative criteria",
 			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
-				msg.ShareOutMinAmount = sdk.NewInt(-10)
+				msg.ShareOutMinAmount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -584,8 +590,8 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 			Sender:           addr1,
 			PoolId:           1,
 			TokenInDenom:     "test",
-			ShareOutAmount:   sdk.NewInt(100),
-			TokenInMaxAmount: sdk.NewInt(100),
+			ShareOutAmount:   osmomath.NewInt(100),
+			TokenInMaxAmount: osmomath.NewInt(100),
 		}
 		return after(properMsg)
 	}
@@ -633,7 +639,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 		{
 			name: "zero amount",
 			msg: createMsg(func(msg gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut {
-				msg.ShareOutAmount = sdk.NewInt(0)
+				msg.ShareOutAmount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -641,7 +647,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 		{
 			name: "negative amount",
 			msg: createMsg(func(msg gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut {
-				msg.ShareOutAmount = sdk.NewInt(-10)
+				msg.ShareOutAmount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -649,7 +655,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 		{
 			name: "zero criteria",
 			msg: createMsg(func(msg gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut {
-				msg.TokenInMaxAmount = sdk.NewInt(0)
+				msg.TokenInMaxAmount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -657,7 +663,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 		{
 			name: "negative criteria",
 			msg: createMsg(func(msg gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut {
-				msg.TokenInMaxAmount = sdk.NewInt(-10)
+				msg.TokenInMaxAmount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -683,8 +689,8 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 		properMsg := gammtypes.MsgExitSwapExternAmountOut{
 			Sender:           addr1,
 			PoolId:           1,
-			TokenOut:         sdk.NewCoin("test", sdk.NewInt(100)),
-			ShareInMaxAmount: sdk.NewInt(100),
+			TokenOut:         sdk.NewCoin("test", osmomath.NewInt(100)),
+			ShareInMaxAmount: osmomath.NewInt(100),
 		}
 		return after(properMsg)
 	}
@@ -732,7 +738,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 		{
 			name: "zero amount",
 			msg: createMsg(func(msg gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut {
-				msg.TokenOut.Amount = sdk.NewInt(0)
+				msg.TokenOut.Amount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -740,7 +746,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 		{
 			name: "negative amount",
 			msg: createMsg(func(msg gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut {
-				msg.TokenOut.Amount = sdk.NewInt(-10)
+				msg.TokenOut.Amount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -748,7 +754,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 		{
 			name: "zero criteria",
 			msg: createMsg(func(msg gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut {
-				msg.ShareInMaxAmount = sdk.NewInt(0)
+				msg.ShareInMaxAmount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -756,7 +762,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 		{
 			name: "negative criteria",
 			msg: createMsg(func(msg gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut {
-				msg.ShareInMaxAmount = sdk.NewInt(-10)
+				msg.ShareInMaxAmount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -783,8 +789,8 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 			Sender:            addr1,
 			PoolId:            1,
 			TokenOutDenom:     "test",
-			ShareInAmount:     sdk.NewInt(100),
-			TokenOutMinAmount: sdk.NewInt(100),
+			ShareInAmount:     osmomath.NewInt(100),
+			TokenOutMinAmount: osmomath.NewInt(100),
 		}
 		return after(properMsg)
 	}
@@ -832,7 +838,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 		{
 			name: "zero amount",
 			msg: createMsg(func(msg gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn {
-				msg.ShareInAmount = sdk.NewInt(0)
+				msg.ShareInAmount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -840,7 +846,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 		{
 			name: "negative amount",
 			msg: createMsg(func(msg gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn {
-				msg.ShareInAmount = sdk.NewInt(-10)
+				msg.ShareInAmount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -848,7 +854,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 		{
 			name: "zero criteria",
 			msg: createMsg(func(msg gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn {
-				msg.TokenOutMinAmount = sdk.NewInt(0)
+				msg.TokenOutMinAmount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -856,7 +862,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 		{
 			name: "negative criteria",
 			msg: createMsg(func(msg gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn {
-				msg.TokenOutMinAmount = sdk.NewInt(-10)
+				msg.TokenOutMinAmount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -876,7 +882,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 func TestAuthzMsg(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
-	coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
+	coin := sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1))
 
 	testCases := []struct {
 		name    string
@@ -888,8 +894,8 @@ func TestAuthzMsg(t *testing.T) {
 				Sender:            addr1,
 				PoolId:            1,
 				TokenOutDenom:     "test",
-				ShareInAmount:     sdk.NewInt(100),
-				TokenOutMinAmount: sdk.NewInt(100),
+				ShareInAmount:     osmomath.NewInt(100),
+				TokenOutMinAmount: osmomath.NewInt(100),
 			},
 		},
 		{
@@ -898,7 +904,7 @@ func TestAuthzMsg(t *testing.T) {
 				Sender:           addr1,
 				PoolId:           1,
 				TokenOut:         coin,
-				ShareInMaxAmount: sdk.NewInt(1),
+				ShareInMaxAmount: osmomath.NewInt(1),
 			},
 		},
 		{
@@ -906,7 +912,7 @@ func TestAuthzMsg(t *testing.T) {
 			gammMsg: &gammtypes.MsgExitPool{
 				Sender:        addr1,
 				PoolId:        1,
-				ShareInAmount: sdk.NewInt(100),
+				ShareInAmount: osmomath.NewInt(100),
 				TokenOutMins:  sdk.NewCoins(coin),
 			},
 		},
@@ -915,7 +921,7 @@ func TestAuthzMsg(t *testing.T) {
 			gammMsg: &gammtypes.MsgJoinPool{
 				Sender:         addr1,
 				PoolId:         1,
-				ShareOutAmount: sdk.NewInt(1),
+				ShareOutAmount: osmomath.NewInt(1),
 				TokenInMaxs:    sdk.NewCoins(coin),
 			},
 		},
@@ -925,7 +931,7 @@ func TestAuthzMsg(t *testing.T) {
 				Sender:            addr1,
 				PoolId:            1,
 				TokenIn:           coin,
-				ShareOutMinAmount: sdk.NewInt(1),
+				ShareOutMinAmount: osmomath.NewInt(1),
 			},
 		},
 		{
@@ -940,7 +946,7 @@ func TestAuthzMsg(t *testing.T) {
 					TokenOutDenom: "test2",
 				}},
 				TokenIn:           coin,
-				TokenOutMinAmount: sdk.NewInt(1),
+				TokenOutMinAmount: osmomath.NewInt(1),
 			},
 		},
 		{
@@ -955,7 +961,7 @@ func TestAuthzMsg(t *testing.T) {
 					TokenInDenom: "test2",
 				}},
 				TokenOut:         coin,
-				TokenInMaxAmount: sdk.NewInt(1),
+				TokenInMaxAmount: osmomath.NewInt(1),
 			},
 		},
 		{

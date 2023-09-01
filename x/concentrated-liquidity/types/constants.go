@@ -3,8 +3,6 @@ package types
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
@@ -27,25 +25,25 @@ const (
 )
 
 var (
-	MaxSpotPrice       = sdk.MustNewDecFromStr("100000000000000000000000000000000000000")
-	MinSpotPrice       = sdk.MustNewDecFromStr("0.000000000001") // 10^-12
+	MaxSpotPrice       = osmomath.MustNewDecFromStr("100000000000000000000000000000000000000")
+	MinSpotPrice       = osmomath.MustNewDecFromStr("0.000000000001") // 10^-12
 	MaxSqrtPrice       = osmomath.MustMonotonicSqrt(MaxSpotPrice)
 	MinSqrtPrice       = osmomath.MustMonotonicSqrt(MinSpotPrice)
-	MaxSqrtPriceBigDec = osmomath.BigDecFromSDKDec(MaxSqrtPrice)
-	MinSqrtPriceBigDec = osmomath.BigDecFromSDKDec(MinSqrtPrice)
+	MaxSqrtPriceBigDec = osmomath.BigDecFromDec(MaxSqrtPrice)
+	MinSqrtPriceBigDec = osmomath.BigDecFromDec(MinSqrtPrice)
 	// Supported uptimes preset to 1 ns, 1 min, 1 hr, 1D, 1W, 2W
 	SupportedUptimes        = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24, time.Hour * 24 * 7, time.Hour * 24 * 7 * 2}
 	AuthorizedTickSpacing   = []uint64{1, 10, 100, 1000}
-	AuthorizedSpreadFactors = []sdk.Dec{
-		sdk.ZeroDec(),
-		sdk.MustNewDecFromStr("0.0001"), // 0.01%
-		sdk.MustNewDecFromStr("0.0005"), // 0.05%
-		sdk.MustNewDecFromStr("0.001"),  // 0.1%
-		sdk.MustNewDecFromStr("0.002"),  // 0.2%
-		sdk.MustNewDecFromStr("0.003"),  // 0.3%
-		sdk.MustNewDecFromStr("0.005"),  // 0.5%
+	AuthorizedSpreadFactors = []osmomath.Dec{
+		osmomath.ZeroDec(),
+		osmomath.MustNewDecFromStr("0.0001"), // 0.01%
+		osmomath.MustNewDecFromStr("0.0005"), // 0.05%
+		osmomath.MustNewDecFromStr("0.001"),  // 0.1%
+		osmomath.MustNewDecFromStr("0.002"),  // 0.2%
+		osmomath.MustNewDecFromStr("0.003"),  // 0.3%
+		osmomath.MustNewDecFromStr("0.005"),  // 0.5%
 	}
-	DefaultBalancerSharesDiscount = sdk.MustNewDecFromStr("0.05")
+	DefaultBalancerSharesDiscount = osmomath.MustNewDecFromStr("0.05")
 	// By default, we only authorize one nanosecond (one block) uptime as an option
 	DefaultAuthorizedUptimes = []time.Duration{time.Nanosecond}
 )

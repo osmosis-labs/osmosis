@@ -8,9 +8,16 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v18/x/twap/client"
 	"github.com/osmosis-labs/osmosis/v18/x/twap/client/queryproto"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/twap/client"
+	"github.com/osmosis-labs/osmosis/v19/x/twap/client/queryproto"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 type QueryTestSuite struct {
@@ -87,7 +94,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenB",
 			endTime:         &newBlockTime,
 
-			result: sdk.NewDec(2).String(),
+			result: osmomath.NewDec(2).String(),
 		},
 		{
 			name:            "tokenB in terms of tokenA",
@@ -96,7 +103,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenA",
 			endTime:         &newBlockTime,
 
-			result: sdk.NewDecWithPrec(5, 1).String(),
+			result: osmomath.NewDecWithPrec(5, 1).String(),
 		},
 		{
 			name:            "tokenC in terms of tokenD (rounded decimal of 4/3)",
@@ -105,7 +112,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenD",
 			endTime:         &newBlockTime,
 
-			result: sdk.MustNewDecFromStr("1.333333330000000000").String(),
+			result: osmomath.MustNewDecFromStr("1.333333330000000000").String(),
 		},
 		{
 			name:            "tokenB in terms of tokenC (rounded decimal of 2/3)",
@@ -113,8 +120,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			baseAssetDenom:  "tokenC",
 			quoteAssetDenom: "tokenB",
 			endTime:         &newBlockTime,
-
-			result: sdk.MustNewDecFromStr("0.666666670000000000").String(),
+			result:          osmomath.MustNewDecFromStr("0.666666670000000000").String(),
 		},
 		{
 			name:            "tokenD in terms of tokenE (1)",
@@ -123,7 +129,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenE",
 			endTime:         &newBlockTime,
 
-			result: sdk.OneDec().String(),
+			result: osmomath.OneDec().String(),
 		},
 		{
 			name:            "tokenA in terms of tokenB - no end time",
@@ -132,7 +138,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenB",
 			endTime:         nil,
 
-			result: sdk.NewDec(2).String(),
+			result: osmomath.NewDec(2).String(),
 		},
 		{
 			name:            "tokenA in terms of tokenB - end time is empty",
@@ -141,7 +147,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenB",
 			endTime:         &time.Time{},
 
-			result: sdk.NewDec(2).String(),
+			result: osmomath.NewDec(2).String(),
 		},
 		{
 			name:               "tokenA in terms of tokenB - start time too old",

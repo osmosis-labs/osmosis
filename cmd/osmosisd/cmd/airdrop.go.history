@@ -29,8 +29,8 @@ type AppStateV036 struct {
 }
 
 type Snapshot struct {
-	TotalAtomAmount         sdk.Int `json:"total_atom_amount"`
-	TotalOsmosAirdropAmount sdk.Int `json:"total_osmo_amount"`
+	TotalAtomAmount         osmomath.Int `json:"total_atom_amount"`
+	TotalOsmosAirdropAmount osmomath.Int `json:"total_osmo_amount"`
 	NumberAccounts          uint64  `json:"num_accounts"`
 
 	Accounts map[string]SnapshotAccount `json:"accounts"`
@@ -40,17 +40,17 @@ type Snapshot struct {
 type SnapshotAccount struct {
 	AtomAddress string `json:"atom_address"` // Atom Balance = AtomStakedBalance + AtomUnstakedBalance
 
-	AtomBalance          sdk.Int `json:"atom_balance"`
-	AtomOwnershipPercent sdk.Dec `json:"atom_ownership_percent"`
+	AtomBalance          osmomath.Int `json:"atom_balance"`
+	AtomOwnershipPercent osmomath.Dec `json:"atom_ownership_percent"`
 
-	AtomStakedBalance   sdk.Int `json:"atom_staked_balance"`
-	AtomUnstakedBalance sdk.Int `json:"atom_unstaked_balance"` // AtomStakedPercent = AtomStakedBalance / AtomBalance
-	AtomStakedPercent   sdk.Dec `json:"atom_staked_percent"`
+	AtomStakedBalance   osmomath.Int `json:"atom_staked_balance"`
+	AtomUnstakedBalance osmomath.Int `json:"atom_unstaked_balance"` // AtomStakedPercent = AtomStakedBalance / AtomBalance
+	AtomStakedPercent   osmomath.Dec `json:"atom_staked_percent"`
 
-	OsmoBalance      sdk.Int `json:"osmo_balance"`           // OsmoBalance = sqrt( AtomBalance ) * (1 + 1.5 * atom staked percent)
-	OsmoBalanceBase  sdk.Int `json:"osmo_balance_base"`      // OsmoBalanceBase = sqrt(atom balance)
-	OsmoBalanceBonus sdk.Int `json:"osmo_balance_bonus"`     // OsmoBalanceBonus = OsmoBalanceBase * (1.5 * atom staked percent)
-	OsmoPercent      sdk.Dec `json:"osmo_ownership_percent"` // OsmoPercent = OsmoNormalizedBalance / TotalOsmoSupply
+	OsmoBalance      osmomath.Int `json:"osmo_balance"`           // OsmoBalance = sqrt( AtomBalance ) * (1 + 1.5 * atom staked percent)
+	OsmoBalanceBase  osmomath.Int `json:"osmo_balance_base"`      // OsmoBalanceBase = sqrt(atom balance)
+	OsmoBalanceBonus osmomath.Int `json:"osmo_balance_bonus"`     // OsmoBalanceBonus = OsmoBalanceBase * (1.5 * atom staked percent)
+	OsmoPercent      osmomath.Dec `json:"osmo_ownership_percent"` // OsmoPercent = OsmoNormalizedBalance / TotalOsmoSupply
 }
 
 // setCosmosBech32Prefixes set config for cosmos address system
@@ -111,7 +111,7 @@ Example:
 			// Produce the map of address to total atom balance, both staked and unstaked
 			snapshotAccs := make(map[string]SnapshotAccount)
 
-			totalAtomBalance := sdk.NewInt(0)
+			totalAtomBalance := osmomath.NewInt(0)
 			for _, account := range genStateV036.AppState.Accounts {
 
 				balance := account.Coins.AmountOf(denom)
@@ -125,7 +125,7 @@ Example:
 					AtomAddress:         account.Address.String(),
 					AtomBalance:         balance,
 					AtomUnstakedBalance: balance,
-					AtomStakedBalance:   sdk.ZeroInt(),
+					AtomStakedBalance:   osmomath.ZeroInt(),
 				}
 			}
 
@@ -136,7 +136,7 @@ Example:
 					panic("no account found for unbonding")
 				}
 
-				unbondingAtoms := sdk.NewInt(0)
+				unbondingAtoms := osmomath.NewInt(0)
 				for _, entry := range unbonding.Entries {
 					unbondingAtoms = unbondingAtoms.Add(entry.Balance)
 				}
@@ -170,24 +170,24 @@ Example:
 				snapshotAccs[address] = acc
 			}
 
-			totalOsmoBalance := sdk.NewInt(0)
-			onePointFive := sdk.MustNewDecFromStr("1.5")
+			totalOsmoBalance := osmomath.NewInt(0)
+			onePointFive := osmomath.MustNewDecFromStr("1.5")
 
 			for address, acc := range snapshotAccs {
-				allAtoms := acc.AtomBalance.ToDec()
+				allAtoms := acc.AtomBalance.ToLegacyDec()
 
 				acc.AtomOwnershipPercent = allAtoms.QuoInt(totalAtomBalance)
 
 				if allAtoms.IsZero() {
-					acc.AtomStakedPercent = sdk.ZeroDec()
-					acc.OsmoBalanceBase = sdk.ZeroInt()
-					acc.OsmoBalanceBonus = sdk.ZeroInt()
-					acc.OsmoBalance = sdk.ZeroInt()
+					acc.AtomStakedPercent = osmomath.ZeroDec()
+					acc.OsmoBalanceBase = osmomath.ZeroInt()
+					acc.OsmoBalanceBonus = osmomath.ZeroInt()
+					acc.OsmoBalance = osmomath.ZeroInt()
 					snapshotAccs[address] = acc
 					continue
 				}
 
-				stakedAtoms := acc.AtomStakedBalance.ToDec()
+				stakedAtoms := acc.AtomStakedBalance.ToLegacyDec()
 				stakedPercent := stakedAtoms.Quo(allAtoms)
 				acc.AtomStakedPercent = stakedPercent
 
@@ -204,10 +204,10 @@ Example:
 				// OsmoBalance = sqrt( all atoms) * (1 + 1.5) * (staked atom percent) =
 				acc.OsmoBalance = allOsmo.RoundInt()
 
-				if allAtoms.LTE(sdk.NewDec(1000000)) {
-					acc.OsmoBalanceBase = sdk.ZeroInt()
-					acc.OsmoBalanceBonus = sdk.ZeroInt()
-					acc.OsmoBalance = sdk.ZeroInt()
+				if allAtoms.LTE(osmomath.NewDec(1000000)) {
+					acc.OsmoBalanceBase = osmomath.ZeroInt()
+					acc.OsmoBalanceBonus = osmomath.ZeroInt()
+					acc.OsmoBalance = osmomath.ZeroInt()
 				}
 
 				totalOsmoBalance = totalOsmoBalance.Add(acc.OsmoBalance)
@@ -217,7 +217,7 @@ Example:
 
 			// iterate to find Osmo ownership percentage per account
 			for address, acc := range snapshotAccs {
-				acc.OsmoPercent = acc.OsmoBalance.ToDec().Quo(totalOsmoBalance.ToDec())
+				acc.OsmoPercent = acc.OsmoBalance.ToLegacyDec().Quo(totalOsmoBalance.ToLegacyDec())
 				snapshotAccs[address] = acc
 			}
 

@@ -5,7 +5,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/superfluid/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 const totalSuperfluidDelegationInvariantName = "total-superfluid-delegation-invariant-name"
@@ -26,7 +31,7 @@ func AllInvariants(keeper Keeper) sdk.Invariant {
 func TotalSuperfluidDelegationInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		accs := keeper.GetAllIntermediaryAccounts(ctx)
-		totalSuperfluidDelegationTokens := sdk.ZeroDec()
+		totalSuperfluidDelegationTokens := osmomath.ZeroDec()
 
 		// Compute the total amount delegated from all intermediary accounts
 		for _, acc := range accs {
@@ -49,7 +54,7 @@ func TotalSuperfluidDelegationInvariant(keeper Keeper) sdk.Invariant {
 
 		// Compute the total delegation amount expected
 		// from every lockID intermediary account connections
-		totalExpectedSuperfluidAmount := sdk.ZeroInt()
+		totalExpectedSuperfluidAmount := osmomath.ZeroInt()
 		connections := keeper.GetAllLockIdIntermediaryAccountConnections(ctx)
 		for _, connection := range connections {
 			lockId := connection.LockId

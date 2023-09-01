@@ -8,9 +8,16 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v18/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 // getDistributedCoinsFromGauges returns coins that have been distributed already from the provided gauges
@@ -266,6 +273,75 @@ func (k Keeper) distributeSyntheticInternal(
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
 }
 
+<<<<<<< HEAD
+=======
+// AllocateAcrossGauges gets all the active groupGauges and distributes tokens evenly based on the internalGauges set for that
+// groupGauge. After each iteration we update the groupGauge by modifying filledEpoch and distributed coins.
+func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
+	currTime := ctx.BlockTime()
+
+	groupGauges, err := k.GetAllGroupGauges(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, groupGauge := range groupGauges {
+		gauge, err := k.GetGaugeByID(ctx, groupGauge.GroupGaugeId)
+		if err != nil {
+			return err
+		}
+
+		// only allow distribution if the GroupGauge is Active
+		if gauge.IsActiveGauge(currTime) {
+			coinsToDistributePerInternalGauge, coinsToDistributeThisEpoch, err := k.calcSplitPolicyCoins(groupGauge.SplittingPolicy, gauge, groupGauge)
+			if err != nil {
+				return err
+			}
+
+			for _, internalGaugeId := range groupGauge.InternalIds {
+				err = k.AddToGaugeRewardsFromGauge(ctx, groupGauge.GroupGaugeId, coinsToDistributePerInternalGauge, internalGaugeId)
+				if err != nil {
+					return err
+				}
+			}
+
+			// we distribute tokens from groupGauge to internal gauge therefore update groupGauge fields
+			// updates filledEpoch and distributedCoins
+			if err := k.updateGaugePostDistribute(ctx, *gauge, coinsToDistributeThisEpoch); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// calcSplitPolicyCoins calculates tokens to split given a policy and groupGauge.
+// TODO: add volume split policy
+// nolint: unused
+func (k Keeper) calcSplitPolicyCoins(policy types.SplittingPolicy, groupGauge *types.Gauge, groupGaugeObj types.GroupGauge) (sdk.Coins, sdk.Coins, error) {
+	if policy == types.Evenly {
+		remainCoins := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
+
+		var coinsDistPerInternalGauge, coinsDistThisEpoch sdk.Coins
+		for _, coin := range remainCoins {
+			epochDiff := groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs
+			internalGaugeLen := len(groupGaugeObj.InternalIds)
+
+			distPerEpoch := coin.Amount.Quo(osmomath.NewIntFromUint64(epochDiff))
+			distPerGauge := distPerEpoch.Quo(osmomath.NewInt(int64(internalGaugeLen)))
+
+			coinsDistThisEpoch = coinsDistThisEpoch.Add(sdk.NewCoin(coin.Denom, distPerEpoch))
+			coinsDistPerInternalGauge = coinsDistPerInternalGauge.Add(sdk.NewCoin(coin.Denom, distPerGauge))
+		}
+
+		return coinsDistPerInternalGauge, coinsDistThisEpoch, nil
+	} else {
+		return nil, nil, fmt.Errorf("GroupGauge id %d doesnot have enought coins to distribute.", &groupGauge.Id)
+	}
+}
+
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
 // It handles any kind of gauges:
@@ -322,13 +398,13 @@ func (k Keeper) distributeInternal(
 		// is supposed to distribute over that epoch.
 		for _, remainCoin := range remainCoins {
 			// remaining coin amount per epoch.
-			remainAmountPerEpoch := remainCoin.Amount.Quo(sdk.NewIntFromUint64(remainEpochs))
+			remainAmountPerEpoch := remainCoin.Amount.Quo(osmomath.NewIntFromUint64(remainEpochs))
 			remainCoinPerEpoch := sdk.NewCoin(remainCoin.Denom, remainAmountPerEpoch)
 
 			// emissionRate calculates amount of tokens to emit per second
 			// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
 			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
-			emissionRate := sdk.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
+			emissionRate := osmomath.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(osmomath.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(osmomath.NewInt(1000)))
 
 			ctx.Logger().Info("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
 			_, err := k.clk.CreateIncentive(ctx,
@@ -367,7 +443,7 @@ func (k Keeper) distributeInternal(
 
 		// Remove some spam gauges, is state compatible.
 		// If they're to pool 1 they can't distr at this small of a quantity.
-		if remainCoins.Len() == 1 && remainCoins[0].Amount.LTE(sdk.NewInt(10)) && gauge.DistributeTo.Denom == "gamm/pool/1" && remainCoins[0].Denom != "uosmo" {
+		if remainCoins.Len() == 1 && remainCoins[0].Amount.LTE(osmomath.NewInt(10)) && gauge.DistributeTo.Denom == "gamm/pool/1" && remainCoins[0].Denom != "uosmo" {
 			ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is perceived spam, skipping %d", gauge.Id))
 			err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 			return totalDistrCoins, err
@@ -387,7 +463,7 @@ func (k Keeper) distributeInternal(
 			for _, coin := range remainCoins {
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 				denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
-				amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
+				amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(osmomath.NewInt(int64(remainEpochs))))
 				if amt.IsPositive() {
 					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
 					distrCoins = distrCoins.Add(newlyDistributedCoin)

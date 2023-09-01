@@ -29,8 +29,14 @@ import (
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+<<<<<<< HEAD
 	osmosisApp "github.com/osmosis-labs/osmosis/v18/app"
 	"github.com/osmosis-labs/osmosis/v18/tests/e2e/util"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	osmosisApp "github.com/osmosis-labs/osmosis/v19/app"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/util"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
 type internalNode struct {
@@ -76,13 +82,13 @@ func (n *internalNode) configDir() string {
 func (n *internalNode) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
 	description := stakingtypes.NewDescription(n.moniker, "", "", "", "")
 	commissionRates := stakingtypes.CommissionRates{
-		Rate:          sdk.MustNewDecFromStr("0.1"),
-		MaxRate:       sdk.MustNewDecFromStr("0.2"),
-		MaxChangeRate: sdk.MustNewDecFromStr("0.01"),
+		Rate:          osmomath.MustNewDecFromStr("0.1"),
+		MaxRate:       osmomath.MustNewDecFromStr("0.2"),
+		MaxChangeRate: osmomath.MustNewDecFromStr("0.01"),
 	}
 
 	// get the initial validator min self delegation
-	minSelfDelegation, _ := sdk.NewIntFromString("1")
+	minSelfDelegation, _ := osmomath.NewIntFromString("1")
 
 	valPubKey, err := cryptocodec.FromTmPubKeyInterface(n.consensusKey.PubKey)
 	if err != nil {

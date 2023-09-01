@@ -7,9 +7,16 @@ import (
 	"os"
 	"time"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/app"
 	osmosim "github.com/osmosis-labs/osmosis/v18/simulation/executor"
 	osmosimtypes "github.com/osmosis-labs/osmosis/v18/simulation/simtypes"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app"
+	osmosim "github.com/osmosis-labs/osmosis/v19/simulation/executor"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,7 +85,7 @@ func updateStakingAndBankState(appState json.RawMessage, cdc codec.JSONCodec) js
 		panic(err)
 	}
 	// compute not bonded balance
-	notBondedTokens := sdk.ZeroInt()
+	notBondedTokens := osmomath.ZeroInt()
 	for _, val := range stakingState.Validators {
 		if val.Status != stakingtypes.Unbonded {
 			continue

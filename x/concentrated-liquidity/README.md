@@ -141,7 +141,7 @@ This goes on in the negative direction until it reaches a spot price of
 price of 100000000000000000000000000000000000000.
 
 The minimum spot price was chosen as this is the smallest possible number
-supported by the sdk.Dec type. As for the maximum spot price, the above number
+supported by the osmomath.Dec type. As for the maximum spot price, the above number
 was based on gamm's max spot price of 340282366920938463463374607431768211455.
 While these numbers are not the same, the max spot price used in concentrated
 liquidity utilizes the same number of significant figures as gamm's max spot
@@ -595,7 +595,7 @@ and token1 as a result the one that had higher liquidity will end up smaller
 than originally given by the user.
 
 Note that the liquidity used here does not represent an amount of a specific
-token, but the liquidity of the pool itself, represented in `sdk.Dec`.
+token, but the liquidity of the pool itself, represented in `osmomath.Dec`.
 
 Using the provided liquidity, now we calculate the delta amount of both token0
 and token1, using the following equations, where L is the liquidity calculated above:
@@ -615,7 +615,7 @@ position for a given tick, the API in the keeper layer would look like the follo
 
 ```go
 ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired,
-amount1Desired, amount0Min, amount1Min sdk.Int,
+amount1Desired, amount0Min, amount1Min osmomath.Int,
 lowerTick, upperTick int64, frozenUntil time.Time
 func createPosition(
     ctx sdk.Context,
@@ -624,9 +624,9 @@ func createPosition(
     amount0Desired,
     amount1Desired,
     amount0Min,
-    amount1Min sdk.Int
+    amount1Min osmomath.Int
     lowerTick,
-    upperTick int64) (amount0, amount1 sdk.Int, sdk.Dec, error) {
+    upperTick int64) (amount0, amount1 osmomath.Int, osmomath.Dec, error) {
         ...
 }
 ```
@@ -650,8 +650,8 @@ func (k Keeper) withdrawPosition(
     lowerTick,
     upperTick int64,
     frozenUntil time.Time,
-    requestedLiquidityAmountToWithdraw sdk.Dec)
-    (amtDenom0, amtDenom1 sdk.Int, err error) {
+    requestedLiquidityAmountToWithdraw osmomath.Dec)
+    (amtDenom0, amtDenom1 osmomath.Int, err error) {
     ...
 }
 ```
@@ -774,32 +774,32 @@ type SwapState struct {
  // if in given out, amount of token being swapped out.
  // Initialized to the amount of the token specified by the user.
  // Updated after every swap step.
- amountSpecifiedRemaining sdk.Dec
+ amountSpecifiedRemaining osmomath.Dec
 
  // Amount of the other token that is calculated from the specified token.
  // if out given in, amount of token swapped out.
  // if in given out, amount of token swapped in.
  // Initialized to zero.
  // Updated after every swap step.
- amountCalculated sdk.Dec
+ amountCalculated osmomath.Dec
 
  // Current sqrt price while calculating swap.
  // Initialized to the pool's current sqrt price.
  // Updated after every swap step.
- sqrtPrice sdk.Dec
+ sqrtPrice osmomath.Dec
  // Current tick while calculating swap.
  // Initialized to the pool's current tick.
  // Updated each time a tick is crossed.
- tick sdk.Int
+ tick osmomath.Int
  // Current liqudiity within the active tick.
  // Initialized to the pool's current tick's liquidity.
  // Updated each time a tick is crossed.
- liquidity sdk.Dec
+ liquidity osmomath.Dec
 
  // Global spread reward growth per-current swap.
  // Initialized to zero.
  // Updated after every swap step.
- spreadRewardGrowthGlobal sdk.Dec
+ spreadRewardGrowthGlobal osmomath.Dec
 }
 ```
 
@@ -1224,7 +1224,7 @@ layers of state:
 // Note that this is proto-generated.
 type Pool struct {
     ...
-    SpreadFactor sdk.Dec
+    SpreadFactor osmomath.Dec
 }
 ```
 
@@ -1855,7 +1855,7 @@ The true price of PEPE in USDC terms is `0.0000009749`.
 In the "on-chain representation", this would be:
 `0.0000009749 * 10**6 / 10**18 = 9.749e-19`
 
-Note that this is below the minimum precision of `sdk.Dec`.
+Note that this is below the minimum precision of `osmomath.Dec`.
 
 Additionally, there is a problem with tick to sqrt price conversions
 where at small price levels, two sqrt prices can map to the same

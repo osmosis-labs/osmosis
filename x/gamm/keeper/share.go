@@ -3,12 +3,19 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v18/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v18/x/poolmanager/events"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v18/x/poolmanager/types"
+=======
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/events"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+>>>>>>> ca75f4c3 (refactor(deps): switch to cosmossdk.io/math from fork math (#6238))
 )
 
-func (k Keeper) applyJoinPoolStateChange(ctx sdk.Context, pool poolmanagertypes.PoolI, joiner sdk.AccAddress, numShares sdk.Int, joinCoins sdk.Coins) error {
+func (k Keeper) applyJoinPoolStateChange(ctx sdk.Context, pool poolmanagertypes.PoolI, joiner sdk.AccAddress, numShares osmomath.Int, joinCoins sdk.Coins) error {
 	err := k.bankKeeper.SendCoins(ctx, joiner, pool.GetAddress(), joinCoins)
 	if err != nil {
 		return err
@@ -30,7 +37,7 @@ func (k Keeper) applyJoinPoolStateChange(ctx sdk.Context, pool poolmanagertypes.
 	return nil
 }
 
-func (k Keeper) applyExitPoolStateChange(ctx sdk.Context, pool poolmanagertypes.PoolI, exiter sdk.AccAddress, numShares sdk.Int, exitCoins sdk.Coins) error {
+func (k Keeper) applyExitPoolStateChange(ctx sdk.Context, pool poolmanagertypes.PoolI, exiter sdk.AccAddress, numShares osmomath.Int, exitCoins sdk.Coins) error {
 	err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), exiter, exitCoins)
 	if err != nil {
 		return err
@@ -55,7 +62,7 @@ func (k Keeper) applyExitPoolStateChange(ctx sdk.Context, pool poolmanagertypes.
 // MintPoolShareToAccount attempts to mint shares of a GAMM denomination to the
 // specified address returning an error upon failure. Shares are minted using
 // the x/gamm module account.
-func (k Keeper) MintPoolShareToAccount(ctx sdk.Context, pool poolmanagertypes.PoolI, addr sdk.AccAddress, amount sdk.Int) error {
+func (k Keeper) MintPoolShareToAccount(ctx sdk.Context, pool poolmanagertypes.PoolI, addr sdk.AccAddress, amount osmomath.Int) error {
 	amt := sdk.NewCoins(sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), amount))
 
 	err := k.bankKeeper.MintCoins(ctx, types.ModuleName, amt)
@@ -72,7 +79,7 @@ func (k Keeper) MintPoolShareToAccount(ctx sdk.Context, pool poolmanagertypes.Po
 }
 
 // BurnPoolShareFromAccount burns `amount` of the given pools shares held by `addr`.
-func (k Keeper) BurnPoolShareFromAccount(ctx sdk.Context, pool poolmanagertypes.PoolI, addr sdk.AccAddress, amount sdk.Int) error {
+func (k Keeper) BurnPoolShareFromAccount(ctx sdk.Context, pool poolmanagertypes.PoolI, addr sdk.AccAddress, amount osmomath.Int) error {
 	amt := sdk.Coins{
 		sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), amount),
 	}
