@@ -17,10 +17,29 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v19/x/mint/types"
 )
 
+// preparePoolConfig defines the parameters for creating a new pool
+// returned from the respective randomizer helper.
+type preparePoolConfig struct {
+	creator      sdk.AccAddress
+	coin0        sdk.Coin
+	coin1        sdk.Coin
+	tickSpacing  uint64
+	spreadFactor sdk.Dec
+}
+
+// preparePositionConfig defines the parameters for creating a new position
+// returned from the respective randomizer helper.
+type preparePositionConfig struct {
+	owner     sdk.AccAddress
+	tokens    sdk.Coins
+	lowerTick int64
+	upperTick int64
+}
+
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 
 func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*clmodeltypes.MsgCreateConcentratedPool, error) {
-	poolCreator, coin0, coin1, tickSpacing, spreadFactor, err := RandomPreparePoolFunc(sim, ctx, k)
+	preparePoolInfo, err := RandomPreparePoolFunc(sim, ctx, k)
 	if err != nil {
 		return nil, err
 	}
@@ -31,8 +50,7 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	k.SetParams(ctx, defaultParams)
 
 	// make sure the denoms are valid authorized quote denoms
-	authorizedQuoteDenoms := k.GetAuthorizedQuoteDenoms(ctx)
-	authorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, coin1.Denom, coin0.Denom)
+	authorizedQuoteDenoms := append(k.GetAuthorizedQuoteDenoms(ctx), preparePoolInfo.coin1.Denom, preparePoolInfo.coin0.Denom)
 	k.SetAuthorizedQuoteDenoms(ctx, authorizedQuoteDenoms)
 
 	denomMetaData := banktypes.Metadata{
@@ -50,11 +68,11 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	}
 
 	return &clmodeltypes.MsgCreateConcentratedPool{
-		Sender:       poolCreator.String(),
-		Denom0:       coin0.Denom,
-		Denom1:       coin1.Denom,
-		TickSpacing:  tickSpacing,
-		SpreadFactor: spreadFactor,
+		Sender:       preparePoolInfo.creator.String(),
+		Denom0:       preparePoolInfo.coin0.Denom,
+		Denom1:       preparePoolInfo.coin1.Denom,
+		TickSpacing:  preparePoolInfo.tickSpacing,
+		SpreadFactor: preparePoolInfo.spreadFactor,
 	}, nil
 }
 
@@ -65,28 +83,28 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 		return nil, err
 	}
 
-	positionCreator, tokens, lowerTick, upperTick, err := RandomPrepareCreatePositionFunc(sim, ctx, clPool, poolDenoms)
+	preparePositionConfig, err := RandomPrepareCreatePositionFunc(sim, ctx, clPool, poolDenoms)
 	if err != nil {
 		return nil, err
 	}
 
-	token0Desired := tokens.AmountOf(clPool.GetToken0())
-	token1Desired := tokens.AmountOf(clPool.GetToken1())
+	token0Desired := preparePositionConfig.tokens.AmountOf(clPool.GetToken0())
+	token1Desired := preparePositionConfig.tokens.AmountOf(clPool.GetToken1())
 
 	tokenMinAmount0, tokenMinAmount1 := RandomMinAmount(sim, token0Desired, token1Desired)
 
-	accountBalancePoolDenom0 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[0])
-	accountBalancePoolDenom1 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[1])
-	if accountBalancePoolDenom0.Amount.LT(tokens[0].Amount) || accountBalancePoolDenom1.Amount.LT(tokens[1].Amount) {
+	accountBalancePoolDenom0 := sim.BankKeeper().GetBalance(ctx, preparePositionConfig.owner, poolDenoms[0])
+	accountBalancePoolDenom1 := sim.BankKeeper().GetBalance(ctx, preparePositionConfig.owner, poolDenoms[1])
+	if accountBalancePoolDenom0.Amount.LT(preparePositionConfig.tokens[0].Amount) || accountBalancePoolDenom1.Amount.LT(preparePositionConfig.tokens[1].Amount) {
 		return nil, fmt.Errorf("insufficient funds when creating a concentrated position")
 	}
 
 	return &cltypes.MsgCreatePosition{
 		PoolId:          clPool.GetId(),
-		Sender:          positionCreator.String(),
-		LowerTick:       lowerTick,
-		UpperTick:       upperTick,
-		TokensProvided:  tokens,
+		Sender:          preparePositionConfig.owner.String(),
+		LowerTick:       preparePositionConfig.lowerTick,
+		UpperTick:       preparePositionConfig.upperTick,
+		TokensProvided:  preparePositionConfig.tokens,
 		TokenMinAmount0: tokenMinAmount0,
 		TokenMinAmount1: tokenMinAmount1,
 	}, nil
@@ -325,7 +343,7 @@ func RandomTickDivisibility(sim *osmosimtypes.SimCtx, minTick int64, maxTick int
 	return int64(-1), nil
 }
 
-func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper.Keeper) (sdk.AccAddress, sdk.Coin, sdk.Coin, uint64, sdk.Dec, error) {
+func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper.Keeper) (preparePoolConfig, error) {
 	rand := sim.GetRand()
 
 	authorizedTickSpacing := cltypes.AuthorizedTickSpacing
@@ -334,22 +352,22 @@ func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper
 	// find an address with two or more distinct denoms in their wallet
 	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(sim, ctx))
 	if !senderExists {
-		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, fmt.Errorf("no sender with two different denoms & pool creation fee exists")
+		return preparePoolConfig{}, fmt.Errorf("no sender with two different denoms & pool creation fee exists")
 	}
 
 	// get random 3 coins, use 2 to create pool and 1 for fees (stake denom).
 	poolCoins, ok := sim.GetRandSubsetOfKDenoms(ctx, sender, 3)
 	if !ok {
-		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, fmt.Errorf("provided sender with requested number of denoms does not exist")
+		return preparePoolConfig{}, fmt.Errorf("provided sender with requested number of denoms does not exist")
 	}
 
 	// check if the sender has sufficient amount for fees
 	if poolCoins.Add(PoolCreationFee).IsAnyGT(sim.BankKeeper().SpendableCoins(ctx, sender.Address)) {
-		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, errors.New("chose an account / creation amount that didn't pass fee limit")
+		return preparePoolConfig{}, errors.New("chose an account / creation amount that didn't pass fee limit")
 	}
 
 	if poolCoins[0].Denom == sdk.DefaultBondDenom || poolCoins[1].Denom == sdk.DefaultBondDenom {
-		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, fmt.Errorf("poolCoins contains denom stake which contains invalid metadata")
+		return preparePoolConfig{}, fmt.Errorf("poolCoins contains denom stake which contains invalid metadata")
 	}
 
 	coin0 := poolCoins[0]
@@ -357,20 +375,26 @@ func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper
 	tickSpacing := authorizedTickSpacing[rand.Intn(len(authorizedTickSpacing))]
 	spreadFactor := authorizedSpreadFactor[rand.Intn(len(authorizedSpreadFactor))]
 
-	return sender.Address, coin0, coin1, tickSpacing, spreadFactor, nil
+	return preparePoolConfig{
+		creator:      sender.Address,
+		coin0:        coin0,
+		coin1:        coin1,
+		tickSpacing:  tickSpacing,
+		spreadFactor: spreadFactor,
+	}, nil
 }
 
-func RandomPrepareCreatePositionFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, clPool cltypes.ConcentratedPoolExtension, poolDenoms []string) (sdk.AccAddress, sdk.Coins, int64, int64, error) {
+func RandomPrepareCreatePositionFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, clPool cltypes.ConcentratedPoolExtension, poolDenoms []string) (preparePositionConfig, error) {
 	// make sure that the position creator has the poolTokens
 	positionCreator, tokens, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
 	if !senderExists {
-		return nil, sdk.Coins{}, 0, 0, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
+		return preparePositionConfig{}, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
 	}
 
 	// ensure that we always have 2 tokens
 	// Note: tokens returns a random subset of poolDenoms, so  had to add this assertion
 	if len(tokens) < 2 {
-		return nil, sdk.Coins{}, 0, 0, fmt.Errorf("user does not have pool tokens")
+		return preparePositionConfig{}, fmt.Errorf("user does not have pool tokens")
 	}
 
 	//  Retrieve minTick and maxTick from kprecision factor
@@ -379,8 +403,13 @@ func RandomPrepareCreatePositionFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, 
 	// Randomize lowerTick and upperTick from max values to create position
 	lowerTick, upperTick, err := getRandomTickPositions(sim, minTick, maxTick, clPool.GetTickSpacing())
 	if err != nil {
-		return nil, sdk.Coins{}, 0, 0, err
+		return preparePositionConfig{}, err
 	}
 
-	return positionCreator.Address, tokens, lowerTick, upperTick, nil
+	return preparePositionConfig{
+		owner:     positionCreator.Address,
+		tokens:    tokens,
+		lowerTick: lowerTick,
+		upperTick: upperTick,
+	}, nil
 }
