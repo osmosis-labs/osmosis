@@ -103,6 +103,9 @@ pub fn execute(
 
         ExecuteMsg::ProposePFM { chain } => execute::propose_pfm((deps, env, info), chain),
         ExecuteMsg::ValidatePFM { chain } => execute::validate_pfm((deps, env, info), chain),
+        ExecuteMsg::TransferOwnership { new_owner } => {
+            execute::transfer_ownership(deps, info.sender, new_owner)
+        }
     }
 }
 
