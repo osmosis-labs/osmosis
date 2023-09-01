@@ -339,7 +339,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Sanity check that pool initialized with valid parameters (the ones that we haven't explicitly specified)
 	s.Require().Equal(concentratedPool.GetCurrentTick(), int64(0))
-	s.Require().Equal(concentratedPool.GetCurrentSqrtPrice(), osmomath.ZeroDec())
+	s.Require().Equal(concentratedPool.GetCurrentSqrtPrice(), osmomath.ZeroBigDec())
 	s.Require().Equal(concentratedPool.GetLiquidity(), osmomath.ZeroDec())
 
 	// Assert contents of the pool are valid (that we explicitly specified)
