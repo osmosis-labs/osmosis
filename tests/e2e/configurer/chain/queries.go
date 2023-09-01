@@ -460,10 +460,10 @@ func (n *NodeConfig) QueryPropTally(proposalNumber int) (PropTallyResult, error)
 	var balancesResp govtypes.QueryTallyResultResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
 		return PropTallyResult{
-			Yes:        sdk.ZeroInt(),
-			No:         sdk.ZeroInt(),
-			Abstain:    sdk.ZeroInt(),
-			NoWithVeto: sdk.ZeroInt(),
+			Yes:        osmomath.ZeroInt(),
+			No:         osmomath.ZeroInt(),
+			Abstain:    osmomath.ZeroInt(),
+			NoWithVeto: osmomath.ZeroInt(),
 		}, err
 	}
 	noTotal := balancesResp.Tally.No

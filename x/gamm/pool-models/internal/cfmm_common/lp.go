@@ -17,7 +17,7 @@ const errMsgFormatSharesLargerThanMax = "cannot exit all shares in a pool. Attem
 func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares osmomath.Int, exitFee osmomath.Dec) (sdk.Coins, error) {
 	totalShares := pool.GetTotalShares()
 	if exitingShares.GTE(totalShares) {
-		return sdk.Coins{}, errorsmod.Wrapf(types.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, exitingShares, totalShares.Sub(sdk.OneInt()))
+		return sdk.Coins{}, errorsmod.Wrapf(types.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, exitingShares, totalShares.Sub(osmomath.OneInt()))
 	}
 
 	// refundedShares = exitingShares * (1 - exit fee)

@@ -8,10 +8,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/x/twap/client"
 	"github.com/osmosis-labs/osmosis/v19/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 type QueryTestSuite struct {
@@ -88,7 +88,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenB",
 			endTime:         &newBlockTime,
 
-			result: sdk.NewDec(2).String(),
+			result: osmomath.NewDec(2).String(),
 		},
 		{
 			name:            "tokenB in terms of tokenA",
@@ -132,7 +132,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenB",
 			endTime:         nil,
 
-			result: sdk.NewDec(2).String(),
+			result: osmomath.NewDec(2).String(),
 		},
 		{
 			name:            "tokenA in terms of tokenB - end time is empty",
@@ -141,7 +141,7 @@ func (suite *QueryTestSuite) TestQueryTwap() {
 			quoteAssetDenom: "tokenB",
 			endTime:         &time.Time{},
 
-			result: sdk.NewDec(2).String(),
+			result: osmomath.NewDec(2).String(),
 		},
 		{
 			name:               "tokenA in terms of tokenB - start time too old",

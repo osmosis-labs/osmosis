@@ -71,7 +71,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		CommunityPool:    osmomath.ZeroDec(),
 	}
 	s.App.MintKeeper.SetParams(s.Ctx, mintParams)
-	s.App.MintKeeper.SetMinter(s.Ctx, minttypes.NewMinter(sdk.NewDec(1_000_000)))
+	s.App.MintKeeper.SetMinter(s.Ctx, minttypes.NewMinter(osmomath.NewDec(1_000_000)))
 
 	distributionParams := s.App.DistrKeeper.GetParams(s.Ctx)
 	distributionParams.BaseProposerReward = osmomath.ZeroDec()
@@ -204,7 +204,7 @@ func (s *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAccs [
 		// check delegation from intermediary account to validator
 		delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
 		s.Require().True(found)
-		s.Require().True(delegation.Shares.GTE(sdk.NewDec(10000000)))
+		s.Require().True(delegation.Shares.GTE(osmomath.NewDec(10000000)))
 
 		// check delegated tokens
 		validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)

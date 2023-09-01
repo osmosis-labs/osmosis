@@ -1278,13 +1278,13 @@ func (s *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn() {
 		{
 			name:             "happy path",
 			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(1000000)), sdk.NewCoin("usdc", osmomath.NewInt(5000000000))),
-			liquidityToSlash: sdk.NewDec(10000000),
+			liquidityToSlash: osmomath.NewDec(10000000),
 			denomToSlash:     cltypes.GetConcentratedLockupDenomFromPoolId(1),
 		},
 		{
 			name:             "error: attempt to slash more liquidity than the lock has",
 			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(1000000)), sdk.NewCoin("usdc", osmomath.NewInt(5000000000))),
-			liquidityToSlash: sdk.NewDec(100000000),
+			liquidityToSlash: osmomath.NewDec(100000000),
 			denomToSlash:     cltypes.GetConcentratedLockupDenomFromPoolId(1),
 			expectError:      true,
 		},
@@ -1292,7 +1292,7 @@ func (s *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn() {
 			name:             "error: attempt to slash a denom that does not exist in the lock",
 			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(1000000)), sdk.NewCoin("usdc", osmomath.NewInt(5000000000))),
 			denomToSlash:     cltypes.GetConcentratedLockupDenomFromPoolId(2),
-			liquidityToSlash: sdk.NewDec(10000000),
+			liquidityToSlash: osmomath.NewDec(10000000),
 			expectError:      true,
 		},
 	}

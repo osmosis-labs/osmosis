@@ -206,7 +206,7 @@ func RandMsgCollectSpreadRewards(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ct
 		}
 
 		// perform swap from token0 to token1 until either token0 or token1 fund runs out
-		_, err = k.SwapExactAmountIn(cacheCtx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), osmomath.NewDecWithPrec(1, 2))
+		_, err = k.SwapExactAmountIn(cacheCtx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, osmomath.OneInt(), osmomath.NewDecWithPrec(1, 2))
 		if err != nil {
 			return nil, err
 		}
@@ -319,9 +319,9 @@ func getRandomTickPositions(sim *osmosimtypes.SimCtx, minTick, maxTick int64, ti
 
 func RandomMinAmount(sim *osmosimtypes.SimCtx, token0Desired, token1Desired osmomath.Int) (osmomath.Int, osmomath.Int) {
 	rand := sim.GetRand()
-	percent := sdk.NewDec(int64(sdkrand.RandIntBetween(rand, 0, 100) / 100))
-	minAmount0 := sdk.NewDecFromInt(token0Desired).Mul(percent).TruncateInt()
-	minAmount1 := sdk.NewDecFromInt(token1Desired).Mul(percent).TruncateInt()
+	percent := osmomath.NewDec(int64(sdkrand.RandIntBetween(rand, 0, 100) / 100))
+	minAmount0 := osmomath.NewDecFromInt(token0Desired).Mul(percent).TruncateInt()
+	minAmount1 := osmomath.NewDecFromInt(token1Desired).Mul(percent).TruncateInt()
 	return minAmount0, minAmount1
 }
 

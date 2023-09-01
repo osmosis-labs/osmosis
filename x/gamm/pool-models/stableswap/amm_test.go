@@ -904,10 +904,10 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			suite.Run(getTestCaseName(name, tc, spreadFactor), func() {
 				ctx := suite.CreateTestContext()
 
-				spreadFactorDec, err := sdk.NewDecFromStr(spreadFactor)
+				spreadFactorDec, err := osmomath.NewDecFromStr(spreadFactor)
 				suite.Require().NoError(err)
 
-				exitFeeDec, err := sdk.NewDecFromStr("0")
+				exitFeeDec, err := osmomath.NewDecFromStr("0")
 				suite.Require().NoError(err)
 
 				// TODO: add scaling factors into inverse relationship tests
@@ -1066,8 +1066,8 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 			exitTokens, err := p.ExitPool(ctx, shares, osmomath.ZeroDec())
 			require.NoError(t, err, "test: %s", name)
 
-			// since each asset swap can have up to sdk.OneInt() error, our expected error bound is 1*numAssets
-			correctnessThreshold := sdk.OneInt().Mul(osmomath.NewInt(int64(len(p.PoolLiquidity))))
+			// since each asset swap can have up to osmomath.OneInt() error, our expected error bound is 1*numAssets
+			correctnessThreshold := osmomath.OneInt().Mul(osmomath.NewInt(int64(len(p.PoolLiquidity))))
 
 			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom, osmomath.ZeroDec())
 			require.NoError(t, err, "test: %s", name)
@@ -1192,7 +1192,7 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 }
 
 func TestSingleAssetJoinSpreadFactorRatio(t *testing.T) {
-	largeInt, ok := sdk.NewIntFromString("123456789012345678")
+	largeInt, ok := osmomath.NewIntFromString("123456789012345678")
 	require.True(t, ok)
 	type testcase struct {
 		poolLiquidity  sdk.Coins

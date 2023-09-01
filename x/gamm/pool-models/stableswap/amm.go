@@ -169,7 +169,7 @@ func (p Pool) spotPrice(quoteDenom, baseDenom string) (spotPrice osmomath.Dec, e
 
 	// We arbitrarily choose a = 1, and anticipate that this is a small value at the scale of
 	// xReserve & yReserve.
-	a := sdk.OneInt()
+	a := osmomath.OneInt()
 
 	res, err := p.calcOutAmtGivenIn(sdk.NewCoin(baseDenom, a), quoteDenom, osmomath.ZeroDec())
 	// fmt.Println("spot price res", res)
@@ -287,7 +287,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, sprea
 		return osmomath.ZeroInt(), sdk.NewCoins(), errors.New("attempted joining pool with assets that do not exist in pool")
 	}
 
-	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(sdk.OneInt()) {
+	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(osmomath.OneInt()) {
 		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], spreadFactor)
 		if err != nil {
 			return osmomath.ZeroInt(), sdk.NewCoins(), err

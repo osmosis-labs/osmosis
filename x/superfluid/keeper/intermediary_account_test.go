@@ -49,7 +49,7 @@ func (s *KeeperTestSuite) TestIntermediaryAccountCreation() {
 			delAddrs := CreateRandomAccounts(int(tc.delegatorNumber))
 
 			// we create two additional pools: total three pools, 10 gauges
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 			var interAccs []types.SuperfluidIntermediaryAccount
 

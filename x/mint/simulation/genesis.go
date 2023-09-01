@@ -51,47 +51,47 @@ var (
 		},
 		{
 			Address: "osmo19qgldlsk7hdv3ddtwwpvzff30pxqe9phq9evxf",
-			Weight:  osmomath.NewDecWithPrec(995, 3).Quo(sdk.NewDec(10)), // 0.0995
+			Weight:  osmomath.NewDecWithPrec(995, 3).Quo(osmomath.NewDec(10)), // 0.0995
 		},
 		{
 			Address: "osmo19fs55cx4594een7qr8tglrjtt5h9jrxg458htd",
-			Weight:  osmomath.NewDecWithPrec(6, 1).Quo(sdk.NewDec(10)), // 0.06
+			Weight:  osmomath.NewDecWithPrec(6, 1).Quo(osmomath.NewDec(10)), // 0.06
 		},
 		{
 			Address: "osmo1ssp6px3fs3kwreles3ft6c07mfvj89a544yj9k",
-			Weight:  osmomath.NewDecWithPrec(15, 2).Quo(sdk.NewDec(10)), // 0.015
+			Weight:  osmomath.NewDecWithPrec(15, 2).Quo(osmomath.NewDec(10)), // 0.015
 		},
 		{
 			Address: "osmo1c5yu8498yzqte9cmfv5zcgtl07lhpjrj0skqdx",
-			Weight:  osmomath.NewDecWithPrec(1, 1).Quo(sdk.NewDec(10)), // 0.01
+			Weight:  osmomath.NewDecWithPrec(1, 1).Quo(osmomath.NewDec(10)), // 0.01
 		},
 		{
 			Address: "osmo1yhj3r9t9vw7qgeg22cehfzj7enwgklw5k5v7lj",
-			Weight:  osmomath.NewDecWithPrec(75, 2).Quo(sdk.NewDec(100)), // 0.0075
+			Weight:  osmomath.NewDecWithPrec(75, 2).Quo(osmomath.NewDec(100)), // 0.0075
 		},
 		{
 			Address: "osmo18nzmtyn5vy5y45dmcdnta8askldyvehx66lqgm",
-			Weight:  osmomath.NewDecWithPrec(7, 1).Quo(sdk.NewDec(100)), // 0.007
+			Weight:  osmomath.NewDecWithPrec(7, 1).Quo(osmomath.NewDec(100)), // 0.007
 		},
 		{
 			Address: "osmo1z2x9z58cg96ujvhvu6ga07yv9edq2mvkxpgwmc",
-			Weight:  osmomath.NewDecWithPrec(5, 1).Quo(sdk.NewDec(100)), // 0.005
+			Weight:  osmomath.NewDecWithPrec(5, 1).Quo(osmomath.NewDec(100)), // 0.005
 		},
 		{
 			Address: "osmo1tvf3373skua8e6480eyy38avv8mw3hnt8jcxg9",
-			Weight:  osmomath.NewDecWithPrec(25, 2).Quo(sdk.NewDec(100)), // 0.0025
+			Weight:  osmomath.NewDecWithPrec(25, 2).Quo(osmomath.NewDec(100)), // 0.0025
 		},
 		{
 			Address: "osmo1zs0txy03pv5crj2rvty8wemd3zhrka2ne8u05n",
-			Weight:  osmomath.NewDecWithPrec(25, 2).Quo(sdk.NewDec(100)), // 0.0025
+			Weight:  osmomath.NewDecWithPrec(25, 2).Quo(osmomath.NewDec(100)), // 0.0025
 		},
 		{
 			Address: "osmo1djgf9p53n7m5a55hcn6gg0cm5mue4r5g3fadee",
-			Weight:  osmomath.NewDecWithPrec(1, 1).Quo(sdk.NewDec(100)), // 0.001
+			Weight:  osmomath.NewDecWithPrec(1, 1).Quo(osmomath.NewDec(100)), // 0.001
 		},
 		{
 			Address: "osmo1488zldkrn8xcjh3z40v2mexq7d088qkna8ceze",
-			Weight:  osmomath.NewDecWithPrec(8, 1).Quo(sdk.NewDec(1000)), // 0.0008
+			Weight:  osmomath.NewDecWithPrec(8, 1).Quo(osmomath.NewDec(1000)), // 0.0008
 		},
 	}
 )
@@ -143,7 +143,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 }
 
 func genEpochProvisions(r *rand.Rand) osmomath.Dec {
-	return sdk.NewDec(int64(r.Intn(maxInt64)))
+	return osmomath.NewDec(int64(r.Intn(maxInt64)))
 }
 
 func genReductionFactor(r *rand.Rand) osmomath.Dec {

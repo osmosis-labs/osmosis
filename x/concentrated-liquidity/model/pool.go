@@ -21,7 +21,7 @@ const (
 
 var (
 	_   types.ConcentratedPoolExtension = &Pool{}
-	one                                 = sdk.OneDec()
+	one                                 = osmomath.OneDec()
 )
 
 // NewConcentratedLiquidityPool creates a new ConcentratedLiquidity pool with the specified parameters.
@@ -45,7 +45,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		Id:                   poolId,
 		CurrentSqrtPrice:     osmomath.ZeroBigDec(),
 		CurrentTick:          0,
-		CurrentTickLiquidity: sdk.ZeroDec(),
+		CurrentTickLiquidity: osmomath.ZeroDec(),
 		Token0:               denom0,
 		Token1:               denom1,
 		TickSpacing:          tickSpacing,

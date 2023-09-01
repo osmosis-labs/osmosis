@@ -204,7 +204,7 @@ Example:
 				// OsmoBalance = sqrt( all atoms) * (1 + 1.5) * (staked atom percent) =
 				acc.OsmoBalance = allOsmo.RoundInt()
 
-				if allAtoms.LTE(sdk.NewDec(1000000)) {
+				if allAtoms.LTE(osmomath.NewDec(1000000)) {
 					acc.OsmoBalanceBase = osmomath.ZeroInt()
 					acc.OsmoBalanceBonus = osmomath.ZeroInt()
 					acc.OsmoBalance = osmomath.ZeroInt()

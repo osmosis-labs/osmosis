@@ -128,7 +128,7 @@ func (s *KeeperTestSuite) TestGetProportions() {
 		{
 			name:         "1 * 1 = 1",
 			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1)),
-			ratio:        sdk.NewDec(1),
+			ratio:        osmomath.NewDec(1),
 			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1)),
 		},
 		{
@@ -173,7 +173,7 @@ func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 			weightedAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 			mintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(mintAmount)),
@@ -337,7 +337,7 @@ func (s *KeeperTestSuite) TestDistributeToModule() {
 
 			recepientModule: poolincentivestypes.ModuleName,
 			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
-			proportion:      sdk.NewDec(1),
+			proportion:      osmomath.NewDec(1),
 		},
 		"pre-mint > distribute - developer vesting modulosmomath.NewInt(rds - success": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(101)),
@@ -360,7 +360,7 @@ func (s *KeeperTestSuite) TestDistributeToModule() {
 
 			recepientModule: poolincentivestypes.ModuleName,
 			mintedCoin:      sdk.NewCoin(denomDoesNotExist, osmomath.NewInt(100)),
-			proportion:      sdk.NewDec(1),
+			proportion:      osmomath.NewDec(1),
 
 			expectedError: true,
 		},
@@ -369,7 +369,7 @@ func (s *KeeperTestSuite) TestDistributeToModule() {
 
 			recepientModule: moduleAccountDoesNotExist,
 			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
-			proportion:      sdk.NewDec(1),
+			proportion:      osmomath.NewDec(1),
 
 			expectPanic: true,
 		},
@@ -378,7 +378,7 @@ func (s *KeeperTestSuite) TestDistributeToModule() {
 
 			recepientModule: poolincentivestypes.ModuleName,
 			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
-			proportion:      sdk.NewDec(2),
+			proportion:      osmomath.NewDec(2),
 
 			expectedError: true,
 		},
@@ -441,9 +441,9 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 
 	var (
 		validLargePreMintAmount  = osmomath.NewInt(keeper.DeveloperVestingAmount)
-		validPreMintAmountAddOne = osmomath.NewInt(keeper.DeveloperVestingAmount).Add(sdk.OneInt())
+		validPreMintAmountAddOne = osmomath.NewInt(keeper.DeveloperVestingAmount).Add(osmomath.OneInt())
 		validPreMintCoin         = sdk.NewCoin(sdk.DefaultBondDenom, validLargePreMintAmount)
-		validPreMintCoinSubOne   = sdk.NewCoin(sdk.DefaultBondDenom, validLargePreMintAmount.Sub(sdk.OneInt()))
+		validPreMintCoinSubOne   = sdk.NewCoin(sdk.DefaultBondDenom, validLargePreMintAmount.Sub(osmomath.OneInt()))
 	)
 
 	tests := map[string]struct {
@@ -468,7 +468,7 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 		},
@@ -525,7 +525,7 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 		},
@@ -533,15 +533,15 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			preMintCoin: validPreMintCoin,
 
 			mintedCoin: validPreMintCoin,
-			proportion: sdk.NewDec(2),
+			proportion: osmomath.NewDec(2),
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 
-			expectedError: keeper.ErrInvalidRatio{ActualRatio: sdk.NewDec(2)},
+			expectedError: keeper.ErrInvalidRatio{ActualRatio: osmomath.NewDec(2)},
 		},
 		"invalid address in developer reward receivers - error": {
 			preMintCoin: validPreMintCoin,
@@ -551,7 +551,7 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: invalidAddress,
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 
@@ -570,7 +570,7 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 			expectedError: errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", validPreMintCoinSubOne, validPreMintCoin)),
@@ -583,7 +583,7 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 			expectedError: keeper.ErrInsufficientDevVestingBalance{ActualBalance: validPreMintCoin.Amount, AttemptedDistribution: validPreMintAmountAddOne},
@@ -596,7 +596,7 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: keeper.EmptyWeightedAddressReceiver,
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 		},
@@ -608,11 +608,11 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: keeper.EmptyWeightedAddressReceiver,
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 		},

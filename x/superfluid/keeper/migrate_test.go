@@ -223,7 +223,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 				clIntermediaryAcc := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, concentratedLockId)
 				delegation, found := stakingKeeper.GetDelegation(s.Ctx, clIntermediaryAcc, valAddr)
 				s.Require().True(found, "expected delegation, found delegation no delegation")
-				s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(sdk.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares", balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
+				s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(osmomath.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares", balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
 			}
 
 			// If the lock was superfluid undelegating:
@@ -385,7 +385,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			clIntermediaryAcc := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, concentratedLockId)
 			delegation, found := stakingKeeper.GetDelegation(s.Ctx, clIntermediaryAcc, valAddr)
 			s.Require().True(found, "expected delegation, found delegation no delegation")
-			s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(sdk.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares", balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
+			s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(osmomath.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares", balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
 
 			// Check if the new intermediary account connection was created.
 			newConcentratedIntermediaryAccount := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, concentratedLockId)
@@ -876,7 +876,7 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 			// Create a balancer pool of "stake" and "foo".
 			msg := balancer.NewMsgCreateBalancerPool(poolCreateAcc, balancer.PoolParams{
 				SwapFee: osmomath.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDec(0),
+				ExitFee: osmomath.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
 			balancerPooId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 			s.Require().NoError(err)
@@ -933,7 +933,7 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 			s.Require().NoError(err)
 
 			defaultErrorTolerance := osmomath.ErrTolerance{
-				AdditiveTolerance: sdk.NewDec(1),
+				AdditiveTolerance: osmomath.NewDec(1),
 				RoundingDir:       osmomath.RoundDown,
 			}
 
@@ -986,7 +986,7 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	// Create a balancer pool of "stake" and "foo".
 	msg := balancer.NewMsgCreateBalancerPool(poolCreateAcc, balancer.PoolParams{
 		SwapFee: osmomath.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDec(0),
+		ExitFee: osmomath.NewDec(0),
 	}, defaultPoolAssets, defaultFutureGovernor)
 	balancerPooId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 	s.Require().NoError(err)
@@ -1158,7 +1158,7 @@ func (s *KeeperTestSuite) ValidateMigrateResult(
 	// exitPool has rounding difference.
 	// We test if correct amt has been exited and frozen by comparing with rounding tolerance.
 	defaultErrorTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.NewDec(2),
+		AdditiveTolerance: osmomath.NewDec(2),
 		RoundingDir:       osmomath.RoundDown,
 	}
 	s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[0].Token.Denom).ToLegacyDec().Mul(percentOfSharesToMigrate).RoundInt(), amount0))
@@ -1314,7 +1314,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		s.Require().NoError(err)
 		balancerSpotPrice, err := balancerPool.SpotPrice(s.Ctx, DefaultCoin1.Denom, DefaultCoin0.Denom)
 		s.Require().NoError(err)
-		s.CreateFullRangePosition(clPool, sdk.NewCoins(sdk.NewCoin(DefaultCoin0.Denom, osmomath.NewInt(100000000)), sdk.NewCoin(DefaultCoin1.Denom, sdk.NewDec(100000000).Mul(balancerSpotPrice).TruncateInt())))
+		s.CreateFullRangePosition(clPool, sdk.NewCoins(sdk.NewCoin(DefaultCoin0.Denom, osmomath.NewInt(100000000)), sdk.NewCoin(DefaultCoin1.Denom, osmomath.NewDec(100000000).Mul(balancerSpotPrice).TruncateInt())))
 
 		// Add a gov sanctioned link between the balancer and concentrated liquidity pool.
 		migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
@@ -1404,7 +1404,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 //
 // The function returns a `positionInfo` struct with the created position's information.
 func (s *KeeperTestSuite) createBalancerPosition(acc sdk.AccAddress, balancerPoolId uint64, unbondingDuration time.Duration, balancerPoolShareDenom string, coins sdk.Coins, i int, superfluidDelegate bool) positionInfo {
-	sharesOut, err := s.App.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, acc, balancerPoolId, coins, sdk.OneInt())
+	sharesOut, err := s.App.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, acc, balancerPoolId, coins, osmomath.OneInt())
 	s.Require().NoError(err)
 	shareCoins := sdk.NewCoins(sdk.NewCoin(balancerPoolShareDenom, sharesOut))
 

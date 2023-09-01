@@ -49,10 +49,10 @@ const (
 var (
 	defaultInitPoolAmount   = osmomath.NewInt(1000000000000)
 	defaultPoolSpreadFactor = sdk.NewDecWithPrec(1, 3) // 0.1% pool spread factor default
-	pointOneFivePercent     = sdk.MustNewDecFromStr("0.0015")
-	pointThreePercent       = sdk.MustNewDecFromStr("0.003")
-	pointThreeFivePercent   = sdk.MustNewDecFromStr("0.0035")
-	defaultTakerFee         = sdk.ZeroDec()
+	pointOneFivePercent     = osmomath.MustNewDecFromStr("0.0015")
+	pointThreePercent       = osmomath.MustNewDecFromStr("0.003")
+	pointThreeFivePercent   = osmomath.MustNewDecFromStr("0.0035")
+	defaultTakerFee         = osmomath.ZeroDec()
 	defaultSwapAmount       = osmomath.NewInt(1000000)
 	gammKeeperType          = reflect.TypeOf(&gamm.Keeper{})
 	concentratedKeeperType  = reflect.TypeOf(&cl.Keeper{})
@@ -329,14 +329,14 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			poolId:            1,
 			quoteAssetDenom:   "bar",
 			baseAssetDenom:    "baz",
-			expectedSpotPrice: sdk.MustNewDecFromStr("1.5"),
+			expectedSpotPrice: osmomath.MustNewDecFromStr("1.5"),
 		},
 		"valid stableswap pool": {
 			preCreatePoolType: types.Stableswap,
 			poolId:            1,
 			quoteAssetDenom:   "bar",
 			baseAssetDenom:    "baz",
-			expectedSpotPrice: sdk.MustNewDecFromStr("0.99999998"),
+			expectedSpotPrice: osmomath.MustNewDecFromStr("0.99999998"),
 		},
 		"valid concentrated liquidity pool with position": {
 			preCreatePoolType:    types.Concentrated,
@@ -347,7 +347,7 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			// We generate this value using the scripts in x/concentrated-liquidity/python
 			// Exact output: 5000.000000000000000129480272834995458481
 			// SDK Bankers rounded output: 5000.000000000000000129
-			expectedSpotPrice: sdk.MustNewDecFromStr("5000.000000000000000129"),
+			expectedSpotPrice: osmomath.MustNewDecFromStr("5000.000000000000000129"),
 		},
 		"valid concentrated liquidity pool without position": {
 			preCreatePoolType: types.Concentrated,
@@ -365,7 +365,7 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			quoteAssetDenom:   apptesting.DefaultTransmuterDenomA,
 			baseAssetDenom:    apptesting.DefaultTransmuterDenomB,
 			// For transmuter, the spot price is always 1. (hard-coded even if no liquidity)
-			expectedSpotPrice: sdk.OneDec(),
+			expectedSpotPrice: osmomath.OneDec(),
 		},
 		"non-existent pool": {
 			preCreatePoolType: types.Balancer,
@@ -404,8 +404,8 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 					LowerTick:       int64(30545000),
 					UpperTick:       int64(31500000),
 					TokensProvided:  coins,
-					TokenMinAmount0: sdk.ZeroInt(),
-					TokenMinAmount1: sdk.ZeroInt(),
+					TokenMinAmount0: osmomath.ZeroInt(),
+					TokenMinAmount1: osmomath.ZeroInt(),
 				})
 				s.Require().NoError(err)
 			}
@@ -685,7 +685,7 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 				sdk.NewCoins(sdk.NewCoin(foo, apptesting.DefaultCoinAmount), sdk.NewCoin(bar, apptesting.DefaultCoinAmount)),
 			},
 			poolType:         []types.PoolType{types.CosmWasm},
-			poolSpreadFactor: []osmomath.Dec{sdk.OneDec()},
+			poolSpreadFactor: []osmomath.Dec{osmomath.OneDec()},
 			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
@@ -702,7 +702,7 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 				sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount)),
 			},
 			poolType:         []types.PoolType{types.CosmWasm, types.Concentrated},
-			poolSpreadFactor: []osmomath.Dec{sdk.OneDec(), defaultPoolSpreadFactor},
+			poolSpreadFactor: []osmomath.Dec{osmomath.OneDec(), defaultPoolSpreadFactor},
 			routes: []types.SwapAmountInRoute{
 				{
 					PoolId:        1,
@@ -975,7 +975,7 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 				sdk.NewCoins(sdk.NewCoin(foo, apptesting.DefaultCoinAmount), sdk.NewCoin(bar, apptesting.DefaultCoinAmount)),
 			},
 			poolType:         []types.PoolType{types.CosmWasm},
-			poolSpreadFactor: []osmomath.Dec{sdk.OneDec()},
+			poolSpreadFactor: []osmomath.Dec{osmomath.OneDec()},
 			routes: []types.SwapAmountOutRoute{
 				{
 					PoolId:       1,
@@ -992,7 +992,7 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 				sdk.NewCoins(sdk.NewCoin(bar, defaultInitPoolAmount), sdk.NewCoin(baz, defaultInitPoolAmount)),
 			},
 			poolType:         []types.PoolType{types.CosmWasm, types.Concentrated},
-			poolSpreadFactor: []osmomath.Dec{sdk.OneDec(), defaultPoolSpreadFactor},
+			poolSpreadFactor: []osmomath.Dec{osmomath.OneDec(), defaultPoolSpreadFactor},
 			routes: []types.SwapAmountOutRoute{
 				{
 					PoolId:       1,
@@ -1416,7 +1416,7 @@ func (s *KeeperTestSuite) makeGaugesIncentivized(incentivizedGauges []uint64) {
 	var records []poolincentivestypes.DistrRecord
 	totalWeight := osmomath.NewInt(int64(len(incentivizedGauges)))
 	for _, gauge := range incentivizedGauges {
-		records = append(records, poolincentivestypes.DistrRecord{GaugeId: gauge, Weight: sdk.OneInt()})
+		records = append(records, poolincentivestypes.DistrRecord{GaugeId: gauge, Weight: osmomath.OneInt()})
 	}
 	distInfo := poolincentivestypes.DistrInfo{
 		TotalWeight: totalWeight,
@@ -1518,7 +1518,7 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(osmoFeeReduced
 			nextTokenInAfterSubTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
 
 			// we then do individual swaps until we reach the end of the swap route
-			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterSubTakerFee, hop.TokenOutDenom, sdk.OneInt(), spreadFactor)
+			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterSubTakerFee, hop.TokenOutDenom, osmomath.OneInt(), spreadFactor)
 			s.Require().NoError(err)
 
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
@@ -1542,7 +1542,7 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(osmoFeeReduced
 			nextTokenInAfterSubTakerFee, _ := s.App.PoolManagerKeeper.CalcTakerFeeExactIn(nextTokenIn, takerFee)
 
 			// we then do individual swaps until we reach the end of the swap route
-			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterSubTakerFee, hop.TokenOutDenom, sdk.OneInt(), spreadFactor)
+			tokenOut, err := swapModule.SwapExactAmountIn(cacheCtx, s.TestAccs[0], pool, nextTokenInAfterSubTakerFee, hop.TokenOutDenom, osmomath.OneInt(), spreadFactor)
 			s.Require().NoError(err)
 
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
@@ -1580,7 +1580,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			poolId:                 1,
 			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
 			poolFee:                defaultPoolSpreadFactor,
-			takerFee:               sdk.MustNewDecFromStr("0.0025"), // 0.25%
+			takerFee:               osmomath.MustNewDecFromStr("0.0025"), // 0.25%
 			tokenIn:                sdk.NewCoin(foo, osmomath.NewInt(100000)),
 			tokenOutMinAmount:      osmomath.NewInt(1),
 			tokenOutDenom:          bar,
@@ -1598,7 +1598,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			poolId:                 1,
 			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
 			poolFee:                defaultPoolSpreadFactor,
-			takerFee:               sdk.MustNewDecFromStr("0.0025"), // 0.25%
+			takerFee:               osmomath.MustNewDecFromStr("0.0025"), // 0.25%
 			tokenIn:                sdk.NewCoin(bar, osmomath.NewInt(100000)),
 			tokenOutMinAmount:      osmomath.NewInt(1),
 			tokenOutDenom:          foo,
@@ -1609,7 +1609,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			poolId:    1,
 			poolCoins: sdk.NewCoins(sdk.NewCoin(foo, osmomath.NewInt(2000000000000)), sdk.NewCoin(bar, osmomath.NewInt(1000000000000))),
 			poolFee:   defaultPoolSpreadFactor,
-			takerFee:  sdk.MustNewDecFromStr("0.0033"), // 0.33%
+			takerFee:  osmomath.MustNewDecFromStr("0.0033"), // 0.33%
 			// We capture the expected fees in the input token to simplify the process for calculating output.
 			// 100000 / (1 - 0.0043) = 100432
 			tokenIn:           sdk.NewCoin(foo, osmomath.NewInt(100432)),
@@ -1623,8 +1623,8 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			name:                   "Swap - [foo -> bar], 0 percent swap fee, 0 percent taker fee",
 			poolId:                 1,
 			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, osmomath.NewInt(1000000000000)), sdk.NewCoin(bar, osmomath.NewInt(1000000000000))),
-			poolFee:                sdk.ZeroDec(),
-			takerFee:               sdk.ZeroDec(),
+			poolFee:                osmomath.ZeroDec(),
+			takerFee:               osmomath.ZeroDec(),
 			tokenIn:                sdk.NewCoin(foo, osmomath.NewInt(100000)),
 			tokenOutMinAmount:      osmomath.NewInt(1),
 			tokenOutDenom:          bar,
@@ -1635,8 +1635,8 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			name:              "Swap - [foo -> bar], 99 percent swap fee, 99 percent taker fee",
 			poolId:            1,
 			poolCoins:         sdk.NewCoins(sdk.NewCoin(foo, osmomath.NewInt(1000000000000)), sdk.NewCoin(bar, osmomath.NewInt(1000000000000))),
-			poolFee:           sdk.MustNewDecFromStr("0.99"),
-			takerFee:          sdk.MustNewDecFromStr("0.99"),
+			poolFee:           osmomath.MustNewDecFromStr("0.99"),
+			takerFee:          osmomath.MustNewDecFromStr("0.99"),
 			tokenIn:           sdk.NewCoin(foo, osmomath.NewInt(10000)),
 			tokenOutMinAmount: osmomath.NewInt(1),
 			tokenOutDenom:     bar,
@@ -1701,7 +1701,7 @@ func (s *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			s.FundAcc(s.TestAccs[0], tc.poolCoins)
 			s.PrepareCustomBalancerPoolFromCoins(tc.poolCoins, balancer.PoolParams{
 				SwapFee: tc.poolFee,
-				ExitFee: sdk.ZeroDec(),
+				ExitFee: osmomath.ZeroDec(),
 			})
 
 			// execute the swap
@@ -1962,21 +1962,21 @@ func (s *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSpreadF
 		// and two pools for calculating `EstimateMultihopSwapExactAmountOut`
 		s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 			SwapFee: poolDefaultSpreadFactor, // 1%
-			ExitFee: sdk.NewDec(0),
+			ExitFee: osmomath.NewDec(0),
 		})
 		s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 			SwapFee: poolDefaultSpreadFactor,
-			ExitFee: sdk.NewDec(0),
+			ExitFee: osmomath.NewDec(0),
 		})
 
 		firstEstimatePoolId = s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 			SwapFee: poolDefaultSpreadFactor, // 1%
-			ExitFee: sdk.NewDec(0),
+			ExitFee: osmomath.NewDec(0),
 		})
 
 		secondEstimatePoolId = s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 			SwapFee: poolDefaultSpreadFactor,
-			ExitFee: sdk.NewDec(0),
+			ExitFee: osmomath.NewDec(0),
 		})
 		return
 	}
@@ -2085,7 +2085,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		"valid solo route one hop": {
 			routes:            defaultSingleRouteOneHop,
 			tokenInDenom:      foo,
-			tokenOutMinAmount: sdk.OneInt(),
+			tokenOutMinAmount: osmomath.OneInt(),
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees:        zeroTakerFeeDistr,
@@ -2098,7 +2098,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 				withInputSwapIn(defaultSingleRouteOneHop[0], osmomath.NewInt(1000)),
 			},
 			tokenInDenom:      foo,
-			tokenOutMinAmount: sdk.OneInt(),
+			tokenOutMinAmount: osmomath.OneInt(),
 
 			// We expect the output to truncate
 			expectedTokenOutEstimate: osmomath.NewInt(996),
@@ -2121,7 +2121,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		"valid solo route multi hop": {
 			routes:            []types.SwapAmountInSplitRoute{defaultSingleRouteTwoHops},
 			tokenInDenom:      foo,
-			tokenOutMinAmount: sdk.OneInt(),
+			tokenOutMinAmount: osmomath.OneInt(),
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees:        zeroTakerFeeDistr,
@@ -2132,7 +2132,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 				defaultSingleRouteThreeHops,
 			},
 			tokenInDenom:      foo,
-			tokenOutMinAmount: sdk.OneInt(),
+			tokenOutMinAmount: osmomath.OneInt(),
 
 			// 1x from single route two hops and 3x from single route three hops
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount.MulRaw(4),
@@ -2150,7 +2150,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 				withInputSwapIn(fooAbcBazTwoHops, osmomath.NewInt(1000)),
 			},
 			tokenInDenom:      foo,
-			tokenOutMinAmount: sdk.OneInt(),
+			tokenOutMinAmount: osmomath.OneInt(),
 
 			// We charge taker fee on each hop and expect the output to truncate
 			// The output of first hop: (1 - 0.0035) * 1000 = 996.5, truncated to 996 (4foo taker fee)
@@ -2182,14 +2182,14 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			setupPools: s.withTakerFees(
 				defaultValidPools,
 				[]uint64{0, 3, 6, 7},
-				[]osmomath.Dec{pointThreeFivePercent, sdk.ZeroDec(), pointOneFivePercent, pointThreePercent},
+				[]osmomath.Dec{pointThreeFivePercent, osmomath.ZeroDec(), pointOneFivePercent, pointThreePercent},
 			),
 			routes: []types.SwapAmountInSplitRoute{
 				withInputSwapIn(defaultSingleRouteTwoHops, osmomath.NewInt(1000)),
 				withInputSwapIn(fooAbcBazTwoHops, osmomath.NewInt(1000)),
 			},
 			tokenInDenom:      foo,
-			tokenOutMinAmount: sdk.OneInt(),
+			tokenOutMinAmount: osmomath.OneInt(),
 
 			// Route 1:
 			// 	Hop 1: (1 - 0.0035) * 1000 = 996.5, truncated to 996. Post swap truncated to 995.
@@ -2242,9 +2242,9 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			},
 			tokenInDenom: foo,
 			// one greater than expected amount
-			tokenOutMinAmount: priceImpactThreshold.Add(sdk.OneInt()),
+			tokenOutMinAmount: priceImpactThreshold.Add(osmomath.OneInt()),
 
-			expectError: types.PriceImpactProtectionExactInError{Actual: priceImpactThreshold, MinAmount: priceImpactThreshold.Add(sdk.OneInt())},
+			expectError: types.PriceImpactProtectionExactInError{Actual: priceImpactThreshold, MinAmount: priceImpactThreshold.Add(osmomath.OneInt())},
 		},
 		"error: duplicate split routes": {
 			routes: []types.SwapAmountInSplitRoute{
@@ -2257,7 +2257,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 				},
 			},
 			tokenInDenom:      foo,
-			tokenOutMinAmount: sdk.OneInt(),
+			tokenOutMinAmount: osmomath.OneInt(),
 
 			expectError: types.ErrDuplicateRoutesNotAllowed,
 		},
@@ -2275,7 +2275,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 				},
 			},
 			tokenInDenom:      foo,
-			tokenOutMinAmount: sdk.OneInt(),
+			tokenOutMinAmount: osmomath.OneInt(),
 
 			expectError: types.FailedToFindRouteError{PoolId: uint64(len(defaultValidPools) + 1)},
 		},
@@ -2330,7 +2330,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			// As a result, we roughly expect the amount out to be the same
 			// as the amount in given in another token. However, the actual
 			// amount must be stricly less than the given due to price impact.
-			multiplicativeTolerance := sdk.OneDec()
+			multiplicativeTolerance := osmomath.OneDec()
 			if tc.checkExactOutput {
 				// We set to a small value instead of zero since zero is a special case
 				// where multiplicative tolerance is skipped/not considered
@@ -2513,7 +2513,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			setupPools: s.withTakerFees(
 				defaultValidPools,
 				[]uint64{0, 2, 3, 5},
-				[]osmomath.Dec{pointThreeFivePercent, sdk.ZeroDec(), pointOneFivePercent, pointThreePercent},
+				[]osmomath.Dec{pointThreeFivePercent, osmomath.ZeroDec(), pointOneFivePercent, pointThreePercent},
 			),
 			routes: []types.SwapAmountOutSplitRoute{
 				withInputSwapOut(defaultSingleRouteTwoHops, osmomath.NewInt(1000)),
@@ -2555,9 +2555,9 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			tokenOutDenom: baz,
 			// one less than expected amount
 			// every route individually would fail, but the split route should succeed
-			tokenInMaxAmount: priceImpactThreshold.Sub(sdk.OneInt()),
+			tokenInMaxAmount: priceImpactThreshold.Sub(osmomath.OneInt()),
 
-			expectError: types.PriceImpactProtectionExactOutError{Actual: priceImpactThreshold, MaxAmount: priceImpactThreshold.Sub(sdk.OneInt())},
+			expectError: types.PriceImpactProtectionExactOutError{Actual: priceImpactThreshold, MaxAmount: priceImpactThreshold.Sub(osmomath.OneInt())},
 		},
 
 		"error: duplicate split routes": {
@@ -2639,7 +2639,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			// As a result, we roughly expect the amount in to be the same
 			// as the amount out given of another token. However, the actual
 			// amount must be stricly greater than the given due to price impact.
-			multiplicativeTolerance := sdk.OneDec()
+			multiplicativeTolerance := osmomath.OneDec()
 			if tc.checkExactOutput {
 				// We set to a small value instead of zero since zero is a special case
 				// where multiplicative tolerance is skipped/not considered
@@ -2660,7 +2660,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 		cosmWasmPoolId = uint64(3)
 	)
 	var (
-		defaultPoolCoinOne = sdk.NewCoin("usdc", sdk.OneInt())
+		defaultPoolCoinOne = sdk.NewCoin("usdc", osmomath.OneInt())
 		defaultPoolCoinTwo = sdk.NewCoin("eth", osmomath.NewInt(2))
 		nonPoolCool        = sdk.NewCoin("uosmo", osmomath.NewInt(3))
 
@@ -2732,7 +2732,7 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 			s.PrepareBalancerPool()
 			if tc.poolLiquidity.Len() == 2 {
 				s.FundAcc(s.TestAccs[0], tc.poolLiquidity)
-				s.CreatePoolFromTypeWithCoinsAndSpreadFactor(types.CosmWasm, tc.poolLiquidity, sdk.ZeroDec())
+				s.CreatePoolFromTypeWithCoinsAndSpreadFactor(types.CosmWasm, tc.poolLiquidity, osmomath.ZeroDec())
 			}
 
 			// Get pool defined in test case
@@ -2992,14 +2992,14 @@ func (s *KeeperTestSuite) TestGetOsmoRoutedMultihopTotalSpreadFactor() {
 				},
 			}),
 			// Note that pool 2 has 5x the swap fee of pool 1
-			poolFees: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor.Mul(sdk.NewDec(5))},
+			poolFees: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor.Mul(osmomath.NewDec(5))},
 			concentratedPoolDenoms: [][]string{
 				{foo, uosmo}, // pool 1.
 				{uosmo, baz}, // pool 2.
 			},
 
-			expectedRouteFee: defaultPoolSpreadFactor.Mul(sdk.NewDec(5)),
-			expectedTotalFee: defaultPoolSpreadFactor.Mul(sdk.NewDec(6)),
+			expectedRouteFee: defaultPoolSpreadFactor.Mul(osmomath.NewDec(5)),
+			expectedTotalFee: defaultPoolSpreadFactor.Mul(osmomath.NewDec(6)),
 		},
 		"error: pool does not exist": {
 			route: types.SwapAmountInRoutes([]types.SwapAmountInRoute{
@@ -3108,8 +3108,8 @@ func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 				},
 			},
 			poolCoins:                   []sdk.Coins{sdk.NewCoins(sdk.NewCoin(uosmo, osmomath.NewInt(100)), sdk.NewCoin(bar, osmomath.NewInt(100)))},
-			cumulativeRouteSpreadFactor: sdk.NewDec(100),
-			sumOfSpreadFactors:          sdk.NewDec(500),
+			cumulativeRouteSpreadFactor: osmomath.NewDec(100),
+			sumOfSpreadFactors:          osmomath.NewDec(500),
 
 			tokenOut:        sdk.NewCoin(uosmo, osmomath.NewInt(10)),
 			expectedSwapIns: []osmomath.Int{osmomath.NewInt(12)},
@@ -3130,8 +3130,8 @@ func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 				sdk.NewCoins(sdk.NewCoin(foo, osmomath.NewInt(100)), sdk.NewCoin(bar, osmomath.NewInt(100))),   // pool 1.
 				sdk.NewCoins(sdk.NewCoin(bar, osmomath.NewInt(100)), sdk.NewCoin(uosmo, osmomath.NewInt(100))), // pool 2.
 			},
-			cumulativeRouteSpreadFactor: sdk.NewDec(100),
-			sumOfSpreadFactors:          sdk.NewDec(500),
+			cumulativeRouteSpreadFactor: osmomath.NewDec(100),
+			sumOfSpreadFactors:          osmomath.NewDec(500),
 
 			tokenOut:        sdk.NewCoin(uosmo, osmomath.NewInt(10)),
 			expectedSwapIns: []osmomath.Int{osmomath.NewInt(14), osmomath.NewInt(12)},
@@ -3444,7 +3444,7 @@ func (s *KeeperTestSuite) TestTrackVolume() {
 // ensuring the resulting values are swapped as intended and sent to the correct destinations.
 func (s *KeeperTestSuite) TestTakerFee() {
 	var (
-		nonZeroTakerFee = sdk.MustNewDecFromStr("0.0015")
+		nonZeroTakerFee = osmomath.MustNewDecFromStr("0.0015")
 		// Note: all pools have the default amount of 10_000_000_000 in each asset,
 		// meaning in their initial state they have a spot price of 1.
 		quoteNativeDenomRoute = []types.SwapAmountInSplitRoute{
@@ -3480,7 +3480,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 				TokenInAmount: twentyFiveBaseUnitsAmount,
 			},
 		}
-		totalExpectedTakerFee = sdk.NewDecFromInt(twentyFiveBaseUnitsAmount).Mul(nonZeroTakerFee)
+		totalExpectedTakerFee = osmomath.NewDecFromInt(twentyFiveBaseUnitsAmount).Mul(nonZeroTakerFee)
 		osmoTakerFeeDistr     = s.App.PoolManagerKeeper.GetParams(s.Ctx).TakerFeeParams.OsmoTakerFeeDistribution
 		nonOsmoTakerFeeDistr  = s.App.PoolManagerKeeper.GetParams(s.Ctx).TakerFeeParams.NonOsmoTakerFeeDistribution
 	)
@@ -3502,7 +3502,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 		"native denom taker fee": {
 			routes:            quoteNativeDenomRoute,
 			tokenInDenom:      uosmo,
-			tokenOutMinAmount: sdk.OneInt(),
+			tokenOutMinAmount: osmomath.OneInt(),
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees: expectedTakerFees{
@@ -3516,7 +3516,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 		"quote denom taker fee": {
 			routes:            quoteQuoteDenomRoute,
 			tokenInDenom:      foo,
-			tokenOutMinAmount: sdk.OneInt(),
+			tokenOutMinAmount: osmomath.OneInt(),
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees: expectedTakerFees{
@@ -3527,12 +3527,12 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			// since foo is whitelisted token, it is sent directly to community pool
 			expectedCommunityPoolBalancesDelta: sdk.NewCoins(sdk.NewCoin(foo, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).TruncateInt())),
 			// foo swapped for uosmo, uosmo sent to main fee collector, 1 uosmo diff due to slippage from swap
-			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(uosmo, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).Sub(sdk.OneDec()).TruncateInt())),
+			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(uosmo, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).Sub(osmomath.OneDec()).TruncateInt())),
 		},
 		"non quote denom taker fee": {
 			routes:            quoteNonquoteDenomRoute,
 			tokenInDenom:      abc,
-			tokenOutMinAmount: sdk.OneInt(),
+			tokenOutMinAmount: osmomath.OneInt(),
 
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 			expectedTakerFees: expectedTakerFees{
@@ -3541,9 +3541,9 @@ func (s *KeeperTestSuite) TestTakerFee() {
 				stakingRewardAssets:         sdk.NewCoins(sdk.NewCoin(abc, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).TruncateInt())),
 			},
 			// since abc is not whitelisted token, it gets swapped for `CommunityPoolDenomToSwapNonWhitelistedAssetsTo`, which is set to baz, 1 baz diff due to slippage from swap
-			expectedCommunityPoolBalancesDelta: sdk.NewCoins(sdk.NewCoin(baz, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).Sub(sdk.OneDec()).TruncateInt())),
+			expectedCommunityPoolBalancesDelta: sdk.NewCoins(sdk.NewCoin(baz, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.CommunityPool).Sub(osmomath.OneDec()).TruncateInt())),
 			// abc swapped for uosmo, uosmo sent to main fee collector, 1 uosmo diff due to slippage from swap
-			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(uosmo, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).Sub(sdk.OneDec()).TruncateInt())),
+			expectedStakingRewardFeeCollectorMainBalanceDelta: sdk.NewCoins(sdk.NewCoin(uosmo, totalExpectedTakerFee.Mul(nonOsmoTakerFeeDistr.StakingRewards).Sub(osmomath.OneDec()).TruncateInt())),
 		},
 	}
 
@@ -3595,7 +3595,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			// As a result, we roughly expect the amount out to be the same
 			// as the amount in given in another token. However, the actual
 			// amount must be stricly less than the given due to price impact.
-			multiplicativeTolerance := sdk.OneDec()
+			multiplicativeTolerance := osmomath.OneDec()
 			errTolerance := osmomath.ErrTolerance{
 				RoundingDir:             osmomath.RoundDown,
 				MultiplicativeTolerance: multiplicativeTolerance,

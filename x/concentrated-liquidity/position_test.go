@@ -287,7 +287,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			// Setup for checks
 			actualUptimeAccumDelta, expectedUptimeAccumValueGrowth, expectedIncentiveRecords, _ := emptyAccumValues, emptyAccumValues, test.incentiveRecords, sdk.DecCoins{}
 
-			timeElapsedSec := sdk.NewDec(int64(test.timeElapsedSinceInit)).Quo(sdk.NewDec(10e8))
+			timeElapsedSec := osmomath.NewDec(int64(test.timeElapsedSinceInit)).Quo(osmomath.NewDec(10e8))
 			positionName := string(types.KeyPositionId(test.param.positionId))
 
 			// Loop through each supported uptime for pool and ensure that:
@@ -1608,14 +1608,14 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 			positionCoins:   sdk.NewCoins(DefaultCoin0, DefaultCoin1),
 			lowerTick:       DefaultMinTick,
 			upperTick:       DefaultUpperTick, // max tick doesn't overlap, should not count towards full range liquidity
-			updateLiquidity: sdk.NewDec(100),
+			updateLiquidity: osmomath.NewDec(100),
 		},
 		{
 			name:            "full range + position overlapping max tick. update liquidity downwards",
 			positionCoins:   sdk.NewCoins(DefaultCoin0, DefaultCoin1),
 			lowerTick:       DefaultLowerTick, // min tick doesn't overlap, should not count towards full range liquidity
 			upperTick:       DefaultMaxTick,
-			updateLiquidity: sdk.NewDec(-100),
+			updateLiquidity: osmomath.NewDec(-100),
 		},
 	}
 
@@ -2017,7 +2017,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		poolId           = pool.GetId()
 		denom0           = pool.GetToken0()
 		denom1           = pool.GetToken1()
-		rewardsPerSecond = sdk.NewDec(1000)
+		rewardsPerSecond = osmomath.NewDec(1000)
 	)
 
 	_, err := s.clk.CreateIncentive(s.Ctx, poolId, s.TestAccs[0], sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000)), rewardsPerSecond, s.Ctx.BlockTime(), time.Nanosecond)

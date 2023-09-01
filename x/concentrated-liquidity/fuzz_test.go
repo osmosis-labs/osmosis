@@ -242,10 +242,10 @@ func tickAmtChange(r *rand.Rand, targetAmount osmomath.Dec) osmomath.Dec {
 	changeType := r.Intn(3)
 
 	// Generate a random percentage under 0.1%
-	randChangePercent := sdk.NewDec(r.Int63n(1)).QuoInt64(1000)
+	randChangePercent := osmomath.NewDec(r.Int63n(1)).QuoInt64(1000)
 	change := targetAmount.Mul(randChangePercent)
 
-	change = sdk.MaxDec(sdk.NewDec(1), randChangePercent)
+	change = sdk.MaxDec(osmomath.NewDec(1), randChangePercent)
 
 	switch changeType {
 	case 0:
@@ -274,7 +274,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	// Reason for adding one int:
 	// Seed 1688658883- causes an error in swap in given out due to rounding (acceptable). This is because we use
 	// token out from "swap out given in" as an input to "in given out". "in given out" rounds by one in pool's favor
-	s.FundAcc(s.TestAccs[0], sdk.NewCoins(swapInFunded).Add(sdk.NewCoin(swapInFunded.Denom, sdk.OneInt())))
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(swapInFunded).Add(sdk.NewCoin(swapInFunded.Denom, osmomath.OneInt())))
 	// // Execute swap
 	fmt.Printf("swap in: %s\n", swapInFunded)
 	cacheCtx, writeOutGivenIn := s.Ctx.CacheContext()
@@ -544,7 +544,7 @@ func (s *KeeperTestSuite) choosePartialOrFullWithdraw(r *rand.Rand) osmomath.Dec
 	}
 
 	// partial withdraw
-	multiplier = multiplier.Mul(sdk.NewDec(r.Int63n(100))).QuoInt64(100)
+	multiplier = multiplier.Mul(osmomath.NewDec(r.Int63n(100))).QuoInt64(100)
 
 	return multiplier
 }

@@ -111,7 +111,7 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 	profit := osmomath.ZeroInt()
 
 	// Track the left and right bounds of the binary search
-	curLeft := sdk.OneInt()
+	curLeft := osmomath.OneInt()
 	curRight := types.MaxInputAmount
 
 	// Input denom used for cyclic arbitrage
@@ -145,7 +145,7 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 	// Binary search to find the max profit
 	for iteration := 0; curLeft.LT(curRight) && iteration < types.MaxIterations; iteration++ {
 		curMid := (curLeft.Add(curRight)).Quo(osmomath.NewInt(2))
-		curMidPlusOne := curMid.Add(sdk.OneInt())
+		curMidPlusOne := curMid.Add(osmomath.OneInt())
 
 		// Short circuit profit searching if there is an error in the GAMM module
 		tokenInMid, profitMid, err := k.EstimateMultihopProfit(ctx, inputDenom, curMid.Mul(route.StepSize), route.Route)
@@ -330,7 +330,7 @@ func (k Keeper) ExtendSearchRangeIfNeeded(
 	// If the profit for the maximum amount in is still increasing, then we can increase the range of the binary search
 	if maxInProfit.GTE(osmomath.ZeroInt()) {
 		// Get the profit for the maximum amount in + 1
-		_, maxInProfitPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Add(sdk.OneInt()).Mul(route.StepSize), route.Route)
+		_, maxInProfitPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Add(osmomath.OneInt()).Mul(route.StepSize), route.Route)
 		if err != nil {
 			return osmomath.ZeroInt(), osmomath.ZeroInt(), err
 		}

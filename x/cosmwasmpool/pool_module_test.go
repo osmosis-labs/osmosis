@@ -178,9 +178,9 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 	}{
 		"calc amount less than supply": {
 			initialCoins:     initalDefaultSupply,
-			tokenIn:          sdk.NewCoin(denomA, defaultAmount.Sub(sdk.OneInt())),
+			tokenIn:          sdk.NewCoin(denomA, defaultAmount.Sub(osmomath.OneInt())),
 			tokenOutDenom:    denomB,
-			expectedTokenOut: sdk.NewCoin(denomB, defaultAmount.Sub(sdk.OneInt())),
+			expectedTokenOut: sdk.NewCoin(denomB, defaultAmount.Sub(osmomath.OneInt())),
 			swapFee:          osmomath.ZeroDec(),
 		},
 		"calc amount equal to supply": {
@@ -192,20 +192,20 @@ func (s *PoolModuleSuite) TestCalcOutAmtGivenIn_SwapOutAmtGivenIn() {
 		},
 		"calc amount greater than supply": {
 			initialCoins:         initalDefaultSupply,
-			tokenIn:              sdk.NewCoin(denomA, defaultAmount.Add(sdk.OneInt())),
+			tokenIn:              sdk.NewCoin(denomA, defaultAmount.Add(osmomath.OneInt())),
 			tokenOutDenom:        denomB,
-			expectedErrorMessage: fmt.Sprintf("Insufficient pool asset: required: %s, available: %s", sdk.NewCoin(denomB, defaultAmount.Add(sdk.OneInt())), sdk.NewCoin(denomB, defaultAmount)),
+			expectedErrorMessage: fmt.Sprintf("Insufficient pool asset: required: %s, available: %s", sdk.NewCoin(denomB, defaultAmount.Add(osmomath.OneInt())), sdk.NewCoin(denomB, defaultAmount)),
 		},
 		"non-zero swap fee": {
 			initialCoins:         initalDefaultSupply,
-			tokenIn:              sdk.NewCoin(denomA, defaultAmount.Sub(sdk.OneInt())),
+			tokenIn:              sdk.NewCoin(denomA, defaultAmount.Sub(osmomath.OneInt())),
 			tokenOutDenom:        denomB,
 			swapFee:              osmomath.MustNewDecFromStr(nonZeroFeeStr),
 			expectedErrorMessage: fmt.Sprintf("Invalid swap fee: expected: %s, actual: %s", osmomath.ZeroInt(), nonZeroFeeStr),
 		},
 		"invalid pool given": {
 			initialCoins:  sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount)),
-			tokenIn:       sdk.NewCoin(denomA, defaultAmount.Sub(sdk.OneInt())),
+			tokenIn:       sdk.NewCoin(denomA, defaultAmount.Sub(osmomath.OneInt())),
 			tokenOutDenom: denomB,
 			isInvalidPool: true,
 
@@ -299,9 +299,9 @@ func (s *PoolModuleSuite) TestCalcInAmtGivenOut_SwapInAmtGivenOut() {
 	}{
 		"calc amount less than supply": {
 			initialCoins:     initalDefaultSupply,
-			tokenOut:         sdk.NewCoin(denomA, defaultAmount.Sub(sdk.OneInt())),
+			tokenOut:         sdk.NewCoin(denomA, defaultAmount.Sub(osmomath.OneInt())),
 			tokenInDenom:     denomB,
-			expectedTokenIn:  sdk.NewCoin(denomB, defaultAmount.Sub(sdk.OneInt())),
+			expectedTokenIn:  sdk.NewCoin(denomB, defaultAmount.Sub(osmomath.OneInt())),
 			tokenInMaxAmount: defaultAmount,
 			swapFee:          osmomath.ZeroDec(),
 		},
@@ -315,24 +315,24 @@ func (s *PoolModuleSuite) TestCalcInAmtGivenOut_SwapInAmtGivenOut() {
 		},
 		"calc amount greater than supply": {
 			initialCoins:         initalDefaultSupply,
-			tokenOut:             sdk.NewCoin(denomA, defaultAmount.Add(sdk.OneInt())),
+			tokenOut:             sdk.NewCoin(denomA, defaultAmount.Add(osmomath.OneInt())),
 			tokenInDenom:         denomB,
-			tokenInMaxAmount:     defaultAmount.Sub(sdk.OneInt()),
-			expectedErrorMessage: fmt.Sprintf("Insufficient pool asset: required: %s, available: %s", sdk.NewCoin(denomA, defaultAmount.Add(sdk.OneInt())), sdk.NewCoin(denomA, defaultAmount)),
+			tokenInMaxAmount:     defaultAmount.Sub(osmomath.OneInt()),
+			expectedErrorMessage: fmt.Sprintf("Insufficient pool asset: required: %s, available: %s", sdk.NewCoin(denomA, defaultAmount.Add(osmomath.OneInt())), sdk.NewCoin(denomA, defaultAmount)),
 		},
 		"non-zero swap fee": {
 			initialCoins:         initalDefaultSupply,
-			tokenOut:             sdk.NewCoin(denomA, defaultAmount.Sub(sdk.OneInt())),
+			tokenOut:             sdk.NewCoin(denomA, defaultAmount.Sub(osmomath.OneInt())),
 			tokenInDenom:         denomB,
-			tokenInMaxAmount:     defaultAmount.Sub(sdk.OneInt()),
+			tokenInMaxAmount:     defaultAmount.Sub(osmomath.OneInt()),
 			swapFee:              osmomath.MustNewDecFromStr(nonZeroFeeStr),
 			expectedErrorMessage: fmt.Sprintf("Invalid swap fee: expected: %s, actual: %s", osmomath.ZeroInt(), nonZeroFeeStr),
 		},
 		"invalid pool given": {
 			initialCoins:     sdk.NewCoins(sdk.NewCoin(denomA, defaultAmount), sdk.NewCoin(denomB, defaultAmount)),
-			tokenOut:         sdk.NewCoin(denomA, defaultAmount.Sub(sdk.OneInt())),
+			tokenOut:         sdk.NewCoin(denomA, defaultAmount.Sub(osmomath.OneInt())),
 			tokenInDenom:     denomB,
-			tokenInMaxAmount: defaultAmount.Sub(sdk.OneInt()),
+			tokenInMaxAmount: defaultAmount.Sub(osmomath.OneInt()),
 			isInvalidPool:    true,
 
 			expectedErrorMessage: types.InvalidPoolTypeError{

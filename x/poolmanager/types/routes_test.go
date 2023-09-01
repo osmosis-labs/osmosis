@@ -3,7 +3,6 @@ package types
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -153,7 +152,7 @@ func TestValidateSwapAmountInSplitRoute(t *testing.T) {
 			routes: []SwapAmountInSplitRoute{
 				{
 					Pools:         []SwapAmountInRoute{},
-					TokenInAmount: sdk.OneInt(),
+					TokenInAmount: osmomath.OneInt(),
 				},
 			},
 			expectErr: ErrEmptyRoutes,
@@ -169,7 +168,7 @@ func TestValidateSwapAmountInSplitRoute(t *testing.T) {
 							TokenOutDenom: bar,
 						},
 					},
-					TokenInAmount: sdk.OneInt(),
+					TokenInAmount: osmomath.OneInt(),
 				},
 				{
 					Pools: []SwapAmountInRoute{
@@ -178,7 +177,7 @@ func TestValidateSwapAmountInSplitRoute(t *testing.T) {
 							TokenOutDenom: baz,
 						},
 					},
-					TokenInAmount: sdk.OneInt(),
+					TokenInAmount: osmomath.OneInt(),
 				},
 			},
 			expectErr: InvalidFinalTokenOutError{TokenOutGivenA: bar, TokenOutGivenB: baz},
@@ -235,7 +234,7 @@ func TestValidateSwapAmountOutSplitRoute(t *testing.T) {
 			routes: []SwapAmountOutSplitRoute{
 				{
 					Pools:          []SwapAmountOutRoute{},
-					TokenOutAmount: sdk.OneInt(),
+					TokenOutAmount: osmomath.OneInt(),
 				},
 			},
 			expectErr: ErrEmptyRoutes,
@@ -251,7 +250,7 @@ func TestValidateSwapAmountOutSplitRoute(t *testing.T) {
 							TokenInDenom: bar,
 						},
 					},
-					TokenOutAmount: sdk.OneInt(),
+					TokenOutAmount: osmomath.OneInt(),
 				},
 				{
 					Pools: []SwapAmountOutRoute{
@@ -260,7 +259,7 @@ func TestValidateSwapAmountOutSplitRoute(t *testing.T) {
 							TokenInDenom: baz,
 						},
 					},
-					TokenOutAmount: sdk.OneInt(),
+					TokenOutAmount: osmomath.OneInt(),
 				},
 			},
 			expectErr: InvalidFinalTokenOutError{TokenOutGivenA: bar, TokenOutGivenB: baz},

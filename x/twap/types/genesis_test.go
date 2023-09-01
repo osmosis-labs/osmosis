@@ -4,7 +4,6 @@ import (
 	"testing"
 	time "time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -98,7 +97,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			twapGenesis: NewGenesisState(basicParams, []TwapRecord{}),
 		},
 		"valid geometric twap acc is negative": {
-			twapGenesis: NewGenesisState(basicParams, []TwapRecord{withGeometricAcc(baseRecord, sdk.NewDec(-1))}),
+			twapGenesis: NewGenesisState(basicParams, []TwapRecord{withGeometricAcc(baseRecord, osmomath.NewDec(-1))}),
 		},
 		"invalid geometric twap acc is nil": {
 			twapGenesis: NewGenesisState(basicParams, []TwapRecord{withGeometricAcc(baseRecord, osmomath.Dec{})}),
@@ -228,7 +227,7 @@ func TestTWAPRecord_Validate(t *testing.T) {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
 				r.LastErrorTime = r.Time
-				r.P0LastSpotPrice = sdk.NewDec(5)
+				r.P0LastSpotPrice = osmomath.NewDec(5)
 				r.P1LastSpotPrice = osmomath.ZeroDec() // note that this one is zero due to spot price error.
 				return r
 			}(),
@@ -250,7 +249,7 @@ func TestTWAPRecord_Validate(t *testing.T) {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
 				r.LastErrorTime = r.Time
-				r.P0LastSpotPrice = sdk.NewDec(5)
+				r.P0LastSpotPrice = osmomath.NewDec(5)
 				r.P1LastSpotPrice = osmomath.NewDecWithPrec(2, 1)
 				return r
 			}(),

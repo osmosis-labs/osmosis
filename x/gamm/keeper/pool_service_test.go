@@ -402,16 +402,16 @@ func (s *KeeperTestSuite) TestSpotPriceOverflow() {
 		panics          bool
 	}{
 		"uniV2marginalOverflow": {
-			poolLiquidity: sdk.NewCoins(sdk.NewCoin(denomA, types.MaxSpotPrice.TruncateInt().Add(sdk.OneInt())),
-				sdk.NewCoin(denomB, sdk.OneInt())),
+			poolLiquidity: sdk.NewCoins(sdk.NewCoin(denomA, types.MaxSpotPrice.TruncateInt().Add(osmomath.OneInt())),
+				sdk.NewCoin(denomB, osmomath.OneInt())),
 			poolWeights:     []int64{1, 1},
 			quoteAssetDenom: denomA,
 			baseAssetDenom:  denomB,
 			overflows:       true,
 		},
 		"uniV2 internal error": {
-			poolLiquidity: sdk.NewCoins(sdk.NewCoin(denomA, sdk.NewDec(2).Power(250).TruncateInt()),
-				sdk.NewCoin(denomB, sdk.OneInt())),
+			poolLiquidity: sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewDec(2).Power(250).TruncateInt()),
+				sdk.NewCoin(denomB, osmomath.OneInt())),
 			poolWeights:     []int64{1, 1 << 19},
 			quoteAssetDenom: denomB,
 			baseAssetDenom:  denomA,
@@ -644,7 +644,7 @@ func (s *KeeperTestSuite) TestExitPool() {
 			// Create the pool at first
 			msg := balancer.NewMsgCreateBalancerPool(test.txSender, balancer.PoolParams{
 				SwapFee: osmomath.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDec(0),
+				ExitFee: osmomath.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
 			poolId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 			s.Require().NoError(err)
@@ -791,8 +791,8 @@ func (s *KeeperTestSuite) TestActiveBalancerPool() {
 
 			// Create the pool at first
 			poolId := s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: sdk.NewDec(0),
-				ExitFee: sdk.NewDec(0),
+				SwapFee: osmomath.NewDec(0),
+				ExitFee: osmomath.NewDec(0),
 			})
 			ctx = ctx.WithBlockTime(tc.blockTime)
 

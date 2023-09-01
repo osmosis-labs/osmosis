@@ -80,12 +80,12 @@ const swapNoProgressLimit = 100
 func newSwapState(specifiedAmount osmomath.Int, p types.ConcentratedPoolExtension, strategy swapstrategy.SwapStrategy) SwapState {
 	return SwapState{
 		amountSpecifiedRemaining:                 specifiedAmount.ToLegacyDec(),
-		amountCalculated:                         sdk.ZeroDec(),
+		amountCalculated:                         osmomath.ZeroDec(),
 		sqrtPrice:                                p.GetCurrentSqrtPrice(),
 		tick:                                     p.GetCurrentTick(),
 		liquidity:                                p.GetLiquidity(),
-		globalSpreadRewardGrowthPerUnitLiquidity: sdk.ZeroDec(),
-		globalSpreadRewardGrowth:                 sdk.ZeroDec(),
+		globalSpreadRewardGrowthPerUnitLiquidity: osmomath.ZeroDec(),
+		globalSpreadRewardGrowth:                 osmomath.ZeroDec(),
 		swapStrategy:                             strategy,
 	}
 }
@@ -103,7 +103,7 @@ type PoolUpdates struct {
 }
 
 var (
-	smallestDec = sdk.SmallestDec()
+	smallestDec = osmomath.SmallestDec()
 )
 
 // updateSpreadRewardGrowthGlobal updates the swap state's spread reward growth global per unit of liquidity
@@ -278,7 +278,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 	spreadFactor osmomath.Dec,
 ) (tokenOut sdk.Coin, err error) {
 	cacheCtx, _ := ctx.CacheContext()
-	swapResult, _, err := k.computeOutAmtGivenIn(cacheCtx, poolI.GetId(), tokenIn, tokenOutDenom, spreadFactor, sdk.ZeroDec())
+	swapResult, _, err := k.computeOutAmtGivenIn(cacheCtx, poolI.GetId(), tokenIn, tokenOutDenom, spreadFactor, osmomath.ZeroDec())
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -293,7 +293,7 @@ func (k Keeper) CalcInAmtGivenOut(
 	spreadFactor osmomath.Dec,
 ) (sdk.Coin, error) {
 	cacheCtx, _ := ctx.CacheContext()
-	swapResult, _, err := k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, sdk.ZeroDec(), poolI.GetId())
+	swapResult, _, err := k.computeInAmtGivenOut(cacheCtx, tokenOut, tokenInDenom, spreadFactor, osmomath.ZeroDec(), poolI.GetId())
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -838,7 +838,7 @@ func (k Keeper) ComputeMaxInAmtGivenMaxTicksCrossed(
 	}
 
 	// Setup the swap strategy
-	swapStrategy, _, err := k.setupSwapStrategy(p, p.GetSpreadFactor(cacheCtx), tokenInDenom, sdk.ZeroDec())
+	swapStrategy, _, err := k.setupSwapStrategy(p, p.GetSpreadFactor(cacheCtx), tokenInDenom, osmomath.ZeroDec())
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, err
 	}
@@ -852,7 +852,7 @@ func (k Keeper) ComputeMaxInAmtGivenMaxTicksCrossed(
 	nextInitTickIter := swapStrategy.InitializeNextTickIterator(cacheCtx, poolId, swapState.tick)
 	defer nextInitTickIter.Close()
 
-	totalTokenOut := sdk.ZeroDec()
+	totalTokenOut := osmomath.ZeroDec()
 
 	for i := uint64(0); i < maxTicksCrossed; i++ {
 		// Check if the iterator is valid

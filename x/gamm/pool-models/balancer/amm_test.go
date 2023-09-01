@@ -35,13 +35,13 @@ func TestBalancerPoolParams(t *testing.T) {
 		// Can't set the spread factor as negative
 		{osmomath.NewDecWithPrec(-1, 2), defaultZeroExitFee, wantErr},
 		// Can't set the spread factor as 1
-		{sdk.NewDec(1), defaultZeroExitFee, wantErr},
+		{osmomath.NewDec(1), defaultZeroExitFee, wantErr},
 		// Can't set the spread factor above 1
 		{osmomath.NewDecWithPrec(15, 1), defaultZeroExitFee, wantErr},
 		// Can't set the exit fee as negative
 		{defaultSpreadFactor, osmomath.NewDecWithPrec(-1, 2), wantErr},
 		// Can't set the exit fee as 1
-		{defaultSpreadFactor, sdk.NewDec(1), wantErr},
+		{defaultSpreadFactor, osmomath.NewDec(1), wantErr},
 		// Can't set the exit fee above 1
 		{defaultSpreadFactor, osmomath.NewDecWithPrec(15, 1), wantErr},
 	}
@@ -72,19 +72,19 @@ func (s *KeeperTestSuite) TestEnsureDenomInPool() {
 	}{
 		"all of tokensIn is in pool asset map": {
 			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
-			tokensIn:    sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt())),
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("uatom", osmomath.OneInt())),
 			expectPass:  true,
 			expectedErr: nil,
 		},
 		"one of tokensIn is in pool asset map": {
 			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
-			tokensIn:    sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt()), sdk.NewCoin("foo", sdk.OneInt())),
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("uatom", osmomath.OneInt()), sdk.NewCoin("foo", osmomath.OneInt())),
 			expectPass:  false,
 			expectedErr: types.ErrDenomNotFoundInPool,
 		},
 		"none of tokensIn is in pool asset map": {
 			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
-			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdk.OneInt())),
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", osmomath.OneInt())),
 			expectPass:  false,
 			expectedErr: types.ErrDenomNotFoundInPool,
 		},

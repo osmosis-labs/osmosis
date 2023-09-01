@@ -259,6 +259,6 @@ func (suite *UpgradeTestSuite) validateCons(coinsA, coinsB sdk.Coins) {
 	for _, coinA := range coinsA {
 		coinBAmount := coinsB.AmountOf(coinA.Denom)
 		// minor tolerance due to fees and rounding
-		osmoassert.DecApproxEq(suite.T(), coinBAmount.ToLegacyDec(), coinA.Amount.ToLegacyDec(), sdk.NewDec(2))
+		osmoassert.DecApproxEq(suite.T(), coinBAmount.ToLegacyDec(), coinA.Amount.ToLegacyDec(), osmomath.NewDec(2))
 	}
 }

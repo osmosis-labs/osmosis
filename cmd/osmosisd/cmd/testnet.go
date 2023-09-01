@@ -220,7 +220,7 @@ func InitTestnet(
 			sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(osmomath.OneDec(), osmomath.OneDec(), osmomath.OneDec()),
-			sdk.OneInt(),
+			osmomath.OneInt(),
 		)
 		if err != nil {
 			return err

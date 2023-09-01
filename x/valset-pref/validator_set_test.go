@@ -76,7 +76,7 @@ func (s *KeeperTestSuite) TestCheckUndelegateTotalAmount() {
 	}{
 		{
 			name:     "token amount matches with totalAmountFromWeights",
-			tokenAmt: sdk.NewDec(122_312_231),
+			tokenAmt: osmomath.NewDec(122_312_231),
 			existingSet: []types.ValidatorPreference{
 				{
 					ValOperAddress: valAddrs[0],
@@ -106,7 +106,7 @@ func (s *KeeperTestSuite) TestCheckUndelegateTotalAmount() {
 		},
 		{
 			name:     "tokenAmt doesnot match with totalAmountFromWeights",
-			tokenAmt: sdk.NewDec(122_312_231),
+			tokenAmt: osmomath.NewDec(122_312_231),
 			existingSet: []types.ValidatorPreference{
 				{
 					ValOperAddress: valAddrs[0],

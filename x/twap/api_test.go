@@ -26,17 +26,17 @@ var (
 	ThreePlusOneThird osmomath.Dec = osmomath.MustNewDecFromStr("3.333333333333333333")
 
 	// base record is a record with t=baseTime, sp0=10(sp1=0.1) accumulators set to 0
-	baseRecord types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.NewDec(10), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec())
+	baseRecord types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(baseTime, osmomath.NewDec(10), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec())
 
 	threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC types.TwapRecord = newThreeAssetPoolTwapRecordWithDefaults(
 		baseTime,
-		sdk.NewDec(10),     // spot price 0
-		osmomath.ZeroDec(), // accum A
-		osmomath.ZeroDec(), // accum B
-		osmomath.ZeroDec(), // accum C
-		osmomath.ZeroDec(), // geomAccum AB
-		osmomath.ZeroDec(), // geomAccum AC
-		osmomath.ZeroDec(), // geomAccum BC
+		osmomath.NewDec(10), // spot price 0
+		osmomath.ZeroDec(),  // accum A
+		osmomath.ZeroDec(),  // accum B
+		osmomath.ZeroDec(),  // accum C
+		osmomath.ZeroDec(),  // geomAccum AB
+		osmomath.ZeroDec(),  // geomAccum AC
+		osmomath.ZeroDec(),  // geomAccum BC
 	)
 
 	// accumA = 10 seconds * (spot price = 10) = OneSec * 10 * 10
@@ -54,17 +54,17 @@ var (
 	// t = baseTime + 10
 	// spA = 5, spB = 0.2, spC = 10
 	tPlus10sp5Record = newTwoAssetPoolTwapRecordWithDefaults(
-		baseTime.Add(10*time.Second), sdk.NewDec(5), accumA, accumB, geomAccumAB)
+		baseTime.Add(10*time.Second), osmomath.NewDec(5), accumA, accumB, geomAccumAB)
 
 	tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
-		baseTime.Add(10*time.Second), sdk.NewDec(5), accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC)
+		baseTime.Add(10*time.Second), osmomath.NewDec(5), accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC)
 
 	// accumulators updated from tPlus10sp5Record with
 	// t = baseTime + 20
 	// spA = 2, spB = 0.5, spC = 4
 	tPlus20sp2Record = newTwoAssetPoolTwapRecordWithDefaults(
 		baseTime.Add(20*time.Second),
-		sdk.NewDec(2),               // spot price 0
+		osmomath.NewDec(2),          // spot price 0
 		OneSec.MulInt64(10*10+5*10), // accum A
 		OneSec.MulInt64(3),          // accum B
 		osmomath.ZeroDec(),          // TODO: choose correct
@@ -72,7 +72,7 @@ var (
 
 	tPlus20sp2ThreeAssetRecordAB, tPlus20sp2ThreeAssetRecordAC, tPlus20sp2ThreeAssetRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
 		baseTime.Add(20*time.Second),
-		sdk.NewDec(2),                // spot price 0
+		osmomath.NewDec(2),           // spot price 0
 		OneSec.MulInt64(10*10+5*10),  // accum A
 		OneSec.MulInt64(3),           // accum B
 		OneSec.MulInt64(20*10+10*10), // accum C
@@ -90,7 +90,7 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 	initStartRecord.PoolId, initStartRecord.Height = poolId, s.Ctx.BlockHeight()
 	initStartRecord.Asset0Denom, initStartRecord.Asset1Denom = denomB, denomA
 
-	zeroAccumTenPoint1Record := recordWithUpdatedSpotPrice(initStartRecord, sdk.NewDec(10), osmomath.NewDecWithPrec(1, 1))
+	zeroAccumTenPoint1Record := recordWithUpdatedSpotPrice(initStartRecord, osmomath.NewDec(10), osmomath.NewDecWithPrec(1, 1))
 
 	tests := map[string]struct {
 		// if start record is blank, don't do any sets
@@ -189,7 +189,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(1 record) start and end point to same record, use sp1": {
 			recordsToSet: []types.TwapRecord{baseRecord},
@@ -201,25 +201,25 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOneMin, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(1 record) spot price error before start time": {
 			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, tMinOne)},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(2 record) start and end point to same record": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(2 record) start and end exact, different records": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, baseTime.Add(10*time.Second), baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(2 record) start exact, end after second record": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
@@ -246,13 +246,13 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record, tPlus20sp2Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime.Add(10*time.Second), baseTime.Add(10*time.Second), baseQuoteBA),
-			expTwap:      sdk.NewDec(5),
+			expTwap:      osmomath.NewDec(5),
 		},
 		"(3 record) start and end exactly at record times, different records": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record, tPlus20sp2Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime.Add(10*time.Second), baseTime.Add(20*time.Second), baseQuoteBA),
-			expTwap:      sdk.NewDec(5),
+			expTwap:      osmomath.NewDec(5),
 		},
 		"(3 record) start at second record, end after third record": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record, tPlus20sp2Record},
@@ -278,7 +278,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record, tPlus20sp2Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime.Add(15*time.Second), baseTime.Add(30*time.Second), baseQuoteBA),
-			expTwap:      sdk.NewDec(3), // 5 for 5s, 2 for 10s = 45 / 15 = 3
+			expTwap:      osmomath.NewDec(3), // 5 for 5s, 2 for 10s = 45 / 15 = 3
 		},
 
 		// error catching
@@ -310,7 +310,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, baseTime)},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOneMin, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 			expectError:  errSpotPrice,
 			expectSpErr:  baseTime,
 		},
@@ -318,7 +318,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, baseTime)},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(tPlusOne, tPlusOneMin, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 			expectError:  errSpotPrice,
 			expectSpErr:  baseTime,
 		},
@@ -326,7 +326,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, tPlusOne)},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOneMin, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 			expectError:  errSpotPrice,
 			expectSpErr:  baseTime,
 		},
@@ -335,7 +335,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, baseTime)},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 			expectError:  errSpotPrice,
 			expectSpErr:  baseTime,
 		},
@@ -343,7 +343,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, tPlusOne)},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 			expectError:  errSpotPrice,
 			expectSpErr:  baseTime,
 		},
@@ -352,7 +352,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, tPlusOneMin)},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 			expectError:  errSpotPrice,
 			expectSpErr:  baseTime,
 		},
@@ -397,7 +397,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 			// A 10 for 10s, 5 for 10s = 150/20 = 7.5
 			// C 20 for 10s, 10 for 10s = 300/20 = 15
 			// B .1 for 10s, .2 for 10s = 3/20 = 0.15
-			expTwap: []osmomath.Dec{osmomath.NewDecWithPrec(75, 1), sdk.NewDec(15), osmomath.NewDecWithPrec(15, 2)},
+			expTwap: []osmomath.Dec{osmomath.NewDecWithPrec(75, 1), osmomath.NewDec(15), osmomath.NewDecWithPrec(15, 2)},
 		},
 		"(3 pairs of 3 record) start at second record, end after third record": {
 			recordsToSet: []types.TwapRecord{
@@ -410,7 +410,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 			// A 5 for 10s, 2 for 10s = 70/20 = 3.5
 			// C 10 for 10s, 4 for 10s = 140/20 = 7
 			// B .2 for 10s, .5 for 10s = 7/20 = 0.35
-			expTwap: []osmomath.Dec{osmomath.NewDecWithPrec(35, 1), sdk.NewDec(7), osmomath.NewDecWithPrec(35, 2)},
+			expTwap: []osmomath.Dec{osmomath.NewDecWithPrec(35, 1), osmomath.NewDec(7), osmomath.NewDecWithPrec(35, 2)},
 		},
 		// interpolate in time closer to second record
 		"(3 record) interpolate: get twap closer to second record": {
@@ -424,7 +424,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 			// A 5 for 5s, 2 for 10s = 45/15 = 3
 			// C 10 for 5s, 4 for 10s = 140/15 = 6
 			// B .2 for 5s, .5 for 10s = 7/15 = .4
-			expTwap: []osmomath.Dec{sdk.NewDec(3), sdk.NewDec(6), osmomath.NewDecWithPrec(4, 1)},
+			expTwap: []osmomath.Dec{osmomath.NewDec(3), osmomath.NewDec(6), osmomath.NewDecWithPrec(4, 1)},
 		},
 	}
 	for name, test := range tests {
@@ -471,10 +471,10 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 		oneHourAfterKeepThreshold = baseTimePlusKeepPeriod.Add(time.Hour)
 
 		periodBetweenBaseAndOneHourBeforeThreshold           = (defaultRecordHistoryKeepPeriod.Milliseconds() - time.Hour.Milliseconds())
-		accumBeforeKeepThreshold0, accumBeforeKeepThreshold1 = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10), sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10)
-		geomAccumBeforeKeepThreshold                         = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold).Mul(logTen)
+		accumBeforeKeepThreshold0, accumBeforeKeepThreshold1 = osmomath.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10), osmomath.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10)
+		geomAccumBeforeKeepThreshold                         = osmomath.NewDec(periodBetweenBaseAndOneHourBeforeThreshold).Mul(logTen)
 		// recordBeforeKeepThreshold is a record with t=baseTime+keepPeriod-1h, sp0=30(sp1=0.3) accumulators set relative to baseRecord
-		recordBeforeKeepThreshold types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(oneHourBeforeKeepThreshold, sdk.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1, geomAccumBeforeKeepThreshold)
+		recordBeforeKeepThreshold types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(oneHourBeforeKeepThreshold, osmomath.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1, geomAccumBeforeKeepThreshold)
 	)
 
 	// N.B.: when ctxTime = end time, we trigger the "TWAP to now path".
@@ -491,49 +491,49 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTimePlusKeepPeriod,
 			input:        makeSimpleTwapInput(baseTimePlusKeepPeriod, baseTimePlusKeepPeriod, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(1 record at keep threshold); with end time; ctxTime = at keep threshold; start time = end time = base keep threshold - 1ms": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTimePlusKeepPeriod,
 			input:        makeSimpleTwapInput(baseTimePlusKeepPeriod.Add(-time.Millisecond), baseTimePlusKeepPeriod.Add(-time.Millisecond), baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(1 record younger than keep threshold); to now; ctxTime = start time = end time = after keep threshold": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      oneHourAfterKeepThreshold,
 			input:        makeSimpleTwapInput(oneHourAfterKeepThreshold, oneHourAfterKeepThreshold, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(1 record younger than keep threshold); with end time; ctxTime = start time = end time = after keep threshold - 1ms": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      oneHourAfterKeepThreshold,
 			input:        makeSimpleTwapInput(oneHourAfterKeepThreshold.Add(-time.Millisecond), oneHourAfterKeepThreshold.Add(-time.Millisecond), baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(1 record older than keep threshold); to now; ctxTime = baseTime, start time = end time = before keep threshold": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      oneHourBeforeKeepThreshold,
 			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold, oneHourBeforeKeepThreshold, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(1 record older than keep threshold); with end time; ctxTime = baseTime, start time = end time = before keep threshold - 1ms": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      oneHourBeforeKeepThreshold,
 			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold.Add(-time.Millisecond), oneHourBeforeKeepThreshold.Add(-time.Millisecond), baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(1 record older than keep threshold); to now; ctxTime = after keep threshold, start time = before keep threshold; end time = after keep threshold": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      oneHourAfterKeepThreshold,
 			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold, oneHourAfterKeepThreshold, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(1 record older than keep threshold); with end time; ctxTime = after keep threshold, start time = before keep threshold; end time = after keep threshold - 1ms": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      oneHourAfterKeepThreshold,
 			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold, oneHourAfterKeepThreshold.Add(-time.Millisecond), baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(1 record at keep threshold); to now; ctxTime = base keep threshold, start time = base time - 1ms (source of error); end time = base keep threshold; error": {
 			recordsToSet: []types.TwapRecord{baseRecord},
@@ -609,11 +609,11 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod_ThreeAsset() {
 		oneHourAfterKeepThreshold      = baseTimePlusKeepPeriod.Add(time.Hour)
 
 		periodBetweenBaseAndOneHourBeforeThreshold                                      = (defaultRecordHistoryKeepPeriod.Milliseconds() - time.Hour.Milliseconds())
-		accumBeforeKeepThresholdA, accumBeforeKeepThresholdB, accumBeforeKeepThresholdC = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10), osmomath.NewDecWithPrec(1, 1).MulInt64(periodBetweenBaseAndOneHourBeforeThreshold), sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 20)
+		accumBeforeKeepThresholdA, accumBeforeKeepThresholdB, accumBeforeKeepThresholdC = osmomath.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10), osmomath.NewDecWithPrec(1, 1).MulInt64(periodBetweenBaseAndOneHourBeforeThreshold), osmomath.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 20)
 		// recordBeforeKeepThreshold is a record with t=baseTime+keepPeriod-1h, spA=30(spB=0.3)(spC=60) accumulators set relative to baseRecord
 		recordBeforeKeepThresholdAB, recordBeforeKeepThresholdAC, recordBeforeKeepThresholdBC = newThreeAssetPoolTwapRecordWithDefaults(
 			oneHourBeforeKeepThreshold,
-			sdk.NewDec(30),
+			osmomath.NewDec(30),
 			accumBeforeKeepThresholdA,
 			accumBeforeKeepThresholdB,
 			accumBeforeKeepThresholdC,
@@ -702,7 +702,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapToNowInput(baseTime, baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(1 record) start time = record time, use sp1": {
 			recordsToSet: []types.TwapRecord{baseRecord},
@@ -714,13 +714,13 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapToNowInput(baseTime.Add(10*time.Second), baseQuoteBA),
-			expTwap:      sdk.NewDec(10),
+			expTwap:      osmomath.NewDec(10),
 		},
 		"(2 record) to now: start time = second record time": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapToNowInput(baseTime.Add(10*time.Second), baseQuoteBA),
-			expTwap:      sdk.NewDec(5), // 10 for 0s, 5 for 10s
+			expTwap:      osmomath.NewDec(5), // 10 for 0s, 5 for 10s
 		},
 		"(2 record) to now: start time = second record time, use sp1": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
@@ -753,7 +753,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			recordsToSet:  []types.TwapRecord{withLastErrTime(baseRecord, baseTime)},
 			ctxTime:       tPlusOneMin,
 			input:         makeSimpleTwapInput(tPlusOne, tPlusOneMin, baseQuoteBA),
-			expTwap:       sdk.NewDec(10),
+			expTwap:       osmomath.NewDec(10),
 			expectedError: errSpotPrice,
 		},
 	}
@@ -804,7 +804,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 			// A 10 for 0s, 5 for 10s = 50/10 = 5
 			// C 20 for 0s, 10 for 10s = 100/10 = 10
 			// B .1 for 0s, .2 for 10s = 2/10 = 0.2
-			expTwap: []osmomath.Dec{sdk.NewDec(5), sdk.NewDec(10), osmomath.NewDecWithPrec(2, 1)},
+			expTwap: []osmomath.Dec{osmomath.NewDec(5), osmomath.NewDec(10), osmomath.NewDecWithPrec(2, 1)},
 		},
 		"(2 pairs of 3 records) first record time < start time < second record time": {
 			recordsToSet: []types.TwapRecord{
@@ -897,7 +897,7 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 			s.Require().NoError(err)
 
 			osmomath.ErrTolerance{
-				MultiplicativeTolerance: sdk.SmallestDec(),
+				MultiplicativeTolerance: osmomath.SmallestDec(),
 			}.CompareBigDec(
 				osmomath.BigDecFromDec(spotPrice),
 				osmomath.BigDecFromDec(twap),

@@ -83,7 +83,7 @@ func TestMsgCreateConcentratedPool(t *testing.T) {
 				Denom0:       ETH,
 				Denom1:       USDC,
 				TickSpacing:  DefaultTickSpacing,
-				SpreadFactor: osmomath.ZeroDec().Sub(sdk.SmallestDec()),
+				SpreadFactor: osmomath.ZeroDec().Sub(osmomath.SmallestDec()),
 			},
 			expectPass: false,
 		},

@@ -60,7 +60,7 @@ func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 			locks := []lockuptypes.PeriodLock{}
 			slashFactor := osmomath.NewDecWithPrec(5, 2)
@@ -105,7 +105,7 @@ func (s *KeeperTestSuite) TestBeforeValidatorSlashed() {
 				s.Require().NoError(err)
 				s.Require().Equal(
 					gotLock.Coins.AmountOf(denoms[0]).String(),
-					sdk.NewDec(1000000).Mul(osmomath.OneDec().Sub(slashFactor)).TruncateInt().String(),
+					osmomath.NewDec(1000000).Mul(osmomath.OneDec().Sub(slashFactor)).TruncateInt().String(),
 				)
 			}
 		})
@@ -166,7 +166,7 @@ func (s *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 			// setup superfluid delegations
 			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -328,7 +328,7 @@ func (s *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 				s.Require().NoError(err)
 
 				errTolerance := osmomath.ErrTolerance{
-					AdditiveTolerance: sdk.NewDec(1),
+					AdditiveTolerance: osmomath.NewDec(1),
 					// Actual should be greater than expected, so we round up
 					RoundingDir: osmomath.RoundUp,
 				}

@@ -345,13 +345,13 @@ func TestMsgSplitRouteSwapExactAmountIn(t *testing.T) {
 	var (
 		validMultihopRouteOne = types.SwapAmountInSplitRoute{
 			Pools:         validSwapExactAmountInRoutes,
-			TokenInAmount: sdk.OneInt(),
+			TokenInAmount: osmomath.OneInt(),
 		}
 		validMultihopRouteTwo = types.SwapAmountInSplitRoute{
 			Pools: []types.SwapAmountInRoute{
 				validSwapRoutePoolThreeAmountIn,
 			},
-			TokenInAmount: sdk.OneInt(),
+			TokenInAmount: osmomath.OneInt(),
 		}
 
 		defaultValidMsg = types.MsgSplitRouteSwapExactAmountIn{
@@ -361,7 +361,7 @@ func TestMsgSplitRouteSwapExactAmountIn(t *testing.T) {
 				validMultihopRouteTwo,
 			},
 			TokenInDenom:      "udai",
-			TokenOutMinAmount: sdk.OneInt(),
+			TokenOutMinAmount: osmomath.OneInt(),
 		}
 	)
 	msg := createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountIn) types.MsgSplitRouteSwapExactAmountIn {
@@ -427,7 +427,7 @@ func TestMsgSplitRouteSwapExactAmountIn(t *testing.T) {
 		},
 		"invalid token out min amount": {
 			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountIn) types.MsgSplitRouteSwapExactAmountIn {
-				msg.TokenOutMinAmount = sdk.ZeroInt()
+				msg.TokenOutMinAmount = osmomath.ZeroInt()
 				return msg
 			}),
 			expectError: true,
@@ -459,13 +459,13 @@ func TestMsgSplitRouteSwapExactAmountOut(t *testing.T) {
 	var (
 		validMultihopRouteOne = types.SwapAmountOutSplitRoute{
 			Pools:          validSwapExactAmountOutRoutes,
-			TokenOutAmount: sdk.OneInt(),
+			TokenOutAmount: osmomath.OneInt(),
 		}
 		validMultihopRouteTwo = types.SwapAmountOutSplitRoute{
 			Pools: []types.SwapAmountOutRoute{
 				validSwapRoutePoolThreeAmountOut,
 			},
-			TokenOutAmount: sdk.OneInt(),
+			TokenOutAmount: osmomath.OneInt(),
 		}
 
 		defaultValidMsg = types.MsgSplitRouteSwapExactAmountOut{
@@ -475,7 +475,7 @@ func TestMsgSplitRouteSwapExactAmountOut(t *testing.T) {
 				validMultihopRouteTwo,
 			},
 			TokenOutDenom:    "udai",
-			TokenInMaxAmount: sdk.OneInt(),
+			TokenInMaxAmount: osmomath.OneInt(),
 		}
 	)
 	msg := createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountOut) types.MsgSplitRouteSwapExactAmountOut {
@@ -541,7 +541,7 @@ func TestMsgSplitRouteSwapExactAmountOut(t *testing.T) {
 		},
 		"invalid token in max amount": {
 			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountOut) types.MsgSplitRouteSwapExactAmountOut {
-				msg.TokenInMaxAmount = sdk.ZeroInt()
+				msg.TokenInMaxAmount = osmomath.ZeroInt()
 				return msg
 			}),
 			expectError: true,
@@ -577,12 +577,12 @@ func TestMsgSetDenomPairTakerFee(t *testing.T) {
 				{
 					Denom0:   "uosmo",
 					Denom1:   "uatom",
-					TakerFee: sdk.MustNewDecFromStr("0.003"),
+					TakerFee: osmomath.MustNewDecFromStr("0.003"),
 				},
 				{
 					Denom0:   "uosmo",
 					Denom1:   "uion",
-					TakerFee: sdk.MustNewDecFromStr("0.006"),
+					TakerFee: osmomath.MustNewDecFromStr("0.006"),
 				},
 			},
 		}

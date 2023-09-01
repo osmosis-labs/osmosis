@@ -1,8 +1,6 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
@@ -30,19 +28,19 @@ var (
 	InitPoolSharesSupply = OneShare.MulRaw(100)
 
 	// SpotPriceSigFigs is the amount of significant figures used in return value of calculate SpotPrice
-	SpotPriceSigFigs = sdk.NewDec(10).Power(SigFigsExponent).TruncateInt()
+	SpotPriceSigFigs = osmomath.NewDec(10).Power(SigFigsExponent).TruncateInt()
 	// MaxSpotPrice is the maximum supported spot price. Anything greater than this will error.
 	// Internal note: Ctrl+F for MaxSpotPrice in code if ever changed.
 	// Other tests depend on being equal to MaxSpotPrice,
 	// but don't directly import it due to import issues.
-	MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(osmomath.OneDec())
+	MaxSpotPrice = osmomath.NewDec(2).Power(128).Sub(osmomath.OneDec())
 	// MinSpotPrice is the minimum supported spot price. Anything less than this will error.
 	// It is limited by osmomath.Dec's precision.
-	MinSpotPrice = sdk.SmallestDec()
+	MinSpotPrice = osmomath.SmallestDec()
 
 	// MultihopSpreadFactorMultiplierForOsmoPools if a spread factor multiplier for trades consists of just two OSMO pools during a single transaction.
 	MultihopSpreadFactorMultiplierForOsmoPools = osmomath.NewDecWithPrec(5, 1) // 0.5
 
 	// Maximum amount per asset after the application of scaling factors should be 10e34.
-	StableswapMaxScaledAmtPerAsset = sdk.NewDec(10).Power(34).TruncateInt()
+	StableswapMaxScaledAmtPerAsset = osmomath.NewDec(10).Power(34).TruncateInt()
 )

@@ -5,8 +5,6 @@ import (
 	"math"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/twap"
 
@@ -542,11 +540,11 @@ func (s *TestSuite) TestAccumulatorOverflow() {
 	}{
 		"no overflow": {
 			// 2562047h47m16.854775807s in duration, this is over 292 years.
-			timeDelta: sdk.NewDec(2).Power(128),
+			timeDelta: osmomath.NewDec(2).Power(128),
 			panics:    false,
 		},
 		"overflow": {
-			timeDelta: sdk.NewDec(2).Power(129),
+			timeDelta: osmomath.NewDec(2).Power(129),
 			panics:    true,
 		},
 	}

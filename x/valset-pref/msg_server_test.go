@@ -105,7 +105,7 @@ func (s *KeeperTestSuite) TestSetValidatorSetPreference() {
 			preferences: []types.ValidatorPreference{
 				{
 					ValOperAddress: "addr1---------------",
-					Weight:         sdk.NewDec(1),
+					Weight:         osmomath.NewDec(1),
 				},
 			},
 			expectPass: false,
@@ -193,14 +193,14 @@ func (s *KeeperTestSuite) TestDelegateToValidatorSet() {
 			delegator:        sdk.AccAddress([]byte("addr1---------------")),
 			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10_000_000)),
 			setValSet:        true,
-			expectedShares:   []osmomath.Dec{sdk.NewDec(2_000_000), sdk.NewDec(3_300_000), sdk.NewDec(1_200_000), sdk.NewDec(3_500_000)},
+			expectedShares:   []osmomath.Dec{osmomath.NewDec(2_000_000), osmomath.NewDec(3_300_000), osmomath.NewDec(1_200_000), osmomath.NewDec(3_500_000)},
 			expectPass:       true,
 		},
 		{
 			name:             "Delegate more tokens to existing validator-set",
 			delegator:        sdk.AccAddress([]byte("addr1---------------")),
 			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10_000_000)),
-			expectedShares:   []osmomath.Dec{sdk.NewDec(4_000_000), sdk.NewDec(6_600_000), sdk.NewDec(2_400_000), sdk.NewDec(7_000_000)},
+			expectedShares:   []osmomath.Dec{osmomath.NewDec(4_000_000), osmomath.NewDec(6_600_000), osmomath.NewDec(2_400_000), osmomath.NewDec(7_000_000)},
 			expectPass:       true,
 		},
 		{
@@ -214,7 +214,7 @@ func (s *KeeperTestSuite) TestDelegateToValidatorSet() {
 			name:                   "Delegate to existing staking position (non valSet)",
 			delegator:              sdk.AccAddress([]byte("addr3---------------")),
 			amountToDelegate:       sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10_000_000)),
-			expectedShares:         []osmomath.Dec{sdk.NewDec(13_333_333), sdk.NewDec(13_333_333), sdk.NewDec(13_333_334)},
+			expectedShares:         []osmomath.Dec{osmomath.NewDec(13_333_333), osmomath.NewDec(13_333_333), osmomath.NewDec(13_333_334)},
 			setExistingDelegations: true,
 			expectPass:             true,
 		},
@@ -222,7 +222,7 @@ func (s *KeeperTestSuite) TestDelegateToValidatorSet() {
 			name:             "Delegate very small amount to existing valSet",
 			delegator:        sdk.AccAddress([]byte("addr4---------------")),
 			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(0o10_013)), // small case
-			expectedShares:   []osmomath.Dec{sdk.NewDec(821), sdk.NewDec(1355), sdk.NewDec(492), sdk.NewDec(1439)},
+			expectedShares:   []osmomath.Dec{osmomath.NewDec(821), osmomath.NewDec(1355), osmomath.NewDec(492), osmomath.NewDec(1439)},
 			setValSet:        true,
 			expectPass:       true,
 		},
@@ -230,7 +230,7 @@ func (s *KeeperTestSuite) TestDelegateToValidatorSet() {
 			name:             "Delegate large amount to existing valSet",
 			delegator:        sdk.AccAddress([]byte("addr5---------------")),
 			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(96_386_414)),
-			expectedShares:   []osmomath.Dec{sdk.NewDec(19_277_282), sdk.NewDec(31_807_516), sdk.NewDec(11_566_369), sdk.NewDec(33_735_247)},
+			expectedShares:   []osmomath.Dec{osmomath.NewDec(19_277_282), osmomath.NewDec(31_807_516), osmomath.NewDec(11_566_369), osmomath.NewDec(33_735_247)},
 			setValSet:        true,
 			expectPass:       true,
 		},
@@ -282,8 +282,8 @@ func (s *KeeperTestSuite) TestDelegateToValidatorSet() {
 				}
 
 				if test.setExistingDelegations {
-					delSharesAmt := sdk.NewDec(0)
-					expectedAmt := sdk.NewDec(0)
+					delSharesAmt := osmomath.NewDec(0)
+					expectedAmt := osmomath.NewDec(0)
 
 					for i, val := range valAddrs {
 						valAddr, err := sdk.ValAddressFromBech32(val)
@@ -325,16 +325,16 @@ func (s *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 			delegator:      sdk.AccAddress([]byte("addr1---------------")),
 			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(20_000_000)), // delegate 20osmo
 			coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10_000_000)), // undelegate 10osmo
-			expectedShares: []osmomath.Dec{sdk.NewDec(2_000_000), sdk.NewDec(3_300_000), sdk.NewDec(1_200_000), sdk.NewDec(3_500_000)},
+			expectedShares: []osmomath.Dec{osmomath.NewDec(2_000_000), osmomath.NewDec(3_300_000), osmomath.NewDec(1_200_000), osmomath.NewDec(3_500_000)},
 			setValSet:      true,
 			expectPass:     true,
 		},
 		{
 			name:           "Unstake x amount from ValSet",
 			delegator:      sdk.AccAddress([]byte("addr2---------------")),
-			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(20_000_000)),                                           // delegate 20osmo
-			coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(15_000_000)),                                           // undelegate 15osmo
-			expectedShares: []osmomath.Dec{sdk.NewDec(1_000_000), sdk.NewDec(1_650_000), sdk.NewDec(600_000), sdk.NewDec(1_750_000)}, // validatorDelegatedShares - (weight * coinToUnstake)
+			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(20_000_000)),                                                               // delegate 20osmo
+			coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(15_000_000)),                                                               // undelegate 15osmo
+			expectedShares: []osmomath.Dec{osmomath.NewDec(1_000_000), osmomath.NewDec(1_650_000), osmomath.NewDec(600_000), osmomath.NewDec(1_750_000)}, // validatorDelegatedShares - (weight * coinToUnstake)
 			setValSet:      true,
 			expectPass:     true,
 		},
@@ -359,7 +359,7 @@ func (s *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 			delegator:              sdk.AccAddress([]byte("addr5---------------")),
 			coinToStake:            sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10_000_000)),
 			coinToUnStake:          sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10_000_000)),
-			expectedShares:         []osmomath.Dec{sdk.NewDec(1_000_000), sdk.NewDec(1_660_000), sdk.NewDec(600_000), sdk.NewDec(1_740_000)}, // validatorDelegatedShares - (weight * coinToUnstake)
+			expectedShares:         []osmomath.Dec{osmomath.NewDec(1_000_000), osmomath.NewDec(1_660_000), osmomath.NewDec(600_000), osmomath.NewDec(1_740_000)}, // validatorDelegatedShares - (weight * coinToUnstake)
 			setExistingDelegations: true,
 			expectPass:             true,
 		},
@@ -368,7 +368,7 @@ func (s *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 			delegator:      sdk.AccAddress([]byte("addr6---------------")),
 			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100_000_000)),
 			coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(87_461_351)),
-			expectedShares: []osmomath.Dec{sdk.NewDec(2_507_730), sdk.NewDec(4_137_755), sdk.NewDec(1_504_638), sdk.NewDec(4_388_526)}, // validatorDelegatedShares - (weight * coinToUnstake), for ex: 20_000_000 - (0.2 * 87_461_351)
+			expectedShares: []osmomath.Dec{osmomath.NewDec(2_507_730), osmomath.NewDec(4_137_755), osmomath.NewDec(1_504_638), osmomath.NewDec(4_388_526)}, // validatorDelegatedShares - (weight * coinToUnstake), for ex: 20_000_000 - (0.2 * 87_461_351)
 			setValSet:      true,
 			expectPass:     true,
 		},
@@ -377,7 +377,7 @@ func (s *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 			delegator:      sdk.AccAddress([]byte("addr7---------------")),
 			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10_000_000)),
 			coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1234)),
-			expectedShares: []osmomath.Dec{sdk.NewDec(1_999_754), sdk.NewDec(3_299_593), sdk.NewDec(1_199_852), sdk.NewDec(3_499_567)}, // validatorDelegatedShares - (weight * coinToUnstake),
+			expectedShares: []osmomath.Dec{osmomath.NewDec(1_999_754), osmomath.NewDec(3_299_593), osmomath.NewDec(1_199_852), osmomath.NewDec(3_499_567)}, // validatorDelegatedShares - (weight * coinToUnstake),
 			setValSet:      true,
 			expectPass:     true,
 		},
@@ -464,7 +464,7 @@ func (s *KeeperTestSuite) TestRedelegateToValidatorSet() {
 				},
 			},
 			amountToDelegate:            sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(20_000_000)),
-			expectedShares:              []osmomath.Dec{sdk.NewDec(4_000_000), sdk.NewDec(4_000_000), sdk.NewDec(12_000_000)},
+			expectedShares:              []osmomath.Dec{osmomath.NewDec(4_000_000), osmomath.NewDec(4_000_000), osmomath.NewDec(12_000_000)},
 			setExistingValSetDelegation: true,
 			expectPass:                  true, // addr1 successfully redelegates to (valAddr0, valAddr1, valAddr2)
 		},
@@ -506,7 +506,7 @@ func (s *KeeperTestSuite) TestRedelegateToValidatorSet() {
 				},
 			},
 			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(20_000_000)),
-			expectedShares:   []osmomath.Dec{sdk.NewDec(10_000_000), sdk.NewDec(6_000_000), sdk.NewDec(4_000_000)},
+			expectedShares:   []osmomath.Dec{osmomath.NewDec(10_000_000), osmomath.NewDec(6_000_000), osmomath.NewDec(4_000_000)},
 			expectPass:       false, // this fails because valAddrs[1] is being redelegated to in first test
 		},
 		{
@@ -527,7 +527,7 @@ func (s *KeeperTestSuite) TestRedelegateToValidatorSet() {
 				},
 			},
 			amountToDelegate:      sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10_000_000)),
-			expectedShares:        []osmomath.Dec{sdk.NewDec(5_000_000), sdk.NewDec(3_000_000), sdk.NewDec(2_000_000)},
+			expectedShares:        []osmomath.Dec{osmomath.NewDec(5_000_000), osmomath.NewDec(3_000_000), osmomath.NewDec(2_000_000)},
 			setExistingDelegation: true,
 			expectPass:            true,
 		},
@@ -680,7 +680,7 @@ func (s *KeeperTestSuite) TestDelegateBondedTokens() {
 			delegator:            sdk.AccAddress([]byte("addr1---------------")),
 			lockId:               testLock[0].ID,
 			expectedUnlockedOsmo: sdk.NewCoin(appParams.BaseCoinUnit, osmomath.NewInt(60_000_000)), // delegator has 100osmo and creates 5 locks 10osmo each, forceUnlock only 1 lock
-			expectedDelegations:  []osmomath.Dec{sdk.NewDec(2_000_000), sdk.NewDec(3_300_000), sdk.NewDec(1_200_000), sdk.NewDec(3_500_000)},
+			expectedDelegations:  []osmomath.Dec{osmomath.NewDec(2_000_000), osmomath.NewDec(3_300_000), osmomath.NewDec(1_200_000), osmomath.NewDec(3_500_000)},
 			setValSet:            true,
 			expectPass:           true,
 		},

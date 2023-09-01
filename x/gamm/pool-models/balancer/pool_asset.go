@@ -34,7 +34,7 @@ func (pa PoolAsset) validateWeight() error {
 
 func (pa PoolAsset) prettify() poolAssetPretty {
 	return poolAssetPretty{
-		Weight: sdk.NewDecFromInt(pa.Weight).QuoInt64(GuaranteedWeightPrecision),
+		Weight: osmomath.NewDecFromInt(pa.Weight).QuoInt64(GuaranteedWeightPrecision),
 		Token:  pa.Token,
 	}
 }

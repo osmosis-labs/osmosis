@@ -28,7 +28,7 @@ func createTestPool(t *testing.T, spreadFactor, exitFee osmomath.Dec, poolAssets
 
 func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares osmomath.Int) {
 	t.Helper()
-	allowedErrRatioDec, err := sdk.NewDecFromStr(allowedErrRatio)
+	allowedErrRatioDec, err := osmomath.NewDecFromStr(allowedErrRatio)
 	require.NoError(t, err)
 
 	errTolerance := osmomath.ErrTolerance{

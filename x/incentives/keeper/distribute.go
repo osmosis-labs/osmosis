@@ -320,7 +320,7 @@ func (k Keeper) calcSplitPolicyCoins(policy types.SplittingPolicy, groupGauge *t
 			epochDiff := groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs
 			internalGaugeLen := len(groupGaugeObj.InternalIds)
 
-			distPerEpoch := coin.Amount.Quo(sdk.NewIntFromUint64(epochDiff))
+			distPerEpoch := coin.Amount.Quo(osmomath.NewIntFromUint64(epochDiff))
 			distPerGauge := distPerEpoch.Quo(osmomath.NewInt(int64(internalGaugeLen)))
 
 			coinsDistThisEpoch = coinsDistThisEpoch.Add(sdk.NewCoin(coin.Denom, distPerEpoch))
@@ -390,13 +390,13 @@ func (k Keeper) distributeInternal(
 		// is supposed to distribute over that epoch.
 		for _, remainCoin := range remainCoins {
 			// remaining coin amount per epoch.
-			remainAmountPerEpoch := remainCoin.Amount.Quo(sdk.NewIntFromUint64(remainEpochs))
+			remainAmountPerEpoch := remainCoin.Amount.Quo(osmomath.NewIntFromUint64(remainEpochs))
 			remainCoinPerEpoch := sdk.NewCoin(remainCoin.Denom, remainAmountPerEpoch)
 
 			// emissionRate calculates amount of tokens to emit per second
 			// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
 			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
-			emissionRate := sdk.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(osmomath.NewInt(1000)))
+			emissionRate := osmomath.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(osmomath.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(osmomath.NewInt(1000)))
 
 			ctx.Logger().Info("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
 			_, err := k.clk.CreateIncentive(ctx,

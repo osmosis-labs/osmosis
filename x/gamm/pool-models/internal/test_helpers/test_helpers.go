@@ -49,7 +49,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	require.NoError(t, err)
 
 	// we expect that any output less than 1 will always be rounded up
-	require.True(t, actualTokenIn.Amount.GTE(sdk.OneInt()))
+	require.True(t, actualTokenIn.Amount.GTE(osmomath.OneInt()))
 
 	inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(actualTokenIn), assetOutDenom, spreadFactor)
 	require.NoError(t, err)
@@ -64,7 +64,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	// Since these cases are effectively unusable by design, we only really care about whether
 	// they are safe i.e. round correctly.
 	preFeeTokenIn := actualTokenIn.Amount.ToLegacyDec().Mul((osmomath.OneDec().Sub(spreadFactor))).Ceil().TruncateInt()
-	if preFeeTokenIn.Equal(sdk.OneInt()) {
+	if preFeeTokenIn.Equal(osmomath.OneInt()) {
 		require.True(t, actual.GT(expected))
 	} else {
 		if expected.Sub(actual).Abs().GT(osmomath.OneDec()) {

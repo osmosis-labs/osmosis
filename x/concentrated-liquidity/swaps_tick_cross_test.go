@@ -32,7 +32,7 @@ var (
 	// this is chosen arbitrarily to allow tests to pass. Thee tests in this suite do not
 	// intend to validate the correctness of the slippage bound. As a result, it is irrelevant here
 	// and we can choose any value that works.
-	defaultTokenInMaxAmount = sdk.MustNewDecFromStr("707106781186547528576662335").TruncateInt()
+	defaultTokenInMaxAmount = osmomath.MustNewDecFromStr("707106781186547528576662335").TruncateInt()
 )
 
 // CreatePositionTickSpacingsFromCurrentTick creates a position with the passed in tick spacings away from the current tick.
@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) CreatePositionTickSpacingsFromCurrentTick(poolId uint6
 	lowerTick := currentTick - int64(tickSpacingsAwayFromCurrentTick)*tickSpacing
 	upperTick := currentTick + int64(tickSpacingsAwayFromCurrentTick)*tickSpacing
 	s.FundAcc(s.TestAccs[0], DefaultCoins)
-	positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
 
 	return positionMeta{
@@ -74,7 +74,7 @@ func (s *KeeperTestSuite) validateIteratorLeftZeroForOne(poolId uint64, expected
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
-	zeroForOneSwapStrategy, _, err := s.App.ConcentratedLiquidityKeeper.SetupSwapStrategy(s.Ctx, pool, sdk.ZeroDec(), pool.GetToken0(), types.MinSqrtPrice)
+	zeroForOneSwapStrategy, _, err := s.App.ConcentratedLiquidityKeeper.SetupSwapStrategy(s.Ctx, pool, osmomath.ZeroDec(), pool.GetToken0(), types.MinSqrtPrice)
 	s.Require().NoError(err)
 	initializedTickValue := pool.GetCurrentTick()
 	iter := zeroForOneSwapStrategy.InitializeNextTickIterator(s.Ctx, pool.GetId(), initializedTickValue)
@@ -93,7 +93,7 @@ func (s *KeeperTestSuite) validateIteratorRightOneForZero(poolId uint64, expecte
 	s.Require().NoError(err)
 
 	// Setup swap strategy directly as it would fail validation if constructed via SetupSwapStrategy(...)
-	oneForZeroSwapStrategy := swapstrategy.New(false, osmomath.BigDecFromDec(types.MaxSqrtPrice), s.App.GetKey(types.ModuleName), sdk.ZeroDec())
+	oneForZeroSwapStrategy := swapstrategy.New(false, osmomath.BigDecFromDec(types.MaxSqrtPrice), s.App.GetKey(types.ModuleName), osmomath.ZeroDec())
 	s.Require().NoError(err)
 	initializedTickValue := pool.GetCurrentTick()
 	iter := oneForZeroSwapStrategy.InitializeNextTickIterator(s.Ctx, pool.GetId(), initializedTickValue)
@@ -136,7 +136,7 @@ func (s *KeeperTestSuite) assertPositionRangeConditional(poolId uint64, isOutOfR
 // swapZeroForOneLeft swaps amount in the left (zfo) direction of the swap.
 // Asserts that no error is returned.
 func (s *KeeperTestSuite) swapZeroForOneLeft(poolId uint64, amount sdk.Coin) {
-	s.swapZeroForOneLeftWithSpread(poolId, amount, sdk.ZeroDec())
+	s.swapZeroForOneLeftWithSpread(poolId, amount, osmomath.ZeroDec())
 }
 
 // swapZeroForOneLeftWithSpread functions exactly as swapZeroForOneLeft but with a spread factor.
@@ -145,14 +145,14 @@ func (s *KeeperTestSuite) swapZeroForOneLeftWithSpread(poolId uint64, amount sdk
 	s.Require().NoError(err)
 
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(amount))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, amount, pool.GetToken1(), sdk.ZeroInt(), spreadFactor)
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, amount, pool.GetToken1(), osmomath.ZeroInt(), spreadFactor)
 	s.Require().NoError(err)
 }
 
 // swapOneForZeroRight swaps amount in the right (ofz) direction of the swap.
 // Asserts that no error is returned.
 func (s *KeeperTestSuite) swapOneForZeroRight(poolId uint64, amount sdk.Coin) {
-	s.swapOneForZeroRightWithSpread(poolId, amount, sdk.ZeroDec())
+	s.swapOneForZeroRightWithSpread(poolId, amount, osmomath.ZeroDec())
 }
 
 // swapOneForZeroRightWithSpread functions exactly as swapOneForZeroRight but with a spread factor.
@@ -161,7 +161,7 @@ func (s *KeeperTestSuite) swapOneForZeroRightWithSpread(poolId uint64, amount sd
 	s.Require().NoError(err)
 
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(amount))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, amount, pool.GetToken0(), sdk.ZeroInt(), spreadFactor)
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, amount, pool.GetToken0(), osmomath.ZeroInt(), spreadFactor)
 	s.Require().NoError(err)
 }
 
@@ -175,7 +175,7 @@ func (s *KeeperTestSuite) swapInGivenOutZeroForOneLeft(poolId uint64, tokenOut s
 
 	tokenInDenom := pool.GetToken0()
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(tokenInDenom, estimatedTokenIn.Ceil().TruncateInt())))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, tokenInDenom, defaultTokenInMaxAmount, tokenOut, sdk.ZeroDec())
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, tokenInDenom, defaultTokenInMaxAmount, tokenOut, osmomath.ZeroDec())
 	s.Require().NoError(err)
 }
 
@@ -188,7 +188,7 @@ func (s *KeeperTestSuite) swapInGivenOutOneForZeroRight(poolId uint64, tokenOut 
 
 	tokenInDenom := pool.GetToken1()
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(tokenInDenom, estimatedTokenIn.Ceil().TruncateInt())))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, tokenInDenom, defaultTokenInMaxAmount, tokenOut, sdk.ZeroDec())
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, tokenInDenom, defaultTokenInMaxAmount, tokenOut, osmomath.ZeroDec())
 	s.Require().NoError(err)
 }
 
@@ -199,7 +199,7 @@ func (s *KeeperTestSuite) swapInGivenOutOneForZeroRight(poolId uint64, tokenOut 
 //
 // Returns the pool id and the narrow range position metadata.
 func (s *KeeperTestSuite) setupPoolAndPositions(testTickSpacing uint64, positionTickSpacingsFromCurrTick []uint64, initialCoins sdk.Coins) (uint64, []positionMeta) {
-	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, testTickSpacing, sdk.ZeroDec())
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, testTickSpacing, osmomath.ZeroDec())
 	poolId := pool.GetId()
 
 	// Create a full range position
@@ -281,7 +281,7 @@ func (s *KeeperTestSuite) computeSwapAmounts(poolId uint64, curSqrtPrice osmomat
 
 	// Start from current pool liquidity and zero amount in.
 	currentLiquidity := pool.GetLiquidity()
-	amountIn := sdk.ZeroDec()
+	amountIn := osmomath.ZeroDec()
 
 	for i, liquidityNetEntry := range liquidityNetAmounts {
 		// Initialize the next initialized tick and its sqrt price.
@@ -369,7 +369,7 @@ func (s *KeeperTestSuite) computeSwapAmountsInGivenOut(poolId uint64, curSqrtPri
 
 	// Start from current pool liquidity and zero amount in.
 	currentLiquidity := osmomath.BigDecFromDec(pool.GetLiquidity())
-	amountOut := sdk.ZeroDec()
+	amountOut := osmomath.ZeroDec()
 
 	for i, liquidityNetEntry := range liquidityNetAmounts {
 		// Initialize the next initialized tick and its sqrt price.
@@ -634,7 +634,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		s.Require().True(isNarrowInRange)
 
 		var (
-			amountZeroIn   osmomath.Dec    = sdk.ZeroDec()
+			amountZeroIn   osmomath.Dec    = osmomath.ZeroDec()
 			sqrtPriceStart osmomath.BigDec = pool.GetCurrentSqrtPrice()
 
 			liquidity = pool.GetLiquidity()
@@ -726,7 +726,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		s.Require().NoError(err)
 
 		var (
-			amountOneIn    osmomath.Dec    = sdk.ZeroDec()
+			amountOneIn    osmomath.Dec    = osmomath.ZeroDec()
 			sqrtPriceStart osmomath.BigDec = pool.GetCurrentSqrtPrice()
 			liquidity                      = pool.GetLiquidity()
 		)
@@ -1069,7 +1069,7 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 			return nextTickToReachInCompute, sdk.NewDecWithPrec(5, 1)
 		}
 
-		return expectedSwapEndTick, sdk.OneDec()
+		return expectedSwapEndTick, osmomath.OneDec()
 	}
 
 	validateActivePositions := func(poolId uint64, positionMeta []positionMeta, expectedIsPositionActiveFlags []bool) {
@@ -1203,7 +1203,7 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 		// the "current sqrt price" for the next swap in the sequence as defined by our test configuration.
 		estimateAmountInFromRounding := func(isZeroForOne bool, nextSqrtPrice osmomath.BigDec, liq osmomath.BigDec, amountOutDifference osmomath.BigDec) (osmomath.Dec, osmomath.BigDec) {
 			if !liq.IsPositive() {
-				return sdk.ZeroDec(), nextSqrtPrice
+				return osmomath.ZeroDec(), nextSqrtPrice
 			}
 
 			if isZeroForOne {
@@ -1266,7 +1266,7 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 					amountOut, expectedLiquidity, nextSqrtPrice := s.computeSwapAmountsInGivenOut(poolId, curSqrtPrice, nextTickToReachInCompute, isZeroForOne, shouldStayWithinTheSameTickInCompute)
 					amountIn, _, _ := s.computeSwapAmounts(poolId, curSqrtPrice, nextTickToReachInCompute, isZeroForOne, shouldStayWithinTheSameTickInCompute)
 
-					s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(tokenInDenom, amountIn.Ceil().TruncateInt().Add(sdk.OneInt()))))
+					s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(tokenInDenom, amountIn.Ceil().TruncateInt().Add(osmomath.OneInt()))))
 
 					// Discount the amount in by 50% if we are swapping within the same tick.
 					amountOutRoundedUp := amountOut.Mul(withinTheSameTickDiscount).Ceil().TruncateInt()
@@ -1341,7 +1341,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 
 		// Assert that min tick is crossed and liquidity is zero.
 		s.assertPoolTickEquals(poolId, types.MinCurrentTick)
-		s.assertPoolLiquidityEquals(poolId, sdk.ZeroDec())
+		s.assertPoolLiquidityEquals(poolId, osmomath.ZeroDec())
 
 		// Assert that full range positions are now inactive.
 		s.assertPositionOutOfRange(poolId, types.MinInitializedTick, types.MaxTick)
@@ -1351,9 +1351,9 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		s.Require().NoError(err)
 
 		// Validate cannot swap left again
-		_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, smallTokenZeroCoinIn, tokeOneDenom, sdk.ZeroInt(), sdk.ZeroDec())
+		_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, smallTokenZeroCoinIn, tokeOneDenom, osmomath.ZeroInt(), osmomath.ZeroDec())
 		s.Require().Error(err)
-		s.Require().ErrorContains(err, types.InvalidAmountCalculatedError{Amount: sdk.ZeroInt()}.Error())
+		s.Require().ErrorContains(err, types.InvalidAmountCalculatedError{Amount: osmomath.ZeroInt()}.Error())
 
 		// Validate the ability to swap right
 		s.swapOneForZeroRight(poolId, smallTokenOneCoinIn)
@@ -1384,7 +1384,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		// the liquidity net amounts on MaxTick are always negative. Therefore, when swapping one
 		// for zero and crossing a max tick to be "within in", we always end up with a current liquidity of zero.
 		s.assertPoolTickEquals(poolId, types.MaxTick)
-		s.assertPoolLiquidityEquals(poolId, sdk.ZeroDec())
+		s.assertPoolLiquidityEquals(poolId, osmomath.ZeroDec())
 
 		// Assert that full range positions are now inactive.
 		s.assertPositionOutOfRange(poolId, types.MinInitializedTick, types.MaxTick)
@@ -1394,9 +1394,9 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		s.Require().NoError(err)
 
 		// Validate cannot swap right again
-		_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, smallTokenOneCoinIn, tokenZeroDenom, sdk.ZeroInt(), sdk.ZeroDec())
+		_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, smallTokenOneCoinIn, tokenZeroDenom, osmomath.ZeroInt(), osmomath.ZeroDec())
 		s.Require().Error(err)
-		s.Require().ErrorContains(err, types.InvalidAmountCalculatedError{Amount: sdk.ZeroInt()}.Error())
+		s.Require().ErrorContains(err, types.InvalidAmountCalculatedError{Amount: osmomath.ZeroInt()}.Error())
 
 		// Validate the ability to swap left
 		s.swapZeroForOneLeft(poolId, smallTokenZeroCoinIn)

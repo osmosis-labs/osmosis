@@ -335,7 +335,7 @@ func ParseCoins(arg string, fieldName string) (sdk.Coins, error) {
 
 // TODO: This really shouldn't be getting used in the CLI, its misdesign on the CLI ux
 func ParseSdkInt(arg string, fieldName string) (osmomath.Int, error) {
-	i, ok := sdk.NewIntFromString(arg)
+	i, ok := osmomath.NewIntFromString(arg)
 	if !ok {
 		return osmomath.Int{}, fmt.Errorf("could not parse %s as osmomath.Int for field %s", arg, fieldName)
 	}
@@ -343,7 +343,7 @@ func ParseSdkInt(arg string, fieldName string) (osmomath.Int, error) {
 }
 
 func ParseSdkDec(arg, fieldName string) (osmomath.Dec, error) {
-	i, err := sdk.NewDecFromStr(arg)
+	i, err := osmomath.NewDecFromStr(arg)
 	if err != nil {
 		return osmomath.Dec{}, fmt.Errorf("could not parse %s as osmomath.Dec for field %s: %w", arg, fieldName, err)
 	}

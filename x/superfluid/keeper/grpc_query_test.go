@@ -49,7 +49,7 @@ func (s *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 	delegation_amount := int64(1000000)
 
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
-	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 	superfluidDelegations := []superfluidDelegation{
 		{0, 0, 0, delegation_amount},
@@ -123,7 +123,7 @@ func (s *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	// setup 2 validators
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
 
-	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 	// create a delegation of 1000000 for every combination of 2 delegations, 2 validators, and 2 superfluid denoms
 	superfluidDelegations := []superfluidDelegation{
@@ -158,8 +158,8 @@ func (s *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 		multiplier1 := s.querier.Keeper.GetOsmoEquivalentMultiplier(s.Ctx, denoms[1])
 		minRiskFactor := s.querier.Keeper.GetParams(s.Ctx).MinimumRiskFactor
 
-		expectAmount0 := multiplier0.Mul(sdk.NewDec(1000000)).Sub(multiplier0.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
-		expectAmount1 := multiplier1.Mul(sdk.NewDec(1000000)).Sub(multiplier1.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
+		expectAmount0 := multiplier0.Mul(osmomath.NewDec(1000000)).Sub(multiplier0.Mul(osmomath.NewDec(1000000)).Mul(minRiskFactor))
+		expectAmount1 := multiplier1.Mul(osmomath.NewDec(1000000)).Sub(multiplier1.Mul(osmomath.NewDec(1000000)).Mul(minRiskFactor))
 
 		s.Require().NoError(err)
 		s.Require().Len(res.SuperfluidDelegationRecords, 2)
@@ -214,7 +214,7 @@ func (s *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding
 
 	// setup 2 validators
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
-	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 	// create a delegation of 1000000 for every combination of 2 delegations, 2 validators, and 2 superfluid denoms
 	superfluidDelegations := []superfluidDelegation{
@@ -416,7 +416,7 @@ func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 	// setup 2 validators
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
 
-	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 	// create a delegation of 1000000 for every combination of 2 delegations, 2 validators, and 2 superfluid denoms
 	superfluidDelegations := []superfluidDelegation{
@@ -430,10 +430,10 @@ func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 	delegatorAddresses, _, _ := s.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
 
 	// setup normal delegations
-	bond0to0 := stakingtypes.NewDelegation(delegatorAddresses[0], valAddrs[0], sdk.NewDec(9000000))
-	bond0to1 := stakingtypes.NewDelegation(delegatorAddresses[0], valAddrs[1], sdk.NewDec(9000000))
-	bond1to0 := stakingtypes.NewDelegation(delegatorAddresses[1], valAddrs[0], sdk.NewDec(9000000))
-	bond1to1 := stakingtypes.NewDelegation(delegatorAddresses[1], valAddrs[1], sdk.NewDec(9000000))
+	bond0to0 := stakingtypes.NewDelegation(delegatorAddresses[0], valAddrs[0], osmomath.NewDec(9000000))
+	bond0to1 := stakingtypes.NewDelegation(delegatorAddresses[0], valAddrs[1], osmomath.NewDec(9000000))
+	bond1to0 := stakingtypes.NewDelegation(delegatorAddresses[1], valAddrs[0], osmomath.NewDec(9000000))
+	bond1to1 := stakingtypes.NewDelegation(delegatorAddresses[1], valAddrs[1], osmomath.NewDec(9000000))
 
 	s.App.StakingKeeper.SetDelegation(s.Ctx, bond0to0)
 	s.App.StakingKeeper.SetDelegation(s.Ctx, bond0to1)
@@ -444,8 +444,8 @@ func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 	multiplier1 := s.querier.Keeper.GetOsmoEquivalentMultiplier(s.Ctx, denoms[1])
 	minRiskFactor := s.querier.Keeper.GetParams(s.Ctx).MinimumRiskFactor
 
-	expectAmount0 := multiplier0.Mul(sdk.NewDec(1000000)).Sub(multiplier0.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
-	expectAmount1 := multiplier1.Mul(sdk.NewDec(1000000)).Sub(multiplier1.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
+	expectAmount0 := multiplier0.Mul(osmomath.NewDec(1000000)).Sub(multiplier0.Mul(osmomath.NewDec(1000000)).Mul(minRiskFactor))
+	expectAmount1 := multiplier1.Mul(osmomath.NewDec(1000000)).Sub(multiplier1.Mul(osmomath.NewDec(1000000)).Mul(minRiskFactor))
 
 	// for each delegator, query all their superfluid delegations and normal delegations. Making sure they have 4 delegations
 	// Making sure TotalEquivalentStakedAmount is equal to converted amount + normal delegations

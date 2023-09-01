@@ -3,8 +3,6 @@ package twap_test
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
@@ -77,7 +75,7 @@ func (s *TestSuite) TestComputeTwap() {
 			expTwap: osmomath.OneDec(),
 		},
 		"arithmetic only: accumulator = 10*OneSec, t=5s. 0 base accum": testCaseFromDeltas(
-			s, osmomath.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
+			s, osmomath.ZeroDec(), tenSecAccum, 5*time.Second, osmomath.NewDec(2)),
 		"arithmetic only: accumulator = 10*OneSec, t=100s. 0 base accum (asset 1)": testCaseFromDeltasAsset1(s, osmomath.ZeroDec(), OneSec.MulInt64(10), 100*time.Second, osmomath.NewDecWithPrec(1, 1)),
 		"geometric only: accumulator = log(10)*OneSec, t=5s. 0 base accum": geometricTestCaseFromDeltas0(
 			s, osmomath.ZeroDec(), geometricTenSecAccum, 5*time.Second, twap.TwapPow(geometricTenSecAccum.QuoInt64(5*1000))),
@@ -131,7 +129,7 @@ func (s *TestSuite) TestComputeArithmeticStrategyTwap() {
 			expPanic:    true,
 		},
 		"accumulator = 10*OneSec, t=5s. 0 base accum": testCaseFromDeltas(
-			s, osmomath.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
+			s, osmomath.ZeroDec(), tenSecAccum, 5*time.Second, osmomath.NewDec(2)),
 		"accumulator = 10*OneSec, t=3s. 0 base accum": testCaseFromDeltas(
 			s, osmomath.ZeroDec(), tenSecAccum, 3*time.Second, ThreePlusOneThird),
 		"accumulator = 10*OneSec, t=100s. 0 base accum": testCaseFromDeltas(
@@ -139,7 +137,7 @@ func (s *TestSuite) TestComputeArithmeticStrategyTwap() {
 
 		// test that base accum has no impact
 		"accumulator = 10*OneSec, t=5s. 10 base accum": testCaseFromDeltas(
-			s, sdk.NewDec(10), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
+			s, osmomath.NewDec(10), tenSecAccum, 5*time.Second, osmomath.NewDec(2)),
 		"accumulator = 10*OneSec, t=3s. 10*second base accum": testCaseFromDeltas(
 			s, tenSecAccum, tenSecAccum, 3*time.Second, ThreePlusOneThird),
 		"accumulator = 10*OneSec, t=100s. .1*second base accum": testCaseFromDeltas(
@@ -171,7 +169,7 @@ func (s *TestSuite) TestComputeArithmeticStrategyTwap() {
 func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 	var (
 		errTolerance = osmomath.ErrTolerance{
-			MultiplicativeTolerance: sdk.SmallestDec(),
+			MultiplicativeTolerance: osmomath.SmallestDec(),
 			RoundingDir:             osmomath.RoundDown,
 		}
 
@@ -203,27 +201,27 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 			startRecord: newOneSidedGeometricRecord(baseTime, osmomath.ZeroDec()),
 			endRecord:   newOneSidedGeometricRecord(tPlusOne, geometricTenSecAccum),
 			quoteAsset:  denom0,
-			expTwap:     sdk.NewDec(10),
+			expTwap:     osmomath.NewDec(10),
 		},
 		"basic denom1: spot price = 1 for one second, 0 init accumulator": {
 			startRecord: newOneSidedGeometricRecord(baseTime, osmomath.ZeroDec()),
 			endRecord:   newOneSidedGeometricRecord(tPlusOne, geometricTenSecAccum),
 			quoteAsset:  denom1,
-			expTwap:     osmomath.OneDec().Quo(sdk.NewDec(10)),
+			expTwap:     osmomath.OneDec().Quo(osmomath.NewDec(10)),
 		},
 
 		// basic test for both denom with non-zero start accumulator
 		"denom0: start accumulator of 10 * 1s, end accumulator 10 * 1s + 20 * 2s = 20": {
 			startRecord: newOneSidedGeometricRecord(baseTime, geometricTenSecAccum),
-			endRecord:   newOneSidedGeometricRecord(baseTime.Add(time.Second*2), geometricTenSecAccum.Add(OneSec.MulInt64(2).Mul(twap.TwapLog(sdk.NewDec(20))))),
+			endRecord:   newOneSidedGeometricRecord(baseTime.Add(time.Second*2), geometricTenSecAccum.Add(OneSec.MulInt64(2).Mul(twap.TwapLog(osmomath.NewDec(20))))),
 			quoteAsset:  denom0,
-			expTwap:     sdk.NewDec(20),
+			expTwap:     osmomath.NewDec(20),
 		},
 		"denom1 start accumulator of 10 * 1s, end accumulator 10 * 1s + 20 * 2s = 20": {
 			startRecord: newOneSidedGeometricRecord(baseTime, geometricTenSecAccum),
-			endRecord:   newOneSidedGeometricRecord(baseTime.Add(time.Second*2), geometricTenSecAccum.Add(OneSec.MulInt64(2).Mul(twap.TwapLog(sdk.NewDec(20))))),
+			endRecord:   newOneSidedGeometricRecord(baseTime.Add(time.Second*2), geometricTenSecAccum.Add(OneSec.MulInt64(2).Mul(twap.TwapLog(osmomath.NewDec(20))))),
 			quoteAsset:  denom1,
-			expTwap:     osmomath.OneDec().Quo(sdk.NewDec(20)),
+			expTwap:     osmomath.OneDec().Quo(osmomath.NewDec(20)),
 		},
 
 		// toggle time delta.
@@ -244,9 +242,9 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 
 		"price of 1_000_000 for an hour": {
 			startRecord: newOneSidedGeometricRecord(baseTime, osmomath.ZeroDec()),
-			endRecord:   newOneSidedGeometricRecord(baseTime.Add(time.Hour), OneSec.MulInt64(60*60).Mul(twap.TwapLog(sdk.NewDec(1_000_000)))),
+			endRecord:   newOneSidedGeometricRecord(baseTime.Add(time.Hour), OneSec.MulInt64(60*60).Mul(twap.TwapLog(osmomath.NewDec(1_000_000)))),
 			quoteAsset:  denom0,
-			expTwap:     sdk.NewDec(1_000_000),
+			expTwap:     osmomath.NewDec(1_000_000),
 		},
 
 		"no overflow test: at max spot price denom0 quote - get max spot price": {
@@ -290,7 +288,7 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 			startRecord: newOneSidedGeometricRecord(baseTime.Add(oneHundredNanoseconds), osmomath.ZeroDec()),
 			endRecord:   newOneSidedGeometricRecord(tPlusOne, geometricTenSecAccum),
 			quoteAsset:  denom0,
-			expTwap:     sdk.NewDec(10),
+			expTwap:     osmomath.NewDec(10),
 		},
 	}
 
@@ -321,11 +319,11 @@ func (s *TestSuite) TestComputeArithmeticStrategyTwap_ThreeAsset() {
 			expTwap:     []osmomath.Dec{osmomath.OneDec(), osmomath.OneDec(), osmomath.OneDec()},
 		},
 		"three asset. accumulator = 10*OneSec, t=5s. 0 base accum": testThreeAssetCaseFromDeltas(
-			osmomath.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
+			osmomath.ZeroDec(), tenSecAccum, 5*time.Second, osmomath.NewDec(2)),
 
 		// test that base accum has no impact
 		"three asset. accumulator = 10*OneSec, t=5s. 10 base accum": testThreeAssetCaseFromDeltas(
-			sdk.NewDec(10), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
+			osmomath.NewDec(10), tenSecAccum, 5*time.Second, osmomath.NewDec(2)),
 		"three asset. accumulator = 10*OneSec, t=100s. .1*second base accum": testThreeAssetCaseFromDeltas(
 			pointOneAccum, tenSecAccum, 100*time.Second, osmomath.NewDecWithPrec(1, 1)),
 	}
@@ -342,7 +340,7 @@ func (s *TestSuite) TestComputeArithmeticStrategyTwap_ThreeAsset() {
 
 func (s *TestSuite) TestComputeGeometricStrategyTwap_ThreeAsset() {
 	var (
-		five        = sdk.NewDec(5)
+		five        = osmomath.NewDec(5)
 		fiveFor3Sec = OneSec.MulInt64(3).Mul(twap.TwapLog(five))
 
 		ten          = five.MulInt64(2)
@@ -356,7 +354,7 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap_ThreeAsset() {
 			startRecord: newThreeAssetOneSidedRecord(baseTime, osmomath.ZeroDec(), true),
 			endRecord:   newThreeAssetOneSidedRecord(tPlusOne, geometricTenSecAccum, true),
 			quoteAsset:  []string{denom0, denom0, denom1},
-			expTwap:     []osmomath.Dec{sdk.NewDec(10), sdk.NewDec(10), sdk.NewDec(10)},
+			expTwap:     []osmomath.Dec{osmomath.NewDec(10), osmomath.NewDec(10), osmomath.NewDec(10)},
 		},
 		"three asset. accumulator = 5*3Sec, t=3s, no start accum": testThreeAssetCaseFromDeltas(
 			osmomath.ZeroDec(), fiveFor3Sec, 3*time.Second, five),

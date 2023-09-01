@@ -723,7 +723,7 @@ func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[strin
 	if denomUnitMap, ok := assetMap[coinDenom]; ok {
 		// In this case, we just need to replace the denom with the base denom and retain the number
 		if denomUnitMap.Exponent != 0 {
-			coinDec, err := sdk.NewDecFromStr(coinValue)
+			coinDec, err := osmomath.NewDecFromStr(coinValue)
 			if err != nil {
 				return "", err
 			}

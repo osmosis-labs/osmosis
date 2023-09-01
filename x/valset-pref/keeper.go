@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/valset-pref/types"
 )
 
@@ -71,7 +72,7 @@ func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delAddr sdk.AccAd
 		return nil, types.ErrNoDelegation
 	}
 
-	existingTotalShares := sdk.NewDec(0)
+	existingTotalShares := osmomath.NewDec(0)
 	// calculate total shares that currently exists
 	for _, existingDelegation := range existingDelegations {
 		existingTotalShares = existingTotalShares.Add(existingDelegation.Shares)

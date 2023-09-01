@@ -1,8 +1,6 @@
 package swapstrategy_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/swapstrategy"
@@ -23,17 +21,17 @@ func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGiven
 	}{
 		"reached target -> charge spread factor on amount in": {
 			hasReachedTarget:         true,
-			amountIn:                 sdk.NewDec(100),
+			amountIn:                 osmomath.NewDec(100),
 			amountSpecifiedRemaining: five,
 			spreadFactor:             onePercentSpreadFactor,
 
 			// amount in * spread factor / (1 - spread factor)
-			expectedspreadRewardCharge: swapstrategy.ComputeSpreadRewardChargeFromAmountIn(sdk.NewDec(100), onePercentSpreadFactor),
+			expectedspreadRewardCharge: swapstrategy.ComputeSpreadRewardChargeFromAmountIn(osmomath.NewDec(100), onePercentSpreadFactor),
 		},
 		"did not reach target -> charge spread factor on the difference between amount remaining and amount in": {
 			hasReachedTarget:         false,
 			amountIn:                 five,
-			amountSpecifiedRemaining: sdk.NewDec(100),
+			amountSpecifiedRemaining: osmomath.NewDec(100),
 			spreadFactor:             onePercentSpreadFactor,
 
 			expectedspreadRewardCharge: osmomath.MustNewDecFromStr("95"),
@@ -41,13 +39,13 @@ func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGiven
 		"zero spread factor": {
 			hasReachedTarget:           true,
 			amountIn:                   five,
-			amountSpecifiedRemaining:   sdk.NewDec(100),
+			amountSpecifiedRemaining:   osmomath.NewDec(100),
 			spreadFactor:               osmomath.ZeroDec(),
 			expectedspreadRewardCharge: osmomath.ZeroDec(),
 		},
 		"negative spread factor - panic": {
 			hasReachedTarget:         false,
-			amountIn:                 sdk.NewDec(100),
+			amountIn:                 osmomath.NewDec(100),
 			amountSpecifiedRemaining: five,
 			spreadFactor:             osmomath.OneDec().Neg(),
 
@@ -55,8 +53,8 @@ func (suite *StrategyTestSuite) TestComputespreadRewardChargePerSwapStepOutGiven
 		},
 		"amount specified remaining < amount in leads to negative spread factor - panic": {
 			hasReachedTarget:         false,
-			amountIn:                 sdk.NewDec(102),
-			amountSpecifiedRemaining: sdk.NewDec(101),
+			amountIn:                 osmomath.NewDec(102),
+			amountSpecifiedRemaining: osmomath.NewDec(101),
 			spreadFactor:             onePercentSpreadFactor,
 
 			// 101 - 102 = -1 -> panic

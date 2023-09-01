@@ -454,7 +454,7 @@ func validateSpotPriceFallsInBounds(ctx sdk.Context, cfmmPool gammtypes.CFMMPool
 	if err != nil {
 		return err
 	}
-	expectedSpotPriceFromSwap := sdk.NewDec(100000).Quo(respectiveBaseAsset.Amount.ToLegacyDec())
+	expectedSpotPriceFromSwap := osmomath.NewDec(100000).Quo(respectiveBaseAsset.Amount.ToLegacyDec())
 	if expectedSpotPriceFromSwap.LT(cltypes.MinSpotPrice) || expectedSpotPriceFromSwap.GT(cltypes.MaxSpotPrice) {
 		return fmt.Errorf("expected spot price from swap to be between %s and %s, got %s", cltypes.MinSpotPrice, cltypes.MaxSpotPrice, expectedSpotPriceFromSwap)
 	}

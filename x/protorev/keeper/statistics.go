@@ -36,7 +36,7 @@ func (k Keeper) IncrementNumberOfTrades(ctx sdk.Context) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixNumberOfTrades)
 
 	numberOfTrades, _ := k.GetNumberOfTrades(ctx)
-	numberOfTrades = numberOfTrades.Add(sdk.OneInt())
+	numberOfTrades = numberOfTrades.Add(osmomath.OneInt())
 
 	bz, err := numberOfTrades.Marshal()
 	if err != nil {
@@ -146,7 +146,7 @@ func (k Keeper) IncrementTradesByRoute(ctx sdk.Context, route []uint64) error {
 	key := types.GetKeyPrefixTradesByRoute(route)
 
 	trades, _ := k.GetTradesByRoute(ctx, route)
-	trades = trades.Add(sdk.OneInt())
+	trades = trades.Add(osmomath.OneInt())
 	bz, err := trades.Marshal()
 	if err != nil {
 		return err

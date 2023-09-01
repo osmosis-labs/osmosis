@@ -5,12 +5,10 @@ import (
 	"sort"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
-var MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(osmomath.OneDec())
+var MaxSpotPrice = osmomath.NewDec(2).Power(128).Sub(osmomath.OneDec())
 
 // GetAllUniqueDenomPairs returns all unique pairs of denoms, where for every pair
 // (X, Y), X < Y.

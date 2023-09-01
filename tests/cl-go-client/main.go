@@ -210,7 +210,7 @@ func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId
 
 			isToken0In = rand.Intn(2) == 0
 
-			tokenOutMinAmount = sdk.OneInt()
+			tokenOutMinAmount = osmomath.OneInt()
 		)
 
 		tokenInDenom := denom0
@@ -237,7 +237,7 @@ func swapGivenLargeAmountsBothDirections(igniteClient cosmosclient.Client, poolI
 
 		isToken0In = rand.Intn(2) == 0
 
-		tokenOutMinAmount = sdk.OneInt()
+		tokenOutMinAmount = osmomath.OneInt()
 	)
 
 	tokenInDenom := denom0

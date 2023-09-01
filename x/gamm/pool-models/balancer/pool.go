@@ -439,7 +439,7 @@ func (p *Pool) PokePool(blockTime time.Time) {
 		// case 3: t > start_time + duration: w(t) = target_pool_weights
 
 		shiftedBlockTime := blockTime.Sub(params.StartTime).Milliseconds()
-		percentDurationElapsed := sdk.NewDec(shiftedBlockTime).QuoInt64(params.Duration.Milliseconds())
+		percentDurationElapsed := osmomath.NewDec(shiftedBlockTime).QuoInt64(params.Duration.Milliseconds())
 
 		// If the duration elapsed is equal to the total time, or a rounding error
 		// makes it seem like it is, just set to target weight.

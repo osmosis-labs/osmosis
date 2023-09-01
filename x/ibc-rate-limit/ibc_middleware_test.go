@@ -330,7 +330,7 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	// Calculate remaining allowance in the quota
 	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
 
-	used, ok := sdk.NewIntFromString(attrs["weekly_used_out"])
+	used, ok := osmomath.NewIntFromString(attrs["weekly_used_out"])
 	suite.Require().True(ok)
 
 	suite.Require().Equal(used, sendAmount.MulRaw(2))

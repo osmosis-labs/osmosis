@@ -12,8 +12,6 @@ import (
 	simapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid"
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var now = time.Now().UTC()
@@ -32,7 +30,7 @@ var testGenesis = types.GenesisState{
 		{
 			EpochNumber: 1,
 			Denom:       DefaultGammAsset,
-			Multiplier:  sdk.NewDec(1000),
+			Multiplier:  osmomath.NewDec(1000),
 		},
 	},
 	IntermediaryAccounts: []types.SuperfluidIntermediaryAccount{

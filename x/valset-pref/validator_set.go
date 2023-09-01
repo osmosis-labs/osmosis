@@ -133,7 +133,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	}
 
 	// the total amount the user wants to undelegate
-	tokenAmt := sdk.NewDec(coin.Amount.Int64())
+	tokenAmt := osmomath.NewDec(coin.Amount.Int64())
 
 	err = k.CheckUndelegateTotalAmount(tokenAmt, existingSet.Preferences)
 	if err != nil {
@@ -175,7 +175,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 
 // CheckUndelegateTotalAmount checks if the tokenAmount equals the total amount calculated from valset weights.
 func (k Keeper) CheckUndelegateTotalAmount(tokenAmt osmomath.Dec, existingSet []types.ValidatorPreference) error {
-	totalAmountFromWeights := sdk.NewDec(0)
+	totalAmountFromWeights := osmomath.NewDec(0)
 	for _, val := range existingSet {
 		totalAmountFromWeights = totalAmountFromWeights.Add(val.Weight.Mul(tokenAmt))
 	}
@@ -208,7 +208,7 @@ func (k Keeper) CheckUndelegateTotalAmount(tokenAmt osmomath.Dec, existingSet []
 func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet []types.ValidatorPreference, newSet []types.ValidatorPreference) error {
 	var existingValSet []valSet
 	var newValSet []valSet
-	totalTokenAmount := sdk.NewDec(0)
+	totalTokenAmount := osmomath.NewDec(0)
 
 	// Rearranging the exisingValSet and newValSet to to add extra validator padding
 	for _, existingVals := range existingSet {
@@ -394,7 +394,7 @@ func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.Validator
 	var weightsRoundedValPrefList []types.ValidatorPreference
 	for _, val := range preferences {
 		// round up weights
-		valWeightStr := osmomath.SigFigRound(val.Weight, sdk.NewDec(10).Power(2).TruncateInt())
+		valWeightStr := osmomath.SigFigRound(val.Weight, osmomath.NewDec(10).Power(2).TruncateInt())
 
 		_, _, err := k.GetValidatorInfo(ctx, val.ValOperAddress)
 		if err != nil {
@@ -462,7 +462,7 @@ func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromS
 
 	val_struct_zero_amount := valSet{
 		ValAddr: validator.ValOperAddress,
-		Amount:  sdk.NewDec(0),
+		Amount:  osmomath.NewDec(0),
 	}
 
 	return val_struct, val_struct_zero_amount

@@ -56,7 +56,7 @@ func ParseSdkDecFromString(s string, separator string) ([]osmomath.Dec, error) {
 	for _, weightStr := range strings.Split(s, separator) {
 		weightStr = strings.TrimSpace(weightStr)
 
-		parsed, err := sdk.NewDecFromStr(weightStr)
+		parsed, err := osmomath.NewDecFromStr(weightStr)
 		if err != nil {
 			return parsedDec, err
 		}

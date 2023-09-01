@@ -8,7 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // If Options are not set in a config somewhere,
@@ -79,7 +78,7 @@ func parseDecFromConfig(opts servertypes.AppOptions, optName string, defaultValu
 		}
 		var err error
 		// pre-pend 0 to allow the config to start with a decimal, e.g. ".01"
-		value, err = sdk.NewDecFromStr("0" + valueStr)
+		value, err = osmomath.NewDecFromStr("0" + valueStr)
 		if err != nil {
 			panic(fmt.Errorf("invalidly configured osmosis-mempool.%v, err= %v", optName, err))
 		}

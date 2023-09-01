@@ -87,7 +87,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coin
 }
 
 var zeroDec = osmomath.ZeroDec()
-var oneThirdSpotPriceUnits = sdk.NewDec(1).Quo(sdk.NewDec(3)).
+var oneThirdSpotPriceUnits = osmomath.NewDec(1).Quo(osmomath.NewDec(3)).
 	MulIntMut(gammtypes.SpotPriceSigFigs).RoundInt().ToLegacyDec().QuoInt(gammtypes.SpotPriceSigFigs)
 
 // PrepareBalancerPool returns a Balancer pool's pool-ID with pool params set in PrepareBalancerPoolWithPoolParams.
@@ -99,7 +99,7 @@ func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 
 	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, FOO, BAR)
 	s.NoError(err)
-	s.Equal(sdk.NewDec(2), spotPrice)
+	s.Equal(osmomath.NewDec(2), spotPrice)
 	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, BAR, BAZ)
 	s.NoError(err)
 	s.Equal(osmomath.NewDecWithPrec(15, 1), spotPrice)
@@ -126,8 +126,8 @@ func (s *KeeperTestHelper) PrepareBasicStableswapPool() uint64 {
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
 	params := stableswap.PoolParams{
-		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
+		SwapFee: osmomath.NewDec(0),
+		ExitFee: osmomath.NewDec(0),
 	}
 
 	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, DefaultStableswapLiquidity, []uint64{}, "")
@@ -141,8 +141,8 @@ func (s *KeeperTestHelper) PrepareImbalancedStableswapPool() uint64 {
 	s.FundAcc(s.TestAccs[0], ImbalancedStableswapLiquidity)
 
 	params := stableswap.PoolParams{
-		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
+		SwapFee: osmomath.NewDec(0),
+		ExitFee: osmomath.NewDec(0),
 	}
 
 	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, ImbalancedStableswapLiquidity, []uint64{1, 1, 1}, "")

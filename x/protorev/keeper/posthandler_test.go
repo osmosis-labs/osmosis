@@ -134,7 +134,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						TokenIn:  "ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0",
 					},
 				},
-				expectedNumOfTrades: sdk.OneInt(),
+				expectedNumOfTrades: osmomath.OneInt(),
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  types.OsmosisDenomination,

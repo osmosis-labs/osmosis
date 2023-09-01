@@ -53,7 +53,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			s.SetupTest()
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20)})
+			denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20)})
 
 			// Generate delegator addresses
 			delAddrs, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -73,7 +73,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 
 			// check lptoken twap value set
 			newEpochMultiplier := s.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(s.Ctx, denoms[0])
-			s.Require().Equal(newEpochMultiplier, sdk.NewDec(15))
+			s.Require().Equal(newEpochMultiplier, osmomath.NewDec(15))
 
 			for index, lock := range locks {
 				// check gauge creation in new block
@@ -93,7 +93,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				s.Require().NoError(err)
 				delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
 				s.Require().True(found)
-				s.Require().Equal(sdk.NewDec(7500000), delegation.Shares)
+				s.Require().Equal(osmomath.NewDec(7500000), delegation.Shares)
 			}
 
 			for index, delAddr := range delAddrs {
@@ -286,7 +286,7 @@ func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 			// setup superfluid delegations
 			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -345,7 +345,7 @@ func (s *KeeperTestSuite) TestAfterAddTokensToLock_Event() {
 
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20)})
 
 	// setup superfluid delegations
 	_, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 1000000}}, denoms)

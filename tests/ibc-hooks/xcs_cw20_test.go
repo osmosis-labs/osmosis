@@ -93,7 +93,7 @@ func (suite *HooksTestSuite) setupCW20PoolAndRoutes(chain *osmosisibctesting.Tes
 func (suite *HooksTestSuite) getCW20Balance(chain *osmosisibctesting.TestChain, cw20Addr, addr sdk.AccAddress) osmomath.Int {
 	queryMsg := fmt.Sprintf(`{"balance":{"address":"%s"}}`, addr)
 	res := chain.QueryContractJson(&suite.Suite, cw20Addr, []byte(queryMsg))
-	balance, ok := sdk.NewIntFromString(res.Get("balance").String())
+	balance, ok := osmomath.NewIntFromString(res.Get("balance").String())
 	if !ok {
 		panic("could not parse balance")
 	}

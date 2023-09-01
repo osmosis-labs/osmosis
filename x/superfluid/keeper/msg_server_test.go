@@ -65,7 +65,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 			lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
 			c := sdk.WrapSDKContext(s.Ctx)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 			// If there is no coinsToLock in the param, use pool denom
 			if test.param.coinsToLock.Empty() {
@@ -387,7 +387,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
 		// setup validators
 		valAddrs := s.SetupValidators(test.validatorStats)
 
-		denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20)})
+		denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20)})
 
 		// setup superfluid delegations
 		s.setupSuperfluidDelegations(valAddrs, test.superDelegations, denoms)
@@ -420,7 +420,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUnbondLock_Event() {
 	// setup validators
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 	// setup superfluid delegations
 	_, _, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 1000000}}, denoms)
@@ -455,7 +455,7 @@ func (s *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
 	// setup validators
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{sdk.NewDec(20)})
+	denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20)})
 
 	// whitelist designated pools
 	s.App.SuperfluidKeeper.SetUnpoolAllowedPools(s.Ctx, poolIds)
@@ -485,7 +485,7 @@ func (s *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosit
 	// Set balancer pool (foo and stake) and make its respective gamm share an authorized superfluid asset
 	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.PoolParams{
 		SwapFee: osmomath.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDec(0),
+		ExitFee: osmomath.NewDec(0),
 	}, defaultPoolAssets, defaultFutureGovernor)
 	balancerPooId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
 	s.Require().NoError(err)

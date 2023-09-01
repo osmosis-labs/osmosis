@@ -25,7 +25,7 @@ var (
 	twoDec               = oneDec.Add(oneDec)
 	pointFiveDec         = osmomath.OneDec().Quo(twoDec)
 	OneSec               = osmomath.MustNewDecFromStr("1000.000000000000000000")
-	logTen               = twap.TwapLog(sdk.NewDec(10))
+	logTen               = twap.TwapLog(osmomath.NewDec(10))
 	logOneOverTen        = twap.TwapLog(osmomath.OneDec().QuoInt64(10))
 	tenSecAccum          = OneSec.MulInt64(10)
 	geometricTenSecAccum = OneSec.Mul(logTen)
@@ -177,7 +177,7 @@ func (s *TestSuite) TestUpdateRecord() {
 	updateTime := time.Unix(3, 0).UTC()
 	baseTimeMinusOne := time.Unix(1, 0).UTC()
 
-	zeroAccumNoErrSp10Record := newRecord(poolId, baseTime, sdk.NewDec(10), zeroDec, zeroDec, zeroDec)
+	zeroAccumNoErrSp10Record := newRecord(poolId, baseTime, osmomath.NewDec(10), zeroDec, zeroDec, zeroDec)
 	sp10OneTimeUnitAccumRecord := newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10), geometricTenSecAccum)
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
@@ -254,7 +254,7 @@ func (s *TestSuite) TestUpdateRecord() {
 
 func TestRecordWithUpdatedAccumulators(t *testing.T) {
 	poolId := uint64(1)
-	defaultRecord := newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec, pointFiveDec)
+	defaultRecord := newRecord(poolId, time.Unix(1, 0), osmomath.NewDec(10), oneDec, twoDec, pointFiveDec)
 	tests := map[string]struct {
 		record      types.TwapRecord
 		newTime     time.Time
@@ -262,7 +262,7 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 		expectPanic bool
 	}{
 		"accum with zero value": {
-			record:    newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec),
+			record:    newRecord(poolId, time.Unix(1, 0), osmomath.NewDec(10), zeroDec, zeroDec, zeroDec),
 			newTime:   time.Unix(2, 0),
 			expRecord: newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10), geometricTenSecAccum),
 		},
@@ -272,7 +272,7 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(10)), twoDec.Add(OneSec.QuoInt64(10)), pointFiveDec.Add(geometricTenSecAccum)),
 		},
 		"larger time interval": {
-			record:    newRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), oneDec, twoDec, pointFiveDec),
+			record:    newRecord(poolId, time.Unix(11, 0), osmomath.NewDec(10), oneDec, twoDec, pointFiveDec),
 			newTime:   time.Unix(55, 0),
 			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(44*10)), twoDec.Add(OneSec.MulInt64(44).QuoInt64(10)), pointFiveDec.Add(OneSec.MulInt64(44).Mul(logTen))),
 		},
@@ -333,17 +333,17 @@ func TestRecordWithUpdatedAccumulators_ThreeAsset(t *testing.T) {
 		expRecord       []types.TwapRecord
 	}{
 		"accum with zero value": {
-			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec, zeroDec, zeroDec, zeroDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), osmomath.NewDec(10), zeroDec, zeroDec, zeroDec, zeroDec, zeroDec, zeroDec),
 			interpolateTime: time.Unix(2, 0),
 			expRecord:       newThreeAssetExpRecord(poolId, OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.MulInt64(20), geometricTenSecAccum, geometricTenSecAccum, OneSec.Mul(logOneOverTen)),
 		},
 		"small starting accumulators": {
-			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), twoDec, oneDec, twoDec, oneDec, twoDec, oneDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), osmomath.NewDec(10), twoDec, oneDec, twoDec, oneDec, twoDec, oneDec),
 			interpolateTime: time.Unix(2, 0),
 			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(10)), oneDec.Add(OneSec.QuoInt64(10)), twoDec.Add(OneSec.MulInt64(20)), oneDec.Add(geometricTenSecAccum), twoDec.Add(geometricTenSecAccum), oneDec.Add(OneSec.Mul(logOneOverTen))),
 		},
 		"larger time interval": {
-			record:          newThreeAssetRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), twoDec, oneDec, twoDec, oneDec, twoDec, oneDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(11, 0), osmomath.NewDec(10), twoDec, oneDec, twoDec, oneDec, twoDec, oneDec),
 			interpolateTime: time.Unix(55, 0),
 			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(44*10)), oneDec.Add(OneSec.MulInt64(44).QuoInt64(10)), twoDec.Add(OneSec.MulInt64(44*20)), oneDec.Add(OneSec.MulInt64(44).Mul(logTen)), twoDec.Add(OneSec.MulInt64(44).Mul(logTen)), oneDec.Add(OneSec.MulInt64(44).Mul(logOneOverTen))),
 		},
@@ -392,7 +392,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 			testDenom1:      baseRecord.Asset1Denom,
 			testTime:        baseTime.Add(time.Second),
 			// 1(spot price) * 1000(one sec in milli-seconds)
-			expectedAccumulator: baseRecord.P0ArithmeticTwapAccumulator.Add(sdk.NewDec(1000)),
+			expectedAccumulator: baseRecord.P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(1000)),
 		},
 		"call 1 second after existing record with error": {
 			recordsToPreSet: withLastErrTime(baseRecord, baseTime),
@@ -401,7 +401,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 			testDenom1:      baseRecord.Asset1Denom,
 			testTime:        baseTime.Add(time.Second),
 			// 1(spot price) * 1000(one sec in milli-seconds)
-			expectedAccumulator: baseRecord.P0ArithmeticTwapAccumulator.Add(sdk.NewDec(1000)),
+			expectedAccumulator: baseRecord.P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(1000)),
 			expectedLastErrTime: baseTime.Add(time.Second),
 		},
 		"call 1 second before existing record": {
@@ -463,7 +463,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 }
 
 func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
-	baseRecord := newThreeAssetRecord(2, baseTime, sdk.NewDec(10), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec())
+	baseRecord := newThreeAssetRecord(2, baseTime, osmomath.NewDec(10), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec())
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
 		recordsToPreSet       []types.TwapRecord
@@ -480,17 +480,17 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 			// A 10 spot price * 1000ms = 10000
 			// B .1 spot price * 1000ms = 100
 			expectedP0Accumulator: []osmomath.Dec{
-				baseRecord[0].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
-				baseRecord[1].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
-				baseRecord[2].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
+				baseRecord[0].P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(10000)),
+				baseRecord[1].P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(10000)),
+				baseRecord[2].P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(100)),
 			},
 			// B .1 spot price * 1000ms = 100
 			// C 20 spot price * 1000ms = 20000
 			// C 20 spot price * 1000ms = 20000
 			expectedP1Accumulator: []osmomath.Dec{
-				baseRecord[0].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
-				baseRecord[1].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
-				baseRecord[2].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
+				baseRecord[0].P1ArithmeticTwapAccumulator.Add(osmomath.NewDec(100)),
+				baseRecord[1].P1ArithmeticTwapAccumulator.Add(osmomath.NewDec(20000)),
+				baseRecord[2].P1ArithmeticTwapAccumulator.Add(osmomath.NewDec(20000)),
 			},
 		},
 		"call 1 second after existing record with error": {
@@ -505,17 +505,17 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 			// A 10 spot price * 1000ms = 10000
 			// B .1 spot price * 1000ms = 100
 			expectedP0Accumulator: []osmomath.Dec{
-				baseRecord[0].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
-				baseRecord[1].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
-				baseRecord[2].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
+				baseRecord[0].P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(10000)),
+				baseRecord[1].P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(10000)),
+				baseRecord[2].P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(100)),
 			},
 			// B .1 spot price * 1000ms = 100
 			// C 20 spot price * 1000ms = 20000
 			// C 20 spot price * 1000ms = 20000
 			expectedP1Accumulator: []osmomath.Dec{
-				baseRecord[0].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
-				baseRecord[1].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
-				baseRecord[2].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
+				baseRecord[0].P1ArithmeticTwapAccumulator.Add(osmomath.NewDec(100)),
+				baseRecord[1].P1ArithmeticTwapAccumulator.Add(osmomath.NewDec(20000)),
+				baseRecord[2].P1ArithmeticTwapAccumulator.Add(osmomath.NewDec(20000)),
 			},
 		},
 		"call 1 second before existing record": {
@@ -701,7 +701,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: sdk.NewDec(2),
+					overrideSp: osmomath.NewDec(2),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
@@ -726,7 +726,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: sdk.NewDec(2),
+					overrideSp: osmomath.NewDec(2),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
@@ -743,7 +743,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record added.
 				{
-					spotPriceA:   sdk.NewDec(2),
+					spotPriceA:   osmomath.NewDec(2),
 					spotPriceB:   osmomath.NewDecWithPrec(2, 1),
 					isMostRecent: true,
 				},
@@ -1424,8 +1424,8 @@ func (s *TestSuite) TestComputeArithmeticTwapWithSpotPriceError() {
 // TestTwapLog_CorrectBase tests that the base of 2 is used for the twap log function.
 // log_2{16} = 4
 func (s *TestSuite) TestTwapLog_CorrectBase() {
-	logOf := sdk.NewDec(16)
-	expectedValue := sdk.NewDec(4)
+	logOf := osmomath.NewDec(16)
+	expectedValue := osmomath.NewDec(4)
 
 	result := twap.TwapLog(logOf)
 
@@ -1434,7 +1434,7 @@ func (s *TestSuite) TestTwapLog_CorrectBase() {
 
 func (s *TestSuite) TestTwapLog() {
 	smallestAdditiveTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.SmallestDec(),
+		AdditiveTolerance: osmomath.SmallestDec(),
 	}
 
 	testcases := []struct {
@@ -1458,7 +1458,7 @@ func (s *TestSuite) TestTwapLog() {
 		},
 		{
 			"smallest dec",
-			sdk.SmallestDec(),
+			osmomath.SmallestDec(),
 			// https://www.wolframalpha.com/input?i=log+base+2+of+%2810%5E-18%29+with+20+digits
 			osmomath.MustNewDecFromStr("59.794705707972522262").Neg(),
 			false,

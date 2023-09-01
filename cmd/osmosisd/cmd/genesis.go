@@ -376,11 +376,11 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.StakingParams.MinCommissionRate = osmomath.MustNewDecFromStr("0.05")
 
 	genParams.MintParams = minttypes.DefaultParams()
-	genParams.MintParams.EpochIdentifier = "day"                                                // 1 day
-	genParams.MintParams.GenesisEpochProvisions = sdk.NewDec(300_000_000_000_000).QuoInt64(365) // 300M * 10^6 / 365 = ~821917.8082191781 * 10^6
+	genParams.MintParams.EpochIdentifier = "day"                                                     // 1 day
+	genParams.MintParams.GenesisEpochProvisions = osmomath.NewDec(300_000_000_000_000).QuoInt64(365) // 300M * 10^6 / 365 = ~821917.8082191781 * 10^6
 	genParams.MintParams.MintDenom = genParams.NativeCoinMetadatas[0].Base
-	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3) // 2/3
-	genParams.MintParams.ReductionPeriodInEpochs = 365               // 1 year (screw leap years)
+	genParams.MintParams.ReductionFactor = osmomath.NewDec(2).QuoInt64(3) // 2/3
+	genParams.MintParams.ReductionPeriodInEpochs = 365                    // 1 year (screw leap years)
 	genParams.MintParams.DistributionProportions = minttypes.DistributionProportions{
 		Staking:          osmomath.MustNewDecFromStr("0.25"), // 25%
 		DeveloperRewards: osmomath.MustNewDecFromStr("0.25"), // 25%

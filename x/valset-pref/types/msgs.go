@@ -58,7 +58,7 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	}
 
 	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
-	roundedValue := osmomath.SigFigRound(totalWeight, sdk.NewDec(10).Power(2).TruncateInt())
+	roundedValue := osmomath.SigFigRound(totalWeight, osmomath.NewDec(10).Power(2).TruncateInt())
 
 	// check if the total validator distribution weights equal 1
 	if !roundedValue.Equal(osmomath.OneDec()) {
@@ -179,7 +179,7 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid delegator address (%s)", err)
 	}
 
-	totalWeight := sdk.NewDec(0)
+	totalWeight := osmomath.NewDec(0)
 	validatorAddrs := []string{}
 	for _, validator := range m.Preferences {
 		_, err := sdk.ValAddressFromBech32(validator.ValOperAddress)
@@ -198,7 +198,7 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 	}
 
 	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
-	roundedValue := osmomath.SigFigRound(totalWeight, sdk.NewDec(10).Power(2).TruncateInt())
+	roundedValue := osmomath.SigFigRound(totalWeight, osmomath.NewDec(10).Power(2).TruncateInt())
 
 	// check if the total validator distribution weights equal 1
 	if !roundedValue.Equal(osmomath.OneDec()) {

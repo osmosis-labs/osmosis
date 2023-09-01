@@ -164,7 +164,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			//
 			// Note that the expected difference valid additive difference of 101 on asset 1.
 			var errTolerance osmomath.ErrTolerance
-			errTolerance.AdditiveTolerance = sdk.NewDec(101)
+			errTolerance.AdditiveTolerance = osmomath.NewDec(101)
 			errTolerance.RoundingDir = osmomath.RoundDown
 
 			postAddToPositionStakeSupply := bankKeeper.GetSupply(ctx, bondDenom)

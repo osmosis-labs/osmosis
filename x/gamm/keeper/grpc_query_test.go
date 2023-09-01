@@ -689,7 +689,7 @@ func (s *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 				BaseAssetDenom:  "foo",
 				QuoteAssetDenom: "bar",
 			},
-			result: sdk.NewDec(2).String(),
+			result: osmomath.NewDec(2).String(),
 		},
 		{
 			name: "valid request for bar/baz",
@@ -780,7 +780,7 @@ func (s *KeeperTestSuite) TestV2QueryBalancerPoolSpotPrice() {
 				BaseAssetDenom:  "tokenA",
 				QuoteAssetDenom: "tokenB",
 			},
-			result: sdk.NewDec(2).String(),
+			result: osmomath.NewDec(2).String(),
 		},
 		{
 			name: "tokenB in terms of tokenA",

@@ -16,18 +16,18 @@ func (s *KeeperTestSuite) TestOsmoEquivalentMultiplierSetGetDeleteFlow() {
 	s.Require().Len(multipliers, 0)
 
 	// set multiplier
-	s.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(s.Ctx, 1, DefaultGammAsset, sdk.NewDec(2))
+	s.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(s.Ctx, 1, DefaultGammAsset, osmomath.NewDec(2))
 
 	// get multiplier
 	multiplier := s.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(s.Ctx, DefaultGammAsset)
-	s.Require().Equal(multiplier, sdk.NewDec(2))
+	s.Require().Equal(multiplier, osmomath.NewDec(2))
 
 	// check multipliers
 	expectedMultipliers := []types.OsmoEquivalentMultiplierRecord{
 		{
 			EpochNumber: 1,
 			Denom:       DefaultGammAsset,
-			Multiplier:  sdk.NewDec(2),
+			Multiplier:  osmomath.NewDec(2),
 		},
 	}
 	multipliers = s.App.SuperfluidKeeper.GetAllOsmoEquivalentMultipliers(s.Ctx)
@@ -35,14 +35,14 @@ func (s *KeeperTestSuite) TestOsmoEquivalentMultiplierSetGetDeleteFlow() {
 
 	// test last epoch price
 	multiplier = s.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(s.Ctx, DefaultGammAsset)
-	s.Require().Equal(multiplier, sdk.NewDec(2))
+	s.Require().Equal(multiplier, osmomath.NewDec(2))
 
 	// delete multiplier
 	s.App.SuperfluidKeeper.DeleteOsmoEquivalentMultiplier(s.Ctx, DefaultGammAsset)
 
 	// get multiplier
 	multiplier = s.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(s.Ctx, DefaultGammAsset)
-	s.Require().Equal(multiplier, sdk.NewDec(0))
+	s.Require().Equal(multiplier, osmomath.NewDec(0))
 
 	// check multipliers
 	multipliers = s.App.SuperfluidKeeper.GetAllOsmoEquivalentMultipliers(s.Ctx)
@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestOsmoEquivalentMultiplierSetGetDeleteFlow() {
 
 	// test last epoch price
 	multiplier = s.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(s.Ctx, DefaultGammAsset)
-	s.Require().Equal(multiplier, sdk.NewDec(0))
+	s.Require().Equal(multiplier, osmomath.NewDec(0))
 }
 
 func (s *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
@@ -63,7 +63,7 @@ func (s *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 	gammShareDenom := DefaultGammAsset
 	clShareDenom := cltypes.GetConcentratedLockupDenomFromPoolId(2)
 
-	multiplier := sdk.NewDec(2)
+	multiplier := osmomath.NewDec(2)
 	testAmount := osmomath.NewInt(100)
 	epoch := int64(1)
 
@@ -72,7 +72,7 @@ func (s *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 
 	// Get multiplier
 	multiplier = s.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(s.Ctx, gammShareDenom)
-	s.Require().Equal(multiplier, sdk.NewDec(2))
+	s.Require().Equal(multiplier, osmomath.NewDec(2))
 
 	// Should get error since asset is not superfluid enabled
 	osmoTokens, err := s.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(s.Ctx, gammShareDenom, testAmount)

@@ -879,7 +879,7 @@ func extractLiquidityFromResponse(responseBytes []byte) (osmomath.Dec, error) {
 		return osmomath.Dec{}, err
 	}
 
-	positionID, err := sdk.NewDecFromStr(liquidityString)
+	positionID, err := osmomath.NewDecFromStr(liquidityString)
 	if err != nil {
 		return osmomath.Dec{}, err
 	}

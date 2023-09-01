@@ -35,7 +35,7 @@ func (s *QueryTestSuite) SetupSuite() {
 		time.Hour * 24 * 21,
 	})
 	// set up pool
-	s.SetupGammPoolsWithBondDenomMultiplier([]osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	s.SetupGammPoolsWithBondDenomMultiplier([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 	// set up lock with id = 1
 	s.LockTokens(s.TestAccs[0], sdk.Coins{sdk.NewCoin("gamm/pool/1", osmomath.NewInt(1000000))}, time.Hour*24*21)
 	// set up validator

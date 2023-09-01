@@ -560,10 +560,10 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 					Weight: osmomath.NewInt(tc.initialWeightIn),
 				}
 
-				spreadFactorDec, err := sdk.NewDecFromStr(spreadFactor)
+				spreadFactorDec, err := osmomath.NewDecFromStr(spreadFactor)
 				suite.Require().NoError(err)
 
-				exitFeeDec, err := sdk.NewDecFromStr("0")
+				exitFeeDec, err := osmomath.NewDecFromStr("0")
 				suite.Require().NoError(err)
 
 				pool := createTestPool(suite.T(), spreadFactorDec, exitFeeDec, poolAssetOut, poolAssetIn)
@@ -657,7 +657,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 	for _, tc := range testcases {
 		for _, spreadFactor := range spreadFactorCases {
 			t.Run(getTestCaseName(tc, spreadFactor), func(t *testing.T) {
-				spreadFactorDec, err := sdk.NewDecFromStr(spreadFactor)
+				spreadFactorDec, err := osmomath.NewDecFromStr(spreadFactor)
 				require.NoError(t, err)
 
 				initialPoolBalanceOut := osmomath.NewInt(tc.initialPoolOut)
@@ -684,7 +684,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 					spreadFactorDec,
 				)
 
-				tol := sdk.NewDec(1)
+				tol := osmomath.NewDec(1)
 				osmoassert.DecApproxEq(t, initialCalcTokenOut.ToLegacyDec(), inverseCalcTokenOut, tol)
 			})
 		}

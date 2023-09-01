@@ -487,7 +487,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 			// Check the protorev statistics
 			numberOfTrades, err := s.App.ProtoRevKeeper.GetTradesByRoute(s.Ctx, test.param.route.PoolIds())
 			s.Require().NoError(err)
-			s.Require().Equal(sdk.OneInt(), numberOfTrades)
+			s.Require().Equal(osmomath.OneInt(), numberOfTrades)
 
 			routeProfit, err := s.App.ProtoRevKeeper.GetProfitsByRoute(s.Ctx, test.param.route.PoolIds(), test.arbDenom)
 			s.Require().NoError(err)
@@ -748,7 +748,7 @@ func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
 			s.Ctx,
 			route,
 			"usdx",
-			sdk.OneInt(),
+			osmomath.OneInt(),
 			types.MaxInputAmount,
 		)
 		s.Require().NoError(err)
@@ -786,7 +786,7 @@ func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
 			s.Ctx,
 			route,
 			"atom",
-			sdk.OneInt(),
+			osmomath.OneInt(),
 			types.MaxInputAmount,
 		)
 		s.Require().NoError(err)
@@ -831,11 +831,11 @@ func (s *KeeperTestSuite) TestUpdateSearchRangeIfNeeded() {
 			s.Ctx,
 			route,
 			"uosmo",
-			sdk.OneInt(),
+			osmomath.OneInt(),
 			types.MaxInputAmount,
 		)
 		s.Require().NoError(err)
-		s.Require().Equal(sdk.OneInt(), curLeft)
+		s.Require().Equal(osmomath.OneInt(), curLeft)
 		s.Require().Equal(osmomath.NewInt(5141), curRight)
 	})
 }

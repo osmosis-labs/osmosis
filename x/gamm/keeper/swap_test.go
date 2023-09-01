@@ -442,8 +442,8 @@ func (s *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 			s.FundAcc(acc, defaultAcctFunds)
 
 			poolId := s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: sdk.NewDec(0),
-				ExitFee: sdk.NewDec(0),
+				SwapFee: osmomath.NewDec(0),
+				ExitFee: osmomath.NewDec(0),
 			})
 
 			s.Ctx = s.Ctx.WithBlockTime(tc.blockTime)

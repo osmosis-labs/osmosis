@@ -433,7 +433,7 @@ func newTwoAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1, geo
 func newThreeAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC osmomath.Dec) (types.TwapRecord, types.TwapRecord, types.TwapRecord) {
 	spA := sp0
 	spB := osmomath.OneDec().Quo(sp0)
-	spC := sp0.Mul(sdk.NewDec(2))
+	spC := sp0.Mul(osmomath.NewDec(2))
 	twapAB := types.TwapRecord{
 		PoolId:      2,
 		Time:        t,
@@ -520,7 +520,7 @@ func newExpRecord(accum0, accum1, geomAccum osmomath.Dec) types.TwapRecord {
 func newThreeAssetRecord(poolId uint64, t time.Time, sp0, accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC osmomath.Dec) []types.TwapRecord {
 	spA := sp0
 	spB := osmomath.OneDec().Quo(sp0)
-	spC := sp0.Mul(sdk.NewDec(2))
+	spC := sp0.Mul(osmomath.NewDec(2))
 	twapAB := types.TwapRecord{
 		PoolId:          poolId,
 		Asset0Denom:     defaultThreeAssetCoins[0].Denom,
@@ -583,7 +583,7 @@ func newOneSidedRecord(time time.Time, accum osmomath.Dec, useP0 bool) types.Twa
 func newOneSidedGeometricRecord(time time.Time, accum osmomath.Dec) types.TwapRecord {
 	record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
 	record.GeometricTwapAccumulator = accum
-	record.P0LastSpotPrice = sdk.NewDec(10)
+	record.P0LastSpotPrice = osmomath.NewDec(10)
 	return record
 }
 

@@ -112,7 +112,7 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 	// from the above selected account, determine the token type and respective weight needed to make the pool
 	for i := 0; i < len(poolCoins); i++ {
 		poolAssets = append(poolAssets, balancertypes.PoolAsset{
-			Weight: sdk.OneInt(),
+			Weight: osmomath.OneInt(),
 			Token:  poolCoins[i],
 		})
 	}
@@ -157,7 +157,7 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 		return nil, err
 	}
 
-	amountInAfterSubTakerFee := randomCoinSubset[0].Amount.ToLegacyDec().Mul(sdk.OneDec().Sub(takerFee))
+	amountInAfterSubTakerFee := randomCoinSubset[0].Amount.ToLegacyDec().Mul(osmomath.OneDec().Sub(takerFee))
 	tokenInAfterSubTakerFee := sdk.NewCoin(randomCoinSubset[0].Denom, amountInAfterSubTakerFee.TruncateInt())
 
 	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenInAfterSubTakerFee), coinOut.Denom, pool.GetSpreadFactor(ctx))
@@ -214,7 +214,7 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 		return nil, err
 	}
 
-	amountInAfterAddTakerFee := tokenInMax.Amount.ToLegacyDec().Quo(sdk.OneDec().Sub(takerFee))
+	amountInAfterAddTakerFee := tokenInMax.Amount.ToLegacyDec().Quo(osmomath.OneDec().Sub(takerFee))
 	tokenInMax = sdk.NewCoin(tokenInMax.Denom, amountInAfterAddTakerFee.TruncateInt())
 
 	return &types.MsgSwapExactAmountOut{
@@ -448,12 +448,12 @@ func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (types.
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
 	pools, err := k.GetPoolsAndPoke(ctx)
 	if err != nil {
-		return nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), err
+		return nil, sdk.NewCoin("denom", osmomath.ZeroInt()), sdk.NewCoin("denom", osmomath.ZeroInt()), err
 	}
 
 	numPools := len(pools)
 	if numPools == 0 {
-		return nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), fmt.Errorf("no pools exist")
+		return nil, sdk.NewCoin("denom", osmomath.ZeroInt()), sdk.NewCoin("denom", osmomath.ZeroInt()), fmt.Errorf("no pools exist")
 	}
 
 	rand := sim.GetRand()

@@ -111,7 +111,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// Swap
 	toSwap := sdk.NewCoin(pool.GetToken0(), osmomath.NewInt(100))
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(toSwap))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], updatedCLPool, toSwap, pool.GetToken1(), osmomath.NewInt(1), sdk.ZeroDec())
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], updatedCLPool, toSwap, pool.GetToken1(), osmomath.NewInt(1), osmomath.ZeroDec())
 	s.Require().NoError(err)
 
 }
@@ -184,7 +184,7 @@ func (s *UpgradeTestSuite) setupCorruptedState() {
 	s.Require().NoError(err)
 	aktGAMMPool, err := keepers.GAMMKeeper.GetPool(s.Ctx, 3)
 	s.Require().NoError(err)
-	sharesOut, err := keepers.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, addr, aktGAMMPool.GetId(), sdk.NewCoins(sdk.NewCoin(v17.OSMO, osmomath.NewInt(50000000000))), sdk.ZeroInt())
+	sharesOut, err := keepers.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, addr, aktGAMMPool.GetId(), sdk.NewCoins(sdk.NewCoin(v17.OSMO, osmomath.NewInt(50000000000))), osmomath.ZeroInt())
 	s.Require().NoError(err)
 	aktSharesDenom := fmt.Sprintf("gamm/pool/%d", aktGAMMPool.GetId())
 	shareCoins := sdk.NewCoins(sdk.NewCoin(aktSharesDenom, sharesOut))

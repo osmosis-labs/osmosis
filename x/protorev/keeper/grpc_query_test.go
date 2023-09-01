@@ -138,7 +138,7 @@ func (s *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 	res, err = s.queryClient.GetProtoRevStatisticsByRoute(sdk.WrapSDKContext(s.Ctx), req)
 	s.Require().NoError(err)
 	s.Require().Equal([]uint64{1, 2, 3}, res.Statistics.Route)
-	s.Require().Equal(sdk.OneInt(), res.Statistics.NumberOfTrades)
+	s.Require().Equal(osmomath.OneInt(), res.Statistics.NumberOfTrades)
 	coin := sdk.NewCoin("Atom", osmomath.NewInt(10000))
 	s.Require().Contains(res.Statistics.Profits, coin)
 
@@ -186,7 +186,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(res.Statistics))
 	s.Require().Equal([]uint64{1, 2, 3}, res.Statistics[0].Route)
-	s.Require().Equal(sdk.OneInt(), res.Statistics[0].NumberOfTrades)
+	s.Require().Equal(osmomath.OneInt(), res.Statistics[0].NumberOfTrades)
 	osmoCoin := sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000))
 	s.Require().Contains(res.Statistics[0].Profits, osmoCoin)
 
@@ -216,7 +216,7 @@ func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	s.Require().Contains(res.Statistics[0].Profits, osmoCoin)
 
 	s.Require().Equal([]uint64{1, 2, 4}, res.Statistics[1].Route)
-	s.Require().Equal(sdk.OneInt(), res.Statistics[1].NumberOfTrades)
+	s.Require().Equal(osmomath.OneInt(), res.Statistics[1].NumberOfTrades)
 	osmoCoin = sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(70000))
 	s.Require().Contains(res.Statistics[1].Profits, osmoCoin)
 
@@ -234,12 +234,12 @@ func (s *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	s.Require().Contains(res.Statistics[0].Profits, osmoCoin)
 
 	s.Require().Equal([]uint64{1, 2, 4}, res.Statistics[1].Route)
-	s.Require().Equal(sdk.OneInt(), res.Statistics[1].NumberOfTrades)
+	s.Require().Equal(osmomath.OneInt(), res.Statistics[1].NumberOfTrades)
 	osmoCoin = sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(70000))
 	s.Require().Contains(res.Statistics[1].Profits, osmoCoin)
 
 	s.Require().Equal([]uint64{5, 2, 4}, res.Statistics[2].Route)
-	s.Require().Equal(sdk.OneInt(), res.Statistics[2].NumberOfTrades)
+	s.Require().Equal(osmomath.OneInt(), res.Statistics[2].NumberOfTrades)
 	atomCoin := sdk.NewCoin("Atom", osmomath.NewInt(80000))
 	s.Require().Contains(res.Statistics[2].Profits, atomCoin)
 }

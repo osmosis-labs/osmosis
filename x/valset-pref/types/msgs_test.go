@@ -3,7 +3,6 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -70,7 +69,7 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Preferences: []types.ValidatorPreference{
 					{
 						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
-						Weight:         sdk.NewDec(1),
+						Weight:         osmomath.NewDec(1),
 					},
 				},
 			},

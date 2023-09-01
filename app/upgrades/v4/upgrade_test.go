@@ -111,7 +111,7 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 
 				// Kept as comments for recordkeeping. Since SetParams is now private, the changes being tested for can no longer be made:
 				//  	gammParams := suite.app.GAMMKeeper.GetParams(suite.ctx)
-				//  	expectedCreationFee := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.OneInt()))
+				//  	expectedCreationFee := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.OneInt()))
 				//  	suite.Require().Equal(gammParams.PoolCreationFee, expectedCreationFee)
 			},
 			true,

@@ -756,7 +756,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, setupForwardi
 
 	// Fund the account with some uosmo and some stake
 	bankKeeper := chain.GetOsmosisApp().BankKeeper
-	i, ok := sdk.NewIntFromString("20000000000000000000000")
+	i, ok := osmomath.NewIntFromString("20000000000000000000000")
 	suite.Require().True(ok)
 	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
 	err := bankKeeper.MintCoins(chain.GetContext(), minttypes.ModuleName, amounts)
@@ -764,7 +764,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, setupForwardi
 	err = bankKeeper.SendCoinsFromModuleToAccount(chain.GetContext(), minttypes.ModuleName, owner, amounts)
 	suite.Require().NoError(err)
 
-	suite.SetupPools(chainName, []osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	suite.SetupPools(chainName, []osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 	// Setup contract
 	chain.StoreContractCode(&suite.Suite, "./bytecode/swaprouter.wasm")
@@ -800,7 +800,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, setupForwardi
 func (suite *HooksTestSuite) fundAccount(chain *osmosisibctesting.TestChain, owner sdk.AccAddress) {
 	// TODO: allow this function to fund with custom token names (calling them tokenA, tokenB, etc. would make tests easier to read, I think)
 	bankKeeper := chain.GetOsmosisApp().BankKeeper
-	i, ok := sdk.NewIntFromString("20000000000000000000000")
+	i, ok := osmomath.NewIntFromString("20000000000000000000000")
 	suite.Require().True(ok)
 	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
 	err := bankKeeper.MintCoins(chain.GetContext(), minttypes.ModuleName, amounts)
@@ -819,7 +819,7 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) (sdk.AccAd
 	}
 
 	// Setup pools
-	suite.SetupPools(chainName, []osmomath.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	suite.SetupPools(chainName, []osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 	// Setup contract
 	chain.StoreContractCode(&suite.Suite, "./bytecode/crosschain_registry.wasm")
@@ -1399,7 +1399,7 @@ func (suite *HooksTestSuite) CreateIBCNativePoolOnChain(chainName Chain, denom s
 	chain := suite.GetChain(chainName)
 	bondDenom := chain.GetOsmosisApp().StakingKeeper.BondDenom(chain.GetContext())
 
-	multiplier := sdk.NewDec(20)
+	multiplier := osmomath.NewDec(20)
 
 	uosmoAmount := gammtypes.InitPoolSharesSupply.ToLegacyDec().Mul(multiplier).RoundInt()
 
@@ -1788,14 +1788,14 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 			receiver:      actorChainB,
 			receivedToken: suite.GetIBCDenom(ChainC, ChainB, "token0"),
 			setupInitialToken: func() string {
-				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainC, ChainA})
-				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainB, ChainA})
+				suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainC, ChainA})
+				suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainB, ChainA})
 
 				token0BA := suite.GetIBCDenom(ChainB, ChainA, "token0")
 				token0CA := suite.GetIBCDenom(ChainC, ChainA, "token0")
 
 				// Setup pool
-				poolId := suite.CreateIBCPoolOnChain(ChainA, token0BA, token0CA, sdk.NewInt(defaultPoolAmount))
+				poolId := suite.CreateIBCPoolOnChain(ChainA, token0BA, token0CA, osmomath.NewInt(defaultPoolAmount))
 
 				customRoute = fmt.Sprintf(`[{"pool_id": "%d", "token_out_denom": "%s"}]`, poolId, token0CA)
 

@@ -79,7 +79,7 @@ var (
 		RoundingDir:       osmomath.RoundDown,
 	}
 
-	roundingError = sdk.OneInt()
+	roundingError = osmomath.OneInt()
 
 	positionCases = map[string]lpTest{
 		"base case": {
@@ -437,7 +437,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
 				// Note: subtracting one due to truncations in favor of the pool when withdrawing.
-				amount1Expected: baseCase.amount1Expected.Sub(sdk.OneInt()), // 5000 usdc
+				amount1Expected: baseCase.amount1Expected.Sub(osmomath.OneInt()), // 5000 usdc
 			},
 			timeElapsed:             defaultTimeElapsed,
 			isFullLiquidityWithdraw: true,
@@ -490,7 +490,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		"withdraw partial liquidity amount": {
 			setupConfig: baseCase,
 			sutConfigOverwrite: &lpTest{
-				liquidityAmount: baseCase.liquidityAmount.QuoRoundUp(sdk.NewDec(2)),
+				liquidityAmount: baseCase.liquidityAmount.QuoRoundUp(osmomath.NewDec(2)),
 				amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.499488
 				amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2500 usdc
 			},
@@ -501,7 +501,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
 				// Note: subtracting one due to truncations in favor of the pool when withdrawing.
-				amount1Expected: baseCase.amount1Expected.Sub(sdk.OneInt()), // 5000 usdc
+				amount1Expected: baseCase.amount1Expected.Sub(osmomath.OneInt()), // 5000 usdc
 			},
 			timeElapsed:             0,
 			isFullLiquidityWithdraw: true,
@@ -526,8 +526,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		"error: try withdrawing negative liquidity": {
 			setupConfig: baseCase,
 			sutConfigOverwrite: &lpTest{
-				liquidityAmount: baseCase.liquidityAmount.Sub(baseCase.liquidityAmount.Mul(sdk.NewDec(2))),
-				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Sub(baseCase.liquidityAmount.Mul(sdk.NewDec(2))), Available: baseCase.liquidityAmount},
+				liquidityAmount: baseCase.liquidityAmount.Sub(baseCase.liquidityAmount.Mul(osmomath.NewDec(2))),
+				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Sub(baseCase.liquidityAmount.Mul(osmomath.NewDec(2))), Available: baseCase.liquidityAmount},
 			},
 			timeElapsed: defaultTimeElapsed,
 		},
@@ -751,7 +751,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// This is to be more thoroughly tested separately.
 			if expectedRemainingLiquidity.IsZero() {
 				// Add one USDC because we withdraw one less than originally funded due to truncation in favor of the pool.
-				s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin(USDC, sdk.OneInt())))
+				s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin(USDC, osmomath.OneInt())))
 				_, err = concentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), owner, config.tokensProvided, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
 			}
@@ -1033,7 +1033,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				expectedError: types.InsufficientLiquidityCreatedError{
 					Actual: osmomath.NewInt(9999998816),
 					// minimum amount we have input becomes default amt 1 expected (from original position withdraw) + 10000000000 (input) - 1 (rounding)
-					Minimum:     DefaultAmt1Expected.Add(osmomath.NewInt(10000000000)).Sub(sdk.OneInt()),
+					Minimum:     DefaultAmt1Expected.Add(osmomath.NewInt(10000000000)).Sub(osmomath.OneInt()),
 					IsTokenZero: false,
 				},
 			},
@@ -1169,8 +1169,8 @@ func (s *KeeperTestSuite) TestSingleSidedAddToPosition() {
 				// liquidity = Decimal("20004500137.498290928785113714000000000000000000")
 				// calc_amount_zero_delta(liquidity, sqrtPriceLowerTick, sqrtPriceUpperTick, False)
 				// Decimal('999999.999999999999999999999957642595723576')
-				// The value above gets rounded down to DefaultAmt0.Sub(sdk.OneInt()). Then, we add DefaultAmt0.
-				amount0Expected: DefaultAmt0.Sub(sdk.OneInt()).Add(DefaultAmt0),
+				// The value above gets rounded down to DefaultAmt0.Sub(osmomath.OneInt()). Then, we add DefaultAmt0.
+				amount0Expected: DefaultAmt0.Sub(osmomath.OneInt()).Add(DefaultAmt0),
 				amount1Expected: osmomath.ZeroInt(),
 				// current tick is 0, so create the position completely above it
 				lowerTick: 100,
@@ -1568,7 +1568,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			lowerTick:      DefaultLowerTick,
 			upperTick:      DefaultUpperTick,
 			joinTime:       DefaultJoinTime,
-			liquidityDelta: DefaultLiquidityAmt.Neg().Mul(sdk.NewDec(2)),
+			liquidityDelta: DefaultLiquidityAmt.Neg().Mul(osmomath.NewDec(2)),
 			numPositions:   1,
 			expectedError:  true,
 		},
@@ -1706,7 +1706,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 
 func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 	sqrt := func(x int64) osmomath.BigDec {
-		sqrt, err := osmomath.MonotonicSqrt(sdk.NewDec(x))
+		sqrt, err := osmomath.MonotonicSqrt(osmomath.NewDec(x))
 		s.Require().NoError(err)
 		return osmomath.BigDecFromDec(sqrt)
 	}
@@ -1728,21 +1728,21 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 			expectedTick:          DefaultCurrTick,
 		},
 		"100_000_050 and tick spacing 100, price level where curr sqrt price does not translate to allowed tick (assumes exponent at price one of -6 and tick spacing of 100)": {
-			amount0Desired:        sdk.OneInt(),
+			amount0Desired:        osmomath.OneInt(),
 			amount1Desired:        osmomath.NewInt(100_000_050),
 			tickSpacing:           DefaultTickSpacing,
 			expectedCurrSqrtPrice: sqrt(100_000_050),
 			expectedTick:          72000000,
 		},
 		"100_000_051 and tick spacing 100, price level where curr sqrt price does not translate to allowed tick (assumes exponent at price one of -6 and tick spacing of 100)": {
-			amount0Desired:        sdk.OneInt(),
+			amount0Desired:        osmomath.OneInt(),
 			amount1Desired:        osmomath.NewInt(100_000_051),
 			tickSpacing:           DefaultTickSpacing,
 			expectedCurrSqrtPrice: sqrt(100_000_051),
 			expectedTick:          72000000,
 		},
 		"100_000_051 and tick spacing 1, price level where curr sqrt price translates to allowed tick (assumes exponent at price one of -6 and tick spacing of 1)": {
-			amount0Desired:        sdk.OneInt(),
+			amount0Desired:        osmomath.OneInt(),
 			amount1Desired:        osmomath.NewInt(100_000_051),
 			tickSpacing:           1,
 			expectedCurrSqrtPrice: sqrt(100_000_051),
@@ -2079,7 +2079,7 @@ func (s *KeeperTestSuite) TestValidatePositionUpdateById() {
 			updateInitiatorIndex:    0,
 			lowerTickGiven:          DefaultLowerTick,
 			upperTickGiven:          DefaultUpperTick,
-			liquidityDeltaGiven:     sdk.NewDec(2), // non negative
+			liquidityDeltaGiven:     osmomath.NewDec(2), // non negative
 			joinTimeGiven:           DefaultJoinTime,
 			modifyPositionLiquidity: true, // modifies position to have less liquidity than liquidity delta
 			poolIdGiven:             defaultPoolId,
@@ -2153,7 +2153,7 @@ func (s *KeeperTestSuite) TestValidatePositionUpdateById() {
 			updateInitiatorIndex:    0,
 			lowerTickGiven:          DefaultLowerTick,
 			upperTickGiven:          DefaultUpperTick,
-			liquidityDeltaGiven:     sdk.NewDec(2).Neg(),
+			liquidityDeltaGiven:     osmomath.NewDec(2).Neg(),
 			joinTimeGiven:           DefaultJoinTime,
 			modifyPositionLiquidity: true, // modifies position to have less liquidity than liquidity delta
 			poolIdGiven:             defaultPoolId,

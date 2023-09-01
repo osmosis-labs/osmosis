@@ -39,7 +39,7 @@ func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) 
 
 	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
 	totalWeightDec := distrInfo.TotalWeight.ToLegacyDec()
-	incentivePercentage := sdk.NewDec(0)
+	incentivePercentage := osmomath.NewDec(0)
 	percentMultiplier := osmomath.NewInt(100)
 
 	pool, err := q.Keeper.poolmanagerKeeper.GetPool(sdkCtx, req.PoolId)

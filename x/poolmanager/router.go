@@ -495,7 +495,7 @@ func (k Keeper) SplitRouteExactAmountOut(
 		// which is 256. This is to ensure that we utilize price impact protection
 		// on the total of in amount from all multihop paths.
 		multihopStartTokenInMaxAmount = intMaxValue
-		totalInAmount                 = sdk.ZeroInt()
+		totalInAmount                 = osmomath.ZeroInt()
 	)
 
 	for _, multihopRoute := range route {
@@ -681,8 +681,8 @@ func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute,
 func (k Keeper) getOsmoRoutedMultihopTotalSpreadFactor(ctx sdk.Context, route types.MultihopRoute) (
 	totalPathSpreadFactor osmomath.Dec, sumOfSpreadFactors osmomath.Dec, err error,
 ) {
-	additiveSpreadFactor := sdk.ZeroDec()
-	maxSpreadFactor := sdk.ZeroDec()
+	additiveSpreadFactor := osmomath.ZeroDec()
+	maxSpreadFactor := osmomath.ZeroDec()
 
 	for _, poolId := range route.PoolIds() {
 		swapModule, err := k.GetPoolModule(ctx, poolId)

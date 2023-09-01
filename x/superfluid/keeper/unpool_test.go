@@ -111,7 +111,7 @@ func (s *KeeperTestSuite) TestUnpool() {
 			// create pool of "stake" and "foo"
 			msg := balancer.NewMsgCreateBalancerPool(poolCreateAcc, balancer.PoolParams{
 				SwapFee: osmomath.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDec(0),
+				ExitFee: osmomath.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
 
 			poolId, err := poolmanagerKeeper.CreatePool(ctx, msg)

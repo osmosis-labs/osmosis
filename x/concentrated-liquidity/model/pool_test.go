@@ -27,14 +27,14 @@ const (
 
 var (
 	DefaultSpotPrice        = osmomath.MustNewDecFromStr("0.2")
-	DefaultReverseSpotPrice = sdk.NewDec(1).Quo(DefaultSpotPrice)
+	DefaultReverseSpotPrice = osmomath.NewDec(1).Quo(DefaultSpotPrice)
 	DefaultSqrtSpotPrice    = func() osmomath.BigDec {
 		sqrtPrice, _ := osmomath.MonotonicSqrt(DefaultSpotPrice)
 		return osmomath.BigDecFromDec(sqrtPrice)
 	}()
 	DefaultLiquidityAmt        = osmomath.MustNewDecFromStr("1517882343.751510418088349649")
 	DefaultCurrTick      int64 = 310000
-	DefaultCurrPrice           = sdk.NewDec(5000)
+	DefaultCurrPrice           = osmomath.NewDec(5000)
 	DefaultCurrSqrtPrice       = func() osmomath.BigDec {
 		sqrtPrice, _ := osmomath.MonotonicSqrt(DefaultCurrPrice)
 		return osmomath.BigDecFromDec(sqrtPrice)
@@ -235,10 +235,10 @@ func (s *ConcentratedPoolTestSuite) TestUpdateLiquidity() {
 	s.Require().Equal(DefaultLiquidityAmt, mock_pool.CurrentTickLiquidity)
 
 	// Try adding 10 to the pool liquidity.
-	mock_pool.UpdateLiquidity(sdk.NewDec(10))
+	mock_pool.UpdateLiquidity(osmomath.NewDec(10))
 
 	// Assert that the liquidity has increased by 10.
-	s.Require().Equal(DefaultLiquidityAmt.Add(sdk.NewDec(10)), mock_pool.CurrentTickLiquidity)
+	s.Require().Equal(DefaultLiquidityAmt.Add(osmomath.NewDec(10)), mock_pool.CurrentTickLiquidity)
 }
 
 func (s *ConcentratedPoolTestSuite) TestIsCurrentTickInRange() {
@@ -520,9 +520,9 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				denom0:       ETH,
 				denom1:       USDC,
 				tickSpacing:  DefaultTickSpacing,
-				spreadFactor: osmomath.ZeroDec().Sub(sdk.SmallestDec()),
+				spreadFactor: osmomath.ZeroDec().Sub(osmomath.SmallestDec()),
 			},
-			expectedErr: types.InvalidSpreadFactorError{ActualSpreadFactor: osmomath.ZeroDec().Sub(sdk.SmallestDec())},
+			expectedErr: types.InvalidSpreadFactorError{ActualSpreadFactor: osmomath.ZeroDec().Sub(osmomath.SmallestDec())},
 		},
 		{
 			name: "Error: spread factor == 1",
@@ -572,7 +572,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			return sqrtPrice
 		}
 
-		defaultLiquidityDelta       = sdk.NewDec(1000)
+		defaultLiquidityDelta       = osmomath.NewDec(1000)
 		defaultLiquidityDeltaBigDec = osmomath.NewBigDec(1000)
 
 		lowerTick            = int64(-99)
@@ -728,8 +728,8 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 
 func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 	var (
-		defaultLiquidityDelta = sdk.NewDec(1000)
-		defaultLiquidityAmt   = sdk.NewDec(1000)
+		defaultLiquidityDelta = osmomath.NewDec(1000)
+		defaultLiquidityAmt   = osmomath.NewDec(1000)
 
 		lowerTick = int64(-99)
 		midtick   = int64(2)

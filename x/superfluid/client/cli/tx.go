@@ -452,7 +452,7 @@ func NewUnbondConvertAndStake() *cobra.Command {
 			// if user provided args for min amount to stake, use it. If not, use empty coin struct
 			var sharesToConvert sdk.Coin
 			if len(args) >= 3 {
-				convertedInt, ok := sdk.NewIntFromString(args[2])
+				convertedInt, ok := osmomath.NewIntFromString(args[2])
 				if !ok {
 					return fmt.Errorf("Conversion for osmomath.Int failed")
 				}

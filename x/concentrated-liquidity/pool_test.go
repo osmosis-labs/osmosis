@@ -281,7 +281,7 @@ func (s *KeeperTestSuite) TestValidateSpreadFactor() {
 		},
 		{
 			name:         "Invalid spread factor",
-			spreadFactor: params.AuthorizedSpreadFactors[0].Add(sdk.SmallestDec()),
+			spreadFactor: params.AuthorizedSpreadFactors[0].Add(osmomath.SmallestDec()),
 			expectValid:  false,
 		},
 	}
@@ -500,7 +500,7 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 
 func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 	var (
-		defaultPoolCoinOne = sdk.NewCoin(USDC, sdk.OneInt())
+		defaultPoolCoinOne = sdk.NewCoin(USDC, osmomath.OneInt())
 		defaultPoolCoinTwo = sdk.NewCoin(ETH, osmomath.NewInt(2))
 		nonPoolCool        = sdk.NewCoin("uosmo", osmomath.NewInt(3))
 

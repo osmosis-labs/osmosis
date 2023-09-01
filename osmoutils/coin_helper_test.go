@@ -78,7 +78,7 @@ func TestSubDecCoins(t *testing.T) {
 			firstInput:  []sdk.DecCoins{fiftyEach},
 			secondInput: []sdk.DecCoins{hundredEach},
 
-			expectedOutput:    []sdk.DecCoins{{sdk.DecCoin{Denom: "bar", Amount: sdk.NewDec(-50)}, sdk.DecCoin{Denom: "foo", Amount: sdk.NewDec(-50)}}},
+			expectedOutput:    []sdk.DecCoins{{sdk.DecCoin{Denom: "bar", Amount: osmomath.NewDec(-50)}, sdk.DecCoin{Denom: "foo", Amount: osmomath.NewDec(-50)}}},
 			expectPanicUnsafe: true,
 		},
 	}

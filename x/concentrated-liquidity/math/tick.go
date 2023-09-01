@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
@@ -29,7 +27,7 @@ func TicksToSqrtPrice(lowerTick, upperTick int64) (osmomath.BigDec, osmomath.Big
 }
 
 // TickToSqrtPrice returns the sqrtPrice given a tickIndex
-// If tickIndex is zero, the function returns sdk.OneDec().
+// If tickIndex is zero, the function returns osmomath.OneDec().
 // It is the combination of calling TickToPrice followed by Sqrt.
 func TickToSqrtPrice(tickIndex int64) (osmomath.BigDec, osmomath.BigDec, error) {
 	priceBigDec, err := TickToPrice(tickIndex)
@@ -50,7 +48,7 @@ func TickToSqrtPrice(tickIndex int64) (osmomath.BigDec, osmomath.BigDec, error) 
 }
 
 // TickToPrice returns the price given a tickIndex
-// If tickIndex is zero, the function returns sdk.OneDec().
+// If tickIndex is zero, the function returns osmomath.OneDec().
 func TickToPrice(tickIndex int64) (osmomath.BigDec, error) {
 	if tickIndex == 0 {
 		return osmomath.OneBigDec(), nil
@@ -158,13 +156,13 @@ func CalculatePriceToTickDec(priceBigDec osmomath.BigDec) (tickIndex osmomath.De
 	price := priceBigDec.Dec()
 
 	if price.IsNegative() {
-		return sdk.ZeroDec(), fmt.Errorf("price must be greater than zero")
+		return osmomath.ZeroDec(), fmt.Errorf("price must be greater than zero")
 	}
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return sdk.ZeroDec(), types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+		return osmomath.ZeroDec(), types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	if price.Equal(sdkOneDec) {
-		return sdk.ZeroDec(), nil
+		return osmomath.ZeroDec(), nil
 	}
 
 	// The approach here is to try determine which "geometric spacing" are we in.
@@ -201,7 +199,7 @@ func CalculatePriceToTickDec(priceBigDec osmomath.BigDec) (tickIndex osmomath.De
 	// (NOTE: You'd expect it to be number of ticks "completely" filled by the current spacing,
 	// which would be truncation. However price may have errors, hence it being callers job)
 	tickIndex = ticksFilledByCurrentSpacing.Dec()
-	tickIndex = tickIndex.Add(sdk.NewDec(geoSpacing.initialTick))
+	tickIndex = tickIndex.Add(osmomath.NewDec(geoSpacing.initialTick))
 	return tickIndex, nil
 }
 

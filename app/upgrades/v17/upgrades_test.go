@@ -148,37 +148,37 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				existingBalancerPoolId := suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("atom", osmomath.NewInt(10000000000)), sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)))
 
 				// create few TWAP records for the pools
-				t1 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(10),
+				t1 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*24), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", osmomath.NewDec(10),
 					osmomath.OneDec().MulInt64(10*10),
 					osmomath.OneDec().MulInt64(3),
 					osmomath.ZeroDec())
 
-				t2 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*10), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(30),
+				t2 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour*10), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", osmomath.NewDec(30),
 					osmomath.OneDec().MulInt64(10*10+10),
 					osmomath.OneDec().MulInt64(5),
 					osmomath.ZeroDec())
 
-				t3 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", sdk.NewDec(20),
+				t3 := dummyTwapRecord(existingPool.GetId(), time.Now().Add(-time.Hour), "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo", osmomath.NewDec(20),
 					osmomath.OneDec().MulInt64(10*10+10*5),
 					osmomath.OneDec().MulInt64(10),
 					osmomath.ZeroDec())
 
-				t4 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour*24), "akash", "uosmo", sdk.NewDec(10),
+				t4 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour*24), "akash", "uosmo", osmomath.NewDec(10),
 					osmomath.OneDec().MulInt64(10*10*10),
 					osmomath.OneDec().MulInt64(5),
 					osmomath.ZeroDec())
 
-				t5 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour), "akash", "uosmo", sdk.NewDec(20),
+				t5 := dummyTwapRecord(existingPool2.GetId(), time.Now().Add(-time.Hour), "akash", "uosmo", osmomath.NewDec(20),
 					osmomath.OneDec().MulInt64(10),
 					osmomath.OneDec().MulInt64(2),
 					osmomath.ZeroDec())
 
-				t6 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Hour), "atom", "uosmo", sdk.NewDec(10),
+				t6 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Hour), "atom", "uosmo", osmomath.NewDec(10),
 					osmomath.OneDec().MulInt64(10),
 					osmomath.OneDec().MulInt64(10),
 					osmomath.ZeroDec())
 
-				t7 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Minute*20), "atom", "uosmo", sdk.NewDec(50),
+				t7 := dummyTwapRecord(existingBalancerPoolId, time.Now().Add(-time.Minute*20), "atom", "uosmo", osmomath.NewDec(50),
 					osmomath.OneDec().MulInt64(10*5),
 					osmomath.OneDec().MulInt64(5),
 					osmomath.ZeroDec())

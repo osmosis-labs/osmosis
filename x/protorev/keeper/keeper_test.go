@@ -116,7 +116,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0", osmomath.NewInt(9000000000000000000)),
 		sdk.NewCoin("ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC", osmomath.NewInt(9000000000000000000)),
 		sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", osmomath.NewInt(9000000000000000000)),
-		sdk.NewCoin("ibc/0E43EDE2E2A3AFA36D0CD38BDDC0B49FECA64FA426A82E102F304E430ECF46EE", sdk.NewIntFromBigInt(big.NewInt(1).Mul(big.NewInt(9000000000000000000), big.NewInt(10000)))),
+		sdk.NewCoin("ibc/0E43EDE2E2A3AFA36D0CD38BDDC0B49FECA64FA426A82E102F304E430ECF46EE", osmomath.NewIntFromBigInt(big.NewInt(1).Mul(big.NewInt(9000000000000000000), big.NewInt(10000)))),
 		sdk.NewCoin("ibc/8242AD24008032E457D2E12D46588FD39FB54FB29680C6C7663D296B383C37C4", osmomath.NewInt(9000000000000000000)),
 		sdk.NewCoin("usdc", osmomath.NewInt(9000000000000000000)),
 		sdk.NewCoin("usdt", osmomath.NewInt(9000000000000000000)),
@@ -169,7 +169,7 @@ func (s *KeeperTestSuite) SetupTest() {
 // and so on....
 func (s *KeeperTestSuite) setUpPools() {
 	// Create any necessary osmomath.Ints that require string conversion
-	pool28Amount1, ok := sdk.NewIntFromString("6170367464346955818920")
+	pool28Amount1, ok := osmomath.NewIntFromString("6170367464346955818920")
 	s.Require().True(ok)
 
 	// Init pools

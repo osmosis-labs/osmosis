@@ -52,7 +52,7 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 			poolCreationFee: sdk.Coins{sdk.NewCoin("atom", osmomath.NewInt(10000))},
 			msg: balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.PoolParams{
 				SwapFee: osmomath.NewDecWithPrec(1, 2),
-				ExitFee: sdk.ZeroDec(),
+				ExitFee: osmomath.ZeroDec(),
 			}, apptesting.DefaultPoolAssets, ""),
 			expectPass: false,
 		},
@@ -120,7 +120,7 @@ func (s *KeeperTestSuite) TestPoolCreationFee() {
 // TestCreatePool tests that all possible pools are created correctly.
 func (s *KeeperTestSuite) TestCreatePool() {
 	var (
-		validBalancerPoolMsg = balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
+		validBalancerPoolMsg = balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.NewPoolParams(osmomath.ZeroDec(), osmomath.ZeroDec(), nil), []balancer.PoolAsset{
 			{
 				Token:  sdk.NewCoin(foo, defaultInitPoolAmount),
 				Weight: osmomath.NewInt(1),
@@ -131,7 +131,7 @@ func (s *KeeperTestSuite) TestCreatePool() {
 			},
 		}, "")
 
-		invalidBalancerPoolMsg = balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), osmomath.NewDecWithPrec(1, 2), nil), []balancer.PoolAsset{
+		invalidBalancerPoolMsg = balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.NewPoolParams(osmomath.ZeroDec(), osmomath.NewDecWithPrec(1, 2), nil), []balancer.PoolAsset{
 			{
 				Token:  sdk.NewCoin(foo, defaultInitPoolAmount),
 				Weight: osmomath.NewInt(1),
@@ -269,7 +269,7 @@ func (s *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
 		return msg
 	}
 
-	balancerPoolMsg := balancer.NewMsgCreateBalancerPool(poolManagerModuleAcc.GetAddress(), balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
+	balancerPoolMsg := balancer.NewMsgCreateBalancerPool(poolManagerModuleAcc.GetAddress(), balancer.NewPoolParams(osmomath.ZeroDec(), osmomath.ZeroDec(), nil), []balancer.PoolAsset{
 		{
 			Token:  sdk.NewCoin(foo, defaultInitPoolAmount),
 			Weight: osmomath.NewInt(1),
@@ -312,7 +312,7 @@ func (s *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
 
 			// Note: this is necessary for gauge creation in the after pool created hook.
 			// There is a check requiring positive supply existing on-chain.
-			s.MintCoins(sdk.NewCoins(sdk.NewCoin("uosmo", sdk.OneInt())))
+			s.MintCoins(sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.OneInt())))
 
 			pool, err := poolmanagerKeeper.CreateConcentratedPoolAsPoolManager(ctx, tc.msg)
 

@@ -1,15 +1,13 @@
 package math
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 var (
-	sdkOneDec      = sdk.OneDec()
-	sdkTenDec      = sdk.NewDec(10)
+	sdkOneDec      = osmomath.OneDec()
+	sdkTenDec      = osmomath.NewDec(10)
 	powersOfTen    []osmomath.Dec
 	negPowersOfTen []osmomath.Dec
 
@@ -20,7 +18,7 @@ var (
 
 	// 9 * 10^(-types.ExponentAtPriceOne), where types.ExponentAtPriceOne is non-positive and is s.t.
 	// this answer fits well within an int64.
-	geometricExponentIncrementDistanceInTicks = 9 * sdk.NewDec(10).PowerMut(uint64(-types.ExponentAtPriceOne)).TruncateInt64()
+	geometricExponentIncrementDistanceInTicks = 9 * osmomath.NewDec(10).PowerMut(uint64(-types.ExponentAtPriceOne)).TruncateInt64()
 )
 
 // Builds metadata for every additive tickspacing exponent, namely:
@@ -84,7 +82,7 @@ func init() {
 	for i := 0; i <= osmomath.PrecisionDec; i++ {
 		negPowersOfTen[i] = sdkOneDec.Quo(sdkTenDec.Power(uint64(i)))
 	}
-	// 10^77 < sdk.MaxInt < 10^78
+	// 10^77 < osmomath.MaxInt < 10^78
 	powersOfTen = make([]osmomath.Dec, 77)
 	for i := 0; i <= 76; i++ {
 		powersOfTen[i] = sdkTenDec.Power(uint64(i))

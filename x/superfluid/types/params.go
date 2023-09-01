@@ -4,7 +4,6 @@ import (
 	fmt "fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -52,7 +51,7 @@ func ValidateMinimumRiskFactor(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.IsNegative() || v.GT(sdk.NewDec(100)) {
+	if v.IsNegative() || v.GT(osmomath.NewDec(100)) {
 		return fmt.Errorf("minimum risk factor should be between 0 - 100: %s", v.String())
 	}
 

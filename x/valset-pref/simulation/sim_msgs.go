@@ -14,7 +14,7 @@ import (
 
 func RandomMsgSetValSetPreference(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgSetValidatorSetPreference, error) {
 	// Start with a weight of 1
-	remainingWeight := sdk.NewDec(1)
+	remainingWeight := osmomath.NewDec(1)
 
 	preferences, err := GetRandomValAndWeights(ctx, k, sim, remainingWeight)
 	if err != nil {
@@ -126,7 +126,7 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 	}
 
 	// new delegations to redelegate to
-	remainingWeight := sdk.NewDec(1)
+	remainingWeight := osmomath.NewDec(1)
 	preferences, err := GetRandomValAndWeights(ctx, k, sim, remainingWeight)
 	if err != nil {
 		return nil, err
