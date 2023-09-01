@@ -165,10 +165,10 @@ func (k Keeper) CalculateSpotPrice(
 	}
 
 	if price.IsZero() {
-		return osmomath.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+		return osmomath.Dec{}, types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromDec(price), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return osmomath.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+		return osmomath.Dec{}, types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromDec(price), MinSpotPrice: types.MinSpotPriceBigDec, MaxSpotPrice: types.MaxSpotPrice}
 	}
 
 	return price, nil

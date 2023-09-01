@@ -86,7 +86,7 @@ func TickToPrice(tickIndex int64) (osmomath.BigDec, error) {
 	// defense in depth, this logic would not be reached due to use having checked if given tick is in between
 	// min tick and max tick.
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return osmomath.BigDec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+		return osmomath.BigDec{}, types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromDec(price), MinSpotPrice: types.MinSpotPriceBigDec, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	return osmomath.BigDecFromDec(price), nil
 }
@@ -150,19 +150,26 @@ func powTenBigDec(exponent int64) osmomath.BigDec {
 	return bigNegPowersOfTen[-exponent]
 }
 
-func CalculatePriceToTickDec(priceBigDec osmomath.BigDec) (tickIndex osmomath.Dec, err error) {
-	// It is acceptable to truncate price as the minimum we support is
-	// 10**-12 which is above the smallest value of osmomath.Dec.
-	price := priceBigDec.Dec()
-
+// CalculatePriceToTick calculates tickIndex from price. Contrary to CalculatePriceToTickV1,
+// it uses BigDec in internal calculations
+func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 	if price.IsNegative() {
-		return osmomath.ZeroDec(), fmt.Errorf("price must be greater than zero")
+		return 0, fmt.Errorf("price must be greater than zero")
 	}
-	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return osmomath.ZeroDec(), types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+	if price.GT(osmomath.BigDecFromDec(types.MaxSpotPrice)) || price.LT(types.MinSpotPriceV2) {
+		return 0, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
-	if price.Equal(sdkOneDec) {
-		return osmomath.ZeroDec(), nil
+	if price.Equal(osmomathBigOneDec) {
+		return 0, nil
+	}
+
+	// N.B. this exists to maintain backwards compatibility with
+	// the old version of the function that operated on decimal with precision of 18.
+	if price.GTE(types.MinSpotPriceBigDec) {
+		// TODO: implement efficient big decimal truncation.
+		// It is acceptable to truncate price as the minimum we support is
+		// 10**-12 which is above the smallest value of sdk.Dec.
+		price = osmomath.BigDecFromDec(price.Dec())
 	}
 
 	// The approach here is to try determine which "geometric spacing" are we in.
@@ -171,7 +178,7 @@ func CalculatePriceToTickDec(priceBigDec osmomath.BigDec) (tickIndex osmomath.De
 	// If price < 1, we search for the first geometric spacing w/ a min price smaller than our price.
 	// TODO: We can optimize by using smarter search algorithms
 	var geoSpacing *tickExpIndexData
-	if price.GT(sdkOneDec) {
+	if price.GT(osmomathBigOneDec) {
 		index := 0
 		geoSpacing = tickExpCache[int64(index)]
 		for geoSpacing.maxPrice.LT(price) {
@@ -190,16 +197,12 @@ func CalculatePriceToTickDec(priceBigDec osmomath.BigDec) (tickIndex osmomath.De
 	// We know were between (geoSpacing.initialPrice, geoSpacing.endPrice)
 	// The number of ticks that need to be filled by our current spacing is
 	// (price - geoSpacing.initialPrice) / geoSpacing.additiveIncrementPerTick
-	priceInThisExponent := osmomath.BigDecFromDec(price.Sub(geoSpacing.initialPrice))
+	priceInThisExponent := price.Sub(geoSpacing.initialPrice)
 	ticksFilledByCurrentSpacing := priceInThisExponent.Quo(geoSpacing.additiveIncrementPerTick)
 	// we get the bucket index by:
 	// * taking the bucket index of the smallest price in this tick
 	// * adding to it the number of ticks filled by the current spacing
-	// We leave rounding of this to the caller
-	// (NOTE: You'd expect it to be number of ticks "completely" filled by the current spacing,
-	// which would be truncation. However price may have errors, hence it being callers job)
-	tickIndex = ticksFilledByCurrentSpacing.Dec()
-	tickIndex = tickIndex.Add(osmomath.NewDec(geoSpacing.initialTick))
+	tickIndex = ticksFilledByCurrentSpacing.TruncateInt64() + geoSpacing.initialTick
 	return tickIndex, nil
 }
 
@@ -210,12 +213,10 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 	// and move it in a +/- 1 tick range based on the sqrt price those ticks would imply.
 	price := sqrtPrice.Mul(sqrtPrice)
 
-	tick, err := CalculatePriceToTickDec(price)
+	tick, err := CalculatePriceToTick(price)
 	if err != nil {
 		return 0, err
 	}
-
-	truncatedTick := tick.TruncateInt64()
 
 	// We have a candidate bucket index `t`. We discern here if:
 	// * sqrtPrice in [TickToSqrtPrice(t - 1), TickToSqrtPrice(t))
@@ -230,18 +231,18 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 	// We check this at max tick - 1 instead of max tick, since we expect the output to
 	// have some error that can push us over the tick boundary.
 	outOfBounds := false
-	if truncatedTick <= types.MinInitializedTick {
-		truncatedTick = types.MinInitializedTick + 1
+	if tick <= types.MinInitializedTick {
+		tick = types.MinInitializedTick + 1
 		outOfBounds = true
-	} else if truncatedTick >= types.MaxTick-1 {
-		truncatedTick = types.MaxTick - 2
+	} else if tick >= types.MaxTick-1 {
+		tick = types.MaxTick - 2
 		outOfBounds = true
 	}
 
-	_, sqrtPriceTmin1, errM1 := TickToSqrtPrice(truncatedTick - 1)
-	_, sqrtPriceT, errT := TickToSqrtPrice(truncatedTick)
-	_, sqrtPriceTplus1, errP1 := TickToSqrtPrice(truncatedTick + 1)
-	_, sqrtPriceTplus2, errP2 := TickToSqrtPrice(truncatedTick + 2)
+	_, sqrtPriceTmin1, errM1 := TickToSqrtPrice(tick - 1)
+	_, sqrtPriceT, errT := TickToSqrtPrice(tick)
+	_, sqrtPriceTplus1, errP1 := TickToSqrtPrice(tick + 1)
+	_, sqrtPriceTplus2, errP2 := TickToSqrtPrice(tick + 2)
 	if errM1 != nil || errT != nil || errP1 != nil || errP2 != nil {
 		return 0, errors.New("internal error in computing square roots within CalculateSqrtPriceToTick")
 	}
@@ -257,15 +258,15 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 
 	// We expect this case to only be hit when the original provided sqrt price is exactly equal to the max sqrt price.
 	if sqrtPrice.Equal(sqrtPriceTplus2) {
-		return truncatedTick + 2, nil
+		return tick + 2, nil
 	}
 
 	// The remaining cases handle shifting tick index by +/- 1.
 	if sqrtPrice.GTE(sqrtPriceTplus1) {
-		return truncatedTick + 1, nil
+		return tick + 1, nil
 	}
 	if sqrtPrice.GTE(sqrtPriceT) {
-		return truncatedTick, nil
+		return tick, nil
 	}
-	return truncatedTick - 1, nil
+	return tick - 1, nil
 }
