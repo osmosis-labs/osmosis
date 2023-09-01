@@ -5,6 +5,7 @@ import (
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v19/x/tokenfactory/keeper"
@@ -43,7 +44,7 @@ func RandomMsgMintDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) 
 	}
 
 	// TODO: Replace with an improved rand exponential coin
-	mintAmount := sim.RandPositiveInt(sdk.NewIntFromUint64(1000_000000))
+	mintAmount := sim.RandPositiveInt(osmomath.NewIntFromUint64(1000_000000))
 	return &types.MsgMint{
 		Sender: addr.String(),
 		Amount: sdk.NewCoin(denom, mintAmount),

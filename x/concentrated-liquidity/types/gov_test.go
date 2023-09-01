@@ -3,10 +3,10 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
@@ -16,20 +16,20 @@ func TestCreateConcentratedLiquidityPoolsProposalMarshalUnmarshal(t *testing.T) 
 			Denom0:       "uion",
 			Denom1:       "uosmo",
 			TickSpacing:  100,
-			SpreadFactor: sdk.MustNewDecFromStr("0.01"),
+			SpreadFactor: osmomath.MustNewDecFromStr("0.01"),
 		},
 		{
 			Denom0:       "stake",
 			Denom1:       "uosmo",
 			TickSpacing:  1000,
-			SpreadFactor: sdk.MustNewDecFromStr("0.02"),
+			SpreadFactor: osmomath.MustNewDecFromStr("0.02"),
 		},
 		{
 			Denom0:      "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
 			Denom1:      "uosmo",
 			TickSpacing: 10,
 
-			SpreadFactor: sdk.MustNewDecFromStr("0.05"),
+			SpreadFactor: osmomath.MustNewDecFromStr("0.05"),
 		},
 	}
 
@@ -112,7 +112,7 @@ func TestCreateConcentratedLiquidityPoolsProposal_ValidateBasic(t *testing.T) {
 		Denom0:       "uion",
 		Denom1:       "uosmo",
 		TickSpacing:  100,
-		SpreadFactor: sdk.MustNewDecFromStr("0.01"),
+		SpreadFactor: osmomath.MustNewDecFromStr("0.01"),
 	}
 
 	withInvalidTickSpacing := func(record types.PoolRecord) types.PoolRecord {
@@ -136,7 +136,7 @@ func TestCreateConcentratedLiquidityPoolsProposal_ValidateBasic(t *testing.T) {
 	}
 
 	withInvalidSpreadFactor := func(record types.PoolRecord) types.PoolRecord {
-		record.SpreadFactor = sdk.MustNewDecFromStr("1.01")
+		record.SpreadFactor = osmomath.MustNewDecFromStr("1.01")
 		return record
 	}
 

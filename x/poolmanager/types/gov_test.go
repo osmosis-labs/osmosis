@@ -3,10 +3,10 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
@@ -15,17 +15,17 @@ func TestDenomPairTakerFeeProposalMarshalUnmarshal(t *testing.T) {
 		{
 			Denom0:   "uion",
 			Denom1:   "uosmo",
-			TakerFee: sdk.MustNewDecFromStr("0.0013"),
+			TakerFee: osmomath.MustNewDecFromStr("0.0013"),
 		},
 		{
 			Denom0:   "stake",
 			Denom1:   "uosmo",
-			TakerFee: sdk.MustNewDecFromStr("0.0016"),
+			TakerFee: osmomath.MustNewDecFromStr("0.0016"),
 		},
 		{
 			Denom0:   "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
 			Denom1:   "uosmo",
-			TakerFee: sdk.MustNewDecFromStr("0.0017"),
+			TakerFee: osmomath.MustNewDecFromStr("0.0017"),
 		},
 	}
 
@@ -67,7 +67,7 @@ func TestDenomPairTakerFeeProposal_ValidateBasic(t *testing.T) {
 	baseRecord := types.DenomPairTakerFee{
 		Denom0:   "uion",
 		Denom1:   "uosmo",
-		TakerFee: sdk.MustNewDecFromStr("0.0013"),
+		TakerFee: osmomath.MustNewDecFromStr("0.0013"),
 	}
 
 	withSameDenom := func(record types.DenomPairTakerFee) types.DenomPairTakerFee {
@@ -86,7 +86,7 @@ func TestDenomPairTakerFeeProposal_ValidateBasic(t *testing.T) {
 	}
 
 	withInvalidTakerFee := func(record types.DenomPairTakerFee) types.DenomPairTakerFee {
-		record.TakerFee = sdk.MustNewDecFromStr("1.01")
+		record.TakerFee = osmomath.MustNewDecFromStr("1.01")
 		return record
 	}
 

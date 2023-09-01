@@ -9,6 +9,8 @@ import (
 	"unsafe"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 const (
@@ -40,20 +42,20 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// RandPositiveInt get a rand positive sdk.Int
-func RandPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {
-	if !max.GTE(sdk.OneInt()) {
-		return sdk.Int{}, errors.New("max too small")
+// RandPositiveInt get a rand positive osmomath.Int
+func RandPositiveInt(r *rand.Rand, max osmomath.Int) (osmomath.Int, error) {
+	if !max.GTE(osmomath.OneInt()) {
+		return osmomath.Int{}, errors.New("max too small")
 	}
 
-	max = max.Sub(sdk.OneInt())
+	max = max.Sub(osmomath.OneInt())
 
-	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdk.OneInt()), nil
+	return osmomath.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(osmomath.OneInt()), nil
 }
 
 // RandomAmount generates a random amount
 // Note: The range of RandomAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
+func RandomAmount(r *rand.Rand, max osmomath.Int) osmomath.Int {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
@@ -65,12 +67,12 @@ func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
 		randInt = big.NewInt(0).Rand(r, max.BigInt()) // up to max - 1
 	}
 
-	return sdk.NewIntFromBigInt(randInt)
+	return osmomath.NewIntFromBigInt(randInt)
 }
 
 // RandomDecAmount generates a random decimal amount
 // Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
+func RandomDecAmount(r *rand.Rand, max osmomath.Dec) osmomath.Dec {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
@@ -82,7 +84,7 @@ func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 		randInt = big.NewInt(0).Rand(r, max.BigInt())
 	}
 
-	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
+	return osmomath.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
 }
 
 // RandTimestamp generates a random timestamp

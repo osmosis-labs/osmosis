@@ -658,14 +658,14 @@ message ParamsResponse {
 }
 
 message Params {
-  sdk.Dec minimum_risk_factor = 1; // serialized as string
+  osmomath.Dec minimum_risk_factor = 1; // serialized as string
 }
 ```
 
 The params query returns the params for the superfluid module. This
 currently contains:
 
-- `MinimumRiskFactor` which is an sdk.Dec that represents the discount
+- `MinimumRiskFactor` which is an osmomath.Dec that represents the discount
   to apply to all superfluid staked modules when calcultating their
   staking power. For example, if a specific denom has an OSMO
   equivalent value of 100 OSMO, but the the `MinimumRiskFactor` param
@@ -886,8 +886,8 @@ This query returns the total amount of delegated coins for a validator /
 superfluid denom pair. This query does NOT involve iteration, so should
 be used instead of the above `SuperfluidDelegationsByValidatorDenom`
 whenever possible. It is called an "Estimate" because it can have some
-slight rounding errors, due to conversions between sdk.Dec and
-sdk.Int\", but for the most part it should be very close to the sum of
+slight rounding errors, due to conversions between osmomath.Dec and
+osmomath.Int\", but for the most part it should be very close to the sum of
 the results of the previous query.
 
 ## Parameters

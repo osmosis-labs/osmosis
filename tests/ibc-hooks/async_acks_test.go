@@ -11,6 +11,7 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 	"github.com/tidwall/gjson"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -37,7 +38,7 @@ func (suite *HooksTestSuite) TestWasmHooksAsyncAcks() {
 	// Calls that don't specify async acks work as expected
 	memo := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"async": {"use_async": false}}}}`, contractAddr)
 	suite.fundAccount(suite.chainB, sender)
-	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), sender.String(), contractAddr.String(), "channel-0", memo)
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", osmomath.NewInt(2000)), sender.String(), contractAddr.String(), "channel-0", memo)
 	sendResult, receiveResult, ack, err := suite.FullSend(transferMsg, BtoA)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(sendResult)
@@ -73,7 +74,7 @@ func (suite *HooksTestSuite) TestWasmHooksAsyncAcks() {
 		// Calls that specify async Acks work and no Acks are sent
 		memo = fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"async": {"use_async": true}}}}`, contractAddr)
 		suite.fundAccount(suite.chainB, sender)
-		transferMsg = NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), sender.String(), contractAddr.String(), "channel-0", memo)
+		transferMsg = NewMsgTransfer(sdk.NewCoin("token0", osmomath.NewInt(2000)), sender.String(), contractAddr.String(), "channel-0", memo)
 
 		sendResult, err = suite.chainB.SendMsgsNoCheck(transferMsg)
 		suite.Require().NoError(err)

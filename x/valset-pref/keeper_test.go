@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -33,19 +34,19 @@ func (s *KeeperTestSuite) PrepareDelegateToValidatorSet() []types.ValidatorPrefe
 	valPreferences := []types.ValidatorPreference{
 		{
 			ValOperAddress: valAddrs[0],
-			Weight:         sdk.NewDecWithPrec(2, 1), // 0.2
+			Weight:         osmomath.NewDecWithPrec(2, 1), // 0.2
 		},
 		{
 			ValOperAddress: valAddrs[1],
-			Weight:         sdk.NewDecWithPrec(332, 3), // 0.33
+			Weight:         osmomath.NewDecWithPrec(332, 3), // 0.33
 		},
 		{
 			ValOperAddress: valAddrs[2],
-			Weight:         sdk.NewDecWithPrec(12, 2), // 0.12
+			Weight:         osmomath.NewDecWithPrec(12, 2), // 0.12
 		},
 		{
 			ValOperAddress: valAddrs[3],
-			Weight:         sdk.NewDecWithPrec(348, 3), // 0.35
+			Weight:         osmomath.NewDecWithPrec(348, 3), // 0.35
 		},
 	}
 
@@ -101,7 +102,7 @@ func (s *KeeperTestSuite) AllocateRewards(ctx sdk.Context, delegator sdk.AccAddr
 }
 
 // Pres *KeeperTestSuites sets up existing delegation by creating a certain number of validators and delegating tokenAmt to them.
-func (s *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAddrs []string, delegator sdk.AccAddress, tokenAmt sdk.Int) error {
+func (s *KeeperTestSuite) PrepareExistingDelegations(ctx sdk.Context, valAddrs []string, delegator sdk.AccAddress, tokenAmt osmomath.Int) error {
 	for i := 0; i < len(valAddrs); i++ {
 		valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])
 		if err != nil {
@@ -181,7 +182,7 @@ func (s *KeeperTestSuite) TestGetDelegationPreference() {
 			}
 
 			if test.setExistingDelegations {
-				err := s.PrepareExistingDelegations(s.Ctx, valAddrs, test.delegator, sdk.NewInt(10_000_000))
+				err := s.PrepareExistingDelegations(s.Ctx, valAddrs, test.delegator, osmomath.NewInt(10_000_000))
 				s.Require().NoError(err)
 			}
 

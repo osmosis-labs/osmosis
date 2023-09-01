@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
@@ -447,13 +448,13 @@ func NewUnbondConvertAndStake() *cobra.Command {
 
 			valAddr := args[1]
 
-			var minAmtToStake sdk.Int
+			var minAmtToStake osmomath.Int
 			// if user provided args for min amount to stake, use it. If not, use empty coin struct
 			var sharesToConvert sdk.Coin
 			if len(args) >= 3 {
-				convertedInt, ok := sdk.NewIntFromString(args[2])
+				convertedInt, ok := osmomath.NewIntFromString(args[2])
 				if !ok {
-					return fmt.Errorf("Conversion for sdk.Int failed")
+					return fmt.Errorf("Conversion for osmomath.Int failed")
 				}
 				minAmtToStake = convertedInt
 				if len(args) == 4 {
@@ -464,7 +465,7 @@ func NewUnbondConvertAndStake() *cobra.Command {
 					sharesToConvert = coins
 				}
 			} else {
-				minAmtToStake = sdk.ZeroInt()
+				minAmtToStake = osmomath.ZeroInt()
 				sharesToConvert = sdk.Coin{}
 			}
 

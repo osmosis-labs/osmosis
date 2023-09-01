@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
@@ -462,12 +463,12 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 		return nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
-	spreadFactor, err := sdk.NewDecFromStr(pool.SwapFee)
+	spreadFactor, err := osmomath.NewDecFromStr(pool.SwapFee)
 	if err != nil {
 		return nil, err
 	}
 
-	exitFee, err := sdk.NewDecFromStr(pool.ExitFee)
+	exitFee, err := osmomath.NewDecFromStr(pool.ExitFee)
 	if err != nil {
 		return nil, err
 	}
@@ -557,12 +558,12 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 		return nil, err
 	}
 
-	spreadFactor, err := sdk.NewDecFromStr(flags.SwapFee)
+	spreadFactor, err := osmomath.NewDecFromStr(flags.SwapFee)
 	if err != nil {
 		return nil, err
 	}
 
-	exitFee, err := sdk.NewDecFromStr(flags.ExitFee)
+	exitFee, err := osmomath.NewDecFromStr(flags.ExitFee)
 	if err != nil {
 		return nil, err
 	}
@@ -697,7 +698,7 @@ func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, args []string, fs *
 		return nil, err
 	}
 
-	tokenInMaxAmount, ok := sdk.NewIntFromString(tokenInMaxAmountStr)
+	tokenInMaxAmount, ok := osmomath.NewIntFromString(tokenInMaxAmountStr)
 	if !ok {
 		return nil, errors.New("invalid token in max amount")
 	}
@@ -889,13 +890,13 @@ func parsePoolRecordsWithCFMMLink(cmd *cobra.Command) ([]types.PoolRecordWithCFM
 		}
 
 		exponentAtPriceOneStr := poolRecordsWithCFMMLink[i+3]
-		exponentAtPriceOne, ok := sdk.NewIntFromString(exponentAtPriceOneStr)
+		exponentAtPriceOne, ok := osmomath.NewIntFromString(exponentAtPriceOneStr)
 		if !ok {
 			return nil, fmt.Errorf("invalid exponentAtPriceOne: %s", exponentAtPriceOneStr)
 		}
 
 		spreadFactorStr := poolRecordsWithCFMMLink[i+4]
-		spreadFactor, err := sdk.NewDecFromStr(spreadFactorStr)
+		spreadFactor, err := osmomath.NewDecFromStr(spreadFactorStr)
 		if err != nil {
 			return nil, err
 		}

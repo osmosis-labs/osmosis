@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 )
@@ -29,7 +30,7 @@ import (
 // - The position is not superfluid staked.
 // - The position is the last position in the pool.
 // - The lock duration does not match the unbonding duration.
-func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, sender sdk.AccAddress, positionId uint64, amount0ToAdd, amount1ToAdd sdk.Int) (cltypes.CreateFullRangePositionData, uint64, error) {
+func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, sender sdk.AccAddress, positionId uint64, amount0ToAdd, amount1ToAdd osmomath.Int) (cltypes.CreateFullRangePositionData, uint64, error) {
 	position, err := k.clk.GetPosition(ctx, positionId)
 	if err != nil {
 		return cltypes.CreateFullRangePositionData{}, 0, err

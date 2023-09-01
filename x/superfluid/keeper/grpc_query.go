@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -233,7 +234,7 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 	res := types.SuperfluidDelegationsByDelegatorResponse{
 		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
 		TotalDelegatedCoins:         sdk.NewCoins(),
-		TotalEquivalentStakedAmount: sdk.NewCoin(appparams.BaseCoinUnit, sdk.ZeroInt()),
+		TotalEquivalentStakedAmount: sdk.NewCoin(appparams.BaseCoinUnit, osmomath.ZeroInt()),
 	}
 
 	syntheticLocks := q.Keeper.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
@@ -509,7 +510,7 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 
 		delegation, _ := q.SuperfluidDelegationsByValidatorDenom(goCtx, &types.SuperfluidDelegationsByValidatorDenomRequest{ValidatorAddress: valAddr.String(), Denom: req.Denom})
 
-		amount := sdk.ZeroInt()
+		amount := osmomath.ZeroInt()
 		for _, record := range delegation.SuperfluidDelegationRecords {
 			amount = amount.Add(record.DelegationAmount.Amount)
 		}
@@ -537,7 +538,7 @@ func (q Querier) TotalDelegationByValidatorForDenom(goCtx context.Context, req *
 func (q Querier) TotalSuperfluidDelegations(goCtx context.Context, _ *types.TotalSuperfluidDelegationsRequest) (*types.TotalSuperfluidDelegationsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	totalSuperfluidDelegated := sdk.NewInt(0)
+	totalSuperfluidDelegated := osmomath.NewInt(0)
 
 	intermediaryAccounts := q.Keeper.GetAllIntermediaryAccounts(ctx)
 	for _, intermediaryAccount := range intermediaryAccounts {

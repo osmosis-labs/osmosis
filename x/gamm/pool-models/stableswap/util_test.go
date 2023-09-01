@@ -6,10 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
-func createTestPool(t *testing.T, poolLiquidity sdk.Coins, spreadFactor, exitFee sdk.Dec, scalingFactors []uint64) types.CFMMPoolI {
+func createTestPool(t *testing.T, poolLiquidity sdk.Coins, spreadFactor, exitFee osmomath.Dec, scalingFactors []uint64) types.CFMMPoolI {
 	t.Helper()
 	scalingFactors, _ = applyScalingFactorMultiplier(scalingFactors)
 

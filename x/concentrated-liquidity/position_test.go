@@ -26,7 +26,7 @@ const (
 var (
 	DefaultIncentiveRecords = []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
 	DefaultBlockTime        = time.Unix(1, 1).UTC()
-	DefaultSpreadFactor     = sdk.NewDecWithPrec(2, 3)
+	DefaultSpreadFactor     = osmomath.NewDecWithPrec(2, 3)
 )
 
 // AssertPositionsDoNotExist checks that the positions with the given IDs do not exist on uptime accumulators.
@@ -110,7 +110,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		upperTick      int64
 		joinTime       time.Time
 		positionId     uint64
-		liquidityDelta sdk.Dec
+		liquidityDelta osmomath.Dec
 	}
 
 	tests := []struct {
@@ -119,7 +119,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		positionExists       bool
 		timeElapsedSinceInit time.Duration
 		incentiveRecords     []types.IncentiveRecord
-		expectedLiquidity    sdk.Dec
+		expectedLiquidity    osmomath.Dec
 		expectedErr          error
 	}{
 		{
@@ -206,7 +206,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Require().NoError(err)
 
 			// If positionExists set, initialize the specified position with defaultLiquidityAmt
-			preexistingLiquidity := sdk.ZeroDec()
+			preexistingLiquidity := osmomath.ZeroDec()
 			if test.positionExists {
 				// We let some fixed amount of time to elapse so we can ensure LastLiquidityUpdate time is
 				// tracked properly even with no liquidity.
@@ -287,7 +287,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			// Setup for checks
 			actualUptimeAccumDelta, expectedUptimeAccumValueGrowth, expectedIncentiveRecords, _ := emptyAccumValues, emptyAccumValues, test.incentiveRecords, sdk.DecCoins{}
 
-			timeElapsedSec := sdk.NewDec(int64(test.timeElapsedSinceInit)).Quo(sdk.NewDec(10e8))
+			timeElapsedSec := osmomath.NewDec(int64(test.timeElapsedSinceInit)).Quo(osmomath.NewDec(10e8))
 			positionName := string(types.KeyPositionId(test.param.positionId))
 
 			// Loop through each supported uptime for pool and ensure that:
@@ -339,7 +339,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 	tests := []struct {
 		name                      string
 		positionId                uint64
-		expectedPositionLiquidity sdk.Dec
+		expectedPositionLiquidity osmomath.Dec
 		expectedErr               error
 	}{
 		{
@@ -372,7 +372,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
-				s.Require().Equal(sdk.Dec{}, position.Liquidity)
+				s.Require().Equal(osmomath.Dec{}, position.Liquidity)
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(test.expectedPositionLiquidity, position.Liquidity)
@@ -757,7 +757,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 				positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, test.positionId)
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, types.PositionIdNotFoundError{PositionId: test.positionId})
-				s.Require().Equal(sdk.Dec{}, positionLiquidity)
+				s.Require().Equal(osmomath.Dec{}, positionLiquidity)
 
 				// Check that stores were deleted
 				// Retrieve the position from the store via position ID and compare to expected values.
@@ -825,20 +825,20 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 			// prepare concentrated pool with a default position
 			s.PrepareConcentratedPool()
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
-			_, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+			_, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 			s.Require().NoError(err)
 
 			// create a position from the test case
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
-			positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.position.PoolId, s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), tc.position.LowerTick, tc.position.UpperTick)
+			positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.position.PoolId, s.TestAccs[1], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), tc.position.LowerTick, tc.position.UpperTick)
 			s.Require().NoError(err)
 			tc.position.Liquidity = positionData.Liquidity
 
 			if tc.isZeroLiquidity {
 				// set the position liquidity to zero
-				tc.position.Liquidity = sdk.ZeroDec()
-				positionData.Amount0 = sdk.ZeroInt()
-				positionData.Amount1 = sdk.ZeroInt()
+				tc.position.Liquidity = osmomath.ZeroDec()
+				positionData.Amount0 = osmomath.ZeroInt()
+				positionData.Amount1 = osmomath.ZeroInt()
 			}
 
 			// calculate underlying assets from the position
@@ -957,8 +957,8 @@ func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 		err                error
 	)
 	invalidCoinsAmount := sdk.NewCoins(DefaultCoin0)
-	invalidCoin0Denom := sdk.NewCoins(sdk.NewCoin("invalidDenom", sdk.NewInt(1000000000000000000)), DefaultCoin1)
-	invalidCoin1Denom := sdk.NewCoins(DefaultCoin0, sdk.NewCoin("invalidDenom", sdk.NewInt(1000000000000000000)))
+	invalidCoin0Denom := sdk.NewCoins(sdk.NewCoin("invalidDenom", osmomath.NewInt(1000000000000000000)), DefaultCoin1)
+	invalidCoin1Denom := sdk.NewCoins(DefaultCoin0, sdk.NewCoin("invalidDenom", osmomath.NewInt(1000000000000000000)))
 
 	tests := []struct {
 		name                  string
@@ -1006,12 +1006,12 @@ func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 		{
 			name:             "err: wrong denom 0 provided for a full range",
 			coinsForPosition: invalidCoin0Denom,
-			expectedErr:      types.Amount0IsNegativeError{Amount0: sdk.ZeroInt()},
+			expectedErr:      types.Amount0IsNegativeError{Amount0: osmomath.ZeroInt()},
 		},
 		{
 			name:             "err: wrong denom 1 provided for a full range",
 			coinsForPosition: invalidCoin1Denom,
-			expectedErr:      types.Amount1IsNegativeError{Amount1: sdk.ZeroInt()},
+			expectedErr:      types.Amount1IsNegativeError{Amount1: osmomath.ZeroInt()},
 		},
 	}
 
@@ -1126,7 +1126,7 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 
 			// Create a position
 			positionId := uint64(0)
-			liquidity := sdk.ZeroDec()
+			liquidity := osmomath.ZeroDec()
 			if test.createFullRangePosition {
 				var err error
 				positionData, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), test.owner, DefaultCoins)
@@ -1135,7 +1135,7 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 				liquidity = positionData.Liquidity
 			} else {
 				var err error
-				positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), test.owner, defaultPositionCoins, sdk.ZeroInt(), sdk.ZeroInt(), test.lowerTick, test.upperTick)
+				positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), test.owner, defaultPositionCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), test.lowerTick, test.upperTick)
 				s.Require().NoError(err)
 				positionId = positionData.ID
 				liquidity = positionData.Liquidity
@@ -1514,7 +1514,7 @@ func (s *KeeperTestSuite) TestSetPosition() {
 		lowerTick        int64
 		upperTick        int64
 		joinTime         time.Time
-		liquidity        sdk.Dec
+		liquidity        osmomath.Dec
 		positionId       uint64
 		underlyingLockId uint64
 	}{
@@ -1601,21 +1601,21 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		name                 string
 		positionCoins        sdk.Coins
 		lowerTick, upperTick int64
-		updateLiquidity      sdk.Dec
+		updateLiquidity      osmomath.Dec
 	}{
 		{
 			name:            "full range + position overlapping min tick. update liquidity upwards",
 			positionCoins:   sdk.NewCoins(DefaultCoin0, DefaultCoin1),
 			lowerTick:       DefaultMinTick,
 			upperTick:       DefaultUpperTick, // max tick doesn't overlap, should not count towards full range liquidity
-			updateLiquidity: sdk.NewDec(100),
+			updateLiquidity: osmomath.NewDec(100),
 		},
 		{
 			name:            "full range + position overlapping max tick. update liquidity downwards",
 			positionCoins:   sdk.NewCoins(DefaultCoin0, DefaultCoin1),
 			lowerTick:       DefaultLowerTick, // min tick doesn't overlap, should not count towards full range liquidity
 			upperTick:       DefaultMaxTick,
-			updateLiquidity: sdk.NewDec(-100),
+			updateLiquidity: osmomath.NewDec(-100),
 		},
 	}
 
@@ -1628,7 +1628,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		// Create a new pool.
 		clPool := s.PrepareConcentratedPool()
 		clPoolId := clPool.GetId()
-		actualFullRangeLiquidity := sdk.ZeroDec()
+		actualFullRangeLiquidity := osmomath.ZeroDec()
 
 		// Create a full range position.
 		positionData, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), owner, tc.positionCoins)
@@ -1645,7 +1645,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 
 		// Create a new position that overlaps with the min tick, but is not full range and therefore should not count towards the full range liquidity.
 		s.FundAcc(owner, tc.positionCoins)
-		_, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, owner, DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), tc.lowerTick, tc.upperTick)
+		_, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, owner, DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), tc.lowerTick, tc.upperTick)
 		s.Require().NoError(err)
 
 		clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
@@ -1693,8 +1693,8 @@ func (s *KeeperTestSuite) TestGetAllPositionIdsForPoolId() {
 
 func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 	invalidCoinsAmount := sdk.NewCoins(DefaultCoin0)
-	invalidCoin0Denom := sdk.NewCoins(sdk.NewCoin("invalidDenom", sdk.NewInt(1000000000000000000)), DefaultCoin1)
-	invalidCoin1Denom := sdk.NewCoins(DefaultCoin0, sdk.NewCoin("invalidDenom", sdk.NewInt(1000000000000000000)))
+	invalidCoin0Denom := sdk.NewCoins(sdk.NewCoin("invalidDenom", osmomath.NewInt(1000000000000000000)), DefaultCoin1)
+	invalidCoin1Denom := sdk.NewCoins(DefaultCoin0, sdk.NewCoin("invalidDenom", osmomath.NewInt(1000000000000000000)))
 	zeroCoins := sdk.NewCoins()
 
 	defaultRemainingLockDuration := s.App.StakingKeeper.GetParams(s.Ctx).UnbondingTime
@@ -1714,13 +1714,13 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			name:                  "invalid coin0 denom",
 			remainingLockDuration: defaultRemainingLockDuration,
 			coinsForPosition:      invalidCoin0Denom,
-			expectedErr:           types.Amount0IsNegativeError{Amount0: sdk.ZeroInt()},
+			expectedErr:           types.Amount0IsNegativeError{Amount0: osmomath.ZeroInt()},
 		},
 		{
 			name:                  "invalid coin1 denom",
 			remainingLockDuration: defaultRemainingLockDuration,
 			coinsForPosition:      invalidCoin1Denom,
-			expectedErr:           types.Amount1IsNegativeError{Amount1: sdk.ZeroInt()},
+			expectedErr:           types.Amount1IsNegativeError{Amount1: osmomath.ZeroInt()},
 		},
 		{
 			name:                  "invalid coins amount",
@@ -1787,16 +1787,16 @@ func (s *KeeperTestSuite) TestTickRoundingEdgeCase() {
 	secondPositionAddr := testAccs[1]
 
 	// Create two identical positions with the initial assets set such that both positions are fully in one asset
-	firstPositionAssets := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(9823358512)), sdk.NewCoin(USDC, sdk.NewInt(8985893232)))
+	firstPositionAssets := sdk.NewCoins(sdk.NewCoin(ETH, osmomath.NewInt(9823358512)), sdk.NewCoin(USDC, osmomath.NewInt(8985893232)))
 	firstPosLiq, firstPosId := s.SetupPosition(pool.GetId(), firstPositionAddr, firstPositionAssets, -68720000, -68710000, true)
-	secondPositionAssets := sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(9823358512)), sdk.NewCoin(USDC, sdk.NewInt(8985893232)))
+	secondPositionAssets := sdk.NewCoins(sdk.NewCoin(ETH, osmomath.NewInt(9823358512)), sdk.NewCoin(USDC, osmomath.NewInt(8985893232)))
 	secondPosLiq, secondPosId := s.SetupPosition(pool.GetId(), secondPositionAddr, secondPositionAssets, -68720000, -68710000, true)
 
 	// Execute a swap that brings the price close enough to the edge of a tick to trigger bankers rounding
 	swapAddr := testAccs[2]
-	desiredTokenOut := sdk.NewCoin(USDC, sdk.NewInt(10000))
-	s.FundAcc(swapAddr, sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(1000000000000000000))))
-	_, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, sdk.ZeroDec(), sdk.ZeroDec())
+	desiredTokenOut := sdk.NewCoin(USDC, osmomath.NewInt(10000))
+	s.FundAcc(swapAddr, sdk.NewCoins(sdk.NewCoin(ETH, osmomath.NewInt(1000000000000000000))))
+	_, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, osmomath.ZeroDec(), osmomath.ZeroDec())
 	s.Require().NoError(err)
 
 	// Both positions should be able to withdraw successfully
@@ -2012,15 +2012,15 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 
 	var (
 		// Initialize pool with non-zero spread factor.
-		spreadFactor     = sdk.NewDecWithPrec(3, 3)
+		spreadFactor     = osmomath.NewDecWithPrec(3, 3)
 		pool             = s.PrepareCustomConcentratedPool(s.TestAccs[0], DefaultCoin0.Denom, DefaultCoin1.Denom, 1, spreadFactor)
 		poolId           = pool.GetId()
 		denom0           = pool.GetToken0()
 		denom1           = pool.GetToken1()
-		rewardsPerSecond = sdk.NewDec(1000)
+		rewardsPerSecond = osmomath.NewDec(1000)
 	)
 
-	_, err := s.clk.CreateIncentive(s.Ctx, poolId, s.TestAccs[0], sdk.NewCoin("uosmo", sdk.NewInt(1_000_000)), rewardsPerSecond, s.Ctx.BlockTime(), time.Nanosecond)
+	_, err := s.clk.CreateIncentive(s.Ctx, poolId, s.TestAccs[0], sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000)), rewardsPerSecond, s.Ctx.BlockTime(), time.Nanosecond)
 	s.Require().NoError(err)
 
 	// Estimates how much to swap in to approximately reach the given tick
@@ -2033,8 +2033,8 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 
 		s.Require().True(toTick < pool.GetCurrentTick())
 
-		amountZeroIn := math.CalcAmount0Delta(osmomath.BigDecFromSDKDec(pool.GetLiquidity()), pool.GetCurrentSqrtPrice(), s.tickToSqrtPrice(toTick), true)
-		coinZeroIn := sdk.NewCoin(denom0, amountZeroIn.SDKDec().TruncateInt())
+		amountZeroIn := math.CalcAmount0Delta(osmomath.BigDecFromDec(pool.GetLiquidity()), pool.GetCurrentSqrtPrice(), s.tickToSqrtPrice(toTick), true)
+		coinZeroIn := sdk.NewCoin(denom0, amountZeroIn.Dec().TruncateInt())
 
 		return coinZeroIn
 	}
@@ -2049,8 +2049,8 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 
 		s.Require().True(toTick > pool.GetCurrentTick())
 
-		amountOneIn := math.CalcAmount1Delta(osmomath.BigDecFromSDKDec(pool.GetLiquidity()), pool.GetCurrentSqrtPrice(), s.tickToSqrtPrice(toTick), true)
-		coinOneIn := sdk.NewCoin(denom1, amountOneIn.SDKDec().TruncateInt())
+		amountOneIn := math.CalcAmount1Delta(osmomath.BigDecFromDec(pool.GetLiquidity()), pool.GetCurrentSqrtPrice(), s.tickToSqrtPrice(toTick), true)
+		coinOneIn := sdk.NewCoin(denom1, amountOneIn.Dec().TruncateInt())
 
 		return coinOneIn
 	}
@@ -2060,18 +2060,18 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	s.CreateFullRangePosition(pool, DefaultCoins)
 
 	expectedTotalSpreadRewards := sdk.NewCoins()
-	expectedTotalIncentiveRewards := sdk.ZeroDec()
+	expectedTotalIncentiveRewards := osmomath.ZeroDec()
 
 	// Initialize position at a higher range
 	s.FundAcc(s.TestAccs[0], DefaultCoins)
-	_, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultCurrTick+50, DefaultCurrTick+100)
+	_, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultCurrTick+50, DefaultCurrTick+100)
 	s.Require().NoError(err)
 
 	// Estimate how much to swap in to approximately DefaultCurrTick - 50
 	coinZeroIn := estimateCoinZeroIn(DefaultCurrTick - 50)
 
 	// Update expected spread rewards
-	expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+	expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToLegacyDec().Mul(spreadFactor).Ceil().TruncateInt()))
 
 	// Increase block time
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
@@ -2088,7 +2088,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	coinOneIn := estimateCoinOneIn(DefaultCurrTick + 150)
 
 	// Update expected spread rewards
-	expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom1, coinOneIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+	expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom1, coinOneIn.Amount.ToLegacyDec().Mul(spreadFactor).Ceil().TruncateInt()))
 
 	// Increase block time
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
@@ -2107,7 +2107,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	// We initialized the lower tick's accumulator (DefaultCurrTick - 25) to be greater than the upper tick's accumulator (DefaultCurrTick + 50)
 	// Whenever the current tick is above the position's range, we compute in range accumulator as upper tick accumulator - lower tick accumulator
 	// In this case, it ends up being negative, which is now supported.
-	negativeIntervalAccumPositionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultCurrTick-25, DefaultCurrTick+50)
+	negativeIntervalAccumPositionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultCurrTick-25, DefaultCurrTick+50)
 	s.Require().NoError(err)
 
 	// Increase block time
@@ -2119,7 +2119,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		// Assert global invariants
 		s.assertGlobalInvariants(ExpectedGlobalRewardValues{
 			// Additive tolerance of 1 for each position.
-			ExpectedAdditiveSpreadRewardTolerance: sdk.OneDec().MulInt64(3),
+			ExpectedAdditiveSpreadRewardTolerance: osmomath.OneDec().MulInt64(3),
 			TotalSpreadRewards:                    expectedTotalSpreadRewards,
 			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("uosmo", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
 		})
@@ -2135,7 +2135,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		coinZeroIn = estimateCoinZeroIn(DefaultCurrTick - 50)
 
 		// Update expected spread rewards
-		expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+		expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToLegacyDec().Mul(spreadFactor).Ceil().TruncateInt()))
 
 		// Increase block time
 		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
@@ -2148,7 +2148,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		// Assert global invariants
 		s.assertGlobalInvariants(ExpectedGlobalRewardValues{
 			// Additive tolerance of 1 for each position.
-			ExpectedAdditiveSpreadRewardTolerance: sdk.OneDec().MulInt64(3),
+			ExpectedAdditiveSpreadRewardTolerance: osmomath.OneDec().MulInt64(3),
 			TotalSpreadRewards:                    expectedTotalSpreadRewards,
 			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("uosmo", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
 		})
@@ -2164,7 +2164,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		coinZeroIn = estimateCoinZeroIn(DefaultCurrTick - 10)
 
 		// Update expected spread rewards
-		expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+		expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToLegacyDec().Mul(spreadFactor).Ceil().TruncateInt()))
 
 		// Increase block time
 		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
@@ -2177,7 +2177,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		// Assert global invariants
 		s.assertGlobalInvariants(ExpectedGlobalRewardValues{
 			// Additive tolerance of 1 for each position.
-			ExpectedAdditiveSpreadRewardTolerance: sdk.OneDec().MulInt64(3),
+			ExpectedAdditiveSpreadRewardTolerance: osmomath.OneDec().MulInt64(3),
 			TotalSpreadRewards:                    expectedTotalSpreadRewards,
 			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("uosmo", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
 		})
@@ -2193,7 +2193,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		coinZeroIn = estimateCoinZeroIn(DefaultCurrTick - 50)
 
 		// Update expected spread rewards
-		expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+		expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom0, coinZeroIn.Amount.ToLegacyDec().Mul(spreadFactor).Ceil().TruncateInt()))
 
 		// Increase block time
 		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
@@ -2207,7 +2207,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		coinOneIn := estimateCoinOneIn(DefaultCurrTick + 150)
 
 		// Update expected spread rewards
-		expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom1, coinOneIn.Amount.ToDec().Mul(spreadFactor).Ceil().TruncateInt()))
+		expectedTotalSpreadRewards = expectedTotalSpreadRewards.Add(sdk.NewCoin(denom1, coinOneIn.Amount.ToLegacyDec().Mul(spreadFactor).Ceil().TruncateInt()))
 
 		// Increase block time
 		s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
@@ -2220,7 +2220,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		// Assert global invariants
 		s.assertGlobalInvariants(ExpectedGlobalRewardValues{
 			// Additive tolerance of 1 for each position.
-			ExpectedAdditiveSpreadRewardTolerance: sdk.OneDec().MulInt64(3),
+			ExpectedAdditiveSpreadRewardTolerance: osmomath.OneDec().MulInt64(3),
 			TotalSpreadRewards:                    expectedTotalSpreadRewards,
 			TotalIncentives:                       sdk.NewCoins(sdk.NewCoin("uosmo", expectedTotalIncentiveRewards.Ceil().TruncateInt())),
 		})

@@ -60,6 +60,7 @@ pub fn execute(
             slippage,
             next_memo,
             on_failed_delivery,
+            route,
         } => execute::unwrap_or_swap_and_forward(
             (deps, env, info),
             output_denom,
@@ -67,6 +68,7 @@ pub fn execute(
             &receiver,
             next_memo,
             on_failed_delivery,
+            route,
         ),
         ExecuteMsg::Recover {} => execute::recover(deps, info.sender),
         ExecuteMsg::TransferOwnership { new_governor } => {

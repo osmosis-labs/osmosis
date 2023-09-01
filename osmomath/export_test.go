@@ -3,7 +3,6 @@ package osmomath
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +16,7 @@ var (
 // but we can't directly import that due to import cycles.
 // Hence we use the same var name, in hopes that if any change there happens,
 // this is caught via a CTRL+F
-var MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
+var MaxSpotPrice = NewDec(2).Power(128).Sub(OneDec())
 
 // ConditionalPanic checks if expectPanic is true, asserts that sut (system under test)
 // panics. If expectPanic is false, asserts that sut does not panic.

@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
@@ -94,16 +95,16 @@ func (s *KeeperTestSuite) TestCreatePositionMsg() {
 			expectedError: types.InvalidLowerUpperTickError{LowerTick: DefaultUpperTick, UpperTick: DefaultUpperTick},
 		},
 		"error: tokens provided is three": {
-			tokensProvided: DefaultCoins.Add(sdk.NewCoin("foo", sdk.NewInt(10))),
+			tokensProvided: DefaultCoins.Add(sdk.NewCoin("foo", osmomath.NewInt(10))),
 			expectedError:  types.CoinLengthError{Length: 3, MaxLength: 2},
 		},
 		"error: token min amount 0 is negative": {
-			amount0Minimum: sdk.NewInt(-10),
-			expectedError:  types.NotPositiveRequireAmountError{Amount: sdk.NewInt(-10).String()},
+			amount0Minimum: osmomath.NewInt(-10),
+			expectedError:  types.NotPositiveRequireAmountError{Amount: osmomath.NewInt(-10).String()},
 		},
 		"error: token min amount 1 is negative": {
-			amount1Minimum: sdk.NewInt(-10),
-			expectedError:  types.NotPositiveRequireAmountError{Amount: sdk.NewInt(-10).String()},
+			amount1Minimum: osmomath.NewInt(-10),
+			expectedError:  types.NotPositiveRequireAmountError{Amount: osmomath.NewInt(-10).String()},
 		},
 	}
 	for name, tc := range testcases {
@@ -296,7 +297,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_Events() {
 
 			// Add spread rewards to the pool's accum so we aren't just claiming 0 rewards.
 			// Claiming 0 rewards is still a valid message, but is not as valuable for testing.
-			s.AddToSpreadRewardAccumulator(validPoolId, sdk.NewDecCoin(ETH, sdk.NewInt(1)))
+			s.AddToSpreadRewardAccumulator(validPoolId, sdk.NewDecCoin(ETH, osmomath.NewInt(1)))
 
 			// Determine expected rewards from all provided positions without modifying state.
 			expectedTotalSpreadRewards := sdk.Coins(nil)
@@ -419,7 +420,7 @@ func (s *KeeperTestSuite) TestCollectIncentives_Events() {
 			err = addToUptimeAccums(ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
 			s.Require().NoError(err)
 
-			numPositions := sdk.NewInt(int64(len(tc.positionIds)))
+			numPositions := osmomath.NewInt(int64(len(tc.positionIds)))
 			// Fund the incentives address with the amount of incentives we expect the positions to both claim and forfeit.
 			// The claim amount must be funded to the incentives address in order for the rewards to be sent to the user.
 			// The forfeited about must be funded to the incentives address in order for the forfeited rewards to be sent to the community pool.
