@@ -14,11 +14,13 @@ import go
 
 from BinaryExpr b
 where
-  (b.getOperator() = "==" or b.getOperator() = "<")
+  (b.getOperator() = "==" or b.getOperator() = "<" or b.getOperator() = ">" or b.getOperator() = "<=" or b.getOperator() = ">=")
   and (
     // find sdk.Dec(s)
     (b.getLeftOperand().getType().hasQualifiedName("github.com/cosmos/cosmos-sdk/types", "Dec") or b.getRightOperand().getType().hasQualifiedName("github.com/cosmos/cosmos-sdk/types", "Dec")) or
     // find sdk.Int(s)
-    (b.getLeftOperand().getType().hasQualifiedName("github.com/cosmos/cosmos-sdk/types", "Int") or b.getRightOperand().getType().hasQualifiedName("github.com/cosmos/cosmos-sdk/types", "Int"))
+    (b.getLeftOperand().getType().hasQualifiedName("github.com/cosmos/cosmos-sdk/types", "Int") or b.getRightOperand().getType().hasQualifiedName("github.com/cosmos/cosmos-sdk/types", "Int")) or 
+    // find osmomath.BigDec(s)
+    (b.getLeftOperand().getType().hasQualifiedName("github.com/osmosis-labs/osmosis/osmomath", "BigDec") or b.getRightOperand().getType().hasQualifiedName("github.com/osmosis-labs/osmosis/osmomath", "BigDec"))
   )
 select b, "Use SDK operators instead of native operators when dealing with sdk.Int or sdk.Dec."
