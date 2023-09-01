@@ -13,6 +13,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	v17 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v17"
 
@@ -72,7 +73,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().NoError(err)
 
 	// LP Fails before the upgrade
-	lpTokens := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), sdk.NewInt(1_000_000)), sdk.NewCoin(pool.GetToken1(), sdk.NewInt(1_000_000)))
+	lpTokens := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), osmomath.NewInt(1_000_000)), sdk.NewCoin(pool.GetToken1(), osmomath.NewInt(1_000_000)))
 	s.FundAcc(s.TestAccs[0], lpTokens)
 	// require a panic
 	s.Require().Panics(func() {
@@ -91,7 +92,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		Denom:         "gamm/pool/3",
 		Duration:      time.Hour * 24 * 14,
 	})
-	valueAfterClear.Equal(sdk.NewInt(shareStaysLocked))
+	valueAfterClear.Equal(osmomath.NewInt(shareStaysLocked))
 
 	s.ensurePostUpgradeDistributionWorks()
 
@@ -108,9 +109,9 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().NoError(err)
 
 	// Swap
-	toSwap := sdk.NewCoin(pool.GetToken0(), sdk.NewInt(100))
+	toSwap := sdk.NewCoin(pool.GetToken0(), osmomath.NewInt(100))
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(toSwap))
-	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], updatedCLPool, toSwap, pool.GetToken1(), sdk.NewInt(1), sdk.ZeroDec())
+	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], updatedCLPool, toSwap, pool.GetToken1(), osmomath.NewInt(1), osmomath.ZeroDec())
 	s.Require().NoError(err)
 
 }
@@ -142,13 +143,13 @@ func (suite *UpgradeTestSuite) setupPoolsToMainnetState() {
 		// If LinkedClassicPool is specified, but it's smaller than the current pool ID,
 		// create dummy pools to fill the gap.
 		for lastPoolID+1 < poolID {
-			poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(100000000000)), sdk.NewCoin(assetPair.QuoteAsset, sdk.NewInt(100000000000)))
+			poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, osmomath.NewInt(100000000000)), sdk.NewCoin(assetPair.QuoteAsset, osmomath.NewInt(100000000000)))
 			suite.PrepareBalancerPoolWithCoins(poolCoins...)
 			lastPoolID++
 		}
 
 		// Now create the pool with the correct pool ID.
-		poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, sdk.NewInt(100000000000)), sdk.NewCoin(assetPair.QuoteAsset, sdk.NewInt(100000000000)))
+		poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, osmomath.NewInt(100000000000)), sdk.NewCoin(assetPair.QuoteAsset, osmomath.NewInt(100000000000)))
 		suite.PrepareBalancerPoolWithCoins(poolCoins...)
 
 		// Enable the GAMM pool for superfluid if the record says so.
@@ -177,13 +178,13 @@ func (s *UpgradeTestSuite) setupCorruptedState() {
 	addr, err := sdk.AccAddressFromBech32("osmo1urn0pnx8fl5kt89r5nzqd8htruq7skadc2xdk3")
 	s.Require().NoError(err)
 	keepers := &s.App.AppKeepers
-	err = keepers.BankKeeper.MintCoins(s.Ctx, protorevtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(v17.OSMO, sdk.NewInt(50000000000))))
+	err = keepers.BankKeeper.MintCoins(s.Ctx, protorevtypes.ModuleName, sdk.NewCoins(sdk.NewCoin(v17.OSMO, osmomath.NewInt(50000000000))))
 	s.Require().NoError(err)
-	err = keepers.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, protorevtypes.ModuleName, addr, sdk.NewCoins(sdk.NewCoin(v17.OSMO, sdk.NewInt(50000000000))))
+	err = keepers.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, protorevtypes.ModuleName, addr, sdk.NewCoins(sdk.NewCoin(v17.OSMO, osmomath.NewInt(50000000000))))
 	s.Require().NoError(err)
 	aktGAMMPool, err := keepers.GAMMKeeper.GetPool(s.Ctx, 3)
 	s.Require().NoError(err)
-	sharesOut, err := keepers.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, addr, aktGAMMPool.GetId(), sdk.NewCoins(sdk.NewCoin(v17.OSMO, sdk.NewInt(50000000000))), sdk.ZeroInt())
+	sharesOut, err := keepers.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, addr, aktGAMMPool.GetId(), sdk.NewCoins(sdk.NewCoin(v17.OSMO, osmomath.NewInt(50000000000))), osmomath.ZeroInt())
 	s.Require().NoError(err)
 	aktSharesDenom := fmt.Sprintf("gamm/pool/%d", aktGAMMPool.GetId())
 	shareCoins := sdk.NewCoins(sdk.NewCoin(aktSharesDenom, sharesOut))
@@ -192,7 +193,7 @@ func (s *UpgradeTestSuite) setupCorruptedState() {
 
 	// also create a lock with the shares that would stay locked during the upgrade.
 	// doing this would help us assert if the accumulator has been resetted to the correct value.
-	shareCoinsStaysLocked := sdk.NewCoins(sdk.NewCoin(aktSharesDenom, sdk.NewInt(shareStaysLocked)))
+	shareCoinsStaysLocked := sdk.NewCoins(sdk.NewCoin(aktSharesDenom, osmomath.NewInt(shareStaysLocked)))
 	s.FundAcc(addr, shareCoinsStaysLocked)
 	_, err = keepers.LockupKeeper.CreateLock(s.Ctx, addr, shareCoinsStaysLocked, time.Hour*24*14)
 	s.Require().NoError(err)
@@ -252,7 +253,7 @@ func (suite *UpgradeTestSuite) ensurePreUpgradeDistributionPanics() {
 	suite.App.GAMMKeeper.SetMigrationRecords(suite.Ctx, migrationInfo)
 
 	// add new coins to the CL pool gauge so that it would be distributed after epoch ends then trigger panic
-	coinsToAdd := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000)))
+	coinsToAdd := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000)))
 	gagueId, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, clPool.GetId(), epochInfo.Duration)
 	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gagueId)
 	suite.Require().NoError(err)

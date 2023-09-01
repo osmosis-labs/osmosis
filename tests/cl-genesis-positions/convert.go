@@ -71,8 +71,8 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 	}
 
 	initAmounts := sdk.NewCoins(
-		sdk.NewCoin(denom0, sdk.NewInt(1000000000000000000)),
-		sdk.NewCoin(denom1, sdk.NewInt(1000000000000000000)),
+		sdk.NewCoin(denom0, osmomath.NewInt(1000000000000000000)),
+		sdk.NewCoin(denom1, osmomath.NewInt(1000000000000000000)),
 	)
 
 	// fund all accounts
@@ -88,7 +88,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		Denom0:       denom0,
 		Denom1:       denom1,
 		TickSpacing:  100,
-		SpreadFactor: sdk.MustNewDecFromStr("0.0005"),
+		SpreadFactor: osmomath.MustNewDecFromStr("0.0005"),
 	}
 
 	err := msgCreatePool.ValidateBasic()
@@ -111,7 +111,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 	// Initialize first position to be 1:1 price
 	// this is because the first position must have non-zero token0 and token1 to initialize the price
 	// however, our data has first position with non-zero amount.
-	_, err = osmosis.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(osmosis.Ctx, pool.GetId(), osmosis.TestAccs[0], sdk.NewCoins(sdk.NewCoin(msgCreatePool.Denom0, sdk.NewInt(100)), sdk.NewCoin(msgCreatePool.Denom1, sdk.NewInt(100))))
+	_, err = osmosis.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(osmosis.Ctx, pool.GetId(), osmosis.TestAccs[0], sdk.NewCoins(sdk.NewCoin(msgCreatePool.Denom0, osmomath.NewInt(100)), sdk.NewCoin(msgCreatePool.Denom1, osmomath.NewInt(100))))
 	if err != nil {
 		panic(err)
 	}
@@ -138,7 +138,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		if err != nil {
 			panic(err)
 		}
-		lowerTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrtPriceLower), pool.GetTickSpacing())
+		lowerTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromDec(sqrtPriceLower), pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}
@@ -147,7 +147,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		if err != nil {
 			panic(err)
 		}
-		upperTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrtPriceUpper), pool.GetTickSpacing())
+		upperTickOsmosis, err := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromDec(sqrtPriceUpper), pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}
@@ -185,8 +185,8 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			LowerTick:       lowerTickOsmosis,
 			UpperTick:       upperTickOsmosis,
 			TokensProvided:  tokensProvided,
-			TokenMinAmount0: sdk.ZeroInt(),
-			TokenMinAmount1: sdk.ZeroInt(),
+			TokenMinAmount0: osmomath.ZeroInt(),
+			TokenMinAmount1: osmomath.ZeroInt(),
 		})
 		if err != nil {
 			fmt.Printf("\n\n\nWARNING: Failed to create position: %v\n\n\n", err)
@@ -230,7 +230,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 	return clGenesis, bankGenesis
 }
 
-func parsePrice(strPrice string) (result sdk.Dec) {
+func parsePrice(strPrice string) (result osmomath.Dec) {
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -250,11 +250,11 @@ func parsePrice(strPrice string) (result sdk.Dec) {
 			result = cltypes.MinSpotPrice
 		}
 	}()
-	result = osmomath.MustNewDecFromStr(strPrice).SDKDec()
+	result = osmomath.MustNewBigDecFromStr(strPrice).Dec()
 	return result
 }
 
-func parseStringToInt(strInt string) (result sdk.Int, failedParsing bool) {
+func parseStringToInt(strInt string) (result osmomath.Int, failedParsing bool) {
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -262,7 +262,7 @@ func parseStringToInt(strInt string) (result sdk.Int, failedParsing bool) {
 			failedParsing = true
 		}
 	}()
-	result = osmomath.MustNewDecFromStr(strInt).SDKDec().MulInt64(int64(osmosisPrecision)).TruncateInt()
+	result = osmomath.MustNewBigDecFromStr(strInt).Dec().MulInt64(int64(osmosisPrecision)).TruncateInt()
 	return result, failedParsing
 }
 

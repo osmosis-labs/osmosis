@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,24 +26,24 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(100),
+					Weight:  osmomath.NewInt(100),
 				},
 				{
 					GaugeId: 2,
-					Weight:  sdk.NewInt(200),
+					Weight:  osmomath.NewInt(200),
 				},
 				{
 					GaugeId: 3,
-					Weight:  sdk.NewInt(300),
+					Weight:  osmomath.NewInt(300),
 				},
 			},
-			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15000)),
+			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(15000)),
 			expectedGaugesBalances: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2500))),
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(4999))),
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(7500))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(2500))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(4999))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(7500))),
 			},
-			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
+			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, osmomath.NewInt(0)),
 		},
 
 		// With minting 30000 stake to module, after AllocateAsset we get:
@@ -55,33 +56,33 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 0,
-					Weight:  sdk.NewInt(700),
+					Weight:  osmomath.NewInt(700),
 				},
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(100),
+					Weight:  osmomath.NewInt(100),
 				},
 				{
 					GaugeId: 2,
-					Weight:  sdk.NewInt(200),
+					Weight:  osmomath.NewInt(200),
 				},
 			},
-			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30000)),
+			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(30000)),
 			expectedGaugesBalances: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0))),
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000))),
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(6000))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(0))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(3000))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(6000))),
 			},
-			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(21000)),
+			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, osmomath.NewInt(21000)),
 		},
 		// With minting 30000 stake to module, after AllocateAsset we get:
 		// 	expectedCommunityPool = 30000 (Cause there are no gauges, all rewards are transferred to the community pool)
 		{
 			name:                   "community pool distribution when no distribution records are set",
 			testingDistrRecord:     []types.DistrRecord{},
-			mintedCoins:            sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30000)),
+			mintedCoins:            sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(30000)),
 			expectedGaugesBalances: []sdk.Coins{},
-			expectedCommunityPool:  sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(30000)),
+			expectedCommunityPool:  sdk.NewDecCoin(sdk.DefaultBondDenom, osmomath.NewInt(30000)),
 		},
 	}
 
@@ -130,13 +131,13 @@ func (s *KeeperTestSuite) TestReplaceDistrRecords() {
 		testingDistrRecord []types.DistrRecord
 		isPoolPrepared     bool
 		expectErr          bool
-		expectTotalWeight  sdk.Int
+		expectTotalWeight  osmomath.Int
 	}{
 		{
 			name: "Not existent gauge.",
 			testingDistrRecord: []types.DistrRecord{{
 				GaugeId: 1,
-				Weight:  sdk.NewInt(100),
+				Weight:  osmomath.NewInt(100),
 			}},
 			isPoolPrepared: false,
 			expectErr:      true,
@@ -146,11 +147,11 @@ func (s *KeeperTestSuite) TestReplaceDistrRecords() {
 			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(100),
+					Weight:  osmomath.NewInt(100),
 				},
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(200),
+					Weight:  osmomath.NewInt(200),
 				},
 			},
 			isPoolPrepared: true,
@@ -161,11 +162,11 @@ func (s *KeeperTestSuite) TestReplaceDistrRecords() {
 			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 2,
-					Weight:  sdk.NewInt(200),
+					Weight:  osmomath.NewInt(200),
 				},
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(250),
+					Weight:  osmomath.NewInt(250),
 				},
 			},
 			isPoolPrepared: true,
@@ -176,32 +177,32 @@ func (s *KeeperTestSuite) TestReplaceDistrRecords() {
 			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 0,
-					Weight:  sdk.NewInt(100),
+					Weight:  osmomath.NewInt(100),
 				},
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(100),
+					Weight:  osmomath.NewInt(100),
 				},
 			},
 			isPoolPrepared:    true,
 			expectErr:         false,
-			expectTotalWeight: sdk.NewInt(200),
+			expectTotalWeight: osmomath.NewInt(200),
 		},
 		{
 			name: "With different weights",
 			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 0,
-					Weight:  sdk.NewInt(100),
+					Weight:  osmomath.NewInt(100),
 				},
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(200),
+					Weight:  osmomath.NewInt(200),
 				},
 			},
 			isPoolPrepared:    true,
 			expectErr:         false,
-			expectTotalWeight: sdk.NewInt(300),
+			expectTotalWeight: osmomath.NewInt(300),
 		},
 	}
 
@@ -237,13 +238,13 @@ func (s *KeeperTestSuite) TestUpdateDistrRecords() {
 		testingDistrRecord []types.DistrRecord
 		isPoolPrepared     bool
 		expectErr          bool
-		expectTotalWeight  sdk.Int
+		expectTotalWeight  osmomath.Int
 	}{
 		{
 			name: "Not existent gauge.",
 			testingDistrRecord: []types.DistrRecord{{
 				GaugeId: 1,
-				Weight:  sdk.NewInt(100),
+				Weight:  osmomath.NewInt(100),
 			}},
 			isPoolPrepared: false,
 			expectErr:      true,
@@ -253,11 +254,11 @@ func (s *KeeperTestSuite) TestUpdateDistrRecords() {
 			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(100),
+					Weight:  osmomath.NewInt(100),
 				},
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(100),
+					Weight:  osmomath.NewInt(100),
 				},
 			},
 			isPoolPrepared: true,
@@ -268,11 +269,11 @@ func (s *KeeperTestSuite) TestUpdateDistrRecords() {
 			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 2,
-					Weight:  sdk.NewInt(100),
+					Weight:  osmomath.NewInt(100),
 				},
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(200),
+					Weight:  osmomath.NewInt(200),
 				},
 			},
 			isPoolPrepared: true,
@@ -283,32 +284,32 @@ func (s *KeeperTestSuite) TestUpdateDistrRecords() {
 			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 0,
-					Weight:  sdk.NewInt(100),
+					Weight:  osmomath.NewInt(100),
 				},
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(100),
+					Weight:  osmomath.NewInt(100),
 				},
 			},
 			isPoolPrepared:    true,
 			expectErr:         false,
-			expectTotalWeight: sdk.NewInt(200),
+			expectTotalWeight: osmomath.NewInt(200),
 		},
 		{
 			name: "With different weights",
 			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 0,
-					Weight:  sdk.NewInt(100),
+					Weight:  osmomath.NewInt(100),
 				},
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(200),
+					Weight:  osmomath.NewInt(200),
 				},
 			},
 			isPoolPrepared:    true,
 			expectErr:         false,
-			expectTotalWeight: sdk.NewInt(300),
+			expectTotalWeight: osmomath.NewInt(300),
 		},
 	}
 

@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/x/mint/keeper"
@@ -76,66 +77,66 @@ func (s *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight int
 		// testing edge cases of multiple tests.
 		developerVestingAccount := accountKeeper.GetAccount(s.Ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
 		accountKeeper.RemoveAccount(s.Ctx, developerVestingAccount)
-		err := bankKeeper.BurnCoins(s.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount))))
+		err := bankKeeper.BurnCoins(s.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(keeper.DeveloperVestingAmount))))
 		s.Require().Error(err)
 
 		// If developer module account is created, the s.Setup() also sets the offset,
 		// therefore, we should reset it to 0 to set up the environment truly w/o the module account.
 		supplyOffset := bankKeeper.GetSupplyOffset(s.Ctx, sdk.DefaultBondDenom)
-		bankKeeper.AddSupplyOffset(s.Ctx, sdk.DefaultBondDenom, supplyOffset.Mul(sdk.NewInt(-1)))
-		s.Require().Equal(sdk.ZeroInt(), bankKeeper.GetSupplyOffset(s.Ctx, sdk.DefaultBondDenom))
+		bankKeeper.AddSupplyOffset(s.Ctx, sdk.DefaultBondDenom, supplyOffset.Mul(osmomath.NewInt(-1)))
+		s.Require().Equal(osmomath.ZeroInt(), bankKeeper.GetSupplyOffset(s.Ctx, sdk.DefaultBondDenom))
 	}
 }
 
 // TestGetProportions tests that mint allocations are computed as expected.
 func (s *KeeperTestSuite) TestGetProportions() {
-	complexRatioDec := sdk.NewDecWithPrec(131, 3).Quo(sdk.NewDecWithPrec(273, 3))
+	complexRatioDec := osmomath.NewDecWithPrec(131, 3).Quo(osmomath.NewDecWithPrec(273, 3))
 
 	tests := []struct {
 		name          string
-		ratio         sdk.Dec
+		ratio         osmomath.Dec
 		expectedCoin  sdk.Coin
 		expectedError error
 		mintedCoin    sdk.Coin
 	}{
 		{
 			name:         "0 * 0.2 = 0",
-			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
-			ratio:        sdk.NewDecWithPrec(2, 1),
-			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
+			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(0)),
+			ratio:        osmomath.NewDecWithPrec(2, 1),
+			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(0)),
 		},
 		{
 			name:         "100000 * 0.2 = 20000",
-			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000)),
-			ratio:        sdk.NewDecWithPrec(2, 1),
-			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000).Quo(sdk.NewInt(5))),
+			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100000)),
+			ratio:        osmomath.NewDecWithPrec(2, 1),
+			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100000).Quo(osmomath.NewInt(5))),
 		},
 		{
 			name:         "123456 * 2/3 = 82304",
-			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(123456)),
-			ratio:        sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
-			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(82304)),
+			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(123456)),
+			ratio:        osmomath.NewDecWithPrec(2, 1).Quo(osmomath.NewDecWithPrec(3, 1)),
+			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(82304)),
 		},
 		{
-			name:       "54617981 * .131/.273 approx = 2.62",
-			mintedCoin: sdk.NewCoin("uosmo", sdk.NewInt(54617981)),
+			name:       "54617981 * .131/.273osmomath.NewInt(.62",
+			mintedCoin: sdk.NewCoin("uosmo", osmomath.NewInt(54617981)),
 			ratio:      complexRatioDec, // .131/.273
 			// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
-			// Ref: https://github.com/osmosis-labs/osmosis/issues/1917
-			expectedCoin: sdk.NewCoin("uosmo", sdk.NewInt(54617981).ToDec().Mul(complexRatioDec).TruncateInt()),
+			// Ref: https://github.com/osmosis-osmomath.NewInt(s/issues/1917
+			expectedCoin: sdk.NewCoin("uosmo", osmomath.NewInt(54617981).ToLegacyDec().Mul(complexRatioDec).TruncateInt()),
 		},
 		{
 			name:         "1 * 1 = 1",
-			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
-			ratio:        sdk.NewDec(1),
-			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
+			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1)),
+			ratio:        osmomath.NewDec(1),
+			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1)),
 		},
 		{
 			name:       "1 * 1.01 - error, ratio must be <= 1",
-			mintedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
-			ratio:      sdk.NewDecWithPrec(101, 2),
+			mintedCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(0)),
+			ratio:      osmomath.NewDecWithPrec(101, 2),
 
-			expectedError: keeper.ErrInvalidRatio{ActualRatio: sdk.NewDecWithPrec(101, 2)},
+			expectedError: keeper.ErrInvalidRatio{ActualRatio: osmomath.NewDecWithPrec(101, 2)},
 		},
 	}
 
@@ -172,29 +173,29 @@ func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 			weightedAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
-			mintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(mintAmount)),
+			mintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(mintAmount)),
 		},
 		{
 			name: "multiple dev reward addresses",
 			weightedAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressThree.String(),
-					Weight:  sdk.NewDecWithPrec(6, 1),
+					Weight:  osmomath.NewDecWithPrec(6, 1),
 				},
 				{
 					Address: testAddressFour.String(),
-					Weight:  sdk.NewDecWithPrec(4, 1),
+					Weight:  osmomath.NewDecWithPrec(4, 1),
 				},
 			},
-			mintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(mintAmount)),
+			mintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(mintAmount)),
 		},
 		{
 			name:              "nil dev reward address - dev rewards go to community pool",
 			weightedAddresses: nil,
-			mintCoin:          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(mintAmount)),
+			mintCoin:          sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(mintAmount)),
 		},
 	}
 	for _, tc := range tests {
@@ -213,7 +214,7 @@ func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 			// is called once.
 			mintKeeper.SetMintHooksUnsafe(&mintHooksMock{})
 
-			mintAmount := tc.mintCoin.Amount.ToDec()
+			mintAmount := tc.mintCoin.Amount.ToLegacyDec()
 
 			// set WeightedDeveloperRewardsReceivers
 			params.WeightedDeveloperRewardsReceivers = tc.weightedAddresses
@@ -222,7 +223,7 @@ func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 			expectedCommunityPoolAmount := mintAmount.Mul((params.DistributionProportions.CommunityPool))
 			expectedDevRewardsAmount := mintAmount.Mul(params.DistributionProportions.DeveloperRewards)
 			expectedPoolIncentivesAmount := mintAmount.Mul(params.DistributionProportions.PoolIncentives)
-			expectedStakingAmount := tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.Staking)
+			expectedStakingAmount := tc.mintCoin.Amount.ToLegacyDec().Mul(params.DistributionProportions.Staking)
 
 			// distributions go to community pool because nil dev reward addresses.
 			if tc.weightedAddresses == nil {
@@ -242,17 +243,17 @@ func (s *KeeperTestSuite) TestDistributeMintedCoin() {
 			s.Require().Equal(1, hooks.hookCallCount)
 
 			// validate distributions to fee collector.
-			feeCollectorBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(authtypes.FeeCollectorName), sdk.DefaultBondDenom).Amount.ToDec()
+			feeCollectorBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(authtypes.FeeCollectorName), sdk.DefaultBondDenom).Amount.ToLegacyDec()
 			s.Require().Equal(
 				expectedStakingAmount,
 				feeCollectorBalanceAmount)
 
 			// validate pool incentives distributions.
-			actualPoolIncentivesBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(poolincentivestypes.ModuleName), sdk.DefaultBondDenom).Amount.ToDec()
+			actualPoolIncentivesBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(poolincentivestypes.ModuleName), sdk.DefaultBondDenom).Amount.ToLegacyDec()
 			s.Require().Equal(expectedPoolIncentivesAmount, actualPoolIncentivesBalance)
 
 			// validate distributions to community pool.
-			actualCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), sdk.DefaultBondDenom).Amount.ToDec()
+			actualCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), sdk.DefaultBondDenom).Amount.ToLegacyDec()
 			s.Require().Equal(expectedCommunityPoolAmount, actualCommunityPoolBalanceAmount)
 
 			// validate distributions to developer addresses.
@@ -276,7 +277,7 @@ func (s *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 	}{
 		"valid call": {
 			blockHeight: 0,
-			amount:      sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
+			amount:      sdk.NewCoin("stake", osmomath.NewInt(keeper.DeveloperVestingAmount)),
 		},
 		"nil amount": {
 			blockHeight:   0,
@@ -284,12 +285,12 @@ func (s *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 		},
 		"zero amount": {
 			blockHeight:   0,
-			amount:        sdk.NewCoin("stake", sdk.NewInt(0)),
+			amount:        sdk.NewCoin("stake", osmomath.NewInt(0)),
 			expectedError: errorsmod.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
 		},
 		"module account is already created": {
 			blockHeight:                     0,
-			amount:                          sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
+			amount:                          sdk.NewCoin("stake", osmomath.NewInt(keeper.DeveloperVestingAmount)),
 			isDeveloperModuleAccountCreated: true,
 			expectedError:                   errorsmod.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName),
 		},
@@ -326,58 +327,58 @@ func (s *KeeperTestSuite) TestDistributeToModule() {
 
 		recepientModule string
 		mintedCoin      sdk.Coin
-		proportion      sdk.Dec
+		proportion      osmomath.Dec
 
 		expectedError bool
 		expectPanic   bool
 	}{
-		"pre-mint == distribute - poolincentives module - full amount - success": {
-			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+		"pre-mint == distribute - poolincentives module osmomath.NewInt(nt - success": {
+			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
 
 			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
-			proportion:      sdk.NewDec(1),
+			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
+			proportion:      osmomath.NewDec(1),
 		},
-		"pre-mint > distribute - developer vesting module - two thirds - success": {
-			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(101)),
+		"pre-mint > distribute - developer vesting modulosmomath.NewInt(rds - success": {
+			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(101)),
 
 			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
-			proportion:      sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
+			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
+			proportion:      osmomath.NewDecWithPrec(2, 1).Quo(osmomath.NewDecWithPrec(3, 1)),
 		},
 		"pre-mint < distribute (0) - error": {
-			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
+			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(0)),
 
 			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
-			proportion:      sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
+			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
+			proportion:      osmomath.NewDecWithPrec(2, 1).Quo(osmomath.NewDecWithPrec(3, 1)),
 
 			expectedError: true,
 		},
 		"denom does not exist - error": {
-			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
 
 			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewCoin(denomDoesNotExist, sdk.NewInt(100)),
-			proportion:      sdk.NewDec(1),
+			mintedCoin:      sdk.NewCoin(denomDoesNotExist, osmomath.NewInt(100)),
+			proportion:      osmomath.NewDec(1),
 
 			expectedError: true,
 		},
 		"invalid module account -panic": {
-			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
 
 			recepientModule: moduleAccountDoesNotExist,
-			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
-			proportion:      sdk.NewDec(1),
+			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
+			proportion:      osmomath.NewDec(1),
 
 			expectPanic: true,
 		},
 		"proportion greater than 1 - error": {
-			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(300)),
+			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(300)),
 
 			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
-			proportion:      sdk.NewDec(2),
+			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(100)),
+			proportion:      osmomath.NewDec(2),
 
 			expectedError: true,
 		},
@@ -396,7 +397,7 @@ func (s *KeeperTestSuite) TestDistributeToModule() {
 
 				// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
 				// Ref: https://github.com/osmosis-labs/osmosis/issues/1917
-				expectedDistributed := tc.mintedCoin.Amount.ToDec().Mul(tc.proportion).TruncateInt()
+				expectedDistributed := tc.mintedCoin.Amount.ToLegacyDec().Mul(tc.proportion).TruncateInt()
 				oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.mintedCoin.Denom).Amount
 				oldRecepientModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(tc.recepientModule), tc.mintedCoin.Denom).Amount
 
@@ -409,7 +410,7 @@ func (s *KeeperTestSuite) TestDistributeToModule() {
 
 				if tc.expectedError {
 					s.Require().Error(err)
-					s.Require().Equal(actualDistributed, sdk.Int{})
+					s.Require().Equal(actualDistributed, osmomath.Int{})
 					// Old balances should not change.
 					s.Require().Equal(oldMintModuleBalanceAmount.Int64(), actualMintModuleBalanceAmount.Int64())
 					s.Require().Equal(oldRecepientModuleBalanceAmount.Int64(), actualRecepientModuleBalanceAmount.Int64())
@@ -439,17 +440,17 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 	)
 
 	var (
-		validLargePreMintAmount  = sdk.NewInt(keeper.DeveloperVestingAmount)
-		validPreMintAmountAddOne = sdk.NewInt(keeper.DeveloperVestingAmount).Add(sdk.OneInt())
+		validLargePreMintAmount  = osmomath.NewInt(keeper.DeveloperVestingAmount)
+		validPreMintAmountAddOne = osmomath.NewInt(keeper.DeveloperVestingAmount).Add(osmomath.OneInt())
 		validPreMintCoin         = sdk.NewCoin(sdk.DefaultBondDenom, validLargePreMintAmount)
-		validPreMintCoinSubOne   = sdk.NewCoin(sdk.DefaultBondDenom, validLargePreMintAmount.Sub(sdk.OneInt()))
+		validPreMintCoinSubOne   = sdk.NewCoin(sdk.DefaultBondDenom, validLargePreMintAmount.Sub(osmomath.OneInt()))
 	)
 
 	tests := map[string]struct {
 		preMintCoin sdk.Coin
 
 		mintedCoin         sdk.Coin
-		proportion         sdk.Dec
+		proportion         osmomath.Dec
 		recepientAddresses []types.WeightedAddress
 
 		expectedError error
@@ -463,31 +464,30 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			preMintCoin: validPreMintCoin,
 
 			mintedCoin: validPreMintCoin,
-			proportion: sdk.NewDecWithPrec(153, 3),
+			proportion: osmomath.NewDecWithPrec(153, 3),
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 		},
 		"valid case with 3 weighted addresses and custom large mint amount under pre mint": {
 			preMintCoin: validPreMintCoin,
-
-			mintedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(939_123_546_789)),
-			proportion: sdk.NewDecWithPrec(31347, 5),
+			mintedCoin:  sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(939_123_546_789)),
+			proportion:  osmomath.NewDecWithPrec(31347, 5),
 			recepientAddresses: []types.WeightedAddress{ // .231 + .4 + .369
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDecWithPrec(231, 3),
+					Weight:  osmomath.NewDecWithPrec(231, 3),
 				},
 				{
 					Address: testAddressTwo.String(),
-					Weight:  sdk.NewDecWithPrec(4, 1),
+					Weight:  osmomath.NewDecWithPrec(4, 1),
 				},
 				{
 					Address: testAddressThree.String(),
-					Weight:  sdk.NewDecWithPrec(369, 3),
+					Weight:  osmomath.NewDecWithPrec(369, 3),
 				},
 			},
 		},
@@ -495,15 +495,15 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			preMintCoin: validPreMintCoin,
 
 			mintedCoin: validPreMintCoin,
-			proportion: sdk.NewDecWithPrec(123, 3),
+			proportion: osmomath.NewDecWithPrec(123, 3),
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDecWithPrec(5, 1),
+					Weight:  osmomath.NewDecWithPrec(5, 1),
 				},
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDecWithPrec(5, 1),
+					Weight:  osmomath.NewDecWithPrec(5, 1),
 				},
 			},
 			// Since we have double the full amount allocated
@@ -515,17 +515,17 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			preMintCoin: validPreMintCoin,
 
 			mintedCoin: validPreMintCoin,
-			proportion: sdk.NewDecWithPrec(153, 3),
+			proportion: osmomath.NewDecWithPrec(153, 3),
 		},
 		"valid case with 0 amount of total minted coin": {
 			preMintCoin: validPreMintCoin,
 
-			mintedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
-			proportion: sdk.NewDecWithPrec(153, 3),
+			mintedCoin: sdk.NewCoin(sdk.DefaultBondDenom, osmomath.ZeroInt()),
+			proportion: osmomath.NewDecWithPrec(153, 3),
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 		},
@@ -533,25 +533,25 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			preMintCoin: validPreMintCoin,
 
 			mintedCoin: validPreMintCoin,
-			proportion: sdk.NewDec(2),
+			proportion: osmomath.NewDec(2),
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 
-			expectedError: keeper.ErrInvalidRatio{ActualRatio: sdk.NewDec(2)},
+			expectedError: keeper.ErrInvalidRatio{ActualRatio: osmomath.NewDec(2)},
 		},
 		"invalid address in developer reward receivers - error": {
 			preMintCoin: validPreMintCoin,
 
 			mintedCoin: validPreMintCoin,
-			proportion: sdk.NewDecWithPrec(153, 3),
+			proportion: osmomath.NewDecWithPrec(153, 3),
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: invalidAddress,
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 
@@ -566,11 +566,11 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			preMintCoin: validPreMintCoinSubOne,
 
 			mintedCoin: validPreMintCoin,
-			proportion: sdk.OneDec(),
+			proportion: osmomath.OneDec(),
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 			expectedError: errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", validPreMintCoinSubOne, validPreMintCoin)),
@@ -579,11 +579,11 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			preMintCoin: validPreMintCoin,
 
 			mintedCoin: sdk.NewCoin(sdk.DefaultBondDenom, validPreMintAmountAddOne),
-			proportion: sdk.OneDec(),
+			proportion: osmomath.OneDec(),
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 			expectedError: keeper.ErrInsufficientDevVestingBalance{ActualBalance: validPreMintCoin.Amount, AttemptedDistribution: validPreMintAmountAddOne},
@@ -592,11 +592,11 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			preMintCoin: validPreMintCoin,
 
 			mintedCoin: validPreMintCoin,
-			proportion: sdk.NewDecWithPrec(153, 3),
+			proportion: osmomath.NewDecWithPrec(153, 3),
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: keeper.EmptyWeightedAddressReceiver,
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 		},
@@ -604,15 +604,15 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			preMintCoin: validPreMintCoin,
 
 			mintedCoin: validPreMintCoin,
-			proportion: sdk.NewDecWithPrec(153, 3),
+			proportion: osmomath.NewDecWithPrec(153, 3),
 			recepientAddresses: []types.WeightedAddress{
 				{
 					Address: keeper.EmptyWeightedAddressReceiver,
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDec(1),
+					Weight:  osmomath.NewDec(1),
 				},
 			},
 		},
@@ -632,12 +632,12 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 
 				// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
 				// Ref: https://github.com/osmosis-labs/osmosis/issues/1917
-				expectedDistributed := tc.mintedCoin.Amount.ToDec().Mul(tc.proportion).TruncateInt()
+				expectedDistributed := tc.mintedCoin.Amount.ToLegacyDec().Mul(tc.proportion).TruncateInt()
 
 				oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.mintedCoin.Denom).Amount
 				oldDeveloperVestingModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), tc.mintedCoin.Denom).Amount
 				oldCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), tc.mintedCoin.Denom).Amount
-				oldDeveloperRewardsBalanceAmounts := make([]sdk.Int, len(tc.recepientAddresses))
+				oldDeveloperRewardsBalanceAmounts := make([]osmomath.Int, len(tc.recepientAddresses))
 				for i, weightedAddress := range tc.recepientAddresses {
 					if weightedAddress.Address == keeper.EmptyWeightedAddressReceiver {
 						continue
@@ -659,7 +659,7 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 				if tc.expectedError != nil {
 					s.Require().Error(err)
 					s.Require().Equal(tc.expectedError.Error(), err.Error())
-					s.Require().Equal(actualDistributed, sdk.Int{})
+					s.Require().Equal(actualDistributed, osmomath.Int{})
 
 					// See testcases with this flag set to true for details.
 					if tc.allowBalanceChange {
@@ -690,12 +690,11 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 
 				// TODO: these should be equal, slightly off due to known rounding issues: https://github.com/osmosis-labs/osmosis/issues/1917
 				// s.Require().Equal(oldDeveloperVestingModuleBalanceAmount.Sub(expectedDistributed).Int64(), actualDeveloperVestingModuleBalanceAmount.Int64())
-
-				expectedDistributedCommunityPool := sdk.NewInt(0)
+				expectedDistributedCommunityPool := osmomath.NewInt(0)
 
 				for i, weightedAddress := range tc.recepientAddresses {
 					// TODO: truncation should not occur: https://github.com/osmosis-labs/osmosis/issues/1917
-					expectedAllocation := expectedDistributed.ToDec().Mul(tc.recepientAddresses[i].Weight).TruncateInt()
+					expectedAllocation := expectedDistributed.ToLegacyDec().Mul(tc.recepientAddresses[i].Weight).TruncateInt()
 
 					if weightedAddress.Address == keeper.EmptyWeightedAddressReceiver {
 						expectedDistributedCommunityPool = expectedDistributedCommunityPool.Add(expectedAllocation)
@@ -709,7 +708,7 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 
 					// Edge case. See testcases with this flag set to true for details.
 					if tc.expectSameAddresses {
-						s.Require().Equal(oldDeveloperRewardsBalanceAmounts[i].Add(expectedAllocation.Mul(sdk.NewInt(2))).Int64(), actualDeveloperRewardsBalanceAmounts.Int64())
+						s.Require().Equal(oldDeveloperRewardsBalanceAmounts[i].Add(expectedAllocation.Mul(osmomath.NewInt(2))).Int64(), actualDeveloperRewardsBalanceAmounts.Int64())
 						return
 					}
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 const (
@@ -46,7 +46,7 @@ func (e UndefinedRouteError) Error() string {
 
 type FinalAmountIsNotPositiveError struct {
 	IsAmountOut bool
-	Amount      sdk.Int
+	Amount      osmomath.Int
 }
 
 func (e FinalAmountIsNotPositiveError) Error() string {
@@ -58,8 +58,8 @@ func (e FinalAmountIsNotPositiveError) Error() string {
 }
 
 type PriceImpactProtectionExactInError struct {
-	Actual    sdk.Int
-	MinAmount sdk.Int
+	Actual    osmomath.Int
+	MinAmount osmomath.Int
 }
 
 func (e PriceImpactProtectionExactInError) Error() string {
@@ -67,8 +67,8 @@ func (e PriceImpactProtectionExactInError) Error() string {
 }
 
 type PriceImpactProtectionExactOutError struct {
-	Actual    sdk.Int
-	MaxAmount sdk.Int
+	Actual    osmomath.Int
+	MaxAmount osmomath.Int
 }
 
 func (e PriceImpactProtectionExactOutError) Error() string {

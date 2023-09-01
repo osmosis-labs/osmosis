@@ -15,6 +15,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/tendermint/tendermint/libs/bytes"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
@@ -103,7 +104,7 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 
 // CreateConcentratedPosition creates a concentrated position from [lowerTick; upperTick] in pool with id of poolId
 // token{0,1} - liquidity to create position with
-func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, tokens string, token0MinAmt, token1MinAmt int64, poolId uint64) (uint64, sdk.Dec) {
+func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, tokens string, token0MinAmt, token1MinAmt int64, poolId uint64) (uint64, osmomath.Dec) {
 	n.LogActionF("creating concentrated position")
 	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
 	// fees = 1250 (because 50,000 * 0.0025 = 1250)
@@ -361,9 +362,9 @@ func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords s
 
 func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
 	n.LogActionF("depositing on proposal: %d", proposalNumber)
-	deposit := sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.MinDepositValue)).String()
+	deposit := sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.MinDepositValue)).String()
 	if isExpedited {
-		deposit = sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.MinExpeditedDepositValue)).String()
+		deposit = sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.MinExpeditedDepositValue)).String()
 	}
 	cmd := []string{"osmosisd", "tx", "gov", "deposit", fmt.Sprintf("%d", proposalNumber), deposit, "--from=val"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -410,7 +411,7 @@ func (n *NodeConfig) LockTokens(tokens string, duration string, from string) int
 	return lockID
 }
 
-func (n *NodeConfig) AddToExistingLock(tokens sdk.Int, denom, duration, from string, lockID int) {
+func (n *NodeConfig) AddToExistingLock(tokens osmomath.Int, denom, duration, from string, lockID int) {
 	n.LogActionF("noting previous lockup amount")
 	path := fmt.Sprintf("/osmosis/lockup/v1beta1/locked_by_id/%d", lockID)
 	bz, err := n.QueryGRPCGateway(path)
@@ -685,7 +686,7 @@ func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token
 }
 
 func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
-	propNumber := n.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	propNumber := n.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)))
 	n.DepositProposal(propNumber, false)
 
 	var wg sync.WaitGroup
@@ -701,7 +702,7 @@ func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
 	wg.Wait()
 }
 
-func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
+func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount osmomath.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
 	// lock tokens
 	lockID := n.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
 
@@ -866,21 +867,21 @@ func extractPositionIdFromResponse(responseBytes []byte) (uint64, error) {
 	return positionID, nil
 }
 
-func extractLiquidityFromResponse(responseBytes []byte) (sdk.Dec, error) {
+func extractLiquidityFromResponse(responseBytes []byte) (osmomath.Dec, error) {
 	var txResponse map[string]interface{}
 	err := json.Unmarshal(responseBytes, &txResponse)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	liquidityString, err := GetLiquidity(txResponse)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
-	positionID, err := sdk.NewDecFromStr(liquidityString)
+	positionID, err := osmomath.NewDecFromStr(liquidityString)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	return positionID, nil

@@ -6,6 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 const (
@@ -72,7 +74,7 @@ func (p *CreateConcentratedLiquidityPoolsProposal) ValidateBasic() error {
 		}
 
 		spreadFactor := record.SpreadFactor
-		if spreadFactor.IsNegative() || spreadFactor.GTE(sdk.OneDec()) {
+		if spreadFactor.IsNegative() || spreadFactor.GTE(osmomath.OneDec()) {
 			return InvalidSpreadFactorError{ActualSpreadFactor: spreadFactor}
 		}
 	}

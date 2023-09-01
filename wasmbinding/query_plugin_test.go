@@ -19,6 +19,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	gammv2types "github.com/osmosis-labs/osmosis/v19/x/gamm/v2types"
@@ -78,7 +79,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, sender, apptesting.DefaultAcctFunds)
 				suite.Require().NoError(err)
 				msg := balancer.NewMsgCreateBalancerPool(sender,
-					balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil),
+					balancer.NewPoolParams(osmomath.ZeroDec(), osmomath.ZeroDec(), nil),
 					apptesting.DefaultPoolAssets, "")
 				_, err = suite.app.PoolManagerKeeper.CreatePool(suite.ctx, msg)
 				suite.NoError(err)
@@ -95,7 +96,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			},
 			checkResponseStruct: true,
 			responseProtoStruct: &gammv2types.QuerySpotPriceResponse{ //nolint:staticcheck // we're intentionally using this deprecated package for testing
-				SpotPrice: sdk.NewDecWithPrec(5, 1).String(),
+				SpotPrice: osmomath.NewDecWithPrec(5, 1).String(),
 			},
 		},
 		{
@@ -107,7 +108,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, sender, apptesting.DefaultAcctFunds)
 				suite.Require().NoError(err)
 				msg := balancer.NewMsgCreateBalancerPool(sender,
-					balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil),
+					balancer.NewPoolParams(osmomath.ZeroDec(), osmomath.ZeroDec(), nil),
 					apptesting.DefaultPoolAssets, "")
 				_, err = suite.app.PoolManagerKeeper.CreatePool(suite.ctx, msg)
 				suite.NoError(err)
@@ -124,7 +125,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			},
 			checkResponseStruct: true,
 			responseProtoStruct: &gammv2types.QuerySpotPriceResponse{ //nolint:staticcheck // we're intentionally using this deprecated package for testing
-				SpotPrice: sdk.NewDecWithPrec(5, 1).String(),
+				SpotPrice: osmomath.NewDecWithPrec(5, 1).String(),
 			},
 		},
 		{
@@ -145,7 +146,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				suite.Require().NoError(err)
 
 				// fund account to receive non-empty response
-				err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
+				err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
 				suite.Require().NoError(err)
 
 				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
@@ -168,7 +169,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				suite.Require().NoError(err)
 
 				// fund account to receive non-empty response
-				err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
+				err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", osmomath.NewInt(10))})
 				suite.Require().NoError(err)
 
 				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
@@ -309,7 +310,7 @@ func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 			originalResponse:    "0a090a036261721202333012050a03666f6f",
 			protoResponseStruct: &banktypes.QueryAllBalancesResponse{},
 			expectedProtoResponse: &banktypes.QueryAllBalancesResponse{
-				Balances: sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(30))),
+				Balances: sdk.NewCoins(sdk.NewCoin("bar", osmomath.NewInt(30))),
 				Pagination: &query.PageResponse{
 					NextKey: []byte("foo"),
 				},
@@ -398,7 +399,7 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 			&banktypes.QueryAllBalancesResponse{},
 			func() proto.Message {
 				return &banktypes.QueryAllBalancesResponse{
-					Balances: sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(30))),
+					Balances: sdk.NewCoins(sdk.NewCoin("bar", osmomath.NewInt(30))),
 					Pagination: &query.PageResponse{
 						NextKey: []byte("foo"),
 					},

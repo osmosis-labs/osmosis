@@ -2,6 +2,8 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 var (
@@ -13,7 +15,7 @@ var (
 	DefaultBaseDenoms = []BaseDenom{
 		{
 			Denom:    OsmosisDenomination,
-			StepSize: sdk.NewInt(1_000_000),
+			StepSize: osmomath.NewInt(1_000_000),
 		},
 	}
 	DefaultPoolTypeInfo = InfoByPoolType{

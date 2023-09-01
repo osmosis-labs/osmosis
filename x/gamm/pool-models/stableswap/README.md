@@ -68,14 +68,14 @@ We detail rounding modes and scaling details as pseudocode in the relevant secti
 The AMM pool interfaces requires implementing the following stateful methods:
 
 ```golang
-	SwapOutAmtGivenIn(tokenIn sdk.Coins, tokenOutDenom string, spreadFactor sdk.Dec) (tokenOut sdk.Coin, err error)
-	SwapInAmtGivenOut(tokenOut sdk.Coins, tokenInDenom string, spreadFactor sdk.Dec) (tokenIn sdk.Coin, err error)
+	SwapOutAmtGivenIn(tokenIn sdk.Coins, tokenOutDenom string, spreadFactor osmomath.Dec) (tokenOut sdk.Coin, err error)
+	SwapInAmtGivenOut(tokenOut sdk.Coins, tokenInDenom string, spreadFactor osmomath.Dec) (tokenIn sdk.Coin, err error)
 
-	SpotPrice(baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error)
+	SpotPrice(baseAssetDenom string, quoteAssetDenom string) (osmomath.Dec, error)
 
-	JoinPool(tokensIn sdk.Coins, spreadFactor sdk.Dec) (numShares sdk.Int, err error)
-	JoinPoolNoSwap(tokensIn sdk.Coins, spreadFactor sdk.Dec) (numShares sdk.Int, err error)
-	ExitPool(numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
+	JoinPool(tokensIn sdk.Coins, spreadFactor osmomath.Dec) (numShares osmomath.Int, err error)
+	JoinPoolNoSwap(tokensIn sdk.Coins, spreadFactor osmomath.Dec) (numShares osmomath.Int, err error)
+	ExitPool(numShares osmomath.Int, exitFee osmomath.Dec) (exitedCoins sdk.Coins, err error)
 ```
 
 The "constant" part of CFMM's imply that we can reason about all their necessary algorithms from just the CFMM equation. There are still multiple ways to solve each method. We detail below the ways in which we do so. This is organized by first discussing variable substitutions we do, to be in a more amenable form, and then the details of how we implement each method.

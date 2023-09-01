@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/client/cli"
 )
 
@@ -18,7 +19,7 @@ func TestParseCoinsNoSort(t *testing.T) {
 	)
 
 	var (
-		ten = sdk.NewInt(10)
+		ten = osmomath.NewInt(10)
 
 		coinA = sdk.NewCoin(a, ten)
 		coinB = sdk.NewCoin(b, ten)
@@ -51,10 +52,10 @@ func TestParseCoinsNoSort(t *testing.T) {
 		"mixed with different values.": {
 			coinsStr: "100ddd,20bbb,300aaa,40ccc",
 			expectedCoins: sdk.Coins{
-				sdk.NewCoin(d, sdk.NewInt(100)),
-				sdk.NewCoin(b, sdk.NewInt(20)),
-				sdk.NewCoin(a, sdk.NewInt(300)),
-				sdk.NewCoin(c, sdk.NewInt(40)),
+				sdk.NewCoin(d, osmomath.NewInt(100)),
+				sdk.NewCoin(b, osmomath.NewInt(20)),
+				sdk.NewCoin(a, osmomath.NewInt(300)),
+				sdk.NewCoin(c, osmomath.NewInt(40)),
 			},
 		},
 	}

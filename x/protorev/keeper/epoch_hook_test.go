@@ -5,8 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
@@ -144,7 +143,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			},
 			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochOne": {
-					"uosmo": {Liquidity: sdk.NewInt(2000000), PoolId: 47},
+					"uosmo": {Liquidity: osmomath.NewInt(2000000), PoolId: 47},
 				},
 			},
 		},
@@ -162,7 +161,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			},
 			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochTwo": {
-					"uosmo": {Liquidity: sdk.Int(sdk.NewUintFromString("999999000000000001000000000000000000")), PoolId: 50},
+					"uosmo": {Liquidity: osmomath.Int(osmomath.NewUintFromString("999999000000000001000000000000000000")), PoolId: 50},
 				},
 			},
 		},

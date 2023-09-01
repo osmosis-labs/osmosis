@@ -4,6 +4,8 @@ import (
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // ---------------------- BaseDenom Validation ---------------------- //
@@ -13,7 +15,7 @@ func (base *BaseDenom) Validate() error {
 		return fmt.Errorf("base denom cannot be empty")
 	}
 
-	if base.StepSize.IsNil() || base.StepSize.LT(sdk.OneInt()) {
+	if base.StepSize.IsNil() || base.StepSize.LT(osmomath.OneInt()) {
 		return fmt.Errorf("step size must be greater than 0")
 	}
 

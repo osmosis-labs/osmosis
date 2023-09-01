@@ -90,21 +90,21 @@ func (i BigInt) IsNil() bool {
 	return i.i == nil
 }
 
-// NewInt constructs Int from int64
-func NewInt(n int64) BigInt {
+// NewBigInt constructs Int from int64
+func NewBigInt(n int64) BigInt {
 	return BigInt{big.NewInt(n)}
 }
 
-// NewIntFromUint64 constructs an Int from a uint64.
-func NewIntFromUint64(n uint64) BigInt {
+// NewBigIntFromUint64 constructs an Int from a uint64.
+func NewBigIntFromUint64(n uint64) BigInt {
 	b := big.NewInt(0)
 	b.SetUint64(n)
 	return BigInt{b}
 }
 
-// NewIntFromBigInt constructs Int from big.Int. If the provided big.Int is nil,
+// NewBigIntFromBigInt constructs Int from big.Int. If the provided big.Int is nil,
 // it returns an empty instance. This function panics if the bit length is > 256.
-func NewIntFromBigInt(i *big.Int) BigInt {
+func NewBigIntFromBigInt(i *big.Int) BigInt {
 	if i == nil {
 		return BigInt{}
 	}
@@ -115,8 +115,8 @@ func NewIntFromBigInt(i *big.Int) BigInt {
 	return BigInt{i}
 }
 
-// NewIntFromString constructs Int from string
-func NewIntFromString(s string) (res BigInt, ok bool) {
+// NewBigIntFromString constructs Int from string
+func NewBigIntFromString(s string) (res BigInt, ok bool) {
 	i, ok := newIntegerFromString(s)
 	if !ok {
 		return
@@ -129,9 +129,9 @@ func NewIntFromString(s string) (res BigInt, ok bool) {
 	return BigInt{i}, true
 }
 
-// NewIntWithDecimal constructs Int with decimal
+// NewBigIntWithDecimal constructs Int with decimal
 // Result value is n*10^dec
-func NewIntWithDecimal(n int64, dec int) BigInt {
+func NewBigIntWithDecimal(n int64, dec int) BigInt {
 	if dec < 0 {
 		panic("NewIntWithDecimal() decimal is negative")
 	}
@@ -146,15 +146,15 @@ func NewIntWithDecimal(n int64, dec int) BigInt {
 	return BigInt{i}
 }
 
-// ZeroInt returns Int value with zero
-func ZeroInt() BigInt { return BigInt{big.NewInt(0)} }
+// ZeroBigInt returns Int value with zero
+func ZeroBigInt() BigInt { return BigInt{big.NewInt(0)} }
 
-// OneInt returns Int value with one
-func OneInt() BigInt { return BigInt{big.NewInt(1)} }
+// OneBigInt returns Int value with one
+func OneBigInt() BigInt { return BigInt{big.NewInt(1)} }
 
 // ToDec converts Int to Dec
 func (i BigInt) ToDec() BigDec {
-	return NewDecFromInt(i)
+	return NewBigDecFromInt(i)
 }
 
 // Int64 converts Int to int64
@@ -243,7 +243,7 @@ func (i BigInt) Add(i2 BigInt) (res BigInt) {
 
 // AddRaw adds int64 to Int
 func (i BigInt) AddRaw(i2 int64) BigInt {
-	return i.Add(NewInt(i2))
+	return i.Add(NewBigInt(i2))
 }
 
 // Sub subtracts Int from another
@@ -258,7 +258,7 @@ func (i BigInt) Sub(i2 BigInt) (res BigInt) {
 
 // SubRaw subtracts int64 from Int
 func (i BigInt) SubRaw(i2 int64) BigInt {
-	return i.Sub(NewInt(i2))
+	return i.Sub(NewBigInt(i2))
 }
 
 // Mul multiples two Ints
@@ -277,7 +277,7 @@ func (i BigInt) Mul(i2 BigInt) (res BigInt) {
 
 // MulRaw multipies Int and int64
 func (i BigInt) MulRaw(i2 int64) BigInt {
-	return i.Mul(NewInt(i2))
+	return i.Mul(NewBigInt(i2))
 }
 
 // Quo divides Int with Int
@@ -291,7 +291,7 @@ func (i BigInt) Quo(i2 BigInt) (res BigInt) {
 
 // QuoRaw divides Int with int64
 func (i BigInt) QuoRaw(i2 int64) BigInt {
-	return i.Quo(NewInt(i2))
+	return i.Quo(NewBigInt(i2))
 }
 
 // Mod returns remainder after dividing with Int
@@ -304,7 +304,7 @@ func (i BigInt) Mod(i2 BigInt) BigInt {
 
 // ModRaw returns remainder after dividing with int64
 func (i BigInt) ModRaw(i2 int64) BigInt {
-	return i.Mod(NewInt(i2))
+	return i.Mod(NewBigInt(i2))
 }
 
 // Neg negates Int
@@ -318,12 +318,12 @@ func (i BigInt) Abs() BigInt {
 }
 
 // return the minimum of the ints
-func MinInt(i1, i2 BigInt) BigInt {
+func MinBigInt(i1, i2 BigInt) BigInt {
 	return BigInt{min(i1.BigInt(), i2.BigInt())}
 }
 
-// MaxInt returns the maximum between two integers.
-func MaxInt(i, i2 BigInt) BigInt {
+// MaxBigInt returns the maximum between two integers.
+func MaxBigInt(i, i2 BigInt) BigInt {
 	return BigInt{max(i.BigInt(), i2.BigInt())}
 }
 
@@ -435,6 +435,6 @@ func (i BigInt) MarshalAmino() ([]byte, error)   { return i.Marshal() }
 func (i *BigInt) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
 
 // intended to be used with require/assert:  require.True(IntEq(...))
-func IntEq(t *testing.T, exp, got BigInt) (*testing.T, bool, string, string, string) {
+func BigIntEq(t *testing.T, exp, got BigInt) (*testing.T, bool, string, string, string) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }

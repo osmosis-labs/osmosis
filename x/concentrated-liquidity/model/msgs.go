@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
@@ -24,7 +25,7 @@ func NewMsgCreateConcentratedPool(
 	denom0 string,
 	denom1 string,
 	tickSpacing uint64,
-	spreadFactor sdk.Dec,
+	spreadFactor osmomath.Dec,
 ) MsgCreateConcentratedPool {
 	return MsgCreateConcentratedPool{
 		Sender:       sender.String(),

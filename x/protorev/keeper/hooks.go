@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
@@ -30,7 +31,7 @@ func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, pool
 }
 
 // AfterJoinPool stores swaps to be checked by protorev given the coins entered into the pool.
-func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
+func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount osmomath.Int) {
 	// Checked to avoid future unintended behavior based on how the hook is called
 	if len(enterCoins) != 1 {
 		return
@@ -40,7 +41,7 @@ func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint
 }
 
 // AfterExitPool stores swaps to be checked by protorev given the coins exited from the pool.
-func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
+func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount osmomath.Int, exitCoins sdk.Coins) {
 	// Added due to ExitSwapShareAmountIn both calling
 	// ExitPoolHook with all denoms of the pool and then also
 	// Swapping which triggers the after swap hook.
@@ -107,16 +108,16 @@ func (k Keeper) StoreSwap(ctx sdk.Context, poolId uint64, tokenIn, tokenOut stri
 }
 
 // GetComparablePoolLiquidity gets the comparable liquidity of a pool by multiplying the amounts of the pool coins.
-func (k Keeper) GetComparablePoolLiquidity(ctx sdk.Context, poolId uint64) (comparableLiquidity sdk.Int, err error) {
+func (k Keeper) GetComparablePoolLiquidity(ctx sdk.Context, poolId uint64) (comparableLiquidity osmomath.Int, err error) {
 	coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolId)
 	if err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 
 	// Recover from overflow panic
 	defer func() {
 		if r := recover(); r != nil {
-			comparableLiquidity = sdk.Int{}
+			comparableLiquidity = osmomath.Int{}
 			err = errors.New("Int overflow in GetComparablePoolLiquidity")
 		}
 	}()

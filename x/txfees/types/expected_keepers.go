@@ -4,13 +4,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 // SpotPriceCalculator defines the contract that must be fulfilled by a spot price calculator
 // The x/gamm keeper is expected to satisfy this interface.
 type SpotPriceCalculator interface {
-	CalculateSpotPrice(ctx sdk.Context, poolId uint64, quoteDenom, baseDenom string) (sdk.Dec, error)
+	CalculateSpotPrice(ctx sdk.Context, poolId uint64, quoteDenom, baseDenom string) (osmomath.Dec, error)
 }
 
 // PoolManager defines the contract needed for swap related APIs.
@@ -20,7 +21,7 @@ type PoolManager interface {
 		sender sdk.AccAddress,
 		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
-		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
+		tokenOutMinAmount osmomath.Int) (tokenOutAmount osmomath.Int, err error)
 
 	SwapExactAmountIn(
 		ctx sdk.Context,
@@ -28,8 +29,8 @@ type PoolManager interface {
 		poolId uint64,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
-		tokenOutMinAmount sdk.Int,
-	) (sdk.Int, error)
+		tokenOutMinAmount osmomath.Int,
+	) (osmomath.Int, error)
 
 	SwapExactAmountInNoTakerFee(
 		ctx sdk.Context,
@@ -37,8 +38,8 @@ type PoolManager interface {
 		poolId uint64,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
-		tokenOutMinAmount sdk.Int,
-	) (sdk.Int, error)
+		tokenOutMinAmount osmomath.Int,
+	) (osmomath.Int, error)
 
 	GetParams(ctx sdk.Context) (params poolmanagertypes.Params)
 }
