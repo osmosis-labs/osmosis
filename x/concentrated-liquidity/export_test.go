@@ -72,7 +72,7 @@ func (k Keeper) ComputeOutAmtGivenIn(
 	spreadFactor sdk.Dec,
 	priceLimit sdk.Dec,
 
-) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadRewards sdk.Dec, err error) {
+) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
 	return k.computeOutAmtGivenIn(ctx, poolId, tokenInMin, tokenOutDenom, spreadFactor, priceLimit)
 }
 
@@ -95,7 +95,7 @@ func (k Keeper) ComputeInAmtGivenOut(
 	priceLimit sdk.Dec,
 	poolId uint64,
 
-) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, totalSpreadRewards sdk.Dec, err error) {
+) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
 	return k.computeInAmtGivenOut(ctx, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit, poolId)
 }
 

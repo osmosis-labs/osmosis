@@ -32,6 +32,14 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
+// PropTallyResult is the result of a proposal tally.
+type PropTallyResult struct {
+	Yes        sdk.Int
+	No         sdk.Int
+	Abstain    sdk.Int
+	NoWithVeto sdk.Int
+}
+
 // QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.
 func (n *NodeConfig) QueryProtoRevNumberOfTrades() (sdk.Int, error) {
 	path := "/osmosis/protorev/number_of_trades"
@@ -443,21 +451,31 @@ func (n *NodeConfig) QueryWasmSmartArray(contract string, msg string) (resultArr
 	return resultArray, nil
 }
 
-func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
+func (n *NodeConfig) QueryPropTally(proposalNumber int) (PropTallyResult, error) {
 	path := fmt.Sprintf("cosmos/gov/v1beta1/proposals/%d/tally", proposalNumber)
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
 	var balancesResp govtypes.QueryTallyResultResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
-		return sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), err
+		return PropTallyResult{
+			Yes:        sdk.ZeroInt(),
+			No:         sdk.ZeroInt(),
+			Abstain:    sdk.ZeroInt(),
+			NoWithVeto: sdk.ZeroInt(),
+		}, err
 	}
 	noTotal := balancesResp.Tally.No
 	yesTotal := balancesResp.Tally.Yes
 	noWithVetoTotal := balancesResp.Tally.NoWithVeto
 	abstainTotal := balancesResp.Tally.Abstain
 
-	return noTotal, yesTotal, noWithVetoTotal, abstainTotal, nil
+	return PropTallyResult{
+		Yes:        yesTotal,
+		No:         noTotal,
+		Abstain:    abstainTotal,
+		NoWithVeto: noWithVetoTotal,
+	}, nil
 }
 
 func (n *NodeConfig) QueryPropStatus(proposalNumber int) (string, error) {
