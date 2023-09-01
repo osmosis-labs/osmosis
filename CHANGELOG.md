@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### API Breaks
+
+* [#6256](https://github.com/osmosis-labs/osmosis/pull/6256) Refactor CalcPriceToTick to operate on BigDec price to support new price range.
+
 ### API breaks
 
 * [#6182](https://github.com/osmosis-labs/osmosis/pull/6182) change import paths to v18

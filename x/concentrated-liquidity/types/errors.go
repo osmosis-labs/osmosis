@@ -264,9 +264,9 @@ func (e TickNotFoundError) Error() string {
 }
 
 type PriceBoundError struct {
-	ProvidedPrice sdk.Dec
-	MinSpotPrice  sdk.Dec
-	MaxSpotPrice  sdk.Dec
+	ProvidedPrice osmomath.BigDec
+	MinSpotPrice  osmomath.BigDec
+	MaxSpotPrice  osmomath.Dec
 }
 
 func (e PriceBoundError) Error() string {
