@@ -3,11 +3,10 @@ package osmocli
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	clqueryproto "github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/client/queryproto"
 	cltypes "github.com/osmosis-labs/osmosis/v18/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v18/x/lockup/types"
+	"github.com/stretchr/testify/require"
 )
 
 // test-specific helper descriptor
