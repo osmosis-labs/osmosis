@@ -301,6 +301,8 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	s.Require().Equal(profits, routeStats[0].Profits)
 }
 
+// Note: this test depends on taker fee being set.
+// As a result, we use chain B. Chain A has zero taker fee.
 func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	var (
 		denom0                 = "uion"
