@@ -2073,7 +2073,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 
 			// perform compute
 			cacheCtx, _ := s.Ctx.CacheContext()
-			tokenIn, tokenOut, poolUpdates, totalSpreadRewards, err := s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
+			swapResult, poolUpdates, err := s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
 				cacheCtx,
 				pool.GetId(),
 				test.tokenIn, test.tokenOutDenom,
@@ -2082,17 +2082,17 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
-				s.testSwapResult(test, pool, tokenIn, tokenOut, poolUpdates, err)
+				s.testSwapResult(test, pool, swapResult.AmountIn, swapResult.AmountOut, poolUpdates, err)
 
-				expectedSpreadFactors := tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
-				s.Require().Equal(expectedSpreadFactors.String(), totalSpreadRewards.TruncateInt().String())
+				expectedSpreadFactors := swapResult.AmountIn.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
+				s.Require().Equal(expectedSpreadFactors.String(), swapResult.SpreadRewards.TruncateInt().String())
 
 				// check that the pool has not been modified after performing calc
 				s.assertPoolNotModified(poolBeforeCalc)
 			}
 
 			// perform swap
-			tokenIn, tokenOut, poolUpdates, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
+			tokenIn, tokenOut, poolUpdates, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 				s.Ctx, s.TestAccs[0], pool,
 				test.tokenIn, test.tokenOutDenom,
 				test.spreadFactor, test.priceLimit,
@@ -2101,7 +2101,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
-				s.testSwapResult(test, pool, tokenIn, tokenOut, poolUpdates, err)
+				s.testSwapResult(test, pool, tokenIn.Amount, tokenOut.Amount, poolUpdates, err)
 				s.assertSpreadRewardAccum(test, pool.GetId())
 			}
 		})
@@ -2192,13 +2192,13 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 	}
 }
 
-func (s *KeeperTestSuite) testSwapResult(test SwapTest, pool types.ConcentratedPoolExtension, tokenIn, tokenOut sdk.Coin, poolUpdates cl.PoolUpdates, err error) {
+func (s *KeeperTestSuite) testSwapResult(test SwapTest, pool types.ConcentratedPoolExtension, amountIn, amountOut sdk.Int, poolUpdates cl.PoolUpdates, err error) {
 	s.Require().NoError(err)
 
 	// check that tokenIn, tokenOut, tick, and sqrtPrice from CalcOut are all what we expected
 	s.Require().Equal(test.expectedSqrtPrice, poolUpdates.NewSqrtPrice, "resultant sqrt price not equal to expected sqrt price")
-	s.Require().Equal(test.expectedTokenOut.String(), tokenOut.String())
-	s.Require().Equal(test.expectedTokenIn.String(), tokenIn.String())
+	s.Require().Equal(test.expectedTokenOut.Amount.String(), amountOut.String())
+	s.Require().Equal(test.expectedTokenIn.Amount.String(), amountIn.String())
 	s.Require().Equal(test.expectedTick, poolUpdates.NewCurrentTick)
 
 	expectedLiquidity := s.getExpectedLiquidity(test, pool)
@@ -2219,21 +2219,21 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 
 			// perform compute
 			cacheCtx, _ := s.Ctx.CacheContext()
-			tokenIn, tokenOut, poolUpdates, totalSpreadRewards, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
+			swapResult, poolUpdates, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
 				cacheCtx,
 				test.tokenOut, test.tokenInDenom,
 				test.spreadFactor, test.priceLimit, pool.GetId())
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
-				s.testSwapResult(test, pool, tokenIn, tokenOut, poolUpdates, err)
+				s.testSwapResult(test, pool, swapResult.AmountIn, swapResult.AmountOut, poolUpdates, err)
 
-				expectedSpreadRewards := tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
-				s.Require().Equal(expectedSpreadRewards.String(), totalSpreadRewards.TruncateInt().String())
+				expectedSpreadRewards := swapResult.AmountIn.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
+				s.Require().Equal(expectedSpreadRewards.String(), swapResult.SpreadRewards.TruncateInt().String())
 			}
 
 			// perform swap
-			tokenIn, tokenOut, poolUpdates, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
+			tokenIn, tokenOut, poolUpdates, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
 				s.Ctx, s.TestAccs[0], pool,
 				test.tokenOut, test.tokenInDenom,
 				test.spreadFactor, test.priceLimit)
@@ -2247,7 +2247,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 			s.Require().NoError(err)
 
 			// check that tokenIn, tokenOut, tick, and sqrtPrice from SwapOut are all what we expected
-			s.testSwapResult(test, pool, tokenIn, tokenOut, poolUpdates, err)
+			s.testSwapResult(test, pool, tokenIn.Amount, tokenOut.Amount, poolUpdates, err)
 
 			// Check variables on pool were set correctly
 			// - ensure the pool's currentTick and currentSqrtPrice was updated due to calling a mutative method
@@ -2718,7 +2718,7 @@ func (s *KeeperTestSuite) TestComputeOutAmtGivenIn() {
 			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
 
 			// perform calc
-			_, _, _, _, err := s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
+			_, _, err := s.App.ConcentratedLiquidityKeeper.ComputeOutAmtGivenIn(
 				s.Ctx,
 				poolBeforeCalc.GetId(),
 				test.tokenIn, test.tokenOutDenom,
@@ -2804,7 +2804,7 @@ func (s *KeeperTestSuite) TestComputeInAmtGivenOut() {
 			poolBeforeCalc := s.preparePoolAndDefaultPositions(test)
 
 			// perform calc
-			_, _, _, _, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
+			_, _, err := s.App.ConcentratedLiquidityKeeper.ComputeInAmtGivenOut(
 				s.Ctx,
 				test.tokenOut, test.tokenInDenom,
 				test.spreadFactor, test.priceLimit, poolBeforeCalc.GetId())
