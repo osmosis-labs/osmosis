@@ -23,11 +23,12 @@ var defaultFeePerTx = osmomath.NewInt(1000)
 // amountIn - amount being swapped
 // spreadFactor - pool's spread factor
 // poolLiquidity - current pool liquidity
-func calculateSpreadRewardGrowthGlobal(spreadRewardChargeTotal, poolLiquidity osmomath.Dec) osmomath.Dec {
+func calculateSpreadRewardGrowthGlobal(amountIn, spreadFactor, poolLiquidity osmomath.Dec) osmomath.Dec {
 	// First we get total spread reward charge for the swap (ΔY * spreadFactor)
+	spreadRewardChargeTotal := amountIn.Mul(spreadFactor)
 
 	// Calculating spread reward growth global (dividing by pool liquidity to find spread reward growth per unit of virtual liquidity)
-	spreadRewardGrowthGlobal := spreadRewardChargeTotal.QuoTruncate(poolLiquidity)
+	spreadRewardGrowthGlobal := spreadRewardChargeTotal.Quo(poolLiquidity)
 	return spreadRewardGrowthGlobal
 }
 
