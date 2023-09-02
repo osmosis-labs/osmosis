@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Misc Improvements
 
-* [#6279](https://github.com/osmosis-labs/osmosis/pull/6279) fix prop-572 introduced issue
+* [#6279](https://github.com/osmosis-labs/osmosis/pull/6279) fix prop-597 introduced issue
 
 ### API Breaks
 
