@@ -100,7 +100,7 @@ jobs:
   e2e:
     needs: get_diff
     if: needs.get_diff.outputs.git_diff
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 20
     steps:
       - name: Clean up Pre-Existing E2E Docker containers
