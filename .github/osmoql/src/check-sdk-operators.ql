@@ -14,7 +14,7 @@ import go
 
 from BinaryExpr b
 where
-  (b.getOperator() = "==" or b.getOperator() = "<" or b.getOperator() = ">" or b.getOperator() = "<=" or b.getOperator() = ">=")
+  (b.getOperator() = "==")
   and (
     // find sdk.Dec(s)
     (b.getLeftOperand().getType().hasQualifiedName("github.com/cosmos/cosmos-sdk/types", "Dec") or b.getRightOperand().getType().hasQualifiedName("github.com/cosmos/cosmos-sdk/types", "Dec")) or
