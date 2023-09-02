@@ -1087,6 +1087,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedPoolFromCFMM() {
 	}
 }
 
+// TODO: Test Migration records updates in this test
 func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrationLink() {
 	s.Setup()
 
