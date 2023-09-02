@@ -18,6 +18,10 @@ import (
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	clgenesis "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types/genesis"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
@@ -86,6 +90,13 @@ const (
 	TWAPPruningKeepPeriod = EpochDayDuration / 4
 
 	DaiOsmoPoolId = 674
+
+	// taken from https://github.com/osmosis-labs/osmosis/pull/6279
+	firstCLPoolIDV19 = 1066
+	lastCLPoolIDV19  = 1136
+
+	balancerExceptionPoolIdOne = 1013
+	balancerExceptionPoolIdTwo = 1039
 )
 
 var (
@@ -263,6 +274,11 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, cltypes.ModuleName, &gammtypes.GenesisState{}, updateGammGenesis)
+	if err != nil {
+		return err
+	}
+
 	err = updateModuleGenesis(appGenState, banktypes.ModuleName, &banktypes.GenesisState{}, updateBankGenesis(appGenState))
 	if err != nil {
 		return err
@@ -414,24 +430,55 @@ func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 		gammGenState.Pools = append(gammGenState.Pools, setupPool(poolId, OsmoDenom, AtomDenom))
 	}
 
-	// Note that we set the next pool number as 1 greater than the latest created pool.
-	// This is to ensure that migrations are performed correctly.
+	gammGenState.Pools = append(gammGenState.Pools, setupPool(balancerExceptionPoolIdOne, OsmoDenom, AtomDenom))
+	gammGenState.Pools = append(gammGenState.Pools, setupPool(balancerExceptionPoolIdTwo, OsmoDenom, AtomDenom))
 	gammGenState.NextPoolNumber = DaiOsmoPoolId
+}
+
+func updateCLGenesis(clGenState *clgenesis.GenesisState) {
+	for poolId := uint64(firstCLPoolIDV19); poolId <= lastCLPoolIDV19; poolId++ {
+		if poolId == balancerExceptionPoolIdOne || poolId == balancerExceptionPoolIdTwo {
+			continue
+		}
+		clGenState.PoolData = append(clGenState.PoolData, clgenesis.PoolData{
+			Pool:  setupCLPool(poolId, OsmoDenom, AtomDenom),
+			Ticks: []clgenesis.FullTick{},
+			SpreadRewardAccumulator: clgenesis.AccumObject{
+				Name: cltypes.KeySpreadRewardPoolAccumulator(poolId),
+				AccumContent: &accum.AccumulatorContent{
+					AccumValue:  sdk.NewDecCoins(),
+					TotalShares: sdk.ZeroDec(),
+				},
+			},
+			IncentivesAccumulators: setupCLIncentivesAccumulators(poolId),
+			IncentiveRecords:       []cltypes.IncentiveRecord{},
+		})
+	}
 }
 
 func updatePoolManagerGenesis(appGenState map[string]json.RawMessage) func(*poolmanagertypes.GenesisState) {
 	return func(s *poolmanagertypes.GenesisState) {
 		gammGenState := &gammtypes.GenesisState{}
 		util.Cdc.MustUnmarshalJSON(appGenState[gammtypes.ModuleName], gammGenState)
-		s.NextPoolId = gammGenState.NextPoolNumber
+
+		clGenState := &clgenesis.GenesisState{}
+		util.Cdc.MustUnmarshalJSON(appGenState[cltypes.ModuleName], clGenState)
+		s.NextPoolId = lastCLPoolIDV19 + 1
 		s.PoolRoutes = make([]poolmanagertypes.ModuleRoute, 0, s.NextPoolId-1)
 		for poolId := uint64(1); poolId < s.NextPoolId; poolId++ {
-			s.PoolRoutes = append(s.PoolRoutes, poolmanagertypes.ModuleRoute{
-				PoolId: poolId,
-				// Note: we assume that all pools created are balancer pools.
-				// If changes are needed, modify gamm genesis first.
-				PoolType: poolmanagertypes.Balancer,
-			})
+			if poolId < firstCLPoolIDV19 || poolId == balancerExceptionPoolIdOne || poolId == balancerExceptionPoolIdTwo {
+				s.PoolRoutes = append(s.PoolRoutes, poolmanagertypes.ModuleRoute{
+					PoolId: poolId,
+					// Note: we assume that all pools created are balancer pools.
+					// If changes are needed, modify gamm genesis first.
+					PoolType: poolmanagertypes.Balancer,
+				})
+			} else {
+				s.PoolRoutes = append(s.PoolRoutes, poolmanagertypes.ModuleRoute{
+					PoolId:   poolId,
+					PoolType: poolmanagertypes.Concentrated,
+				})
+			}
 		}
 	}
 }
@@ -587,4 +634,30 @@ func setupPool(poolId uint64, denomA, denomB string) *types1.Any {
 		panic(err)
 	}
 	return anyPool
+}
+
+func setupCLPool(poolId uint64, denomA, denomB string) *types1.Any {
+	clPool, err := model.NewConcentratedLiquidityPool(poolId, denomA, denomB, 1, sdk.ZeroDec())
+	if err != nil {
+		panic(err)
+	}
+	anyPool, err := types1.NewAnyWithValue(&clPool)
+	if err != nil {
+		panic(err)
+	}
+	return anyPool
+}
+
+func setupCLIncentivesAccumulators(poolId uint64) []clgenesis.AccumObject {
+	accumulators := []clgenesis.AccumObject{}
+	for i := range cltypes.SupportedUptimes {
+		accumulators = append(accumulators, clgenesis.AccumObject{
+			Name: cltypes.KeyUptimeAccumulator(poolId, uint64(i)),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  sdk.NewDecCoins(),
+				TotalShares: sdk.ZeroDec(),
+			},
+		})
+	}
+	return accumulators
 }
