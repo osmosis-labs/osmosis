@@ -19,7 +19,7 @@ var Upgrade = upgrades.Upgrade{
 	},
 }
 
-var records = []migration.BalancerToConcentratedPoolLink{
+var Records = []migration.BalancerToConcentratedPoolLink{
 	// created at v16
 	{BalancerPoolId: 674, ClPoolId: 1066}, // DAI
 	// created at https://www.mintscan.io/osmosis/proposals/571

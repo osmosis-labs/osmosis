@@ -46,7 +46,7 @@ func CreateUpgradeHandler(
 		defaultPoolManagerParams.TakerFeeParams.DefaultTakerFee = osmomath.ZeroDec()
 		keepers.PoolManagerKeeper.SetParams(ctx, defaultPoolManagerParams)
 
-		err = keepers.GAMMKeeper.UpdateMigrationRecords(ctx, records)
+		err = keepers.GAMMKeeper.UpdateMigrationRecords(ctx, Records)
 		if err != nil {
 			return nil, err
 		}
