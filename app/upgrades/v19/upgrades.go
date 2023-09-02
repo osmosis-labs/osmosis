@@ -45,6 +45,10 @@ func CreateUpgradeHandler(
 		defaultPoolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.ZeroDec()
 		keepers.PoolManagerKeeper.SetParams(ctx, defaultPoolManagerParams)
 
+		err = keepers.GAMMKeeper.UpdateMigrationRecords(ctx, Records)
+		if err != nil {
+			return nil, err
+		}
 		return migrations, nil
 	}
 }
