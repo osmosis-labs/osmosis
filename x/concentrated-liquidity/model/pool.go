@@ -243,9 +243,8 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 
 	var (
 		liquidityDeltaBigDec = osmomath.BigDecFromSDKDec(liquidityDelta)
-
-		actualAmountDenom0 osmomath.BigDec
-		actualAmountDenom1 osmomath.BigDec
+		actualAmountDenom0   osmomath.BigDec
+		actualAmountDenom1   osmomath.BigDec
 	)
 
 	if p.IsCurrentTickInRange(lowerTick, upperTick) {
