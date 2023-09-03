@@ -25,10 +25,20 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     go mod download
 
 # Cosmwasm - Download correct libwasmvm version
+## Get the architecture and WASMVM_VERSION first
 RUN ARCH=$(uname -m) && WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | sed 's/.* //') && \
+    echo "ARCH=${ARCH}" > /tmp/env && \
+    echo "WASMVM_VERSION=${WASMVM_VERSION}" >> /tmp/env
+
+## Source the /tmp/env file to get ARCH and WASMVM_VERSION
+## Then download wasmvm
+RUN source /tmp/env && \
     wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$ARCH.a \
-        -O /lib/libwasmvm_muslc.a && \
-    # verify checksum
+        -O /lib/libwasmvm_muslc.a 
+
+## Source the /tmp/env file again to get ARCH and WASMVM_VERSION
+## Then download the checksum file and verify the checksum.
+RUN source /tmp/env && \
     wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
     sha256sum /lib/libwasmvm_muslc.a | grep $(cat /tmp/checksums.txt | grep libwasmvm_muslc.$ARCH | cut -d ' ' -f 1)
 
