@@ -40,6 +40,7 @@ type positionAndLiquidity struct {
 }
 
 func TestFuzz_Many(t *testing.T) {
+	t.Parallel()
 	fuzz(t, defaultNumSwaps, defaultNumPositions, 10)
 }
 
@@ -54,6 +55,7 @@ func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
 
 // pre-condition: poolId exists, and has at least one position
 func fuzz(t *testing.T, numSwaps int, numPositions int, numIterations int) {
+	t.Helper()
 	seed := time.Now().Unix()
 
 	for i := 0; i < numIterations; i++ {
@@ -99,11 +101,6 @@ func (s *KeeperTestSuite) individualFuzz(r *rand.Rand, fuzzNum int, numSwaps int
 	s.fuzzTestWithSeed(r, pool.GetId(), numSwaps, numPositions)
 
 	s.validateNoErrors(s.collectedErrors)
-}
-
-type fuzzState struct {
-	r      *rand.Rand
-	poolId int
 }
 
 func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps int, numPositions int) {
@@ -159,7 +156,6 @@ func (s *KeeperTestSuite) randomSwap(r *rand.Rand, poolId uint64) (fatalErr bool
 	swapStrategy, zfo := updateStrategy()
 
 	for didSwap := false; !didSwap; {
-
 		if swapStrategy == 0 {
 			didSwap, fatalErr = s.swapRandomAmount(r, pool, zfo)
 		} else if swapStrategy == 1 {
@@ -243,9 +239,8 @@ func tickAmtChange(r *rand.Rand, targetAmount osmomath.Dec) osmomath.Dec {
 
 	// Generate a random percentage under 0.1%
 	randChangePercent := osmomath.NewDec(r.Int63n(1)).QuoInt64(1000)
-	change := targetAmount.Mul(randChangePercent)
 
-	change = sdk.MaxDec(osmomath.NewDec(1), randChangePercent)
+	change := sdk.MaxDec(osmomath.NewDec(1), randChangePercent)
 
 	switch changeType {
 	case 0:
@@ -400,7 +395,6 @@ func (s *KeeperTestSuite) validateNoErrors(possibleErrors []error) {
 	fullMsg := ""
 	shouldFail := false
 	for _, err := range possibleErrors {
-
 		// TODO: figure out if this is OK
 		// Answer: Ok for now, due to outofbounds=True restriction
 		// Should sanity check that our fuzzer isn't hitting this too often though, that could hit at
@@ -460,7 +454,6 @@ func (s *KeeperTestSuite) addOrRemoveLiquidity(r *rand.Rand, poolId uint64) {
 	} else {
 		s.removeRandomPosition(r)
 	}
-
 }
 
 // if true add position, if false remove position

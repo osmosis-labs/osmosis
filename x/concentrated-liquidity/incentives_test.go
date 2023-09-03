@@ -13,7 +13,6 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 )
 
 var (
@@ -102,8 +101,7 @@ var (
 
 	testQualifyingDepositsOne = osmomath.NewInt(50)
 
-	defaultBalancerPoolParams = balancer.PoolParams{SwapFee: osmomath.NewDec(0), ExitFee: osmomath.NewDec(0)}
-	invalidPoolId             = uint64(10)
+	invalidPoolId = uint64(10)
 )
 
 type ExpectedUptimes struct {
@@ -2219,7 +2217,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 
 					// Add to uptime growth outside range
 					if tc.addedUptimeGrowthOutside != nil {
-						s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, ownerWithValidPosition, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.addedUptimeGrowthOutside)
+						s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.addedUptimeGrowthOutside)
 					}
 				}
 
@@ -2806,7 +2804,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 
 				clPool.SetCurrentTick(DefaultCurrTick)
 				if tc.growthOutside != nil {
-					s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick, DefaultLowerTick, DefaultUpperTick, tc.growthOutside)
+					s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, DefaultCurrTick, DefaultLowerTick, DefaultUpperTick, tc.growthOutside)
 				}
 
 				if tc.growthInside != nil {

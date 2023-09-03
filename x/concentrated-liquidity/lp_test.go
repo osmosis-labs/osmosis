@@ -2187,7 +2187,8 @@ func (s *KeeperTestSuite) TestValidatePositionUpdateById() {
 				s.Require().NoError(err)
 				owner, err := sdk.AccAddressFromBech32(position.Address)
 				s.Require().NoError(err)
-				s.clk.SetPosition(s.Ctx, defaultPoolId, owner, position.LowerTick, position.UpperTick, position.JoinTime, osmomath.OneDec(), position.PositionId, 0)
+				err = s.clk.SetPosition(s.Ctx, defaultPoolId, owner, position.LowerTick, position.UpperTick, position.JoinTime, osmomath.OneDec(), position.PositionId, 0)
+				s.Require().NoError(err)
 			}
 
 			err := clKeeper.ValidatePositionUpdateById(s.Ctx, tc.positionId, updateInitiator, tc.lowerTickGiven, tc.upperTickGiven, tc.liquidityDeltaGiven, tc.joinTimeGiven, tc.poolIdGiven)
