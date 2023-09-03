@@ -208,7 +208,7 @@ func (s *KeeperTestSuite) setupPoolAndPositions(testTickSpacing uint64, position
 	s.Require().NoError(err)
 
 	// Refetch pool as the first position updated its state.
-	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+	_, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 	s.Require().NoError(err)
 
 	// Create all narrow range positions per given tick spacings away from the current tick
@@ -403,7 +403,7 @@ func (s *KeeperTestSuite) computeSwapAmountsInGivenOut(poolId uint64, curSqrtPri
 			if amountOut.IsZero() && isWithinDesiredBucketAfterSwap {
 				nextInitTickSqrtPrice := s.tickToSqrtPrice(liquidityNetAmounts[i+1].TickIndex)
 
-				// We discound by two so that we do no cross any tick and remain in the same bucket.
+				// We discounted by two so that we do no cross any tick and remain in the same bucket.
 				curAmountIn := math.CalcAmount1Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, false).QuoInt64(2)
 				amountOut = amountOut.Add(curAmountIn.DecRoundUp())
 			}
@@ -512,7 +512,6 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 
 	// testCase defines the test case configuration
 	type testCase struct {
-		name        string
 		tickSpacing uint64
 
 		swapTicksAway                  int64
@@ -634,8 +633,8 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		s.Require().True(isNarrowInRange)
 
 		var (
-			amountZeroIn   osmomath.Dec    = osmomath.ZeroDec()
-			sqrtPriceStart osmomath.BigDec = pool.GetCurrentSqrtPrice()
+			amountZeroIn   = osmomath.ZeroDec()
+			sqrtPriceStart = pool.GetCurrentSqrtPrice()
 
 			liquidity = pool.GetLiquidity()
 		)
@@ -726,9 +725,9 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		s.Require().NoError(err)
 
 		var (
-			amountOneIn    osmomath.Dec    = osmomath.ZeroDec()
-			sqrtPriceStart osmomath.BigDec = pool.GetCurrentSqrtPrice()
-			liquidity                      = pool.GetLiquidity()
+			amountOneIn    = osmomath.ZeroDec()
+			sqrtPriceStart = pool.GetCurrentSqrtPrice()
+			liquidity      = pool.GetLiquidity()
 		)
 
 		if tickToSwapTo >= nr1Position.upperTick {
@@ -953,7 +952,6 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_Tick_Initialization_And_Crossing() 
 		for name, tc := range testCases {
 			tc := tc
 			s.Run(name, func() {
-
 				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 				// 1. Prepare pool and positions for test
 
@@ -1019,7 +1017,7 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 		// at the end of configured swaps of the test.
 		// See diagram above the definition of defaultTickSpacingsAway variable for layout.
 		// The first position is NR1, the second position is NR2 etc.
-		// That is, the wider range position is preceeds the narrower range position.
+		// That is, the wider range position is precedes the narrower range position.
 		isPositionActiveFlag []bool
 	}
 
@@ -1080,7 +1078,6 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 		// Validate the positions
 		s.Require().NotEmpty(expectedIsPositionActiveFlags)
 		for i, expectedActivePositionIndex := range expectedIsPositionActiveFlags {
-
 			isInRange := pool.IsCurrentTickInRange(positionMeta[i].lowerTick, positionMeta[i].upperTick)
 			s.Require().Equal(expectedActivePositionIndex, isInRange, fmt.Sprintf("position %d", i))
 		}
@@ -1329,7 +1326,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 
 		// Fetch pool
-		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		_, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
 		// Compute tokenIn amount necessary to reach the min tick.
@@ -1347,7 +1344,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		s.assertPositionOutOfRange(poolId, types.MinInitializedTick, types.MaxTick)
 
 		// Refetch pool
-		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
 		// Validate cannot swap left again
@@ -1369,7 +1366,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		poolId, _ := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 
 		// Fetch pool
-		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		_, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
 		// Compute tokenIn amount necessary to reach the max tick.
@@ -1390,7 +1387,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		s.assertPositionOutOfRange(poolId, types.MinInitializedTick, types.MaxTick)
 
 		// Refetch pool
-		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
 		// Validate cannot swap right again
@@ -1411,7 +1408,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 // that liquidiy is calculated for that position as well as the adjacent position on the swap path.
 // It then repeats this for the other direction.
 func (s *KeeperTestSuite) TestSwapOutGivenIn_GetLiquidityFromAmountsPositionBounds() {
-	// See definiton of defaultTickSpacingsAway for position layout diagram.
+	// See definition of defaultTickSpacingsAway for position layout diagram.
 	poolId, positions := s.setupPoolAndPositions(tickSpacingOne, defaultTickSpacingsAway, DefaultCoins)
 	var (
 		// 3 tick spacings away [30999997, 31000003) (3TS) from the original current tick (31000000)

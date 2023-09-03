@@ -13,7 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	concentrated_liquidity "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/clmocks"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
@@ -71,7 +70,7 @@ var (
 	DefaultExponentOverlappingPositionUpperTick, _ = math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromDec(sqrt4999), DefaultTickSpacing)
 	BAR                                            = "bar"
 	FOO                                            = "foo"
-	InsufficientFundsError                         = fmt.Errorf("insufficient funds")
+	ErrInsufficentFunds                            = fmt.Errorf("insufficient funds")
 	DefaultAuthorizedUptimes                       = []time.Duration{time.Nanosecond}
 	ThreeOrderedConsecutiveAuthorizedUptimes       = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24}
 	ThreeUnorderedNonConsecutiveAuthorizedUptimes  = []time.Duration{time.Nanosecond, time.Hour * 24 * 7, time.Minute}
@@ -96,7 +95,7 @@ type FuzzTestSuite struct {
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 	FuzzTestSuite
-	clk               *concentrated_liquidity.Keeper
+	clk               *cl.Keeper
 	authorizedUptimes []time.Duration
 }
 
@@ -248,7 +247,7 @@ func (s *KeeperTestSuite) addLiquidityToUptimeAccumulators(ctx sdk.Context, pool
 //   - If lowerTick <= currentTick < upperTick, we add to just the global accumulators.
 //
 //   - If lowerTick < upperTick <= currentTick, we add to the upper tick's trackers, but not the lower's.
-func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
+func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, currentTick, lowerTick, upperTick int64, uptimeGrowthToAdd []sdk.DecCoins) {
 	s.Require().True(lowerTick <= upperTick)
 
 	// Note that we process adds to global accums at the end to ensure that they don't affect the behavior of uninitialized ticks.
@@ -432,47 +431,6 @@ func (s *KeeperTestSuite) TestValidatePermissionlessPoolCreationEnabled() {
 
 	// Validate that permissionless pool creation is disabled.
 	s.Require().Error(s.App.ConcentratedLiquidityKeeper.ValidatePermissionlessPoolCreationEnabled(s.Ctx))
-}
-
-// runFungifySetup Sets up a pool with `poolSpreadFactor`, prepares `numPositions` default positions on it (all identical), and sets
-// up the passed in incentive records such that they emit on the pool. It also sets the largest authorized uptime to be `fullChargeDuration`.
-//
-// Returns the pool, expected position ids and the total liquidity created on the pool.
-func (s *KeeperTestSuite) runFungifySetup(address sdk.AccAddress, numPositions int, fullChargeDuration time.Duration, poolSpreadFactor osmomath.Dec, incentiveRecords []types.IncentiveRecord) (types.ConcentratedPoolExtension, []uint64, osmomath.Dec) {
-	expectedPositionIds := make([]uint64, numPositions)
-	for i := 0; i < numPositions; i++ {
-		expectedPositionIds[i] = uint64(i + 1)
-	}
-
-	s.TestAccs = apptesting.CreateRandomAccounts(5)
-	s.SetBlockTime(defaultBlockTime)
-	totalPositionsToCreate := osmomath.NewInt(int64(numPositions))
-	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
-
-	// Set test authorized uptime params.
-	params := s.clk.GetParams(s.Ctx)
-	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, fullChargeDuration}
-	s.clk.SetParams(s.Ctx, params)
-
-	// Fund account
-	s.FundAcc(address, requiredBalances)
-
-	// Create CL pool
-	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, poolSpreadFactor)
-
-	// Set incentives for pool to ensure accumulators work correctly
-	err := s.clk.SetMultipleIncentiveRecords(s.Ctx, incentiveRecords)
-	s.Require().NoError(err)
-
-	// Set up fully charged positions
-	totalLiquidity := osmomath.ZeroDec()
-	for i := 0; i < numPositions; i++ {
-		positionData, err := s.clk.CreatePosition(s.Ctx, defaultPoolId, address, DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-		s.Require().NoError(err)
-		totalLiquidity = totalLiquidity.Add(positionData.Liquidity)
-	}
-
-	return pool, expectedPositionIds, totalLiquidity
 }
 
 func (s *KeeperTestSuite) runMultipleAuthorizedUptimes(tests func()) {

@@ -36,10 +36,12 @@ func (s *BenchTestSuite) createPosition(accountIndex int, poolId uint64, coin0, 
 }
 
 func noError(b *testing.B, err error) {
+	b.Helper()
 	require.NoError(b, err)
 }
 
 func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, pool types.ConcentratedPoolExtension, largeSwapInCoin sdk.Coin, currentTick int64)) {
+	b.Helper()
 	// Notice we stop the timer to skip setup code.
 	b.StopTimer()
 
@@ -231,7 +233,9 @@ func runBenchmark(b *testing.B, testFunc func(b *testing.B, s *BenchTestSuite, p
 }
 
 func BenchmarkSwapExactAmountIn(b *testing.B) {
+	b.Helper()
 	runBenchmark(b, func(b *testing.B, s *BenchTestSuite, pool types.ConcentratedPoolExtension, largeSwapInCoin sdk.Coin, currentTick int64) {
+		b.Helper()
 		clKeeper := s.App.ConcentratedLiquidityKeeper
 
 		liquidityNet, err := clKeeper.GetTickLiquidityNetInDirection(s.Ctx, pool.GetId(), largeSwapInCoin.Denom, osmomath.NewInt(currentTick), osmomath.Int{})
@@ -251,7 +255,9 @@ func BenchmarkSwapExactAmountIn(b *testing.B) {
 }
 
 func BenchmarkGetTickLiquidityNetInDirection(b *testing.B) {
+	b.Helper()
 	runBenchmark(b, func(b *testing.B, s *BenchTestSuite, pool types.ConcentratedPoolExtension, largeSwapInCoin sdk.Coin, currentTick int64) {
+		b.Helper()
 		clKeeper := s.App.ConcentratedLiquidityKeeper
 
 		b.StartTimer()
@@ -267,7 +273,9 @@ func BenchmarkGetTickLiquidityNetInDirection(b *testing.B) {
 }
 
 func BenchmarkGetTickLiquidityForFullRange(b *testing.B) {
+	b.Helper()
 	runBenchmark(b, func(b *testing.B, s *BenchTestSuite, pool types.ConcentratedPoolExtension, largeSwapInCoin sdk.Coin, currentTick int64) {
+		b.Helper()
 		clKeeper := s.App.ConcentratedLiquidityKeeper
 
 		b.StartTimer()

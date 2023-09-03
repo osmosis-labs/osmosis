@@ -15,7 +15,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 const (
@@ -400,15 +399,6 @@ func (s *KeeperTestSuite) TestGetNextPositionAndIncrement() {
 	s.Require().Equal(positionId, uint64(3))
 }
 
-type positionOwnershipTest struct {
-	queryPositionOwner sdk.AccAddress
-	queryPositionId    uint64
-	expPass            bool
-
-	setupPositions []sdk.AccAddress
-	poolId         uint64
-}
-
 func (s *KeeperTestSuite) TestGetUserPositions() {
 	s.Setup()
 	defaultAddress := s.TestAccs[0]
@@ -568,7 +558,6 @@ func (s *KeeperTestSuite) TestGetUserPositionsSerialized() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-
 			s.SetupTest()
 			k := s.App.ConcentratedLiquidityKeeper
 
@@ -952,7 +941,7 @@ func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
 
 func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 	var (
-		positionData       cltypes.CreateFullRangePositionData
+		positionData       types.CreateFullRangePositionData
 		concentratedLockId uint64
 		err                error
 	)
@@ -1126,7 +1115,7 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 
 			// Create a position
 			positionId := uint64(0)
-			liquidity := osmomath.ZeroDec()
+			var liquidity osmomath.Dec
 			if test.createFullRangePosition {
 				var err error
 				positionData, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), test.owner, DefaultCoins)
@@ -1635,7 +1624,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		s.Require().NoError(err)
 		actualFullRangeLiquidity = actualFullRangeLiquidity.Add(positionData.Liquidity)
 
-		clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
+		_, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
 		s.Require().NoError(err)
 
 		// Get the full range liquidity for the pool.
@@ -1648,7 +1637,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		_, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPoolId, owner, DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), tc.lowerTick, tc.upperTick)
 		s.Require().NoError(err)
 
-		clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
+		_, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPoolId)
 		s.Require().NoError(err)
 
 		// Test updating the full range liquidity.
@@ -2081,7 +2070,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	s.swapZeroForOneLeftWithSpread(poolId, coinZeroIn, spreadFactor)
 
 	// Refetch pool
-	pool, err = s.clk.GetPoolById(s.Ctx, poolId)
+	_, err = s.clk.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
 	// Swap to approximately DefaultCurrTick + 150
@@ -2126,6 +2115,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	})
 
 	s.RunTestCaseWithoutStateUpdates("assert rewards when current tick is below the position with negative accumulator", func(t *testing.T) {
+		t.Helper()
 		// Make closure-local copy of expectedTotalSpreadRewards
 		expectedTotalSpreadRewards := expectedTotalSpreadRewards
 		expectedTotalIncentiveRewards := expectedTotalIncentiveRewards
@@ -2155,6 +2145,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	})
 
 	s.RunTestCaseWithoutStateUpdates("assert rewards when current tick is inside the position with negative accumulator", func(t *testing.T) {
+		t.Helper()
 		// Make closure-local copy of expectedTotalSpreadRewards
 		expectedTotalSpreadRewards := expectedTotalSpreadRewards
 		expectedTotalIncentiveRewards := expectedTotalIncentiveRewards
@@ -2184,6 +2175,7 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	})
 
 	s.RunTestCaseWithoutStateUpdates("assert rewards when current tick is above the position with negative accumulator", func(t *testing.T) {
+		t.Helper()
 		// Make closure-local copy of expectedTotalSpreadRewards
 		expectedTotalSpreadRewards := expectedTotalSpreadRewards
 		expectedTotalIncentiveRewards := expectedTotalIncentiveRewards

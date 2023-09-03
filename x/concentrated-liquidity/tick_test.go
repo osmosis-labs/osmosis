@@ -366,7 +366,6 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			} else {
 				s.Require().True(gasConsumed < uint64(types.BaseGasFeeForInitializingTick))
 			}
-
 		})
 	}
 }
@@ -477,7 +476,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 				s.Require().Equal(model.TickInfo{}, tickInfo)
 			} else {
 				s.Require().NoError(err)
-				clPool, err = clKeeper.GetPoolById(s.Ctx, validPoolId)
+				_, err = clKeeper.GetPoolById(s.Ctx, validPoolId)
 				s.Require().NoError(err)
 				s.Require().Equal(test.expectedTickInfo, tickInfo)
 			}

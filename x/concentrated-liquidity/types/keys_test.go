@@ -11,7 +11,7 @@ import (
 )
 
 // TestReverseRelationTickIndexToBytes tests if TickIndexToBytes and TickIndexFromBytes
-// succesfully converts back to the original value.
+// successfully converts back to the original value.
 func TestReverseRelationTickIndexToBytes(t *testing.T) {
 	tests := map[string]struct {
 		tickIndex int64
@@ -112,10 +112,10 @@ func TestAccumulatorNameKeys(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			name1 := types.KeySpreadRewardPoolAccumulator(tc.poolId)
-			require.NotContains(t, string(name1), accum.KeySeparator)
+			require.NotContains(t, name1, accum.KeySeparator)
 			for i := 0; i < 125; i++ {
 				name2 := types.KeyUptimeAccumulator(tc.poolId, uint64(i))
-				require.NotContains(t, string(name2), accum.KeySeparator)
+				require.NotContains(t, name2, accum.KeySeparator)
 			}
 		})
 	}

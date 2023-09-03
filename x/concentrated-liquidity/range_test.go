@@ -44,16 +44,12 @@ type RangeTestParams struct {
 	fuzzNumPositions     bool
 	fuzzSwapAmounts      bool
 	fuzzTimeBetweenJoins bool
-	fuzzIncentiveRecords bool
 
 	// -- Optional additional test dimensions --
 
 	// Have a single address for all positions in each range
 	singleAddrPerRange bool
-	// Create new active incentive records between each join
-	newActiveIncentivesBetweenJoins bool
-	// Create new inactive incentive records between each join
-	newInactiveIncentivesBetweenJoins bool
+
 	// Fund each position address with double the expected amount of assets.
 	// Should only be used for cases where join amount gets pushed up due to
 	// precision near min tick.
@@ -143,7 +139,6 @@ func withNoSwap(params RangeTestParams) RangeTestParams {
 // setupRangesAndAssertInvariants sets up the state specified by `testParams` on the given set of ranges.
 // It also asserts global invariants at each intermediate step.
 func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.ConcentratedPoolExtension, ranges [][]int64, testParams RangeTestParams) {
-
 	// --- Parse test params ---
 
 	// Prepare a slice tracking how many positions to create on each range.
@@ -260,7 +255,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	s.Require().Equal(sdk.NewCoins(totalAssets...), sdk.NewCoins(poolAssets.Add(poolSpreadRewards...)...))
 
 	// Do a final checkpoint for incentives and then run assertions on expected global claimable value
-	cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
+	cumulativeEmittedIncentives, _ = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
 	truncatedEmissions, _ := cumulativeEmittedIncentives.TruncateDecimal()
 
 	// Run global assertions with an optional parameter specifying the expected incentive amount claimable by all positions.

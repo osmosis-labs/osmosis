@@ -14,17 +14,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
 var (
 	defaultPoolId     = uint64(1)
 	defaultMultiplier = osmomath.OneInt()
 
-	testAddressOne   = sdk.MustAccAddressFromBech32("osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks")
-	testAddressTwo   = sdk.MustAccAddressFromBech32("osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv")
-	testAddressThree = sdk.MustAccAddressFromBech32("osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka")
-	testAddressFour  = sdk.MustAccAddressFromBech32("osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53")
+	testAddressOne = sdk.MustAccAddressFromBech32("osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks")
 
 	// Note: lexicographic order is denomFour, denomOne, denomThree, denomTwo
 	testDenomOne   = "denomOne"
@@ -106,18 +102,12 @@ var (
 
 	testQualifyingDepositsOne = osmomath.NewInt(50)
 
-	defaultBalancerAssets = []balancer.PoolAsset{
-		{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("foo", osmomath.NewInt(100))},
-		{Weight: osmomath.NewInt(1), Token: sdk.NewCoin("bar", osmomath.NewInt(100))},
-	}
-	defaultConcentratedAssets = sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)), sdk.NewCoin("bar", osmomath.NewInt(100)))
 	defaultBalancerPoolParams = balancer.PoolParams{SwapFee: osmomath.NewDec(0), ExitFee: osmomath.NewDec(0)}
 	invalidPoolId             = uint64(10)
 )
 
 type ExpectedUptimes struct {
 	emptyExpectedAccumValues     []sdk.DecCoins
-	fiveHundredAccumValues       []sdk.DecCoins
 	hundredTokensSingleDenom     []sdk.DecCoins
 	hundredTokensMultiDenom      []sdk.DecCoins
 	twoHundredTokensMultiDenom   []sdk.DecCoins
@@ -732,17 +722,6 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 	})
 }
 
-func (s *KeeperTestSuite) setupBalancerPoolWithFractionLocked(pa []balancer.PoolAsset, fraction osmomath.Dec) uint64 {
-	balancerPoolId := s.PrepareCustomBalancerPool(pa, defaultBalancerPoolParams)
-	longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
-	s.Require().NoError(err)
-	lockAmt := gammtypes.InitPoolSharesSupply.ToLegacyDec().Mul(fraction).TruncateInt()
-	lockCoins := sdk.NewCoins(sdk.NewCoin(gammtypes.GetPoolShareDenom(balancerPoolId), lockAmt))
-	_, err = s.App.LockupKeeper.CreateLock(s.Ctx, s.TestAccs[0], lockCoins, longestLockableDuration)
-	s.Require().NoError(err)
-	return balancerPoolId
-}
-
 // Testing strategy:
 // 1. Create a position
 // 2. Let a fixed amount of time pass, enough to qualify it for some (but not all) uptimes
@@ -910,7 +889,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				s.Require().NoError(err)
 
 				// Add qualifying and non-qualifying liquidity to the pool
-				qualifyingLiquidity := osmomath.ZeroDec()
+				var qualifyingLiquidity osmomath.Dec
 				depositedCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsOne), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsOne))
 				s.FundAcc(testAddressOne, depositedCoins)
 				positionData, err := clKeeper.CreatePosition(s.Ctx, clPool.GetId(), testAddressOne, depositedCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), clPool.GetCurrentTick()-100, clPool.GetCurrentTick()+100)
@@ -2235,7 +2214,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 
 					// Add to uptime growth inside range
 					if tc.addedUptimeGrowthInside != nil {
-						s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, ownerWithValidPosition, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.addedUptimeGrowthInside)
+						s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.addedUptimeGrowthInside)
 					}
 
 					// Add to uptime growth outside range
@@ -2831,7 +2810,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				}
 
 				if tc.growthInside != nil {
-					s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick, DefaultLowerTick, DefaultUpperTick, tc.growthInside)
+					s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, DefaultCurrTick, DefaultLowerTick, DefaultUpperTick, tc.growthInside)
 				}
 
 				err = s.clk.SetPool(s.Ctx, clPool)
@@ -2926,13 +2905,13 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 		{
 			name:                     "Claim after 1 minute, 1ns uptime",
 			blockTimeElapsed:         time.Minute,
-			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, osmomath.NewInt(59))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
+			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, osmomath.NewInt(59))), //  after 1min = 59.999999999901820104usdc ~ 59usdc because 1usdc emitted every second
 			minUptimeIncentiveRecord: time.Nanosecond,
 		},
 		{
 			name:                     "Claim after 1 hr, 1ns uptime",
 			blockTimeElapsed:         time.Hour,
-			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, osmomath.NewInt(3599))), //  after 1min = 59.999999999901820104usdc ~ 59usdc becasue 1usdc emitted every second
+			expectedCoins:            sdk.NewCoins(sdk.NewCoin(USDC, osmomath.NewInt(3599))), //  after 1min = 59.999999999901820104usdc ~ 59usdc because 1usdc emitted every second
 			minUptimeIncentiveRecord: time.Nanosecond,
 		},
 		{
@@ -3052,7 +3031,6 @@ func (s *KeeperTestSuite) TestPrepareClaimAllIncentivesForPosition() {
 			for i, uptimeAccumDiffPostClaim := range uptimeAccumsDiffPostClaim {
 				s.Require().Equal(expectedForfeitedIncentives[i].Amount, uptimeAccumDiffPostClaim.Amount)
 			}
-
 		})
 	}
 }
@@ -3516,7 +3494,6 @@ func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-
 			s.SetupTest()
 			k := s.App.ConcentratedLiquidityKeeper
 

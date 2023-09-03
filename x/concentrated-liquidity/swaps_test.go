@@ -9,7 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
 	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
@@ -758,7 +757,7 @@ var (
 			expectedTokenIn:  sdk.NewCoin("eth", osmomath.NewInt(12892)),
 			expectedTokenOut: sdk.NewCoin("usdc", osmomath.NewInt(64417624)),
 			expectedTick: func() int64 {
-				tick, _ := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromDec(sqrt4994), DefaultTickSpacing)
+				tick, _ := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromDec(sqrt4994), DefaultTickSpacing)
 				return tick
 			}(),
 			// Since the next sqrt price is based on the price limit, we can calculate this directly.
@@ -896,7 +895,7 @@ var (
 			expectedTokenOut: sdk.NewCoin("usdc", osmomath.NewInt(64417624)),
 			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000000085792039652"),
 			expectedTick: func() int64 {
-				tick, _ := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromDec(sqrt4994), DefaultTickSpacing)
+				tick, _ := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromDec(sqrt4994), DefaultTickSpacing)
 				return tick
 			}(),
 			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.668238976219012614"),
@@ -2027,9 +2026,9 @@ func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.Concent
 
 	newLowerTick, newUpperTick := s.lowerUpperPricesToTick(test.newLowerPrice, test.newUpperPrice, pool.GetTickSpacing())
 
-	_, lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
+	_, lowerSqrtPrice, err := clmath.TickToSqrtPrice(newLowerTick)
 	s.Require().NoError(err)
-	_, upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
+	_, upperSqrtPrice, err := clmath.TickToSqrtPrice(newUpperTick)
 	s.Require().NoError(err)
 
 	if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
@@ -2037,7 +2036,7 @@ func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.Concent
 		test.poolLiqAmount1 = DefaultAmt1
 	}
 
-	expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
+	expectedLiquidity := clmath.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 	return expectedLiquidity
 }
 

@@ -19,11 +19,8 @@ var (
 	// spot price - (10^(spot price exponent - 6 - 1))
 	// Note we get spot price exponent by counting the number of digits in the max spot price and subtracting 1.
 	closestPriceBelowMaxPriceDefaultTickSpacing = types.MaxSpotPrice.Sub(osmomath.NewDec(10).PowerMut(uint64(len(types.MaxSpotPrice.TruncateInt().String()) - 1 - int(-types.ExponentAtPriceOne) - 1)))
-	// min tick + 10 ^ -expoentAtPriceOne
-	closestTickAboveMinPriceDefaultTickSpacing = osmomath.NewInt(types.MinInitializedTick).Add(osmomath.NewInt(10).ToLegacyDec().Power(uint64(types.ExponentAtPriceOne * -1)).TruncateInt())
 
 	smallestBigDec = osmomath.SmallestBigDec()
-	bigOneDec      = osmomath.OneDec()
 	bigTenDec      = osmomath.NewBigDec(10)
 )
 
@@ -394,7 +391,7 @@ func TestPriceToTick(t *testing.T) {
 		tc := tc
 
 		t.Run(name, func(t *testing.T) {
-			// surpress error here, we only listen to errors from system under test.
+			// suppress error here, we only listen to errors from system under test.
 			tick, _ := math.CalculatePriceToTick(tc.price)
 
 			// With tick spacing of one, no rounding should occur.

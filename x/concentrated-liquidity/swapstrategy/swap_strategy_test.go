@@ -49,7 +49,6 @@ var (
 	defaultAmountReserves   = osmomath.NewInt(1_000_000_000)
 	DefaultCoins            = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves))
 	oneULPDec               = osmomath.SmallestDec()
-	oneULPBigDec            = osmomath.SmallestDec()
 )
 
 func TestStrategyTestSuite(t *testing.T) {
@@ -61,13 +60,11 @@ func (suite *StrategyTestSuite) SetupTest() {
 }
 
 type tickIteratorTest struct {
-	currentTick     int64
 	preSetPositions []position
 	tickSpacing     uint64
 
 	expectIsValid  bool
 	expectNextTick int64
-	expectError    error
 }
 
 func (suite *StrategyTestSuite) runTickIteratorTest(strategy swapstrategy.SwapStrategy, tc tickIteratorTest) {

@@ -564,7 +564,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// with tick spacing > 1, requiring price to tick conversion with rounding.
 			curTick, err := math.CalculateSqrtPriceToTick(osmomath.BigDecFromDec(osmomath.MustMonotonicSqrt(curPrice)))
 			s.Require().NoError(err)
-			var curSqrtPrice osmomath.BigDec = osmomath.OneBigDec()
+			var curSqrtPrice = osmomath.OneBigDec()
 			if test.currentPoolTick > 0 {
 				_, sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
 				s.Require().NoError(err)

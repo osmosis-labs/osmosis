@@ -53,7 +53,6 @@ func TestConcentratedPoolTestSuite(t *testing.T) {
 
 // TestGetAddress tests the GetAddress method of pool
 func (s *ConcentratedPoolTestSuite) TestGetAddress() {
-
 	tests := []struct {
 		name          string
 		expectedPanic bool
@@ -94,7 +93,6 @@ func (s *ConcentratedPoolTestSuite) TestGetAddress() {
 
 // TestGetIncentivesAddress tests the GetIncentivesAddress method of pool
 func (s *ConcentratedPoolTestSuite) TestGetIncentivesAddress() {
-
 	tests := []struct {
 		name          string
 		expectedPanic bool
@@ -564,11 +562,11 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 	}
 }
 
-func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
+func (s *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 	var (
 		tickToSqrtPrice = func(tick int64) osmomath.BigDec {
 			_, sqrtPrice, err := clmath.TickToSqrtPrice(tick)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 			return sqrtPrice
 		}
 
@@ -689,8 +687,8 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.Setup()
+		s.Run(name, func() {
+			s.Setup()
 
 			pool := model.Pool{
 				CurrentTick: tc.currentTick,
@@ -698,35 +696,35 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
 			pool.CurrentSqrtPrice = currenTicktSqrtPrice
 
-			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
+			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(s.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 
 			if tc.expectError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorIs(err, tc.expectError)
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectError)
 				return
 			}
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
-			suite.Require().Equal(tc.expectedAmount0, actualAmount0)
-			suite.Require().Equal(tc.expectedAmount1, actualAmount1)
+			s.Require().Equal(tc.expectedAmount0, actualAmount0)
+			s.Require().Equal(tc.expectedAmount1, actualAmount1)
 
 			// Note: to test rounding invariants around positive and negative liquidity.
 			if tc.shouldTestRoundingInvariant {
-				actualAmount0Neg, actualAmount1Neg, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta.Neg())
-				suite.Require().NoError(err)
+				actualAmount0Neg, actualAmount1Neg, err := pool.CalcActualAmounts(s.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta.Neg())
+				s.Require().NoError(err)
 
 				amt0Diff := actualAmount0.Sub(actualAmount0Neg.Neg())
 				amt1Diff := actualAmount1.Sub(actualAmount1Neg.Neg())
 
 				// Difference is between 0 and 1 due to positive liquidity rounding up and negative liquidity performing math normally.
-				suite.Require().True(amt0Diff.IsPositive() && amt0Diff.LT(osmomath.OneDec()))
-				suite.Require().True(amt1Diff.IsPositive() && amt1Diff.LT(osmomath.OneDec()))
+				s.Require().True(amt0Diff.IsPositive() && amt0Diff.LT(osmomath.OneDec()))
+				s.Require().True(amt1Diff.IsPositive() && amt1Diff.LT(osmomath.OneDec()))
 			}
 		})
 	}
 }
 
-func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
+func (s *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 	var (
 		defaultLiquidityDelta = osmomath.NewDec(1000)
 		defaultLiquidityAmt   = osmomath.NewDec(1000)
@@ -783,8 +781,8 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.Setup()
+		s.Run(name, func() {
+			s.Setup()
 
 			pool := model.Pool{
 				CurrentTick:          tc.currentTick,
@@ -793,20 +791,20 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
 			pool.CurrentSqrtPrice = currenTicktSqrtPrice
 
-			wasUpdated := pool.UpdateLiquidityIfActivePosition(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
+			wasUpdated := pool.UpdateLiquidityIfActivePosition(s.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 			if tc.lowerTick <= tc.currentTick && tc.currentTick <= tc.upperTick {
-				suite.Require().True(wasUpdated)
+				s.Require().True(wasUpdated)
 				expectedCurrentTickLiquidity := defaultLiquidityAmt.Add(tc.liquidityDelta)
-				suite.Require().Equal(expectedCurrentTickLiquidity, pool.CurrentTickLiquidity)
+				s.Require().Equal(expectedCurrentTickLiquidity, pool.CurrentTickLiquidity)
 			} else {
-				suite.Require().False(wasUpdated)
-				suite.Require().Equal(defaultLiquidityAmt, pool.CurrentTickLiquidity)
+				s.Require().False(wasUpdated)
+				s.Require().Equal(defaultLiquidityAmt, pool.CurrentTickLiquidity)
 			}
 		})
 	}
 }
 
-func (suite *ConcentratedPoolTestSuite) TestPoolSetMethods() {
+func (s *ConcentratedPoolTestSuite) TestPoolSetMethods() {
 	var (
 		newCurrentTick      = DefaultCurrTick
 		newCurrentSqrtPrice = DefaultCurrSqrtPrice
@@ -829,17 +827,17 @@ func (suite *ConcentratedPoolTestSuite) TestPoolSetMethods() {
 
 	for name, tc := range tests {
 		tc := tc
-		suite.Run(name, func() {
-			suite.Setup()
+		s.Run(name, func() {
+			s.Setup()
 
-			currentBlockTime := suite.Ctx.BlockTime()
+			currentBlockTime := s.Ctx.BlockTime()
 
 			// Create the pool and check that the initial values are not equal to the new values we will set.
-			clPool := suite.PrepareConcentratedPool()
-			suite.Require().NotEqual(tc.currentTick, clPool.GetCurrentTick())
-			suite.Require().NotEqual(tc.currentSqrtPrice, clPool.GetCurrentSqrtPrice())
-			suite.Require().NotEqual(tc.tickSpacing, clPool.GetTickSpacing())
-			suite.Require().NotEqual(currentBlockTime.Add(tc.lastLiquidityUpdateDelta), clPool.GetLastLiquidityUpdate())
+			clPool := s.PrepareConcentratedPool()
+			s.Require().NotEqual(tc.currentTick, clPool.GetCurrentTick())
+			s.Require().NotEqual(tc.currentSqrtPrice, clPool.GetCurrentSqrtPrice())
+			s.Require().NotEqual(tc.tickSpacing, clPool.GetTickSpacing())
+			s.Require().NotEqual(currentBlockTime.Add(tc.lastLiquidityUpdateDelta), clPool.GetLastLiquidityUpdate())
 
 			// Run the setters.
 			clPool.SetCurrentTick(tc.currentTick)
@@ -848,10 +846,10 @@ func (suite *ConcentratedPoolTestSuite) TestPoolSetMethods() {
 			clPool.SetLastLiquidityUpdate(currentBlockTime.Add(tc.lastLiquidityUpdateDelta))
 
 			// Check that the values are now equal to the new values.
-			suite.Require().Equal(tc.currentTick, clPool.GetCurrentTick())
-			suite.Require().Equal(tc.currentSqrtPrice, clPool.GetCurrentSqrtPrice())
-			suite.Require().Equal(tc.tickSpacing, clPool.GetTickSpacing())
-			suite.Require().Equal(currentBlockTime.Add(tc.lastLiquidityUpdateDelta), clPool.GetLastLiquidityUpdate())
+			s.Require().Equal(tc.currentTick, clPool.GetCurrentTick())
+			s.Require().Equal(tc.currentSqrtPrice, clPool.GetCurrentSqrtPrice())
+			s.Require().Equal(tc.tickSpacing, clPool.GetTickSpacing())
+			s.Require().Equal(currentBlockTime.Add(tc.lastLiquidityUpdateDelta), clPool.GetLastLiquidityUpdate())
 		})
 	}
 }

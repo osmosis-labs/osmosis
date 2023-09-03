@@ -22,7 +22,7 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		{
 			name: "invalid params",
-			genesis: *&genesis.GenesisState{
+			genesis: genesis.GenesisState{
 				Params:                types.Params{},
 				PoolData:              genesis.DefaultGenesis().PoolData,
 				NextPositionId:        genesis.DefaultGenesis().GetNextPositionId(),
@@ -32,7 +32,7 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		{
 			name: "next position id is zero",
-			genesis: *&genesis.GenesisState{
+			genesis: genesis.GenesisState{
 				Params:                genesis.DefaultGenesis().GetParams(),
 				PoolData:              genesis.DefaultGenesis().PoolData,
 				NextPositionId:        0,
@@ -42,7 +42,7 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		{
 			name: "next incentive record id is zero",
-			genesis: *&genesis.GenesisState{
+			genesis: genesis.GenesisState{
 				Params:                genesis.DefaultGenesis().GetParams(),
 				PoolData:              genesis.DefaultGenesis().PoolData,
 				NextPositionId:        genesis.DefaultGenesis().GetNextPositionId(),
