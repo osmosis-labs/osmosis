@@ -232,7 +232,7 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 	}
 }
 
-func (s *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking bool, owner sdk.AccAddress) (positionId, lockId uint64, amount0, amount1 osmomath.Int, valAddr sdk.ValAddress, poolJoinAcc sdk.AccAddress) {
+func (s *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking bool, owner sdk.AccAddress) (positionId, lockId uint64, amount0, amount1 osmomath.Int, valAddr sdk.ValAddress, poolJoinAcc sdk.AccAddress) { //nolint:revive // TODO: refactor this function
 	bankKeeper := s.App.BankKeeper
 	superfluidKeeper := s.App.SuperfluidKeeper
 	lockupKeeper := s.App.LockupKeeper
