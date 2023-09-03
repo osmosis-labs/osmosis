@@ -25,9 +25,9 @@ type UpgradeTestSuite struct {
 	app *app.OsmosisApp
 }
 
-func (suite *UpgradeTestSuite) SetupTest() {
-	suite.app = app.Setup(false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+func (s *UpgradeTestSuite) SetupTest() {
+	s.app = app.Setup(false)
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -36,7 +36,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 const dummyUpgradeHeight = 5
 
-func (suite *UpgradeTestSuite) TestUpgradePayments() {
+func (s *UpgradeTestSuite) TestUpgradePayments() {
 	testCases := []struct {
 		msg         string
 		pre_update  func()
@@ -52,27 +52,27 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 				bal := int64(1000000000000)
 				coin := sdk.NewInt64Coin("uosmo", bal)
 				coins := sdk.NewCoins(coin)
-				err := suite.app.BankKeeper.MintCoins(suite.ctx, "mint", coins)
-				suite.Require().NoError(err)
-				err = suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, "mint", "distribution", coins)
-				suite.Require().NoError(err)
-				feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
+				err := s.app.BankKeeper.MintCoins(s.ctx, "mint", coins)
+				s.Require().NoError(err)
+				err = s.app.BankKeeper.SendCoinsFromModuleToModule(s.ctx, "mint", "distribution", coins)
+				s.Require().NoError(err)
+				feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
 				feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinFromCoin(coin))
-				suite.app.DistrKeeper.SetFeePool(suite.ctx, feePool)
+				s.app.DistrKeeper.SetFeePool(s.ctx, feePool)
 			},
 			func() {
 				// run upgrade
-				suite.ctx = suite.ctx.WithBlockHeight(dummyUpgradeHeight - 1)
+				s.ctx = s.ctx.WithBlockHeight(dummyUpgradeHeight - 1)
 				plan := upgradetypes.Plan{Name: "v4", Height: dummyUpgradeHeight}
-				err := suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
-				suite.Require().NoError(err)
-				_, exists := suite.app.UpgradeKeeper.GetUpgradePlan(suite.ctx)
-				suite.Require().True(exists)
+				err := s.app.UpgradeKeeper.ScheduleUpgrade(s.ctx, plan)
+				s.Require().NoError(err)
+				_, exists := s.app.UpgradeKeeper.GetUpgradePlan(s.ctx)
+				s.Require().True(exists)
 
-				suite.ctx = suite.ctx.WithBlockHeight(dummyUpgradeHeight)
-				suite.Require().NotPanics(func() {
+				s.ctx = s.ctx.WithBlockHeight(dummyUpgradeHeight)
+				s.Require().NotPanics(func() {
 					beginBlockRequest := abci.RequestBeginBlock{}
-					suite.app.BeginBlocker(suite.ctx, beginBlockRequest)
+					s.app.BeginBlocker(s.ctx, beginBlockRequest)
 				})
 			},
 			func() {
@@ -82,45 +82,45 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 				payments := v4.GetProp12Payments()
 				for _, payment := range payments {
 					addr, err := sdk.AccAddressFromBech32(payment[0])
-					suite.Require().NoError(err)
+					s.Require().NoError(err)
 					amount, err := strconv.ParseInt(strings.TrimSpace(payment[1]), 10, 64)
-					suite.Require().NoError(err)
+					s.Require().NoError(err)
 					coin := sdk.NewInt64Coin("uosmo", amount)
 
-					accBal := suite.app.BankKeeper.GetBalance(suite.ctx, addr, "uosmo")
-					suite.Require().Equal(coin, accBal)
+					accBal := s.app.BankKeeper.GetBalance(s.ctx, addr, "uosmo")
+					s.Require().Equal(coin, accBal)
 
 					total += amount
 				}
 
 				// check that the total paid out was as expected
-				suite.Require().Equal(total, int64(367926557424))
+				s.Require().Equal(total, int64(367926557424))
 
 				expectedBal := 1000000000000 - total
 
 				// check that distribution module account balance has been reduced correctly
-				distAddr := suite.app.AccountKeeper.GetModuleAddress("distribution")
-				distBal := suite.app.BankKeeper.GetBalance(suite.ctx, distAddr, "uosmo")
-				suite.Require().Equal(distBal, sdk.NewInt64Coin("uosmo", expectedBal))
+				distAddr := s.app.AccountKeeper.GetModuleAddress("distribution")
+				distBal := s.app.BankKeeper.GetBalance(s.ctx, distAddr, "uosmo")
+				s.Require().Equal(distBal, sdk.NewInt64Coin("uosmo", expectedBal))
 
 				// check that feepool.communitypool has been reduced correctly
-				feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
-				suite.Require().Equal(feePool.GetCommunityPool(), sdk.NewDecCoins(sdk.NewInt64DecCoin("uosmo", expectedBal)))
+				feePool := s.app.DistrKeeper.GetFeePool(s.ctx)
+				s.Require().Equal(feePool.GetCommunityPool(), sdk.NewDecCoins(sdk.NewInt64DecCoin("uosmo", expectedBal)))
 
 				// Check that gamm Minimum Fee has been set correctly
 
 				// Kept as comments for recordkeeping. Since SetParams is now private, the changes being tested for can no longer be made:
-				//  	gammParams := suite.app.GAMMKeeper.GetParams(suite.ctx)
+				//  	gammParams := s.app.GAMMKeeper.GetParams(suite.ctx)
 				//  	expectedCreationFee := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.OneInt()))
-				//  	suite.Require().Equal(gammParams.PoolCreationFee, expectedCreationFee)
+				//  	s.Require().Equal(gammParams.PoolCreationFee, expectedCreationFee)
 			},
 			true,
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest() // reset
+		s.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			s.SetupTest() // reset
 
 			tc.pre_update()
 			tc.update()
