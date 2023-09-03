@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -127,6 +128,13 @@ func (s *IntegrationTestSuite) updatedCFMMPool(node *chain.NodeConfig, poolId ui
 	cfmmPool, err := node.QueryCFMMPool(poolId)
 	s.Require().NoError(err)
 	return cfmmPool
+}
+
+func formatCLIInt(i int) string {
+	if i < 0 {
+		return fmt.Sprintf("[%d]", i)
+	}
+	return strconv.Itoa(i)
 }
 
 // Assert returned positions:

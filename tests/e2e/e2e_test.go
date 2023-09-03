@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
@@ -33,6 +34,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
 	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
@@ -365,59 +367,66 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	address1 := chainBNode.CreateWalletAndFund("addr1", fundTokens, chainB)
 	address2 := chainBNode.CreateWalletAndFund("addr2", fundTokens, chainB)
 	address3 := chainBNode.CreateWalletAndFund("addr3", fundTokens, chainB)
+	addresses := []string{address1, address2, address3}
 
 	// When claiming rewards, a small portion of dust is forfeited and is redistributed to everyone. We must track the total
 	// liquidity across all positions (even if not active), in order to calculate how much to increase the reward growth global per share by.
 	totalLiquidity := osmomath.ZeroDec()
 
+	// not sure what this is
+	createPosFormat := fmt.Sprintf("10000000%s,10000000%s", denom0, denom1)
+	createPosition := func(address string, lower int, upper int) math.LegacyDec {
+		_, liquidity := chainBNode.CreateConcentratedPosition(address, formatCLIInt(lower), formatCLIInt(upper), createPosFormat, 0, 0, poolID)
+		return liquidity
+	}
+
 	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions
-	_, liquidity := chainBNode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
-	_, liquidity = chainBNode.CreateConcentratedPosition(address1, "[-40000]", "120000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
+	type clposition struct {
+		lower int
+		upper int
+	}
+	positions := [][]clposition{
+		{{-120000, 40000}, {-40000, 120000}},
+		{{220000, int(cltypes.MaxTick)}},
+		{{-160000, -20000}, {int(cltypes.MinInitializedTick), 140000}},
+	}
+	createdPositions := [][]model.FullPositionBreakdown{{}, {}, {}}
+	// Create all positions, with each address' positions created in sequence, but all addresses' created concurrently
+	var clwg sync.WaitGroup
+	var mu sync.Mutex
 
-	// Create 1 position for address2: does not overlap with anything, ends at maximum
-	_, liquidity = chainBNode.CreateConcentratedPosition(address2, "220000", fmt.Sprintf("%d", cltypes.MaxTick), fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
+	for i, _ := range positions {
+		clwg.Add(1)
+		go func(i int) { // Launch a goroutine
+			addr, positionSet := addresses[i], positions[i]
+			defer clwg.Done() // Decrement the counter when the goroutine completes
+			userLiquidity := math.LegacyZeroDec()
+			for _, j := range positionSet {
+				liquidity := createPosition(addr, j.lower, j.upper)
+				userLiquidity.AddMut(liquidity)
+			}
+			mu.Lock() // Lock totalLiquidity for concurrent write
+			totalLiquidity.AddMut(userLiquidity)
+			mu.Unlock() // Unlock after write
+			createdPositions[i] = chainBNode.QueryConcentratedPositions(addr)
+		}(i)
+	}
 
-	// Create 2 positions for address3: overlap together, overlap with 2 address1 positions, one position starts from minimum
-	_, liquidity = chainBNode.CreateConcentratedPosition(address3, "[-160000]", "[-20000]", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
-	_, liquidity = chainBNode.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinInitializedTick), "140000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
-
-	// Get newly created positions
-	positionsAddress1 := chainBNode.QueryConcentratedPositions(address1)
-	positionsAddress2 := chainBNode.QueryConcentratedPositions(address2)
-	positionsAddress3 := chainBNode.QueryConcentratedPositions(address3)
+	clwg.Wait() // Block until all goroutines complete
 
 	concentratedPool = s.updatedConcentratedPool(chainBNode, poolID)
 
-	// Assert number of positions per address
-	s.Require().Equal(len(positionsAddress1), 2)
-	s.Require().Equal(len(positionsAddress2), 1)
-	s.Require().Equal(len(positionsAddress3), 2)
+	for i, posSet := range positions {
+		s.Require().Equal(len(createdPositions[i]), len(posSet))
+		for j, pos := range posSet {
+			s.validateCLPosition(createdPositions[i][j].Position, poolID, int64(pos.lower), int64(pos.upper))
+		}
+	}
 
-	// Assert positions for address1
-	addr1position1 := positionsAddress1[0].Position
-	addr1position2 := positionsAddress1[1].Position
-	// First position first address
-	s.validateCLPosition(addr1position1, poolID, -120000, 40000)
-	// Second position second address
-	s.validateCLPosition(addr1position2, poolID, -40000, 120000)
-
-	// Assert positions for address2
-	addr2position1 := positionsAddress2[0].Position
-	// First position second address
-	s.validateCLPosition(addr2position1, poolID, 220000, cltypes.MaxTick)
-
-	// Assert positions for address3
-	addr3position1 := positionsAddress3[0].Position
-	addr3position2 := positionsAddress3[1].Position
-	// First position third address
-	s.validateCLPosition(addr3position1, poolID, -160000, -20000)
-	// Second position third address
-	s.validateCLPosition(addr3position2, poolID, cltypes.MinInitializedTick, 140000)
+	// compat with old code
+	positionsAddress1 := createdPositions[0]
+	positionsAddress2 := createdPositions[1]
+	positionsAddress3 := createdPositions[2]
 
 	// Collect SpreadRewards
 
@@ -823,26 +832,22 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	chainB.WaitForNumHeights(2)
 
 	// Assert removing some liquidity
-	// address1: check removing some amount of liquidity
-	address1position1liquidityBefore := positionsAddress1[0].Position.Liquidity
-	chainBNode.WithdrawPosition(address1, defaultLiquidityRemoval, positionsAddress1[0].Position.PositionId)
-	// assert
-	positionsAddress1 = chainBNode.QueryConcentratedPositions(address1)
-	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
-
-	// address2: check removing some amount of liquidity
-	address2position1liquidityBefore := positionsAddress2[0].Position.Liquidity
-	chainBNode.WithdrawPosition(address2, defaultLiquidityRemoval, positionsAddress2[0].Position.PositionId)
-	// assert
-	positionsAddress2 = chainBNode.QueryConcentratedPositions(address2)
-	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
-
-	// address3: check removing some amount of liquidity
-	address3position1liquidityBefore := positionsAddress3[0].Position.Liquidity
-	chainBNode.WithdrawPosition(address3, defaultLiquidityRemoval, positionsAddress3[0].Position.PositionId)
-	// assert
-	positionsAddress3 = chainBNode.QueryConcentratedPositions(address3)
-	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
+	// remove default liquidity from the 0th position of every address
+	clwg = sync.WaitGroup{}
+	for i := range createdPositions {
+		clwg.Add(1)
+		go func(i int) { // Launch a goroutine
+			defer clwg.Done()
+			addr := addresses[i]
+			posSet := createdPositions[i]
+			posLiquidityBefore := posSet[0].Position.Liquidity
+			chainBNode.WithdrawPosition(addr, defaultLiquidityRemoval, posSet[0].Position.PositionId)
+			// assert
+			positionsAddress1 = chainBNode.QueryConcentratedPositions(addr)
+			s.Require().Equal(posLiquidityBefore, posSet[0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
+		}(i)
+	}
+	clwg.Wait()
 
 	// Assert removing all liquidity
 	// address2: no more positions left
