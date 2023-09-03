@@ -696,7 +696,6 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 
 				s.Require().Equal(groupGaugeObj.InternalIds, tc.internalGaugeIds)
 			}
-
 		})
 	}
 }
@@ -764,9 +763,7 @@ func (s *KeeperTestSuite) TestAddToGaugeRewardsFromGauge() {
 				s.Require().NoError(err)
 
 				s.Require().Equal(gauge.Coins, tc.coinsToTransfer)
-
 			}
 		})
 	}
-
 }

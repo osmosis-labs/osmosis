@@ -4,13 +4,13 @@ import (
 	"strings"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	poolincentivetypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
@@ -90,7 +90,7 @@ func (s *KeeperTestSuite) TestDistribute() {
 			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
 		},
 		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
-		// we change oneLockupUser lock's reward recepient to the twoLockupUser
+		// we change oneLockupUser lock's reward recipient to the twoLockupUser
 		// none should go to oneLockupUser and 3k to twoLockupUser.
 		{
 			name:   "Change Reward Receiver: One user with one lockup, another user with two lockups, single default gauge",
@@ -106,7 +106,7 @@ func (s *KeeperTestSuite) TestDistribute() {
 			expectedRewards: []sdk.Coins{sdk.NewCoins(), threeKRewardCoins},
 		},
 		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
-		// We change oneLockupUser's reward recepient to twoLockupUser, twoLockupUser's reward recepient to OneLockupUser.
+		// We change oneLockupUser's reward recipient to twoLockupUser, twoLockupUser's reward recipient to OneLockupUser.
 		// Rewards should be reversed to the original test case, 2k should go to oneLockupUser and 1k to twoLockupUser.
 		{
 			name:   "Change Reward Receiver: One user with one lockup, another user with two lockups, single default gauge",
@@ -131,7 +131,7 @@ func (s *KeeperTestSuite) TestDistribute() {
 		},
 		// gauge 1 gives 3k coins. three locks, all eligible.
 		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
-		// Change all of oneLockupUser's reward recepient to twoLockupUser, vice versa.
+		// Change all of oneLockupUser's reward recipient to twoLockupUser, vice versa.
 		// Rewards should be reversed, 5k should to oneLockupUser and 1k to twoLockupUser.
 		{
 			name:   "Change Reward Receiver: One user with one lockup (default gauge), another user with two lockups (double length gauge)",
@@ -369,19 +369,18 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 
 	type test struct {
 		// setup
-		isPerpertual       bool
-		tokensToAddToGauge sdk.Coins
-		gaugeStartTime     time.Time
-		gaugeCoins         sdk.Coins
-		distrTo            lockuptypes.QueryCondition
-		startTime          time.Time
-		numEpochsPaidOver  uint64
-		poolId             uint64
+		isPerpertual      bool
+		gaugeStartTime    time.Time
+		gaugeCoins        sdk.Coins
+		distrTo           lockuptypes.QueryCondition
+		startTime         time.Time
+		numEpochsPaidOver uint64
+		poolId            uint64
 
 		// expected
 		expectErr                              bool
 		expectedDistributions                  sdk.Coins
-		expectedRemainingAmountIncentiveRecord []sdk.Dec
+		expectedRemainingAmountIncentiveRecord []sdkmath.LegacyDec
 	}
 
 	defaultTest := test{
@@ -406,7 +405,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 	withGaugeCoins := func(tc test, gaugeCoins sdk.Coins) test {
 		tc.gaugeCoins = gaugeCoins
 		tc.expectedDistributions = gaugeCoins
-		tc.expectedRemainingAmountIncentiveRecord = make([]sdk.Dec, len(gaugeCoins))
+		tc.expectedRemainingAmountIncentiveRecord = make([]sdkmath.LegacyDec, len(gaugeCoins))
 		for i := range tc.expectedRemainingAmountIncentiveRecord {
 			tc.expectedRemainingAmountIncentiveRecord[i] = osmomath.NewDec(gaugeCoins[i].Amount.Int64())
 		}
@@ -423,7 +422,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		tempDistributions := make(sdk.Coins, len(tc.expectedDistributions))
 		copy(tempDistributions, tc.expectedDistributions)
 
-		tempRemainingAmountIncentiveRecord := make([]sdk.Dec, len(tc.expectedRemainingAmountIncentiveRecord))
+		tempRemainingAmountIncentiveRecord := make([]sdkmath.LegacyDec, len(tc.expectedRemainingAmountIncentiveRecord))
 		copy(tempRemainingAmountIncentiveRecord, tc.expectedRemainingAmountIncentiveRecord)
 
 		for i := range tc.expectedRemainingAmountIncentiveRecord {
@@ -899,18 +898,18 @@ func (s *KeeperTestSuite) TestGetPoolFromGaugeId() {
 //   - we only distribute external incentive in epoch 1.
 //   - Check that incentive record has been correctly created and gauge has been correctly updated.
 //   - all perpetual gauges must finish distributing records
-//   - ClPool1 will recieve full 1Musdc, 1Meth in this epoch.
-//   - ClPool2 will recieve 500kusdc, 500keth in this epoch.
-//   - ClPool3 will recieve full 1Musdc, 1Meth in this epoch whereas
+//   - ClPool1 will receive full 1Musdc, 1Meth in this epoch.
+//   - ClPool2 will receive 500kusdc, 500keth in this epoch.
+//   - ClPool3 will receive full 1Musdc, 1Meth in this epoch whereas
 //
 // 6. Remove distribution records for internal incentives using HandleReplacePoolIncentivesProposal
 // 7. let epoch 2 pass
 //   - We distribute internal incentive in epoch 2.
 //   - check only external non-perpetual gauges with 2 epochs distributed
 //   - check gauge has been correctly updated
-//   - ClPool1 will already have 1Musdc, 1Meth (from epoch1) as external incentive. Will recieve 750Kstake as internal incentive.
-//   - ClPool2 will already have 500kusdc, 500keth (from epoch1) as external incentive. Will recieve 500kusdc, 500keth (from epoch 2) as external incentive and 750Kstake as internal incentive.
-//   - ClPool3 will already have 1M, 1M (from epoch1) as external incentive. This pool will not recieve any internal incentive.
+//   - ClPool1 will already have 1Musdc, 1Meth (from epoch1) as external incentive. Will receive 750Kstake as internal incentive.
+//   - ClPool2 will already have 500kusdc, 500keth (from epoch1) as external incentive. Will receive 500kusdc, 500keth (from epoch 2) as external incentive and 750Kstake as internal incentive.
+//   - ClPool3 will already have 1M, 1M (from epoch1) as external incentive. This pool will not receive any internal incentive.
 //
 // 8. let epoch 3 pass
 //   - nothing distributes as non-perpetual gauges with 2 epochs have ended and perpetual gauges have not been reloaded
@@ -934,7 +933,7 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 
 	s.FundAcc(s.TestAccs[1], requiredBalances)
 	s.FundAcc(s.TestAccs[2], requiredBalances)
-	s.FundModuleAcc(incentivetypes.ModuleName, requiredBalances)
+	s.FundModuleAcc(types.ModuleName, requiredBalances)
 
 	// 2. Setup CL pool and gauge (gauge automatically gets created at the end of CL pool creation).
 	clPoolId1 := s.PrepareConcentratedPool() // creates internal no-lock gauge id = 1
@@ -991,7 +990,7 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	s.ValidateDistributedGauge(clPoolInternalGaugeId3, 1, sdk.Coins(nil))
 
 	// check if incentives record got created.
-	// Note: ClPool1 will recieve full 1Musdc, 1Meth in this epoch.
+	// Note: ClPool1 will receive full 1Musdc, 1Meth in this epoch.
 	s.Require().Equal(2, len(clPool1IncentiveRecordsAtEpoch1))
 	s.Require().Equal(2, len(clPool2IncentiveRecordsAtEpoch1))
 	s.Require().Equal(2, len(clPool3IncentiveRecordsAtEpoch1))
@@ -999,11 +998,11 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	s.ValidateIncentiveRecord(clPoolId1.GetId(), externalGaugeCoins[0], clPool1IncentiveRecordsAtEpoch1[0])
 	s.ValidateIncentiveRecord(clPoolId1.GetId(), externalGaugeCoins[1], clPool1IncentiveRecordsAtEpoch1[1])
 
-	// Note: ClPool2 will recieve 500kusdc, 500keth in this epoch.
+	// Note: ClPool2 will receive 500kusdc, 500keth in this epoch.
 	s.ValidateIncentiveRecord(clPoolId2.GetId(), halfOfExternalGaugeCoins[0], clPool2IncentiveRecordsAtEpoch1[0])
 	s.ValidateIncentiveRecord(clPoolId2.GetId(), halfOfExternalGaugeCoins[1], clPool2IncentiveRecordsAtEpoch1[1])
 
-	// Note: ClPool3 will recieve full 1Musdc, 1Meth in this epoch.
+	// Note: ClPool3 will receive full 1Musdc, 1Meth in this epoch.
 	// Note: emission rate is the same as CLPool1 because we are distributed same amount over 1 epoch.
 	s.ValidateIncentiveRecord(clPoolId3.GetId(), externalGaugeCoins[0], clPool3IncentiveRecordsAtEpoch1[0])
 	s.ValidateIncentiveRecord(clPoolId3.GetId(), externalGaugeCoins[1], clPool3IncentiveRecordsAtEpoch1[1])
@@ -1041,12 +1040,12 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	s.Require().Equal(5, len(clPool2IncentiveRecordsAtEpoch2))
 	s.Require().Equal(2, len(clPool3IncentiveRecordsAtEpoch2))
 
-	// Note: ClPool1 will recieve 1Musdc, 1Meth (from epoch1) as external incentive, 750Kstake as internal incentive.
+	// Note: ClPool1 will receive 1Musdc, 1Meth (from epoch1) as external incentive, 750Kstake as internal incentive.
 	s.ValidateIncentiveRecord(clPoolId1.GetId(), externalGaugeCoins[0], clPool1IncentiveRecordsAtEpoch2[0])
 	s.ValidateIncentiveRecord(clPoolId1.GetId(), externalGaugeCoins[1], clPool1IncentiveRecordsAtEpoch2[1])
 	s.ValidateIncentiveRecord(clPoolId1.GetId(), internalGaugeCoins[0], clPool1IncentiveRecordsAtEpoch2[2])
 
-	// Note: ClPool2 will recieve 500kusdc, 500keth (from epoch1) as external incentive, 500kusdc, 500keth (from epoch 2) as external incentive and 750Kstake as internal incentive.
+	// Note: ClPool2 will receive 500kusdc, 500keth (from epoch1) as external incentive, 500kusdc, 500keth (from epoch 2) as external incentive and 750Kstake as internal incentive.
 	s.ValidateIncentiveRecord(clPoolId2.GetId(), halfOfExternalGaugeCoins[1], clPool2IncentiveRecordsAtEpoch2[0]) // new record
 	s.ValidateIncentiveRecord(clPoolId2.GetId(), halfOfExternalGaugeCoins[0], clPool2IncentiveRecordsAtEpoch2[1]) // new record
 	s.ValidateIncentiveRecord(clPoolId2.GetId(), halfOfExternalGaugeCoins[1], clPool2IncentiveRecordsAtEpoch2[2]) // new record
@@ -1058,7 +1057,7 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 
 	// 8. let epoch 3 pass
 	// Note: All internal and external incentives have been distributed already.
-	// Therefore we shouldn't distribue anything in this epoch.
+	// Therefore we shouldn't distributed anything in this epoch.
 	// ******************** EPOCH 3 *********************
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(epochInfo.Duration))
 	s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 3)
@@ -1078,7 +1077,6 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	// should be the same as the one from after Epoch2.
 	s.Require().Equal(clPool1IncentiveRecordsAtEpoch2, clPool1IncentiveRecordsAtEpoch3)
 	s.Require().Equal(clPool2IncentiveRecordsAtEpoch2, clPool2IncentiveRecordsAtEpoch3)
-
 }
 
 func (s *KeeperTestSuite) CreateNoLockExternalGauges(clPoolId uint64, externalGaugeCoins sdk.Coins, gaugeCreator sdk.AccAddress, numEpochsPaidOver uint64) uint64 {
@@ -1104,20 +1102,18 @@ func (s *KeeperTestSuite) IncentivizeInternalGauge(poolIds []uint64, epochDurati
 		weight = osmomath.ZeroInt()
 	}
 
-	var gaugeIds []uint64
 	var poolIncentiveRecords []poolincentivetypes.DistrRecord
 	for _, poolId := range poolIds {
 		gaugeIdForPoolId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, poolId, epochDuration)
 		s.Require().NoError(err)
 
-		gaugeIds = append(gaugeIds, gaugeIdForPoolId)
 		poolIncentiveRecords = append(poolIncentiveRecords, poolincentivetypes.DistrRecord{
 			GaugeId: gaugeIdForPoolId,
 			Weight:  weight,
 		})
 	}
 
-	// incentivize both CL pools to recieve internal incentives
+	// incentivize both CL pools to receive internal incentives
 	err := s.App.PoolIncentivesKeeper.HandleReplacePoolIncentivesProposal(s.Ctx, &poolincentivetypes.ReplacePoolIncentivesProposal{
 		Title:       "",
 		Description: "",
@@ -1374,5 +1370,4 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 			}
 		})
 	}
-
 }
