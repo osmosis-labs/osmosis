@@ -23,13 +23,13 @@ const (
 	defaultNumPositions = 10
 )
 
-type swapAmountsMismatchErr struct {
+type swapAmountsMismatchError struct {
 	swapInFunded       sdk.Coin
 	amountInSwapResult sdk.Coin
 	diff               osmomath.Int
 }
 
-func (e swapAmountsMismatchErr) Error() string {
+func (e swapAmountsMismatchError) Error() string {
 	return fmt.Sprintf("amounts in mismatch, original %s, swapped in given out: %s, difference of %s", e.swapInFunded, e.amountInSwapResult, e.diff)
 }
 
@@ -238,7 +238,7 @@ func tickAmtChange(r *rand.Rand, targetAmount osmomath.Dec) osmomath.Dec {
 	changeType := r.Intn(3)
 
 	// Generate a random percentage under 0.1%
-	randChangePercent := osmomath.NewDec(r.Int63n(1)).QuoInt64(1000)
+	randChangePercent := osmomath.NewDec(r.Int63n(999) + 1).QuoInt64(1000)
 
 	change := sdk.MaxDec(osmomath.NewDec(1), randChangePercent)
 
@@ -277,7 +277,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
 		// it would error for a real user though. This is good though, since that user would just be burning funds.
-		if err.(types.InvalidAmountCalculatedError).Amount.IsZero() {
+		if invalidAmountErr, ok := err.(types.InvalidAmountCalculatedError); ok && invalidAmountErr.Amount.IsZero() {
 			return false, false
 		}
 	}
@@ -296,7 +296,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
 		// it would error for a real user though. This is good though, since that user would just be burning funds.
-		if err.(types.InvalidAmountCalculatedError).Amount.IsZero() {
+		if invalidAmountErr, ok := err.(types.InvalidAmountCalculatedError); ok && invalidAmountErr.Amount.IsZero() {
 			return false, false
 		}
 	}
@@ -356,7 +356,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 		// This proves that this is a test setup error, not a swap logic error. We need smarter detection of when
 		// a small difference between non-rounded tokenOut in swap out given in and the returned tokenOut here leads
 		// to a large difference in sqrt price (TBD later).
-		s.collectedErrors = append(s.collectedErrors, swapAmountsMismatchErr{swapInFunded: swapInFunded, amountInSwapResult: amountInSwapResult, diff: swapInFunded.Amount.Sub(amountInSwapResult.Amount)})
+		s.collectedErrors = append(s.collectedErrors, swapAmountsMismatchError{swapInFunded: swapInFunded, amountInSwapResult: amountInSwapResult, diff: swapInFunded.Amount.Sub(amountInSwapResult.Amount)})
 		return true, false
 	}
 
@@ -413,7 +413,7 @@ func (s *KeeperTestSuite) validateNoErrors(possibleErrors []error) {
 		}
 
 		// This is acceptable. See where this error is returned for explanation.
-		if errors.As(err, &swapAmountsMismatchErr{}) {
+		if errors.As(err, &swapAmountsMismatchError{}) {
 			continue
 		}
 

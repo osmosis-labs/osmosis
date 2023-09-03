@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -736,7 +737,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 		expectedError            error
 	}
 
-	validateResult := func(ctx sdk.Context, err error, tc updateAccumToNow, poolId uint64, initUptimeAccumValues []sdk.DecCoins, qualifyingLiquidity sdk.Dec) []sdk.DecCoins {
+	validateResult := func(ctx sdk.Context, err error, tc updateAccumToNow, poolId uint64, initUptimeAccumValues []sdk.DecCoins, qualifyingLiquidity sdkmath.LegacyDec) []sdk.DecCoins {
 		if tc.expectedError != nil {
 			s.Require().ErrorContains(err, tc.expectedError.Error())
 
@@ -3240,7 +3241,7 @@ func (s *KeeperTestSuite) TestGetAllIncentiveRecordsForUptime() {
 					curUptimeRecords, err := clKeeper.GetAllIncentiveRecordsForUptime(s.Ctx, poolId, supportedUptime)
 					s.Require().NoError(err)
 
-					retrievedRecordsByUptime = append(retrievedRecordsByUptime, curUptimeRecords...)
+					retrievedRecordsByUptime = append(retrievedRecordsByUptime, curUptimeRecords...) //nolint:staticcheck,makezero // for testing, we want to append to the slice
 				}
 			})
 		}
