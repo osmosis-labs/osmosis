@@ -266,8 +266,8 @@ func (k Keeper) distributeSyntheticInternal(
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
 }
 
-// AllocateAcrossGauges gets all the active groupGauges and distributes tokens evenly based on the internalGauges set for that
-// groupGauge. After each iteration we update the groupGauge by modifying filledEpoch and distributed coins.
+// AllocateAcrossGauges gets all the active groupGauges and distributes tokens based on the splitting policy of each gauge.
+// After each iteration we update the groupGauge by modifying filledEpoch and distributed coins.
 func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 	currTime := ctx.BlockTime()
 
@@ -282,16 +282,27 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 			return err
 		}
 
-		allocatedCoins, coinsToDistributeThisEpoch, err := k.syncGroupGaugeWeights(ctx, groupGauge.SplittingPolicy, gauge, groupGauge)
+		// TODO: handle this error quietly
+		err = k.syncGroupGaugeWeights(ctx, groupGauge)
 		if err != nil {
 			return err
 		}
 
+		// TODO: Get amount to distribute in coins (based on perpetual or non perpetual)
+		coinsToDistribute := sdk.Coins{}
+
 		// only allow distribution if the GroupGauge is Active
 		if gauge.IsActiveGauge(currTime) {
-			for _, distrRecord := range groupGauge.Records {
+			for _, distrRecord := range groupGauge.InternalGaugeInfo.GaugeRecords {
 				moduleAccount := k.ak.GetModuleAddress(types.ModuleName)
-				err = k.AddToGaugeRewards(ctx, moduleAccount, allocatedCoins, distrRecord.GaugeId)
+
+				// TODO: calculate pro-rata share based on record's weight and total weight
+				// shareOfDistribution := sdk.ZeroDec()
+
+				// TODO: loop through `coinsToDistribute` and add pro-rata share to `amountToAdd`
+				amountToAdd := coinsToDistribute
+
+				err = k.AddToGaugeRewards(ctx, moduleAccount, amountToAdd, distrRecord.GaugeId)
 				if err != nil {
 					return err
 				}
@@ -299,36 +310,40 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 
 			// we distribute tokens from groupGauge to internal gauge therefore update groupGauge fields
 			// updates filledEpoch and distributedCoins
-			k.updateGaugePostDistribute(ctx, *gauge, coinsToDistributeThisEpoch)
+			k.updateGaugePostDistribute(ctx, *gauge, coinsToDistribute)
 		}
 	}
 
 	return nil
 }
 
-// syncGroupGaugeWeights updates the weights of the
+// syncGroupGaugeWeights updates the individual and total weights of the gauge records based on the splitting policy.
 // TODO: add volume split policy
-func (k Keeper) syncGroupGaugeWeights(ctx sdk.Context, policy types.SplittingPolicy, groupGauge *types.Gauge, groupGaugeObj types.GroupGauge) (sdk.Int, error) {
-	if policy == types.Evenly {
-		remainCoins := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
+func (k Keeper) syncGroupGaugeWeights(ctx sdk.Context, groupGauge types.GroupGauge) error {
+	// totalWeight := sdk.ZeroInt()
+	//
+	// Loop through gauge records
+	//
+	// For each record:
+	// 	Get corresponding pool:
+	// 		Retrieve the gauge and get its lock type
+	//
+	// 		If NoLock, it's a CL pool, so we set the "lockableDuration" to epoch duration
+	//
+	//		Otherwise, it's a balancer pool so we set it to longest lockable duration (leave TODO to add support for CW pools once there's clarity)
+	//
+	// 		Retrieve pool ID using GetPoolIdFromGaugeId(gaugeId, lockableDuration)
+	//
+	//	Get new volume for pool. Assert GTE gauge's weight
+	// 		If new volume is 0, there was an issue with volume tracking. Return error.
+	// 		We expect this to be handled quietly in update logic but not in init logic.
+	//
+	// 	Update gauge record's weight to new volume - old weight
+	//  Add new this diff to total weight
+	//
+	// Outside loop: set group gauge in state (`SetGroupGauge`)
 
-		var coinsDistPerInternalGauge, coinsDistThisEpoch sdk.Coins
-		for _, coin := range remainCoins {
-			epochDiff := groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs
-			internalGaugeLen := len(groupGaugeObj.InternalIds)
-
-			distPerEpoch := coin.Amount.Quo(sdk.NewIntFromUint64(epochDiff))
-			distPerGauge := distPerEpoch.Quo(sdk.NewInt(int64(internalGaugeLen)))
-
-			coinsDistThisEpoch = coinsDistThisEpoch.Add(sdk.NewCoin(coin.Denom, distPerEpoch))
-			coinsDistPerInternalGauge = coinsDistPerInternalGauge.Add(sdk.NewCoin(coin.Denom, distPerGauge))
-		}
-
-		return sdk.Int{}, nil, coinsDistPerInternalGauge, coinsDistThisEpoch
-	} else {
-		return sdk.Int{}, fmt.Errorf("GroupGauge id %d doesnot have enought coins to distribute.", &groupGauge.Id)
-	}
-
+	return nil
 }
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to

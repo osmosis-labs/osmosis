@@ -693,7 +693,7 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 				groupGaugeObj, err := s.App.IncentivesKeeper.GetGroupGaugeById(s.Ctx, groupGaugeId)
 				s.Require().NoError(err)
 
-				s.Require().Equal(groupGaugeObj.InternalIds, tc.internalGaugeIds)
+				s.Require().Equal(groupGaugeObj.InternalGaugeInfo.GaugeRecords, tc.internalGaugeIds)
 			}
 
 		})

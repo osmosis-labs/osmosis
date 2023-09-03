@@ -297,8 +297,8 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 }
 
 // initGaugeInfoBySplittingPolicy takes in a list of pool IDs and a splitting policy and returns a InternalGaugeInfo struct initialized based on the splitting policy.
-func (k Keeper) initGaugeInfoBySplittingPolicy(ctx sdk.Context, poolIds []uint64, splittingPolicy types.SplittingPolicy) (types.InternalGaugeInfo, error) {
-}
+// func (k Keeper) initGaugeInfoBySplittingPolicy(ctx sdk.Context, poolIds []uint64, splittingPolicy types.SplittingPolicy) (types.InternalGaugeInfo, error) {
+// }
 
 // getWeightBySplittingPolicy takes in a pool ID, splitting policy, and current weight, and returns the updated weight (should be positive)
 func (k Keeper) getWeightBySplittingPolicy(ctx sdk.Context, poolId uint64, splittingPolicy types.SplittingPolicy, currentWeight sdk.Int) (sdk.Int, error) {
@@ -326,7 +326,7 @@ func (k Keeper) getWeightBySplittingPolicy(ctx sdk.Context, poolId uint64, split
 // Note: we donot have to bankSend for this gauge transfer because all the available incentive has already been bank sent
 // when we create Group Gauge. Now we are just allocating funds from groupGauge to internalGauge.
 // CONTRACT: internalGaugeId should be present in the group gauge.
-func (k Keeper) addToGaugeRewardsFromGauge(ctx sdk.Context, groupGaugeId uint64, coins sdk.Coins, internalGaugeId uint64) error {
+func (k Keeper) AddToGaugeRewardsFromGauge(ctx sdk.Context, groupGaugeId uint64, coins sdk.Coins, internalGaugeId uint64) error {
 	groupGauge, err := k.GetGaugeByID(ctx, groupGaugeId)
 	if err != nil {
 		return err

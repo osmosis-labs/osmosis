@@ -48,8 +48,24 @@ func (s *KeeperTestSuite) TestGetGroupGaugeById() {
 		"Valid record": {
 			groupGaugeId: uint64(5),
 			expectedRecord: types.GroupGauge{
-				GroupGaugeId:    uint64(5),
-				InternalIds:     []uint64{2, 3, 4},
+				GroupGaugeId: uint64(5),
+				InternalGaugeInfo: types.InternalGaugeInfo{
+					TotalWeight: sdk.NewInt(150),
+					GaugeRecords: []types.InternalGaugeRecord{
+						{
+							GaugeId: 2,
+							Weight:  sdk.NewInt(50),
+						},
+						{
+							GaugeId: 3,
+							Weight:  sdk.NewInt(50),
+						},
+						{
+							GaugeId: 4,
+							Weight:  sdk.NewInt(50),
+						},
+					},
+				},
 				SplittingPolicy: types.Evenly,
 			},
 		},
