@@ -637,20 +637,20 @@ func ParseEvent(responseJson map[string]interface{}, field string) (string, erro
 }
 
 // TODO: Make test usage so that we can eliminate this!
-var AddrMutexMap = make(map[string]*sync.Mutex)
+var addrMutexMap = make(map[string]*sync.Mutex)
 
 func IbcLockAddrs(addrs []string) func() {
 	for _, addr := range addrs {
-		if _, exists := AddrMutexMap[addr]; !exists {
-			AddrMutexMap[addr] = &sync.Mutex{}
+		if _, exists := addrMutexMap[addr]; !exists {
+			addrMutexMap[addr] = &sync.Mutex{}
 		}
 	}
 	for _, addr := range addrs {
-		AddrMutexMap[addr].Lock()
+		addrMutexMap[addr].Lock()
 	}
 	return func() {
 		for _, addr := range addrs {
-			AddrMutexMap[addr].Unlock()
+			addrMutexMap[addr].Unlock()
 		}
 	}
 }
@@ -662,20 +662,8 @@ func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token
 	sender := n.GetWallet(initialization.ValidatorWalletName)
 
 	// Create or get the mutex for the specific sender and recipient
-	func() {
-		if _, exists := AddrMutexMap[recipient]; !exists {
-			AddrMutexMap[recipient] = &sync.Mutex{}
-		}
-		if _, exists := AddrMutexMap[sender]; !exists {
-			AddrMutexMap[sender] = &sync.Mutex{}
-		}
-	}()
-
-	// Lock the mutex for the specific sender and recipient
-	AddrMutexMap[recipient].Lock()
-	defer AddrMutexMap[recipient].Unlock()
-	AddrMutexMap[sender].Lock()
-	defer AddrMutexMap[sender].Unlock()
+	unlockFn := IbcLockAddrs([]string{recipient, sender})
+	defer unlockFn()
 
 	n.SendIBCNoMutex(srcChain, dstChain, recipient, token)
 }
