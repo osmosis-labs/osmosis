@@ -57,6 +57,33 @@ func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*sdk.Result, error) {
 	return r, nil
 }
 
+// SendMsgsNoCheck is an alternative to ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
+func (chain *TestChain) SendMsgsFromPrivKey(accountNumber, accountSequence uint64, privKey cryptotypes.PrivKey, msgs ...sdk.Msg) (*sdk.Result, error) {
+	// ensure the chain has the latest time
+	chain.Coordinator.UpdateTimeForChain(chain.TestChain)
+
+	_, r, err := SignAndDeliver(
+		chain.TxConfig,
+		chain.App.GetBaseApp(),
+		chain.GetContext().BlockHeader(),
+		msgs,
+		chain.ChainID,
+		[]uint64{accountNumber},
+		[]uint64{accountSequence},
+		privKey,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// SignAndDeliver calls app.Commit()
+	chain.NextBlock()
+
+	chain.Coordinator.IncrementTime()
+
+	return r, nil
+}
+
 // SignAndDeliver signs and delivers a transaction without asserting the results. This overrides the function
 // from ibctesting
 func SignAndDeliver(

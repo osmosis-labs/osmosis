@@ -5,6 +5,7 @@ package types
 import (
 	fmt "fmt"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -35,7 +36,7 @@ var _ AuthenticatorData = &SigVerificationData{}
 
 // Secp256k1 signature authenticator
 type SigVerificationAuthenticator struct {
-	ak      authante.AccountKeeper
+	ak      *authkeeper.AccountKeeper
 	Handler authsigning.SignModeHandler
 	PubKey  cryptotypes.PubKey
 }
@@ -46,7 +47,7 @@ func (c SigVerificationAuthenticator) Type() string {
 
 // NewSigVerificationAuthenticator creates a new SigVerificationAuthenticator
 func NewSigVerificationAuthenticator(
-	ak authante.AccountKeeper,
+	ak *authkeeper.AccountKeeper,
 	Handler authsigning.SignModeHandler,
 ) SigVerificationAuthenticator {
 	return SigVerificationAuthenticator{
@@ -56,7 +57,7 @@ func NewSigVerificationAuthenticator(
 }
 
 // SetAccountKeeper sets the account keeper one the SigVerificationAuthenticator
-func (c SigVerificationAuthenticator) SetAccountKeeper(ak authante.AccountKeeper) {
+func (c SigVerificationAuthenticator) SetAccountKeeper(ak *authkeeper.AccountKeeper) {
 	c.ak = ak
 }
 
@@ -175,10 +176,9 @@ func (c SigVerificationAuthenticator) Authenticate(
 ) (success bool, err error) {
 	verificationData, ok := authenticationData.(SigVerificationData)
 	if !ok {
-		return false, nil //ToDo: add error
+		return false, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "invalid signature verification data")
 	}
 
-	// TODO: modify this to validate the signature of a specific message
 	for i, sig := range verificationData.Signatures {
 		acc, err := authante.GetSignerAcc(ctx, c.ak, verificationData.Signers[i])
 		if err != nil {
@@ -194,7 +194,7 @@ func (c SigVerificationAuthenticator) Authenticate(
 			pubKey = acc.GetPubKey() // TODO: do we want this default?
 		}
 		if !verificationData.Simulate && pubKey == nil {
-			return false, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
+			return false, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on not set on account or authenticator")
 		}
 
 		// Check account sequence number.
@@ -212,7 +212,7 @@ func (c SigVerificationAuthenticator) Authenticate(
 		if !genesis {
 			accNum = acc.GetAccountNumber()
 		}
-		signerData := authsigning.SignerData{ // ToDo: signer data can prob be moved to GetAuthenticationData
+		signerData := authsigning.SignerData{
 			ChainID:       chainID,
 			AccountNumber: accNum,
 			Sequence:      acc.GetSequence(),

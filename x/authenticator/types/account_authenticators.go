@@ -11,6 +11,9 @@ func ResetAuthenticators() {
 }
 
 func InitializeAuthenticators(initialAuthenticators []Authenticator) {
+	if len(registeredAuthenticators) > 0 {
+		return
+	}
 	registeredAuthenticators = initialAuthenticators
 }
 
