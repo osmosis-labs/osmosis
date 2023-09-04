@@ -1,6 +1,8 @@
 package types
 
 // List of registered authenticators
+// ToDo: This being global leads to issues with tests that use multiple apps (i.e.: ibctesting)
+// Is it better to move this to state or to modify the tests to be able to handle it as-is?
 var registeredAuthenticators []Authenticator
 var defaultAuhenticatorIndex int = -1
 
