@@ -98,6 +98,11 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.LargeWasmUpload()
 	})
 
+	s.T().Run("StableSwap", func(t *testing.T) {
+		t.Parallel()
+		s.StableSwap()
+	})
+
 	// Test currently disabled
 	// s.T().Run("ArithmeticTWAP", func(t *testing.T) {
 	// 	t.Parallel()
@@ -116,15 +121,6 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 	}
 
 	// Upgrade Dependent Tests
-
-	if s.skipUpgrade {
-		s.T().Skip("Skipping StableSwapPostUpgrade test")
-	} else {
-		s.T().Run("StableSwapPostUpgrade", func(t *testing.T) {
-			t.Parallel()
-			s.StableSwapPostUpgrade()
-		})
-	}
 
 	if s.skipUpgrade {
 		s.T().Skip("Skipping GeometricTwapMigration test")
@@ -153,29 +149,17 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 			t.Parallel()
 			s.IBCTokenTransferRateLimiting()
 		})
-	}
 
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
 		s.T().Run("IBCTokenTransferAndCreatePool", func(t *testing.T) {
 			t.Parallel()
 			s.IBCTokenTransferAndCreatePool()
 		})
-	}
 
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
 		s.T().Run("IBCWasmHooks", func(t *testing.T) {
 			t.Parallel()
 			s.IBCWasmHooks()
 		})
-	}
 
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
 		s.T().Run("PacketForwarding", func(t *testing.T) {
 			t.Parallel()
 			s.PacketForwarding()
@@ -895,12 +879,12 @@ func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 		spreadFactor        = "0.001" // 0.1%
 	)
 
-	chainB, chainBNode, err := s.getChainBCfgs()
+	chainA, chainANode, err := s.getChainACfgs()
 	s.Require().NoError(err)
 
 	// Test tick spacing reduction proposal
-	poolID := chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
-	concentratedPool := s.updatedConcentratedPool(chainBNode, poolID)
+	poolID := chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
+	concentratedPool := s.updatedConcentratedPool(chainANode, poolID)
 	// Get the current tick spacing
 	currentTickSpacing := concentratedPool.GetTickSpacing()
 
@@ -917,14 +901,14 @@ func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 	newTickSpacing := cltypes.AuthorizedTickSpacing[indexOfCurrentTickSpacing-1]
 
 	// Run the tick spacing reduction proposal
-	propNumber := chainBNode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinExpeditedDeposit)), true)
+	propNumber := chainANode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinExpeditedDeposit)), true)
 
-	chainBNode.DepositProposal(propNumber, true)
+	chainANode.DepositProposal(propNumber, true)
 	// TODO: are we just waiting for 1-2 minutes for no reason here?
 	totalTimeChan := make(chan time.Duration, 1)
-	go chainBNode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
+	go chainANode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
 
-	chain.AllValsVoteOnProposal(chainB, propNumber)
+	chain.AllValsVoteOnProposal(chainA, propNumber)
 
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	timeoutPeriod := 2 * time.Minute
@@ -937,15 +921,11 @@ func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 	}
 
 	// Check that the tick spacing was reduced to the expected new tick spacing
-	concentratedPool = s.updatedConcentratedPool(chainBNode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainANode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
 }
 
-func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
-	if s.skipUpgrade {
-		s.T().Skip("Skipping StableSwapPostUpgrade test")
-	}
-
+func (s *IntegrationTestSuite) StableSwap() {
 	chainAB, chainABNode, err := s.getChainCfgs()
 	s.Require().NoError(err)
 
@@ -963,8 +943,7 @@ func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 	coinAIn, coinBIn := fmt.Sprintf("20000%s", denomA), fmt.Sprintf("2%s", denomB)
 
 	chainABNode.BankSend(initialization.WalletFeeTokens.String(), sender, config.StableswapWallet[index])
-	chainABNode.BankSend(coinAIn, sender, config.StableswapWallet[index])
-	chainABNode.BankSend(coinBIn, sender, config.StableswapWallet[index])
+	chainABNode.BankSend(coinAIn+","+coinBIn, sender, config.StableswapWallet[index])
 
 	s.T().Log("performing swaps")
 	chainABNode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[index]), denomB, config.StableswapWallet[index])
@@ -1054,17 +1033,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	propNumber := chainABNode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)), false)
 	chainABNode.DepositProposal(propNumber, false)
 
-	var wg sync.WaitGroup
-
-	for _, n := range chainAB.NodeConfigs {
-		wg.Add(1)
-		go func(nodeConfig *chain.NodeConfig) {
-			defer wg.Done()
-			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-		}(n)
-	}
-
-	wg.Wait()
+	chain.AllValsVoteOnProposal(chainAB, propNumber)
 
 	// set delegator vote to no
 	chainABNode.VoteNoProposal(superfluidVotingWallet, propNumber)

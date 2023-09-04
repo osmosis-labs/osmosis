@@ -43,7 +43,7 @@ const (
 	// It is used when we are indifferent about the node we are working with.
 	defaultNodeIndex = 0
 	// waitUntilRepeatPauseTime is the time to wait between each check of the node status.
-	waitUntilRepeatPauseTime = 2 * time.Second
+	waitUntilRepeatPauseTime = 1 * time.Second
 	// waitUntilrepeatMax is the maximum number of times to repeat the wait until condition.
 	waitUntilrepeatMax = 60
 
