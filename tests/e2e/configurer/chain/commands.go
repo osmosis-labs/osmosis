@@ -137,7 +137,7 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) int {
 }
 
 func (n *NodeConfig) WithdrawPosition(from, liquidityOut string, positionId uint64) {
-	n.LogActionF("withdrawing liquidity from position")
+	n.LogActionF("withdrawing liquidity from position %d", positionId)
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from), "--gas=700000", "--fees=5000uosmo"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
@@ -636,10 +636,26 @@ func ParseEvent(responseJson map[string]interface{}, field string) (string, erro
 	return "", fmt.Errorf("%s field not found in response", field)
 }
 
-var addrMutexMap = make(map[string]*sync.Mutex)
+// TODO: Make test usage so that we can eliminate this!
+var AddrMutexMap = make(map[string]*sync.Mutex)
+
+func IbcLockAddrs(addrs []string) func() {
+	for _, addr := range addrs {
+		if _, exists := AddrMutexMap[addr]; !exists {
+			AddrMutexMap[addr] = &sync.Mutex{}
+		}
+	}
+	for _, addr := range addrs {
+		AddrMutexMap[addr].Lock()
+	}
+	return func() {
+		for _, addr := range addrs {
+			AddrMutexMap[addr].Unlock()
+		}
+	}
+}
 
 func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token sdk.Coin) {
-	n.t.Logf("IBC sending %s from %s to %s (%s)", token, n.chainId, dstChain.Id, recipient)
 	// We add a mutex here since we don't want multiple IBC transfers to happen at the same time
 	// Otherwise, when we check if the receiving end has the correct balance, we might get the balance
 	// of a previous transfer.
@@ -647,20 +663,27 @@ func (n *NodeConfig) SendIBC(srcChain, dstChain *Config, recipient string, token
 
 	// Create or get the mutex for the specific sender and recipient
 	func() {
-		if _, exists := addrMutexMap[recipient]; !exists {
-			addrMutexMap[recipient] = &sync.Mutex{}
+		if _, exists := AddrMutexMap[recipient]; !exists {
+			AddrMutexMap[recipient] = &sync.Mutex{}
 		}
-		if _, exists := addrMutexMap[sender]; !exists {
-			addrMutexMap[sender] = &sync.Mutex{}
+		if _, exists := AddrMutexMap[sender]; !exists {
+			AddrMutexMap[sender] = &sync.Mutex{}
 		}
 	}()
 
 	// Lock the mutex for the specific sender and recipient
-	addrMutexMap[recipient].Lock()
-	defer addrMutexMap[recipient].Unlock()
-	addrMutexMap[sender].Lock()
-	defer addrMutexMap[sender].Unlock()
+	AddrMutexMap[recipient].Lock()
+	defer AddrMutexMap[recipient].Unlock()
+	AddrMutexMap[sender].Lock()
+	defer AddrMutexMap[sender].Unlock()
 
+	n.SendIBCNoMutex(srcChain, dstChain, recipient, token)
+}
+
+func (n *NodeConfig) SendIBCNoMutex(srcChain, dstChain *Config, recipient string, token sdk.Coin) {
+	n.t.Logf("IBC sending %s from %s to %s (%s)", token, n.chainId, dstChain.Id, recipient)
+
+	sender := n.GetWallet(initialization.ValidatorWalletName)
 	dstNode, err := dstChain.GetDefaultNode()
 	require.NoError(n.t, err)
 

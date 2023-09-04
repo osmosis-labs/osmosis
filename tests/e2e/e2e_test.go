@@ -820,7 +820,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 	// Assert removing some liquidity
 	// 1) remove default liquidity from the 0th position of every address
-	// 2) AFterwards, Remove the entire 0th position for addr 1 and 2
+	// 2) Afterwards, Remove the entire 0th position for addr 1 and 2
 	clwg = sync.WaitGroup{}
 	for i := 0; i < len(createdPositions); i++ {
 		clwg.Add(1)
@@ -978,13 +978,16 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 	}{{chainA, chainB, chainANode, chainBNode.PublicAddress}, {chainB, chainA, chainBNode, chainANode.PublicAddress}}
 	tokens := []sdk.Coin{initialization.OsmoToken, initialization.StakeToken}
 
+	unlockFn := chain.IbcLockAddrs([]string{chainANode.PublicAddress, chainBNode.PublicAddress, initialization.ValidatorWalletName})
+	defer unlockFn()
 	var wg sync.WaitGroup
 	wg.Add(4)
 	for i := range ibcSendConfigs {
 		for j := range tokens {
 			cfg := ibcSendConfigs[i]
+			token := tokens[j]
 			go func() {
-				cfg.srcNode.SendIBC(cfg.srcCfg, cfg.destCfg, cfg.recipient, tokens[j])
+				cfg.srcNode.SendIBCNoMutex(cfg.srcCfg, cfg.destCfg, cfg.recipient, token)
 				wg.Done()
 			}()
 		}
