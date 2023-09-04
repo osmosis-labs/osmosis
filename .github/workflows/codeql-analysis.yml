@@ -57,3 +57,6 @@ jobs:
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
+
+      - name: Print analysis output
+        run: cat /home/runner/work/osmosis/results/go.sarif
