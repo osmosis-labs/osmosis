@@ -70,3 +70,13 @@ func (q Querier) ArithmeticTwap(grpcCtx context.Context,
 	return q.Q.ArithmeticTwap(ctx, *req)
 }
 
+func (q Querier) ExtraArithmeticTwap(grpcCtx context.Context,
+	req *queryproto.ArithmeticTwapRequest,
+) (*queryproto.ArithmeticTwapResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.ExtraArithmeticTwap(ctx, *req)
+}
+

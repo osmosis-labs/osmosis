@@ -1,6 +1,7 @@
 package twap
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,7 +54,7 @@ func (k Keeper) GetExtraArithmeticTwap(
 	startTime time.Time,
 	endTime time.Time,
 ) (sdk.Dec, error) {
-	return k.getExtraTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, k.GetArithmeticStrategy())
+	return k.getExtraTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime)
 }
 
 func (k Keeper) GetGeometricTwap(
@@ -133,7 +134,6 @@ func (k Keeper) getExtraTwap(
 	quoteAssetDenom string,
 	startTime time.Time,
 	endTime time.Time,
-	strategy twapStrategy,
 ) (sdk.Dec, error) {
 	if startTime.After(endTime) {
 		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: endTime}
@@ -146,7 +146,8 @@ func (k Keeper) getExtraTwap(
 
 	var trackers []AccumTracker
 
-	lastPreviousRecordKeep, err := k.getInterpolatedRecord(ctx, poolId, endTime.Add(-interval), baseAssetDenom, quoteAssetDenom)
+	lastPreviousRecordKeep, err := k.getInterpolatedRecord(ctx, poolId, ctx.BlockTime().Add(-interval), baseAssetDenom, quoteAssetDenom)
+	fmt.Println("lastPreviousRecordKeep", lastPreviousRecordKeep)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -173,11 +174,13 @@ func (k Keeper) getExtraTwap(
 		}
 
 		diffTime := types.CanonicalTimeMs(tempEndRecord.Time) - types.CanonicalTimeMs(endTime)
+		fmt.Println("diffTime", diffTime)
 		if diffTime == 0 {
 			trackers = append(trackers, AccumTracker{P0Accumulator: tempEndRecord.P0ArithmeticTwapAccumulator, P1Accumulator: tempEndRecord.P1ArithmeticTwapAccumulator, Time: tempEndRecord.Time})
 		} else {
 			// With different time < interval, calculate accumulator directly from tempEndRecord
 			tracker, err := k.getAccumTracker(ctx, endTime, tempEndRecord, diffTime)
+			fmt.Println("tracker", tracker)
 			if err != nil {
 				return sdk.Dec{}, err
 			}
@@ -210,6 +213,7 @@ func (k Keeper) getExtraTwap(
 			P1ArithmeticTwapAccumulator: trackers[0].P1Accumulator,
 		}
 		tracker, err := k.getAccumTracker(ctx, startTime, tempRecord, trackers[0].Time.Sub(startTime).Milliseconds())
+		fmt.Println("tracker start time", tracker, trackers[0].Time.Sub(startTime).Milliseconds(), trackers[0])
 		if err != nil {
 			return sdk.Dec{}, err
 		}
@@ -241,6 +245,8 @@ func (k Keeper) getAccumTracker(
 	if err != nil {
 		return AccumTracker{}, err
 	}
+
+	fmt.Println("getAccumTracker", sp0, sp1)
 
 	accum0 := existingRecord.P0ArithmeticTwapAccumulator.Sub(sp0.MulInt64(diffTime))
 	accum1 := existingRecord.P1ArithmeticTwapAccumulator.Sub(sp1.MulInt64(diffTime))
