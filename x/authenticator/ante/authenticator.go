@@ -3,8 +3,6 @@ package ante
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 )
@@ -15,20 +13,14 @@ import (
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type AuthenticatorDecorator struct {
-	accountKeeper       authante.AccountKeeper
 	authenticatorKeeper *authenticatorkeeper.Keeper
-	signModeHandler     authsigning.SignModeHandler
 }
 
 func NewAuthenticatorDecorator(
-	ak authante.AccountKeeper,
 	authenticatorKeeper *authenticatorkeeper.Keeper,
-	signModeHandler authsigning.SignModeHandler,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
-		accountKeeper:       ak,
 		authenticatorKeeper: authenticatorKeeper,
-		signModeHandler:     signModeHandler,
 	}
 }
 

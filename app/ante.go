@@ -59,7 +59,7 @@ func NewAnteHandler(
 		ante.NewSetPubKeyDecorator(accountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(accountKeeper),
 		ante.NewSigGasConsumeDecorator(accountKeeper, sigGasConsumer),
-		authante.NewAuthenticatorDecorator(accountKeeper, authenticatorKeeper, signModeHandler),
+		authante.NewAuthenticatorDecorator(authenticatorKeeper),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewAnteDecorator(channelKeeper),
 	)
