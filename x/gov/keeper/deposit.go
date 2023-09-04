@@ -190,7 +190,7 @@ func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.
 	}
 	minDepositCoins := depositParams.MinDeposit
 	for i := range minDepositCoins {
-		minDepositCoins[i].Amount = minDepositCoins[i].Amount.ToDec().Mul(depositParams.MinInitialDepositRatio).RoundInt()
+		minDepositCoins[i].Amount = minDepositCoins[i].Amount.ToLegacyDec().Mul(depositParams.MinInitialDepositRatio).RoundInt()
 	}
 	if !initialDeposit.IsAllGTE(minDepositCoins) {
 		return sdkerrors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)

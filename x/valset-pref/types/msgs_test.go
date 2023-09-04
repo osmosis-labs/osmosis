@@ -3,9 +3,9 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/x/valset-pref/types"
@@ -27,15 +27,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Preferences: []types.ValidatorPreference{
 					{
 						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
-						Weight:         sdk.NewDecWithPrec(322, 3),
+						Weight:         osmomath.NewDecWithPrec(322, 3),
 					},
 					{
 						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
-						Weight:         sdk.NewDecWithPrec(332, 3),
+						Weight:         osmomath.NewDecWithPrec(332, 3),
 					},
 					{
 						ValOperAddress: "osmovaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
-						Weight:         sdk.NewDecWithPrec(348, 3),
+						Weight:         osmomath.NewDecWithPrec(348, 3),
 					},
 				},
 			},
@@ -48,15 +48,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Preferences: []types.ValidatorPreference{
 					{
 						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
-						Weight:         sdk.NewDecWithPrec(6, 1),
+						Weight:         osmomath.NewDecWithPrec(6, 1),
 					},
 					{
 						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
-						Weight:         sdk.NewDecWithPrec(4, 1),
+						Weight:         osmomath.NewDecWithPrec(4, 1),
 					},
 					{
 						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
-						Weight:         sdk.NewDecWithPrec(2, 1),
+						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 				},
 			},
@@ -69,7 +69,7 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Preferences: []types.ValidatorPreference{
 					{
 						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
-						Weight:         sdk.NewDec(1),
+						Weight:         osmomath.NewDec(1),
 					},
 				},
 			},
@@ -82,15 +82,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Preferences: []types.ValidatorPreference{
 					{
 						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxay", // invalid address
-						Weight:         sdk.NewDecWithPrec(2, 1),
+						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 					{
 						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
-						Weight:         sdk.NewDecWithPrec(2, 1),
+						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 					{
 						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
-						Weight:         sdk.NewDecWithPrec(6, 1),
+						Weight:         osmomath.NewDecWithPrec(6, 1),
 					},
 				},
 			},
@@ -103,15 +103,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Preferences: []types.ValidatorPreference{
 					{
 						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
-						Weight:         sdk.NewDecWithPrec(5, 1),
+						Weight:         osmomath.NewDecWithPrec(5, 1),
 					},
 					{
 						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
-						Weight:         sdk.NewDecWithPrec(3, 1),
+						Weight:         osmomath.NewDecWithPrec(3, 1),
 					},
 					{
 						ValOperAddress: "osmovaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
-						Weight:         sdk.NewDecWithPrec(3, 1),
+						Weight:         osmomath.NewDecWithPrec(3, 1),
 					},
 				},
 			},
@@ -124,15 +124,15 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 				Preferences: []types.ValidatorPreference{
 					{
 						ValOperAddress: "osmovaloper1x2cfenmflhj3dwm2ph6nkgqr3nppkg86fxaymg",
-						Weight:         sdk.NewDecWithPrec(2, 1),
+						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 					{
 						ValOperAddress: "osmovaloper1jcr68jghzm24zwe78zuhz7xahua8429erxk7vm",
-						Weight:         sdk.NewDecWithPrec(2, 1),
+						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 					{
 						ValOperAddress: "osmovaloper1gqsr38e4zteekwr6kq5se5jpadafqmcfyz8jds",
-						Weight:         sdk.NewDecWithPrec(2, 1),
+						Weight:         osmomath.NewDecWithPrec(2, 1),
 					},
 				},
 			},

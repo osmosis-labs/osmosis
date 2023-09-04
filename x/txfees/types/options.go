@@ -5,8 +5,9 @@ import (
 
 	"github.com/spf13/cast"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // If Options are not set in a config somewhere,
@@ -14,19 +15,19 @@ import (
 
 // DefaultMinGasPriceForArbitrageTx represents minimum gas price
 // for arbitrage transactions.
-var DefaultMinGasPriceForArbitrageTx = sdk.ZeroDec()
+var DefaultMinGasPriceForArbitrageTx = osmomath.ZeroDec()
 
 var (
-	DefaultMinGasPriceForHighGasTx = sdk.ZeroDec()
+	DefaultMinGasPriceForHighGasTx = osmomath.ZeroDec()
 	DefaultMaxGasWantedPerTx       = uint64(25 * 1000 * 1000)
 	DefaultHighGasTxThreshold      = uint64(1 * 1000 * 1000)
 )
 
 type MempoolFeeOptions struct {
 	MaxGasWantedPerTx         uint64
-	MinGasPriceForArbitrageTx sdk.Dec
+	MinGasPriceForArbitrageTx osmomath.Dec
 	HighGasTxThreshold        uint64
-	MinGasPriceForHighGasTx   sdk.Dec
+	MinGasPriceForHighGasTx   osmomath.Dec
 }
 
 func NewDefaultMempoolFeeOptions() MempoolFeeOptions {
@@ -59,15 +60,15 @@ func parseMaxGasWantedPerTx(opts servertypes.AppOptions) uint64 {
 	return value
 }
 
-func parseMinGasPriceForArbitrageTx(opts servertypes.AppOptions) sdk.Dec {
+func parseMinGasPriceForArbitrageTx(opts servertypes.AppOptions) osmomath.Dec {
 	return parseDecFromConfig(opts, "arbitrage-min-gas-fee", DefaultMinGasPriceForArbitrageTx.Clone())
 }
 
-func parseMinGasPriceForHighGasTx(opts servertypes.AppOptions) sdk.Dec {
+func parseMinGasPriceForHighGasTx(opts servertypes.AppOptions) osmomath.Dec {
 	return parseDecFromConfig(opts, "min-gas-price-for-high-gas-tx", DefaultMinGasPriceForHighGasTx.Clone())
 }
 
-func parseDecFromConfig(opts servertypes.AppOptions, optName string, defaultValue sdk.Dec) sdk.Dec {
+func parseDecFromConfig(opts servertypes.AppOptions, optName string, defaultValue osmomath.Dec) osmomath.Dec {
 	valueInterface := opts.Get("osmosis-mempool." + optName)
 	value := defaultValue
 	if valueInterface != nil {
@@ -77,7 +78,7 @@ func parseDecFromConfig(opts servertypes.AppOptions, optName string, defaultValu
 		}
 		var err error
 		// pre-pend 0 to allow the config to start with a decimal, e.g. ".01"
-		value, err = sdk.NewDecFromStr("0" + valueStr)
+		value, err = osmomath.NewDecFromStr("0" + valueStr)
 		if err != nil {
 			panic(fmt.Errorf("invalidly configured osmosis-mempool.%v, err= %v", optName, err))
 		}

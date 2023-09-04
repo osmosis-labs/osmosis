@@ -3,16 +3,17 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
 // IterateRoutes checks the profitability of every single route that is passed in
 // and returns the optimal route if there is one
-func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remainingTxPoolPoints, remainingBlockPoolPoints *uint64) (sdk.Coin, sdk.Int, poolmanagertypes.SwapAmountInRoutes) {
+func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remainingTxPoolPoints, remainingBlockPoolPoints *uint64) (sdk.Coin, osmomath.Int, poolmanagertypes.SwapAmountInRoutes) {
 	var optimalRoute poolmanagertypes.SwapAmountInRoutes
 	var maxProfitInputCoin sdk.Coin
-	maxProfit := sdk.ZeroInt()
+	maxProfit := osmomath.ZeroInt()
 
 	// Iterate through the routes and find the optimal route for the given swap
 	for index := 0; index < len(routes) && *remainingTxPoolPoints > 0; index++ {
@@ -29,7 +30,7 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 		}
 
 		// If the profit is greater than zero, then we convert the profits to uosmo and compare profits in terms of uosmo
-		if profit.GT(sdk.ZeroInt()) {
+		if profit.GT(osmomath.ZeroInt()) {
 			profit, err := k.ConvertProfits(ctx, inputCoin, profit)
 			if err != nil {
 				k.Logger(ctx).Error("Error converting profits: " + err.Error())
@@ -51,7 +52,7 @@ func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remaining
 // ConvertProfits converts the profit denom to uosmo to allow for a fair comparison of profits
 //
 // NOTE: This does not check the underlying pool before swapping so this may go over the MaxTicksCrossed.
-func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.Int) (sdk.Int, error) {
+func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit osmomath.Int) (osmomath.Int, error) {
 	if inputCoin.Denom == types.OsmosisDenomination {
 		return profit, nil
 	}
@@ -93,24 +94,24 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 // EstimateMultihopProfit estimates the profit for a given route
 // by estimating the amount out given the amount in for the first pool in the route
 // and then subtracting the amount in from the amount out to get the profit
-func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amount sdk.Int, route poolmanagertypes.SwapAmountInRoutes) (sdk.Coin, sdk.Int, error) {
+func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amount osmomath.Int, route poolmanagertypes.SwapAmountInRoutes) (sdk.Coin, osmomath.Int, error) {
 	tokenIn := sdk.NewCoin(inputDenom, amount)
 	amtOut, err := k.poolmanagerKeeper.MultihopEstimateOutGivenExactAmountIn(ctx, route, tokenIn)
 	if err != nil {
-		return sdk.Coin{}, sdk.ZeroInt(), err
+		return sdk.Coin{}, osmomath.ZeroInt(), err
 	}
 	profit := amtOut.Sub(tokenIn.Amount)
 	return tokenIn, profit, nil
 }
 
 // FindMaxProfitRoute runs a binary search to find the max profit for a given route
-func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, remainingTxPoolPoints, remainingBlockPoolPoints *uint64) (sdk.Coin, sdk.Int, error) {
+func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, remainingTxPoolPoints, remainingBlockPoolPoints *uint64) (sdk.Coin, osmomath.Int, error) {
 	// Track the tokenIn amount/denom and the profit
 	tokenIn := sdk.Coin{}
-	profit := sdk.ZeroInt()
+	profit := osmomath.ZeroInt()
 
 	// Track the left and right bounds of the binary search
-	curLeft := sdk.OneInt()
+	curLeft := osmomath.OneInt()
 	curRight := types.MaxInputAmount
 
 	// Input denom used for cyclic arbitrage
@@ -121,9 +122,9 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 	// If there is no profit, then we can return early and not run the binary search.
 	_, minInProfit, err := k.EstimateMultihopProfit(ctx, inputDenom, curLeft.Mul(route.StepSize), route.Route)
 	if err != nil {
-		return sdk.Coin{}, sdk.ZeroInt(), err
-	} else if minInProfit.LTE(sdk.ZeroInt()) {
-		return sdk.Coin{}, sdk.ZeroInt(), nil
+		return sdk.Coin{}, osmomath.ZeroInt(), err
+	} else if minInProfit.LTE(osmomath.ZeroInt()) {
+		return sdk.Coin{}, osmomath.ZeroInt(), nil
 	}
 
 	// Decrement the number of pool points remaining since we know this route will be profitable
@@ -132,30 +133,30 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 
 	// Increment the number of pool points consumed since we know this route will be profitable
 	if err := k.IncrementPointCountForBlock(ctx, route.PoolPoints); err != nil {
-		return sdk.Coin{}, sdk.ZeroInt(), err
+		return sdk.Coin{}, osmomath.ZeroInt(), err
 	}
 
 	// Update the search range if the max input amount is too small/large
 	curLeft, curRight, err = k.UpdateSearchRangeIfNeeded(ctx, route, inputDenom, curLeft, curRight)
 	if err != nil {
-		return sdk.Coin{}, sdk.ZeroInt(), err
+		return sdk.Coin{}, osmomath.ZeroInt(), err
 	}
 
 	// Binary search to find the max profit
 	for iteration := 0; curLeft.LT(curRight) && iteration < types.MaxIterations; iteration++ {
-		curMid := (curLeft.Add(curRight)).Quo(sdk.NewInt(2))
-		curMidPlusOne := curMid.Add(sdk.OneInt())
+		curMid := (curLeft.Add(curRight)).Quo(osmomath.NewInt(2))
+		curMidPlusOne := curMid.Add(osmomath.OneInt())
 
 		// Short circuit profit searching if there is an error in the GAMM module
 		tokenInMid, profitMid, err := k.EstimateMultihopProfit(ctx, inputDenom, curMid.Mul(route.StepSize), route.Route)
 		if err != nil {
-			return sdk.Coin{}, sdk.ZeroInt(), err
+			return sdk.Coin{}, osmomath.ZeroInt(), err
 		}
 
 		// Short circuit profit searching if there is an error in the GAMM module
 		tokenInMidPlusOne, profitMidPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curMidPlusOne.Mul(route.StepSize), route.Route)
 		if err != nil {
-			return sdk.Coin{}, sdk.ZeroInt(), err
+			return sdk.Coin{}, osmomath.ZeroInt(), err
 		}
 
 		// Reduce subspace to search for max profit
@@ -181,12 +182,12 @@ func (k Keeper) UpdateSearchRangeIfNeeded(
 	ctx sdk.Context,
 	route RouteMetaData,
 	inputDenom string,
-	curLeft, curRight sdk.Int,
-) (sdk.Int, sdk.Int, error) {
+	curLeft, curRight osmomath.Int,
+) (osmomath.Int, osmomath.Int, error) {
 	// If there are concentrated liquidity pools in the route, then we may need to reduce the upper bound of the binary search.
 	updatedMax, err := k.CalculateUpperBoundForSearch(ctx, route, inputDenom)
 	if err != nil {
-		return sdk.ZeroInt(), sdk.ZeroInt(), err
+		return osmomath.ZeroInt(), osmomath.ZeroInt(), err
 	}
 
 	// In the case where the updated upper bound is less than the current upper bound, we know we will not extend
@@ -204,7 +205,7 @@ func (k Keeper) CalculateUpperBoundForSearch(
 	ctx sdk.Context,
 	route RouteMetaData,
 	inputDenom string,
-) (sdk.Int, error) {
+) (osmomath.Int, error) {
 	var intermidiateCoin sdk.Coin
 
 	poolInfo := k.GetInfoByPoolType(ctx)
@@ -215,7 +216,7 @@ func (k Keeper) CalculateUpperBoundForSearch(
 		hop := route.Route[index]
 		pool, err := k.poolmanagerKeeper.GetPool(ctx, hop.PoolId)
 		if err != nil {
-			return sdk.ZeroInt(), err
+			return osmomath.ZeroInt(), err
 		}
 
 		tokenInDenom := inputDenom
@@ -235,7 +236,7 @@ func (k Keeper) CalculateUpperBoundForSearch(
 				poolInfo.Concentrated.MaxTicksCrossed,
 			)
 			if err != nil {
-				return sdk.ZeroInt(), err
+				return osmomath.ZeroInt(), err
 			}
 
 			// if there have been no other CL pools in the route, then we can set the intermediate coin to the max input amount.
@@ -251,14 +252,14 @@ func (k Keeper) CalculateUpperBoundForSearch(
 			// the smaller amount to ensure we do not overstep the max ticks moved.
 			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenInDenom)
 			if err != nil {
-				return sdk.ZeroInt(), err
+				return osmomath.ZeroInt(), err
 			}
 		case !intermidiateCoin.IsNil():
 			// If we have already seen a CL pool in the route, then simply propagate the intermediate coin up
 			// the route.
 			intermidiateCoin, err = k.executeSafeSwap(ctx, pool.GetId(), intermidiateCoin, tokenInDenom)
 			if err != nil {
-				return sdk.ZeroInt(), err
+				return osmomath.ZeroInt(), err
 			}
 		}
 	}
@@ -287,11 +288,11 @@ func (k Keeper) executeSafeSwap(
 ) (sdk.Coin, error) {
 	liquidity, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, poolID)
 	if err != nil {
-		return sdk.NewCoin(tokenInDenom, sdk.ZeroInt()), err
+		return sdk.NewCoin(tokenInDenom, osmomath.ZeroInt()), err
 	}
 
 	// At most we can swap half of the liquidity in the pool
-	liquidTokenAmt := liquidity.AmountOf(outputCoin.Denom).Quo(sdk.NewInt(4))
+	liquidTokenAmt := liquidity.AmountOf(outputCoin.Denom).Quo(osmomath.NewInt(4))
 	if liquidTokenAmt.LT(outputCoin.Amount) {
 		outputCoin.Amount = liquidTokenAmt
 	}
@@ -307,7 +308,7 @@ func (k Keeper) executeSafeSwap(
 		outputCoin,
 	)
 	if err != nil {
-		return sdk.NewCoin(tokenInDenom, sdk.ZeroInt()), err
+		return sdk.NewCoin(tokenInDenom, osmomath.ZeroInt()), err
 	}
 
 	return sdk.NewCoin(tokenInDenom, amt), nil
@@ -318,20 +319,20 @@ func (k Keeper) ExtendSearchRangeIfNeeded(
 	ctx sdk.Context,
 	route RouteMetaData,
 	inputDenom string,
-	curLeft, curRight, updatedMax sdk.Int,
-) (sdk.Int, sdk.Int, error) {
+	curLeft, curRight, updatedMax osmomath.Int,
+) (osmomath.Int, osmomath.Int, error) {
 	// Get the profit for the maximum amount in
 	_, maxInProfit, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Mul(route.StepSize), route.Route)
 	if err != nil {
-		return sdk.ZeroInt(), sdk.ZeroInt(), err
+		return osmomath.ZeroInt(), osmomath.ZeroInt(), err
 	}
 
 	// If the profit for the maximum amount in is still increasing, then we can increase the range of the binary search
-	if maxInProfit.GTE(sdk.ZeroInt()) {
+	if maxInProfit.GTE(osmomath.ZeroInt()) {
 		// Get the profit for the maximum amount in + 1
-		_, maxInProfitPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Add(sdk.OneInt()).Mul(route.StepSize), route.Route)
+		_, maxInProfitPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Add(osmomath.OneInt()).Mul(route.StepSize), route.Route)
 		if err != nil {
-			return sdk.ZeroInt(), sdk.ZeroInt(), err
+			return osmomath.ZeroInt(), osmomath.ZeroInt(), err
 		}
 
 		// Change the range of the binary search if the profit is still increasing

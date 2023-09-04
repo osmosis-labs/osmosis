@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"sync"
@@ -40,6 +41,9 @@ type IntegrationTestSuite struct {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	isEnabled := os.Getenv(e2eEnabledEnv)
+	user := os.Getenv("USER")
+	fmt.Println(user)
+	fmt.Println(isEnabled)
 	if isEnabled != "True" {
 		t.Skipf("e2e test is disabled. To run, set %s to True", e2eEnabledEnv)
 	}

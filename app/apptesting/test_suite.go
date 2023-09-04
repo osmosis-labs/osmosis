@@ -31,6 +31,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app"
 
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
@@ -62,7 +63,7 @@ type KeeperTestHelper struct {
 
 var (
 	SecondaryDenom       = "uion"
-	SecondaryAmount      = sdk.NewInt(100000000)
+	SecondaryAmount      = osmomath.NewInt(100000000)
 	baseTestAccts        = []sdk.AccAddress{}
 	defaultTestStartTime = time.Now().UTC()
 )
@@ -205,14 +206,14 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	valPub := secp256k1.GenPrivKey().PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
 	bondDenom := s.App.StakingKeeper.GetParams(s.Ctx).BondDenom
-	selfBond := sdk.NewCoins(sdk.Coin{Amount: sdk.NewInt(100), Denom: bondDenom})
+	selfBond := sdk.NewCoins(sdk.Coin{Amount: osmomath.NewInt(100), Denom: bondDenom})
 
 	s.FundAcc(sdk.AccAddress(valAddr), selfBond)
 
 	stakingHandler := staking.NewHandler(*s.App.StakingKeeper)
 	stakingCoin := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: selfBond[0].Amount}
 	ZeroCommission := stakingtypes.NewCommissionRates(zeroDec, zeroDec, zeroDec)
-	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, sdk.OneInt())
+	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, osmomath.OneInt())
 	s.Require().NoError(err)
 	res, err := stakingHandler(s.Ctx, msg)
 	s.Require().NoError(err)
@@ -323,7 +324,7 @@ func (s *KeeperTestHelper) RunMsg(msg sdk.Msg) (*sdk.Result, error) {
 }
 
 // AllocateRewardsToValidator allocates reward tokens to a distribution module then allocates rewards to the validator address.
-func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, rewardAmt sdk.Int) {
+func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, rewardAmt osmomath.Int) {
 	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
 	s.Require().True(found)
 
@@ -334,12 +335,12 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 
 	// allocate rewards to validator
 	s.Ctx = s.Ctx.WithBlockHeight(s.Ctx.BlockHeight() + 1)
-	decTokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(20000)}}
+	decTokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: osmomath.NewDec(20000)}}
 	s.App.DistrKeeper.AllocateTokensToValidator(s.Ctx, validator, decTokens)
 }
 
 // SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
-func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.CFMMPoolI {
+func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []osmomath.Dec) []gammtypes.CFMMPoolI {
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
@@ -349,10 +350,10 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 	pools := []gammtypes.CFMMPoolI{}
 	for index, multiplier := range multipliers {
 		token := fmt.Sprintf("token%d", index)
-		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
+		uosmoAmount := gammtypes.InitPoolSharesSupply.ToLegacyDec().Mul(multiplier).RoundInt()
 
 		s.FundAcc(acc1, sdk.NewCoins(
-			sdk.NewCoin(bondDenom, uosmoAmount.Mul(sdk.NewInt(10))),
+			sdk.NewCoin(bondDenom, uosmoAmount.Mul(osmomath.NewInt(10))),
 			sdk.NewInt64Coin(token, 100000),
 		).Add(params.PoolCreationFee...))
 
@@ -361,20 +362,20 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 
 			// pool assets
 			defaultFooAsset = balancer.PoolAsset{
-				Weight: sdk.NewInt(100),
+				Weight: osmomath.NewInt(100),
 				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
 			}
 			defaultBarAsset = balancer.PoolAsset{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin(token, sdk.NewInt(10000)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin(token, osmomath.NewInt(10000)),
 			}
 
 			poolAssets = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
 		)
 
 		poolParams := balancer.PoolParams{
-			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.Dec(sdk.ZeroInt()),
+			SwapFee: osmomath.NewDecWithPrec(1, 2),
+			ExitFee: osmomath.Dec(osmomath.ZeroInt()),
 		}
 		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
 
@@ -392,7 +393,7 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 
 // SwapAndSetSpotPrice runs a swap to set Spot price of a pool using arbitrary values
 // returns spot price after the arbitrary swap.
-func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin, toAsset sdk.Coin) sdk.Dec {
+func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin, toAsset sdk.Coin) osmomath.Dec {
 	// create a dummy account
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
@@ -412,7 +413,7 @@ func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin
 		route,
 		fromAsset.Amount,
 		sdk.NewCoin(toAsset.Denom,
-			toAsset.Amount.Quo(sdk.NewInt(4))))
+			toAsset.Amount.Quo(osmomath.NewInt(4))))
 	s.Require().NoError(err)
 
 	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, fromAsset.Denom, toAsset.Denom)

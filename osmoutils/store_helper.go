@@ -8,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/gogo/protobuf/proto"
 )
@@ -168,14 +170,14 @@ func MustGet(store store.KVStore, key []byte, result proto.Message) {
 }
 
 // MustSetDec sets dec value to store at key. Panics on any error.
-func MustSetDec(store store.KVStore, key []byte, value sdk.Dec) {
+func MustSetDec(store store.KVStore, key []byte, value osmomath.Dec) {
 	MustSet(store, key, &sdk.DecProto{
 		Dec: value,
 	})
 }
 
 // MustGetDec gets dec value from store at key. Panics on any error.
-func MustGetDec(store store.KVStore, key []byte) sdk.Dec {
+func MustGetDec(store store.KVStore, key []byte) osmomath.Dec {
 	result := &sdk.DecProto{}
 	MustGet(store, key, result)
 	return result.Dec
@@ -184,14 +186,14 @@ func MustGetDec(store store.KVStore, key []byte) sdk.Dec {
 // GetDec gets dec value from store at key. Returns error if:
 // - database error occurs.
 // - no value at given key is found.
-func GetDec(store store.KVStore, key []byte) (sdk.Dec, error) {
+func GetDec(store store.KVStore, key []byte) (osmomath.Dec, error) {
 	result := &sdk.DecProto{}
 	isFound, err := Get(store, key, result)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 	if !isFound {
-		return sdk.Dec{}, DecNotFoundError{Key: string(key)}
+		return osmomath.Dec{}, DecNotFoundError{Key: string(key)}
 	}
 	return result.Dec, nil
 }

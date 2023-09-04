@@ -3,6 +3,7 @@ package keeper
 import (
 	"time"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid/keeper/internal/events"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
@@ -87,14 +88,14 @@ func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, 
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 }
 
-func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor sdk.Dec, effectiveSlashFactor sdk.Dec) {
+func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor osmomath.Dec, effectiveSlashFactor osmomath.Dec) {
 	if slashFactor.IsZero() {
 		return
 	}
 	h.k.SlashLockupsForValidatorSlash(ctx, valAddr, infractionHeight, slashFactor)
 }
 
-func (h Hooks) AfterValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor sdk.Dec, effectiveSlashFactor sdk.Dec) {
+func (h Hooks) AfterValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor osmomath.Dec, effectiveSlashFactor osmomath.Dec) {
 	if slashFactor.IsZero() {
 		return
 	}

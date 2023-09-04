@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/v2types"
@@ -252,7 +253,7 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 	exitFee := pool.GetExitFee(sdkCtx)
 
 	totalSharesAmount := pool.GetTotalShares()
-	if req.ShareInAmount.GTE(totalSharesAmount) || req.ShareInAmount.LTE(sdk.ZeroInt()) {
+	if req.ShareInAmount.GTE(totalSharesAmount) || req.ShareInAmount.LTE(osmomath.ZeroInt()) {
 		return nil, errorsmod.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
 	}
 

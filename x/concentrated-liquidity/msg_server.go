@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
@@ -79,10 +80,10 @@ func (server msgServer) AddToPosition(goCtx context.Context, msg *types.MsgAddTo
 	}
 
 	if msg.TokenMinAmount0.IsNil() {
-		msg.TokenMinAmount0 = sdk.ZeroInt()
+		msg.TokenMinAmount0 = osmomath.ZeroInt()
 	}
 	if msg.TokenMinAmount1.IsNil() {
-		msg.TokenMinAmount1 = sdk.ZeroInt()
+		msg.TokenMinAmount1 = osmomath.ZeroInt()
 	}
 
 	positionId, actualAmount0, actualAmount1, err := server.keeper.addToPosition(ctx, sender, msg.PositionId, msg.Amount0, msg.Amount1, msg.TokenMinAmount0, msg.TokenMinAmount1)

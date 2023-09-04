@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
@@ -29,8 +30,8 @@ func BenchmarkBalancerSwapHighestLiquidityArb(b *testing.B) {
 					TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
 				},
 			},
-			TokenIn:           sdk.NewCoin("ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0", sdk.NewInt(10000)),
-			TokenOutMinAmount: sdk.NewInt(10000),
+			TokenIn:           sdk.NewCoin("ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0", osmomath.NewInt(10000)),
+			TokenOutMinAmount: osmomath.NewInt(10000),
 		},
 	}
 	benchmarkWrapper(b, msgs, 1)
@@ -47,8 +48,8 @@ func BenchmarkStableSwapHotRouteArb(b *testing.B) {
 					TokenOutDenom: types.OsmosisDenomination,
 				},
 			},
-			TokenIn:           sdk.NewCoin("usdc", sdk.NewInt(10000)),
-			TokenOutMinAmount: sdk.NewInt(100),
+			TokenIn:           sdk.NewCoin("usdc", osmomath.NewInt(10000)),
+			TokenOutMinAmount: osmomath.NewInt(100),
 		},
 	}
 	benchmarkWrapper(b, msgs, 1)
@@ -65,8 +66,8 @@ func BenchmarkFourHopHotRouteArb(b *testing.B) {
 					TokenOutDenom: "test/2",
 				},
 			},
-			TokenIn:           sdk.NewCoin("Atom", sdk.NewInt(10000)),
-			TokenOutMinAmount: sdk.NewInt(100),
+			TokenIn:           sdk.NewCoin("Atom", osmomath.NewInt(10000)),
+			TokenOutMinAmount: osmomath.NewInt(100),
 		},
 	}
 	benchmarkWrapper(b, msgs, 1)
@@ -75,7 +76,7 @@ func BenchmarkFourHopHotRouteArb(b *testing.B) {
 func (s *KeeperTestSuite) TestAnteHandle() {
 	type param struct {
 		trades              []types.Trade
-		expectedNumOfTrades sdk.Int
+		expectedNumOfTrades osmomath.Int
 		expectedProfits     []sdk.Coin
 		expectedPoolPoints  uint64
 	}
@@ -101,7 +102,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			name: "Random Msg - Expect Nothing to Happen",
 			params: param{
 				trades:              []types.Trade{},
-				expectedNumOfTrades: sdk.ZeroInt(),
+				expectedNumOfTrades: osmomath.ZeroInt(),
 				expectedProfits:     []sdk.Coin{},
 				expectedPoolPoints:  0,
 			},
@@ -117,7 +118,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						TokenIn:  "juno",
 					},
 				},
-				expectedNumOfTrades: sdk.ZeroInt(),
+				expectedNumOfTrades: osmomath.ZeroInt(),
 				expectedProfits:     []sdk.Coin{},
 				expectedPoolPoints:  0,
 			},
@@ -133,11 +134,11 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						TokenIn:  "ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0",
 					},
 				},
-				expectedNumOfTrades: sdk.OneInt(),
+				expectedNumOfTrades: osmomath.OneInt(),
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(24848),
+						Amount: osmomath.NewInt(24848),
 					},
 				},
 				expectedPoolPoints: 6,
@@ -154,15 +155,15 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						TokenIn:  "Atom",
 					},
 				},
-				expectedNumOfTrades: sdk.NewInt(2),
+				expectedNumOfTrades: osmomath.NewInt(2),
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: sdk.NewInt(5826),
+						Amount: osmomath.NewInt(5826),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(24848),
+						Amount: osmomath.NewInt(24848),
 					},
 				},
 				expectedPoolPoints: 12,
@@ -179,15 +180,15 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						TokenIn:  "usdc",
 					},
 				},
-				expectedNumOfTrades: sdk.NewInt(3),
+				expectedNumOfTrades: osmomath.NewInt(3),
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: sdk.NewInt(5826),
+						Amount: osmomath.NewInt(5826),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(56609900),
+						Amount: osmomath.NewInt(56609900),
 					},
 				},
 				expectedPoolPoints: 21,
@@ -204,15 +205,15 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						TokenIn:  "Atom",
 					},
 				},
-				expectedNumOfTrades: sdk.NewInt(4),
+				expectedNumOfTrades: osmomath.NewInt(4),
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: sdk.NewInt(15_767_231),
+						Amount: osmomath.NewInt(15_767_231),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(56_609_900),
+						Amount: osmomath.NewInt(56_609_900),
 					},
 				},
 				expectedPoolPoints: 29,
@@ -229,15 +230,15 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						TokenIn:  types.OsmosisDenomination,
 					},
 				},
-				expectedNumOfTrades: sdk.NewInt(5),
+				expectedNumOfTrades: osmomath.NewInt(5),
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: sdk.NewInt(15_767_231),
+						Amount: osmomath.NewInt(15_767_231),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(256_086_256),
+						Amount: osmomath.NewInt(256_086_256),
 					},
 				},
 				expectedPoolPoints: 41,
@@ -254,15 +255,15 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						TokenIn:  "busd",
 					},
 				},
-				expectedNumOfTrades: sdk.NewInt(5),
+				expectedNumOfTrades: osmomath.NewInt(5),
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: sdk.NewInt(15_767_231),
+						Amount: osmomath.NewInt(15_767_231),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(256_086_256),
+						Amount: osmomath.NewInt(256_086_256),
 					},
 				},
 				expectedPoolPoints: 41,
@@ -279,15 +280,15 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						TokenIn:  "busd",
 					},
 				},
-				expectedNumOfTrades: sdk.NewInt(5),
+				expectedNumOfTrades: osmomath.NewInt(5),
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: sdk.NewInt(15_767_231),
+						Amount: osmomath.NewInt(15_767_231),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(256_086_256),
+						Amount: osmomath.NewInt(256_086_256),
 					},
 				},
 				expectedPoolPoints: 41,
@@ -304,15 +305,15 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 						TokenIn:  "busd",
 					},
 				},
-				expectedNumOfTrades: sdk.NewInt(5),
+				expectedNumOfTrades: osmomath.NewInt(5),
 				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
-						Amount: sdk.NewInt(15_767_231),
+						Amount: osmomath.NewInt(15_767_231),
 					},
 					{
 						Denom:  types.OsmosisDenomination,
-						Amount: sdk.NewInt(256_086_256),
+						Amount: osmomath.NewInt(256_086_256),
 					},
 				},
 				expectedPoolPoints: 41,
@@ -334,7 +335,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			s.Ctx = s.Ctx.WithMinGasPrices(sdk.NewDecCoins())
 
 			gasLimit := uint64(500000)
-			txFee := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000)))
+			txFee := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000)))
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
 			signerData := authsigning.SignerData{
@@ -422,7 +423,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 
 				// Check that the number of trades is correct
 				numOfTrades, _ := s.App.ProtoRevKeeper.GetNumberOfTrades(s.Ctx)
-				s.Require().Equal(tc.params.expectedNumOfTrades.String(), numOfTrades.String())
+				s.Require().Equal(tc.params.expectedNumOfTrades, numOfTrades)
 
 				// Check that the profits are correct
 				profits := s.App.ProtoRevKeeper.GetAllProfits(s.Ctx)
@@ -668,7 +669,7 @@ func benchmarkWrapper(b *testing.B, msgs []sdk.Msg, expectedTrades int) {
 				b.Fatal("error getting number of trades")
 			}
 		}
-		if !numberTrades.Equal(sdk.NewInt(int64(expectedTrades))) {
+		if !numberTrades.Equal(osmomath.NewInt(int64(expectedTrades))) {
 			b.Fatalf("expected %d trades, got %d", expectedTrades, numberTrades)
 		}
 	}
@@ -691,7 +692,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
 	acc1 := s.App.AccountKeeper.NewAccountWithAddress(s.Ctx, addr0)
 	s.App.AccountKeeper.SetAccount(s.Ctx, acc1)
-	err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))))
+	err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000))))
 	s.Require().NoError(err)
 
 	// Build the tx
@@ -710,7 +711,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 		s.clientCtx.TxConfig,
 		accSeqs[0],
 	)
-	tx := s.BuildTx(txBuilder, msgs, sigV2, "", sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))), 500000)
+	tx := s.BuildTx(txBuilder, msgs, sigV2, "", sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000))), 500000)
 
 	// Set up the post handler
 	protoRevDecorator := keeper.NewProtoRevDecorator(*s.App.ProtoRevKeeper)

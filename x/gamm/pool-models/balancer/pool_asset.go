@@ -7,6 +7,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -15,13 +16,13 @@ import (
 )
 
 type poolAssetPretty struct {
-	Token  sdk.Coin `json:"token" yaml:"token"`
-	Weight sdk.Dec  `json:"weight" yaml:"weight"`
+	Token  sdk.Coin     `json:"token" yaml:"token"`
+	Weight osmomath.Dec `json:"weight" yaml:"weight"`
 }
 
 // validates a pool asset, to check if it has a valid weight.
 func (pa PoolAsset) validateWeight() error {
-	if pa.Weight.LTE(sdk.ZeroInt()) {
+	if pa.Weight.LTE(osmomath.ZeroInt()) {
 		return fmt.Errorf("a token's weight in the pool must be greater than 0")
 	}
 
@@ -33,7 +34,7 @@ func (pa PoolAsset) validateWeight() error {
 
 func (pa PoolAsset) prettify() poolAssetPretty {
 	return poolAssetPretty{
-		Weight: sdk.NewDecFromInt(pa.Weight).QuoInt64(GuaranteedWeightPrecision),
+		Weight: osmomath.NewDecFromInt(pa.Weight).QuoInt64(GuaranteedWeightPrecision),
 		Token:  pa.Token,
 	}
 }

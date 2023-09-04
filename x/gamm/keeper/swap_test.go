@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
@@ -19,8 +20,8 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	type param struct {
 		tokenIn           sdk.Coin
 		tokenOutDenom     string
-		tokenOutMinAmount sdk.Int
-		expectedTokenOut  sdk.Int
+		tokenOutMinAmount osmomath.Int
+		expectedTokenOut  osmomath.Int
 	}
 
 	tests := []struct {
@@ -28,90 +29,90 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 		param param
 		// Note: by default spread factor is zero in all tests
 		// It is only set to non-zero when this overwrite is non-nil
-		spreadFactorOverwrite sdk.Dec
+		spreadFactorOverwrite osmomath.Dec
 		// Note: this is the value by which the original spread factor is divided
 		// by if it is non-nil. This is done to test the case where the given
 		// parameter spread factor is reduced by more than allowed (max factor of 0.5)
-		spreadFactorOverwriteQuotient sdk.Dec
+		spreadFactorOverwriteQuotient osmomath.Dec
 		expectPass                    bool
 	}{
 		{
 			name: "Proper swap",
 			param: param{
-				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenIn:           sdk.NewCoin("foo", osmomath.NewInt(100000)),
 				tokenOutDenom:     "bar",
-				tokenOutMinAmount: sdk.NewInt(1),
-				expectedTokenOut:  sdk.NewInt(49262),
+				tokenOutMinAmount: osmomath.NewInt(1),
+				expectedTokenOut:  osmomath.NewInt(49262),
 			},
 			expectPass: true,
 		},
 		{
 			name: "Proper swap2",
 			param: param{
-				tokenIn:           sdk.NewCoin("bar", sdk.NewInt(2451783)),
+				tokenIn:           sdk.NewCoin("bar", osmomath.NewInt(2451783)),
 				tokenOutDenom:     "baz",
-				tokenOutMinAmount: sdk.NewInt(1),
-				expectedTokenOut:  sdk.NewInt(1167843),
+				tokenOutMinAmount: osmomath.NewInt(1),
+				expectedTokenOut:  osmomath.NewInt(1167843),
 			},
 			expectPass: true,
 		},
 		{
 			name: "boundary valid spread factor given (= 0.5 pool spread factor)",
 			param: param{
-				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenIn:           sdk.NewCoin("foo", osmomath.NewInt(100000)),
 				tokenOutDenom:     "bar",
-				tokenOutMinAmount: sdk.NewInt(1),
-				expectedTokenOut:  sdk.NewInt(46833),
+				tokenOutMinAmount: osmomath.NewInt(1),
+				expectedTokenOut:  osmomath.NewInt(46833),
 			},
-			spreadFactorOverwrite:         sdk.MustNewDecFromStr("0.1"),
-			spreadFactorOverwriteQuotient: sdk.MustNewDecFromStr("2"),
+			spreadFactorOverwrite:         osmomath.MustNewDecFromStr("0.1"),
+			spreadFactorOverwriteQuotient: osmomath.MustNewDecFromStr("2"),
 			expectPass:                    true,
 		},
 		{
 			name: "invalid spread factor given (< 0.5 pool spread factor)",
 			param: param{
-				tokenIn:           sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenIn:           sdk.NewCoin("foo", osmomath.NewInt(100000)),
 				tokenOutDenom:     "bar",
-				tokenOutMinAmount: sdk.NewInt(1),
-				expectedTokenOut:  sdk.NewInt(49262),
+				tokenOutMinAmount: osmomath.NewInt(1),
+				expectedTokenOut:  osmomath.NewInt(49262),
 			},
-			spreadFactorOverwrite:         sdk.MustNewDecFromStr("0.1"),
-			spreadFactorOverwriteQuotient: sdk.MustNewDecFromStr("3"),
+			spreadFactorOverwrite:         osmomath.MustNewDecFromStr("0.1"),
+			spreadFactorOverwriteQuotient: osmomath.MustNewDecFromStr("3"),
 			expectPass:                    false,
 		},
 		{
 			name: "out is lesser than min amount",
 			param: param{
-				tokenIn:           sdk.NewCoin("bar", sdk.NewInt(2451783)),
+				tokenIn:           sdk.NewCoin("bar", osmomath.NewInt(2451783)),
 				tokenOutDenom:     "baz",
-				tokenOutMinAmount: sdk.NewInt(9000000),
+				tokenOutMinAmount: osmomath.NewInt(9000000),
 			},
 			expectPass: false,
 		},
 		{
 			name: "in and out denom are same",
 			param: param{
-				tokenIn:           sdk.NewCoin("bar", sdk.NewInt(2451783)),
+				tokenIn:           sdk.NewCoin("bar", osmomath.NewInt(2451783)),
 				tokenOutDenom:     "bar",
-				tokenOutMinAmount: sdk.NewInt(1),
+				tokenOutMinAmount: osmomath.NewInt(1),
 			},
 			expectPass: false,
 		},
 		{
 			name: "unknown in denom",
 			param: param{
-				tokenIn:           sdk.NewCoin("bara", sdk.NewInt(2451783)),
+				tokenIn:           sdk.NewCoin("bara", osmomath.NewInt(2451783)),
 				tokenOutDenom:     "bar",
-				tokenOutMinAmount: sdk.NewInt(1),
+				tokenOutMinAmount: osmomath.NewInt(1),
 			},
 			expectPass: false,
 		},
 		{
 			name: "unknown out denom",
 			param: param{
-				tokenIn:           sdk.NewCoin("bar", sdk.NewInt(2451783)),
+				tokenIn:           sdk.NewCoin("bar", osmomath.NewInt(2451783)),
 				tokenOutDenom:     "bara",
-				tokenOutMinAmount: sdk.NewInt(1),
+				tokenOutMinAmount: osmomath.NewInt(1),
 			},
 			expectPass: false,
 		},
@@ -122,13 +123,13 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.SetupTest()
-			spreadFactor := sdk.ZeroDec()
+			spreadFactor := osmomath.ZeroDec()
 			if !test.spreadFactorOverwrite.IsNil() {
 				spreadFactor = test.spreadFactorOverwrite
 			}
 			poolId := s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: spreadFactor,
-				ExitFee: sdk.ZeroDec(),
+				ExitFee: osmomath.ZeroDec(),
 			})
 			if !test.spreadFactorOverwriteQuotient.IsNil() {
 				spreadFactor = spreadFactor.Quo(test.spreadFactorOverwriteQuotient)
@@ -160,7 +161,7 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				}
 
 				// Ratio of the token out should be between the before spot price and after spot price.
-				tradeAvgPrice := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
+				tradeAvgPrice := test.param.tokenIn.Amount.ToLegacyDec().Quo(tokenOutAmount.ToLegacyDec())
 				s.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
 				_, err := keeper.SwapExactAmountIn(ctx, s.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, spreadFactor)
@@ -188,7 +189,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			name: "balancer",
 			param: param{
 				poolType:      "balancer",
-				tokenIn:       sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenIn:       sdk.NewCoin("foo", osmomath.NewInt(100000)),
 				tokenOutDenom: "bar",
 			},
 			expectPass: true,
@@ -197,7 +198,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenIn() {
 			name: "stableswap",
 			param: param{
 				poolType:      "stableswap",
-				tokenIn:       sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenIn:       sdk.NewCoin("foo", osmomath.NewInt(100000)),
 				tokenOutDenom: "bar",
 			},
 			expectPass: true,
@@ -253,7 +254,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 			name: "balancer",
 			param: param{
 				poolType:     "balancer",
-				tokenOut:     sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenOut:     sdk.NewCoin("foo", osmomath.NewInt(100000)),
 				tokenInDenom: "bar",
 			},
 			expectPass: true,
@@ -262,7 +263,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 			name: "stableswap",
 			param: param{
 				poolType:     "stableswap",
-				tokenOut:     sdk.NewCoin("foo", sdk.NewInt(100000)),
+				tokenOut:     sdk.NewCoin("foo", osmomath.NewInt(100000)),
 				tokenInDenom: "bar",
 			},
 			expectPass: true,
@@ -311,9 +312,9 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOut() {
 func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 	type param struct {
 		tokenInDenom          string
-		tokenInMaxAmount      sdk.Int
+		tokenInMaxAmount      osmomath.Int
 		tokenOut              sdk.Coin
-		expectedTokenInAmount sdk.Int
+		expectedTokenInAmount osmomath.Int
 	}
 
 	tests := []struct {
@@ -325,9 +326,9 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 			name: "Proper swap",
 			param: param{
 				tokenInDenom:          "foo",
-				tokenInMaxAmount:      sdk.NewInt(900000000),
-				tokenOut:              sdk.NewCoin("bar", sdk.NewInt(100000)),
-				expectedTokenInAmount: sdk.NewInt(206165),
+				tokenInMaxAmount:      osmomath.NewInt(900000000),
+				tokenOut:              sdk.NewCoin("bar", osmomath.NewInt(100000)),
+				expectedTokenInAmount: osmomath.NewInt(206165),
 			},
 			expectPass: true,
 		},
@@ -335,9 +336,9 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 			name: "Proper swap2",
 			param: param{
 				tokenInDenom:          "foo",
-				tokenInMaxAmount:      sdk.NewInt(900000000),
-				tokenOut:              sdk.NewCoin("baz", sdk.NewInt(316721)),
-				expectedTokenInAmount: sdk.NewInt(1084571),
+				tokenInMaxAmount:      osmomath.NewInt(900000000),
+				tokenOut:              sdk.NewCoin("baz", osmomath.NewInt(316721)),
+				expectedTokenInAmount: osmomath.NewInt(1084571),
 			},
 			expectPass: true,
 		},
@@ -345,8 +346,8 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 			name: "in is greater than max",
 			param: param{
 				tokenInDenom:     "foo",
-				tokenInMaxAmount: sdk.NewInt(100),
-				tokenOut:         sdk.NewCoin("baz", sdk.NewInt(316721)),
+				tokenInMaxAmount: osmomath.NewInt(100),
+				tokenOut:         sdk.NewCoin("baz", osmomath.NewInt(316721)),
 			},
 			expectPass: false,
 		},
@@ -354,8 +355,8 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 			name: "pool doesn't have enough token to out",
 			param: param{
 				tokenInDenom:     "foo",
-				tokenInMaxAmount: sdk.NewInt(900000000),
-				tokenOut:         sdk.NewCoin("baz", sdk.NewInt(99316721)),
+				tokenInMaxAmount: osmomath.NewInt(900000000),
+				tokenOut:         sdk.NewCoin("baz", osmomath.NewInt(99316721)),
 			},
 			expectPass: false,
 		},
@@ -363,8 +364,8 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 			name: "unknown in denom",
 			param: param{
 				tokenInDenom:     "fooz",
-				tokenInMaxAmount: sdk.NewInt(900000000),
-				tokenOut:         sdk.NewCoin("bar", sdk.NewInt(100000)),
+				tokenInMaxAmount: osmomath.NewInt(900000000),
+				tokenOut:         sdk.NewCoin("bar", osmomath.NewInt(100000)),
 			},
 			expectPass: false,
 		},
@@ -372,8 +373,8 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 			name: "unknown out denom",
 			param: param{
 				tokenInDenom:     "foo",
-				tokenInMaxAmount: sdk.NewInt(900000000),
-				tokenOut:         sdk.NewCoin("barz", sdk.NewInt(100000)),
+				tokenInMaxAmount: osmomath.NewInt(900000000),
+				tokenOut:         sdk.NewCoin("barz", osmomath.NewInt(100000)),
 			},
 			expectPass: false,
 		},
@@ -412,7 +413,7 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				s.NoError(err, "test: %v", test.name)
 
 				// Ratio of the token out should be between the before spot price and after spot price.
-				tradeAvgPrice := tokenInAmount.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
+				tradeAvgPrice := tokenInAmount.ToLegacyDec().Quo(test.param.tokenOut.Amount.ToLegacyDec())
 				s.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
 				_, err := keeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, spreadFactor)
@@ -441,8 +442,8 @@ func (s *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 			s.FundAcc(acc, defaultAcctFunds)
 
 			poolId := s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: sdk.NewDec(0),
-				ExitFee: sdk.NewDec(0),
+				SwapFee: osmomath.NewDec(0),
+				ExitFee: osmomath.NewDec(0),
 			})
 
 			s.Ctx = s.Ctx.WithBlockTime(tc.blockTime)
@@ -450,17 +451,17 @@ func (s *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 			s.Require().NoError(err)
 			spreadFactor := pool.GetSpreadFactor(s.Ctx)
 
-			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
+			foocoin := sdk.NewCoin("foo", osmomath.NewInt(10))
 
 			if tc.expectPass {
-				_, err := s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, foocoin, "bar", sdk.ZeroInt(), spreadFactor)
+				_, err := s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, foocoin, "bar", osmomath.ZeroInt(), spreadFactor)
 				s.Require().NoError(err)
-				_, err = s.App.GAMMKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), foocoin, spreadFactor)
+				_, err = s.App.GAMMKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, "bar", osmomath.NewInt(1000000000000000000), foocoin, spreadFactor)
 				s.Require().NoError(err)
 			} else {
-				_, err := s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, foocoin, "bar", sdk.ZeroInt(), spreadFactor)
+				_, err := s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool, foocoin, "bar", osmomath.ZeroInt(), spreadFactor)
 				s.Require().Error(err)
-				_, err = s.App.GAMMKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, "bar", sdk.NewInt(1000000000000000000), foocoin, spreadFactor)
+				_, err = s.App.GAMMKeeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, "bar", osmomath.NewInt(1000000000000000000), foocoin, spreadFactor)
 				s.Require().Error(err)
 			}
 		}
@@ -476,7 +477,7 @@ func (s *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 func (s *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	// Setup test
 	s.SetupTest()
-	testCoin := sdk.NewCoin("foo", sdk.NewInt(10))
+	testCoin := sdk.NewCoin("foo", osmomath.NewInt(10))
 	s.FundAcc(s.TestAccs[0], defaultAcctFunds)
 
 	// Setup active pool
@@ -520,7 +521,7 @@ func (s *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 					},
 				},
 				testCoin,
-				sdk.ZeroInt(),
+				osmomath.ZeroInt(),
 			)
 
 			_, swapOutErr := s.App.PoolManagerKeeper.RouteExactAmountOut(
@@ -532,7 +533,7 @@ func (s *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 						TokenInDenom: "bar",
 					},
 				},
-				sdk.NewInt(1000000000000000000),
+				osmomath.NewInt(1000000000000000000),
 				testCoin,
 			)
 

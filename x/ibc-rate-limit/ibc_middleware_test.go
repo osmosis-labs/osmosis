@@ -15,6 +15,7 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	txfeetypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
@@ -52,7 +53,7 @@ func NewTransferPath(chainA, chainB *osmosisibctesting.TestChain) *ibctesting.Pa
 func (suite *MiddlewareTestSuite) SetupTest() {
 	suite.SkipIfWSL()
 	// TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
-	txfeetypes.ConsensusMinFee = sdk.ZeroDec()
+	txfeetypes.ConsensusMinFee = osmomath.ZeroDec()
 	suite.Setup()
 	ibctesting.DefaultTestingAppInit = osmosisibctesting.SetupTestingApp
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
@@ -77,7 +78,7 @@ func (suite *MiddlewareTestSuite) TearDownSuite() {
 }
 
 // Helpers
-func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount sdk.Int) sdk.Msg {
+func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount osmomath.Int) sdk.Msg {
 	coin := sdk.NewCoin(denom, amount)
 	port := suite.path.EndpointA.ChannelConfig.PortID
 	channel := suite.path.EndpointA.ChannelID
@@ -95,7 +96,7 @@ func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount sdk.Int) 
 	)
 }
 
-func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount sdk.Int) sdk.Msg {
+func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount osmomath.Int) sdk.Msg {
 	coin := sdk.NewCoin(denom, amount)
 	port := suite.path.EndpointB.ChannelConfig.PortID
 	channel := suite.path.EndpointB.ChannelID
@@ -113,7 +114,7 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount sdk.Int) 
 	)
 }
 
-func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.Keeper) sdk.Int {
+func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.Keeper) osmomath.Int {
 	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 
 	// ToDo: The commented-out code bellow is what we want to happen, but we're temporarily
@@ -127,7 +128,7 @@ func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.
 	//
 	// For native tokens, obtain the balance held in escrow for all potential channels
 	//channels := channelKeeper.GetAllChannels(ctx)
-	//balance := sdk.NewInt(0)
+	//balance := osmomath.NewInt(0)
 	//for _, channel := range channels {
 	//	escrowAddress := transfertypes.GetEscrowAddress("transfer", channel.ChannelId)
 	//	balance = balance.Add(bankKeeper.GetBalance(ctx, escrowAddress, denom).Amount)
@@ -141,7 +142,7 @@ func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
 	msg := transfertypes.NewMsgTransfer(
 		suite.path.EndpointB.ChannelConfig.PortID,
 		suite.path.EndpointB.ChannelID,
-		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
+		sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1)),
 		suite.chainB.SenderAccount.GetAddress().String(),
 		strings.Repeat("x", 4097),
 		clienttypes.NewHeight(0, 100),
@@ -252,19 +253,19 @@ func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string,
 
 // Test that Sending IBC messages works when the middleware isn't configured
 func (suite *MiddlewareTestSuite) TestSendTransferNoContract() {
-	one := sdk.NewInt(1)
+	one := osmomath.NewInt(1)
 	_, err := suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, one))
 	suite.Require().NoError(err)
 }
 
 // Test that Receiving IBC messages works when the middleware isn't configured
 func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
-	one := sdk.NewInt(1)
+	one := osmomath.NewInt(1)
 	_, err := suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, one))
 	suite.Require().NoError(err)
 }
 
-func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed sdk.Int) {
+func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed osmomath.Int) {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 
@@ -329,13 +330,13 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	// Calculate remaining allowance in the quota
 	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
 
-	used, ok := sdk.NewIntFromString(attrs["weekly_used_out"])
+	used, ok := osmomath.NewIntFromString(attrs["weekly_used_out"])
 	suite.Require().True(ok)
 
 	suite.Require().Equal(used, sendAmount.MulRaw(2))
 
 	// Sending above the quota should fail. We use 2 instead of 1 here to avoid rounding issues
-	_, err = suite.AssertSend(false, suite.MessageFromAToB(denom, sdk.NewInt(2)))
+	_, err = suite.AssertSend(false, suite.MessageFromAToB(denom, osmomath.NewInt(2)))
 	suite.Require().Error(err)
 	return attrs
 }
@@ -375,7 +376,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 	suite.coordinator.IncrementTimeBy(oneSecAfterReset.Sub(suite.coordinator.CurrentTime))
 
 	// Sending should succeed again
-	_, err = suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	_, err = suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, osmomath.NewInt(1)))
 	suite.Require().NoError(err)
 }
 
@@ -421,7 +422,7 @@ func (suite *MiddlewareTestSuite) fullRecvTest(native bool) {
 	suite.Require().NoError(err)
 
 	// Sending above the quota should fail. We send 2 instead of 1 to account for rounding errors
-	_, err = suite.AssertReceive(false, suite.MessageFromBToA(sendDenom, sdk.NewInt(2)))
+	_, err = suite.AssertReceive(false, suite.MessageFromBToA(sendDenom, osmomath.NewInt(2)))
 	suite.Require().NoError(err)
 }
 
@@ -448,7 +449,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 
 	// send 1 token.
 	// If the contract doesn't have a quota for the current channel, all transfers are allowed
-	_, err := suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	_, err := suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, osmomath.NewInt(1)))
 	suite.Require().NoError(err)
 }
 
@@ -519,7 +520,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	suite.Require().NoError(err)
 
 	// We should be able to send again because the packet that exceeded the quota failed and has been reverted
-	_, err = suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, sdk.NewInt(1)))
+	_, err = suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, osmomath.NewInt(1)))
 	suite.Require().NoError(err)
 }
 

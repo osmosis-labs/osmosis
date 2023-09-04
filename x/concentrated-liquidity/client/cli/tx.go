@@ -16,6 +16,7 @@ import (
 
 	govtypes "github.com/osmosis-labs/osmosis/v19/x/gov/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
@@ -317,7 +318,7 @@ func parsePoolRecords(cmd *cobra.Command) ([]types.PoolRecord, error) {
 		}
 
 		spreadFactorStr := poolRecords[i+3]
-		spreadFactor, err := sdk.NewDecFromStr(spreadFactorStr)
+		spreadFactor, err := osmomath.NewDecFromStr(spreadFactorStr)
 		if err != nil {
 			return nil, err
 		}

@@ -8,18 +8,17 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	simapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid"
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var now = time.Now().UTC()
 
 var testGenesis = types.GenesisState{
 	Params: types.Params{
-		MinimumRiskFactor: sdk.NewDecWithPrec(5, 1), // 50%
+		MinimumRiskFactor: osmomath.NewDecWithPrec(5, 1), // 50%
 	},
 	SuperfluidAssets: []types.SuperfluidAsset{
 		{
@@ -31,7 +30,7 @@ var testGenesis = types.GenesisState{
 		{
 			EpochNumber: 1,
 			Denom:       DefaultGammAsset,
-			Multiplier:  sdk.NewDec(1000),
+			Multiplier:  osmomath.NewDec(1000),
 		},
 	},
 	IntermediaryAccounts: []types.SuperfluidIntermediaryAccount{

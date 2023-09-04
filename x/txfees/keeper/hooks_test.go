@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
@@ -55,7 +56,7 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		baseDenom    string
 		denoms       []string
 		poolTypes    []poolmanagertypes.PoolI
-		spreadFactor sdk.Dec
+		spreadFactor osmomath.Dec
 		expectPass   bool
 	}{
 		{
@@ -64,7 +65,7 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			baseDenom:    baseDenom,
 			denoms:       []string{uion},
 			poolTypes:    []poolmanagertypes.PoolI{uionPool},
-			spreadFactor: sdk.MustNewDecFromStr("0"),
+			spreadFactor: osmomath.MustNewDecFromStr("0"),
 		},
 		{
 			name:         "Multiple non-osmo fee token: TxFees AfterEpochEnd",
@@ -72,11 +73,11 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			baseDenom:    baseDenom,
 			denoms:       []string{atom, ust},
 			poolTypes:    []poolmanagertypes.PoolI{atomPool, ustPool},
-			spreadFactor: sdk.MustNewDecFromStr("0"),
+			spreadFactor: osmomath.MustNewDecFromStr("0"),
 		},
 	}
 
-	finalOutputAmount := sdk.NewInt(0)
+	finalOutputAmount := osmomath.NewInt(0)
 
 	for _, tc := range tests {
 		tc := tc
@@ -132,8 +133,8 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom() {
 
 	var (
 		defaultTxFeesDenom, _ = s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
-		defaultPoolCoins      = sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin(defaultTxFeesDenom, sdk.NewInt(100)))
-		defaultBalanceToSwap  = sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)))
+		defaultPoolCoins      = sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)), sdk.NewCoin(defaultTxFeesDenom, osmomath.NewInt(100)))
+		defaultBalanceToSwap  = sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)))
 	)
 
 	tests := []struct {
@@ -199,8 +200,8 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 
 	var (
 		defaultTxFeesDenom, _      = s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
-		defaultPoolCoins           = sdk.NewCoins(sdk.NewCoin(preSwapDenom, sdk.NewInt(100)), sdk.NewCoin(defaultTxFeesDenom, sdk.NewInt(100)))
-		defaultBalanceToSwap       = sdk.NewCoins(sdk.NewCoin(preSwapDenom, sdk.NewInt(100)))
+		defaultPoolCoins           = sdk.NewCoins(sdk.NewCoin(preSwapDenom, osmomath.NewInt(100)), sdk.NewCoin(defaultTxFeesDenom, osmomath.NewInt(100)))
+		defaultBalanceToSwap       = sdk.NewCoins(sdk.NewCoin(preSwapDenom, osmomath.NewInt(100)))
 		defaultProtorevLinkDenoms  = []string{preSwapDenom, defaultTxFeesDenom}
 		reversedProtorevLinkDenoms = []string{defaultTxFeesDenom, preSwapDenom}
 	)
@@ -461,8 +462,8 @@ func (s *KeeperTestSuite) preparePoolsForSwappingToDenom(nonNativeDenomA, nonNat
 	poolIdTwo := s.PrepareConcentratedPoolWithCoins(nonNativeDenomB, denomToSwapTo).GetId()
 
 	// Add liquidity to both pools
-	poolOneCoins := sdk.NewCoins(sdk.NewCoin(nonNativeDenomA, sdk.NewInt(100)), sdk.NewCoin(denomToSwapTo, sdk.NewInt(100)))
-	poolTwoCoins := sdk.NewCoins(sdk.NewCoin(nonNativeDenomB, sdk.NewInt(100)), sdk.NewCoin(denomToSwapTo, sdk.NewInt(100)))
+	poolOneCoins := sdk.NewCoins(sdk.NewCoin(nonNativeDenomA, osmomath.NewInt(100)), sdk.NewCoin(denomToSwapTo, osmomath.NewInt(100)))
+	poolTwoCoins := sdk.NewCoins(sdk.NewCoin(nonNativeDenomB, osmomath.NewInt(100)), sdk.NewCoin(denomToSwapTo, osmomath.NewInt(100)))
 	s.FundAcc(s.TestAccs[0], poolOneCoins.Add(poolTwoCoins...))
 
 	_, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, poolIdOne, s.TestAccs[0], poolOneCoins)
@@ -481,10 +482,10 @@ func (s *KeeperTestSuite) preparePoolsForSwappingToDenom(nonNativeDenomA, nonNat
 // returns a set of coins that covers all edge cases and success scenarios for swapping to denom.
 func prepareCoinsForSwapToDenomTest(swapToDenom string) sdk.Coins {
 	return sdk.NewCoins(
-		sdk.NewCoin(preSwapDenom, sdk.NewInt(100)),            // first pool with a link to denom pair in protorev (gets swapped)
-		sdk.NewCoin(swapToDenom, sdk.NewInt(300)),             // swapToDenom (left as is in balance)
-		sdk.NewCoin(denomWithNoPool, sdk.NewInt(400)),         // no pool exists, silently skipped
-		sdk.NewCoin(denomWithNoProtorevLink, sdk.NewInt(500)), // pool with no link to denom pair in protorev, silently skipped
-		sdk.NewCoin(otherPreSwapDenom, sdk.NewInt(600)),       // second pool with a link to denom pair in protorev (gets swapped)
+		sdk.NewCoin(preSwapDenom, osmomath.NewInt(100)),            // first pool with a link to denom pair in protorev (gets swapped)
+		sdk.NewCoin(swapToDenom, osmomath.NewInt(300)),             // swapToDenom (left as is in balance)
+		sdk.NewCoin(denomWithNoPool, osmomath.NewInt(400)),         // no pool exists, silently skipped
+		sdk.NewCoin(denomWithNoProtorevLink, osmomath.NewInt(500)), // pool with no link to denom pair in protorev, silently skipped
+		sdk.NewCoin(otherPreSwapDenom, osmomath.NewInt(600)),       // second pool with a link to denom pair in protorev (gets swapped)
 	)
 }

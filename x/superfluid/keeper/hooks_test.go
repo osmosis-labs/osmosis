@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v19/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
@@ -30,7 +31,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// delegation rewards are calculated using the equation (current period cumulative reward ratio - last period cumulative reward ratio) * asset amount
 			// in this test case, the calculation for expected reward would be the following (0.99999 - 0) * 10_000_000
 			// thus we expect 999_990 stake as rewards
-			[]sdk.Coins{{sdk.NewCoin("stake", sdk.NewInt(999990))}},
+			[]sdk.Coins{{sdk.NewCoin("stake", osmomath.NewInt(999990))}},
 		},
 		{
 			"happy path with two validator and delegator each",
@@ -43,7 +44,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			// This would be the first block propsed by the second validator, current period cumulative reward ratio being 999_86.66684,
 			// last period cumulative reward ratio being 0
 			// Thus as rewards, we expect 999986stake, calculted using the following equation: (999_86.66684 - 0) * 7_500_000
-			[]sdk.Coins{{sdk.NewCoin("stake", sdk.NewInt(999990))}, {sdk.NewCoin("stake", sdk.NewInt(999986))}},
+			[]sdk.Coins{{sdk.NewCoin("stake", osmomath.NewInt(999990))}, {sdk.NewCoin("stake", osmomath.NewInt(999986))}},
 		},
 	}
 
@@ -52,7 +53,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 			s.SetupTest()
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+			denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20)})
 
 			// Generate delegator addresses
 			delAddrs, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -72,7 +73,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 
 			// check lptoken twap value set
 			newEpochMultiplier := s.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(s.Ctx, denoms[0])
-			s.Require().Equal(newEpochMultiplier, sdk.NewDec(15))
+			s.Require().Equal(newEpochMultiplier, osmomath.NewDec(15))
 
 			for index, lock := range locks {
 				// check gauge creation in new block
@@ -92,7 +93,7 @@ func (s *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				s.Require().NoError(err)
 				delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
 				s.Require().True(found)
-				s.Require().Equal(sdk.NewDec(7500000), delegation.Shares)
+				s.Require().Equal(osmomath.NewDec(7500000), delegation.Shares)
 			}
 
 			for index, delAddr := range delAddrs {
@@ -280,12 +281,12 @@ func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 
-			slashFactor := sdk.NewDecWithPrec(5, 2)
+			slashFactor := osmomath.NewDecWithPrec(5, 2)
 
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 			// setup superfluid delegations
 			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -324,14 +325,14 @@ func (s *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			for _, lockId := range tc.expSlashedLockIds {
 				gotLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
 				s.Require().NoError(err)
-				s.Require().Equal(sdk.NewInt(950000).String(), gotLock.Coins.AmountOf(denoms[0]).String())
+				s.Require().Equal(osmomath.NewInt(950000).String(), gotLock.Coins.AmountOf(denoms[0]).String())
 			}
 
 			// check unslashed lockups
 			for _, lockId := range tc.expUnslashedLockIds {
 				gotLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, lockId)
 				s.Require().NoError(err)
-				s.Require().Equal(sdk.NewInt(1000000).String(), gotLock.Coins.AmountOf(denoms[0]).String())
+				s.Require().Equal(osmomath.NewInt(1000000).String(), gotLock.Coins.AmountOf(denoms[0]).String())
 			}
 		})
 	}
@@ -344,7 +345,7 @@ func (s *KeeperTestSuite) TestAfterAddTokensToLock_Event() {
 
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20)})
 
 	// setup superfluid delegations
 	_, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 1000000}}, denoms)
@@ -353,7 +354,7 @@ func (s *KeeperTestSuite) TestAfterAddTokensToLock_Event() {
 	for index, lock := range locks {
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
 		c := sdk.WrapSDKContext(s.Ctx)
-		coinsToLock := sdk.NewCoins(sdk.NewCoin(denoms[index], sdk.NewInt(100)))
+		coinsToLock := sdk.NewCoins(sdk.NewCoin(denoms[index], osmomath.NewInt(100)))
 		sender, _ := sdk.AccAddressFromBech32(lock.Owner)
 		s.FundAcc(sender, coinsToLock)
 

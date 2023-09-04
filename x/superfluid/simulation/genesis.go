@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -14,7 +14,7 @@ import (
 func RandomizedGenState(simState *module.SimulationState) {
 	superfluidGenesis := &types.GenesisState{
 		Params: types.Params{
-			MinimumRiskFactor: sdk.NewDecWithPrec(5, 2), // 5%
+			MinimumRiskFactor: osmomath.NewDecWithPrec(5, 2), // 5%
 		},
 		SuperfluidAssets:          []types.SuperfluidAsset{},
 		OsmoEquivalentMultipliers: []types.OsmoEquivalentMultiplierRecord{},

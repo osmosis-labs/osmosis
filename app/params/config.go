@@ -4,6 +4,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -39,11 +41,11 @@ func init() {
 
 // RegisterDenoms registers token denoms.
 func RegisterDenoms() {
-	err := sdk.RegisterDenom(HumanCoinUnit, sdk.OneDec())
+	err := sdk.RegisterDenom(HumanCoinUnit, osmomath.OneDec())
 	if err != nil {
 		panic(err)
 	}
-	err = sdk.RegisterDenom(BaseCoinUnit, sdk.NewDecWithPrec(1, OsmoExponent))
+	err = sdk.RegisterDenom(BaseCoinUnit, osmomath.NewDecWithPrec(1, OsmoExponent))
 	if err != nil {
 		panic(err)
 	}

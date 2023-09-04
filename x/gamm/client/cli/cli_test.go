@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/client/cli"
@@ -181,7 +182,7 @@ func TestNewJoinPoolCmd(t *testing.T) {
 			ExpectedMsg: &types.MsgJoinPool{
 				Sender:         testAddresses[0].String(),
 				PoolId:         1,
-				ShareOutAmount: sdk.NewIntFromUint64(100),
+				ShareOutAmount: osmomath.NewIntFromUint64(100),
 				TokenInMaxs:    sdk.NewCoins(sdk.NewInt64Coin("stake", 100)),
 			},
 		},
@@ -197,7 +198,7 @@ func TestNewExitPoolCmd(t *testing.T) {
 			ExpectedMsg: &types.MsgExitPool{
 				Sender:        testAddresses[0].String(),
 				PoolId:        1,
-				ShareInAmount: sdk.NewIntFromUint64(10),
+				ShareInAmount: osmomath.NewIntFromUint64(10),
 				TokenOutMins:  sdk.NewCoins(sdk.NewInt64Coin("stake", 100)),
 			},
 		},
@@ -213,7 +214,7 @@ func TestNewSwapExactAmountOutCmd(t *testing.T) {
 			ExpectedMsg: &types.MsgSwapExactAmountOut{
 				Sender:           testAddresses[0].String(),
 				Routes:           []poolmanagertypes.SwapAmountOutRoute{{PoolId: 1, TokenInDenom: "node0token"}},
-				TokenInMaxAmount: sdk.NewIntFromUint64(20),
+				TokenInMaxAmount: osmomath.NewIntFromUint64(20),
 				TokenOut:         sdk.NewInt64Coin("stake", 10),
 			},
 		},
@@ -230,7 +231,7 @@ func TestNewSwapExactAmountInCmd(t *testing.T) {
 				Sender:            testAddresses[0].String(),
 				Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: "node0token"}},
 				TokenIn:           sdk.NewInt64Coin("stake", 10),
-				TokenOutMinAmount: sdk.NewIntFromUint64(3),
+				TokenOutMinAmount: osmomath.NewIntFromUint64(3),
 			},
 		},
 	}
@@ -246,7 +247,7 @@ func TestNewJoinSwapExternAmountInCmd(t *testing.T) {
 				Sender:            testAddresses[0].String(),
 				PoolId:            1,
 				TokenIn:           sdk.NewInt64Coin("stake", 10),
-				ShareOutMinAmount: sdk.NewIntFromUint64(1),
+				ShareOutMinAmount: osmomath.NewIntFromUint64(1),
 			},
 		},
 	}
@@ -262,8 +263,8 @@ func TestNewJoinSwapShareAmountOutCmd(t *testing.T) {
 				Sender:           testAddresses[0].String(),
 				PoolId:           1,
 				TokenInDenom:     "stake",
-				ShareOutAmount:   sdk.NewIntFromUint64(10),
-				TokenInMaxAmount: sdk.NewIntFromUint64(1),
+				ShareOutAmount:   osmomath.NewIntFromUint64(10),
+				TokenInMaxAmount: osmomath.NewIntFromUint64(1),
 			},
 		},
 	}
@@ -279,7 +280,7 @@ func TestNewExitSwapExternAmountOutCmd(t *testing.T) {
 				Sender:           testAddresses[0].String(),
 				PoolId:           1,
 				TokenOut:         sdk.NewInt64Coin("stake", 10),
-				ShareInMaxAmount: sdk.NewIntFromUint64(1),
+				ShareInMaxAmount: osmomath.NewIntFromUint64(1),
 			},
 		},
 	}
@@ -295,8 +296,8 @@ func TestNewExitSwapShareAmountInCmd(t *testing.T) {
 				Sender:            testAddresses[0].String(),
 				PoolId:            1,
 				TokenOutDenom:     "stake",
-				ShareInAmount:     sdk.NewIntFromUint64(10),
-				TokenOutMinAmount: sdk.NewIntFromUint64(1),
+				ShareInAmount:     osmomath.NewIntFromUint64(10),
+				TokenOutMinAmount: osmomath.NewIntFromUint64(1),
 			},
 		},
 	}

@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
@@ -33,21 +34,22 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
 	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
 var (
-	// minDecTolerance minimum tolerance for sdk.Dec, given its precision of 18.
-	minDecTolerance = sdk.MustNewDecFromStr("0.000000000000000001")
+	// minDecTolerance minimum tolerance for osmomath.Dec, given its precision of 18.
+	minDecTolerance = osmomath.MustNewDecFromStr("0.000000000000000001")
 )
 
 // TODO: Find more scalable way to do this
 func (s *IntegrationTestSuite) TestAllE2E() {
 	// Reset the default taker fee to 0.15%, so we can actually run tests with it activated
-	s.T().Run("SetDefaultTakerFeeBothChains", func(t *testing.T) {
-		s.T().Log("resetting the default taker fee to 0.15%")
-		s.SetDefaultTakerFeeBothChains()
+	s.T().Run("SetDefaultTakerFeeChainB", func(t *testing.T) {
+		s.T().Log("resetting the default taker fee to 0.15% on chain B only")
+		s.SetDefaultTakerFeeChainB()
 	})
 
 	// Zero Dependent Tests
@@ -91,6 +93,11 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.LargeWasmUpload()
 	})
 
+	s.T().Run("StableSwap", func(t *testing.T) {
+		t.Parallel()
+		s.StableSwap()
+	})
+
 	// Test currently disabled
 	// s.T().Run("ArithmeticTWAP", func(t *testing.T) {
 	// 	t.Parallel()
@@ -109,15 +116,6 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 	}
 
 	// Upgrade Dependent Tests
-
-	if s.skipUpgrade {
-		s.T().Skip("Skipping StableSwapPostUpgrade test")
-	} else {
-		s.T().Run("StableSwapPostUpgrade", func(t *testing.T) {
-			t.Parallel()
-			s.StableSwapPostUpgrade()
-		})
-	}
 
 	if s.skipUpgrade {
 		s.T().Skip("Skipping GeometricTwapMigration test")
@@ -146,29 +144,17 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 			t.Parallel()
 			s.IBCTokenTransferRateLimiting()
 		})
-	}
 
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
 		s.T().Run("IBCTokenTransferAndCreatePool", func(t *testing.T) {
 			t.Parallel()
 			s.IBCTokenTransferAndCreatePool()
 		})
-	}
 
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
 		s.T().Run("IBCWasmHooks", func(t *testing.T) {
 			t.Parallel()
 			s.IBCWasmHooks()
 		})
-	}
 
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
 		s.T().Run("PacketForwarding", func(t *testing.T) {
 			t.Parallel()
 			s.PacketForwarding()
@@ -296,57 +282,78 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	s.Require().NoError(err)
 	s.Require().NotNil(routeStats)
 	s.Require().Len(routeStats, 1)
-	s.Require().Equal(sdk.OneInt(), routeStats[0].NumberOfTrades)
+	s.Require().Equal(osmomath.OneInt(), routeStats[0].NumberOfTrades)
 	s.Require().Equal([]uint64{swapPoolId1, swapPoolId2, swapPoolId3}, routeStats[0].Route)
 	s.Require().Equal(profits, routeStats[0].Profits)
 }
 
+// Note: this test depends on taker fee being set.
+// As a result, we use chain B. Chain A has zero taker fee.
 func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	var (
 		denom0                 = "uion"
 		denom1                 = "uosmo"
 		tickSpacing     uint64 = 100
 		spreadFactor           = "0.001" // 0.1%
-		spreadFactorDec        = sdk.MustNewDecFromStr("0.001")
-		takerFee               = sdk.MustNewDecFromStr("0.0015")
+		spreadFactorDec        = osmomath.MustNewDecFromStr("0.001")
+		takerFee               = osmomath.MustNewDecFromStr("0.0015")
 	)
 
-	chainAB, chainABNode, err := s.getChainCfgs()
+	// Use chain B node since it has taker fee enabled.
+	chainB, chainBNode, err := s.getChainBCfgs()
 	s.Require().NoError(err)
+	var adminWalletAddr string
 
-	// Get the permisionless pool creation parameter.
-	isPermisionlessCreationEnabledStr := chainABNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
-	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
-		s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been")
-	}
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-	// Change the parameter to enable permisionless pool creation.
-	err = chainABNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainAB)
-	s.Require().NoError(err)
+	go func() {
+		defer wg.Done()
+		// Get the permisionless pool creation parameter.
+		isPermisionlessCreationEnabledStr := chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
+			s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been")
+		}
 
-	// Update the protorev admin address to a known wallet we can control
-	adminWalletAddr := chainABNode.CreateWalletAndFund("admin", []string{"4000000uosmo"}, chainAB)
-	err = chainABNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainAB)
-	s.Require().NoError(err)
+		// Change the parameter to enable permisionless pool creation.
+		err := chainBNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainB)
+		s.Require().NoError(err)
 
-	// Update the weight of CL pools so that this test case is not back run by protorev.
-	chainABNode.SetMaxPoolPointsPerTx(7, adminWalletAddr)
+		// Confirm that the parameter has been changed.
+		isPermisionlessCreationEnabledStr = chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
+			s.T().Fatal("concentrated liquidity pool creation is not enabled")
+		}
 
-	// Confirm that the parameter has been changed.
-	isPermisionlessCreationEnabledStr = chainABNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
-	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
-		s.T().Fatal("concentrated liquidity pool creation is not enabled")
-	}
+		go func() {
+			s.T().Run("test update pool tick spacing", func(t *testing.T) {
+				s.TickSpacingUpdateProp()
+			})
+		}()
+	}()
+
+	go func() {
+		defer wg.Done()
+		// Update the protorev admin address to a known wallet we can control
+		adminWalletAddr = chainBNode.CreateWalletAndFund("admin", []string{"4000000uosmo"}, chainB)
+		err := chainBNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainB)
+		s.Require().NoError(err)
+
+		// Update the weight of CL pools so that this test case is not back run by protorev.
+		chainBNode.SetMaxPoolPointsPerTx(7, adminWalletAddr)
+	}()
+
+	wg.Wait()
 
 	// Create concentrated liquidity pool when permisionless pool creation is enabled.
-	poolID := chainABNode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
+	poolID := chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
 
-	concentratedPool := s.updatedConcentratedPool(chainABNode, poolID)
+	concentratedPool := s.updatedConcentratedPool(chainBNode, poolID)
 
 	// Sanity check that pool initialized with valid parameters (the ones that we haven't explicitly specified)
 	s.Require().Equal(concentratedPool.GetCurrentTick(), int64(0))
-	s.Require().Equal(concentratedPool.GetCurrentSqrtPrice(), osmomath.ZeroDec())
-	s.Require().Equal(concentratedPool.GetLiquidity(), sdk.ZeroDec())
+	s.Require().Equal(concentratedPool.GetCurrentSqrtPrice(), osmomath.ZeroBigDec())
+	s.Require().Equal(concentratedPool.GetLiquidity(), osmomath.ZeroDec())
 
 	// Assert contents of the pool are valid (that we explicitly specified)
 	s.Require().Equal(concentratedPool.GetId(), poolID)
@@ -354,73 +361,80 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	s.Require().Equal(concentratedPool.GetToken1(), denom1)
 	s.Require().Equal(concentratedPool.GetTickSpacing(), tickSpacing)
 	s.Require().Equal(concentratedPool.GetExponentAtPriceOne(), cltypes.ExponentAtPriceOne)
-	s.Require().Equal(concentratedPool.GetSpreadFactor(sdk.Context{}), sdk.MustNewDecFromStr(spreadFactor))
+	s.Require().Equal(concentratedPool.GetSpreadFactor(sdk.Context{}), osmomath.MustNewDecFromStr(spreadFactor))
 
 	fundTokens := []string{"100000000uosmo", "100000000uion", "100000000stake"}
 
 	// Get 3 addresses to create positions
-	address1 := chainABNode.CreateWalletAndFund("addr1", fundTokens, chainAB)
-	address2 := chainABNode.CreateWalletAndFund("addr2", fundTokens, chainAB)
-	address3 := chainABNode.CreateWalletAndFund("addr3", fundTokens, chainAB)
+	address1 := chainBNode.CreateWalletAndFund("addr1", fundTokens, chainB)
+	address2 := chainBNode.CreateWalletAndFund("addr2", fundTokens, chainB)
+	address3 := chainBNode.CreateWalletAndFund("addr3", fundTokens, chainB)
+	addresses := []string{address1, address2, address3}
 
 	// When claiming rewards, a small portion of dust is forfeited and is redistributed to everyone. We must track the total
 	// liquidity across all positions (even if not active), in order to calculate how much to increase the reward growth global per share by.
-	totalLiquidity := sdk.ZeroDec()
+	totalLiquidity := osmomath.ZeroDec()
+
+	// not sure what this is
+	createPosFormat := fmt.Sprintf("10000000%s,10000000%s", denom0, denom1)
+	createPosition := func(address string, lower int, upper int) math.LegacyDec {
+		_, liquidity := chainBNode.CreateConcentratedPosition(address, formatCLIInt(lower), formatCLIInt(upper), createPosFormat, 0, 0, poolID)
+		return liquidity
+	}
 
 	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions
-	_, liquidity := chainABNode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
-	_, liquidity = chainABNode.CreateConcentratedPosition(address1, "[-40000]", "120000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
+	type clposition struct {
+		lower int
+		upper int
+	}
+	positions := [][]clposition{
+		{{-120000, 40000}, {-40000, 120000}},
+		{{220000, int(cltypes.MaxTick)}},
+		{{-160000, -20000}, {int(cltypes.MinInitializedTick), 140000}},
+	}
+	createdPositions := [][]model.FullPositionBreakdown{{}, {}, {}}
+	// Create all positions, with each address' positions created in sequence, but all addresses' created concurrently
+	var clwg sync.WaitGroup
+	var mu sync.Mutex
 
-	// Create 1 position for address2: does not overlap with anything, ends at maximum
-	_, liquidity = chainABNode.CreateConcentratedPosition(address2, "220000", fmt.Sprintf("%d", cltypes.MaxTick), fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
+	for i, _ := range positions {
+		clwg.Add(1)
+		go func(i int) { // Launch a goroutine
+			addr, positionSet := addresses[i], positions[i]
+			defer clwg.Done() // Decrement the counter when the goroutine completes
+			userLiquidity := math.LegacyZeroDec()
+			for _, j := range positionSet {
+				liquidity := createPosition(addr, j.lower, j.upper)
+				userLiquidity.AddMut(liquidity)
+			}
+			mu.Lock() // Lock totalLiquidity for concurrent write
+			totalLiquidity.AddMut(userLiquidity)
+			mu.Unlock() // Unlock after write
+			createdPositions[i] = chainBNode.QueryConcentratedPositions(addr)
+		}(i)
+	}
 
-	// Create 2 positions for address3: overlap together, overlap with 2 address1 positions, one position starts from minimum
-	_, liquidity = chainABNode.CreateConcentratedPosition(address3, "[-160000]", "[-20000]", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
-	_, liquidity = chainABNode.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinInitializedTick), "140000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
+	clwg.Wait() // Block until all goroutines complete
 
-	// Get newly created positions
-	positionsAddress1 := chainABNode.QueryConcentratedPositions(address1)
-	positionsAddress2 := chainABNode.QueryConcentratedPositions(address2)
-	positionsAddress3 := chainABNode.QueryConcentratedPositions(address3)
+	concentratedPool = s.updatedConcentratedPool(chainBNode, poolID)
 
-	concentratedPool = s.updatedConcentratedPool(chainABNode, poolID)
+	for i, posSet := range positions {
+		s.Require().Equal(len(createdPositions[i]), len(posSet))
+		for j, pos := range posSet {
+			s.validateCLPosition(createdPositions[i][j].Position, poolID, int64(pos.lower), int64(pos.upper))
+		}
+	}
 
-	// Assert number of positions per address
-	s.Require().Equal(len(positionsAddress1), 2)
-	s.Require().Equal(len(positionsAddress2), 1)
-	s.Require().Equal(len(positionsAddress3), 2)
-
-	// Assert positions for address1
-	addr1position1 := positionsAddress1[0].Position
-	addr1position2 := positionsAddress1[1].Position
-	// First position first address
-	s.validateCLPosition(addr1position1, poolID, -120000, 40000)
-	// Second position second address
-	s.validateCLPosition(addr1position2, poolID, -40000, 120000)
-
-	// Assert positions for address2
-	addr2position1 := positionsAddress2[0].Position
-	// First position second address
-	s.validateCLPosition(addr2position1, poolID, 220000, cltypes.MaxTick)
-
-	// Assert positions for address3
-	addr3position1 := positionsAddress3[0].Position
-	addr3position2 := positionsAddress3[1].Position
-	// First position third address
-	s.validateCLPosition(addr3position1, poolID, -160000, -20000)
-	// Second position third address
-	s.validateCLPosition(addr3position2, poolID, cltypes.MinInitializedTick, 140000)
+	// compat with old code
+	positionsAddress1 := createdPositions[0]
+	positionsAddress2 := createdPositions[1]
+	positionsAddress3 := createdPositions[2]
 
 	// Collect SpreadRewards
 
 	var (
 		// spreadRewardGrowthGlobal is a variable for tracking global spread reward growth
-		spreadRewardGrowthGlobal = sdk.ZeroDec()
+		spreadRewardGrowthGlobal = osmomath.ZeroDec()
 		outMinAmt                = "1"
 	)
 
@@ -431,13 +445,13 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	var (
 		// Swap parameters
 		uosmoInDec_Swap1 = osmomath.NewBigDec(3465198)
-		uosmoIn_Swap1    = fmt.Sprintf("%suosmo", uosmoInDec_Swap1.SDKDec().String())
+		uosmoIn_Swap1    = fmt.Sprintf("%suosmo", uosmoInDec_Swap1.Dec().String())
 	)
 	// Perform swap (not crossing initialized ticks)
-	chainABNode.SwapExactAmountIn(uosmoIn_Swap1, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
+	chainBNode.SwapExactAmountIn(uosmoIn_Swap1, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
 	// Calculate and track global spread reward growth for swap 1
-	uosmoInDec_Swap1_SubTakerFee := uosmoInDec_Swap1.SDKDec().Mul(sdk.OneDec().Sub(takerFee)).TruncateDec()
-	uosmoInDec_Swap1_SubTakerFee_SubSpreadFactor := uosmoInDec_Swap1_SubTakerFee.Mul(sdk.OneDec().Sub(spreadFactorDec))
+	uosmoInDec_Swap1_SubTakerFee := uosmoInDec_Swap1.Dec().Mul(osmomath.OneDec().Sub(takerFee)).TruncateDec()
+	uosmoInDec_Swap1_SubTakerFee_SubSpreadFactor := uosmoInDec_Swap1_SubTakerFee.Mul(osmomath.OneDec().Sub(spreadFactorDec))
 	totalSpreadReward := uosmoInDec_Swap1_SubTakerFee.Sub(uosmoInDec_Swap1_SubTakerFee_SubSpreadFactor).TruncateDec()
 
 	spreadRewardGrowthGlobal.AddMut(calculateSpreadRewardGrowthGlobal(totalSpreadReward, concentratedPool.GetLiquidity()))
@@ -446,7 +460,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	liquidityBeforeSwap := concentratedPool.GetLiquidity()
 	sqrtPriceBeforeSwap := concentratedPool.GetCurrentSqrtPrice()
 
-	concentratedPool = s.updatedConcentratedPool(chainABNode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainBNode, poolID)
 
 	liquidityAfterSwap := concentratedPool.GetLiquidity()
 	sqrtPriceAfterSwap := concentratedPool.GetCurrentSqrtPrice()
@@ -455,16 +469,16 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	s.Require().Equal(liquidityAfterSwap.String(), liquidityBeforeSwap.String())
 
 	// Assert current sqrt price
-	expectedSqrtPriceDelta := osmomath.BigDecFromSDKDec(uosmoInDec_Swap1_SubTakerFee_SubSpreadFactor).QuoTruncate(osmomath.BigDecFromSDKDec(concentratedPool.GetLiquidity())) // Δ(sqrtPrice) = Δy / L
+	expectedSqrtPriceDelta := osmomath.BigDecFromDec(uosmoInDec_Swap1_SubTakerFee_SubSpreadFactor).QuoTruncate(osmomath.BigDecFromDec(concentratedPool.GetLiquidity())) // Δ(sqrtPrice) = Δy / L
 	expectedSqrtPrice := sqrtPriceBeforeSwap.Add(expectedSqrtPriceDelta)
 	s.Require().Equal(expectedSqrtPrice.String(), sqrtPriceAfterSwap.String())
 
 	// Collect SpreadRewards: Swap 1
 
 	// Track balances for address1 position1
-	addr1BalancesBefore := s.addrBalance(chainABNode, address1)
-	chainABNode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
-	addr1BalancesAfter := s.addrBalance(chainABNode, address1)
+	addr1BalancesBefore := s.addrBalance(chainBNode, address1)
+	chainBNode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+	addr1BalancesAfter := s.addrBalance(chainBNode, address1)
 
 	// Assert that the balance changed only for tokenIn (uosmo)
 	s.assertBalancesInvariants(addr1BalancesBefore, addr1BalancesAfter, false, true)
@@ -474,9 +488,9 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Calculate uncollected spread rewards for address1 position1
 	spreadRewardsUncollectedAddress1Position1_Swap1 := calculateUncollectedSpreadRewards(
 		positionsAddress1[0].Position.Liquidity,
-		sdk.ZeroDec(), // no growth below
-		sdk.ZeroDec(), // no growth above
-		sdk.ZeroDec(), // no spreadRewardGrowthInsideLast - it is the first swap
+		osmomath.ZeroDec(), // no growth below
+		osmomath.ZeroDec(), // no growth above
+		osmomath.ZeroDec(), // no spreadRewardGrowthInsideLast - it is the first swap
 		spreadRewardGrowthGlobal,
 	)
 
@@ -525,8 +539,8 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Calculate Δ(sqrtPrice):
 	// deltaSqrtPriceAfterNextInitializedTick = ΔsqrtP(40300) - ΔsqrtP(40000)
 	// deltaSqrtPriceAtNextInitializedTick = ΔsqrtP(40000) - ΔsqrtP(currentTick)
-	deltaSqrtPriceAfterNextInitializedTick := sqrtPriceAfterNextInitializedTickBigDec.Sub(sqrtPriceAtNextInitializedTickBigDec).SDKDec()
-	deltaSqrtPriceAtNextInitializedTick := sqrtPriceAtNextInitializedTickBigDec.Sub(sqrtPriceBeforeSwap).SDKDec()
+	deltaSqrtPriceAfterNextInitializedTick := sqrtPriceAfterNextInitializedTickBigDec.Sub(sqrtPriceAtNextInitializedTickBigDec).Dec()
+	deltaSqrtPriceAtNextInitializedTick := sqrtPriceAtNextInitializedTickBigDec.Sub(sqrtPriceBeforeSwap).Dec()
 
 	// Calculate the amount of osmo required to:
 	// * amountInToGetToTickAfterInitialized - move price from next initialized tick (40000) to destination tick (40000 + tickOffset)
@@ -541,22 +555,22 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 		// uosmoInDec_Swap2_NoSpreadReward is calculated such that swapping this amount (not considering spread reward) moves the price over the next initialized tick
 		uosmoInDec_Swap2_NoSpreadReward = amountInToGetToNextInitTick.Add(amountInToGetToTickAfterInitialized)
-		uosmoInDec_Swap2                = uosmoInDec_Swap2_NoSpreadReward.Quo(sdk.OneDec().Sub(spreadFactorDec)).TruncateDec() // account for spread factor of 1%
+		uosmoInDec_Swap2                = uosmoInDec_Swap2_NoSpreadReward.Quo(osmomath.OneDec().Sub(spreadFactorDec)).TruncateDec() // account for spread factor of 1%
 
 		spreadRewardGrowthGlobal_Swap1 = spreadRewardGrowthGlobalBeforeDustRedistribution.Clone()
 	)
 
-	uosmoInDec_Swap2_AddTakerFee := uosmoInDec_Swap2.Quo(sdk.OneDec().Sub(takerFee)).TruncateDec() // account for taker fee
+	uosmoInDec_Swap2_AddTakerFee := uosmoInDec_Swap2.Quo(osmomath.OneDec().Sub(takerFee)).TruncateDec() // account for taker fee
 	uosmoIn_Swap2 := fmt.Sprintf("%suosmo", uosmoInDec_Swap2_AddTakerFee.String())
 
 	// Perform a swap
-	chainABNode.SwapExactAmountIn(uosmoIn_Swap2, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
+	chainBNode.SwapExactAmountIn(uosmoIn_Swap2, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
 
 	// Calculate the amount of liquidity of the position that was kicked out during swap (address1 position1)
 	liquidityOfKickedOutPosition := positionsAddress1[0].Position.Liquidity
 
 	// Update pool and track pool's liquidity
-	concentratedPool = s.updatedConcentratedPool(chainABNode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainBNode, poolID)
 
 	liquidityAfterSwap = concentratedPool.GetLiquidity()
 
@@ -570,7 +584,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Step1: amountIn is uosmo tokens that are swapped + uosmo tokens that are paid for spread reward
 	// hasReachedTarget in SwapStep is true, hence, to find spread rewards, calculate:
 	// spreadRewardCharge = amountIn * spreadFactor / (1 - spreadFactor)
-	spreadRewardCharge_Swap2_Step1 := amountInToGetToNextInitTick.Mul(spreadFactorDec).Quo(sdk.OneDec().Sub(spreadFactorDec))
+	spreadRewardCharge_Swap2_Step1 := amountInToGetToNextInitTick.Mul(spreadFactorDec).Quo(osmomath.OneDec().Sub(spreadFactorDec))
 
 	// Step2: hasReachedTarget in SwapStep is false (nextTick is 120000), hence, to find spread rewards, calculate:
 	// spreadRewardCharge = amountRemaining - amountOne
@@ -589,9 +603,9 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Assert that address1 position1 earned spread rewards only from first swap step
 
 	// Track balances for address1 position1
-	addr1BalancesBefore = s.addrBalance(chainABNode, address1)
-	chainABNode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
-	addr1BalancesAfter = s.addrBalance(chainABNode, address1)
+	addr1BalancesBefore = s.addrBalance(chainBNode, address1)
+	chainBNode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+	addr1BalancesAfter = s.addrBalance(chainBNode, address1)
 
 	// Assert that the balance changed only for tokenIn (uosmo)
 	s.assertBalancesInvariants(addr1BalancesBefore, addr1BalancesAfter, false, true)
@@ -599,7 +613,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Calculate uncollected spread rewards for position, which liquidity will only be live part of the swap
 	spreadRewardsUncollectedAddress1Position1_Swap2 := calculateUncollectedSpreadRewards(
 		positionsAddress1[0].Position.Liquidity,
-		sdk.ZeroDec(),
+		osmomath.ZeroDec(),
 		spreadRewardCharge_Swap2_Step2,
 		spreadRewardGrowthGlobal_Swap1,
 		spreadRewardGrowthGlobal,
@@ -614,25 +628,25 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Assert that address3 position2 earned rewards from first and second swaps
 
 	// Track balance off address3 position2: check that position that has not been kicked out earned full rewards
-	addr3BalancesBefore := s.addrBalance(chainABNode, address3)
-	chainABNode.CollectSpreadRewards(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
-	addr3BalancesAfter := s.addrBalance(chainABNode, address3)
+	addr3BalancesBefore := s.addrBalance(chainBNode, address3)
+	chainBNode.CollectSpreadRewards(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
+	addr3BalancesAfter := s.addrBalance(chainBNode, address3)
 
 	// Calculate uncollected spread rewards for address3 position2 earned from Swap 1
 	spreadRewardsUncollectedAddress3Position2_Swap1 := calculateUncollectedSpreadRewards(
 		positionsAddress3[1].Position.Liquidity,
-		sdk.ZeroDec(),
-		sdk.ZeroDec(),
-		sdk.ZeroDec(),
+		osmomath.ZeroDec(),
+		osmomath.ZeroDec(),
+		osmomath.ZeroDec(),
 		spreadRewardGrowthGlobal_Swap1,
 	)
 
 	// Calculate uncollected spread rewards for address3 position2 (was active throughout both swap steps): Swap2
 	spreadRewardsUncollectedAddress3Position2_Swap2 := calculateUncollectedSpreadRewards(
 		positionsAddress3[1].Position.Liquidity,
-		sdk.ZeroDec(),
-		sdk.ZeroDec(),
-		calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal_Swap1, sdk.ZeroDec(), sdk.ZeroDec()),
+		osmomath.ZeroDec(),
+		osmomath.ZeroDec(),
+		calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal_Swap1, osmomath.ZeroDec(), osmomath.ZeroDec()),
 		spreadRewardGrowthGlobal,
 	)
 
@@ -681,38 +695,38 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	fractionAtNextInitializedTick := numeratorNextInitializedTick.Quo(denominatorNextInitializedTick)
 
 	// Calculate amounts of uionIn needed
-	amountInToGetToTickBelowInitialized := liquidityBeforeSwap.Add(positionsAddress1[0].Position.Liquidity).Mul(fractionBelowNextInitializedTick.SDKDec())
-	amountInToGetToNextInitTick = liquidityBeforeSwap.Mul(fractionAtNextInitializedTick.SDKDec())
+	amountInToGetToTickBelowInitialized := liquidityBeforeSwap.Add(positionsAddress1[0].Position.Liquidity).Mul(fractionBelowNextInitializedTick.Dec())
+	amountInToGetToNextInitTick = liquidityBeforeSwap.Mul(fractionAtNextInitializedTick.Dec())
 
 	// Collect spread rewards for address1 position1 to avoid overhead computations (swap2 already asserted spread rewards are aggregated correctly from multiple swaps)
-	chainABNode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+	chainBNode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
 
 	var (
 		// Swap parameters
-		uionInDec_Swap3_NoSpreadReward = amountInToGetToNextInitTick.Add(amountInToGetToTickBelowInitialized)                // amount of uion to move price from current to desired (not considering spreadFactor)
-		uionInDec_Swap3                = uionInDec_Swap3_NoSpreadReward.Quo(sdk.OneDec().Sub(spreadFactorDec)).TruncateDec() // consider spreadFactor
+		uionInDec_Swap3_NoSpreadReward = amountInToGetToNextInitTick.Add(amountInToGetToTickBelowInitialized)                     // amount of uion to move price from current to desired (not considering spreadFactor)
+		uionInDec_Swap3                = uionInDec_Swap3_NoSpreadReward.Quo(osmomath.OneDec().Sub(spreadFactorDec)).TruncateDec() // consider spreadFactor
 
 		// Save variables from previous swaps
 		spreadRewardGrowthGlobal_Swap2                = spreadRewardGrowthGlobal.Clone()
 		spreadRewardGrowthInsideAddress1Position1Last = spreadRewardGrowthGlobal.Sub(spreadRewardCharge_Swap2_Step2).Clone()
 	)
 
-	uionInDec_Swap3_AddTakerFee := uionInDec_Swap3.Quo(sdk.OneDec().Sub(takerFee)).TruncateDec() // account for taker fee
+	uionInDec_Swap3_AddTakerFee := uionInDec_Swap3.Quo(osmomath.OneDec().Sub(takerFee)).TruncateDec() // account for taker fee
 	uionIn_Swap3 := fmt.Sprintf("%suion", uionInDec_Swap3_AddTakerFee.String())
 
 	// Perform a swap
-	chainABNode.SwapExactAmountIn(uionIn_Swap3, outMinAmt, fmt.Sprintf("%d", poolID), denom1, initialization.ValidatorWalletName)
+	chainBNode.SwapExactAmountIn(uionIn_Swap3, outMinAmt, fmt.Sprintf("%d", poolID), denom1, initialization.ValidatorWalletName)
 
 	// Assert liquidity of kicked in position was successfully added to the pool
-	concentratedPool = s.updatedConcentratedPool(chainABNode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainBNode, poolID)
 
 	liquidityAfterSwap = concentratedPool.GetLiquidity()
 	s.Require().Equal(liquidityBeforeSwap.Add(positionsAddress1[0].Position.Liquidity), liquidityAfterSwap)
 
 	// Track balance of address1
-	addr1BalancesBefore = s.addrBalance(chainABNode, address1)
-	chainABNode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
-	addr1BalancesAfter = s.addrBalance(chainABNode, address1)
+	addr1BalancesBefore = s.addrBalance(chainBNode, address1)
+	chainBNode.CollectSpreadRewards(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+	addr1BalancesAfter = s.addrBalance(chainBNode, address1)
 
 	// Assert that the balance changed only for tokenIn (uion)
 	s.assertBalancesInvariants(addr1BalancesBefore, addr1BalancesAfter, true, false)
@@ -722,7 +736,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Step1: amountIn is uion tokens that are swapped + uion tokens that are paid for spread reward
 	// hasReachedTarget in SwapStep is true, hence, to find spread rewards, calculate:
 	// spreadRewardCharge = amountIn * spreadFactor / (1 - spreadFactor)
-	spreadRewardCharge_Swap3_Step1 := amountInToGetToNextInitTick.Mul(spreadFactorDec).Quo(sdk.OneDec().Sub(spreadFactorDec))
+	spreadRewardCharge_Swap3_Step1 := amountInToGetToNextInitTick.Mul(spreadFactorDec).Quo(osmomath.OneDec().Sub(spreadFactorDec))
 
 	// Step2: hasReachedTarget in SwapStep is false (next initialized tick is -20000), hence, to find spread rewards, calculate:
 	// spreadRewardCharge = amountRemaining - amountZero
@@ -741,7 +755,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Only collects spread rewards for second swap step
 	spreadRewardsUncollectedAddress1Position1_Swap3 := calculateUncollectedSpreadRewards(
 		positionsAddress1[0].Position.Liquidity,
-		sdk.ZeroDec(),
+		osmomath.ZeroDec(),
 		spreadRewardCharge_Swap2_Step2.Add(spreadRewardCharge_Swap3_Step1), // spread rewards acquired by swap2 step2 and swap3 step1 (steps happened above upper tick of this position)
 		spreadRewardGrowthInsideAddress1Position1Last,                      // spreadRewardGrowthInside from first and second swaps
 		spreadRewardGrowthGlobal,
@@ -756,9 +770,9 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Assert position that was active throughout the whole swap:
 
 	// Track balance of address3
-	addr3BalancesBefore = s.addrBalance(chainABNode, address3)
-	chainABNode.CollectSpreadRewards(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
-	addr3BalancesAfter = s.addrBalance(chainABNode, address3)
+	addr3BalancesBefore = s.addrBalance(chainBNode, address3)
+	chainBNode.CollectSpreadRewards(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
+	addr3BalancesAfter = s.addrBalance(chainBNode, address3)
 
 	// Assert that the balance changed only for tokenIn (uion)
 	s.assertBalancesInvariants(addr3BalancesBefore, addr3BalancesAfter, true, false)
@@ -768,19 +782,19 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Step 1
 	spreadRewardsUncollectedAddress3Position2_Swap3_Step1 := calculateUncollectedSpreadRewards(
 		positionsAddress3[1].Position.Liquidity,
-		sdk.ZeroDec(), // no growth below
-		sdk.ZeroDec(), // no growth above
-		calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal_Swap2, sdk.ZeroDec(), sdk.ZeroDec()), // snapshot of spread reward growth at swap 2
-		spreadRewardGrowthGlobal.Sub(spreadRewardCharge_Swap3_Step2),                                    // step 1 hasn't earned spread rewards from step 2
+		osmomath.ZeroDec(), // no growth below
+		osmomath.ZeroDec(), // no growth above
+		calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal_Swap2, osmomath.ZeroDec(), osmomath.ZeroDec()), // snapshot of spread reward growth at swap 2
+		spreadRewardGrowthGlobal.Sub(spreadRewardCharge_Swap3_Step2),                                              // step 1 hasn't earned spread rewards from step 2
 	)
 
 	// Step 2
 	spreadRewardsUncollectedAddress3Position2_Swap3_Step2 := calculateUncollectedSpreadRewards(
 		positionsAddress3[1].Position.Liquidity,
-		sdk.ZeroDec(), // no growth below
-		sdk.ZeroDec(), // no growth above
-		calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal_Swap2, sdk.ZeroDec(), sdk.ZeroDec()), // snapshot of spread reward growth at swap 2
-		spreadRewardGrowthGlobal.Sub(spreadRewardCharge_Swap3_Step1),                                    // step 2 hasn't earned spread rewards from step 1
+		osmomath.ZeroDec(), // no growth below
+		osmomath.ZeroDec(), // no growth above
+		calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal_Swap2, osmomath.ZeroDec(), osmomath.ZeroDec()), // snapshot of spread reward growth at swap 2
+		spreadRewardGrowthGlobal.Sub(spreadRewardCharge_Swap3_Step1),                                              // step 2 hasn't earned spread rewards from step 1
 	)
 
 	// Calculate total spread rewards acquired by address3 position2 from all swap steps
@@ -797,17 +811,17 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Assert that positions, which were not included in swaps, were not affected
 
 	// Address3 Position1: [-160000; -20000]
-	addr3BalancesBefore = s.addrBalance(chainABNode, address3)
-	chainABNode.CollectSpreadRewards(address3, fmt.Sprint(positionsAddress3[0].Position.PositionId))
-	addr3BalancesAfter = s.addrBalance(chainABNode, address3)
+	addr3BalancesBefore = s.addrBalance(chainBNode, address3)
+	chainBNode.CollectSpreadRewards(address3, fmt.Sprint(positionsAddress3[0].Position.PositionId))
+	addr3BalancesAfter = s.addrBalance(chainBNode, address3)
 
 	// Assert that balances did not change for any token
 	s.assertBalancesInvariants(addr3BalancesBefore, addr3BalancesAfter, true, true)
 
 	// Address2's only position: [220000; 342000]
-	addr2BalancesBefore := s.addrBalance(chainABNode, address2)
-	chainABNode.CollectSpreadRewards(address2, fmt.Sprint(positionsAddress2[0].Position.PositionId))
-	addr2BalancesAfter := s.addrBalance(chainABNode, address2)
+	addr2BalancesBefore := s.addrBalance(chainBNode, address2)
+	chainBNode.CollectSpreadRewards(address2, fmt.Sprint(positionsAddress2[0].Position.PositionId))
+	addr2BalancesAfter := s.addrBalance(chainBNode, address2)
 
 	// Assert the balances did not change for every token
 	s.assertBalancesInvariants(addr2BalancesBefore, addr2BalancesAfter, true, true)
@@ -817,45 +831,62 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Withdraw Position parameters
 	defaultLiquidityRemoval := "1000"
 
-	chainAB.WaitForNumHeights(2)
+	chainB.WaitForNumHeights(2)
 
 	// Assert removing some liquidity
-	// address1: check removing some amount of liquidity
-	address1position1liquidityBefore := positionsAddress1[0].Position.Liquidity
-	chainABNode.WithdrawPosition(address1, defaultLiquidityRemoval, positionsAddress1[0].Position.PositionId)
-	// assert
-	positionsAddress1 = chainABNode.QueryConcentratedPositions(address1)
-	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
+	// remove default liquidity from the 0th position of every address
+	clwg = sync.WaitGroup{}
+	for i := 0; i < len(createdPositions); i++ {
+		clwg.Add(1)
+		go func(i int) { // Launch a goroutine
+			defer clwg.Done()
+			addr := addresses[i]
+			posSet := createdPositions[i]
+			posLiquidityBefore := posSet[0].Position.Liquidity
+			chainBNode.WithdrawPosition(addr, defaultLiquidityRemoval, posSet[0].Position.PositionId)
+			// assert
+			createdPositions[i] = chainBNode.QueryConcentratedPositions(addr)
+			s.Require().Equal(posLiquidityBefore, createdPositions[i][0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
+		}(i)
+	}
+	clwg.Wait()
 
-	// address2: check removing some amount of liquidity
-	address2position1liquidityBefore := positionsAddress2[0].Position.Liquidity
-	chainABNode.WithdrawPosition(address2, defaultLiquidityRemoval, positionsAddress2[0].Position.PositionId)
-	// assert
-	positionsAddress2 = chainABNode.QueryConcentratedPositions(address2)
-	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
-
-	// address3: check removing some amount of liquidity
-	address3position1liquidityBefore := positionsAddress3[0].Position.Liquidity
-	chainABNode.WithdrawPosition(address3, defaultLiquidityRemoval, positionsAddress3[0].Position.PositionId)
-	// assert
-	positionsAddress3 = chainABNode.QueryConcentratedPositions(address3)
-	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
+	positionsAddress1 = createdPositions[0]
+	positionsAddress2 = createdPositions[1]
+	positionsAddress3 = createdPositions[2]
 
 	// Assert removing all liquidity
 	// address2: no more positions left
 	allLiquidityAddress2Position1 := positionsAddress2[0].Position.Liquidity
-	chainABNode.WithdrawPosition(address2, allLiquidityAddress2Position1.String(), positionsAddress2[0].Position.PositionId)
-	positionsAddress2 = chainABNode.QueryConcentratedPositions(address2)
+	chainBNode.WithdrawPosition(address2, allLiquidityAddress2Position1.String(), positionsAddress2[0].Position.PositionId)
+	positionsAddress2 = chainBNode.QueryConcentratedPositions(address2)
 	s.Require().Empty(positionsAddress2)
 
 	// address1: one position left
 	allLiquidityAddress1Position1 := positionsAddress1[0].Position.Liquidity
-	chainABNode.WithdrawPosition(address1, allLiquidityAddress1Position1.String(), positionsAddress1[0].Position.PositionId)
-	positionsAddress1 = chainABNode.QueryConcentratedPositions(address1)
+	chainBNode.WithdrawPosition(address1, allLiquidityAddress1Position1.String(), positionsAddress1[0].Position.PositionId)
+	positionsAddress1 = chainBNode.QueryConcentratedPositions(address1)
 	s.Require().Equal(len(positionsAddress1), 1)
 
-	// Test tick spacing reduction proposal
+	// Reset the maximum number of pool points
+	chainBNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
+}
 
+// This must be spawned from CL update test suite since it depends on permissionless pool creation
+func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
+	var (
+		denom0              = "uion"
+		denom1              = "uosmo"
+		tickSpacing  uint64 = 100
+		spreadFactor        = "0.001" // 0.1%
+	)
+
+	chainB, chainBNode, err := s.getChainBCfgs()
+	s.Require().NoError(err)
+
+	// Test tick spacing reduction proposal
+	poolID := chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
+	concentratedPool := s.updatedConcentratedPool(chainBNode, poolID)
 	// Get the current tick spacing
 	currentTickSpacing := concentratedPool.GetTickSpacing()
 
@@ -872,23 +903,14 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	newTickSpacing := cltypes.AuthorizedTickSpacing[indexOfCurrentTickSpacing-1]
 
 	// Run the tick spacing reduction proposal
-	propNumber := chainABNode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
+	propNumber := chainBNode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinExpeditedDeposit)), true)
 
-	chainABNode.DepositProposal(propNumber, true)
+	chainBNode.DepositProposal(propNumber, true)
+	// TODO: are we just waiting for 1-2 minutes for no reason here?
 	totalTimeChan := make(chan time.Duration, 1)
-	go chainABNode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
-	var wg sync.WaitGroup
+	go chainBNode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
 
-	// TODO: create a helper function for all these go routine yes vote calls.
-	for _, n := range chainAB.NodeConfigs {
-		wg.Add(1)
-		go func(nodeConfig *chain.NodeConfig) {
-			defer wg.Done()
-			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-		}(n)
-	}
-
-	wg.Wait()
+	chain.AllValsVoteOnProposal(chainB, propNumber)
 
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	timeoutPeriod := 2 * time.Minute
@@ -901,18 +923,11 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	}
 
 	// Check that the tick spacing was reduced to the expected new tick spacing
-	concentratedPool = s.updatedConcentratedPool(chainABNode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainBNode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
-
-	// Reset the maximum number of pool points
-	chainABNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
 }
 
-func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
-	if s.skipUpgrade {
-		s.T().Skip("Skipping StableSwapPostUpgrade test")
-	}
-
+func (s *IntegrationTestSuite) StableSwap() {
 	chainAB, chainABNode, err := s.getChainCfgs()
 	s.Require().NoError(err)
 
@@ -930,8 +945,7 @@ func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 	coinAIn, coinBIn := fmt.Sprintf("20000%s", denomA), fmt.Sprintf("2%s", denomB)
 
 	chainABNode.BankSend(initialization.WalletFeeTokens.String(), sender, config.StableswapWallet[index])
-	chainABNode.BankSend(coinAIn, sender, config.StableswapWallet[index])
-	chainABNode.BankSend(coinBIn, sender, config.StableswapWallet[index])
+	chainABNode.BankSend(coinAIn+","+coinBIn, sender, config.StableswapWallet[index])
 
 	s.T().Log("performing swaps")
 	chainABNode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[index]), denomB, config.StableswapWallet[index])
@@ -1014,24 +1028,14 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	// setup wallets and send gamm tokens to these wallets (both chains)
 	superfluidVotingWallet := chainABNode.CreateWallet("TestSuperfluidVoting", chainAB)
 	chainABNode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), initialization.ValidatorWalletName, superfluidVotingWallet)
-	lockId := chainABNode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
+	lockId := chainABNode.LockTokens(fmt.Sprintf("%v%s", osmomath.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
 	chainABNode.SuperfluidDelegate(lockId, chainABNode.OperatorAddress, superfluidVotingWallet)
 
 	// create a text prop, deposit and vote yes
-	propNumber := chainABNode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
+	propNumber := chainABNode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)), false)
 	chainABNode.DepositProposal(propNumber, false)
 
-	var wg sync.WaitGroup
-
-	for _, n := range chainAB.NodeConfigs {
-		wg.Add(1)
-		go func(nodeConfig *chain.NodeConfig) {
-			defer wg.Done()
-			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-		}(n)
-	}
-
-	wg.Wait()
+	chain.AllValsVoteOnProposal(chainAB, propNumber)
 
 	// set delegator vote to no
 	chainABNode.VoteNoProposal(superfluidVotingWallet, propNumber)
@@ -1075,11 +1079,14 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	)
 }
 
+// Note: do not use chain B in this test as it has taker fee set.
+// This TWAP test depends on specific values that might be affected
+// by the taker fee.
 func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() {
-	chainAB, chainABNode, err := s.getChainCfgs()
+	chainA, chainANode, err := s.getChainACfgs()
 	s.Require().NoError(err)
 
-	poolId, err := chainAB.SubmitCreateConcentratedPoolProposal(chainABNode)
+	poolId, err := chainA.SubmitCreateConcentratedPoolProposal(chainANode)
 	s.NoError(err)
 	fmt.Println("poolId", poolId)
 
@@ -1093,7 +1100,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	var concentratedPool cltypes.ConcentratedPoolExtension
 	s.Eventually(
 		func() bool {
-			concentratedPool = s.updatedConcentratedPool(chainABNode, poolId)
+			concentratedPool = s.updatedConcentratedPool(chainANode, poolId)
 			s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 			s.Require().Equal(expectedDenom0, concentratedPool.GetToken0())
 			s.Require().Equal(expectedDenom1, concentratedPool.GetToken1())
@@ -1110,45 +1117,45 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	fundTokens := []string{"100000000stake", "100000000uosmo"}
 
 	// Get address to create positions
-	address1 := chainABNode.CreateWalletAndFund("address1", fundTokens, chainAB)
+	address1 := chainANode.CreateWalletAndFund("address1", fundTokens, chainA)
 
 	// We add 5 ms to avoid landing directly on block time in twap. If block time
 	// is provided as start time, the latest spot price is used. Otherwise
 	// interpolation is done.
-	timeBeforePositionCreationBeforeSwap := chainABNode.QueryLatestBlockTime().Add(5 * time.Millisecond)
+	timeBeforePositionCreationBeforeSwap := chainANode.QueryLatestBlockTime().Add(5 * time.Millisecond)
 	s.T().Log("geometric twap, start time ", timeBeforePositionCreationBeforeSwap.Unix())
 
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforePositionCreationBeforeSwap) is not equal to the block time.
-	chainAB.WaitForNumHeights(1)
+	chainA.WaitForNumHeights(1)
 
 	// Check initial TWAP
 	// We expect this to error since there is no spot price yet.
 	s.T().Log("initial twap check")
-	initialTwapBOverA, err := chainABNode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeBeforePositionCreationBeforeSwap)
+	initialTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeBeforePositionCreationBeforeSwap)
 	s.Require().Error(err)
-	s.Require().Equal(sdk.Dec{}, initialTwapBOverA)
+	s.Require().Equal(osmomath.Dec{}, initialTwapBOverA)
 
 	// Create a position and check that TWAP now returns a value.
 	s.T().Log("creating first position")
-	chainABNode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,20000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
-	timeAfterPositionCreationBeforeSwap := chainABNode.QueryLatestBlockTime()
-	chainAB.WaitForNumHeights(2)
-	firstPositionTwapBOverA, err := chainABNode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterPositionCreationBeforeSwap)
+	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,20000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
+	timeAfterPositionCreationBeforeSwap := chainANode.QueryLatestBlockTime()
+	chainA.WaitForNumHeights(2)
+	firstPositionTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterPositionCreationBeforeSwap)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.MustNewDecFromStr("0.5"), firstPositionTwapBOverA)
+	s.Require().Equal(osmomath.MustNewDecFromStr("0.5"), firstPositionTwapBOverA)
 
 	// Run a swap and check that the TWAP updates.
 	s.T().Log("run swap")
 	coinAIn := fmt.Sprintf("1000000%s", concentratedPool.GetToken0())
-	chainABNode.SwapExactAmountIn(coinAIn, "1", fmt.Sprintf("%d", concentratedPool.GetId()), concentratedPool.GetToken1(), address1)
+	chainANode.SwapExactAmountIn(coinAIn, "1", fmt.Sprintf("%d", concentratedPool.GetId()), concentratedPool.GetToken1(), address1)
 
-	timeAfterSwap := chainABNode.QueryLatestBlockTime()
-	chainAB.WaitForNumHeights(1)
-	timeAfterSwapPlus1Height := chainABNode.QueryLatestBlockTime()
+	timeAfterSwap := chainANode.QueryLatestBlockTime()
+	chainA.WaitForNumHeights(1)
+	timeAfterSwapPlus1Height := chainANode.QueryLatestBlockTime()
 
 	s.T().Log("querying for the TWAP after swap")
-	afterSwapTwapBOverA, err := chainABNode.QueryGeometricTwap(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwap, timeAfterSwapPlus1Height)
+	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwap, timeAfterSwapPlus1Height)
 	s.Require().NoError(err)
 
 	// We swap stake so uosmo's supply will decrease and stake will increase.
@@ -1157,24 +1164,24 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 
 	// Remove the position and check that TWAP returns an error.
 	s.T().Log("removing first position (pool is drained)")
-	positions := chainABNode.QueryConcentratedPositions(address1)
-	chainABNode.WithdrawPosition(address1, positions[0].Position.Liquidity.String(), positions[0].Position.PositionId)
-	chainAB.WaitForNumHeights(1)
+	positions := chainANode.QueryConcentratedPositions(address1)
+	chainANode.WithdrawPosition(address1, positions[0].Position.Liquidity.String(), positions[0].Position.PositionId)
+	chainA.WaitForNumHeights(1)
 
 	s.T().Log("querying for the TWAP from after pool drained")
-	afterRemoveTwapBOverA, err := chainABNode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapPlus1Height)
+	afterRemoveTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapPlus1Height)
 	s.Require().Error(err)
-	s.Require().Equal(sdk.Dec{}, afterRemoveTwapBOverA)
+	s.Require().Equal(osmomath.Dec{}, afterRemoveTwapBOverA)
 
 	// Create a position and check that TWAP now returns a value.
 	// Should be equal to 1 since the position contains equal amounts of both tokens.
 	s.T().Log("creating position")
-	chainABNode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
-	chainAB.WaitForNumHeights(1)
-	timeAfterSwapRemoveAndCreatePlus1Height := chainABNode.QueryLatestBlockTime()
-	secondTwapBOverA, err := chainABNode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapRemoveAndCreatePlus1Height)
+	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
+	chainA.WaitForNumHeights(1)
+	timeAfterSwapRemoveAndCreatePlus1Height := chainANode.QueryLatestBlockTime()
+	secondTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapRemoveAndCreatePlus1Height)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewDec(1), secondTwapBOverA)
+	s.Require().Equal(osmomath.NewDec(1), secondTwapBOverA)
 }
 
 func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
@@ -1195,7 +1202,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	osmoSupply, err := chainANode.QuerySupplyOf("uosmo")
 	s.Require().NoError(err)
 
-	f, err := osmoSupply.ToDec().Float64()
+	f, err := osmoSupply.ToLegacyDec().Float64()
 	s.Require().NoError(err)
 
 	over := f * 0.02
@@ -1265,7 +1272,7 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 	transferAmount := int64(10)
 	validatorAddr := chainBNode.GetWallet(initialization.ValidatorWalletName)
 	fmt.Println("Sending IBC transfer IBCWasmHooks")
-	coin := sdk.NewCoin("uosmo", sdk.NewInt(transferAmount))
+	coin := sdk.NewCoin("uosmo", osmomath.NewInt(transferAmount))
 	chainBNode.SendIBCTransfer(chainA, validatorAddr, contractAddr,
 		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr), coin)
 
@@ -1342,7 +1349,7 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 	forwardMemo, err := json.Marshal(memoData)
 	s.NoError(err)
 	// Send the transfer from chainA to chainB. ChainB will parse the memo and forward the packet back to chainA
-	coin := sdk.NewCoin("uosmo", sdk.NewInt(transferAmount))
+	coin := sdk.NewCoin("uosmo", osmomath.NewInt(transferAmount))
 	chainANode.SendIBCTransfer(chainB, validatorAddr, validatorAddr, string(forwardMemo), coin)
 
 	// check the balance of the contract
@@ -1391,8 +1398,8 @@ func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 	preUpgradePoolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId[index])
 
 	lockupWalletAddr, lockupWalletSuperfluidAddr := chainABNode.GetWallet("lockup-wallet"), chainABNode.GetWallet("lockup-wallet-superfluid")
-	chainABNode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletAddr, 1)
-	chainABNode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletSuperfluidAddr, 2)
+	chainABNode.AddToExistingLock(osmomath.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletAddr, 1)
+	chainABNode.AddToExistingLock(osmomath.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletSuperfluidAddr, 2)
 }
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
@@ -1413,7 +1420,7 @@ func (s *IntegrationTestSuite) AddToExistingLock() {
 	lockupWalletSuperfluidAddr := chainABNode.CreateWalletAndFundFrom("TestAddToExistingLockSuperfluid", funder, fundTokens, chainAB)
 
 	// ensure we can add to new locks and superfluid locks on chainA
-	chainABNode.LockAndAddToExistingLock(chainAB, sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
+	chainABNode.LockAndAddToExistingLock(chainAB, osmomath.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
 }
 
 // TestArithmeticTWAP tests TWAP by creating a pool, performing a swap.
@@ -1462,9 +1469,8 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 	twapFromBeforeSwapToBeforeSwapOneCA, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
 	s.Require().NoError(err)
 
-	chainABNode.BankSend(coinAIn, sender, swapWalletAddr)
-	chainABNode.BankSend(coinBIn, sender, swapWalletAddr)
-	chainABNode.BankSend(coinCIn, sender, swapWalletAddr)
+	swapAmt := coinAIn + "," + coinBIn + "," + coinCIn
+	chainABNode.BankSend(swapAmt, sender, swapWalletAddr)
 
 	s.T().Log("querying for the second TWAP to now before swap, must equal to first")
 	twapFromBeforeSwapToBeforeSwapTwoAB, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap.Add(50*time.Millisecond))
@@ -1475,9 +1481,9 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 	s.Require().NoError(err)
 
 	// Since there were no swaps between the two queries, the TWAPs should be the same.
-	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneAB, twapFromBeforeSwapToBeforeSwapTwoAB, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneBC, twapFromBeforeSwapToBeforeSwapTwoBC, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneCA, twapFromBeforeSwapToBeforeSwapTwoCA, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneAB, twapFromBeforeSwapToBeforeSwapTwoAB, osmomath.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneBC, twapFromBeforeSwapToBeforeSwapTwoBC, osmomath.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneCA, twapFromBeforeSwapToBeforeSwapTwoCA, osmomath.NewDecWithPrec(1, 3))
 
 	s.T().Log("performing swaps")
 	chainABNode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", poolId), denomB, swapWalletAddr)
@@ -1543,9 +1549,9 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 
 	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
 	// There are potential rounding errors requiring us to approximate the comparison.
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsAB, twapFromAfterToNowAB, sdk.NewDecWithPrec(2, 3))
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsBC, twapFromAfterToNowBC, sdk.NewDecWithPrec(2, 3))
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsCA, twapFromAfterToNowCA, sdk.NewDecWithPrec(2, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsAB, twapFromAfterToNowAB, osmomath.NewDecWithPrec(2, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsBC, twapFromAfterToNowBC, osmomath.NewDecWithPrec(2, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsCA, twapFromAfterToNowCA, osmomath.NewDecWithPrec(2, 3))
 
 	// Make sure that the pruning keep period has passed.
 	s.T().Logf("waiting for pruning keep period of (%.f) seconds to pass", initialization.TWAPPruningKeepPeriod.Seconds())
@@ -1587,9 +1593,9 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 	twapToNowPostPruningCA, err := chainABNode.QueryArithmeticTwap(poolId, denomC, denomA, timeAfterSwap, timeAfterPruning)
 	s.Require().NoError(err)
 	// There are potential rounding errors requiring us to approximate the comparison.
-	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningAB, twapAfterSwapBeforePruning10MsAB, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningBC, twapAfterSwapBeforePruning10MsBC, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningCA, twapAfterSwapBeforePruning10MsCA, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningAB, twapAfterSwapBeforePruning10MsAB, osmomath.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningBC, twapAfterSwapBeforePruning10MsBC, osmomath.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningCA, twapAfterSwapBeforePruning10MsCA, osmomath.NewDecWithPrec(1, 3))
 }
 
 func (s *IntegrationTestSuite) StateSync() {
@@ -1693,7 +1699,7 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 	chainAB, chainABNode, err := s.getChainCfgs()
 	s.Require().NoError(err)
 
-	propNumber := chainABNode.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
+	propNumber := chainABNode.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinExpeditedDeposit)), true)
 
 	chainABNode.DepositProposal(propNumber, true)
 	totalTimeChan := make(chan time.Duration, 1)
@@ -1737,6 +1743,9 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 // Assuming base asset is uosmo, the initial twap is 2
 // Upon swapping 1_000_000 uosmo for stake, supply changes, making uosmo less expensive.
 // As a result of the swap, twap changes to 0.5.
+// Note: do not use chain B in this test as it has taker fee set.
+// This TWAP test depends on specific values that might be affected
+// by the taker fee.
 func (s *IntegrationTestSuite) GeometricTWAP() {
 	const (
 		// This pool contains 1_000_000 uosmo and 2_000_000 stake.
@@ -1750,45 +1759,47 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 		minAmountOut = "1"
 	)
 
-	chainAB, chainABNode, err := s.getChainCfgs()
+	// Note: use chain A specifically as this is the chain where we do not
+	// set taker fee.
+	chainA, chainANode, err := s.getChainACfgs()
 	s.Require().NoError(err)
 
-	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
+	sender := chainANode.GetWallet(initialization.ValidatorWalletName)
 
 	// Triggers the creation of TWAP records.
-	poolId := chainABNode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
-	swapWalletAddr := chainABNode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()}, chainAB)
+	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
+	swapWalletAddr := chainANode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()}, chainA)
 
 	// We add 5 ms to avoid landing directly on block time in twap. If block time
 	// is provided as start time, the latest spot price is used. Otherwise
 	// interpolation is done.
-	timeBeforeSwapPlus5ms := chainABNode.QueryLatestBlockTime().Add(5 * time.Millisecond)
+	timeBeforeSwapPlus5ms := chainANode.QueryLatestBlockTime().Add(5 * time.Millisecond)
 	s.T().Log("geometric twap, start time ", timeBeforeSwapPlus5ms.Unix())
 
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforeSwap) is not equal to the block time.
-	chainAB.WaitForNumHeights(2)
+	chainA.WaitForNumHeights(2)
 
 	s.T().Log("querying for the first geometric TWAP to now (before swap)")
 	// Assume base = uosmo, quote = stake
 	// At pool creation time, the twap should be:
 	// quote assset supply / base asset supply = 2_000_000 / 1_000_000 = 2
-	curBlockTime := chainABNode.QueryLatestBlockTime().Unix()
+	curBlockTime := chainANode.QueryLatestBlockTime().Unix()
 	s.T().Log("geometric twap, end time ", curBlockTime)
 
-	initialTwapBOverA, err := chainABNode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeBeforeSwapPlus5ms)
+	initialTwapBOverA, err := chainANode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeBeforeSwapPlus5ms)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewDec(2), initialTwapBOverA)
+	s.Require().Equal(osmomath.NewDec(2), initialTwapBOverA)
 
 	// Assume base = stake, quote = uosmo
 	// At pool creation time, the twap should be:
 	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
-	initialTwapAOverB, err := chainABNode.QueryGeometricTwapToNow(poolId, denomB, denomA, timeBeforeSwapPlus5ms)
+	initialTwapAOverB, err := chainANode.QueryGeometricTwapToNow(poolId, denomB, denomA, timeBeforeSwapPlus5ms)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewDecWithPrec(5, 1), initialTwapAOverB)
+	s.Require().Equal(osmomath.NewDecWithPrec(5, 1), initialTwapAOverB)
 
 	coinAIn := fmt.Sprintf("1000000%s", denomA)
-	chainABNode.BankSend(coinAIn, sender, swapWalletAddr)
+	chainANode.BankSend(coinAIn, sender, swapWalletAddr)
 
 	s.T().Logf("performing swap of %s for %s", coinAIn, denomB)
 
@@ -1796,18 +1807,18 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	//           = 2_000_000 * (1 - (1_000_000 / 2_000_000)^1)
 	//           = 2_000_000 * 0.5
 	//           = 1_000_000
-	chainABNode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", poolId), denomB, swapWalletAddr)
+	chainANode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", poolId), denomB, swapWalletAddr)
 
 	// New supply post swap:
 	// stake = 2_000_000 - 1_000_000 - 1_000_000
 	// uosmo = 1_000_000 + 1_000_000 = 2_000_000
 
-	timeAfterSwap := chainABNode.QueryLatestBlockTime()
-	chainAB.WaitForNumHeights(1)
-	timeAfterSwapPlus1Height := chainABNode.QueryLatestBlockTime()
+	timeAfterSwap := chainANode.QueryLatestBlockTime()
+	chainA.WaitForNumHeights(1)
+	timeAfterSwapPlus1Height := chainANode.QueryLatestBlockTime()
 
 	s.T().Log("querying for the TWAP from after swap to now")
-	afterSwapTwapBOverA, err := chainABNode.QueryGeometricTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwapPlus1Height)
+	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwapPlus1Height)
 	s.Require().NoError(err)
 
 	// We swap uosmo so uosmo's supply will increase and stake will decrease.
@@ -1822,38 +1833,27 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	// uatom = 1_000_000
 	// uosmo = 2_000_000
 	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
-	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
+	osmoassert.DecApproxEq(s.T(), osmomath.NewDecWithPrec(5, 1), afterSwapTwapBOverA, osmomath.NewDecWithPrec(1, 2))
 }
 
-func (s *IntegrationTestSuite) SetDefaultTakerFeeBothChains() {
-	var wg sync.WaitGroup
-	wg.Add(2)
+// Only set taker fee on chain B as some tests depend on the exact swap values.
+// For example, Geometric twap. As a result, we use chain A for these tests.
+//
+// Similarly, CL tests depend on taker fee being set.
+// As a result, we deterministically configure chain B's taker fee prior to running CL tests.
+func (s *IntegrationTestSuite) SetDefaultTakerFeeChainB() {
 
-	// Chain A
-
-	go func() {
-		defer wg.Done()
-		chainA, chainANode, err := s.getChainACfgs()
-		s.Require().NoError(err)
-		s.SetDefaultTakerFee(chainA, chainANode)
-	}()
+	// Note: do not set taker fee on Chain A as
+	// geometric TWAP test depends on specific values that might be affected
+	// by the taker fee.
 
 	// Chain B
 
-	go func() {
-		defer wg.Done()
-		chainB, chainBNode, err := s.getChainBCfgs()
-		s.Require().NoError(err)
-		s.SetDefaultTakerFee(chainB, chainBNode)
-	}()
+	// Note: CL tests depend on taker fee being set to non-zero value.
 
-	// Wait for all goroutines to complete
-	wg.Wait()
-}
+	chainB, chainBNode, err := s.getChainBCfgs()
+	s.Require().NoError(err)
 
-func (s *IntegrationTestSuite) SetDefaultTakerFee(chain *chain.Config, chainNode *chain.NodeConfig) {
-	// Change the parameter to set the default taker fee to a non zero value
-
-	err := chainNode.ParamChangeProposal("poolmanager", string(poolmanagertypes.KeyDefaultTakerFee), json.RawMessage(`"0.001500000000000000"`), chain)
+	err = chainBNode.ParamChangeProposal("poolmanager", string(poolmanagertypes.KeyDefaultTakerFee), json.RawMessage(`"0.001500000000000000"`), chainB)
 	s.Require().NoError(err)
 }

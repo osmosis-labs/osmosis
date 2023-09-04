@@ -25,10 +25,10 @@ import (
 
 var (
 	STAKE            = "stake"
-	DefaultAmt0      = sdk.NewInt(1000000)
+	DefaultAmt0      = osmomath.NewInt(1000000)
 	DefaultCoin0     = sdk.NewCoin(STAKE, DefaultAmt0)
 	USDC             = "usdc"
-	DefaultAmt1      = sdk.NewInt(5000000000)
+	DefaultAmt1      = osmomath.NewInt(5000000000)
 	DefaultCoin1     = sdk.NewCoin(USDC, DefaultAmt1)
 	DefaultCoins     = sdk.NewCoins(DefaultCoin0, DefaultCoin1)
 	DefaultLowerTick = int64(30545000)
@@ -49,81 +49,81 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 		unlocking                bool
 		noLock                   bool
 		overwriteLockId          bool
-		percentOfSharesToMigrate sdk.Dec
+		percentOfSharesToMigrate osmomath.Dec
 		minExitCoins             sdk.Coins
 		expectedError            error
 	}
 	testCases := map[string]sendTest{
 		"lock that is not superfluid delegated, not unlocking": {
 			// migrateNonSuperfluidLockBalancerToConcentrated
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.9"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("0.9"),
 			expectedError:            types.MigratePartialSharesError{SharesToMigrate: "45000000000000000000", SharesInLock: "50000000000000000000"},
 		},
 		"lock that is not superfluid delegated, unlocking": {
 			// migrateNonSuperfluidLockBalancerToConcentrated
 			unlocking:                true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.6"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("0.6"),
 			expectedError:            types.MigratePartialSharesError{SharesToMigrate: "30000000000000000000", SharesInLock: "50000000000000000000"},
 		},
 		"lock that is superfluid delegated, not unlocking (full shares)": {
 			// migrateSuperfluidBondedBalancerToConcentrated
 			superfluidDelegated:      true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 		},
 		"lock that is superfluid undelegating, not unlocking (full shares)": {
 			// migrateSuperfluidUnbondingBalancerToConcentrated
 			superfluidDelegated:      true,
 			superfluidUndelegating:   true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 		},
 		"lock that is superfluid undelegating, unlocking (full shares)": {
 			// migrateSuperfluidUnbondingBalancerToConcentrated
 			superfluidDelegated:      true,
 			superfluidUndelegating:   true,
 			unlocking:                true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 		},
 		"no lock (partial shares)": {
 			// MigrateUnlockedPositionFromBalancerToConcentrated
 			noLock:                   true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.3"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("0.3"),
 		},
 		"no lock (full shares)": {
 			// MigrateUnlockedPositionFromBalancerToConcentrated
 			noLock:                   true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 		},
 		"error: non-existent lock": {
 			overwriteLockId:          true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			expectedError:            errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 5)),
 		},
 		"error: lock that is not superfluid delegated, not unlocking, min exit coins more than being exitted": {
 			// migrateNonSuperfluidLockBalancerToConcentrated
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000)), sdk.NewCoin("stake", sdk.NewInt(5000))),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
+			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(5000)), sdk.NewCoin("stake", osmomath.NewInt(5000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 		"error: lock that is not superfluid delegated, unlocking, min exit coins more than being exitted": {
 			// migrateNonSuperfluidLockBalancerToConcentrated
 			unlocking:                true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000))),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
+			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(5000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 		"error: lock that is superfluid delegated, not unlocking (full shares), min exit coins more than being exitted": {
 			// migrateSuperfluidBondedBalancerToConcentrated
 			superfluidDelegated:      true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000))),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
+			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(10000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 		"error: lock that is superfluid undelegating, not unlocking, min exit coins more than being exitted": {
 			// migrateSuperfluidUnbondingBalancerToConcentrated
 			superfluidDelegated:      true,
 			superfluidUndelegating:   true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(40000))),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
+			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(40000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 		"lock that is superfluid undelegating, unlocking, min exit coins more than being exitted": {
@@ -131,8 +131,8 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			superfluidDelegated:      true,
 			superfluidUndelegating:   true,
 			unlocking:                true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(40000))),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
+			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(40000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 	}
@@ -151,7 +151,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
 			coinsToMigrate := balancerPoolShareOut
-			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
+			coinsToMigrate.Amount = coinsToMigrate.Amount.ToLegacyDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// Modify migration inputs if necessary
 			if tc.overwriteLockId {
@@ -181,7 +181,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 
 			// If the lock was superfluid delegated:
 			if tc.superfluidDelegated && !tc.superfluidUndelegating {
-				if tc.percentOfSharesToMigrate.Equal(sdk.OneDec()) {
+				if tc.percentOfSharesToMigrate.Equal(osmomath.OneDec()) {
 					// If we migrated all the shares:
 
 					// The intermediary account connection to the old gamm lock should be deleted.
@@ -199,7 +199,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 					// Check that the original gamm lockup is deleted.
 					_, err := s.App.LockupKeeper.GetLockByID(s.Ctx, originalGammLockId)
 					s.Require().Error(err)
-				} else if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
+				} else if tc.percentOfSharesToMigrate.LT(osmomath.OneDec()) {
 					// If we migrated part of the shares:
 					// The intermediary account connection to the old gamm lock should still be present.
 					addr := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, originalGammLockId)
@@ -223,7 +223,7 @@ func (s *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 				clIntermediaryAcc := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, concentratedLockId)
 				delegation, found := stakingKeeper.GetDelegation(s.Ctx, clIntermediaryAcc, valAddr)
 				s.Require().True(found, "expected delegation, found delegation no delegation")
-				s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(sdk.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares", balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
+				s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(osmomath.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares", balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
 			}
 
 			// If the lock was superfluid undelegating:
@@ -257,31 +257,31 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 	type sendTest struct {
 		overwriteValidatorAddress bool
 		overwriteLockId           bool
-		percentOfSharesToMigrate  sdk.Dec
+		percentOfSharesToMigrate  osmomath.Dec
 		tokenOutMins              sdk.Coins
 		expectedError             error
 	}
 	testCases := map[string]sendTest{
 		"lock that is superfluid delegated, not unlocking (full shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 		},
 		"error: migrate more shares than lock has": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1.1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1.1"),
 			expectedError:            types.MigrateMoreSharesThanLockHasError{SharesToMigrate: "55000000000000000000", SharesInLock: "50000000000000000000"},
 		},
 		"error: invalid validator address": {
 			overwriteValidatorAddress: true,
-			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate:  osmomath.MustNewDecFromStr("1"),
 			expectedError:             fmt.Errorf("decoding bech32 failed: invalid checksum"),
 		},
 		"error: non-existent lock ID": {
 			overwriteLockId:          true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			expectedError:            lockuptypes.ErrLockupNotFound,
 		},
 		"error: lock that is superfluid delegated, not unlocking (full shares), token out mins is more than exit coins": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100000))),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
+			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 	}
@@ -300,7 +300,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
 			coinsToMigrate := balancerPoolShareOut
-			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
+			coinsToMigrate.Amount = coinsToMigrate.Amount.ToLegacyDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// GetMigrationType is called via the migration message router and is always run prior to the migration itself.
 			// We use it here just to retrieve the synthetic lock before the migration.
@@ -342,7 +342,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 				positionData.Amount0, positionData.Amount1,
 			)
 
-			if tc.percentOfSharesToMigrate.Equal(sdk.OneDec()) {
+			if tc.percentOfSharesToMigrate.Equal(osmomath.OneDec()) {
 				// If we migrated all the shares:
 
 				// The intermediary account connection to the old gamm lock should be deleted.
@@ -360,7 +360,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 				// Check that the original gamm lockup is deleted.
 				_, err := s.App.LockupKeeper.GetLockByID(s.Ctx, originalGammLockId)
 				s.Require().Error(err)
-			} else if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
+			} else if tc.percentOfSharesToMigrate.LT(osmomath.OneDec()) {
 				// If we migrated part of the shares:
 				// The intermediary account connection to the old gamm lock should still be present.
 				addr := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, originalGammLockId)
@@ -385,7 +385,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated() {
 			clIntermediaryAcc := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, concentratedLockId)
 			delegation, found := stakingKeeper.GetDelegation(s.Ctx, clIntermediaryAcc, valAddr)
 			s.Require().True(found, "expected delegation, found delegation no delegation")
-			s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(sdk.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares", balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
+			s.Require().Equal(balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().Sub(osmomath.OneInt()).String(), delegation.Shares.RoundInt().String(), "expected %d shares, found %d shares", balancerDelegationPre.Shares.Mul(tc.percentOfSharesToMigrate).RoundInt().String(), delegation.Shares.String())
 
 			// Check if the new intermediary account connection was created.
 			newConcentratedIntermediaryAccount := superfluidKeeper.GetLockIdIntermediaryAccountConnection(s.Ctx, concentratedLockId)
@@ -416,26 +416,26 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 	type sendTest struct {
 		unlocking                 bool
 		overwriteValidatorAddress bool
-		percentOfSharesToMigrate  sdk.Dec
+		percentOfSharesToMigrate  osmomath.Dec
 		tokenOutMins              sdk.Coins
 		expectedError             error
 	}
 	testCases := map[string]sendTest{
 		"lock that is superfluid undelegating, not unlocking (full shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 		},
 		"lock that is superfluid undelegating, unlocking (full shares)": {
 			unlocking:                true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 		},
 		"error: invalid validator address": {
 			overwriteValidatorAddress: true,
-			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate:  osmomath.MustNewDecFromStr("1"),
 			expectedError:             fmt.Errorf("decoding bech32 failed: invalid checksum"),
 		},
 		"error: lock that is superfluid undelegating, not unlocking (full shares), token out mins is more than exit coins": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100000))),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
+			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 	}
@@ -456,7 +456,7 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
 			coinsToMigrate := balancerPoolShareOut
-			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
+			coinsToMigrate.Amount = coinsToMigrate.Amount.ToLegacyDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// GetMigrationType is called via the migration message router and is always run prior to the migration itself
 			synthLockBeforeMigration, migrationType, err := superfluidKeeper.GetMigrationType(s.Ctx, int64(originalGammLockId))
@@ -490,13 +490,13 @@ func (s *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrated()
 				positionData.Amount0, positionData.Amount1,
 			)
 
-			if tc.percentOfSharesToMigrate.Equal(sdk.OneDec()) {
+			if tc.percentOfSharesToMigrate.Equal(osmomath.OneDec()) {
 				// If we migrated all the shares:
 
 				// The synthetic lockup should be deleted.
 				_, err = lockupKeeper.GetSyntheticLockup(s.Ctx, originalGammLockId, keeper.UnstakingSyntheticDenom(balancerLock.Coins[0].Denom, valAddr.String()))
 				s.Require().Error(err)
-			} else if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
+			} else if tc.percentOfSharesToMigrate.LT(osmomath.OneDec()) {
 				// If we migrated part of the shares:
 
 				// The synthetic lockup should not be deleted.
@@ -539,21 +539,21 @@ func (s *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated() {
 	defaultJoinTime := s.Ctx.BlockTime()
 	type sendTest struct {
 		unlocking                bool
-		percentOfSharesToMigrate sdk.Dec
+		percentOfSharesToMigrate osmomath.Dec
 		tokenOutMins             sdk.Coins
 		expectedError            error
 	}
 	testCases := map[string]sendTest{
 		"lock that is not superfluid delegated, not unlocking (full shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 		},
 		"lock that is not superfluid delegated, unlocking (full shares)": {
 			unlocking:                true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 		},
 		"error: lock that is not superfluid delegated, not unlocking (full shares), token out mins is more than exit coins": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000))),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
+			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(10000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 	}
@@ -571,7 +571,7 @@ func (s *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated() {
 
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
 			coinsToMigrate := balancerPoolShareOut
-			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
+			coinsToMigrate.Amount = coinsToMigrate.Amount.ToLegacyDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// GetMigrationType is called via the migration message router and is always run prior to the migration itself
 			synthLockBeforeMigration, migrationType, err := superfluidKeeper.GetMigrationType(s.Ctx, int64(originalGammLockId))
@@ -615,28 +615,28 @@ func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated(
 	defaultJoinTime := s.Ctx.BlockTime()
 	type sendTest struct {
 		unlocking                bool
-		percentOfSharesToMigrate sdk.Dec
+		percentOfSharesToMigrate osmomath.Dec
 		tokenOutMins             sdk.Coins
 		expectedError            error
 	}
 	testCases := map[string]sendTest{
 		"no lock (full shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 		},
 		"no lock (partial shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.9"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("0.9"),
 		},
 		"no lock (more shares than own)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1.1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1.1"),
 			expectedError:            fmt.Errorf("insufficient funds"),
 		},
 		"no lock (no shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("0"),
 			expectedError:            errorsmod.Wrapf(gammtypes.ErrInvalidMathApprox, "Trying to exit a negative amount of shares"),
 		},
 		"error: no lock (full shares), token out mins is more than exit coins": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000))),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
+			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(10000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 	}
@@ -654,7 +654,7 @@ func (s *KeeperTestSuite) TestMigrateUnlockedPositionFromBalancerToConcentrated(
 
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
 			coinsToMigrate := balancerPoolShareOut
-			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
+			coinsToMigrate.Amount = coinsToMigrate.Amount.ToLegacyDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// GetMigrationType is called via the migration message router and is always run prior to the migration itself
 			synthLockBeforeMigration, migrationType, err := superfluidKeeper.GetMigrationType(s.Ctx, 0)
@@ -693,60 +693,60 @@ func (s *KeeperTestSuite) TestValidateMigration() {
 		overwriteSender           bool
 		overwriteSharesDenomValue string
 		overwriteLockId           bool
-		percentOfSharesToMigrate  sdk.Dec
+		percentOfSharesToMigrate  osmomath.Dec
 		tokenOutMins              sdk.Coins
 		expectedError             error
 	}
 	testCases := map[string]sendTest{
 		"lock that is not superfluid delegated, not unlocking (full shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			isSuperfluidDelegated:    false,
 			isSuperfluidUndelegating: false,
 		},
 		"lock that is not superfluid delegated, not unlocking (partial shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.9"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("0.9"),
 			isSuperfluidDelegated:    false,
 			isSuperfluidUndelegating: false,
 		},
 		"lock that is not superfluid delegated, unlocking (full shares)": {
 			unlocking:                true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			isSuperfluidDelegated:    false,
 			isSuperfluidUndelegating: false,
 		},
 		"lock that is superfluid undelegating, not unlocking (full shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			isSuperfluidDelegated:    true,
 			isSuperfluidUndelegating: true,
 		},
 		"lock that is superfluid undelegating, unlocking (full shares)": {
 			unlocking:                true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			isSuperfluidDelegated:    true,
 			isSuperfluidUndelegating: true,
 		},
 		"lock that is superfluid delegated, not unlocking (full shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			isSuperfluidDelegated:    true,
 		},
 		"error: denom prefix error": {
 			overwriteSharesDenomValue: "cl/pool/2",
-			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate:  osmomath.MustNewDecFromStr("1"),
 			expectedError:             types.SharesToMigrateDenomPrefixError{Denom: "cl/pool/2", ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix},
 		},
 		"error: no canonical link": {
 			overwriteSharesDenomValue: "gamm/pool/2",
-			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate:  osmomath.MustNewDecFromStr("1"),
 			expectedError:             gammtypes.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: 2},
 		},
 		"error: wrong sender": {
 			overwriteSender:          true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			expectedError:            lockuptypes.ErrNotLockOwner,
 		},
 		"error: wrong lock ID": {
 			overwriteLockId:          true,
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			expectedError:            lockuptypes.ErrLockupNotFound,
 		},
 	}
@@ -764,7 +764,7 @@ func (s *KeeperTestSuite) TestValidateMigration() {
 
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
 			coinsToMigrate := balancerPoolShareOut
-			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
+			coinsToMigrate.Amount = coinsToMigrate.Amount.ToLegacyDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// Modify migration inputs if necessary
 			if tc.overwriteSender {
@@ -805,47 +805,47 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 		overwritePool             bool
 		overwritePoolId           bool
 		exitCoinsLengthIsTwo      bool
-		percentOfSharesToMigrate  sdk.Dec
+		percentOfSharesToMigrate  osmomath.Dec
 		tokenOutMins              sdk.Coins
 		expectedError             error
 	}
 	testCases := map[string]sendTest{
 		"happy path (full shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 		},
 		"happy path (partial shares)": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.4"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("0.4"),
 			expectedError:            types.MigratePartialSharesError{SharesToMigrate: "20000000000000000000", SharesInLock: "50000000000000000000"},
 		},
 		"attempt to leave a pool that has more than two denoms": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			overwritePool:            true,
 			exitCoinsLengthIsTwo:     false,
 		},
 		"error: lock does not exist": {
-			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate:  osmomath.MustNewDecFromStr("1"),
 			overwritePreMigrationLock: true,
 			expectedError:             lockuptypes.ErrLockupNotFound,
 		},
 		"error: attempt to migrate more than lock has": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			overwriteShares:          true,
 			expectedError:            types.MigrateMoreSharesThanLockHasError{SharesToMigrate: "50000000000000000001", SharesInLock: "50000000000000000000"},
 		},
 		"error: attempt to leave a pool that does not exist": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			overwritePoolId:          true,
 			expectedError:            fmt.Errorf("pool with ID %d does not exist", 2),
 		},
 		"error: attempt to leave a pool that has more than two denoms with exitCoinsLengthIsTwo true": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
 			overwritePool:            true,
 			exitCoinsLengthIsTwo:     true,
 			expectedError:            types.TwoTokenBalancerPoolError{NumberOfTokens: 4},
 		},
 		"error: happy path (full shares), token out mins is more than exit coins": {
-			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100000))),
+			percentOfSharesToMigrate: osmomath.MustNewDecFromStr("1"),
+			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100000))),
 			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 	}
@@ -875,8 +875,8 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 
 			// Create a balancer pool of "stake" and "foo".
 			msg := balancer.NewMsgCreateBalancerPool(poolCreateAcc, balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDec(0),
+				SwapFee: osmomath.NewDecWithPrec(1, 2),
+				ExitFee: osmomath.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
 			balancerPooId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 			s.Require().NoError(err)
@@ -891,7 +891,7 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 			// Note how much of the balancer pool's LP token the account that joined the pool has.
 			balancerPoolShareOut := bankKeeper.GetBalance(ctx, poolJoinAcc, balancerPoolDenom)
 
-			sharesToMigrate := balancerPoolShareOut.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).TruncateInt()
+			sharesToMigrate := balancerPoolShareOut.Amount.ToLegacyDec().Mul(tc.percentOfSharesToMigrate).TruncateInt()
 			coinsToMigrate := sdk.NewCoin(balancerPoolDenom, sharesToMigrate)
 
 			// The unbonding duration is the same as the staking module's unbonding duration.
@@ -908,13 +908,13 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 			}
 
 			if tc.overwriteShares {
-				coinsToMigrate.Amount = lock.Coins[0].Amount.Add(sdk.NewInt(1))
+				coinsToMigrate.Amount = lock.Coins[0].Amount.Add(osmomath.NewInt(1))
 			}
 
 			if tc.overwritePool {
 				multiCoinBalancerPoolId := s.PrepareBalancerPool()
 				balancerPooId = multiCoinBalancerPoolId
-				shareAmt := sdk.MustNewDecFromStr("50000000000000000000").TruncateInt()
+				shareAmt := osmomath.MustNewDecFromStr("50000000000000000000").TruncateInt()
 				newShares := sdk.NewCoin(fmt.Sprintf("gamm/pool/%d", multiCoinBalancerPoolId), shareAmt)
 				s.FundAcc(poolJoinAcc, sdk.NewCoins(newShares))
 			}
@@ -933,11 +933,11 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 			s.Require().NoError(err)
 
 			defaultErrorTolerance := osmomath.ErrTolerance{
-				AdditiveTolerance: sdk.NewDec(1),
+				AdditiveTolerance: osmomath.NewDec(1),
 				RoundingDir:       osmomath.RoundDown,
 			}
 
-			if tc.percentOfSharesToMigrate.Equal(sdk.OneDec()) {
+			if tc.percentOfSharesToMigrate.Equal(osmomath.OneDec()) {
 				// If all of the shares were migrated, the original lock should be deleted
 				_, err := lockupKeeper.GetLockByID(ctx, originalGammLockId)
 				s.Require().Error(err)
@@ -952,14 +952,14 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 			if tc.exitCoinsLengthIsTwo {
 				for _, coin := range exitCoins {
 					// Check that the exit coin is the same amount that we joined with (with one unit rounding down)
-					s.Require().Equal(0, defaultErrorTolerance.Compare(tokensIn.AmountOf(coin.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), coin.Amount))
+					s.Require().Equal(0, defaultErrorTolerance.Compare(tokensIn.AmountOf(coin.Denom).ToLegacyDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), coin.Amount))
 				}
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking, noLock bool, percentOfSharesToMigrate sdk.Dec) (joinPoolAmt sdk.Coins, balancerIntermediaryAcc types.SuperfluidIntermediaryAccount, balancerLock *lockuptypes.PeriodLock, poolCreateAcc, poolJoinAcc sdk.AccAddress, balancerPooId, clPoolId uint64, balancerPoolShareOut sdk.Coin, valAddr sdk.ValAddress) {
+func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking, noLock bool, percentOfSharesToMigrate osmomath.Dec) (joinPoolAmt sdk.Coins, balancerIntermediaryAcc types.SuperfluidIntermediaryAccount, balancerLock *lockuptypes.PeriodLock, poolCreateAcc, poolJoinAcc sdk.AccAddress, balancerPooId, clPoolId uint64, balancerPoolShareOut sdk.Coin, valAddr sdk.ValAddress) {
 	bankKeeper := s.App.BankKeeper
 	gammKeeper := s.App.GAMMKeeper
 	superfluidKeeper := s.App.SuperfluidKeeper
@@ -985,8 +985,8 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 
 	// Create a balancer pool of "stake" and "foo".
 	msg := balancer.NewMsgCreateBalancerPool(poolCreateAcc, balancer.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDec(0),
+		SwapFee: osmomath.NewDecWithPrec(1, 2),
+		ExitFee: osmomath.NewDec(0),
 	}, defaultPoolAssets, defaultFutureGovernor)
 	balancerPooId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 	s.Require().NoError(err)
@@ -1015,7 +1015,7 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	balancerPoolShareOut = bankKeeper.GetBalance(ctx, poolJoinAcc, balancerPoolDenom)
 
 	// Create a cl pool with the same underlying assets as the balancer pool.
-	clPool := s.PrepareCustomConcentratedPool(poolCreateAcc, defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, sdk.ZeroDec())
+	clPool := s.PrepareCustomConcentratedPool(poolCreateAcc, defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, osmomath.ZeroDec())
 	clPoolId = clPool.GetId()
 
 	// Add a gov sanctioned link between the balancer and concentrated liquidity pool.
@@ -1084,19 +1084,19 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	return joinPoolAmt, balancerIntermediaryAcc, balancerLock, poolCreateAcc, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr
 }
 
-func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, concentratedLockId, poolIdEntering uint64, percentOfSharesToMigrate sdk.Dec, valAddr sdk.ValAddress, balancerLock lockuptypes.PeriodLock, expectSlash bool) {
+func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, concentratedLockId, poolIdEntering uint64, percentOfSharesToMigrate osmomath.Dec, valAddr sdk.ValAddress, balancerLock lockuptypes.PeriodLock, expectSlash bool) {
 	// Retrieve the concentrated lock and gamm lock prior to slashing.
 	concentratedLockPreSlash, err := s.App.LockupKeeper.GetLockByID(ctx, concentratedLockId)
 	s.Require().NoError(err)
 	gammLockPreSlash, err := s.App.LockupKeeper.GetLockByID(ctx, gammLockId)
-	if percentOfSharesToMigrate.LT(sdk.OneDec()) {
+	if percentOfSharesToMigrate.LT(osmomath.OneDec()) {
 		s.Require().NoError(err)
 	} else {
 		s.Require().Error(err)
 	}
 
 	// Slash the validator.
-	slashFactor := sdk.NewDecWithPrec(5, 2)
+	slashFactor := osmomath.NewDecWithPrec(5, 2)
 	s.App.SuperfluidKeeper.SlashLockupsForValidatorSlash(
 		ctx,
 		valAddr,
@@ -1107,7 +1107,7 @@ func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, co
 	concentratedLockPostSlash, err := s.App.LockupKeeper.GetLockByID(ctx, concentratedLockId)
 	s.Require().NoError(err)
 	gammLockPostSlash, err := s.App.LockupKeeper.GetLockByID(ctx, gammLockId)
-	if percentOfSharesToMigrate.LT(sdk.OneDec()) {
+	if percentOfSharesToMigrate.LT(osmomath.OneDec()) {
 		s.Require().NoError(err)
 	} else {
 		s.Require().Error(err)
@@ -1115,20 +1115,20 @@ func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, co
 
 	// Check if the concentrated lock was slashed.
 	clDenom := cltypes.GetConcentratedLockupDenomFromPoolId(poolIdEntering)
-	slashAmtCL := concentratedLockPreSlash.Coins.AmountOf(clDenom).ToDec().Mul(slashFactor).TruncateInt()
+	slashAmtCL := concentratedLockPreSlash.Coins.AmountOf(clDenom).ToLegacyDec().Mul(slashFactor).TruncateInt()
 	if !expectSlash {
-		slashAmtCL = sdk.ZeroInt()
+		slashAmtCL = osmomath.ZeroInt()
 	}
 	s.Require().Equal(concentratedLockPreSlash.Coins.AmountOf(clDenom).Sub(slashAmtCL).String(), concentratedLockPostSlash.Coins.AmountOf(clDenom).String())
 
 	// Check if the gamm lock was slashed.
 	// We only check if the gamm lock was slashed if the lock was not migrated entirely.
 	// Otherwise, there would be no newly created gamm lock to check.
-	if percentOfSharesToMigrate.LT(sdk.OneDec()) {
+	if percentOfSharesToMigrate.LT(osmomath.OneDec()) {
 		gammDenom := balancerLock.Coins[0].Denom
-		slashAmtGamm := gammLockPreSlash.Coins.AmountOf(gammDenom).ToDec().Mul(slashFactor).TruncateInt()
+		slashAmtGamm := gammLockPreSlash.Coins.AmountOf(gammDenom).ToLegacyDec().Mul(slashFactor).TruncateInt()
 		if !expectSlash {
-			slashAmtGamm = sdk.ZeroInt()
+			slashAmtGamm = osmomath.ZeroInt()
 		}
 		s.Require().Equal(gammLockPreSlash.Coins.AmountOf(gammDenom).Sub(slashAmtGamm).String(), gammLockPostSlash.Coins.AmountOf(gammDenom).String())
 	}
@@ -1138,11 +1138,11 @@ func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, co
 
 func (s *KeeperTestSuite) ValidateMigrateResult(
 	positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering uint64,
-	percentOfSharesToMigrate, liquidityMigrated sdk.Dec,
+	percentOfSharesToMigrate, liquidityMigrated osmomath.Dec,
 	balancerLock lockuptypes.PeriodLock,
 	joinPoolAmt sdk.Coins,
 	balancerPoolShareOut, coinsToMigrate sdk.Coin,
-	amount0, amount1 sdk.Int,
+	amount0, amount1 osmomath.Int,
 ) {
 	// Check that the concentrated liquidity and join time match what we expect
 	position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
@@ -1158,11 +1158,11 @@ func (s *KeeperTestSuite) ValidateMigrateResult(
 	// exitPool has rounding difference.
 	// We test if correct amt has been exited and frozen by comparing with rounding tolerance.
 	defaultErrorTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.NewDec(2),
+		AdditiveTolerance: osmomath.NewDec(2),
 		RoundingDir:       osmomath.RoundDown,
 	}
-	s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[0].Token.Denom).ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount0))
-	s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[1].Token.Denom).ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount1))
+	s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[0].Token.Denom).ToLegacyDec().Mul(percentOfSharesToMigrate).RoundInt(), amount0))
+	s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[1].Token.Denom).ToLegacyDec().Mul(percentOfSharesToMigrate).RoundInt(), amount1))
 }
 
 type Positions struct {
@@ -1178,7 +1178,7 @@ type Positions struct {
 type positionInfo struct {
 	joinPoolCoins sdk.Coins
 	coin          sdk.Coin
-	shares        sdk.Int
+	shares        osmomath.Int
 	lockId        uint64
 }
 
@@ -1314,7 +1314,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		s.Require().NoError(err)
 		balancerSpotPrice, err := balancerPool.SpotPrice(s.Ctx, DefaultCoin1.Denom, DefaultCoin0.Denom)
 		s.Require().NoError(err)
-		s.CreateFullRangePosition(clPool, sdk.NewCoins(sdk.NewCoin(DefaultCoin0.Denom, sdk.NewInt(100000000)), sdk.NewCoin(DefaultCoin1.Denom, sdk.NewDec(100000000).Mul(balancerSpotPrice).TruncateInt())))
+		s.CreateFullRangePosition(clPool, sdk.NewCoins(sdk.NewCoin(DefaultCoin0.Denom, osmomath.NewInt(100000000)), sdk.NewCoin(DefaultCoin1.Denom, osmomath.NewDec(100000000).Mul(balancerSpotPrice).TruncateInt())))
 
 		// Add a gov sanctioned link between the balancer and concentrated liquidity pool.
 		migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
@@ -1331,14 +1331,14 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		s.Require().NoError(err)
 
 		// All the following values will be tracked as we migrate each position. We will check them against the invariants at the end.
-		totalAmount0Migrated := sdk.ZeroInt()
-		totalAmount1Migrated := sdk.ZeroInt()
-		totalSentBackToOwnersAmount0 := sdk.ZeroInt()
-		totalSentBackToOwnersAmount1 := sdk.ZeroInt()
-		totalBalancerPoolFundsLeftBehindAmount0 := sdk.ZeroInt()
-		totalBalancerPoolFundsLeftBehindAmount1 := sdk.ZeroInt()
-		amount0AccountFor := sdk.ZeroInt()
-		amount1AccountFor := sdk.ZeroInt()
+		totalAmount0Migrated := osmomath.ZeroInt()
+		totalAmount1Migrated := osmomath.ZeroInt()
+		totalSentBackToOwnersAmount0 := osmomath.ZeroInt()
+		totalSentBackToOwnersAmount1 := osmomath.ZeroInt()
+		totalBalancerPoolFundsLeftBehindAmount0 := osmomath.ZeroInt()
+		totalBalancerPoolFundsLeftBehindAmount1 := osmomath.ZeroInt()
+		amount0AccountFor := osmomath.ZeroInt()
+		amount1AccountFor := osmomath.ZeroInt()
 
 		// Migrate all the positions.
 		// We will check certain invariants after each individual migration.
@@ -1404,7 +1404,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 //
 // The function returns a `positionInfo` struct with the created position's information.
 func (s *KeeperTestSuite) createBalancerPosition(acc sdk.AccAddress, balancerPoolId uint64, unbondingDuration time.Duration, balancerPoolShareDenom string, coins sdk.Coins, i int, superfluidDelegate bool) positionInfo {
-	sharesOut, err := s.App.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, acc, balancerPoolId, coins, sdk.OneInt())
+	sharesOut, err := s.App.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, acc, balancerPoolId, coins, osmomath.OneInt())
 	s.Require().NoError(err)
 	shareCoins := sdk.NewCoins(sdk.NewCoin(balancerPoolShareDenom, sharesOut))
 

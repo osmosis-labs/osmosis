@@ -50,8 +50,8 @@ func (e NotPositiveRequireAmountError) Error() string {
 }
 
 type QualifyingLiquidityOrTimeElapsedNotPositiveError struct {
-	QualifyingLiquidity sdk.Dec
-	TimeElapsed         sdk.Dec
+	QualifyingLiquidity osmomath.Dec
+	TimeElapsed         osmomath.Dec
 }
 
 func (e QualifyingLiquidityOrTimeElapsedNotPositiveError) Error() string {
@@ -59,7 +59,7 @@ func (e QualifyingLiquidityOrTimeElapsedNotPositiveError) Error() string {
 }
 
 type TimeElapsedNotPositiveError struct {
-	TimeElapsed sdk.Dec
+	TimeElapsed osmomath.Dec
 }
 
 func (e TimeElapsedNotPositiveError) Error() string {
@@ -117,8 +117,8 @@ func (e InvalidTickError) Error() string {
 }
 
 type InsufficientLiquidityError struct {
-	Actual    sdk.Dec
-	Available sdk.Dec
+	Actual    osmomath.Dec
+	Available osmomath.Dec
 }
 
 func (e InsufficientLiquidityError) Error() string {
@@ -126,8 +126,8 @@ func (e InsufficientLiquidityError) Error() string {
 }
 
 type InsufficientLiquidityCreatedError struct {
-	Actual      sdk.Int
-	Minimum     sdk.Int
+	Actual      osmomath.Int
+	Minimum     osmomath.Int
 	IsTokenZero bool
 }
 
@@ -140,7 +140,7 @@ func (e InsufficientLiquidityCreatedError) Error() string {
 }
 
 type NegativeLiquidityError struct {
-	Liquidity sdk.Dec
+	Liquidity osmomath.Dec
 }
 
 func (e NegativeLiquidityError) Error() string {
@@ -157,8 +157,8 @@ func (e DenomDuplicatedError) Error() string {
 }
 
 type AmountLessThanMinError struct {
-	TokenAmount sdk.Int
-	TokenMin    sdk.Int
+	TokenAmount osmomath.Int
+	TokenMin    osmomath.Int
 }
 
 func (e AmountLessThanMinError) Error() string {
@@ -166,8 +166,8 @@ func (e AmountLessThanMinError) Error() string {
 }
 
 type AmountGreaterThanMaxError struct {
-	TokenAmount sdk.Int
-	TokenMax    sdk.Int
+	TokenAmount osmomath.Int
+	TokenMax    osmomath.Int
 }
 
 func (e AmountGreaterThanMaxError) Error() string {
@@ -221,8 +221,8 @@ func (e TickSpacingBoundaryError) Error() string {
 }
 
 type InitialLiquidityZeroError struct {
-	Amount0 sdk.Int
-	Amount1 sdk.Int
+	Amount0 osmomath.Int
+	Amount1 osmomath.Int
 }
 
 func (e InitialLiquidityZeroError) Error() string {
@@ -264,9 +264,9 @@ func (e TickNotFoundError) Error() string {
 }
 
 type PriceBoundError struct {
-	ProvidedPrice sdk.Dec
-	MinSpotPrice  sdk.Dec
-	MaxSpotPrice  sdk.Dec
+	ProvidedPrice osmomath.BigDec
+	MinSpotPrice  osmomath.BigDec
+	MaxSpotPrice  osmomath.Dec
 }
 
 func (e PriceBoundError) Error() string {
@@ -274,7 +274,7 @@ func (e PriceBoundError) Error() string {
 }
 
 type SpotPriceNegativeError struct {
-	ProvidedPrice sdk.Dec
+	ProvidedPrice osmomath.Dec
 }
 
 func (e SpotPriceNegativeError) Error() string {
@@ -290,7 +290,7 @@ func (e SqrtPriceNegativeError) Error() string {
 }
 
 type InvalidSpreadFactorError struct {
-	ActualSpreadFactor sdk.Dec
+	ActualSpreadFactor osmomath.Dec
 }
 
 func (e InvalidSpreadFactorError) Error() string {
@@ -331,7 +331,7 @@ func (e StartTimeTooEarlyError) Error() string {
 type IncentiveInsufficientBalanceError struct {
 	PoolId          uint64
 	IncentiveDenom  string
-	IncentiveAmount sdk.Int
+	IncentiveAmount osmomath.Int
 }
 
 func (e IncentiveInsufficientBalanceError) Error() string {
@@ -379,7 +379,7 @@ func (e InvalidIncentiveCoinError) Error() string {
 
 type NonPositiveEmissionRateError struct {
 	PoolId       uint64
-	EmissionRate sdk.Dec
+	EmissionRate osmomath.Dec
 }
 
 func (e NonPositiveEmissionRateError) Error() string {
@@ -406,8 +406,8 @@ func (e InvalidUptimeIndexError) Error() string {
 }
 
 type QueryRangeUnsupportedError struct {
-	RequestedRange sdk.Int
-	MaxRange       sdk.Int
+	RequestedRange osmomath.Int
+	MaxRange       osmomath.Int
 }
 
 func (e QueryRangeUnsupportedError) Error() string {
@@ -493,7 +493,7 @@ func (e InsufficientUserBalanceError) Error() string {
 func (e *InsufficientUserBalanceError) Unwrap() error { return e.Err }
 
 type InvalidAmountCalculatedError struct {
-	Amount sdk.Int
+	Amount osmomath.Int
 }
 
 func (e InvalidAmountCalculatedError) Error() string {
@@ -608,7 +608,7 @@ func (e PositionsNotInSameTickRangeError) Error() string {
 }
 
 type InvalidDiscountRateError struct {
-	DiscountRate sdk.Dec
+	DiscountRate osmomath.Dec
 }
 
 func (e InvalidDiscountRateError) Error() string {
@@ -667,8 +667,8 @@ func (e AddToLastPositionInPoolError) Error() string {
 
 type NegativeAmountAddedError struct {
 	PositionId   uint64
-	Asset0Amount sdk.Int
-	Asset1Amount sdk.Int
+	Asset0Amount osmomath.Int
+	Asset1Amount osmomath.Int
 }
 
 func (e NegativeAmountAddedError) Error() string {
@@ -693,8 +693,8 @@ func (e UnauthorizedQuoteDenomError) Error() string {
 }
 
 type UnauthorizedSpreadFactorError struct {
-	ProvidedSpreadFactor    sdk.Dec
-	AuthorizedSpreadFactors []sdk.Dec
+	ProvidedSpreadFactor    osmomath.Dec
+	AuthorizedSpreadFactors []osmomath.Dec
 }
 
 func (e UnauthorizedSpreadFactorError) Error() string {
@@ -711,7 +711,7 @@ func (e UnauthorizedTickSpacingError) Error() string {
 }
 
 type NonPositiveLiquidityForNewPositionError struct {
-	LiquidityDelta sdk.Dec
+	LiquidityDelta osmomath.Dec
 	PositionId     uint64
 }
 
@@ -721,8 +721,8 @@ func (e NonPositiveLiquidityForNewPositionError) Error() string {
 
 type LiquidityWithdrawalError struct {
 	PositionID       uint64
-	RequestedAmount  sdk.Dec
-	CurrentLiquidity sdk.Dec
+	RequestedAmount  osmomath.Dec
+	CurrentLiquidity osmomath.Dec
 }
 
 func (e LiquidityWithdrawalError) Error() string {
@@ -779,7 +779,7 @@ func (e PositionNotFullRangeError) Error() string {
 }
 
 type Amount0IsNegativeError struct {
-	Amount0 sdk.Int
+	Amount0 osmomath.Int
 }
 
 func (e Amount0IsNegativeError) Error() string {
@@ -787,7 +787,7 @@ func (e Amount0IsNegativeError) Error() string {
 }
 
 type Amount1IsNegativeError struct {
-	Amount1 sdk.Int
+	Amount1 osmomath.Int
 }
 
 func (e Amount1IsNegativeError) Error() string {
@@ -854,8 +854,8 @@ func (e SwapNoProgressError) Error() string {
 
 type SwapNoProgressWithConsumptionError struct {
 	ComputedSqrtPrice osmomath.BigDec
-	AmountIn          sdk.Dec
-	AmountOut         sdk.Dec
+	AmountIn          osmomath.Dec
+	AmountOut         osmomath.Dec
 }
 
 func (e SwapNoProgressWithConsumptionError) Error() string {
@@ -871,7 +871,7 @@ func (e SqrtPriceToTickError) Error() string {
 }
 
 type OverChargeSwapOutGivenInError struct {
-	AmountSpecifiedRemaining sdk.Dec
+	AmountSpecifiedRemaining osmomath.Dec
 }
 
 func (e OverChargeSwapOutGivenInError) Error() string {

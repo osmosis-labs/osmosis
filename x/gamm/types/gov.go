@@ -8,6 +8,7 @@ import (
 
 	govtypes "github.com/osmosis-labs/osmosis/v19/x/gov/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
 )
 
@@ -193,7 +194,7 @@ func (p *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) ValidateBasic() 
 		}
 
 		spreadFactor := record.SpreadFactor
-		if spreadFactor.IsNegative() || spreadFactor.GTE(sdk.OneDec()) {
+		if spreadFactor.IsNegative() || spreadFactor.GTE(osmomath.OneDec()) {
 			return fmt.Errorf("Invalid Spread factor")
 		}
 
