@@ -56,6 +56,21 @@ func (s *IntegrationTestSuite) assertBalancesInvariants(balancesBefore, balances
 	}
 }
 
+func (s *IntegrationTestSuite) assertClSwap(clpoolStart types.ConcentratedPoolExtension, clPoolAfter types.ConcentratedPoolExtension, expectedSqrtPriceDelta osmomath.BigDec) {
+	// Update pool and track liquidity and sqrt price
+	liquidityBeforeSwap := clpoolStart.GetLiquidity()
+	sqrtPriceBeforeSwap := clpoolStart.GetCurrentSqrtPrice()
+	liquidityAfterSwap := clPoolAfter.GetLiquidity()
+	sqrtPriceAfterSwap := clPoolAfter.GetCurrentSqrtPrice()
+
+	// Assert swaps don't change pool's liquidity amount
+	s.Require().Equal(liquidityAfterSwap.String(), liquidityBeforeSwap.String())
+
+	// Assert current sqrt price
+	expectedSqrtPrice := sqrtPriceBeforeSwap.Add(expectedSqrtPriceDelta)
+	s.Require().Equal(expectedSqrtPrice.String(), sqrtPriceAfterSwap.String())
+}
+
 // Get balances for address
 func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address string) sdk.Coins {
 	addrBalances, err := node.QueryBalances(address)
@@ -65,31 +80,27 @@ func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address strin
 
 var currentNodeIndexA int
 
-func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig, error) {
+func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig) {
 	chainA := s.configurer.GetChainConfig(0)
-
 	chainANodes := chainA.GetAllChainNodes()
-
 	chosenNode := chainANodes[currentNodeIndexA]
 	currentNodeIndexA = (currentNodeIndexA + 1) % len(chainANodes)
-	return chainA, chosenNode, nil
+	return chainA, chosenNode
 }
 
 var currentNodeIndexB int
 
-func (s *IntegrationTestSuite) getChainBCfgs() (*chain.Config, *chain.NodeConfig, error) {
+func (s *IntegrationTestSuite) getChainBCfgs() (*chain.Config, *chain.NodeConfig) {
 	chainB := s.configurer.GetChainConfig(1)
-
 	chainBNodes := chainB.GetAllChainNodes()
-
 	chosenNode := chainBNodes[currentNodeIndexB]
 	currentNodeIndexB = (currentNodeIndexB + 1) % len(chainBNodes)
-	return chainB, chosenNode, nil
+	return chainB, chosenNode
 }
 
 var useChainA bool
 
-func (s *IntegrationTestSuite) getChainCfgs() (*chain.Config, *chain.NodeConfig, error) {
+func (s *IntegrationTestSuite) getChainCfgs() (*chain.Config, *chain.NodeConfig) {
 	if useChainA {
 		useChainA = false
 		return s.getChainACfgs()
