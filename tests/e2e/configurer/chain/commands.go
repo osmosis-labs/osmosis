@@ -312,9 +312,12 @@ func (n *NodeConfig) SubmitSuperfluidProposal(asset string, initialDeposit sdk.C
 	return proposalID
 }
 
-func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(initialDeposit sdk.Coin) int {
+func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(initialDeposit sdk.Coin, isExpedited bool) int {
 	n.LogActionF("Creating concentrated liquidity pool")
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
+	if isExpedited {
+		cmd = append(cmd, "--is-expedited=true")
+	}
 	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
@@ -782,7 +785,8 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 				Value:    value,
 			},
 		},
-		Deposit: "625000000uosmo",
+		IsExpedited: true,
+		Deposit:     strconv.Itoa(int(config.InitialMinExpeditedDeposit)) + appparams.BaseCoinUnit,
 	}
 	proposalJson, err := json.Marshal(proposal)
 	if err != nil {
@@ -791,6 +795,19 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 
 	propNumber := n.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
 
+	AllValsVoteOnProposal(chain, propNumber)
+
+	require.Eventually(n.t, func() bool {
+		status, err := n.QueryPropStatus(propNumber)
+		if err != nil {
+			return false
+		}
+		return status == proposalStatusPassed
+	}, time.Minute, 10*time.Millisecond)
+	return nil
+}
+
+func AllValsVoteOnProposal(chain *Config, propNumber int) {
 	var wg sync.WaitGroup
 
 	for _, n := range chain.NodeConfigs {
@@ -802,15 +819,6 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 	}
 
 	wg.Wait()
-
-	require.Eventually(n.t, func() bool {
-		status, err := n.QueryPropStatus(propNumber)
-		if err != nil {
-			return false
-		}
-		return status == proposalStatusPassed
-	}, time.Minute, 10*time.Millisecond)
-	return nil
 }
 
 func extractProposalIdFromResponse(response string) (int, error) {

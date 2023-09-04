@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
@@ -33,6 +34,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
 	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
@@ -91,6 +93,11 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.LargeWasmUpload()
 	})
 
+	s.T().Run("StableSwap", func(t *testing.T) {
+		t.Parallel()
+		s.StableSwap()
+	})
+
 	// Test currently disabled
 	// s.T().Run("ArithmeticTWAP", func(t *testing.T) {
 	// 	t.Parallel()
@@ -109,15 +116,6 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 	}
 
 	// Upgrade Dependent Tests
-
-	if s.skipUpgrade {
-		s.T().Skip("Skipping StableSwapPostUpgrade test")
-	} else {
-		s.T().Run("StableSwapPostUpgrade", func(t *testing.T) {
-			t.Parallel()
-			s.StableSwapPostUpgrade()
-		})
-	}
 
 	if s.skipUpgrade {
 		s.T().Skip("Skipping GeometricTwapMigration test")
@@ -146,29 +144,17 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 			t.Parallel()
 			s.IBCTokenTransferRateLimiting()
 		})
-	}
 
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
 		s.T().Run("IBCTokenTransferAndCreatePool", func(t *testing.T) {
 			t.Parallel()
 			s.IBCTokenTransferAndCreatePool()
 		})
-	}
 
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
 		s.T().Run("IBCWasmHooks", func(t *testing.T) {
 			t.Parallel()
 			s.IBCWasmHooks()
 		})
-	}
 
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
 		s.T().Run("PacketForwarding", func(t *testing.T) {
 			t.Parallel()
 			s.PacketForwarding()
@@ -316,30 +302,48 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Use chain B node since it has taker fee enabled.
 	chainB, chainBNode, err := s.getChainBCfgs()
 	s.Require().NoError(err)
+	var adminWalletAddr string
 
-	// Get the permisionless pool creation parameter.
-	isPermisionlessCreationEnabledStr := chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
-	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
-		s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been")
-	}
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-	// Change the parameter to enable permisionless pool creation.
-	err = chainBNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainB)
-	s.Require().NoError(err)
+	go func() {
+		defer wg.Done()
+		// Get the permisionless pool creation parameter.
+		isPermisionlessCreationEnabledStr := chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
+			s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been")
+		}
 
-	// Update the protorev admin address to a known wallet we can control
-	adminWalletAddr := chainBNode.CreateWalletAndFund("admin", []string{"4000000uosmo"}, chainB)
-	err = chainBNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainB)
-	s.Require().NoError(err)
+		// Change the parameter to enable permisionless pool creation.
+		err := chainBNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainB)
+		s.Require().NoError(err)
 
-	// Update the weight of CL pools so that this test case is not back run by protorev.
-	chainBNode.SetMaxPoolPointsPerTx(7, adminWalletAddr)
+		// Confirm that the parameter has been changed.
+		isPermisionlessCreationEnabledStr = chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
+			s.T().Fatal("concentrated liquidity pool creation is not enabled")
+		}
 
-	// Confirm that the parameter has been changed.
-	isPermisionlessCreationEnabledStr = chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
-	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
-		s.T().Fatal("concentrated liquidity pool creation is not enabled")
-	}
+		go func() {
+			s.T().Run("test update pool tick spacing", func(t *testing.T) {
+				s.TickSpacingUpdateProp()
+			})
+		}()
+	}()
+
+	go func() {
+		defer wg.Done()
+		// Update the protorev admin address to a known wallet we can control
+		adminWalletAddr = chainBNode.CreateWalletAndFund("admin", []string{"4000000uosmo"}, chainB)
+		err := chainBNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainB)
+		s.Require().NoError(err)
+
+		// Update the weight of CL pools so that this test case is not back run by protorev.
+		chainBNode.SetMaxPoolPointsPerTx(7, adminWalletAddr)
+	}()
+
+	wg.Wait()
 
 	// Create concentrated liquidity pool when permisionless pool creation is enabled.
 	poolID := chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
@@ -365,59 +369,66 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	address1 := chainBNode.CreateWalletAndFund("addr1", fundTokens, chainB)
 	address2 := chainBNode.CreateWalletAndFund("addr2", fundTokens, chainB)
 	address3 := chainBNode.CreateWalletAndFund("addr3", fundTokens, chainB)
+	addresses := []string{address1, address2, address3}
 
 	// When claiming rewards, a small portion of dust is forfeited and is redistributed to everyone. We must track the total
 	// liquidity across all positions (even if not active), in order to calculate how much to increase the reward growth global per share by.
 	totalLiquidity := osmomath.ZeroDec()
 
+	// not sure what this is
+	createPosFormat := fmt.Sprintf("10000000%s,10000000%s", denom0, denom1)
+	createPosition := func(address string, lower int, upper int) math.LegacyDec {
+		_, liquidity := chainBNode.CreateConcentratedPosition(address, formatCLIInt(lower), formatCLIInt(upper), createPosFormat, 0, 0, poolID)
+		return liquidity
+	}
+
 	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions
-	_, liquidity := chainBNode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
-	_, liquidity = chainBNode.CreateConcentratedPosition(address1, "[-40000]", "120000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
+	type clposition struct {
+		lower int
+		upper int
+	}
+	positions := [][]clposition{
+		{{-120000, 40000}, {-40000, 120000}},
+		{{220000, int(cltypes.MaxTick)}},
+		{{-160000, -20000}, {int(cltypes.MinInitializedTick), 140000}},
+	}
+	createdPositions := [][]model.FullPositionBreakdown{{}, {}, {}}
+	// Create all positions, with each address' positions created in sequence, but all addresses' created concurrently
+	var clwg sync.WaitGroup
+	var mu sync.Mutex
 
-	// Create 1 position for address2: does not overlap with anything, ends at maximum
-	_, liquidity = chainBNode.CreateConcentratedPosition(address2, "220000", fmt.Sprintf("%d", cltypes.MaxTick), fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
+	for i, _ := range positions {
+		clwg.Add(1)
+		go func(i int) { // Launch a goroutine
+			addr, positionSet := addresses[i], positions[i]
+			defer clwg.Done() // Decrement the counter when the goroutine completes
+			userLiquidity := math.LegacyZeroDec()
+			for _, j := range positionSet {
+				liquidity := createPosition(addr, j.lower, j.upper)
+				userLiquidity.AddMut(liquidity)
+			}
+			mu.Lock() // Lock totalLiquidity for concurrent write
+			totalLiquidity.AddMut(userLiquidity)
+			mu.Unlock() // Unlock after write
+			createdPositions[i] = chainBNode.QueryConcentratedPositions(addr)
+		}(i)
+	}
 
-	// Create 2 positions for address3: overlap together, overlap with 2 address1 positions, one position starts from minimum
-	_, liquidity = chainBNode.CreateConcentratedPosition(address3, "[-160000]", "[-20000]", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
-	_, liquidity = chainBNode.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinInitializedTick), "140000", fmt.Sprintf("10000000%s,10000000%s", denom0, denom1), 0, 0, poolID)
-	totalLiquidity = totalLiquidity.Add(liquidity)
-
-	// Get newly created positions
-	positionsAddress1 := chainBNode.QueryConcentratedPositions(address1)
-	positionsAddress2 := chainBNode.QueryConcentratedPositions(address2)
-	positionsAddress3 := chainBNode.QueryConcentratedPositions(address3)
+	clwg.Wait() // Block until all goroutines complete
 
 	concentratedPool = s.updatedConcentratedPool(chainBNode, poolID)
 
-	// Assert number of positions per address
-	s.Require().Equal(len(positionsAddress1), 2)
-	s.Require().Equal(len(positionsAddress2), 1)
-	s.Require().Equal(len(positionsAddress3), 2)
+	for i, posSet := range positions {
+		s.Require().Equal(len(createdPositions[i]), len(posSet))
+		for j, pos := range posSet {
+			s.validateCLPosition(createdPositions[i][j].Position, poolID, int64(pos.lower), int64(pos.upper))
+		}
+	}
 
-	// Assert positions for address1
-	addr1position1 := positionsAddress1[0].Position
-	addr1position2 := positionsAddress1[1].Position
-	// First position first address
-	s.validateCLPosition(addr1position1, poolID, -120000, 40000)
-	// Second position second address
-	s.validateCLPosition(addr1position2, poolID, -40000, 120000)
-
-	// Assert positions for address2
-	addr2position1 := positionsAddress2[0].Position
-	// First position second address
-	s.validateCLPosition(addr2position1, poolID, 220000, cltypes.MaxTick)
-
-	// Assert positions for address3
-	addr3position1 := positionsAddress3[0].Position
-	addr3position2 := positionsAddress3[1].Position
-	// First position third address
-	s.validateCLPosition(addr3position1, poolID, -160000, -20000)
-	// Second position third address
-	s.validateCLPosition(addr3position2, poolID, cltypes.MinInitializedTick, 140000)
+	// compat with old code
+	positionsAddress1 := createdPositions[0]
+	positionsAddress2 := createdPositions[1]
+	positionsAddress3 := createdPositions[2]
 
 	// Collect SpreadRewards
 
@@ -823,26 +834,26 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	chainB.WaitForNumHeights(2)
 
 	// Assert removing some liquidity
-	// address1: check removing some amount of liquidity
-	address1position1liquidityBefore := positionsAddress1[0].Position.Liquidity
-	chainBNode.WithdrawPosition(address1, defaultLiquidityRemoval, positionsAddress1[0].Position.PositionId)
-	// assert
-	positionsAddress1 = chainBNode.QueryConcentratedPositions(address1)
-	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
+	// remove default liquidity from the 0th position of every address
+	clwg = sync.WaitGroup{}
+	for i := 0; i < len(createdPositions); i++ {
+		clwg.Add(1)
+		go func(i int) { // Launch a goroutine
+			defer clwg.Done()
+			addr := addresses[i]
+			posSet := createdPositions[i]
+			posLiquidityBefore := posSet[0].Position.Liquidity
+			chainBNode.WithdrawPosition(addr, defaultLiquidityRemoval, posSet[0].Position.PositionId)
+			// assert
+			createdPositions[i] = chainBNode.QueryConcentratedPositions(addr)
+			s.Require().Equal(posLiquidityBefore, createdPositions[i][0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
+		}(i)
+	}
+	clwg.Wait()
 
-	// address2: check removing some amount of liquidity
-	address2position1liquidityBefore := positionsAddress2[0].Position.Liquidity
-	chainBNode.WithdrawPosition(address2, defaultLiquidityRemoval, positionsAddress2[0].Position.PositionId)
-	// assert
-	positionsAddress2 = chainBNode.QueryConcentratedPositions(address2)
-	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
-
-	// address3: check removing some amount of liquidity
-	address3position1liquidityBefore := positionsAddress3[0].Position.Liquidity
-	chainBNode.WithdrawPosition(address3, defaultLiquidityRemoval, positionsAddress3[0].Position.PositionId)
-	// assert
-	positionsAddress3 = chainBNode.QueryConcentratedPositions(address3)
-	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
+	positionsAddress1 = createdPositions[0]
+	positionsAddress2 = createdPositions[1]
+	positionsAddress3 = createdPositions[2]
 
 	// Assert removing all liquidity
 	// address2: no more positions left
@@ -857,8 +868,25 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	positionsAddress1 = chainBNode.QueryConcentratedPositions(address1)
 	s.Require().Equal(len(positionsAddress1), 1)
 
-	// Test tick spacing reduction proposal
+	// Reset the maximum number of pool points
+	chainBNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
+}
 
+// This must be spawned from CL update test suite since it depends on permissionless pool creation
+func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
+	var (
+		denom0              = "uion"
+		denom1              = "uosmo"
+		tickSpacing  uint64 = 100
+		spreadFactor        = "0.001" // 0.1%
+	)
+
+	chainB, chainBNode, err := s.getChainBCfgs()
+	s.Require().NoError(err)
+
+	// Test tick spacing reduction proposal
+	poolID := chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
+	concentratedPool := s.updatedConcentratedPool(chainBNode, poolID)
 	// Get the current tick spacing
 	currentTickSpacing := concentratedPool.GetTickSpacing()
 
@@ -878,20 +906,11 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	propNumber := chainBNode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinExpeditedDeposit)), true)
 
 	chainBNode.DepositProposal(propNumber, true)
+	// TODO: are we just waiting for 1-2 minutes for no reason here?
 	totalTimeChan := make(chan time.Duration, 1)
 	go chainBNode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
-	var wg sync.WaitGroup
 
-	// TODO: create a helper function for all these go routine yes vote calls.
-	for _, n := range chainB.NodeConfigs {
-		wg.Add(1)
-		go func(nodeConfig *chain.NodeConfig) {
-			defer wg.Done()
-			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-		}(n)
-	}
-
-	wg.Wait()
+	chain.AllValsVoteOnProposal(chainB, propNumber)
 
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	timeoutPeriod := 2 * time.Minute
@@ -906,16 +925,9 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Check that the tick spacing was reduced to the expected new tick spacing
 	concentratedPool = s.updatedConcentratedPool(chainBNode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
-
-	// Reset the maximum number of pool points
-	chainBNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
 }
 
-func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
-	if s.skipUpgrade {
-		s.T().Skip("Skipping StableSwapPostUpgrade test")
-	}
-
+func (s *IntegrationTestSuite) StableSwap() {
 	chainAB, chainABNode, err := s.getChainCfgs()
 	s.Require().NoError(err)
 
@@ -933,8 +945,7 @@ func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 	coinAIn, coinBIn := fmt.Sprintf("20000%s", denomA), fmt.Sprintf("2%s", denomB)
 
 	chainABNode.BankSend(initialization.WalletFeeTokens.String(), sender, config.StableswapWallet[index])
-	chainABNode.BankSend(coinAIn, sender, config.StableswapWallet[index])
-	chainABNode.BankSend(coinBIn, sender, config.StableswapWallet[index])
+	chainABNode.BankSend(coinAIn+","+coinBIn, sender, config.StableswapWallet[index])
 
 	s.T().Log("performing swaps")
 	chainABNode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[index]), denomB, config.StableswapWallet[index])
@@ -1024,17 +1035,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	propNumber := chainABNode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)), false)
 	chainABNode.DepositProposal(propNumber, false)
 
-	var wg sync.WaitGroup
-
-	for _, n := range chainAB.NodeConfigs {
-		wg.Add(1)
-		go func(nodeConfig *chain.NodeConfig) {
-			defer wg.Done()
-			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-		}(n)
-	}
-
-	wg.Wait()
+	chain.AllValsVoteOnProposal(chainAB, propNumber)
 
 	// set delegator vote to no
 	chainABNode.VoteNoProposal(superfluidVotingWallet, propNumber)
@@ -1468,9 +1469,8 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 	twapFromBeforeSwapToBeforeSwapOneCA, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
 	s.Require().NoError(err)
 
-	chainABNode.BankSend(coinAIn, sender, swapWalletAddr)
-	chainABNode.BankSend(coinBIn, sender, swapWalletAddr)
-	chainABNode.BankSend(coinCIn, sender, swapWalletAddr)
+	swapAmt := coinAIn + "," + coinBIn + "," + coinCIn
+	chainABNode.BankSend(swapAmt, sender, swapWalletAddr)
 
 	s.T().Log("querying for the second TWAP to now before swap, must equal to first")
 	twapFromBeforeSwapToBeforeSwapTwoAB, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap.Add(50*time.Millisecond))
