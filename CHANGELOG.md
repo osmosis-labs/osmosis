@@ -49,9 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug Fixes
 
-### Misc Improvements
-* [#6267](https://github.com/osmosis-labs/osmosis/pull/6267) codeql: add codeql query to look for usages of native go's binary operators between sdk/osmo numerical types (ex: sdk.Dec == sdk.Dec)
-
 ### Minor improvements & Bug Fixes
 
 ### Security
