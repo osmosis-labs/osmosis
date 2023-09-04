@@ -8,6 +8,7 @@ import (
 
 	query "github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	pooltypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
@@ -387,7 +388,7 @@ func (s *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 	// take newly created gauge and modify its pool incentives distribution weight to 100
 	distrRecord := pooltypes.DistrRecord{
 		GaugeId: gaugeID,
-		Weight:  sdk.NewInt(100),
+		Weight:  osmomath.NewInt(100),
 	}
 	err = s.App.PoolIncentivesKeeper.ReplaceDistrRecords(s.Ctx, distrRecord)
 	s.Require().NoError(err)
@@ -407,7 +408,7 @@ func (s *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 	s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochIdentifier, curEpochNumber)
 	// TODO: Figure out what this number should be
 	// TODO: Respond to this
-	mintCoins := sdk.NewCoin(coins[0].Denom, sdk.NewInt(1500000))
+	mintCoins := sdk.NewCoin(coins[0].Denom, osmomath.NewInt(1500000))
 
 	// query the rewards of the new address after the 10th epoch
 	// since it is the only address the gauge is paying out to, the future rewards should equal the entirety of the gauge plus the newly minted coins

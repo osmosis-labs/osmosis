@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
@@ -27,23 +28,23 @@ var (
 
 	// pool assets
 	defaultFooAsset = balancer.PoolAsset{
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(100),
+		Token:  sdk.NewCoin("foo", osmomath.NewInt(10000)),
 	}
 	defaultBarAsset = balancer.PoolAsset{
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(100),
+		Token:  sdk.NewCoin("bar", osmomath.NewInt(10000)),
 	}
 	defaultPoolAssets                     = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
 	defaultStableSwapPoolAssets sdk.Coins = sdk.NewCoins(
-		sdk.NewCoin("foo", sdk.NewInt(10000)),
-		sdk.NewCoin("bar", sdk.NewInt(10000)),
+		sdk.NewCoin("foo", osmomath.NewInt(10000)),
+		sdk.NewCoin("bar", osmomath.NewInt(10000)),
 	)
 	defaultAcctFunds sdk.Coins = sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-		sdk.NewCoin("foo", sdk.NewInt(10000000)),
-		sdk.NewCoin("bar", sdk.NewInt(10000000)),
-		sdk.NewCoin("baz", sdk.NewInt(10000000)),
+		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
+		sdk.NewCoin("foo", osmomath.NewInt(10000000)),
+		sdk.NewCoin("bar", osmomath.NewInt(10000000)),
+		sdk.NewCoin("baz", osmomath.NewInt(10000000)),
 	)
 	ETH                = "eth"
 	USDC               = "usdc"
@@ -80,7 +81,7 @@ func (s *KeeperTestSuite) TestCreateBalancerPool() {
 		}, {
 			name: "create a pool with negative spread factor",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(-1, 2),
+				SwapFee: osmomath.NewDecWithPrec(-1, 2),
 				ExitFee: defaultZeroExitFee,
 			}, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: false,
@@ -88,23 +89,23 @@ func (s *KeeperTestSuite) TestCreateBalancerPool() {
 		}, {
 			name: "create a pool with negative exit fee",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(-1, 2),
+				SwapFee: osmomath.NewDecWithPrec(1, 2),
+				ExitFee: osmomath.NewDecWithPrec(-1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
 		}, {
 			name: "create a pool with non zero exit fee",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
+				SwapFee: osmomath.NewDecWithPrec(1, 2),
+				ExitFee: osmomath.NewDecWithPrec(1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
 		}, {
 			name: "create the pool with empty PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
+				SwapFee: osmomath.NewDecWithPrec(1, 2),
 				ExitFee: defaultZeroExitFee,
 			}, []balancer.PoolAsset{}, defaultFutureGovernor),
 			emptySender: false,
@@ -112,73 +113,73 @@ func (s *KeeperTestSuite) TestCreateBalancerPool() {
 		}, {
 			name: "create the pool with 0 weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
+				SwapFee: osmomath.NewDecWithPrec(1, 2),
 				ExitFee: defaultZeroExitFee,
 			}, []balancer.PoolAsset{{
-				Weight: sdk.NewInt(0),
-				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+				Weight: osmomath.NewInt(0),
+				Token:  sdk.NewCoin("foo", osmomath.NewInt(10000)),
 			}, {
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin("bar", osmomath.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
 		}, {
 			name: "create the pool with negative weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
+				SwapFee: osmomath.NewDecWithPrec(1, 2),
 				ExitFee: defaultZeroExitFee,
 			}, []balancer.PoolAsset{{
-				Weight: sdk.NewInt(-1),
-				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+				Weight: osmomath.NewInt(-1),
+				Token:  sdk.NewCoin("foo", osmomath.NewInt(10000)),
 			}, {
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin("bar", osmomath.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
 		}, {
 			name: "create the pool with 0 balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
+				SwapFee: osmomath.NewDecWithPrec(1, 2),
 				ExitFee: defaultZeroExitFee,
 			}, []balancer.PoolAsset{{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("foo", sdk.NewInt(0)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin("foo", osmomath.NewInt(0)),
 			}, {
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin("bar", osmomath.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
 		}, {
 			name: "create the pool with negative balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
+				SwapFee: osmomath.NewDecWithPrec(1, 2),
 				ExitFee: defaultZeroExitFee,
 			}, []balancer.PoolAsset{{
-				Weight: sdk.NewInt(100),
+				Weight: osmomath.NewInt(100),
 				Token: sdk.Coin{
 					Denom:  "foo",
-					Amount: sdk.NewInt(-1),
+					Amount: osmomath.NewInt(-1),
 				},
 			}, {
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin("bar", osmomath.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
 		}, {
 			name: "create the pool with duplicated PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
+				SwapFee: osmomath.NewDecWithPrec(1, 2),
 				ExitFee: defaultZeroExitFee,
 			}, []balancer.PoolAsset{{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin("foo", osmomath.NewInt(10000)),
 			}, {
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin("foo", osmomath.NewInt(10000)),
 			}}, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
@@ -295,7 +296,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 					defaultPoolId,
 					balancer.PoolParams{
 						SwapFee: defaultSpreadFactor,
-						ExitFee: sdk.NewDecWithPrec(5, 1),
+						ExitFee: osmomath.NewDecWithPrec(5, 1),
 					},
 					defaultPoolAssets,
 					"",
@@ -401,16 +402,16 @@ func (s *KeeperTestSuite) TestSpotPriceOverflow() {
 		panics          bool
 	}{
 		"uniV2marginalOverflow": {
-			poolLiquidity: sdk.NewCoins(sdk.NewCoin(denomA, types.MaxSpotPrice.TruncateInt().Add(sdk.OneInt())),
-				sdk.NewCoin(denomB, sdk.OneInt())),
+			poolLiquidity: sdk.NewCoins(sdk.NewCoin(denomA, types.MaxSpotPrice.TruncateInt().Add(osmomath.OneInt())),
+				sdk.NewCoin(denomB, osmomath.OneInt())),
 			poolWeights:     []int64{1, 1},
 			quoteAssetDenom: denomA,
 			baseAssetDenom:  denomB,
 			overflows:       true,
 		},
 		"uniV2 internal error": {
-			poolLiquidity: sdk.NewCoins(sdk.NewCoin(denomA, sdk.NewDec(2).Power(250).TruncateInt()),
-				sdk.NewCoin(denomB, sdk.OneInt())),
+			poolLiquidity: sdk.NewCoins(sdk.NewCoin(denomA, osmomath.NewDec(2).Power(250).TruncateInt()),
+				sdk.NewCoin(denomB, osmomath.OneInt())),
 			poolWeights:     []int64{1, 1 << 19},
 			quoteAssetDenom: denomB,
 			baseAssetDenom:  denomA,
@@ -423,7 +424,7 @@ func (s *KeeperTestSuite) TestSpotPriceOverflow() {
 			poolId := s.PrepareBalancerPoolWithCoinsAndWeights(tc.poolLiquidity, tc.poolWeights)
 			pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
 			s.Require().NoError(err)
-			var poolSpotPrice sdk.Dec
+			var poolSpotPrice osmomath.Dec
 			var poolErr error
 			osmoassert.ConditionalPanic(s.T(), tc.panics, func() {
 				poolSpotPrice, poolErr = pool.SpotPrice(s.Ctx, tc.baseAssetDenom, tc.quoteAssetDenom)
@@ -437,7 +438,7 @@ func (s *KeeperTestSuite) TestSpotPriceOverflow() {
 			} else if tc.panics {
 				s.Require().ErrorIs(keeperErr, types.ErrSpotPriceInternal)
 				s.Require().Error(keeperErr)
-				s.Require().Equal(sdk.Dec{}, keeperSpotPrice)
+				s.Require().Equal(osmomath.Dec{}, keeperSpotPrice)
 			} else {
 				s.Require().NoError(poolErr)
 				s.Require().NoError(keeperErr)
@@ -449,11 +450,11 @@ func (s *KeeperTestSuite) TestSpotPriceOverflow() {
 
 // TODO: Add more edge cases around TokenInMaxs not containing every token in pool.
 func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
-	fiveKFooAndBar := sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(5000)), sdk.NewCoin("foo", sdk.NewInt(5000)))
+	fiveKFooAndBar := sdk.NewCoins(sdk.NewCoin("bar", osmomath.NewInt(5000)), sdk.NewCoin("foo", osmomath.NewInt(5000)))
 	tests := []struct {
 		name            string
 		txSender        sdk.AccAddress
-		sharesRequested sdk.Int
+		sharesRequested osmomath.Int
 		tokenInMaxs     sdk.Coins
 		expectPass      bool
 	}{
@@ -467,23 +468,23 @@ func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 		{
 			name:            "join no swap with zero shares requested",
 			txSender:        s.TestAccs[1],
-			sharesRequested: sdk.NewInt(0),
+			sharesRequested: osmomath.NewInt(0),
 			tokenInMaxs:     sdk.Coins{},
 			expectPass:      false,
 		},
 		{
 			name:            "join no swap with negative shares requested",
 			txSender:        s.TestAccs[1],
-			sharesRequested: sdk.NewInt(-1),
+			sharesRequested: osmomath.NewInt(-1),
 			tokenInMaxs:     sdk.Coins{},
 			expectPass:      false,
 		},
 		{
 			name:            "join no swap with insufficient funds",
 			txSender:        s.TestAccs[1],
-			sharesRequested: sdk.NewInt(-1),
+			sharesRequested: osmomath.NewInt(-1),
 			tokenInMaxs: sdk.Coins{
-				sdk.NewCoin("bar", sdk.NewInt(4999)), sdk.NewCoin("foo", sdk.NewInt(4999)),
+				sdk.NewCoin("bar", osmomath.NewInt(4999)), sdk.NewCoin("foo", osmomath.NewInt(4999)),
 			},
 			expectPass: false,
 		},
@@ -501,7 +502,7 @@ func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 			txSender:        s.TestAccs[1],
 			sharesRequested: types.OneShare.MulRaw(50),
 			tokenInMaxs: sdk.Coins{
-				fiveKFooAndBar[0], fiveKFooAndBar[1], sdk.NewCoin("baz", sdk.NewInt(5000)),
+				fiveKFooAndBar[0], fiveKFooAndBar[1], sdk.NewCoin("baz", osmomath.NewInt(5000)),
 			},
 			expectPass: false,
 		},
@@ -530,7 +531,7 @@ func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 
 		// Create the pool at first
 		msg := balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
-			SwapFee: sdk.NewDecWithPrec(1, 2),
+			SwapFee: osmomath.NewDecWithPrec(1, 2),
 			ExitFee: defaultZeroExitFee,
 		}, defaultPoolAssets, defaultFutureGovernor)
 		poolId, err := poolmanagerKeeper.CreatePool(s.Ctx, msg)
@@ -565,11 +566,11 @@ func (s *KeeperTestSuite) TestJoinPoolNoSwap() {
 }
 
 func (s *KeeperTestSuite) TestExitPool() {
-	fiveKFooAndBar := sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(5000)), sdk.NewCoin("foo", sdk.NewInt(5000)))
+	fiveKFooAndBar := sdk.NewCoins(sdk.NewCoin("bar", osmomath.NewInt(5000)), sdk.NewCoin("foo", osmomath.NewInt(5000)))
 	tests := []struct {
 		name         string
 		txSender     sdk.AccAddress
-		sharesIn     sdk.Int
+		sharesIn     osmomath.Int
 		tokenOutMins sdk.Coins
 		emptySender  bool
 		expectPass   bool
@@ -593,7 +594,7 @@ func (s *KeeperTestSuite) TestExitPool() {
 		{
 			name:         "attempt exit pool requesting 0 share amount",
 			txSender:     s.TestAccs[0],
-			sharesIn:     sdk.NewInt(0),
+			sharesIn:     osmomath.NewInt(0),
 			tokenOutMins: sdk.Coins{},
 			emptySender:  false,
 			expectPass:   false,
@@ -601,7 +602,7 @@ func (s *KeeperTestSuite) TestExitPool() {
 		{
 			name:         "attempt exit pool requesting negative share amount",
 			txSender:     s.TestAccs[0],
-			sharesIn:     sdk.NewInt(-1),
+			sharesIn:     osmomath.NewInt(-1),
 			tokenOutMins: sdk.Coins{},
 			emptySender:  false,
 			expectPass:   false,
@@ -611,7 +612,7 @@ func (s *KeeperTestSuite) TestExitPool() {
 			txSender: s.TestAccs[0],
 			sharesIn: types.OneShare.MulRaw(50),
 			tokenOutMins: sdk.Coins{
-				sdk.NewCoin("foo", sdk.NewInt(5001)),
+				sdk.NewCoin("foo", osmomath.NewInt(5001)),
 			},
 			emptySender: false,
 			expectPass:  false,
@@ -642,8 +643,8 @@ func (s *KeeperTestSuite) TestExitPool() {
 
 			// Create the pool at first
 			msg := balancer.NewMsgCreateBalancerPool(test.txSender, balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDec(0),
+				SwapFee: osmomath.NewDecWithPrec(1, 2),
+				ExitFee: osmomath.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
 			poolId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 			s.Require().NoError(err)
@@ -685,21 +686,21 @@ func (s *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 	testCases := []struct {
 		name             string
 		pool             balancer.MsgCreateBalancerPool
-		joinPoolShareAmt sdk.Int
+		joinPoolShareAmt osmomath.Int
 	}{
 		{
 			name: "pool with same token ratio",
 			pool: balancer.NewMsgCreateBalancerPool(nil, balancer.PoolParams{
-				SwapFee: sdk.ZeroDec(),
-				ExitFee: sdk.ZeroDec(),
+				SwapFee: osmomath.ZeroDec(),
+				ExitFee: osmomath.ZeroDec(),
 			}, []balancer.PoolAsset{
 				{
-					Weight: sdk.NewInt(100),
-					Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+					Weight: osmomath.NewInt(100),
+					Token:  sdk.NewCoin("foo", osmomath.NewInt(10000)),
 				},
 				{
-					Weight: sdk.NewInt(100),
-					Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+					Weight: osmomath.NewInt(100),
+					Token:  sdk.NewCoin("bar", osmomath.NewInt(10000)),
 				},
 			}, defaultFutureGovernor),
 			joinPoolShareAmt: types.OneShare.MulRaw(50),
@@ -707,16 +708,16 @@ func (s *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 		{
 			name: "pool with different token ratio",
 			pool: balancer.NewMsgCreateBalancerPool(nil, balancer.PoolParams{
-				SwapFee: sdk.ZeroDec(),
-				ExitFee: sdk.ZeroDec(),
+				SwapFee: osmomath.ZeroDec(),
+				ExitFee: osmomath.ZeroDec(),
 			}, []balancer.PoolAsset{
 				{
-					Weight: sdk.NewInt(100),
-					Token:  sdk.NewCoin("foo", sdk.NewInt(7000)),
+					Weight: osmomath.NewInt(100),
+					Token:  sdk.NewCoin("foo", osmomath.NewInt(7000)),
 				},
 				{
-					Weight: sdk.NewInt(100),
-					Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+					Weight: osmomath.NewInt(100),
+					Token:  sdk.NewCoin("bar", osmomath.NewInt(10000)),
 				},
 			}, defaultFutureGovernor),
 			joinPoolShareAmt: types.OneShare.MulRaw(50),
@@ -761,7 +762,7 @@ func (s *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 
 			// due to rounding, `balanceBeforeJoin` and `balanceAfterExit` have neglectable difference
 			// coming from rounding in exitPool.Here we test if the difference is within rounding tolerance range
-			roundingToleranceCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1)), sdk.NewCoin("bar", sdk.NewInt(1)))
+			roundingToleranceCoins := sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(1)), sdk.NewCoin("bar", osmomath.NewInt(1)))
 			s.Require().True(deltaBalance.AmountOf("foo").LTE(roundingToleranceCoins.AmountOf("foo")))
 			s.Require().True(deltaBalance.AmountOf("bar").LTE(roundingToleranceCoins.AmountOf("bar")))
 		})
@@ -790,8 +791,8 @@ func (s *KeeperTestSuite) TestActiveBalancerPool() {
 
 			// Create the pool at first
 			poolId := s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: sdk.NewDec(0),
-				ExitFee: sdk.NewDec(0),
+				SwapFee: osmomath.NewDec(0),
+				ExitFee: osmomath.NewDec(0),
 			})
 			ctx = ctx.WithBlockTime(tc.blockTime)
 
@@ -806,25 +807,25 @@ func (s *KeeperTestSuite) TestActiveBalancerPool() {
 
 			s.AssertEventEmitted(ctx, types.TypeEvtPoolExited, 1)
 
-			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
+			foocoin := sdk.NewCoin("foo", osmomath.NewInt(10))
 			foocoins := sdk.Coins{foocoin}
 
 			if tc.expectPass {
-				_, err = gammKeeper.JoinSwapExactAmountIn(ctx, testAccount, poolId, foocoins, sdk.ZeroInt())
+				_, err = gammKeeper.JoinSwapExactAmountIn(ctx, testAccount, poolId, foocoins, osmomath.ZeroInt())
 				s.Require().NoError(err)
-				_, err = gammKeeper.JoinSwapShareAmountOut(ctx, testAccount, poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
+				_, err = gammKeeper.JoinSwapShareAmountOut(ctx, testAccount, poolId, "foo", types.OneShare.MulRaw(10), osmomath.NewInt(1000000000000000000))
 				s.Require().NoError(err)
-				_, err = gammKeeper.ExitSwapShareAmountIn(ctx, testAccount, poolId, "foo", types.OneShare.MulRaw(10), sdk.ZeroInt())
+				_, err = gammKeeper.ExitSwapShareAmountIn(ctx, testAccount, poolId, "foo", types.OneShare.MulRaw(10), osmomath.ZeroInt())
 				s.Require().NoError(err)
-				_, err = gammKeeper.ExitSwapExactAmountOut(ctx, testAccount, poolId, foocoin, sdk.NewInt(1000000000000000000))
+				_, err = gammKeeper.ExitSwapExactAmountOut(ctx, testAccount, poolId, foocoin, osmomath.NewInt(1000000000000000000))
 				s.Require().NoError(err)
 			} else {
 				s.Require().Error(err)
-				_, err = gammKeeper.JoinSwapShareAmountOut(ctx, testAccount, poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
+				_, err = gammKeeper.JoinSwapShareAmountOut(ctx, testAccount, poolId, "foo", types.OneShare.MulRaw(10), osmomath.NewInt(1000000000000000000))
 				s.Require().Error(err)
-				_, err = gammKeeper.ExitSwapShareAmountIn(ctx, testAccount, poolId, "foo", types.OneShare.MulRaw(10), sdk.ZeroInt())
+				_, err = gammKeeper.ExitSwapShareAmountIn(ctx, testAccount, poolId, "foo", types.OneShare.MulRaw(10), osmomath.ZeroInt())
 				s.Require().Error(err)
-				_, err = gammKeeper.ExitSwapExactAmountOut(ctx, testAccount, poolId, foocoin, sdk.NewInt(1000000000000000000))
+				_, err = gammKeeper.ExitSwapExactAmountOut(ctx, testAccount, poolId, foocoin, osmomath.NewInt(1000000000000000000))
 				s.Require().Error(err)
 			}
 		})
@@ -834,21 +835,21 @@ func (s *KeeperTestSuite) TestActiveBalancerPool() {
 func (s *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 	testCases := []struct {
 		name              string
-		poolSpreadFactor  sdk.Dec
-		poolExitFee       sdk.Dec
+		poolSpreadFactor  osmomath.Dec
+		poolExitFee       osmomath.Dec
 		tokensIn          sdk.Coins
-		shareOutMinAmount sdk.Int
-		expectedSharesOut sdk.Int
-		tokenOutMinAmount sdk.Int
+		shareOutMinAmount osmomath.Int
+		expectedSharesOut osmomath.Int
+		tokenOutMinAmount osmomath.Int
 	}{
 		{
 			name:              "single coin with zero swap and exit fees",
-			poolSpreadFactor:  sdk.ZeroDec(),
-			poolExitFee:       sdk.ZeroDec(),
-			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
-			shareOutMinAmount: sdk.ZeroInt(),
-			expectedSharesOut: sdk.NewInt(6265857020099440400),
-			tokenOutMinAmount: sdk.ZeroInt(),
+			poolSpreadFactor:  osmomath.ZeroDec(),
+			poolExitFee:       osmomath.ZeroDec(),
+			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(1000000))),
+			shareOutMinAmount: osmomath.ZeroInt(),
+			expectedSharesOut: osmomath.NewInt(6265857020099440400),
+			tokenOutMinAmount: osmomath.ZeroInt(),
 		},
 		// TODO: Uncomment or remove this following test case once the referenced
 		// issue is resolved.
@@ -856,12 +857,12 @@ func (s *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 		// Ref: https://github.com/osmosis-labs/osmosis/issues/1196
 		// {
 		// 	name:              "single coin with positive spread factor and zero exit fee",
-		// 	poolSpreadFactor:       sdk.NewDecWithPrec(1, 2),
-		// 	poolExitFee:       sdk.ZeroDec(),
-		// 	tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
-		// 	shareOutMinAmount: sdk.ZeroInt(),
-		// 	expectedSharesOut: sdk.NewInt(6226484702880621000),
-		// 	tokenOutMinAmount: sdk.ZeroInt(),
+		// 	poolSpreadFactor:       osmomath.NewDecWithPrec(1, 2),
+		// 	poolExitFee:       osmomath.ZeroDec(),
+		// 	tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(1000000))),
+		// 	shareOutMinAmount: osmomath.ZeroInt(),
+		// 	expectedSharesOut: osmomath.NewInt(6226484702880621000),
+		// 	tokenOutMinAmount: osmomath.ZeroInt(),
 		// },
 	}
 
@@ -878,12 +879,12 @@ func (s *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 				defaultAcctFunds,
 				[]balancer.PoolAsset{
 					{
-						Weight: sdk.NewInt(100),
-						Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+						Weight: osmomath.NewInt(100),
+						Token:  sdk.NewCoin("foo", osmomath.NewInt(5000000)),
 					},
 					{
-						Weight: sdk.NewInt(200),
-						Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+						Weight: osmomath.NewInt(200),
+						Token:  sdk.NewCoin("bar", osmomath.NewInt(5000000)),
 					},
 				},
 				balancer.PoolParams{
@@ -907,13 +908,13 @@ func (s *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			s.Require().NoError(err)
 
 			// require swapTokenOutAmt <= (tokenInAmt * (1 - tc.poolSpreadFactor))
-			oneMinusSwapFee := sdk.OneDec().Sub(tc.poolSpreadFactor)
+			oneMinusSwapFee := osmomath.OneDec().Sub(tc.poolSpreadFactor)
 			spreadFactorAdjustedAmount := oneMinusSwapFee.MulInt(tc.tokensIn[0].Amount).RoundInt()
 			s.Require().True(tokenOutAmt.LTE(spreadFactorAdjustedAmount))
 
 			// require swapTokenOutAmt + 10 > input
 			s.Require().True(
-				spreadFactorAdjustedAmount.Sub(tokenOutAmt).LTE(sdk.NewInt(10)),
+				spreadFactorAdjustedAmount.Sub(tokenOutAmt).LTE(osmomath.NewInt(10)),
 				"expected out amount %s, actual out amount %s",
 				spreadFactorAdjustedAmount, tokenOutAmt,
 			)

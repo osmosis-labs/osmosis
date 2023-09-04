@@ -7,5 +7,5 @@ type DecNotFoundError struct {
 }
 
 func (e DecNotFoundError) Error() string {
-	return fmt.Sprintf("no sdk.Dec at key (%s)", e.Key)
+	return fmt.Sprintf("no osmomath.Dec at key (%s)", e.Key)
 }

@@ -3,9 +3,9 @@ package model_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 )
 
@@ -29,7 +29,7 @@ func (s *CosmWasmPoolSuite) SetupTest() {
 // TestGetSpreadFactor validates that spread factor is set to zero.
 func (s *CosmWasmPoolSuite) TestGetSpreadFactor() {
 	var (
-		expectedSwapFee = sdk.ZeroDec()
+		expectedSwapFee = osmomath.ZeroDec()
 	)
 
 	pool := s.PrepareCosmWasmPool()
@@ -42,7 +42,7 @@ func (s *CosmWasmPoolSuite) TestGetSpreadFactor() {
 // TestSpotPrice validates that spot price is returned as one.
 func (s *CosmWasmPoolSuite) TestSpotPrice() {
 	var (
-		expectedSpotPrice = sdk.OneDec()
+		expectedSpotPrice = osmomath.OneDec()
 	)
 
 	pool := s.PrepareCosmWasmPool()

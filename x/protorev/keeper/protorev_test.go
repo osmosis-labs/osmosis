@@ -3,12 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
-)
-
-const (
-	atomDenom = "Atom"
-	wethDenom = "weth"
 )
 
 // TestGetTokenPairArbRoutes tests the GetTokenPairArbRoutes function.
@@ -67,7 +63,7 @@ func (s *KeeperTestSuite) TestGetAllBaseDenoms() {
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(baseDenoms))
 	s.Require().Equal(baseDenoms[0].Denom, types.OsmosisDenomination)
-	s.Require().Equal(baseDenoms[1].Denom, atomDenom)
+	s.Require().Equal(baseDenoms[1].Denom, "Atom")
 	s.Require().Equal(baseDenoms[2].Denom, "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7")
 
 	// Should be able to delete all base denoms
@@ -77,78 +73,46 @@ func (s *KeeperTestSuite) TestGetAllBaseDenoms() {
 	s.Require().Equal(0, len(baseDenoms))
 
 	// Should be able to set the base denoms
-	err = s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, []types.BaseDenom{{Denom: "osmo"}, {Denom: atomDenom}, {Denom: wethDenom}})
+	err = s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, []types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
 	s.Require().NoError(err)
 	baseDenoms, err = s.App.ProtoRevKeeper.GetAllBaseDenoms(s.Ctx)
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(baseDenoms))
 	s.Require().Equal(baseDenoms[0].Denom, "osmo")
-	s.Require().Equal(baseDenoms[1].Denom, atomDenom)
-	s.Require().Equal(baseDenoms[2].Denom, wethDenom)
+	s.Require().Equal(baseDenoms[1].Denom, "atom")
+	s.Require().Equal(baseDenoms[2].Denom, "weth")
 }
 
-// runGetPoolForDenomPairTest runs the basic suite of tests shared between GetPoolForDenomPair and GetPoolForDenomPairNoOrder
-func (s *KeeperTestSuite) runGetPoolForDenomPairTest(systemUnderTest func(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error), isNoOrder bool) {
+// TestGetPoolForDenomPair tests the GetPoolForDenomPair, SetPoolForDenomPair, and DeleteAllPoolsForBaseDenom functions.
+func (s *KeeperTestSuite) TestGetPoolForDenomPair() {
 	// Should be able to set a pool for a denom pair
-	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, atomDenom, types.OsmosisDenomination, 1000)
-	pool, err := systemUnderTest(s.Ctx, atomDenom, types.OsmosisDenomination)
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, "Atom", types.OsmosisDenomination, 1000)
+	pool, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "Atom", types.OsmosisDenomination)
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(1000), pool)
 
 	// Should be able to add another pool for a denom pair
-	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, atomDenom, wethDenom, 2000)
-	pool, err = systemUnderTest(s.Ctx, atomDenom, wethDenom)
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, "Atom", "weth", 2000)
+	pool, err = s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "Atom", "weth")
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(2000), pool)
 
-	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, atomDenom, 3000)
-	pool, err = systemUnderTest(s.Ctx, types.OsmosisDenomination, atomDenom)
+	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, "Atom", 3000)
+	pool, err = s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, "Atom")
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(3000), pool)
 
 	// Should be able to delete all pools for a base denom
-	s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, atomDenom)
-	_, err = systemUnderTest(s.Ctx, atomDenom, types.OsmosisDenomination)
-	// Note that if this is a no order variant, then there is still a reversed index present so no error is expected.
-	s.Require().True(isNoOrder && err == nil || !isNoOrder && err != nil)
-
-	_, err = systemUnderTest(s.Ctx, atomDenom, wethDenom)
+	s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "Atom")
+	_, err = s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "Atom", types.OsmosisDenomination)
+	s.Require().Error(err)
+	_, err = s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "Atom", "weth")
 	s.Require().Error(err)
 
 	// Other denoms should still exist
-	pool, err = systemUnderTest(s.Ctx, types.OsmosisDenomination, atomDenom)
+	pool, err = s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, types.OsmosisDenomination, "Atom")
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(3000), pool)
-}
-
-// TestGetPoolForDenomPair tests the GetPoolForDenomPair, SetPoolForDenomPair, and DeleteAllPoolsForBaseDenom functions.
-// It tests that this method is denom order dependent. That is if set A-B but try to get B-A, an error is returned.
-func (s *KeeperTestSuite) TestGetPoolForDenomPair() {
-	s.runGetPoolForDenomPairTest(s.App.ProtoRevKeeper.GetPoolForDenomPair, false)
-
-	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, atomDenom, wethDenom, 1000)
-
-	// Different order from what set should return an error
-	poolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, wethDenom, atomDenom)
-	s.Require().Error(err)
-	s.Require().Equal(uint64(0), poolId)
-
-	s.Require().ErrorIs(err, types.NoPoolForDenomPairError{BaseDenom: wethDenom, MatchDenom: atomDenom})
-}
-
-// tests that the GetPoolForDenomPairNoOrder returns the pool id as long as it exists in any order
-// of denoms (not base-quote order dependent). That is if set A-B but try to get B-A, the pool id is returned correctly.
-func (s *KeeperTestSuite) TestGetPoolForDenomPairNoOrder() {
-	s.runGetPoolForDenomPairTest(s.App.ProtoRevKeeper.GetPoolForDenomPairNoOrder, true)
-
-	expectedPoolId := uint64(1000)
-
-	s.App.ProtoRevKeeper.SetPoolForDenomPair(s.Ctx, atomDenom, wethDenom, expectedPoolId)
-
-	// Different order from what set should NOT return an error
-	poolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPairNoOrder(s.Ctx, wethDenom, atomDenom)
-	s.Require().NoError(err)
-	s.Require().Equal(expectedPoolId, poolId)
 }
 
 // TestGetDaysSinceModuleGenesis tests the GetDaysSinceModuleGenesis and SetDaysSinceModuleGenesis functions.
@@ -178,28 +142,28 @@ func (s *KeeperTestSuite) TestGetDeveloperFees() {
 	s.Require().Equal(sdk.Coin{}, osmoFees)
 
 	// Should be no atom fees on genesis
-	atomFees, err := s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, atomDenom)
+	atomFees, err := s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, "Atom")
 	s.Require().Error(err)
 	s.Require().Equal(sdk.Coin{}, atomFees)
 
 	// Should be able to set the fees
-	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
+	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)))
 	s.Require().NoError(err)
-	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(atomDenom, sdk.NewInt(100)))
+	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin("Atom", osmomath.NewInt(100)))
 	s.Require().NoError(err)
-	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(wethDenom, sdk.NewInt(100)))
+	err = s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin("weth", osmomath.NewInt(100)))
 	s.Require().NoError(err)
 
 	// Should be able to get the fees
 	osmoFees, err = s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, types.OsmosisDenomination)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)), osmoFees)
-	atomFees, err = s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, atomDenom)
+	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)), osmoFees)
+	atomFees, err = s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, "Atom")
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin(atomDenom, sdk.NewInt(100)), atomFees)
-	wethFees, err := s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, wethDenom)
+	s.Require().Equal(sdk.NewCoin("Atom", osmomath.NewInt(100)), atomFees)
+	wethFees, err := s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, "weth")
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin(wethDenom, sdk.NewInt(100)), wethFees)
+	s.Require().Equal(sdk.NewCoin("weth", osmomath.NewInt(100)), wethFees)
 
 	fees, err = s.App.ProtoRevKeeper.GetAllDeveloperFees(s.Ctx)
 	s.Require().NoError(err)
@@ -210,13 +174,13 @@ func (s *KeeperTestSuite) TestGetDeveloperFees() {
 
 // TestDeleteDeveloperFees tests the DeleteDeveloperFees function.
 func (s *KeeperTestSuite) TestDeleteDeveloperFees() {
-	err := s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
+	err := s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)))
 	s.Require().NoError(err)
 
 	// Should be able to get the fees
 	osmoFees, err := s.App.ProtoRevKeeper.GetDeveloperFees(s.Ctx, types.OsmosisDenomination)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)), osmoFees)
+	s.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(100)), osmoFees)
 
 	// Should be able to delete the fees
 	s.App.ProtoRevKeeper.DeleteDeveloperFees(s.Ctx, types.OsmosisDenomination)

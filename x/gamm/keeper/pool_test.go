@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
@@ -17,8 +18,8 @@ import (
 
 var (
 	defaultPoolParamsStableSwap = stableswap.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.ZeroDec(),
+		SwapFee: osmomath.NewDecWithPrec(1, 2),
+		ExitFee: osmomath.ZeroDec(),
 	}
 	defaultPoolId = uint64(1)
 )
@@ -41,10 +42,10 @@ var (
 // 			s.Ctx,
 // 			acc,
 // 			sdk.NewCoins(
-// 				sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
-// 				sdk.NewCoin("foo", sdk.NewInt(1000)),
-// 				sdk.NewCoin("bar", sdk.NewInt(1000)),
-// 				sdk.NewCoin("baz", sdk.NewInt(1000)),
+// 				sdk.NewCoin("uosmo", osmomath.NewInt(1000000000)),
+// 				sdk.NewCoin("foo", osmomath.NewInt(1000)),
+// 				sdk.NewCoin("bar", osmomath.NewInt(1000)),
+// 				sdk.NewCoin("baz", osmomath.NewInt(1000)),
 // 			),
 // 		)
 // 		if err != nil {
@@ -54,25 +55,25 @@ var (
 
 // 	poolId, err := s.App.GAMMKeeper.CreateBalancerPool(s.Ctx, acc1, defaultPoolParams, []types.PoolAsset{
 // 		{
-// 			Weight: sdk.NewInt(100),
-// 			Token:  sdk.NewCoin("foo", sdk.NewInt(1000)),
+// 			Weight: osmomath.NewInt(100),
+// 			Token:  sdk.NewCoin("foo", osmomath.NewInt(1000)),
 // 		},
 // 		{
-// 			Weight: sdk.NewInt(100),
-// 			Token:  sdk.NewCoin("bar", sdk.NewInt(1000)),
+// 			Weight: osmomath.NewInt(100),
+// 			Token:  sdk.NewCoin("bar", osmomath.NewInt(1000)),
 // 		},
 // 		{
-// 			Weight: sdk.NewInt(100),
-// 			Token:  sdk.NewCoin("baz", sdk.NewInt(1000)),
+// 			Weight: osmomath.NewInt(100),
+// 			Token:  sdk.NewCoin("baz", osmomath.NewInt(1000)),
 // 		},
 // 	}, "")
 // 	s.NoError(err)
 
 // 	for _, acc := range []sdk.AccAddress{acc2, acc3} {
 // 		err = s.App.GAMMKeeper.JoinPool(s.Ctx, acc, poolId, types.OneShare.MulRaw(100), sdk.NewCoins(
-// 			sdk.NewCoin("foo", sdk.NewInt(1000)),
-// 			sdk.NewCoin("bar", sdk.NewInt(1000)),
-// 			sdk.NewCoin("baz", sdk.NewInt(1000)),
+// 			sdk.NewCoin("foo", osmomath.NewInt(1000)),
+// 			sdk.NewCoin("bar", osmomath.NewInt(1000)),
+// 			sdk.NewCoin("baz", osmomath.NewInt(1000)),
 // 		))
 // 		s.NoError(err)
 // 	}
@@ -80,7 +81,7 @@ var (
 // 	pool, err := s.App.GAMMKeeper.GetPool(s.Ctx, poolId)
 // 	s.NoError(err)
 // 	denom := pool.GetTotalShares().Denom
-// 	totalAmount := sdk.ZeroInt()
+// 	totalAmount := osmomath.ZeroInt()
 // 	for _, acc := range s.TestAccs {
 // 		coin := s.App.BankKeeper.GetBalance(s.Ctx, acc, denom)
 // 		s.True(coin.Amount.Equal(types.OneShare.MulRaw(100)))
@@ -93,7 +94,7 @@ var (
 // 	for _, acc := range s.TestAccs {
 // 		for _, denom := range []string{"foo", "bar", "baz"} {
 // 			amt := s.App.BankKeeper.GetBalance(s.Ctx, acc, denom)
-// 			s.True(amt.Amount.Equal(sdk.NewInt(1000)),
+// 			s.True(amt.Amount.Equal(osmomath.NewInt(1000)),
 // 				"Expected equal %s: %d, %d", amt.Denom, amt.Amount.Int64(), 1000)
 // 		}
 // 	}
@@ -108,7 +109,7 @@ var (
 // 	for _, acc := range s.TestAccs {
 // 		coins := make(sdk.Coins, 3)
 // 		for i := range coins {
-// 			amount := sdk.NewInt(rand.Int63n(1000))
+// 			amount := osmomath.NewInt(rand.Int63n(1000))
 // 			// give large amount of coins to the pool creator
 // 			if i == 0 {
 // 				amount = amount.MulRaw(10000)
@@ -116,7 +117,7 @@ var (
 // 			coins[i] = sdk.Coin{denoms[i], amount}
 // 		}
 // 		coinOf[acc.String()] = coins
-// 		coins = append(coins, sdk.NewCoin("uosmo", sdk.NewInt(1000000000)))
+// 		coins = append(coins, sdk.NewCoin("uosmo", osmomath.NewInt(1000000000)))
 
 // 		s.FundAcc(
 // 			s.App.BankKeeper,
@@ -147,7 +148,7 @@ var (
 // 		for _, coin := range coinOf[acc.String()] {
 // 			amt := s.App.BankKeeper.GetBalance(s.Ctx, acc, coin.Denom)
 // 			// the refund could have rounding error
-// 			s.True(amt.Amount.Sub(coin.Amount).Abs().LTE(sdk.NewInt(2)),
+// 			s.True(amt.Amount.Sub(coin.Amount).Abs().LTE(osmomath.NewInt(2)),
 // 				"Expected equal %s: %d, %d", amt.Denom, amt.Amount.Int64(), coin.Amount.Int64())
 // 		}
 // 	}
@@ -160,10 +161,10 @@ var (
 // 		s.Ctx,
 // 		acc1,
 // 		sdk.NewCoins(
-// 			sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
-// 			sdk.NewCoin("foo", sdk.NewInt(1000)),
-// 			sdk.NewCoin("bar", sdk.NewInt(1000)),
-// 			sdk.NewCoin("baz", sdk.NewInt(1000)),
+// 			sdk.NewCoin("uosmo", osmomath.NewInt(1000000000)),
+// 			sdk.NewCoin("foo", osmomath.NewInt(1000)),
+// 			sdk.NewCoin("bar", osmomath.NewInt(1000)),
+// 			sdk.NewCoin("baz", osmomath.NewInt(1000)),
 // 		),
 // 	)
 // 	if err != nil {
@@ -172,16 +173,16 @@ var (
 
 // 	poolId, err := s.App.GAMMKeeper.CreateBalancerPool(s.Ctx, acc1, defaultPoolParams, []types.PoolAsset{
 // 		{
-// 			Weight: sdk.NewInt(100),
-// 			Token:  sdk.NewCoin("foo", sdk.NewInt(1000)),
+// 			Weight: osmomath.NewInt(100),
+// 			Token:  sdk.NewCoin("foo", osmomath.NewInt(1000)),
 // 		},
 // 		{
-// 			Weight: sdk.NewInt(100),
-// 			Token:  sdk.NewCoin("bar", sdk.NewInt(1000)),
+// 			Weight: osmomath.NewInt(100),
+// 			Token:  sdk.NewCoin("bar", osmomath.NewInt(1000)),
 // 		},
 // 		{
-// 			Weight: sdk.NewInt(100),
-// 			Token:  sdk.NewCoin("baz", sdk.NewInt(1000)),
+// 			Weight: osmomath.NewInt(100),
+// 			Token:  sdk.NewCoin("baz", osmomath.NewInt(1000)),
 // 		},
 // 	}, "")
 // 	s.NoError(err)
@@ -189,7 +190,7 @@ var (
 // 	err = s.App.GAMMKeeper.CleanupBalancerPool(s.Ctx, []uint64{poolId}, []string{})
 // 	s.NoError(err)
 
-// 	_, _, err = s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, acc1, poolId, sdk.NewCoin("foo", sdk.NewInt(1)), "bar", sdk.NewInt(1))
+// 	_, _, err = s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, acc1, poolId, sdk.NewCoin("foo", osmomath.NewInt(1)), "bar", osmomath.NewInt(1))
 // 	s.Error(err)
 // }
 
@@ -200,10 +201,10 @@ var (
 // 		s.Ctx,
 // 		acc1,
 // 		sdk.NewCoins(
-// 			sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
-// 			sdk.NewCoin("foo", sdk.NewInt(1000)),
-// 			sdk.NewCoin("bar", sdk.NewInt(1000)),
-// 			sdk.NewCoin("baz", sdk.NewInt(1000)),
+// 			sdk.NewCoin("uosmo", osmomath.NewInt(1000000000)),
+// 			sdk.NewCoin("foo", osmomath.NewInt(1000)),
+// 			sdk.NewCoin("bar", osmomath.NewInt(1000)),
+// 			sdk.NewCoin("baz", osmomath.NewInt(1000)),
 // 		),
 // 	)
 // 	if err != nil {
@@ -212,16 +213,16 @@ var (
 
 // 	poolId, err := s.App.GAMMKeeper.CreateBalancerPool(s.Ctx, acc1, defaultPoolParams, []types.PoolAsset{
 // 		{
-// 			Weight: sdk.NewInt(100),
-// 			Token:  sdk.NewCoin("foo", sdk.NewInt(1000)),
+// 			Weight: osmomath.NewInt(100),
+// 			Token:  sdk.NewCoin("foo", osmomath.NewInt(1000)),
 // 		},
 // 		{
-// 			Weight: sdk.NewInt(100),
-// 			Token:  sdk.NewCoin("bar", sdk.NewInt(1000)),
+// 			Weight: osmomath.NewInt(100),
+// 			Token:  sdk.NewCoin("bar", osmomath.NewInt(1000)),
 // 		},
 // 		{
-// 			Weight: sdk.NewInt(100),
-// 			Token:  sdk.NewCoin("baz", sdk.NewInt(1000)),
+// 			Weight: osmomath.NewInt(100),
+// 			Token:  sdk.NewCoin("baz", osmomath.NewInt(1000)),
 // 		},
 // 	}, "")
 // 	s.NoError(err)
@@ -239,8 +240,8 @@ var (
 // 	for _, coin := range []string{"foo", "bar", "baz"} {
 // 		amt := s.App.BankKeeper.GetBalance(s.Ctx, acc1, coin)
 // 		// the refund could have rounding error
-// 		s.True(amt.Amount.Equal(sdk.NewInt(1000)) || amt.Amount.Equal(sdk.NewInt(1000).SubRaw(1)),
-// 			"Expected equal %s: %d, %d", amt.Denom, amt.Amount.Int64(), sdk.NewInt(1000).Int64())
+// 		s.True(amt.Amount.Equal(osmomath.NewInt(1000)) || amt.Amount.Equal(osmomath.NewInt(1000).SubRaw(1)),
+// 			"Expected equal %s: %d, %d", amt.Denom, amt.Amount.Int64(), osmomath.NewInt(1000).Int64())
 // 	}
 // }
 
@@ -259,11 +260,11 @@ func (s *KeeperTestSuite) TestGetPoolAndPoke() {
 
 	startPoolWeightAssets := []balancer.PoolAsset{
 		{
-			Weight: defaultPoolAssets[0].Weight.Quo(sdk.NewInt(2)),
+			Weight: defaultPoolAssets[0].Weight.Quo(osmomath.NewInt(2)),
 			Token:  defaultPoolAssets[0].Token,
 		},
 		{
-			Weight: defaultPoolAssets[1].Weight.Mul(sdk.NewInt(3)),
+			Weight: defaultPoolAssets[1].Weight.Mul(osmomath.NewInt(3)),
 			Token:  defaultPoolAssets[1].Token,
 		},
 	}
@@ -598,7 +599,7 @@ func (s *KeeperTestSuite) TestSetStableSwapScalingFactorController() {
 func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 	tests := map[string]struct {
 		poolId              uint64
-		shareOutAmount      sdk.Int
+		shareOutAmount      osmomath.Int
 		expectedLpLiquidity sdk.Coins
 		err                 error
 	}{
@@ -607,7 +608,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 				SwapFee: defaultSpreadFactor,
 				ExitFee: defaultZeroExitFee,
 			}),
-			shareOutAmount: sdk.ZeroInt(),
+			shareOutAmount: osmomath.ZeroInt(),
 			err:            types.ErrInvalidMathApprox,
 		},
 
@@ -616,7 +617,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 				SwapFee: defaultSpreadFactor,
 				ExitFee: defaultZeroExitFee,
 			}),
-			shareOutAmount: sdk.NewInt(-1),
+			shareOutAmount: osmomath.NewInt(-1),
 			err:            types.ErrInvalidMathApprox,
 		},
 
@@ -632,7 +633,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 			// Amount of tokens in poolAssets:
 			// 		- defaultPoolAssets[1].Token.Amount: 10000
 			//  	- defaultPoolAssets[0].Token.Amount: 10000
-			shareOutAmount: sdk.NewInt(8_000_000_000_000_000_000),
+			shareOutAmount: osmomath.NewInt(8_000_000_000_000_000_000),
 			expectedLpLiquidity: sdk.Coins{
 				sdk.NewInt64Coin(defaultPoolAssets[1].Token.Denom, 800),
 				sdk.NewInt64Coin(defaultPoolAssets[0].Token.Denom, 800),
@@ -651,7 +652,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 			// Amount of tokens in poolAssets:
 			// 		- defaultPoolAssets[1].Token.Amount: 10000
 			//  	- defaultPoolAssets[0].Token.Amount: 10000
-			shareOutAmount: sdk.NewInt(8_888_000_000_000_000_000),
+			shareOutAmount: osmomath.NewInt(8_888_000_000_000_000_000),
 			expectedLpLiquidity: sdk.Coins{
 				sdk.NewInt64Coin(defaultPoolAssets[1].Token.Denom, 889),
 				sdk.NewInt64Coin(defaultPoolAssets[0].Token.Denom, 889),
@@ -668,7 +669,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),
-			shareOutAmount: sdk.ZeroInt(),
+			shareOutAmount: osmomath.ZeroInt(),
 			err:            types.ErrInvalidMathApprox,
 		},
 
@@ -682,7 +683,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),
-			shareOutAmount: sdk.ZeroInt(),
+			shareOutAmount: osmomath.ZeroInt(),
 			err:            types.ErrInvalidMathApprox,
 		},
 
@@ -696,7 +697,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),
-			shareOutAmount: sdk.NewInt(-1),
+			shareOutAmount: osmomath.NewInt(-1),
 			err:            types.ErrInvalidMathApprox,
 		},
 
@@ -710,7 +711,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),
-			shareOutAmount: sdk.NewInt(-1),
+			shareOutAmount: osmomath.NewInt(-1),
 			err:            types.ErrInvalidMathApprox,
 		},
 
@@ -724,7 +725,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),
-			shareOutAmount: sdk.NewInt(8_000_000_000_000_000_000),
+			shareOutAmount: osmomath.NewInt(8_000_000_000_000_000_000),
 			expectedLpLiquidity: sdk.Coins{
 				sdk.NewInt64Coin(defaultAcctFunds[1].Denom, 800000),
 				sdk.NewInt64Coin(defaultAcctFunds[2].Denom, 800000),
@@ -747,7 +748,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 			// Amount of tokens in liquidity:
 			// 		- defaultAcctFunds[1].Amount: 10000000
 			//  	- defaultAcctFunds[2].Amount: 10000000
-			shareOutAmount: sdk.NewInt(8_888_888_000_000_000_000),
+			shareOutAmount: osmomath.NewInt(8_888_888_000_000_000_000),
 			expectedLpLiquidity: sdk.Coins{
 				sdk.NewInt64Coin(defaultAcctFunds[1].Denom, 888889),
 				sdk.NewInt64Coin(defaultAcctFunds[2].Denom, 888889),
@@ -764,7 +765,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[2].Denom, defaultAcctFunds[2].Amount)),
 				[]uint64{1, 1},
 			),
-			shareOutAmount: sdk.NewInt(8_000_000_000_000_000_000),
+			shareOutAmount: osmomath.NewInt(8_000_000_000_000_000_000),
 			expectedLpLiquidity: sdk.Coins{
 				sdk.NewInt64Coin(defaultAcctFunds[1].Denom, 400000),
 				sdk.NewInt64Coin(defaultAcctFunds[2].Denom, 800000),
@@ -787,7 +788,7 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 			// Amount of tokens in liquidity:
 			// 		- defaultAcctFunds[1].Amount: 10000000
 			//  	- defaultAcctFunds[2].Amount: 5000000
-			shareOutAmount: sdk.NewInt(8_888_888_000_000_000_000),
+			shareOutAmount: osmomath.NewInt(8_888_888_000_000_000_000),
 			expectedLpLiquidity: sdk.Coins{
 				sdk.NewInt64Coin(defaultAcctFunds[1].Denom, 444445),
 				sdk.NewInt64Coin(defaultAcctFunds[2].Denom, 888889),
@@ -818,19 +819,19 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 
 func (suite *KeeperTestSuite) TestGetTotalPoolShares() {
 	tests := map[string]struct {
-		sharesJoined   sdk.Int
+		sharesJoined   osmomath.Int
 		poolNotCreated bool
 
 		expectedError error
 	}{
 		"happy path: default balancer pool": {
-			sharesJoined: sdk.ZeroInt(),
+			sharesJoined: osmomath.ZeroInt(),
 		},
 		"Multiple LPs with shares exist": {
 			sharesJoined: types.OneShare,
 		},
 		"error: pool does not exist": {
-			sharesJoined:   sdk.ZeroInt(),
+			sharesJoined:   osmomath.ZeroInt(),
 			poolNotCreated: true,
 			expectedError:  types.PoolDoesNotExistError{PoolId: uint64(0)},
 		},
@@ -850,8 +851,8 @@ func (suite *KeeperTestSuite) TestGetTotalPoolShares() {
 				balancerPoolId = suite.PrepareBalancerPool()
 			}
 
-			sharesJoined := sdk.ZeroInt()
-			if !tc.sharesJoined.Equal(sdk.ZeroInt()) {
+			sharesJoined := osmomath.ZeroInt()
+			if !tc.sharesJoined.Equal(osmomath.ZeroInt()) {
 				suite.FundAcc(testAccount, defaultAcctFunds)
 				_, sharesActualJoined, err := gammKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, balancerPoolId, tc.sharesJoined, sdk.Coins{})
 				suite.Require().NoError(err)

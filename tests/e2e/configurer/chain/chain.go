@@ -3,7 +3,6 @@ package chain
 import (
 	"fmt"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
 
@@ -42,7 +42,7 @@ const (
 	// It is used when we are indifferent about the node we are working with.
 	defaultNodeIndex = 0
 	// waitUntilRepeatPauseTime is the time to wait between each check of the node status.
-	waitUntilRepeatPauseTime = 2 * time.Second
+	waitUntilRepeatPauseTime = 1 * time.Second
 	// waitUntilrepeatMax is the maximum number of times to repeat the wait until condition.
 	waitUntilrepeatMax = 60
 
@@ -58,7 +58,7 @@ func New(t *testing.T, containerManager *containers.Manager, id string, initVali
 		},
 		ValidatorInitConfigs:  initValidatorConfigs,
 		VotingPeriod:          config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks,
-		ExpeditedVotingPeriod: config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks - 2,
+		ExpeditedVotingPeriod: config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks - 3,
 		t:                     t,
 		containerManager:      containerManager,
 	}
@@ -262,21 +262,11 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 }
 
 func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig) (uint64, error) {
-	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)), true)
 
-	chainANode.DepositProposal(propNumber, false)
+	chainANode.DepositProposal(propNumber, true)
 
-	var wg sync.WaitGroup
-
-	for _, n := range c.NodeConfigs {
-		wg.Add(1)
-		go func(nodeConfig *NodeConfig) {
-			defer wg.Done()
-			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-		}(n)
-	}
-
-	wg.Wait()
+	AllValsVoteOnProposal(c, propNumber)
 
 	require.Eventually(c.t, func() bool {
 		status, err := chainANode.QueryPropStatus(propNumber)

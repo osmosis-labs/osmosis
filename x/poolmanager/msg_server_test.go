@@ -3,14 +3,15 @@ package poolmanager_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	poolmanagerKeeper "github.com/osmosis-labs/osmosis/v19/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 var (
-	amount     = sdk.NewInt(100)
-	min_amount = sdk.ZeroInt()
-	max_amount = sdk.NewInt(10000000)
+	amount     = osmomath.NewInt(100)
+	min_amount = osmomath.ZeroInt()
+	max_amount = osmomath.NewInt(10000000)
 
 	pool1_in = types.SwapAmountInRoute{PoolId: 1, TokenOutDenom: "bar"}
 	pool2_in = types.SwapAmountInRoute{PoolId: 2, TokenOutDenom: "baz"}
@@ -27,7 +28,7 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountIn() {
 	testcases := map[string]struct {
 		routes            []types.SwapAmountInSplitRoute
 		tokenInDenom      string
-		tokenoutMinAmount sdk.Int
+		tokenoutMinAmount osmomath.Int
 
 		expectedSplitRouteSwapEvent int
 		expectedMessageEvents       int
@@ -113,7 +114,7 @@ func (s *KeeperTestSuite) TestSplitRouteSwapExactAmountOut() {
 	testcases := map[string]struct {
 		routes            []types.SwapAmountOutSplitRoute
 		tokenOutDenom     string
-		tokenoutMaxAmount sdk.Int
+		tokenoutMaxAmount osmomath.Int
 
 		expectedSplitRouteSwapEvent int
 		expectedMessageEvents       int
@@ -214,12 +215,12 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 					{
 						Denom0:   "denom0",
 						Denom1:   "denom1",
-						TakerFee: sdk.MustNewDecFromStr("0.0013"),
+						TakerFee: osmomath.MustNewDecFromStr("0.0013"),
 					},
 					{
 						Denom0:   "denom0",
 						Denom1:   "denom2",
-						TakerFee: sdk.MustNewDecFromStr("0.0016"),
+						TakerFee: osmomath.MustNewDecFromStr("0.0016"),
 					},
 				},
 			},
@@ -233,7 +234,7 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 					{
 						Denom0:   "denom0",
 						Denom1:   "denom1",
-						TakerFee: sdk.MustNewDecFromStr("0.0013"),
+						TakerFee: osmomath.MustNewDecFromStr("0.0013"),
 					},
 				},
 			},
@@ -247,7 +248,7 @@ func (s *KeeperTestSuite) TestSetDenomPairTakerFee() {
 					{
 						Denom0:   "denom0",
 						Denom1:   "denom1",
-						TakerFee: sdk.MustNewDecFromStr("0.0013"),
+						TakerFee: osmomath.MustNewDecFromStr("0.0013"),
 					},
 				},
 			},

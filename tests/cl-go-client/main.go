@@ -17,6 +17,7 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cosmosaccount"
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	clqueryproto "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
@@ -85,9 +86,9 @@ const (
 
 var (
 	defaultAccountName  = fmt.Sprintf("%s%d", accountNamePrefix, 1)
-	defaultMinAmount    = sdk.ZeroInt()
-	defaultSpreadFactor = sdk.MustNewDecFromStr("0.001")
-	externalGaugeCoins  = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000_000_000)))
+	defaultMinAmount    = osmomath.ZeroInt()
+	defaultSpreadFactor = osmomath.MustNewDecFromStr("0.001")
+	externalGaugeCoins  = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000_000_000)))
 	accountMutex        sync.Mutex
 )
 
@@ -178,8 +179,8 @@ func createRandomPosition(igniteClient cosmosclient.Client, poolId uint64) (stri
 	lowerTick := roundTickDown(rand.Int63n(maxTick-minTick+1)+minTick, tickSpacing)
 	// lowerTick <= upperTick <= maxTick
 	upperTick := roundTickDown(maxTick-rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))), tickSpacing)
-	tokenDesired0 := sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-	tokenDesired1 := sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+	tokenDesired0 := sdk.NewCoin(denom0, osmomath.NewInt(rand.Int63n(maxAmountDeposited)))
+	tokenDesired1 := sdk.NewCoin(denom1, osmomath.NewInt(rand.Int63n(maxAmountDeposited)))
 	tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
 
 	runMessageWithRetries(func() error {
@@ -209,7 +210,7 @@ func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId
 
 			isToken0In = rand.Intn(2) == 0
 
-			tokenOutMinAmount = sdk.OneInt()
+			tokenOutMinAmount = osmomath.OneInt()
 		)
 
 		tokenInDenom := denom0
@@ -218,7 +219,7 @@ func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId
 			tokenInDenom = denom1
 			tokenOutDenom = denom0
 		}
-		tokenInCoin := sdk.NewCoin(tokenInDenom, sdk.NewInt(rand.Int63n(maxAmountSingleSwap)))
+		tokenInCoin := sdk.NewCoin(tokenInDenom, osmomath.NewInt(rand.Int63n(maxAmountSingleSwap)))
 
 		runMessageWithRetries(func() error {
 			_, err := makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
@@ -236,7 +237,7 @@ func swapGivenLargeAmountsBothDirections(igniteClient cosmosclient.Client, poolI
 
 		isToken0In = rand.Intn(2) == 0
 
-		tokenOutMinAmount = sdk.OneInt()
+		tokenOutMinAmount = osmomath.OneInt()
 	)
 
 	tokenInDenom := denom0
@@ -246,7 +247,7 @@ func swapGivenLargeAmountsBothDirections(igniteClient cosmosclient.Client, poolI
 		tokenOutDenom = denom0
 	}
 
-	tokenInCoin := sdk.NewCoin(tokenInDenom, sdk.NewInt(largeStartAmount))
+	tokenInCoin := sdk.NewCoin(tokenInDenom, osmomath.NewInt(largeStartAmount))
 
 	for i := 0; i < numSwaps; i++ {
 		runMessageWithRetries(func() error {
@@ -258,7 +259,7 @@ func swapGivenLargeAmountsBothDirections(igniteClient cosmosclient.Client, poolI
 				// out of funds or liquidity.
 				tempTokenInDenom := tokenInCoin.Denom
 				// new token in = token out / (1 - spread factor)
-				tokenInCoin = sdk.NewCoin(tokenOutDenom, tokenOut.ToDec().Quo(sdk.OneDec().Sub(defaultSpreadFactor)).RoundInt())
+				tokenInCoin = sdk.NewCoin(tokenOutDenom, tokenOut.ToLegacyDec().Quo(osmomath.OneDec().Sub(defaultSpreadFactor)).RoundInt())
 				tokenOutDenom = tempTokenInDenom
 			}
 
@@ -360,7 +361,7 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	return resp.PoolID
 }
 
-func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 sdk.Int) (positionId uint64, amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec, err error) {
+func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 osmomath.Int) (positionId uint64, amountCreated0, amountCreated1 osmomath.Int, liquidityCreated osmomath.Dec, err error) {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
@@ -378,11 +379,11 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
 	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return 0, osmomath.Int{}, osmomath.Int{}, osmomath.Dec{}, err
 	}
 	resp := cltypes.MsgCreatePositionResponse{}
 	if err := txResp.Decode(&resp); err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return 0, osmomath.Int{}, osmomath.Int{}, osmomath.Dec{}, err
 	}
 	log.Println("created position: positionId", positionId, "amt0", resp.Amount0, "amt1", resp.Amount1, "liquidity", resp.LiquidityCreated)
 
@@ -417,8 +418,8 @@ func addToPositionsOp(igniteClient cosmosclient.Client) {
 	for _, position := range userPositionResp.Positions {
 		position := position.Position
 
-		randAmt0 := sdk.NewInt(rand.Int63n(maxAmountDeposited))
-		randAmt1 := sdk.NewInt(rand.Int63n(maxAmountDeposited))
+		randAmt0 := osmomath.NewInt(rand.Int63n(maxAmountDeposited))
+		randAmt1 := osmomath.NewInt(rand.Int63n(maxAmountDeposited))
 
 		log.Println("Adding To position: position id", position.PositionId, "accountName", position.Address, "amount0", randAmt0, "amount1", randAmt1, "defaultMinAmount", defaultMinAmount)
 
@@ -490,7 +491,7 @@ func withdrawPositionsOp(igniteClient cosmosclient.Client) {
 	}
 }
 
-func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, tokenInCoin sdk.Coin, tokenOutDenom string, tokenOutMinAmount sdk.Int) (sdk.Int, error) {
+func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, tokenInCoin sdk.Coin, tokenOutDenom string, tokenOutMinAmount osmomath.Int) (osmomath.Int, error) {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
@@ -510,11 +511,11 @@ func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountNam
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
 	if err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 	resp := poolmanagertypes.MsgSwapExactAmountInResponse{}
 	if err := txResp.Decode(&resp); err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 
 	log.Println("swap made, token out amount: ", resp.TokenOutAmount)

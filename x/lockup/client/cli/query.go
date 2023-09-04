@@ -15,8 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 )
@@ -314,7 +313,7 @@ $ %s query lockup output-all-locks <max lock ID>
 				Id            int
 				Status        int // one of {doesnt_exist, }
 				Denom         string
-				Amount        sdk.Int
+				Amount        osmomath.Int
 				Address       string
 				UnbondEndTime time.Time
 			}

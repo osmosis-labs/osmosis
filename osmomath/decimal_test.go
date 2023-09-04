@@ -7,7 +7,6 @@ import (
 	"math/big"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
@@ -21,7 +20,7 @@ type decimalTestSuite struct {
 
 var (
 	zeroAdditiveErrTolerance = osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.ZeroDec(),
+		AdditiveTolerance: osmomath.ZeroDec(),
 	}
 )
 
@@ -44,7 +43,7 @@ func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeR
 }
 
 func (s *decimalTestSuite) TestAddMut() {
-	toAdd := osmomath.MustNewDecFromStr("10")
+	toAdd := osmomath.MustNewBigDecFromStr("10")
 	tests := map[string]struct {
 		startValue        osmomath.BigDec
 		expectedMutResult osmomath.BigDec
@@ -68,13 +67,13 @@ func (s *decimalTestSuite) TestAddMut() {
 }
 
 func (s *decimalTestSuite) TestQuoMut() {
-	quoBy := osmomath.MustNewDecFromStr("2")
+	quoBy := osmomath.MustNewBigDecFromStr("2")
 	tests := map[string]struct {
 		startValue        osmomath.BigDec
 		expectedMutResult osmomath.BigDec
 	}{
 		"0":  {osmomath.NewBigDec(0), osmomath.NewBigDec(0)},
-		"1":  {osmomath.NewBigDec(1), osmomath.MustNewDecFromStr("0.5")},
+		"1":  {osmomath.NewBigDec(1), osmomath.MustNewBigDecFromStr("0.5")},
 		"10": {osmomath.NewBigDec(10), osmomath.NewBigDec(5)},
 	}
 
@@ -92,30 +91,30 @@ func (s *decimalTestSuite) TestQuoMut() {
 }
 func TestDecApproxEq(t *testing.T) {
 	// d1 = 0.55, d2 = 0.6, tol = 0.1
-	d1 := osmomath.NewDecWithPrec(55, 2)
-	d2 := osmomath.NewDecWithPrec(6, 1)
-	tol := osmomath.NewDecWithPrec(1, 1)
+	d1 := osmomath.NewBigDecWithPrec(55, 2)
+	d2 := osmomath.NewBigDecWithPrec(6, 1)
+	tol := osmomath.NewBigDecWithPrec(1, 1)
 
 	require.True(osmomath.DecApproxEq(t, d1, d2, tol))
 
 	// d1 = 0.55, d2 = 0.6, tol = 1E-5
-	d1 = osmomath.NewDecWithPrec(55, 2)
-	d2 = osmomath.NewDecWithPrec(6, 1)
-	tol = osmomath.NewDecWithPrec(1, 5)
+	d1 = osmomath.NewBigDecWithPrec(55, 2)
+	d2 = osmomath.NewBigDecWithPrec(6, 1)
+	tol = osmomath.NewBigDecWithPrec(1, 5)
 
 	require.False(osmomath.DecApproxEq(t, d1, d2, tol))
 
 	// d1 = 0.6, d2 = 0.61, tol = 0.01
-	d1 = osmomath.NewDecWithPrec(6, 1)
-	d2 = osmomath.NewDecWithPrec(61, 2)
-	tol = osmomath.NewDecWithPrec(1, 2)
+	d1 = osmomath.NewBigDecWithPrec(6, 1)
+	d2 = osmomath.NewBigDecWithPrec(61, 2)
+	tol = osmomath.NewBigDecWithPrec(1, 2)
 
 	require.True(osmomath.DecApproxEq(t, d1, d2, tol))
 }
 
 // create a decimal from a decimal string (ex. "1234.5678")
 func (s *decimalTestSuite) MustNewDecFromStr(str string) (d osmomath.BigDec) {
-	d, err := osmomath.NewDecFromStr(str)
+	d, err := osmomath.NewBigDecFromStr(str)
 	s.Require().NoError(err)
 
 	return d
@@ -134,18 +133,18 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 		{"0.-75", true, osmomath.BigDec{}},
 		{"0", false, osmomath.NewBigDec(0)},
 		{"1", false, osmomath.NewBigDec(1)},
-		{"1.1", false, osmomath.NewDecWithPrec(11, 1)},
-		{"0.75", false, osmomath.NewDecWithPrec(75, 2)},
-		{"0.8", false, osmomath.NewDecWithPrec(8, 1)},
-		{"0.11111", false, osmomath.NewDecWithPrec(11111, 5)},
+		{"1.1", false, osmomath.NewBigDecWithPrec(11, 1)},
+		{"0.75", false, osmomath.NewBigDecWithPrec(75, 2)},
+		{"0.8", false, osmomath.NewBigDecWithPrec(8, 1)},
+		{"0.11111", false, osmomath.NewBigDecWithPrec(11111, 5)},
 		{"314460551102969.31442782343433718353144278234343371835", true, osmomath.NewBigDec(3141203149163817869)},
 		{
 			"314460551102969314427823434337.18357180924882313501835718092488231350",
-			true, osmomath.NewDecFromBigIntWithPrec(largeBigInt, 4),
+			true, osmomath.NewBigDecFromBigIntWithPrec(largeBigInt, 4),
 		},
 		{
 			"314460551102969314427823434337.1835",
-			false, osmomath.NewDecFromBigIntWithPrec(largeBigInt, 4),
+			false, osmomath.NewBigDecFromBigIntWithPrec(largeBigInt, 4),
 		},
 		{".", true, osmomath.BigDec{}},
 		{".0", true, osmomath.NewBigDec(0)},
@@ -157,7 +156,7 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 	}
 
 	for tcIndex, tc := range tests {
-		res, err := osmomath.NewDecFromStr(tc.decimalStr)
+		res, err := osmomath.NewBigDecFromStr(tc.decimalStr)
 		if tc.expErr {
 			s.Require().NotNil(err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
@@ -166,7 +165,7 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 		}
 
 		// negative tc
-		res, err = osmomath.NewDecFromStr("-" + tc.decimalStr)
+		res, err = osmomath.NewBigDecFromStr("-" + tc.decimalStr)
 		if tc.expErr {
 			s.Require().NotNil(err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
@@ -186,11 +185,11 @@ func (s *decimalTestSuite) TestDecString() {
 		{osmomath.NewBigDec(1), "1.000000000000000000000000000000000000"},
 		{osmomath.NewBigDec(10), "10.000000000000000000000000000000000000"},
 		{osmomath.NewBigDec(12340), "12340.000000000000000000000000000000000000"},
-		{osmomath.NewDecWithPrec(12340, 4), "1.234000000000000000000000000000000000"},
-		{osmomath.NewDecWithPrec(12340, 5), "0.123400000000000000000000000000000000"},
-		{osmomath.NewDecWithPrec(12340, 8), "0.000123400000000000000000000000000000"},
-		{osmomath.NewDecWithPrec(1009009009009009009, 17), "10.090090090090090090000000000000000000"},
-		{osmomath.MustNewDecFromStr("10.090090090090090090090090090090090090"), "10.090090090090090090090090090090090090"},
+		{osmomath.NewBigDecWithPrec(12340, 4), "1.234000000000000000000000000000000000"},
+		{osmomath.NewBigDecWithPrec(12340, 5), "0.123400000000000000000000000000000000"},
+		{osmomath.NewBigDecWithPrec(12340, 8), "0.000123400000000000000000000000000000"},
+		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), "10.090090090090090090000000000000000000"},
+		{osmomath.MustNewBigDecFromStr("10.090090090090090090090090090090090090"), "10.090090090090090090090090090090090090"},
 	}
 	for tcIndex, tc := range tests {
 		s.Require().Equal(tc.want, tc.d.String(), "bad String(), index: %v", tcIndex)
@@ -206,10 +205,10 @@ func (s *decimalTestSuite) TestDecFloat64() {
 		{osmomath.NewBigDec(1), 1.000000000000000000},
 		{osmomath.NewBigDec(10), 10.000000000000000000},
 		{osmomath.NewBigDec(12340), 12340.000000000000000000},
-		{osmomath.NewDecWithPrec(12340, 4), 1.234000000000000000},
-		{osmomath.NewDecWithPrec(12340, 5), 0.123400000000000000},
-		{osmomath.NewDecWithPrec(12340, 8), 0.000123400000000000},
-		{osmomath.NewDecWithPrec(1009009009009009009, 17), 10.090090090090090090},
+		{osmomath.NewBigDecWithPrec(12340, 4), 1.234000000000000000},
+		{osmomath.NewBigDecWithPrec(12340, 5), 0.123400000000000000},
+		{osmomath.NewBigDecWithPrec(12340, 8), 0.000123400000000000},
+		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), 10.090090090090090090},
 	}
 	for tcIndex, tc := range tests {
 		value, err := tc.d.Float64()
@@ -222,23 +221,23 @@ func (s *decimalTestSuite) TestDecFloat64() {
 func (s *decimalTestSuite) TestSdkDec() {
 	tests := []struct {
 		d        osmomath.BigDec
-		want     sdk.Dec
+		want     osmomath.Dec
 		expPanic bool
 	}{
-		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000000000"), false},
-		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000000000"), false},
-		{osmomath.NewBigDec(10), sdk.MustNewDecFromStr("10.000000000000000000"), false},
-		{osmomath.NewBigDec(12340), sdk.MustNewDecFromStr("12340.000000000000000000"), false},
-		{osmomath.NewDecWithPrec(12340, 4), sdk.MustNewDecFromStr("1.234000000000000000"), false},
-		{osmomath.NewDecWithPrec(12340, 5), sdk.MustNewDecFromStr("0.123400000000000000"), false},
-		{osmomath.NewDecWithPrec(12340, 8), sdk.MustNewDecFromStr("0.000123400000000000"), false},
-		{osmomath.NewDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), false},
+		{osmomath.NewBigDec(0), osmomath.MustNewDecFromStr("0.000000000000000000"), false},
+		{osmomath.NewBigDec(1), osmomath.MustNewDecFromStr("1.000000000000000000"), false},
+		{osmomath.NewBigDec(10), osmomath.MustNewDecFromStr("10.000000000000000000"), false},
+		{osmomath.NewBigDec(12340), osmomath.MustNewDecFromStr("12340.000000000000000000"), false},
+		{osmomath.NewBigDecWithPrec(12340, 4), osmomath.MustNewDecFromStr("1.234000000000000000"), false},
+		{osmomath.NewBigDecWithPrec(12340, 5), osmomath.MustNewDecFromStr("0.123400000000000000"), false},
+		{osmomath.NewBigDecWithPrec(12340, 8), osmomath.MustNewDecFromStr("0.000123400000000000"), false},
+		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), osmomath.MustNewDecFromStr("10.090090090090090090"), false},
 	}
 	for tcIndex, tc := range tests {
 		if tc.expPanic {
-			s.Require().Panics(func() { tc.d.SDKDec() })
+			s.Require().Panics(func() { tc.d.Dec() })
 		} else {
-			value := tc.d.SDKDec()
+			value := tc.d.Dec()
 			s.Require().Equal(tc.want, value, "bad SdkDec(), index: %v", tcIndex)
 		}
 	}
@@ -247,24 +246,24 @@ func (s *decimalTestSuite) TestSdkDec() {
 func (s *decimalTestSuite) TestSdkDecRoundUp() {
 	tests := []struct {
 		d        osmomath.BigDec
-		want     sdk.Dec
+		want     osmomath.Dec
 		expPanic bool
 	}{
-		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000000000"), false},
-		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000000000"), false},
-		{osmomath.NewBigDec(10), sdk.MustNewDecFromStr("10.000000000000000000"), false},
-		{osmomath.NewBigDec(12340), sdk.MustNewDecFromStr("12340.000000000000000000"), false},
-		{osmomath.NewDecWithPrec(12340, 4), sdk.MustNewDecFromStr("1.234000000000000000"), false},
-		{osmomath.NewDecWithPrec(12340, 5), sdk.MustNewDecFromStr("0.123400000000000000"), false},
-		{osmomath.NewDecWithPrec(12340, 8), sdk.MustNewDecFromStr("0.000123400000000000"), false},
-		{osmomath.NewDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), false},
-		{osmomath.NewDecWithPrec(1009009009009009009, 19), sdk.MustNewDecFromStr("0.100900900900900901"), false},
+		{osmomath.NewBigDec(0), osmomath.MustNewDecFromStr("0.000000000000000000"), false},
+		{osmomath.NewBigDec(1), osmomath.MustNewDecFromStr("1.000000000000000000"), false},
+		{osmomath.NewBigDec(10), osmomath.MustNewDecFromStr("10.000000000000000000"), false},
+		{osmomath.NewBigDec(12340), osmomath.MustNewDecFromStr("12340.000000000000000000"), false},
+		{osmomath.NewBigDecWithPrec(12340, 4), osmomath.MustNewDecFromStr("1.234000000000000000"), false},
+		{osmomath.NewBigDecWithPrec(12340, 5), osmomath.MustNewDecFromStr("0.123400000000000000"), false},
+		{osmomath.NewBigDecWithPrec(12340, 8), osmomath.MustNewDecFromStr("0.000123400000000000"), false},
+		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), osmomath.MustNewDecFromStr("10.090090090090090090"), false},
+		{osmomath.NewBigDecWithPrec(1009009009009009009, 19), osmomath.MustNewDecFromStr("0.100900900900900901"), false},
 	}
 	for tcIndex, tc := range tests {
 		if tc.expPanic {
-			s.Require().Panics(func() { tc.d.SDKDecRoundUp() })
+			s.Require().Panics(func() { tc.d.DecRoundUp() })
 		} else {
-			value := tc.d.SDKDecRoundUp()
+			value := tc.d.DecRoundUp()
 			s.Require().Equal(tc.want, value, "bad SdkDec(), index: %v", tcIndex)
 		}
 	}
@@ -272,51 +271,51 @@ func (s *decimalTestSuite) TestSdkDecRoundUp() {
 
 func (s *decimalTestSuite) TestBigDecFromSdkDec() {
 	tests := []struct {
-		d        sdk.Dec
+		d        osmomath.Dec
 		want     osmomath.BigDec
 		expPanic bool
 	}{
-		{sdk.MustNewDecFromStr("0.000000000000000000"), osmomath.NewBigDec(0), false},
-		{sdk.MustNewDecFromStr("1.000000000000000000"), osmomath.NewBigDec(1), false},
-		{sdk.MustNewDecFromStr("10.000000000000000000"), osmomath.NewBigDec(10), false},
-		{sdk.MustNewDecFromStr("12340.000000000000000000"), osmomath.NewBigDec(12340), false},
-		{sdk.MustNewDecFromStr("1.234000000000000000"), osmomath.NewDecWithPrec(12340, 4), false},
-		{sdk.MustNewDecFromStr("0.123400000000000000"), osmomath.NewDecWithPrec(12340, 5), false},
-		{sdk.MustNewDecFromStr("0.000123400000000000"), osmomath.NewDecWithPrec(12340, 8), false},
-		{sdk.MustNewDecFromStr("10.090090090090090090"), osmomath.NewDecWithPrec(1009009009009009009, 17), false},
+		{osmomath.MustNewDecFromStr("0.000000000000000000"), osmomath.NewBigDec(0), false},
+		{osmomath.MustNewDecFromStr("1.000000000000000000"), osmomath.NewBigDec(1), false},
+		{osmomath.MustNewDecFromStr("10.000000000000000000"), osmomath.NewBigDec(10), false},
+		{osmomath.MustNewDecFromStr("12340.000000000000000000"), osmomath.NewBigDec(12340), false},
+		{osmomath.MustNewDecFromStr("1.234000000000000000"), osmomath.NewBigDecWithPrec(12340, 4), false},
+		{osmomath.MustNewDecFromStr("0.123400000000000000"), osmomath.NewBigDecWithPrec(12340, 5), false},
+		{osmomath.MustNewDecFromStr("0.000123400000000000"), osmomath.NewBigDecWithPrec(12340, 8), false},
+		{osmomath.MustNewDecFromStr("10.090090090090090090"), osmomath.NewBigDecWithPrec(1009009009009009009, 17), false},
 	}
 	for tcIndex, tc := range tests {
 		if tc.expPanic {
-			s.Require().Panics(func() { osmomath.BigDecFromSDKDec(tc.d) })
+			s.Require().Panics(func() { osmomath.BigDecFromDec(tc.d) })
 		} else {
-			value := osmomath.BigDecFromSDKDec(tc.d)
-			s.Require().Equal(tc.want, value, "bad osmomath.BigDecFromSdkDec(), index: %v", tcIndex)
+			value := osmomath.BigDecFromDec(tc.d)
+			s.Require().Equal(tc.want, value, "bad osmomath.BigDecFromDec(), index: %v", tcIndex)
 		}
 	}
 }
 
 func (s *decimalTestSuite) TestBigDecFromSdkDecSlice() {
 	tests := []struct {
-		d        []sdk.Dec
+		d        []osmomath.Dec
 		want     []osmomath.BigDec
 		expPanic bool
 	}{
-		{[]sdk.Dec{sdk.MustNewDecFromStr("0.000000000000000000")}, []osmomath.BigDec{osmomath.NewBigDec(0)}, false},
-		{[]sdk.Dec{sdk.MustNewDecFromStr("0.000000000000000000"), sdk.MustNewDecFromStr("1.000000000000000000")}, []osmomath.BigDec{osmomath.NewBigDec(0), osmomath.NewBigDec(1)}, false},
-		{[]sdk.Dec{sdk.MustNewDecFromStr("1.000000000000000000"), sdk.MustNewDecFromStr("0.000000000000000000"), sdk.MustNewDecFromStr("0.000123400000000000")}, []osmomath.BigDec{osmomath.NewBigDec(1), osmomath.NewBigDec(0), osmomath.NewDecWithPrec(12340, 8)}, false},
-		{[]sdk.Dec{sdk.MustNewDecFromStr("10.000000000000000000")}, []osmomath.BigDec{osmomath.NewBigDec(10)}, false},
-		{[]sdk.Dec{sdk.MustNewDecFromStr("12340.000000000000000000")}, []osmomath.BigDec{osmomath.NewBigDec(12340)}, false},
-		{[]sdk.Dec{sdk.MustNewDecFromStr("1.234000000000000000"), sdk.MustNewDecFromStr("12340.000000000000000000")}, []osmomath.BigDec{osmomath.NewDecWithPrec(12340, 4), osmomath.NewBigDec(12340)}, false},
-		{[]sdk.Dec{sdk.MustNewDecFromStr("0.123400000000000000"), sdk.MustNewDecFromStr("12340.000000000000000000")}, []osmomath.BigDec{osmomath.NewDecWithPrec(12340, 5), osmomath.NewBigDec(12340)}, false},
-		{[]sdk.Dec{sdk.MustNewDecFromStr("0.000123400000000000"), sdk.MustNewDecFromStr("10.090090090090090090")}, []osmomath.BigDec{osmomath.NewDecWithPrec(12340, 8), osmomath.NewDecWithPrec(1009009009009009009, 17)}, false},
-		{[]sdk.Dec{sdk.MustNewDecFromStr("10.090090090090090090"), sdk.MustNewDecFromStr("10.090090090090090090")}, []osmomath.BigDec{osmomath.NewDecWithPrec(1009009009009009009, 17), osmomath.NewDecWithPrec(1009009009009009009, 17)}, false},
+		{[]osmomath.Dec{osmomath.MustNewDecFromStr("0.000000000000000000")}, []osmomath.BigDec{osmomath.NewBigDec(0)}, false},
+		{[]osmomath.Dec{osmomath.MustNewDecFromStr("0.000000000000000000"), osmomath.MustNewDecFromStr("1.000000000000000000")}, []osmomath.BigDec{osmomath.NewBigDec(0), osmomath.NewBigDec(1)}, false},
+		{[]osmomath.Dec{osmomath.MustNewDecFromStr("1.000000000000000000"), osmomath.MustNewDecFromStr("0.000000000000000000"), osmomath.MustNewDecFromStr("0.000123400000000000")}, []osmomath.BigDec{osmomath.NewBigDec(1), osmomath.NewBigDec(0), osmomath.NewBigDecWithPrec(12340, 8)}, false},
+		{[]osmomath.Dec{osmomath.MustNewDecFromStr("10.000000000000000000")}, []osmomath.BigDec{osmomath.NewBigDec(10)}, false},
+		{[]osmomath.Dec{osmomath.MustNewDecFromStr("12340.000000000000000000")}, []osmomath.BigDec{osmomath.NewBigDec(12340)}, false},
+		{[]osmomath.Dec{osmomath.MustNewDecFromStr("1.234000000000000000"), osmomath.MustNewDecFromStr("12340.000000000000000000")}, []osmomath.BigDec{osmomath.NewBigDecWithPrec(12340, 4), osmomath.NewBigDec(12340)}, false},
+		{[]osmomath.Dec{osmomath.MustNewDecFromStr("0.123400000000000000"), osmomath.MustNewDecFromStr("12340.000000000000000000")}, []osmomath.BigDec{osmomath.NewBigDecWithPrec(12340, 5), osmomath.NewBigDec(12340)}, false},
+		{[]osmomath.Dec{osmomath.MustNewDecFromStr("0.000123400000000000"), osmomath.MustNewDecFromStr("10.090090090090090090")}, []osmomath.BigDec{osmomath.NewBigDecWithPrec(12340, 8), osmomath.NewBigDecWithPrec(1009009009009009009, 17)}, false},
+		{[]osmomath.Dec{osmomath.MustNewDecFromStr("10.090090090090090090"), osmomath.MustNewDecFromStr("10.090090090090090090")}, []osmomath.BigDec{osmomath.NewBigDecWithPrec(1009009009009009009, 17), osmomath.NewBigDecWithPrec(1009009009009009009, 17)}, false},
 	}
 	for tcIndex, tc := range tests {
 		if tc.expPanic {
-			s.Require().Panics(func() { osmomath.BigDecFromSDKDecSlice(tc.d) })
+			s.Require().Panics(func() { osmomath.BigDecFromDecSlice(tc.d) })
 		} else {
-			value := osmomath.BigDecFromSDKDecSlice(tc.d)
-			s.Require().Equal(tc.want, value, "bad osmomath.BigDecFromSdkDec(), index: %v", tcIndex)
+			value := osmomath.BigDecFromDecSlice(tc.d)
+			s.Require().Equal(tc.want, value, "bad osmomath.BigDecFromDec(), index: %v", tcIndex)
 		}
 	}
 }
@@ -327,27 +326,27 @@ func (s *decimalTestSuite) TestEqualities() {
 		gt, lt, eq bool
 	}{
 		{osmomath.NewBigDec(0), osmomath.NewBigDec(0), false, false, true},
-		{osmomath.NewDecWithPrec(0, 2), osmomath.NewDecWithPrec(0, 4), false, false, true},
-		{osmomath.NewDecWithPrec(100, 0), osmomath.NewDecWithPrec(100, 0), false, false, true},
-		{osmomath.NewDecWithPrec(-100, 0), osmomath.NewDecWithPrec(-100, 0), false, false, true},
-		{osmomath.NewDecWithPrec(-1, 1), osmomath.NewDecWithPrec(-1, 1), false, false, true},
-		{osmomath.NewDecWithPrec(3333, 3), osmomath.NewDecWithPrec(3333, 3), false, false, true},
+		{osmomath.NewBigDecWithPrec(0, 2), osmomath.NewBigDecWithPrec(0, 4), false, false, true},
+		{osmomath.NewBigDecWithPrec(100, 0), osmomath.NewBigDecWithPrec(100, 0), false, false, true},
+		{osmomath.NewBigDecWithPrec(-100, 0), osmomath.NewBigDecWithPrec(-100, 0), false, false, true},
+		{osmomath.NewBigDecWithPrec(-1, 1), osmomath.NewBigDecWithPrec(-1, 1), false, false, true},
+		{osmomath.NewBigDecWithPrec(3333, 3), osmomath.NewBigDecWithPrec(3333, 3), false, false, true},
 
-		{osmomath.NewDecWithPrec(0, 0), osmomath.NewDecWithPrec(3333, 3), false, true, false},
-		{osmomath.NewDecWithPrec(0, 0), osmomath.NewDecWithPrec(100, 0), false, true, false},
-		{osmomath.NewDecWithPrec(-1, 0), osmomath.NewDecWithPrec(3333, 3), false, true, false},
-		{osmomath.NewDecWithPrec(-1, 0), osmomath.NewDecWithPrec(100, 0), false, true, false},
-		{osmomath.NewDecWithPrec(1111, 3), osmomath.NewDecWithPrec(100, 0), false, true, false},
-		{osmomath.NewDecWithPrec(1111, 3), osmomath.NewDecWithPrec(3333, 3), false, true, false},
-		{osmomath.NewDecWithPrec(-3333, 3), osmomath.NewDecWithPrec(-1111, 3), false, true, false},
+		{osmomath.NewBigDecWithPrec(0, 0), osmomath.NewBigDecWithPrec(3333, 3), false, true, false},
+		{osmomath.NewBigDecWithPrec(0, 0), osmomath.NewBigDecWithPrec(100, 0), false, true, false},
+		{osmomath.NewBigDecWithPrec(-1, 0), osmomath.NewBigDecWithPrec(3333, 3), false, true, false},
+		{osmomath.NewBigDecWithPrec(-1, 0), osmomath.NewBigDecWithPrec(100, 0), false, true, false},
+		{osmomath.NewBigDecWithPrec(1111, 3), osmomath.NewBigDecWithPrec(100, 0), false, true, false},
+		{osmomath.NewBigDecWithPrec(1111, 3), osmomath.NewBigDecWithPrec(3333, 3), false, true, false},
+		{osmomath.NewBigDecWithPrec(-3333, 3), osmomath.NewBigDecWithPrec(-1111, 3), false, true, false},
 
-		{osmomath.NewDecWithPrec(3333, 3), osmomath.NewDecWithPrec(0, 0), true, false, false},
-		{osmomath.NewDecWithPrec(100, 0), osmomath.NewDecWithPrec(0, 0), true, false, false},
-		{osmomath.NewDecWithPrec(3333, 3), osmomath.NewDecWithPrec(-1, 0), true, false, false},
-		{osmomath.NewDecWithPrec(100, 0), osmomath.NewDecWithPrec(-1, 0), true, false, false},
-		{osmomath.NewDecWithPrec(100, 0), osmomath.NewDecWithPrec(1111, 3), true, false, false},
-		{osmomath.NewDecWithPrec(3333, 3), osmomath.NewDecWithPrec(1111, 3), true, false, false},
-		{osmomath.NewDecWithPrec(-1111, 3), osmomath.NewDecWithPrec(-3333, 3), true, false, false},
+		{osmomath.NewBigDecWithPrec(3333, 3), osmomath.NewBigDecWithPrec(0, 0), true, false, false},
+		{osmomath.NewBigDecWithPrec(100, 0), osmomath.NewBigDecWithPrec(0, 0), true, false, false},
+		{osmomath.NewBigDecWithPrec(3333, 3), osmomath.NewBigDecWithPrec(-1, 0), true, false, false},
+		{osmomath.NewBigDecWithPrec(100, 0), osmomath.NewBigDecWithPrec(-1, 0), true, false, false},
+		{osmomath.NewBigDecWithPrec(100, 0), osmomath.NewBigDecWithPrec(1111, 3), true, false, false},
+		{osmomath.NewBigDecWithPrec(3333, 3), osmomath.NewBigDecWithPrec(1111, 3), true, false, false},
+		{osmomath.NewBigDecWithPrec(-1111, 3), osmomath.NewBigDecWithPrec(-3333, 3), true, false, false},
 	}
 
 	for tcIndex, tc := range tests {
@@ -400,24 +399,24 @@ func (s *decimalTestSuite) TestArithmetic() {
 
 		{
 			osmomath.NewBigDec(3), osmomath.NewBigDec(7), osmomath.NewBigDec(21), osmomath.NewBigDec(21), osmomath.NewBigDec(21),
-			osmomath.MustNewDecFromStr("0.428571428571428571428571428571428571"), osmomath.MustNewDecFromStr("0.428571428571428571428571428571428572"), osmomath.MustNewDecFromStr("0.428571428571428571428571428571428571"),
+			osmomath.MustNewBigDecFromStr("0.428571428571428571428571428571428571"), osmomath.MustNewBigDecFromStr("0.428571428571428571428571428571428572"), osmomath.MustNewBigDecFromStr("0.428571428571428571428571428571428571"),
 			osmomath.NewBigDec(10), osmomath.NewBigDec(-4),
 		},
 		{
-			osmomath.NewBigDec(2), osmomath.NewBigDec(4), osmomath.NewBigDec(8), osmomath.NewBigDec(8), osmomath.NewBigDec(8), osmomath.NewDecWithPrec(5, 1), osmomath.NewDecWithPrec(5, 1), osmomath.NewDecWithPrec(5, 1),
+			osmomath.NewBigDec(2), osmomath.NewBigDec(4), osmomath.NewBigDec(8), osmomath.NewBigDec(8), osmomath.NewBigDec(8), osmomath.NewBigDecWithPrec(5, 1), osmomath.NewBigDecWithPrec(5, 1), osmomath.NewBigDecWithPrec(5, 1),
 			osmomath.NewBigDec(6), osmomath.NewBigDec(-2),
 		},
 
 		{osmomath.NewBigDec(100), osmomath.NewBigDec(100), osmomath.NewBigDec(10000), osmomath.NewBigDec(10000), osmomath.NewBigDec(10000), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(200), osmomath.NewBigDec(0)},
 
 		{
-			osmomath.NewDecWithPrec(15, 1), osmomath.NewDecWithPrec(15, 1), osmomath.NewDecWithPrec(225, 2), osmomath.NewDecWithPrec(225, 2), osmomath.NewDecWithPrec(225, 2),
+			osmomath.NewBigDecWithPrec(15, 1), osmomath.NewBigDecWithPrec(15, 1), osmomath.NewBigDecWithPrec(225, 2), osmomath.NewBigDecWithPrec(225, 2), osmomath.NewBigDecWithPrec(225, 2),
 			osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(3), osmomath.NewBigDec(0),
 		},
 		{
-			osmomath.NewDecWithPrec(3333, 4), osmomath.NewDecWithPrec(333, 4), osmomath.NewDecWithPrec(1109889, 8), osmomath.NewDecWithPrec(1109889, 8), osmomath.NewDecWithPrec(1109889, 8),
-			osmomath.MustNewDecFromStr("10.009009009009009009009009009009009009"), osmomath.MustNewDecFromStr("10.009009009009009009009009009009009010"), osmomath.MustNewDecFromStr("10.009009009009009009009009009009009009"),
-			osmomath.NewDecWithPrec(3666, 4), osmomath.NewDecWithPrec(3, 1),
+			osmomath.NewBigDecWithPrec(3333, 4), osmomath.NewBigDecWithPrec(333, 4), osmomath.NewBigDecWithPrec(1109889, 8), osmomath.NewBigDecWithPrec(1109889, 8), osmomath.NewBigDecWithPrec(1109889, 8),
+			osmomath.MustNewBigDecFromStr("10.009009009009009009009009009009009009"), osmomath.MustNewBigDecFromStr("10.009009009009009009009009009009009010"), osmomath.MustNewBigDecFromStr("10.009009009009009009009009009009009009"),
+			osmomath.NewBigDecWithPrec(3666, 4), osmomath.NewBigDecWithPrec(3, 1),
 		},
 	}
 
@@ -453,10 +452,10 @@ func (s *decimalTestSuite) TestArithmetic() {
 
 func (s *decimalTestSuite) TestMulRoundUp_RoundingAtPrecisionEnd() {
 	var (
-		a                = osmomath.MustNewDecFromStr("0.000000000000000000000000000000000009")
-		b                = osmomath.MustNewDecFromStr("0.000000000000000000000000000000000009")
-		expectedRoundUp  = osmomath.MustNewDecFromStr("0.000000000000000000000000000000000001")
-		expectedTruncate = osmomath.MustNewDecFromStr("0.000000000000000000000000000000000000")
+		a                = osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000009")
+		b                = osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000009")
+		expectedRoundUp  = osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000001")
+		expectedTruncate = osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000000")
 	)
 
 	actualRoundUp := a.MulRoundUp(b)
@@ -520,9 +519,9 @@ func (s *decimalTestSuite) TestTruncate() {
 
 func (s *decimalTestSuite) TestStringOverflow() {
 	// two random 64 bit primes
-	dec1, err := osmomath.NewDecFromStr("51643150036226787134389711697696177267")
+	dec1, err := osmomath.NewBigDecFromStr("51643150036226787134389711697696177267")
 	s.Require().NoError(err)
-	dec2, err := osmomath.NewDecFromStr("-31798496660535729618459429845579852627")
+	dec2, err := osmomath.NewBigDecFromStr("-31798496660535729618459429845579852627")
 	s.Require().NoError(err)
 	dec3 := dec1.Add(dec2)
 	s.Require().Equal(
@@ -537,10 +536,10 @@ func (s *decimalTestSuite) TestDecMulInt() {
 		sdkInt osmomath.BigInt
 		want   osmomath.BigDec
 	}{
-		{osmomath.NewBigDec(10), osmomath.NewInt(2), osmomath.NewBigDec(20)},
-		{osmomath.NewBigDec(1000000), osmomath.NewInt(100), osmomath.NewBigDec(100000000)},
-		{osmomath.NewDecWithPrec(1, 1), osmomath.NewInt(10), osmomath.NewBigDec(1)},
-		{osmomath.NewDecWithPrec(1, 5), osmomath.NewInt(20), osmomath.NewDecWithPrec(2, 4)},
+		{osmomath.NewBigDec(10), osmomath.NewBigInt(2), osmomath.NewBigDec(20)},
+		{osmomath.NewBigDec(1000000), osmomath.NewBigInt(100), osmomath.NewBigDec(100000000)},
+		{osmomath.NewBigDecWithPrec(1, 1), osmomath.NewBigInt(10), osmomath.NewBigDec(1)},
+		{osmomath.NewBigDecWithPrec(1, 5), osmomath.NewBigInt(20), osmomath.NewBigDecWithPrec(2, 4)},
 	}
 	for i, tc := range tests {
 		got := tc.sdkDec.MulInt(tc.sdkInt)
@@ -553,14 +552,14 @@ func (s *decimalTestSuite) TestDecCeil() {
 		input    osmomath.BigDec
 		expected osmomath.BigDec
 	}{
-		{osmomath.MustNewDecFromStr("0.001"), osmomath.NewBigDec(1)},   // 0.001 => 1.0
-		{osmomath.MustNewDecFromStr("-0.001"), osmomath.ZeroDec()},     // -0.001 => 0.0
-		{osmomath.ZeroDec(), osmomath.ZeroDec()},                       // 0.0 => 0.0
-		{osmomath.MustNewDecFromStr("0.9"), osmomath.NewBigDec(1)},     // 0.9 => 1.0
-		{osmomath.MustNewDecFromStr("4.001"), osmomath.NewBigDec(5)},   // 4.001 => 5.0
-		{osmomath.MustNewDecFromStr("-4.001"), osmomath.NewBigDec(-4)}, // -4.001 => -4.0
-		{osmomath.MustNewDecFromStr("4.7"), osmomath.NewBigDec(5)},     // 4.7 => 5.0
-		{osmomath.MustNewDecFromStr("-4.7"), osmomath.NewBigDec(-4)},   // -4.7 => -4.0
+		{osmomath.MustNewBigDecFromStr("0.001"), osmomath.NewBigDec(1)},   // 0.001 => 1.0
+		{osmomath.MustNewBigDecFromStr("-0.001"), osmomath.ZeroBigDec()},  // -0.001 => 0.0
+		{osmomath.ZeroBigDec(), osmomath.ZeroBigDec()},                    // 0.0 => 0.0
+		{osmomath.MustNewBigDecFromStr("0.9"), osmomath.NewBigDec(1)},     // 0.9 => 1.0
+		{osmomath.MustNewBigDecFromStr("4.001"), osmomath.NewBigDec(5)},   // 4.001 => 5.0
+		{osmomath.MustNewBigDecFromStr("-4.001"), osmomath.NewBigDec(-4)}, // -4.001 => -4.0
+		{osmomath.MustNewBigDecFromStr("4.7"), osmomath.NewBigDec(5)},     // 4.7 => 5.0
+		{osmomath.MustNewBigDecFromStr("-4.7"), osmomath.NewBigDec(-4)},   // -4.7 => -4.0
 	}
 
 	for i, tc := range testCases {
@@ -575,16 +574,16 @@ func (s *decimalTestSuite) TestApproxRoot() {
 		root     uint64
 		expected osmomath.BigDec
 	}{
-		{osmomath.OneDec(), 10, osmomath.OneDec()},                                                                            // 1.0 ^ (0.1) => 1.0
-		{osmomath.NewDecWithPrec(25, 2), 2, osmomath.NewDecWithPrec(5, 1)},                                                    // 0.25 ^ (0.5) => 0.5
-		{osmomath.NewDecWithPrec(4, 2), 2, osmomath.NewDecWithPrec(2, 1)},                                                     // 0.04 ^ (0.5) => 0.2
-		{osmomath.NewDecFromInt(osmomath.NewInt(27)), 3, osmomath.NewDecFromInt(osmomath.NewInt(3))},                          // 27 ^ (1/3) => 3
-		{osmomath.NewDecFromInt(osmomath.NewInt(-81)), 4, osmomath.NewDecFromInt(osmomath.NewInt(-3))},                        // -81 ^ (0.25) => -3
-		{osmomath.NewDecFromInt(osmomath.NewInt(2)), 2, osmomath.MustNewDecFromStr("1.414213562373095048801688724209698079")}, // 2 ^ (0.5) => 1.414213562373095048801688724209698079
-		{osmomath.NewDecWithPrec(1005, 3), 31536000, osmomath.MustNewDecFromStr("1.000000000158153903837946258002096839")},    // 1.005 ^ (1/31536000) ≈ 1.000000000158153903837946258002096839
-		{osmomath.SmallestDec(), 2, osmomath.NewDecWithPrec(1, 18)},                                                           // 1e-36 ^ (0.5) => 1e-18
-		{osmomath.SmallestDec(), 3, osmomath.MustNewDecFromStr("0.000000000001000000000000000002431786")},                     // 1e-36 ^ (1/3) => 1e-12
-		{osmomath.NewDecWithPrec(1, 8), 3, osmomath.MustNewDecFromStr("0.002154434690031883721759293566519280")},              // 1e-8 ^ (1/3) ≈ 0.002154434690031883721759293566519
+		{osmomath.OneBigDec(), 10, osmomath.OneBigDec()},                                                                               // 1.0 ^ (0.1) => 1.0
+		{osmomath.NewBigDecWithPrec(25, 2), 2, osmomath.NewBigDecWithPrec(5, 1)},                                                       // 0.25 ^ (0.5) => 0.5
+		{osmomath.NewBigDecWithPrec(4, 2), 2, osmomath.NewBigDecWithPrec(2, 1)},                                                        // 0.04 ^ (0.5) => 0.2
+		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(27)), 3, osmomath.NewBigDecFromInt(osmomath.NewBigInt(3))},                       // 27 ^ (1/3) => 3
+		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(-81)), 4, osmomath.NewBigDecFromInt(osmomath.NewBigInt(-3))},                     // -81 ^ (0.25) => -3
+		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(2)), 2, osmomath.MustNewBigDecFromStr("1.414213562373095048801688724209698079")}, // 2 ^ (0.5) => 1.414213562373095048801688724209698079
+		{osmomath.NewBigDecWithPrec(1005, 3), 31536000, osmomath.MustNewBigDecFromStr("1.000000000158153903837946258002096839")},       // 1.005 ^ (1/31536000) ≈ 1.000000000158153903837946258002096839
+		{osmomath.SmallestBigDec(), 2, osmomath.NewBigDecWithPrec(1, 18)},                                                              // 1e-36 ^ (0.5) => 1e-18
+		{osmomath.SmallestBigDec(), 3, osmomath.MustNewBigDecFromStr("0.000000000001000000000000000002431786")},                        // 1e-36 ^ (1/3) => 1e-12
+		{osmomath.NewBigDecWithPrec(1, 8), 3, osmomath.MustNewBigDecFromStr("0.002154434690031883721759293566519280")},                 // 1e-8 ^ (1/3) ≈ 0.002154434690031883721759293566519
 	}
 
 	// In the case of 1e-8 ^ (1/3), the result repeats every 5 iterations starting from iteration 24
@@ -594,7 +593,7 @@ func (s *decimalTestSuite) TestApproxRoot() {
 	for i, tc := range testCases {
 		res, err := tc.input.ApproxRoot(tc.root)
 		s.Require().NoError(err)
-		s.Require().True(tc.expected.Sub(res).Abs().LTE(osmomath.SmallestDec()), "unexpected result for test case %d, input: %v", i, tc.input)
+		s.Require().True(tc.expected.Sub(res).Abs().LTE(osmomath.SmallestBigDec()), "unexpected result for test case %d, input: %v", i, tc.input)
 	}
 }
 
@@ -603,12 +602,12 @@ func (s *decimalTestSuite) TestApproxSqrt() {
 		input    osmomath.BigDec
 		expected osmomath.BigDec
 	}{
-		{osmomath.OneDec(), osmomath.OneDec()},                                                                             // 1.0 => 1.0
-		{osmomath.NewDecWithPrec(25, 2), osmomath.NewDecWithPrec(5, 1)},                                                    // 0.25 => 0.5
-		{osmomath.NewDecWithPrec(4, 2), osmomath.NewDecWithPrec(2, 1)},                                                     // 0.09 => 0.3
-		{osmomath.NewDecFromInt(osmomath.NewInt(9)), osmomath.NewDecFromInt(osmomath.NewInt(3))},                           // 9 => 3
-		{osmomath.NewDecFromInt(osmomath.NewInt(-9)), osmomath.NewDecFromInt(osmomath.NewInt(-3))},                         // -9 => -3
-		{osmomath.NewDecFromInt(osmomath.NewInt(2)), osmomath.MustNewDecFromStr("1.414213562373095048801688724209698079")}, // 2 => 1.414213562373095048801688724209698079
+		{osmomath.OneBigDec(), osmomath.OneBigDec()},                                                                                // 1.0 => 1.0
+		{osmomath.NewBigDecWithPrec(25, 2), osmomath.NewBigDecWithPrec(5, 1)},                                                       // 0.25 => 0.5
+		{osmomath.NewBigDecWithPrec(4, 2), osmomath.NewBigDecWithPrec(2, 1)},                                                        // 0.09 => 0.3
+		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(9)), osmomath.NewBigDecFromInt(osmomath.NewBigInt(3))},                        // 9 => 3
+		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(-9)), osmomath.NewBigDecFromInt(osmomath.NewBigInt(-3))},                      // -9 => -3
+		{osmomath.NewBigDecFromInt(osmomath.NewBigInt(2)), osmomath.MustNewBigDecFromStr("1.414213562373095048801688724209698079")}, // 2 => 1.414213562373095048801688724209698079
 	}
 
 	for i, tc := range testCases {
@@ -627,21 +626,23 @@ func (s *decimalTestSuite) TestDecSortableBytes() {
 		{osmomath.NewBigDec(1), []byte("000000000000000000000000000000000001.000000000000000000000000000000000000")},
 		{osmomath.NewBigDec(10), []byte("000000000000000000000000000000000010.000000000000000000000000000000000000")},
 		{osmomath.NewBigDec(12340), []byte("000000000000000000000000000000012340.000000000000000000000000000000000000")},
-		{osmomath.NewDecWithPrec(12340, 4), []byte("000000000000000000000000000000000001.234000000000000000000000000000000000")},
-		{osmomath.NewDecWithPrec(12340, 5), []byte("000000000000000000000000000000000000.123400000000000000000000000000000000")},
-		{osmomath.NewDecWithPrec(12340, 8), []byte("000000000000000000000000000000000000.000123400000000000000000000000000000")},
-		{osmomath.NewDecWithPrec(1009009009009009009, 17), []byte("000000000000000000000000000000000010.090090090090090090000000000000000000")},
-		{osmomath.NewDecWithPrec(-1009009009009009009, 17), []byte("-000000000000000000000000000000000010.090090090090090090000000000000000000")},
-		{osmomath.MustNewDecFromStr("1000000000000000000000000000000000000"), []byte("max")},
-		{osmomath.MustNewDecFromStr("-1000000000000000000000000000000000000"), []byte("--")},
+		{osmomath.NewBigDecWithPrec(12340, 4), []byte("000000000000000000000000000000000001.234000000000000000000000000000000000")},
+		{osmomath.NewBigDecWithPrec(12340, 5), []byte("000000000000000000000000000000000000.123400000000000000000000000000000000")},
+		{osmomath.NewBigDecWithPrec(12340, 8), []byte("000000000000000000000000000000000000.000123400000000000000000000000000000")},
+		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), []byte("000000000000000000000000000000000010.090090090090090090000000000000000000")},
+		{osmomath.NewBigDecWithPrec(-1009009009009009009, 17), []byte("-000000000000000000000000000000000010.090090090090090090000000000000000000")},
+		{osmomath.MustNewBigDecFromStr("1000000000000000000000000000000000000"), []byte("max")},
+		{osmomath.MustNewBigDecFromStr("-1000000000000000000000000000000000000"), []byte("--")},
 	}
 	for tcIndex, tc := range tests {
 		s.Require().Equal(tc.want, osmomath.SortableDecBytes(tc.d), "bad String(), index: %v", tcIndex)
 	}
 
-	s.Require().Panics(func() { osmomath.SortableDecBytes(osmomath.MustNewDecFromStr("1000000000000000000000000000000000001")) })
 	s.Require().Panics(func() {
-		osmomath.SortableDecBytes(osmomath.MustNewDecFromStr("-1000000000000000000000000000000000001"))
+		osmomath.SortableDecBytes(osmomath.MustNewBigDecFromStr("1000000000000000000000000000000000001"))
+	})
+	s.Require().Panics(func() {
+		osmomath.SortableDecBytes(osmomath.MustNewBigDecFromStr("-1000000000000000000000000000000000001"))
 	})
 }
 
@@ -658,25 +659,25 @@ func (s *decimalTestSuite) TestDecEncoding() {
 			"\"0.000000000000000000000000000000000000\"\n",
 		},
 		{
-			osmomath.NewDecWithPrec(4, 2),
+			osmomath.NewBigDecWithPrec(4, 2),
 			"3430303030303030303030303030303030303030303030303030303030303030303030",
 			"\"0.040000000000000000000000000000000000\"",
 			"\"0.040000000000000000000000000000000000\"\n",
 		},
 		{
-			osmomath.NewDecWithPrec(-4, 2),
+			osmomath.NewBigDecWithPrec(-4, 2),
 			"2D3430303030303030303030303030303030303030303030303030303030303030303030",
 			"\"-0.040000000000000000000000000000000000\"",
 			"\"-0.040000000000000000000000000000000000\"\n",
 		},
 		{
-			osmomath.MustNewDecFromStr("1.414213562373095048801688724209698079"),
+			osmomath.MustNewBigDecFromStr("1.414213562373095048801688724209698079"),
 			"31343134323133353632333733303935303438383031363838373234323039363938303739",
 			"\"1.414213562373095048801688724209698079\"",
 			"\"1.414213562373095048801688724209698079\"\n",
 		},
 		{
-			osmomath.MustNewDecFromStr("-1.414213562373095048801688724209698079"),
+			osmomath.MustNewBigDecFromStr("-1.414213562373095048801688724209698079"),
 			"2D31343134323133353632333733303935303438383031363838373234323039363938303739",
 			"\"-1.414213562373095048801688724209698079\"",
 			"\"-1.414213562373095048801688724209698079\"\n",
@@ -746,7 +747,7 @@ func BenchmarkMarshalTo(b *testing.B) {
 }
 
 func (s *decimalTestSuite) TestLog2() {
-	var expectedErrTolerance = osmomath.MustNewDecFromStr("0.000000000000000000000000000000000100")
+	var expectedErrTolerance = osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000100")
 
 	tests := map[string]struct {
 		initialValue osmomath.BigDec
@@ -755,27 +756,27 @@ func (s *decimalTestSuite) TestLog2() {
 		expectedPanic bool
 	}{
 		"log_2{-1}; invalid; panic": {
-			initialValue:  osmomath.OneDec().Neg(),
+			initialValue:  osmomath.OneBigDec().Neg(),
 			expectedPanic: true,
 		},
 		"log_2{0}; invalid; panic": {
-			initialValue:  osmomath.ZeroDec(),
+			initialValue:  osmomath.ZeroBigDec(),
 			expectedPanic: true,
 		},
 		"log_2{0.001} = -9.965784284662087043610958288468170528": {
-			initialValue: osmomath.MustNewDecFromStr("0.001"),
+			initialValue: osmomath.MustNewBigDecFromStr("0.001"),
 			// From: https://www.wolframalpha.com/input?i=log+base+2+of+0.999912345+with+33+digits
-			expected: osmomath.MustNewDecFromStr("-9.965784284662087043610958288468170528"),
+			expected: osmomath.MustNewBigDecFromStr("-9.965784284662087043610958288468170528"),
 		},
 		"log_2{0.56171821941421412902170941} = -0.832081497183140708984033250637831402": {
-			initialValue: osmomath.MustNewDecFromStr("0.56171821941421412902170941"),
+			initialValue: osmomath.MustNewBigDecFromStr("0.56171821941421412902170941"),
 			// From: https://www.wolframalpha.com/input?i=log+base+2+of+0.56171821941421412902170941+with+36+digits
-			expected: osmomath.MustNewDecFromStr("-0.832081497183140708984033250637831402"),
+			expected: osmomath.MustNewBigDecFromStr("-0.832081497183140708984033250637831402"),
 		},
 		"log_2{0.999912345} = -0.000126464976533858080645902722235833": {
-			initialValue: osmomath.MustNewDecFromStr("0.999912345"),
+			initialValue: osmomath.MustNewBigDecFromStr("0.999912345"),
 			// From: https://www.wolframalpha.com/input?i=log+base+2+of+0.999912345+with+37+digits
-			expected: osmomath.MustNewDecFromStr("-0.000126464976533858080645902722235833"),
+			expected: osmomath.MustNewBigDecFromStr("-0.000126464976533858080645902722235833"),
 		},
 		"log_2{1} = 0": {
 			initialValue: osmomath.NewBigDec(1),
@@ -788,7 +789,7 @@ func (s *decimalTestSuite) TestLog2() {
 		"log_2{7} = 2.807354922057604107441969317231830809": {
 			initialValue: osmomath.NewBigDec(7),
 			// From: https://www.wolframalpha.com/input?i=log+base+2+of+7+37+digits
-			expected: osmomath.MustNewDecFromStr("2.807354922057604107441969317231830809"),
+			expected: osmomath.MustNewBigDecFromStr("2.807354922057604107441969317231830809"),
 		},
 		"log_2{512} = 9": {
 			initialValue: osmomath.NewBigDec(512),
@@ -797,32 +798,32 @@ func (s *decimalTestSuite) TestLog2() {
 		"log_2{580} = 9.179909090014934468590092754117374938": {
 			initialValue: osmomath.NewBigDec(580),
 			// From: https://www.wolframalpha.com/input?i=log+base+2+of+600+37+digits
-			expected: osmomath.MustNewDecFromStr("9.179909090014934468590092754117374938"),
+			expected: osmomath.MustNewBigDecFromStr("9.179909090014934468590092754117374938"),
 		},
 		"log_2{1024} = 10": {
 			initialValue: osmomath.NewBigDec(1024),
 			expected:     osmomath.NewBigDec(10),
 		},
 		"log_2{1024.987654321} = 10.001390817654141324352719749259888355": {
-			initialValue: osmomath.NewDecWithPrec(1024987654321, 9),
+			initialValue: osmomath.NewBigDecWithPrec(1024987654321, 9),
 			// From: https://www.wolframalpha.com/input?i=log+base+2+of+1024.987654321+38+digits
-			expected: osmomath.MustNewDecFromStr("10.001390817654141324352719749259888355"),
+			expected: osmomath.MustNewBigDecFromStr("10.001390817654141324352719749259888355"),
 		},
 		"log_2{912648174127941279170121098210.92821920190204131121} = 99.525973560175362367047484597337715868": {
-			initialValue: osmomath.MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
+			initialValue: osmomath.MustNewBigDecFromStr("912648174127941279170121098210.92821920190204131121"),
 			// From: https://www.wolframalpha.com/input?i=log+base+2+of+912648174127941279170121098210.92821920190204131121+38+digits
-			expected: osmomath.MustNewDecFromStr("99.525973560175362367047484597337715868"),
+			expected: osmomath.MustNewBigDecFromStr("99.525973560175362367047484597337715868"),
 		},
 		"log_2{Max Spot Price} = 128": {
-			initialValue: osmomath.BigDecFromSDKDec(osmomath.MaxSpotPrice), // 2^128 - 1
+			initialValue: osmomath.BigDecFromDec(osmomath.MaxSpotPrice), // 2^128 - 1
 			// From: https://www.wolframalpha.com/input?i=log+base+2+of+%28%282%5E128%29+-+1%29+38+digits
-			expected: osmomath.MustNewDecFromStr("128"),
+			expected: osmomath.MustNewBigDecFromStr("128"),
 		},
 		// The value tested below is: gammtypes.MaxSpotPrice * 0.99 = (2^128 - 1) * 0.99
 		"log_2{336879543251729078828740861357450529340.45} = 127.98550043030488492336620207564264562": {
-			initialValue: osmomath.MustNewDecFromStr("336879543251729078828740861357450529340.45"),
+			initialValue: osmomath.MustNewBigDecFromStr("336879543251729078828740861357450529340.45"),
 			// From: https://www.wolframalpha.com/input?i=log+base+2+of+%28%28%282%5E128%29+-+1%29*0.99%29++38+digits
-			expected: osmomath.MustNewDecFromStr("127.98550043030488492336620207564264562"),
+			expected: osmomath.MustNewBigDecFromStr("127.98550043030488492336620207564264562"),
 		},
 	}
 
@@ -842,7 +843,7 @@ func (s *decimalTestSuite) TestLog2() {
 }
 
 func (s *decimalTestSuite) TestLn() {
-	var expectedErrTolerance = osmomath.MustNewDecFromStr("0.000000000000000000000000000000000100")
+	var expectedErrTolerance = osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000100")
 
 	tests := map[string]struct {
 		initialValue osmomath.BigDec
@@ -851,61 +852,61 @@ func (s *decimalTestSuite) TestLn() {
 		expectedPanic bool
 	}{
 		"log_e{-1}; invalid; panic": {
-			initialValue:  osmomath.OneDec().Neg(),
+			initialValue:  osmomath.OneBigDec().Neg(),
 			expectedPanic: true,
 		},
 		"log_e{0}; invalid; panic": {
-			initialValue:  osmomath.ZeroDec(),
+			initialValue:  osmomath.ZeroBigDec(),
 			expectedPanic: true,
 		},
 		"log_e{0.001} = -6.90775527898213705205397436405309262": {
-			initialValue: osmomath.MustNewDecFromStr("0.001"),
+			initialValue: osmomath.MustNewBigDecFromStr("0.001"),
 			// From: https://www.wolframalpha.com/input?i=log0.001+to+36+digits+with+36+decimals
-			expected: osmomath.MustNewDecFromStr("-6.90775527898213705205397436405309262"),
+			expected: osmomath.MustNewBigDecFromStr("-6.90775527898213705205397436405309262"),
 		},
 		"log_e{0.56171821941421412902170941} = -0.576754943768592057376050794884207180": {
-			initialValue: osmomath.MustNewDecFromStr("0.56171821941421412902170941"),
+			initialValue: osmomath.MustNewBigDecFromStr("0.56171821941421412902170941"),
 			// From: https://www.wolframalpha.com/input?i=log0.56171821941421412902170941+to+36+digits
-			expected: osmomath.MustNewDecFromStr("-0.576754943768592057376050794884207180"),
+			expected: osmomath.MustNewBigDecFromStr("-0.576754943768592057376050794884207180"),
 		},
 		"log_e{0.999912345} = -0.000087658841924023373535614212850888": {
-			initialValue: osmomath.MustNewDecFromStr("0.999912345"),
+			initialValue: osmomath.MustNewBigDecFromStr("0.999912345"),
 			// From: https://www.wolframalpha.com/input?i=log0.999912345+to+32+digits
-			expected: osmomath.MustNewDecFromStr("-0.000087658841924023373535614212850888"),
+			expected: osmomath.MustNewBigDecFromStr("-0.000087658841924023373535614212850888"),
 		},
 		"log_e{1} = 0": {
 			initialValue: osmomath.NewBigDec(1),
 			expected:     osmomath.NewBigDec(0),
 		},
 		"log_e{e} = 1": {
-			initialValue: osmomath.MustNewDecFromStr("2.718281828459045235360287471352662498"),
+			initialValue: osmomath.MustNewBigDecFromStr("2.718281828459045235360287471352662498"),
 			// From: https://www.wolframalpha.com/input?i=e+with+36+decimals
 			expected: osmomath.NewBigDec(1),
 		},
 		"log_e{7} = 1.945910149055313305105352743443179730": {
 			initialValue: osmomath.NewBigDec(7),
 			// From: https://www.wolframalpha.com/input?i=log7+up+to+36+decimals
-			expected: osmomath.MustNewDecFromStr("1.945910149055313305105352743443179730"),
+			expected: osmomath.MustNewBigDecFromStr("1.945910149055313305105352743443179730"),
 		},
 		"log_e{512} = 6.238324625039507784755089093123589113": {
 			initialValue: osmomath.NewBigDec(512),
 			// From: https://www.wolframalpha.com/input?i=log512+up+to+36+decimals
-			expected: osmomath.MustNewDecFromStr("6.238324625039507784755089093123589113"),
+			expected: osmomath.MustNewBigDecFromStr("6.238324625039507784755089093123589113"),
 		},
 		"log_e{580} = 6.36302810354046502061849560850445238": {
 			initialValue: osmomath.NewBigDec(580),
 			// From: https://www.wolframalpha.com/input?i=log580+up+to+36+decimals
-			expected: osmomath.MustNewDecFromStr("6.36302810354046502061849560850445238"),
+			expected: osmomath.MustNewBigDecFromStr("6.36302810354046502061849560850445238"),
 		},
 		"log_e{1024.987654321} = 6.93243584693509415029056534690631614": {
-			initialValue: osmomath.NewDecWithPrec(1024987654321, 9),
+			initialValue: osmomath.NewBigDecWithPrec(1024987654321, 9),
 			// From: https://www.wolframalpha.com/input?i=log1024.987654321+to+36+digits
-			expected: osmomath.MustNewDecFromStr("6.93243584693509415029056534690631614"),
+			expected: osmomath.MustNewBigDecFromStr("6.93243584693509415029056534690631614"),
 		},
 		"log_e{912648174127941279170121098210.92821920190204131121} = 68.986147965719214790400745338243805015": {
-			initialValue: osmomath.MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
+			initialValue: osmomath.MustNewBigDecFromStr("912648174127941279170121098210.92821920190204131121"),
 			// From: https://www.wolframalpha.com/input?i=log912648174127941279170121098210.92821920190204131121+to+38+digits
-			expected: osmomath.MustNewDecFromStr("68.986147965719214790400745338243805015"),
+			expected: osmomath.MustNewBigDecFromStr("68.986147965719214790400745338243805015"),
 		},
 	}
 
@@ -933,54 +934,54 @@ func (s *decimalTestSuite) TestTickLog() {
 		expectedPanic        bool
 	}{
 		"log_1.0001{-1}; invalid; panic": {
-			initialValue:  osmomath.OneDec().Neg(),
+			initialValue:  osmomath.OneBigDec().Neg(),
 			expectedPanic: true,
 		},
 		"log_1.0001{0}; invalid; panic": {
-			initialValue:  osmomath.ZeroDec(),
+			initialValue:  osmomath.ZeroBigDec(),
 			expectedPanic: true,
 		},
 		"log_1.0001{0.001} = -69081.006609899112313305835611219486392199": {
-			initialValue: osmomath.MustNewDecFromStr("0.001"),
+			initialValue: osmomath.MustNewBigDecFromStr("0.001"),
 			// From: https://www.wolframalpha.com/input?i=log_1.0001%280.001%29+to+41+digits
-			expectedErrTolerance: osmomath.MustNewDecFromStr("0.000000000000000000000000000143031879"),
-			expected:             osmomath.MustNewDecFromStr("-69081.006609899112313305835611219486392199"),
+			expectedErrTolerance: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000143031879"),
+			expected:             osmomath.MustNewBigDecFromStr("-69081.006609899112313305835611219486392199"),
 		},
 		"log_1.0001{0.999912345} = -0.876632247930741919880461740717176538": {
-			initialValue: osmomath.MustNewDecFromStr("0.999912345"),
+			initialValue: osmomath.MustNewBigDecFromStr("0.999912345"),
 			// From: https://www.wolframalpha.com/input?i=log_1.0001%280.999912345%29+to+36+digits
-			expectedErrTolerance: osmomath.MustNewDecFromStr("0.000000000000000000000000000000138702"),
-			expected:             osmomath.MustNewDecFromStr("-0.876632247930741919880461740717176538"),
+			expectedErrTolerance: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000138702"),
+			expected:             osmomath.MustNewBigDecFromStr("-0.876632247930741919880461740717176538"),
 		},
 		"log_1.0001{1} = 0": {
 			initialValue: osmomath.NewBigDec(1),
 
-			expectedErrTolerance: osmomath.ZeroDec(),
+			expectedErrTolerance: osmomath.ZeroBigDec(),
 			expected:             osmomath.NewBigDec(0),
 		},
 		"log_1.0001{1.0001} = 1": {
-			initialValue: osmomath.MustNewDecFromStr("1.0001"),
+			initialValue: osmomath.MustNewBigDecFromStr("1.0001"),
 
-			expectedErrTolerance: osmomath.MustNewDecFromStr("0.000000000000000000000000000000152500"),
-			expected:             osmomath.OneDec(),
+			expectedErrTolerance: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000152500"),
+			expected:             osmomath.OneBigDec(),
 		},
 		"log_1.0001{512} = 62386.365360724158196763710649998441051753": {
 			initialValue: osmomath.NewBigDec(512),
 			// From: https://www.wolframalpha.com/input?i=log_1.0001%28512%29+to+41+digits
-			expectedErrTolerance: osmomath.MustNewDecFromStr("0.000000000000000000000000000129292137"),
-			expected:             osmomath.MustNewDecFromStr("62386.365360724158196763710649998441051753"),
+			expectedErrTolerance: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000129292137"),
+			expected:             osmomath.MustNewBigDecFromStr("62386.365360724158196763710649998441051753"),
 		},
 		"log_1.0001{1024.987654321} = 69327.824629506998657531621822514042777198": {
-			initialValue: osmomath.NewDecWithPrec(1024987654321, 9),
+			initialValue: osmomath.NewBigDecWithPrec(1024987654321, 9),
 			// From: https://www.wolframalpha.com/input?i=log_1.0001%281024.987654321%29+to+41+digits
-			expectedErrTolerance: osmomath.MustNewDecFromStr("0.000000000000000000000000000143836264"),
-			expected:             osmomath.MustNewDecFromStr("69327.824629506998657531621822514042777198"),
+			expectedErrTolerance: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000143836264"),
+			expected:             osmomath.MustNewBigDecFromStr("69327.824629506998657531621822514042777198"),
 		},
 		"log_1.0001{912648174127941279170121098210.92821920190204131121} = 689895.972156319183538389792485913311778672": {
-			initialValue: osmomath.MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
+			initialValue: osmomath.MustNewBigDecFromStr("912648174127941279170121098210.92821920190204131121"),
 			// From: https://www.wolframalpha.com/input?i=log_1.0001%28912648174127941279170121098210.92821920190204131121%29+to+42+digits
-			expectedErrTolerance: osmomath.MustNewDecFromStr("0.000000000000000000000000001429936067"),
-			expected:             osmomath.MustNewDecFromStr("689895.972156319183538389792485913311778672"),
+			expectedErrTolerance: osmomath.MustNewBigDecFromStr("0.000000000000000000000000001429936067"),
+			expected:             osmomath.MustNewBigDecFromStr("689895.972156319183538389792485913311778672"),
 		},
 	}
 
@@ -1034,69 +1035,69 @@ func (s *decimalTestSuite) TestCustomBaseLog() {
 			initialValue: osmomath.NewBigDec(100),
 			base:         osmomath.NewBigDec(30),
 			// From: https://www.wolframalpha.com/input?i=log_30%28100%29+to+37+digits
-			expectedErrTolerance: osmomath.ZeroDec(),
-			expected:             osmomath.MustNewDecFromStr("1.353984985057691049642502891262784015"),
+			expectedErrTolerance: osmomath.ZeroBigDec(),
+			expected:             osmomath.MustNewBigDecFromStr("1.353984985057691049642502891262784015"),
 		},
 		"log_0.2(0.99) = 0.006244624769837438271878639001855450": {
-			initialValue: osmomath.MustNewDecFromStr("0.99"),
-			base:         osmomath.MustNewDecFromStr("0.2"),
+			initialValue: osmomath.MustNewBigDecFromStr("0.99"),
+			base:         osmomath.MustNewBigDecFromStr("0.2"),
 			// From: https://www.wolframalpha.com/input?i=log_0.2%280.99%29+to+34+digits
-			expectedErrTolerance: osmomath.MustNewDecFromStr("0.000000000000000000000000000000000013"),
-			expected:             osmomath.MustNewDecFromStr("0.006244624769837438271878639001855450"),
+			expectedErrTolerance: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000013"),
+			expected:             osmomath.MustNewBigDecFromStr("0.006244624769837438271878639001855450"),
 		},
 
 		"log_0.0001(500000) = -1.424742501084004701196565276318876743": {
 			initialValue: osmomath.NewBigDec(500000),
-			base:         osmomath.NewDecWithPrec(1, 4),
+			base:         osmomath.NewBigDecWithPrec(1, 4),
 			// From: https://www.wolframalpha.com/input?i=log_0.0001%28500000%29+to+37+digits
-			expectedErrTolerance: osmomath.MustNewDecFromStr("0.000000000000000000000000000000000003"),
-			expected:             osmomath.MustNewDecFromStr("-1.424742501084004701196565276318876743"),
+			expectedErrTolerance: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000003"),
+			expected:             osmomath.MustNewBigDecFromStr("-1.424742501084004701196565276318876743"),
 		},
 
 		"log_500000(0.0001) = -0.701881216598197542030218906945601429": {
-			initialValue: osmomath.NewDecWithPrec(1, 4),
+			initialValue: osmomath.NewBigDecWithPrec(1, 4),
 			base:         osmomath.NewBigDec(500000),
 			// From: https://www.wolframalpha.com/input?i=log_500000%280.0001%29+to+36+digits
-			expectedErrTolerance: osmomath.MustNewDecFromStr("0.000000000000000000000000000000000001"),
-			expected:             osmomath.MustNewDecFromStr("-0.701881216598197542030218906945601429"),
+			expectedErrTolerance: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000001"),
+			expected:             osmomath.MustNewBigDecFromStr("-0.701881216598197542030218906945601429"),
 		},
 
 		"log_10000(5000000) = 1.674742501084004701196565276318876743": {
 			initialValue: osmomath.NewBigDec(5000000),
 			base:         osmomath.NewBigDec(10000),
 			// From: https://www.wolframalpha.com/input?i=log_10000%285000000%29+to+37+digits
-			expectedErrTolerance: osmomath.MustNewDecFromStr("0.000000000000000000000000000000000002"),
-			expected:             osmomath.MustNewDecFromStr("1.674742501084004701196565276318876743"),
+			expectedErrTolerance: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000000002"),
+			expected:             osmomath.MustNewBigDecFromStr("1.674742501084004701196565276318876743"),
 		},
 		"log_0.123456789(1) = 0": {
-			initialValue: osmomath.OneDec(),
-			base:         osmomath.MustNewDecFromStr("0.123456789"),
+			initialValue: osmomath.OneBigDec(),
+			base:         osmomath.MustNewBigDecFromStr("0.123456789"),
 
-			expectedErrTolerance: osmomath.ZeroDec(),
-			expected:             osmomath.ZeroDec(),
+			expectedErrTolerance: osmomath.ZeroBigDec(),
+			expected:             osmomath.ZeroBigDec(),
 		},
 		"log_1111(1111) = 1": {
 			initialValue: osmomath.NewBigDec(1111),
 			base:         osmomath.NewBigDec(1111),
 
-			expectedErrTolerance: osmomath.ZeroDec(),
-			expected:             osmomath.OneDec(),
+			expectedErrTolerance: osmomath.ZeroBigDec(),
+			expected:             osmomath.OneBigDec(),
 		},
 
 		"log_1.123{1024.987654321} = 59.760484327223888489694630378785099461": {
-			initialValue: osmomath.NewDecWithPrec(1024987654321, 9),
-			base:         osmomath.NewDecWithPrec(1123, 3),
+			initialValue: osmomath.NewBigDecWithPrec(1024987654321, 9),
+			base:         osmomath.NewBigDecWithPrec(1123, 3),
 			// From: https://www.wolframalpha.com/input?i=log_1.123%281024.987654321%29+to+38+digits
-			expectedErrTolerance: osmomath.MustNewDecFromStr("0.000000000000000000000000000000007686"),
-			expected:             osmomath.MustNewDecFromStr("59.760484327223888489694630378785099461"),
+			expectedErrTolerance: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000007686"),
+			expected:             osmomath.MustNewBigDecFromStr("59.760484327223888489694630378785099461"),
 		},
 
 		"log_1.123{912648174127941279170121098210.92821920190204131121} = 594.689327867863079177915648832621538986": {
-			initialValue: osmomath.MustNewDecFromStr("912648174127941279170121098210.92821920190204131121"),
-			base:         osmomath.NewDecWithPrec(1123, 3),
+			initialValue: osmomath.MustNewBigDecFromStr("912648174127941279170121098210.92821920190204131121"),
+			base:         osmomath.NewBigDecWithPrec(1123, 3),
 			// From: https://www.wolframalpha.com/input?i=log_1.123%28912648174127941279170121098210.92821920190204131121%29+to+39+digits
-			expectedErrTolerance: osmomath.MustNewDecFromStr("0.000000000000000000000000000000077705"),
-			expected:             osmomath.MustNewDecFromStr("594.689327867863079177915648832621538986"),
+			expectedErrTolerance: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000077705"),
+			expected:             osmomath.MustNewBigDecFromStr("594.689327867863079177915648832621538986"),
 		},
 	}
 	for name, tc := range tests {
@@ -1114,7 +1115,7 @@ func (s *decimalTestSuite) TestCustomBaseLog() {
 }
 
 func (s *decimalTestSuite) TestPowerInteger() {
-	var expectedErrTolerance = osmomath.MustNewDecFromStr("0.000000000000000000000000000000100000")
+	var expectedErrTolerance = osmomath.MustNewBigDecFromStr("0.000000000000000000000000000000100000")
 
 	tests := map[string]struct {
 		base           osmomath.BigDec
@@ -1124,78 +1125,78 @@ func (s *decimalTestSuite) TestPowerInteger() {
 		expectedToleranceOverwrite osmomath.BigDec
 	}{
 		"0^2": {
-			base:     osmomath.ZeroDec(),
+			base:     osmomath.ZeroBigDec(),
 			exponent: 2,
 
-			expectedResult: osmomath.ZeroDec(),
+			expectedResult: osmomath.ZeroBigDec(),
 		},
 		"1^2": {
-			base:     osmomath.OneDec(),
+			base:     osmomath.OneBigDec(),
 			exponent: 2,
 
-			expectedResult: osmomath.OneDec(),
+			expectedResult: osmomath.OneBigDec(),
 		},
 		"4^4": {
-			base:     osmomath.MustNewDecFromStr("4"),
+			base:     osmomath.MustNewBigDecFromStr("4"),
 			exponent: 4,
 
-			expectedResult: osmomath.MustNewDecFromStr("256"),
+			expectedResult: osmomath.MustNewBigDecFromStr("256"),
 		},
 		"5^3": {
-			base:     osmomath.MustNewDecFromStr("5"),
+			base:     osmomath.MustNewBigDecFromStr("5"),
 			exponent: 4,
 
-			expectedResult: osmomath.MustNewDecFromStr("625"),
+			expectedResult: osmomath.MustNewBigDecFromStr("625"),
 		},
 		"e^10": {
 			base:     osmomath.EulersNumber,
 			exponent: 10,
 
 			// https://www.wolframalpha.com/input?i=e%5E10+41+digits
-			expectedResult: osmomath.MustNewDecFromStr("22026.465794806716516957900645284244366354"),
+			expectedResult: osmomath.MustNewBigDecFromStr("22026.465794806716516957900645284244366354"),
 		},
 		"geom twap overflow: 2^log_2{max spot price + 1}": {
 			base: osmomath.TwoBigDec,
 			// add 1 for simplicity of calculation to isolate overflow.
-			exponent: uint64(osmomath.BigDecFromSDKDec(osmomath.MaxSpotPrice).Add(osmomath.OneDec()).LogBase2().TruncateInt().Uint64()),
+			exponent: uint64(osmomath.BigDecFromDec(osmomath.MaxSpotPrice).Add(osmomath.OneBigDec()).LogBase2().TruncateInt().Uint64()),
 
 			// https://www.wolframalpha.com/input?i=2%5E%28floor%28+log+base+2+%282%5E128%29%29%29+++39+digits
-			expectedResult: osmomath.MustNewDecFromStr("340282366920938463463374607431768211456"),
+			expectedResult: osmomath.MustNewBigDecFromStr("340282366920938463463374607431768211456"),
 		},
 		"geom twap overflow: 2^log_2{max spot price}": {
 			base:     osmomath.TwoBigDec,
-			exponent: uint64(osmomath.BigDecFromSDKDec(osmomath.MaxSpotPrice).LogBase2().TruncateInt().Uint64()),
+			exponent: uint64(osmomath.BigDecFromDec(osmomath.MaxSpotPrice).LogBase2().TruncateInt().Uint64()),
 
 			// https://www.wolframalpha.com/input?i=2%5E%28floor%28+log+base+2+%282%5E128+-+1%29%29%29+++39+digits
-			expectedResult: osmomath.MustNewDecFromStr("170141183460469231731687303715884105728"),
+			expectedResult: osmomath.MustNewBigDecFromStr("170141183460469231731687303715884105728"),
 		},
 		"geom twap overflow: 2^log_2{max spot price / 2 - 2017}": { // 2017 is prime.
 			base:     osmomath.TwoBigDec,
-			exponent: uint64(osmomath.BigDecFromSDKDec(osmomath.MaxSpotPrice.Quo(sdk.NewDec(2)).Sub(sdk.NewDec(2017))).LogBase2().TruncateInt().Uint64()),
+			exponent: uint64(osmomath.BigDecFromDec(osmomath.MaxSpotPrice.Quo(osmomath.NewDec(2)).Sub(osmomath.NewDec(2017))).LogBase2().TruncateInt().Uint64()),
 
 			// https://www.wolframalpha.com/input?i=e%5E10+41+digits
-			expectedResult: osmomath.MustNewDecFromStr("85070591730234615865843651857942052864"),
+			expectedResult: osmomath.MustNewBigDecFromStr("85070591730234615865843651857942052864"),
 		},
 
-		// sdk.Dec test vectors copied from osmosis-labs/cosmos-sdk:
+		// osmomath.Dec test vectors copied from osmosis-labs/cosmos-sdk:
 
 		"1.0 ^ (10) => 1.0": {
-			base:     osmomath.OneDec(),
+			base:     osmomath.OneBigDec(),
 			exponent: 10,
 
-			expectedResult: osmomath.OneDec(),
+			expectedResult: osmomath.OneBigDec(),
 		},
 		"0.5 ^ 2 => 0.25": {
-			base:     osmomath.NewDecWithPrec(5, 1),
+			base:     osmomath.NewBigDecWithPrec(5, 1),
 			exponent: 2,
 
-			expectedResult: osmomath.NewDecWithPrec(25, 2),
+			expectedResult: osmomath.NewBigDecWithPrec(25, 2),
 		},
 		"0.2 ^ 2 => 0.04": {
-			base:     osmomath.NewDecWithPrec(2, 1),
+			base:     osmomath.NewBigDecWithPrec(2, 1),
 			exponent: 2,
 
-			expectedResult: osmomath.NewDecWithPrec(4, 2),
+			expectedResult: osmomath.NewBigDecWithPrec(4, 2),
 		},
 		"3 ^ 3 => 27": {
 			base:     osmomath.NewBigDec(3),
@@ -1213,20 +1214,20 @@ func (s *decimalTestSuite) TestPowerInteger() {
 			base:     osmomath.NewBigDec(-3),
 			exponent: 50,
 
-			expectedResult: osmomath.MustNewDecFromStr("717897987691852588770249"),
+			expectedResult: osmomath.MustNewBigDecFromStr("717897987691852588770249"),
 		},
 		"-3 ^ 51 = -2153693963075557766310747": {
 			base:     osmomath.NewBigDec(-3),
 			exponent: 51,
 
-			expectedResult: osmomath.MustNewDecFromStr("-2153693963075557766310747"),
+			expectedResult: osmomath.MustNewBigDecFromStr("-2153693963075557766310747"),
 		},
 		"1.414213562373095049 ^ 2 = 2": {
-			base:     osmomath.NewDecWithPrec(1414213562373095049, 18),
+			base:     osmomath.NewBigDecWithPrec(1414213562373095049, 18),
 			exponent: 2,
 
 			expectedResult:             osmomath.NewBigDec(2),
-			expectedToleranceOverwrite: osmomath.MustNewDecFromStr("0.0000000000000000006"),
+			expectedToleranceOverwrite: osmomath.MustNewBigDecFromStr("0.0000000000000000006"),
 		},
 	}
 
@@ -1248,7 +1249,7 @@ func (s *decimalTestSuite) TestPowerInteger() {
 			// positive integer, we also test Power().
 			// Negative exponent and base are not supported for Power()
 			if tc.exponent >= 0 && !tc.base.IsNegative() {
-				actualResult2 := tc.base.Power(osmomath.NewDecFromInt(osmomath.NewIntFromUint64(tc.exponent)))
+				actualResult2 := tc.base.Power(osmomath.NewBigDecFromInt(osmomath.NewBigIntFromUint64(tc.exponent)))
 				require.True(osmomath.DecApproxEq(s.T(), tc.expectedResult, actualResult2, tolerance))
 			}
 		})
@@ -1260,13 +1261,13 @@ func (s *decimalTestSuite) TestClone() {
 		startValue osmomath.BigDec
 	}{
 		"1.1": {
-			startValue: osmomath.MustNewDecFromStr("1.1"),
+			startValue: osmomath.MustNewBigDecFromStr("1.1"),
 		},
 		"-3": {
-			startValue: osmomath.MustNewDecFromStr("-3"),
+			startValue: osmomath.MustNewBigDecFromStr("-3"),
 		},
 		"0": {
-			startValue: osmomath.MustNewDecFromStr("-3"),
+			startValue: osmomath.MustNewBigDecFromStr("-3"),
 		},
 	}
 
@@ -1289,23 +1290,23 @@ func (s *decimalTestSuite) TestClone() {
 // while Mut is not.
 func (s *decimalTestSuite) TestMul_Mutation() {
 
-	mulBy := osmomath.MustNewDecFromStr("2")
+	mulBy := osmomath.MustNewBigDecFromStr("2")
 
 	tests := map[string]struct {
 		startValue        osmomath.BigDec
 		expectedMulResult osmomath.BigDec
 	}{
 		"1.1": {
-			startValue:        osmomath.MustNewDecFromStr("1.1"),
-			expectedMulResult: osmomath.MustNewDecFromStr("2.2"),
+			startValue:        osmomath.MustNewBigDecFromStr("1.1"),
+			expectedMulResult: osmomath.MustNewBigDecFromStr("2.2"),
 		},
 		"-3": {
-			startValue:        osmomath.MustNewDecFromStr("-3"),
-			expectedMulResult: osmomath.MustNewDecFromStr("-6"),
+			startValue:        osmomath.MustNewBigDecFromStr("-3"),
+			expectedMulResult: osmomath.MustNewBigDecFromStr("-6"),
 		},
 		"0": {
-			startValue:        osmomath.ZeroDec(),
-			expectedMulResult: osmomath.ZeroDec(),
+			startValue:        osmomath.ZeroBigDec(),
+			expectedMulResult: osmomath.ZeroBigDec(),
 		},
 	}
 
@@ -1334,20 +1335,20 @@ func (s *decimalTestSuite) TestPowerInteger_Mutation() {
 		expectedResult osmomath.BigDec
 	}{
 		"1": {
-			startValue:     osmomath.OneDec(),
-			expectedResult: osmomath.OneDec(),
+			startValue:     osmomath.OneBigDec(),
+			expectedResult: osmomath.OneBigDec(),
 		},
 		"-3": {
-			startValue:     osmomath.MustNewDecFromStr("-3"),
-			expectedResult: osmomath.MustNewDecFromStr("9"),
+			startValue:     osmomath.MustNewBigDecFromStr("-3"),
+			expectedResult: osmomath.MustNewBigDecFromStr("9"),
 		},
 		"0": {
-			startValue:     osmomath.ZeroDec(),
-			expectedResult: osmomath.ZeroDec(),
+			startValue:     osmomath.ZeroBigDec(),
+			expectedResult: osmomath.ZeroBigDec(),
 		},
 		"4": {
-			startValue:     osmomath.MustNewDecFromStr("4.5"),
-			expectedResult: osmomath.MustNewDecFromStr("20.25"),
+			startValue:     osmomath.MustNewBigDecFromStr("4.5"),
+			expectedResult: osmomath.MustNewBigDecFromStr("20.25"),
 		},
 	}
 
@@ -1384,11 +1385,11 @@ func (s *decimalTestSuite) TestPower() {
 			errTolerance: zeroAdditiveErrTolerance,
 		},
 		"2^0.5 (base of 2 and non-integer exponent)": {
-			base:     osmomath.MustNewDecFromStr("2"),
-			exponent: osmomath.MustNewDecFromStr("0.5"),
+			base:     osmomath.MustNewBigDecFromStr("2"),
+			exponent: osmomath.MustNewBigDecFromStr("0.5"),
 
 			// https://www.wolframalpha.com/input?i=2%5E0.5+37+digits
-			expectedResult: osmomath.MustNewDecFromStr("1.414213562373095048801688724209698079"),
+			expectedResult: osmomath.MustNewBigDecFromStr("1.414213562373095048801688724209698079"),
 
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance: minDecTolerance,
@@ -1396,11 +1397,11 @@ func (s *decimalTestSuite) TestPower() {
 			},
 		},
 		"3^0.33 (integer base other than 2 and non-integer exponent)": {
-			base:     osmomath.MustNewDecFromStr("3"),
-			exponent: osmomath.MustNewDecFromStr("0.33"),
+			base:     osmomath.MustNewBigDecFromStr("3"),
+			exponent: osmomath.MustNewBigDecFromStr("0.33"),
 
 			// https://www.wolframalpha.com/input?i=3%5E0.33+37+digits
-			expectedResult: osmomath.MustNewDecFromStr("1.436977652184851654252692986409357265"),
+			expectedResult: osmomath.MustNewBigDecFromStr("1.436977652184851654252692986409357265"),
 
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance: minDecTolerance,
@@ -1409,10 +1410,10 @@ func (s *decimalTestSuite) TestPower() {
 		},
 		"e^0.98999 (non-integer base and non-integer exponent)": {
 			base:     osmomath.EulersNumber,
-			exponent: osmomath.MustNewDecFromStr("0.9899"),
+			exponent: osmomath.MustNewBigDecFromStr("0.9899"),
 
 			// https://www.wolframalpha.com/input?i=e%5E0.9899+37+digits
-			expectedResult: osmomath.MustNewDecFromStr("2.690965362357751196751808686902156603"),
+			expectedResult: osmomath.MustNewBigDecFromStr("2.690965362357751196751808686902156603"),
 
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance: minDecTolerance,
@@ -1421,10 +1422,10 @@ func (s *decimalTestSuite) TestPower() {
 		},
 		"10^0.001 (small non-integer exponent)": {
 			base:     osmomath.NewBigDec(10),
-			exponent: osmomath.MustNewDecFromStr("0.001"),
+			exponent: osmomath.MustNewBigDecFromStr("0.001"),
 
 			// https://www.wolframalpha.com/input?i=10%5E0.001+37+digits
-			expectedResult: osmomath.MustNewDecFromStr("1.002305238077899671915404889328110554"),
+			expectedResult: osmomath.MustNewBigDecFromStr("1.002305238077899671915404889328110554"),
 
 			errTolerance: osmomath.ErrTolerance{
 				AdditiveTolerance: minDecTolerance,
@@ -1433,10 +1434,10 @@ func (s *decimalTestSuite) TestPower() {
 		},
 		"13^100.7777 (large non-integer exponent)": {
 			base:     osmomath.NewBigDec(13),
-			exponent: osmomath.MustNewDecFromStr("100.7777"),
+			exponent: osmomath.MustNewBigDecFromStr("100.7777"),
 
 			// https://www.wolframalpha.com/input?i=13%5E100.7777+37+digits
-			expectedResult: osmomath.MustNewDecFromStr("1.822422110233759706998600329118969132").Mul(osmomath.NewBigDec(10).PowerInteger(112)),
+			expectedResult: osmomath.MustNewBigDecFromStr("1.822422110233759706998600329118969132").Mul(osmomath.NewBigDec(10).PowerInteger(112)),
 
 			errTolerance: osmomath.ErrTolerance{
 				MultiplicativeTolerance: minDecTolerance,
@@ -1444,26 +1445,26 @@ func (s *decimalTestSuite) TestPower() {
 			},
 		},
 		"large non-integer exponent with large non-integer base - panics": {
-			base:     osmomath.MustNewDecFromStr("169.137"),
-			exponent: osmomath.MustNewDecFromStr("100.7777"),
+			base:     osmomath.MustNewBigDecFromStr("169.137"),
+			exponent: osmomath.MustNewBigDecFromStr("100.7777"),
 
 			expectPanic: true,
 		},
 		"negative base - panic": {
 			base:     osmomath.NewBigDec(-3),
-			exponent: osmomath.MustNewDecFromStr("4"),
+			exponent: osmomath.MustNewBigDecFromStr("4"),
 
 			expectPanic: true,
 		},
 		"negative exponent - panic": {
 			base:     osmomath.NewBigDec(1),
-			exponent: osmomath.MustNewDecFromStr("-4"),
+			exponent: osmomath.MustNewBigDecFromStr("-4"),
 
 			expectPanic: true,
 		},
 		"base < 1 - panic (see godoc)": {
-			base:     osmomath.NewBigDec(1).Sub(osmomath.SmallestDec()),
-			exponent: osmomath.OneDec(),
+			base:     osmomath.NewBigDec(1).Sub(osmomath.SmallestBigDec()),
+			exponent: osmomath.OneBigDec(),
 
 			expectPanic: true,
 		},
