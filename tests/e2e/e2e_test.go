@@ -33,6 +33,8 @@ import (
 var (
 	// minDecTolerance minimum tolerance for osmomath.Dec, given its precision of 18.
 	minDecTolerance = osmomath.MustNewDecFromStr("0.000000000000000001")
+	// TODO: lower
+	govPropTimeout = time.Minute
 )
 
 // TODO: Find more scalable way to do this
@@ -413,7 +415,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 			}
 			return true
 		},
-		1*time.Minute,
+		govPropTimeout,
 		10*time.Millisecond,
 		"Osmosis node failed to retrieve prop tally",
 	)
@@ -476,7 +478,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 			return strings.Contains(val, contract)
 		},
-		1*time.Minute,
+		govPropTimeout,
 		10*time.Millisecond,
 		"Osmosis node failed to retrieve params",
 	)
@@ -856,7 +858,7 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	var elapsed time.Duration
-	timeoutPeriod := 2 * time.Minute
+	timeoutPeriod := 2 * govPropTimeout
 	select {
 	case elapsed = <-totalTimeChan:
 	case <-time.After(timeoutPeriod):

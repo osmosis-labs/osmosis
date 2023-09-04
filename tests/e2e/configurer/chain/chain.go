@@ -55,8 +55,8 @@ func New(t *testing.T, containerManager *containers.Manager, id string, initVali
 			Id: id,
 		},
 		ValidatorInitConfigs:  initValidatorConfigs,
-		VotingPeriod:          config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks,
-		ExpeditedVotingPeriod: config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks - 3,
+		VotingPeriod:          numVal*config.PropVoteBlocks + config.PropBufferBlocks,
+		ExpeditedVotingPeriod: numVal*config.PropVoteBlocks + config.PropBufferBlocks - 3,
 		t:                     t,
 		containerManager:      containerManager,
 	}
