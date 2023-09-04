@@ -310,7 +310,8 @@ func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight 
 
 func (n *NodeConfig) SubmitSuperfluidProposal(asset string) int {
 	cmd := []string{"set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), "--title=\"superfluid asset prop\"", fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", "--gas=700000", "--fees=5000uosmo"}
-	return n.SubmitProposal(cmd, true, fmt.Sprintf("superfluid proposal for asset %s", asset))
+	// TODO: no expedited flag for some reason
+	return n.SubmitProposal(cmd, false, fmt.Sprintf("superfluid proposal for asset %s", asset))
 }
 
 func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(isExpedited bool) int {
