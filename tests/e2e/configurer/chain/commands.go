@@ -792,6 +792,19 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 
 	propNumber := n.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
 
+	AllValsVoteOnProposal(chain, propNumber)
+
+	require.Eventually(n.t, func() bool {
+		status, err := n.QueryPropStatus(propNumber)
+		if err != nil {
+			return false
+		}
+		return status == proposalStatusPassed
+	}, time.Minute, 10*time.Millisecond)
+	return nil
+}
+
+func AllValsVoteOnProposal(chain *Config, propNumber int) {
 	var wg sync.WaitGroup
 
 	for _, n := range chain.NodeConfigs {
@@ -803,15 +816,6 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 	}
 
 	wg.Wait()
-
-	require.Eventually(n.t, func() bool {
-		status, err := n.QueryPropStatus(propNumber)
-		if err != nil {
-			return false
-		}
-		return status == proposalStatusPassed
-	}, time.Minute, 10*time.Millisecond)
-	return nil
 }
 
 func extractProposalIdFromResponse(response string) (int, error) {

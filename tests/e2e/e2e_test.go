@@ -68,6 +68,11 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.ConcentratedLiquidity()
 	})
 
+	s.T().Run("CL_Update_TickSpacing", func(t *testing.T) {
+		t.Parallel()
+		s.TestTickSpacingUpdateProp()
+	})
+
 	s.T().Run("SuperfluidVoting", func(t *testing.T) {
 		t.Parallel()
 		s.SuperfluidVoting()
@@ -866,8 +871,24 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	positionsAddress1 = chainBNode.QueryConcentratedPositions(address1)
 	s.Require().Equal(len(positionsAddress1), 1)
 
-	// Test tick spacing reduction proposal
+	// Reset the maximum number of pool points
+	chainBNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
+}
 
+func (s *IntegrationTestSuite) TestTickSpacingUpdateProp() {
+	var (
+		denom0              = "uion"
+		denom1              = "uosmo"
+		tickSpacing  uint64 = 100
+		spreadFactor        = "0.001" // 0.1%
+	)
+
+	chainB, chainBNode, err := s.getChainBCfgs()
+	s.Require().NoError(err)
+
+	// Test tick spacing reduction proposal
+	poolID := chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
+	concentratedPool := s.updatedConcentratedPool(chainBNode, poolID)
 	// Get the current tick spacing
 	currentTickSpacing := concentratedPool.GetTickSpacing()
 
@@ -887,20 +908,11 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	propNumber := chainBNode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinExpeditedDeposit)), true)
 
 	chainBNode.DepositProposal(propNumber, true)
+	// TODO: are we just waiting for 1-2 minutes for no reason here?
 	totalTimeChan := make(chan time.Duration, 1)
 	go chainBNode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
-	var wg sync.WaitGroup
 
-	// TODO: create a helper function for all these go routine yes vote calls.
-	for _, n := range chainB.NodeConfigs {
-		wg.Add(1)
-		go func(nodeConfig *chain.NodeConfig) {
-			defer wg.Done()
-			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-		}(n)
-	}
-
-	wg.Wait()
+	chain.AllValsVoteOnProposal(chainB, propNumber)
 
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	timeoutPeriod := 2 * time.Minute
@@ -915,14 +927,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Check that the tick spacing was reduced to the expected new tick spacing
 	concentratedPool = s.updatedConcentratedPool(chainBNode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
-
-	// Reset the maximum number of pool points
-	chainBNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
 }
-
-// func (s *IntegrationTestSuite) TestTickSpacingUpdateProp() {
-
-// }
 
 func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 	if s.skipUpgrade {
