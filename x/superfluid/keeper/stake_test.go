@@ -1113,7 +1113,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			s.Require().NoError(err)
 
 			// Staking & Delegation check
-			s.delegationCheck(s.Ctx, sender, originalValAddr, valAddr, totalAmtConverted)
+			s.delegationCheck(sender, originalValAddr, valAddr, totalAmtConverted)
 
 			// Bank check
 			balanceAfterConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender).FilterDenoms([]string{"foo", "stake", "uosmo"})
@@ -1125,8 +1125,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			}
 
 			// lock check
-			s.lockCheck(s.Ctx, *lock, valAddr.String(), true)
-
+			s.lockCheck(*lock, valAddr.String())
 		})
 	}
 }
@@ -1226,10 +1225,10 @@ func (s *KeeperTestSuite) TestConvertLockToStake() {
 			s.Require().NoError(err)
 
 			// Staking & Delegation check
-			s.delegationCheck(s.Ctx, sender, originalValAddr, valAddr, totalAmtConverted)
+			s.delegationCheck(sender, originalValAddr, valAddr, totalAmtConverted)
 
 			// Lock check
-			s.lockCheck(s.Ctx, *lock, valAddr.String(), true)
+			s.lockCheck(*lock, valAddr.String())
 
 			// Bank check
 			balanceAfterConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
@@ -1320,7 +1319,7 @@ func (s *KeeperTestSuite) TestConvertUnlockedToStake() {
 			s.Require().True(expectedBondDenomAmt.Equal(bondDenomPoolAmtAfterConvert))
 
 			// Staking & Delegation check
-			s.delegationCheck(s.Ctx, sender, sdk.ValAddress{}, valAddr, totalAmtConverted)
+			s.delegationCheck(sender, sdk.ValAddress{}, valAddr, totalAmtConverted)
 
 			// Bank check
 			balanceAfterConvertLockToStake := s.App.BankKeeper.GetBalance(s.Ctx, sender, shareOut.Denom)
@@ -1500,7 +1499,7 @@ func (s *KeeperTestSuite) TestDelegateBaseOnValsetPref() {
 		"error: using valset pref fail, no superfluid address provided": {
 			expectedError: "empty address string is not allowed",
 		},
-		"error: invalid val address provded": {
+		"error: invalid val address provided": {
 			useInvalidValAddr: true,
 			expectedError:     "ecoding bech32 failed: invalid character not part of charset",
 		},
@@ -1581,7 +1580,7 @@ func (s *KeeperTestSuite) TestDelegateBaseOnValsetPref() {
 	}
 }
 
-func (s *KeeperTestSuite) SetupUnbondConvertAndStakeTest(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking, noLock bool) (joinPoolAmt sdk.Coins, balancerIntermediaryAcc types.SuperfluidIntermediaryAccount, balancerLock *lockuptypes.PeriodLock, poolCreateAcc, poolJoinAcc sdk.AccAddress, balancerPooId uint64, balancerPoolShareOut sdk.Coin, valAddr sdk.ValAddress) {
+func (s *KeeperTestSuite) SetupUnbondConvertAndStakeTest(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking, noLock bool) (joinPoolAmt sdk.Coins, balancerIntermediaryAcc types.SuperfluidIntermediaryAccount, balancerLock *lockuptypes.PeriodLock, poolCreateAcc, poolJoinAcc sdk.AccAddress, balancerPooId uint64, balancerPoolShareOut sdk.Coin, valAddr sdk.ValAddress) { //nolint:revive // TODO: refactor this function
 	bankKeeper := s.App.BankKeeper
 	gammKeeper := s.App.GAMMKeeper
 	superfluidKeeper := s.App.SuperfluidKeeper
@@ -1681,14 +1680,13 @@ func (s *KeeperTestSuite) SetupUnbondConvertAndStakeTest(ctx sdk.Context, superf
 
 	s.Require().NoError(err)
 	return joinPoolAmt, balancerIntermediaryAcc, balancerLock, poolCreateAcc, poolJoinAcc, balancerPooId, balancerPoolShareOut, valAddr
-
 }
 
 // delegationCheck checks staking related invariants of the test.
 // We check the following in this method:
 // - if superfluid staked previously, check if the original validator's delegation has been deleted.
 // - Cehck if the delegation of the new validator matches what's expected.
-func (s *KeeperTestSuite) delegationCheck(ctx sdk.Context, sender sdk.AccAddress, originalValAddr, newValAddr sdk.ValAddress, totalAmtConverted osmomath.Int) {
+func (s *KeeperTestSuite) delegationCheck(sender sdk.AccAddress, originalValAddr, newValAddr sdk.ValAddress, totalAmtConverted osmomath.Int) {
 	if !originalValAddr.Empty() {
 		// check if original superfluid staked lock's delgation is successfully deleted
 		_, found := s.App.StakingKeeper.GetDelegation(s.Ctx, sender, originalValAddr)
@@ -1704,8 +1702,8 @@ func (s *KeeperTestSuite) delegationCheck(ctx sdk.Context, sender sdk.AccAddress
 // lockCheck checks lock related invariants of the test.
 // We check the following in this method:
 // - check if old synth lock has been deleted (both staking & unstaking)
-// - check if old lock has been succesfully deleted.
-func (s *KeeperTestSuite) lockCheck(ctx sdk.Context, lock lockuptypes.PeriodLock, valAddr string, checkUnstakingSynthLock bool) {
+// - check if old lock has been successfully deleted.
+func (s *KeeperTestSuite) lockCheck(lock lockuptypes.PeriodLock, valAddr string) {
 	// The synthetic lockup should be deleted.
 	_, err := s.App.LockupKeeper.GetSyntheticLockup(s.Ctx, lock.ID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr))
 	s.Require().Error(err)
