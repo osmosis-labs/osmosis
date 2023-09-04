@@ -68,11 +68,6 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.ConcentratedLiquidity()
 	})
 
-	s.T().Run("CL_Update_TickSpacing", func(t *testing.T) {
-		t.Parallel()
-		s.TickSpacingUpdateProp()
-	})
-
 	s.T().Run("SuperfluidVoting", func(t *testing.T) {
 		t.Parallel()
 		s.SuperfluidVoting()
@@ -329,6 +324,12 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
 			s.T().Fatal("concentrated liquidity pool creation is not enabled")
 		}
+
+		go func() {
+			s.T().Run("test update pool tick spacing", func(t *testing.T) {
+				s.TickSpacingUpdateProp()
+			})
+		}()
 	}()
 
 	go func() {
@@ -879,12 +880,12 @@ func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 		spreadFactor        = "0.001" // 0.1%
 	)
 
-	chainA, chainANode, err := s.getChainACfgs()
+	chainB, chainBNode, err := s.getChainBCfgs()
 	s.Require().NoError(err)
 
 	// Test tick spacing reduction proposal
-	poolID := chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
-	concentratedPool := s.updatedConcentratedPool(chainANode, poolID)
+	poolID := chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
+	concentratedPool := s.updatedConcentratedPool(chainBNode, poolID)
 	// Get the current tick spacing
 	currentTickSpacing := concentratedPool.GetTickSpacing()
 
@@ -901,14 +902,14 @@ func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 	newTickSpacing := cltypes.AuthorizedTickSpacing[indexOfCurrentTickSpacing-1]
 
 	// Run the tick spacing reduction proposal
-	propNumber := chainANode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinExpeditedDeposit)), true)
+	propNumber := chainBNode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinExpeditedDeposit)), true)
 
-	chainANode.DepositProposal(propNumber, true)
+	chainBNode.DepositProposal(propNumber, true)
 	// TODO: are we just waiting for 1-2 minutes for no reason here?
 	totalTimeChan := make(chan time.Duration, 1)
-	go chainANode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
+	go chainBNode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
 
-	chain.AllValsVoteOnProposal(chainA, propNumber)
+	chain.AllValsVoteOnProposal(chainB, propNumber)
 
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	timeoutPeriod := 2 * time.Minute
@@ -921,7 +922,7 @@ func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 	}
 
 	// Check that the tick spacing was reduced to the expected new tick spacing
-	concentratedPool = s.updatedConcentratedPool(chainANode, poolID)
+	concentratedPool = s.updatedConcentratedPool(chainBNode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
 }
 
