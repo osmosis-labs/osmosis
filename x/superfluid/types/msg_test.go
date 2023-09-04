@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
@@ -17,7 +18,7 @@ import (
 func TestAuthzMsg(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
-	coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
+	coin := sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1))
 
 	testCases := []struct {
 		name string
@@ -94,7 +95,7 @@ func TestUnbondConvertAndStakeMsg(t *testing.T) {
 				LockId:          2,
 				Sender:          addr1,
 				ValAddr:         valAddr,
-				MinAmtToStake:   sdk.NewInt(10),
+				MinAmtToStake:   osmomath.NewInt(10),
 				SharesToConvert: sdk.NewInt64Coin("foo", 10),
 			},
 		},
@@ -104,7 +105,7 @@ func TestUnbondConvertAndStakeMsg(t *testing.T) {
 				LockId:          0,
 				Sender:          addr1,
 				ValAddr:         valAddr,
-				MinAmtToStake:   sdk.NewInt(10),
+				MinAmtToStake:   osmomath.NewInt(10),
 				SharesToConvert: sdk.NewInt64Coin("foo", 10),
 			},
 		},
@@ -113,7 +114,7 @@ func TestUnbondConvertAndStakeMsg(t *testing.T) {
 			msg: &types.MsgUnbondConvertAndStake{
 				LockId:          0,
 				Sender:          addr1,
-				MinAmtToStake:   sdk.NewInt(10),
+				MinAmtToStake:   osmomath.NewInt(10),
 				SharesToConvert: sdk.NewInt64Coin("foo", 10),
 			},
 		},
@@ -123,7 +124,7 @@ func TestUnbondConvertAndStakeMsg(t *testing.T) {
 				LockId:          0,
 				Sender:          "abcd",
 				ValAddr:         valAddr,
-				MinAmtToStake:   sdk.NewInt(10),
+				MinAmtToStake:   osmomath.NewInt(10),
 				SharesToConvert: sdk.NewInt64Coin("foo", 10),
 			},
 			expectedError: true,
@@ -133,7 +134,7 @@ func TestUnbondConvertAndStakeMsg(t *testing.T) {
 			msg: &types.MsgUnbondConvertAndStake{
 				LockId:          0,
 				Sender:          addr1,
-				MinAmtToStake:   sdk.NewInt(10).Neg(),
+				MinAmtToStake:   osmomath.NewInt(10).Neg(),
 				SharesToConvert: sdk.NewInt64Coin("foo", 10),
 			},
 			expectedError: true,

@@ -4,33 +4,34 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/mint/types"
 )
 
 var customGenesis = types.NewGenesisState(
-	types.NewMinter(sdk.ZeroDec()),
+	types.NewMinter(osmomath.ZeroDec()),
 	types.NewParams(
-		"uosmo",                  // denom
-		sdk.NewDec(200),          // epoch provisions
-		"year",                   // epoch identifier
-		sdk.NewDecWithPrec(5, 1), // reduction factor
-		5,                        // reduction perion in epochs
+		"uosmo",                       // denom
+		osmomath.NewDec(200),          // epoch provisions
+		"year",                        // epoch identifier
+		osmomath.NewDecWithPrec(5, 1), // reduction factor
+		5,                             // reduction perion in epochs
 		types.DistributionProportions{
-			Staking:          sdk.NewDecWithPrec(25, 2),
-			PoolIncentives:   sdk.NewDecWithPrec(25, 2),
-			DeveloperRewards: sdk.NewDecWithPrec(25, 2),
-			CommunityPool:    sdk.NewDecWithPrec(25, 2),
+			Staking:          osmomath.NewDecWithPrec(25, 2),
+			PoolIncentives:   osmomath.NewDecWithPrec(25, 2),
+			DeveloperRewards: osmomath.NewDecWithPrec(25, 2),
+			CommunityPool:    osmomath.NewDecWithPrec(25, 2),
 		},
 		[]types.WeightedAddress{
 			{
 				Address: "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj",
-				Weight:  sdk.NewDecWithPrec(6, 1),
+				Weight:  osmomath.NewDecWithPrec(6, 1),
 			},
 			{
 				Address: "osmo1gw445ta0aqn26suz2rg3tkqfpxnq2hs224d7gq",
-				Weight:  sdk.NewDecWithPrec(4, 1),
+				Weight:  osmomath.NewDecWithPrec(4, 1),
 			},
 		},
 		2), // minting reward distribution start epoch
@@ -46,12 +47,12 @@ func (s *KeeperTestSuite) TestMintInitGenesis() {
 		isDeveloperModuleAccountCreated bool
 
 		expectPanic             bool
-		expectedEpochProvisions sdk.Dec
+		expectedEpochProvisions osmomath.Dec
 		// Deltas represent by how much a certain paramets
 		// has changed after calling InitGenesis()
-		expectedSupplyOffsetDelta           sdk.Int
-		expectedSupplyWithOffsetDelta       sdk.Int
-		expectedDeveloperVestingAmountDelta sdk.Int
+		expectedSupplyOffsetDelta           osmomath.Int
+		expectedSupplyWithOffsetDelta       osmomath.Int
+		expectedDeveloperVestingAmountDelta osmomath.Int
 		expectedHalvenStartedEpoch          int64
 	}{
 		"default genesis - developer module account is not created prior to InitGenesis() - created during the call": {
@@ -59,9 +60,9 @@ func (s *KeeperTestSuite) TestMintInitGenesis() {
 			mintDenom:   sdk.DefaultBondDenom,
 
 			expectedEpochProvisions:             types.DefaultGenesisState().Params.GenesisEpochProvisions,
-			expectedSupplyOffsetDelta:           sdk.NewInt(keeper.DeveloperVestingAmount).Neg(),
-			expectedSupplyWithOffsetDelta:       sdk.ZeroInt(),
-			expectedDeveloperVestingAmountDelta: sdk.NewInt(keeper.DeveloperVestingAmount),
+			expectedSupplyOffsetDelta:           osmomath.NewInt(keeper.DeveloperVestingAmount).Neg(),
+			expectedSupplyWithOffsetDelta:       osmomath.ZeroInt(),
+			expectedDeveloperVestingAmountDelta: osmomath.NewInt(keeper.DeveloperVestingAmount),
 		},
 		"default genesis - developer module account is created prior to InitGenesis() - not created during the call": {
 			mintGenesis:                     types.DefaultGenesisState(),
@@ -69,18 +70,18 @@ func (s *KeeperTestSuite) TestMintInitGenesis() {
 			isDeveloperModuleAccountCreated: true,
 
 			expectedEpochProvisions:             types.DefaultGenesisState().Params.GenesisEpochProvisions,
-			expectedSupplyOffsetDelta:           sdk.ZeroInt(),
-			expectedSupplyWithOffsetDelta:       sdk.ZeroInt(),
-			expectedDeveloperVestingAmountDelta: sdk.ZeroInt(),
+			expectedSupplyOffsetDelta:           osmomath.ZeroInt(),
+			expectedSupplyWithOffsetDelta:       osmomath.ZeroInt(),
+			expectedDeveloperVestingAmountDelta: osmomath.ZeroInt(),
 		},
 		"custom genesis": {
 			mintGenesis: customGenesis,
 			mintDenom:   "uosmo",
 
-			expectedEpochProvisions:             sdk.NewDec(200),
-			expectedSupplyOffsetDelta:           sdk.NewInt(keeper.DeveloperVestingAmount).Neg(),
-			expectedSupplyWithOffsetDelta:       sdk.ZeroInt(),
-			expectedDeveloperVestingAmountDelta: sdk.NewInt(keeper.DeveloperVestingAmount),
+			expectedEpochProvisions:             osmomath.NewDec(200),
+			expectedSupplyOffsetDelta:           osmomath.NewInt(keeper.DeveloperVestingAmount).Neg(),
+			expectedSupplyWithOffsetDelta:       osmomath.ZeroInt(),
+			expectedDeveloperVestingAmountDelta: osmomath.NewInt(keeper.DeveloperVestingAmount),
 			expectedHalvenStartedEpoch:          3,
 		},
 		"nil genesis state - panic": {

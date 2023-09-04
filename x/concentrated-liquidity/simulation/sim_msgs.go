@@ -8,6 +8,7 @@ import (
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
 	osmosimtypes "github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
 	sdkrand "github.com/osmosis-labs/osmosis/v19/simulation/simtypes/random"
@@ -24,7 +25,7 @@ type preparePoolConfig struct {
 	coin0        sdk.Coin
 	coin1        sdk.Coin
 	tickSpacing  uint64
-	spreadFactor sdk.Dec
+	spreadFactor osmomath.Dec
 }
 
 // preparePositionConfig defines the parameters for creating a new position
@@ -62,7 +63,7 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	}
 
 	sim.BankKeeper().SetDenomMetaData(ctx, denomMetaData)
-	err = sim.BankKeeper().MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(appParams.BaseCoinUnit, sdk.NewInt(10000000))))
+	err = sim.BankKeeper().MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(appParams.BaseCoinUnit, osmomath.NewInt(10000000))))
 	if err != nil {
 		return nil, err
 	}
@@ -197,15 +198,15 @@ func RandMsgCollectSpreadRewards(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ct
 	// we must use cacheCtx when calling a mutative method within a simulator method
 	// otherwise, if this errors, it will partially commit and lead to unrealistic state
 	cacheCtx, write := ctx.CacheContext()
-	for remainingSwapOwnerToken0Amt.GT(sdk.ZeroInt()) {
+	for remainingSwapOwnerToken0Amt.GT(osmomath.ZeroInt()) {
 		randToken0Amt := sim.RandPositiveInt(remainingSwapOwnerToken0Amt)
 
-		if randToken0Amt.LTE(sdk.ZeroInt()) {
+		if randToken0Amt.LTE(osmomath.ZeroInt()) {
 			return nil, fmt.Errorf("invalid amount to swap")
 		}
 
 		// perform swap from token0 to token1 until either token0 or token1 fund runs out
-		_, err = k.SwapExactAmountIn(cacheCtx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), sdk.NewDecWithPrec(1, 2))
+		_, err = k.SwapExactAmountIn(cacheCtx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, osmomath.OneInt(), osmomath.NewDecWithPrec(1, 2))
 		if err != nil {
 			return nil, err
 		}
@@ -316,11 +317,11 @@ func getRandomTickPositions(sim *osmosimtypes.SimCtx, minTick, maxTick int64, ti
 	return lowerTick, upperTick, nil
 }
 
-func RandomMinAmount(sim *osmosimtypes.SimCtx, token0Desired, token1Desired sdk.Int) (sdk.Int, sdk.Int) {
+func RandomMinAmount(sim *osmosimtypes.SimCtx, token0Desired, token1Desired osmomath.Int) (osmomath.Int, osmomath.Int) {
 	rand := sim.GetRand()
-	percent := sdk.NewDec(int64(sdkrand.RandIntBetween(rand, 0, 100) / 100))
-	minAmount0 := sdk.NewDecFromInt(token0Desired).Mul(percent).TruncateInt()
-	minAmount1 := sdk.NewDecFromInt(token1Desired).Mul(percent).TruncateInt()
+	percent := osmomath.NewDec(int64(sdkrand.RandIntBetween(rand, 0, 100) / 100))
+	minAmount0 := osmomath.NewDecFromInt(token0Desired).Mul(percent).TruncateInt()
+	minAmount1 := osmomath.NewDecFromInt(token1Desired).Mul(percent).TruncateInt()
 	return minAmount0, minAmount1
 }
 

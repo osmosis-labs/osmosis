@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	simapp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/mint/simulation"
 	"github.com/osmosis-labs/osmosis/v19/x/mint/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -18,7 +18,7 @@ func TestDecodeStore(t *testing.T) {
 	cdc, _ := simapp.MakeCodecs()
 	dec := simulation.NewDecodeStore(cdc)
 
-	minter := types.NewMinter(sdk.NewDec(15))
+	minter := types.NewMinter(osmomath.NewDec(15))
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

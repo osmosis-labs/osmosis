@@ -7,6 +7,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v19/app"
@@ -77,7 +78,7 @@ func TestNewSwapExactAmountOutCmd(t *testing.T) {
 			ExpectedMsg: &types.MsgSwapExactAmountOut{
 				Sender:           testAddresses[0].String(),
 				Routes:           []types.SwapAmountOutRoute{{PoolId: 1, TokenInDenom: "node0token"}},
-				TokenInMaxAmount: sdk.NewIntFromUint64(20),
+				TokenInMaxAmount: osmomath.NewIntFromUint64(20),
 				TokenOut:         sdk.NewInt64Coin("stake", 10),
 			},
 		},
@@ -176,7 +177,7 @@ func TestNewSwapExactAmountInCmd(t *testing.T) {
 				Sender:            testAddresses[0].String(),
 				Routes:            []types.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: "node0token"}},
 				TokenIn:           sdk.NewInt64Coin("stake", 10),
-				TokenOutMinAmount: sdk.NewIntFromUint64(3),
+				TokenOutMinAmount: osmomath.NewIntFromUint64(3),
 			},
 		},
 	}

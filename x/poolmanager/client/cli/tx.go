@@ -21,6 +21,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
@@ -178,7 +179,7 @@ func NewMsgNewSplitRouteSwapExactAmountOut(fs *flag.FlagSet) ([]types.SwapAmount
 	var splitRouteProto []types.SwapAmountOutSplitRoute
 	for _, route := range splitRouteJSONdata.Route {
 		protoRoute := types.SwapAmountOutSplitRoute{
-			TokenOutAmount: sdk.NewInt(route.TokenOutAmount),
+			TokenOutAmount: osmomath.NewInt(route.TokenOutAmount),
 		}
 		protoRoute.Pools = append(protoRoute.Pools, route.Pools...)
 		splitRouteProto = append(splitRouteProto, protoRoute)
@@ -207,7 +208,7 @@ func NewMsgNewSplitRouteSwapExactAmountIn(fs *flag.FlagSet) ([]types.SwapAmountI
 	var splitRouteProto []types.SwapAmountInSplitRoute
 	for _, route := range splitRouteJSONdata.Route {
 		protoRoute := types.SwapAmountInSplitRoute{
-			TokenInAmount: sdk.NewInt(route.TokenInAmount),
+			TokenInAmount: osmomath.NewInt(route.TokenInAmount),
 		}
 		protoRoute.Pools = append(protoRoute.Pools, route.Pools...)
 		splitRouteProto = append(splitRouteProto, protoRoute)
@@ -228,7 +229,7 @@ func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, args []string, fs *
 		return nil, err
 	}
 
-	tokenInMaxAmount, ok := sdk.NewIntFromString(tokenInMaxAmountStr)
+	tokenInMaxAmount, ok := osmomath.NewIntFromString(tokenInMaxAmountStr)
 	if !ok {
 		return nil, errors.New("invalid token in max amount")
 	}
@@ -300,12 +301,12 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		return txf, nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
-	spreadFactor, err := sdk.NewDecFromStr(pool.SwapFee)
+	spreadFactor, err := osmomath.NewDecFromStr(pool.SwapFee)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	exitFee, err := sdk.NewDecFromStr(pool.ExitFee)
+	exitFee, err := osmomath.NewDecFromStr(pool.ExitFee)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -391,12 +392,12 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 		return txf, nil, err
 	}
 
-	spreadFactor, err := sdk.NewDecFromStr(flags.SwapFee)
+	spreadFactor, err := osmomath.NewDecFromStr(flags.SwapFee)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	exitFee, err := sdk.NewDecFromStr(flags.ExitFee)
+	exitFee, err := osmomath.NewDecFromStr(flags.ExitFee)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -602,7 +603,7 @@ func ParseDenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
 		denom1 := denomPairTakerFeeRecords[i+1]
 
 		takerFeeStr := denomPairTakerFeeRecords[i+2]
-		takerFee, err := sdk.NewDecFromStr(takerFeeStr)
+		takerFee, err := osmomath.NewDecFromStr(takerFeeStr)
 		if err != nil {
 			return nil, err
 		}

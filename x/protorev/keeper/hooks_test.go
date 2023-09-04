@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
@@ -32,7 +33,7 @@ func (s *KeeperTestSuite) TestSwapping() {
 					},
 				},
 				executeSwap: func() {
-					_, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], 1, sdk.NewCoin("akash", sdk.NewInt(100)), "Atom", sdk.NewInt(1))
+					_, err := s.App.PoolManagerKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], 1, sdk.NewCoin("akash", osmomath.NewInt(100)), "Atom", osmomath.NewInt(1))
 					s.Require().NoError(err)
 				},
 			},
@@ -52,7 +53,7 @@ func (s *KeeperTestSuite) TestSwapping() {
 
 					route := []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: "Atom"}}
 
-					_, err := s.App.PoolManagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], route, sdk.NewCoin("akash", sdk.NewInt(100)), sdk.NewInt(1))
+					_, err := s.App.PoolManagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], route, sdk.NewCoin("akash", osmomath.NewInt(100)), osmomath.NewInt(1))
 					s.Require().NoError(err)
 				},
 			},
@@ -72,7 +73,7 @@ func (s *KeeperTestSuite) TestSwapping() {
 
 					route := []poolmanagertypes.SwapAmountOutRoute{{PoolId: 1, TokenInDenom: "akash"}}
 
-					_, err := s.App.PoolManagerKeeper.RouteExactAmountOut(s.Ctx, s.TestAccs[0], route, sdk.NewInt(10000), sdk.NewCoin("Atom", sdk.NewInt(100)))
+					_, err := s.App.PoolManagerKeeper.RouteExactAmountOut(s.Ctx, s.TestAccs[0], route, osmomath.NewInt(10000), sdk.NewCoin("Atom", osmomath.NewInt(100)))
 					s.Require().NoError(err)
 				},
 			},
@@ -97,7 +98,7 @@ func (s *KeeperTestSuite) TestSwapping() {
 
 					route := []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: "Atom"}, {PoolId: 1, TokenOutDenom: "akash"}}
 
-					_, err := s.App.PoolManagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], route, sdk.NewCoin("akash", sdk.NewInt(100)), sdk.NewInt(1))
+					_, err := s.App.PoolManagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], route, sdk.NewCoin("akash", osmomath.NewInt(100)), osmomath.NewInt(1))
 					s.Require().NoError(err)
 				},
 			},
@@ -117,7 +118,7 @@ func (s *KeeperTestSuite) TestSwapping() {
 
 					route := []poolmanagertypes.SwapAmountInRoute{{PoolId: 50, TokenOutDenom: "epochTwo"}}
 
-					_, err := s.App.PoolManagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], route, sdk.NewCoin("uosmo", sdk.NewInt(10)), sdk.NewInt(1))
+					_, err := s.App.PoolManagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], route, sdk.NewCoin("uosmo", osmomath.NewInt(10)), osmomath.NewInt(1))
 					s.Require().NoError(err)
 				},
 			},
@@ -160,7 +161,7 @@ func (s *KeeperTestSuite) TestLiquidityChanging() {
 					},
 				},
 				executeLiquidityProviding: func() {
-					_, err := s.App.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, s.TestAccs[0], 1, sdk.NewCoins(sdk.NewCoin("akash", sdk.NewInt(100))), sdk.NewInt(1))
+					_, err := s.App.GAMMKeeper.JoinSwapExactAmountIn(s.Ctx, s.TestAccs[0], 1, sdk.NewCoins(sdk.NewCoin("akash", osmomath.NewInt(100))), osmomath.NewInt(1))
 					s.Require().NoError(err)
 				},
 			},
@@ -177,7 +178,7 @@ func (s *KeeperTestSuite) TestLiquidityChanging() {
 					},
 				},
 				executeLiquidityProviding: func() {
-					_, err := s.App.GAMMKeeper.JoinSwapShareAmountOut(s.Ctx, s.TestAccs[0], 1, "akash", sdk.NewInt(1000), sdk.NewInt(10000))
+					_, err := s.App.GAMMKeeper.JoinSwapShareAmountOut(s.Ctx, s.TestAccs[0], 1, "akash", osmomath.NewInt(1000), osmomath.NewInt(10000))
 					s.Require().NoError(err)
 				},
 			},
@@ -194,7 +195,7 @@ func (s *KeeperTestSuite) TestLiquidityChanging() {
 					},
 				},
 				executeLiquidityProviding: func() {
-					_, err := s.App.GAMMKeeper.ExitSwapExactAmountOut(s.Ctx, s.TestAccs[0], 1, sdk.NewCoin("Atom", sdk.NewInt(1)), sdk.NewInt(1002141106353159235))
+					_, err := s.App.GAMMKeeper.ExitSwapExactAmountOut(s.Ctx, s.TestAccs[0], 1, sdk.NewCoin("Atom", osmomath.NewInt(1)), osmomath.NewInt(1002141106353159235))
 					s.Require().NoError(err)
 				},
 			},
@@ -211,7 +212,7 @@ func (s *KeeperTestSuite) TestLiquidityChanging() {
 					},
 				},
 				executeLiquidityProviding: func() {
-					_, err := s.App.GAMMKeeper.ExitSwapShareAmountIn(s.Ctx, s.TestAccs[0], 1, "Atom", sdk.NewInt(1000000000000000000), sdk.NewInt(1))
+					_, err := s.App.GAMMKeeper.ExitSwapShareAmountIn(s.Ctx, s.TestAccs[0], 1, "Atom", osmomath.NewInt(1000000000000000000), osmomath.NewInt(1))
 					s.Require().NoError(err)
 				},
 			},
@@ -222,7 +223,7 @@ func (s *KeeperTestSuite) TestLiquidityChanging() {
 			param: param{
 				expectedTrades: []types.Trade(nil),
 				executeLiquidityProviding: func() {
-					_, err := s.App.GAMMKeeper.ExitSwapShareAmountIn(s.Ctx, s.TestAccs[0], 1, "Atom", sdk.NewInt(1000), sdk.NewInt(0))
+					_, err := s.App.GAMMKeeper.ExitSwapShareAmountIn(s.Ctx, s.TestAccs[0], 1, "Atom", osmomath.NewInt(1000), osmomath.NewInt(0))
 					s.Require().NoError(err)
 				},
 			},
@@ -263,16 +264,16 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 				executePoolCreation: func() uint64 {
 					poolId := s.createGAMMPool([]balancer.PoolAsset{
 						{
-							Token:  sdk.NewCoin("hookGamm", sdk.NewInt(1000000000)),
-							Weight: sdk.NewInt(1),
+							Token:  sdk.NewCoin("hookGamm", osmomath.NewInt(1000000000)),
+							Weight: osmomath.NewInt(1),
 						},
 						{
-							Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(1000000000)),
-							Weight: sdk.NewInt(1),
+							Token:  sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(1000000000)),
+							Weight: osmomath.NewInt(1),
 						},
 					},
-						sdk.NewDecWithPrec(2, 3),
-						sdk.NewDecWithPrec(0, 2))
+						osmomath.NewDecWithPrec(2, 3),
+						osmomath.NewDecWithPrec(0, 2))
 
 					return poolId
 				},
@@ -309,16 +310,16 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 					// Create balancer pool first with a new denom pair
 					balancerPoolId := s.createGAMMPool([]balancer.PoolAsset{
 						{
-							Token:  sdk.NewCoin("hook", sdk.NewInt(1)),
-							Weight: sdk.NewInt(1),
+							Token:  sdk.NewCoin("hook", osmomath.NewInt(1)),
+							Weight: osmomath.NewInt(1),
 						},
 						{
-							Token:  sdk.NewCoin("uosmo", sdk.NewInt(1)),
-							Weight: sdk.NewInt(1),
+							Token:  sdk.NewCoin("uosmo", osmomath.NewInt(1)),
+							Weight: osmomath.NewInt(1),
 						},
 					},
-						sdk.NewDecWithPrec(1, 1),
-						sdk.NewDecWithPrec(0, 2),
+						osmomath.NewDecWithPrec(1, 1),
+						osmomath.NewDecWithPrec(0, 2),
 					)
 
 					// Ensure that the balancer pool is stored since no other pool exists for the denom pair
@@ -354,16 +355,16 @@ func (s *KeeperTestSuite) TestPoolCreation() {
 					// Create balancer pool with the same denom pair and more liquidity
 					balancerPoolId := s.createGAMMPool([]balancer.PoolAsset{
 						{
-							Token:  sdk.NewCoin(clPoolLiquidity[0].Denom, clPoolLiquidity[0].Amount.Add(sdk.NewInt(1))),
-							Weight: sdk.NewInt(1),
+							Token:  sdk.NewCoin(clPoolLiquidity[0].Denom, clPoolLiquidity[0].Amount.Add(osmomath.NewInt(1))),
+							Weight: osmomath.NewInt(1),
 						},
 						{
-							Token:  sdk.NewCoin(clPoolLiquidity[1].Denom, clPoolLiquidity[1].Amount.Add(sdk.NewInt(1))),
-							Weight: sdk.NewInt(1),
+							Token:  sdk.NewCoin(clPoolLiquidity[1].Denom, clPoolLiquidity[1].Amount.Add(osmomath.NewInt(1))),
+							Weight: osmomath.NewInt(1),
 						},
 					},
-						sdk.NewDecWithPrec(1, 1),
-						sdk.NewDecWithPrec(0, 2),
+						osmomath.NewDecWithPrec(1, 1),
+						osmomath.NewDecWithPrec(0, 2),
 					)
 
 					// The returned pool id should be what is finally stored in the protorev keeper since it has more liquidity
@@ -438,7 +439,7 @@ func (s *KeeperTestSuite) TestStoreSwap() {
 								TokenOut: "akash",
 							},
 						},
-						StepSize: sdk.NewInt(1),
+						StepSize: osmomath.NewInt(1),
 					})
 				},
 				expectedSwapsStoredLen: 2,
@@ -471,7 +472,7 @@ func (s *KeeperTestSuite) TestStoreSwap() {
 func (s *KeeperTestSuite) TestGetComparablePoolLiquidity() {
 	type param struct {
 		executePoolCreation         func() uint64
-		expectedComparableLiquidity sdk.Int
+		expectedComparableLiquidity osmomath.Int
 	}
 
 	tests := []struct {
@@ -483,9 +484,9 @@ func (s *KeeperTestSuite) TestGetComparablePoolLiquidity() {
 			name: "Get Balancer Pool Comparable Liquidity",
 			param: param{
 				executePoolCreation: func() uint64 {
-					return s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10)), sdk.NewCoin("juno", sdk.NewInt(10)))
+					return s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10)), sdk.NewCoin("juno", osmomath.NewInt(10)))
 				},
-				expectedComparableLiquidity: sdk.NewInt(100),
+				expectedComparableLiquidity: osmomath.NewInt(100),
 			},
 			expectPass: true,
 		},
@@ -495,17 +496,17 @@ func (s *KeeperTestSuite) TestGetComparablePoolLiquidity() {
 				executePoolCreation: func() uint64 {
 					return s.createStableswapPool(
 						sdk.NewCoins(
-							sdk.NewCoin("uosmo", sdk.NewInt(10)),
-							sdk.NewCoin("juno", sdk.NewInt(10)),
+							sdk.NewCoin("uosmo", osmomath.NewInt(10)),
+							sdk.NewCoin("juno", osmomath.NewInt(10)),
 						),
 						stableswap.PoolParams{
-							SwapFee: sdk.NewDecWithPrec(1, 4),
-							ExitFee: sdk.NewDecWithPrec(0, 2),
+							SwapFee: osmomath.NewDecWithPrec(1, 4),
+							ExitFee: osmomath.NewDecWithPrec(0, 2),
 						},
 						[]uint64{1, 1},
 					)
 				},
-				expectedComparableLiquidity: sdk.NewInt(100),
+				expectedComparableLiquidity: osmomath.NewInt(100),
 			},
 			expectPass: true,
 		},
@@ -518,11 +519,11 @@ func (s *KeeperTestSuite) TestGetComparablePoolLiquidity() {
 						s.Ctx,
 						s.TestAccs[0],
 						pool.GetAddress(),
-						sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10)), sdk.NewCoin("usdc", sdk.NewInt(10))))
+						sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(10)), sdk.NewCoin("usdc", osmomath.NewInt(10))))
 					s.Require().NoError(err)
 					return pool.GetId()
 				},
-				expectedComparableLiquidity: sdk.NewInt(100),
+				expectedComparableLiquidity: osmomath.NewInt(100),
 			},
 			expectPass: true,
 		},
@@ -531,10 +532,10 @@ func (s *KeeperTestSuite) TestGetComparablePoolLiquidity() {
 			param: param{
 				executePoolCreation: func() uint64 {
 					return s.PrepareBalancerPoolWithCoins(
-						sdk.NewCoin("uosmo", sdk.Int(sdk.NewUintFromString("999999999999999999999999999999999999999"))),
-						sdk.NewCoin("juno", sdk.Int(sdk.NewUintFromString("999999999999999999999999999999999999999"))))
+						sdk.NewCoin("uosmo", osmomath.Int(osmomath.NewUintFromString("999999999999999999999999999999999999999"))),
+						sdk.NewCoin("juno", osmomath.Int(osmomath.NewUintFromString("999999999999999999999999999999999999999"))))
 				},
-				expectedComparableLiquidity: sdk.Int{},
+				expectedComparableLiquidity: osmomath.Int{},
 			},
 			expectPass: false,
 		},
@@ -657,7 +658,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 				matchDenom: "juno",
 				prepareStateAndGetPoolIdToCompare: func() (uint64, uint64) {
 					// Prepare a balancer pool with coins
-					poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10)), sdk.NewCoin("juno", sdk.NewInt(10)))
+					poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10)), sdk.NewCoin("juno", osmomath.NewInt(10)))
 
 					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "uosmo")
@@ -696,7 +697,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "uosmo")
 
-					preparedPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10)), sdk.NewCoin("stake", sdk.NewInt(10)))
+					preparedPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10)), sdk.NewCoin("stake", osmomath.NewInt(10)))
 					storedPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "uosmo", "stake")
 					s.Require().NoError(err)
 					s.Require().Equal(preparedPoolId, storedPoolId)
@@ -720,7 +721,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "uosmo")
 
 					// Prepare a balancer pool with more liquidity
-					balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(2000000000000000000)), sdk.NewCoin("stake", sdk.NewInt(1000000000000000000)))
+					balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", osmomath.NewInt(2000000000000000000)), sdk.NewCoin("stake", osmomath.NewInt(1000000000000000000)))
 					storedPoolId, err := s.App.ProtoRevKeeper.GetPoolForDenomPair(s.Ctx, "uosmo", "stake")
 					s.Require().NoError(err)
 					s.Require().Equal(balancerPoolId, storedPoolId)
@@ -738,7 +739,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 				matchDenom: "stake",
 				prepareStateAndGetPoolIdToCompare: func() (uint64, uint64) {
 					// Prepare a balancer pool with more liquidity
-					balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(2000000000000000000)), sdk.NewCoin("stake", sdk.NewInt(1000000000000000000)))
+					balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", osmomath.NewInt(2000000000000000000)), sdk.NewCoin("stake", osmomath.NewInt(1000000000000000000)))
 
 					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "uosmo")
@@ -762,7 +763,7 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 				matchDenom: "stake",
 				prepareStateAndGetPoolIdToCompare: func() (uint64, uint64) {
 					// Prepare a balancer pool with less liquidity
-					balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(500000000000000000)), sdk.NewCoin("stake", sdk.NewInt(1000000000000000000)))
+					balancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", osmomath.NewInt(500000000000000000)), sdk.NewCoin("stake", osmomath.NewInt(1000000000000000000)))
 
 					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "uosmo")
@@ -787,14 +788,14 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 				prepareStateAndGetPoolIdToCompare: func() (uint64, uint64) {
 					// Prepare a balancer pool with liquidity levels that will overflow when multiplied
 					overflowPoolId := s.PrepareBalancerPoolWithCoins(
-						sdk.NewCoin("uosmo", sdk.Int(sdk.NewUintFromString("999999999999999999999999999999999999999"))),
-						sdk.NewCoin("stake", sdk.Int(sdk.NewUintFromString("999999999999999999999999999999999999999"))))
+						sdk.NewCoin("uosmo", osmomath.Int(osmomath.NewUintFromString("999999999999999999999999999999999999999"))),
+						sdk.NewCoin("stake", osmomath.Int(osmomath.NewUintFromString("999999999999999999999999999999999999999"))))
 
 					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "uosmo")
 
 					// Prepare a balancer pool with normal liquidity
-					poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10)), sdk.NewCoin("stake", sdk.NewInt(10)))
+					poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10)), sdk.NewCoin("stake", osmomath.NewInt(10)))
 
 					// The normal liquidity pool should be stored since the function will return early when catching the overflow error
 					return poolId, overflowPoolId
@@ -809,15 +810,15 @@ func (s *KeeperTestSuite) TestCompareAndStorePool() {
 				matchDenom: "stake",
 				prepareStateAndGetPoolIdToCompare: func() (uint64, uint64) {
 					// Prepare a balancer pool with normal liquidity
-					poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", sdk.NewInt(10)), sdk.NewCoin("stake", sdk.NewInt(10)))
+					poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10)), sdk.NewCoin("stake", osmomath.NewInt(10)))
 
 					// Delete all pools for the base denom uosmo so that all tests start with a clean slate
 					s.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(s.Ctx, "uosmo")
 
 					// Prepare a balancer pool with liquidity levels that will overflow when multiplied
 					overflowPoolId := s.PrepareBalancerPoolWithCoins(
-						sdk.NewCoin("uosmo", sdk.Int(sdk.NewUintFromString("999999999999999999999999999999999999999"))),
-						sdk.NewCoin("stake", sdk.Int(sdk.NewUintFromString("999999999999999999999999999999999999999"))))
+						sdk.NewCoin("uosmo", osmomath.Int(osmomath.NewUintFromString("999999999999999999999999999999999999999"))),
+						sdk.NewCoin("stake", osmomath.Int(osmomath.NewUintFromString("999999999999999999999999999999999999999"))))
 
 					// The overflow pool should be stored since the function will return early when catching the overflow error
 					return overflowPoolId, poolId

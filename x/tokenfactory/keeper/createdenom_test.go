@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/x/tokenfactory/types"
 )
@@ -14,7 +15,7 @@ func (s *KeeperTestSuite) TestMsgCreateDenom() {
 	var (
 		tokenFactoryKeeper = s.App.TokenFactoryKeeper
 		bankKeeper         = s.App.BankKeeper
-		denomCreationFee   = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000)))
+		denomCreationFee   = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000000)))
 	)
 
 	// Set the denom creation fee. It is currently turned off in favor
@@ -77,10 +78,10 @@ func (s *KeeperTestSuite) TestCreateDenom() {
 	var (
 		primaryDenom            = "uosmo"
 		secondaryDenom          = apptesting.SecondaryDenom
-		defaultDenomCreationFee = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, sdk.NewInt(50000000)))}
-		twoDenomCreationFee     = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, sdk.NewInt(50000000)), sdk.NewCoin(secondaryDenom, sdk.NewInt(50000000)))}
+		defaultDenomCreationFee = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, osmomath.NewInt(50000000)))}
+		twoDenomCreationFee     = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, osmomath.NewInt(50000000)), sdk.NewCoin(secondaryDenom, osmomath.NewInt(50000000)))}
 		nilCreationFee          = types.Params{DenomCreationFee: nil}
-		largeCreationFee        = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, sdk.NewInt(5000000000)))}
+		largeCreationFee        = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, osmomath.NewInt(5000000000)))}
 	)
 
 	for _, tc := range []struct {

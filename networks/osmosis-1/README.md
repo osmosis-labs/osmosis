@@ -19,6 +19,7 @@ Each version is identified by a specific id, name, tag, block height and softwar
 | `v16` | Magnesium | `v16.1.1` | 10517000       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v16.1.1/) | [556](https://www.mintscan.io/osmosis/proposals/556) |
 | `v17` | Aluminium | `v17.0.0` | 11126100       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v17.0.0/) | [586](https://www.mintscan.io/osmosis/proposals/586) |
 | `v18` |   | `v18.0.0` | 11155350       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v18.0.0/) | [588](https://www.mintscan.io/osmosis/proposals/588) |
+| `v19` |   | `v19.0.0` | 11317300       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v19.0.0/) | [606](https://www.mintscan.io/osmosis/proposals/606) |
 
 ## Upgrade Binaries
 
@@ -171,6 +172,17 @@ Each version is identified by a specific id, name, tag, block height and softwar
 }
 ```
 
+### v19.0.0
+
+```json
+{
+    "binaries": {
+        "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.0.0/osmosisd-19.0.0-linux-arm64?checksum=sha256:39fb492914ef45f81e91e4472ddfdd83a56d3db820e48ed430df4c59aab90736",
+        "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.0.0/osmosisd-19.0.0-linux-amd64?checksum=sha256:e2a105e6bbbc2efa7681aadcf286f8f646f1ab3a8552261aa5bb914f497ad77d"
+    }
+}
+```
+
 ## Replay from Genesis using Cosmovisor
 
 Assuming that your osmosis home it's already initialized with the desired genesis and configuration,
@@ -219,6 +231,9 @@ Alternatively, you can download the appropriate binary for your platform from ou
        ├── v18
        │   └── bin
        │       └── osmosisd
+       ├── v19
+       │   └── bin
+       │       └── osmosisd
        ├── v4
        │   └── bin
        │       └── osmosisd
@@ -254,6 +269,7 @@ versions_info=(
     "v16:https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/osmosisd-16.1.1-linux-amd64?checksum=sha256:f838618633c1d42f593dc33d26b25842f5900961e987fc08570bb81a062e311d"
     "v17:https://github.com/osmosis-labs/osmosis/releases/download/v17.0.0/osmosisd-17.0.0-linux-amd64?checksum=sha256:d7fe62ae33cf2f0b48a17eb8b02644dadd9924f15861ed622cd90cb1a038135b"
     "v18:https://github.com/osmosis-labs/osmosis/releases/download/v18.0.0/osmosisd-18.0.0-linux-amd64?checksum=sha256:d83b4122e3ff9c428c8d6dcfe89718f5229f80e9976dbab2deefeb68dceb0f38"
+    "v19:https://github.com/osmosis-labs/osmosis/releases/download/v19.0.0/osmosisd-19.0.0-linux-amd64?checksum=sha256:e2a105e6bbbc2efa7681aadcf286f8f646f1ab3a8552261aa5bb914f497ad77d"
 )
 
 # Create the cosmovisor directory

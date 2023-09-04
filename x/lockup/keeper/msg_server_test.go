@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v19/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -343,13 +344,13 @@ func (s *KeeperTestSuite) TestMsgForceUnlock() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 	defaultPoolID, defaultLockID := uint64(1), uint64(1)
-	defaultLockAmount := sdk.NewInt(1000000000)
+	defaultLockAmount := osmomath.NewInt(1000000000)
 
 	tests := []struct {
 		name                      string
 		forceUnlockAllowedAddress types.Params
 		postLockSetup             func()
-		forceUnlockAmount         sdk.Int
+		forceUnlockAmount         osmomath.Int
 		expectPass                bool
 	}{
 		{
@@ -387,7 +388,7 @@ func (s *KeeperTestSuite) TestMsgForceUnlock() {
 			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String()}},
 			func() {},
 			// try force unlocking half of locked amount
-			defaultLockAmount.Quo(sdk.NewInt(2)),
+			defaultLockAmount.Quo(osmomath.NewInt(2)),
 			true,
 		},
 		{
@@ -395,7 +396,7 @@ func (s *KeeperTestSuite) TestMsgForceUnlock() {
 			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String()}},
 			func() {},
 			// try force more than the locked amount
-			defaultLockAmount.Add(sdk.NewInt(1)),
+			defaultLockAmount.Add(osmomath.NewInt(1)),
 			false,
 		},
 		{
@@ -420,7 +421,7 @@ func (s *KeeperTestSuite) TestMsgForceUnlock() {
 		s.App.LockupKeeper.SetParams(s.Ctx, test.forceUnlockAllowedAddress)
 
 		// prepare pool for superfluid staking cases
-		poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("stake", sdk.NewInt(1000000000000)), sdk.NewCoin("foo", sdk.NewInt(5000)))
+		poolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("stake", osmomath.NewInt(1000000000000)), sdk.NewCoin("foo", osmomath.NewInt(5000)))
 
 		// lock tokens
 		msgServer := keeper.NewMsgServerImpl(s.App.LockupKeeper)

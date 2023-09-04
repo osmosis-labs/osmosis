@@ -86,7 +86,7 @@ and have a similar cosmwasm binding.
 func (k Keeper) GetArithmeticTwap(ctx sdk.Context,
 	poolId uint64,
 	baseAssetDenom string, quoteAssetDenom string,
-	startTime time.Time, endTime time.Time) (sdk.Dec, error) { ... }
+	startTime time.Time, endTime time.Time) (osmomath.Dec, error) { ... }
 ```
 
 There are convenience methods for `GetArithmeticTwapToNow` which sets `endTime = ctx.BlockTime()`, and has minor gas reduction.

@@ -12,6 +12,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/wasmbinding"
 
@@ -242,9 +243,9 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 				return nil, err
 			}
 			v.PoolId = poolId
-			sdkInt, ok := sdk.NewIntFromString(structArguments[1])
+			sdkInt, ok := osmomath.NewIntFromString(structArguments[1])
 			if !ok {
-				return nil, fmt.Errorf("failed to parse to sdk.Int")
+				return nil, fmt.Errorf("failed to parse to osmomath.Int")
 			}
 			v.ShareInAmount = sdkInt
 			return v, nil

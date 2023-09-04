@@ -15,11 +15,13 @@ jobs:
         uses: actions/stale@v8
         with:
           repo-token: ${{secrets.GITHUB_TOKEN}}
+          # Broken link issues are automatically created with the "automated issue" and "Broken links" labels, so we only care about closing those.
           only-issue-labels: automated issue,Broken links
+          ignore-issue-updates: true
           # close-issue-message requires permission `issues: write`
-          close-issue-message: 'This issue is closed due to a new "Check Broken Links" run. If any links are still broken, they will be reported in a new issue: https://github.com/osmosis-labs/osmosis/issues?q=is%3Aissue+is%3Aopen+label%3A%22automated+issue%22+label%3A%22Broken+links%22'
-          days-before-stale: -1
-          days-before-close: 0
+          close-issue-message: 'This issue is `stale` and has been closed due to a new "Check Broken Links" run. If any links are still broken, they will be reported in a new issue: https://github.com/osmosis-labs/osmosis/issues?q=is%3Aissue+is%3Aopen+label%3A%22automated+issue%22+label%3A%22Broken+links%22'
+          days-before-issue-stale: 0
+          days-before-issue-close: 0
 
       - name: Link Checker
         id: lychee

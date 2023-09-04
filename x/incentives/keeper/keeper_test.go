@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
@@ -77,7 +78,7 @@ func (s *KeeperTestSuite) ValidateNotDistributedGauge(gaugeID uint64) {
 func (s *KeeperTestSuite) ValidateIncentiveRecord(poolId uint64, remainingCoin sdk.Coin, incentiveRecord cltypes.IncentiveRecord) {
 	epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
 	distributedDecCoin := sdk.NewDecCoinFromCoin(remainingCoin)
-	emissionRateForPoolClPool := distributedDecCoin.Amount.QuoTruncate(sdk.NewDec(epochInfo.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
+	emissionRateForPoolClPool := distributedDecCoin.Amount.QuoTruncate(osmomath.NewDec(epochInfo.Duration.Milliseconds()).QuoInt(osmomath.NewInt(1000)))
 
 	s.Require().Equal(poolId, incentiveRecord.PoolId)
 	s.Require().Equal(emissionRateForPoolClPool, incentiveRecord.GetIncentiveRecordBody().EmissionRate)

@@ -1,17 +1,15 @@
 package math
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 var (
-	sdkOneDec      = sdk.OneDec()
-	sdkTenDec      = sdk.NewDec(10)
-	powersOfTen    []sdk.Dec
-	negPowersOfTen []sdk.Dec
+	sdkOneDec      = osmomath.OneDec()
+	sdkTenDec      = osmomath.NewDec(10)
+	powersOfTen    []osmomath.Dec
+	negPowersOfTen []osmomath.Dec
 
 	osmomathBigOneDec = osmomath.NewBigDec(1)
 	osmomathBigTenDec = osmomath.NewBigDec(10)
@@ -20,7 +18,7 @@ var (
 
 	// 9 * 10^(-types.ExponentAtPriceOne), where types.ExponentAtPriceOne is non-positive and is s.t.
 	// this answer fits well within an int64.
-	geometricExponentIncrementDistanceInTicks = 9 * sdk.NewDec(10).PowerMut(uint64(-types.ExponentAtPriceOne)).TruncateInt64()
+	geometricExponentIncrementDistanceInTicks = 9 * osmomath.NewDec(10).PowerMut(uint64(-types.ExponentAtPriceOne)).TruncateInt64()
 )
 
 // Builds metadata for every additive tickspacing exponent, namely:
@@ -35,9 +33,9 @@ var (
 // -1 => (0.1, 10^(types.ExponentAtPriceOne - 1), 9 * (types.ExponentAtPriceOne - 1))
 type tickExpIndexData struct {
 	// if price < initialPrice, we are not in this exponent range.
-	initialPrice sdk.Dec
+	initialPrice osmomath.BigDec
 	// if price >= maxPrice, we are not in this exponent range.
-	maxPrice sdk.Dec
+	maxPrice osmomath.BigDec
 	// TODO: Change to normal Dec, if min spot price increases.
 	// additive increment per tick here.
 	additiveIncrementPerTick osmomath.BigDec
@@ -49,13 +47,13 @@ var tickExpCache map[int64]*tickExpIndexData = make(map[int64]*tickExpIndexData)
 
 func buildTickExpCache() {
 	// build positive indices first
-	maxPrice := sdkOneDec
+	maxPrice := osmomathBigOneDec
 	curExpIndex := int64(0)
-	for maxPrice.LT(types.MaxSpotPrice) {
+	for maxPrice.LT(osmomath.BigDecFromDec(types.MaxSpotPrice)) {
 		tickExpCache[curExpIndex] = &tickExpIndexData{
 			// price range 10^curExpIndex to 10^(curExpIndex + 1). (10, 100)
-			initialPrice:             sdkTenDec.Power(uint64(curExpIndex)),
-			maxPrice:                 sdkTenDec.Power(uint64(curExpIndex + 1)),
+			initialPrice:             osmomathBigTenDec.PowerInteger(uint64(curExpIndex)),
+			maxPrice:                 osmomathBigTenDec.PowerInteger(uint64(curExpIndex + 1)),
 			additiveIncrementPerTick: powTenBigDec(types.ExponentAtPriceOne + curExpIndex),
 			initialTick:              geometricExponentIncrementDistanceInTicks * curExpIndex,
 		}
@@ -63,13 +61,13 @@ func buildTickExpCache() {
 		curExpIndex += 1
 	}
 
-	minPrice := sdkOneDec
+	minPrice := osmomathBigOneDec
 	curExpIndex = -1
-	for minPrice.GT(types.MinSpotPrice) {
+	for minPrice.GT(osmomath.NewBigDecWithPrec(1, 30)) {
 		tickExpCache[curExpIndex] = &tickExpIndexData{
 			// price range 10^curExpIndex to 10^(curExpIndex + 1). (0.001, 0.01)
-			initialPrice:             powTenBigDec(curExpIndex).SDKDec(),
-			maxPrice:                 powTenBigDec(curExpIndex + 1).SDKDec(),
+			initialPrice:             powTenBigDec(curExpIndex),
+			maxPrice:                 powTenBigDec(curExpIndex + 1),
 			additiveIncrementPerTick: powTenBigDec(types.ExponentAtPriceOne + curExpIndex),
 			initialTick:              geometricExponentIncrementDistanceInTicks * curExpIndex,
 		}
@@ -80,18 +78,18 @@ func buildTickExpCache() {
 
 // Set precision multipliers
 func init() {
-	negPowersOfTen = make([]sdk.Dec, sdk.Precision+1)
-	for i := 0; i <= sdk.Precision; i++ {
+	negPowersOfTen = make([]osmomath.Dec, osmomath.PrecisionDec+1)
+	for i := 0; i <= osmomath.PrecisionDec; i++ {
 		negPowersOfTen[i] = sdkOneDec.Quo(sdkTenDec.Power(uint64(i)))
 	}
-	// 10^77 < sdk.MaxInt < 10^78
-	powersOfTen = make([]sdk.Dec, 78)
-	for i := 0; i <= 77; i++ {
+	// 10^77 < osmomath.MaxInt < 10^78
+	powersOfTen = make([]osmomath.Dec, 77)
+	for i := 0; i <= 76; i++ {
 		powersOfTen[i] = sdkTenDec.Power(uint64(i))
 	}
 
-	bigNegPowersOfTen = make([]osmomath.BigDec, osmomath.Precision+1)
-	for i := 0; i <= osmomath.Precision; i++ {
+	bigNegPowersOfTen = make([]osmomath.BigDec, osmomath.PrecisionBigDec+1)
+	for i := 0; i <= osmomath.PrecisionBigDec; i++ {
 		bigNegPowersOfTen[i] = osmomathBigOneDec.Quo(osmomathBigTenDec.PowerInteger(uint64(i)))
 	}
 	// 10^308 < osmomath.MaxInt < 10^309

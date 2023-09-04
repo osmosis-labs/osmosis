@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
@@ -36,18 +37,18 @@ type PoolManagerKeeper interface {
 		sender sdk.AccAddress,
 		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
-		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
+		tokenOutMinAmount osmomath.Int) (tokenOutAmount osmomath.Int, err error)
 
 	MultihopEstimateOutGivenExactAmountIn(
 		ctx sdk.Context,
 		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
-	) (tokenOutAmount sdk.Int, err error)
+	) (tokenOutAmount osmomath.Int, err error)
 
 	MultihopEstimateInGivenExactAmountOut(
 		ctx sdk.Context,
 		routes []poolmanagertypes.SwapAmountOutRoute,
-		tokenOut sdk.Coin) (tokenInAmount sdk.Int, err error)
+		tokenOut sdk.Coin) (tokenInAmount osmomath.Int, err error)
 
 	AllPools(
 		ctx sdk.Context,

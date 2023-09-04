@@ -39,7 +39,7 @@ func cfmmConstantMultiNoVY(xReserve, yReserve, wSumSquares osmomath.BigDec) osmo
 // xy(x^2 + y^2 + w) = (x - a)(y + b)((x - a)^2 + (y + b)^2 + w)
 // with w set to 0 for 2 asset pools
 func solveCfmm(xReserve, yReserve osmomath.BigDec, remReserves []osmomath.BigDec, yIn osmomath.BigDec) osmomath.BigDec {
-	wSumSquares := osmomath.ZeroDec()
+	wSumSquares := osmomath.ZeroBigDec()
 	for _, assetReserve := range remReserves {
 		wSumSquares = wSumSquares.Add(assetReserve.Mul(assetReserve))
 	}
@@ -64,7 +64,7 @@ func targetKCalculator(x0, y0, w, yf osmomath.BigDec) osmomath.BigDec {
 // where x_out = x_0 - x_f
 func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) osmomath.BigDec {
 	// compute coefficients first
-	cubicCoeff := osmomath.OneDec().Neg()
+	cubicCoeff := osmomath.OneBigDec().Neg()
 	quadraticCoeff := x0.MulInt64(3)
 	linearCoeff := quadraticCoeff.Mul(x0).Add(w).Add(yf.Mul(yf)).Neg()
 	return func(xf osmomath.BigDec) osmomath.BigDec {
@@ -79,8 +79,8 @@ func iterKCalculator(x0, w, yf osmomath.BigDec) func(osmomath.BigDec) osmomath.B
 }
 
 var (
-	zero = osmomath.ZeroDec()
-	one  = osmomath.OneDec()
+	zero = osmomath.ZeroBigDec()
+	one  = osmomath.OneBigDec()
 )
 
 func deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal osmomath.BigDec) (
@@ -102,7 +102,7 @@ func deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal
 		xFinalUpperbound = xReserve.Quo(kRatio).Ceil()
 	} else if kRatio.GT(one) {
 		// need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
-		xFinalLowerbound = osmomath.ZeroDec()
+		xFinalLowerbound = osmomath.ZeroBigDec()
 	}
 	// else
 	// k remains unchanged.
@@ -125,7 +125,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	maxIterations := 256
 
 	// we use a geometric error tolerance that guarantees approximately 10^-12 precision on outputs
-	errTolerance := osmomath.ErrTolerance{AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
+	errTolerance := osmomath.ErrTolerance{AdditiveTolerance: osmomath.Dec{}, MultiplicativeTolerance: osmomath.NewDecWithPrec(1, 12)}
 
 	// if yIn is positive, we want to under-estimate the amount of xOut.
 	// This means, we want x_out to be rounded down, as x_out = x_init - x_final, for x_init > x_final.
@@ -155,7 +155,7 @@ func solveCFMMBinarySearchMulti(xReserve, yReserve, wSumSquares, yIn osmomath.Bi
 	return xOut
 }
 
-func (p Pool) spotPrice(quoteDenom, baseDenom string) (spotPrice sdk.Dec, err error) {
+func (p Pool) spotPrice(quoteDenom, baseDenom string) (spotPrice osmomath.Dec, err error) {
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
 	// trading "a" units of Y against the pool, assuming 0 spread factor, at the current liquidity.
 	// The spot price of the pool is then lim a -> 0, f_{y -> x}(a) / a
@@ -169,28 +169,28 @@ func (p Pool) spotPrice(quoteDenom, baseDenom string) (spotPrice sdk.Dec, err er
 
 	// We arbitrarily choose a = 1, and anticipate that this is a small value at the scale of
 	// xReserve & yReserve.
-	a := sdk.OneInt()
+	a := osmomath.OneInt()
 
-	res, err := p.calcOutAmtGivenIn(sdk.NewCoin(baseDenom, a), quoteDenom, sdk.ZeroDec())
+	res, err := p.calcOutAmtGivenIn(sdk.NewCoin(baseDenom, a), quoteDenom, osmomath.ZeroDec())
 	// fmt.Println("spot price res", res)
 	return res, err
 }
 
-func oneMinus(spreadFactor sdk.Dec) osmomath.BigDec {
-	return osmomath.BigDecFromSDKDec(sdk.OneDec().Sub(spreadFactor))
+func oneMinus(spreadFactor osmomath.Dec) osmomath.BigDec {
+	return osmomath.BigDecFromDec(osmomath.OneDec().Sub(spreadFactor))
 }
 
-// calcOutAmtGivenIn calculate amount of specified denom to output from a pool in sdk.Dec given the input `tokenIn`
-func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, spreadFactor sdk.Dec) (sdk.Dec, error) {
+// calcOutAmtGivenIn calculate amount of specified denom to output from a pool in osmomath.Dec given the input `tokenIn`
+func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, spreadFactor osmomath.Dec) (osmomath.Dec, error) {
 	// round liquidity down, and round token in down
 	reserves, err := p.scaledSortedPoolReserves(tokenIn.Denom, tokenOutDenom, osmomath.RoundDown)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 	tokenInSupply, tokenOutSupply, remReserves := reserves[0], reserves[1], reserves[2:]
 	tokenInDec, err := p.scaleCoin(tokenIn, osmomath.RoundDown)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	// amm input = tokenIn * (1 - spread factor)
@@ -204,16 +204,16 @@ func (p Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, spreadFa
 }
 
 // calcInAmtGivenOut calculates exact input amount given the desired output and return as a decimal
-func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, spreadFactor sdk.Dec) (sdk.Dec, error) {
+func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, spreadFactor osmomath.Dec) (osmomath.Dec, error) {
 	// round liquidity down, and round token out up
 	reserves, err := p.scaledSortedPoolReserves(tokenInDenom, tokenOut.Denom, osmomath.RoundDown)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 	tokenInSupply, tokenOutSupply, remReserves := reserves[0], reserves[1], reserves[2:]
 	tokenOutAmount, err := p.scaleCoin(tokenOut, osmomath.RoundUp)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
@@ -230,8 +230,8 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, spreadF
 
 // calcSingleAssetJoinShares calculates the number of LP shares that
 // should be granted given the passed in single-token input (non-mutative)
-func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, spreadFactor sdk.Dec) (sdk.Int, error) {
-	poolWithAddedLiquidityAndShares := func(newLiquidity sdk.Coin, newShares sdk.Int) types.CFMMPoolI {
+func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, spreadFactor osmomath.Dec) (osmomath.Int, error) {
+	poolWithAddedLiquidityAndShares := func(newLiquidity sdk.Coin, newShares osmomath.Int) types.CFMMPoolI {
 		paCopy := p.Copy()
 		paCopy.updatePoolForJoin(sdk.NewCoins(newLiquidity), newShares)
 		return &paCopy
@@ -244,10 +244,10 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, spreadFactor sdk.Dec)
 	// 4) Multiplying token in by one minus spread factor.
 	spreadFactorApplicableRatio, err := p.singleAssetJoinSpreadFactorRatio(tokenIn.Denom)
 	if err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
-	oneMinusSpreadFactor := sdk.OneDec().Sub(spreadFactor.Mul(spreadFactorApplicableRatio))
-	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(oneMinusSpreadFactor).TruncateInt()
+	oneMinusSpreadFactor := osmomath.OneDec().Sub(spreadFactor.Mul(spreadFactorApplicableRatio))
+	tokenInAmtAfterFee := tokenIn.Amount.ToLegacyDec().Mul(oneMinusSpreadFactor).TruncateInt()
 
 	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
 }
@@ -258,7 +258,7 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, spreadFactor sdk.Dec)
 // and we input asset A, this function will return 20%.
 // Note that this will over-estimate spread factor for single asset joins slightly,
 // as in the swapping process into the pool, the A to B ratio would decrease the relative supply of B.
-func (p *Pool) singleAssetJoinSpreadFactorRatio(tokenInDenom string) (sdk.Dec, error) {
+func (p *Pool) singleAssetJoinSpreadFactorRatio(tokenInDenom string) (osmomath.Dec, error) {
 	// get a second denom in pool
 	tokenOut := p.PoolLiquidity[0]
 	if tokenOut.Denom == tokenInDenom {
@@ -267,42 +267,42 @@ func (p *Pool) singleAssetJoinSpreadFactorRatio(tokenInDenom string) (sdk.Dec, e
 	// We round bankers scaled liquidity, since we care about the ratio of liquidity.
 	scaledLiquidity, err := p.scaledSortedPoolReserves(tokenInDenom, tokenOut.Denom, osmomath.RoundDown)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
-	totalLiquidityDenominator := osmomath.ZeroDec()
+	totalLiquidityDenominator := osmomath.ZeroBigDec()
 	for _, amount := range scaledLiquidity {
 		totalLiquidityDenominator = totalLiquidityDenominator.Add(amount)
 	}
 	ratioOfInputAssetLiquidityToTotalLiquidity := scaledLiquidity[0].Quo(totalLiquidityDenominator)
-	// SDKDec() rounds down (as it truncates), therefore 1 - term is rounded up, as desired.
-	nonInternalAssetRatio := sdk.OneDec().Sub(ratioOfInputAssetLiquidityToTotalLiquidity.SDKDec())
+	// Dec() rounds down (as it truncates), therefore 1 - term is rounded up, as desired.
+	nonInternalAssetRatio := osmomath.OneDec().Sub(ratioOfInputAssetLiquidityToTotalLiquidity.Dec())
 	return nonInternalAssetRatio, nil
 }
 
 // Route a pool join attempt to either a single-asset join or all-asset join (mutates pool state)
 // Eventually, we intend to switch this to a COW wrapped pa for better performance
-func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, spreadFactor osmomath.Dec) (numShares osmomath.Int, tokensJoined sdk.Coins, err error) {
 	if !tokensIn.DenomsSubsetOf(p.GetTotalPoolLiquidity(ctx)) {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("attempted joining pool with assets that do not exist in pool")
+		return osmomath.ZeroInt(), sdk.NewCoins(), errors.New("attempted joining pool with assets that do not exist in pool")
 	}
 
-	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(sdk.OneInt()) {
+	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(osmomath.OneInt()) {
 		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], spreadFactor)
 		if err != nil {
-			return sdk.ZeroInt(), sdk.NewCoins(), err
+			return osmomath.ZeroInt(), sdk.NewCoins(), err
 		}
 
 		tokensJoined = tokensIn
 	} else if len(tokensIn) != p.NumAssets() {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
+		return osmomath.ZeroInt(), sdk.NewCoins(), errors.New(
 			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
 	} else {
 		// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
 		var remCoins sdk.Coins
 		numShares, remCoins, err = cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
 		if err != nil {
-			return sdk.ZeroInt(), sdk.NewCoins(), err
+			return osmomath.ZeroInt(), sdk.NewCoins(), err
 		}
 
 		tokensJoined = tokensIn.Sub(remCoins)
@@ -311,7 +311,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, sprea
 	p.updatePoolForJoin(tokensJoined, numShares)
 
 	if err = validatePoolLiquidity(p.PoolLiquidity, p.ScalingFactors); err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
+		return osmomath.ZeroInt(), sdk.NewCoins(), err
 	}
 
 	return numShares, tokensJoined, nil
