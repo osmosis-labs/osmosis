@@ -51,7 +51,8 @@ message ArithmeticTwapRequest {
 }
 message ArithmeticTwapResponse {
   string arithmetic_twap = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"arithmetic_twap\"",
     (gogoproto.nullable) = false
   ];
@@ -69,7 +70,8 @@ message ArithmeticTwapToNowRequest {
 }
 message ArithmeticTwapToNowResponse {
   string arithmetic_twap = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"arithmetic_twap\"",
     (gogoproto.nullable) = false
   ];
@@ -92,7 +94,8 @@ message GeometricTwapRequest {
 }
 message GeometricTwapResponse {
   string geometric_twap = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"geometric_twap\"",
     (gogoproto.nullable) = false
   ];
@@ -110,7 +113,8 @@ message GeometricTwapToNowRequest {
 }
 message GeometricTwapToNowResponse {
   string geometric_twap = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"geometric_twap\"",
     (gogoproto.nullable) = false
   ];

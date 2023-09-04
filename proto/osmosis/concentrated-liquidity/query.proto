@@ -166,7 +166,8 @@ message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }
 
 message TickLiquidityNet {
   string liquidity_net = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
     (gogoproto.nullable) = false
   ];
@@ -175,7 +176,8 @@ message TickLiquidityNet {
 
 message LiquidityDepthWithRange {
   string liquidity_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
     (gogoproto.nullable) = false
   ];
@@ -197,7 +199,8 @@ message LiquidityNetInDirectionResponse {
       [ (gogoproto.nullable) = false ];
   int64 current_tick = 2;
   string current_liquidity = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"current_liquidity\"",
     (gogoproto.nullable) = false
   ];
