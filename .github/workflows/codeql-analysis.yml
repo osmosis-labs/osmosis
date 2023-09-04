@@ -5,8 +5,12 @@ on:
     paths:
       - "**.go"
   push:
+    branches:
+      - main
+      - release/**
     paths:
       - "**.go"
+  workflow_dispatch:
 
 jobs:
   analyze:
