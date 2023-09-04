@@ -834,7 +834,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Assert removing some liquidity
 	// remove default liquidity from the 0th position of every address
 	clwg = sync.WaitGroup{}
-	for i := range createdPositions {
+	for i := 0; i < len(createdPositions); i++ {
 		clwg.Add(1)
 		go func(i int) { // Launch a goroutine
 			defer clwg.Done()
@@ -843,7 +843,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 			posLiquidityBefore := posSet[0].Position.Liquidity
 			chainBNode.WithdrawPosition(addr, defaultLiquidityRemoval, posSet[0].Position.PositionId)
 			// assert
-			positionsAddress1 = chainBNode.QueryConcentratedPositions(addr)
+			createdPositions[i] = chainBNode.QueryConcentratedPositions(addr)
 			s.Require().Equal(posLiquidityBefore, posSet[0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
 		}(i)
 	}
