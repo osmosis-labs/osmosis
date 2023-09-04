@@ -782,7 +782,8 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 				Value:    value,
 			},
 		},
-		Deposit: "625000000uosmo",
+		IsExpedited: true,
+		Deposit:     strconv.Itoa(int(config.InitialMinExpeditedDeposit)) + "," + appparams.BaseCoinUnit,
 	}
 	proposalJson, err := json.Marshal(proposal)
 	if err != nil {

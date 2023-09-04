@@ -920,6 +920,10 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	chainBNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
 }
 
+// func (s *IntegrationTestSuite) TestTickSpacingUpdateProp() {
+
+// }
+
 func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
 	if s.skipUpgrade {
 		s.T().Skip("Skipping StableSwapPostUpgrade test")
@@ -1477,9 +1481,8 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 	twapFromBeforeSwapToBeforeSwapOneCA, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
 	s.Require().NoError(err)
 
-	chainABNode.BankSend(coinAIn, sender, swapWalletAddr)
-	chainABNode.BankSend(coinBIn, sender, swapWalletAddr)
-	chainABNode.BankSend(coinCIn, sender, swapWalletAddr)
+	swapAmt := coinAIn + "," + coinBIn + "," + coinCIn
+	chainABNode.BankSend(swapAmt, sender, swapWalletAddr)
 
 	s.T().Log("querying for the second TWAP to now before swap, must equal to first")
 	twapFromBeforeSwapToBeforeSwapTwoAB, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap.Add(50*time.Millisecond))
