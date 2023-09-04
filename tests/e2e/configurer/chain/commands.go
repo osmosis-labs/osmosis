@@ -667,18 +667,9 @@ func (n *NodeConfig) SendIBCNoMutex(srcChain, dstChain *Config, recipient string
 
 func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
 	propNumber := n.SubmitSuperfluidProposal(denom)
+	n.DepositProposal(propNumber, false)
 
-	var wg sync.WaitGroup
-
-	for _, n := range srcChain.NodeConfigs {
-		wg.Add(1)
-		go func(node *NodeConfig) {
-			defer wg.Done()
-			node.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-		}(n)
-	}
-
-	wg.Wait()
+	AllValsVoteOnProposal(srcChain, propNumber)
 }
 
 func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount osmomath.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
