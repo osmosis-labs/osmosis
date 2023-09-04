@@ -283,84 +283,50 @@ func (n *NodeConfig) ExitPool(from, minAmountsOut string, poolId uint64, shareAm
 	n.LogActionF("successfully exited pool %d, minAmountsOut %s, shareAmountIn %s", poolId, minAmountsOut, shareAmountIn)
 }
 
+func (n *NodeConfig) SubmitProposal(cmdArgs []string, isExpedited bool, propDescriptionForLogs string) int {
+	n.LogActionF("submitting proposal: %s", propDescriptionForLogs)
+	cmd := append([]string{"osmosisd", "tx", "gov", "submit-proposal"}, cmdArgs...)
+	depositAmt := sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit))
+	if isExpedited {
+		cmd = append(cmd, "--is-expedited=true")
+		depositAmt = sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.MinExpeditedDepositValue))
+	}
+	cmd = append(cmd, fmt.Sprintf("--deposit=%s", depositAmt))
+	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+
+	proposalID, err := extractProposalIdFromResponse(resp.String())
+	require.NoError(n.t, err)
+
+	n.LogActionF("successfully submitted proposal: %s", propDescriptionForLogs)
+
+	return proposalID
+}
+
 func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin) int {
-	n.LogActionF("submitting upgrade proposal %s for height %d", upgradeVersion, upgradeHeight)
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%d", upgradeHeight), "--upgrade-info=\"\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
-	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
-
-	proposalID, err := extractProposalIdFromResponse(resp.String())
-	require.NoError(n.t, err)
-
-	require.NoError(n.t, err)
-	n.LogActionF("successfully submitted upgrade proposal")
-
-	return proposalID
+	cmd := []string{"software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%d", upgradeHeight), "--upgrade-info=\"\"", "--from=val"}
+	return n.SubmitProposal(cmd, true, fmt.Sprintf("upgrade proposal %s for height %d", upgradeVersion, upgradeHeight))
 }
 
-func (n *NodeConfig) SubmitSuperfluidProposal(asset string, initialDeposit sdk.Coin) int {
-	n.LogActionF("submitting superfluid proposal for asset %s", asset)
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), "--title=\"superfluid asset prop\"", fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit), "--gas=700000", "--fees=5000uosmo"}
-	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
-
-	proposalID, err := extractProposalIdFromResponse(resp.String())
-	require.NoError(n.t, err)
-
-	n.LogActionF("successfully submitted superfluid proposal for asset %s", asset)
-
-	return proposalID
+func (n *NodeConfig) SubmitSuperfluidProposal(asset string) int {
+	cmd := []string{"set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), "--title=\"superfluid asset prop\"", fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", "--gas=700000", "--fees=5000uosmo"}
+	// TODO: no expedited flag for some reason
+	return n.SubmitProposal(cmd, false, fmt.Sprintf("superfluid proposal for asset %s", asset))
 }
 
-func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(initialDeposit sdk.Coin, isExpedited bool) int {
-	n.LogActionF("Creating concentrated liquidity pool")
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
-	if isExpedited {
-		cmd = append(cmd, "--is-expedited=true")
-	}
-	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
-
-	proposalID, err := extractProposalIdFromResponse(resp.String())
-	require.NoError(n.t, err)
-
-	n.LogActionF("successfully created a create concentrated liquidity pool proposal")
-
-	return proposalID
+func (n *NodeConfig) SubmitCreateConcentratedPoolProposal(isExpedited bool) int {
+	cmd := []string{"create-concentratedliquidity-pool-proposal", "--pool-records=stake,uosmo,100,0.001", "--title=\"create concentrated pool\"", "--description=\"create concentrated pool", "--from=val"}
+	return n.SubmitProposal(cmd, isExpedited, "create concentrated liquidity pool")
 }
 
-func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, isExpedited bool) int {
-	n.LogActionF("submitting text gov proposal")
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
-	if isExpedited {
-		cmd = append(cmd, "--is-expedited=true")
-	}
-	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
-
-	proposalID, err := extractProposalIdFromResponse(resp.String())
-	require.NoError(n.t, err)
-
-	n.LogActionF("successfully submitted text gov proposal")
-
-	return proposalID
+func (n *NodeConfig) SubmitTextProposal(text string, isExpedited bool) int {
+	cmd := []string{"--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val"}
+	return n.SubmitProposal(cmd, isExpedited, "text proposal")
 }
 
-func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords string, initialDeposit sdk.Coin, isExpedited bool) int {
-	n.LogActionF("submitting tick spacing reduction gov proposal")
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "tick-spacing-decrease-proposal", "--title=\"test tick spacing reduction proposal title\"", "--description=\"test tick spacing reduction proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit), fmt.Sprintf("--pool-tick-spacing-records=%s", poolTickSpacingRecords)}
-	if isExpedited {
-		cmd = append(cmd, "--is-expedited=true")
-	}
-	resp, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
-
-	proposalID, err := extractProposalIdFromResponse(resp.String())
-	require.NoError(n.t, err)
-
-	n.LogActionF("successfully submitted tick spacing reduction gov proposal")
-
-	return proposalID
+func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords string, isExpedited bool) int {
+	cmd := []string{"tick-spacing-decrease-proposal", "--title=\"test tick spacing reduction proposal title\"", "--description=\"test tick spacing reduction proposal\"", "--from=val", fmt.Sprintf("--pool-tick-spacing-records=%s", poolTickSpacingRecords)}
+	return n.SubmitProposal(cmd, isExpedited, "tick spacing reduction proposal")
 }
 
 func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
@@ -700,20 +666,10 @@ func (n *NodeConfig) SendIBCNoMutex(srcChain, dstChain *Config, recipient string
 }
 
 func (n *NodeConfig) EnableSuperfluidAsset(srcChain *Config, denom string) {
-	propNumber := n.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)))
+	propNumber := n.SubmitSuperfluidProposal(denom)
 	n.DepositProposal(propNumber, false)
 
-	var wg sync.WaitGroup
-
-	for _, n := range srcChain.NodeConfigs {
-		wg.Add(1)
-		go func(node *NodeConfig) {
-			defer wg.Done()
-			node.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-		}(n)
-	}
-
-	wg.Wait()
+	AllValsVoteOnProposal(srcChain, propNumber)
 }
 
 func (n *NodeConfig) LockAndAddToExistingLock(srcChain *Config, amount osmomath.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {

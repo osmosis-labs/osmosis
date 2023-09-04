@@ -19,6 +19,7 @@ jobs:
           files_ignore: |
             **/*.md
             **/*_test.go
+            tests/**
             **/*.py
             .github/workflows/*.yml
 

@@ -25,7 +25,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
@@ -34,6 +33,8 @@ import (
 var (
 	// minDecTolerance minimum tolerance for osmomath.Dec, given its precision of 18.
 	minDecTolerance = osmomath.MustNewDecFromStr("0.000000000000000001")
+	// TODO: lower
+	govPropTimeout = time.Minute
 )
 
 // TODO: Find more scalable way to do this
@@ -395,9 +396,8 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	lockId := chainABNode.LockTokens(fmt.Sprintf("%v%s", osmomath.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
 	chainABNode.SuperfluidDelegate(lockId, chainABNode.OperatorAddress, superfluidVotingWallet)
 
-	// create a text prop, deposit and vote yes
-	propNumber := chainABNode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)), true)
-	chainABNode.DepositProposal(propNumber, true)
+	// create a text prop and vote yes
+	propNumber := chainABNode.SubmitTextProposal("superfluid vote overwrite test", true)
 
 	chain.AllValsVoteOnProposal(chainAB, propNumber)
 
@@ -415,7 +415,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 			}
 			return true
 		},
-		1*time.Minute,
+		govPropTimeout,
 		10*time.Millisecond,
 		"Osmosis node failed to retrieve prop tally",
 	)
@@ -478,7 +478,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 			return strings.Contains(val, contract)
 		},
-		1*time.Minute,
+		govPropTimeout,
 		10*time.Millisecond,
 		"Osmosis node failed to retrieve params",
 	)
@@ -849,27 +849,16 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 func (s *IntegrationTestSuite) ExpeditedProposals() {
 	chainAB, chainABNode := s.getChainCfgs()
 
-	propNumber := chainABNode.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinExpeditedDeposit)), true)
+	propNumber := chainABNode.SubmitTextProposal("expedited text proposal", true)
 
-	chainABNode.DepositProposal(propNumber, true)
 	totalTimeChan := make(chan time.Duration, 1)
 	go chainABNode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
 
-	var wg sync.WaitGroup
-
-	for _, n := range chainAB.NodeConfigs {
-		wg.Add(1)
-		go func(nodeConfig *chain.NodeConfig) {
-			defer wg.Done()
-			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
-		}(n)
-	}
-
-	wg.Wait()
+	chain.AllValsVoteOnProposal(chainAB, propNumber)
 
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	var elapsed time.Duration
-	timeoutPeriod := 2 * time.Minute
+	timeoutPeriod := 2 * govPropTimeout
 	select {
 	case elapsed = <-totalTimeChan:
 	case <-time.After(timeoutPeriod):

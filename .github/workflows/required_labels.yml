@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, labeled, unlabeled, synchronize]
     branches:
-      - 'main'
+      - "main"
 
 jobs:
   state_compatability_labels:
@@ -19,6 +19,7 @@ jobs:
           files_ignore: |
             **/*.md
             **/*_test.go
+            tests/**
             **/*.py
             .github/workflows/*.yml
 
