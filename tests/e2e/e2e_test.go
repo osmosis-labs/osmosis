@@ -962,7 +962,7 @@ func (s *IntegrationTestSuite) GeometricTwapMigration() {
 }
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
-// Additionally, it attempst to create a pool with IBC denoms.
+// Additionally, it attempts to create a pool with IBC denoms.
 func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
@@ -970,10 +970,26 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 	chainA, chainANode := s.getChainACfgs()
 	chainB, chainBNode := s.getChainBCfgs()
 
-	chainANode.SendIBC(chainA, chainB, chainBNode.PublicAddress, initialization.OsmoToken)
-	chainBNode.SendIBC(chainB, chainA, chainANode.PublicAddress, initialization.OsmoToken)
-	chainANode.SendIBC(chainA, chainB, chainBNode.PublicAddress, initialization.StakeToken)
-	chainBNode.SendIBC(chainB, chainA, chainANode.PublicAddress, initialization.StakeToken)
+	ibcSendConfigs := []struct {
+		srcCfg    *chain.Config
+		destCfg   *chain.Config
+		srcNode   *chain.NodeConfig
+		recipient string
+	}{{chainA, chainB, chainANode, chainBNode.PublicAddress}, {chainB, chainA, chainBNode, chainANode.PublicAddress}}
+	tokens := []sdk.Coin{initialization.OsmoToken, initialization.StakeToken}
+
+	var wg sync.WaitGroup
+	wg.Add(4)
+	for i := range ibcSendConfigs {
+		for j := range tokens {
+			cfg := ibcSendConfigs[i]
+			go func() {
+				cfg.srcNode.SendIBC(cfg.srcCfg, cfg.destCfg, cfg.recipient, tokens[j])
+				wg.Done()
+			}()
+		}
+	}
+	wg.Wait() // Wait for all goroutines to finish
 
 	chainANode.CreateBalancerPool("ibcDenomPool.json", initialization.ValidatorWalletName)
 }
@@ -1001,7 +1017,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 
 	// create a text prop, deposit and vote yes
 	propNumber := chainABNode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinDeposit)), true)
-	chainABNode.DepositProposal(propNumber, false)
+	chainABNode.DepositProposal(propNumber, true)
 
 	chain.AllValsVoteOnProposal(chainAB, propNumber)
 
