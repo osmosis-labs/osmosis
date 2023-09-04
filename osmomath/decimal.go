@@ -44,6 +44,11 @@ var (
 	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
 
+	// precisionFactorSDK is used to adjust the scale of BigDec values to match the precision expected by sdk.Dec
+	precisionFactorSDK *big.Int
+	// precisionDiffFromSDKDec is a difference in precision between BigDec and sdk.Dec
+	precisionDiffFromSDKDec int
+
 	// log_2(e)
 	// From: https://www.wolframalpha.com/input?i=log_2%28e%29+with+37+digits
 	logOfEbase2 = MustNewBigDecFromStr("1.442695040888963407359924681001892137")
@@ -69,6 +74,13 @@ func init() {
 	for i := 0; i <= PrecisionBigDec; i++ {
 		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
 	}
+
+	precisionDiffFromSDKDec = PrecisionBigDec - sdk.Precision
+	if precisionDiffFromSDKDec < 0 {
+		panic("invalid decimal precision")
+	}
+
+	precisionFactorSDK = new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(precisionDiffFromSDKDec)), nil)
 }
 
 func precisionInt() *big.Int {
@@ -552,11 +564,17 @@ func (d BigDec) MustFloat64() float64 {
 // Dec returns the osmomath.Dec representation of a BigDec.
 // Values in any additional decimal places are truncated.
 func (d BigDec) Dec() Dec {
-	precisionDiff := PrecisionBigDec - PrecisionDec
-	precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(precisionDiff)), nil)
+	return d.DecWithPrecision(sdk.Precision)
+}
 
-	if precisionDiff < 0 {
-		panic("invalid decimal precision")
+func (d BigDec) DecWithPrecision(precision int64) Dec {
+	var precisionFactor *big.Int
+	if precision >= sdk.Precision {
+		precisionFactor = precisionFactorSDK
+		precision = sdk.Precision
+	} else {
+		precisionDiff := PrecisionBigDec - precision
+		precisionFactor = new(big.Int).Exp(big.NewInt(10), big.NewInt(precisionDiff), nil)
 	}
 
 	// Truncate any additional decimal values that exist due to BigDec's additional precision
@@ -564,7 +582,7 @@ func (d BigDec) Dec() Dec {
 	intRepresentation := new(big.Int).Quo(d.BigInt(), precisionFactor)
 
 	// convert int representation back to SDK Dec precision
-	truncatedDec := NewDecFromBigIntWithPrec(intRepresentation, PrecisionDec)
+	truncatedDec := NewDecFromBigIntWithPrec(intRepresentation, precision)
 
 	return truncatedDec
 }

@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
@@ -1479,5 +1480,44 @@ func (s *decimalTestSuite) TestPower() {
 				osmoassert.Equal(s.T(), tc.errTolerance, tc.expectedResult, actualResult)
 			})
 		})
+	}
+}
+
+func (s *decimalTestSuite) TestDecWithPrecision() {
+	tests := []struct {
+		d         osmomath.BigDec
+		want      osmomath.Dec
+		precision int64
+		expPanic  bool
+	}{
+		// test cases for basic SDKDec() conversion
+		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000000000"), sdk.Precision, false},
+		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000000000"), sdk.Precision, false},
+		{osmomath.NewBigDec(10), sdk.MustNewDecFromStr("10.000000000000000000"), sdk.Precision, false},
+		{osmomath.NewBigDec(12340), sdk.MustNewDecFromStr("12340.000000000000000000"), sdk.Precision, false},
+		{osmomath.NewBigDecWithPrec(12340, 4), sdk.MustNewDecFromStr("1.234000000000000000"), sdk.Precision, false},
+		{osmomath.NewBigDecWithPrec(12340, 5), sdk.MustNewDecFromStr("0.123400000000000000"), sdk.Precision, false},
+		{osmomath.NewBigDecWithPrec(12340, 8), sdk.MustNewDecFromStr("0.000123400000000000"), sdk.Precision, false},
+		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), sdk.Precision, false},
+		// test cases w/ custom precision:
+		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000"), 12, false},
+		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000"), 12, false},
+		// specified precision is the same as the initial precision: 12.3453123123 -> 12.3453123123
+		{osmomath.NewBigDecWithPrec(123453123123, 10), sdk.MustNewDecFromStr("12.3453123123"), 10, false},
+		// cut precision to 5 decimals: 3212.4623423462346 - 3212.46234
+		{osmomath.NewBigDecWithPrec(32124623423462346, 13), sdk.MustNewDecFromStr("3212.46234"), 5, false},
+		// no decimal point: 18012004 -> 18012004
+		{osmomath.NewBigDecWithPrec(18012004, 0), sdk.MustNewDecFromStr("18012004"), 13, false},
+		// if we try to convert to sdk.Dec while specifying bigger precision than sdk.Dec has, converts with maximum precision possible (sdk.Precision)
+		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), sdk.Precision + 2, false},
+	}
+
+	for tcIndex, tc := range tests {
+		if tc.expPanic {
+			s.Require().Panics(func() { tc.d.DecWithPrecision(tc.precision) })
+		} else {
+			value := tc.d.DecWithPrecision(tc.precision)
+			s.Require().Equal(tc.want, value, "bad SdkDec(), index: %v", tcIndex)
+		}
 	}
 }
