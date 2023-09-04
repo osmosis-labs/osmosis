@@ -849,6 +849,10 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	}
 	clwg.Wait()
 
+	positionsAddress1 = createdPositions[0]
+	positionsAddress2 = createdPositions[1]
+	positionsAddress3 = createdPositions[2]
+
 	// Assert removing all liquidity
 	// address2: no more positions left
 	allLiquidityAddress2Position1 := positionsAddress2[0].Position.Liquidity
