@@ -839,8 +839,8 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 				return
 			}
 			posLiquidity := createdPositions[i][0].Position.Liquidity
-			chainBNode.WithdrawPosition(address1, posLiquidity.String(), createdPositions[i][0].Position.PositionId)
-			finalPosition := chainBNode.QueryConcentratedPositions(address1)
+			chainBNode.WithdrawPosition(addr, posLiquidity.String(), createdPositions[i][0].Position.PositionId)
+			finalPosition := chainBNode.QueryConcentratedPositions(addr)
 			s.Require().Equal(len(finalPosition), len(createdPositions[i])-1)
 		}(i)
 	}
