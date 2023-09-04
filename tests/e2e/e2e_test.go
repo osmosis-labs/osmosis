@@ -70,7 +70,7 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 
 	s.T().Run("CL_Update_TickSpacing", func(t *testing.T) {
 		t.Parallel()
-		s.TestTickSpacingUpdateProp()
+		s.TickSpacingUpdateProp()
 	})
 
 	s.T().Run("SuperfluidVoting", func(t *testing.T) {
@@ -323,30 +323,42 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Use chain B node since it has taker fee enabled.
 	chainB, chainBNode, err := s.getChainBCfgs()
 	s.Require().NoError(err)
+	var adminWalletAddr string
 
-	// Get the permisionless pool creation parameter.
-	isPermisionlessCreationEnabledStr := chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
-	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
-		s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been")
-	}
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-	// Change the parameter to enable permisionless pool creation.
-	err = chainBNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainB)
-	s.Require().NoError(err)
+	go func() {
+		defer wg.Done()
+		// Get the permisionless pool creation parameter.
+		isPermisionlessCreationEnabledStr := chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
+			s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been")
+		}
 
-	// Update the protorev admin address to a known wallet we can control
-	adminWalletAddr := chainBNode.CreateWalletAndFund("admin", []string{"4000000uosmo"}, chainB)
-	err = chainBNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainB)
-	s.Require().NoError(err)
+		// Change the parameter to enable permisionless pool creation.
+		err := chainBNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainB)
+		s.Require().NoError(err)
 
-	// Update the weight of CL pools so that this test case is not back run by protorev.
-	chainBNode.SetMaxPoolPointsPerTx(7, adminWalletAddr)
+		// Confirm that the parameter has been changed.
+		isPermisionlessCreationEnabledStr = chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
+			s.T().Fatal("concentrated liquidity pool creation is not enabled")
+		}
+	}()
 
-	// Confirm that the parameter has been changed.
-	isPermisionlessCreationEnabledStr = chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
-	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
-		s.T().Fatal("concentrated liquidity pool creation is not enabled")
-	}
+	go func() {
+		defer wg.Done()
+		// Update the protorev admin address to a known wallet we can control
+		adminWalletAddr = chainBNode.CreateWalletAndFund("admin", []string{"4000000uosmo"}, chainB)
+		err := chainBNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainB)
+		s.Require().NoError(err)
+
+		// Update the weight of CL pools so that this test case is not back run by protorev.
+		chainBNode.SetMaxPoolPointsPerTx(7, adminWalletAddr)
+	}()
+
+	wg.Wait()
 
 	// Create concentrated liquidity pool when permisionless pool creation is enabled.
 	poolID := chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
@@ -875,7 +887,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	chainBNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
 }
 
-func (s *IntegrationTestSuite) TestTickSpacingUpdateProp() {
+func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 	var (
 		denom0              = "uion"
 		denom1              = "uosmo"
