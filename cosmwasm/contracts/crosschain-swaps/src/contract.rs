@@ -28,9 +28,11 @@ pub fn instantiate(
     // validate swaprouter contract and owner addresses and save to config
     let swap_contract = deps.api.addr_validate(&msg.swap_contract)?;
     let governor = deps.api.addr_validate(&msg.governor)?;
+    let registry_contract = deps.api.addr_validate(&msg.registry_contract)?;
     let state = Config {
         swap_contract,
         governor,
+        registry_contract,
     };
     CONFIG.save(deps.storage, &state)?;
 
@@ -58,6 +60,7 @@ pub fn execute(
             slippage,
             next_memo,
             on_failed_delivery,
+            route,
         } => execute::unwrap_or_swap_and_forward(
             (deps, env, info),
             output_denom,
@@ -65,6 +68,7 @@ pub fn execute(
             &receiver,
             next_memo,
             on_failed_delivery,
+            route,
         ),
         ExecuteMsg::Recover {} => execute::recover(deps, info.sender),
         ExecuteMsg::TransferOwnership { new_governor } => {

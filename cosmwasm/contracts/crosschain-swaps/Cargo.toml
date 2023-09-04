@@ -66,4 +66,5 @@ enum-repr = "0.2.6"
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }
-osmosis-testing = { workspace = true }
+osmosis-test-tube = { workspace = true }
+crosschain-registry = { path = "../crosschain-registry", features = ["imported"]}

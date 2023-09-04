@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 )
 
 // A synthetic lock object is a lock obejct used for the superfluid module.
@@ -113,12 +113,11 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, synthDenom
 	// There is no relationship between unbonding and bonding synthetic lockup, it's managed separately
 	// A separate accumulation store is incremented with the synth denom.
 
-	// TODO: Next state break change !synthlock.IsNil -> found
-	synthLock, _, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
+	_, found, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
 	if err != nil {
 		return err
 	}
-	if !synthLock.IsNil() {
+	if found {
 		return types.ErrSyntheticLockupAlreadyExists
 	}
 
@@ -136,7 +135,7 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, synthDenom
 	}
 
 	// set synthetic lockup object
-	synthLock = types.SyntheticLock{
+	synthLock := types.SyntheticLock{
 		UnderlyingLockId: lockID,
 		SynthDenom:       synthDenom,
 		EndTime:          endTime,

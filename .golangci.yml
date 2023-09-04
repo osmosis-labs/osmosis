@@ -9,7 +9,6 @@ linters:
   enable:
     - asciicheck
     - bidichk
-    - depguard
     - durationcheck
     - errcheck
     - errname
@@ -41,6 +40,16 @@ linters:
     - unused
     - whitespace
     - unparam
+    - revive
+
+linters-settings:
+  revive:
+    rules:
+      - name: function-result-limit
+        severity: warning
+        disabled: false
+        # limits the number of returns to 4
+        arguments: [4]
 
 issues:
   exclude-rules:

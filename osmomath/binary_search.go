@@ -16,13 +16,13 @@ import (
 // * |a - b| / min(a, b) <= MultiplicativeTolerance
 //
 // Each check is respectively ignored if the entry is nil.
-// So AdditiveTolerance = sdk.Int{} or sdk.ZeroInt()
-// MultiplicativeTolerance = sdk.Dec{}
+// So AdditiveTolerance = Int{} or ZeroInt()
+// MultiplicativeTolerance = Dec{}
 // RoundingDir = RoundUnconstrained.
 // Note that if AdditiveTolerance == 0, then this is equivalent to a standard compare.
 type ErrTolerance struct {
-	AdditiveTolerance       sdk.Dec
-	MultiplicativeTolerance sdk.Dec
+	AdditiveTolerance       Dec
+	MultiplicativeTolerance Dec
 	RoundingDir             RoundingDirection
 }
 
@@ -30,8 +30,8 @@ type ErrTolerance struct {
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
-func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
-	diff := expected.ToDec().Sub(actual.ToDec()).Abs()
+func (e ErrTolerance) Compare(expected Int, actual Int) int {
+	diff := expected.ToLegacyDec().Sub(actual.ToLegacyDec()).Abs()
 
 	comparisonSign := 0
 	if expected.GT(actual) {
@@ -69,12 +69,12 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 	}
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
-		minValue := sdk.MinInt(expected.Abs(), actual.Abs())
+		minValue := MinInt(expected.Abs(), actual.Abs())
 		if minValue.IsZero() {
 			return comparisonSign
 		}
 
-		errTerm := diff.Quo(minValue.ToDec())
+		errTerm := diff.Quo(minValue.ToLegacyDec())
 		if errTerm.GT(e.MultiplicativeTolerance) {
 			return comparisonSign
 		}
@@ -120,20 +120,20 @@ func (e ErrTolerance) CompareBigDec(expected BigDec, actual BigDec) int {
 			}
 		}
 
-		if diff.GT(BigDecFromSDKDec(e.AdditiveTolerance)) {
+		if diff.GT(BigDecFromDec(e.AdditiveTolerance)) {
 			return comparisonSign
 		}
 	}
 	// Check multiplicative tolerance equations
 	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
-		minValue := MinDec(expected.Abs(), actual.Abs())
+		minValue := MinBigDec(expected.Abs(), actual.Abs())
 		if minValue.IsZero() {
 			return comparisonSign
 		}
 
 		errTerm := diff.Quo(minValue)
 		// fmt.Printf("err term %v\n", errTerm)
-		if errTerm.GT(BigDecFromSDKDec(e.MultiplicativeTolerance)) {
+		if errTerm.GT(BigDecFromDec(e.MultiplicativeTolerance)) {
 			return comparisonSign
 		}
 	}
@@ -161,15 +161,15 @@ func (e ErrTolerance) EqualCoins(expectedCoins sdk.Coins, actualCoins sdk.Coins)
 // Binary search inputs between [lowerbound, upperbound] to a monotonic increasing function f.
 // We stop once f(found_input) meets the ErrTolerance constraints.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.
-func BinarySearch(f func(sdk.Int) (sdk.Int, error),
-	lowerbound sdk.Int,
-	upperbound sdk.Int,
-	targetOutput sdk.Int,
+func BinarySearch(f func(Int) (Int, error),
+	lowerbound Int,
+	upperbound Int,
+	targetOutput Int,
 	errTolerance ErrTolerance,
 	maxIterations int,
-) (sdk.Int, error) {
+) (Int, error) {
 	var (
-		curEstimate, curOutput sdk.Int
+		curEstimate, curOutput Int
 		err                    error
 	)
 
@@ -178,7 +178,7 @@ func BinarySearch(f func(sdk.Int) (sdk.Int, error),
 		curEstimate = lowerbound.Add(upperbound).QuoRaw(2)
 		curOutput, err = f(curEstimate)
 		if err != nil {
-			return sdk.Int{}, err
+			return Int{}, err
 		}
 
 		compRes := errTolerance.Compare(targetOutput, curOutput)
@@ -191,7 +191,7 @@ func BinarySearch(f func(sdk.Int) (sdk.Int, error),
 		}
 	}
 
-	return sdk.Int{}, errors.New("hit maximum iterations, did not converge fast enough")
+	return Int{}, errors.New("hit maximum iterations, did not converge fast enough")
 }
 
 // SdkDec

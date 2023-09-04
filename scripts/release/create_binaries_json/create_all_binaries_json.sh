@@ -13,6 +13,8 @@ tags=(
     "v15.2.0" 
     "v16.1.1"
     "v17.0.0"
+    "v18.0.0"
+    "v19.0.0"
 )
 
 echo "# Cosmovisor binaries"

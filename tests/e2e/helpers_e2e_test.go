@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -8,26 +9,26 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v17/tests/e2e/util"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
-var defaultFeePerTx = sdk.NewInt(1000)
+var defaultFeePerTx = osmomath.NewInt(1000)
 
 // calculateSpreadRewardGrowthGlobal calculates spread reward growth global per unit of virtual liquidity based on swap parameters:
 // amountIn - amount being swapped
 // spreadFactor - pool's spread factor
 // poolLiquidity - current pool liquidity
-func calculateSpreadRewardGrowthGlobal(amountIn, spreadFactor, poolLiquidity sdk.Dec) sdk.Dec {
+func calculateSpreadRewardGrowthGlobal(spreadRewardChargeTotal, poolLiquidity osmomath.Dec) osmomath.Dec {
 	// First we get total spread reward charge for the swap (ΔY * spreadFactor)
-	spreadRewardChargeTotal := amountIn.Mul(spreadFactor)
 
 	// Calculating spread reward growth global (dividing by pool liquidity to find spread reward growth per unit of virtual liquidity)
-	spreadRewardGrowthGlobal := spreadRewardChargeTotal.Quo(poolLiquidity)
+	spreadRewardGrowthGlobal := spreadRewardChargeTotal.QuoTruncate(poolLiquidity)
 	return spreadRewardGrowthGlobal
 }
 
@@ -36,7 +37,7 @@ func calculateSpreadRewardGrowthGlobal(amountIn, spreadFactor, poolLiquidity sdk
 // spreadRewardGrowthBelow - spread reward growth below lower tick
 // spreadRewardGrowthAbove - spread reward growth above upper tick
 // Formula: spreadRewardGrowthGlobal - spreadRewardGrowthBelowLowerTick - spreadRewardGrowthAboveUpperTick
-func calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGrowthBelow, spreadRewardGrowthAbove sdk.Dec) sdk.Dec {
+func calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGrowthBelow, spreadRewardGrowthAbove osmomath.Dec) osmomath.Dec {
 	return spreadRewardGrowthGlobal.Sub(spreadRewardGrowthBelow).Sub(spreadRewardGrowthAbove)
 }
 
@@ -55,6 +56,21 @@ func (s *IntegrationTestSuite) assertBalancesInvariants(balancesBefore, balances
 	}
 }
 
+func (s *IntegrationTestSuite) assertClSwap(clpoolStart types.ConcentratedPoolExtension, clPoolAfter types.ConcentratedPoolExtension, expectedSqrtPriceDelta osmomath.BigDec) {
+	// Update pool and track liquidity and sqrt price
+	liquidityBeforeSwap := clpoolStart.GetLiquidity()
+	sqrtPriceBeforeSwap := clpoolStart.GetCurrentSqrtPrice()
+	liquidityAfterSwap := clPoolAfter.GetLiquidity()
+	sqrtPriceAfterSwap := clPoolAfter.GetCurrentSqrtPrice()
+
+	// Assert swaps don't change pool's liquidity amount
+	s.Require().Equal(liquidityAfterSwap.String(), liquidityBeforeSwap.String())
+
+	// Assert current sqrt price
+	expectedSqrtPrice := sqrtPriceBeforeSwap.Add(expectedSqrtPriceDelta)
+	s.Require().Equal(expectedSqrtPrice.String(), sqrtPriceAfterSwap.String())
+}
+
 // Get balances for address
 func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address string) sdk.Coins {
 	addrBalances, err := node.QueryBalances(address)
@@ -64,31 +80,27 @@ func (s *IntegrationTestSuite) addrBalance(node *chain.NodeConfig, address strin
 
 var currentNodeIndexA int
 
-func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig, error) {
+func (s *IntegrationTestSuite) getChainACfgs() (*chain.Config, *chain.NodeConfig) {
 	chainA := s.configurer.GetChainConfig(0)
-
 	chainANodes := chainA.GetAllChainNodes()
-
 	chosenNode := chainANodes[currentNodeIndexA]
 	currentNodeIndexA = (currentNodeIndexA + 1) % len(chainANodes)
-	return chainA, chosenNode, nil
+	return chainA, chosenNode
 }
 
 var currentNodeIndexB int
 
-func (s *IntegrationTestSuite) getChainBCfgs() (*chain.Config, *chain.NodeConfig, error) {
+func (s *IntegrationTestSuite) getChainBCfgs() (*chain.Config, *chain.NodeConfig) {
 	chainB := s.configurer.GetChainConfig(1)
-
 	chainBNodes := chainB.GetAllChainNodes()
-
 	chosenNode := chainBNodes[currentNodeIndexB]
 	currentNodeIndexB = (currentNodeIndexB + 1) % len(chainBNodes)
-	return chainB, chosenNode, nil
+	return chainB, chosenNode
 }
 
 var useChainA bool
 
-func (s *IntegrationTestSuite) getChainCfgs() (*chain.Config, *chain.NodeConfig, error) {
+func (s *IntegrationTestSuite) getChainCfgs() (*chain.Config, *chain.NodeConfig) {
 	if useChainA {
 		useChainA = false
 		return s.getChainACfgs()
@@ -104,7 +116,7 @@ func (s *IntegrationTestSuite) getChainCfgs() (*chain.Config, *chain.NodeConfig,
 // spreadRewardGrowthAbove - spread reward growth above upper tick
 // spreadRewardGrowthInsideLast - amount of spread reward growth inside range at the time from which we want to calculate the amount of uncollected spread rewards
 // spreadRewardGrowthGlobal - variable for tracking global spread reward growth
-func calculateUncollectedSpreadRewards(positionLiquidity, spreadRewardGrowthBelow, spreadRewardGrowthAbove, spreadRewardGrowthInsideLast sdk.Dec, spreadRewardGrowthGlobal sdk.Dec) sdk.Dec {
+func calculateUncollectedSpreadRewards(positionLiquidity, spreadRewardGrowthBelow, spreadRewardGrowthAbove, spreadRewardGrowthInsideLast osmomath.Dec, spreadRewardGrowthGlobal osmomath.Dec) osmomath.Dec {
 	// Calculating spread reward growth inside range [-1200; 400]
 	spreadRewardGrowthInside := calculateSpreadRewardGrowthInside(spreadRewardGrowthGlobal, spreadRewardGrowthBelow, spreadRewardGrowthAbove)
 
@@ -127,6 +139,13 @@ func (s *IntegrationTestSuite) updatedCFMMPool(node *chain.NodeConfig, poolId ui
 	cfmmPool, err := node.QueryCFMMPool(poolId)
 	s.Require().NoError(err)
 	return cfmmPool
+}
+
+func formatCLIInt(i int) string {
+	if i < 0 {
+		return fmt.Sprintf("[%d]", i)
+	}
+	return strconv.Itoa(i)
 }
 
 // Assert returned positions:

@@ -7,6 +7,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // constants.
@@ -396,7 +398,7 @@ func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) GetSigners() []sdk.Ac
 
 var _ sdk.Msg = &MsgUnbondConvertAndStake{}
 
-func NewMsgUnbondConvertAndStake(sender sdk.AccAddress, lockId uint64, valAddr string, minAmtToStake sdk.Int, sharesToConvert sdk.Coin) *MsgUnbondConvertAndStake {
+func NewMsgUnbondConvertAndStake(sender sdk.AccAddress, lockId uint64, valAddr string, minAmtToStake osmomath.Int, sharesToConvert sdk.Coin) *MsgUnbondConvertAndStake {
 	return &MsgUnbondConvertAndStake{
 		Sender:          sender.String(),
 		LockId:          lockId,

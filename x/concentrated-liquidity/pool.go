@@ -11,11 +11,12 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 // InitializePool initializes a new concentrated liquidity pool with the given PoolI interface and creator address.
@@ -41,6 +42,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	spreadFactor := concentratedPool.GetSpreadFactor(ctx)
 	poolId := concentratedPool.GetId()
 	quoteAsset := concentratedPool.GetToken1()
+	poolManagerParams := k.poolmanagerKeeper.GetParams(ctx)
 
 	if !k.validateTickSpacing(params, tickSpacing) {
 		return types.UnauthorizedTickSpacingError{ProvidedTickSpacing: tickSpacing, AuthorizedTickSpacings: params.AuthorizedTickSpacing}
@@ -50,8 +52,8 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return types.UnauthorizedSpreadFactorError{ProvidedSpreadFactor: spreadFactor, AuthorizedSpreadFactors: params.AuthorizedSpreadFactors}
 	}
 
-	if !validateAuthorizedQuoteDenoms(quoteAsset, params.AuthorizedQuoteDenoms) {
-		return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: params.AuthorizedQuoteDenoms}
+	if !validateAuthorizedQuoteDenoms(quoteAsset, poolManagerParams.AuthorizedQuoteDenoms) {
+		return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: poolManagerParams.AuthorizedQuoteDenoms}
 	}
 
 	if err := k.createSpreadRewardAccumulator(ctx, poolId); err != nil {
@@ -142,31 +144,31 @@ func (k Keeper) CalculateSpotPrice(
 	poolId uint64,
 	quoteAssetDenom string,
 	baseAssetDenom string,
-) (spotPrice sdk.Dec, err error) {
+) (spotPrice osmomath.Dec, err error) {
 	concentratedPool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	hasPositions, err := k.HasAnyPositionForPool(ctx, poolId)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	if !hasPositions {
-		return sdk.Dec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
+		return osmomath.Dec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
 	}
 
 	price, err := concentratedPool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	if price.IsZero() {
-		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+		return osmomath.Dec{}, types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromDec(price), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+		return osmomath.Dec{}, types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromDec(price), MinSpotPrice: types.MinSpotPriceBigDec, MaxSpotPrice: types.MaxSpotPrice}
 	}
 
 	return price, nil
@@ -309,7 +311,7 @@ func (k Keeper) validateTickSpacingUpdate(pool types.ConcentratedPoolExtension, 
 
 // validateSpreadFactor returns true if the given spread factor is one of the authorized spread factors set in the
 // params. False otherwise.
-func (k Keeper) validateSpreadFactor(params types.Params, spreadFactor sdk.Dec) bool {
+func (k Keeper) validateSpreadFactor(params types.Params, spreadFactor osmomath.Dec) bool {
 	for _, authorizedSpreadFactor := range params.AuthorizedSpreadFactors {
 		if spreadFactor.Equal(authorizedSpreadFactor) {
 			return true

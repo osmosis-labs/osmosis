@@ -7,10 +7,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -70,31 +71,33 @@ type PoolManager interface {
 		sender sdk.AccAddress,
 		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
-		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
+		tokenOutMinAmount osmomath.Int) (tokenOutAmount osmomath.Int, err error)
 
 	RouteExactAmountOut(ctx sdk.Context,
 		sender sdk.AccAddress,
 		routes []poolmanagertypes.SwapAmountOutRoute,
-		tokenInMaxAmount sdk.Int,
+		tokenInMaxAmount osmomath.Int,
 		tokenOut sdk.Coin,
-	) (tokenInAmount sdk.Int, err error)
+	) (tokenInAmount osmomath.Int, err error)
 
 	MultihopEstimateOutGivenExactAmountIn(
 		ctx sdk.Context,
 		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
-	) (tokenOutAmount sdk.Int, err error)
+	) (tokenOutAmount osmomath.Int, err error)
 
 	MultihopEstimateInGivenExactAmountOut(
 		ctx sdk.Context,
 		routes []poolmanagertypes.SwapAmountOutRoute,
-		tokenOut sdk.Coin) (tokenInAmount sdk.Int, err error)
+		tokenOut sdk.Coin) (tokenInAmount osmomath.Int, err error)
 
 	GetPoolModule(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolModuleI, error)
 
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 
 	CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (poolmanagertypes.PoolI, error)
+
+	GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (osmomath.Dec, error)
 }
 
 type PoolIncentivesKeeper interface {

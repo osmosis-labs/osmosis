@@ -12,8 +12,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v19/wasmbinding"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -22,17 +23,17 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
-	downtimequerytypes "github.com/osmosis-labs/osmosis/v17/x/downtime-detector/client/queryproto"
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v17/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v17/x/poolmanager/client/queryproto"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
-	twapquerytypes "github.com/osmosis-labs/osmosis/v17/x/twap/client/queryproto"
-	txfeestypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
+	downtimequerytypes "github.com/osmosis-labs/osmosis/v19/x/downtime-detector/client/queryproto"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v19/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
+	twapquerytypes "github.com/osmosis-labs/osmosis/v19/x/twap/client/queryproto"
+	txfeestypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -242,9 +243,9 @@ func GetStructAndFill(queryPath, module, structName string, structArguments ...s
 				return nil, err
 			}
 			v.PoolId = poolId
-			sdkInt, ok := sdk.NewIntFromString(structArguments[1])
+			sdkInt, ok := osmomath.NewIntFromString(structArguments[1])
 			if !ok {
-				return nil, fmt.Errorf("failed to parse to sdk.Int")
+				return nil, fmt.Errorf("failed to parse to osmomath.Int")
 			}
 			v.ShareInAmount = sdkInt
 			return v, nil

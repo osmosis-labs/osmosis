@@ -7,7 +7,8 @@ import (
 	time "time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 func NewGenesisState(params Params, lockableDurations []time.Duration, distrInfo *DistrInfo) *GenesisState {
@@ -28,7 +29,7 @@ func DefaultGenesisState() *GenesisState {
 			time.Hour * 7,
 		},
 		DistrInfo: &DistrInfo{
-			TotalWeight: sdk.ZeroInt(),
+			TotalWeight: osmomath.ZeroInt(),
 			Records:     nil,
 		},
 	}
@@ -53,7 +54,7 @@ func ValidateGenesis(data *GenesisState) error {
 		return err
 	}
 
-	if data.DistrInfo.TotalWeight.LT(sdk.NewInt(0)) {
+	if data.DistrInfo.TotalWeight.LT(osmomath.NewInt(0)) {
 		return errors.New("distrinfo weight should not be negative")
 	}
 
