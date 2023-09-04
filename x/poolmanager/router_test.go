@@ -1579,6 +1579,8 @@ func (s *KeeperTestSuite) TestEstimateTradeBasedOnPriceImpact() {
 		sdk.NewCoin("usdc", sdk.NewInt(1)),
 	)
 
+	// The below values have been tested and hard coded by using the `CalcOutAmtGivenIn` as it is quite hard to
+	// mathematically work these out.
 	tests := map[string]struct {
 		poolId               uint64
 		preCreatePoolType    types.PoolType

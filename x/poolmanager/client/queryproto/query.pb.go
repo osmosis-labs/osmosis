@@ -1115,13 +1115,25 @@ func (m *TotalLiquidityResponse) GetLiquidity() github_com_cosmos_cosmos_sdk_typ
 	return nil
 }
 
-// =============================== EstimateTradeBasedOnPriceImpact
+// EstimateTradeBasedOnPriceImpactRequest represents a request to estimate a
+// trade for Balancer/StableSwap/Concentrated liquidity pool types based on the
+// given parameters.
 type EstimateTradeBasedOnPriceImpactRequest struct {
-	FromCoin       types2.Coin                            `protobuf:"bytes,1,opt,name=from_coin,json=fromCoin,proto3" json:"from_coin"`
-	ToCoinDenom    string                                 `protobuf:"bytes,2,opt,name=to_coin_denom,json=toCoinDenom,proto3" json:"to_coin_denom,omitempty"`
-	PoolId         uint64                                 `protobuf:"varint,3,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	// from_coin is the total amount of tokens that the user wants to sell.
+	FromCoin types2.Coin `protobuf:"bytes,1,opt,name=from_coin,json=fromCoin,proto3" json:"from_coin"`
+	// to_coin_denom is the denom identifier of the token that the user wants to
+	// buy.
+	ToCoinDenom string `protobuf:"bytes,2,opt,name=to_coin_denom,json=toCoinDenom,proto3" json:"to_coin_denom,omitempty"`
+	// pool_id is the identifier of the liquidity pool that the trade will occur
+	// on.
+	PoolId uint64 `protobuf:"varint,3,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	// max_price_impact is the maximum percentage that the user is willing
+	// to affect the price of the liquidity pool.
 	MaxPriceImpact github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=max_price_impact,json=maxPriceImpact,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"max_price_impact"`
-	ExternalPrice  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=external_price,json=externalPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"external_price"`
+	// external_price is an optional external price that the user can enter.
+	// It adjusts the MaxPriceImpact as the SpotPrice of a pool can be changed at
+	// any time.
+	ExternalPrice github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=external_price,json=externalPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"external_price"`
 }
 
 func (m *EstimateTradeBasedOnPriceImpactRequest) Reset() {
@@ -1180,8 +1192,14 @@ func (m *EstimateTradeBasedOnPriceImpactRequest) GetPoolId() uint64 {
 	return 0
 }
 
+// EstimateTradeBasedOnPriceImpactResponse represents the response data
+// for an estimated trade based on price impact.
 type EstimateTradeBasedOnPriceImpactResponse struct {
-	InputCoin  types2.Coin `protobuf:"bytes,1,opt,name=input_coin,json=inputCoin,proto3" json:"input_coin"`
+	// input_coin is the actual input amount that would be tradeable
+	// under the specified price impact.
+	InputCoin types2.Coin `protobuf:"bytes,1,opt,name=input_coin,json=inputCoin,proto3" json:"input_coin"`
+	// output_coin is the amount of tokens of the ToCoinDenom type
+	// that will be received for the actual InputCoin trade.
 	OutputCoin types2.Coin `protobuf:"bytes,2,opt,name=output_coin,json=outputCoin,proto3" json:"output_coin"`
 }
 

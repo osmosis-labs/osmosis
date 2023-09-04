@@ -367,8 +367,8 @@ The following is the process in which the query finds a trade that will stay bel
 The following is the example input/output when executing `CalcOutAmtGivenIn` on balancer pools:
 
 - If the input is greater than the total liquidity of the pool, the output will be the total liquidity of the target token.
-- If the input is a normal amount, the output will be a normal amount, based on pool data.
-- If the input is a small amount e.g `1`, the output will be `1`, regardless of slippage.
+- If the input is an amount that is reasonably within the range of liquidity of the pool, the output will be a tolerable slippage amount based on pool data.
+- If the input is a small amount for which the pool cannot calculate a viable swap output e.g `1`, the output will be `1`, regardless of slippage.
 
 Here is the following process for the `estimateTradeBasedOnPriceImpactBalancerPool` function:
 
@@ -393,14 +393,14 @@ Here is the following process for the `estimateTradeBasedOnPriceImpactBalancerPo
 The following is the example input/output when executing `CalcOutAmtGivenIn` on stableswap pools:
 
 - If the input is greater than the total liquidity of the pool, the function will `panic`.
-- If the input is a normal amount, the output will be a normal amount, based on pool data.
-- If the input is a small amount e.g `1`, the function will throw an error.
+- If the input is an amount that is reasonably within the range of liquidity of the pool, the output will be a tolerable slippage amount based on pool data.
+- If the input is a small amount for which the pool cannot calculate a viable swap output e.g `1`, the function will throw an error.
 
 Here is the following process for the `estimateTradeBasedOnPriceImpactStableSwapPool` function:
 
 1. The function begins by attempting to estimate the output amount (`tokenOut`) for a given input amount (`req.FromCoin`). This calculation is done without accounting for the swap fee.
 
-   1. If an error occurs and it's not a panic, the function returns zero coins for both the input and output, signifying an error due to an amount that's too small for the trade to proceed.
+   1. If an error occurs, and it's not a panic, the function returns zero coins for both the input and output, signifying an error due to an amount that's too small for the trade to proceed.
 
    2. If a panic occurs during the calculation, the function sets the output coin (`tokenOut`) to zero and proceeds to find a smaller acceptable trade amount.
 
@@ -428,8 +428,8 @@ Here is the following process for the `estimateTradeBasedOnPriceImpactStableSwap
 The following is the example input/output when executing `CalcOutAmtGivenIn` on concentrated liquidity pools:
 
 - If the input is greater than the total liquidity of the pool, the function will error.
-- If the input is a normal amount, the output will be a normal amount, based on pool data.
-- If the input is a small amount e.g `1`, the function will return a zero.
+- If the input is an amount that is reasonably within the range of liquidity of the pool, the output will be a tolerable slippage amount based on pool data.
+- f the input is a small amount for which the pool cannot calculate a viable swap output e.g `1`, the function will return a zero.
 
 Here is the following process for the `estimateTradeBasedOnPriceImpactConcentratedLiquidity` function:
 

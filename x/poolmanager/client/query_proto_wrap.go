@@ -354,9 +354,7 @@ func (q Querier) estimateTradeBasedOnPriceImpactBalancerPool(
 
 	// Validate if the trade as is respects the price impact, if it does re-estimate it with a swap fee and return
 	// the result.
-	currTradePrice := sdk.NewDec(req.FromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
-	priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
-
+	priceDeviation := calculatePriceDeviation(req.FromCoin, tokenOut, spotPrice)
 	if priceDeviation.LTE(adjustedMaxPriceImpact) {
 		tokenOut, err = swapModule.CalcOutAmtGivenIn(
 			ctx, poolI, req.FromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
@@ -376,6 +374,20 @@ func (q Querier) estimateTradeBasedOnPriceImpactBalancerPool(
 	highAmount := req.FromCoin.Amount
 	currFromCoin := req.FromCoin
 
+	// Repeat the above process using the binary search algorithm which iteratively narrows down the optimal trade
+	// amount within a given maximum price impact range.
+	//
+	// The algorithm iteratively:
+	// 1) Calculates the middle amount of the current range ('midAmount').
+	// 2) Tries to execute a trade using this middle amount.
+	// 3) Calculates the resulting price deviation between the spot price and the
+	//    price of the tried trade.
+	//
+	// Depending on whether the price deviation is within the allowed 'adjustedMaxPriceImpact',
+	// the algorithm adjusts the 'lowAmount' or 'highAmount' for the next iteration.
+	//
+	// This process continues until 'lowAmount' is greater than 'highAmount', at which
+	// point the optimal amount respecting the max price impact will have been found.
 	for lowAmount.LTE(highAmount) {
 		// Calculate currFromCoin as the new middle amount to try trade.
 		midAmount := lowAmount.Add(highAmount).Quo(sdk.NewInt(2))
@@ -397,9 +409,7 @@ func (q Querier) estimateTradeBasedOnPriceImpactBalancerPool(
 			}, nil
 		}
 
-		currTradePrice := sdk.NewDec(currFromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
-		priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
-
+		priceDeviation := calculatePriceDeviation(currFromCoin, tokenOut, spotPrice)
 		if priceDeviation.LTE(adjustedMaxPriceImpact) {
 			lowAmount = midAmount.Add(sdk.OneInt())
 		} else {
@@ -456,11 +466,10 @@ func (q Querier) estimateTradeBasedOnPriceImpactStableSwapPool(
 			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
 		}, nil
 	} else if err == nil {
+
 		// Validate if the trade as is respects the price impact, if it does re-estimate it with a swap fee and return
 		// the result.
-		currTradePrice := sdk.NewDec(req.FromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
-		priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
-
+		priceDeviation := calculatePriceDeviation(req.FromCoin, tokenOut, spotPrice)
 		if priceDeviation.LTE(adjustedMaxPriceImpact) {
 			tokenOut, err = swapModule.CalcOutAmtGivenIn(
 				ctx, poolI, req.FromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
@@ -481,6 +490,20 @@ func (q Querier) estimateTradeBasedOnPriceImpactStableSwapPool(
 	highAmount := req.FromCoin.Amount
 	currFromCoin := req.FromCoin
 
+	// Repeat the above process using the binary search algorithm which iteratively narrows down the optimal trade
+	// amount within a given maximum price impact range.
+	//
+	// The algorithm iteratively:
+	// 1) Calculates the middle amount of the current range ('midAmount').
+	// 2) Tries to execute a trade using this middle amount.
+	// 3) Calculates the resulting price deviation between the spot price and the
+	//    price of the tried trade.
+	//
+	// Depending on whether the price deviation is within the allowed 'adjustedMaxPriceImpact',
+	// the algorithm adjusts the 'lowAmount' or 'highAmount' for the next iteration.
+	//
+	// This process continues until 'lowAmount' is greater than 'highAmount', at which
+	// point the optimal amount respecting the max price impact will have been found.
 	for lowAmount.LTE(highAmount) {
 		// Calculate currFromCoin as the new middle amount to try trade.
 		midAmount := lowAmount.Add(highAmount).Quo(sdk.NewInt(2))
@@ -502,9 +525,8 @@ func (q Querier) estimateTradeBasedOnPriceImpactStableSwapPool(
 			// and we should continue halving.
 			highAmount = midAmount.Sub(sdk.OneInt())
 		} else {
-			currTradePrice := sdk.NewDec(currFromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
-			priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
 
+			priceDeviation := calculatePriceDeviation(currFromCoin, tokenOut, spotPrice)
 			if priceDeviation.LTE(adjustedMaxPriceImpact) {
 				lowAmount = midAmount.Add(sdk.OneInt())
 			} else {
@@ -560,9 +582,7 @@ func (q Querier) estimateTradeBasedOnPriceImpactConcentratedLiquidity(
 			}, nil
 		}
 
-		currTradePrice := sdk.NewDec(req.FromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
-		priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
-
+		priceDeviation := calculatePriceDeviation(req.FromCoin, tokenOut, spotPrice)
 		if priceDeviation.LTE(adjustedMaxPriceImpact) {
 			tokenOut, err = swapModule.CalcOutAmtGivenIn(
 				ctx, poolI, req.FromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
@@ -583,6 +603,20 @@ func (q Querier) estimateTradeBasedOnPriceImpactConcentratedLiquidity(
 	highAmount := req.FromCoin.Amount
 	currFromCoin := req.FromCoin
 
+	// Repeat the above process using the binary search algorithm which iteratively narrows down the optimal trade
+	// amount within a given maximum price impact range.
+	//
+	// The algorithm iteratively:
+	// 1) Calculates the middle amount of the current range ('midAmount').
+	// 2) Tries to execute a trade using this middle amount.
+	// 3) Calculates the resulting price deviation between the spot price and the
+	//    price of the tried trade.
+	//
+	// Depending on whether the price deviation is within the allowed 'adjustedMaxPriceImpact',
+	// the algorithm adjusts the 'lowAmount' or 'highAmount' for the next iteration.
+	//
+	// This process continues until 'lowAmount' is greater than 'highAmount', at which
+	// point the optimal amount respecting the max price impact will have been found.
 	for lowAmount.LTE(highAmount) {
 		// Calculate currFromCoin as the new middle amount to try trade.
 		midAmount := lowAmount.Add(highAmount).Quo(sdk.NewInt(2))
@@ -599,9 +633,7 @@ func (q Querier) estimateTradeBasedOnPriceImpactConcentratedLiquidity(
 				}, nil
 			}
 
-			currTradePrice := sdk.NewDec(currFromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
-			priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
-
+			priceDeviation := calculatePriceDeviation(currFromCoin, tokenOut, spotPrice)
 			if priceDeviation.LTE(adjustedMaxPriceImpact) {
 				lowAmount = midAmount.Add(sdk.OneInt())
 			} else {
@@ -632,4 +664,11 @@ func (q Querier) estimateTradeBasedOnPriceImpactConcentratedLiquidity(
 		InputCoin:  currFromCoin,
 		OutputCoin: tokenOut,
 	}, nil
+}
+
+// calculatePriceDeviation calculates the price deviation between the current trade price and the spot price.
+func calculatePriceDeviation(currFromCoin, tokenOut sdk.Coin, spotPrice sdk.Dec) sdk.Dec {
+	currTradePrice := sdk.NewDec(currFromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
+	priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice)
+	return priceDeviation
 }
