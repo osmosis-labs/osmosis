@@ -1499,7 +1499,7 @@ func (s *decimalTestSuite) TestDecWithPrecision() {
 		{osmomath.NewBigDecWithPrec(12340, 5), sdk.MustNewDecFromStr("0.123400000000000000"), sdk.Precision, false},
 		{osmomath.NewBigDecWithPrec(12340, 8), sdk.MustNewDecFromStr("0.000123400000000000"), sdk.Precision, false},
 		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), sdk.Precision, false},
-		// test cases w/ custom precision:
+		// test cases with custom precision:
 		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000"), 12, false},
 		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000"), 12, false},
 		// specified precision is the same as the initial precision: 12.3453123123 -> 12.3453123123
