@@ -1,4 +1,4 @@
-name: "CodeQL"
+name: "OsmoQL"
 
 on:
   pull_request:
