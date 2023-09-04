@@ -1218,9 +1218,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		largestPositionValue := osmoutils.Max(numBondedSuperfluid, numUnbondingSuperfluidLocked, numUnbondingSuperfluidUnlocking, numVanillaLockLocked, numVanillaLockUnlocking, numNoLock)
 		largestPositionValue, ok := largestPositionValue.(int)
 		s.Require().True(ok)
-		numAccounts, ok := largestPositionValue.(int)
-		s.Require().True(ok, "largestPositionValue must be an int")
-		numAccounts++
+		numAccounts := largestPositionValue + 1
 
 		positions := Positions{
 			numAccounts:                     numAccounts,
