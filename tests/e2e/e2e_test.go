@@ -844,7 +844,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 			chainBNode.WithdrawPosition(addr, defaultLiquidityRemoval, posSet[0].Position.PositionId)
 			// assert
 			createdPositions[i] = chainBNode.QueryConcentratedPositions(addr)
-			s.Require().Equal(posLiquidityBefore, posSet[0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
+			s.Require().Equal(posLiquidityBefore, createdPositions[i][0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
 		}(i)
 	}
 	clwg.Wait()
