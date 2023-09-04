@@ -7,7 +7,7 @@
 
 /* 
 problem.severity is set to warning, because in some cases using native operators between sdk.Int(s) or sdk.Dec(s) is justified
-ex: https://github.com/osmosis-labs/osmosis/blob/main/x/twap/logic.go#L58-L63
+ex: https://github.com/osmosis-labs/osmosis/blob/63e87877b35086fc8ad017ee87fcb95f9a9543b7/x/twap/logic.go#L58-L63
 */
 
 import go
