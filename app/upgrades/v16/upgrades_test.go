@@ -24,20 +24,15 @@ import (
 )
 
 var (
-	DAIIBCDenom         = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
-	defaultDaiAmount, _ = osmomath.NewIntFromString("73000000000000000000000")
-	defaultDenom0mount  = osmomath.NewInt(10000000000)
-	desiredDenom0       = "uosmo"
-	desiredDenom0Coin   = sdk.NewCoin(desiredDenom0, defaultDenom0mount)
-	daiCoin             = sdk.NewCoin(DAIIBCDenom, defaultDaiAmount)
+	DAIIBCDenom = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
 )
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (suite *UpgradeTestSuite) SetupTest() {
-	suite.Setup()
+func (s *UpgradeTestSuite) SetupTest() {
+	s.Setup()
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -46,28 +41,28 @@ func TestUpgradeTestSuite(t *testing.T) {
 
 const dummyUpgradeHeight = 5
 
-func dummyUpgrade(suite *UpgradeTestSuite) {
-	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
+func dummyUpgrade(s *UpgradeTestSuite) {
+	s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
 	plan := upgradetypes.Plan{Name: "v16", Height: dummyUpgradeHeight}
-	err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
-	suite.Require().NoError(err)
-	_, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
-	suite.Require().True(exists)
+	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
+	s.Require().NoError(err)
+	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().True(exists)
 
-	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
+	s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
 }
 
-func (suite *UpgradeTestSuite) TestUpgrade() {
+func (s *UpgradeTestSuite) TestUpgrade() {
 	upgradeSetup := func() {
 		// This is done to ensure that we run the InitGenesis() logic for the new modules
-		upgradeStoreKey := suite.App.AppKeepers.GetKey(upgradetypes.StoreKey)
-		store := suite.Ctx.KVStore(upgradeStoreKey)
+		upgradeStoreKey := s.App.AppKeepers.GetKey(upgradetypes.StoreKey)
+		store := s.Ctx.KVStore(upgradeStoreKey)
 		versionStore := prefix.NewStore(store, []byte{upgradetypes.VersionMapByte})
 		versionStore.Delete([]byte(cltypes.ModuleName))
 
 		// Ensure proper setup for ProtoRev upgrade testing
-		err := upgradeProtorevSetup(suite)
-		suite.Require().NoError(err)
+		err := upgradeProtorevSetup(s)
+		s.Require().NoError(err)
 	}
 
 	// Allow 0.01% margin of error.
@@ -88,112 +83,111 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Create earlier pools
 				for i := uint64(1); i < v16.DaiOsmoPoolId; i++ {
-					suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)), sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount))
+					s.PrepareBalancerPoolWithCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)), sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount))
 				}
 
 				// Create DAI / OSMO pool
-				suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount), sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)))
-
+				s.PrepareBalancerPoolWithCoins(sdk.NewCoin("ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", defaultDaiAmount), sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)))
 			},
 			func() {
-				stakingParams := suite.App.StakingKeeper.GetParams(suite.Ctx)
+				stakingParams := s.App.StakingKeeper.GetParams(s.Ctx)
 				stakingParams.BondDenom = "uosmo"
-				suite.App.StakingKeeper.SetParams(suite.Ctx, stakingParams)
+				s.App.StakingKeeper.SetParams(s.Ctx, stakingParams)
 
 				oneDai := sdk.NewCoins(sdk.NewCoin(v16.DAIIBCDenom, osmomath.NewInt(1000000000000000000)))
 
 				// Send one dai to the community pool (this is true in current mainnet)
-				suite.FundAcc(suite.TestAccs[0], oneDai)
+				s.FundAcc(s.TestAccs[0], oneDai)
 
-				err := suite.App.DistrKeeper.FundCommunityPool(suite.Ctx, oneDai, suite.TestAccs[0])
-				suite.Require().NoError(err)
+				err := s.App.DistrKeeper.FundCommunityPool(s.Ctx, oneDai, s.TestAccs[0])
+				s.Require().NoError(err)
 
 				// Determine approx how much OSMO will be used from community pool when 1 DAI used.
-				daiOsmoGammPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, v16.DaiOsmoPoolId)
-				suite.Require().NoError(err)
-				respectiveOsmo, err := suite.App.GAMMKeeper.CalcOutAmtGivenIn(suite.Ctx, daiOsmoGammPool, oneDai[0], v16.DesiredDenom0, osmomath.ZeroDec())
-				suite.Require().NoError(err)
+				daiOsmoGammPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, v16.DaiOsmoPoolId)
+				s.Require().NoError(err)
+				respectiveOsmo, err := s.App.GAMMKeeper.CalcOutAmtGivenIn(s.Ctx, daiOsmoGammPool, oneDai[0], v16.DesiredDenom0, osmomath.ZeroDec())
+				s.Require().NoError(err)
 
 				// Retrieve the community pool balance before the upgrade
-				communityPoolAddress := suite.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
-				communityPoolBalancePre := suite.App.BankKeeper.GetAllBalances(suite.Ctx, communityPoolAddress)
+				communityPoolAddress := s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
+				communityPoolBalancePre := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
 
-				dummyUpgrade(suite)
-				suite.Require().NotPanics(func() {
-					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
+				dummyUpgrade(s)
+				s.Require().NotPanics(func() {
+					s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 				})
 
 				// Retrieve the community pool balance (and the feePool balance) after the upgrade
-				communityPoolBalancePost := suite.App.BankKeeper.GetAllBalances(suite.Ctx, communityPoolAddress)
-				feePoolCommunityPoolPost := suite.App.DistrKeeper.GetFeePool(suite.Ctx).CommunityPool
+				communityPoolBalancePost := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
+				feePoolCommunityPoolPost := s.App.DistrKeeper.GetFeePool(s.Ctx).CommunityPool
 
 				// Validate that the community pool balance has been reduced by the amount of OSMO that was used to create the pool
 				// Note we use all the osmo, but a small amount of DAI is left over due to rounding when creating the first position.
-				suite.Require().Equal(communityPoolBalancePre.AmountOf("uosmo").Sub(respectiveOsmo.Amount).String(), communityPoolBalancePost.AmountOf("uosmo").String())
-				suite.Require().Equal(0, multiplicativeTolerance.Compare(communityPoolBalancePre.AmountOf(v16.DAIIBCDenom), oneDai[0].Amount.Sub(communityPoolBalancePost.AmountOf(v16.DAIIBCDenom))))
+				s.Require().Equal(communityPoolBalancePre.AmountOf("uosmo").Sub(respectiveOsmo.Amount).String(), communityPoolBalancePost.AmountOf("uosmo").String())
+				s.Require().Equal(0, multiplicativeTolerance.Compare(communityPoolBalancePre.AmountOf(v16.DAIIBCDenom), oneDai[0].Amount.Sub(communityPoolBalancePost.AmountOf(v16.DAIIBCDenom))))
 
 				// Validate that the fee pool community pool balance has been decreased by the amount of OSMO/DAI that was used to create the pool
-				suite.Require().Equal(communityPoolBalancePost.AmountOf("uosmo").String(), feePoolCommunityPoolPost.AmountOf("uosmo").TruncateInt().String())
-				suite.Require().Equal(communityPoolBalancePost.AmountOf(v16.DAIIBCDenom).String(), feePoolCommunityPoolPost.AmountOf(v16.DAIIBCDenom).TruncateInt().String())
+				s.Require().Equal(communityPoolBalancePost.AmountOf("uosmo").String(), feePoolCommunityPoolPost.AmountOf("uosmo").TruncateInt().String())
+				s.Require().Equal(communityPoolBalancePost.AmountOf(v16.DAIIBCDenom).String(), feePoolCommunityPoolPost.AmountOf(v16.DAIIBCDenom).TruncateInt().String())
 
 				// Get balancer pool's spot price.
-				balancerSpotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, v16.DaiOsmoPoolId, v16.DAIIBCDenom, v16.DesiredDenom0)
-				suite.Require().NoError(err)
+				balancerSpotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, v16.DaiOsmoPoolId, v16.DAIIBCDenom, v16.DesiredDenom0)
+				s.Require().NoError(err)
 
 				// Validate CL pool was created.
-				concentratedPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, v16.DaiOsmoPoolId+1)
-				suite.Require().NoError(err)
-				suite.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
+				concentratedPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, v16.DaiOsmoPoolId+1)
+				s.Require().NoError(err)
+				s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 
 				// Validate that denom0 and denom1 were set correctly
 				concentratedTypePool, ok := concentratedPool.(cltypes.ConcentratedPoolExtension)
-				suite.Require().True(ok)
-				suite.Require().Equal(v16.DesiredDenom0, concentratedTypePool.GetToken0())
-				suite.Require().Equal(v16.DAIIBCDenom, concentratedTypePool.GetToken1())
+				s.Require().True(ok)
+				s.Require().Equal(v16.DesiredDenom0, concentratedTypePool.GetToken0())
+				s.Require().Equal(v16.DAIIBCDenom, concentratedTypePool.GetToken1())
 
 				// Validate that the spot price of the CL pool is what we expect
-				suite.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromDec(balancerSpotPrice)))
+				s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromDec(balancerSpotPrice)))
 
 				// Validate that link was created.
-				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
-				suite.Require().Equal(1, len(migrationInfo.BalancerToConcentratedPoolLinks))
-				suite.Require().NoError(err)
+				migrationInfo, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
+				s.Require().Equal(1, len(migrationInfo.BalancerToConcentratedPoolLinks))
+				s.Require().NoError(err)
 
 				// Validate that the link is correct.
 				link := migrationInfo.BalancerToConcentratedPoolLinks[0]
-				suite.Require().Equal(v16.DaiOsmoPoolId, link.BalancerPoolId)
-				suite.Require().Equal(concentratedPool.GetId(), link.ClPoolId)
+				s.Require().Equal(v16.DaiOsmoPoolId, link.BalancerPoolId)
+				s.Require().Equal(concentratedPool.GetId(), link.ClPoolId)
 
 				// Check authorized denoms are set correctly.
-				params := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
-				suite.Require().EqualValues(params.AuthorizedQuoteDenoms, v16.AuthorizedQuoteDenoms)
-				suite.Require().EqualValues(params.AuthorizedUptimes, v16.AuthorizedUptimes)
+				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+				s.Require().EqualValues(params.AuthorizedQuoteDenoms, v16.AuthorizedQuoteDenoms)
+				s.Require().EqualValues(params.AuthorizedUptimes, v16.AuthorizedUptimes)
 
 				// Permissionless pool creation is disabled.
-				suite.Require().False(params.IsPermissionlessPoolCreationEnabled)
+				s.Require().False(params.IsPermissionlessPoolCreationEnabled)
 
 				// Ensure that the protorev upgrade was successful
-				verifyProtorevUpdateSuccess(suite)
+				verifyProtorevUpdateSuccess(s)
 
 				// Validate MsgExecuteContract and MsgInstantiateContract were added to the whitelist
-				icaHostAllowList := suite.App.ICAHostKeeper.GetParams(suite.Ctx)
-				suite.Require().Contains(icaHostAllowList.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}))
-				suite.Require().Contains(icaHostAllowList.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}))
+				icaHostAllowList := s.App.ICAHostKeeper.GetParams(s.Ctx)
+				s.Require().Contains(icaHostAllowList.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgExecuteContract{}))
+				s.Require().Contains(icaHostAllowList.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}))
 
 				// Validate that expedited quorum was set to 2/3
-				expQuorum := suite.App.GovKeeper.GetTallyParams(suite.Ctx).ExpeditedQuorum
-				suite.Require().Equal(osmomath.NewDec(2).Quo(osmomath.NewDec(3)), expQuorum)
+				expQuorum := s.App.GovKeeper.GetTallyParams(s.Ctx).ExpeditedQuorum
+				s.Require().Equal(osmomath.NewDec(2).Quo(osmomath.NewDec(3)), expQuorum)
 
 				// Validate that cw pool module address is allowed to upload contract code
-				allowedAddresses := suite.App.WasmKeeper.GetParams(suite.Ctx).CodeUploadAccess.Addresses
-				isCwPoolModuleAddressAllowedUpload := osmoutils.Contains(allowedAddresses, suite.App.AccountKeeper.GetModuleAddress(cosmwasmpooltypes.ModuleName).String())
-				suite.Require().True(isCwPoolModuleAddressAllowedUpload)
+				allowedAddresses := s.App.WasmKeeper.GetParams(s.Ctx).CodeUploadAccess.Addresses
+				isCwPoolModuleAddressAllowedUpload := osmoutils.Contains(allowedAddresses, s.App.AccountKeeper.GetModuleAddress(cosmwasmpooltypes.ModuleName).String())
+				s.Require().True(isCwPoolModuleAddressAllowedUpload)
 			},
 			func() {
 				// Validate that tokenfactory params have been updated
-				params := suite.App.TokenFactoryKeeper.GetParams(suite.Ctx)
-				suite.Require().Nil(params.DenomCreationFee)
-				suite.Require().Equal(v16.NewDenomCreationGasConsume, params.DenomCreationGasConsume)
+				params := s.App.TokenFactoryKeeper.GetParams(s.Ctx)
+				s.Require().Nil(params.DenomCreationFee)
+				s.Require().Equal(v16.NewDenomCreationGasConsume, params.DenomCreationGasConsume)
 			},
 		},
 		{
@@ -202,9 +196,9 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				upgradeSetup()
 			},
 			func() {
-				dummyUpgrade(suite)
-				suite.Require().Panics(func() {
-					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
+				dummyUpgrade(s)
+				s.Require().Panics(func() {
+					s.App.BeginBlocker(s.Ctx, abci.RequestBeginBlock{})
 				})
 			},
 			func() {
@@ -213,8 +207,8 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest() // reset
+		s.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			s.SetupTest() // reset
 
 			tc.pre_upgrade()
 			tc.upgrade()
@@ -223,32 +217,32 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 	}
 }
 
-func upgradeProtorevSetup(suite *UpgradeTestSuite) error {
+func upgradeProtorevSetup(s *UpgradeTestSuite) error {
 	account := apptesting.CreateRandomAccounts(1)[0]
-	suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
+	s.App.ProtoRevKeeper.SetDeveloperAccount(s.Ctx, account)
 
 	devFee := sdk.NewCoin("uosmo", osmomath.NewInt(1000000))
-	if err := suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, devFee); err != nil {
+	if err := s.App.ProtoRevKeeper.SetDeveloperFees(s.Ctx, devFee); err != nil {
 		return err
 	}
 
 	fundCoin := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000000)))
 
-	if err := suite.App.AppKeepers.BankKeeper.MintCoins(suite.Ctx, protorevtypes.ModuleName, fundCoin); err != nil {
+	if err := s.App.AppKeepers.BankKeeper.MintCoins(s.Ctx, protorevtypes.ModuleName, fundCoin); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func verifyProtorevUpdateSuccess(suite *UpgradeTestSuite) {
+func verifyProtorevUpdateSuccess(s *UpgradeTestSuite) {
 	// Ensure balance was transferred to the developer account
-	devAcc, err := suite.App.ProtoRevKeeper.GetDeveloperAccount(suite.Ctx)
-	suite.Require().NoError(err)
-	suite.Require().Equal(suite.App.BankKeeper.GetBalance(suite.Ctx, devAcc, "uosmo"), sdk.NewCoin("uosmo", osmomath.NewInt(1000000)))
+	devAcc, err := s.App.ProtoRevKeeper.GetDeveloperAccount(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(s.App.BankKeeper.GetBalance(s.Ctx, devAcc, "uosmo"), sdk.NewCoin("uosmo", osmomath.NewInt(1000000)))
 
 	// Ensure developer fees are empty
-	coins, err := suite.App.ProtoRevKeeper.GetAllDeveloperFees(suite.Ctx)
-	suite.Require().NoError(err)
-	suite.Require().Equal(coins, []sdk.Coin{})
+	coins, err := s.App.ProtoRevKeeper.GetAllDeveloperFees(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(coins, []sdk.Coin{})
 }
