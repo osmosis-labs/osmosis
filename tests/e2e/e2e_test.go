@@ -872,6 +872,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	chainBNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
 }
 
+// This must be spawned from CL update test suite since it depends on permissionless pool creation
 func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 	var (
 		denom0              = "uion"
