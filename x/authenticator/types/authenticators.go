@@ -4,6 +4,7 @@ package types
 
 import (
 	fmt "fmt"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -27,8 +28,8 @@ type Authenticator interface {
 	ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData AuthenticatorData) bool
 
 	// Optional Hooks. ToDo: Revisit this when adding the authenticator storage and messages
-	//OnAuthenticatorAdded(...) bool
-	//OnAuthenticatorRemoved(...) bool
+	// OnAuthenticatorAdded(...) bool
+	// OnAuthenticatorRemoved(...) bool
 }
 
 // Compile time type assertion for the SigVerificationData using the
@@ -114,7 +115,7 @@ func GetSignersAndSignatures(
 	// Add FeePayer if not already included
 	if feePayer != "" && !seen[feePayer] {
 		if uniqueSignersCount != len(allSignatures)-1 {
-			//TODO: Better error?
+			// TODO: Better error?
 			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", uniqueSignersCount, len(allSignatures)-1)
 		}
 		feePayerAddr, err := sdk.AccAddressFromBech32(feePayer)

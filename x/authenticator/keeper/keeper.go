@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -46,14 +47,12 @@ func (k Keeper) GetAuthenticatorDataForAccount(ctx sdk.Context, account sdk.AccA
 			// unmarshall the authenticator
 			var authenticator types.AccountAuthenticator
 			err := k.cdc.Unmarshal(bz, &authenticator)
-
 			if err != nil {
 				return types.AccountAuthenticator{}, err
 			}
 
 			return authenticator, nil
 		})
-
 	if err != nil {
 		return nil, err
 	}

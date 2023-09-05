@@ -6,6 +6,7 @@ package ante
 import (
 	"encoding/base64"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +20,7 @@ var (
 	// simulation signature values used to estimate gas consumption
 	key                = make([]byte, secp256k1.PubKeySize)
 	simSecp256k1Pubkey = &secp256k1.PubKey{Key: key}
-	//simSecp256k1Sig    [64]byte
+	// simSecp256k1Sig    [64]byte
 
 )
 
