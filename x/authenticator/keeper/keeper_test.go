@@ -13,6 +13,7 @@ import (
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 	Keeper keeper.Keeper
+	am     types.AuthenticatorManager
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -23,10 +24,11 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Reset()
 	// ToDo: when wired up, modify for s.App.AuthenticatorKeeper. Tests will fail for now because the store key doesn't exist
 	ss, _ := s.App.ParamsKeeper.GetSubspace(types.ModuleName)
-	s.Keeper = keeper.NewKeeper(s.App.AppCodec(), s.App.GetKey(types.StoreKey), ss)
+	am := types.NewAuthenticatorManager()
+	s.Keeper = keeper.NewKeeper(s.App.AppCodec(), s.App.GetKey(types.StoreKey), ss, am)
 
 	// Register the SigVerificationAuthenticator
-	types.InitializeAuthenticators([]types.Authenticator{types.SigVerificationAuthenticator{}})
+	s.am.InitializeAuthenticators([]types.Authenticator{types.SigVerificationAuthenticator{}})
 }
 
 // ToDo: more and better tests
@@ -36,7 +38,7 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 	ctx := s.Ctx
 
 	// Ensure the SigVerificationAuthenticator type is registered
-	s.Require().True(types.IsAuthenticatorTypeRegistered(types.SigVerificationAuthenticator{}.Type()))
+	s.Require().True(s.am.IsAuthenticatorTypeRegistered(types.SigVerificationAuthenticator{}.Type()))
 
 	// Create a test message
 	msg := &types.MsgAddAuthenticator{
