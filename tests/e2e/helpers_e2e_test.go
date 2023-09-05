@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -147,5 +148,16 @@ func (s *IntegrationTestSuite) getChainIndex(chain *chain.Config) int {
 		return 0
 	} else {
 		return 1
+	}
+}
+
+func runFuncsInParallelAndBlock(funcs []func()) {
+	var wg sync.WaitGroup
+	wg.Add(len(funcs))
+	for _, f := range funcs {
+		go func(g func()) {
+			defer wg.Done()
+			g()
+		}(f)
 	}
 }

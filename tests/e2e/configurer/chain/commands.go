@@ -657,7 +657,7 @@ func (n *NodeConfig) SendIBCNoMutex(srcChain, dstChain *Config, recipient string
 
 			return balancePost.Amount.Equal(balancePre.Amount.Add(token.Amount))
 		},
-		3*time.Minute,
+		3*time.Minute, // TODO: Lower this
 		10*time.Millisecond,
 		"tx not received on destination chain",
 	)
