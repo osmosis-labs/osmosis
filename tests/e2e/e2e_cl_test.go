@@ -644,6 +644,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Withdraw Position
 
 	defaultLiquidityRemoval := "1000"
+	chainB.WaitForNumHeights(1)
 
 	// Assert removing some liquidity
 	// 1) remove default liquidity from the 0th position of every address
