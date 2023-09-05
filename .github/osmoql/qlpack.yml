@@ -4,6 +4,6 @@ warnOnImplicitThis: false
 name: osmoql
 version: 0.0.1
 default-suite:
-    - query: src/sdkOperators.ql
+    - query: src/check-sdk-operators.ql
 dependencies:
   codeql/go-all: 0.3.6
