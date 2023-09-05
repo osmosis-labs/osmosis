@@ -588,7 +588,7 @@ func (d BigDec) DecWithPrecision(precision int64) Dec {
 }
 
 // ChopPrecisionMut truncates all decimals after precision numbers after decimal point. Mutative
-// CONTRACT: prec <= PrecisionBigDec
+// CONTRACT: precision <= PrecisionBigDec
 func (d *BigDec) ChopPrecisionMut(precision int64) BigDec {
 	precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionBigDec-precision), nil)
 	// big.Quo truncates numbers that would have been after decimal point
@@ -598,7 +598,7 @@ func (d *BigDec) ChopPrecisionMut(precision int64) BigDec {
 }
 
 // ChopPrecision truncates all decimals after precision numbers after decimal point
-// CONTRACT: prec <= PrecisionBigDec
+// CONTRACT: precision <= PrecisionBigDec
 func (d *BigDec) ChopPrecision(precision int64) BigDec {
 	copy := d.Clone()
 	return copy.ChopPrecisionMut(precision)
