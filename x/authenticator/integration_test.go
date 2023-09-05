@@ -55,7 +55,7 @@ func (s *AuthenticatorSuite) SetupTest() {
 	accountAddr := sdk.AccAddress(s.PrivKeys[0].PubKey().Address())
 
 	// fund the account
-	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000))
+	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000))
 	err := s.app.BankKeeper.SendCoins(s.chainA.GetContext(), s.chainA.SenderAccount.GetAddress(), accountAddr, coins)
 	s.Require().NoError(err, "Failed to send bank tx using the first private key")
 
@@ -64,7 +64,7 @@ func (s *AuthenticatorSuite) SetupTest() {
 
 }
 
-func (s *AuthenticatorSuite) TestKeyRotation() {
+func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
 	sendMsg := &banktypes.MsgSend{
 		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
@@ -96,4 +96,105 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], sendMsg)
 	s.Require().NoError(err, "Failed to send bank tx using the first private key after removing the authenticator")
 
+}
+
+type KeyRotationTest struct {
+	Description            string
+	InitialSends           []SendTest
+	KeysToAdd              []int
+	AuthenticatorsToRemove []int
+	FinalSends             []SendTest
+}
+
+type SendTest struct {
+	PrivKeyIndex  int
+	ShouldSucceed bool
+}
+
+func (s *AuthenticatorSuite) TestKeyRotation() {
+	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
+	sendMsg := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		Amount:      coins,
+	}
+
+	tests := []KeyRotationTest{
+		{
+			Description:            "Test add own key as authenticator",
+			KeysToAdd:              []int{0},
+			AuthenticatorsToRemove: []int{},
+			FinalSends: []SendTest{
+				{PrivKeyIndex: 0, ShouldSucceed: true},
+			},
+		},
+
+		{
+			Description:            "Test no authenticator change",
+			KeysToAdd:              []int{1},
+			AuthenticatorsToRemove: []int{0},
+			FinalSends: []SendTest{
+				{PrivKeyIndex: 0, ShouldSucceed: true},
+			},
+		},
+
+		{
+			Description:            "Test simple key rotation",
+			KeysToAdd:              []int{1},
+			AuthenticatorsToRemove: []int{},
+			FinalSends: []SendTest{
+				{PrivKeyIndex: 1, ShouldSucceed: true},
+				{PrivKeyIndex: 0, ShouldSucceed: false},
+			},
+		},
+
+		{
+			Description:            "Test add both keys",
+			KeysToAdd:              []int{0, 1},
+			AuthenticatorsToRemove: []int{},
+			FinalSends: []SendTest{
+				{PrivKeyIndex: 1, ShouldSucceed: true},
+				{PrivKeyIndex: 0, ShouldSucceed: true},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		// Initial sends
+		s.Run(tc.Description, func() {
+			// Reset authenticators
+			s.app.AuthenticatorKeeper.SetNextAuthenticatorId(s.chainA.GetContext(), 0)
+			allAuthenticators, err := s.app.AuthenticatorKeeper.GetAuthenticatorDataForAccount(s.chainA.GetContext(), s.Account.GetAddress())
+			for _, authenticator := range allAuthenticators {
+				err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), authenticator.Id)
+				s.Require().NoError(err, "Failed to remove authenticator")
+			}
+
+			// Test that the initial account can send
+			_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], sendMsg)
+			s.Require().NoError(err, tc.Description)
+
+			// Add keys
+			for _, keyIndex := range tc.KeysToAdd {
+				err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "SigVerification", s.PrivKeys[keyIndex].PubKey().Bytes())
+				s.Require().NoError(err, "Failed to add authenticator for key %d in %s", keyIndex, tc.Description)
+			}
+
+			// Remove keys
+			for _, authenticatorId := range tc.AuthenticatorsToRemove {
+				err := s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), uint64(authenticatorId))
+				s.Require().NoError(err, "Failed to remove authenticator with id %d in %s", authenticatorId, tc.Description)
+			}
+
+			// Final sends
+			for _, send := range tc.FinalSends {
+				_, err := s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[send.PrivKeyIndex], sendMsg)
+				if send.ShouldSucceed {
+					s.Require().NoError(err, tc.Description)
+				} else {
+					s.Require().Error(err, tc.Description)
+				}
+			}
+		})
+	}
 }

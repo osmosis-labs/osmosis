@@ -58,19 +58,8 @@ func NewSigVerificationAuthenticator(
 	}
 }
 
-// SetAccountKeeper sets the account keeper one the SigVerificationAuthenticator
-func (c SigVerificationAuthenticator) SetAccountKeeper(ak *authkeeper.AccountKeeper) {
-	c.ak = ak
-}
-
-// SetAccountKeeper sets the sign mode one the SigVerificationAuthenticator
-func (c SigVerificationAuthenticator) SetSignModeHandler(sm *authsigning.SignModeHandler) {
-	c.Handler = *sm
-}
-
+// Initialize TODO: Document
 func (c SigVerificationAuthenticator) Initialize(data []byte) (Authenticator, error) {
-	// TODO: I'm concerned about this method. I think we should modify the design here so that these authenticators are
-	//       always new objects. Maybe the registered authenticators could be a factory for the actual authenticator.
 	if len(data) != secp256k1.PubKeySize {
 		c.PubKey = nil
 	}
@@ -234,23 +223,24 @@ func (c SigVerificationAuthenticator) Authenticate(
 		if !verificationData.Simulate && !ctx.IsReCheckTx() {
 			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, c.Handler, verificationData.Tx)
 			if err != nil {
-				var errMsg string
 				if authante.OnlyLegacyAminoSigners(sig.Data) {
 					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
 					// and therefore communicate sequence number as a potential cause of error.
-					errMsg = fmt.Sprintf(
+					ctx.Logger().Debug(
 						"signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)",
 						accNum,
 						acc.GetSequence(),
 						chainID,
 					)
 				} else {
-					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)",
+					ctx.Logger().Debug(fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)",
 						accNum,
 						chainID,
-					)
+					))
 				}
-				return false, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, errMsg)
+				// Errors are reserved for when something unexpected happened. Here authentication just failed, so we
+				// return false
+				return false, nil
 			}
 		}
 	}
