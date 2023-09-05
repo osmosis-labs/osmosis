@@ -33,12 +33,12 @@ const (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	configurer    configurer.Configurer
-	skipUpgrade   bool
-	skipIBC       bool
-	skipStateSync bool
-	longTest      bool
-	mutex         sync.Mutex
+	configurer       configurer.Configurer
+	skipUpgrade      bool
+	skipIBC          bool
+	skipStateSync    bool
+	runScheduledTest bool
+	mutex            sync.Mutex
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -74,9 +74,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	upgradeSettings.IsEnabled = !s.skipUpgrade
 
 	if str := os.Getenv(scheduledTestEv); len(str) > 0 {
-		s.longTest, err = strconv.ParseBool(str)
+		s.runScheduledTest, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
-		if s.longTest {
+		if s.runScheduledTest {
 			s.T().Logf("%s was true, running all tests", scheduledTestEv)
 		}
 	}
