@@ -145,11 +145,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	chainB, chainBNode := s.getChainBCfgs()
 	var adminWalletAddr string
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go func() {
-		defer wg.Done()
+	enablePermissionlessCl := func() {
 		// Get the permisionless pool creation parameter.
 		isPermisionlessCreationEnabledStr := chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
 		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
@@ -169,10 +165,9 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 				s.TickSpacingUpdateProp()
 			})
 		}()
-	}()
+	}
 
-	go func() {
-		defer wg.Done()
+	changeProtorevAdminAndMaxPoolPoints := func() {
 		// Update the protorev admin address to a known wallet we can control
 		adminWalletAddr = chainBNode.CreateWalletAndFund("admin", []string{"4000000uosmo"}, chainB)
 		err := chainBNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainB)
@@ -180,13 +175,13 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 		// Update the weight of CL pools so that this test case is not back run by protorev.
 		chainBNode.SetMaxPoolPointsPerTx(7, adminWalletAddr)
-	}()
+	}
 	defer func() {
 		// Reset the maximum number of pool points
 		chainBNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
 	}()
 
-	wg.Wait()
+	runFuncsInParallelAndBlock([]func(){enablePermissionlessCl, changeProtorevAdminAndMaxPoolPoints})
 
 	// Create concentrated liquidity pool when permisionless pool creation is enabled.
 	poolID := chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
