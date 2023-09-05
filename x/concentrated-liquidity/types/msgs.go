@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // constants.
@@ -44,7 +46,7 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 	}
 
 	for _, coin := range msg.TokensProvided {
-		if coin.Amount.LTE(sdk.ZeroInt()) {
+		if coin.Amount.LTE(osmomath.ZeroInt()) {
 			return NotPositiveRequireAmountError{Amount: coin.Amount.String()}
 		}
 	}

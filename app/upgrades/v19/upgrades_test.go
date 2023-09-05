@@ -13,10 +13,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 
-	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 )
 
@@ -26,15 +26,15 @@ const (
 )
 
 var (
-	stakeAmt = sdk.NewInt(100000000)
+	stakeAmt = osmomath.NewInt(100000000)
 )
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (suite *UpgradeTestSuite) SetupTest() {
-	suite.Setup()
+func (s *UpgradeTestSuite) SetupTest() {
+	s.Setup()
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -42,7 +42,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 }
 
 func (s *UpgradeTestSuite) TestUpgrade() {
-	initialTokenBonded := sdk.NewInt(100)
+	initialTokenBonded := osmomath.NewInt(100)
 	s.Setup()
 
 	// prepare superfluid delegation
@@ -64,7 +64,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	// broken states (current status):
 	// synth lock accumulator is set to 0
 	totalSynthLocked := s.App.SuperfluidKeeper.GetTotalSyntheticAssetsLocked(s.Ctx, stakingSyntheticDenom(lockDenom, superfluidVal.String()))
-	s.Require().True(totalSynthLocked.Equal(sdk.ZeroInt()))
+	s.Require().True(totalSynthLocked.Equal(osmomath.ZeroInt()))
 
 	// superfluid delegated tokens have been undelegated from validator,
 	// only have the initial bonded amount present
@@ -87,25 +87,12 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().True(delegationBeforeV18Upgrade.Tokens.Equal(delegationAfterV19Upgrade.Tokens))
 }
 
-func (s *UpgradeTestSuite) setupNormalDelegation() sdk.ValAddress {
-	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
-	vanillaVal := s.SetupValidator(stakingtypes.Bonded)
-	val, found := s.App.StakingKeeper.GetValidator(s.Ctx, vanillaVal)
-	s.Require().True(found)
-	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(bondDenom, stakeAmt)))
-	shares, err := s.App.StakingKeeper.Delegate(s.Ctx, s.TestAccs[0], stakeAmt, stakingtypes.Unbonded, val, true)
-	s.Require().NoError(err)
-	s.Require().True(shares.TruncateInt().Equal(stakeAmt))
-
-	return vanillaVal
-}
-
 func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lockDenom string) {
 	// set up validator that would be used for superfluid staking
 	superfluidVal := s.SetupValidator(stakingtypes.Bonded)
 
 	// create single pool with bond denom
-	pools := s.SetupGammPoolsWithBondDenomMultiplier([]sdk.Dec{sdk.NewDec(20)})
+	pools := s.SetupGammPoolsWithBondDenomMultiplier([]osmomath.Dec{osmomath.NewDec(20)})
 
 	// we only created one pool, we will use this pool for all the continued tests
 	pool := pools[0]
@@ -114,7 +101,7 @@ func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lock
 	denom := gammtypes.GetPoolShareDenom(pool.GetId())
 	err := s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, superfluidtypes.SuperfluidAsset{
 		Denom:     denom,
-		AssetType: types.SuperfluidAssetTypeLPShare,
+		AssetType: superfluidtypes.SuperfluidAssetTypeLPShare,
 	})
 	s.Require().NoError(err)
 
@@ -141,26 +128,26 @@ func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lock
 	return superfluidVal, denom
 }
 
-func (suite *UpgradeTestSuite) runv18Upgrade() {
-	suite.Ctx = suite.Ctx.WithBlockHeight(v18UpgradeHeight - 1)
+func (s *UpgradeTestSuite) runv18Upgrade() {
+	s.Ctx = s.Ctx.WithBlockHeight(v18UpgradeHeight - 1)
 	plan := upgradetypes.Plan{Name: "v18", Height: v18UpgradeHeight}
-	err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
-	suite.Require().NoError(err)
-	_, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
-	suite.Require().True(exists)
+	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
+	s.Require().NoError(err)
+	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().True(exists)
 
-	suite.Ctx = suite.Ctx.WithBlockHeight(v18UpgradeHeight)
+	s.Ctx = s.Ctx.WithBlockHeight(v18UpgradeHeight)
 }
 
-func (suite *UpgradeTestSuite) runv19Upgrade() {
-	suite.Ctx = suite.Ctx.WithBlockHeight(v19UpgradeHeight - 1)
+func (s *UpgradeTestSuite) runv19Upgrade() {
+	s.Ctx = s.Ctx.WithBlockHeight(v19UpgradeHeight - 1)
 	plan := upgradetypes.Plan{Name: "v19", Height: v19UpgradeHeight}
-	err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
-	suite.Require().NoError(err)
-	_, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
-	suite.Require().True(exists)
+	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
+	s.Require().NoError(err)
+	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().True(exists)
 
-	suite.Ctx = suite.Ctx.WithBlockHeight(v19UpgradeHeight)
+	s.Ctx = s.Ctx.WithBlockHeight(v19UpgradeHeight)
 }
 
 func stakingSyntheticDenom(denom, valAddr string) string {

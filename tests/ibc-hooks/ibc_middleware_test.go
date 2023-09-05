@@ -15,6 +15,7 @@ import (
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
@@ -70,7 +71,7 @@ func TestIBCHooksTestSuite(t *testing.T) {
 func (suite *HooksTestSuite) SetupTest() {
 	suite.SkipIfWSL()
 	// TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
-	txfeetypes.ConsensusMinFee = sdk.ZeroDec()
+	txfeetypes.ConsensusMinFee = osmomath.ZeroDec()
 
 	suite.Setup()
 	ibctesting.DefaultTestingAppInit = osmosisibctesting.SetupTestingApp
@@ -251,7 +252,7 @@ func (suite *HooksTestSuite) TestDeriveIntermediateSender() {
 func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 	var (
 		trace    transfertypes.DenomTrace
-		amount   sdk.Int
+		amount   osmomath.Int
 		receiver string
 		status   testutils.Status
 	)
@@ -281,7 +282,7 @@ func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 			receiver = suite.chainB.SenderAccount.GetAddress().String() // must be explicitly changed in malleate
 			status = testutils.Status{}
 
-			amount = sdk.NewInt(100) // must be explicitly changed in malleate
+			amount = osmomath.NewInt(100) // must be explicitly changed in malleate
 			seq := uint64(1)
 
 			trace = transfertypes.ParseDenomTrace(sdk.DefaultBondDenom)
@@ -402,7 +403,7 @@ func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 	// Check that the contract has no funds
 	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
 	balance := suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
-	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+	suite.Require().Equal(osmomath.NewInt(0), balance.Amount)
 
 	// Execute the contract via IBC
 	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"echo": {"msg": "test"} } } }`, addr))
@@ -416,7 +417,7 @@ func (suite *HooksTestSuite) TestFundsAreTransferredToTheContract() {
 
 	// Check that the token has now been transferred to the contract
 	balance = suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
-	suite.Require().Equal(sdk.NewInt(1), balance.Amount)
+	suite.Require().Equal(osmomath.NewInt(1), balance.Amount)
 }
 
 // If the wasm call wails, the contract acknowledgement should be an error and the funds returned
@@ -428,7 +429,7 @@ func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	// Check that the contract has no funds
 	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
 	balance := suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
-	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+	suite.Require().Equal(osmomath.NewInt(0), balance.Amount)
 
 	// Execute the contract via IBC with a message that the contract will reject
 	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"not_echo": {"msg": "test"} } } }`, addr))
@@ -442,7 +443,7 @@ func (suite *HooksTestSuite) TestFundsAreReturnedOnFailedContractExec() {
 	// Check that the token has now been transferred to the contract
 	balance = suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
 	fmt.Println(balance)
-	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+	suite.Require().Equal(osmomath.NewInt(0), balance.Amount)
 }
 
 func (suite *HooksTestSuite) TestPacketsThatShouldBeSkipped() {
@@ -496,7 +497,7 @@ func (suite *HooksTestSuite) TestFundTracking() {
 	// Check that the contract has no funds
 	localDenom := osmoutils.MustExtractDenomFromPacketOnRecv(suite.makeMockPacket("", "", 0))
 	balance := suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
-	suite.Require().Equal(sdk.NewInt(0), balance.Amount)
+	suite.Require().Equal(osmomath.NewInt(0), balance.Amount)
 
 	// Execute the contract via IBC
 	suite.receivePacket(
@@ -532,7 +533,7 @@ func (suite *HooksTestSuite) TestFundTracking() {
 
 	// Check that the token has now been transferred to the contract
 	balance = suite.chainA.GetOsmosisApp().BankKeeper.GetBalance(suite.chainA.GetContext(), addr, localDenom)
-	suite.Require().Equal(sdk.NewInt(2), balance.Amount)
+	suite.Require().Equal(osmomath.NewInt(2), balance.Amount)
 }
 
 // custom MsgTransfer constructor that supports Memo
@@ -640,7 +641,7 @@ func (suite *HooksTestSuite) TestAcks() {
 	// Generate swap instructions for the contract
 	callbackMemo := fmt.Sprintf(`{"ibc_callback":"%s"}`, addr)
 	// Send IBC transfer with the memo with crosschain-swap instructions
-	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), addr.String(), "channel-0", callbackMemo)
+	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), addr.String(), "channel-0", callbackMemo)
 	_, _, _, err := suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err)
 
@@ -665,7 +666,7 @@ func (suite *HooksTestSuite) TestTimeouts() {
 	// Generate swap instructions for the contract
 	callbackMemo := fmt.Sprintf(`{"ibc_callback":"%s"}`, addr)
 	// Send IBC transfer with the memo with crosschain-swap instructions
-	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), addr.String(), "channel-0", callbackMemo)
+	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), addr.String(), "channel-0", callbackMemo)
 	transferMsg.TimeoutTimestamp = uint64(suite.coordinator.CurrentTime.Add(time.Minute).UnixNano())
 	sendResult, err := suite.chainA.SendMsgsNoCheck(transferMsg)
 	suite.Require().NoError(err)
@@ -692,14 +693,14 @@ func (suite *HooksTestSuite) TestTimeouts() {
 
 func (suite *HooksTestSuite) TestSendWithoutMemo() {
 	// Sending a packet without memo to ensure that the ibc_callback middleware doesn't interfere with a regular send
-	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "channel-0", "")
+	transferMsg := NewMsgTransfer(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1000)), suite.chainA.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "channel-0", "")
 	_, _, ack, err := suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err)
 	suite.Require().Contains(ack, "result")
 }
 
 // This is a copy of the SetupGammPoolsWithBondDenomMultiplier from the  test helpers, but using chainA instead of the default
-func (suite *HooksTestSuite) SetupPools(chainName Chain, multipliers []sdk.Dec) []gammtypes.CFMMPoolI {
+func (suite *HooksTestSuite) SetupPools(chainName Chain, multipliers []osmomath.Dec) []gammtypes.CFMMPoolI {
 	chain := suite.GetChain(chainName)
 	acc1 := chain.SenderAccount.GetAddress()
 	bondDenom := chain.GetOsmosisApp().StakingKeeper.BondDenom(chain.GetContext())
@@ -707,27 +708,27 @@ func (suite *HooksTestSuite) SetupPools(chainName Chain, multipliers []sdk.Dec) 
 	pools := []gammtypes.CFMMPoolI{}
 	for index, multiplier := range multipliers {
 		token := fmt.Sprintf("token%d", index)
-		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
+		uosmoAmount := gammtypes.InitPoolSharesSupply.ToLegacyDec().Mul(multiplier).RoundInt()
 
 		var (
 			defaultFutureGovernor = ""
 
 			// pool assets
 			defaultFooAsset = balancer.PoolAsset{
-				Weight: sdk.NewInt(100),
+				Weight: osmomath.NewInt(100),
 				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
 			}
 			defaultBarAsset = balancer.PoolAsset{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin(token, sdk.NewInt(10000)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin(token, osmomath.NewInt(10000)),
 			}
 
 			poolAssets = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
 		)
 
 		poolParams := balancer.PoolParams{
-			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.ZeroDec(),
+			SwapFee: osmomath.NewDecWithPrec(1, 2),
+			ExitFee: osmomath.ZeroDec(),
 		}
 		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
 
@@ -756,7 +757,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, setupForwardi
 
 	// Fund the account with some uosmo and some stake
 	bankKeeper := chain.GetOsmosisApp().BankKeeper
-	i, ok := sdk.NewIntFromString("20000000000000000000000")
+	i, ok := osmomath.NewIntFromString("20000000000000000000000")
 	suite.Require().True(ok)
 	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
 	err := bankKeeper.MintCoins(chain.GetContext(), minttypes.ModuleName, amounts)
@@ -764,7 +765,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, setupForwardi
 	err = bankKeeper.SendCoinsFromModuleToAccount(chain.GetContext(), minttypes.ModuleName, owner, amounts)
 	suite.Require().NoError(err)
 
-	suite.SetupPools(chainName, []sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	suite.SetupPools(chainName, []osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 	// Setup contract
 	chain.StoreContractCode(&suite.Suite, "./bytecode/swaprouter.wasm")
@@ -800,7 +801,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain, setupForwardi
 func (suite *HooksTestSuite) fundAccount(chain *osmosisibctesting.TestChain, owner sdk.AccAddress) {
 	// TODO: allow this function to fund with custom token names (calling them tokenA, tokenB, etc. would make tests easier to read, I think)
 	bankKeeper := chain.GetOsmosisApp().BankKeeper
-	i, ok := sdk.NewIntFromString("20000000000000000000000")
+	i, ok := osmomath.NewIntFromString("20000000000000000000000")
 	suite.Require().True(ok)
 	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
 	err := bankKeeper.MintCoins(chain.GetContext(), minttypes.ModuleName, amounts)
@@ -819,7 +820,7 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) (sdk.AccAd
 	}
 
 	// Setup pools
-	suite.SetupPools(chainName, []sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	suite.SetupPools(chainName, []osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 	// Setup contract
 	chain.StoreContractCode(&suite.Suite, "./bytecode/crosschain_registry.wasm")
@@ -828,19 +829,19 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) (sdk.AccAd
 	suite.Require().NoError(err)
 
 	// Send some token0 tokens from C to B
-	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainC.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String(), "channel-0", "")
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", osmomath.NewInt(2000)), suite.chainC.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String(), "channel-0", "")
 	_, _, _, err = suite.FullSend(transferMsg, CtoB)
 	suite.Require().NoError(err)
 
 	// Send some token0 tokens from B to A
-	transferMsg = NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "channel-0", "")
+	transferMsg = NewMsgTransfer(sdk.NewCoin("token0", osmomath.NewInt(2000)), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "channel-0", "")
 	_, _, _, err = suite.FullSend(transferMsg, BtoA)
 	suite.Require().NoError(err)
 
 	// Send some token0 tokens from C to B to A
 	denomTrace0CB := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", suite.pathBC.EndpointA.ChannelID, "token0"))
 	token0CB := denomTrace0CB.IBCDenom()
-	transferMsg = NewMsgTransfer(sdk.NewCoin(token0CB, sdk.NewInt(2000)), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "channel-0", "")
+	transferMsg = NewMsgTransfer(sdk.NewCoin(token0CB, osmomath.NewInt(2000)), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "channel-0", "")
 	_, _, _, err = suite.FullSend(transferMsg, BtoA)
 	suite.Require().NoError(err)
 
@@ -1046,10 +1047,10 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
 		receiverChain := suite.GetChain(tc.intoChain)
 		receiverApp := receiverChain.GetOsmosisApp()
 		initialSenderBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, tc.sentToken)
-		sentAmount := sdk.NewInt(100)
+		sentAmount := osmomath.NewInt(100)
 		suite.Require().Greater(initialSenderBalance.Amount.Int64(), sentAmount.Int64())
 		initialReceiverBalance := receiverApp.BankKeeper.GetBalance(receiverChain.GetContext(), receiver, tc.receivedToken)
-		suite.Require().Equal(sdk.NewInt(0), initialReceiverBalance.Amount)
+		suite.Require().Equal(osmomath.NewInt(0), initialReceiverBalance.Amount)
 
 		msg := fmt.Sprintf(`{
 		"unwrap_coin": {
@@ -1094,7 +1095,7 @@ func (suite *HooksTestSuite) TestCrosschainSwaps() {
 	msg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB/%s", "on_failed_delivery": "do_nothing"}}`,
 		suite.chainB.SenderAccount.GetAddress(),
 	)
-	res, err := contractKeeper.Execute(ctx, crosschainAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin("token0", sdk.NewInt(1000))))
+	res, err := contractKeeper.Execute(ctx, crosschainAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin("token0", osmomath.NewInt(1000))))
 	suite.Require().NoError(err)
 	var responseJson map[string]interface{}
 	err = json.Unmarshal(res, &responseJson)
@@ -1127,7 +1128,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCTest() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
 	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA, true)
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
-	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", osmomath.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
 	_, _, _, err := suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err)
 
@@ -1151,7 +1152,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCTest() {
 	// Generate full memo
 	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
 	// Send IBC transfer with the memo with crosschain-swap instructions
-	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), "channel-0", msg)
+	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, osmomath.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), "channel-0", msg)
 	_, receiveResult, _, err := suite.FullSend(transferMsg, BtoA)
 
 	// We use the receive result here because the receive adds another packet to be sent back
@@ -1178,7 +1179,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
 	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA, true)
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
-	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", osmomath.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
 	_, _, _, err := suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err)
 
@@ -1201,7 +1202,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	// Generate full memo
 	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
 	// Send IBC transfer with the memo with crosschain-swap instructions
-	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), "channel-0", msg)
+	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, osmomath.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), "channel-0", msg)
 	_, receiveResult, _, err := suite.FullSend(transferMsg, BtoA)
 
 	// We use the receive result here because the receive adds another packet to be sent back
@@ -1231,7 +1232,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	)
 	// Generate full memo
 	msg2 := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg2)
-	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), "channel-0", msg2)
+	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, osmomath.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), "channel-0", msg2)
 	_, receiveResult, _, err = suite.FullSend(transferMsg, BtoA)
 
 	// We use the receive result here because the receive adds another packet to be sent back
@@ -1274,7 +1275,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadSwap() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
 	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA, true)
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
-	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", osmomath.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
 	_, _, _, err := suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err)
 
@@ -1298,7 +1299,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadSwap() {
 	// Generate full memo
 	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
 	// Send IBC transfer with the memo with crosschain-swap instructions
-	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), "channel-0", msg)
+	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, osmomath.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), "channel-0", msg)
 	_, receiveResult, ack, err := suite.FullSend(transferMsg, BtoA)
 
 	// We use the receive result here because the receive adds another packet to be sent back
@@ -1317,7 +1318,7 @@ func (suite *HooksTestSuite) TestBadCrosschainSwapsNextMemoMessages() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
 	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA, true)
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
-	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(20000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", osmomath.NewInt(20000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
 	_, _, _, err := suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err)
 
@@ -1353,7 +1354,7 @@ func (suite *HooksTestSuite) TestBadCrosschainSwapsNextMemoMessages() {
 		msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, tc.memo)
 		// Send IBC transfer with the memo with crosschain-swap instructions
 		fmt.Println(msg)
-		transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(10)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), "channel-0", msg)
+		transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, osmomath.NewInt(10)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), "channel-0", msg)
 		_, _, ack, _ := suite.FullSend(transferMsg, BtoA)
 		if tc.expPass {
 			fmt.Println(ack)
@@ -1364,7 +1365,7 @@ func (suite *HooksTestSuite) TestBadCrosschainSwapsNextMemoMessages() {
 	}
 }
 
-func (suite *HooksTestSuite) CreateIBCPoolOnChain(chainName Chain, denom1, denom2 string, amount1 sdk.Int) uint64 {
+func (suite *HooksTestSuite) CreateIBCPoolOnChain(chainName Chain, denom1, denom2 string, amount1 osmomath.Int) uint64 {
 	chain := suite.GetChain(chainName)
 	acc1 := chain.SenderAccount.GetAddress()
 
@@ -1372,19 +1373,19 @@ func (suite *HooksTestSuite) CreateIBCPoolOnChain(chainName Chain, denom1, denom
 
 	// pool assets
 	defaultFooAsset := balancer.PoolAsset{
-		Weight: sdk.NewInt(100),
+		Weight: osmomath.NewInt(100),
 		Token:  sdk.NewCoin(denom1, amount1),
 	}
 	defaultBarAsset := balancer.PoolAsset{
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin(denom2, sdk.NewInt(defaultPoolAmount)),
+		Weight: osmomath.NewInt(100),
+		Token:  sdk.NewCoin(denom2, osmomath.NewInt(defaultPoolAmount)),
 	}
 
 	poolAssets := []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
 
 	poolParams := balancer.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.ZeroDec(),
+		SwapFee: osmomath.NewDecWithPrec(1, 2),
+		ExitFee: osmomath.ZeroDec(),
 	}
 	msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
 	poolId, err := chain.GetOsmosisApp().PoolManagerKeeper.CreatePool(chain.GetContext(), msg)
@@ -1399,9 +1400,9 @@ func (suite *HooksTestSuite) CreateIBCNativePoolOnChain(chainName Chain, denom s
 	chain := suite.GetChain(chainName)
 	bondDenom := chain.GetOsmosisApp().StakingKeeper.BondDenom(chain.GetContext())
 
-	multiplier := sdk.NewDec(20)
+	multiplier := osmomath.NewDec(20)
 
-	uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
+	uosmoAmount := gammtypes.InitPoolSharesSupply.ToLegacyDec().Mul(multiplier).RoundInt()
 
 	return suite.CreateIBCPoolOnChain(chainName, bondDenom, denom, uosmoAmount)
 }
@@ -1467,10 +1468,10 @@ func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	_, crosschainAddrA := suite.SetupCrosschainSwaps(ChainA, true)
 	swaprouterAddrB, crosschainAddrB := suite.SetupCrosschainSwaps(ChainB, false)
 	// Send some token0 and token1 tokens to B so that there are ibc token0 to send to A and crosschain-swap, and token1 to create the pool
-	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(500000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", osmomath.NewInt(500000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
 	_, _, _, err := suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err)
-	transferMsg1 := NewMsgTransfer(sdk.NewCoin("token1", sdk.NewInt(500000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
+	transferMsg1 := NewMsgTransfer(sdk.NewCoin("token1", osmomath.NewInt(500000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
 	_, _, _, err = suite.FullSend(transferMsg1, AtoB)
 	suite.Require().NoError(err)
 	denom := suite.GetIBCDenom(ChainA, ChainB, "token1")
@@ -1507,7 +1508,7 @@ func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	// Generate full memo
 	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddrA, swapMsg)
 	// Send IBC transfer with the memo with crosschain-swap instructions
-	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddrA.String(), "channel-0", msg)
+	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, osmomath.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddrA.String(), "channel-0", msg)
 	_, receiveResult, _, err := suite.FullSend(transferMsg, BtoA)
 
 	// We use the receive result here because the receive adds another packet to be sent back
@@ -1540,7 +1541,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCMultiHop() {
 
 	// Send A's token0 all the way to B (A->C->B)
 	transferMsg := NewMsgTransfer(
-		sdk.NewCoin("token0", sdk.NewInt(2000)),
+		sdk.NewCoin("token0", osmomath.NewInt(2000)),
 		accountA.String(),
 		accountC.String(),
 		suite.pathAC.EndpointA.ChannelID,
@@ -1551,7 +1552,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCMultiHop() {
 
 	token0AC := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", suite.pathAC.EndpointB.ChannelID, "token0")).IBCDenom()
 	transferMsg = NewMsgTransfer(
-		sdk.NewCoin(token0AC, sdk.NewInt(2000)),
+		sdk.NewCoin(token0AC, osmomath.NewInt(2000)),
 		accountC.String(),
 		accountB.String(),
 		suite.pathBC.EndpointB.ChannelID,
@@ -1581,7 +1582,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCMultiHop() {
 	// Generate full memo
 	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
 	// Send IBC transfer with the memo with crosschain-swap instructions
-	transferMsg = NewMsgTransfer(sdk.NewCoin(token0ACB, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), "channel-0", msg)
+	transferMsg = NewMsgTransfer(sdk.NewCoin(token0ACB, osmomath.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), "channel-0", msg)
 	_, res, _, err := suite.FullSend(transferMsg, BtoA)
 	// We use the receive result here because the receive adds another packet to be sent back
 	suite.Require().NoError(err)
@@ -1616,7 +1617,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCMultiHop() {
 }
 
 // simple transfer
-func (suite *HooksTestSuite) SimpleNativeTransfer(token string, amount sdk.Int, path []Chain) string {
+func (suite *HooksTestSuite) SimpleNativeTransfer(token string, amount osmomath.Int, path []Chain) string {
 	prev := path[0]
 	prevPrefix := ""
 	denom := token
@@ -1663,13 +1664,15 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 
 	swapRouterAddr, crosschainAddr := suite.SetupCrosschainSwaps(ChainA, true)
 
-	sendAmount := sdk.NewInt(100)
+	sendAmount := osmomath.NewInt(100)
 
 	actorChainB := ChainActorDefinition{
 		Chain:   ChainB,
 		name:    "chainB",
 		address: accountB,
 	}
+
+	var customRoute string
 
 	testCases := []struct {
 		name              string
@@ -1701,7 +1704,7 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 			receiver:      actorChainB,
 			receivedToken: suite.GetIBCDenom(ChainA, ChainB, "token0"),
 			setupInitialToken: func() string {
-				suite.SimpleNativeTransfer("token0", sdk.NewInt(defaultPoolAmount), []Chain{ChainC, ChainA})
+				suite.SimpleNativeTransfer("token0", osmomath.NewInt(defaultPoolAmount), []Chain{ChainC, ChainA})
 
 				denom := suite.GetIBCDenom(ChainC, ChainA, "token0")
 				poolId := suite.CreateIBCNativePoolOnChain(ChainA, denom)
@@ -1721,9 +1724,9 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 			receiver:      actorChainB,
 			receivedToken: transfertypes.DenomTrace{Path: suite.GetPath(ChainA, ChainB), BaseDenom: "token0"}.IBCDenom(),
 			setupInitialToken: func() string {
-				suite.SimpleNativeTransfer("token1", sdk.NewInt(defaultPoolAmount), []Chain{ChainB, ChainA})
+				suite.SimpleNativeTransfer("token1", osmomath.NewInt(defaultPoolAmount), []Chain{ChainB, ChainA})
 
-				suite.SimpleNativeTransfer("token1", sdk.NewInt(10000), []Chain{ChainB, ChainA})
+				suite.SimpleNativeTransfer("token1", osmomath.NewInt(10000), []Chain{ChainB, ChainA})
 				denom := suite.GetIBCDenom(ChainB, ChainA, "token1")
 				poolId := suite.CreateIBCNativePoolOnChain(ChainA, denom)
 				suite.SetupIBCRouteOnChain(swapRouterAddr, suite.chainA.SenderAccount.GetAddress(), poolId, ChainA, denom)
@@ -1742,10 +1745,10 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 			receivedToken: "token1",
 			setupInitialToken: func() string {
 				// Send ibc token to chainB
-				suite.SimpleNativeTransfer("token0", sdk.NewInt(500), []Chain{ChainA, ChainB})
+				suite.SimpleNativeTransfer("token0", osmomath.NewInt(500), []Chain{ChainA, ChainB})
 
 				// Setup pool
-				suite.SimpleNativeTransfer("token1", sdk.NewInt(defaultPoolAmount), []Chain{ChainB, ChainA})
+				suite.SimpleNativeTransfer("token1", osmomath.NewInt(defaultPoolAmount), []Chain{ChainB, ChainA})
 				denom := suite.GetIBCDenom(ChainB, ChainA, "token1")
 				poolId := suite.CreateIBCNativePoolOnChain(ChainA, denom)
 				suite.SetupIBCRouteOnChain(swapRouterAddr, suite.chainA.SenderAccount.GetAddress(), poolId, ChainA, denom)
@@ -1763,15 +1766,39 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 			receiver:      actorChainB,
 			receivedToken: suite.GetIBCDenom(ChainC, ChainB, "token0"),
 			setupInitialToken: func() string {
-				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainC, ChainA})
-				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainB, ChainA})
+				suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainC, ChainA})
+				suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainB, ChainA})
 
 				token0BA := suite.GetIBCDenom(ChainB, ChainA, "token0")
 				token0CA := suite.GetIBCDenom(ChainC, ChainA, "token0")
 
 				// Setup pool
-				poolId := suite.CreateIBCPoolOnChain(ChainA, token0BA, token0CA, sdk.NewInt(defaultPoolAmount))
+				poolId := suite.CreateIBCPoolOnChain(ChainA, token0BA, token0CA, osmomath.NewInt(defaultPoolAmount))
 				suite.SetupIBCSimpleRouteOnChain(swapRouterAddr, suite.chainA.SenderAccount.GetAddress(), poolId, ChainA, token0BA, token0CA)
+
+				return "token0"
+			},
+			relayChain: []Direction{AtoC, CtoB},
+			requireAck: []bool{false, true},
+		},
+
+		{
+			name:          "Swap two IBC'd tokens with specified route",
+			sender:        actorChainB,
+			swapFor:       suite.GetIBCDenom(ChainC, ChainA, "token0"),
+			receiver:      actorChainB,
+			receivedToken: suite.GetIBCDenom(ChainC, ChainB, "token0"),
+			setupInitialToken: func() string {
+				suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainC, ChainA})
+				suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainB, ChainA})
+
+				token0BA := suite.GetIBCDenom(ChainB, ChainA, "token0")
+				token0CA := suite.GetIBCDenom(ChainC, ChainA, "token0")
+
+				// Setup pool
+				poolId := suite.CreateIBCPoolOnChain(ChainA, token0BA, token0CA, osmomath.NewInt(defaultPoolAmount))
+
+				customRoute = fmt.Sprintf(`[{"pool_id": "%d", "token_out_denom": "%s"}]`, poolId, token0CA)
 
 				return "token0"
 			},
@@ -1790,16 +1817,16 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 			},
 			receivedToken: suite.GetIBCDenom(ChainB, ChainC, "token0"),
 			setupInitialToken: func() string {
-				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainC, ChainA})
-				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainB, ChainA})
-				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainC, ChainB})
+				suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainC, ChainA})
+				suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainB, ChainA})
+				suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainC, ChainB})
 
 				token0BA := suite.GetIBCDenom(ChainB, ChainA, "token0")
 				token0CB := suite.GetIBCDenom(ChainC, ChainB, "token0")
 				token0CA := suite.GetIBCDenom(ChainC, ChainA, "token0")
 
 				// Setup pool
-				poolId := suite.CreateIBCPoolOnChain(ChainA, token0BA, token0CA, sdk.NewInt(defaultPoolAmount))
+				poolId := suite.CreateIBCPoolOnChain(ChainA, token0BA, token0CA, osmomath.NewInt(defaultPoolAmount))
 				suite.SetupIBCSimpleRouteOnChain(swapRouterAddr, suite.chainA.SenderAccount.GetAddress(), poolId, ChainA, token0BA, token0CA)
 
 				return token0CB
@@ -1813,6 +1840,7 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 		suite.Run(tc.name, func() {
 			senderChain := suite.GetChain(tc.sender.Chain)
 			receiverChain := suite.GetChain(tc.receiver.Chain)
+			customRoute = "" // reset the custom route
 
 			initialToken := tc.setupInitialToken()
 
@@ -1825,8 +1853,13 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 			receivedTokenBalance := receiverChain.GetOsmosisApp().BankKeeper.GetBalance(receiverChain.GetContext(), tc.receiver.address, tc.receivedToken)
 
 			// Generate swap instructions for the contract
-			swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"%s","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s/%s", "on_failed_delivery": "do_nothing", "next_memo":{}}}`,
-				tc.swapFor, tc.receiver.name, tc.receiver.address,
+			var extra string
+			if customRoute != "" {
+				extra = fmt.Sprintf(`,"route": %s`, customRoute)
+			}
+
+			swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"%s","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s/%s", "on_failed_delivery": "do_nothing", "next_memo":{}%s}}`,
+				tc.swapFor, tc.receiver.name, tc.receiver.address, extra,
 			)
 			// Generate full memo
 			msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
@@ -1912,7 +1945,7 @@ func (suite *HooksTestSuite) TestSwapErrorAfterPreSwapUnwind() {
 
 	swapRouterAddr, crosschainAddr := suite.SetupCrosschainSwaps(ChainA, true)
 
-	sendAmount := sdk.NewInt(100)
+	sendAmount := osmomath.NewInt(100)
 
 	sender := ChainActorDefinition{
 		Chain:   ChainB,
@@ -1927,16 +1960,16 @@ func (suite *HooksTestSuite) TestSwapErrorAfterPreSwapUnwind() {
 	}
 
 	//setup initial tokens
-	suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainC, ChainA})
-	suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainB, ChainA})
-	suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainC, ChainB})
+	suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainC, ChainA})
+	suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainB, ChainA})
+	suite.SimpleNativeTransfer("token0", osmomath.NewInt(12000000), []Chain{ChainC, ChainB})
 
 	token0BA := suite.GetIBCDenom(ChainB, ChainA, "token0")
 	token0CB := suite.GetIBCDenom(ChainC, ChainB, "token0")
 	token0CA := suite.GetIBCDenom(ChainC, ChainA, "token0")
 
 	// Setup pool
-	poolId := suite.CreateIBCPoolOnChain(ChainA, token0BA, token0CA, sdk.NewInt(defaultPoolAmount))
+	poolId := suite.CreateIBCPoolOnChain(ChainA, token0BA, token0CA, osmomath.NewInt(defaultPoolAmount))
 	suite.SetupIBCSimpleRouteOnChain(swapRouterAddr, suite.chainA.SenderAccount.GetAddress(), poolId, ChainA, token0BA, token0CA)
 
 	initialToken := token0CB
@@ -1983,7 +2016,7 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 		fmt.Sprintf(`{"crosschain_swaps_contract": "%s", "osmosis_channel": "channel-0"}`, crosschainAddr), 1)
 
 	// Send some token0 tokens to B so that there are ibc tokens to send to A and crosschain-swap
-	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", osmomath.NewInt(2000)), suite.chainA.SenderAccount.GetAddress().String(), initializer.String(), "channel-0", "")
 	_, _, _, err := suite.FullSend(transferMsg, AtoB)
 	suite.Require().NoError(err)
 
@@ -2007,7 +2040,7 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 	// Call the outpost
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisAppB.WasmKeeper)
 	ctxB := suite.chainB.GetContext()
-	_, err = contractKeeper.Execute(ctxB, outpostAddr, initializer, []byte(swapMsg), sdk.NewCoins(sdk.NewCoin(token0IBC, sdk.NewInt(1000))))
+	_, err = contractKeeper.Execute(ctxB, outpostAddr, initializer, []byte(swapMsg), sdk.NewCoins(sdk.NewCoin(token0IBC, osmomath.NewInt(1000))))
 	suite.Require().NoError(err)
 	suite.chainB.NextBlock()
 	err = suite.pathAB.EndpointA.UpdateClient()

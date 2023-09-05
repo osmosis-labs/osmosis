@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"golang.org/x/exp/constraints"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	sdkrand "github.com/osmosis-labs/osmosis/v19/simulation/simtypes/random"
 )
 
@@ -31,8 +32,8 @@ func (sim *SimCtx) RandStringOfLength(n int) string {
 	return sdkrand.RandStringOfLength(r, n)
 }
 
-// RandPositiveInt get a rand positive sdk.Int
-func (sim *SimCtx) RandPositiveInt(max sdk.Int) sdk.Int {
+// RandPositiveInt get a rand positive osmomath.Int
+func (sim *SimCtx) RandPositiveInt(max osmomath.Int) osmomath.Int {
 	r := sim.GetSeededRand("random bounded positive int")
 	v, err := sdkrand.RandPositiveInt(r, max)
 	if err != nil {
@@ -43,14 +44,14 @@ func (sim *SimCtx) RandPositiveInt(max sdk.Int) sdk.Int {
 
 // RandomAmount generates a random amount
 // that is biased to return max and 0.
-func (sim *SimCtx) RandomAmount(max sdk.Int) sdk.Int {
+func (sim *SimCtx) RandomAmount(max osmomath.Int) osmomath.Int {
 	r := sim.GetSeededRand("random bounded positive int")
 	return sdkrand.RandomAmount(r, max)
 }
 
 // RandomDecAmount generates a random decimal amount
 // Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
-func (sim *SimCtx) RandomDecAmount(max sdk.Dec) sdk.Dec {
+func (sim *SimCtx) RandomDecAmount(max osmomath.Dec) osmomath.Dec {
 	r := sim.GetSeededRand("random bounded positive int")
 	return sdkrand.RandomDecAmount(r, max)
 }

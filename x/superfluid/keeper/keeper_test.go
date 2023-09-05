@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
@@ -64,18 +65,18 @@ func (s *KeeperTestSuite) SetupTest() {
 	mintParams := s.App.MintKeeper.GetParams(s.Ctx)
 	mintParams.EpochIdentifier = superfluidEpochIdentifer
 	mintParams.DistributionProportions = minttypes.DistributionProportions{
-		Staking:          sdk.OneDec(),
-		PoolIncentives:   sdk.ZeroDec(),
-		DeveloperRewards: sdk.ZeroDec(),
-		CommunityPool:    sdk.ZeroDec(),
+		Staking:          osmomath.OneDec(),
+		PoolIncentives:   osmomath.ZeroDec(),
+		DeveloperRewards: osmomath.ZeroDec(),
+		CommunityPool:    osmomath.ZeroDec(),
 	}
 	s.App.MintKeeper.SetParams(s.Ctx, mintParams)
-	s.App.MintKeeper.SetMinter(s.Ctx, minttypes.NewMinter(sdk.NewDec(1_000_000)))
+	s.App.MintKeeper.SetMinter(s.Ctx, minttypes.NewMinter(osmomath.NewDec(1_000_000)))
 
 	distributionParams := s.App.DistrKeeper.GetParams(s.Ctx)
-	distributionParams.BaseProposerReward = sdk.ZeroDec()
-	distributionParams.BonusProposerReward = sdk.ZeroDec()
-	distributionParams.CommunityTax = sdk.ZeroDec()
+	distributionParams.BaseProposerReward = osmomath.ZeroDec()
+	distributionParams.BonusProposerReward = osmomath.ZeroDec()
+	distributionParams.CommunityTax = osmomath.ZeroDec()
 	s.App.DistrKeeper.SetParams(s.Ctx, distributionParams)
 }
 
@@ -102,8 +103,8 @@ func (s *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	for _, denom := range denoms {
 		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))
 		poolAssets = append(poolAssets, balancer.PoolAsset{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin(denom, sdk.NewInt(1000000000000000000)),
+			Weight: osmomath.NewInt(100),
+			Token:  sdk.NewCoin(denom, osmomath.NewInt(1000000000000000000)),
 		})
 	}
 
@@ -111,8 +112,8 @@ func (s *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	s.FundAcc(acc1, coins)
 
 	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.ZeroDec(),
+		SwapFee: osmomath.NewDecWithPrec(1, 2),
+		ExitFee: osmomath.ZeroDec(),
 	}, poolAssets, "")
 	poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
 	s.Require().NoError(err)
@@ -129,7 +130,7 @@ func (s *KeeperTestSuite) SetupValidators(bondStatuses []stakingtypes.BondStatus
 	return valAddrs
 }
 
-func (s *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sdk.Dec) ([]string, []uint64) {
+func (s *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []osmomath.Dec) ([]string, []uint64) {
 	pools := s.SetupGammPoolsWithBondDenomMultiplier(multipliers)
 
 	denoms := []string{}
@@ -203,13 +204,13 @@ func (s *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAccs [
 		// check delegation from intermediary account to validator
 		delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, acc.GetAccAddress(), valAddr)
 		s.Require().True(found)
-		s.Require().True(delegation.Shares.GTE(sdk.NewDec(10000000)))
+		s.Require().True(delegation.Shares.GTE(osmomath.NewDec(10000000)))
 
 		// check delegated tokens
 		validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
 		s.Require().True(found)
 		delegatedTokens := validator.TokensFromShares(delegation.Shares).TruncateInt()
-		s.Require().True(delegatedTokens.GTE(sdk.NewInt(10000000)))
+		s.Require().True(delegatedTokens.GTE(osmomath.NewInt(10000000)))
 	}
 }
 

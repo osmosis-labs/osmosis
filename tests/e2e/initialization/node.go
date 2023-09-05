@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -29,6 +30,7 @@ import (
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	osmosisApp "github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/util"
 )
@@ -76,13 +78,13 @@ func (n *internalNode) configDir() string {
 func (n *internalNode) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
 	description := stakingtypes.NewDescription(n.moniker, "", "", "", "")
 	commissionRates := stakingtypes.CommissionRates{
-		Rate:          sdk.MustNewDecFromStr("0.1"),
-		MaxRate:       sdk.MustNewDecFromStr("0.2"),
-		MaxChangeRate: sdk.MustNewDecFromStr("0.01"),
+		Rate:          osmomath.MustNewDecFromStr("0.1"),
+		MaxRate:       osmomath.MustNewDecFromStr("0.2"),
+		MaxChangeRate: osmomath.MustNewDecFromStr("0.01"),
 	}
 
 	// get the initial validator min self delegation
-	minSelfDelegation, _ := sdk.NewIntFromString("1")
+	minSelfDelegation, _ := osmomath.NewIntFromString("1")
 
 	valPubKey, err := cryptocodec.FromTmPubKeyInterface(n.consensusKey.PubKey)
 	if err != nil {
@@ -311,6 +313,14 @@ func (n *internalNode) initNodeConfigs(persistentPeers []string) error {
 	valConfig.LogLevel = "info"
 	valConfig.P2P.PersistentPeers = strings.Join(persistentPeers, ",")
 	valConfig.Storage.DiscardABCIResponses = true
+
+	valConfig.Consensus.TimeoutPropose = time.Millisecond * 300
+	valConfig.Consensus.TimeoutProposeDelta = 0
+	valConfig.Consensus.TimeoutPrevote = 0
+	valConfig.Consensus.TimeoutPrevoteDelta = 0
+	valConfig.Consensus.TimeoutPrecommit = 0
+	valConfig.Consensus.TimeoutPrecommitDelta = 0
+	valConfig.Consensus.TimeoutCommit = 0
 
 	tmconfig.WriteConfigFile(tmCfgPath, valConfig)
 	return nil

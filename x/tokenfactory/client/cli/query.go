@@ -32,7 +32,7 @@ func GetQueryCmd() *cobra.Command {
 
 func GetCmdDenomAuthorityMetadata() (*osmocli.QueryDescriptor, *types.QueryDenomAuthorityMetadataRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "denom-authority-metadata [denom] [flags]",
+		Use:   "denom-authority-metadata",
 		Short: "Get the authority metadata for a specific denom",
 		Long: `{{.Short}}{{.ExampleHeader}}
 		{{.CommandPrefix}} uatom`,
@@ -41,7 +41,7 @@ func GetCmdDenomAuthorityMetadata() (*osmocli.QueryDescriptor, *types.QueryDenom
 
 func GetCmdDenomsFromCreator() (*osmocli.QueryDescriptor, *types.QueryDenomsFromCreatorRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "denoms-from-creator [creator address] [flags]",
+		Use:   "denoms-from-creator",
 		Short: "Returns a list of all tokens created by a specific creator address",
 		Long: `{{.Short}}{{.ExampleHeader}}
 		{{.CommandPrefix}} <address>`,

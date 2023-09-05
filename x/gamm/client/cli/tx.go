@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
@@ -49,7 +50,7 @@ var poolIdFlagOverride = map[string]string{
 
 func NewCreatePoolCmd() *osmocli.TxCliDesc {
 	desc := osmocli.TxCliDesc{
-		Use:   "create-pool [flags]",
+		Use:   "create-pool",
 		Short: "create a new pool and provide the liquidity to it",
 		Long: `Must provide path to a pool JSON file (--pool-file) describing the pool to be created
 Sample pool JSON file contents for balancer:
@@ -112,7 +113,7 @@ func NewExitPoolCmd() (*osmocli.TxCliDesc, *types.MsgExitPool) {
 
 func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn) {
 	return &osmocli.TxCliDesc{
-		Use:   "swap-exact-amount-in [token-in] [token-out-min-amount]",
+		Use:   "swap-exact-amount-in",
 		Short: "swap exact amount in",
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
 			"Routes": osmocli.FlagOnlyParser(swapAmountInRoutes),
@@ -124,7 +125,7 @@ func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn)
 func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOut) {
 	// Can't get rid of this parser without a break, because the args are out of order.
 	return &osmocli.TxCliDesc{
-		Use:              "swap-exact-amount-out [token-out] [token-in-max-amount]",
+		Use:              "swap-exact-amount-out",
 		Short:            "swap exact amount out",
 		NumArgs:          2,
 		ParseAndBuildMsg: NewBuildSwapExactAmountOutMsg,
@@ -134,7 +135,7 @@ func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOu
 
 func NewJoinSwapExternAmountIn() (*osmocli.TxCliDesc, *types.MsgJoinSwapExternAmountIn) {
 	return &osmocli.TxCliDesc{
-		Use:                 "join-swap-extern-amount-in [token-in] [share-out-min-amount]",
+		Use:                 "join-swap-extern-amount-in",
 		Short:               "join swap extern amount in",
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
@@ -143,7 +144,7 @@ func NewJoinSwapExternAmountIn() (*osmocli.TxCliDesc, *types.MsgJoinSwapExternAm
 
 func NewJoinSwapShareAmountOut() (*osmocli.TxCliDesc, *types.MsgJoinSwapShareAmountOut) {
 	return &osmocli.TxCliDesc{
-		Use:                 "join-swap-share-amount-out [token-in-denom] [share-out-amount] [token-in-max-amount] ",
+		Use:                 "join-swap-share-amount-out",
 		Short:               "join swap share amount out",
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
@@ -152,7 +153,7 @@ func NewJoinSwapShareAmountOut() (*osmocli.TxCliDesc, *types.MsgJoinSwapShareAmo
 
 func NewExitSwapExternAmountOut() (*osmocli.TxCliDesc, *types.MsgExitSwapExternAmountOut) {
 	return &osmocli.TxCliDesc{
-		Use:                 "exit-swap-extern-amount-out [token-out] [share-in-max-amount]",
+		Use:                 "exit-swap-extern-amount-out",
 		Short:               "exit swap extern amount out",
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
@@ -161,7 +162,7 @@ func NewExitSwapExternAmountOut() (*osmocli.TxCliDesc, *types.MsgExitSwapExternA
 
 func NewExitSwapShareAmountIn() (*osmocli.TxCliDesc, *types.MsgExitSwapShareAmountIn) {
 	return &osmocli.TxCliDesc{
-		Use:                 "exit-swap-share-amount-in [token-out-denom] [share-in-amount] [token-out-min-amount]",
+		Use:                 "exit-swap-share-amount-in",
 		Short:               "exit swap share amount in",
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
@@ -171,7 +172,7 @@ func NewExitSwapShareAmountIn() (*osmocli.TxCliDesc, *types.MsgExitSwapShareAmou
 // TODO: Change these flags to args. Required flags don't make that much sense.
 func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
 	cmd := osmocli.TxCliDesc{
-		Use:              "adjust-scaling-factors --pool-id=[pool-id] --scaling-factors=[scaling-factors]",
+		Use:              "adjust-scaling-factors --pool-id=[pool-id]  --scaling-factors=[scaling-factors]",
 		Short:            "adjust scaling factors",
 		Example:          "osmosisd adjust-scaling-factors --pool-id=1 --scaling-factors=\"100, 100\"",
 		NumArgs:          0,
@@ -462,12 +463,12 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, fs *flag.FlagSet) (
 		return nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
-	spreadFactor, err := sdk.NewDecFromStr(pool.SwapFee)
+	spreadFactor, err := osmomath.NewDecFromStr(pool.SwapFee)
 	if err != nil {
 		return nil, err
 	}
 
-	exitFee, err := sdk.NewDecFromStr(pool.ExitFee)
+	exitFee, err := osmomath.NewDecFromStr(pool.ExitFee)
 	if err != nil {
 		return nil, err
 	}
@@ -557,12 +558,12 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 		return nil, err
 	}
 
-	spreadFactor, err := sdk.NewDecFromStr(flags.SwapFee)
+	spreadFactor, err := osmomath.NewDecFromStr(flags.SwapFee)
 	if err != nil {
 		return nil, err
 	}
 
-	exitFee, err := sdk.NewDecFromStr(flags.ExitFee)
+	exitFee, err := osmomath.NewDecFromStr(flags.ExitFee)
 	if err != nil {
 		return nil, err
 	}
@@ -697,7 +698,7 @@ func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, args []string, fs *
 		return nil, err
 	}
 
-	tokenInMaxAmount, ok := sdk.NewIntFromString(tokenInMaxAmountStr)
+	tokenInMaxAmount, ok := osmomath.NewIntFromString(tokenInMaxAmountStr)
 	if !ok {
 		return nil, errors.New("invalid token in max amount")
 	}
@@ -889,13 +890,13 @@ func parsePoolRecordsWithCFMMLink(cmd *cobra.Command) ([]types.PoolRecordWithCFM
 		}
 
 		exponentAtPriceOneStr := poolRecordsWithCFMMLink[i+3]
-		exponentAtPriceOne, ok := sdk.NewIntFromString(exponentAtPriceOneStr)
+		exponentAtPriceOne, ok := osmomath.NewIntFromString(exponentAtPriceOneStr)
 		if !ok {
 			return nil, fmt.Errorf("invalid exponentAtPriceOne: %s", exponentAtPriceOneStr)
 		}
 
 		spreadFactorStr := poolRecordsWithCFMMLink[i+4]
-		spreadFactor, err := sdk.NewDecFromStr(spreadFactorStr)
+		spreadFactor, err := osmomath.NewDecFromStr(spreadFactorStr)
 		if err != nil {
 			return nil, err
 		}

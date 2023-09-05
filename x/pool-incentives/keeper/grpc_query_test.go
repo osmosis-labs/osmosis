@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -73,22 +74,22 @@ func (s *KeeperTestSuite) TestDistrInfo() {
 	for _, tc := range []struct {
 		desc                 string
 		poolCreated          bool
-		weights              []sdk.Int
-		expectedTotalWeight  sdk.Int
+		weights              []osmomath.Int
+		expectedTotalWeight  osmomath.Int
 		expectedRecordLength int
 	}{
 		{
 			desc:                 "No pool exists",
 			poolCreated:          false,
-			weights:              []sdk.Int{},
-			expectedTotalWeight:  sdk.NewInt(0),
+			weights:              []osmomath.Int{},
+			expectedTotalWeight:  osmomath.NewInt(0),
 			expectedRecordLength: 0,
 		},
 		{
 			desc:                 "Happy case",
 			poolCreated:          true,
-			weights:              []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
-			expectedTotalWeight:  sdk.NewInt(600),
+			weights:              []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
+			expectedTotalWeight:  osmomath.NewInt(600),
 			expectedRecordLength: 3,
 		},
 	} {
@@ -160,9 +161,9 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 	for _, tc := range []struct {
 		desc                   string
 		poolCreated            bool
-		weights                []sdk.Int
+		weights                []osmomath.Int
 		clPoolWithGauge        bool
-		clGaugeWeight          sdk.Int
+		clGaugeWeight          osmomath.Int
 		perpetual              bool
 		nonPerpetual           bool
 		setupPoolMigrationLink bool
@@ -171,26 +172,26 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 		{
 			desc:                 "No pool exist",
 			poolCreated:          false,
-			weights:              []sdk.Int{},
+			weights:              []osmomath.Int{},
 			expectedRecordLength: 0,
 		},
 		{
 			desc:                 "Normal case",
 			poolCreated:          true,
-			weights:              []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			weights:              []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
 			expectedRecordLength: 3,
 		},
 		{
 			desc:                 "Perpetual",
 			poolCreated:          true,
-			weights:              []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			weights:              []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
 			perpetual:            true,
 			expectedRecordLength: 3,
 		},
 		{
 			desc:                 "Non Perpetual",
 			poolCreated:          true,
-			weights:              []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			weights:              []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
 			nonPerpetual:         true,
 			expectedRecordLength: 0,
 		},
@@ -198,16 +199,16 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 			desc:                 "Concentrated case, no pool migration link",
 			poolCreated:          true,
 			clPoolWithGauge:      true,
-			clGaugeWeight:        sdk.NewInt(400),
-			weights:              []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			clGaugeWeight:        osmomath.NewInt(400),
+			weights:              []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
 			expectedRecordLength: 3, // Note we expect 3 instead of 4 here, since the pool migration link is not setup.
 		},
 		{
 			desc:                   "Concentrated case, setup pool migration link",
 			poolCreated:            true,
 			clPoolWithGauge:        true,
-			clGaugeWeight:          sdk.NewInt(400),
-			weights:                []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			clGaugeWeight:          osmomath.NewInt(400),
+			weights:                []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
 			setupPoolMigrationLink: true,
 			expectedRecordLength:   4,
 		},
@@ -231,7 +232,7 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 			s.Require().Equal(3, len(lockableDurations))
 
 			if tc.poolCreated {
-				balancerPoolId = s.PrepareBalancerPoolWithCoins(sdk.NewCoin("eth", sdk.NewInt(100000000000)), sdk.NewCoin("usdc", sdk.NewInt(100000000000)))
+				balancerPoolId = s.PrepareBalancerPoolWithCoins(sdk.NewCoin("eth", osmomath.NewInt(100000000000)), sdk.NewCoin("usdc", osmomath.NewInt(100000000000)))
 
 				var distRecords []types.DistrRecord
 
@@ -249,7 +250,7 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 								Duration:      time.Hour,
 							}, time.Now(), 1, 0)
 						s.Require().NoError(err)
-						distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugePerpetualId, Weight: sdk.NewInt(300)})
+						distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugePerpetualId, Weight: osmomath.NewInt(300)})
 					}
 					if tc.nonPerpetual {
 						gaugeNonPerpetualId, err := s.App.IncentivesKeeper.CreateGauge(
@@ -259,7 +260,7 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 								Duration:      time.Hour,
 							}, time.Now(), 1, 0)
 						s.Require().NoError(err)
-						distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugeNonPerpetualId, Weight: sdk.NewInt(100)})
+						distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugeNonPerpetualId, Weight: osmomath.NewInt(100)})
 					}
 
 					// Sort in ascending order of gaugeId
@@ -299,29 +300,29 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 
 	tests := map[string]struct {
 		poolCreated          bool
-		internalGaugeWeights []sdk.Int
+		internalGaugeWeights []osmomath.Int
 		externalGauges       []externalGauge
 		clPoolWithGauge      bool
-		clGaugeWeight        sdk.Int
+		clGaugeWeight        osmomath.Int
 
 		expectedNumExternalGauges int
 		expectedGaugeIDs          []uint64
 	}{
 		"No pool exist": {
 			poolCreated:          false,
-			internalGaugeWeights: []sdk.Int{},
+			internalGaugeWeights: []osmomath.Int{},
 
 			expectedNumExternalGauges: 0,
 		},
 		"All gauges are internal (no external gauges)": {
 			poolCreated:          true,
-			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			internalGaugeWeights: []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
 
 			expectedNumExternalGauges: 0,
 		},
 		"Mixed internal and external gauges": {
 			poolCreated:          true,
-			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			internalGaugeWeights: []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
 			externalGauges:       []externalGauge{{isPerpetual: true}, {isPerpetual: false}},
 
 			// Since there is no concentrated pool, there are only 3 internal gauges, one for each lockup duration
@@ -330,7 +331,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 		},
 		"More external gauges than internal gauges": {
 			poolCreated:          true,
-			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			internalGaugeWeights: []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
 			externalGauges:       []externalGauge{{isPerpetual: true}, {isPerpetual: false}, {isPerpetual: true}, {isPerpetual: true}, {isPerpetual: false}},
 
 			// Since there is no concentrated pool, there are only 3 internal gauges, one for each lockup duration
@@ -339,7 +340,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 		},
 		"Same number of external gauges as internal gauges": {
 			poolCreated:          true,
-			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			internalGaugeWeights: []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
 			externalGauges:       []externalGauge{{isPerpetual: true}, {isPerpetual: false}, {isPerpetual: true}},
 
 			// Since there is no concentrated pool, there are only 3 internal gauges, one for each lockup duration
@@ -349,8 +350,8 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges() {
 		"Internal gauge for concentrated pool exists": {
 			poolCreated:          true,
 			clPoolWithGauge:      true,
-			clGaugeWeight:        sdk.NewInt(100),
-			internalGaugeWeights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			clGaugeWeight:        osmomath.NewInt(100),
+			internalGaugeWeights: []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
 			externalGauges:       []externalGauge{{isPerpetual: true}, {isPerpetual: false}, {isPerpetual: true}, {isPerpetual: true}, {isPerpetual: false}},
 
 			// Since there is a concentrated pool, there are 4 internal gauges, one for each lockup duration and one for the epoch duration
@@ -473,7 +474,7 @@ func (s *KeeperTestSuite) TestExternalIncentiveGauges_NoLock() {
 	)
 
 	var (
-		defaultCoins = sdk.NewCoins(sdk.NewCoin(defaultDenom, sdk.NewInt(10000000000)))
+		defaultCoins = sdk.NewCoins(sdk.NewCoin(defaultDenom, osmomath.NewInt(10000000000)))
 
 		defaultLockableDuration = s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)[0]
 
@@ -592,13 +593,13 @@ func (s *KeeperTestSuite) TestGaugeIncentivePercentage() {
 	// Create 3 records
 	err = keeper.UpdateDistrRecords(s.Ctx, types.DistrRecord{
 		GaugeId: gauge1Id,
-		Weight:  sdk.NewInt(100),
+		Weight:  osmomath.NewInt(100),
 	}, types.DistrRecord{
 		GaugeId: gauge2Id,
-		Weight:  sdk.NewInt(200),
+		Weight:  osmomath.NewInt(200),
 	}, types.DistrRecord{
 		GaugeId: gauge3Id,
-		Weight:  sdk.NewInt(300),
+		Weight:  osmomath.NewInt(300),
 	})
 	s.Require().NoError(err)
 

@@ -55,7 +55,7 @@ func GetCmdToDistributeCoins() (*osmocli.QueryDescriptor, *types.ModuleToDistrib
 // GetCmdGaugeByID returns a gauge by ID.
 func GetCmdGaugeByID() (*osmocli.QueryDescriptor, *types.GaugeByIDRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "gauge-by-id [id]",
+		Use:   "gauge-by-id",
 		Short: "Query gauge by id.",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} gauge-by-id 1
@@ -75,7 +75,7 @@ func GetCmdActiveGauges() (*osmocli.QueryDescriptor, *types.ActiveGaugesRequest)
 // GetCmdActiveGaugesPerDenom returns active gauges for a specified denom.
 func GetCmdActiveGaugesPerDenom() (*osmocli.QueryDescriptor, *types.ActiveGaugesPerDenomRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "active-gauges-per-den [den]denom [denom]",
+		Use:   "active-gauges-per-denom",
 		Short: "Query active gauges per denom",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} active-gauges-per-denom gamm/pool/1`,
@@ -94,7 +94,7 @@ func GetCmdUpcomingGauges() (*osmocli.QueryDescriptor, *types.UpcomingGaugesRequ
 // GetCmdUpcomingGaugesPerDenom returns scheduled gauges for specified denom..
 func GetCmdUpcomingGaugesPerDenom() (*osmocli.QueryDescriptor, *types.UpcomingGaugesPerDenomRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "upcoming-gauges-per-denom [denom]",
+		Use:   "upcoming-gauges-per-denom",
 		Short: "Query scheduled gauges per denom",
 		Long:  `{{.Short}}`,
 	}, &types.UpcomingGaugesPerDenomRequest{}

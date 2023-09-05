@@ -16,8 +16,7 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
 	txfeestypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 )
@@ -33,7 +32,7 @@ const (
 
 var (
 	// We set consensus min fee = .0025 uosmo / gas * 400000 gas = 1000
-	Fees = txfeestypes.ConsensusMinFee.Mul(sdk.NewDec(GasLimit)).Ceil().TruncateInt64()
+	Fees = txfeestypes.ConsensusMinFee.Mul(osmomath.NewDec(GasLimit)).Ceil().TruncateInt64()
 
 	defaultErrRegex = regexp.MustCompile(`(E|e)rror`)
 

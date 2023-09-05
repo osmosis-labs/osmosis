@@ -1,5 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
+use osmosis_std::types::osmosis::poolmanager::v1beta1::SwapAmountInRoute;
 use registry::msg::SerializableJson;
 use swaprouter::msg::Slippage;
 
@@ -57,6 +58,8 @@ pub enum ExecuteMsg {
         /// "recovery address" that can clain the funds on osmosis after a
         /// confirmed failure.
         on_failed_delivery: FailedDeliveryAction,
+        /// Users can optionally specify which route to use for the swap
+        route: Option<Vec<SwapAmountInRoute>>,
     },
     /// Executing a recover will transfer any recoverable tokens that the sender
     /// has in this contract to its account.

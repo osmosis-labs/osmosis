@@ -5,10 +5,10 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
-func NewLeaf(key []byte, acc sdk.Int) *Leaf {
+func NewLeaf(key []byte, acc osmomath.Int) *Leaf {
 	return &Leaf{Leaf: &Child{
 		Index:        key,
 		Accumulation: acc,
@@ -208,8 +208,8 @@ func (ptr *ptr) pull(key []byte) {
 	}
 }
 
-func (node Node) accumulate() (res sdk.Int) {
-	res = sdk.ZeroInt()
+func (node Node) accumulate() (res osmomath.Int) {
+	res = osmomath.ZeroInt()
 	for _, child := range node.Children {
 		res = res.Add(child.Accumulation)
 	}
@@ -237,7 +237,7 @@ func (node Node) find(key []byte) (idx int, match bool) {
 	return len(node.Children), false
 }
 
-func (node *Node) setAcc(idx int, acc sdk.Int) *Node {
+func (node *Node) setAcc(idx int, acc osmomath.Int) *Node {
 	node.Children[idx] = &Child{node.Children[idx].Index, acc}
 	return node
 }

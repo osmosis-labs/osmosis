@@ -1,8 +1,6 @@
 package concentrated_liquidity_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
@@ -21,12 +19,12 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 		{
 			name: "one full range position, testing range in between",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
 			},
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
-					LiquidityAmount: sdk.NewDec(10),
+					LiquidityAmount: osmomath.NewDec(10),
 					LowerTick:       DefaultMinTick,
 					UpperTick:       DefaultMaxTick,
 				},
@@ -35,12 +33,12 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 		{
 			name: "one ranged position, testing range with greater range than initialized ticks",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, osmomath.NewDec(-10)),
 			},
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
-					LiquidityAmount: sdk.NewDec(10),
+					LiquidityAmount: osmomath.NewDec(10),
 					LowerTick:       DefaultMinTick,
 					UpperTick:       5,
 				},
@@ -51,24 +49,24 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 		{
 			name: "two ranged positions, testing overlapping positions",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, -20, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, 20, sdk.NewDec(-10)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(50)),
-				withLiquidityNetandTickIndex(defaultTick, 30, sdk.NewDec(-50)),
+				withLiquidityNetandTickIndex(defaultTick, -20, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 20, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(50)),
+				withLiquidityNetandTickIndex(defaultTick, 30, osmomath.NewDec(-50)),
 			},
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
-					LiquidityAmount: sdk.NewDec(10),
+					LiquidityAmount: osmomath.NewDec(10),
 					LowerTick:       -20,
 					UpperTick:       10,
 				},
 				{
-					LiquidityAmount: sdk.NewDec(60),
+					LiquidityAmount: osmomath.NewDec(60),
 					LowerTick:       10,
 					UpperTick:       20,
 				},
 				{
-					LiquidityAmount: sdk.NewDec(50),
+					LiquidityAmount: osmomath.NewDec(50),
 					LowerTick:       20,
 					UpperTick:       30,
 				},
@@ -79,24 +77,24 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 		{
 			name: "one full ranged position, one narrow position",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(50)),
-				withLiquidityNetandTickIndex(defaultTick, 30, sdk.NewDec(-50)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(50)),
+				withLiquidityNetandTickIndex(defaultTick, 30, osmomath.NewDec(-50)),
 			},
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
-					LiquidityAmount: sdk.NewDec(10),
+					LiquidityAmount: osmomath.NewDec(10),
 					LowerTick:       DefaultMinTick,
 					UpperTick:       10,
 				},
 				{
-					LiquidityAmount: sdk.NewDec(60),
+					LiquidityAmount: osmomath.NewDec(60),
 					LowerTick:       10,
 					UpperTick:       30,
 				},
 				{
-					LiquidityAmount: sdk.NewDec(10),
+					LiquidityAmount: osmomath.NewDec(10),
 					LowerTick:       30,
 					UpperTick:       DefaultMaxTick,
 				},
@@ -108,36 +106,36 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 		{
 			name: "three ranged positions, testing overlapping positions",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, -20, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, 20, sdk.NewDec(-10)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(50)),
-				withLiquidityNetandTickIndex(defaultTick, 30, sdk.NewDec(-50)),
-				withLiquidityNetandTickIndex(defaultTick, 11, sdk.NewDec(100)),
-				withLiquidityNetandTickIndex(defaultTick, 13, sdk.NewDec(-100)),
+				withLiquidityNetandTickIndex(defaultTick, -20, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 20, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(50)),
+				withLiquidityNetandTickIndex(defaultTick, 30, osmomath.NewDec(-50)),
+				withLiquidityNetandTickIndex(defaultTick, 11, osmomath.NewDec(100)),
+				withLiquidityNetandTickIndex(defaultTick, 13, osmomath.NewDec(-100)),
 			},
 			expectedLiquidityDepthForRange: []queryproto.LiquidityDepthWithRange{
 				{
-					LiquidityAmount: sdk.NewDec(10),
+					LiquidityAmount: osmomath.NewDec(10),
 					LowerTick:       -20,
 					UpperTick:       10,
 				},
 				{
-					LiquidityAmount: sdk.NewDec(60),
+					LiquidityAmount: osmomath.NewDec(60),
 					LowerTick:       10,
 					UpperTick:       11,
 				},
 				{
-					LiquidityAmount: sdk.NewDec(160),
+					LiquidityAmount: osmomath.NewDec(160),
 					LowerTick:       11,
 					UpperTick:       13,
 				},
 				{
-					LiquidityAmount: sdk.NewDec(60),
+					LiquidityAmount: osmomath.NewDec(60),
 					LowerTick:       13,
 					UpperTick:       20,
 				},
 				{
-					LiquidityAmount: sdk.NewDec(50),
+					LiquidityAmount: osmomath.NewDec(50),
 					LowerTick:       20,
 					UpperTick:       30,
 				},
@@ -174,8 +172,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		poolId          uint64
 		tokenIn         string
 		currentPoolTick int64
-		startTick       sdk.Int
-		boundTick       sdk.Int
+		startTick       osmomath.Int
+		boundTick       osmomath.Int
 
 		// expected values
 		expectedLiquidityDepths []queryproto.TickLiquidityNet
@@ -184,16 +182,16 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		{
 			name: "one full range position, zero for one true",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
 			},
 
 			poolId:    defaultPoolId,
 			tokenIn:   ETH,
-			boundTick: sdk.Int{},
+			boundTick: osmomath.Int{},
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
-					LiquidityNet: sdk.NewDec(10),
+					LiquidityNet: osmomath.NewDec(10),
 					TickIndex:    DefaultMinTick,
 				},
 			},
@@ -201,16 +199,16 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		{
 			name: "one full range position, zero for one false",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
 			},
 
 			poolId:    defaultPoolId,
 			tokenIn:   USDC,
-			boundTick: sdk.Int{},
+			boundTick: osmomath.Int{},
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
-					LiquidityNet: sdk.NewDec(-10),
+					LiquidityNet: osmomath.NewDec(-10),
 					TickIndex:    DefaultMaxTick,
 				},
 			},
@@ -218,18 +216,18 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		{
 			name: "one full range position, one range position above current tick, zero for one true",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
-				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
 			},
 
 			poolId:    defaultPoolId,
 			tokenIn:   ETH,
-			boundTick: sdk.Int{},
+			boundTick: osmomath.Int{},
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
-					LiquidityNet: sdk.NewDec(10),
+					LiquidityNet: osmomath.NewDec(10),
 					TickIndex:    DefaultMinTick,
 				},
 			},
@@ -237,26 +235,26 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		{
 			name: "one full range position, one range position above current tick, zero for one false",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
-				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
 			},
 
 			poolId:    defaultPoolId,
 			tokenIn:   USDC,
-			boundTick: sdk.Int{},
+			boundTick: osmomath.Int{},
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
-					LiquidityNet: sdk.NewDec(20),
+					LiquidityNet: osmomath.NewDec(20),
 					TickIndex:    5,
 				},
 				{
-					LiquidityNet: sdk.NewDec(-20),
+					LiquidityNet: osmomath.NewDec(-20),
 					TickIndex:    10,
 				},
 				{
-					LiquidityNet: sdk.NewDec(-10),
+					LiquidityNet: osmomath.NewDec(-10),
 					TickIndex:    DefaultMaxTick,
 				},
 			},
@@ -264,18 +262,18 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		{
 			name: "one full range position, one range position above current tick, zero for one false, bound tick below with non-empty ticks",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
-				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
 			},
 
 			poolId:    defaultPoolId,
 			tokenIn:   ETH,
-			boundTick: sdk.NewInt(-15),
+			boundTick: osmomath.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
-					LiquidityNet: sdk.NewDec(20),
+					LiquidityNet: osmomath.NewDec(20),
 					TickIndex:    -10,
 				},
 			},
@@ -283,30 +281,30 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		{
 			name: "one ranged position, returned empty array",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
 			},
 
 			poolId:                  defaultPoolId,
 			tokenIn:                 ETH,
-			boundTick:               sdk.NewInt(-5),
+			boundTick:               osmomath.NewInt(-5),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{},
 		},
 		{
 			name: "one full range position, one range position above current tick, zero for one false, bound tick below with non-empty ticks",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
-				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
 			},
 
 			poolId:    defaultPoolId,
 			tokenIn:   USDC,
-			boundTick: sdk.NewInt(10),
+			boundTick: osmomath.NewInt(10),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
-					LiquidityNet: sdk.NewDec(-20),
+					LiquidityNet: osmomath.NewDec(-20),
 					TickIndex:    10,
 				},
 			},
@@ -314,24 +312,24 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		{
 			name: "one full range position, two ranged positions, zero for one true",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
-				withLiquidityNetandTickIndex(defaultTick, -5, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-20)),
-				withLiquidityNetandTickIndex(defaultTick, 2, sdk.NewDec(40)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-40)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -5, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 5, osmomath.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, 2, osmomath.NewDec(40)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-40)),
 			},
 
 			poolId:    defaultPoolId,
 			tokenIn:   ETH,
-			boundTick: sdk.Int{},
+			boundTick: osmomath.Int{},
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
-					LiquidityNet: sdk.NewDec(20),
+					LiquidityNet: osmomath.NewDec(20),
 					TickIndex:    -5,
 				},
 				{
-					LiquidityNet: sdk.NewDec(10),
+					LiquidityNet: osmomath.NewDec(10),
 					TickIndex:    DefaultMinTick,
 				},
 			},
@@ -339,32 +337,32 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		{
 			name: "one full range position, two ranged positions, zero for one false",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
-				withLiquidityNetandTickIndex(defaultTick, -5, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-20)),
-				withLiquidityNetandTickIndex(defaultTick, 2, sdk.NewDec(40)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-40)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -5, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 5, osmomath.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, 2, osmomath.NewDec(40)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-40)),
 			},
 
 			poolId:    defaultPoolId,
 			tokenIn:   USDC,
-			boundTick: sdk.Int{},
+			boundTick: osmomath.Int{},
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
-					LiquidityNet: sdk.NewDec(40),
+					LiquidityNet: osmomath.NewDec(40),
 					TickIndex:    2,
 				},
 				{
-					LiquidityNet: sdk.NewDec(-20),
+					LiquidityNet: osmomath.NewDec(-20),
 					TickIndex:    5,
 				},
 				{
-					LiquidityNet: sdk.NewDec(-40),
+					LiquidityNet: osmomath.NewDec(-40),
 					TickIndex:    10,
 				},
 				{
-					LiquidityNet: sdk.NewDec(-10),
+					LiquidityNet: osmomath.NewDec(-10),
 					TickIndex:    DefaultMaxTick,
 				},
 			},
@@ -372,21 +370,21 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		{
 			name: "current pool tick == start tick, zero for one",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
 			},
 
 			tokenIn:         ETH,
 			currentPoolTick: 10,
-			startTick:       sdk.NewInt(10),
-			boundTick:       sdk.NewInt(-15),
+			startTick:       osmomath.NewInt(10),
+			boundTick:       osmomath.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
-					LiquidityNet: sdk.NewDec(-20),
+					LiquidityNet: osmomath.NewDec(-20),
 					TickIndex:    10,
 				},
 				{
-					LiquidityNet: sdk.NewDec(20),
+					LiquidityNet: osmomath.NewDec(20),
 					TickIndex:    -10,
 				},
 			},
@@ -394,23 +392,23 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		{
 			name: "current pool tick != start tick, zero for one",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
 			},
 
 			tokenIn:         ETH,
 			currentPoolTick: 21,
-			startTick:       sdk.NewInt(10),
-			boundTick:       sdk.NewInt(-15),
+			startTick:       osmomath.NewInt(10),
+			boundTick:       osmomath.NewInt(-15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
 
-					LiquidityNet: sdk.NewDec(-20),
+					LiquidityNet: osmomath.NewDec(-20),
 					TickIndex:    10,
 				},
 				{
 
-					LiquidityNet: sdk.NewDec(20),
+					LiquidityNet: osmomath.NewDec(20),
 					TickIndex:    -10,
 				},
 			},
@@ -418,17 +416,17 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		{
 			name: "current pool tick == start tick, one for zero",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
 			},
 
 			tokenIn:         USDC,
 			currentPoolTick: 5,
-			startTick:       sdk.NewInt(5),
-			boundTick:       sdk.NewInt(15),
+			startTick:       osmomath.NewInt(5),
+			boundTick:       osmomath.NewInt(15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
-					LiquidityNet: sdk.NewDec(-20),
+					LiquidityNet: osmomath.NewDec(-20),
 					TickIndex:    10,
 				},
 			},
@@ -436,17 +434,17 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		{
 			name: "current pool tick != start tick, one for zero",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
 			},
 
 			tokenIn:         USDC,
 			currentPoolTick: -50,
-			startTick:       sdk.NewInt(5),
-			boundTick:       sdk.NewInt(15),
+			startTick:       osmomath.NewInt(5),
+			boundTick:       osmomath.NewInt(15),
 			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
 				{
-					LiquidityNet: sdk.NewDec(-20),
+					LiquidityNet: osmomath.NewDec(-20),
 					TickIndex:    10,
 				},
 			},
@@ -456,89 +454,89 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		{
 			name: "error: invalid pool id",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
 			},
 
 			poolId:        5,
 			tokenIn:       "invalid_token",
-			boundTick:     sdk.NewInt(-5),
+			boundTick:     osmomath.NewInt(-5),
 			expectedError: true,
 		},
 		{
 			name: "error: invalid token in",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
 			},
 
 			poolId:        defaultPoolId,
 			tokenIn:       "invalid_token",
-			boundTick:     sdk.NewInt(-5),
+			boundTick:     osmomath.NewInt(-5),
 			expectedError: true,
 		},
 		{
 			name: "error: wrong direction of bound ticks",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
-				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
 			},
 
 			poolId:        defaultPoolId,
 			tokenIn:       USDC,
-			boundTick:     sdk.NewInt(-5),
+			boundTick:     osmomath.NewInt(-5),
 			expectedError: true,
 		},
 		{
 			name: "error: bound tick is greater than max tick",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
 			},
 
 			poolId:        defaultPoolId,
 			tokenIn:       USDC,
-			boundTick:     sdk.NewInt(DefaultMaxTick + 1),
+			boundTick:     osmomath.NewInt(DefaultMaxTick + 1),
 			expectedError: true,
 		},
 		{
 			name: "error: bound tick is greater than min tick",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
-				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
 			},
 
 			poolId:        defaultPoolId,
 			tokenIn:       ETH,
-			boundTick:     sdk.NewInt(DefaultMinCurrentTick - 1),
+			boundTick:     osmomath.NewInt(DefaultMinCurrentTick - 1),
 			expectedError: true,
 		},
 		{
 			name: "start tick is in invalid range relative to current pool tick, zero for one",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
 			},
 
 			tokenIn:         ETH,
 			currentPoolTick: 10,
-			startTick:       sdk.NewInt(21),
-			boundTick:       sdk.NewInt(-15),
+			startTick:       osmomath.NewInt(21),
+			boundTick:       osmomath.NewInt(-15),
 			expectedError:   true,
 		},
 		{
 			name: "start tick is in invalid range relative to current pool tick, one for zero",
 			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
 			},
 
 			tokenIn:         USDC,
 			currentPoolTick: 5,
-			startTick:       sdk.NewInt(-50),
-			boundTick:       sdk.NewInt(15),
+			startTick:       osmomath.NewInt(-50),
+			boundTick:       osmomath.NewInt(15),
 			expectedError:   true,
 		},
 	}
@@ -561,12 +559,12 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Force initialize current sqrt price to 1.
 			// Normally, initialized during position creation.
 			// We only initialize ticks in this test for simplicity.
-			curPrice := sdk.OneDec()
+			curPrice := osmomath.OneDec()
 			// TODO: consider adding tests for GetTickLiquidityNetInDirection
 			// with tick spacing > 1, requiring price to tick conversion with rounding.
-			curTick, err := math.CalculateSqrtPriceToTick(osmomath.BigDecFromSDKDec(osmomath.MustMonotonicSqrt(curPrice)))
+			curTick, err := math.CalculateSqrtPriceToTick(osmomath.BigDecFromDec(osmomath.MustMonotonicSqrt(curPrice)))
 			s.Require().NoError(err)
-			var curSqrtPrice osmomath.BigDec = osmomath.OneDec()
+			var curSqrtPrice osmomath.BigDec = osmomath.OneBigDec()
 			if test.currentPoolTick > 0 {
 				_, sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
 				s.Require().NoError(err)

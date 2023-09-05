@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
@@ -366,11 +366,11 @@ func (s *KeeperTestSuite) TestIsPoolIncentivized() {
 			s.PrepareConcentratedPool()
 
 			s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, poolincentivestypes.DistrInfo{
-				TotalWeight: sdk.NewInt(100),
+				TotalWeight: osmomath.NewInt(100),
 				Records: []poolincentivestypes.DistrRecord{
 					{
 						GaugeId: tc.poolId,
-						Weight:  sdk.NewInt(50),
+						Weight:  osmomath.NewInt(50),
 					},
 				},
 			})

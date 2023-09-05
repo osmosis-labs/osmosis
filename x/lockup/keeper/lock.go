@@ -13,6 +13,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -40,7 +41,7 @@ func (k Keeper) GetModuleLockedCoins(ctx sdk.Context) sdk.Coins {
 
 // GetPeriodLocksByDuration returns the total amount of query.Denom tokens locked for longer than
 // query.Duration.
-func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCondition) sdk.Int {
+func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCondition) osmomath.Int {
 	beginKey := accumulationKey(query.Duration)
 	return k.accumulationStore(ctx, query.Denom).SubsetAccumulation(beginKey, nil)
 }
@@ -299,7 +300,7 @@ func (k Keeper) RebuildAccumulationStoreForDenom(ctx sdk.Context, denom string) 
 	prefix := accumulationStorePrefix(denom)
 	k.clearKeysByPrefix(ctx, prefix)
 	locks := k.GetLocksDenom(ctx, denom)
-	mapDurationToAmount := make(map[time.Duration]sdk.Int)
+	mapDurationToAmount := make(map[time.Duration]osmomath.Int)
 	for _, lock := range locks {
 		if v, ok := mapDurationToAmount[lock.Duration]; ok {
 			mapDurationToAmount[lock.Duration] = v.Add(lock.Coins.AmountOf(denom))
@@ -318,7 +319,7 @@ func (k Keeper) RebuildSuperfluidAccumulationStoresForDenom(ctx sdk.Context, den
 	superfluidStorePrefix = superfluidStorePrefix[0 : len(superfluidStorePrefix)-1]
 	k.clearKeysByPrefix(ctx, superfluidStorePrefix)
 
-	accumulationStoreEntries := make(map[string]map[time.Duration]sdk.Int)
+	accumulationStoreEntries := make(map[string]map[time.Duration]osmomath.Int)
 	locks := k.GetLocksDenom(ctx, denom)
 	for _, lock := range locks {
 		synthLock, found, err := k.GetSyntheticLockupByUnderlyingLockId(ctx, lock.ID)
@@ -326,11 +327,11 @@ func (k Keeper) RebuildSuperfluidAccumulationStoresForDenom(ctx sdk.Context, den
 			continue
 		}
 
-		var curDurationMap map[time.Duration]sdk.Int
+		var curDurationMap map[time.Duration]osmomath.Int
 		if durationMap, ok := accumulationStoreEntries[synthLock.SynthDenom]; ok {
 			curDurationMap = durationMap
 		} else {
-			curDurationMap = make(map[time.Duration]sdk.Int)
+			curDurationMap = make(map[time.Duration]osmomath.Int)
 		}
 		newAmt := lock.Coins.AmountOf(denom)
 		if curAmt, ok := curDurationMap[synthLock.Duration]; ok {
@@ -613,7 +614,7 @@ func (k Keeper) InitializeAllLocks(ctx sdk.Context, locks []types.PeriodLock) er
 	// We accumulate the accumulation store entries separately,
 	// to avoid hitting the myriad of slowdowns in the SDK iterator creation process.
 	// We then save these once to the accumulation store at the end.
-	accumulationStoreEntries := make(map[string]map[time.Duration]sdk.Int)
+	accumulationStoreEntries := make(map[string]map[time.Duration]osmomath.Int)
 	denoms := []string{}
 	for i, lock := range locks {
 		if i%25000 == 0 {
@@ -628,7 +629,7 @@ func (k Keeper) InitializeAllLocks(ctx sdk.Context, locks []types.PeriodLock) er
 		// Add to the accumlation store cache
 		for _, coin := range lock.Coins {
 			// update or create the new map from duration -> Int for this denom.
-			var curDurationMap map[time.Duration]sdk.Int
+			var curDurationMap map[time.Duration]osmomath.Int
 			if durationMap, ok := accumulationStoreEntries[coin.Denom]; ok {
 				curDurationMap = durationMap
 				// update or create new amount in the duration map
@@ -639,7 +640,7 @@ func (k Keeper) InitializeAllLocks(ctx sdk.Context, locks []types.PeriodLock) er
 				curDurationMap[lock.Duration] = newAmt
 			} else {
 				denoms = append(denoms, coin.Denom)
-				curDurationMap = map[time.Duration]sdk.Int{lock.Duration: coin.Amount}
+				curDurationMap = map[time.Duration]osmomath.Int{lock.Duration: coin.Amount}
 			}
 			accumulationStoreEntries[coin.Denom] = curDurationMap
 		}
@@ -655,7 +656,7 @@ func (k Keeper) InitializeAllLocks(ctx sdk.Context, locks []types.PeriodLock) er
 	return nil
 }
 
-func (k Keeper) writeDurationValuesToAccumTree(ctx sdk.Context, denom string, durationValueMap map[time.Duration]sdk.Int) {
+func (k Keeper) writeDurationValuesToAccumTree(ctx sdk.Context, denom string, durationValueMap map[time.Duration]osmomath.Int) {
 	durations := make([]time.Duration, 0, len(durationValueMap))
 	for duration := range durationValueMap {
 		durations = append(durations, duration)
@@ -677,7 +678,7 @@ func (k Keeper) InitializeAllSyntheticLocks(ctx sdk.Context, syntheticLocks []ty
 	// We accumulate the accumulation store entries separately,
 	// to avoid hitting the myriad of slowdowns in the SDK iterator creation process.
 	// We then save these once to the accumulation store at the end.
-	accumulationStoreEntries := make(map[string]map[time.Duration]sdk.Int)
+	accumulationStoreEntries := make(map[string]map[time.Duration]osmomath.Int)
 	denoms := []string{}
 	for i, synthLock := range syntheticLocks {
 		if i%25000 == 0 {
@@ -701,7 +702,7 @@ func (k Keeper) InitializeAllSyntheticLocks(ctx sdk.Context, syntheticLocks []ty
 			return err
 		}
 
-		var curDurationMap map[time.Duration]sdk.Int
+		var curDurationMap map[time.Duration]osmomath.Int
 		if durationMap, ok := accumulationStoreEntries[synthLock.SynthDenom]; ok {
 			curDurationMap = durationMap
 			newAmt := coin.Amount
@@ -711,7 +712,7 @@ func (k Keeper) InitializeAllSyntheticLocks(ctx sdk.Context, syntheticLocks []ty
 			curDurationMap[synthLock.Duration] = newAmt
 		} else {
 			denoms = append(denoms, synthLock.SynthDenom)
-			curDurationMap = map[time.Duration]sdk.Int{synthLock.Duration: coin.Amount}
+			curDurationMap = map[time.Duration]osmomath.Int{synthLock.Duration: coin.Amount}
 		}
 		accumulationStoreEntries[synthLock.SynthDenom] = curDurationMap
 	}

@@ -26,7 +26,7 @@ const (
 type swapAmountsMismatchErr struct {
 	swapInFunded       sdk.Coin
 	amountInSwapResult sdk.Coin
-	diff               sdk.Int
+	diff               osmomath.Int
 }
 
 func (e swapAmountsMismatchErr) Error() string {
@@ -35,7 +35,7 @@ func (e swapAmountsMismatchErr) Error() string {
 
 type positionAndLiquidity struct {
 	positionId   uint64
-	liquidity    sdk.Dec
+	liquidity    osmomath.Dec
 	accountIndex int
 }
 
@@ -204,7 +204,7 @@ func (s *KeeperTestSuite) swapNearNextTickBoundary(r *rand.Rand, pool types.Conc
 func (s *KeeperTestSuite) swapNearInitializedTickBoundary(r *rand.Rand, pool types.ConcentratedPoolExtension, zfo bool) (didSwap bool, fatalErr bool) {
 	fmt.Println("swap type: near initialized tick boundary")
 
-	ss := swapstrategy.New(zfo, osmomath.ZeroDec(), s.App.GetKey(types.ModuleName), sdk.ZeroDec())
+	ss := swapstrategy.New(zfo, osmomath.ZeroBigDec(), s.App.GetKey(types.ModuleName), osmomath.ZeroDec())
 
 	iter := ss.InitializeNextTickIterator(s.Ctx, pool.GetId(), pool.GetCurrentTick())
 	defer iter.Close()
@@ -238,14 +238,14 @@ func (s *KeeperTestSuite) swapNearTickBoundary(r *rand.Rand, pool types.Concentr
 }
 
 // change tick amount to be at, above or below the target amount
-func tickAmtChange(r *rand.Rand, targetAmount sdk.Dec) sdk.Dec {
+func tickAmtChange(r *rand.Rand, targetAmount osmomath.Dec) osmomath.Dec {
 	changeType := r.Intn(3)
 
 	// Generate a random percentage under 0.1%
-	randChangePercent := sdk.NewDec(r.Int63n(1)).QuoInt64(1000)
+	randChangePercent := osmomath.NewDec(r.Int63n(1)).QuoInt64(1000)
 	change := targetAmount.Mul(randChangePercent)
 
-	change = sdk.MaxDec(sdk.NewDec(1), randChangePercent)
+	change = sdk.MaxDec(osmomath.NewDec(1), randChangePercent)
 
 	switch changeType {
 	case 0:
@@ -259,7 +259,7 @@ func tickAmtChange(r *rand.Rand, targetAmount sdk.Dec) sdk.Dec {
 		return targetAmount.Add(change.TruncateDec())
 	}
 
-	if targetAmount.LTE(sdk.OneDec()) {
+	if targetAmount.LTE(osmomath.OneDec()) {
 		fmt.Printf("tick amt change type: no change, orig: %s \n", targetAmount)
 		return targetAmount
 	}
@@ -274,11 +274,11 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	// Reason for adding one int:
 	// Seed 1688658883- causes an error in swap in given out due to rounding (acceptable). This is because we use
 	// token out from "swap out given in" as an input to "in given out". "in given out" rounds by one in pool's favor
-	s.FundAcc(s.TestAccs[0], sdk.NewCoins(swapInFunded).Add(sdk.NewCoin(swapInFunded.Denom, sdk.OneInt())))
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(swapInFunded).Add(sdk.NewCoin(swapInFunded.Denom, osmomath.OneInt())))
 	// // Execute swap
 	fmt.Printf("swap in: %s\n", swapInFunded)
 	cacheCtx, writeOutGivenIn := s.Ctx.CacheContext()
-	_, tokenOut, _, err := s.clk.SwapOutAmtGivenIn(cacheCtx, s.TestAccs[0], pool, swapInFunded, swapOutDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	_, tokenOut, _, err := s.clk.SwapOutAmtGivenIn(cacheCtx, s.TestAccs[0], pool, swapInFunded, swapOutDenom, pool.GetSpreadFactor(s.Ctx), osmomath.ZeroDec())
 	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
 		// it would error for a real user though. This is good though, since that user would just be burning funds.
@@ -297,7 +297,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 	// We expect the returned amountIn to be roughly equal to the original swapInFunded.
 	cacheCtx, _ = s.Ctx.CacheContext()
 	fmt.Printf("swap out: %s\n", tokenOut)
-	amountInSwapResult, _, _, err := s.clk.SwapInAmtGivenOut(cacheCtx, s.TestAccs[0], pool, tokenOut, swapInFunded.Denom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	amountInSwapResult, _, _, err := s.clk.SwapInAmtGivenOut(cacheCtx, s.TestAccs[0], pool, tokenOut, swapInFunded.Denom, pool.GetSpreadFactor(s.Ctx), osmomath.ZeroDec())
 	if errors.As(err, &types.InvalidAmountCalculatedError{}) {
 		// If the swap we're about to execute will not generate enough output, we skip the swap.
 		// it would error for a real user though. This is good though, since that user would just be burning funds.
@@ -315,14 +315,14 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 
 	errTolerance := osmomath.ErrTolerance{
 		// 2% tolerance
-		MultiplicativeTolerance: sdk.NewDecWithPrec(2, 2),
+		MultiplicativeTolerance: osmomath.NewDecWithPrec(2, 2),
 		// Expected amount in returned from swap "in given out" to be smaller
 		// than original amount in given to "out given in".
 		// Reason: rounding in pool's favor.
 		RoundingDir: osmomath.RoundDown,
 	}
 
-	result := errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(swapInFunded.Amount.ToDec()), osmomath.BigDecFromSDKDec(amountInSwapResult.Amount.ToDec()))
+	result := errTolerance.CompareBigDec(osmomath.BigDecFromDec(swapInFunded.Amount.ToLegacyDec()), osmomath.BigDecFromDec(amountInSwapResult.Amount.ToLegacyDec()))
 
 	if result != 0 {
 		// Note: did some investigations into why this happens.
@@ -476,8 +476,8 @@ func (s *KeeperTestSuite) addRandomPositonMinMaxOneSpacing(r *rand.Rand, poolId 
 }
 
 func (s *KeeperTestSuite) addRandomPositon(r *rand.Rand, poolId uint64, minTick, maxTick int64, tickSpacing int64) {
-	tokenDesired0 := sdk.NewCoin(ETH, sdk.NewInt(r.Int63n(maxAmountDeposited)))
-	tokenDesired1 := sdk.NewCoin(USDC, sdk.NewInt(r.Int63n(maxAmountDeposited)))
+	tokenDesired0 := sdk.NewCoin(ETH, osmomath.NewInt(r.Int63n(maxAmountDeposited)))
+	tokenDesired1 := sdk.NewCoin(USDC, osmomath.NewInt(r.Int63n(maxAmountDeposited)))
 	tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
 
 	accountIndex := r.Intn(len(s.TestAccs))
@@ -490,7 +490,7 @@ func (s *KeeperTestSuite) addRandomPositon(r *rand.Rand, poolId uint64, minTick,
 
 	fmt.Println("creating position: ", "accountName", "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1)
 
-	positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[accountIndex], tokensDesired, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
+	positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[accountIndex], tokensDesired, osmomath.ZeroInt(), osmomath.ZeroInt(), types.MinInitializedTick, types.MaxTick)
 	s.Require().NoError(err)
 	fmt.Printf("actually created: %s%s %s%s \n", positionData.Amount0, ETH, positionData.Amount1, USDC)
 
@@ -536,15 +536,15 @@ func (s *KeeperTestSuite) removeRandomPosition(r *rand.Rand) {
 }
 
 // returns multiplier of the liqudity to withdraw
-func (s *KeeperTestSuite) choosePartialOrFullWithdraw(r *rand.Rand) sdk.Dec {
-	multiplier := sdk.OneDec()
+func (s *KeeperTestSuite) choosePartialOrFullWithdraw(r *rand.Rand) osmomath.Dec {
+	multiplier := osmomath.OneDec()
 	if r.Intn(2) == 0 {
 		// full withdraw
 		return multiplier
 	}
 
 	// partial withdraw
-	multiplier = multiplier.Mul(sdk.NewDec(r.Int63n(100))).QuoInt64(100)
+	multiplier = multiplier.Mul(osmomath.NewDec(r.Int63n(100))).QuoInt64(100)
 
 	return multiplier
 }
@@ -569,6 +569,6 @@ func roundTickDownSpacing(tickIndex int64, tickSpacing int64) int64 {
 	return tickIndex
 }
 
-func randomIntAmount(r *rand.Rand) sdk.Int {
-	return sdk.NewInt(r.Int63n(maxAmountDeposited))
+func randomIntAmount(r *rand.Rand) osmomath.Int {
+	return osmomath.NewInt(r.Int63n(maxAmountDeposited))
 }

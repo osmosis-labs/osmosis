@@ -208,7 +208,7 @@ func (k Keeper) RouteExactAmountIn(
 	sender sdk.AccAddress,
 	routes []types.SwapAmountInRoute,
 	tokenIn sdk.Coin,
-	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
+	tokenOutMinAmount osmomath.Int) (tokenOutAmount osmomath.Int, err error) {
 }
 ```
 
@@ -246,9 +246,9 @@ type SwapI interface {
 		poolId gammtypes.PoolI,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
-		tokenOutMinAmount sdk.Int,
-		spreadFactor sdk.Dec,
-	) (sdk.Int, error)
+		tokenOutMinAmount osmomath.Int,
+		spreadFactor osmomath.Dec,
+	) (osmomath.Int, error)
 }
 ```
 

@@ -3,6 +3,7 @@ package v8
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
@@ -47,12 +48,12 @@ func ApplyProp222Change(ctx sdk.Context, poolincentiveskeeper *poolincentiveskee
 	//   weight: "3655248"
 	// _PLEASE_ double check these numbers, and double the check the proposals choice itself
 	records := []poolincentivestypes.DistrRecord{
-		{GaugeId: 1718, Weight: sdk.NewInt(9138119)},
-		{GaugeId: 1719, Weight: sdk.NewInt(5482871)},
-		{GaugeId: 1720, Weight: sdk.NewInt(3655247)},
-		{GaugeId: 2965, Weight: sdk.NewInt(9138119)},
-		{GaugeId: 2966, Weight: sdk.NewInt(5482872)},
-		{GaugeId: 2967, Weight: sdk.NewInt(3655248)},
+		{GaugeId: 1718, Weight: osmomath.NewInt(9138119)},
+		{GaugeId: 1719, Weight: osmomath.NewInt(5482871)},
+		{GaugeId: 1720, Weight: osmomath.NewInt(3655247)},
+		{GaugeId: 2965, Weight: osmomath.NewInt(9138119)},
+		{GaugeId: 2966, Weight: osmomath.NewInt(5482872)},
+		{GaugeId: 2967, Weight: osmomath.NewInt(3655248)},
 	}
 
 	ctx.Logger().Info("Applying proposal 222 update")
@@ -79,12 +80,12 @@ func ApplyProp223Change(ctx sdk.Context, poolincentiveskeeper *poolincentiveskee
 
 	// _PLEASE_ double check these numbers, and double the check the proposals choice itself
 	records := []poolincentivestypes.DistrRecord{
-		{GaugeId: 1721, Weight: sdk.NewInt(2831977)},
-		{GaugeId: 1722, Weight: sdk.NewInt(1699186)},
-		{GaugeId: 1723, Weight: sdk.NewInt(1132791)},
-		{GaugeId: 3383, Weight: sdk.NewInt(2831978)},
-		{GaugeId: 3384, Weight: sdk.NewInt(1699187)},
-		{GaugeId: 3385, Weight: sdk.NewInt(1132791)},
+		{GaugeId: 1721, Weight: osmomath.NewInt(2831977)},
+		{GaugeId: 1722, Weight: osmomath.NewInt(1699186)},
+		{GaugeId: 1723, Weight: osmomath.NewInt(1132791)},
+		{GaugeId: 3383, Weight: osmomath.NewInt(2831978)},
+		{GaugeId: 3384, Weight: osmomath.NewInt(1699187)},
+		{GaugeId: 3385, Weight: osmomath.NewInt(1132791)},
 	}
 
 	ctx.Logger().Info("Applying proposal 223 update")
@@ -110,12 +111,12 @@ func ApplyProp224Change(ctx sdk.Context, poolincentiveskeeper *poolincentiveskee
 	//   weight: "752464"
 	// _PLEASE_ double check these numbers, and double the check the proposals choice itself
 	records := []poolincentivestypes.DistrRecord{
-		{GaugeId: 1724, Weight: sdk.NewInt(1881159)},
-		{GaugeId: 1725, Weight: sdk.NewInt(1128695)},
-		{GaugeId: 1726, Weight: sdk.NewInt(752463)},
-		{GaugeId: 2949, Weight: sdk.NewInt(1881160)},
-		{GaugeId: 2950, Weight: sdk.NewInt(1128696)},
-		{GaugeId: 2951, Weight: sdk.NewInt(752464)},
+		{GaugeId: 1724, Weight: osmomath.NewInt(1881159)},
+		{GaugeId: 1725, Weight: osmomath.NewInt(1128695)},
+		{GaugeId: 1726, Weight: osmomath.NewInt(752463)},
+		{GaugeId: 2949, Weight: osmomath.NewInt(1881160)},
+		{GaugeId: 2950, Weight: osmomath.NewInt(1128696)},
+		{GaugeId: 2951, Weight: osmomath.NewInt(752464)},
 	}
 
 	ctx.Logger().Info("Applying proposal 224 update")

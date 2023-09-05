@@ -3,6 +3,7 @@ package v9
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	gammkeeper "github.com/osmosis-labs/osmosis/v19/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 )
@@ -23,7 +24,7 @@ func ExecuteProp214(ctx sdk.Context, gamm *gammkeeper.Keeper) {
 		panic(ok)
 	}
 
-	balancerPool.PoolParams.SwapFee = sdk.MustNewDecFromStr("0.002")
+	balancerPool.PoolParams.SwapFee = osmomath.MustNewDecFromStr("0.002")
 
 	// Kept as comments for recordkeeping. SetPool is now private:
 	// 		err = gamm.SetPool(ctx, balancerPool)

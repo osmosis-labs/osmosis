@@ -15,8 +15,8 @@ type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (suite *UpgradeTestSuite) SetupTest() {
-	suite.Setup()
+func (s *UpgradeTestSuite) SetupTest() {
+	s.Setup()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -30,7 +30,7 @@ const dummyUpgradeHeight = 5
 // automatically with this binary. The goal of this test is to test that the upgrade handler
 // does not panic upon upgrade.
 // Detailed state migration tests are placed within the twap keeper.
-func (suite *UpgradeTestSuite) TestPoolMigration() {
+func (s *UpgradeTestSuite) TestPoolMigration() {
 	testCases := []struct {
 		name         string
 		pre_upgrade  func() uint64
@@ -40,41 +40,41 @@ func (suite *UpgradeTestSuite) TestPoolMigration() {
 		{
 			"Test that the upgrade succeeds",
 			func() uint64 {
-				poolId := suite.PrepareBalancerPool()
-				poolDenoms, err := suite.App.GAMMKeeper.GetPoolDenoms(suite.Ctx, poolId)
-				suite.Require().NoError(err)
+				poolId := s.PrepareBalancerPool()
+				poolDenoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
+				s.Require().NoError(err)
 
-				_, err = suite.App.TwapKeeper.GetBeginBlockAccumulatorRecord(suite.Ctx, poolId, poolDenoms[0], poolDenoms[1])
-				suite.Require().NoError(err)
+				_, err = s.App.TwapKeeper.GetBeginBlockAccumulatorRecord(s.Ctx, poolId, poolDenoms[0], poolDenoms[1])
+				s.Require().NoError(err)
 				return poolId
 			},
 			func() {
-				suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
+				s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
 				plan := upgradetypes.Plan{Name: "v12", Height: dummyUpgradeHeight}
-				err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
-				suite.Require().NoError(err)
-				_, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
-				suite.Require().True(exists)
+				err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
+				s.Require().NoError(err)
+				_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+				s.Require().True(exists)
 
-				suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
-				suite.Require().NotPanics(func() {
+				s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
+				s.Require().NotPanics(func() {
 					beginBlockRequest := abci.RequestBeginBlock{}
-					suite.App.BeginBlocker(suite.Ctx, beginBlockRequest)
+					s.App.BeginBlocker(s.Ctx, beginBlockRequest)
 				})
 			},
 			func(poolId uint64) {
-				poolDenoms, err := suite.App.GAMMKeeper.GetPoolDenoms(suite.Ctx, poolId)
-				suite.Require().NoError(err)
+				poolDenoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
+				s.Require().NoError(err)
 
-				_, err = suite.App.TwapKeeper.GetBeginBlockAccumulatorRecord(suite.Ctx, poolId, poolDenoms[0], poolDenoms[1])
-				suite.Require().NoError(err)
+				_, err = s.App.TwapKeeper.GetBeginBlockAccumulatorRecord(s.Ctx, poolId, poolDenoms[0], poolDenoms[1])
+				s.Require().NoError(err)
 			},
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest() // reset
+		s.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			s.SetupTest() // reset
 
 			// creating pools before upgrade
 			poolId := tc.pre_upgrade()

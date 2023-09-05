@@ -90,7 +90,7 @@ If the user does not have an existing validator set use delegators' current stak
 - Check if the user has a validator-set and if so, get the users validator-set from `KVStore`. 
 - Safety Checks 
   - check if the user has enough funds to delegate.
-  - check overflow/underflow since `Delegate` method takes `sdk.Int` as tokenAmount.
+  - check overflow/underflow since `Delegate` method takes `osmomath.Int` as tokenAmount.
 - use the [Delegate](https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/keeper/delegation.go#L614) method from the cosmos-sdk to handle delegation. 
 
 ### MsgUndelegateFromValidatorSet
@@ -119,7 +119,7 @@ The given amount will be divided based on the weights distributed to the validat
 - The unbonding logic will be follow the `UnDelegate` logic from the cosmos-sdk. 
 - Safety Checks 
   - check that the amount of funds to undelegate is <= to the funds the user has in the address.
-  - `UnDelegate` method takes `sdk.Dec` as tokenAmount, so check if overflow/underflow case is relevant.
+  - `UnDelegate` method takes `osmomath.Dec` as tokenAmount, so check if overflow/underflow case is relevant.
 - use the [UnDelegate](https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/keeper/delegation.go#L614) method from the cosmos-sdk to handle delegation. 
 
 ### MsgWithdrawDelegationRewards

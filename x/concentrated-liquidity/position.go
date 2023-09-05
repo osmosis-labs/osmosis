@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
@@ -27,15 +28,15 @@ var emptyOptions = &accum.Options{}
 func (k Keeper) getOrInitPosition(
 	ctx sdk.Context,
 	positionId uint64,
-) (sdk.Dec, error) {
+) (osmomath.Dec, error) {
 	if k.hasPosition(ctx, positionId) {
 		positionLiquidity, err := k.GetPositionLiquidity(ctx, positionId)
 		if err != nil {
-			return sdk.Dec{}, err
+			return osmomath.Dec{}, err
 		}
 		return positionLiquidity, nil
 	}
-	return sdk.ZeroDec(), nil
+	return osmomath.ZeroDec(), nil
 }
 
 // initOrUpdatePosition checks to see if the specified owner has an existing position at the given tick range.
@@ -49,7 +50,7 @@ func (k Keeper) initOrUpdatePosition(
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
-	liquidityDelta sdk.Dec,
+	liquidityDelta osmomath.Dec,
 	joinTime time.Time,
 	positionId uint64,
 ) (err error) {
@@ -141,10 +142,10 @@ func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, prefix []byte, poolI
 }
 
 // GetPositionLiquidity checks if the provided positionId exists. Returns position liquidity if found. Error otherwise.
-func (k Keeper) GetPositionLiquidity(ctx sdk.Context, positionId uint64) (sdk.Dec, error) {
+func (k Keeper) GetPositionLiquidity(ctx sdk.Context, positionId uint64) (osmomath.Dec, error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	return position.Liquidity, nil
@@ -288,7 +289,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
 	joinTime time.Time,
-	liquidity sdk.Dec,
+	liquidity osmomath.Dec,
 	positionId uint64,
 	underlyingLockId uint64,
 ) error {
@@ -404,15 +405,15 @@ func (k Keeper) CreateFullRangePosition(ctx sdk.Context, poolId uint64, owner sd
 	}
 
 	// Defense in depth, ensure coins provided match the pool's token denominations.
-	if coins.AmountOf(concentratedPool.GetToken0()).LTE(sdk.ZeroInt()) {
+	if coins.AmountOf(concentratedPool.GetToken0()).LTE(osmomath.ZeroInt()) {
 		return types.CreateFullRangePositionData{}, types.Amount0IsNegativeError{Amount0: coins.AmountOf(concentratedPool.GetToken0())}
 	}
-	if coins.AmountOf(concentratedPool.GetToken1()).LTE(sdk.ZeroInt()) {
+	if coins.AmountOf(concentratedPool.GetToken1()).LTE(osmomath.ZeroInt()) {
 		return types.CreateFullRangePositionData{}, types.Amount1IsNegativeError{Amount1: coins.AmountOf(concentratedPool.GetToken1())}
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionData, err := k.CreatePosition(ctx, concentratedPool.GetId(), owner, coins, sdk.ZeroInt(), sdk.ZeroInt(), types.MinInitializedTick, types.MaxTick)
+	positionData, err := k.CreatePosition(ctx, concentratedPool.GetId(), owner, coins, osmomath.ZeroInt(), osmomath.ZeroInt(), types.MinInitializedTick, types.MaxTick)
 	if err != nil {
 		return types.CreateFullRangePositionData{}, err
 	}
@@ -509,7 +510,7 @@ func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position model.Posit
 	token1 := pool.GetToken1()
 
 	if position.Liquidity.IsZero() {
-		return sdk.NewCoin(token0, sdk.ZeroInt()), sdk.NewCoin(token1, sdk.ZeroInt()), nil
+		return sdk.NewCoin(token0, osmomath.ZeroInt()), sdk.NewCoin(token1, osmomath.ZeroInt()), nil
 	}
 
 	// Calculate the amount of underlying assets in the position
@@ -631,18 +632,18 @@ func (k Keeper) positionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positi
 // Returns error if:
 // - fails to retrieve data from the store.
 // - there is no full range liquidity in the pool.
-func (k Keeper) GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {
+func (k Keeper) GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (osmomath.Dec, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolIdLiquidityKey := types.KeyFullRangeLiquidityPrefix(poolId)
 	currentTotalFullRangeLiquidity, err := osmoutils.GetDec(store, poolIdLiquidityKey)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 	return currentTotalFullRangeLiquidity, nil
 }
 
 // updateFullRangeLiquidityInPool updates the total liquidity store that is currently in the full range of the pool.
-func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, liquidity sdk.Dec) error {
+func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, liquidity osmomath.Dec) error {
 	store := ctx.KVStore(k.storeKey)
 	// Get previous total liquidity.
 	poolIdLiquidityKey := types.KeyFullRangeLiquidityPrefix(poolId)
@@ -654,7 +655,7 @@ func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 	currentTotalFullRangeLiquidity := currentTotalFullRangeLiquidityDecProto.Dec
 	// If position not found error, then we are creating the first full range liquidity position for a pool.
 	if !found {
-		currentTotalFullRangeLiquidity = sdk.ZeroDec()
+		currentTotalFullRangeLiquidity = osmomath.ZeroDec()
 	}
 
 	// Add the liquidity of the new position to the total liquidity.

@@ -1,8 +1,9 @@
 use crate::helpers::*;
 use crate::state::{
-    ChainPFM, CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_PFM_MAP, CHAIN_TO_BECH32_PREFIX_MAP,
-    CHAIN_TO_BECH32_PREFIX_REVERSE_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
-    CONTRACT_ALIAS_MAP, DENOM_ALIAS_MAP, DENOM_ALIAS_REVERSE_MAP, GLOBAL_ADMIN_MAP,
+    ChainPFM, Config, CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_PFM_MAP,
+    CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_BECH32_PREFIX_REVERSE_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP,
+    CHANNEL_ON_CHAIN_CHAIN_MAP, CONFIG, CONTRACT_ALIAS_MAP, DENOM_ALIAS_MAP,
+    DENOM_ALIAS_REVERSE_MAP, GLOBAL_ADMIN_MAP,
 };
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, BankMsg, DepsMut, Env, MessageInfo, Response};
@@ -47,6 +48,30 @@ pub struct DenomAliasInput {
     pub operation: FullOperation,
     pub alias: String,
     pub full_denom_path: String,
+}
+
+// Transfer ownership of this contract
+pub fn transfer_ownership(
+    deps: DepsMut,
+    sender: Addr,
+    new_owner: String,
+) -> Result<Response, ContractError> {
+    // only owner can transfer
+    if !is_owner(deps.as_ref(), &sender) {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let new_owner = deps.api.addr_validate(&new_owner)?;
+
+    CONFIG.update(
+        deps.storage,
+        |mut config| -> Result<Config, ContractError> {
+            config.owner = new_owner;
+            Ok(config)
+        },
+    )?;
+
+    Ok(Response::new().add_attribute("action", "transfer_ownership"))
 }
 
 pub fn propose_pfm(
@@ -1857,5 +1882,41 @@ mod tests {
 
         query_denom_path_for_alias(deps.as_ref(), "newalias1").unwrap_err();
         query_alias_for_denom_path(deps.as_ref(), path1).unwrap_err();
+    }
+
+    #[test]
+    fn transfer_ownership() {
+        let mut deps = mock_dependencies();
+
+        let owner = initialize_contract(deps.as_mut());
+        let owner_info = mock_info(owner.as_str(), &vec![] as &Vec<cosmwasm_std::Coin>);
+
+        let new_owner = "new_owner".to_string();
+        // The owner can transfer ownership
+        let msg = ExecuteMsg::TransferOwnership {
+            new_owner: new_owner.clone(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), owner_info, msg).unwrap();
+
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(new_owner, config.owner);
+    }
+
+    #[test]
+    fn transfer_ownership_unauthorized() {
+        let mut deps = mock_dependencies();
+
+        let owner = initialize_contract(deps.as_mut());
+
+        let other_info = mock_info("other_sender", &vec![] as &Vec<cosmwasm_std::Coin>);
+
+        // An unauthorized user cannot transfer ownership
+        let msg = ExecuteMsg::TransferOwnership {
+            new_owner: "new_owner".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), other_info, msg).unwrap_err();
+
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(owner, config.owner);
     }
 }

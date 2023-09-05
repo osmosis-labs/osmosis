@@ -33,11 +33,20 @@ pub enum ExecuteMsg {
         operations: Vec<execute::AuthorizedAddressInput>,
     },
 
+    // Transfer Ownership
+    TransferOwnership {
+        new_owner: String,
+    },
+
     // Add PFM to the registry
     #[serde(rename = "propose_pfm")]
-    ProposePFM { chain: String },
+    ProposePFM {
+        chain: String,
+    },
     #[serde(rename = "validate_pfm")]
-    ValidatePFM { chain: String },
+    ValidatePFM {
+        chain: String,
+    },
 
     UnwrapCoin {
         receiver: String,

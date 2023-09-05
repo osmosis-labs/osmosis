@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
@@ -43,7 +44,7 @@ func (k Keeper) GetSpreadRewardAccumulator(ctx sdk.Context, poolId uint64) (*acc
 // - fails to create a new position.
 // - fails to prepare the accumulator for update.
 // - fails to update the position's accumulator.
-func (k Keeper) initOrUpdatePositionSpreadRewardAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidityDelta sdk.Dec) error {
+func (k Keeper) initOrUpdatePositionSpreadRewardAccumulator(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidityDelta osmomath.Dec) error {
 	// Get the spread reward accumulator for the position's pool.
 	spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, poolId)
 	if err != nil {

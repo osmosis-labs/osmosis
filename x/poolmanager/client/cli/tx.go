@@ -21,6 +21,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
@@ -44,7 +45,7 @@ func NewTxCmd() *cobra.Command {
 
 func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn) {
 	return &osmocli.TxCliDesc{
-		Use:     "swap-exact-amount-in [token-in] [token-out-min-amount]",
+		Use:     "swap-exact-amount-in",
 		Short:   "swap exact amount in",
 		Example: "osmosisd tx poolmanager swap-exact-amount-in 2000000uosmo 1 --swap-route-pool-ids 5 --swap-route-denoms uion --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo",
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
@@ -57,7 +58,7 @@ func NewSwapExactAmountInCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn)
 func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOut) {
 	// Can't get rid of this parser without a break, because the args are out of order.
 	return &osmocli.TxCliDesc{
-		Use:              "swap-exact-amount-out [token-out] [token-in-max-amount]",
+		Use:              "swap-exact-amount-out",
 		Short:            "swap exact amount out",
 		Example:          "osmosisd tx poolmanager swap-exact-amount-out 100uion 1000000 --swap-route-pool-ids 1 --swap-route-denoms uosmo --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo",
 		NumArgs:          2,
@@ -68,7 +69,7 @@ func NewSwapExactAmountOutCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountOu
 
 func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteSwapExactAmountIn) {
 	return &osmocli.TxCliDesc{
-		Use:   "split-route-swap-exact-amount-in [token-in-denom] [token-out-min-amount] [flags]",
+		Use:   "split-route-swap-exact-amount-in",
 		Short: "split route swap exact amount in",
 		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-in uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
 		- routes.json
@@ -114,7 +115,7 @@ func NewSplitRouteSwapExactAmountIn() (*osmocli.TxCliDesc, *types.MsgSplitRouteS
 
 func NewSplitRouteSwapExactAmountOut() (*osmocli.TxCliDesc, *types.MsgSplitRouteSwapExactAmountOut) {
 	return &osmocli.TxCliDesc{
-		Use:   "split-route-swap-exact-amount-out [token-out-denom] [token-in-max-amount] [flags]",
+		Use:   "split-route-swap-exact-amount-out",
 		Short: "split route swap exact amount out",
 		Example: `osmosisd tx poolmanager split-route-swap-exact-amount-out uosmo 1 --routes-file="./routes.json" --from val --keyring-backend test -b=block --chain-id=localosmosis --fees 10000uosmo
 		- routes.json
@@ -178,7 +179,7 @@ func NewMsgNewSplitRouteSwapExactAmountOut(fs *flag.FlagSet) ([]types.SwapAmount
 	var splitRouteProto []types.SwapAmountOutSplitRoute
 	for _, route := range splitRouteJSONdata.Route {
 		protoRoute := types.SwapAmountOutSplitRoute{
-			TokenOutAmount: sdk.NewInt(route.TokenOutAmount),
+			TokenOutAmount: osmomath.NewInt(route.TokenOutAmount),
 		}
 		protoRoute.Pools = append(protoRoute.Pools, route.Pools...)
 		splitRouteProto = append(splitRouteProto, protoRoute)
@@ -207,7 +208,7 @@ func NewMsgNewSplitRouteSwapExactAmountIn(fs *flag.FlagSet) ([]types.SwapAmountI
 	var splitRouteProto []types.SwapAmountInSplitRoute
 	for _, route := range splitRouteJSONdata.Route {
 		protoRoute := types.SwapAmountInSplitRoute{
-			TokenInAmount: sdk.NewInt(route.TokenInAmount),
+			TokenInAmount: osmomath.NewInt(route.TokenInAmount),
 		}
 		protoRoute.Pools = append(protoRoute.Pools, route.Pools...)
 		splitRouteProto = append(splitRouteProto, protoRoute)
@@ -228,7 +229,7 @@ func NewBuildSwapExactAmountOutMsg(clientCtx client.Context, args []string, fs *
 		return nil, err
 	}
 
-	tokenInMaxAmount, ok := sdk.NewIntFromString(tokenInMaxAmountStr)
+	tokenInMaxAmount, ok := osmomath.NewIntFromString(tokenInMaxAmountStr)
 	if !ok {
 		return nil, errors.New("invalid token in max amount")
 	}
@@ -300,12 +301,12 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		return txf, nil, errors.New("deposit tokens and token weights should have same length")
 	}
 
-	spreadFactor, err := sdk.NewDecFromStr(pool.SwapFee)
+	spreadFactor, err := osmomath.NewDecFromStr(pool.SwapFee)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	exitFee, err := sdk.NewDecFromStr(pool.ExitFee)
+	exitFee, err := osmomath.NewDecFromStr(pool.ExitFee)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -391,12 +392,12 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 		return txf, nil, err
 	}
 
-	spreadFactor, err := sdk.NewDecFromStr(flags.SwapFee)
+	spreadFactor, err := osmomath.NewDecFromStr(flags.SwapFee)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	exitFee, err := sdk.NewDecFromStr(flags.ExitFee)
+	exitFee, err := osmomath.NewDecFromStr(flags.ExitFee)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -602,7 +603,7 @@ func ParseDenomPairTakerFee(arg string) ([]types.DenomPairTakerFee, error) {
 		denom1 := denomPairTakerFeeRecords[i+1]
 
 		takerFeeStr := denomPairTakerFeeRecords[i+2]
-		takerFee, err := sdk.NewDecFromStr(takerFeeStr)
+		takerFee, err := osmomath.NewDecFromStr(takerFeeStr)
 		if err != nil {
 			return nil, err
 		}

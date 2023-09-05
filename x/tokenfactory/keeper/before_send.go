@@ -91,7 +91,7 @@ func (h Hooks) BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount 
 func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = types.ErrTrackBeforeSendOutOfGas
+			err = errorsmod.Wrapf(types.ErrTrackBeforeSendOutOfGas, "%v", r)
 		}
 	}()
 

@@ -58,7 +58,7 @@ pub fn check_action_permission(
 pub fn is_owner(deps: Deps, sender: &Addr) -> bool {
     CONFIG
         .load(deps.storage)
-        .map(|config| &config.owner == sender)
+        .map(|config| config.owner == sender)
         .map_err(|_| false)
         .unwrap_or(false)
 }
@@ -66,7 +66,7 @@ pub fn is_owner(deps: Deps, sender: &Addr) -> bool {
 pub fn is_global_admin(deps: Deps, sender: &Addr) -> bool {
     GLOBAL_ADMIN_MAP
         .load(deps.storage, "osmosis")
-        .map(|global_admin| &global_admin == sender)
+        .map(|global_admin| global_admin == sender)
         .map_err(|_| false)
         .unwrap_or(false)
 }

@@ -11,6 +11,7 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -89,7 +90,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		return ack
 	}
 
-	amount, ok := sdk.NewIntFromString(data.GetAmount())
+	amount, ok := osmomath.NewIntFromString(data.GetAmount())
 	if !ok {
 		// This should never happen, as it should've been caught in the underlaying call to OnRecvPacket,
 		// but returning here for completeness

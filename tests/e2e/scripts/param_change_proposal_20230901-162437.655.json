@@ -1,0 +1,1 @@
+{"title":"Param Change","description":"Changing the DefaultTakerFee param","is_expedited":false,"changes":[{"subspace":"poolmanager","key":"DefaultTakerFee","value":"0.001500000000000000"}],"deposit":"625000000uosmo"}

@@ -160,8 +160,8 @@ Pools have the following parameters:
 
 |  Key                       | Type                        |
 |  --------------------------| ----------------------------|
-|  SpreadFactor                   | sdk.Dec                     |
-|  ExitFee                   | sdk.Dec                     |
+|  SpreadFactor                   | osmomath.Dec                     |
+|  ExitFee                   | osmomath.Dec                     |
 |  FutureGovernor            | \*FutureGovernor            |
 |  Weights                   | \*Weights                   |
 |  SmoothWeightChangeParams  | \*SmoothWeightChangeParams  |

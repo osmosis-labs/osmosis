@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 var (
@@ -38,9 +38,9 @@ func (e CodeIdNotWhitelistedError) Error() string {
 }
 
 type NegativeExcessiveTokenInAmountError struct {
-	TokenInMaxAmount       sdk.Int
-	TokenInRequiredAmount  sdk.Int
-	TokenInExcessiveAmount sdk.Int
+	TokenInMaxAmount       osmomath.Int
+	TokenInRequiredAmount  osmomath.Int
+	TokenInExcessiveAmount osmomath.Int
 }
 
 func (e NegativeExcessiveTokenInAmountError) Error() string {
