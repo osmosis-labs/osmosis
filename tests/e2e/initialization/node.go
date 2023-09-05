@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -312,6 +313,14 @@ func (n *internalNode) initNodeConfigs(persistentPeers []string) error {
 	valConfig.LogLevel = "info"
 	valConfig.P2P.PersistentPeers = strings.Join(persistentPeers, ",")
 	valConfig.Storage.DiscardABCIResponses = true
+
+	valConfig.Consensus.TimeoutPropose = time.Millisecond * 300
+	valConfig.Consensus.TimeoutProposeDelta = 0
+	valConfig.Consensus.TimeoutPrevote = 0
+	valConfig.Consensus.TimeoutPrevoteDelta = 0
+	valConfig.Consensus.TimeoutPrecommit = 0
+	valConfig.Consensus.TimeoutPrecommitDelta = 0
+	valConfig.Consensus.TimeoutCommit = 0
 
 	tmconfig.WriteConfigFile(tmCfgPath, valConfig)
 	return nil

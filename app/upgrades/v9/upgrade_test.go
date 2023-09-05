@@ -9,7 +9,7 @@ import (
 
 const dummyUpgradeHeight = 5
 
-func (suite *UpgradeTestSuite) TestUpgradePayments() {
+func (s *UpgradeTestSuite) TestUpgradePayments() {
 	testCases := []struct {
 		msg         string
 		pre_update  func()
@@ -21,22 +21,22 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 			"Test that upgrade does not panic",
 			func() {
 				// Create pool 1
-				suite.PrepareBalancerPool()
+				s.PrepareBalancerPool()
 			},
 			func() {
 				// run upgrade
 				// TODO: Refactor this all into a helper fn
-				suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
+				s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
 				plan := upgradetypes.Plan{Name: "v9", Height: dummyUpgradeHeight}
-				err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
-				suite.Require().NoError(err)
-				_, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
-				suite.Require().True(exists)
+				err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
+				s.Require().NoError(err)
+				_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+				s.Require().True(exists)
 
-				suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
-				suite.Require().NotPanics(func() {
+				s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
+				s.Require().NotPanics(func() {
 					beginBlockRequest := abci.RequestBeginBlock{}
-					suite.App.BeginBlocker(suite.Ctx, beginBlockRequest)
+					s.App.BeginBlocker(s.Ctx, beginBlockRequest)
 				})
 			},
 			func() {
@@ -46,8 +46,8 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest() // reset
+		s.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			s.SetupTest() // reset
 
 			tc.pre_update()
 			tc.update()

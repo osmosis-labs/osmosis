@@ -407,7 +407,6 @@ func (s *KeeperTestSuite) TestUserConcentratedSuperfluidPositionsBondedAndUnbond
 	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]interface{}{expectedUnbondingPositionIds, actualUnbondingPositionIds}))
 	s.Require().True(osmoutils.ContainsDuplicateDeepEqual([]interface{}{expectedUnbondingLockIds, actualUnbondingLockIds}))
 	s.Require().Equal(expectedUnbondingTotalSharesLocked, actualUnbondingTotalSharesLocked)
-
 }
 
 func (s *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {

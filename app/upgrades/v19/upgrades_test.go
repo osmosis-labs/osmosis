@@ -17,7 +17,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 
-	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 )
 
@@ -34,8 +33,8 @@ type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (suite *UpgradeTestSuite) SetupTest() {
-	suite.Setup()
+func (s *UpgradeTestSuite) SetupTest() {
+	s.Setup()
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -88,19 +87,6 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.Require().True(delegationBeforeV18Upgrade.Tokens.Equal(delegationAfterV19Upgrade.Tokens))
 }
 
-func (s *UpgradeTestSuite) setupNormalDelegation() sdk.ValAddress {
-	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
-	vanillaVal := s.SetupValidator(stakingtypes.Bonded)
-	val, found := s.App.StakingKeeper.GetValidator(s.Ctx, vanillaVal)
-	s.Require().True(found)
-	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(bondDenom, stakeAmt)))
-	shares, err := s.App.StakingKeeper.Delegate(s.Ctx, s.TestAccs[0], stakeAmt, stakingtypes.Unbonded, val, true)
-	s.Require().NoError(err)
-	s.Require().True(shares.TruncateInt().Equal(stakeAmt))
-
-	return vanillaVal
-}
-
 func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lockDenom string) {
 	// set up validator that would be used for superfluid staking
 	superfluidVal := s.SetupValidator(stakingtypes.Bonded)
@@ -115,7 +101,7 @@ func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lock
 	denom := gammtypes.GetPoolShareDenom(pool.GetId())
 	err := s.App.SuperfluidKeeper.AddNewSuperfluidAsset(s.Ctx, superfluidtypes.SuperfluidAsset{
 		Denom:     denom,
-		AssetType: types.SuperfluidAssetTypeLPShare,
+		AssetType: superfluidtypes.SuperfluidAssetTypeLPShare,
 	})
 	s.Require().NoError(err)
 
@@ -142,26 +128,26 @@ func (s *UpgradeTestSuite) setupSuperfluidDelegation() (val sdk.ValAddress, lock
 	return superfluidVal, denom
 }
 
-func (suite *UpgradeTestSuite) runv18Upgrade() {
-	suite.Ctx = suite.Ctx.WithBlockHeight(v18UpgradeHeight - 1)
+func (s *UpgradeTestSuite) runv18Upgrade() {
+	s.Ctx = s.Ctx.WithBlockHeight(v18UpgradeHeight - 1)
 	plan := upgradetypes.Plan{Name: "v18", Height: v18UpgradeHeight}
-	err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
-	suite.Require().NoError(err)
-	_, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
-	suite.Require().True(exists)
+	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
+	s.Require().NoError(err)
+	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().True(exists)
 
-	suite.Ctx = suite.Ctx.WithBlockHeight(v18UpgradeHeight)
+	s.Ctx = s.Ctx.WithBlockHeight(v18UpgradeHeight)
 }
 
-func (suite *UpgradeTestSuite) runv19Upgrade() {
-	suite.Ctx = suite.Ctx.WithBlockHeight(v19UpgradeHeight - 1)
+func (s *UpgradeTestSuite) runv19Upgrade() {
+	s.Ctx = s.Ctx.WithBlockHeight(v19UpgradeHeight - 1)
 	plan := upgradetypes.Plan{Name: "v19", Height: v19UpgradeHeight}
-	err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
-	suite.Require().NoError(err)
-	_, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
-	suite.Require().True(exists)
+	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
+	s.Require().NoError(err)
+	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().True(exists)
 
-	suite.Ctx = suite.Ctx.WithBlockHeight(v19UpgradeHeight)
+	s.Ctx = s.Ctx.WithBlockHeight(v19UpgradeHeight)
 }
 
 func stakingSyntheticDenom(denom, valAddr string) string {

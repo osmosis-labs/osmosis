@@ -13,24 +13,24 @@ type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (suite *UpgradeTestSuite) SetupTest() {
-	suite.Setup()
+func (s *UpgradeTestSuite) SetupTest() {
+	s.Setup()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(UpgradeTestSuite))
 }
 
-func (suite *UpgradeTestSuite) TestProp214() {
-	poolId := suite.PrepareBalancerPool()
-	v9.ExecuteProp214(suite.Ctx, suite.App.GAMMKeeper)
+func (s *UpgradeTestSuite) TestProp214() {
+	poolId := s.PrepareBalancerPool()
+	v9.ExecuteProp214(s.Ctx, s.App.GAMMKeeper)
 
-	_, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
-	suite.Require().NoError(err)
+	_, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
+	s.Require().NoError(err)
 
 	// Kept as comments for recordkeeping. Since SetPool is now private, the changes being tested for can no longer be made:
-	// 		spreadFactor := pool.GetSpreadFactor(suite.Ctx)
+	// 		spreadFactor := pool.GetSpreadFactor(s.Ctx)
 	//  	expectedSpreadFactor := osmomath.MustNewDecFromStr("0.002")
 	//
-	//  	suite.Require().Equal(expectedSpreadFactor, spreadFactor)
+	//  	s.Require().Equal(expectedSpreadFactor, spreadFactor)
 }

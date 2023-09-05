@@ -23,10 +23,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230830181116-75b4d5f6a4c2
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230830181116-75b4d5f6a4c2
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230830181116-75b4d5f6a4c2
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20230830181116-75b4d5f6a4c2
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230901175805-bab180bc078b
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230901175805-bab180bc078b
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230901175805-bab180bc078b
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20230901175805-bab180bc078b
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.1
@@ -59,6 +59,7 @@ require (
 	github.com/butuzov/mirror v1.1.0 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.1 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
+	github.com/cosmos/gogoproto v1.4.11 // indirect
 	github.com/cosmos/iavl v0.19.5 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
