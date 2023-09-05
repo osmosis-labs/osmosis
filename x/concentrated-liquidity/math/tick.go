@@ -35,13 +35,14 @@ func TickToSqrtPrice(tickIndex int64) (osmomath.BigDec, error) {
 		return osmomath.BigDec{}, err
 	}
 
-	// N.B. at launch we only supported price range
+	// N.B. at launch, we only supported price range
 	// of [tick(10^-12), tick(MaxSpotPrice)].
 	// To maintain backwards state-compatibility, we use the original
-	// math based on 18 precision decimal on the at launch tick range.
+	// math based on 18 precision decimal on the at the launch tick range.
 	if tickIndex >= types.MinInitializedTick {
 		// It is acceptable to truncate here as TickToPrice() function converts
-		// from osmomath.Dec to osmomath.BigDec before returning.
+		// from osmomath.Dec to osmomath.BigDec before returning specifically for this range.
+		// As a result, there is no data loss.
 		price := priceBigDec.Dec()
 
 		sqrtPrice, err := osmomath.MonotonicSqrt(price)
@@ -68,7 +69,12 @@ func TickToPrice(tickIndex int64) (osmomath.BigDec, error) {
 		return osmomath.OneBigDec(), nil
 	}
 
-	if tickIndex == -270000000 {
+	// N.B. We special case MinInitializedTickV2 and MinCurrentTickV2 since MinInitializedTickV2
+	// is the first one that requires taking 10 to the exponent of (-31 + -6) = -37
+	// Given BigDec's precision of 36, that cannot be supported.
+	// The fact that MinInitializedTickV2 and MinCurrentTickV2 translate to the same
+	// price is acceptable since MinCurrentTickV2 cannot be initialized.
+	if tickIndex == types.MinInitializedTickV2 || tickIndex == types.MinCurrentTickV2 {
 		return types.MinSpotPriceV2, nil
 	}
 
@@ -78,14 +84,6 @@ func TickToPrice(tickIndex int64) (osmomath.BigDec, error) {
 	}
 	if tickIndex > types.MaxTick {
 		return osmomath.BigDec{}, types.TickIndexMaximumError{MaxTick: types.MaxTick}
-	}
-	// N.B. We special case MinInitializedTickV2 and MinCurrentTickV2 since MinInitializedTickV2
-	// is the first one that requires taking 10 to the exponent of (-31 + -6) = -37
-	// Given BigDec's precision of 36, that cannot be supported.
-	// The fact that MinInitializedTickV2 and MinCurrentTickV2 translate to the same
-	// price is acceptable since MinCurrentTickV2 cannot be initialized.
-	if tickIndex == types.MinInitializedTickV2 || tickIndex == types.MinCurrentTickV2 {
-		return types.MinSpotPriceV2, nil
 	}
 
 	// Use floor division to determine what the geometricExponent is now (the delta from the starting exponentAtPriceOne)
@@ -110,8 +108,8 @@ func TickToPrice(tickIndex int64) (osmomath.BigDec, error) {
 
 	// Finally, we can calculate the price
 	// Note that to maintain backwards state-compatibility, we utilize the
-	// original math based on 18 precision decimal on the range of [tick(10^-12), tick(MaxSpotPrice)]
-	// For the newly extended range of [tick(MinSpotPriceV2), MinInitializedTick), we use the new math
+	// original math based on 18 precision decimal on the range of [MinInitializedTick, tick(MaxSpotPrice)]
+	// For the newly extended range of [MinInitializedTickV2, MinInitializedTick), we use the new math
 	// based on 36 precision decimal.
 	if tickIndex < types.MinInitializedTick {
 		price = powTenBigDec(geometricExponentDelta).Add(numAdditiveTicks.Mul(currentAdditiveIncrementInTicks))

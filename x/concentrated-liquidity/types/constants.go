@@ -11,9 +11,6 @@ const (
 
 	// Tick corresponding to the at launch min spot price of 10^-12.
 	MinInitializedTick, MaxTick int64 = -108000000, 342000000
-	// Tick corresponding to the extended min spot price of 10^-30.
-	MinInitializedTickV2 int64 = -270000000
-	MinCurrentTickV2     int64 = MinInitializedTickV2 - 1
 	// If we consume all liquidity and cross the min initialized tick,
 	// our current tick will equal to MinInitializedTick - 1 with zero liquidity.
 	// However, note that this tick cannot be crossed. If current tick
@@ -22,7 +19,10 @@ const (
 	// Note, that this behavior is different from MaxTick since our "active range"
 	// invariant is [lower tick, uppper tick). As a result, when we consume all lower
 	// tick liquiditty, we must cross it and get kicked out of it.
-	MinCurrentTick                int64 = MinInitializedTick - 1
+	MinCurrentTick int64 = MinInitializedTick - 1
+	// Tick corresponding to the extended min spot price of 10^-30.
+	MinInitializedTickV2          int64 = -270000000
+	MinCurrentTickV2              int64 = MinInitializedTickV2 - 1
 	ExponentAtPriceOne            int64 = -6
 	ConcentratedGasFeeForSwap           = 10_000
 	BaseGasFeeForNewIncentive           = 10_000
