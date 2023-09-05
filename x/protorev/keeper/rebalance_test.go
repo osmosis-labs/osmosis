@@ -8,7 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
-	protorevtypes "github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
@@ -366,7 +365,7 @@ func (s *KeeperTestSuite) TestFindMaxProfitRoute() {
 			// init the route
 			remainingPoolPoints := uint64(1000)
 			remainingBlockPoolPoints := uint64(1000)
-			route := protorevtypes.RouteMetaData{
+			route := keeper.RouteMetaData{
 				Route:      test.param.route,
 				PoolPoints: test.param.routePoolPoints,
 				StepSize:   osmomath.NewInt(1_000_000),
@@ -468,7 +467,7 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 
 	for _, test := range tests {
 		// Empty SwapToBackrun var to pass in as param
-		pool := protorevtypes.SwapToBackrun{}
+		pool := keeper.SwapToBackrun{}
 		txPoolPointsRemaining := uint64(100)
 		blockPoolPointsRemaining := uint64(100)
 
@@ -504,7 +503,6 @@ func (s *KeeperTestSuite) TestExecuteTrade() {
 			// Check the dev account was paid the correct amount
 			developerAccBalance := s.App.AppKeepers.BankKeeper.GetBalance(s.Ctx, devAccount, test.arbDenom)
 			s.Require().Equal(test.param.expectedProfit.MulRaw(types.ProfitSplitPhase1).QuoRaw(100), developerAccBalance.Amount)
-
 		} else {
 			s.Require().Error(err)
 		}
@@ -596,9 +594,9 @@ func (s *KeeperTestSuite) TestIterateRoutes() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			routes := make([]protorevtypes.RouteMetaData, len(test.params.routes))
+			routes := make([]keeper.RouteMetaData, len(test.params.routes))
 			for i, route := range test.params.routes {
-				routes[i] = protorevtypes.RouteMetaData{
+				routes[i] = keeper.RouteMetaData{
 					Route:      route,
 					PoolPoints: 0,
 					StepSize:   osmomath.NewInt(1_000_000),
