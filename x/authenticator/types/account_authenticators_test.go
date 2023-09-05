@@ -36,40 +36,40 @@ func (m MockAuthenticator) Type() string {
 var _ types.Authenticator = MockAuthenticator{}
 
 func TestInitializeAuthenticators(t *testing.T) {
-	types.ResetAuthenticators() // Reset the global state
+	am := types.NewAuthenticatorManager()
 	auth1 := MockAuthenticator{"type1"}
 	auth2 := MockAuthenticator{"type2"}
 
-	types.InitializeAuthenticators([]types.Authenticator{auth1, auth2})
+	am.InitializeAuthenticators([]types.Authenticator{auth1, auth2})
 
-	authenticators := types.GetRegisteredAuthenticators()
+	authenticators := am.GetRegisteredAuthenticators()
 	require.Equal(t, 2, len(authenticators))
 	require.Contains(t, authenticators, auth1)
 	require.Contains(t, authenticators, auth2)
 }
 
 func TestRegisterAuthenticator(t *testing.T) {
-	types.ResetAuthenticators() // Reset the global state
+	am := types.NewAuthenticatorManager()
 	auth3 := MockAuthenticator{"type3"}
-	types.RegisterAuthenticator(auth3)
-	require.True(t, types.IsAuthenticatorTypeRegistered("type3"))
+	am.RegisterAuthenticator(auth3)
+	require.True(t, am.IsAuthenticatorTypeRegistered("type3"))
 }
 
 func TestUnregisterAuthenticator(t *testing.T) {
-	types.ResetAuthenticators() // Reset the global state
+	am := types.NewAuthenticatorManager()
 	auth2 := MockAuthenticator{"type2"}
-	types.RegisterAuthenticator(auth2) // Register first to ensure it's there
-	require.True(t, types.IsAuthenticatorTypeRegistered("type2"))
-	types.UnregisterAuthenticator(auth2)
-	require.False(t, types.IsAuthenticatorTypeRegistered("type2"))
+	am.RegisterAuthenticator(auth2) // Register first to ensure it's there
+	require.True(t, am.IsAuthenticatorTypeRegistered("type2"))
+	am.UnregisterAuthenticator(auth2)
+	require.False(t, am.IsAuthenticatorTypeRegistered("type2"))
 }
 
 func TestGetRegisteredAuthenticators(t *testing.T) {
-	types.ResetAuthenticators() // Reset the global state
+	am := types.NewAuthenticatorManager()
 	expectedAuthTypes := []string{"type1", "type3"}
 	unexpectedAuthTypes := []string{"type2"}
 
-	authenticators := types.GetRegisteredAuthenticators()
+	authenticators := am.GetRegisteredAuthenticators()
 
 	for _, auth := range authenticators {
 		authType := auth.Type()
@@ -79,20 +79,20 @@ func TestGetRegisteredAuthenticators(t *testing.T) {
 }
 
 func TestAsAuthenticator(t *testing.T) {
-	types.ResetAuthenticators() // Reset the global state
+	am := types.NewAuthenticatorManager()
 
 	// Register mock authenticator
 	auth1 := MockAuthenticator{"type1"}
-	types.RegisterAuthenticator(auth1)
+	am.RegisterAuthenticator(auth1)
 
 	// Check if a registered authenticator type is recognized
 	accountAuth := types.AccountAuthenticator{Type: "type1"}
-	require.NotNil(t, accountAuth.AsAuthenticator(), "Expected a valid Authenticator for 'type1'")
-	require.Equal(t, "type1", accountAuth.AsAuthenticator().Type())
+	require.NotNil(t, accountAuth.AsAuthenticator(am), "Expected a valid Authenticator for 'type1'")
+	require.Equal(t, "type1", accountAuth.AsAuthenticator(am).Type())
 
 	// Check for an unregistered authenticator type
 	accountAuth = types.AccountAuthenticator{Type: "typeX"}
-	require.Nil(t, accountAuth.AsAuthenticator(), "Didn't expect a valid Authenticator for 'typeX'")
+	require.Nil(t, accountAuth.AsAuthenticator(am), "Didn't expect a valid Authenticator for 'typeX'")
 }
 
 // Second mock that always fails authentication
@@ -126,7 +126,6 @@ var _ types.Authenticator = MockAuthenticatorFail{}
 
 // Tests for the mocks behavior
 func TestMockAuthenticators(t *testing.T) {
-	types.ResetAuthenticators() // Reset the global state
 	// Create instances of our mocks
 	mockPass := MockAuthenticator{"type-pass"}
 	mockFail := MockAuthenticatorFail{"type-fail"}
