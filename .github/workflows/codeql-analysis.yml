@@ -2,7 +2,7 @@ name: "OsmoQL"
 
 on:
   pull_request:
-    types: [ready_for_review, labeled] # TODO: remove labeled
+    types: [ready_for_review]
     paths:
       - "**.go"
     branches: 
