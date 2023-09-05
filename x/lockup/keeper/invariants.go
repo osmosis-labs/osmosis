@@ -99,7 +99,6 @@ func LocksBalancesInvariant(keeper Keeper) sdk.Invariant {
 			for _, lock := range locksByDenom {
 				lockedAmount = lockedAmount.Add(lock.Coins.AmountOf(denom))
 			}
-
 			if !lockedAmount.Equal(coin.Amount) {
 				return sdk.FormatInvariant(types.ModuleName, "locks-amount-invariant",
 					fmt.Sprintf("\tlocks amount of %s does not fit actual module balance: %s != %s\n",
