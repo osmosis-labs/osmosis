@@ -48,7 +48,7 @@ var (
 	// precisionFactorSDK is used to adjust the scale of BigDec values to match the precision expected by sdk.Dec
 	precisionFactorSDK *big.Int
 	// precisionDiffFromSDKDec is a difference in precision between BigDec and sdk.Dec
-	precisionDiffFromSDKDec int
+	precisionDiffFromSDKDec int64
 
 	// log_2(e)
 	// From: https://www.wolframalpha.com/input?i=log_2%28e%29+with+37+digits
