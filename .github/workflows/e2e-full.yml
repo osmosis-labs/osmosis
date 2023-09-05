@@ -1,9 +1,8 @@
-name: E2E Merged Main
+name: E2E Full Daily Run
 
 on:
-  push:
-    branches:
-      - "main"
+  schedule:
+    - cron: "0 0 * * *"
   workflow_dispatch:
 
 env:
@@ -70,7 +69,7 @@ jobs:
           build-args: |
             BASE_IMG_TAG=debug
       - name: Test e2e and Upgrade
-        run: make test-e2e-ci-merge-main
+        run: make test-e2e-ci-scheduled
       - name: Dump docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2

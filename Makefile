@@ -372,17 +372,15 @@ test-sim-bench:
 # Utilizes Go cache.
 test-e2e: e2e-setup test-e2e-ci e2e-remove-resources
 
-# test-e2e-ci runs a majority of e2e tests, only skipping the ones that dont need to be run on every commit
+# test-e2e-ci runs a majority of e2e tests, only skipping the ones that are marked as scheduled tests
 # does not do any validation about the state of the Docker environment
 # As a result, avoid using this locally.
-test-e2e-ci-every-commit:
+test-e2e-ci:
 	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -p 4
 
-# test-e2e-ci-merge-main runs every e2e test available, and should only be run when a commit is merged into main
-# does not do any validation about the state of the Docker environment
-# As a result, avoid using this locally.
-test-e2e-ci-merge-main:
-	@VERSION=$(VERSION) OSMOSIS_E2E_LONG_TEST=True OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -p 4
+# test-e2e-ci-scheduled runs every e2e test available, and is only run on a scheduled basis
+test-e2e-ci-scheduled:
+	@VERSION=$(VERSION) OSMOSIS_E2E_SCHEDULED=True OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -p 4
 
 # test-e2e-debug runs a full e2e test suite but does
 # not attempt to delete Docker resources at the end.
