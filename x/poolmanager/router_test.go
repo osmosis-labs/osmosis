@@ -94,7 +94,6 @@ var (
 	bazAbcCoins    = sdk.NewCoins(abcCoin, bazCoin)
 	bazAbcPoolId   = fooAbcPoolId + 1
 	uosmoAbcCoins  = sdk.NewCoins(abcCoin, uosmoCoin)
-	uosmoAbcPoolId = bazAbcPoolId + 1
 
 	defaultValidPools = []poolSetup{
 		{
@@ -152,11 +151,7 @@ func (s *KeeperTestSuite) withTakerFees(pools []poolSetup, indicesToUpdate []uin
 
 	// Deep copy pools
 	copiedPools := make([]poolSetup, len(pools))
-	for i, pool := range pools {
-		copiedPools[i] = pool
-	}
-
-	// Update taker fees on copied pools
+	copy(copiedPools, pools)
 	for i, index := range indicesToUpdate {
 		copiedPools[index].takerFee = updatedFees[i]
 	}
@@ -1546,7 +1541,6 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(osmoFeeReduced
 			s.Require().NoError(err)
 
 			nextTokenIn = sdk.NewCoin(hop.TokenOutDenom, tokenOut)
-
 		}
 		return nextTokenIn
 	}
@@ -1955,7 +1949,7 @@ func (s *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSpreadF
 		firstEstimatePoolId = s.PrepareBasicStableswapPool()
 
 		secondEstimatePoolId = s.PrepareBasicStableswapPool()
-		return
+		return firstEstimatePoolId, secondEstimatePoolId
 	default:
 		// Prepare 4 pools,
 		// Two pools for calculating `MultihopSwapExactAmountOut`
@@ -1978,7 +1972,7 @@ func (s *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSpreadF
 			SwapFee: poolDefaultSpreadFactor,
 			ExitFee: osmomath.NewDec(0),
 		})
-		return
+		return firstEstimatePoolId, secondEstimatePoolId
 	}
 }
 
@@ -3051,7 +3045,7 @@ func (s *KeeperTestSuite) TestGetOsmoRoutedMultihopTotalSpreadFactor() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
+func (s *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 	tests := map[string]struct {
 		route                       []types.SwapAmountOutRoute
 		tokenOut                    sdk.Coin
@@ -3168,24 +3162,24 @@ func (suite *KeeperTestSuite) TestCreateMultihopExpectedSwapOuts() {
 	}
 
 	for name, tc := range tests {
-		suite.Run(name, func() {
-			suite.SetupTest()
+		s.Run(name, func() {
+			s.SetupTest()
 
-			suite.createBalancerPoolsFromCoins(tc.poolCoins)
+			s.createBalancerPoolsFromCoins(tc.poolCoins)
 
 			var actualSwapOuts []osmomath.Int
 			var err error
 
 			if !tc.sumOfSpreadFactors.IsNil() && !tc.cumulativeRouteSpreadFactor.IsNil() {
-				actualSwapOuts, err = suite.App.PoolManagerKeeper.CreateOsmoMultihopExpectedSwapOuts(suite.Ctx, tc.route, tc.tokenOut, tc.cumulativeRouteSpreadFactor, tc.sumOfSpreadFactors)
+				actualSwapOuts, err = s.App.PoolManagerKeeper.CreateOsmoMultihopExpectedSwapOuts(s.Ctx, tc.route, tc.tokenOut, tc.cumulativeRouteSpreadFactor, tc.sumOfSpreadFactors)
 			} else {
-				actualSwapOuts, err = suite.App.PoolManagerKeeper.CreateMultihopExpectedSwapOuts(suite.Ctx, tc.route, tc.tokenOut)
+				actualSwapOuts, err = s.App.PoolManagerKeeper.CreateMultihopExpectedSwapOuts(s.Ctx, tc.route, tc.tokenOut)
 			}
 			if tc.expectedError {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			} else {
-				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expectedSwapIns, actualSwapOuts)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedSwapIns, actualSwapOuts)
 			}
 		})
 	}
@@ -3618,7 +3612,8 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.stakingRewardAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(stakingAddrName))...))
 
 			// Run the afterEpochEnd hook from txfees directly
-			s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "day", 1)
+			err = s.App.TxFeesKeeper.AfterEpochEnd(s.Ctx, "day", 1)
+			s.Require().NoError(err)
 
 			// Store balances after hook
 			communityPoolBalancesPostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))

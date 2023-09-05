@@ -90,8 +90,8 @@ func TestDenomPairTakerFeeProposal_ValidateBasic(t *testing.T) {
 		return record
 	}
 
-	withInvalidRecord := func(record types.DenomPairTakerFee) types.DenomPairTakerFee {
-		record = types.DenomPairTakerFee{}
+	withInvalidRecord := func(record types.DenomPairTakerFee) types.DenomPairTakerFee { //nolint:staticcheck // this is inentionally malformed with an invalid record.
+		record = types.DenomPairTakerFee{} //nolint:staticcheck // this is inentionally malformed with an invalid record.
 		return record
 	}
 

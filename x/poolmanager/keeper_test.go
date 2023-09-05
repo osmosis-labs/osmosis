@@ -56,7 +56,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	skParams := s.App.StakingKeeper.GetParams(s.Ctx)
 	skParams.BondDenom = "uosmo"
 	s.App.StakingKeeper.SetParams(s.Ctx, skParams)
-	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "uosmo")
+	err := s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "uosmo")
+	s.Require().NoError(err)
 	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 	poolManagerParams.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo = "baz"
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
