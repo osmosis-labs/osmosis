@@ -95,7 +95,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	chainANode.SwapExactAmountIn(coinAIn, "1", fmt.Sprintf("%d", concentratedPool.GetId()), concentratedPool.GetToken1(), address1)
 
 	timeAfterSwap := chainANode.QueryLatestBlockTime()
-	chainA.WaitForNumHeights(1)
+	chainANode.WaitForNumHeights(1)
 	timeAfterSwapPlus1Height := chainANode.QueryLatestBlockTime()
 
 	s.T().Log("querying for the TWAP after swap")
@@ -110,7 +110,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	s.T().Log("removing first position (pool is drained)")
 	positions := chainANode.QueryConcentratedPositions(address1)
 	chainANode.WithdrawPosition(address1, positions[0].Position.Liquidity.String(), positions[0].Position.PositionId)
-	chainA.WaitForNumHeights(1)
+	chainANode.WaitForNumHeights(1)
 
 	s.T().Log("querying for the TWAP from after pool drained")
 	afterRemoveTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapPlus1Height)
@@ -121,7 +121,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	// Should be equal to 1 since the position contains equal amounts of both tokens.
 	s.T().Log("creating position")
 	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
-	chainA.WaitForNumHeights(1)
+	chainANode.WaitForNumHeights(1)
 	timeAfterSwapRemoveAndCreatePlus1Height := chainANode.QueryLatestBlockTime()
 	secondTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapRemoveAndCreatePlus1Height)
 	s.Require().NoError(err)
@@ -145,11 +145,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	chainB, chainBNode := s.getChainBCfgs()
 	var adminWalletAddr string
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go func() {
-		defer wg.Done()
+	enablePermissionlessCl := func() {
 		// Get the permisionless pool creation parameter.
 		isPermisionlessCreationEnabledStr := chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
 		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
@@ -169,10 +165,9 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 				s.TickSpacingUpdateProp()
 			})
 		}()
-	}()
+	}
 
-	go func() {
-		defer wg.Done()
+	changeProtorevAdminAndMaxPoolPoints := func() {
 		// Update the protorev admin address to a known wallet we can control
 		adminWalletAddr = chainBNode.CreateWalletAndFund("admin", []string{"4000000uosmo"}, chainB)
 		err := chainBNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainB)
@@ -180,13 +175,13 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 
 		// Update the weight of CL pools so that this test case is not back run by protorev.
 		chainBNode.SetMaxPoolPointsPerTx(7, adminWalletAddr)
-	}()
+	}
 	defer func() {
 		// Reset the maximum number of pool points
 		chainBNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
 	}()
 
-	wg.Wait()
+	runFuncsInParallelAndBlock([]func(){enablePermissionlessCl, changeProtorevAdminAndMaxPoolPoints})
 
 	// Create concentrated liquidity pool when permisionless pool creation is enabled.
 	poolID := chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, spreadFactor)
@@ -640,21 +635,12 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Assert that positions, which were not included in swaps, were not affected
 
 	// Address3 Position1: [-160000; -20000]
-	addr3BalancesBefore = s.addrBalance(chainBNode, address3)
-	chainBNode.CollectSpreadRewards(address3, fmt.Sprint(positionsAddress3[0].Position.PositionId))
-	addr3BalancesAfter = s.addrBalance(chainBNode, address3)
-
-	// Assert that balances did not change for any token
-	s.assertBalancesInvariants(addr3BalancesBefore, addr3BalancesAfter, true, true)
+	assertUserThree := func() { s.ensureZeroRewardSpreads(chainBNode, address3, positionsAddress3[0].Position.PositionId) }
 
 	// Address2's only position: [220000; 342000]
-	addr2BalancesBefore := s.addrBalance(chainBNode, address2)
-	chainBNode.CollectSpreadRewards(address2, fmt.Sprint(positionsAddress2[0].Position.PositionId))
-	addr2BalancesAfter := s.addrBalance(chainBNode, address2)
+	assertUserTwo := func() { s.ensureZeroRewardSpreads(chainBNode, address2, positionsAddress2[0].Position.PositionId) }
 
-	// Assert the balances did not change for every token
-	s.assertBalancesInvariants(addr2BalancesBefore, addr2BalancesAfter, true, true)
-
+	runFuncsInParallelAndBlock([]func(){assertUserThree, assertUserTwo})
 	// Withdraw Position
 
 	defaultLiquidityRemoval := "1000"
@@ -791,6 +777,15 @@ func (s *IntegrationTestSuite) assertBalancesInvariants(balancesBefore, balances
 	if assertUosmoBalanceIsConstant {
 		s.Require().True(balancesAfter.AmountOf("uosmo").Equal(balancesBefore.AmountOf("uosmo")))
 	}
+}
+
+func (s *IntegrationTestSuite) ensureZeroRewardSpreads(node *chain.NodeConfig, addr string, positionId uint64) {
+	addr2BalancesBefore := s.addrBalance(node, addr)
+	node.CollectSpreadRewards(addr, fmt.Sprint(positionId))
+	addr2BalancesAfter := s.addrBalance(node, addr)
+
+	// Assert the balances did not change for every token
+	s.assertBalancesInvariants(addr2BalancesBefore, addr2BalancesAfter, true, true)
 }
 
 // Get current (updated) pool

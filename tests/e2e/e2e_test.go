@@ -181,45 +181,35 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	sender := chainANode.GetWallet(initialization.ValidatorWalletName)
 
 	// --------------- Module init checks ---------------- //
-	// The module should be enabled by default.
+	s.T().Logf("running protorev module init checks")
+
 	enabled, err := chainANode.QueryProtoRevEnabled()
-	s.T().Logf("checking that the protorev module is enabled: %t", enabled)
 	s.Require().NoError(err)
-	s.Require().True(enabled)
+	s.Require().True(enabled, "protorev enabled should be true on init")
 
-	// The module should have no new hot routes by default.
 	hotRoutes, err := chainANode.QueryProtoRevTokenPairArbRoutes()
-	s.T().Logf("checking that the protorev module has no new hot routes: %v", hotRoutes)
-	s.Require().NoError(err)
-	s.Require().Len(hotRoutes, 0)
+	s.Require().NoError(err, "protorev module should have no new hot routes on init")
+	s.Require().Len(hotRoutes, 0, "protorev module should have no new hot routes on init")
 
-	// The module should have no trades by default.
 	_, err = chainANode.QueryProtoRevNumberOfTrades()
-	s.T().Logf("checking that the protorev module has no trades on init: %s", err)
-	s.Require().Error(err)
+	s.Require().Error(err, "protorev module should have no trades on init")
 
-	// The module should have pool weights by default.
 	info, err := chainANode.QueryProtoRevInfoByPoolType()
-	s.T().Logf("checking that the protorev module has pool info on init: %v", info)
-	s.Require().NoError(err)
-	s.Require().NotNil(info)
+	s.Require().NoError(err, "protorev module should have pool info on init")
+	s.Require().NotNil(info, "protorev module should have pool info on init")
 
-	// The module should have max pool points per tx by default.
-	maxPoolPointsPerTx, err := chainANode.QueryProtoRevMaxPoolPointsPerTx()
-	s.T().Logf("checking that the protorev module has max pool points per tx on init: %d", maxPoolPointsPerTx)
-	s.Require().NoError(err)
+	_, err = chainANode.QueryProtoRevMaxPoolPointsPerTx()
+	s.Require().NoError(err, "protorev module should have max pool points per tx on init")
 
-	// The module should have max pool points per block by default.
-	maxPoolPointsPerBlock, err := chainANode.QueryProtoRevMaxPoolPointsPerBlock()
-	s.T().Logf("checking that the protorev module has max pool points per block on init: %d", maxPoolPointsPerBlock)
-	s.Require().NoError(err)
+	_, err = chainANode.QueryProtoRevMaxPoolPointsPerBlock()
+	s.Require().NoError(err, "protorev module should have max pool points per block on init")
 
-	// The module should have only osmosis as a supported base denom by default.
 	supportedBaseDenoms, err := chainANode.QueryProtoRevBaseDenoms()
-	s.T().Logf("checking that the protorev module has only osmosis as a supported base denom on init: %v", supportedBaseDenoms)
 	s.Require().NoError(err)
-	s.Require().Len(supportedBaseDenoms, 1)
-	s.Require().Equal(supportedBaseDenoms[0].Denom, "uosmo")
+	s.Require().Len(supportedBaseDenoms, 1, "protorev module should only have uosmo as a supported base denom on init")
+	s.Require().Equal(supportedBaseDenoms[0].Denom, "uosmo", "protorev module should only have uosmo as a supported base denom on init")
+
+	s.T().Logf("completed protorev module init checks")
 
 	// --------------- Set up for a calculated backrun ---------------- //
 	// Create all of the pools that will be used in the test.
@@ -247,36 +237,40 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	chainANode.SwapExactAmountIn(coinIn, minAmountOut, fmt.Sprintf("%d", swapPoolId2), denomOut, swapWalletAddr)
 
 	// --------------- Module checks after a calculated backrun ---------------- //
-	// Check that the supplies have not changed.
-	s.T().Logf("checking that the supplies have not changed")
-	supplyAfter, err := chainANode.QuerySupply()
-	s.Require().NoError(err)
-	s.Require().NotNil(supplyAfter)
-	s.Require().Equal(supplyBefore, supplyAfter)
+
+	supplyCheck := func() {
+		s.T().Logf("checking that the supplies have not changed")
+		supplyAfter, err := chainANode.QuerySupply()
+		s.Require().NoError(err)
+		s.Require().Equal(supplyBefore, supplyAfter)
+	}
 
 	// Check that the number of trades executed by the protorev module is 1.
-	numTrades, err := chainANode.QueryProtoRevNumberOfTrades()
-	s.T().Logf("checking that the protorev module has executed 1 trade")
-	s.Require().NoError(err)
-	s.Require().NotNil(numTrades)
-	s.Require().Equal(uint64(1), numTrades.Uint64())
+	numTradesCheck := func() {
+		numTrades, err := chainANode.QueryProtoRevNumberOfTrades()
+		s.T().Logf("checking that the protorev module has executed 1 trade")
+		s.Require().NoError(err)
+		s.Require().Equal(uint64(1), numTrades.Uint64())
+	}
 
 	// Check that the profits of the protorev module are not nil.
-	profits, err := chainANode.QueryProtoRevProfits()
-	s.T().Logf("checking that the protorev module has non-nil profits: %s", profits)
-	s.Require().NoError(err)
-	s.Require().NotNil(profits)
-	s.Require().Len(profits, 1)
+	profits := func() {
+		profits, err := chainANode.QueryProtoRevProfits()
+		s.T().Logf("checking that the protorev module has non-nil profits: %s", profits)
+		s.Require().NoError(err)
+		s.Require().Len(profits, 1)
 
-	// Check that the route statistics of the protorev module are not nil.
-	routeStats, err := chainANode.QueryProtoRevAllRouteStatistics()
-	s.T().Logf("checking that the protorev module has non-nil route statistics: %x", routeStats)
-	s.Require().NoError(err)
-	s.Require().NotNil(routeStats)
-	s.Require().Len(routeStats, 1)
-	s.Require().Equal(osmomath.OneInt(), routeStats[0].NumberOfTrades)
-	s.Require().Equal([]uint64{swapPoolId1, swapPoolId2, swapPoolId3}, routeStats[0].Route)
-	s.Require().Equal(profits, routeStats[0].Profits)
+		// Check that the route statistics of the protorev module are not nil.
+		routeStats, err := chainANode.QueryProtoRevAllRouteStatistics()
+		s.T().Logf("checking that the protorev module has non-nil route statistics: %x", routeStats)
+		s.Require().NoError(err)
+		s.Require().Len(routeStats, 1)
+		s.Require().Equal(osmomath.OneInt(), routeStats[0].NumberOfTrades)
+		s.Require().Equal([]uint64{swapPoolId1, swapPoolId2, swapPoolId3}, routeStats[0].Route)
+		s.Require().Equal(profits, routeStats[0].Profits)
+	}
+
+	runFuncsInParallelAndBlock([]func(){supplyCheck, numTradesCheck, profits})
 }
 
 func (s *IntegrationTestSuite) StableSwap() {
@@ -952,7 +946,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	// uosmo = 1_000_000 + 1_000_000 = 2_000_000
 
 	timeAfterSwap := chainANode.QueryLatestBlockTime()
-	chainA.WaitForNumHeights(1)
+	chainA.WaitForNumHeights(2)
 	timeAfterSwapPlus1Height := chainANode.QueryLatestBlockTime()
 
 	s.T().Log("querying for the TWAP from after swap to now")
