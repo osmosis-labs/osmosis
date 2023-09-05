@@ -99,7 +99,7 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 
 	// State Sync Dependent Tests
 
-	if s.skipStateSync {
+	if s.skipStateSync || !s.runScheduledTest {
 		s.T().Skip()
 	} else {
 		s.T().Run("StateSync", func(t *testing.T) {

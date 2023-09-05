@@ -1,14 +1,8 @@
-name: Tests
+name: E2E Full Daily Run
 
 on:
-  pull_request:
-    branches:
-      - "**"
-  push:
-    branches:
-      - "main"
-      - "concentrated-liquidity-main"
-      - "v[0-9]**"
+  schedule:
+    - cron: "0 0 * * *"
   workflow_dispatch:
 
 env:
@@ -40,65 +34,6 @@ jobs:
         run: echo "::set-output name=git_diff::$GIT_DIFF"
     outputs:
       git_diff: ${{ steps.vars.outputs.git_diff }}
-
-  go-split-test-files:
-    needs: get_diff
-    if: needs.get_diff.outputs.git_diff
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v3
-      - name: 🐿 Setup Golang
-        uses: actions/setup-go@v4
-        with:
-          go-version: ${{env.GO_VERSION}}
-      - name: Create a file with all core Cosmos SDK pkgs
-        run: go list ./... ./osmomath/... ./osmoutils/... ./x/ibc-hooks/... ./x/epochs | grep -E -v 'tests/simulator|e2e' > pkgs.txt
-      - name: Split pkgs into 4 files
-        run: split -d -n l/4 pkgs.txt pkgs.txt.part.
-      - uses: actions/upload-artifact@v3
-        with:
-          name: "${{ github.sha }}-00"
-          path: ./pkgs.txt.part.00
-      - uses: actions/upload-artifact@v3
-        with:
-          name: "${{ github.sha }}-01"
-          path: ./pkgs.txt.part.01
-      - uses: actions/upload-artifact@v3
-        with:
-          name: "${{ github.sha }}-02"
-          path: ./pkgs.txt.part.02
-      - uses: actions/upload-artifact@v3
-        with:
-          name: "${{ github.sha }}-03"
-          path: ./pkgs.txt.part.03
-
-  go:
-    needs: [go-split-test-files, get_diff]
-    if: needs.get_diff.outputs.git_diff
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        part: ["00", "01", "02", "03"]
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v3
-      - name: 🐿 Setup Golang
-        uses: actions/setup-go@v4
-        with:
-          go-version: ${{env.GO_VERSION}}
-      - name: Display go version
-        run: go version
-      - uses: actions/download-artifact@v3
-        with:
-          name: "${{ github.sha }}-${{ matrix.part }}"
-      - name: Test & coverage report creation
-        run: |
-          VERSION=$(echo $(git describe --tags) | sed 's/^v//') || VERSION=${GITHUB_SHA}
-          TESTS=$(cat pkgs.txt.part.${{ matrix.part }})
-
-          VERSION=$VERSION SKIP_WASM_WSL_TESTS="false" go test -mod=readonly -tags='ledger test_ledger_mock norace' $TESTS
 
   e2e:
     needs: get_diff
@@ -134,7 +69,7 @@ jobs:
           build-args: |
             BASE_IMG_TAG=debug
       - name: Test e2e and Upgrade
-        run: make test-e2e-ci
+        run: make test-e2e-ci-scheduled
       - name: Dump docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2

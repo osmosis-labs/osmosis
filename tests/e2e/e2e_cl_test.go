@@ -238,7 +238,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	var clwg sync.WaitGroup
 	var mu sync.Mutex
 
-	for i, _ := range positions {
+	for i := range positions {
 		clwg.Add(1)
 		go func(i int) { // Launch a goroutine
 			addr, positionSet := addresses[i], positions[i]
