@@ -1522,7 +1522,7 @@ func (s *decimalTestSuite) TestDec_WithPrecision() {
 			} else {
 				got = tc.d.DecWithPrecision(tc.precision)
 			}
-			s.Require().Equal(tc.want, got, "bad SdkDec(), index: %v", tcIndex)
+			s.Require().Equal(tc.want, got, "bad Dec conversion, index: %v", tcIndex)
 		}
 	}
 }
