@@ -1516,13 +1516,13 @@ func (s *decimalTestSuite) TestDec_WithPrecision() {
 		if tc.expPanic {
 			s.Require().Panics(func() { tc.d.DecWithPrecision(tc.precision) })
 		} else {
-			var value osmomath.Dec
+			var got osmomath.Dec
 			if tc.precision == sdk.Precision {
-				value = tc.d.Dec()
+				got = tc.d.Dec()
 			} else {
-				value = tc.d.DecWithPrecision(tc.precision)
+				got = tc.d.DecWithPrecision(tc.precision)
 			}
-			s.Require().Equal(tc.want, value, "bad SdkDec(), index: %v", tcIndex)
+			s.Require().Equal(tc.want, got, "bad SdkDec(), index: %v", tcIndex)
 		}
 	}
 }
