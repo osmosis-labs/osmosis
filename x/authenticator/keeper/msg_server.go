@@ -19,7 +19,10 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-func (m msgServer) AddAuthenticator(goCtx context.Context, msg *types.MsgAddAuthenticator) (*types.MsgAddAuthenticatorResponse, error) {
+func (m msgServer) AddAuthenticator(
+	goCtx context.Context,
+	msg *types.MsgAddAuthenticator,
+) (*types.MsgAddAuthenticatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)

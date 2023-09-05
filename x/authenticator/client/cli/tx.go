@@ -1,25 +1,27 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 )
 
-// GetTxCmd returns the transaction commands for this module
-func GetTxCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("%s transactions subcommands", types.ModuleName),
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
+func NewTxCmd() *cobra.Command {
+	txCmd := osmocli.TxIndexCmd(types.ModuleName)
+	osmocli.AddTxCmd(txCmd, NewAddAuthentiactorCmd)
+	return txCmd
+}
 
-	// this line is used by starport scaffolding # 1
-
-	return cmd
+func NewAddAuthentiactorCmd() (*osmocli.TxCliDesc, *types.MsgAddAuthenticator) {
+	return &osmocli.TxCliDesc{
+		Use:   "add-authenticator",
+		Short: "add an authenticator for an address",
+		Long:  "",
+		Example: `
+			osmosisd tx authenticator add-authenticator SigVerification <pubkey> --from val \
+			--chain-id osmosis-1 -b sync --keyring-backend test \
+			--fees 1000uosmo
+		`,
+	}, &types.MsgAddAuthenticator{}
 }
