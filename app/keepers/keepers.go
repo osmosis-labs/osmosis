@@ -36,6 +36,7 @@ import (
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
 
+	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
 	downtimedetector "github.com/osmosis-labs/osmosis/v19/x/downtime-detector"
@@ -152,6 +153,7 @@ type AppKeepers struct {
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
 	AuthenticatorKeeper          *authenticatorkeeper.Keeper
+	AuthenticatorManager         *authenticatortypes.AuthenticatorManager
 
 	// IBC modules
 	// transfer module
@@ -178,6 +180,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
 	blockedAddress map[string]bool,
+	encodingConfig *appparams.EncodingConfig,
 ) {
 	// Add 'normal' keepers
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -448,10 +451,18 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.LockupKeeper,
 	)
 
+	// Initialize authenticators
+	appKeepers.AuthenticatorManager = authenticatortypes.NewAuthenticatorManager()
+	appKeepers.AuthenticatorManager.InitializeAuthenticators([]authenticatortypes.Authenticator{
+		authenticatortypes.NewSigVerificationAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()), // default
+	})
+	appKeepers.AuthenticatorManager.SetDefaultAuthenticatorIndex(0)
+
 	authenticatorKeeper := authenticatorkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[authenticatortypes.StoreKey],
 		appKeepers.GetSubspace(authenticatortypes.ModuleName),
+		appKeepers.AuthenticatorManager,
 	)
 	appKeepers.AuthenticatorKeeper = &authenticatorKeeper
 

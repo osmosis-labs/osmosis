@@ -20,18 +20,21 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
+
+	AuthenticatorManager *types.AuthenticatorManager
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, ps paramtypes.Subspace) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, ps paramtypes.Subspace, authenticatorManager *types.AuthenticatorManager) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return Keeper{
-		storeKey:   storeKey,
-		cdc:        cdc,
-		paramSpace: ps,
+		storeKey:             storeKey,
+		cdc:                  cdc,
+		paramSpace:           ps,
+		AuthenticatorManager: authenticatorManager,
 	}
 }
 
@@ -66,7 +69,7 @@ func (k Keeper) GetAuthenticatorsForAccount(ctx sdk.Context, account sdk.AccAddr
 	}
 	authenticators := make([]types.Authenticator, len(authenticatorData))
 	for i, authenticator := range authenticatorData {
-		authenticators[i] = authenticator.AsAuthenticator()
+		authenticators[i] = authenticator.AsAuthenticator(k.AuthenticatorManager)
 	}
 	return authenticators, nil
 }
@@ -101,7 +104,7 @@ func (k Keeper) GetNextAuthenticatorIdAndIncrement(ctx sdk.Context) uint64 {
 
 // AddAuthenticator adds an authenticator to an account
 func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorType string, data []byte) error {
-	if !types.IsAuthenticatorTypeRegistered(authenticatorType) {
+	if !k.AuthenticatorManager.IsAuthenticatorTypeRegistered(authenticatorType) {
 		return fmt.Errorf("authenticator type %s is not registered", authenticatorType)
 	}
 	nextId := k.GetNextAuthenticatorIdAndIncrement(ctx)

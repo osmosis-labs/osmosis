@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 )
 
 // Verify all signatures for a tx and return an error if any are invalid. Note,
@@ -42,7 +41,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 
 		if len(authenticators) == 0 {
-			authenticators = append(authenticators, authenticatortypes.GetDefaultAuthenticator())
+			authenticators = append(authenticators, ad.authenticatorKeeper.AuthenticatorManager.GetDefaultAuthenticator())
 		}
 
 		// ToDo: Add a way for the user to specify which authenticator to use as part of the tx (likely in the signature)

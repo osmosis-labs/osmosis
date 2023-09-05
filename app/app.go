@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 	"io"
 	"net/http"
 	"os"
@@ -239,6 +238,7 @@ func NewOsmosisApp(
 		wasmEnabledProposals,
 		wasmOpts,
 		app.BlockedAddrs(),
+		&encodingConfig,
 	)
 
 	app.SetupHooks()
@@ -290,12 +290,6 @@ func NewOsmosisApp(
 	app.MountKVStores(app.GetKVStoreKey())
 	app.MountTransientStores(app.GetTransientStoreKey())
 	app.MountMemoryStores(app.GetMemoryStoreKey())
-
-	// Initialize authenticators
-	authenticatortypes.InitializeAuthenticators([]authenticatortypes.Authenticator{
-		authenticatortypes.NewSigVerificationAuthenticator(app.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()), // default
-	})
-	authenticatortypes.SetDefaultAuthenticatorIndex(0)
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
