@@ -106,7 +106,7 @@ func LocksBalancesInvariant(keeper Keeper) sdk.Invariant {
 					)), true
 			}
 		}
-		// aaaaaa trigger CI that was devastated by auto go mod upd
+
 		return sdk.FormatInvariant(types.ModuleName, "locks-amount-invariant", "All lockup amount invariant passed"), false
 	}
 }
