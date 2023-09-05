@@ -2,9 +2,12 @@ name: "OsmoQL"
 
 on:
   pull_request:
+    types: [ready_for_review]
     paths:
       - "**.go"
-  push:
+    branches: 
+      - main
+
 
 jobs:
   analyze:
