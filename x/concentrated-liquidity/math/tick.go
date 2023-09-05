@@ -59,7 +59,6 @@ func TickToSqrtPrice(tickIndex int64) (osmomath.BigDec, error) {
 		return osmomath.BigDec{}, err
 	}
 	return sqrtPrice, nil
-
 }
 
 // TickToPrice returns the price given a tickIndex
