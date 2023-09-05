@@ -115,7 +115,7 @@ func NewBigDec(i int64) BigDec {
 }
 
 // create a new BigDec from integer with decimal place at prec
-// CONTRACT: prec <= Precision
+// CONTRACT: prec <= PrecisionBigDec
 func NewBigDecWithPrec(i, prec int64) BigDec {
 	return BigDec{
 		new(big.Int).Mul(big.NewInt(i), precisionMultiplier(prec)),
@@ -123,13 +123,13 @@ func NewBigDecWithPrec(i, prec int64) BigDec {
 }
 
 // create a new BigDec from big integer assuming whole numbers
-// CONTRACT: prec <= Precision
+// CONTRACT: prec <= PrecisionBigDec
 func NewBigDecFromBigInt(i *big.Int) BigDec {
 	return NewBigDecFromBigIntWithPrec(i, 0)
 }
 
 // create a new BigDec from big integer assuming whole numbers
-// CONTRACT: prec <= Precision
+// CONTRACT: prec <= PrecisionBigDec
 func NewBigDecFromBigIntWithPrec(i *big.Int, prec int64) BigDec {
 	return BigDec{
 		new(big.Int).Mul(i, precisionMultiplier(prec)),
@@ -137,13 +137,13 @@ func NewBigDecFromBigIntWithPrec(i *big.Int, prec int64) BigDec {
 }
 
 // create a new BigDec from big integer assuming whole numbers
-// CONTRACT: prec <= Precision
+// CONTRACT: prec <= PrecisionBigDec
 func NewBigDecFromInt(i BigInt) BigDec {
 	return NewBigDecFromIntWithPrec(i, 0)
 }
 
 // create a new BigDec from big integer with decimal place at prec
-// CONTRACT: prec <= Precision
+// CONTRACT: prec <= PrecisionBigDec
 func NewBigDecFromIntWithPrec(i BigInt, prec int64) BigDec {
 	return BigDec{
 		new(big.Int).Mul(i.BigInt(), precisionMultiplier(prec)),
@@ -585,6 +585,23 @@ func (d BigDec) DecWithPrecision(precision int64) Dec {
 	truncatedDec := NewDecFromBigIntWithPrec(intRepresentation, precision)
 
 	return truncatedDec
+}
+
+// ChopPrecisionMut truncates all decimals after precision numbers after decimal point. Mutative
+// CONTRACT: prec <= PrecisionBigDec
+func (d *BigDec) ChopPrecisionMut(precision int64) BigDec {
+	precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionBigDec-precision), nil)
+	// big.Quo truncates numbers that would have been after decimal point
+	d.i.Quo(d.i, precisionFactor)
+	d.i.Mul(d.i, precisionFactor)
+	return BigDec{d.i}
+}
+
+// ChopPrecision truncates all decimals after precision numbers after decimal point
+// CONTRACT: prec <= PrecisionBigDec
+func (d *BigDec) ChopPrecision(precision int64) BigDec {
+	copy := d.Clone()
+	return copy.ChopPrecisionMut(precision)
 }
 
 // DecRoundUp returns the osmomath.Dec representation of a BigDec.

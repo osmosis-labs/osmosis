@@ -1483,7 +1483,7 @@ func (s *decimalTestSuite) TestPower() {
 	}
 }
 
-func (s *decimalTestSuite) TestDecWithPrecision() {
+func (s *decimalTestSuite) TestDec_WithPrecision() {
 	tests := []struct {
 		d         osmomath.BigDec
 		want      osmomath.Dec
@@ -1516,8 +1516,46 @@ func (s *decimalTestSuite) TestDecWithPrecision() {
 		if tc.expPanic {
 			s.Require().Panics(func() { tc.d.DecWithPrecision(tc.precision) })
 		} else {
-			value := tc.d.DecWithPrecision(tc.precision)
+			var value osmomath.Dec
+			if tc.precision == sdk.Precision {
+				value = tc.d.Dec()
+			} else {
+				value = tc.d.DecWithPrecision(tc.precision)
+			}
 			s.Require().Equal(tc.want, value, "bad SdkDec(), index: %v", tcIndex)
 		}
+	}
+}
+
+func (s *decimalTestSuite) TestChopPrecision_Mutative() {
+	tests := []struct {
+		startValue        osmomath.BigDec
+		expectedMutResult osmomath.BigDec
+		precision         int64
+	}{
+		{osmomath.NewBigDec(0), osmomath.MustNewBigDecFromStr("0"), 0},
+		{osmomath.NewBigDec(1), osmomath.MustNewBigDecFromStr("1"), 0},
+		{osmomath.NewBigDec(10), osmomath.MustNewBigDecFromStr("10"), 2},
+		// how to read these comments: ab.cde(fgh) -> ab.cdefgh = initial BigDec; (fgh) = decimal places that will be truncated
+		// 5.1()
+		{osmomath.NewBigDecWithPrec(51, 1), osmomath.MustNewBigDecFromStr("5.1"), 1},
+		// 1.(0010)
+		{osmomath.NewBigDecWithPrec(10010, 4), osmomath.MustNewBigDecFromStr("1"), 0},
+		// 1009.31254(83952)
+		{osmomath.NewBigDecWithPrec(10093125483952, 10), osmomath.MustNewBigDecFromStr("1009.31254"), 5},
+		// 0.1009312548(3952)
+		{osmomath.NewBigDecWithPrec(10093125483952, 14), osmomath.MustNewBigDecFromStr("0.1009312548"), 10},
+	}
+	for id, tc := range tests {
+		name := "testcase_" + fmt.Sprint(id)
+		s.Run(name, func() {
+			startMut := tc.startValue.Clone()
+			startNonMut := tc.startValue.Clone()
+
+			resultMut := startMut.ChopPrecisionMut(tc.precision)
+			resultNonMut := startNonMut.ChopPrecision(tc.precision)
+
+			s.assertMutResult(tc.expectedMutResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+		})
 	}
 }
