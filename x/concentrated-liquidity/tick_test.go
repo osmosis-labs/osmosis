@@ -781,14 +781,14 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 			lowerTick: types.MaxTick,
 			upperTick: types.MaxTick,
 
-			expectedError: types.InvalidTickError{Tick: types.MaxTick, IsLower: true, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick},
+			expectedError: types.InvalidTickError{Tick: types.MaxTick, IsLower: true, MinTick: DefaultMinTick, MaxTick: types.MaxTick},
 		},
 		{
 			name:      "upper tick is equal to min tick.",
-			lowerTick: types.MinInitializedTick,
-			upperTick: types.MinInitializedTick,
+			lowerTick: DefaultMinTick,
+			upperTick: DefaultMinTick,
 
-			expectedError: types.InvalidTickError{Tick: types.MinInitializedTick, IsLower: false, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick},
+			expectedError: types.InvalidTickError{Tick: DefaultMinTick, IsLower: false, MinTick: DefaultMinTick, MaxTick: types.MaxTick},
 		},
 	}
 

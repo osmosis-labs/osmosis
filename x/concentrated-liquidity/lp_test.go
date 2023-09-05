@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
@@ -41,6 +42,7 @@ type lpTest struct {
 
 	// spread reward related fields
 	preSetChargeSpreadRewards              sdk.DecCoin
+	preFundOwnerCoins                      sdk.Coins
 	expectedSpreadRewardGrowthOutsideLower sdk.DecCoins
 	expectedSpreadRewardGrowthOutsideUpper sdk.DecCoins
 }
@@ -67,6 +69,7 @@ var (
 		underlyingLockId:                  0,
 
 		preSetChargeSpreadRewards: oneEth,
+		preFundOwnerCoins:         DefaultCoins,
 		// in this setup lower tick < current tick < upper tick
 		// the spread reward accumulator for ticks <= current tick are updated.
 		expectedSpreadRewardGrowthOutsideLower: cl.EmptyCoins,
@@ -115,7 +118,7 @@ var (
 			currentTick: DefaultUpperTick + 100,
 
 			preSetChargeSpreadRewards:              sdk.NewDecCoin(ETH, osmomath.ZeroInt()), // zero spread reward
-			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
+			expectedSpreadRewardGrowthOutsideLower: cl.EmptyCoins,
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
@@ -162,6 +165,127 @@ var (
 			amount1Expected: DefaultAmt1Expected,
 		},
 	}
+
+	amountZeroExtendedRange = sdk.NewInt(1_000_000).Add(sdk.NewInt(10).ToLegacyDec().PowerMut(18).TruncateInt())
+	amountOneExtendedRange  = sdk.NewInt(50).Mul(sdk.NewInt(1_000_000))
+
+	// coins that initiliaze initial spot price to be in the
+	// extended range
+	// 50 * 10^6 / 10^6 * 10^18 = 50 * 10^-18
+	coinsExtendedFullRangePrice = sdk.NewCoins(
+		sdk.NewCoin(ETH, amountZeroExtendedRange),
+		sdk.NewCoin(USDC, amountOneExtendedRange),
+	)
+
+	// configures the lp test case for testing full range extension
+	// of the min spot price.
+	//
+	// What this does:
+	// - Disable irrelevant parameters such as spread rewards, slippage
+	// protection and coin funding
+	// - Sets tick spacing to 1
+	// - Calculate expected liquidity
+	// - Caclulate expected amounts from liquidity
+	//
+	// Assumes that internal math functions are implemented correctly.
+	estimateLPMigrationCaseResults = func(lpTest lpTest) lpTest {
+		// Note that the min sqrt price must be computed from the min tick since that's
+		// the assumption made in LP logic.
+		lowerSqrtPrice, _ := math.TickToSqrtPrice(lpTest.lowerTick)
+		upperSqrtPrice, _ := math.TickToSqrtPrice(lpTest.upperTick)
+
+		amountZero := lpTest.tokensProvided[0].Amount
+		amountOne := lpTest.tokensProvided[1].Amount
+
+		// Calculate current sqrt price
+		curSqrtPrice := osmomath.BigDecFromDec(osmomath.MustMonotonicSqrt(amountOne.ToLegacyDec().Quo(amountZero.ToLegacyDec())))
+
+		// Calculate liquidity from amounts
+		liquidityAmount := osmomath.BigDecFromDec(math.GetLiquidityFromAmounts(
+			curSqrtPrice,
+			lowerSqrtPrice,
+			upperSqrtPrice,
+			amountZero,
+			amountOne))
+
+		// Calculate amounts from liquidity, rounding up in pool's favor
+
+		amount0Expected := osmomath.ZeroBigDec()
+		amount1Expected := osmomath.ZeroBigDec()
+
+		// Calculate expected amounts depending on position relative
+		// to the current sqrt price.
+		if curSqrtPrice.LT(upperSqrtPrice) && curSqrtPrice.GT(lowerSqrtPrice) {
+			amount0Expected = math.CalcAmount0Delta(liquidityAmount, curSqrtPrice, upperSqrtPrice, true)
+			amount1Expected = math.CalcAmount1Delta(liquidityAmount, lowerSqrtPrice, curSqrtPrice, true)
+		} else if curSqrtPrice.LT(lowerSqrtPrice) {
+			amount0Expected = math.CalcAmount0Delta(liquidityAmount, lowerSqrtPrice, upperSqrtPrice, true)
+		} else {
+			amount1Expected = math.CalcAmount1Delta(liquidityAmount, lowerSqrtPrice, upperSqrtPrice, true)
+		}
+
+		// pre-configure base case overwrites
+		// that are irrelevant for the purposes of the test
+		lpTest.preFundOwnerCoins = lpTest.tokensProvided
+		lpTest.amount0Minimum = osmomath.ZeroInt()
+		lpTest.amount1Minimum = osmomath.ZeroInt()
+		lpTest.expectedSpreadRewardGrowthOutsideLower = sdk.NewDecCoins()
+		lpTest.preSetChargeSpreadRewards = sdk.NewDecCoin(ETH, osmomath.ZeroInt())
+		lpTest.tickSpacing = 1
+
+		// expected values
+		lpTest.liquidityAmount = liquidityAmount.Dec()
+		lpTest.amount0Expected = amount0Expected.Dec().TruncateInt()
+		lpTest.amount1Expected = amount1Expected.Dec().TruncateInt()
+
+		return lpTest
+	}
+
+	// Test cases corresponding to refactoring min spot price
+	// from 10^-12 to 10^-30.
+	// See: https://github.com/osmosis-labs/osmosis/issues/5726
+	// Note that each of these test cases is further configured
+	// inside TestCreatePosition by calling estimateLPMigrationCaseResults
+	// test helper.
+	positionCasesMinSpotPriceRefactor = map[string]lpTest{
+		"updated full range - price in the original full range": {
+			tokensProvided: DefaultCoins,
+
+			lowerTick: types.MinInitializedTickV2,
+			upperTick: types.MaxTick,
+		},
+		"updated full range - price in the extended range": {
+			tokensProvided: coinsExtendedFullRangePrice,
+
+			lowerTick: types.MinInitializedTickV2,
+			upperTick: types.MaxTick,
+		},
+		"original full range - price in the original full range": {
+			tokensProvided: DefaultCoins,
+
+			lowerTick: types.MinInitializedTick,
+			upperTick: types.MaxTick,
+		},
+		"original full range - price in the extended full range": {
+			// 50 * 10^6 / 10^6 * 10^18 = 50 * 10^-18
+			tokensProvided: coinsExtendedFullRangePrice,
+
+			lowerTick: types.MinInitializedTick,
+			upperTick: types.MaxTick,
+		},
+		"inside the extended range - price in the original full range": {
+			tokensProvided: DefaultCoins,
+
+			lowerTick: types.MinInitializedTickV2 + 1234567,
+			upperTick: types.MinInitializedTick - 98765543,
+		},
+		"inside the extended range - price in the extended full range": {
+			tokensProvided: coinsExtendedFullRangePrice,
+
+			lowerTick: types.MinInitializedTickV2 + 1234567,
+			upperTick: types.MinInitializedTick - 98765543,
+		},
+	}
 )
 
 func (s *KeeperTestSuite) TestCreatePosition() {
@@ -171,12 +295,12 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			expectedError: types.PoolNotFoundError{PoolId: 2},
 		},
 		"error: lower tick out of bounds": {
-			lowerTick:     DefaultMinTick - 100,
-			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 100, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+			lowerTick:     types.MinInitializedTickV2 - 100,
+			expectedError: types.InvalidTickError{Tick: types.MinInitializedTickV2 - 100, IsLower: true, MinTick: types.MinInitializedTickV2, MaxTick: DefaultMaxTick},
 		},
 		"error: upper tick out of bounds": {
 			upperTick:     DefaultMaxTick + 100,
-			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 100, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 100, IsLower: false, MinTick: types.MinInitializedTickV2, MaxTick: DefaultMaxTick},
 		},
 		"error: upper tick is below the lower tick, but both are in bounds": {
 			lowerTick:     500,
@@ -239,6 +363,12 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 		tests[name] = test
 	}
 
+	// add tests corresponding to min spot price refactor.
+	// see defintion of positionCasesMinSpotPriceRefactor for more details.
+	for name, test := range positionCasesMinSpotPriceRefactor {
+		tests[name] = estimateLPMigrationCaseResults(test)
+	}
+
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
@@ -288,7 +418,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			}
 
 			// Fund test account and create the desired position
-			s.FundAcc(s.TestAccs[0], DefaultCoins)
+			s.FundAcc(s.TestAccs[0], tc.preFundOwnerCoins)
 
 			// Note user and pool account balances before create position is called
 			userBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
@@ -336,9 +466,9 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			// Else, check that we had no error from creating the position, and that the liquidity and assets that were returned are expected
 			s.Require().NoError(err)
 			s.Require().Equal(tc.positionId, positionId)
+			s.Require().Equal(expectedLiquidityCreated.String(), liquidityCreated.String())
 			s.Require().Equal(tc.amount0Expected.String(), asset0.String())
 			s.Require().Equal(tc.amount1Expected.String(), asset1.String())
-			s.Require().Equal(expectedLiquidityCreated.String(), liquidityCreated.String())
 			if tc.expectedLowerTick != 0 {
 				s.Require().Equal(tc.expectedLowerTick, newLowerTick)
 				tc.lowerTick = newLowerTick
@@ -1357,6 +1487,12 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		}
 		if overwrite.expectedUpperTick != 0 {
 			dst.expectedUpperTick = overwrite.expectedUpperTick
+		}
+		if !overwrite.preFundOwnerCoins.IsZero() {
+			dst.preFundOwnerCoins = overwrite.preFundOwnerCoins
+		}
+		if overwrite.preSetChargeSpreadRewards.IsValid() {
+			dst.preSetChargeSpreadRewards = overwrite.preSetChargeSpreadRewards
 		}
 	}
 }

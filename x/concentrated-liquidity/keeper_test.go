@@ -26,15 +26,17 @@ import (
 )
 
 var (
-	DefaultMinTick, DefaultMaxTick       = types.MinInitializedTick, types.MaxTick
-	DefaultMinCurrentTick                = types.MinCurrentTick
-	DefaultLowerPrice                    = osmomath.NewDec(4545)
-	DefaultLowerTick                     = int64(30545000)
-	DefaultUpperPrice                    = osmomath.NewDec(5500)
-	DefaultUpperTick                     = int64(31500000)
-	DefaultCurrPrice                     = osmomath.NewDec(5000)
-	DefaultCurrTick                int64 = 31000000
-	DefaultCurrSqrtPrice                 = func() osmomath.BigDec {
+	DefaultMinTick, DefaultMaxTick = types.MinInitializedTickV2, types.MaxTick
+	// TODO: swith DefaultMinCurrentTick to types.MinCurrentTickV2 upon
+	// completion of https://github.com/osmosis-labs/osmosis/issues/5726
+	DefaultMinCurrentTick       = types.MinCurrentTick
+	DefaultLowerPrice           = osmomath.NewDec(4545)
+	DefaultLowerTick            = int64(30545000)
+	DefaultUpperPrice           = osmomath.NewDec(5500)
+	DefaultUpperTick            = int64(31500000)
+	DefaultCurrPrice            = osmomath.NewDec(5000)
+	DefaultCurrTick       int64 = 31000000
+	DefaultCurrSqrtPrice        = func() osmomath.BigDec {
 		curSqrtPrice, _ := osmomath.MonotonicSqrt(DefaultCurrPrice) // 70.710678118654752440
 		return osmomath.BigDecFromDec(curSqrtPrice)
 	}()
