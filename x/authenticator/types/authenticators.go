@@ -4,6 +4,7 @@ package types
 
 import (
 	fmt "fmt"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
@@ -20,6 +21,7 @@ type AuthenticatorData interface{}
 
 type Authenticator interface {
 	Type() string
+	Initialize(data []byte) (Authenticator, error)
 	GetAuthenticationData(tx sdk.Tx, messageIndex uint8, simulate bool) (AuthenticatorData, error)
 	Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) (bool, error)
 	ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData AuthenticatorData) bool
@@ -64,6 +66,16 @@ func (c SigVerificationAuthenticator) SetAccountKeeper(ak *authkeeper.AccountKee
 // SetAccountKeeper sets the sign mode one the SigVerificationAuthenticator
 func (c SigVerificationAuthenticator) SetSignModeHandler(sm *authsigning.SignModeHandler) {
 	c.Handler = *sm
+}
+
+func (c SigVerificationAuthenticator) Initialize(data []byte) (Authenticator, error) {
+	// TODO: I'm concerned about this method. I think we should modify the design here so that these authenticators are
+	//       always new objects. Maybe the registered authenticators could be a factory for the actual authenticator.
+	if len(data) != secp256k1.PubKeySize {
+		c.PubKey = nil
+	}
+	c.PubKey = &secp256k1.PubKey{Key: data}
+	return c, nil
 }
 
 // SigVerificationData is used to package all the signature data and the tx
@@ -239,7 +251,6 @@ func (c SigVerificationAuthenticator) Authenticate(
 					)
 				}
 				return false, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, errMsg)
-
 			}
 		}
 	}

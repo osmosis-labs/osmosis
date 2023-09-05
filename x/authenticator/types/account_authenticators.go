@@ -51,6 +51,10 @@ func IsAuthenticatorTypeRegistered(authenticatorType string) bool {
 func (a AccountAuthenticator) AsAuthenticator() Authenticator {
 	for _, authenticator := range GetRegisteredAuthenticators() {
 		if authenticator.Type() == a.Type {
+			authenticator, err := authenticator.Initialize(a.Data)
+			if err != nil {
+				return nil // ToDo: We should probably handle errors here
+			}
 			return authenticator
 		}
 	}

@@ -2,6 +2,7 @@ package osmosisibctesting
 
 import (
 	"encoding/json"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -58,7 +59,7 @@ func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*sdk.Result, error) {
 }
 
 // SendMsgsNoCheck is an alternative to ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
-func (chain *TestChain) SendMsgsFromPrivKey(accountNumber, accountSequence uint64, privKey cryptotypes.PrivKey, msgs ...sdk.Msg) (*sdk.Result, error) {
+func (chain *TestChain) SendMsgsFromPrivKey(account authtypes.AccountI, privKey cryptotypes.PrivKey, msgs ...sdk.Msg) (*sdk.Result, error) {
 	// ensure the chain has the latest time
 	chain.Coordinator.UpdateTimeForChain(chain.TestChain)
 
@@ -68,8 +69,8 @@ func (chain *TestChain) SendMsgsFromPrivKey(accountNumber, accountSequence uint6
 		chain.GetContext().BlockHeader(),
 		msgs,
 		chain.ChainID,
-		[]uint64{accountNumber},
-		[]uint64{accountSequence},
+		[]uint64{account.GetAccountNumber()},
+		[]uint64{account.GetSequence()},
 		privKey,
 	)
 	if err != nil {
@@ -78,6 +79,12 @@ func (chain *TestChain) SendMsgsFromPrivKey(accountNumber, accountSequence uint6
 
 	// SignAndDeliver calls app.Commit()
 	chain.NextBlock()
+
+	// increment sequence for successful transaction execution
+	err = account.SetSequence(account.GetSequence() + 1)
+	if err != nil {
+		return nil, err
+	}
 
 	chain.Coordinator.IncrementTime()
 

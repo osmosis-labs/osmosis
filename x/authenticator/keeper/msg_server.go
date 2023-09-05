@@ -26,7 +26,7 @@ func (m msgServer) AddAuthenticator(goCtx context.Context, msg *types.MsgAddAuth
 		return nil, err
 	}
 
-	err = m.Keeper.AddAuthenticator(ctx, sender, msg.Type)
+	err = m.Keeper.AddAuthenticator(ctx, sender, msg.Type, msg.Data)
 	if err != nil {
 		return nil, err
 	}

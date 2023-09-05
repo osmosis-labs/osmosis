@@ -6,4 +6,5 @@ option go_package = "github.com/osmosis-labs/osmosis/v19/x/authenticator/types";
 message AccountAuthenticator {
   uint64 id = 1;
   string type = 2;
+  bytes data = 3;
 }

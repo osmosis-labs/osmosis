@@ -13,6 +13,10 @@ type MockAuthenticator struct {
 	authType string
 }
 
+func (m MockAuthenticator) Initialize(data []byte) (types.Authenticator, error) {
+	return m, nil
+}
+
 func (m MockAuthenticator) GetAuthenticationData(tx sdk.Tx, messageIndex uint8, simulate bool) (types.AuthenticatorData, error) {
 	return "mock", nil
 }
@@ -94,6 +98,10 @@ func TestAsAuthenticator(t *testing.T) {
 // Second mock that always fails authentication
 type MockAuthenticatorFail struct {
 	authType string
+}
+
+func (m MockAuthenticatorFail) Initialize(data []byte) (types.Authenticator, error) {
+	return m, nil
 }
 
 func (m MockAuthenticatorFail) GetAuthenticationData(tx sdk.Tx, messageIndex uint8, simulate bool) (types.AuthenticatorData, error) {

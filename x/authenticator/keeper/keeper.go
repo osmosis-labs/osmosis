@@ -42,7 +42,7 @@ func (k Keeper) GetAuthenticatorsForAccount(ctx sdk.Context, account sdk.AccAddr
 		func(bz []byte) (types.Authenticator, error) {
 			// unmarshall the authenticator
 			var authenticator types.AccountAuthenticator
-			err := k.cdc.UnmarshalInterface(bz, &authenticator)
+			err := k.cdc.Unmarshal(bz, &authenticator)
 
 			if err != nil {
 				return nil, err
@@ -87,7 +87,7 @@ func (k Keeper) GetNextAuthenticatorIdAndIncrement(ctx sdk.Context) uint64 {
 }
 
 // AddAuthenticator adds an authenticator to an account
-func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorType string) error {
+func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorType string, data []byte) error {
 	if !types.IsAuthenticatorTypeRegistered(authenticatorType) {
 		return fmt.Errorf("authenticator type %s is not registered", authenticatorType)
 	}
@@ -97,6 +97,7 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 		&types.AccountAuthenticator{
 			Id:   nextId,
 			Type: authenticatorType,
+			Data: data,
 		})
 	return nil
 }
@@ -105,6 +106,10 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorId uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyAccountId(account, authenticatorId)
+	// check that the key exists
+	if !store.Has(key) {
+		return fmt.Errorf("authenticator with id %d does not exist for account %s", authenticatorId, account)
+	}
 	store.Delete(key)
 	return nil
 }

@@ -1,7 +1,8 @@
 package authenticator_test
 
 import (
-	"fmt"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/osmosis-labs/osmosis/v19/app"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -23,67 +24,76 @@ type AuthenticatorSuite struct {
 	coordinator *ibctesting.Coordinator
 
 	chainA *osmosisibctesting.TestChain
+	app    *app.OsmosisApp
 
-	SenderPrivKeys []cryptotypes.PrivKey
-	AccountAddr    sdk.AccAddress
+	PrivKeys []cryptotypes.PrivKey
+	Account  authtypes.AccountI
 }
 
 func TestAuthenticatorSuite(t *testing.T) {
 	suite.Run(t, new(AuthenticatorSuite))
 }
 
-func (suite *AuthenticatorSuite) SetupTest() {
-	// NOTE: do we want to setup a second testing app?
-	// suite.Setup()
-
+func (s *AuthenticatorSuite) SetupTest() {
 	// Use the osmosis custom function for creating an osmosis app
 	ibctesting.DefaultTestingAppInit = osmosisibctesting.SetupTestingApp
 
 	// Here we create the app using ibctesting
-	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 1)
-	suite.chainA = &osmosisibctesting.TestChain{
-		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1)),
+	s.coordinator = ibctesting.NewCoordinator(s.T(), 1)
+	s.chainA = &osmosisibctesting.TestChain{
+		TestChain: s.coordinator.GetChain(ibctesting.GetChainID(1)),
 	}
+	s.app = s.chainA.GetOsmosisApp()
 
 	// Initialize two private keys for testing
-	suite.SenderPrivKeys = make([]cryptotypes.PrivKey, 2)
+	s.PrivKeys = make([]cryptotypes.PrivKey, 2)
 	for i := 0; i < 2; i++ {
-		suite.SenderPrivKeys[i] = secp256k1.GenPrivKey()
+		s.PrivKeys[i] = secp256k1.GenPrivKey()
 	}
 
-	// NOTE: osmosis app != ibctesting app
-	// suite.App != suite.chainA
-
 	// Initialize a test account with the first private key
-	suite.AccountAddr = sdk.AccAddress(suite.SenderPrivKeys[0].PubKey().Address())
-}
+	accountAddr := sdk.AccAddress(s.PrivKeys[0].PubKey().Address())
 
-func (suite *AuthenticatorSuite) TestKeyRotation() {
-	// NOTE: do we need to call this here, this will set up a third app?
-	//suite.SetupTest()
-
-	osmosisApp := suite.chainA.GetOsmosisApp()
 	// fund the account
 	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000))
-	err := osmosisApp.BankKeeper.SendCoins(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), suite.AccountAddr, coins)
-	suite.Require().NoError(err, "Failed to send bank tx using the first private key")
+	err := s.app.BankKeeper.SendCoins(s.chainA.GetContext(), s.chainA.SenderAccount.GetAddress(), accountAddr, coins)
+	s.Require().NoError(err, "Failed to send bank tx using the first private key")
 
-	coins = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
+	// get the account
+	s.Account = s.app.AccountKeeper.GetAccount(s.chainA.GetContext(), accountAddr)
+
+}
+
+func (s *AuthenticatorSuite) TestKeyRotation() {
+	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
 	sendMsg := &banktypes.MsgSend{
-		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", suite.AccountAddr.Bytes()),
-		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", suite.AccountAddr.Bytes()),
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
 		Amount:      coins,
 	}
 
-	// can't initialise here as this is where the error stems from
-	// osmosisApp.AccountKeeper = suite.App.AccountKeeper
+	// Send msg from accounts default privkey
+	_, err := s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], sendMsg)
+	s.Require().NoError(err, "Failed to send bank tx using the first private key")
 
-	result, err := suite.chainA.SendMsgsFromPrivKey(1, 1, suite.SenderPrivKeys[0], sendMsg)
-	suite.Require().NoError(err, "Failed to send bank tx using the first private key")
-	fmt.Println(result)
+	// Change account's authenticator
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "SigVerification", s.PrivKeys[1].PubKey().Bytes())
+	s.Require().NoError(err, "Failed to add authenticator")
 
-	// Step 2: Change account's authenticator
-	// TODO: Your logic to change the authenticator
+	// Submit a bank send tx using the second private key
+	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[1], sendMsg)
+	s.Require().NoError(err, "Failed to send bank tx using the second private key")
 
-	// Step 3: Submit a bank send tx using the second private key
+	// Try to send again osing the original PrivKey. This should fail
+	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], sendMsg)
+	s.Require().Error(err, "Sending from the original PrivKey succeeded. This should fail")
+
+	// Remove the account's authenticator
+	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), 0)
+	s.Require().NoError(err, "Failed to remove authenticator")
+
+	// Sending from the default PrivKey now works again
+	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], sendMsg)
+	s.Require().NoError(err, "Failed to send bank tx using the first private key after removing the authenticator")
+
 }
