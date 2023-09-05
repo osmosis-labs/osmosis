@@ -56,12 +56,12 @@ func ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 	return computeTwap(startRecord, endRecord, quoteAsset, strategy)
 }
 
-func (as arithmetic) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) osmomath.Dec {
-	return as.computeTwap(startRecord, endRecord, quoteAsset)
+func (s arithmetic) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) osmomath.Dec {
+	return s.computeTwap(startRecord, endRecord, quoteAsset)
 }
 
-func (gs geometric) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) osmomath.Dec {
-	return gs.computeTwap(startRecord, endRecord, quoteAsset)
+func (s geometric) ComputeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) osmomath.Dec {
+	return s.computeTwap(startRecord, endRecord, quoteAsset)
 }
 
 func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.TwapRecord {
