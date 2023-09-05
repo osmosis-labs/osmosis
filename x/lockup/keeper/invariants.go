@@ -104,7 +104,7 @@ func LocksBalancesInvariant(keeper Keeper) sdk.Invariant {
 				return sdk.FormatInvariant(types.ModuleName, "locks-amount-invariant",
 					fmt.Sprintf("\tlocks amount of %s does not fit actual module balance: %s != %s\n",
 						denom, lockedAmount.String(), coin.Amount.String(),
-					)), true
+					)), false
 			}
 		}
 
