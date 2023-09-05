@@ -267,7 +267,6 @@ var (
 			upperTick: types.MaxTick,
 		},
 		"original full range - price in the extended full range": {
-			// 50 * 10^6 / 10^6 * 10^18 = 50 * 10^-18
 			tokensProvided: coinsExtendedFullRangePrice,
 
 			lowerTick: types.MinInitializedTick,
