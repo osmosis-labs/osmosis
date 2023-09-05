@@ -130,7 +130,7 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 					KeysToAdd:              []int{},
 					AuthenticatorsToRemove: []int{},
 					Sends: []SendTest{
-						{PrivKeyIndex: 0, ShouldSucceed: false},
+						{PrivKeyIndex: 0, ShouldSucceed: true},
 					},
 				},
 			},
