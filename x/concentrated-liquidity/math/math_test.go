@@ -7,7 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
-	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 var (
@@ -314,8 +314,8 @@ func TestGetLiquidityFromAmounts(t *testing.T) {
 		},
 		"full range, price proportional to amounts, equal liquidities (some rounding error) price of 4": {
 			currentSqrtP:   sqrt(osmomath.NewDec(4)),
-			sqrtPHigh:      osmomath.BigDecFromDec(cltypes.MaxSqrtPrice),
-			sqrtPLow:       osmomath.BigDecFromDec(cltypes.MinSqrtPrice),
+			sqrtPHigh:      osmomath.BigDecFromDec(types.MaxSqrtPrice),
+			sqrtPLow:       osmomath.BigDecFromDec(types.MinSqrtPrice),
 			amount0Desired: osmomath.NewInt(4),
 			amount1Desired: osmomath.NewInt(16),
 
@@ -325,8 +325,8 @@ func TestGetLiquidityFromAmounts(t *testing.T) {
 		},
 		"full range, price proportional to amounts, equal liquidities (some rounding error) price of 2": {
 			currentSqrtP:   sqrt(osmomath.NewDec(2)),
-			sqrtPHigh:      osmomath.BigDecFromDec(cltypes.MaxSqrtPrice),
-			sqrtPLow:       osmomath.BigDecFromDec(cltypes.MinSqrtPrice),
+			sqrtPHigh:      osmomath.BigDecFromDec(types.MaxSqrtPrice),
+			sqrtPLow:       osmomath.BigDecFromDec(types.MinSqrtPrice),
 			amount0Desired: osmomath.NewInt(1),
 			amount1Desired: osmomath.NewInt(2),
 
