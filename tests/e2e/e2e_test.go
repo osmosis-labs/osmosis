@@ -827,37 +827,22 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	address1position1liquidityBefore := positionsAddress1[0].Position.Liquidity
 	chainBNode.WithdrawPosition(address1, defaultLiquidityRemoval, positionsAddress1[0].Position.PositionId)
 	// assert
-<<<<<<< HEAD
-	positionsAddress1 = chainABNode.QueryConcentratedPositions(address1)
-	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
-=======
 	positionsAddress1 = chainBNode.QueryConcentratedPositions(address1)
-	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
->>>>>>> 2e72ee65 (fix(e2e): remove taker fee non-determinism affecting geo twap in e2e (#6271))
+	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// address2: check removing some amount of liquidity
 	address2position1liquidityBefore := positionsAddress2[0].Position.Liquidity
 	chainBNode.WithdrawPosition(address2, defaultLiquidityRemoval, positionsAddress2[0].Position.PositionId)
 	// assert
-<<<<<<< HEAD
-	positionsAddress2 = chainABNode.QueryConcentratedPositions(address2)
-	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
-=======
 	positionsAddress2 = chainBNode.QueryConcentratedPositions(address2)
-	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
->>>>>>> 2e72ee65 (fix(e2e): remove taker fee non-determinism affecting geo twap in e2e (#6271))
+	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// address3: check removing some amount of liquidity
 	address3position1liquidityBefore := positionsAddress3[0].Position.Liquidity
 	chainBNode.WithdrawPosition(address3, defaultLiquidityRemoval, positionsAddress3[0].Position.PositionId)
 	// assert
-<<<<<<< HEAD
-	positionsAddress3 = chainABNode.QueryConcentratedPositions(address3)
-	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
-=======
 	positionsAddress3 = chainBNode.QueryConcentratedPositions(address3)
-	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Position.Liquidity.Add(osmomath.MustNewDecFromStr(defaultLiquidityRemoval)))
->>>>>>> 2e72ee65 (fix(e2e): remove taker fee non-determinism affecting geo twap in e2e (#6271))
+	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// Assert removing all liquidity
 	// address2: no more positions left
@@ -890,11 +875,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	newTickSpacing := cltypes.AuthorizedTickSpacing[indexOfCurrentTickSpacing-1]
 
 	// Run the tick spacing reduction proposal
-<<<<<<< HEAD
-	propNumber := chainABNode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
-=======
-	propNumber := chainBNode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, osmomath.NewInt(config.InitialMinExpeditedDeposit)), true)
->>>>>>> 2e72ee65 (fix(e2e): remove taker fee non-determinism affecting geo twap in e2e (#6271))
+	propNumber := chainBNode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
 
 	chainBNode.DepositProposal(propNumber, true)
 	totalTimeChan := make(chan time.Duration, 1)
@@ -925,12 +906,9 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Check that the tick spacing was reduced to the expected new tick spacing
 	concentratedPool = s.updatedConcentratedPool(chainBNode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
-<<<<<<< HEAD
-=======
 
 	// Reset the maximum number of pool points
 	chainBNode.SetMaxPoolPointsPerTx(int(protorevtypes.DefaultMaxPoolPointsPerTx), adminWalletAddr)
->>>>>>> 2e72ee65 (fix(e2e): remove taker fee non-determinism affecting geo twap in e2e (#6271))
 }
 
 func (s *IntegrationTestSuite) StableSwapPostUpgrade() {
@@ -1800,11 +1778,7 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforeSwap) is not equal to the block time.
-<<<<<<< HEAD
-	chainAB.WaitForNumHeights(4)
-=======
 	chainA.WaitForNumHeights(2)
->>>>>>> 2e72ee65 (fix(e2e): remove taker fee non-determinism affecting geo twap in e2e (#6271))
 
 	s.T().Log("querying for the first geometric TWAP to now (before swap)")
 	// Assume base = uosmo, quote = stake
@@ -1839,15 +1813,9 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	// stake = 2_000_000 - 1_000_000 - 1_000_000
 	// uosmo = 1_000_000 + 1_000_000 = 2_000_000
 
-<<<<<<< HEAD
-	timeAfterSwap := chainABNode.QueryLatestBlockTime()
-	chainAB.WaitForNumHeights(4)
-	timeAfterSwapPlus1Height := chainABNode.QueryLatestBlockTime()
-=======
 	timeAfterSwap := chainANode.QueryLatestBlockTime()
 	chainA.WaitForNumHeights(1)
 	timeAfterSwapPlus1Height := chainANode.QueryLatestBlockTime()
->>>>>>> 2e72ee65 (fix(e2e): remove taker fee non-determinism affecting geo twap in e2e (#6271))
 
 	s.T().Log("querying for the TWAP from after swap to now")
 	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwapPlus1Height)
