@@ -15,6 +15,8 @@ import (
 
 var _ types.QueryServer = Querier{}
 
+// demo
+
 // Querier defines a wrapper around the x/lockup keeper providing gRPC method
 // handlers.
 type Querier struct {
