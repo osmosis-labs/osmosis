@@ -98,17 +98,20 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 
 }
 
-type KeyRotationTest struct {
-	Description            string
-	InitialSends           []SendTest
-	KeysToAdd              []int
-	AuthenticatorsToRemove []int
-	FinalSends             []SendTest
-}
-
 type SendTest struct {
 	PrivKeyIndex  int
 	ShouldSucceed bool
+}
+
+type KeyRotationStep struct {
+	KeysToAdd              []int
+	AuthenticatorsToRemove []int
+	Sends                  []SendTest
+}
+
+type KeyRotationTest struct {
+	Description string
+	Steps       []KeyRotationStep
 }
 
 func (s *AuthenticatorSuite) TestKeyRotation() {
@@ -121,46 +124,131 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 
 	tests := []KeyRotationTest{
 		{
-			Description:            "Test add own key as authenticator",
-			KeysToAdd:              []int{0},
-			AuthenticatorsToRemove: []int{},
-			FinalSends: []SendTest{
-				{PrivKeyIndex: 0, ShouldSucceed: true},
+			Description: "Test with no keys",
+			Steps: []KeyRotationStep{
+				{
+					KeysToAdd:              []int{},
+					AuthenticatorsToRemove: []int{},
+					Sends: []SendTest{
+						{PrivKeyIndex: 0, ShouldSucceed: false},
+					},
+				},
 			},
 		},
 
 		{
-			Description:            "Test no authenticator change",
-			KeysToAdd:              []int{1},
-			AuthenticatorsToRemove: []int{0},
-			FinalSends: []SendTest{
-				{PrivKeyIndex: 0, ShouldSucceed: true},
+			Description: "Test add own key as authenticator",
+			Steps: []KeyRotationStep{
+				{
+					KeysToAdd:              []int{0},
+					AuthenticatorsToRemove: []int{},
+					Sends: []SendTest{
+						{PrivKeyIndex: 0, ShouldSucceed: true},
+					},
+				},
 			},
 		},
 
 		{
-			Description:            "Test simple key rotation",
-			KeysToAdd:              []int{1},
-			AuthenticatorsToRemove: []int{},
-			FinalSends: []SendTest{
-				{PrivKeyIndex: 1, ShouldSucceed: true},
-				{PrivKeyIndex: 0, ShouldSucceed: false},
+			Description: "Test no authenticator change",
+			Steps: []KeyRotationStep{
+				{
+					KeysToAdd:              []int{1},
+					AuthenticatorsToRemove: []int{0},
+					Sends: []SendTest{
+						{PrivKeyIndex: 0, ShouldSucceed: true},
+					},
+				},
 			},
 		},
 
 		{
-			Description:            "Test add both keys",
-			KeysToAdd:              []int{0, 1},
-			AuthenticatorsToRemove: []int{},
-			FinalSends: []SendTest{
-				{PrivKeyIndex: 1, ShouldSucceed: true},
-				{PrivKeyIndex: 0, ShouldSucceed: true},
+			Description: "Test simple key rotation",
+			Steps: []KeyRotationStep{
+				{
+					KeysToAdd:              []int{1},
+					AuthenticatorsToRemove: []int{},
+					Sends: []SendTest{
+						{PrivKeyIndex: 1, ShouldSucceed: true},
+						{PrivKeyIndex: 0, ShouldSucceed: false},
+					},
+				},
+			},
+		},
+
+		{
+			Description: "Test add both keys",
+			Steps: []KeyRotationStep{
+				{
+					KeysToAdd:              []int{0, 1},
+					AuthenticatorsToRemove: []int{},
+					Sends: []SendTest{
+						{PrivKeyIndex: 1, ShouldSucceed: true},
+						{PrivKeyIndex: 0, ShouldSucceed: true},
+					},
+				},
+			},
+		},
+
+		{
+			Description: "Test complex rotations",
+			Steps: []KeyRotationStep{
+				{
+					KeysToAdd:              []int{0},
+					AuthenticatorsToRemove: []int{},
+					Sends: []SendTest{ // current authenticators (id=0, key=0)
+						{PrivKeyIndex: 0, ShouldSucceed: true},
+						{PrivKeyIndex: 1, ShouldSucceed: false},
+					},
+				},
+				{
+					KeysToAdd:              []int{1},
+					AuthenticatorsToRemove: []int{0},
+					Sends: []SendTest{ // current authenticators (id=1, key=1)
+						{PrivKeyIndex: 0, ShouldSucceed: false},
+						{PrivKeyIndex: 1, ShouldSucceed: true},
+					},
+				},
+				{
+					KeysToAdd:              []int{0},
+					AuthenticatorsToRemove: []int{1},
+					Sends: []SendTest{ // current authenticators (id=2, key=0)
+						{PrivKeyIndex: 0, ShouldSucceed: true},
+						{PrivKeyIndex: 1, ShouldSucceed: false},
+					},
+				},
+
+				{
+					KeysToAdd:              []int{},
+					AuthenticatorsToRemove: []int{2},
+					Sends: []SendTest{ // all authenticators removed. Back to default
+						{PrivKeyIndex: 0, ShouldSucceed: true},
+						{PrivKeyIndex: 1, ShouldSucceed: false},
+					},
+				},
+
+				{
+					KeysToAdd:              []int{1, 0},
+					AuthenticatorsToRemove: []int{},
+					Sends: []SendTest{ // current authenticators (id=3, key=1), (id=4, key=0)
+						{PrivKeyIndex: 0, ShouldSucceed: true},
+						{PrivKeyIndex: 1, ShouldSucceed: true},
+					},
+				},
+
+				{
+					KeysToAdd:              []int{},
+					AuthenticatorsToRemove: []int{4},
+					Sends: []SendTest{ // current authenticators (id=3, key=1)
+						{PrivKeyIndex: 0, ShouldSucceed: false},
+						{PrivKeyIndex: 1, ShouldSucceed: true},
+					},
+				},
 			},
 		},
 	}
 
 	for _, tc := range tests {
-		// Initial sends
 		s.Run(tc.Description, func() {
 			// Reset authenticators
 			s.app.AuthenticatorKeeper.SetNextAuthenticatorId(s.chainA.GetContext(), 0)
@@ -170,29 +258,31 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 				s.Require().NoError(err, "Failed to remove authenticator")
 			}
 
-			// Test that the initial account can send
-			_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], sendMsg)
-			s.Require().NoError(err, tc.Description)
+			for _, step := range tc.Steps {
+				// useful for debugging
+				//allAuthenticators, _ := s.app.AuthenticatorKeeper.GetAuthenticatorDataForAccount(s.chainA.GetContext(), s.Account.GetAddress())
+				//fmt.Println("allAuthenticators", allAuthenticators)
 
-			// Add keys
-			for _, keyIndex := range tc.KeysToAdd {
-				err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "SigVerification", s.PrivKeys[keyIndex].PubKey().Bytes())
-				s.Require().NoError(err, "Failed to add authenticator for key %d in %s", keyIndex, tc.Description)
-			}
+				// Add keys for the current step
+				for _, keyIndex := range step.KeysToAdd {
+					err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "SigVerification", s.PrivKeys[keyIndex].PubKey().Bytes())
+					s.Require().NoError(err, "Failed to add authenticator for key %d in %s", keyIndex, tc.Description)
+				}
 
-			// Remove keys
-			for _, authenticatorId := range tc.AuthenticatorsToRemove {
-				err := s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), uint64(authenticatorId))
-				s.Require().NoError(err, "Failed to remove authenticator with id %d in %s", authenticatorId, tc.Description)
-			}
+				// Remove keys for the current step
+				for _, authenticatorId := range step.AuthenticatorsToRemove {
+					err := s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), uint64(authenticatorId))
+					s.Require().NoError(err, "Failed to remove authenticator with id %d in %s", authenticatorId, tc.Description)
+				}
 
-			// Final sends
-			for _, send := range tc.FinalSends {
-				_, err := s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[send.PrivKeyIndex], sendMsg)
-				if send.ShouldSucceed {
-					s.Require().NoError(err, tc.Description)
-				} else {
-					s.Require().Error(err, tc.Description)
+				// Send for the current step
+				for _, send := range step.Sends {
+					_, err := s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[send.PrivKeyIndex], sendMsg)
+					if send.ShouldSucceed {
+						s.Require().NoError(err, tc.Description)
+					} else {
+						s.Require().Error(err, tc.Description)
+					}
 				}
 			}
 		})
