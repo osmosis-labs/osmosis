@@ -23,19 +23,11 @@ const (
 	// Pre-upgrade osmosis repo/tag to pull.
 	// It should be uploaded to Docker Hub. OSMOSIS_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
-<<<<<<< HEAD
-	previousVersionOsmoRepository = "osmolabs/osmosis-dev"
-	previousVersionOsmoTag        = "v18.x-747300c7-1693236872"
-	// Pre-upgrade repo/tag for osmosis initialization (this should be one version below upgradeVersion)
-	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
-	previousVersionInitTag        = "18.0"
-=======
 	previousVersionOsmoRepository = "osmolabs/osmosis"
 	previousVersionOsmoTag        = "18.0.0-alpine"
 	// Pre-upgrade repo/tag for osmosis initialization (this should be one version below upgradeVersion)
 	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
 	previousVersionInitTag        = "v18-faster-blocks"
->>>>>>> 4b4baea3 (fast blocks e2e (#6302))
 	// Hermes repo/version for relayer
 	relayerRepository = "informalsystems/hermes"
 	relayerTag        = "1.5.1"
