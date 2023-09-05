@@ -635,25 +635,15 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	// Assert that positions, which were not included in swaps, were not affected
 
 	// Address3 Position1: [-160000; -20000]
-	addr3BalancesBefore = s.addrBalance(chainBNode, address3)
-	chainBNode.CollectSpreadRewards(address3, fmt.Sprint(positionsAddress3[0].Position.PositionId))
-	addr3BalancesAfter = s.addrBalance(chainBNode, address3)
-
-	// Assert that balances did not change for any token
-	s.assertBalancesInvariants(addr3BalancesBefore, addr3BalancesAfter, true, true)
+	assertUserThree := func() { s.ensureZeroRewardSpreads(chainBNode, address3, positionsAddress3[0].Position.PositionId) }
 
 	// Address2's only position: [220000; 342000]
-	addr2BalancesBefore := s.addrBalance(chainBNode, address2)
-	chainBNode.CollectSpreadRewards(address2, fmt.Sprint(positionsAddress2[0].Position.PositionId))
-	addr2BalancesAfter := s.addrBalance(chainBNode, address2)
+	assertUserTwo := func() { s.ensureZeroRewardSpreads(chainBNode, address2, positionsAddress2[0].Position.PositionId) }
 
-	// Assert the balances did not change for every token
-	s.assertBalancesInvariants(addr2BalancesBefore, addr2BalancesAfter, true, true)
-
+	runFuncsInParallelAndBlock([]func(){assertUserThree, assertUserTwo})
 	// Withdraw Position
 
 	defaultLiquidityRemoval := "1000"
-	chainB.WaitForNumHeights(1)
 
 	// Assert removing some liquidity
 	// 1) remove default liquidity from the 0th position of every address
@@ -786,6 +776,15 @@ func (s *IntegrationTestSuite) assertBalancesInvariants(balancesBefore, balances
 	if assertUosmoBalanceIsConstant {
 		s.Require().True(balancesAfter.AmountOf("uosmo").Equal(balancesBefore.AmountOf("uosmo")))
 	}
+}
+
+func (s *IntegrationTestSuite) ensureZeroRewardSpreads(node *chain.NodeConfig, addr string, positionId uint64) {
+	addr2BalancesBefore := s.addrBalance(node, addr)
+	node.CollectSpreadRewards(addr, fmt.Sprint(positionId))
+	addr2BalancesAfter := s.addrBalance(node, addr)
+
+	// Assert the balances did not change for every token
+	s.assertBalancesInvariants(addr2BalancesBefore, addr2BalancesAfter, true, true)
 }
 
 // Get current (updated) pool
