@@ -246,6 +246,13 @@ var (
 		return lpTest
 	}
 
+	defaultFullRangeMigrationCase = lpTest{
+		tokensProvided: DefaultCoins,
+
+		lowerTick: types.MinInitializedTickV2,
+		upperTick: types.MaxTick,
+	}
+
 	// Test cases corresponding to refactoring min spot price
 	// from 10^-12 to 10^-30.
 	// See: https://github.com/osmosis-labs/osmosis/issues/5726
@@ -253,12 +260,7 @@ var (
 	// inside TestCreatePosition by calling estimateLPMigrationCaseResults
 	// test helper.
 	positionCasesMinSpotPriceRefactor = map[string]lpTest{
-		"updated full range - price in the original full range": {
-			tokensProvided: DefaultCoins,
-
-			lowerTick: types.MinInitializedTickV2,
-			upperTick: types.MaxTick,
-		},
+		"updated full range - price in the original full range": defaultFullRangeMigrationCase,
 		"updated full range - price in the extended range": {
 			tokensProvided: coinsExtendedFullRangePrice,
 
@@ -1449,6 +1451,31 @@ func (s *KeeperTestSuite) TestSingleSidedAddToPosition() {
 			s.Require().Error(err)
 		})
 	}
+}
+
+// This test validates that there are no panics or errors when
+// adding to a position created on an extended full range.
+// This test assumes that CreatePosition and WithdrawPosition are implemented
+// correctly. As a result, it does not validate the output values. Only the lack of errors
+// or panics.
+func (s *KeeperTestSuite) TestAddToPosition_MinSpotPriceMigration() {
+	s.SetupTest()
+	pool := s.PrepareConcentratedPool()
+
+	// Fund for 2 creations creation and addition.
+	s.FundAcc(s.TestAccs[0], DefaultCoins.Add(DefaultCoins...).Add(DefaultCoins...))
+
+	// Create a position so that the next one is not the last in the pool (adding in such a case is disallowed).
+	_, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	// Create a position with a full range
+	positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), types.MinInitializedTickV2, types.MaxTick)
+	s.Require().NoError(err)
+
+	// Add to position
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.AddToPosition(s.Ctx, s.TestAccs[0], positionData.ID, DefaultAmt0, DefaultAmt1, osmomath.ZeroInt(), osmomath.ZeroInt())
+	s.Require().NoError(err)
 }
 
 // mergeConfigs merges every desired non-zero field from overwrite
