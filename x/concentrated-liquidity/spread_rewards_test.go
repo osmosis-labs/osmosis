@@ -35,6 +35,7 @@ var (
 	oneEthCoins = sdk.NewDecCoins(oneEth)
 	onlyUSDC    = [][]string{{USDC}, {USDC}, {USDC}, {USDC}}
 	onlyETH     = [][]string{{ETH}, {ETH}, {ETH}, {ETH}}
+	emptyCoins  = sdk.NewCoins()
 )
 
 func (s *KeeperTestSuite) TestCreateAndGetSpreadRewardAccumulator() {
@@ -1486,7 +1487,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_MinSpotPriceMigration() {
 	spreadFactor := types.AuthorizedSpreadFactors[1]
 	s.Require().False(spreadFactor.IsZero())
 
-	poolId, positions, coinsSwappedIn := s.swapToMinTickAndBack(spreadFactor)
+	poolId, positions, coinsSwappedIn := s.swapToMinTickAndBack(spreadFactor, emptyCoins)
 
 	s.Require().Len(coinsSwappedIn, 2)
 	tokenInZeroForOne := coinsSwappedIn[0]
@@ -1511,15 +1512,10 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_MinSpotPriceMigration() {
 		actualCollected = actualCollected.Add(collected...)
 	}
 
-	errTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: osmomath.OneDec(),
-		RoundingDir:       osmomath.RoundDown,
-	}
-
 	// Validate that the total spread rewards collected is equal to the expected total spread rewards
 	s.Require().Equal(len(expectedTotalSpreadRewards), len(actualCollected))
 	for _, coin := range expectedTotalSpreadRewards {
-		s.Require().Equal(0, errTolerance.Compare(coin.Amount, actualCollected.AmountOf(coin.Denom)), fmt.Sprintf("expected (%s), actual (%s)", coin.Amount, actualCollected.AmountOf(coin.Denom)))
+		s.Require().Equal(0, oneAdditiveToleranceRoundDown.Compare(coin.Amount, actualCollected.AmountOf(coin.Denom)), fmt.Sprintf("expected (%s), actual (%s)", coin.Amount, actualCollected.AmountOf(coin.Denom)))
 	}
 }
 

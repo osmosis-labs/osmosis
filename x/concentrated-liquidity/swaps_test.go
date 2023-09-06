@@ -76,6 +76,12 @@ var (
 	oneAdditiveTolerance = osmomath.ErrTolerance{
 		AdditiveTolerance: osmomath.OneDec(),
 	}
+
+	oneAdditiveToleranceRoundDown = osmomath.ErrTolerance{
+		AdditiveTolerance: osmomath.OneDec(),
+		RoundingDir:       osmomath.RoundDown,
+	}
+
 	swapOutGivenInCases = map[string]SwapTest{
 		//  One price range
 		//
@@ -3514,7 +3520,7 @@ func (s *KeeperTestSuite) TestSwap_MinSpotPriceMigration() {
 		s.SetupTest()
 		// Validated by the helper method.
 		// This helper is reused in other more complex tests.
-		s.swapToMinTickAndBack(osmomath.ZeroDec())
+		s.swapToMinTickAndBack(osmomath.ZeroDec(), emptyCoins)
 	})
 
 	s.Run("in given out", func() {

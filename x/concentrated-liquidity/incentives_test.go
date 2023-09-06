@@ -2,6 +2,7 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +17,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
+
+const OSMO = "uosmo"
 
 var (
 	defaultPoolId     = uint64(1)
@@ -3547,5 +3550,32 @@ func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
 
 			s.Require().Equal(test.expectedNumberOfRecords, len(incRecords))
 		})
+	}
+}
+
+// This test validates that incentive rewards are collected without issues
+// when positions are created over the new extended range.
+func (s *KeeperTestSuite) TestCollectIncentives_MinSpotPriceMigration() {
+	s.SetupTest()
+
+	incentiveAmount := osmomath.NewInt(1000)
+	incentiveCoin := sdk.NewCoin(OSMO, incentiveAmount)
+	expectedTotalIncentiveRewards := sdk.NewCoins(incentiveCoin)
+	_, positions, _ := s.swapToMinTickAndBack(osmomath.ZeroDec(), expectedTotalIncentiveRewards)
+
+	actualCollected := sdk.NewCoins()
+
+	// Collect incentive rewards
+	for _, position := range positions {
+		collected, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, s.TestAccs[0], position.ID)
+		s.Require().NoError(err)
+
+		actualCollected = actualCollected.Add(collected...)
+	}
+
+	// Validate that the total incentive rewards collected are equal to the expected total incentive rewards
+	s.Require().Equal(len(expectedTotalIncentiveRewards), len(actualCollected))
+	for _, coin := range expectedTotalIncentiveRewards {
+		s.Require().Equal(0, oneAdditiveToleranceRoundDown.Compare(coin.Amount, actualCollected.AmountOf(coin.Denom)), fmt.Sprintf("expected (%s), actual (%s)", coin.Amount, actualCollected.AmountOf(coin.Denom)))
 	}
 }

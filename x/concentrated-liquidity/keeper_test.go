@@ -25,6 +25,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 )
 
+const migrationTestTimeBetweenSwapsSecs = 10
+
 var (
 	// TODO: switch:
 	// DefaultMinTick to tyoes.MinInitializedTickV2 and
@@ -503,12 +505,30 @@ func (s *KeeperTestSuite) setupPositionsForMinSpotPriceMigration(spreadFactor os
 	return poolId, positions
 }
 
-func (s *KeeperTestSuite) swapToMinTickAndBack(spreadFactor osmomath.Dec) (poolId uint64, positions []cl.CreatePositionData, actualAmountsSwappedIn sdk.Coins) {
+// swaps to the lowered minimum tick of 10^-30 and back to the original tick which is in the positive range.
+// There are 3 positions setup over the swapped range (see setupPositionsForMinSpotPriceMigration for details).
+// Additionally, spread factor and incentive rewards are configurable as parameters.
+// Returns pool id position data and actual tokens swapped in (in zero for one direction and back).
+func (s *KeeperTestSuite) swapToMinTickAndBack(spreadFactor osmomath.Dec, incentiveRewards sdk.Coins) (poolId uint64, positions []cl.CreatePositionData, actualAmountsSwappedIn sdk.Coins) {
 	poolId, positions = s.setupPositionsForMinSpotPriceMigration(spreadFactor)
 
 	// Refetch pool
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
+
+	incentiveCreator := s.TestAccs[2]
+	s.FundAcc(incentiveCreator, incentiveRewards)
+
+	// Create incentive rewards if desired
+	if !incentiveRewards.Empty() {
+		s.Require().Len(incentiveRewards, 1)
+		incentiveCoin := incentiveRewards[0]
+
+		_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(
+			s.Ctx, poolId, s.TestAccs[2],
+			incentiveCoin, incentiveCoin.Amount.ToLegacyDec().Quo(osmomath.NewDec(migrationTestTimeBetweenSwapsSecs)), s.Ctx.BlockTime(), time.Nanosecond)
+		s.Require().NoError(err)
+	}
 
 	// esimate amount in to swap left all the way until the new min initialized tick
 	amountZeroIn, _, _ := s.computeSwapAmounts(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTickV2, true, false)
@@ -525,6 +545,10 @@ func (s *KeeperTestSuite) swapToMinTickAndBack(spreadFactor osmomath.Dec) (poolI
 		spreadFactor, osmomath.ZeroDec(),
 	)
 	s.Require().NoError(err)
+
+	// Increase time so that incentives are collected over the current position
+	// 10 seconds
+	s.AddBlockTime(time.Second * migrationTestTimeBetweenSwapsSecs)
 
 	// Refetch pool
 	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
