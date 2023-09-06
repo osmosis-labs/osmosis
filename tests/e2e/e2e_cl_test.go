@@ -27,7 +27,7 @@ import (
 // Note: do not use chain B in this test as it has taker fee set.
 // This TWAP test depends on specific values that might be affected
 // by the taker fee.
-func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAPTest() {
+func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP_Test() {
 	chainA, chainANode := s.getChainACfgs()
 
 	poolId, err := chainA.SubmitCreateConcentratedPoolProposal(chainANode)
