@@ -7,7 +7,7 @@ import (
 const (
 	IbcFlag       = "Ibc"
 	UpgradeFlag   = "Upgrade"
-	StateSyncFlag = "StateSyncTest"
+	StateSyncFlag = "StateSync"
 )
 
 type E2ETest struct {
