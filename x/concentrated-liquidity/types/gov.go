@@ -15,9 +15,7 @@ const (
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeCreateConcentratedLiquidityPool)
-	govtypes.RegisterProposalTypeCodec(&CreateConcentratedLiquidityPoolsProposal{}, "osmosis/CreateCLPoolsProposal")
 	govtypes.RegisterProposalType(ProposalTypeTickSpacingDecrease)
-	govtypes.RegisterProposalTypeCodec(&TickSpacingDecreaseProposal{}, "osmosis/TickSpacingDecreaseProposal")
 }
 
 var (

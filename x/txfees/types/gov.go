@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -14,7 +14,6 @@ const (
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdateFeeToken)
-	govtypes.RegisterProposalTypeCodec(&UpdateFeeTokenProposal{}, "osmosis/UpdateFeeTokenProposal")
 }
 
 var _ govtypes.Content = &UpdateFeeTokenProposal{}

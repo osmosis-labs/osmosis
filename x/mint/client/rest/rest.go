@@ -8,5 +8,5 @@ import (
 
 // RegisterRoutes registers minting module REST handlers on the provided router.
 func RegisterRoutes(clientCtx client.Context, rtr *mux.Router) {
-	registerQueryRoutes(clientCtx, _)
+	registerQueryRoutes(clientCtx, rtr)
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -14,9 +14,7 @@ const (
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeUploadCosmWasmPoolCodeAndWhiteList)
-	govtypes.RegisterProposalTypeCodec(&UploadCosmWasmPoolCodeAndWhiteListProposal{}, "osmosis/UploadCosmWasmPoolCodeAndWhiteListProposal")
 	govtypes.RegisterProposalType(ProposalTypeMigratePoolContractsProposal)
-	govtypes.RegisterProposalTypeCodec(&MigratePoolContractsProposal{}, "osmosis/MigratePoolContractsProposal")
 }
 
 var (

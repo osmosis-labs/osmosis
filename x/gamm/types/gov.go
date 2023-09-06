@@ -20,13 +20,9 @@ const (
 // Init registers proposals to update and replace migration records.
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdateMigrationRecords)
-	govtypes.RegisterProposalTypeCodec(&UpdateMigrationRecordsProposal{}, "osmosis/UpdateMigrationRecordsProposal")
 	govtypes.RegisterProposalType(ProposalTypeReplaceMigrationRecords)
-	govtypes.RegisterProposalTypeCodec(&ReplaceMigrationRecordsProposal{}, "osmosis/ReplaceMigrationRecordsProposal")
 	govtypes.RegisterProposalType(ProposalTypeCreateConcentratedLiquidityPoolAndLinktoCFMM)
-	govtypes.RegisterProposalTypeCodec(&CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal{}, "osmosis/CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal")
 	govtypes.RegisterProposalType(ProposalTypeSetScalingFactorController)
-	govtypes.RegisterProposalTypeCodec(&SetScalingFactorControllerProposal{}, "osmosis/SetScalingFactorControllerProposal")
 }
 
 var (

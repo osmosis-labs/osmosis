@@ -71,7 +71,7 @@ func GenAndDeliverTx(
 		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to generate mock tx"), nil, err
 	}
 
-	gasInfo, _, err := app.Deliver(txGen.TxEncoder(), tx)
+	gasInfo, _, err := app.DeliverTx(txGen.TxEncoder(), tx)
 	if err != nil {
 		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to deliver tx"), nil, err
 	}
