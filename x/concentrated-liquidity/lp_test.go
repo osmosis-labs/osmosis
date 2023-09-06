@@ -246,13 +246,6 @@ var (
 		return lpTest
 	}
 
-	defaultFullRangeMigrationCase = lpTest{
-		tokensProvided: DefaultCoins,
-
-		lowerTick: types.MinInitializedTickV2,
-		upperTick: types.MaxTick,
-	}
-
 	// Test cases corresponding to refactoring min spot price
 	// from 10^-12 to 10^-30.
 	// See: https://github.com/osmosis-labs/osmosis/issues/5726
@@ -260,7 +253,12 @@ var (
 	// inside TestCreatePosition by calling estimateLPMigrationCaseResults
 	// test helper.
 	positionCasesMinSpotPriceRefactor = map[string]lpTest{
-		"updated full range - price in the original full range": defaultFullRangeMigrationCase,
+		"updated full range - price in the original full range": {
+			tokensProvided: DefaultCoins,
+
+			lowerTick: types.MinInitializedTickV2,
+			upperTick: types.MaxTick,
+		},
 		"updated full range - price in the extended range": {
 			tokensProvided: coinsExtendedFullRangePrice,
 
