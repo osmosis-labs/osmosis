@@ -166,8 +166,8 @@ var (
 		},
 	}
 
-	amountZeroExtendedRange = sdk.NewInt(1_000_000).Add(sdk.NewInt(10).ToLegacyDec().PowerMut(18).TruncateInt())
-	amountOneExtendedRange  = sdk.NewInt(50).Mul(sdk.NewInt(1_000_000))
+	amountZeroExtendedRange = osmomath.NewInt(1_000_000).Add(osmomath.NewInt(10).ToLegacyDec().PowerMut(18).TruncateInt())
+	amountOneExtendedRange  = osmomath.NewInt(50).Mul(osmomath.NewInt(1_000_000))
 
 	// coins that initiliaze initial spot price to be in the
 	// extended range
