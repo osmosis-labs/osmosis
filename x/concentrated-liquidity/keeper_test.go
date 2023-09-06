@@ -438,47 +438,6 @@ func (s *KeeperTestSuite) TestValidatePermissionlessPoolCreationEnabled() {
 	s.Require().Error(s.App.ConcentratedLiquidityKeeper.ValidatePermissionlessPoolCreationEnabled(s.Ctx))
 }
 
-// runFungifySetup Sets up a pool with `poolSpreadFactor`, prepares `numPositions` default positions on it (all identical), and sets
-// up the passed in incentive records such that they emit on the pool. It also sets the largest authorized uptime to be `fullChargeDuration`.
-//
-// Returns the pool, expected position ids and the total liquidity created on the pool.
-func (s *KeeperTestSuite) runFungifySetup(address sdk.AccAddress, numPositions int, fullChargeDuration time.Duration, poolSpreadFactor osmomath.Dec, incentiveRecords []types.IncentiveRecord) (types.ConcentratedPoolExtension, []uint64, osmomath.Dec) {
-	expectedPositionIds := make([]uint64, numPositions)
-	for i := 0; i < numPositions; i++ {
-		expectedPositionIds[i] = uint64(i + 1)
-	}
-
-	s.TestAccs = apptesting.CreateRandomAccounts(5)
-	s.SetBlockTime(defaultBlockTime)
-	totalPositionsToCreate := osmomath.NewInt(int64(numPositions))
-	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
-
-	// Set test authorized uptime params.
-	params := s.clk.GetParams(s.Ctx)
-	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, fullChargeDuration}
-	s.clk.SetParams(s.Ctx, params)
-
-	// Fund account
-	s.FundAcc(address, requiredBalances)
-
-	// Create CL pool
-	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, poolSpreadFactor)
-
-	// Set incentives for pool to ensure accumulators work correctly
-	err := s.clk.SetMultipleIncentiveRecords(s.Ctx, incentiveRecords)
-	s.Require().NoError(err)
-
-	// Set up fully charged positions
-	totalLiquidity := osmomath.ZeroDec()
-	for i := 0; i < numPositions; i++ {
-		positionData, err := s.clk.CreatePosition(s.Ctx, defaultPoolId, address, DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-		s.Require().NoError(err)
-		totalLiquidity = totalLiquidity.Add(positionData.Liquidity)
-	}
-
-	return pool, expectedPositionIds, totalLiquidity
-}
-
 func (s *KeeperTestSuite) runMultipleAuthorizedUptimes(tests func()) {
 	authorizedUptimesTested := [][]time.Duration{
 		DefaultAuthorizedUptimes,
@@ -506,4 +465,37 @@ func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64, rangeTestP
 
 	// Assert global invariants on final state
 	s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
+}
+
+// creates a pososition from the first test account with default coins and no slippage protection
+// for a given pool id and ticks.
+// a convinience method for testing.
+func (s *KeeperTestSuite) createDefaultPosition(poolId uint64, lowerTick, upperTick int64) uint64 {
+	positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	s.Require().NoError(err)
+	return positionData.ID
+}
+
+// sets up positions for testing the migration of the min spot price from 10^-12 to 10^-30.
+// Specifically, creates positions:
+// - original full range
+// - new extended full range
+// - position between the new min spot price and the old min spot price
+func (s *KeeperTestSuite) setupPositionsForMinSpotPriceMigration() uint64 {
+	pool := s.PrepareConcentratedPool()
+	poolId := pool.GetId()
+
+	// Fund test account with tokens necessary for all positions
+	s.FundAcc(s.TestAccs[0], DefaultCoins.Add(DefaultCoins...).Add(DefaultCoins...))
+
+	// Setup an original full range position
+	s.createDefaultPosition(poolId, types.MinInitializedTick, types.MaxTick)
+
+	// Setup a full range position on the new min spot price
+	s.createDefaultPosition(poolId, types.MinInitializedTickV2, types.MaxTick)
+
+	// Setup a position between the new min spot price and the old min spot price
+	s.createDefaultPosition(poolId, types.MinInitializedTickV2+1000, types.MinInitializedTick-1000)
+
+	return poolId
 }
