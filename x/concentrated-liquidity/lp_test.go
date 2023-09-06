@@ -742,8 +742,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// Set global spread reward growth to 1 ETH and charge the spread reward to the pool.
 			if !config.preSetChargeSpreadRewards.IsZero() {
-				// TODO: make sure works for other tests
-				// globalSpreadRewardGrowth := sdk.NewDecCoin(ETH, osmomath.NewInt(1))
 				s.AddToSpreadRewardAccumulator(pool.GetId(), tc.setupConfig.preSetChargeSpreadRewards)
 
 				// Set the expected spread rewards claimed to the amount of liquidity created since the global spread reward growth is 1.
