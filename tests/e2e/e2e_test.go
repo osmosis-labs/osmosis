@@ -89,7 +89,7 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		}
 
 		s.T().Run(methodName, func(t *testing.T) {
-			//t.Parallel()
+			t.Parallel()
 			value.MethodByName(methodName).Call(nil)
 		})
 
