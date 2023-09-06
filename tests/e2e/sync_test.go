@@ -12,7 +12,7 @@ import (
 )
 
 // TODO: Consider moving this to its own package and having separate test instantiation for it.
-func (s *IntegrationTestSuite) StateSync() {
+func (s *IntegrationTestSuite) StateSyncTest() {
 	if s.skipStateSync {
 		s.T().Skip()
 	}

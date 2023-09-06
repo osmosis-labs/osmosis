@@ -27,7 +27,7 @@ import (
 // Note: do not use chain B in this test as it has taker fee set.
 // This TWAP test depends on specific values that might be affected
 // by the taker fee.
-func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() {
+func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAPTest() {
 	chainA, chainANode := s.getChainACfgs()
 
 	poolId, err := chainA.SubmitCreateConcentratedPoolProposal(chainANode)
@@ -131,7 +131,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 // Note: this test depends on taker fee being set.
 // As a result, we use chain B. Chain A has zero taker fee.
 // TODO: Move this test and its components to its own file, Its way too big and needs to be split up significantly.
-func (s *IntegrationTestSuite) ConcentratedLiquidity() {
+func (s *IntegrationTestSuite) ConcentratedLiquidityTest() {
 	var (
 		denom0                 = "uion"
 		denom1                 = "uosmo"

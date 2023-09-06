@@ -3,6 +3,7 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -35,123 +36,59 @@ var (
 	minDecTolerance = osmomath.MustNewDecFromStr("0.000000000000000001")
 	// TODO: lower
 	govPropTimeout = time.Minute
+
+	stateSyncTests = []string{"StateSyncTest"}
+	upgradesTests  = []string{"GeometricTwapMigrationTest", "AddToExistingLockPostUpgradeTest"}
+	ibcTests       = []string{"IBCTokenTransferRateLimitingTest", "IBCTokenTransferAndCreatePoolTest", "IBCWasmHooksTest", "PacketForwardingTest"}
 )
 
-// TODO: Find more scalable way to do this
+// Contains is a function that should exist in the stdlib
+func Contains(slice []string, target string) bool {
+	for _, element := range slice {
+		if element == target {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *IntegrationTestSuite) TestAllE2E() {
-	// Reset the default taker fee to 0.15%, so we can actually run tests with it activated
-	s.T().Run("SetDefaultTakerFeeChainB", func(t *testing.T) {
-		s.T().Log("resetting the default taker fee to 0.15% on chain B only")
-		s.SetDefaultTakerFeeChainB()
-	})
-
 	// Zero Dependent Tests
-	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
-		t.Parallel()
-		s.CreateConcentratedLiquidityPoolVoting_And_TWAP()
-	})
+	value := reflect.ValueOf(s)
+	typeOfS := value.Type()
 
-	s.T().Run("ProtoRev", func(t *testing.T) {
-		t.Parallel()
-		s.ProtoRev()
-	})
+	for i := 0; i < value.NumMethod(); i++ {
+		methodName := typeOfS.Method(i).Name
+		if !strings.HasSuffix(methodName, "Test") {
+			continue
+		}
 
-	s.T().Run("ConcentratedLiquidity", func(t *testing.T) {
-		t.Parallel()
-		s.ConcentratedLiquidity()
-	})
+		if s.skipStateSync || !s.runScheduledTest {
+			if Contains(stateSyncTests, methodName) {
+				s.T().Skip(fmt.Sprintf("Skipping %s because skipStateSync is set ", methodName))
+				continue
+			}
+		}
 
-	s.T().Run("SuperfluidVoting", func(t *testing.T) {
-		t.Parallel()
-		s.SuperfluidVoting()
-	})
+		if s.skipUpgrade {
+			if Contains(upgradesTests, methodName) {
+				s.T().Skip(fmt.Sprintf("Skipping %s because skipUpgrade is set ", methodName))
+				continue
+			}
+		}
 
-	s.T().Run("AddToExistingLock", func(t *testing.T) {
-		t.Parallel()
-		s.AddToExistingLock()
-	})
+		if s.skipIBC {
+			if Contains(ibcTests, methodName) {
+				s.T().Skip(fmt.Sprintf("Skipping %s because skipIBC is set ", methodName))
+				continue
+			}
+		}
 
-	s.T().Run("ExpeditedProposals", func(t *testing.T) {
-		t.Parallel()
-		s.ExpeditedProposals()
-	})
-
-	s.T().Run("GeometricTWAP", func(t *testing.T) {
-		t.Parallel()
-		s.GeometricTWAP()
-	})
-
-	s.T().Run("LargeWasmUpload", func(t *testing.T) {
-		t.Parallel()
-		s.LargeWasmUpload()
-	})
-
-	s.T().Run("StableSwap", func(t *testing.T) {
-		t.Parallel()
-		s.StableSwap()
-	})
-
-	// Test currently disabled
-	// s.T().Run("ArithmeticTWAP", func(t *testing.T) {
-	// 	t.Parallel()
-	// 	s.ArithmeticTWAP()
-	// })
-
-	// State Sync Dependent Tests
-
-	if s.skipStateSync || !s.runScheduledTest {
-		s.T().Skip()
-	} else {
-		s.T().Run("StateSync", func(t *testing.T) {
+		s.T().Run(methodName, func(t *testing.T) {
 			t.Parallel()
-			s.StateSync()
-		})
-	}
-
-	// Upgrade Dependent Tests
-
-	if s.skipUpgrade {
-		s.T().Skip("Skipping GeometricTwapMigration test")
-	} else {
-		s.T().Run("GeometricTwapMigration", func(t *testing.T) {
-			t.Parallel()
-			s.GeometricTwapMigration()
-		})
-	}
-
-	if s.skipUpgrade {
-		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
-	} else {
-		s.T().Run("AddToExistingLockPostUpgrade", func(t *testing.T) {
-			t.Parallel()
-			s.AddToExistingLockPostUpgrade()
-		})
-	}
-
-	// IBC Dependent Tests
-
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	} else {
-		s.T().Run("IBCTokenTransferRateLimiting", func(t *testing.T) {
-			t.Parallel()
-			s.IBCTokenTransferRateLimiting()
+			value.MethodByName(methodName).Call(nil)
 		})
 
-		s.T().Run("IBCTokenTransferAndCreatePool", func(t *testing.T) {
-			t.Parallel()
-			s.IBCTokenTransferAndCreatePool()
-		})
-
-		s.T().Run("IBCWasmHooks", func(t *testing.T) {
-			t.Parallel()
-			s.IBCWasmHooks()
-		})
-
-		s.T().Run("PacketForwarding", func(t *testing.T) {
-			t.Parallel()
-			s.PacketForwarding()
-		})
 	}
 }
 
@@ -159,7 +96,7 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 // 1. The protorev module is correctly configured on init
 // 2. The protorev module can correctly back run a swap
 // 3. the protorev module correctly tracks statistics
-func (s *IntegrationTestSuite) ProtoRev() {
+func (s *IntegrationTestSuite) ProtoRevTest() {
 	const (
 		poolFile1 = "protorevPool1.json"
 		poolFile2 = "protorevPool2.json"
@@ -273,7 +210,7 @@ func (s *IntegrationTestSuite) ProtoRev() {
 	runFuncsInParallelAndBlock([]func(){supplyCheck, numTradesCheck, profits})
 }
 
-func (s *IntegrationTestSuite) StableSwap() {
+func (s *IntegrationTestSuite) StableSwapTest() {
 	chainAB, chainABNode := s.getChainCfgs()
 
 	index := s.getChainIndex(chainAB)
@@ -305,7 +242,7 @@ func (s *IntegrationTestSuite) StableSwap() {
 // correctly and does not cause a chain halt. This test was created
 // in-response to a testnet incident when performing the geometric twap
 // upgrade. Upon adding the migrations logic, the tests began to pass.
-func (s *IntegrationTestSuite) GeometricTwapMigration() {
+func (s *IntegrationTestSuite) GeometricTwapMigrationTest() {
 	if s.skipUpgrade {
 		s.T().Skip("Skipping upgrade tests")
 	}
@@ -335,7 +272,7 @@ func (s *IntegrationTestSuite) GeometricTwapMigration() {
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
 // Additionally, it attempts to create a pool with IBC denoms.
-func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
+func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePoolTest() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -376,7 +313,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 // - voting yes on the proposal from the validator wallet
 // - voting no on the proposal from the delegator wallet
 // - ensuring that delegator's wallet overwrites the validator's vote
-func (s *IntegrationTestSuite) SuperfluidVoting() {
+func (s *IntegrationTestSuite) SuperfluidVotingTest() {
 	chainAB, chainABNode := s.getChainCfgs()
 
 	poolId := chainABNode.CreateBalancerPool("nativeDenomPool.json", initialization.ValidatorWalletName)
@@ -437,7 +374,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	)
 }
 
-func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
+func (s *IntegrationTestSuite) IBCTokenTransferRateLimitingTest() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -502,13 +439,13 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	}
 }
 
-func (s *IntegrationTestSuite) LargeWasmUpload() {
+func (s *IntegrationTestSuite) LargeWasmUploadTest() {
 	_, chainNode := s.getChainCfgs()
 	validatorAddr := chainNode.GetWallet(initialization.ValidatorWalletName)
 	chainNode.StoreWasmCode("bytecode/large.wasm", validatorAddr)
 }
 
-func (s *IntegrationTestSuite) IBCWasmHooks() {
+func (s *IntegrationTestSuite) IBCWasmHooksTest() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -519,7 +456,7 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 
 	transferAmount := int64(10)
 	validatorAddr := chainBNode.GetWallet(initialization.ValidatorWalletName)
-	fmt.Println("Sending IBC transfer IBCWasmHooks")
+	fmt.Println("Sending IBC transfer IBCWasmHooksTest")
 	coin := sdk.NewCoin("uosmo", osmomath.NewInt(transferAmount))
 	chainBNode.SendIBCTransfer(chainA, validatorAddr, contractAddr,
 		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr), coin)
@@ -570,7 +507,7 @@ func (s *IntegrationTestSuite) IBCWasmHooks() {
 
 // TestPacketForwarding sends a packet from chainA to chainB, and forwards it
 // back to chainA with a custom memo to execute the counter contract on chain A
-func (s *IntegrationTestSuite) PacketForwarding() {
+func (s *IntegrationTestSuite) PacketForwardingTest() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -630,9 +567,9 @@ func (s *IntegrationTestSuite) PacketForwarding() {
 }
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
-func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
+func (s *IntegrationTestSuite) AddToExistingLockPostUpgradeTest() {
 	if s.skipUpgrade {
-		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
+		s.T().Skip("Skipping AddToExistingLockPostUpgradeTest test")
 	}
 
 	chainAB, chainABNode := s.getChainCfgs()
@@ -648,7 +585,7 @@ func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 }
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
-func (s *IntegrationTestSuite) AddToExistingLock() {
+func (s *IntegrationTestSuite) AddToExistingLockTest() {
 	chainAB, chainABNode := s.getChainCfgs()
 
 	funder := chainABNode.GetWallet(initialization.ValidatorWalletName)
@@ -840,7 +777,7 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningCA, twapAfterSwapBeforePruning10MsCA, osmomath.NewDecWithPrec(1, 3))
 }
 
-func (s *IntegrationTestSuite) ExpeditedProposals() {
+func (s *IntegrationTestSuite) ExpeditedProposalsTest() {
 	chainAB, chainABNode := s.getChainCfgs()
 
 	propNumber := chainABNode.SubmitTextProposal("expedited text proposal", true)
@@ -879,7 +816,7 @@ func (s *IntegrationTestSuite) ExpeditedProposals() {
 // Note: do not use chain B in this test as it has taker fee set.
 // This TWAP test depends on specific values that might be affected
 // by the taker fee.
-func (s *IntegrationTestSuite) GeometricTWAP() {
+func (s *IntegrationTestSuite) GeometricTWAPTest() {
 	const (
 		// This pool contains 1_000_000 uosmo and 2_000_000 stake.
 		// Equals weights.
@@ -973,7 +910,8 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 //
 // Similarly, CL tests depend on taker fee being set.
 // As a result, we deterministically configure chain B's taker fee prior to running CL tests.
-func (s *IntegrationTestSuite) SetDefaultTakerFeeChainB() {
+func (s *IntegrationTestSuite) SetDefaultTakerFeeChainBTest() {
+	s.T().Log("resetting the default taker fee to 0.15% on chain B only")
 	chainB, chainBNode := s.getChainBCfgs()
 	err := chainBNode.ParamChangeProposal("poolmanager", string(poolmanagertypes.KeyDefaultTakerFee), json.RawMessage(`"0.001500000000000000"`), chainB)
 	s.Require().NoError(err)
