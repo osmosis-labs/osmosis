@@ -238,6 +238,7 @@ func NewOsmosisApp(
 		wasmEnabledProposals,
 		wasmOpts,
 		app.BlockedAddrs(),
+		&encodingConfig,
 	)
 
 	app.SetupHooks()
@@ -299,6 +300,7 @@ func NewOsmosisApp(
 			wasmConfig,
 			app.GetKey(wasm.StoreKey),
 			app.AccountKeeper,
+			app.AuthenticatorKeeper,
 			app.BankKeeper,
 			app.TxFeesKeeper,
 			app.GAMMKeeper,

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -20,42 +21,56 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
+
+	AuthenticatorManager *types.AuthenticatorManager
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, ps paramtypes.Subspace) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, ps paramtypes.Subspace, authenticatorManager *types.AuthenticatorManager) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return Keeper{
-		storeKey:   storeKey,
-		cdc:        cdc,
-		paramSpace: ps,
+		storeKey:             storeKey,
+		cdc:                  cdc,
+		paramSpace:           ps,
+		AuthenticatorManager: authenticatorManager,
 	}
 }
 
-func (k Keeper) GetAuthenticatorsForAccount(ctx sdk.Context, account sdk.AccAddress) ([]types.Authenticator, error) {
+func (k Keeper) GetAuthenticatorDataForAccount(ctx sdk.Context, account sdk.AccAddress) ([]types.AccountAuthenticator, error) {
 	accountAuthenticators, err := osmoutils.GatherValuesFromStorePrefix(
 		ctx.KVStore(k.storeKey),
 		types.KeyAccount(account),
-		func(bz []byte) (types.Authenticator, error) {
+		func(bz []byte) (types.AccountAuthenticator, error) {
 			// unmarshall the authenticator
 			var authenticator types.AccountAuthenticator
-			err := k.cdc.UnmarshalInterface(bz, &authenticator)
-
+			err := k.cdc.Unmarshal(bz, &authenticator)
 			if err != nil {
-				return nil, err
+				return types.AccountAuthenticator{}, err
 			}
 
-			return authenticator.AsAuthenticator(), nil
+			return authenticator, nil
 		})
-
 	if err != nil {
 		return nil, err
 	}
 
 	return accountAuthenticators, nil
+}
+
+func (k Keeper) GetAuthenticatorsForAccount(ctx sdk.Context, account sdk.AccAddress) ([]types.Authenticator, error) {
+	// use k.GetAuthenticatorDataForAccount(ctx, account) to populate a slice of types.Authenticator and return it. authenticator.AsAuthenticator() will be useful here.
+	authenticatorData, err := k.GetAuthenticatorDataForAccount(ctx, account)
+	if err != nil {
+		return nil, err
+	}
+	authenticators := make([]types.Authenticator, len(authenticatorData))
+	for i, authenticator := range authenticatorData {
+		authenticators[i] = authenticator.AsAuthenticator(k.AuthenticatorManager)
+	}
+	return authenticators, nil
 }
 
 // GetNextAuthenticatorId returns the next authenticator id.
@@ -87,8 +102,8 @@ func (k Keeper) GetNextAuthenticatorIdAndIncrement(ctx sdk.Context) uint64 {
 }
 
 // AddAuthenticator adds an authenticator to an account
-func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorType string) error {
-	if !types.IsAuthenticatorTypeRegistered(authenticatorType) {
+func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorType string, data []byte) error {
+	if !k.AuthenticatorManager.IsAuthenticatorTypeRegistered(authenticatorType) {
 		return fmt.Errorf("authenticator type %s is not registered", authenticatorType)
 	}
 	nextId := k.GetNextAuthenticatorIdAndIncrement(ctx)
@@ -97,6 +112,7 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 		&types.AccountAuthenticator{
 			Id:   nextId,
 			Type: authenticatorType,
+			Data: data,
 		})
 	return nil
 }
@@ -105,6 +121,10 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorId uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyAccountId(account, authenticatorId)
+	// check that the key exists
+	if !store.Has(key) {
+		return fmt.Errorf("authenticator with id %d does not exist for account %s", authenticatorId, account)
+	}
 	store.Delete(key)
 	return nil
 }

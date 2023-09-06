@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -48,6 +50,39 @@ func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*sdk.Result, error) {
 
 	// increment sequence for successful transaction execution
 	err = chain.SenderAccount.SetSequence(chain.SenderAccount.GetSequence() + 1)
+	if err != nil {
+		return nil, err
+	}
+
+	chain.Coordinator.IncrementTime()
+
+	return r, nil
+}
+
+// SendMsgsNoCheck is an alternative to ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
+func (chain *TestChain) SendMsgsFromPrivKey(account authtypes.AccountI, privKey cryptotypes.PrivKey, msgs ...sdk.Msg) (*sdk.Result, error) {
+	// ensure the chain has the latest time
+	chain.Coordinator.UpdateTimeForChain(chain.TestChain)
+
+	_, r, err := SignAndDeliver(
+		chain.TxConfig,
+		chain.App.GetBaseApp(),
+		chain.GetContext().BlockHeader(),
+		msgs,
+		chain.ChainID,
+		[]uint64{account.GetAccountNumber()},
+		[]uint64{account.GetSequence()},
+		privKey,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// SignAndDeliver calls app.Commit()
+	chain.NextBlock()
+
+	// increment sequence for successful transaction execution
+	err = account.SetSequence(account.GetSequence() + 1)
 	if err != nil {
 		return nil, err
 	}

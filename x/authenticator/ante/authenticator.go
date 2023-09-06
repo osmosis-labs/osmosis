@@ -2,10 +2,8 @@ package ante
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-
-	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 )
 
 // Verify all signatures for a tx and return an error if any are invalid. Note,
@@ -14,17 +12,14 @@ import (
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type AuthenticatorDecorator struct {
-	ak              authante.AccountKeeper
-	signModeHandler authsigning.SignModeHandler
+	authenticatorKeeper *authenticatorkeeper.Keeper
 }
 
 func NewAuthenticatorDecorator(
-	ak authante.AccountKeeper,
-	signModeHandler authsigning.SignModeHandler,
+	authenticatorKeeper *authenticatorkeeper.Keeper,
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
-		ak:              ak,
-		signModeHandler: signModeHandler,
+		authenticatorKeeper: authenticatorKeeper,
 	}
 }
 
@@ -36,25 +31,37 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
-
-	for i, msg := range tx.GetMsgs() {
-
+	for msgIndex, msg := range tx.GetMsgs() {
 		// Todo: Replace getting the authenticator for something like this:
-		//ad.authenticatorKeeper.GetAuthenticatorsForAccount(msg.GetSigners()[0])  // ToDo: How do we deal with multiple signers?
-		authenticator := authenticatortypes.NewSigVerificationAuthenticator(ad.ak, ad.signModeHandler)
-
-		// Get the authentication data for the transaction
-		authData, err := authenticator.GetAuthenticationData(tx, uint8(i), simulate)
+		authenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccount(ctx, msg.GetSigners()[0])
 		if err != nil {
-			return ctx, err
+			return sdk.Context{}, err
 		}
 
-		// Authenticate the message
-		_, err = authenticator.Authenticate(ctx, msg, authData)
-		if err != nil {
-			return ctx, err
+		if len(authenticators) == 0 {
+			authenticators = append(authenticators, ad.authenticatorKeeper.AuthenticatorManager.GetDefaultAuthenticator())
+		}
+
+		// ToDo: Add a way for the user to specify which authenticator to use as part of the tx (likely in the signature)
+		// Note: we have to make sure that doing that does not make the signature malleable
+
+		for _, authenticator := range authenticators {
+			// Get the authentication data for the transaction
+			authData, err := authenticator.GetAuthenticationData(tx, uint8(msgIndex), simulate)
+			if err != nil {
+				return ctx, err
+			}
+
+			// Authenticate the message
+			authenticated, err := authenticator.Authenticate(ctx, msg, authData)
+			if err != nil {
+				return ctx, err
+			}
+
+			if authenticated {
+				return next(ctx, tx, simulate)
+			}
 		}
 	}
-
-	return next(ctx, tx, simulate)
+	return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authentication failed")
 }

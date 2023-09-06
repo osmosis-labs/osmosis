@@ -1,40 +1,54 @@
 package types
 
-// List of registered authenticators
-var registeredAuthenticators []Authenticator
-
-func ResetAuthenticators() {
-	registeredAuthenticators = []Authenticator{}
+type AuthenticatorManager struct {
+	registeredAuthenticators  []Authenticator
+	defaultAuthenticatorIndex int
 }
 
-func InitializeAuthenticators(initialAuthenticators []Authenticator) {
-	registeredAuthenticators = initialAuthenticators
+// NewAuthenticatorManager creates a new AuthenticatorManager.
+func NewAuthenticatorManager() *AuthenticatorManager {
+	return &AuthenticatorManager{
+		registeredAuthenticators:  []Authenticator{},
+		defaultAuthenticatorIndex: -1,
+	}
+}
+
+// ResetAuthenticators resets all registered authenticators.
+func (am *AuthenticatorManager) ResetAuthenticators() {
+	am.registeredAuthenticators = []Authenticator{}
+}
+
+// InitializeAuthenticators initializes authenticators. If already initialized, it will not overwrite.
+func (am *AuthenticatorManager) InitializeAuthenticators(initialAuthenticators []Authenticator) {
+	if len(am.registeredAuthenticators) > 0 {
+		return
+	}
+	am.registeredAuthenticators = initialAuthenticators
 }
 
 // RegisterAuthenticator adds a new authenticator to the list of registered authenticators.
-func RegisterAuthenticator(authenticator Authenticator) {
-	registeredAuthenticators = append(registeredAuthenticators, authenticator)
+func (am *AuthenticatorManager) RegisterAuthenticator(authenticator Authenticator) {
+	am.registeredAuthenticators = append(am.registeredAuthenticators, authenticator)
 }
 
 // UnregisterAuthenticator removes an authenticator from the list of registered authenticators.
-func UnregisterAuthenticator(authenticator Authenticator) {
-	for i, auth := range registeredAuthenticators {
-		if auth == authenticator { // assuming equality comparison works as intended for your authenticators
-			// Remove the element at index i
-			registeredAuthenticators = append(registeredAuthenticators[:i], registeredAuthenticators[i+1:]...)
+func (am *AuthenticatorManager) UnregisterAuthenticator(authenticator Authenticator) {
+	for i, auth := range am.registeredAuthenticators {
+		if auth == authenticator {
+			am.registeredAuthenticators = append(am.registeredAuthenticators[:i], am.registeredAuthenticators[i+1:]...)
 			break
 		}
 	}
 }
 
 // GetRegisteredAuthenticators returns the list of registered authenticators.
-func GetRegisteredAuthenticators() []Authenticator {
-	return registeredAuthenticators
+func (am *AuthenticatorManager) GetRegisteredAuthenticators() []Authenticator {
+	return am.registeredAuthenticators
 }
 
-// IsAuthenticatorTypeRegistered returns true if the authenticator type is registered.
-func IsAuthenticatorTypeRegistered(authenticatorType string) bool {
-	for _, authenticator := range GetRegisteredAuthenticators() {
+// IsAuthenticatorTypeRegistered checks if the authenticator type is registered.
+func (am *AuthenticatorManager) IsAuthenticatorTypeRegistered(authenticatorType string) bool {
+	for _, authenticator := range am.GetRegisteredAuthenticators() {
 		if authenticator.Type() == authenticatorType {
 			return true
 		}
@@ -42,9 +56,31 @@ func IsAuthenticatorTypeRegistered(authenticatorType string) bool {
 	return false
 }
 
-func (a AccountAuthenticator) AsAuthenticator() Authenticator {
-	for _, authenticator := range GetRegisteredAuthenticators() {
+// SetDefaultAuthenticatorIndex sets the default authenticator index.
+func (am *AuthenticatorManager) SetDefaultAuthenticatorIndex(index int) {
+	am.defaultAuthenticatorIndex = index
+	if am.defaultAuthenticatorIndex < 0 || am.defaultAuthenticatorIndex >= len(am.registeredAuthenticators) {
+		panic("Invalid default authenticator index")
+	}
+}
+
+// GetDefaultAuthenticator retrieves the default authenticator.
+func (am *AuthenticatorManager) GetDefaultAuthenticator() Authenticator {
+	if am.defaultAuthenticatorIndex < 0 {
+		// ToDo: Instead of panicking, maybe return a FalseAuthenticator that never authenticates?
+		panic("Default authenticator not set")
+	}
+	return am.registeredAuthenticators[am.defaultAuthenticatorIndex]
+}
+
+// AsAuthenticator converts an AccountAuthenticator to its corresponding Authenticator.
+func (a *AccountAuthenticator) AsAuthenticator(am *AuthenticatorManager) Authenticator {
+	for _, authenticator := range am.GetRegisteredAuthenticators() {
 		if authenticator.Type() == a.Type {
+			authenticator, err := authenticator.Initialize(a.Data)
+			if err != nil {
+				return nil // ToDo: We should probably handle errors here
+			}
 			return authenticator
 		}
 	}

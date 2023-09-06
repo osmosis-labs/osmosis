@@ -12,7 +12,7 @@ import (
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
-	Keeper keeper.Keeper
+	am *types.AuthenticatorManager
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -21,22 +21,19 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.Reset()
-	// ToDo: when wired up, modify for s.App.AuthenticatorKeeper. Tests will fail for now because the store key doesn't exist
-	ss, _ := s.App.ParamsKeeper.GetSubspace(types.ModuleName)
-	s.Keeper = keeper.NewKeeper(s.App.AppCodec(), s.App.GetKey(types.StoreKey), ss)
-
+	s.am = types.NewAuthenticatorManager()
 	// Register the SigVerificationAuthenticator
-	types.InitializeAuthenticators([]types.Authenticator{types.SigVerificationAuthenticator{}})
+	s.am.InitializeAuthenticators([]types.Authenticator{types.SigVerificationAuthenticator{}})
 }
 
 // ToDo: more and better tests
 
 func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
-	msgServer := keeper.NewMsgServerImpl(s.Keeper)
+	msgServer := keeper.NewMsgServerImpl(*s.App.AuthenticatorKeeper)
 	ctx := s.Ctx
 
 	// Ensure the SigVerificationAuthenticator type is registered
-	s.Require().True(types.IsAuthenticatorTypeRegistered(types.SigVerificationAuthenticator{}.Type()))
+	s.Require().True(s.am.IsAuthenticatorTypeRegistered(types.SigVerificationAuthenticator{}.Type()))
 
 	// Create a test message
 	msg := &types.MsgAddAuthenticator{
@@ -50,7 +47,7 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 }
 
 func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
-	msgServer := keeper.NewMsgServerImpl(s.Keeper)
+	msgServer := keeper.NewMsgServerImpl(*s.App.AuthenticatorKeeper)
 	ctx := s.Ctx
 
 	// First add an authenticator so that we can attempt to remove it later
@@ -64,7 +61,7 @@ func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
 	// Now attempt to remove it
 	removeMsg := &types.MsgRemoveAuthenticator{
 		Sender: s.TestAccs[0].String(),
-		Id:     1, // assuming that the Id is 1 for simplicity
+		Id:     0,
 	}
 
 	resp, err := msgServer.RemoveAuthenticator(sdk.WrapSDKContext(ctx), removeMsg)

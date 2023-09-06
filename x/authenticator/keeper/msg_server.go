@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 )
@@ -26,7 +27,7 @@ func (m msgServer) AddAuthenticator(goCtx context.Context, msg *types.MsgAddAuth
 		return nil, err
 	}
 
-	err = m.Keeper.AddAuthenticator(ctx, sender, msg.Type)
+	err = m.Keeper.AddAuthenticator(ctx, sender, msg.Type, msg.Data)
 	if err != nil {
 		return nil, err
 	}
@@ -54,6 +55,9 @@ func (m msgServer) RemoveAuthenticator(goCtx context.Context, msg *types.MsgRemo
 	}
 
 	err = m.Keeper.RemoveAuthenticator(ctx, sender, msg.Id)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.MsgRemoveAuthenticatorResponse{
 		Success: true,

@@ -5,6 +5,10 @@ package types
 import (
 	fmt "fmt"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
@@ -18,13 +22,14 @@ type AuthenticatorData interface{}
 
 type Authenticator interface {
 	Type() string
+	Initialize(data []byte) (Authenticator, error)
 	GetAuthenticationData(tx sdk.Tx, messageIndex uint8, simulate bool) (AuthenticatorData, error)
 	Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) (bool, error)
 	ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData AuthenticatorData) bool
 
 	// Optional Hooks. ToDo: Revisit this when adding the authenticator storage and messages
-	//OnAuthenticatorAdded(...) bool
-	//OnAuthenticatorRemoved(...) bool
+	// OnAuthenticatorAdded(...) bool
+	// OnAuthenticatorRemoved(...) bool
 }
 
 // Compile time type assertion for the SigVerificationData using the
@@ -34,8 +39,9 @@ var _ AuthenticatorData = &SigVerificationData{}
 
 // Secp256k1 signature authenticator
 type SigVerificationAuthenticator struct {
-	ak      authante.AccountKeeper
+	ak      *authkeeper.AccountKeeper
 	Handler authsigning.SignModeHandler
+	PubKey  cryptotypes.PubKey
 }
 
 func (c SigVerificationAuthenticator) Type() string {
@@ -44,7 +50,7 @@ func (c SigVerificationAuthenticator) Type() string {
 
 // NewSigVerificationAuthenticator creates a new SigVerificationAuthenticator
 func NewSigVerificationAuthenticator(
-	ak authante.AccountKeeper,
+	ak *authkeeper.AccountKeeper,
 	Handler authsigning.SignModeHandler,
 ) SigVerificationAuthenticator {
 	return SigVerificationAuthenticator{
@@ -53,14 +59,13 @@ func NewSigVerificationAuthenticator(
 	}
 }
 
-// SetAccountKeeper sets the account keeper one the SigVerificationAuthenticator
-func (c SigVerificationAuthenticator) SetAccountKeeper(ak authante.AccountKeeper) {
-	c.ak = ak
-}
-
-// SetAccountKeeper sets the sign mode one the SigVerificationAuthenticator
-func (c SigVerificationAuthenticator) SetSignModeHandler(sm *authsigning.SignModeHandler) {
-	c.Handler = *sm
+// Initialize TODO: Document
+func (c SigVerificationAuthenticator) Initialize(data []byte) (Authenticator, error) {
+	if len(data) != secp256k1.PubKeySize {
+		c.PubKey = nil
+	}
+	c.PubKey = &secp256k1.PubKey{Key: data}
+	return c, nil
 }
 
 // SigVerificationData is used to package all the signature data and the tx
@@ -69,7 +74,63 @@ type SigVerificationData struct {
 	Signers    []sdk.AccAddress
 	Signatures []signing.SignatureV2
 	Tx         authsigning.Tx
-	simulate   bool
+	Simulate   bool
+}
+
+func GetSignersAndSignatures(
+	msgs []sdk.Msg,
+	allSignatures []signing.SignatureV2,
+	feePayer string,
+	msgIndex int,
+) ([]sdk.AccAddress, []signing.SignatureV2, error) {
+	if msgIndex < -1 || msgIndex >= len(msgs) {
+		return nil, nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid message ID")
+	}
+	useMsgIndex := msgIndex != -1
+
+	seen := map[string]bool{}
+	uniqueSignersCount := 0
+
+	var signersList []sdk.AccAddress
+	var signaturesList []signing.SignatureV2
+
+	// Loop through the messages and their signers
+	for i, msg := range msgs {
+		for _, signer := range msg.GetSigners() {
+			signerStr := signer.String()
+			if !seen[signerStr] {
+				seen[signerStr] = true
+				uniqueSignersCount++
+				if !useMsgIndex || i == msgIndex {
+					signersList = append(signersList, signer)
+					signaturesList = append(signaturesList, allSignatures[uniqueSignersCount-1])
+					if useMsgIndex {
+						break
+					}
+				}
+			}
+		}
+	}
+
+	// Add FeePayer if not already included
+	if feePayer != "" && !seen[feePayer] {
+		if uniqueSignersCount != len(allSignatures)-1 {
+			// TODO: Better error?
+			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", uniqueSignersCount, len(allSignatures)-1)
+		}
+		feePayerAddr, err := sdk.AccAddressFromBech32(feePayer)
+		if err != nil {
+			return nil, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid fee payer address")
+		}
+		signersList = append(signersList, feePayerAddr)
+		signaturesList = append(signaturesList, allSignatures[len(allSignatures)-1]) // FeePayer's signature is last
+	}
+
+	if uniqueSignersCount != len(allSignatures) {
+		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "mismatch between signers and signatures;  expected: %d, got %d", len(signersList), len(signaturesList))
+	}
+
+	return signersList, signaturesList, nil
 }
 
 // GetAuthenticationData parses the signers and signatures from a transactiom
@@ -86,9 +147,6 @@ func (c SigVerificationAuthenticator) GetAuthenticationData(
 			sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
-	// Get all signers for a transaction
-	signers := sigTx.GetSigners()
-
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	signatures, err := sigTx.GetSignaturesV2()
@@ -96,21 +154,18 @@ func (c SigVerificationAuthenticator) GetAuthenticationData(
 		return SigVerificationData{}, err
 	}
 
-	// check that signer length and signature length are the same
-	if len(signatures) != len(signers) {
-		return SigVerificationData{},
-			sdkerrors.Wrapf(
-				sdkerrors.ErrUnauthorized,
-				"invalid number of signer;  expected: %d, got %d",
-				len(signers),
-				len(signatures))
+	msgs := sigTx.GetMsgs()
+	msgSigners, msgSignatures, err := GetSignersAndSignatures(msgs, signatures, "", int(messageIndex)) // TODO: deal with feepayer
+	if err != nil {
+		return SigVerificationData{}, err
 	}
 
 	// Get the signature for the message at msgIndex
 	return SigVerificationData{
-		Signers:    signers,
-		Signatures: signatures,
+		Signers:    msgSigners,
+		Signatures: msgSignatures,
 		Tx:         sigTx,
+		Simulate:   simulate,
 	}, nil
 }
 
@@ -123,8 +178,9 @@ func (c SigVerificationAuthenticator) Authenticate(
 ) (success bool, err error) {
 	verificationData, ok := authenticationData.(SigVerificationData)
 	if !ok {
-		return false, nil //ToDo: add error
+		return false, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "invalid signature verification data")
 	}
+
 	for i, sig := range verificationData.Signatures {
 		acc, err := authante.GetSignerAcc(ctx, c.ak, verificationData.Signers[i])
 		if err != nil {
@@ -132,9 +188,15 @@ func (c SigVerificationAuthenticator) Authenticate(
 		}
 
 		// retrieve pubkey
-		pubKey := acc.GetPubKey()
-		if !verificationData.simulate && pubKey == nil {
-			return false, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
+		pubKey := c.PubKey
+		if pubKey == nil {
+			// Having a default here keeps this authenticator stateless,
+			// that way we don't have to create specific authenticators with the pubkey of each existing account
+
+			pubKey = acc.GetPubKey() // TODO: do we want this default?
+		}
+		if !verificationData.Simulate && pubKey == nil {
+			return false, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on not set on account or authenticator")
 		}
 
 		// Check account sequence number.
@@ -159,27 +221,27 @@ func (c SigVerificationAuthenticator) Authenticate(
 		}
 
 		// no need to verify signatures on recheck tx
-		if !verificationData.simulate && !ctx.IsReCheckTx() {
+		if !verificationData.Simulate && !ctx.IsReCheckTx() {
 			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, c.Handler, verificationData.Tx)
 			if err != nil {
-				var errMsg string
 				if authante.OnlyLegacyAminoSigners(sig.Data) {
 					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
 					// and therefore communicate sequence number as a potential cause of error.
-					errMsg = fmt.Sprintf(
+					ctx.Logger().Debug(
 						"signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)",
 						accNum,
 						acc.GetSequence(),
 						chainID,
 					)
 				} else {
-					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)",
+					ctx.Logger().Debug(fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)",
 						accNum,
 						chainID,
-					)
+					))
 				}
-				return false, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, errMsg)
-
+				// Errors are reserved for when something unexpected happened. Here authentication just failed, so we
+				// return false
+				return false, nil
 			}
 		}
 	}

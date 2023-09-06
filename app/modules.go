@@ -125,7 +125,7 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:                    {authtypes.Staking},
 	poolmanagertypes.ModuleName:                   nil,
 	cosmwasmpooltypes.ModuleName:                  nil,
-	authenticatortypes.ModuleName:            nil,
+	authenticatortypes.ModuleName:                 nil,
 }
 
 // appModules return modules to initialize module manager.

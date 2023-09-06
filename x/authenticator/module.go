@@ -68,9 +68,6 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 	}
 }
 
-func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
-}
-
 // QuerierRoute returns the gamm module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
@@ -78,17 +75,20 @@ func (am AppModule) Route() sdk.Route {
 	return sdk.Route{}
 }
 
+func (a AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
+}
+
 // ----------------------------------------------------------------------------
 // End deprecated notice
 // ----------------------------------------------------------------------------
 
 // DefaultGenesis returns a default GenesisState for the module, marshalled to json.RawMessage. The default GenesisState need to be defined by the module developer and is primarily used for testing
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+func (a AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
 // ValidateGenesis used to validate the GenesisState, given in its json.RawMessage form
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -97,8 +97,8 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 // GetTxCmd returns the root Tx command for the module. The subcommands of this root command are used by end-users to generate new transactions containing messages defined in the module
@@ -107,7 +107,7 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 // GetQueryCmd returns the root query command for the module. The subcommands of this root command are used by end-users to generate new queries to the subset of the state defined by the module
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd(types.StoreKey)
 }
 
