@@ -18,8 +18,6 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
-const OSMO = "uosmo"
-
 var (
 	defaultPoolId     = uint64(1)
 	defaultMultiplier = osmomath.OneInt()

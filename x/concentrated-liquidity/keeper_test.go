@@ -25,7 +25,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 )
 
-const migrationTestTimeBetweenSwapsSecs = 10
+const (
+	OSMO                              = "uosmo"
+	migrationTestTimeBetweenSwapsSecs = 10
+)
 
 var (
 	// TODO: switch:
