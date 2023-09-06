@@ -53,7 +53,11 @@ func Contains(slice []string, target string) bool {
 }
 
 func (s *IntegrationTestSuite) TestAllE2E() {
-	// Zero Dependent Tests
+	s.T().Run("SetDefaultTakerFeeChainB", func(t *testing.T) {
+		s.T().Log("resetting the default taker fee to 0.15% on chain B only")
+		s.SetDefaultTakerFeeChainB()
+	})
+
 	value := reflect.ValueOf(s)
 	typeOfS := value.Type()
 
@@ -910,7 +914,7 @@ func (s *IntegrationTestSuite) GeometricTWAPTest() {
 //
 // Similarly, CL tests depend on taker fee being set.
 // As a result, we deterministically configure chain B's taker fee prior to running CL tests.
-func (s *IntegrationTestSuite) SetDefaultTakerFeeChainBTest() {
+func (s *IntegrationTestSuite) SetDefaultTakerFeeChainB() {
 	s.T().Log("resetting the default taker fee to 0.15% on chain B only")
 	chainB, chainBNode := s.getChainBCfgs()
 	err := chainBNode.ParamChangeProposal("poolmanager", string(poolmanagertypes.KeyDefaultTakerFee), json.RawMessage(`"0.001500000000000000"`), chainB)
