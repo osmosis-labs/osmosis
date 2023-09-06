@@ -27,6 +27,7 @@ func getSender(sender string) []sdk.AccAddress {
 var _ sdk.Msg = &MsgAddAuthenticator{}
 
 func (msg *MsgAddAuthenticator) ValidateBasic() error {
+	// TODO: validate bytes
 	return validateSender(msg.Sender)
 }
 

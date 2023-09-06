@@ -25,6 +25,10 @@ func (m msgServer) AddAuthenticator(
 ) (*types.MsgAddAuthenticatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	// TODO: validate based on type of authenticator
+	// TODO: do we want to create and account for the data/pubkey
+	// here? Or in ante handler
+
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
