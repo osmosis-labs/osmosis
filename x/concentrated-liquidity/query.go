@@ -27,7 +27,7 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 
 	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
 	// we do -1 to make min tick inclusive.
-	currentTick := types.MinCurrentTickV2
+	currentTick := types.MinCurrentTick
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, currentTick)
 	defer nextTickIter.Close()
