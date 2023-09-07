@@ -32,5 +32,4 @@ func (k Keeper) GetAuthenticators(
 	}
 
 	return &types.GetAuthenticatorsResponse{AccountAuthenticators: authenticators}, nil
-
 }
