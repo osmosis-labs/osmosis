@@ -293,12 +293,16 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 
 // This is an experiment to determine how the fees are being taken even if the tx fails
 func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
-	// This amount is too large, so the send should
-	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000_000_000))
-	sendMsg := &banktypes.MsgSend{
+	successSendMsg := &banktypes.MsgSend{
 		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
 		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
-		Amount:      coins,
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)),
+	}
+	// This amount is too large, so the send should fail
+	failSendMsg := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000_000)),
 	}
 
 	stateful := StatefulAuthenticator{KvStoreKey: s.app.GetKVStoreKey()[authenticatortypes.StoreKey]}
@@ -310,18 +314,18 @@ func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
 	balances := s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), s.Account.GetAddress())
 	fmt.Println("balances: ", balances)
 
-	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], failSendMsg)
 	fmt.Println("err: ", err)
-	s.Require().Error(err, "Failed to send bank tx using the first private key")
+	s.Require().Error(err, "Succeeded sending tx that should fail")
 
 	balances = s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), s.Account.GetAddress())
 	fmt.Println("balances: ", balances)
 
 	fmt.Println(stateful.GetValue(s.chainA.GetContext()))
 
-	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], successSendMsg)
 	fmt.Println("err: ", err)
-	s.Require().Error(err, "Failed to send bank tx using the first private key")
+	s.Require().NoError(err, "Failed to send bank tx with enough funds")
 
 	balances = s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), s.Account.GetAddress())
 	fmt.Println("balances: ", balances)
