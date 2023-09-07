@@ -34,6 +34,7 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewSwapExactAmountOutCmd)
 	osmocli.AddTxCmd(txCmd, NewSplitRouteSwapExactAmountIn)
 	osmocli.AddTxCmd(txCmd, NewSplitRouteSwapExactAmountOut)
+	txCmd.AddCommand(NewSetDenomPairTakerFeeCmd())
 
 	txCmd.AddCommand(
 		NewCreatePoolCmd(),
