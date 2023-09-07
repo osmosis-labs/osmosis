@@ -45,6 +45,7 @@ type SigVerificationAuthenticator struct {
 }
 
 func (c SigVerificationAuthenticator) Type() string {
+	// TODO: can these be ENUMs?
 	return "SigVerification"
 }
 
@@ -116,7 +117,12 @@ func GetSignersAndSignatures(
 	if feePayer != "" && !seen[feePayer] {
 		if uniqueSignersCount != len(allSignatures)-1 {
 			// TODO: Better error?
-			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", uniqueSignersCount, len(allSignatures)-1)
+			return nil, nil, sdkerrors.Wrapf(
+				sdkerrors.ErrUnauthorized,
+				"invalid number of signer;  expected: %d, got %d",
+				uniqueSignersCount,
+				len(allSignatures)-1,
+			)
 		}
 		feePayerAddr, err := sdk.AccAddressFromBech32(feePayer)
 		if err != nil {
@@ -127,7 +133,12 @@ func GetSignersAndSignatures(
 	}
 
 	if uniqueSignersCount != len(allSignatures) {
-		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "mismatch between signers and signatures;  expected: %d, got %d", len(signersList), len(signaturesList))
+		return nil, nil, sdkerrors.Wrapf(
+			sdkerrors.ErrUnauthorized,
+			"mismatch between signers and signatures;  expected: %d, got %d",
+			len(signersList),
+			len(signaturesList),
+		)
 	}
 
 	return signersList, signaturesList, nil

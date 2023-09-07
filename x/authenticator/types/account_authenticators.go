@@ -73,6 +73,8 @@ func (am *AuthenticatorManager) GetDefaultAuthenticator() Authenticator {
 	return am.registeredAuthenticators[am.defaultAuthenticatorIndex]
 }
 
+// NOTE: This should never return a pointer
+// AUDIT: Check this function for security!
 // AsAuthenticator converts an AccountAuthenticator to its corresponding Authenticator.
 func (a *AccountAuthenticator) AsAuthenticator(am *AuthenticatorManager) Authenticator {
 	for _, authenticator := range am.GetRegisteredAuthenticators() {

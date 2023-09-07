@@ -1,9 +1,11 @@
 package authenticator_test
 
 import (
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/osmosis-labs/osmosis/v19/app"
 	"testing"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	"github.com/osmosis-labs/osmosis/v19/app"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -11,9 +13,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/tests/osmosisibctesting"
-	"github.com/stretchr/testify/suite"
 )
 
 type AuthenticatorSuite struct {
