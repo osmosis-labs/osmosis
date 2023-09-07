@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/cometbft/cometbft v0.37.2
-	github.com/cometbft/cometbft-db v0.6.8-0.20220506192307-f628bb5dc95b
+	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-sdk v0.47.4
 	github.com/cosmos/iavl v0.20.0
 	github.com/cosmos/ibc-go/v7 v7.1.0
@@ -157,8 +157,9 @@ require (
 )
 
 replace (
+	github.com/cosmos/cosmos-proto => /home/ghost/git/cosmos/cosmos-proto
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/ed4eb883f2a65bd5343e9d2f6186060f45294cb2
-	//	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230703010110-ed4eb883f2a6
+	//github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230703010110-ed4eb883f2a6
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// use grpc compatible with cosmos protobufs

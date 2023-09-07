@@ -47,7 +47,6 @@ require (
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
 	github.com/cometbft/cometbft v0.37.2 // indirect
-	github.com/cometbft/cometbft-db v0.6.8-0.20220506192307-f628bb5dc95b // indirect
 	github.com/cometbft/cometbft-db v0.8.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
@@ -187,7 +186,7 @@ require (
 
 replace (
 	// osmosis-patched wasmd
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.31.0-osmo-v16
+	//github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.31.0-osmo-v16
 	// Security patch for wasmvm. See https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md
 	github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.2.3
 	// dragonberry

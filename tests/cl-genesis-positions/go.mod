@@ -14,7 +14,7 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/bytedance/sonic v1.10.0 // indirect
 	github.com/cometbft/cometbft-db v0.8.0 // indirect
-	github.com/cosmos/ibc-go/v4 v4.3.1 // indirect
+	github.com/cosmos/ibc-go/v7 v7.0.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
@@ -43,7 +43,6 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
-	github.com/cometbft/cometbft-db v0.6.8-0.20220506192307-f628bb5dc95b // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect

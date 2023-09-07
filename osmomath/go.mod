@@ -13,22 +13,21 @@ require (
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
+	github.com/btcsuite/btcd v0.22.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/cometbft/cometbft v0.37.2 // indirect
-	github.com/cometbft/cometbft-db v0.6.8-0.20220506192307-f628bb5dc95b // indirect
 	github.com/cometbft/cometbft-db v0.8.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.20.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
-	github.com/dgraph-io/badger/v3 v3.2103.2 // indirect
+	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
+	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
+	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
@@ -36,11 +35,9 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/glog v1.1.1 // indirect
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/flatbuffers v2.0.8+incompatible // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/gtank/merlin v0.1.1 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
@@ -66,6 +63,7 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.10.1 // indirect
+	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
@@ -76,9 +74,9 @@ require (
 	github.com/spf13/viper v1.16.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
+	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
-	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
@@ -94,7 +92,7 @@ require (
 
 replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/ed4eb883f2a65bd5343e9d2f6186060f45294cb2
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230703010110-ed4eb883f2a6
+	//github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230703010110-ed4eb883f2a6
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// use grpc compatible with cosmos protobufs:w
