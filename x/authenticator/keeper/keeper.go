@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -127,6 +128,11 @@ func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, aut
 	}
 	store.Delete(key)
 	return nil
+}
+
+func (k Keeper) GetPrivateAuthenticatorStore(ctx sdk.Context, authenticatorType string) sdk.KVStore {
+	// TODO: this is prob not what we want. We want prefix for writing but not for reading
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyAuthenticatorStorage(authenticatorType))
 }
 
 // ToDo: Open questions:

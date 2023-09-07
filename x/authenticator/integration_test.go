@@ -1,8 +1,10 @@
 package authenticator_test
 
 import (
+	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/osmosis-labs/osmosis/v19/app"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -287,4 +289,42 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 			}
 		})
 	}
+}
+
+// This is an experiment to determine how the fees are being taken even if the tx fails
+func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
+	// This amount is too large, so the send should
+	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000_000_000))
+	sendMsg := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		Amount:      coins,
+	}
+
+	stateful := StatefulAuthenticator{KvStoreKey: s.app.GetKVStoreKey()[authenticatortypes.StoreKey]}
+	s.app.AuthenticatorManager.RegisterAuthenticator(stateful)
+	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "Stateful", []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+
+	// check account balances
+	balances := s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), s.Account.GetAddress())
+	fmt.Println("balances: ", balances)
+
+	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], sendMsg)
+	fmt.Println("err: ", err)
+	s.Require().Error(err, "Failed to send bank tx using the first private key")
+
+	balances = s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), s.Account.GetAddress())
+	fmt.Println("balances: ", balances)
+
+	fmt.Println(stateful.GetValue(s.chainA.GetContext()))
+
+	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], sendMsg)
+	fmt.Println("err: ", err)
+	s.Require().Error(err, "Failed to send bank tx using the first private key")
+
+	balances = s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), s.Account.GetAddress())
+	fmt.Println("balances: ", balances)
+
+	fmt.Println(stateful.GetValue(s.chainA.GetContext()))
 }

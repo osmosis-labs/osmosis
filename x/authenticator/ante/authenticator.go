@@ -53,6 +53,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			}
 
 			// Authenticate the message
+			// TODO: Here we want to modify the context so that the authenticator can only modify its own data
 			authenticated, err := authenticator.Authenticate(ctx, msg, authData)
 			if err != nil {
 				return ctx, err
