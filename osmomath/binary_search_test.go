@@ -318,6 +318,8 @@ func TestBinarySearchRoundingBehavior(t *testing.T) {
 		equalWithinOne)
 }
 
+// .
+
 func TestErrTolerance_Compare(t *testing.T) {
 	ZeroErrTolerance := ErrTolerance{AdditiveTolerance: ZeroDec(), MultiplicativeTolerance: Dec{}}
 	NonZeroErrAdditive := ErrTolerance{AdditiveTolerance: NewDec(10), MultiplicativeTolerance: Dec{}}
