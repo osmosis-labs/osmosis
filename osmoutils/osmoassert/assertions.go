@@ -9,6 +9,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
+type testSuite interface {
+	Require() *require.Assertions
+}
+
 // ConditionalPanic checks if expectPanic is true, asserts that sut (system under test)
 // panics. If expectPanic is false, asserts that sut does not panic.
 // returns true if sut panics and false it it does not
@@ -58,4 +62,26 @@ func messageFromMsgAndArgs(msgAndArgs ...interface{}) string {
 		return fmt.Sprintf(msgFormat, msgAndArgs[1:]...)
 	}
 	return ""
+}
+
+func Equal[T any](s testSuite, tolerance osmomath.ErrTolerance, A, B T, msgAndArgs ...interface{}) {
+	switch a := any(A).(type) {
+	case osmomath.Int:
+		b, ok := any(B).(osmomath.Int)
+		failNowIfNot(s, ok)
+
+		s.Require().Equal(0, tolerance.Compare(a, b), msgAndArgs...)
+
+	case osmomath.BigDec:
+		b, ok := any(B).(osmomath.BigDec)
+		failNowIfNot(s, ok)
+
+		s.Require().Equal(0, tolerance.CompareBigDec(a, b), msgAndArgs...)
+
+	case osmomath.Dec:
+		b, ok := any(B).(osmomath.Dec)
+		failNowIfNot(s, ok)
+
+		s.Require().Equal(0, tolerance.CompareDec(a, b), msgAndArgs...)
+	}
 }
