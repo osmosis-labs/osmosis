@@ -23,7 +23,7 @@ type AuthenticatorData interface{}
 type Authenticator interface {
 	Type() string
 	Initialize(data []byte) (Authenticator, error)
-	GetAuthenticationData(tx sdk.Tx, messageIndex uint8, simulate bool) (AuthenticatorData, error)
+	GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex uint8, simulate bool) (AuthenticatorData, error)
 	Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) (bool, error)
 	ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData AuthenticatorData) bool
 
@@ -147,11 +147,7 @@ func GetSignersAndSignatures(
 // GetAuthenticationData parses the signers and signatures from a transactiom
 // then returns a indexed list of both signers and signatures
 // NOTE: position in the array is used to associate the signer and signature
-func (c SigVerificationAuthenticator) GetAuthenticationData(
-	tx sdk.Tx,
-	messageIndex uint8,
-	simulate bool,
-) (AuthenticatorData, error) {
+func (c SigVerificationAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex uint8, simulate bool) (AuthenticatorData, error) {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
 		return SigVerificationData{},

@@ -46,7 +46,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 		for _, authenticator := range authenticators {
 			// Get the authentication data for the transaction
-			authData, err := authenticator.GetAuthenticationData(tx, uint8(msgIndex), simulate)
+			authData, err := authenticator.GetAuthenticationData(ctx, tx, uint8(msgIndex), simulate)
 			if err != nil {
 				return ctx, err
 			}

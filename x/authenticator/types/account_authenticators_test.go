@@ -17,7 +17,7 @@ func (m MockAuthenticator) Initialize(data []byte) (types.Authenticator, error) 
 	return m, nil
 }
 
-func (m MockAuthenticator) GetAuthenticationData(tx sdk.Tx, messageIndex uint8, simulate bool) (types.AuthenticatorData, error) {
+func (m MockAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex uint8, simulate bool) (types.AuthenticatorData, error) {
 	return "mock", nil
 }
 
@@ -104,7 +104,7 @@ func (m MockAuthenticatorFail) Initialize(data []byte) (types.Authenticator, err
 	return m, nil
 }
 
-func (m MockAuthenticatorFail) GetAuthenticationData(tx sdk.Tx, messageIndex uint8, simulate bool) (types.AuthenticatorData, error) {
+func (m MockAuthenticatorFail) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex uint8, simulate bool) (types.AuthenticatorData, error) {
 	return "mock-fail", nil
 }
 
@@ -136,12 +136,12 @@ func TestMockAuthenticators(t *testing.T) {
 	var mockCtx sdk.Context
 
 	// Testing mockPass
-	dataPass, _ := mockPass.GetAuthenticationData(mockTx, 0, false)
+	dataPass, _ := mockPass.GetAuthenticationData(ctx, mockTx, 0, false)
 	isAuthenticatedPass, _ := mockPass.Authenticate(mockCtx, mockMsg, dataPass)
 	require.True(t, isAuthenticatedPass)
 
 	// Testing mockFail
-	dataFail, _ := mockFail.GetAuthenticationData(mockTx, 0, false)
+	dataFail, _ := mockFail.GetAuthenticationData(ctx, mockTx, 0, false)
 	isAuthenticatedFail, _ := mockFail.Authenticate(mockCtx, mockMsg, dataFail)
 	require.False(t, isAuthenticatedFail)
 }
