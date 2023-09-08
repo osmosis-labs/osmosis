@@ -1,9 +1,15 @@
 package osmoassert
 
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
+
 var diffTypesErrorMessage = "cannot compare variables of different types"
 
-func failNowIfNot(s testSuite, ok bool) {
+func failNowIfNot(t *testing.T, ok bool) {
 	if !ok {
-		s.Require().FailNow(diffTypesErrorMessage)
+		require.FailNow(t, diffTypesErrorMessage)
 	}
 }

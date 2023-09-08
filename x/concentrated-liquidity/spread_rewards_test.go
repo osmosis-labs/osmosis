@@ -1512,7 +1512,7 @@ func (s *KeeperTestSuite) CollectAndAssertSpreadRewards(ctx sdk.Context, poolId 
 	for _, coin := range totalSpreadRewardsCollected {
 		expected := totalSpreadRewards.AmountOf(coin.Denom)
 		actual := coin.Amount
-		osmoassert.Equal(s, errTolerance, expected, actual)
+		osmoassert.Equal(s.T(), errTolerance, expected, actual)
 	}
 }
 

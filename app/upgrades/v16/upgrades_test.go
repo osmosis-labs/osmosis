@@ -125,7 +125,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				// Validate that the community pool balance has been reduced by the amount of OSMO that was used to create the pool
 				// Note we use all the osmo, but a small amount of DAI is left over due to rounding when creating the first position.
 				s.Require().Equal(communityPoolBalancePre.AmountOf("uosmo").Sub(respectiveOsmo.Amount).String(), communityPoolBalancePost.AmountOf("uosmo").String())
-				osmoassert.Equal(s, multiplicativeTolerance, communityPoolBalancePre.AmountOf(v16.DAIIBCDenom), oneDai[0].Amount.Sub(communityPoolBalancePost.AmountOf(v16.DAIIBCDenom)))
+				osmoassert.Equal(s.T(), multiplicativeTolerance, communityPoolBalancePre.AmountOf(v16.DAIIBCDenom), oneDai[0].Amount.Sub(communityPoolBalancePost.AmountOf(v16.DAIIBCDenom)))
 
 				// Validate that the fee pool community pool balance has been decreased by the amount of OSMO/DAI that was used to create the pool
 				s.Require().Equal(communityPoolBalancePost.AmountOf("uosmo").String(), feePoolCommunityPoolPost.AmountOf("uosmo").TruncateInt().String())
@@ -147,7 +147,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				s.Require().Equal(v16.DAIIBCDenom, concentratedTypePool.GetToken1())
 
 				// Validate that the spot price of the CL pool is what we expect
-				osmoassert.Equal(s, multiplicativeTolerance, concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromDec(balancerSpotPrice))
+				osmoassert.Equal(s.T(), multiplicativeTolerance, concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromDec(balancerSpotPrice))
 
 				// Validate that link was created.
 				migrationInfo, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)

@@ -1129,8 +1129,8 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			postBalanceToken0 := s.App.BankKeeper.GetBalance(s.Ctx, sender, pool.GetToken0())
 			postBalanceToken1 := s.App.BankKeeper.GetBalance(s.Ctx, sender, pool.GetToken1())
 
-			osmoassert.Equal(s, errToleranceOneRoundDown, preBalanceToken0.Amount, postBalanceToken0.Amount)
-			osmoassert.Equal(s, errToleranceOneRoundDown, expectedAmount1Delta, postBalanceToken1.Amount.Sub(tc.amount1ToAdd))
+			osmoassert.Equal(s.T(), errToleranceOneRoundDown, preBalanceToken0.Amount, postBalanceToken0.Amount)
+			osmoassert.Equal(s.T(), errToleranceOneRoundDown, expectedAmount1Delta, postBalanceToken1.Amount.Sub(tc.amount1ToAdd))
 
 			// now check that old position id has been succesfully deleted
 			_, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
@@ -1275,8 +1275,8 @@ func (s *KeeperTestSuite) TestSingleSidedAddToPosition() {
 			postBalanceToken1 := s.App.BankKeeper.GetBalance(s.Ctx, owner, pool.GetToken1())
 
 			// Ensure that we utilized all the tokens we funded the account with when adding to the position.
-			osmoassert.Equal(s, errToleranceOneRoundDown, postBalanceToken0.Amount.Sub(preBalanceToken0.Amount), osmomath.ZeroInt())
-			osmoassert.Equal(s, errToleranceOneRoundDown, postBalanceToken1.Amount.Sub(preBalanceToken1.Amount), osmomath.ZeroInt())
+			osmoassert.Equal(s.T(), errToleranceOneRoundDown, postBalanceToken0.Amount.Sub(preBalanceToken0.Amount), osmomath.ZeroInt())
+			osmoassert.Equal(s.T(), errToleranceOneRoundDown, postBalanceToken1.Amount.Sub(preBalanceToken1.Amount), osmomath.ZeroInt())
 
 			// now check that old position id has been successfully deleted
 			_, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionData.ID)
@@ -1879,20 +1879,20 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 
 			// 1. amount for denom0 and denom1 upon creating and withdraw position should be same
 			// Note: round down because create position rounds in favor of the pool.
-			osmoassert.Equal(s, errToleranceOneRoundDown, amtDenom0CreatePosition, amtDenom0WithdrawPosition)
-			osmoassert.Equal(s, errToleranceOneRoundDown, amtDenom1CreatePosition, amtDenom1WithdrawPosition)
+			osmoassert.Equal(s.T(), errToleranceOneRoundDown, amtDenom0CreatePosition, amtDenom0WithdrawPosition)
+			osmoassert.Equal(s.T(), errToleranceOneRoundDown, amtDenom1CreatePosition, amtDenom1WithdrawPosition)
 
 			// 2. user balance and pool balance after creating / withdrawing position should be same
 			userBalancePostPositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			poolBalancePostPositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
 
 			// Note: rounding down since position creation rounds in favor of the pool.
-			osmoassert.Equal(s, errToleranceOneRoundDown, userBalancePrePositionCreation.AmountOf(ETH), userBalancePostPositionCreation.AmountOf(ETH))
-			osmoassert.Equal(s, errToleranceOneRoundDown, userBalancePrePositionCreation.AmountOf(USDC), userBalancePostPositionCreation.AmountOf(USDC))
+			osmoassert.Equal(s.T(), errToleranceOneRoundDown, userBalancePrePositionCreation.AmountOf(ETH), userBalancePostPositionCreation.AmountOf(ETH))
+			osmoassert.Equal(s.T(), errToleranceOneRoundDown, userBalancePrePositionCreation.AmountOf(USDC), userBalancePostPositionCreation.AmountOf(USDC))
 
 			// Note: rounding up since withdrawal rounds in favor of the pool.
-			osmoassert.Equal(s, errToleranceOneRoundUp, poolBalancePrePositionCreation.AmountOf(ETH), poolBalancePostPositionCreation.AmountOf(ETH))
-			osmoassert.Equal(s, errToleranceOneRoundUp, poolBalancePrePositionCreation.AmountOf(USDC), poolBalancePostPositionCreation.AmountOf(USDC))
+			osmoassert.Equal(s.T(), errToleranceOneRoundUp, poolBalancePrePositionCreation.AmountOf(ETH), poolBalancePostPositionCreation.AmountOf(ETH))
+			osmoassert.Equal(s.T(), errToleranceOneRoundUp, poolBalancePrePositionCreation.AmountOf(USDC), poolBalancePostPositionCreation.AmountOf(USDC))
 
 			// 3. Check that position's liquidity was deleted
 			positionLiquidity, err := clKeeper.GetPositionLiquidity(s.Ctx, tc.positionId)
@@ -1906,8 +1906,8 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			s.Require().NoError(err)
 
 			// Note: one ends up remaining due to rounding in favor of the pool.
-			osmoassert.Equal(s, errToleranceOneRoundUp, liquidityBefore.AmountOf(ETH), liquidityAfter.AmountOf(ETH))
-			osmoassert.Equal(s, errToleranceOneRoundUp, liquidityBefore.AmountOf(USDC), liquidityAfter.AmountOf(USDC))
+			osmoassert.Equal(s.T(), errToleranceOneRoundUp, liquidityBefore.AmountOf(ETH), liquidityAfter.AmountOf(ETH))
+			osmoassert.Equal(s.T(), errToleranceOneRoundUp, liquidityBefore.AmountOf(USDC), liquidityAfter.AmountOf(USDC))
 		})
 	}
 }

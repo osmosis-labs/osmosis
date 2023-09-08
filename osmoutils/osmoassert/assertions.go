@@ -11,6 +11,7 @@ import (
 
 type testSuite interface {
 	Require() *require.Assertions
+	T() *testing.T
 }
 
 // ConditionalPanic checks if expectPanic is true, asserts that sut (system under test)
@@ -65,25 +66,25 @@ func messageFromMsgAndArgs(msgAndArgs ...interface{}) string {
 }
 
 // Equal compares A with B and asserts that they are equal within tolerance error tolerance
-func Equal[T any](s testSuite, tolerance osmomath.ErrTolerance, A, B T) {
+func Equal[T any](t *testing.T, tolerance osmomath.ErrTolerance, A, B T) {
 	errMsg := fmt.Sprintf("expected %T, actual %T", A, B)
 	switch a := any(A).(type) {
 	case osmomath.Int:
 		b, ok := any(B).(osmomath.Int)
-		failNowIfNot(s, ok)
+		failNowIfNot(t, ok)
 
-		s.Require().Equal(0, tolerance.Compare(a, b), errMsg)
+		require.True(t, tolerance.Compare(a, b) == 0, errMsg)
 
 	case osmomath.BigDec:
 		b, ok := any(B).(osmomath.BigDec)
-		failNowIfNot(s, ok)
+		failNowIfNot(t, ok)
 
-		s.Require().Equal(0, tolerance.CompareBigDec(a, b), errMsg)
+		require.True(t, tolerance.CompareBigDec(a, b) == 0, errMsg)
 
 	case osmomath.Dec:
 		b, ok := any(B).(osmomath.Dec)
-		failNowIfNot(s, ok)
+		failNowIfNot(t, ok)
 
-		s.Require().Equal(0, tolerance.CompareDec(a, b), errMsg)
+		require.True(t, tolerance.CompareDec(a, b) == 0, errMsg)
 	}
 }

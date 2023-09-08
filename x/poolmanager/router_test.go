@@ -2342,7 +2342,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			}
 
 			// Ensure output amount is within tolerance
-			osmoassert.Equal(s, errTolerance, tc.expectedTokenOutEstimate, tc.tokenOutMinAmount)
+			osmoassert.Equal(s.T(), errTolerance, tc.expectedTokenOutEstimate, tc.tokenOutMinAmount)
 
 			// -- Ensure taker fee distributions have properly executed --
 
@@ -2650,7 +2650,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 				MultiplicativeTolerance: multiplicativeTolerance,
 			}
 
-			osmoassert.Equal(s, errTolerance, tc.expectedTokenInEstimate, tokenIn)
+			osmoassert.Equal(s.T(), errTolerance, tc.expectedTokenInEstimate, tokenIn)
 		})
 	}
 }
@@ -3602,7 +3602,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			}
 
 			// Ensure output amount is within tolerance
-			osmoassert.Equal(s, errTolerance, tc.expectedTokenOutEstimate, tokenOut)
+			osmoassert.Equal(s.T(), errTolerance, tc.expectedTokenOutEstimate, tokenOut)
 
 			// -- Ensure taker fee distributions have properly executed --
 

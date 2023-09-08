@@ -1476,7 +1476,7 @@ func (s *decimalTestSuite) TestPower() {
 		s.Run(name, func() {
 			osmomath.ConditionalPanic(s.T(), tc.expectPanic, func() {
 				actualResult := tc.base.Power(tc.exponent)
-				osmoassert.Equal(s, tc.errTolerance, tc.expectedResult, actualResult)
+				osmoassert.Equal(s.T(), tc.errTolerance, tc.expectedResult, actualResult)
 			})
 		})
 	}

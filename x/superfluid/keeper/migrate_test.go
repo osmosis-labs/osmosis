@@ -950,7 +950,7 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 			if tc.exitCoinsLengthIsTwo {
 				for _, coin := range exitCoins {
 					// Check that the exit coin is the same amount that we joined with (with one unit rounding down)
-					osmoassert.Equal(s, defaultErrorTolerance, tokensIn.AmountOf(coin.Denom).ToLegacyDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), coin.Amount)
+					osmoassert.Equal(s.T(), defaultErrorTolerance, tokensIn.AmountOf(coin.Denom).ToLegacyDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), coin.Amount)
 				}
 			}
 		})
@@ -1160,8 +1160,8 @@ func (s *KeeperTestSuite) ValidateMigrateResult(
 		AdditiveTolerance: osmomath.NewDec(2),
 		RoundingDir:       osmomath.RoundDown,
 	}
-	osmoassert.Equal(s, defaultErrorTolerance, joinPoolAmt.AmountOf(defaultPoolAssets[0].Token.Denom).ToLegacyDec().Mul(percentOfSharesToMigrate).RoundInt(), amount0)
-	osmoassert.Equal(s, defaultErrorTolerance, joinPoolAmt.AmountOf(defaultPoolAssets[1].Token.Denom).ToLegacyDec().Mul(percentOfSharesToMigrate).RoundInt(), amount1)
+	osmoassert.Equal(s.T(), defaultErrorTolerance, joinPoolAmt.AmountOf(defaultPoolAssets[0].Token.Denom).ToLegacyDec().Mul(percentOfSharesToMigrate).RoundInt(), amount0)
+	osmoassert.Equal(s.T(), defaultErrorTolerance, joinPoolAmt.AmountOf(defaultPoolAssets[1].Token.Denom).ToLegacyDec().Mul(percentOfSharesToMigrate).RoundInt(), amount1)
 }
 
 type Positions struct {

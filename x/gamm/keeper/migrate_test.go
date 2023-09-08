@@ -290,13 +290,13 @@ func (s *KeeperTestSuite) TestMigrate() {
 
 		// The balance in the cl pool should be equal to what the user previously had in the gamm pool.
 		// This test is within 100 shares due to rounding that occurs from utilizing .000000000000000001 instead of 0.
-		osmoassert.Equal(s, test.errTolerance, userEthBalanceTransferredToClPool.Amount, clPoolEthBalanceAfterMigration.Amount)
-		osmoassert.Equal(s, test.errTolerance, userUsdcBalanceTransferredToClPool.Amount, clPoolUsdcBalanceAfterMigration.Amount)
+		osmoassert.Equal(s.T(), test.errTolerance, userEthBalanceTransferredToClPool.Amount, clPoolEthBalanceAfterMigration.Amount)
+		osmoassert.Equal(s.T(), test.errTolerance, userUsdcBalanceTransferredToClPool.Amount, clPoolUsdcBalanceAfterMigration.Amount)
 
 		// Assert user amount transferred to cl pool from gamm pool should be equal to the amount we migrated from the migrate message.
 		// This test is within 100 shares due to rounding that occurs from utilizing .000000000000000001 instead of 0.
-		osmoassert.Equal(s, test.errTolerance, userEthBalanceTransferredToClPool.Amount, positionData.Amount0)
-		osmoassert.Equal(s, test.errTolerance, userUsdcBalanceTransferredToClPool.Amount, positionData.Amount0)
+		osmoassert.Equal(s.T(), test.errTolerance, userEthBalanceTransferredToClPool.Amount, positionData.Amount0)
+		osmoassert.Equal(s.T(), test.errTolerance, userUsdcBalanceTransferredToClPool.Amount, positionData.Amount0)
 	}
 }
 

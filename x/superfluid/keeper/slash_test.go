@@ -334,8 +334,8 @@ func (s *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 					RoundingDir: osmomath.RoundUp,
 				}
 
-				osmoassert.Equal(s, errTolerance, asset0PreSlash.Sub(asset0PostSlash).Amount, underlyingAssetsToSlash[0].Amount)
-				osmoassert.Equal(s, errTolerance, asset1PreSlash.Sub(asset1PostSlash).Amount, underlyingAssetsToSlash[1].Amount)
+				osmoassert.Equal(s.T(), errTolerance, asset0PreSlash.Sub(asset0PostSlash).Amount, underlyingAssetsToSlash[0].Amount)
+				osmoassert.Equal(s.T(), errTolerance, asset1PreSlash.Sub(asset1PostSlash).Amount, underlyingAssetsToSlash[1].Amount)
 
 				// Check that the fee accumulator has been updated by the amount it was slashed.
 				feeAccumPostSlash, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, clPoolId)
