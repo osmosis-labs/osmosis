@@ -1,7 +1,6 @@
 package concentrated_liquidity_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1513,7 +1512,7 @@ func (s *KeeperTestSuite) CollectAndAssertSpreadRewards(ctx sdk.Context, poolId 
 	for _, coin := range totalSpreadRewardsCollected {
 		expected := totalSpreadRewards.AmountOf(coin.Denom)
 		actual := coin.Amount
-		osmoassert.Equal(s, errTolerance, expected, actual, fmt.Sprintf("expected (%s), actual (%s)", expected, actual))
+		osmoassert.Equal(s, errTolerance, expected, actual)
 	}
 }
 

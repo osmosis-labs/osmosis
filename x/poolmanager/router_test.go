@@ -2,7 +2,6 @@ package poolmanager_test
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -2316,7 +2315,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			// Log starting community pool balance to compare against
 			initCommunityPoolBalances := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
 
-			tokenOut, err := k.SplitRouteExactAmountIn(s.Ctx, sender, tc.routes, tc.tokenInDenom, tc.tokenOutMinAmount)
+			_, err := k.SplitRouteExactAmountIn(s.Ctx, sender, tc.routes, tc.tokenInDenom, tc.tokenOutMinAmount)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -2343,7 +2342,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			}
 
 			// Ensure output amount is within tolerance
-			osmoassert.Equal(s, errTolerance, tc.expectedTokenOutEstimate, tokenOut, fmt.Sprintf("expected %s, got %s", tc.expectedTokenOutEstimate, tokenOut))
+			osmoassert.Equal(s, errTolerance, tc.expectedTokenOutEstimate, tc.tokenOutMinAmount)
 
 			// -- Ensure taker fee distributions have properly executed --
 
@@ -2651,7 +2650,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 				MultiplicativeTolerance: multiplicativeTolerance,
 			}
 
-			osmoassert.Equal(s, errTolerance, tc.expectedTokenInEstimate, tokenIn, fmt.Sprintf("expected %s, got %s", tc.expectedTokenInEstimate, tokenIn))
+			osmoassert.Equal(s, errTolerance, tc.expectedTokenInEstimate, tokenIn)
 		})
 	}
 }
@@ -3603,7 +3602,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			}
 
 			// Ensure output amount is within tolerance
-			osmoassert.Equal(s, errTolerance, tc.expectedTokenOutEstimate, tokenOut, fmt.Sprintf("expected %s, got %s", tc.expectedTokenOutEstimate, tokenOut))
+			osmoassert.Equal(s, errTolerance, tc.expectedTokenOutEstimate, tokenOut)
 
 			// -- Ensure taker fee distributions have properly executed --
 

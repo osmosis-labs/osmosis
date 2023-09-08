@@ -2010,7 +2010,6 @@ func (s *KeeperTestSuite) assertSpreadRewardAccum(test SwapTest, poolId uint64) 
 		additiveSpreadRewardGrowthGlobalErrTolerance,
 		osmomath.BigDecFromDec(test.expectedSpreadRewardGrowthAccumulatorValue),
 		osmomath.BigDecFromDec(spreadRewardVal),
-		fmt.Sprintf("expected %s, got %s", test.expectedSpreadRewardGrowthAccumulatorValue.String(), spreadRewardVal.String()),
 	)
 }
 
@@ -3099,12 +3098,12 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 	for _, coin := range userBalanceBeforeSwap {
 		beforeSwap := userBalanceBeforeSwap.AmountOf(coin.Denom)
 		afterSwap := userBalanceAfterSwap.AmountOf(coin.Denom)
-		osmoassert.Equal(s, multiplicativeTolerance, beforeSwap, afterSwap, fmt.Sprintf("user balance before swap: %s, after swap: %s", beforeSwap, afterSwap))
+		osmoassert.Equal(s, multiplicativeTolerance, beforeSwap, afterSwap)
 	}
 	for _, coin := range poolBalanceBeforeSwap {
 		beforeSwap := poolBalanceBeforeSwap.AmountOf(coin.Denom)
 		afterSwap := poolBalanceAfterSwap.AmountOf(coin.Denom)
-		osmoassert.Equal(s, multiplicativeTolerance, beforeSwap, afterSwap, fmt.Sprintf("pool balance before swap: %s, after swap: %s", beforeSwap, afterSwap))
+		osmoassert.Equal(s, multiplicativeTolerance, beforeSwap, afterSwap)
 	}
 }
 
@@ -3117,7 +3116,7 @@ func (s *KeeperTestSuite) validateAmountsWithTolerance(amountA osmomath.Int, amo
 		// This may occcur for small amounts where the multiplicative tolerance ends up being
 		// too restrictive for the rounding difference of just 1. E.g. 100 vs 101 does not satisfy the
 		// 0.01% multiplciative margin of error but it is acceptable due to expected rounding epsilon.
-		osmoassert.Equal(s, oneAdditiveTolerance, amountA, amountB, "amountA: %s, amountB: %s", amountA, amountB)
+		osmoassert.Equal(s, oneAdditiveTolerance, amountA, amountB)
 	} else {
 		s.Require().Equal(0, multCompare, "amountA: %s, amountB: %s", amountA, amountB)
 	}
@@ -3215,7 +3214,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedTokenOut := osmomath.NewInt(982676)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
-	osmoassert.Equal(s, multiplicativeTolerance, expectedSqrtPrice, actualSqrtPrice, "expected sqrt price: %s, actual sqrt price: %s", expectedSqrtPrice, actualSqrtPrice)
+	osmoassert.Equal(s, multiplicativeTolerance, expectedSqrtPrice, actualSqrtPrice)
 	osmoassert.Equal(s, multiplicativeTolerance, expectedTokenIn, totalTokenIn.Amount)
 	osmoassert.Equal(s, multiplicativeTolerance, expectedTokenOut, totalTokenOut.Amount)
 
@@ -3500,7 +3499,7 @@ func (s *KeeperTestSuite) TestComputeMaxInAmtGivenMaxTicksCrossed() {
 				s.Require().NoError(err)
 
 				errTolerance := osmomath.ErrTolerance{AdditiveTolerance: osmomath.NewDec(int64(test.maxTicksCrossed))}
-				osmoassert.Equal(s, errTolerance, expectedResultingTokenOutAmount, resultingTokenOut.Amount, "expected: %s, got: %s", expectedResultingTokenOutAmount, resultingTokenOut.Amount)
+				osmoassert.Equal(s, errTolerance, expectedResultingTokenOutAmount, resultingTokenOut.Amount)
 			}
 		})
 	}

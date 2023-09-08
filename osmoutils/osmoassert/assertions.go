@@ -64,24 +64,25 @@ func messageFromMsgAndArgs(msgAndArgs ...interface{}) string {
 	return ""
 }
 
-func Equal[T any](s testSuite, tolerance osmomath.ErrTolerance, A, B T, msgAndArgs ...interface{}) {
+func Equal[T any](s testSuite, tolerance osmomath.ErrTolerance, A, B T) {
+	errMsg := fmt.Sprintf("expected %T, actual %T", A, B)
 	switch a := any(A).(type) {
 	case osmomath.Int:
 		b, ok := any(B).(osmomath.Int)
 		failNowIfNot(s, ok)
 
-		s.Require().Equal(0, tolerance.Compare(a, b), msgAndArgs...)
+		s.Require().Equal(0, tolerance.Compare(a, b), errMsg)
 
 	case osmomath.BigDec:
 		b, ok := any(B).(osmomath.BigDec)
 		failNowIfNot(s, ok)
 
-		s.Require().Equal(0, tolerance.CompareBigDec(a, b), msgAndArgs...)
+		s.Require().Equal(0, tolerance.CompareBigDec(a, b), errMsg)
 
 	case osmomath.Dec:
 		b, ok := any(B).(osmomath.Dec)
 		failNowIfNot(s, ok)
 
-		s.Require().Equal(0, tolerance.CompareDec(a, b), msgAndArgs...)
+		s.Require().Equal(0, tolerance.CompareDec(a, b), errMsg)
 	}
 }
