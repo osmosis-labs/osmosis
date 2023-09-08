@@ -64,6 +64,7 @@ func messageFromMsgAndArgs(msgAndArgs ...interface{}) string {
 	return ""
 }
 
+// Equal compares A with B and asserts that they are equal within tolerance error tolerance
 func Equal[T any](s testSuite, tolerance osmomath.ErrTolerance, A, B T) {
 	errMsg := fmt.Sprintf("expected %T, actual %T", A, B)
 	switch a := any(A).(type) {
