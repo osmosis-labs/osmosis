@@ -2,6 +2,8 @@ module github.com/osmosis-labs/osmosis/v19
 
 go 1.20
 
+// commit to get around go proxy issues
+
 require (
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/math v1.1.2
