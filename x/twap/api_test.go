@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	sdkrand "github.com/osmosis-labs/osmosis/v19/simulation/simtypes/random"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/twap"
@@ -897,10 +896,9 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 			twap, err := app.TwapKeeper.GetGeometricTwapToNow(ctx, 1, denom0, denom1, oldTime)
 			s.Require().NoError(err)
 
-			errTolerance := osmomath.ErrTolerance{
+			osmomath.ErrTolerance{
 				MultiplicativeTolerance: osmomath.SmallestDec(),
-			}
-			osmoassert.Equal(s.T(), errTolerance,
+			}.CompareBigDec(
 				osmomath.BigDecFromDec(spotPrice),
 				osmomath.BigDecFromDec(twap),
 			)
