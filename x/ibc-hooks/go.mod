@@ -11,7 +11,7 @@ require (
 	github.com/gogo/protobuf v1.3.3
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230908070444-45efc347339b
+	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230908072830-062a3c0388c9
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230908072830-062a3c0388c9
 	github.com/spf13/cobra v1.7.0
 	github.com/tendermint/tendermint v0.37.0-rc1

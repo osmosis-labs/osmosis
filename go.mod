@@ -24,8 +24,8 @@ require (
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230908072830-062a3c0388c9
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230908072830-062a3c0388c9
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230908072830-062a3c0388c9
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230908072830-062a3c0388c9
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230908074245-7987e99ea6db
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230908074245-7987e99ea6db
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.1
@@ -64,6 +64,7 @@ require (
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/google/btree v1.1.2 // indirect
