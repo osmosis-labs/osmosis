@@ -136,12 +136,12 @@ func TestMockAuthenticators(t *testing.T) {
 	var mockCtx sdk.Context
 
 	// Testing mockPass
-	dataPass, _ := mockPass.GetAuthenticationData(ctx, mockTx, 0, false)
+	dataPass, _ := mockPass.GetAuthenticationData(mockCtx, mockTx, 0, false)
 	isAuthenticatedPass, _ := mockPass.Authenticate(mockCtx, mockMsg, dataPass)
 	require.True(t, isAuthenticatedPass)
 
 	// Testing mockFail
-	dataFail, _ := mockFail.GetAuthenticationData(ctx, mockTx, 0, false)
+	dataFail, _ := mockFail.GetAuthenticationData(mockCtx, mockTx, 0, false)
 	isAuthenticatedFail, _ := mockFail.Authenticate(mockCtx, mockMsg, dataFail)
 	require.False(t, isAuthenticatedFail)
 }
