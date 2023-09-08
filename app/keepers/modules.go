@@ -43,6 +43,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/mint"
 	poolincentives "github.com/osmosis-labs/osmosis/v19/x/pool-incentives"
 	poolincentivesclient "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/client"
+	poolmanagerclient "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client"
 	poolmanager "github.com/osmosis-labs/osmosis/v19/x/poolmanager/module"
 	"github.com/osmosis-labs/osmosis/v19/x/protorev"
 	superfluid "github.com/osmosis-labs/osmosis/v19/x/superfluid"
@@ -89,6 +90,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 			cwpoolclient.UploadCodeIdAndWhitelistProposalHandler,
 			cwpoolclient.MigratePoolContractsProposalHandler,
 			txfeesclient.SubmitUpdateFeeTokenProposalHandler,
+			poolmanagerclient.DenomPairTakerFeeProposalHandler,
 		)...,
 	),
 	params.AppModuleBasic{},
