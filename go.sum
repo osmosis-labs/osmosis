@@ -958,12 +958,12 @@ github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest/v3 v3.10.0 h1:4K3z2VMe8Woe++invjaTB7VRyQXQy5UY+loujO4aNE4=
 github.com/ory/dockertest/v3 v3.10.0/go.mod h1:nr57ZbRWMqfsdGdFNLHz5jjNdDb7VVFnzAeW1n5N1Lg=
-github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230829222007-529c69c19915 h1:1VDV+B0rHSrbHjZz7P1tEjZTb2nro/GAhbOT8RAoQcw=
-github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230829222007-529c69c19915/go.mod h1:L6USUt+QX9lIqUVCRs8DFEVRZJbCYbemmtcXb7GfHYE=
+github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230908065430-05346fa12992 h1:oe/bPcmVAEYebe8zstvtCdLipiDLduJFLUnACTWByC0=
+github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230908065430-05346fa12992/go.mod h1:L6USUt+QX9lIqUVCRs8DFEVRZJbCYbemmtcXb7GfHYE=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
-github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230901175805-bab180bc078b h1:Sw0WZKfZrUz+ozJhcjZ64TQFOtOHwqSLKrNOLonhXUU=
-github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230901175805-bab180bc078b/go.mod h1:MakArTjDobfAOPe2myXDSRRTeP8amtcYcSpG80UoOcE=
+github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230908070444-45efc347339b h1:8drV1Kdi/6uTfTKscJOXPvu3U1WkSY94V7sRLEJpUk4=
+github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230908070444-45efc347339b/go.mod h1:JrqCNKQYpB1hmsci9T+rB9RiDt9Ia8x6C9F/pz+IHvg=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230901175805-bab180bc078b h1:UFJcRrnM4q+kgvVvH35+Au5Mzj6Www4SYIF3LG0AvgM=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230901175805-bab180bc078b/go.mod h1:6ekJSCvnwK3AB7RVJV0Z6xdC+WoMTyAyBjsjuXRU+Zg=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230901175805-bab180bc078b h1:6w9/InjrxkQ3Q+3OKdtKQQh4lyUiMb5iknG3NhdtpHc=
