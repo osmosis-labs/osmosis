@@ -3,6 +3,7 @@ package authenticator_test
 import (
 	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/osmosis-labs/osmosis/v19/app"
 	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 	"testing"
@@ -13,9 +14,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/tests/osmosisibctesting"
-	"github.com/stretchr/testify/suite"
 )
 
 type AuthenticatorSuite struct {

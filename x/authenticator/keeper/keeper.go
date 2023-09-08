@@ -8,8 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	gogotypes "github.com/gogo/protobuf/types"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 )
@@ -40,19 +41,22 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, ps paramtypes.Subsp
 	}
 }
 
-func (k Keeper) GetAuthenticatorDataForAccount(ctx sdk.Context, account sdk.AccAddress) ([]types.AccountAuthenticator, error) {
+func (k Keeper) GetAuthenticatorDataForAccount(
+	ctx sdk.Context,
+	account sdk.AccAddress,
+) ([]*types.AccountAuthenticator, error) {
 	accountAuthenticators, err := osmoutils.GatherValuesFromStorePrefix(
 		ctx.KVStore(k.storeKey),
 		types.KeyAccount(account),
-		func(bz []byte) (types.AccountAuthenticator, error) {
+		func(bz []byte) (*types.AccountAuthenticator, error) {
 			// unmarshall the authenticator
 			var authenticator types.AccountAuthenticator
 			err := k.cdc.Unmarshal(bz, &authenticator)
 			if err != nil {
-				return types.AccountAuthenticator{}, err
+				return &types.AccountAuthenticator{}, err
 			}
 
-			return authenticator, nil
+			return &authenticator, nil
 		})
 	if err != nil {
 		return nil, err
@@ -62,7 +66,6 @@ func (k Keeper) GetAuthenticatorDataForAccount(ctx sdk.Context, account sdk.AccA
 }
 
 func (k Keeper) GetAuthenticatorsForAccount(ctx sdk.Context, account sdk.AccAddress) ([]types.Authenticator, error) {
-	// use k.GetAuthenticatorDataForAccount(ctx, account) to populate a slice of types.Authenticator and return it. authenticator.AsAuthenticator() will be useful here.
 	authenticatorData, err := k.GetAuthenticatorDataForAccount(ctx, account)
 	if err != nil {
 		return nil, err
