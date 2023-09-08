@@ -57,6 +57,7 @@ import (
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v12/x/incentives/keeper"
 	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v12/x/lockup/keeper"
+	
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 	mintkeeper "github.com/osmosis-labs/osmosis/v12/x/mint/keeper"
 	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
