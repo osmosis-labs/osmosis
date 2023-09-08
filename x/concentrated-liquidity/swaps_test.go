@@ -3567,6 +3567,9 @@ func (s *KeeperTestSuite) TestSwap_MinSpotPriceMigration() {
 		// Refetch pool
 		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
+
+		originalTick := pool.GetCurrentTick()
+
 		// esimate amount in to swap left all the way until the new min initialized tick
 		amountOneOut, _, _ := s.computeSwapAmountsInGivenOut(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTickV2, true, false)
 
@@ -3579,7 +3582,7 @@ func (s *KeeperTestSuite) TestSwap_MinSpotPriceMigration() {
 
 		// perform the swap to the new min initialized tick.
 		coinOneOut := sdk.NewCoin(pool.GetToken1(), amountOneOut.TruncateInt())
-		tokenZeroIn, actualTokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
+		tokenZeroIn, tokenOneOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
 			s.Ctx, swapper, pool,
 			coinOneOut, pool.GetToken0(),
 			osmomath.ZeroDec(), osmomath.ZeroDec(),
@@ -3593,10 +3596,9 @@ func (s *KeeperTestSuite) TestSwap_MinSpotPriceMigration() {
 		// Confirm all liquidity was consumed and `MinCurrentTick` set
 		s.Require().Equal(types.MinCurrentTick, pool.GetCurrentTick())
 
-		// Fund the difference to have enough for the next swap. There is this small additive difference
-		// due to the differences in rounding logic.
-		// The value is taken directly from the test failure.
-		s.FundAcc(swapper, sdk.NewCoins(actualTokenOut))
+		// Esimate the amount in that needs to be funded due to rounding differences.
+		amountOneIn, _, _ := s.computeSwapAmounts(poolId, pool.GetCurrentSqrtPrice(), originalTick, false, false)
+		s.FundAcc(swapper, sdk.NewCoins(sdk.NewCoin(pool.GetToken1(), amountOneIn.Ceil().TruncateInt().Sub(tokenOneOut.Amount))))
 
 		// Swap amount out to the end up in the original tick
 		inverseTokenOut, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
