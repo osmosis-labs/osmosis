@@ -21,7 +21,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.6
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230908171738-9abfe2e61cf4
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.6
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.2
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.8
@@ -66,6 +66,7 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/google/btree v1.1.2 // indirect
+	github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
 	github.com/nunnatsa/ginkgolinter v0.13.3 // indirect
@@ -86,6 +87,7 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/goleak v1.1.12 // indirect
 	go.uber.org/zap v1.24.0 // indirect
+	golang.org/x/arch v0.3.0 // indirect
 	google.golang.org/genproto v0.0.0-20230726155614-23370e0ffb3e // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230706204954-ccb25ca9f130 // indirect
 )
