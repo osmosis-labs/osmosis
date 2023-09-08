@@ -313,24 +313,18 @@ func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
 	s.Require().NoError(err, "Failed to add authenticator")
 
 	// check account balances
-	balances := s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), s.Account.GetAddress())
-	fmt.Println("balances: ", balances)
 
 	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], failSendMsg)
 	fmt.Println("err: ", err)
 	s.Require().Error(err, "Succeeded sending tx that should fail")
 
-	balances = s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), s.Account.GetAddress())
-	fmt.Println("balances: ", balances)
-
-	fmt.Println(stateful.GetValue(s.chainA.GetContext()))
+	// Incremented by one. Only on the ante.
+	s.Require().Equal(stateful.GetValue(s.chainA.GetContext()), 1)
 
 	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], successSendMsg)
 	fmt.Println("err: ", err)
 	s.Require().NoError(err, "Failed to send bank tx with enough funds")
 
-	balances = s.app.BankKeeper.GetAllBalances(s.chainA.GetContext(), s.Account.GetAddress())
-	fmt.Println("balances: ", balances)
-
-	fmt.Println(stateful.GetValue(s.chainA.GetContext()))
+	// Incremented by 2. Ante and Post
+	s.Require().Equal(stateful.GetValue(s.chainA.GetContext()), 3)
 }
