@@ -2315,7 +2315,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			// Log starting community pool balance to compare against
 			initCommunityPoolBalances := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
 
-			_, err := k.SplitRouteExactAmountIn(s.Ctx, sender, tc.routes, tc.tokenInDenom, tc.tokenOutMinAmount)
+			tokenOut, err := k.SplitRouteExactAmountIn(s.Ctx, sender, tc.routes, tc.tokenInDenom, tc.tokenOutMinAmount)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -2342,7 +2342,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			}
 
 			// Ensure output amount is within tolerance
-			osmoassert.Equal(s.T(), errTolerance, tc.expectedTokenOutEstimate, tc.tokenOutMinAmount)
+			osmoassert.Equal(s.T(), errTolerance, tc.expectedTokenOutEstimate, tokenOut)
 
 			// -- Ensure taker fee distributions have properly executed --
 
