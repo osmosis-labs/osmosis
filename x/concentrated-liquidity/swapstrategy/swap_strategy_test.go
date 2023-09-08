@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/swapstrategy"
@@ -234,16 +235,16 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 
 			// Tolerance of 1 with rounding up because we round up for in given out.
 			// This is to ensure that inflow into the pool is rounded in favor of the pool.
-			suite.Require().Equal(0, errToleranceOne.CompareBigDec(
+			osmoassert.Equal(suite.T(), errToleranceOne,
 				osmomath.BigDecFromDec(amountInOutGivenIn),
-				osmomath.BigDecFromDec(amountInInGivenOut)),
-				fmt.Sprintf("amount in out given in: %s, amount in in given out: %s", amountInOutGivenIn, amountInInGivenOut))
+				osmomath.BigDecFromDec(amountInInGivenOut),
+			)
 
 			// These should be approximately equal. The difference stems from minor roundings and truncations in the intermediary calculations.
-			suite.Require().Equal(0, errToleranceSmall.CompareBigDec(
+			osmoassert.Equal(suite.T(), errToleranceSmall,
 				osmomath.BigDecFromDec(amountOutOutGivenIn),
-				osmomath.BigDecFromDec(amountOutInGivenOut)),
-				fmt.Sprintf("amount out out given in: %s, amount out in given out: %s", amountOutOutGivenIn, amountOutInGivenOut))
+				osmomath.BigDecFromDec(amountOutInGivenOut),
+			)
 		})
 	}
 }
