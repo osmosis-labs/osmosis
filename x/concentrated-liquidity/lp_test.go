@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
@@ -41,8 +42,12 @@ type lpTest struct {
 
 	// spread reward related fields
 	preSetChargeSpreadRewards              sdk.DecCoin
+	preFundOwnerCoins                      sdk.Coins
 	expectedSpreadRewardGrowthOutsideLower sdk.DecCoins
 	expectedSpreadRewardGrowthOutsideUpper sdk.DecCoins
+
+	// uptime accumulator related fields
+	shouldNotPreFundUptimeAccumulators bool
 }
 
 var (
@@ -67,6 +72,7 @@ var (
 		underlyingLockId:                  0,
 
 		preSetChargeSpreadRewards: oneEth,
+		preFundOwnerCoins:         DefaultCoins,
 		// in this setup lower tick < current tick < upper tick
 		// the spread reward accumulator for ticks <= current tick are updated.
 		expectedSpreadRewardGrowthOutsideLower: cl.EmptyCoins,
@@ -115,7 +121,7 @@ var (
 			currentTick: DefaultUpperTick + 100,
 
 			preSetChargeSpreadRewards:              sdk.NewDecCoin(ETH, osmomath.ZeroInt()), // zero spread reward
-			expectedSpreadRewardGrowthOutsideLower: oneEthCoins,
+			expectedSpreadRewardGrowthOutsideLower: cl.EmptyCoins,
 
 			// Rounding up in favor of the pool.
 			amount0Expected: DefaultAmt0Expected.Add(roundingError),
@@ -162,6 +168,128 @@ var (
 			amount1Expected: DefaultAmt1Expected,
 		},
 	}
+
+	amountZeroExtendedRange = osmomath.NewInt(1_000_000).Add(osmomath.NewInt(10).ToLegacyDec().PowerMut(18).TruncateInt())
+	amountOneExtendedRange  = osmomath.NewInt(50).Mul(osmomath.NewInt(1_000_000))
+
+	// coins that initiliaze initial spot price to be in the
+	// extended range
+	// 50 * 10^6 / 10^6 * 10^18 = 50 * 10^-18
+	coinsExtendedFullRangePrice = sdk.NewCoins(
+		sdk.NewCoin(ETH, amountZeroExtendedRange),
+		sdk.NewCoin(USDC, amountOneExtendedRange),
+	)
+
+	// configures the lp test case for testing full range extension
+	// of the min spot price.
+	//
+	// What this does:
+	// - Disable irrelevant parameters such as spread rewards, slippage
+	// protection and coin funding
+	// - Sets tick spacing to 1
+	// - Calculate expected liquidity
+	// - Caclulate expected amounts from liquidity
+	//
+	// Assumes that internal math functions are implemented correctly.
+	// roundUp is true for creating position and false for withdrawing position.
+	estimateLPMigrationCaseResults = func(lpTest lpTest, roundUp bool) lpTest {
+		// Note that the min sqrt price must be computed from the min tick since that's
+		// the assumption made in LP logic.
+		lowerSqrtPrice, _ := math.TickToSqrtPrice(lpTest.lowerTick)
+		upperSqrtPrice, _ := math.TickToSqrtPrice(lpTest.upperTick)
+
+		amountZero := lpTest.tokensProvided[0].Amount
+		amountOne := lpTest.tokensProvided[1].Amount
+
+		// Calculate current sqrt price
+		curSqrtPrice := osmomath.BigDecFromDec(osmomath.MustMonotonicSqrt(amountOne.ToLegacyDec().Quo(amountZero.ToLegacyDec())))
+
+		// Calculate liquidity from amounts
+		liquidityAmount := osmomath.BigDecFromDec(math.GetLiquidityFromAmounts(
+			curSqrtPrice,
+			lowerSqrtPrice,
+			upperSqrtPrice,
+			amountZero,
+			amountOne))
+
+		// Calculate amounts from liquidity, rounding up in pool's favor
+
+		amount0Expected := osmomath.ZeroBigDec()
+		amount1Expected := osmomath.ZeroBigDec()
+
+		// Calculate expected amounts depending on position relative
+		// to the current sqrt price.
+		if curSqrtPrice.LT(upperSqrtPrice) && curSqrtPrice.GT(lowerSqrtPrice) {
+			amount0Expected = math.CalcAmount0Delta(liquidityAmount, curSqrtPrice, upperSqrtPrice, roundUp)
+			amount1Expected = math.CalcAmount1Delta(liquidityAmount, lowerSqrtPrice, curSqrtPrice, roundUp)
+		} else if curSqrtPrice.LT(lowerSqrtPrice) {
+			amount0Expected = math.CalcAmount0Delta(liquidityAmount, lowerSqrtPrice, upperSqrtPrice, roundUp)
+		} else {
+			amount1Expected = math.CalcAmount1Delta(liquidityAmount, lowerSqrtPrice, upperSqrtPrice, roundUp)
+		}
+
+		// pre-configure base case overwrites
+		// that are irrelevant for the purposes of the test
+		lpTest.preFundOwnerCoins = lpTest.tokensProvided
+		lpTest.amount0Minimum = osmomath.ZeroInt()
+		lpTest.amount1Minimum = osmomath.ZeroInt()
+		lpTest.expectedSpreadRewardGrowthOutsideLower = sdk.NewDecCoins()
+		lpTest.preSetChargeSpreadRewards = sdk.NewDecCoin(ETH, osmomath.ZeroInt())
+		lpTest.tickSpacing = 1
+		lpTest.shouldNotPreFundUptimeAccumulators = true
+
+		// expected values
+		lpTest.liquidityAmount = liquidityAmount.Dec()
+		lpTest.amount0Expected = amount0Expected.Dec().TruncateInt()
+		lpTest.amount1Expected = amount1Expected.Dec().TruncateInt()
+
+		return lpTest
+	}
+
+	// Test cases corresponding to refactoring min spot price
+	// from 10^-12 to 10^-30.
+	// See: https://github.com/osmosis-labs/osmosis/issues/5726
+	// Note that each of these test cases is further configured
+	// inside TestCreatePosition by calling estimateLPMigrationCaseResults
+	// test helper.
+	positionCasesMinSpotPriceRefactor = map[string]lpTest{
+		"updated full range - price in the original full range": {
+			tokensProvided: DefaultCoins,
+
+			lowerTick: types.MinInitializedTickV2,
+			upperTick: types.MaxTick,
+		},
+		"updated full range - price in the extended range": {
+			tokensProvided: coinsExtendedFullRangePrice,
+
+			lowerTick: types.MinInitializedTickV2,
+			upperTick: types.MaxTick,
+		},
+		"original full range - price in the original full range": {
+			tokensProvided: DefaultCoins,
+
+			lowerTick: types.MinInitializedTick,
+			upperTick: types.MaxTick,
+		},
+		"original full range - price in the extended full range": {
+			tokensProvided: coinsExtendedFullRangePrice,
+
+			lowerTick: types.MinInitializedTick,
+			upperTick: types.MaxTick,
+		},
+		"inside the extended range - price in the original full range": {
+			tokensProvided: DefaultCoins,
+
+			lowerTick: types.MinInitializedTickV2 + 1234567,
+			upperTick: types.MinInitializedTick - 98765543,
+		},
+		"inside the extended range - price in the extended full range": {
+			tokensProvided: coinsExtendedFullRangePrice,
+
+			lowerTick: types.MinInitializedTickV2 + 1234567,
+			upperTick: types.MinInitializedTick - 98765543,
+		},
+	}
 )
 
 func (s *KeeperTestSuite) TestCreatePosition() {
@@ -171,12 +299,12 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			expectedError: types.PoolNotFoundError{PoolId: 2},
 		},
 		"error: lower tick out of bounds": {
-			lowerTick:     DefaultMinTick - 100,
-			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 100, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+			lowerTick:     types.MinInitializedTickV2 - 100,
+			expectedError: types.InvalidTickError{Tick: types.MinInitializedTickV2 - 100, IsLower: true, MinTick: types.MinInitializedTickV2, MaxTick: DefaultMaxTick},
 		},
 		"error: upper tick out of bounds": {
 			upperTick:     DefaultMaxTick + 100,
-			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 100, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 100, IsLower: false, MinTick: types.MinInitializedTickV2, MaxTick: DefaultMaxTick},
 		},
 		"error: upper tick is below the lower tick, but both are in bounds": {
 			lowerTick:     500,
@@ -239,6 +367,12 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 		tests[name] = test
 	}
 
+	// add tests corresponding to min spot price refactor.
+	// see defintion of positionCasesMinSpotPriceRefactor for more details.
+	for name, test := range positionCasesMinSpotPriceRefactor {
+		tests[name] = estimateLPMigrationCaseResults(test, true)
+	}
+
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
@@ -288,7 +422,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			}
 
 			// Fund test account and create the desired position
-			s.FundAcc(s.TestAccs[0], DefaultCoins)
+			s.FundAcc(s.TestAccs[0], tc.preFundOwnerCoins)
 
 			// Note user and pool account balances before create position is called
 			userBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
@@ -336,9 +470,9 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			// Else, check that we had no error from creating the position, and that the liquidity and assets that were returned are expected
 			s.Require().NoError(err)
 			s.Require().Equal(tc.positionId, positionId)
+			s.Require().Equal(expectedLiquidityCreated.String(), liquidityCreated.String())
 			s.Require().Equal(tc.amount0Expected.String(), asset0.String())
 			s.Require().Equal(tc.amount1Expected.String(), asset1.String())
-			s.Require().Equal(expectedLiquidityCreated.String(), liquidityCreated.String())
 			if tc.expectedLowerTick != 0 {
 				s.Require().Equal(tc.expectedLowerTick, newLowerTick)
 				tc.lowerTick = newLowerTick
@@ -390,7 +524,7 @@ const (
 	unlocked
 )
 
-func (s *KeeperTestSuite) createPositionWithLockState(ls lockState, poolId uint64, owner sdk.AccAddress, providedCoins sdk.Coins, dur time.Duration) (uint64, osmomath.Dec) {
+func (s *KeeperTestSuite) createPositionWithLockState(ls lockState, poolId uint64, owner sdk.AccAddress, providedCoins sdk.Coins, dur time.Duration, lowerTick, upperTick int64) (uint64, osmomath.Dec) {
 	var (
 		positionData          cl.CreatePositionData
 		fullRangePositionData cltypes.CreateFullRangePositionData
@@ -404,7 +538,7 @@ func (s *KeeperTestSuite) createPositionWithLockState(ls lockState, poolId uint6
 	} else if ls == unlocked {
 		fullRangePositionData, _, err = s.clk.CreateFullRangePositionUnlocking(s.Ctx, poolId, owner, providedCoins, dur-time.Hour)
 	} else {
-		positionData, err = s.clk.CreatePosition(s.Ctx, poolId, owner, providedCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+		positionData, err = s.clk.CreatePosition(s.Ctx, poolId, owner, providedCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), lowerTick, upperTick)
 		s.Require().NoError(err)
 		return positionData.ID, positionData.Liquidity
 	}
@@ -420,7 +554,10 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 	DefaultJoinTime := s.Ctx.BlockTime()
 	nonOwner := s.TestAccs[1]
 
-	tests := map[string]struct {
+	// valid tick at which no position exists
+	const tickWithNoPositionExisting = -1
+
+	type withdrawPositionCase struct {
 		setupConfig *lpTest
 		// when this is set, it overwrites the setupConfig
 		// and gives the overwritten configuration to
@@ -431,7 +568,9 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		createLockState         lockState
 		withdrawWithNonOwner    bool
 		isFullLiquidityWithdraw bool
-	}{
+	}
+
+	tests := map[string]withdrawPositionCase{
 		"base case: withdraw full liquidity amount": {
 			setupConfig: baseCase,
 			sutConfigOverwrite: &lpTest{
@@ -509,7 +648,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		"error: no position created": {
 			setupConfig: baseCase,
 			sutConfigOverwrite: &lpTest{
-				lowerTick:     -1, // valid tick at which no position exists
+				lowerTick:     tickWithNoPositionExisting,
 				positionId:    DefaultPositionId + 1,
 				expectedError: types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
 			},
@@ -541,6 +680,20 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		},
 	}
 
+	// add tests corresponding to min spot price refactor.
+	// see defintion of positionCasesMinSpotPriceRefactor for more details.
+	for name, test := range positionCasesMinSpotPriceRefactor {
+		test := test
+
+		updatedTest := estimateLPMigrationCaseResults(test, false)
+
+		tests[name] = withdrawPositionCase{
+			setupConfig:             baseCase,
+			sutConfigOverwrite:      &updatedTest,
+			isFullLiquidityWithdraw: true,
+		}
+	}
+
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
@@ -560,11 +713,18 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			mergeConfigs(&config, tc.sutConfigOverwrite)
 
 			// If a setupConfig is provided, use it to create a pool and position.
-			pool := s.PrepareConcentratedPool()
-			fundCoins := config.tokensProvided
-			s.FundAcc(owner, fundCoins)
+			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, config.tickSpacing, osmomath.ZeroDec())
+			s.FundAcc(owner, config.preFundOwnerCoins)
 
-			_, liquidityCreated = s.createPositionWithLockState(tc.createLockState, pool.GetId(), owner, fundCoins, tc.timeElapsed)
+			// Fot the edge case test with no position existing,
+			// we want to set up a valid position at a different tick
+			// As a result, we overwrite the config with another lower tick value.
+			createPositionLowerTick := config.lowerTick
+			if createPositionLowerTick == tickWithNoPositionExisting {
+				createPositionLowerTick = DefaultLowerTick
+			}
+
+			_, liquidityCreated = s.createPositionWithLockState(tc.createLockState, pool.GetId(), owner, config.tokensProvided, tc.timeElapsed, createPositionLowerTick, config.upperTick)
 
 			// Set mock listener to make sure that is is called when desired.
 			// It must be set after test position creation so that we do not record the call
@@ -574,30 +734,34 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.timeElapsed))
 			store := s.Ctx.KVStore(s.App.GetKey(types.StoreKey))
 
-			// Set global spread reward growth to 1 ETH and charge the spread reward to the pool.
-			globalSpreadRewardGrowth := sdk.NewDecCoin(ETH, osmomath.NewInt(1))
-			s.AddToSpreadRewardAccumulator(pool.GetId(), globalSpreadRewardGrowth)
-
-			// Add global uptime growth
-			err = addToUptimeAccums(s.Ctx, pool.GetId(), concentratedLiquidityKeeper, defaultUptimeGrowth)
-			s.Require().NoError(err)
-
 			// Determine the liquidity expected to remain after the withdraw.
 			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
 
 			expectedSpreadRewardsClaimed := sdk.NewCoins()
 			expectedIncentivesClaimed := sdk.NewCoins()
-			// Set the expected spread rewards claimed to the amount of liquidity created since the global spread reward growth is 1.
-			// Fund the pool account with the expected spread rewards claimed.
-			if expectedRemainingLiquidity.IsZero() {
-				expectedSpreadRewardsClaimed = expectedSpreadRewardsClaimed.Add(sdk.NewCoin(ETH, liquidityCreated.TruncateInt()))
-				s.FundAcc(pool.GetSpreadRewardsAddress(), expectedSpreadRewardsClaimed)
+
+			// Set global spread reward growth to 1 ETH and charge the spread reward to the pool.
+			if !config.preSetChargeSpreadRewards.IsZero() {
+				s.AddToSpreadRewardAccumulator(pool.GetId(), tc.setupConfig.preSetChargeSpreadRewards)
+
+				// Set the expected spread rewards claimed to the amount of liquidity created since the global spread reward growth is 1.
+				// Fund the pool account with the expected spread rewards claimed.
+				if expectedRemainingLiquidity.IsZero() {
+					expectedSpreadRewardsClaimed = expectedSpreadRewardsClaimed.Add(sdk.NewCoin(ETH, liquidityCreated.TruncateInt()))
+					s.FundAcc(pool.GetSpreadRewardsAddress(), expectedSpreadRewardsClaimed)
+				}
+			}
+
+			if !config.shouldNotPreFundUptimeAccumulators {
+				// Add global uptime growth
+				err = addToUptimeAccums(s.Ctx, pool.GetId(), concentratedLiquidityKeeper, defaultUptimeGrowth)
+				s.Require().NoError(err)
+
+				// Set expected incentives and fund pool with appropriate amount
+				expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
 			}
 
 			communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
-
-			// Set expected incentives and fund pool with appropriate amount
-			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
 
 			// Fund full amount since forfeited incentives for the last position are sent to the community pool.
 			largestSupportedUptime := s.clk.GetLargestSupportedUptimeDuration(s.Ctx)
@@ -750,8 +914,9 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// Dumb sanity-check that creating a position with the same liquidity amount after fully removing it does not error.
 			// This is to be more thoroughly tested separately.
 			if expectedRemainingLiquidity.IsZero() {
-				// Add one USDC because we withdraw one less than originally funded due to truncation in favor of the pool.
+				// Add one USDC and ETH because we withdraw one less than originally funded due to truncation in favor of the pool.
 				s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin(USDC, osmomath.OneInt())))
+				s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin(ETH, osmomath.OneInt())))
 				_, err = concentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), owner, config.tokensProvided, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
 			}
@@ -1073,7 +1238,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			s.FundAcc(owner, fundCoins)
 
 			// Create a position from the parameters in the test case.
-			positionId, _ := s.createPositionWithLockState(tc.createLockState, pool.GetId(), owner, lockCoins, tc.timeElapsed)
+			positionId, _ := s.createPositionWithLockState(tc.createLockState, pool.GetId(), owner, lockCoins, tc.timeElapsed, DefaultLowerTick, DefaultUpperTick)
 
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.timeElapsed))
 			preBalanceToken0 := s.App.BankKeeper.GetBalance(s.Ctx, owner, pool.GetToken0())
@@ -1284,6 +1449,31 @@ func (s *KeeperTestSuite) TestSingleSidedAddToPosition() {
 	}
 }
 
+// This test validates that there are no panics or errors when
+// adding to a position created on an extended full range.
+// This test assumes that CreatePosition and WithdrawPosition are implemented
+// correctly. As a result, it does not validate the output values. Only the lack of errors
+// or panics.
+func (s *KeeperTestSuite) TestAddToPosition_MinSpotPriceMigration() {
+	s.SetupTest()
+	pool := s.PrepareConcentratedPool()
+
+	// Fund for 2 creations creation and addition.
+	s.FundAcc(s.TestAccs[0], DefaultCoins.Add(DefaultCoins...).Add(DefaultCoins...))
+
+	// Create a position so that the next one is not the last in the pool (adding in such a case is disallowed).
+	_, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	// Create a position with a full range
+	positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), types.MinInitializedTickV2, types.MaxTick)
+	s.Require().NoError(err)
+
+	// Add to position
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.AddToPosition(s.Ctx, s.TestAccs[0], positionData.ID, DefaultAmt0, DefaultAmt1, osmomath.ZeroInt(), osmomath.ZeroInt())
+	s.Require().NoError(err)
+}
+
 // mergeConfigs merges every desired non-zero field from overwrite
 // into dst. dst is mutated due to being a pointer.
 func mergeConfigs(dst *lpTest, overwrite *lpTest) {
@@ -1357,6 +1547,15 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		}
 		if overwrite.expectedUpperTick != 0 {
 			dst.expectedUpperTick = overwrite.expectedUpperTick
+		}
+		if !overwrite.preFundOwnerCoins.IsZero() {
+			dst.preFundOwnerCoins = overwrite.preFundOwnerCoins
+		}
+		if overwrite.preSetChargeSpreadRewards.IsValid() {
+			dst.preSetChargeSpreadRewards = overwrite.preSetChargeSpreadRewards
+		}
+		if overwrite.shouldNotPreFundUptimeAccumulators {
+			dst.shouldNotPreFundUptimeAccumulators = overwrite.shouldNotPreFundUptimeAccumulators
 		}
 	}
 }
