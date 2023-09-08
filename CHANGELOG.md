@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### API Breaks
 
 * [#6256](https://github.com/osmosis-labs/osmosis/pull/6256) Refactor CalcPriceToTick to operate on BigDec price to support new price range.
+* [#6317](https://github.com/osmosis-labs/osmosis/pull/6317) Remove price return from CL `math.TickToSqrtPrice`
 
 ## v19.0.0
 
