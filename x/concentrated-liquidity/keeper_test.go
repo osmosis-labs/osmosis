@@ -25,6 +25,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 )
 
+const (
+	OSMO                              = "uosmo"
+	migrationTestTimeBetweenSwapsSecs = 10
+)
+
 var (
 	// TODO: switch:
 	// DefaultMinTick to tyoes.MinInitializedTickV2 and
@@ -470,10 +475,10 @@ func (s *KeeperTestSuite) runMultiplePositionRanges(ranges [][]int64, rangeTestP
 // creates a pososition from the first test account with default coins and no slippage protection
 // for a given pool id and ticks.
 // a convinience method for testing.
-func (s *KeeperTestSuite) createDefaultPosition(poolId uint64, lowerTick, upperTick int64) uint64 {
+func (s *KeeperTestSuite) createDefaultPosition(poolId uint64, lowerTick, upperTick int64) cl.CreatePositionData {
 	positionData, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
-	return positionData.ID
+	return positionData
 }
 
 // sets up positions for testing the migration of the min spot price from 10^-12 to 10^-30.
@@ -481,21 +486,95 @@ func (s *KeeperTestSuite) createDefaultPosition(poolId uint64, lowerTick, upperT
 // - original full range
 // - new extended full range
 // - position between the new min spot price and the old min spot price
-func (s *KeeperTestSuite) setupPositionsForMinSpotPriceMigration() uint64 {
-	pool := s.PrepareConcentratedPool()
-	poolId := pool.GetId()
+func (s *KeeperTestSuite) setupPositionsForMinSpotPriceMigration(spreadFactor osmomath.Dec) (poolId uint64, positions []cl.CreatePositionData) {
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, spreadFactor)
+	poolId = pool.GetId()
 
 	// Fund test account with tokens necessary for all positions
 	s.FundAcc(s.TestAccs[0], DefaultCoins.Add(DefaultCoins...).Add(DefaultCoins...))
 
 	// Setup an original full range position
-	s.createDefaultPosition(poolId, types.MinInitializedTick, types.MaxTick)
+	position := s.createDefaultPosition(poolId, types.MinInitializedTick, types.MaxTick)
+	positions = append(positions, position)
 
 	// Setup a full range position on the new min spot price
-	s.createDefaultPosition(poolId, types.MinInitializedTickV2, types.MaxTick)
+	position = s.createDefaultPosition(poolId, types.MinInitializedTickV2, types.MaxTick)
+	positions = append(positions, position)
 
 	// Setup a position between the new min spot price and the old min spot price
-	s.createDefaultPosition(poolId, types.MinInitializedTickV2+1000, types.MinInitializedTick-1000)
+	position = s.createDefaultPosition(poolId, types.MinInitializedTickV2+1000, types.MinInitializedTick-1000)
+	positions = append(positions, position)
 
-	return poolId
+	return poolId, positions
+}
+
+// swaps to the lowered minimum tick of 10^-30 and back to the original tick which is in the positive range.
+// There are 3 positions setup over the swapped range (see setupPositionsForMinSpotPriceMigration for details).
+// Additionally, spread factor and incentive rewards are configurable as parameters.
+// Returns pool id position data and actual tokens swapped in (in zero for one direction and back).
+func (s *KeeperTestSuite) swapToMinTickAndBack(spreadFactor osmomath.Dec, incentiveRewards sdk.Coins) (poolId uint64, positions []cl.CreatePositionData, actualAmountsSwappedIn sdk.Coins) {
+	poolId, positions = s.setupPositionsForMinSpotPriceMigration(spreadFactor)
+
+	// Refetch pool
+	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	incentiveCreator := s.TestAccs[2]
+	s.FundAcc(incentiveCreator, incentiveRewards)
+
+	// Create incentive rewards if desired
+	if !incentiveRewards.Empty() {
+		s.Require().Len(incentiveRewards, 1)
+		incentiveCoin := incentiveRewards[0]
+
+		_, err = s.App.ConcentratedLiquidityKeeper.CreateIncentive(
+			s.Ctx, poolId, s.TestAccs[2],
+			incentiveCoin, incentiveCoin.Amount.ToLegacyDec().Quo(osmomath.NewDec(migrationTestTimeBetweenSwapsSecs)), s.Ctx.BlockTime(), time.Nanosecond)
+		s.Require().NoError(err)
+	}
+
+	// esimate amount in to swap left all the way until the new min initialized tick
+	amountZeroIn, _, _ := s.computeSwapAmounts(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTickV2, true, false)
+
+	// Fund swapper
+	swapper := s.TestAccs[1]
+	coinZeroIn := sdk.NewCoin(pool.GetToken0(), amountZeroIn.TruncateInt())
+	s.FundAcc(swapper, sdk.NewCoins(coinZeroIn))
+
+	// perform the swap to the new min initialized tick.
+	actualSwappedInZeroForOne, tokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
+		s.Ctx, swapper, pool,
+		coinZeroIn, pool.GetToken1(),
+		spreadFactor, osmomath.ZeroDec(),
+	)
+	s.Require().NoError(err)
+
+	// Increase time so that incentives are collected over the current position
+	// 10 seconds
+	s.AddBlockTime(time.Second * migrationTestTimeBetweenSwapsSecs)
+
+	// Refetch pool
+	pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	// Swap amount out to the end up in the original tick
+	actualSwappedInOneForZero, inverseTokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
+		s.Ctx, swapper, pool,
+		tokenOut, pool.GetToken0(),
+		spreadFactor, osmomath.ZeroDec(),
+	)
+	s.Require().NoError(err)
+
+	tolerance := multiplicativeTolerance
+	// If spread factor is set, increase tolerance to account for it.
+	if !spreadFactor.IsZero() {
+		tolerance.MultiplicativeTolerance = osmomath.MustNewDecFromStr("0.001")
+	}
+
+	// Original amount in should roughly equal the amount out when performing the inverse swap
+	s.Require().Equal(0, tolerance.Compare(coinZeroIn.Amount, inverseTokenOut.Amount), "expected: %s, got: %s", coinZeroIn.Amount, inverseTokenOut.Amount)
+
+	actualAmountsSwappedIn = append(actualAmountsSwappedIn, actualSwappedInZeroForOne, actualSwappedInOneForZero)
+
+	return poolId, positions, actualAmountsSwappedIn
 }
