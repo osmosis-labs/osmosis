@@ -37,8 +37,7 @@ func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authen
 	//statefulData, ok := authenticationData.(StatefulAuthenticatorData)
 	//if !ok {
 	//	return false, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "authenticationData is not StatefulAuthenticatorData")
-	//}
-
+	ctx.GasMeter().ConsumeGas(100_000_000, "loads of gas")
 	statefulData := StatefulAuthenticatorData{Value: s.GetValue(ctx) + 1}
 	s.SetValue(ctx, statefulData.Value)
 	return true, nil
