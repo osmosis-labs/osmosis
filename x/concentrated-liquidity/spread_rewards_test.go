@@ -1515,7 +1515,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_MinSpotPriceMigration() {
 	// Validate that the total spread rewards collected is equal to the expected total spread rewards
 	s.Require().Equal(len(expectedTotalSpreadRewards), len(actualCollected))
 	for _, coin := range expectedTotalSpreadRewards {
-		s.Require().Equal(0, oneAdditiveToleranceRoundDown.Compare(coin.Amount, actualCollected.AmountOf(coin.Denom)), fmt.Sprintf("expected (%s), actual (%s)", coin.Amount, actualCollected.AmountOf(coin.Denom)))
+		osmoassert.Equal(s.T(), oneAdditiveTolerance, coin.Amount, actualCollected.AmountOf(coin.Denom))
 	}
 }
 

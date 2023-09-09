@@ -13,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	concentrated_liquidity "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/clmocks"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
@@ -572,7 +573,7 @@ func (s *KeeperTestSuite) swapToMinTickAndBack(spreadFactor osmomath.Dec, incent
 	}
 
 	// Original amount in should roughly equal the amount out when performing the inverse swap
-	s.Require().Equal(0, tolerance.Compare(coinZeroIn.Amount, inverseTokenOut.Amount), "expected: %s, got: %s", coinZeroIn.Amount, inverseTokenOut.Amount)
+	osmoassert.Equal(s.T(), tolerance, coinZeroIn.Amount, inverseTokenOut.Amount)
 
 	actualAmountsSwappedIn = append(actualAmountsSwappedIn, actualSwappedInZeroForOne, actualSwappedInOneForZero)
 

@@ -3573,7 +3573,7 @@ func (s *KeeperTestSuite) TestSwap_MinSpotPriceMigration() {
 		s.Require().NoError(err)
 
 		// Original amount in should roughly equal the amount out when performing the inverse swap
-		s.Require().Equal(0, multiplicativeTolerance.Compare(coinOneOut.Amount, inverseTokenOut.Amount), "expected: %s, got: %s", coinOneOut.Amount, inverseTokenOut.Amount)
+		osmoassert.Equal(s.T(), multiplicativeTolerance, coinOneOut.Amount, inverseTokenOut.Amount)
 	})
 }
 

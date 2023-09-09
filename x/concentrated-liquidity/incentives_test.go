@@ -2,7 +2,6 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
@@ -3574,6 +3574,6 @@ func (s *KeeperTestSuite) TestCollectIncentives_MinSpotPriceMigration() {
 	// Validate that the total incentive rewards collected are equal to the expected total incentive rewards
 	s.Require().Equal(len(expectedTotalIncentiveRewards), len(actualCollected))
 	for _, coin := range expectedTotalIncentiveRewards {
-		s.Require().Equal(0, oneAdditiveToleranceRoundDown.Compare(coin.Amount, actualCollected.AmountOf(coin.Denom)), fmt.Sprintf("expected (%s), actual (%s)", coin.Amount, actualCollected.AmountOf(coin.Denom)))
+		osmoassert.Equal(s.T(), oneAdditiveToleranceRoundDown, coin.Amount, actualCollected.AmountOf(coin.Denom))
 	}
 }
