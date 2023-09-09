@@ -222,6 +222,16 @@ func (s *KeeperTestSuite) swapNearInitializedTickBoundary(r *rand.Rand, pool typ
 }
 
 func (s *KeeperTestSuite) swapNearTickBoundary(r *rand.Rand, pool types.ConcentratedPoolExtension, targetTick int64, zfo bool) (didSwap bool, fatalErr bool) {
+	// TODO: remove this limit upon completion of the refactor in:
+	// https://github.com/osmosis-labs/osmosis/issues/5726
+	// Due to an intermediary refactor step where we have
+	// full range positions created in the extended full range it
+	// sometimes tries to swap to the V2 MinInitializedTick that
+	// is not supported yet by the rest of the system.
+	if targetTick < types.MinInitializedTick {
+		return false, false
+	}
+
 	swapInDenom, swapOutDenom := zfoToDenoms(zfo, pool)
 	// TODO: Confirm accuracy of this method.
 	amountInRequired, curLiquidity, _ := s.computeSwapAmounts(pool.GetId(), pool.GetCurrentSqrtPrice(), targetTick, zfo, false)

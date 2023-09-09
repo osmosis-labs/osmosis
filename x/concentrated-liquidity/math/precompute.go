@@ -9,7 +9,6 @@ import (
 
 var (
 	sdkOneDec      = sdk.OneDec()
-	sdkNineDec     = sdk.NewDec(9)
 	sdkTenDec      = sdk.NewDec(10)
 	powersOfTen    []sdk.Dec
 	negPowersOfTen []sdk.Dec
