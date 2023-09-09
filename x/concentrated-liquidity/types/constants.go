@@ -8,9 +8,9 @@ import (
 
 const (
 	// Precomputed values for min and max tick
+
+	// Tick corresponding to the at launch min spot price of 10^-12.
 	MinInitializedTick, MaxTick int64 = -108000000, 342000000
-	MinInitializedTickV2        int64 = -270000000
-	MinCurrentTickV2            int64 = MinInitializedTickV2 - 1
 	// If we consume all liquidity and cross the min initialized tick,
 	// our current tick will equal to MinInitializedTick - 1 with zero liquidity.
 	// However, note that this tick cannot be crossed. If current tick
@@ -19,7 +19,10 @@ const (
 	// Note, that this behavior is different from MaxTick since our "active range"
 	// invariant is [lower tick, uppper tick). As a result, when we consume all lower
 	// tick liquiditty, we must cross it and get kicked out of it.
-	MinCurrentTick                int64 = MinInitializedTick - 1
+	MinCurrentTick int64 = MinInitializedTick - 1
+	// Tick corresponding to the extended min spot price of 10^-30.
+	MinInitializedTickV2          int64 = -270000000
+	MinCurrentTickV2              int64 = MinInitializedTickV2 - 1
 	ExponentAtPriceOne            int64 = -6
 	ConcentratedGasFeeForSwap           = 10_000
 	BaseGasFeeForNewIncentive           = 10_000
@@ -27,7 +30,8 @@ const (
 )
 
 var (
-	MaxSpotPrice = osmomath.MustNewDecFromStr("100000000000000000000000000000000000000")
+	MaxSpotPrice       = osmomath.MustNewDecFromStr("100000000000000000000000000000000000000")
+	MaxSpotPriceBigDec = osmomath.BigDecFromDec(MaxSpotPrice)
 	// TODO: remove when https://github.com/osmosis-labs/osmosis/issues/5726 is complete.
 	MinSpotPrice = osmomath.MustNewDecFromStr("0.000000000001") // 10^-12
 	// Note: this is the at launch min spot price that is getting lowered to 10^-30
