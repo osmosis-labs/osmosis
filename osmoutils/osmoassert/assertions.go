@@ -9,11 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
-type testSuite interface {
-	Require() *require.Assertions
-	T() *testing.T
-}
-
 // ConditionalPanic checks if expectPanic is true, asserts that sut (system under test)
 // panics. If expectPanic is false, asserts that sut does not panic.
 // returns true if sut panics and false it it does not
