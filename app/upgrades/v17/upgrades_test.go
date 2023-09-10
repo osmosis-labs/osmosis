@@ -14,6 +14,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 	v17 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v17"
@@ -294,7 +295,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 					s.Require().Equal(assetPair.QuoteAsset, concentratedTypePool.GetToken1())
 
 					// Validate that the spot price of the CL pool is what we expect
-					s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromDec(balancerSpotPrice)))
+					osmoassert.Equal(s.T(), multiplicativeTolerance, concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromDec(balancerSpotPrice))
 
 					// Validate that the link is correct.
 					migrationInfo, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
@@ -460,7 +461,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 					s.Require().Equal(quoteAsset, concentratedTypePool.GetToken1())
 
 					// Validate that the spot price of the CL pool is what we expect
-					s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromDec(balancerSpotPrice)))
+					osmoassert.Equal(s.T(), multiplicativeTolerance, concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromDec(balancerSpotPrice))
 
 					// Validate that the link is correct.
 					migrationInfo, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)

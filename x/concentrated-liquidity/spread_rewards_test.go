@@ -1,13 +1,13 @@
 package concentrated_liquidity_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
@@ -1515,7 +1515,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_MinSpotPriceMigration() {
 	// Validate that the total spread rewards collected is equal to the expected total spread rewards
 	s.Require().Equal(len(expectedTotalSpreadRewards), len(actualCollected))
 	for _, coin := range expectedTotalSpreadRewards {
-		s.Require().Equal(0, oneAdditiveToleranceRoundDown.Compare(coin.Amount, actualCollected.AmountOf(coin.Denom)), fmt.Sprintf("expected (%s), actual (%s)", coin.Amount, actualCollected.AmountOf(coin.Denom)))
+		osmoassert.Equal(s.T(), oneAdditiveTolerance, coin.Amount, actualCollected.AmountOf(coin.Denom))
 	}
 }
 
@@ -1553,7 +1553,7 @@ func (s *KeeperTestSuite) CollectAndAssertSpreadRewards(ctx sdk.Context, poolId 
 	for _, coin := range totalSpreadRewardsCollected {
 		expected := totalSpreadRewards.AmountOf(coin.Denom)
 		actual := coin.Amount
-		s.Require().Equal(0, errTolerance.Compare(expected, actual), fmt.Sprintf("expected (%s), actual (%s)", expected, actual))
+		osmoassert.Equal(s.T(), errTolerance, expected, actual)
 	}
 }
 
