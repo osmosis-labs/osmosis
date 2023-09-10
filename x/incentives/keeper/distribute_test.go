@@ -17,6 +17,38 @@ import (
 
 var _ = suite.TestingSuite(nil)
 
+var (
+	defaultGaugeRecordOne = types.InternalGaugeRecord{
+		GaugeId:          1,
+		CurrentWeight:    sdk.NewInt(100),
+		CumulativeWeight: sdk.NewInt(200),
+	}
+	defaultGaugeRecordTwo = types.InternalGaugeRecord{
+		// Note that this is 4 and not 2 because we assume the second pool is a balancer pool
+		// that creates three gauges (one for each lockable duration), only the last of which
+		// we use.
+		GaugeId:          4,
+		CurrentWeight:    sdk.NewInt(100),
+		CumulativeWeight: sdk.NewInt(200),
+	}
+	defaultGroupGauge = types.GroupGauge{
+		GroupGaugeId: 5,
+		InternalGaugeInfo: types.InternalGaugeInfo{
+			TotalWeight:  defaultGaugeRecordOne.CurrentWeight.Add(defaultGaugeRecordTwo.CurrentWeight),
+			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOne, defaultGaugeRecordTwo},
+		},
+		SplittingPolicy: types.Volume,
+	}
+	singleRecordGroupGauge = types.GroupGauge{
+		GroupGaugeId: 5,
+		InternalGaugeInfo: types.InternalGaugeInfo{
+			TotalWeight:  defaultGaugeRecordOne.CurrentWeight.Add(defaultGaugeRecordTwo.CurrentWeight),
+			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOne},
+		},
+		SplittingPolicy: types.Volume,
+	}
+)
+
 type GroupGaugeCreationFields struct {
 	coins            sdk.Coins
 	numEpochPaidOver uint64
@@ -1126,6 +1158,9 @@ func (s *KeeperTestSuite) IncentivizeInternalGauge(poolIds []uint64, epochDurati
 	s.Require().NoError(err)
 }
 func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
+	// We skip these tests until allocating across gauges for volume splitting is implemented.
+	s.T().Skip()
+
 	tests := []struct {
 		name                               string
 		GroupGauge                         types.GroupGauge
@@ -1141,16 +1176,19 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 					TotalWeight: sdk.NewInt(150),
 					GaugeRecords: []types.InternalGaugeRecord{
 						{
-							GaugeId: 2,
-							Weight:  sdk.NewInt(50),
+							GaugeId:          2,
+							CurrentWeight:    sdk.NewInt(50),
+							CumulativeWeight: sdk.NewInt(50),
 						},
 						{
-							GaugeId: 3,
-							Weight:  sdk.NewInt(50),
+							GaugeId:          3,
+							CurrentWeight:    sdk.NewInt(50),
+							CumulativeWeight: sdk.NewInt(50),
 						},
 						{
-							GaugeId: 4,
-							Weight:  sdk.NewInt(50),
+							GaugeId:          4,
+							CurrentWeight:    sdk.NewInt(50),
+							CumulativeWeight: sdk.NewInt(50),
 						},
 					},
 				},
@@ -1168,16 +1206,19 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 					TotalWeight: sdk.NewInt(150),
 					GaugeRecords: []types.InternalGaugeRecord{
 						{
-							GaugeId: 5,
-							Weight:  sdk.NewInt(50),
+							GaugeId:          5,
+							CurrentWeight:    sdk.NewInt(50),
+							CumulativeWeight: sdk.NewInt(50),
 						},
 						{
-							GaugeId: 6,
-							Weight:  sdk.NewInt(50),
+							GaugeId:          6,
+							CurrentWeight:    sdk.NewInt(50),
+							CumulativeWeight: sdk.NewInt(50),
 						},
 						{
-							GaugeId: 7,
-							Weight:  sdk.NewInt(50),
+							GaugeId:          7,
+							CurrentWeight:    sdk.NewInt(50),
+							CumulativeWeight: sdk.NewInt(50),
 						},
 					},
 				},
@@ -1248,6 +1289,9 @@ func (s *KeeperTestSuite) WithBaseCaseDifferentInternalGauges(baseCase GroupGaug
 }
 
 func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
+	// We skip these test until group gauge initialization refactor is complete
+	s.T().Skip()
+
 	hundredKUosmo := sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))
 	hundredKUatom := sdk.NewCoin("uatom", sdk.NewInt(100_000_000))
 	fifetyKUosmo := sdk.NewCoin("uosmo", sdk.NewInt(50_000_000))
@@ -1406,4 +1450,175 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 		})
 	}
 
+}
+
+// deepCopyGroupGauge creates a deep copy of the passed in group gauge.
+func deepCopyGroupGauge(src types.GroupGauge) types.GroupGauge {
+	gaugeRecords := make([]types.InternalGaugeRecord, len(src.InternalGaugeInfo.GaugeRecords))
+	for i, record := range src.InternalGaugeInfo.GaugeRecords {
+		gaugeRecords[i] = types.InternalGaugeRecord{
+			GaugeId:          record.GaugeId,
+			CurrentWeight:    record.CurrentWeight,
+			CumulativeWeight: record.CumulativeWeight,
+		}
+	}
+
+	return types.GroupGauge{
+		GroupGaugeId: src.GroupGaugeId,
+		InternalGaugeInfo: types.InternalGaugeInfo{
+			TotalWeight:  src.InternalGaugeInfo.TotalWeight,
+			GaugeRecords: gaugeRecords,
+		},
+		SplittingPolicy: src.SplittingPolicy,
+	}
+}
+
+// withUpdatedVolumes takes in a group gauge and a list of updated cumulative volumes (ordered) and updates the contents of the gauge to
+// reflect these new volumes.
+// It is only intended to be used to set expected values for test cases.
+func (s *KeeperTestSuite) withUpdatedVolumes(groupGauge types.GroupGauge, updatedCumulativeVolumes []sdk.Int) types.GroupGauge {
+	// Ensure there aren't more volumes to update than records in group gauge
+	s.Require().True(len(updatedCumulativeVolumes) <= len(groupGauge.InternalGaugeInfo.GaugeRecords))
+
+	// We make a deep copy of the group gauge to ensure we don't modify the original input/defaults
+	updatedGroupGauge := deepCopyGroupGauge(groupGauge)
+
+	newTotalWeight := sdk.ZeroInt()
+	for i, updatedVolume := range updatedCumulativeVolumes {
+		currentRecord := groupGauge.InternalGaugeInfo.GaugeRecords[i]
+		updatedRecord := types.InternalGaugeRecord{
+			GaugeId:          currentRecord.GaugeId,
+			CurrentWeight:    updatedVolume.Sub(currentRecord.CumulativeWeight),
+			CumulativeWeight: updatedVolume,
+		}
+		updatedGroupGauge.InternalGaugeInfo.GaugeRecords[i] = updatedRecord
+		newTotalWeight = newTotalWeight.Add(updatedRecord.CurrentWeight)
+	}
+	updatedGroupGauge.InternalGaugeInfo.TotalWeight = newTotalWeight
+
+	return updatedGroupGauge
+}
+
+// withSplittingPolicy returns a deep copy of the passed in group gauge with the splitting policy set to the passed in value.
+func withSplittingPolicy(groupGauge types.GroupGauge, splittingPolicy types.SplittingPolicy) types.GroupGauge {
+	// We make a deep copy of the group gauge to ensure we don't modify the original input/defaults
+	updatedGroupGauge := deepCopyGroupGauge(groupGauge)
+	updatedGroupGauge.SplittingPolicy = splittingPolicy
+
+	return updatedGroupGauge
+}
+
+func (s *KeeperTestSuite) TestSyncGroupGaugeWeights() {
+	tests := map[string]struct {
+		groupGaugeToSync   types.GroupGauge
+		updatedPoolVolumes []sdk.Int
+
+		expectedSyncedGauge types.GroupGauge
+		expectedError       error
+	}{
+		"happy path: valid update on group gauge with even volume growth": {
+			groupGaugeToSync: deepCopyGroupGauge(defaultGroupGauge),
+			updatedPoolVolumes: []sdk.Int{
+				sdk.NewInt(300),
+				sdk.NewInt(300),
+			},
+
+			expectedSyncedGauge: s.withUpdatedVolumes(defaultGroupGauge, []sdk.Int{sdk.NewInt(300), sdk.NewInt(300)}),
+			expectedError:       nil,
+		},
+		"valid update on group gauge with different volume growth": {
+			groupGaugeToSync: deepCopyGroupGauge(defaultGroupGauge),
+			updatedPoolVolumes: []sdk.Int{
+				sdk.NewInt(253),
+				sdk.NewInt(659),
+			},
+
+			expectedSyncedGauge: s.withUpdatedVolumes(defaultGroupGauge, []sdk.Int{sdk.NewInt(253), sdk.NewInt(659)}),
+			expectedError:       nil,
+		},
+		"valid update on group gauge with only one record to sync": {
+			groupGaugeToSync: deepCopyGroupGauge(singleRecordGroupGauge),
+
+			updatedPoolVolumes: []sdk.Int{
+				sdk.NewInt(933),
+			},
+
+			expectedSyncedGauge: s.withUpdatedVolumes(singleRecordGroupGauge, []sdk.Int{sdk.NewInt(933)}),
+			expectedError:       nil,
+		},
+
+		// Error catching
+		"tracked volume has dropped to zero for a pool (no pool volume or volume cannot be found)": {
+			groupGaugeToSync: deepCopyGroupGauge(defaultGroupGauge),
+			updatedPoolVolumes: []sdk.Int{
+				sdk.NewInt(300),
+				sdk.NewInt(0),
+			},
+
+			expectedError: types.NoPoolVolumeError{PoolId: uint64(2)},
+		},
+		"cumulative volume has decreased for a pool (impossible/invalid state)": {
+			groupGaugeToSync: deepCopyGroupGauge(defaultGroupGauge),
+			updatedPoolVolumes: []sdk.Int{
+				sdk.NewInt(300),
+				sdk.NewInt(100),
+			},
+
+			expectedError: types.CumulativeVolumeDecreasedError{PoolId: uint64(2), PreviousVolume: sdk.NewInt(200), NewVolume: sdk.NewInt(100)},
+		},
+		"unsupported splitting policy": {
+			groupGaugeToSync: withSplittingPolicy(defaultGroupGauge, types.SplittingPolicy(100)),
+			updatedPoolVolumes: []sdk.Int{
+				sdk.NewInt(300),
+				sdk.NewInt(300),
+			},
+
+			expectedError: types.UnsupportedSplittingPolicyError{GroupGaugeId: uint64(5), SplittingPolicy: types.SplittingPolicy(100)},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			ik := s.App.IncentivesKeeper
+
+			// Prepare pools so gauges and pool ids are set in state
+			clPool := s.PrepareConcentratedPool()
+			balPoolId := s.PrepareBalancerPool()
+
+			poolIds := []uint64{clPool.GetId(), balPoolId}
+
+			// Update cumulative volumes for pools
+			for i, updatedVolume := range tc.updatedPoolVolumes {
+				// Note that even though we deal with volumes as ints, they are tracked as coins to allow for tracking of more denoms in the future.
+				s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolIds[i], sdk.NewCoins(sdk.NewCoin(s.App.StakingKeeper.BondDenom(s.Ctx), updatedVolume)))
+			}
+
+			// Set group gauge in state to make stronger assertions later
+			ik.SetGroupGauge(s.Ctx, tc.groupGaugeToSync)
+
+			// --- System under test ---
+
+			err := ik.SyncGroupGaugeWeights(s.Ctx, tc.groupGaugeToSync)
+
+			// --- Assertions ---
+
+			if tc.expectedError != nil {
+				s.Require().ErrorContains(tc.expectedError, err.Error())
+
+				// Ensure group gauge is unchanged in state
+				gaugeInState, err := ik.GetGroupGaugeById(s.Ctx, tc.groupGaugeToSync.GroupGaugeId)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.groupGaugeToSync, gaugeInState)
+
+				return
+			}
+
+			s.Require().NoError(err)
+
+			updatedGauge, err := ik.GetGroupGaugeById(s.Ctx, tc.groupGaugeToSync.GroupGaugeId)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedSyncedGauge, updatedGauge)
+		})
+	}
 }

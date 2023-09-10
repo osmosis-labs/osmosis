@@ -246,8 +246,9 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 		}
 
 		records = append(records, types.InternalGaugeRecord{
-			GaugeId: gauge.Id,
-			Weight:  sdk.ZeroInt(),
+			GaugeId:          gauge.Id,
+			CurrentWeight:    sdk.ZeroInt(),
+			CumulativeWeight: sdk.ZeroInt(),
 		})
 	}
 

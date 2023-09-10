@@ -310,7 +310,10 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 
 			// we distribute tokens from groupGauge to internal gauge therefore update groupGauge fields
 			// updates filledEpoch and distributedCoins
-			k.updateGaugePostDistribute(ctx, *gauge, coinsToDistribute)
+			err = k.updateGaugePostDistribute(ctx, *gauge, coinsToDistribute)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -318,30 +321,101 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 }
 
 // syncGroupGaugeWeights updates the individual and total weights of the gauge records based on the splitting policy.
-// TODO: add volume split policy
 func (k Keeper) syncGroupGaugeWeights(ctx sdk.Context, groupGauge types.GroupGauge) error {
-	// totalWeight := sdk.ZeroInt()
-	//
-	// Loop through gauge records
-	//
-	// For each record:
-	// 	Get corresponding pool:
-	// 		Retrieve the gauge and get its lock type
-	//
-	// 		If NoLock, it's a CL pool, so we set the "lockableDuration" to epoch duration
-	//
-	//		Otherwise, it's a balancer pool so we set it to longest lockable duration (leave TODO to add support for CW pools once there's clarity)
-	//
-	// 		Retrieve pool ID using GetPoolIdFromGaugeId(gaugeId, lockableDuration)
-	//
-	//	Get new volume for pool. Assert GTE gauge's weight
-	// 		If new volume is 0, there was an issue with volume tracking. Return error.
-	// 		We expect this to be handled quietly in update logic but not in init logic.
-	//
-	// 	Update gauge record's weight to new volume - old weight
-	//  Add new this diff to total weight
-	//
-	// Outside loop: set group gauge in state (`SetGroupGauge`)
+	if groupGauge.SplittingPolicy == types.Volume {
+		err := k.syncVolumeSplitGauge(ctx, groupGauge)
+		if err != nil {
+			return err
+		}
+	} else {
+		return types.UnsupportedSplittingPolicyError{GroupGaugeId: groupGauge.GroupGaugeId, SplittingPolicy: groupGauge.SplittingPolicy}
+	}
+
+	return nil
+}
+
+// syncVolumeSplitGauge syncs a group gauge according to volume splitting policy.
+// It mutates the passed in object and sets the updated value in state.
+// If there is an error, the passed in object is not mutated.
+//
+// It returns an error if:
+// - the splitting policy is not supported
+// - the volume for any linked pool is zero or cannot be found
+// - the cumulative volume for any linked pool has decreased (should never happen)
+func (k Keeper) syncVolumeSplitGauge(ctx sdk.Context, groupGauge types.GroupGauge) error {
+	totalWeight := sdk.ZeroInt()
+
+	// We operate on a deep copy of the given group gauge because we expect to handle specific errors quietly
+	// and want to avoid the scenario where the original group gauge is partially mutated in such cases.
+	updatedGroupGauge := types.GroupGauge{
+		GroupGaugeId: groupGauge.GroupGaugeId,
+		InternalGaugeInfo: types.InternalGaugeInfo{
+			TotalWeight:  groupGauge.InternalGaugeInfo.TotalWeight,
+			GaugeRecords: make([]types.InternalGaugeRecord, len(groupGauge.InternalGaugeInfo.GaugeRecords)),
+		},
+		SplittingPolicy: groupGauge.SplittingPolicy,
+	}
+
+	// Loop through gauge records and update their state to reflect new pool volumes
+	for i, gaugeRecord := range groupGauge.InternalGaugeInfo.GaugeRecords {
+		gauge, err := k.GetGaugeByID(ctx, gaugeRecord.GaugeId)
+		if err != nil {
+			return err
+		}
+
+		gaugeType := gauge.DistributeTo.LockQueryType
+		gaugeDuration := time.Duration(0)
+
+		if gaugeType == lockuptypes.NoLock {
+			// If NoLock, it's a CL pool, so we set the "lockableDuration" to epoch duration
+			gaugeDuration = k.GetEpochInfo(ctx).Duration
+		} else {
+			// Otherwise, it's a balancer pool so we set it to longest lockable duration
+			// TODO: add support for CW pools once there's clarity around default gauge type
+			gaugeDuration, err = k.pik.GetLongestLockableDuration(ctx)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Retrieve pool ID using GetPoolIdFromGaugeId(gaugeId, lockableDuration)
+		poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeRecord.GaugeId, gaugeDuration)
+		if err != nil {
+			return err
+		}
+
+		// Get new volume for pool. Assert GTE gauge's weight
+		cumulativePoolVolume := k.pmk.GetOsmoVolumeForPool(ctx, poolId)
+
+		// If new volume is 0, there was an issue with volume tracking. Return error.
+		// We expect this to be handled quietly in update logic but not in init logic.
+		// By returning an error, we let the caller decide whether to handle it quietly or not.
+		if !cumulativePoolVolume.IsPositive() {
+			return types.NoPoolVolumeError{PoolId: poolId}
+		}
+
+		// Update gauge record's weight to new volume - last volume snapshot
+		volumeDelta := cumulativePoolVolume.Sub(gaugeRecord.CumulativeWeight)
+		if volumeDelta.IsNegative() {
+			return types.CumulativeVolumeDecreasedError{PoolId: poolId, PreviousVolume: gaugeRecord.CumulativeWeight, NewVolume: cumulativePoolVolume}
+		}
+
+		gaugeRecord.CurrentWeight = volumeDelta
+
+		// Snapshot cumulative volume
+		gaugeRecord.CumulativeWeight = cumulativePoolVolume
+
+		// Add new this diff to total weight
+		totalWeight = totalWeight.Add(volumeDelta)
+
+		// Mutate original group gauge to ensure changes are tracked
+		updatedGroupGauge.InternalGaugeInfo.GaugeRecords[i] = gaugeRecord
+	}
+
+	// Update group gauge total weight
+	updatedGroupGauge.InternalGaugeInfo.TotalWeight = totalWeight
+
+	k.SetGroupGauge(ctx, updatedGroupGauge)
 
 	return nil
 }

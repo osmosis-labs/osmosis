@@ -82,6 +82,7 @@ func (k Keeper) CreateLockablePoolGauges(ctx sdk.Context, poolId uint64) error {
 			1,
 			0,
 		)
+		fmt.Println("Pool id, gauge id, lockable duration", poolId, gaugeId, int64(lockableDuration))
 		if err != nil {
 			return err
 		}
