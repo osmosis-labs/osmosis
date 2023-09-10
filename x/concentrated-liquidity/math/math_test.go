@@ -173,7 +173,6 @@ func TestCalcAmount0Delta(t *testing.T) {
 			sqrtPB:          osmomath.MustNewBigDecFromStr("0.000000000000001409841835100661211756"),
 			roundUp:         true,
 			amount0Expected: osmomath.MustNewBigDecFromStr("3546676037185128488234786333758360815266.999539026068480181194797910898392880").Ceil(), // rounded up at precision end.
-			isWithTolerance: true,
 		},
 	}
 
