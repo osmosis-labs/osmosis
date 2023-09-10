@@ -302,7 +302,7 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 				// Sig fig round the expected value.
 				tc.expTwap = osmomath.SigFigRound(tc.expTwap, gammtypes.SpotPriceSigFigs)
 
-				s.Require().Equal(0, errTolerance.CompareBigDec(osmomath.BigDecFromDec(tc.expTwap), osmomath.BigDecFromDec(actualTwap)), "expected %s, got %s", tc.expTwap, actualTwap)
+				osmoassert.Equal(s.T(), errTolerance, osmomath.BigDecFromDec(tc.expTwap), osmomath.BigDecFromDec(actualTwap))
 			})
 		})
 	}

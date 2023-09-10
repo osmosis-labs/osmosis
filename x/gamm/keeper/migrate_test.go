@@ -9,6 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
@@ -289,13 +290,13 @@ func (s *KeeperTestSuite) TestMigrate() {
 
 		// The balance in the cl pool should be equal to what the user previously had in the gamm pool.
 		// This test is within 100 shares due to rounding that occurs from utilizing .000000000000000001 instead of 0.
-		s.Require().Equal(0, test.errTolerance.Compare(userEthBalanceTransferredToClPool.Amount, clPoolEthBalanceAfterMigration.Amount))
-		s.Require().Equal(0, test.errTolerance.Compare(userUsdcBalanceTransferredToClPool.Amount, clPoolUsdcBalanceAfterMigration.Amount))
+		osmoassert.Equal(s.T(), test.errTolerance, userEthBalanceTransferredToClPool.Amount, clPoolEthBalanceAfterMigration.Amount)
+		osmoassert.Equal(s.T(), test.errTolerance, userUsdcBalanceTransferredToClPool.Amount, clPoolUsdcBalanceAfterMigration.Amount)
 
 		// Assert user amount transferred to cl pool from gamm pool should be equal to the amount we migrated from the migrate message.
 		// This test is within 100 shares due to rounding that occurs from utilizing .000000000000000001 instead of 0.
-		s.Require().Equal(0, test.errTolerance.Compare(userEthBalanceTransferredToClPool.Amount, positionData.Amount0))
-		s.Require().Equal(0, test.errTolerance.Compare(userUsdcBalanceTransferredToClPool.Amount, positionData.Amount0))
+		osmoassert.Equal(s.T(), test.errTolerance, userEthBalanceTransferredToClPool.Amount, positionData.Amount0)
+		osmoassert.Equal(s.T(), test.errTolerance, userUsdcBalanceTransferredToClPool.Amount, positionData.Amount0)
 	}
 }
 

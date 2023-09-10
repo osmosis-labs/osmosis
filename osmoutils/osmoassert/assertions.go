@@ -59,3 +59,27 @@ func messageFromMsgAndArgs(msgAndArgs ...interface{}) string {
 	}
 	return ""
 }
+
+// Equal compares A with B and asserts that they are equal within tolerance error tolerance
+func Equal[T any](t *testing.T, tolerance osmomath.ErrTolerance, A, B T) {
+	errMsg := fmt.Sprintf("expected %T, actual %T", A, B)
+	switch a := any(A).(type) {
+	case osmomath.Int:
+		b, ok := any(B).(osmomath.Int)
+		failNowIfNot(t, ok)
+
+		require.True(t, tolerance.Compare(a, b) == 0, errMsg)
+
+	case osmomath.BigDec:
+		b, ok := any(B).(osmomath.BigDec)
+		failNowIfNot(t, ok)
+
+		require.True(t, tolerance.CompareBigDec(a, b) == 0, errMsg)
+
+	case osmomath.Dec:
+		b, ok := any(B).(osmomath.Dec)
+		failNowIfNot(t, ok)
+
+		require.True(t, tolerance.CompareDec(a, b) == 0, errMsg)
+	}
+}
