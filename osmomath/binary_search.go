@@ -56,6 +56,7 @@ func Compare[T Comparable](errTolerance ErrTolerance, expected T, actual T) int 
 	}
 }
 
+// checkTypeAssertion panics if type assertion was unsuccessful in Compare function
 func checkTypeAssertion(ok bool, typeA, typeB any) {
 	if !ok {
 		panic(fmt.Sprintf("actual value is not of the same type as expected: actual (%T), expected (%T)", typeA, typeB))
