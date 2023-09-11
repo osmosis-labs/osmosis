@@ -111,6 +111,15 @@ func GetPriceLimit(zeroForOne bool) osmomath.BigDec {
 	return types.MaxSpotPriceBigDec
 }
 
+// GetSqrtPriceLimit returns sqrt price limit from price limit and swap strategy.
+// If price limit is zero and strategy is zero for one, min sqrt price is returned.
+// If price limit is zero and strategy is one for zero, max sqrt price is returned.
+// If price limit is greater than MaxSpotPrice, an error is returned.
+// Otherwise, if price limit is less that MinSpotPrice, a big decimal sqrt function
+// is used to get the sqrt price limit. Otherwise, a decimal sqrt function is used.
+// The sqrt function choice strategy applies to both zero for one and one for zero.
+// Such a choice is made to keep state-compatibility with the original at-launch
+// price range.
 func GetSqrtPriceLimit(priceLimit osmomath.BigDec, zeroForOne bool) (osmomath.BigDec, error) {
 	if priceLimit.IsZero() {
 		if zeroForOne {
@@ -119,9 +128,13 @@ func GetSqrtPriceLimit(priceLimit osmomath.BigDec, zeroForOne bool) (osmomath.Bi
 		return osmomath.BigDecFromDec(types.MaxSqrtPrice), nil
 	}
 
+	if priceLimit.LT(types.MinSpotPriceV2) || priceLimit.GT(types.MaxSpotPriceBigDec) {
+		return osmomath.BigDec{}, types.PriceBoundError{ProvidedPrice: priceLimit, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
+	}
+
 	// To keep state-compatibility with the original at-launch price range
 	// we utilize the same sqrt price function.
-	if priceLimit.GTE(types.MinSqrtPriceBigDec) {
+	if priceLimit.GTE(types.MinSpotPriceBigDec) {
 		// Truncation is fine since previous Osmosis version only supported
 		// 18 decimal price ranges.
 		sqrtPriceLimit, err := osmomath.MonotonicSqrt(priceLimit.Dec())
