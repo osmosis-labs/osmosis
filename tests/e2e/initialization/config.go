@@ -486,8 +486,8 @@ func updateTWAPGenesis(appGenState map[string]json.RawMessage) func(twapGenState
 					Asset1Denom:                 denomPair.Denom0,
 					Height:                      1,
 					Time:                        time.Date(2023, 0o2, 1, 0, 0, 0, 0, time.UTC), // some time in the past.
-					P0LastSpotPrice:             sp0,
-					P1LastSpotPrice:             sp1,
+					P0LastSpotPrice:             sp0.Dec(),
+					P1LastSpotPrice:             sp1.Dec(),
 					P0ArithmeticTwapAccumulator: osmomath.ZeroDec(),
 					P1ArithmeticTwapAccumulator: osmomath.ZeroDec(),
 					GeometricTwapAccumulator:    osmomath.ZeroDec(),

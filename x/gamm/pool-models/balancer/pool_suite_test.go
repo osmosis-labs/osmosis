@@ -702,7 +702,7 @@ func (s *KeeperTestSuite) TestBalancerSpotPrice() {
 					s.Require().Error(err, "test: %s", tc.name)
 				} else {
 					s.Require().NoError(err, "test: %s", tc.name)
-					s.Require().True(spotPrice.Equal(tc.expectedOutput),
+					s.Require().True(spotPrice.Dec().Equal(tc.expectedOutput),
 						"test: %s\nSpot price wrong, got %s, expected %s\n", tc.name,
 						spotPrice, tc.expectedOutput)
 				}
@@ -819,7 +819,7 @@ func (s *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 					s.Require().Error(err, "test: %s", tc.name)
 				} else {
 					s.Require().NoError(err, "test: %s", tc.name)
-					s.Require().True(spotPrice.Equal(tc.expectedOutput),
+					s.Require().True(spotPrice.Dec().Equal(tc.expectedOutput),
 						"test: %s\nSpot price wrong, got %s, expected %s\n", tc.name,
 						spotPrice, tc.expectedOutput)
 				}

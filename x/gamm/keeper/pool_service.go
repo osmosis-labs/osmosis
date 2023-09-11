@@ -26,34 +26,34 @@ func (k Keeper) CalculateSpotPrice(
 	poolID uint64,
 	quoteAssetDenom string,
 	baseAssetDenom string,
-) (spotPrice osmomath.Dec, err error) {
+) (spotPrice osmomath.BigDec, err error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	// defer to catch panics, in case something internal overflows.
 	defer func() {
 		if r := recover(); r != nil {
-			spotPrice = osmomath.Dec{}
+			spotPrice = osmomath.BigDec{}
 			err = types.ErrSpotPriceInternal
 		}
 	}()
 
-	spotPrice, err = pool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
+	spotPriceDec, err := pool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	// if spotPrice greater than max spot price, return an error
-	if spotPrice.GT(types.MaxSpotPrice) {
-		return types.MaxSpotPrice, types.ErrSpotPriceOverflow
+	if spotPriceDec.GT(types.MaxSpotPriceBigDec) {
+		return osmomath.BigDecFromDec(types.MaxSpotPrice), types.ErrSpotPriceOverflow
 	} else if !spotPrice.IsPositive() {
-		return osmomath.Dec{}, types.ErrSpotPriceInternal
+		return osmomath.BigDec{}, types.ErrSpotPriceInternal
 	}
 
 	// we want to round this to `SpotPriceSigFigs` of precision
-	spotPrice = osmomath.SigFigRound(spotPrice, types.SpotPriceSigFigs)
+	spotPrice = osmomath.BigDecFromDec(osmomath.SigFigRound(spotPriceDec.Dec(), types.SpotPriceSigFigs))
 	return spotPrice, err
 }
 

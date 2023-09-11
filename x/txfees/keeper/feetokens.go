@@ -32,27 +32,28 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 		return sdk.Coin{}, err
 	}
 
-	return sdk.NewCoin(baseDenom, spotPrice.MulInt(inputFee.Amount).RoundInt()), nil
+	// TODO (perf)
+	return sdk.NewCoin(baseDenom, sdk.NewIntFromBigInt(spotPrice.Mul(osmomath.NewBigDecFromBigInt(inputFee.Amount.BigInt())).RoundInt().BigInt())), nil
 }
 
 // CalcFeeSpotPrice converts the provided tx fees into their equivalent value in the base denomination.
 // Spot Price Calculation: spotPrice / (1 - spreadFactor),
 // where spotPrice is defined as:
 // (tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)
-func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (osmomath.Dec, error) {
+func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (osmomath.BigDec, error) {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	feeToken, err := k.GetFeeToken(ctx, inputDenom)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	spotPrice, err := k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 	return spotPrice, nil
 }

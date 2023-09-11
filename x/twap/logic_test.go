@@ -42,8 +42,8 @@ func (s *TestSuite) TestGetSpotPrices() {
 	testCases := map[string]struct {
 		poolID                uint64
 		prevErrTime           time.Time
-		mockSp0               osmomath.Dec
-		mockSp1               osmomath.Dec
+		mockSp0               osmomath.BigDec
+		mockSp1               osmomath.BigDec
 		mockSp0Err            error
 		mockSp1Err            error
 		expectedSp0           osmomath.Dec
@@ -53,8 +53,8 @@ func (s *TestSuite) TestGetSpotPrices() {
 		"zero sp": {
 			poolID:                poolID,
 			prevErrTime:           currTime,
-			mockSp0:               osmomath.ZeroDec(),
-			mockSp1:               osmomath.ZeroDec(),
+			mockSp0:               osmomath.ZeroBigDec(),
+			mockSp1:               osmomath.ZeroBigDec(),
 			mockSp0Err:            fmt.Errorf("foo"),
 			expectedSp0:           osmomath.ZeroDec(),
 			expectedSp1:           osmomath.ZeroDec(),
@@ -63,8 +63,8 @@ func (s *TestSuite) TestGetSpotPrices() {
 		"exceeds max spot price": {
 			poolID:                poolID,
 			prevErrTime:           currTime,
-			mockSp0:               types.MaxSpotPrice.Add(osmomath.OneDec()),
-			mockSp1:               types.MaxSpotPrice.Add(osmomath.OneDec()),
+			mockSp0:               types.MaxSpotPriceBigDec.Add(osmomath.OneBigDec()),
+			mockSp1:               types.MaxSpotPriceBigDec.Add(osmomath.OneBigDec()),
 			expectedSp0:           types.MaxSpotPrice,
 			expectedSp1:           types.MaxSpotPrice,
 			expectedLatestErrTime: ctx.BlockTime(),
@@ -72,8 +72,8 @@ func (s *TestSuite) TestGetSpotPrices() {
 		"valid spot prices": {
 			poolID:                poolID,
 			prevErrTime:           currTime,
-			mockSp0:               osmomath.NewDecWithPrec(55, 2),
-			mockSp1:               osmomath.NewDecWithPrec(6, 1),
+			mockSp0:               osmomath.NewBigDecWithPrec(55, 2),
+			mockSp1:               osmomath.NewBigDecWithPrec(6, 1),
 			expectedSp0:           osmomath.NewDecWithPrec(55, 2),
 			expectedSp1:           osmomath.NewDecWithPrec(6, 1),
 			expectedLatestErrTime: currTime,
@@ -170,9 +170,9 @@ func (s *TestSuite) TestUpdateRecord() {
 	programmableAmmInterface := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
 	s.App.TwapKeeper.SetAmmInterface(programmableAmmInterface)
 
-	spotPriceResOne := twapmock.SpotPriceResult{Sp: osmomath.OneDec(), Err: nil}
-	spotPriceResOneErr := twapmock.SpotPriceResult{Sp: osmomath.OneDec(), Err: errors.New("dummy err")}
-	spotPriceResOneErrNilDec := twapmock.SpotPriceResult{Sp: osmomath.Dec{}, Err: errors.New("dummy err")}
+	spotPriceResOne := twapmock.SpotPriceResult{Sp: osmomath.OneBigDec(), Err: nil}
+	spotPriceResOneErr := twapmock.SpotPriceResult{Sp: osmomath.OneBigDec(), Err: errors.New("dummy err")}
+	spotPriceResOneErrNilDec := twapmock.SpotPriceResult{Sp: osmomath.BigDec{}, Err: errors.New("dummy err")}
 	baseTime := time.Unix(2, 0).UTC()
 	updateTime := time.Unix(3, 0).UTC()
 	baseTimeMinusOne := time.Unix(1, 0).UTC()
@@ -230,10 +230,10 @@ func (s *TestSuite) TestUpdateRecord() {
 			test.record.PoolId = poolId
 			test.expRecord.PoolId = poolId
 			if (test.expRecord.P0LastSpotPrice == osmomath.Dec{}) {
-				test.expRecord.P0LastSpotPrice = test.spotPriceResult0.Sp
+				test.expRecord.P0LastSpotPrice = test.spotPriceResult0.Sp.Dec()
 			}
 			if (test.expRecord.P1LastSpotPrice == osmomath.Dec{}) {
-				test.expRecord.P1LastSpotPrice = test.spotPriceResult1.Sp
+				test.expRecord.P1LastSpotPrice = test.spotPriceResult1.Sp.Dec()
 			}
 			test.expRecord.Height = s.Ctx.BlockHeight()
 			test.expRecord.Time = s.Ctx.BlockTime()
@@ -643,7 +643,7 @@ func (s *TestSuite) TestUpdateRecords() {
 	type spOverride struct {
 		baseDenom   string
 		quoteDenom  string
-		overrideSp  osmomath.Dec
+		overrideSp  osmomath.BigDec
 		overrideErr error
 	}
 
@@ -701,17 +701,17 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: osmomath.NewDec(2),
+					overrideSp: osmomath.NewBigDec(2),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: baseRecord.Asset0Denom,
-					overrideSp: osmomath.NewDecWithPrec(2, 1),
+					overrideSp: osmomath.NewBigDecWithPrec(2, 1),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: "extradenom",
-					overrideSp: osmomath.NewDecWithPrec(3, 1),
+					overrideSp: osmomath.NewBigDecWithPrec(3, 1),
 				},
 			},
 
@@ -726,12 +726,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: osmomath.NewDec(2),
+					overrideSp: osmomath.NewBigDec(2),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: baseRecord.Asset0Denom,
-					overrideSp: osmomath.NewDecWithPrec(2, 1),
+					overrideSp: osmomath.NewBigDecWithPrec(2, 1),
 				},
 			},
 
@@ -763,7 +763,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:   baseRecord.Asset1Denom,
 					quoteDenom:  baseRecord.Asset0Denom,
-					overrideSp:  osmomath.NewDecWithPrec(2, 1),
+					overrideSp:  osmomath.NewBigDecWithPrec(2, 1),
 					overrideErr: spError,
 				},
 			},
@@ -792,12 +792,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 				{
 					baseDenom:   baseRecord.Asset1Denom,
 					quoteDenom:  baseRecord.Asset0Denom,
-					overrideSp:  types.MaxSpotPrice.Add(osmomath.OneDec()),
+					overrideSp:  types.MaxSpotPriceBigDec.Add(osmomath.OneBigDec()),
 					overrideErr: nil, // twap logic should identify the large spot price and mark it as error.
 				},
 			},
@@ -826,12 +826,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: baseRecord.Asset0Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 			},
 
@@ -860,7 +860,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 				{
 					baseDenom:   baseRecord.Asset1Denom,
@@ -895,12 +895,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: baseRecord.Asset0Denom,
-					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
+					overrideSp: osmomath.OneBigDec().Add(osmomath.OneBigDec()),
 				},
 			},
 
@@ -934,12 +934,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: baseRecord.Asset0Denom,
-					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
+					overrideSp: osmomath.OneBigDec().Add(osmomath.OneBigDec()),
 				},
 			},
 
@@ -964,12 +964,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  mostRecentRecordPoolOne.Asset0Denom,
 					quoteDenom: mostRecentRecordPoolOne.Asset1Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 				{
 					baseDenom:  mostRecentRecordPoolOne.Asset1Denom,
 					quoteDenom: mostRecentRecordPoolOne.Asset0Denom,
-					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
+					overrideSp: osmomath.OneBigDec().Add(osmomath.OneBigDec()),
 				},
 			},
 
@@ -992,12 +992,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: baseRecord.Asset0Denom,
-					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
+					overrideSp: osmomath.OneBigDec().Add(osmomath.OneBigDec()),
 				},
 			},
 
@@ -1023,12 +1023,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  mostRecentRecordPoolOne.Asset0Denom,
 					quoteDenom: mostRecentRecordPoolOne.Asset1Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 				{
 					baseDenom:  mostRecentRecordPoolOne.Asset1Denom,
 					quoteDenom: mostRecentRecordPoolOne.Asset0Denom,
-					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
+					overrideSp: osmomath.OneBigDec().Add(osmomath.OneBigDec()),
 				},
 			},
 			expectError: types.InvalidUpdateRecordError{},
@@ -1041,32 +1041,32 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  threeAssetRecordAB.Asset0Denom,
 					quoteDenom: threeAssetRecordAB.Asset1Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 				{
 					baseDenom:  threeAssetRecordAB.Asset1Denom,
 					quoteDenom: threeAssetRecordAB.Asset0Denom,
-					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
+					overrideSp: osmomath.OneBigDec().Add(osmomath.OneBigDec()),
 				},
 				{
 					baseDenom:  threeAssetRecordAC.Asset0Denom,
 					quoteDenom: threeAssetRecordAC.Asset1Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 				{
 					baseDenom:  threeAssetRecordAC.Asset1Denom,
 					quoteDenom: threeAssetRecordAC.Asset0Denom,
-					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()).Add(osmomath.OneDec()),
+					overrideSp: osmomath.OneBigDec().Add(osmomath.OneBigDec()).Add(osmomath.OneBigDec()),
 				},
 				{
 					baseDenom:  threeAssetRecordBC.Asset0Denom,
 					quoteDenom: threeAssetRecordBC.Asset1Denom,
-					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
+					overrideSp: osmomath.OneBigDec().Add(osmomath.OneBigDec()),
 				},
 				{
 					baseDenom:  threeAssetRecordBC.Asset1Denom,
 					quoteDenom: threeAssetRecordBC.Asset0Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 			},
 
@@ -1129,33 +1129,33 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  threeAssetRecordAB.Asset0Denom,
 					quoteDenom: threeAssetRecordAB.Asset1Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 				{
 					baseDenom:  threeAssetRecordAB.Asset1Denom,
 					quoteDenom: threeAssetRecordAB.Asset0Denom,
-					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
+					overrideSp: osmomath.OneBigDec().Add(osmomath.OneBigDec()),
 				},
 				{
 					baseDenom:  threeAssetRecordAC.Asset0Denom,
 					quoteDenom: threeAssetRecordAC.Asset1Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 				{
 					baseDenom:   threeAssetRecordAC.Asset1Denom,
 					quoteDenom:  threeAssetRecordAC.Asset0Denom,
-					overrideSp:  types.MaxSpotPrice.Add(osmomath.OneDec()),
+					overrideSp:  types.MaxSpotPriceBigDec.Add(osmomath.OneBigDec()),
 					overrideErr: nil, // twap logic should identify the large spot price and mark it as error.
 				},
 				{
 					baseDenom:  threeAssetRecordBC.Asset0Denom,
 					quoteDenom: threeAssetRecordBC.Asset1Denom,
-					overrideSp: osmomath.OneDec(),
+					overrideSp: osmomath.OneBigDec(),
 				},
 				{
 					baseDenom:  threeAssetRecordBC.Asset1Denom,
 					quoteDenom: threeAssetRecordBC.Asset0Denom,
-					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
+					overrideSp: osmomath.OneBigDec().Add(osmomath.OneBigDec()),
 				},
 			},
 

@@ -51,7 +51,7 @@ func (q Querier) DenomSpotPrice(ctx context.Context, req *types.QueryDenomSpotPr
 		return nil, err
 	}
 
-	return &types.QueryDenomSpotPriceResponse{PoolID: feeToken.PoolID, SpotPrice: spotPrice}, nil
+	return &types.QueryDenomSpotPriceResponse{PoolID: feeToken.PoolID, SpotPrice: spotPrice.Dec()}, nil
 }
 
 func (q Querier) DenomPoolId(ctx context.Context, req *types.QueryDenomPoolIdRequest) (*types.QueryDenomPoolIdResponse, error) {

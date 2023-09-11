@@ -215,8 +215,8 @@ func (s *ConcentratedPoolTestSuite) TestSpotPrice() {
 				s.Require().NoError(err)
 
 				// We use elipson due to sqrt approximation
-				elipson := osmomath.MustNewDecFromStr("0.0000000000000001")
-				s.Require().True(spotPriceFromMethod.Sub(tc.expectedSpotPrice).Abs().LT(elipson))
+				elipson := osmomath.MustNewBigDecFromStr("0.0000000000000001")
+				s.Require().True(spotPriceFromMethod.Sub(osmomath.BigDecFromDec(tc.expectedSpotPrice)).Abs().LT(elipson))
 			}
 		})
 	}

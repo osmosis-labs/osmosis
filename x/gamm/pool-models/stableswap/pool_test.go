@@ -1339,7 +1339,8 @@ func TestStableswapSpotPrice(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
-			spotPrice, err := p.SpotPrice(ctx, tc.quoteDenom, tc.baseDenom)
+			spotPriceBigDec, err := p.SpotPrice(ctx, tc.quoteDenom, tc.baseDenom)
+			spotPrice := spotPriceBigDec.Dec()
 
 			if tc.expectPass {
 				require.NoError(t, err)

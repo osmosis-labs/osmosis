@@ -22,7 +22,7 @@ type SpotPriceInput struct {
 	quoteDenom string
 }
 type SpotPriceResult struct {
-	Sp  osmomath.Dec
+	Sp  osmomath.BigDec
 	Err error
 }
 
@@ -53,7 +53,7 @@ func (p *ProgrammedPoolManagerInterface) ProgramPoolDenomsOverride(poolId uint64
 }
 
 func (p *ProgrammedPoolManagerInterface) ProgramPoolSpotPriceOverride(poolId uint64,
-	quoteDenom, baseDenom string, overrideSp osmomath.Dec, overrideErr error,
+	quoteDenom, baseDenom string, overrideSp osmomath.BigDec, overrideErr error,
 ) {
 	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	p.programmedSpotPrice[input] = SpotPriceResult{overrideSp, overrideErr}
@@ -74,7 +74,7 @@ func (p *ProgrammedPoolManagerInterface) RouteCalculateSpotPrice(ctx sdk.Context
 	poolId uint64,
 	quoteDenom,
 	baseDenom string,
-) (price osmomath.Dec, err error) {
+) (price osmomath.BigDec, err error) {
 	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	if res, ok := p.programmedSpotPrice[input]; ok {
 		return res.Sp, res.Err

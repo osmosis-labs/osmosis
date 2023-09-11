@@ -424,7 +424,7 @@ func (s *KeeperTestSuite) TestSpotPriceOverflow() {
 			poolId := s.PrepareBalancerPoolWithCoinsAndWeights(tc.poolLiquidity, tc.poolWeights)
 			pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
 			s.Require().NoError(err)
-			var poolSpotPrice osmomath.Dec
+			var poolSpotPrice osmomath.BigDec
 			var poolErr error
 			osmoassert.ConditionalPanic(s.T(), tc.panics, func() {
 				poolSpotPrice, poolErr = pool.SpotPrice(s.Ctx, tc.baseAssetDenom, tc.quoteAssetDenom)

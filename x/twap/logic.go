@@ -44,7 +44,7 @@ func getSpotPrices(
 	poolId uint64,
 	denom0, denom1 string,
 	previousErrorTime time.Time,
-) (sp0 osmomath.Dec, sp1 osmomath.Dec, latestErrTime time.Time) {
+) (sp0Dec osmomath.Dec, sp1Dec osmomath.Dec, latestErrTime time.Time) {
 	latestErrTime = previousErrorTime
 	// sp0 = denom0 quote, denom1 base.
 	sp0, err0 := k.RouteCalculateSpotPrice(ctx, poolId, denom0, denom1)
@@ -55,20 +55,20 @@ func getSpotPrices(
 		// In the event of an error, we just sanity replace empty values with zero values
 		// so that the numbers can be still be calculated within TWAPs over error values
 		// TODO: Should we be using the last spot price?
-		if (sp0 == osmomath.Dec{}) {
-			sp0 = osmomath.ZeroDec()
+		if (sp0 == osmomath.BigDec{}) {
+			sp0 = osmomath.ZeroBigDec()
 		}
-		if (sp1 == osmomath.Dec{}) {
-			sp1 = osmomath.ZeroDec()
+		if (sp1 == osmomath.BigDec{}) {
+			sp1 = osmomath.ZeroBigDec()
 		}
 	}
-	if sp0.GT(types.MaxSpotPrice) {
-		sp0, latestErrTime = types.MaxSpotPrice, ctx.BlockTime()
+	if sp0.GT(types.MaxSpotPriceBigDec) {
+		sp0, latestErrTime = types.MaxSpotPriceBigDec, ctx.BlockTime()
 	}
-	if sp1.GT(types.MaxSpotPrice) {
-		sp1, latestErrTime = types.MaxSpotPrice, ctx.BlockTime()
+	if sp1.GT(types.MaxSpotPriceBigDec) {
+		sp1, latestErrTime = types.MaxSpotPriceBigDec, ctx.BlockTime()
 	}
-	return sp0, sp1, latestErrTime
+	return sp0.Dec(), sp1.Dec(), latestErrTime
 }
 
 // mustTrackCreatedPool is a wrapper around afterCreatePool that panics on error.
