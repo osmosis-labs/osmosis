@@ -243,7 +243,7 @@ func (e ErrTolerance) EqualCoins(expectedCoins sdk.Coins, actualCoins sdk.Coins)
 	}
 
 	for _, expectedCoin := range expectedCoins {
-		curCoinEqual := e.compareInt(expectedCoin.Amount, actualCoins.AmountOf(expectedCoin.Denom))
+		curCoinEqual := Compare(e, expectedCoin.Amount, actualCoins.AmountOf(expectedCoin.Denom))
 		if curCoinEqual != 0 {
 			return false
 		}
@@ -275,7 +275,7 @@ func BinarySearch(f func(Int) (Int, error),
 			return Int{}, err
 		}
 
-		compRes := errTolerance.compareInt(targetOutput, curOutput)
+		compRes := Compare(errTolerance, targetOutput, curOutput)
 		if compRes < 0 {
 			upperbound = curEstimate
 		} else if compRes > 0 {
@@ -320,7 +320,7 @@ func BinarySearchBigDec(f func(BigDec) BigDec,
 		curOutput = f(curEstimate)
 
 		// fmt.Println("binary search, input, target output, cur output", curEstimate, targetOutput, curOutput)
-		compRes := errTolerance.compareBigDec(targetOutput, curOutput)
+		compRes := Compare(errTolerance, targetOutput, curOutput)
 		if compRes < 0 {
 			upperbound = curEstimate
 		} else if compRes > 0 {
