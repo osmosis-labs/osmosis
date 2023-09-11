@@ -2,6 +2,7 @@ package osmomath
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -24,6 +25,36 @@ type ErrTolerance struct {
 	AdditiveTolerance       Dec
 	MultiplicativeTolerance Dec
 	RoundingDir             RoundingDirection
+}
+
+type comparable interface {
+	BigDec | Dec | Int
+}
+
+func Compare[T comparable](errTolerance ErrTolerance, expected T, actual T) int {
+	switch expectedT := any(expected).(type) {
+	case Int:
+		actualT, ok := any(actual).(Int)
+		checkTypeAssertion(ok, actual, expected)
+		return errTolerance.CompareInt(expectedT, actualT)
+	case Dec:
+		actualT, ok := any(actual).(Dec)
+		checkTypeAssertion(ok, actual, expected)
+		return errTolerance.CompareDec(expectedT, actualT)
+	case BigDec:
+		actualT, ok := any(actual).(BigDec)
+		checkTypeAssertion(ok, actual, expected)
+		return errTolerance.CompareBigDec(expectedT, actualT)
+	default:
+		// should not happen
+		panic("trying to compare uncomparable type")
+	}
+}
+
+func checkTypeAssertion(ok bool, typeA, typeB any) {
+	if !ok {
+		panic(fmt.Sprintf("actual value is not of the same type as expected: actual (%T), expected (%T)", typeA, typeB))
+	}
 }
 
 // Compare returns if actual is within errTolerance of expected.
