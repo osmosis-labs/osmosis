@@ -36,15 +36,15 @@ func Compare[T comparable](errTolerance ErrTolerance, expected T, actual T) int 
 	case Int:
 		actualT, ok := any(actual).(Int)
 		checkTypeAssertion(ok, actual, expected)
-		return errTolerance.CompareInt(expectedT, actualT)
+		return errTolerance.compareInt(expectedT, actualT)
 	case Dec:
 		actualT, ok := any(actual).(Dec)
 		checkTypeAssertion(ok, actual, expected)
-		return errTolerance.CompareDec(expectedT, actualT)
+		return errTolerance.compareDec(expectedT, actualT)
 	case BigDec:
 		actualT, ok := any(actual).(BigDec)
 		checkTypeAssertion(ok, actual, expected)
-		return errTolerance.CompareBigDec(expectedT, actualT)
+		return errTolerance.compareBigDec(expectedT, actualT)
 	default:
 		// should not happen
 		panic("trying to compare uncomparable type")
@@ -57,11 +57,11 @@ func checkTypeAssertion(ok bool, typeA, typeB any) {
 	}
 }
 
-// Compare returns if actual is within errTolerance of expected.
+// compareInt returns if actual is within errTolerance of expected.
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
-func (e ErrTolerance) CompareInt(expected Int, actual Int) int {
+func (e ErrTolerance) compareInt(expected Int, actual Int) int {
 	diff := expected.ToLegacyDec().Sub(actual.ToLegacyDec()).Abs()
 
 	comparisonSign := 0
@@ -114,11 +114,11 @@ func (e ErrTolerance) CompareInt(expected Int, actual Int) int {
 	return 0
 }
 
-// CompareBigDec validates if actual is within errTolerance of expected.
+// compareBigDec validates if actual is within errTolerance of expected.
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
-func (e ErrTolerance) CompareBigDec(expected BigDec, actual BigDec) int {
+func (e ErrTolerance) compareBigDec(expected BigDec, actual BigDec) int {
 	// Ensure that even if expected is within tolerance of actual, we don't count it as equal if its in the wrong direction.
 	// so if were supposed to round down, it must be that `expected >= actual`.
 	// likewise if were supposed to round up, it must be that `expected <= actual`.
@@ -172,11 +172,11 @@ func (e ErrTolerance) CompareBigDec(expected BigDec, actual BigDec) int {
 	return 0
 }
 
-// CompareDec validates if actual is within errTolerance of expected.
+// compareDec validates if actual is within errTolerance of expected.
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
-func (e ErrTolerance) CompareDec(expected Dec, actual Dec) int {
+func (e ErrTolerance) compareDec(expected Dec, actual Dec) int {
 	// Ensure that even if expected is within tolerance of actual, we don't count it as equal if its in the wrong direction.
 	// so if we're supposed to round down, it must be that `expected >= actual`.
 	// likewise if we're supposed to round up, it must be that `expected <= actual`.
@@ -237,7 +237,7 @@ func (e ErrTolerance) EqualCoins(expectedCoins sdk.Coins, actualCoins sdk.Coins)
 	}
 
 	for _, expectedCoin := range expectedCoins {
-		curCoinEqual := e.CompareInt(expectedCoin.Amount, actualCoins.AmountOf(expectedCoin.Denom))
+		curCoinEqual := e.compareInt(expectedCoin.Amount, actualCoins.AmountOf(expectedCoin.Denom))
 		if curCoinEqual != 0 {
 			return false
 		}
@@ -269,7 +269,7 @@ func BinarySearch(f func(Int) (Int, error),
 			return Int{}, err
 		}
 
-		compRes := errTolerance.CompareInt(targetOutput, curOutput)
+		compRes := errTolerance.compareInt(targetOutput, curOutput)
 		if compRes < 0 {
 			upperbound = curEstimate
 		} else if compRes > 0 {
@@ -314,7 +314,7 @@ func BinarySearchBigDec(f func(BigDec) BigDec,
 		curOutput = f(curEstimate)
 
 		// fmt.Println("binary search, input, target output, cur output", curEstimate, targetOutput, curOutput)
-		compRes := errTolerance.CompareBigDec(targetOutput, curOutput)
+		compRes := errTolerance.compareBigDec(targetOutput, curOutput)
 		if compRes < 0 {
 			upperbound = curEstimate
 		} else if compRes > 0 {
