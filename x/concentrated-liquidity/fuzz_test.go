@@ -332,7 +332,7 @@ func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunde
 		RoundingDir: osmomath.RoundDown,
 	}
 
-	result := errTolerance.CompareBigDec(osmomath.BigDecFromDec(swapInFunded.Amount.ToLegacyDec()), osmomath.BigDecFromDec(amountInSwapResult.Amount.ToLegacyDec()))
+	result := osmomath.Compare(errTolerance, osmomath.BigDecFromDec(swapInFunded.Amount.ToLegacyDec()), osmomath.BigDecFromDec(amountInSwapResult.Amount.ToLegacyDec()))
 
 	if result != 0 {
 		// Note: did some investigations into why this happens.

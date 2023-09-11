@@ -27,11 +27,11 @@ type ErrTolerance struct {
 	RoundingDir             RoundingDirection
 }
 
-type comparable interface {
+type Comparable interface {
 	BigDec | Dec | Int
 }
 
-func Compare[T comparable](errTolerance ErrTolerance, expected T, actual T) int {
+func Compare[T Comparable](errTolerance ErrTolerance, expected T, actual T) int {
 	switch expectedT := any(expected).(type) {
 	case Int:
 		actualT, ok := any(actual).(Int)

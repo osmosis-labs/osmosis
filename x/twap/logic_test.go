@@ -1470,7 +1470,8 @@ func (s *TestSuite) TestTwapLog() {
 			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
 				result := twap.TwapLog(tc.price)
 
-				smallestAdditiveTolerance.CompareBigDec(
+				osmomath.Compare(
+					smallestAdditiveTolerance,
 					osmomath.BigDecFromDec(tc.expected),
 					osmomath.BigDecFromDec(result),
 				)

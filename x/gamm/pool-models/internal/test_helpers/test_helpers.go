@@ -68,7 +68,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 		require.True(t, actual.GT(expected))
 	} else {
 		if expected.Sub(actual).Abs().GT(osmomath.OneDec()) {
-			compRes := errTolerance.CompareBigDec(osmomath.BigDecFromDec(expected), osmomath.BigDecFromDec(actual))
+			compRes := osmomath.Compare(errTolerance, osmomath.BigDecFromDec(expected), osmomath.BigDecFromDec(actual))
 			require.True(t, compRes == 0, "expected %s, actual %s, not within error tolerance %v",
 				expected, actual, errTolerance)
 		}

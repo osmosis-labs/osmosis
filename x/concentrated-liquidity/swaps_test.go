@@ -3116,7 +3116,7 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 // validateAmountsWithTolerance validates the given amounts a and b, allowing
 // a negligible multiplicative error and an additive error of 1.
 func (s *KeeperTestSuite) validateAmountsWithTolerance(amountA osmomath.Int, amountB osmomath.Int) {
-	multCompare := multiplicativeTolerance.CompareInt(amountA, amountB)
+	multCompare := osmomath.Compare(multiplicativeTolerance, amountA, amountB)
 	if multCompare != 0 {
 		// If the multiplicative comparison fails, try again with additive tolerance of one.
 		// This may occcur for small amounts where the multiplicative tolerance ends up being
