@@ -252,15 +252,15 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 func (suite *StrategyTestSuite) TestGetPriceLimit() {
 	tests := map[string]struct {
 		zeroForOne bool
-		expected   osmomath.Dec
+		expected   osmomath.BigDec
 	}{
 		"zero for one -> min": {
 			zeroForOne: true,
-			expected:   types.MinSpotPrice,
+			expected:   types.MinSpotPriceBigDec,
 		},
 		"one for zero -> max": {
 			zeroForOne: false,
-			expected:   types.MaxSpotPrice,
+			expected:   types.MaxSpotPriceBigDec,
 		},
 	}
 
