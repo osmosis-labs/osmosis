@@ -60,9 +60,13 @@ func messageFromMsgAndArgs(msgAndArgs ...interface{}) string {
 	return ""
 }
 
+type Stringer interface {
+	String() string
+}
+
 // Equal compares A with B and asserts that they are equal within tolerance error tolerance
-func Equal[T any](t *testing.T, tolerance osmomath.ErrTolerance, A, B T) {
-	errMsg := fmt.Sprintf("expected %T, actual %T", A, B)
+func Equal[T Stringer](t *testing.T, tolerance osmomath.ErrTolerance, A, B T) {
+	errMsg := fmt.Sprintf("expected %s, actual %s", A.String(), B.String())
 	switch a := any(A).(type) {
 	case osmomath.Int:
 		b, ok := any(B).(osmomath.Int)
@@ -81,5 +85,8 @@ func Equal[T any](t *testing.T, tolerance osmomath.ErrTolerance, A, B T) {
 		failNowIfNot(t, ok)
 
 		require.True(t, tolerance.CompareDec(a, b) == 0, errMsg)
+	default:
+		require.FailNow(t, "unsupported types")
 	}
+
 }

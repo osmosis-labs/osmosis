@@ -158,6 +158,39 @@ func TestCalcAmount0Delta(t *testing.T) {
 			amount0Expected: osmomath.MustNewBigDecFromStr("6098022989717817431593106314408.88812810159039320984467945943").Ceil(), // rounded up at precision end.
 			isWithTolerance: true,
 		},
+		// See: https://github.com/osmosis-labs/osmosis/issues/6351 for details.
+		// The values were taken from the failing swap on the development branch that reproduced the issue.
+		"edge case: low sqrt prices may cause error amplification if incorrect order of operations (round up)": {
+			// from decimal import *
+			// from math import *
+			// getcontext().prec = 100
+			// max_sqrt_p = Decimal("0.00000099994999874993749609347654199")
+			// min_sqrt_p = Decimal("0.000000000000001409841835100661211756")
+			// liq = Decimal("5000252259822539816806336.971796256914465071095518135400579243")
+			// liq * (max_sqrt_p - min_sqrt_p) / (max_sqrt_p * min_sqrt_p)
+			liquidity:       osmomath.MustNewBigDecFromStr("5000252259822539816806336.971796256914465071095518135400579243"),
+			sqrtPA:          osmomath.MustNewBigDecFromStr("0.00000099994999874993749609347654199"),
+			sqrtPB:          osmomath.MustNewBigDecFromStr("0.000000000000001409841835100661211756"),
+			roundUp:         true,
+			amount0Expected: osmomath.MustNewBigDecFromStr("3546676037185128488234786333758360815266.999539026068480181194797910898392880").Ceil(),
+		},
+		// See: https://github.com/osmosis-labs/osmosis/issues/6351 for details.
+		// The values were taken from the failing swap on the development branch that reproduced the issue.
+		"edge case: low sqrt prices may cause error amplification if incorrect order of operations (round down)": {
+			// from decimal import *
+			// from math import *
+			// getcontext().prec = 100
+			// max_sqrt_p = Decimal("0.00000099994999874993749609347654199")
+			// min_sqrt_p = Decimal("0.000000000000001409841835100661211756")
+			// liq = Decimal("5000252259822539816806336.971796256914465071095518135400579243")
+			// liq * (max_sqrt_p - min_sqrt_p) / (max_sqrt_p * min_sqrt_p)
+			liquidity:       osmomath.MustNewBigDecFromStr("5000252259822539816806336.971796256914465071095518135400579243"),
+			sqrtPA:          osmomath.MustNewBigDecFromStr("0.00000099994999874993749609347654199"),
+			sqrtPB:          osmomath.MustNewBigDecFromStr("0.000000000000001409841835100661211756"),
+			roundUp:         false,
+			isWithTolerance: true,
+			amount0Expected: osmomath.MustNewBigDecFromStr("3546676037185128488234786333758360815266.999539026068480181194797910898392880"),
+		},
 	}
 
 	for name, tc := range testCases {
