@@ -45,11 +45,6 @@ var (
 	oneInt                = big.NewInt(1)
 	tenInt                = big.NewInt(10)
 
-	// precisionFactorSDK is used to adjust the scale of BigDec values to match the precision expected by sdk.Dec
-	precisionFactorSDK *big.Int
-	// precisionDiffFromSDKDec is a difference in precision between BigDec and sdk.Dec
-	precisionDiffFromSDKDec int64
-
 	// log_2(e)
 	// From: https://www.wolframalpha.com/input?i=log_2%28e%29+with+37+digits
 	logOfEbase2 = MustNewBigDecFromStr("1.442695040888963407359924681001892137")
