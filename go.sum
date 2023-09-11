@@ -959,8 +959,8 @@ github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230908065430-05346fa12992 h1:
 github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230908065430-05346fa12992/go.mod h1:L6USUt+QX9lIqUVCRs8DFEVRZJbCYbemmtcXb7GfHYE=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
-github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230804142026-a81cfe3ddde7 h1:NTR4zfrPMP4pJ5T60zyZumBAnTWmTAQX/JSZLGrM9jI=
-github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230804142026-a81cfe3ddde7/go.mod h1:UlftwozB+QObT3o0YfkuuyL9fsVdgoWt0dm6J7MLYnU=
+github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230911123420-0b85a22895b6 h1:aknh7uXbTWdV6gbYCqycd4Fi5HA56CsoysIYwDNAvL0=
+github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230911123420-0b85a22895b6/go.mod h1:BerUbrf+jMbIGRMqIN3YWK1SbmZU4WbYuxpTd3uxmBU=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230911122130-5ebd42c20860 h1:kw95z4V3rll7jiecKw/NlAoX9gv0kXBRZNbZHqLXln0=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230911122130-5ebd42c20860/go.mod h1:1mDkMP1ZX4xVgIRYYACMCy2DEnQyh/HumpW1pzUAWPM=
 github.com/osmosis-labs/osmosis/v17 v17.0.0-20230811221421-2e3f19d86dd4 h1:EMbnmbZSJ1znKoN8Z4bwQxDN/Iq/n14KlH2QjzqeMSg=
@@ -1235,6 +1235,7 @@ github.com/twitchyliquid64/golang-asm v0.15.1 h1:SU5vSMR7hnwNxj24w34ZyCi/FmDZTkS
 github.com/twitchyliquid64/golang-asm v0.15.1/go.mod h1:a1lVb/DtPvCB8fslRZhAngC2+aY1QWCk3Cedj/Gdt08=
 github.com/tyler-smith/go-bip39 v1.0.1-0.20181017060643-dbb3b84ba2ef/go.mod h1:sJ5fKU0s6JVwZjjcUEX2zFOnvq0ASQ2K9Zr6cf67kNs=
 github.com/tyler-smith/go-bip39 v1.0.2/go.mod h1:sJ5fKU0s6JVwZjjcUEX2zFOnvq0ASQ2K9Zr6cf67kNs=
+github.com/ugorji/go v1.1.7 h1:/68gy2h+1mWMrwZFeD1kQialdSzAb432dtpeJ42ovdo=
 github.com/ugorji/go v1.1.7/go.mod h1:kZn38zHttfInRq0xu/PH0az30d+z6vm202qpg1oXVMw=
 github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljTbGfSG7qAOspJ7OScBnGdDN/yBr0sguwnwf0=
 github.com/ugorji/go/codec v1.1.7/go.mod h1:Ax+UKWsSmolVDwsd+7N3ZtXu+yMGCf907BLYF3GoBXY=
