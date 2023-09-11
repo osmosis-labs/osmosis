@@ -2,11 +2,13 @@ package authenticator_test
 
 import (
 	"fmt"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	"testing"
 
 	"github.com/osmosis-labs/osmosis/v19/app"
 	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -81,7 +83,7 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	s.Require().NoError(err, "Failed to send bank tx using the first private key")
 
 	// Change account's authenticator
-	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "SigVerification", s.PrivKeys[1].PubKey().Bytes())
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerificationAuthenticator", s.PrivKeys[1].PubKey().Bytes())
 	s.Require().NoError(err, "Failed to add authenticator")
 
 	// Submit a bank send tx using the second private key
@@ -269,7 +271,7 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 
 				// Add keys for the current step
 				for _, keyIndex := range step.KeysToAdd {
-					err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "SigVerification", s.PrivKeys[keyIndex].PubKey().Bytes())
+					err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerificationAuthenticator", s.PrivKeys[keyIndex].PubKey().Bytes())
 					s.Require().NoError(err, "Failed to add authenticator for key %d in %s", keyIndex, tc.Description)
 				}
 

@@ -2,14 +2,15 @@ package authenticator_test
 
 import (
 	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 )
 
-var _ types.Authenticator = &StatefulAuthenticator{}
-var _ types.AuthenticatorData = &StatefulAuthenticatorData{}
+var _ authenticator.Authenticator = &StatefulAuthenticator{}
+var _ authenticator.AuthenticatorData = &StatefulAuthenticatorData{}
 
 type StatefulAuthenticatorData struct {
 	Value int
@@ -24,16 +25,20 @@ func (s StatefulAuthenticator) Type() string {
 	return "Stateful"
 }
 
-func (s StatefulAuthenticator) Initialize(data []byte) (types.Authenticator, error) {
+func (s StatefulAuthenticator) Gas() uint64 {
+	return 1000
+}
+
+func (s StatefulAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
 	return s, nil
 }
 
-func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex uint8, simulate bool) (types.AuthenticatorData, error) {
+func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex uint8, simulate bool) (authenticator.AuthenticatorData, error) {
 	// TODO: We probably want the context here. Specifically a read-only cachecontext
 	return StatefulAuthenticatorData{Value: s.GetValue(ctx)}, nil
 }
 
-func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData types.AuthenticatorData) (bool, error) {
+func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) (bool, error) {
 	// TODO: the get should probably happen in the method above and here we should just have this:
 	statefulData, ok := authenticationData.(StatefulAuthenticatorData)
 	if !ok {
@@ -60,7 +65,7 @@ func (s StatefulAuthenticator) GetValue(ctx sdk.Context) int {
 
 }
 
-func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData types.AuthenticatorData) bool {
+func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData authenticator.AuthenticatorData) bool {
 	s.SetValue(ctx, s.GetValue(ctx)+1)
 	return true
 }

@@ -72,6 +72,7 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v19/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v19/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
@@ -153,7 +154,7 @@ type AppKeepers struct {
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
 	AuthenticatorKeeper          *authenticatorkeeper.Keeper
-	AuthenticatorManager         *authenticatortypes.AuthenticatorManager
+	AuthenticatorManager         *authenticator.AuthenticatorManager
 
 	// IBC modules
 	// transfer module
@@ -452,9 +453,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 
 	// Initialize authenticators
-	appKeepers.AuthenticatorManager = authenticatortypes.NewAuthenticatorManager()
-	appKeepers.AuthenticatorManager.InitializeAuthenticators([]authenticatortypes.Authenticator{
-		authenticatortypes.NewSigVerificationAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()), // default
+	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()
+	appKeepers.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
+		authenticator.NewSignatureVerificationAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()), // default
 	})
 	appKeepers.AuthenticatorManager.SetDefaultAuthenticatorIndex(0)
 

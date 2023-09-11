@@ -11,6 +11,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 )
 
@@ -23,10 +24,15 @@ type Keeper struct {
 	cdc        codec.BinaryCodec
 	paramSpace paramtypes.Subspace
 
-	AuthenticatorManager *types.AuthenticatorManager
+	AuthenticatorManager *authenticator.AuthenticatorManager
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, ps paramtypes.Subspace, authenticatorManager *types.AuthenticatorManager) Keeper {
+func NewKeeper(
+	cdc codec.BinaryCodec,
+	storeKey sdk.StoreKey,
+	ps paramtypes.Subspace,
+	authenticatorManager *authenticator.AuthenticatorManager,
+) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
@@ -64,12 +70,15 @@ func (k Keeper) GetAuthenticatorDataForAccount(
 	return accountAuthenticators, nil
 }
 
-func (k Keeper) GetAuthenticatorsForAccount(ctx sdk.Context, account sdk.AccAddress) ([]types.Authenticator, error) {
+func (k Keeper) GetAuthenticatorsForAccount(
+	ctx sdk.Context,
+	account sdk.AccAddress,
+) ([]authenticator.Authenticator, error) {
 	authenticatorData, err := k.GetAuthenticatorDataForAccount(ctx, account)
 	if err != nil {
 		return nil, err
 	}
-	authenticators := make([]types.Authenticator, len(authenticatorData))
+	authenticators := make([]authenticator.Authenticator, len(authenticatorData))
 	for i, authenticator := range authenticatorData {
 		authenticators[i] = authenticator.AsAuthenticator(k.AuthenticatorManager)
 	}
