@@ -41,6 +41,8 @@ var (
 	MinSqrtPrice       = osmomath.MustMonotonicSqrt(MinSpotPrice)
 	MaxSqrtPriceBigDec = osmomath.BigDecFromDec(MaxSqrtPrice)
 	MinSqrtPriceBigDec = osmomath.BigDecFromDec(MinSqrtPrice)
+	MinSqrtPriceV2     = osmomath.MustMonotonicSqrtBigDec(MinSpotPriceV2)
+
 	// Supported uptimes preset to 1 ns, 1 min, 1 hr, 1D, 1W, 2W
 	SupportedUptimes        = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24, time.Hour * 24 * 7, time.Hour * 24 * 7 * 2}
 	AuthorizedTickSpacing   = []uint64{1, 10, 100, 1000}
