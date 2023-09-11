@@ -65,12 +65,15 @@ require (
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
-	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/google/btree v1.1.2 // indirect
+	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
+	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
 	github.com/nunnatsa/ginkgolinter v0.13.5 // indirect
+	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
 	github.com/sashamelentyev/interfacebloat v1.1.0 // indirect
 	github.com/sashamelentyev/usestdlibvars v1.24.0 // indirect
