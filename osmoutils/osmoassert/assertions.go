@@ -72,7 +72,7 @@ func Equal[T Stringer](t *testing.T, tolerance osmomath.ErrTolerance, A, B T) {
 		b, ok := any(B).(osmomath.Int)
 		failNowIfNot(t, ok)
 
-		require.True(t, tolerance.Compare(a, b) == 0, errMsg)
+		require.True(t, tolerance.CompareInt(a, b) == 0, errMsg)
 
 	case osmomath.BigDec:
 		b, ok := any(B).(osmomath.BigDec)

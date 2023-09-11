@@ -9,7 +9,7 @@ import (
 // ErrTolerance is used to define a compare function, which checks if two
 // ints are within a certain error tolerance of one another,
 // and (optionally) that they are rounding in the correct direction.
-// ErrTolerance.Compare(a, b) returns true iff:
+// ErrTolerance.CompareInt(a, b) returns true iff:
 // * RoundingMode = RoundUp, then a <= b
 // * RoundingMode = RoundDown, then a >= b
 // * |a - b| <= AdditiveTolerance
@@ -30,7 +30,7 @@ type ErrTolerance struct {
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
-func (e ErrTolerance) Compare(expected Int, actual Int) int {
+func (e ErrTolerance) CompareInt(expected Int, actual Int) int {
 	diff := expected.ToLegacyDec().Sub(actual.ToLegacyDec()).Abs()
 
 	comparisonSign := 0
@@ -206,7 +206,7 @@ func (e ErrTolerance) EqualCoins(expectedCoins sdk.Coins, actualCoins sdk.Coins)
 	}
 
 	for _, expectedCoin := range expectedCoins {
-		curCoinEqual := e.Compare(expectedCoin.Amount, actualCoins.AmountOf(expectedCoin.Denom))
+		curCoinEqual := e.CompareInt(expectedCoin.Amount, actualCoins.AmountOf(expectedCoin.Denom))
 		if curCoinEqual != 0 {
 			return false
 		}
@@ -238,7 +238,7 @@ func BinarySearch(f func(Int) (Int, error),
 			return Int{}, err
 		}
 
-		compRes := errTolerance.Compare(targetOutput, curOutput)
+		compRes := errTolerance.CompareInt(targetOutput, curOutput)
 		if compRes < 0 {
 			upperbound = curEstimate
 		} else if compRes > 0 {

@@ -351,13 +351,13 @@ func TestErrTolerance_Compare(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotInt := tt.tol.Compare(NewInt(tt.intInput), NewInt(tt.intReference))
+			gotInt := tt.tol.CompareInt(NewInt(tt.intInput), NewInt(tt.intReference))
 			if gotInt != tt.expectedCompareResult {
-				t.Errorf("ErrTolerance.Compare() = %v, want %v", gotInt, tt.expectedCompareResult)
+				t.Errorf("ErrTolerance.CompareInt() = %v, want %v", gotInt, tt.expectedCompareResult)
 			}
-			gotIntRev := tt.tol.Compare(NewInt(tt.intReference), NewInt(tt.intInput))
+			gotIntRev := tt.tol.CompareInt(NewInt(tt.intReference), NewInt(tt.intInput))
 			if gotIntRev != -tt.expectedCompareResult {
-				t.Errorf("ErrTolerance.Compare() = %v, want %v", gotIntRev, -tt.expectedCompareResult)
+				t.Errorf("ErrTolerance.CompareInt() = %v, want %v", gotIntRev, -tt.expectedCompareResult)
 			}
 			gotBigDec := tt.tol.CompareBigDec(NewBigDec(tt.intInput), NewBigDec(tt.intReference))
 			if gotBigDec != tt.expectedCompareResult {
