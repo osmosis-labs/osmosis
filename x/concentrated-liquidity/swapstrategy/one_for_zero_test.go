@@ -159,7 +159,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedAmountOut:               osmomath.ZeroDec(),
 			expectedSpreadRewardChargeTotal: osmomath.ZeroDec(),
 		},
-		"7: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price": {
+		// This edge case does not occur anymore. The fix observed in PR: https://github.com/osmosis-labs/osmosis/pull/6352
+		// See linked issue for detals of the change.
+		"7: (fixed) invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price": {
 			// Note the numbers are hand-picked to reproduce this specific case.
 			sqrtPriceCurrent: osmomath.BigDecFromDec(osmomath.MustNewDecFromStr("0.000001000049998750")),
 			sqrtPriceTarget:  osmomath.MustNewDecFromStr("0.000001000049998751"),
