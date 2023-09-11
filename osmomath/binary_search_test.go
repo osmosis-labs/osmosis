@@ -216,7 +216,7 @@ func runBinarySearchTestCases(t *testing.T, tests map[string]binarySearchTestCas
 				if equality == exactlyEqual {
 					require.True(DecEq(t, tc.expectedSolvedInput, actualSolvedInput))
 				} else if equality == errToleranceEqual {
-					require.True(t, tc.errTolerance.CompareBigDec(tc.expectedSolvedInput, actualSolvedInput) == 0)
+					require.True(t, Compare(tc.errTolerance, tc.expectedSolvedInput, actualSolvedInput) == 0)
 				} else {
 					_, valid, msg, dec1, dec2 := DecApproxEq(t, tc.expectedSolvedInput, actualSolvedInput, OneBigDec())
 					require.True(t, valid, msg+" \n d1 = %s, d2 = %s", dec1, dec2,
@@ -351,27 +351,27 @@ func TestErrTolerance_Compare(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotInt := tt.tol.CompareInt(NewInt(tt.intInput), NewInt(tt.intReference))
+			gotInt := Compare(tt.tol, NewInt(tt.intInput), NewInt(tt.intReference))
 			if gotInt != tt.expectedCompareResult {
 				t.Errorf("ErrTolerance.CompareInt() = %v, want %v", gotInt, tt.expectedCompareResult)
 			}
-			gotIntRev := tt.tol.CompareInt(NewInt(tt.intReference), NewInt(tt.intInput))
+			gotIntRev := Compare(tt.tol, NewInt(tt.intReference), NewInt(tt.intInput))
 			if gotIntRev != -tt.expectedCompareResult {
 				t.Errorf("ErrTolerance.CompareInt() = %v, want %v", gotIntRev, -tt.expectedCompareResult)
 			}
-			gotBigDec := tt.tol.CompareBigDec(NewBigDec(tt.intInput), NewBigDec(tt.intReference))
+			gotBigDec := Compare(tt.tol, NewBigDec(tt.intInput), NewBigDec(tt.intReference))
 			if gotBigDec != tt.expectedCompareResult {
 				t.Errorf("ErrTolerance.CompareBigDec() = %v, want %v", gotBigDec, tt.expectedCompareResult)
 			}
-			gotBigDecRev := tt.tol.CompareBigDec(NewBigDec(tt.intReference), NewBigDec(tt.intInput))
+			gotBigDecRev := Compare(tt.tol, NewBigDec(tt.intReference), NewBigDec(tt.intInput))
 			if gotBigDecRev != -tt.expectedCompareResult {
 				t.Errorf("ErrTolerance.CompareBigDec() = %v, want %v", gotBigDecRev, -tt.expectedCompareResult)
 			}
-			gotDec := tt.tol.CompareDec(NewDec(tt.intInput), NewDec(tt.intReference))
+			gotDec := Compare(tt.tol, NewDec(tt.intInput), NewDec(tt.intReference))
 			if gotDec != tt.expectedCompareResult {
 				t.Errorf("ErrTolerance.CompareBigDec() = %v, want %v", gotDec, tt.expectedCompareResult)
 			}
-			gotDecRev := tt.tol.CompareDec(NewDec(tt.intReference), NewDec(tt.intInput))
+			gotDecRev := Compare(tt.tol, NewDec(tt.intReference), NewDec(tt.intInput))
 			if gotDecRev != -tt.expectedCompareResult {
 				t.Errorf("ErrTolerance.CompareBigDec() = %v, want %v", gotDecRev, -tt.expectedCompareResult)
 			}
