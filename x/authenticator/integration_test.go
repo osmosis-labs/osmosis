@@ -1,11 +1,12 @@
 package authenticator_test
 
 import (
-	"testing"
-
+	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/osmosis-labs/osmosis/v19/app"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -290,4 +291,40 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 			}
 		})
 	}
+}
+
+// This is an experiment to determine how the fees are being taken even if the tx fails
+func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
+	successSendMsg := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)),
+	}
+	// This amount is too large, so the send should fail
+	failSendMsg := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000_000)),
+	}
+
+	stateful := StatefulAuthenticator{KvStoreKey: s.app.GetKVStoreKey()[authenticatortypes.StoreKey]}
+	s.app.AuthenticatorManager.RegisterAuthenticator(stateful)
+	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "Stateful", []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+
+	// check account balances
+
+	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], failSendMsg)
+	fmt.Println("err: ", err)
+	s.Require().Error(err, "Succeeded sending tx that should fail")
+
+	// Incremented by one. Only on the ante.
+	s.Require().Equal(stateful.GetValue(s.chainA.GetContext()), 1)
+
+	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], successSendMsg)
+	fmt.Println("err: ", err)
+	s.Require().NoError(err, "Failed to send bank tx with enough funds")
+
+	// Incremented by 2. Ante and Post
+	s.Require().Equal(stateful.GetValue(s.chainA.GetContext()), 3)
 }

@@ -1,4 +1,4 @@
-package ante
+package post
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -6,11 +6,6 @@ import (
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 )
 
-// Verify all signatures for a tx and return an error if any are invalid. Note,
-// the AuthenticatorDecorator will not check signatures on ReCheck.
-//
-// CONTRACT: Pubkeys are set in context for all signers before this decorator runs
-// CONTRACT: Tx must implement SigVerifiableTx interface
 type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
 }
@@ -31,7 +26,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
 	for msgIndex, msg := range tx.GetMsgs() {
-		// Todo: Replace getting the authenticator for something like this:
 		authenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccount(ctx, msg.GetSigners()[0])
 		if err != nil {
 			return sdk.Context{}, err
@@ -40,11 +34,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		if len(authenticators) == 0 {
 			authenticators = append(authenticators, ad.authenticatorKeeper.AuthenticatorManager.GetDefaultAuthenticator())
 		}
-
-		// ToDo: Add a way for the user to specify which authenticator to use as part of the tx (likely in the signature)
-		// Note: we have to make sure that doing that does not make the signature malleable
-
-		for _, authenticator := range authenticators {
+		for _, authenticator := range authenticators { // This should execute on *all* authenticators so they can update their state
 			// Get the authentication data for the transaction
 			authData, err := authenticator.GetAuthenticationData(ctx, tx, uint8(msgIndex), simulate)
 			if err != nil {
@@ -52,15 +42,17 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			}
 
 			// Authenticate the message
-			authenticated, err := authenticator.Authenticate(ctx, msg, authData)
-			if err != nil {
-				return ctx, err
-			}
+			// TODO: We probably want this method to return an error instead of a bool
+			success := authenticator.ConfirmExecution(ctx, msg, true, authData)
+			// TODO: Is the authenticated boolean needed? The idea was to check if the tx was authenticated or not, but
+			//   IIUC post handlers only get called if the tx is authenticated.
+			//   Another thing we may want to know there is which aithenticator authenticated the tx.
+			//   Maybe we can keep that information with something like the SetPubKeyDecorator
 
-			if authenticated {
-				return next(ctx, tx, simulate)
+			if !success {
+				return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution")
 			}
 		}
 	}
-	return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authentication failed")
+	return next(ctx, tx, simulate)
 }
