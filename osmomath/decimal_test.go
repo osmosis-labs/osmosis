@@ -1545,6 +1545,8 @@ func (s *decimalTestSuite) TestChopPrecision_Mutative() {
 		{osmomath.NewBigDecWithPrec(10093125483952, 10), osmomath.MustNewBigDecFromStr("1009.31254"), 5},
 		// 0.1009312548(3952)
 		{osmomath.NewBigDecWithPrec(10093125483952, 14), osmomath.MustNewBigDecFromStr("0.1009312548"), 10},
+		// Edge case: max precision. Should remain unchanged
+		{osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.PrecisionBigDec},
 	}
 	for id, tc := range tests {
 		name := "testcase_" + fmt.Sprint(id)
