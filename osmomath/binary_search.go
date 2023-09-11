@@ -31,6 +31,10 @@ type Comparable interface {
 	BigDec | Dec | Int
 }
 
+// Compare returns if actual is within errTolerance of expected.
+// returns 0 if it is
+// returns 1 if not, and expected > actual.
+// returns -1 if not, and expected < actual
 func Compare[T Comparable](errTolerance ErrTolerance, expected T, actual T) int {
 	switch expectedT := any(expected).(type) {
 	case Int:
