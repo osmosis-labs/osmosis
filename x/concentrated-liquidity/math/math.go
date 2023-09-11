@@ -78,10 +78,8 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 	// These are truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
 	// - withdrawing liquidity
-	// The denominator is rounded up to get a smaller final amount.
-	denom := sqrtPriceA.MulRoundUp(sqrtPriceB)
-
-	return liq.MulTruncate(diff).QuoTruncate(denom)
+	// Each intermediary step is truncated at precision end to get a smaller final amount.
+	return liq.MulTruncate(diff).QuoTruncate(sqrtPriceA).QuoTruncate(sqrtPriceB)
 }
 
 // CalcAmount1Delta takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
