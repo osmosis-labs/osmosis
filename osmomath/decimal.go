@@ -75,7 +75,7 @@ func init() {
 		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
 	}
 
-	precisionDiffFromSDKDec = PrecisionBigDec - sdk.Precision
+	precisionDiffFromSDKDec = PrecisionBigDec - PrecisionDec
 	if precisionDiffFromSDKDec < 0 {
 		panic("invalid decimal precision")
 	}
@@ -564,14 +564,14 @@ func (d BigDec) MustFloat64() float64 {
 // Dec returns the osmomath.Dec representation of a BigDec.
 // Values in any additional decimal places are truncated.
 func (d BigDec) Dec() Dec {
-	return d.DecWithPrecision(sdk.Precision)
+	return d.DecWithPrecision(PrecisionDec)
 }
 
 func (d BigDec) DecWithPrecision(precision int64) Dec {
 	var precisionFactor *big.Int
-	if precision >= sdk.Precision {
+	if precision >= PrecisionDec {
 		precisionFactor = precisionFactorSDK
-		precision = sdk.Precision
+		precision = PrecisionDec
 	} else {
 		precisionDiff := PrecisionBigDec - precision
 		precisionFactor = new(big.Int).Exp(big.NewInt(10), big.NewInt(precisionDiff), nil)
@@ -687,7 +687,7 @@ func chopPrecisionAndRoundUpBigDec(d *big.Int) *big.Int {
 	return chopPrecisionAndRoundUp(d, precisionReuse)
 }
 
-// chopPrecisionAndRoundUpDec removes  sdk.Precision amount of rightmost digits and rounds up.
+// chopPrecisionAndRoundUpDec removes PrecisionDec amount of rightmost digits and rounds up.
 func chopPrecisionAndRoundUpDec(d *big.Int) *big.Int {
 	return chopPrecisionAndRoundUp(d, precisionReuseSDK)
 }
