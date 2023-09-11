@@ -28,11 +28,11 @@ type SignatureVerificationAuthenticator struct {
 	PubKey  cryptotypes.PubKey
 }
 
-func (secp256k1sa SignatureVerificationAuthenticator) Type() string {
+func (sva SignatureVerificationAuthenticator) Type() string {
 	return SignatureVerificationAuthenticatorType
 }
 
-func (secp256k1sa SignatureVerificationAuthenticator) Gas() uint64 {
+func (sva SignatureVerificationAuthenticator) Gas() uint64 {
 	// The default gas for verifying a secp256k1 signature is 1000
 	return 1000
 }
@@ -51,14 +51,14 @@ func NewSignatureVerificationAuthenticator(
 // Initialize is used when a secondary account is used as an authenticator,
 // this is used to verify a signature from an account that does not have a public key
 // in the store. In this case we Initialize the authenticator from the authenticators store
-func (secp256k1sa SignatureVerificationAuthenticator) Initialize(
+func (sva SignatureVerificationAuthenticator) Initialize(
 	data []byte,
 ) (Authenticator, error) {
 	if len(data) != secp256k1.PubKeySize {
-		secp256k1sa.PubKey = nil
+		sva.PubKey = nil
 	}
-	secp256k1sa.PubKey = &secp256k1.PubKey{Key: data}
-	return secp256k1sa, nil
+	sva.PubKey = &secp256k1.PubKey{Key: data}
+	return sva, nil
 }
 
 // SignatureData is used to package all the signature data and the tx
@@ -73,7 +73,7 @@ type SignatureData struct {
 // GetAuthenticationData parses the signers and signatures from a transactiom
 // then returns a indexed list of both signers and signatures
 // NOTE: position in the array is used to associate the signer and signature
-func (secp256k1sa SignatureVerificationAuthenticator) GetAuthenticationData(
+func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 	ctx sdk.Context,
 	tx sdk.Tx,
 	messageIndex uint8,
@@ -115,7 +115,7 @@ func (secp256k1sa SignatureVerificationAuthenticator) GetAuthenticationData(
 
 // Authenticate takes a SignaturesVerificationData struct and validates
 // each signer and signature using  signature verification
-func (secp256k1sa SignatureVerificationAuthenticator) Authenticate(
+func (sva SignatureVerificationAuthenticator) Authenticate(
 	ctx sdk.Context,
 	msg sdk.Msg,
 	authenticationData AuthenticatorData,
@@ -126,7 +126,7 @@ func (secp256k1sa SignatureVerificationAuthenticator) Authenticate(
 	}
 
 	// First consume gas for verifing the signature
-	params := secp256k1sa.ak.GetParams(ctx)
+	params := sva.ak.GetParams(ctx)
 	for _, sig := range verificationData.Signatures {
 		err := authante.DefaultSigVerificationGasConsumer(ctx.GasMeter(), sig, params)
 		if err != nil {
@@ -136,13 +136,13 @@ func (secp256k1sa SignatureVerificationAuthenticator) Authenticate(
 
 	// after gas consumption continue to verify signatures
 	for i, sig := range verificationData.Signatures {
-		acc, err := authante.GetSignerAcc(ctx, secp256k1sa.ak, verificationData.Signers[i])
+		acc, err := authante.GetSignerAcc(ctx, sva.ak, verificationData.Signers[i])
 		if err != nil {
 			return false, err
 		}
 
 		// retrieve pubkey
-		pubKey := secp256k1sa.PubKey
+		pubKey := sva.PubKey
 		if pubKey == nil {
 			// Having a default here keeps this authenticator stateless,
 			// that way we don't have to create specific authenticators with the pubkey of each existing account
@@ -182,7 +182,7 @@ func (secp256k1sa SignatureVerificationAuthenticator) Authenticate(
 				pubKey,
 				signerData,
 				sig.Data,
-				secp256k1sa.Handler,
+				sva.Handler,
 				verificationData.Tx,
 			)
 			if err != nil {
@@ -210,7 +210,7 @@ func (secp256k1sa SignatureVerificationAuthenticator) Authenticate(
 	return true, nil
 }
 
-func (secp256k1sa SignatureVerificationAuthenticator) ConfirmExecution(
+func (sva SignatureVerificationAuthenticator) ConfirmExecution(
 	ctx sdk.Context,
 	msg sdk.Msg,
 	authenticated bool,
