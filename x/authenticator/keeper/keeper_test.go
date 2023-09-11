@@ -4,15 +4,17 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
-	"github.com/stretchr/testify/suite"
 )
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
-	am *types.AuthenticatorManager
+	am *authenticator.AuthenticatorManager
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -21,9 +23,9 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (s *KeeperTestSuite) SetupTest() {
 	s.Reset()
-	s.am = types.NewAuthenticatorManager()
+	s.am = authenticator.NewAuthenticatorManager()
 	// Register the SigVerificationAuthenticator
-	s.am.InitializeAuthenticators([]types.Authenticator{types.SigVerificationAuthenticator{}})
+	s.am.InitializeAuthenticators([]authenticator.Authenticator{authenticator.SignatureVerificationAuthenticator{}})
 }
 
 // ToDo: more and better tests
@@ -33,12 +35,12 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 	ctx := s.Ctx
 
 	// Ensure the SigVerificationAuthenticator type is registered
-	s.Require().True(s.am.IsAuthenticatorTypeRegistered(types.SigVerificationAuthenticator{}.Type()))
+	s.Require().True(s.am.IsAuthenticatorTypeRegistered(authenticator.SignatureVerificationAuthenticator{}.Type()))
 
 	// Create a test message
 	msg := &types.MsgAddAuthenticator{
 		Sender: s.TestAccs[0].String(),
-		Type:   types.SigVerificationAuthenticator{}.Type(),
+		Type:   authenticator.SignatureVerificationAuthenticator{}.Type(),
 	}
 
 	resp, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
@@ -53,7 +55,7 @@ func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
 	// First add an authenticator so that we can attempt to remove it later
 	addMsg := &types.MsgAddAuthenticator{
 		Sender: s.TestAccs[0].String(),
-		Type:   types.SigVerificationAuthenticator{}.Type(),
+		Type:   authenticator.SignatureVerificationAuthenticator{}.Type(),
 	}
 	_, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), addMsg)
 	s.Require().NoError(err)
