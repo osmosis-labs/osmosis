@@ -134,10 +134,12 @@ func GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidity, amount
 		return sqrtPriceCurrent
 	}
 
+	// Truncate at precision end to make denominator smaller so that the final result is larger.
 	product := amountZeroRemainingIn.MulTruncate(sqrtPriceCurrent)
 	// denominator = product + liquidity
 	denominator := product
 	denominator.AddMut(liquidity)
+	// MulRoundUp and QuoRoundUp to make the final result larger by rounding up at precision end.
 	return liquidity.MulRoundUp(sqrtPriceCurrent).QuoRoundUp(denominator)
 }
 
