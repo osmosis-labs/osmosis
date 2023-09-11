@@ -44,11 +44,6 @@ var (
 	oneInt               = big.NewInt(1)
 	tenInt               = big.NewInt(10)
 
-	// precisionFactorSDK is used to adjust the scale of BigDec values to match the precision expected by sdk.Dec
-	precisionFactorSDK *big.Int
-	// precisionDiffFromSDKDec is a difference in precision between BigDec and sdk.Dec
-	precisionDiffFromSDKDec int64
-
 	// log_2(e)
 	// From: https://www.wolframalpha.com/input?i=log_2%28e%29+with+37+digits
 	logOfEbase2 = MustNewBigDecFromStr("1.442695040888963407359924681001892137")
@@ -59,6 +54,9 @@ var (
 	// initialized in init() since requires
 	// precision to be defined.
 	twoBigDec BigDec = MustNewBigDecFromStr("2")
+
+	// precisionFactors are used to adjust the scale of big.Int values to match the desired precision
+	precisionFactors = make(map[int64]*big.Int)
 )
 
 // Decimal errors
@@ -75,12 +73,10 @@ func init() {
 		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
 	}
 
-	precisionDiffFromSDKDec = PrecisionBigDec - PrecisionDec
-	if precisionDiffFromSDKDec < 0 {
-		panic("invalid decimal precision")
+	for precision := int64(0); precision <= PrecisionBigDec; precision++ {
+		precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionBigDec-precision), nil)
+		precisionFactors[precision] = precisionFactor
 	}
-
-	precisionFactorSDK = new(big.Int).Exp(big.NewInt(10), big.NewInt(precisionDiffFromSDKDec), nil)
 }
 
 func precisionInt() *big.Int {
@@ -569,12 +565,11 @@ func (d BigDec) Dec() Dec {
 
 func (d BigDec) DecWithPrecision(precision int64) Dec {
 	var precisionFactor *big.Int
-	if precision >= PrecisionDec {
-		precisionFactor = precisionFactorSDK
+	if precision >= PrecisionDec { // if provided precision is more than Dec's precision, assume conversion to native Dec (no precision lost)
+		precisionFactor = precisionFactors[PrecisionDec]
 		precision = PrecisionDec
 	} else {
-		precisionDiff := PrecisionBigDec - precision
-		precisionFactor = new(big.Int).Exp(big.NewInt(10), big.NewInt(precisionDiff), nil)
+		precisionFactor = precisionFactors[precision]
 	}
 
 	// Truncate any additional decimal values that exist due to BigDec's additional precision
@@ -590,7 +585,7 @@ func (d BigDec) DecWithPrecision(precision int64) Dec {
 // ChopPrecisionMut truncates all decimals after precision numbers after decimal point. Mutative
 // CONTRACT: precision <= PrecisionBigDec
 func (d *BigDec) ChopPrecisionMut(precision int64) BigDec {
-	precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionBigDec-precision), nil)
+	precisionFactor := precisionFactors[precision]
 	// big.Quo truncates numbers that would have been after decimal point
 	d.i.Quo(d.i, precisionFactor)
 	d.i.Mul(d.i, precisionFactor)
