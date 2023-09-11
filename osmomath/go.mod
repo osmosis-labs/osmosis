@@ -5,7 +5,7 @@ go 1.20
 require (
 	cosmossdk.io/math v1.1.2
 	github.com/cosmos/cosmos-sdk v0.47.4
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.6
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230911084520-9b98861bc1f5
 	github.com/stretchr/testify v1.8.4
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -46,8 +46,6 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/nxadm/tail v1.4.8 // indirect
-	github.com/onsi/gomega v1.27.10 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
