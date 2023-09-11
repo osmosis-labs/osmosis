@@ -27,6 +27,7 @@ type ErrTolerance struct {
 	RoundingDir             RoundingDirection
 }
 
+// Comparable interface is a type constraint that allows any comparable types within osmomath package
 type Comparable interface {
 	BigDec | Dec | Int
 }
