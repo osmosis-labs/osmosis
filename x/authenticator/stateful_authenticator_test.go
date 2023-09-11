@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 )
 
@@ -29,17 +30,17 @@ func (s StatefulAuthenticator) Initialize(data []byte) (types.Authenticator, err
 
 func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex uint8, simulate bool) (types.AuthenticatorData, error) {
 	// TODO: We probably want the context here. Specifically a read-only cachecontext
-	return StatefulAuthenticatorData{Value: 0}, nil
+	return StatefulAuthenticatorData{Value: s.GetValue(ctx)}, nil
 }
 
 func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData types.AuthenticatorData) (bool, error) {
 	// TODO: the get should probably happen in the method above and here we should just have this:
-	//statefulData, ok := authenticationData.(StatefulAuthenticatorData)
-	//if !ok {
-	//	return false, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "authenticationData is not StatefulAuthenticatorData")
-	ctx.GasMeter().ConsumeGas(100_000_000, "loads of gas")
-	statefulData := StatefulAuthenticatorData{Value: s.GetValue(ctx) + 1}
-	s.SetValue(ctx, statefulData.Value)
+	statefulData, ok := authenticationData.(StatefulAuthenticatorData)
+	if !ok {
+		return false, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "authenticationData is not StatefulAuthenticatorData")
+	}
+	//ctx.GasMeter().ConsumeGas(100_000_000, "loads of gas")
+	s.SetValue(ctx, statefulData.Value+1)
 	return true, nil
 }
 
