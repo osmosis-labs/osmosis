@@ -7,9 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
-	"github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 var (
@@ -52,8 +53,8 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 	properMsg := types.MsgSwapExactAmountIn{
 		Sender:            addr1,
 		Routes:            validSwapExactAmountInRoutes,
-		TokenIn:           sdk.NewCoin("test", sdk.NewInt(100)),
-		TokenOutMinAmount: sdk.NewInt(200),
+		TokenIn:           sdk.NewCoin("test", osmomath.NewInt(100)),
+		TokenOutMinAmount: osmomath.NewInt(200),
 	}
 
 	msg := createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
@@ -127,7 +128,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		{
 			name: "zero amount token",
 			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
-				msg.TokenIn.Amount = sdk.NewInt(0)
+				msg.TokenIn.Amount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -135,7 +136,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		{
 			name: "negative amount token",
 			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
-				msg.TokenIn.Amount = sdk.NewInt(-10)
+				msg.TokenIn.Amount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -143,7 +144,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		{
 			name: "zero amount criteria",
 			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
-				msg.TokenOutMinAmount = sdk.NewInt(0)
+				msg.TokenOutMinAmount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -151,7 +152,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		{
 			name: "negative amount criteria",
 			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
-				msg.TokenOutMinAmount = sdk.NewInt(-10)
+				msg.TokenOutMinAmount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -179,8 +180,8 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 			PoolId:       1,
 			TokenInDenom: "test2",
 		}},
-		TokenOut:         sdk.NewCoin("test", sdk.NewInt(100)),
-		TokenInMaxAmount: sdk.NewInt(200),
+		TokenOut:         sdk.NewCoin("test", osmomath.NewInt(100)),
+		TokenInMaxAmount: osmomath.NewInt(200),
 	}
 
 	msg := createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
@@ -254,7 +255,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		{
 			name: "zero amount token",
 			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
-				msg.TokenOut.Amount = sdk.NewInt(0)
+				msg.TokenOut.Amount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -262,7 +263,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		{
 			name: "negative amount token",
 			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
-				msg.TokenOut.Amount = sdk.NewInt(-10)
+				msg.TokenOut.Amount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -270,7 +271,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		{
 			name: "zero amount criteria",
 			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
-				msg.TokenInMaxAmount = sdk.NewInt(0)
+				msg.TokenInMaxAmount = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -278,7 +279,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		{
 			name: "negative amount criteria",
 			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
-				msg.TokenInMaxAmount = sdk.NewInt(-10)
+				msg.TokenInMaxAmount = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -296,7 +297,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 
 // Test authz serialize and de-serializes for poolmanager msg.
 func TestAuthzMsg(t *testing.T) {
-	coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
+	coin := sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1))
 
 	testCases := []struct {
 		name string
@@ -314,7 +315,7 @@ func TestAuthzMsg(t *testing.T) {
 					TokenOutDenom: "test2",
 				}},
 				TokenIn:           coin,
-				TokenOutMinAmount: sdk.NewInt(1),
+				TokenOutMinAmount: osmomath.NewInt(1),
 			},
 		},
 		{
@@ -329,7 +330,7 @@ func TestAuthzMsg(t *testing.T) {
 					TokenInDenom: "test2",
 				}},
 				TokenOut:         coin,
-				TokenInMaxAmount: sdk.NewInt(1),
+				TokenInMaxAmount: osmomath.NewInt(1),
 			},
 		},
 	}
@@ -344,13 +345,13 @@ func TestMsgSplitRouteSwapExactAmountIn(t *testing.T) {
 	var (
 		validMultihopRouteOne = types.SwapAmountInSplitRoute{
 			Pools:         validSwapExactAmountInRoutes,
-			TokenInAmount: sdk.OneInt(),
+			TokenInAmount: osmomath.OneInt(),
 		}
 		validMultihopRouteTwo = types.SwapAmountInSplitRoute{
 			Pools: []types.SwapAmountInRoute{
 				validSwapRoutePoolThreeAmountIn,
 			},
-			TokenInAmount: sdk.OneInt(),
+			TokenInAmount: osmomath.OneInt(),
 		}
 
 		defaultValidMsg = types.MsgSplitRouteSwapExactAmountIn{
@@ -360,7 +361,7 @@ func TestMsgSplitRouteSwapExactAmountIn(t *testing.T) {
 				validMultihopRouteTwo,
 			},
 			TokenInDenom:      "udai",
-			TokenOutMinAmount: sdk.OneInt(),
+			TokenOutMinAmount: osmomath.OneInt(),
 		}
 	)
 	msg := createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountIn) types.MsgSplitRouteSwapExactAmountIn {
@@ -426,7 +427,7 @@ func TestMsgSplitRouteSwapExactAmountIn(t *testing.T) {
 		},
 		"invalid token out min amount": {
 			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountIn) types.MsgSplitRouteSwapExactAmountIn {
-				msg.TokenOutMinAmount = sdk.ZeroInt()
+				msg.TokenOutMinAmount = osmomath.ZeroInt()
 				return msg
 			}),
 			expectError: true,
@@ -458,13 +459,13 @@ func TestMsgSplitRouteSwapExactAmountOut(t *testing.T) {
 	var (
 		validMultihopRouteOne = types.SwapAmountOutSplitRoute{
 			Pools:          validSwapExactAmountOutRoutes,
-			TokenOutAmount: sdk.OneInt(),
+			TokenOutAmount: osmomath.OneInt(),
 		}
 		validMultihopRouteTwo = types.SwapAmountOutSplitRoute{
 			Pools: []types.SwapAmountOutRoute{
 				validSwapRoutePoolThreeAmountOut,
 			},
-			TokenOutAmount: sdk.OneInt(),
+			TokenOutAmount: osmomath.OneInt(),
 		}
 
 		defaultValidMsg = types.MsgSplitRouteSwapExactAmountOut{
@@ -474,7 +475,7 @@ func TestMsgSplitRouteSwapExactAmountOut(t *testing.T) {
 				validMultihopRouteTwo,
 			},
 			TokenOutDenom:    "udai",
-			TokenInMaxAmount: sdk.OneInt(),
+			TokenInMaxAmount: osmomath.OneInt(),
 		}
 	)
 	msg := createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountOut) types.MsgSplitRouteSwapExactAmountOut {
@@ -540,7 +541,7 @@ func TestMsgSplitRouteSwapExactAmountOut(t *testing.T) {
 		},
 		"invalid token in max amount": {
 			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountOut) types.MsgSplitRouteSwapExactAmountOut {
-				msg.TokenInMaxAmount = sdk.ZeroInt()
+				msg.TokenInMaxAmount = osmomath.ZeroInt()
 				return msg
 			}),
 			expectError: true,
@@ -548,6 +549,92 @@ func TestMsgSplitRouteSwapExactAmountOut(t *testing.T) {
 		"empty routes": {
 			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountOut) types.MsgSplitRouteSwapExactAmountOut {
 				msg.Routes = []types.SwapAmountOutSplitRoute{}
+				return msg
+			}),
+			expectError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+
+			if tc.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestMsgSetDenomPairTakerFee(t *testing.T) {
+	createMsg := func(after func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+		properMsg := types.MsgSetDenomPairTakerFee{
+			Sender: addr1,
+			DenomPairTakerFee: []types.DenomPairTakerFee{
+				{
+					Denom0:   "uosmo",
+					Denom1:   "uatom",
+					TakerFee: osmomath.MustNewDecFromStr("0.003"),
+				},
+				{
+					Denom0:   "uosmo",
+					Denom1:   "uion",
+					TakerFee: osmomath.MustNewDecFromStr("0.006"),
+				},
+			},
+		}
+
+		return after(properMsg)
+	}
+
+	msg := createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), types.RouterKey)
+	require.Equal(t, msg.Type(), types.TypeMsgSetDenomPairTakerFee)
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
+	tests := map[string]struct {
+		msg         types.MsgSetDenomPairTakerFee
+		expectError bool
+	}{
+		"valid": {
+			msg: createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+				// Do nothing
+				return msg
+			}),
+		},
+		"invalid sender": {
+			msg: createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+				msg.Sender = ""
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid denom0": {
+			msg: createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+				msg.DenomPairTakerFee[0].Denom0 = ""
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid denom1": {
+			msg: createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+				msg.DenomPairTakerFee[0].Denom1 = ""
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid denom0 = denom1": {
+			msg: createMsg(func(msg types.MsgSetDenomPairTakerFee) types.MsgSetDenomPairTakerFee {
+				msg.DenomPairTakerFee[0].Denom0 = msg.DenomPairTakerFee[0].Denom1
 				return msg
 			}),
 			expectError: true,

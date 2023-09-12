@@ -8,9 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v17/app"
-	"github.com/osmosis-labs/osmosis/v17/x/lockup"
-	"github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
+	"github.com/osmosis-labs/osmosis/v19/x/lockup"
+	"github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -71,7 +72,7 @@ func TestInitGenesis(t *testing.T) {
 		Denom:    "foo",
 		Duration: time.Second,
 	})
-	require.Equal(t, sdk.NewInt(30000000), acc)
+	require.Equal(t, osmomath.NewInt(30000000), acc)
 }
 
 func TestExportGenesis(t *testing.T) {

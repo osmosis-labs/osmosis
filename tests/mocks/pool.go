@@ -9,7 +9,7 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
-	types0 "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	types0 "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 // MockPoolI is a mock of PoolI interface.
@@ -91,6 +91,20 @@ func (mr *MockPoolIMockRecorder) GetSpreadFactor(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpreadFactor", reflect.TypeOf((*MockPoolI)(nil).GetSpreadFactor), ctx)
 }
 
+// GetTakerFee mocks base method.
+func (m *MockPoolI) GetTakerFee() types.Dec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTakerFee")
+	ret0, _ := ret[0].(types.Dec)
+	return ret0
+}
+
+// GetTakerFee indicates an expected call of GetTakerFee.
+func (mr *MockPoolIMockRecorder) GetTakerFee() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTakerFee", reflect.TypeOf((*MockPoolI)(nil).GetTakerFee))
+}
+
 // GetType mocks base method.
 func (m *MockPoolI) GetType() types0.PoolType {
 	m.ctrl.T.Helper()
@@ -141,6 +155,18 @@ func (m *MockPoolI) Reset() {
 func (mr *MockPoolIMockRecorder) Reset() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reset", reflect.TypeOf((*MockPoolI)(nil).Reset))
+}
+
+// SetTakerFee mocks base method.
+func (m *MockPoolI) SetTakerFee(newTakerFee types.Dec) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetTakerFee", newTakerFee)
+}
+
+// SetTakerFee indicates an expected call of SetTakerFee.
+func (mr *MockPoolIMockRecorder) SetTakerFee(newTakerFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTakerFee", reflect.TypeOf((*MockPoolI)(nil).SetTakerFee), newTakerFee)
 }
 
 // SpotPrice mocks base method.

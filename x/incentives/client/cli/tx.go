@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -124,7 +124,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 
 func NewAddToGaugeCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgAddToGauge](&osmocli.TxCliDesc{
-		Use:   "add-to-gauge [gauge_id] [rewards] [flags]",
+		Use:   "add-to-gauge",
 		Short: "add coins to gauge to distribute more rewards to users",
 	})
 }

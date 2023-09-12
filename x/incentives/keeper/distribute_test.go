@@ -7,12 +7,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
-	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	incentivetypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	poolincentivetypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolincentivetypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -211,7 +212,7 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 	fiveKRewardCoinsUosmo := sdk.NewInt64Coin(appParams.BaseCoinUnit, 5000)
 	fifteenKRewardCoins := sdk.NewInt64Coin(defaultRewardDenom, 15000)
 
-	coinsToMint := sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(10000000)), sdk.NewCoin(appParams.BaseCoinUnit, sdk.NewInt(10000000)))
+	coinsToMint := sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, osmomath.NewInt(10000000)), sdk.NewCoin(appParams.BaseCoinUnit, osmomath.NewInt(10000000)))
 	defaultGaugeStartTime := s.Ctx.BlockTime()
 
 	incentivesParams := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
@@ -338,7 +339,7 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 				balance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
 				for _, coin := range balance {
 					actualbalanceAfterDistribution := coinsToMint.AmountOf(coin.Denom).Sub(coin.Amount)
-					s.Require().Equal(tc.expectedDistributions.AmountOf(coin.Denom).Add(sdk.ZeroInt()), actualbalanceAfterDistribution.Add(sdk.ZeroInt()))
+					s.Require().Equal(tc.expectedDistributions.AmountOf(coin.Denom).Add(osmomath.ZeroInt()), actualbalanceAfterDistribution.Add(osmomath.ZeroInt()))
 				}
 
 				for i, gauge := range gauges {
@@ -355,7 +356,7 @@ func (s *KeeperTestSuite) TestDistribute_InternalIncentives_NoLock() {
 						incentiveRecord, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, poolId, types.DefaultConcentratedUptime, uint64(incentiveId))
 						s.Require().NoError(err)
 
-						expectedEmissionRate := sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(int64(currentEpoch.Duration.Seconds())))
+						expectedEmissionRate := osmomath.NewDecFromInt(coin.Amount).QuoTruncate(osmomath.NewDec(int64(currentEpoch.Duration.Seconds())))
 
 						// Check that gauge distribution state is updated.
 						s.ValidateDistributedGauge(gaugeId, 1, tc.gaugeCoins)
@@ -426,7 +427,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		expectErr:         false,
 
 		expectedDistributions:                  sdk.NewCoins(fiveKRewardCoins),
-		expectedRemainingAmountIncentiveRecord: []sdk.Dec{sdk.NewDec(defaultAmount)},
+		expectedRemainingAmountIncentiveRecord: []osmomath.Dec{osmomath.NewDec(defaultAmount)},
 	}
 
 	withIsPerpetual := func(tc test, isPerpetual bool) test {
@@ -439,7 +440,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 		tc.expectedDistributions = gaugeCoins
 		tc.expectedRemainingAmountIncentiveRecord = make([]sdk.Dec, len(gaugeCoins))
 		for i := range tc.expectedRemainingAmountIncentiveRecord {
-			tc.expectedRemainingAmountIncentiveRecord[i] = sdk.NewDec(gaugeCoins[i].Amount.Int64())
+			tc.expectedRemainingAmountIncentiveRecord[i] = osmomath.NewDec(gaugeCoins[i].Amount.Int64())
 		}
 		return tc
 	}
@@ -459,10 +460,10 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 
 		for i := range tc.expectedRemainingAmountIncentiveRecord {
 			// update expected distributions
-			tempDistributions[i].Amount = tc.expectedDistributions[i].Amount.Quo(sdk.NewInt(int64(numEpochs)))
+			tempDistributions[i].Amount = tc.expectedDistributions[i].Amount.Quo(osmomath.NewInt(int64(numEpochs)))
 
 			// update expected remaining amount in incentive record
-			tempRemainingAmountIncentiveRecord[i] = tc.expectedRemainingAmountIncentiveRecord[i].QuoTruncate(sdk.NewDec(int64(numEpochs))).TruncateDec()
+			tempRemainingAmountIncentiveRecord[i] = tc.expectedRemainingAmountIncentiveRecord[i].QuoTruncate(osmomath.NewDec(int64(numEpochs))).TruncateDec()
 		}
 
 		tc.expectedDistributions = tempDistributions
@@ -544,14 +545,14 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 				s.Require().Equal(tc.expectedDistributions, totalDistributedCoins)
 
 				incentivesEpochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
-				incentivesEpochDurationSeconds := sdk.NewDec(incentivesEpochDuration.Milliseconds()).QuoInt(sdk.NewInt(1000))
+				incentivesEpochDurationSeconds := osmomath.NewDec(incentivesEpochDuration.Milliseconds()).QuoInt(osmomath.NewInt(1000))
 
 				// Check that incentive records were created
 				for i, coin := range tc.expectedDistributions {
 					incentiveRecords, err := s.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, time.Nanosecond, uint64(i+1))
 					s.Require().NoError(err)
 
-					expectedEmissionRatePerEpoch := coin.Amount.ToDec().QuoTruncate(incentivesEpochDurationSeconds)
+					expectedEmissionRatePerEpoch := coin.Amount.ToLegacyDec().QuoTruncate(incentivesEpochDurationSeconds)
 
 					s.Require().Equal(tc.startTime.UTC(), incentiveRecords.IncentiveRecordBody.StartTime.UTC())
 					s.Require().Equal(coin.Denom, incentiveRecords.IncentiveRecordBody.RemainingCoin.Denom)
@@ -957,10 +958,10 @@ func (s *KeeperTestSuite) TestFunctionalInternalExternalCLGauge() {
 	var (
 		epochInfo = s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
 
-		requiredBalances         = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10_000_000)), sdk.NewCoin("usdc", sdk.NewInt(10_000_000)))
-		internalGaugeCoins       = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(defaultInternalGaugeValue)))                                                                                                               // distributed full sum at epoch
-		externalGaugeCoins       = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(defaultExternalGaugeValue)), sdk.NewCoin("usdc", sdk.NewInt(defaultExternalGaugeValue)))                                                     // distributed full sum at epoch
-		halfOfExternalGaugeCoins = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(defaultExternalGaugeValue/numEpochsPaidOverGaugeTwo)), sdk.NewCoin("usdc", sdk.NewInt(defaultExternalGaugeValue/numEpochsPaidOverGaugeTwo))) // distributed at each epoch for non-perp gauge with numEpoch = 2
+		requiredBalances         = sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(10_000_000)), sdk.NewCoin("usdc", osmomath.NewInt(10_000_000)))
+		internalGaugeCoins       = sdk.NewCoins(sdk.NewCoin("stake", osmomath.NewInt(defaultInternalGaugeValue)))                                                                                                                    // distributed full sum at epoch
+		externalGaugeCoins       = sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(defaultExternalGaugeValue)), sdk.NewCoin("usdc", osmomath.NewInt(defaultExternalGaugeValue)))                                                     // distributed full sum at epoch
+		halfOfExternalGaugeCoins = sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(defaultExternalGaugeValue/numEpochsPaidOverGaugeTwo)), sdk.NewCoin("usdc", osmomath.NewInt(defaultExternalGaugeValue/numEpochsPaidOverGaugeTwo))) // distributed at each epoch for non-perp gauge with numEpoch = 2
 	)
 
 	s.FundAcc(s.TestAccs[1], requiredBalances)
@@ -1128,11 +1129,11 @@ func (s *KeeperTestSuite) CreateNoLockExternalGauges(clPoolId uint64, externalGa
 }
 
 func (s *KeeperTestSuite) IncentivizeInternalGauge(poolIds []uint64, epochDuration time.Duration, removeDistrRecord bool) {
-	var weight sdk.Int
+	var weight osmomath.Int
 	if !removeDistrRecord {
-		weight = sdk.NewInt(100)
+		weight = osmomath.NewInt(100)
 	} else {
-		weight = sdk.ZeroInt()
+		weight = osmomath.ZeroInt()
 	}
 
 	var gaugeIds []uint64
@@ -1194,8 +1195,8 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 				},
 				SplittingPolicy: types.Evenly,
 			},
-			expectedAllocationPerGroupGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))),
-			expectedAllocationPerInternalGauge: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(33_333_333))),
+			expectedAllocationPerGroupGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))),
+			expectedAllocationPerInternalGauge: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(33_333_333))),
 			expectError:                        false,
 		},
 		{
@@ -1224,8 +1225,8 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 				},
 				SplittingPolicy: types.Evenly,
 			},
-			expectedAllocationPerGroupGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(50_000_000))),
-			expectedAllocationPerInternalGauge: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(16_666_666))),
+			expectedAllocationPerGroupGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(50_000_000))),
+			expectedAllocationPerInternalGauge: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(16_666_666))),
 			expectError:                        false,
 		},
 	}
@@ -1233,7 +1234,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(200_000_000))))
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))))
 			clPool := s.PrepareConcentratedPool()
 
 			// create 3 internal Gauge
@@ -1243,11 +1244,11 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gaugeid= 8
 
 			// create perp group gauge
-			_, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))), uint64(1), s.TestAccs[1], internalGauges[:3], lockuptypes.ByGroup, types.Evenly) // gauge id = 2,3,4
+			_, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))), uint64(1), s.TestAccs[1], internalGauges[:3], lockuptypes.ByGroup, types.Evenly) // gauge id = 2,3,4
 			s.Require().NoError(err)
 
 			// create non-perp group gauge
-			_, err = s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))), uint64(2), s.TestAccs[1], internalGauges[len(internalGauges)-3:], lockuptypes.ByGroup, types.Evenly) // gauge id = 5,6,7
+			_, err = s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))), uint64(2), s.TestAccs[1], internalGauges[len(internalGauges)-3:], lockuptypes.ByGroup, types.Evenly) // gauge id = 5,6,7
 			s.Require().NoError(err)
 
 			// Call Testing function
@@ -1292,12 +1293,12 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 	// We skip these test until group gauge initialization refactor is complete
 	s.T().Skip()
 
-	hundredKUosmo := sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))
-	hundredKUatom := sdk.NewCoin("uatom", sdk.NewInt(100_000_000))
-	fifetyKUosmo := sdk.NewCoin("uosmo", sdk.NewInt(50_000_000))
-	fifetyKUatom := sdk.NewCoin("uatom", sdk.NewInt(50_000_000))
-	twentyfiveKUosmo := sdk.NewCoin("uosmo", sdk.NewInt(25_000_000))
-	twentyfiveKUatom := sdk.NewCoin("uatom", sdk.NewInt(25_000_000))
+	hundredKUosmo := sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))
+	hundredKUatom := sdk.NewCoin("uatom", osmomath.NewInt(100_000_000))
+	fifetyKUosmo := sdk.NewCoin("uosmo", osmomath.NewInt(50_000_000))
+	fifetyKUatom := sdk.NewCoin("uatom", osmomath.NewInt(50_000_000))
+	twentyfiveKUosmo := sdk.NewCoin("uosmo", osmomath.NewInt(25_000_000))
+	twentyfiveKUatom := sdk.NewCoin("uatom", osmomath.NewInt(25_000_000))
 
 	baseCase := &GroupGaugeCreationFields{
 		coins:            sdk.NewCoins(hundredKUosmo),
@@ -1323,7 +1324,7 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 		{
 			name:                             "Valid case: Valid perp-GroupGauge Creation with only CL internal gauges and Distribution",
 			createGauge:                      s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{2, 3, 4}),
-			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(33_333_333))),
+			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(33_333_333))),
 			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo),
 		},
 		{
@@ -1335,7 +1336,7 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 		{
 			name:                             "Valid case: Valid non-perpGroupGauge Creation with and Distribution",
 			createGauge:                      s.WithBaseCaseDifferentEpochPaidOver(*baseCase, uint64(4)),
-			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(6_250_000))),
+			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(6_250_000))),
 			expectedCoinsDistributedPerEpoch: sdk.NewCoins(twentyfiveKUosmo),
 		},
 		{
@@ -1347,7 +1348,7 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 		{
 			name:                             "Valid case: Valid non-perp GroupGauge Creation with 2 coins and Distribution",
 			createGauge:                      s.WithBaseCaseDifferentEpochPaidOver(s.WithBaseCaseDifferentCoins(*baseCase, sdk.NewCoins(hundredKUosmo, hundredKUatom)), uint64(2)),
-			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(12_500_000)), sdk.NewCoin("uatom", sdk.NewInt(12_500_000))),
+			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(12_500_000)), sdk.NewCoin("uatom", osmomath.NewInt(12_500_000))),
 			expectedCoinsDistributedPerEpoch: sdk.NewCoins(fifetyKUosmo, fifetyKUatom),
 		},
 		{
@@ -1401,7 +1402,7 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 
 				var expectedDistributedCoins []sdk.Coin
 				for _, coin := range tc.expectedCoinsDistributedPerEpoch {
-					expectedDistributedCoins = append(expectedDistributedCoins, sdk.NewCoin(coin.Denom, coin.Amount.Mul(sdk.NewIntFromUint64(epoch))))
+					expectedDistributedCoins = append(expectedDistributedCoins, sdk.NewCoin(coin.Denom, coin.Amount.Mul(osmomath.NewIntFromUint64(epoch))))
 				}
 
 				s.ValidateDistributedGauge(groupGauge.Id, epoch, expectedDistributedCoins)
@@ -1413,7 +1414,7 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 				for _, internalGauge := range internalGauges {
 					var expectedDistributedCoinsPerInternalGauge []sdk.Coin
 					for _, coin := range tc.expectedCoinsPerInternalGauge {
-						expectedDistributedCoinsPerInternalGauge = append(expectedDistributedCoinsPerInternalGauge, (sdk.NewCoin(coin.Denom, coin.Amount.Mul(sdk.NewIntFromUint64(epoch)))))
+						expectedDistributedCoinsPerInternalGauge = append(expectedDistributedCoinsPerInternalGauge, (sdk.NewCoin(coin.Denom, coin.Amount.Mul(osmomath.NewIntFromUint64(epoch)))))
 					}
 					s.ValidateDistributedGauge(internalGauge.Id, epoch, expectedDistributedCoinsPerInternalGauge)
 				}
@@ -1440,7 +1441,7 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 				if len(balances) != 0 {
 					var coins sdk.Coins
 					for _, bal := range tc.expectedCoinsPerInternalGauge {
-						coin := sdk.NewCoin(bal.Denom, bal.Amount.Mul(sdk.NewIntFromUint64(epoch)))
+						coin := sdk.NewCoin(bal.Denom, bal.Amount.Mul(osmomath.NewIntFromUint64(epoch)))
 						coins = append(coins, coin)
 					}
 

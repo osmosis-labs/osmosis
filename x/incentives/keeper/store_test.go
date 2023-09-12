@@ -4,8 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -84,8 +85,8 @@ func (s *KeeperTestSuite) TestGetGroupGaugeById() {
 
 	for name, test := range tests {
 		s.Run(name, func() {
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)))) // 1,000 osmo
-			clPool := s.PrepareConcentratedPool()                                                 // gaugeid = 1
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))) // 1,000 osmo
+			clPool := s.PrepareConcentratedPool()                                                      // gaugeid = 1
 
 			// create 3 internal Gauge
 			var internalGauges []uint64
@@ -94,7 +95,7 @@ func (s *KeeperTestSuite) TestGetGroupGaugeById() {
 				internalGauges = append(internalGauges, internalGauge)
 			}
 
-			_, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000))), 1, s.TestAccs[1], internalGauges, lockuptypes.ByGroup, types.Evenly) // gauge id = 5
+			_, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))), 1, s.TestAccs[1], internalGauges, lockuptypes.ByGroup, types.Evenly) // gauge id = 5
 			s.Require().NoError(err)
 
 			record, err := s.App.IncentivesKeeper.GetGroupGaugeById(s.Ctx, test.groupGaugeId)

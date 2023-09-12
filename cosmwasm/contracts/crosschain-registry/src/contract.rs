@@ -39,6 +39,7 @@ pub fn instantiate(
         &ChainPFM {
             acknowledged: true,
             validated: true,
+            initiator: None,
         },
     )?;
 
@@ -102,6 +103,9 @@ pub fn execute(
 
         ExecuteMsg::ProposePFM { chain } => execute::propose_pfm((deps, env, info), chain),
         ExecuteMsg::ValidatePFM { chain } => execute::validate_pfm((deps, env, info), chain),
+        ExecuteMsg::TransferOwnership { new_owner } => {
+            execute::transfer_ownership(deps, info.sender, new_owner)
+        }
     }
 }
 
@@ -156,16 +160,17 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[cfg_attr(not(feature = "imported"), entry_point)]
-pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
+pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
+    let own_addr = env.contract.address.to_string();
     match msg {
         SudoMsg::IBCLifecycleComplete(IBCLifecycleComplete::IBCAck {
             channel,
             sequence,
             ack,
             success,
-        }) => ibc_lifecycle::receive_ack(deps, channel, sequence, ack, success),
+        }) => ibc_lifecycle::receive_ack(deps, own_addr, channel, sequence, ack, success),
         SudoMsg::IBCLifecycleComplete(IBCLifecycleComplete::IBCTimeout { channel, sequence }) => {
-            ibc_lifecycle::receive_timeout(deps, channel, sequence)
+            ibc_lifecycle::receive_timeout(deps, own_addr, channel, sequence)
         }
     }
 }

@@ -17,9 +17,9 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -30,7 +30,7 @@ func NewTxCmd() *cobra.Command {
 
 func NewCreateCWPoolCmd() (*osmocli.TxCliDesc, *model.MsgCreateCosmWasmPool) {
 	return &osmocli.TxCliDesc{
-		Use:              "create-pool [code-id] [instantiate-msg] [sender]",
+		Use:              "create-pool",
 		Short:            "create a cosmwasm pool",
 		Example:          "osmosisd tx cosmwasmpool create-pool 1 uion,uosmo --from lo-test1 --keyring-backend test --chain-id localosmosis --fees 875uosmo -b=block",
 		NumArgs:          2,

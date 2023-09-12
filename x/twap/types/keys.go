@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
@@ -92,7 +93,7 @@ func ParseTwapFromBz(bz []byte) (twap TwapRecord, err error) {
 	}
 	err = proto.Unmarshal(bz, &twap)
 	if twap.GeometricTwapAccumulator.IsNil() {
-		twap.GeometricTwapAccumulator = sdk.ZeroDec()
+		twap.GeometricTwapAccumulator = osmomath.ZeroDec()
 	}
 	return twap, err
 }

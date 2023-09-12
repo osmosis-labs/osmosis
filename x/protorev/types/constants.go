@@ -1,8 +1,6 @@
 package types
 
-import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
+import "github.com/osmosis-labs/osmosis/osmomath"
 
 // OsmosisDenomination stores the native denom name for Osmosis on chain used for route building
 var OsmosisDenomination string = "uosmo"
@@ -10,11 +8,11 @@ var OsmosisDenomination string = "uosmo"
 // ----------------- Module Execution Time Constants ----------------- //
 
 // MaxInputAmount is the upper bound index for finding the optimal in amount when determining route profitability (2 ^ 14) = 16,384
-var MaxInputAmount = sdk.NewInt(16_384)
+var MaxInputAmount = osmomath.NewInt(16_384)
 
 // ExtendedMaxInputAmount is the upper bound index for finding the optimal in amount
 // when determining route profitability for an arb that's above the default range (2 ^ 17) = 131,072
-var ExtendedMaxInputAmount = sdk.NewInt(131_072)
+var ExtendedMaxInputAmount = osmomath.NewInt(131_072)
 
 // Max iterations for binary search (log2(131_072) = 17)
 const MaxIterations int = 17

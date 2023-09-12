@@ -15,6 +15,22 @@ Currently the only supported metadata & spot price calculator is using a GAMM po
         of each epoch.
 * Adds a new SDK message for creating governance proposals for adding new TxFee denoms.
 
+## Epoch Hooks
+
+The txfees module includes hooks that trigger actions at the end of each epoch.
+
+The `AfterEpochEnd` hook performs several actions:
+
+1. It swaps all non-OSMO denominated fees in the non-native fee collector for staking rewards module account into OSMO. This is done by checking the balance of the non-native fee collector for staking rewards module account, and swapping each non-OSMO denominated fee into OSMO. If a pool does not exist for a particular denomination pair, the swap is silently skipped. See the `swapNonNativeFeeToDenom` function description below for more details.
+
+2. After the swap, it transfers all OSMO from the non-native fee collector for staking rewards to the primary txfees fee collector module account. This indirectly distributes the fees to stakers.
+
+3. It also swaps non-whitelisted assets in the non-native community pool collector into the denomination specified in the pool manager parameters (currently USDC).
+
+4. Finally, it funds the community pool with the swapped denomination.
+
+The `swapNonNativeFeeToDenom` function is used to perform the swaps. It iterates over each coin in the balance of the specified fee collector account, and swaps it into the specified denomination. This function assumes that a pool route exists in the protorev route store for each denomination pair. If a pool route does not exist or is disabled, the swap is silently skipped.
+
 ## Local Mempool Filters Added
 
 * If you specify a min-tx-fee in the $BASEDENOM then

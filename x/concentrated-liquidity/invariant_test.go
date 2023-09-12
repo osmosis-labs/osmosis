@@ -4,13 +4,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 type ExpectedGlobalRewardValues struct {
-	ExpectedAdditiveSpreadRewardTolerance sdk.Dec
-	ExpectedAdditiveIncentivesTolerance   sdk.Dec
+	ExpectedAdditiveSpreadRewardTolerance osmomath.Dec
+	ExpectedAdditiveIncentivesTolerance   osmomath.Dec
 	TotalSpreadRewards                    sdk.Coins
 	TotalIncentives                       sdk.Coins
 }
@@ -104,12 +104,12 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant(expectedGlobalRewardValues
 		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
 	}
 
-	spreadRewardAdditiveTolerance := sdk.Dec{}
+	spreadRewardAdditiveTolerance := osmomath.Dec{}
 	if !expectedGlobalRewardValues.ExpectedAdditiveSpreadRewardTolerance.IsNil() {
 		spreadRewardAdditiveTolerance = expectedGlobalRewardValues.ExpectedAdditiveSpreadRewardTolerance
 	}
 
-	incentivesAdditiveTolerance := sdk.Dec{}
+	incentivesAdditiveTolerance := osmomath.Dec{}
 	if !expectedGlobalRewardValues.ExpectedAdditiveIncentivesTolerance.IsNil() {
 		incentivesAdditiveTolerance = expectedGlobalRewardValues.ExpectedAdditiveSpreadRewardTolerance
 	}

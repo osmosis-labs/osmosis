@@ -1,8 +1,8 @@
 package v8
 
 import (
-	"github.com/osmosis-labs/osmosis/v17/app/upgrades"
-	v8constants "github.com/osmosis-labs/osmosis/v17/app/upgrades/v8/constants"
+	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
+	v8constants "github.com/osmosis-labs/osmosis/v19/app/upgrades/v8/constants"
 )
 
 const (

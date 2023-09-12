@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v17/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
@@ -125,10 +126,30 @@ func (k Keeper) GetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch str
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return 0, fmt.Errorf("highest liquidity pool between base %s and match denom %s not found", baseDenom, denomToMatch)
+		return 0, types.NoPoolForDenomPairError{BaseDenom: baseDenom, MatchDenom: denomToMatch}
 	}
 
 	poolId := sdk.BigEndianToUint64(bz)
+	return poolId, nil
+}
+
+// GetPoolForDenomPairNoOrder returns the id of the pool between the two denoms.
+// It is order-independent. That is, tokenA can either be a base or a quote. Both cases are handled.
+// If no pool exists, an error is returned.
+// TODO: unit test
+func (k Keeper) GetPoolForDenomPairNoOrder(ctx sdk.Context, tokenA, tokenB string) (uint64, error) {
+	poolId, err := k.GetPoolForDenomPair(ctx, tokenA, tokenB)
+	if err != nil {
+		if errors.Is(err, types.NoPoolForDenomPairError{BaseDenom: tokenA, MatchDenom: tokenB}) {
+			// Attempt changing base and mathch denoms.
+			poolId, err = k.GetPoolForDenomPair(ctx, tokenB, tokenA)
+			if err != nil {
+				return 0, err
+			}
+		} else {
+			return 0, err
+		}
+	}
 	return poolId, nil
 }
 
