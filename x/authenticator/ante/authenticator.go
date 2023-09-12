@@ -2,6 +2,7 @@ package ante
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"

@@ -33,7 +33,7 @@ func GetSignersAndSignatures(
 	// TODO:
 	// on the feePayer acc1
 	// give me authenticator for that account
-	// can we auth this account in sufficently low gas
+	// can we auth this account in sufficiently low gas
 	// does it have secp256k1 or something else that is low gas
 	// defined as less than x
 
