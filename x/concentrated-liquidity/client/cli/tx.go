@@ -55,7 +55,7 @@ func NewCreatePositionCmd() (*osmocli.TxCliDesc, *types.MsgCreatePosition) {
 
 func NewAddToPositionCmd() (*osmocli.TxCliDesc, *types.MsgAddToPosition) {
 	return &osmocli.TxCliDesc{
-		Use:     "add-to-position [position-id] [token-0] [token-1]",
+		Use:     "add-to-position [position-id] [token-0] [token-1] [token-0-min-amount] [token-1-min-amount]",
 		Short:   "add to an existing concentrated liquidity position",
 		Example: "osmosisd tx concentratedliquidity add-to-position 10 1000000000uosmo 10000000uion --from val --chain-id localosmosis -b block --keyring-backend test --fees 1000000uosmo",
 	}, &types.MsgAddToPosition{}
