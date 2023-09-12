@@ -37,30 +37,16 @@ func TickToSqrtPrice(tickIndex int64) (osmomath.BigDec, error) {
 		return osmomath.BigDec{}, err
 	}
 
-	// N.B. at launch, we only supported price range
-	// of [tick(10^-12), tick(MaxSpotPrice)].
-	// To maintain backwards state-compatibility, we use the original
-	// math based on 18 precision decimal on the at the launch tick range.
-	if tickIndex >= types.MinInitializedTick {
-		// It is acceptable to truncate here as TickToPrice() function converts
-		// from osmomath.Dec to osmomath.BigDec before returning specifically for this range.
-		// As a result, there is no data loss.
-		price := priceBigDec.SDKDec()
+	// It is acceptable to truncate here as TickToPrice() function converts
+	// from osmomath.Dec to osmomath.BigDec before returning specifically for this range.
+	// As a result, there is no data loss.
+	price := priceBigDec.SDKDec()
 
-		sqrtPrice, err := osmomath.MonotonicSqrt(price)
-		if err != nil {
-			return osmomath.BigDec{}, err
-		}
-		return osmomath.BigDecFromSDKDec(sqrtPrice), nil
-	}
-
-	// For the newly extended range of [tick(MinSpotPriceV2), MinInitializedTick), we use the new math
-	// based on 36 precision decimal.
-	sqrtPrice, err := osmomath.MonotonicSqrtBigDec(priceBigDec)
+	sqrtPrice, err := osmomath.MonotonicSqrt(price)
 	if err != nil {
 		return osmomath.BigDec{}, err
 	}
-	return sqrtPrice, nil
+	return osmomath.BigDecFromSDKDec(sqrtPrice), nil
 }
 
 // TickToPrice returns the price given a tickIndex
