@@ -45,6 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### State Breaking
 
 * [#6344](https://github.com/osmosis-labs/osmosis/pull/6344) fix: set name, display and symbol of denom metadata in tokenfactory's CreateDenom
+### Misc Improvements
+
+* [#6380](https://github.com/osmosis-labs/osmosis/pull/6380) Change full range definition to 10^-30 to 10^38.
 
 ### Bug Fixes
 
