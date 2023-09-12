@@ -71,12 +71,13 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 
 		msgAuthenticated := false
-		// ToDo: We should consider adding a way for the user to specify which authenticator to use as part of the tx (likely in the signature)
-		// Note: we have to make sure that doing that does not make the signature malleable
+		// TODO: We should consider adding a way for the user to specify which authenticator to
+		// use as part of the tx (likely in the signature)
+		// NOTE: we have to make sure that doing that does not make the signature malleable
 		for _, authenticator := range authenticators {
 			// Get the authentication data for the transaction
 			cacheCtx, _ := ctx.CacheContext() // GetAuthenticationData is not allowed to modify the state
-			authData, err := authenticator.GetAuthenticationData(cacheCtx, tx, uint8(msgIndex), simulate)
+			authData, err := authenticator.GetAuthenticationData(cacheCtx, tx, int8(msgIndex), simulate)
 			if err != nil {
 				return ctx, err
 			}

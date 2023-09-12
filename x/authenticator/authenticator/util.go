@@ -43,6 +43,7 @@ func GetSignersAndSignatures(
 	msgs []sdk.Msg,
 	suppliedSignatures []signing.SignatureV2,
 	feePayer string,
+	// TODO: review the msg index
 	msgIndex int,
 ) ([]sdk.AccAddress, []signing.SignatureV2, error) {
 	// Map to associate each signer with its signature.

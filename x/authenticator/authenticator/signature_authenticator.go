@@ -76,7 +76,8 @@ type SignatureData struct {
 func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 	ctx sdk.Context,
 	tx sdk.Tx,
-	messageIndex uint8,
+	// TODO: revisit msg index fucntionality
+	messageIndex int8,
 	simulate bool,
 ) (AuthenticatorData, error) {
 	sigTx, ok := tx.(authsigning.Tx)
@@ -93,6 +94,7 @@ func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 	}
 
 	msgs := sigTx.GetMsgs()
+	signers := sigTx.GetSigners()
 
 	msgSigners, msgSignatures, err := GetSignersAndSignatures(
 		msgs,
@@ -102,6 +104,18 @@ func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 	)
 	if err != nil {
 		return SignatureData{}, err
+	}
+
+	// NOTE: added invariant check to ensure our code is working as before
+	if len(signers) != len(msgSigners) {
+		return SignatureData{},
+			sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invariant check failed, old signers don't match new signers")
+	}
+
+	// NOTE: added invariant check to ensure our code is working as before
+	if len(signatures) != len(msgSignatures) {
+		return SignatureData{},
+			sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invariant check failed, old signatures don't match new signatures")
 	}
 
 	// Get the signature for the message at msgIndex
@@ -117,6 +131,7 @@ func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 // each signer and signature using  signature verification
 func (sva SignatureVerificationAuthenticator) Authenticate(
 	ctx sdk.Context,
+	// NOTE: do we use this msg anywhere
 	msg sdk.Msg,
 	authenticationData AuthenticatorData,
 ) (success bool, err error) {
@@ -141,7 +156,9 @@ func (sva SignatureVerificationAuthenticator) Authenticate(
 			return false, err
 		}
 
-		// retrieve pubkey
+		// Retrieve pubkey we use either the public key from the authenticator store
+		// if that's not available query the original auth store for the public key
+		// the public key is added to the sva struct by the Initialize function
 		pubKey := sva.PubKey
 		if pubKey == nil {
 			// Having a default here keeps this authenticator stateless,
@@ -163,7 +180,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(
 			)
 		}
 
-		// retrieve signer data
+		// Retrieve and build the signer data struct
 		genesis := ctx.IsGenesis() || ctx.BlockHeight() == 0
 		chainID := ctx.ChainID()
 		var accNum uint64
@@ -176,7 +193,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(
 			Sequence:      acc.GetSequence(),
 		}
 
-		// no need to verify signatures on recheck tx
+		// No need to verify signatures on recheck tx
 		if !verificationData.Simulate && !ctx.IsReCheckTx() {
 			err := authsigning.VerifySignature(
 				pubKey,
