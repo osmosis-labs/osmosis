@@ -32,9 +32,9 @@ func (sva SignatureVerificationAuthenticator) Type() string {
 	return SignatureVerificationAuthenticatorType
 }
 
-func (sva SignatureVerificationAuthenticator) Gas() uint64 {
-	// The default gas for verifying a secp256k1 signature is 1000
-	return 1000
+func (sva SignatureVerificationAuthenticator) StaticGas() uint64 {
+	// using 0 gas here. The gas is consumed based on the pubkey type in Authenticate()
+	return 0
 }
 
 // NewSignatureVerificationAuthenticator creates a new SignatureVerificationAuthenticator

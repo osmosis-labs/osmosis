@@ -85,6 +85,23 @@ func (k Keeper) GetAuthenticatorsForAccount(
 	return authenticators, nil
 }
 
+func (k Keeper) GetAuthenticatorsForAccountOrDefault(
+	ctx sdk.Context,
+	account sdk.AccAddress,
+) ([]authenticator.Authenticator, error) {
+	authenticators, err := k.GetAuthenticatorsForAccount(ctx, account)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(authenticators) == 0 {
+		authenticators = append(authenticators, k.AuthenticatorManager.GetDefaultAuthenticator())
+	}
+
+	return authenticators, nil
+
+}
+
 // GetNextAuthenticatorId returns the next authenticator id.
 func (k Keeper) GetNextAuthenticatorId(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)

@@ -11,10 +11,9 @@ const (
 type AuthenticatorData interface{}
 
 type Authenticator interface {
-	// TODO: Rename to DefaultGas or StaticGas. Alt. pass the context and consume the gas here
-	Gas() uint64
-
 	Type() string
+
+	StaticGas() uint64
 
 	Initialize(data []byte) (Authenticator, error)
 
