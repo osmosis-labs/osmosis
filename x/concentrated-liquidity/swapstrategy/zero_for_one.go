@@ -81,14 +81,14 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 		sqrtPriceNext = math.GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidityBigDec, amountZeroInRemainingLessSpreadReward)
 	}
 
-	// This edge case deals with an edge case stemming from rounding.
+	// The code snippet below deals with an edge case stemming from rounding.
 	// If the computed sqrtPriceNext is 1 BigDec ULP away from the sqrtPriceTarget AND
 	// amount zero in needed to reach target is 1 unit greater than the amount zero remaining after spread rewards,
-	// we deems this as a rounding error and make sqrtPriceNext equal to sqrtPriceTarget
-	// while consuming all among in actually remaining.
+	// we deem this as a rounding error and make sqrtPriceNext equal to sqrtPriceTarget
+	// while consuming all amount in actually remaining.
 	//
 	// Without this change, we reach an infinite loop swap condition where we try to swap until the target but fail to consume
-	// any amount in to advance the swap by only one ULP.
+	// any amount in to advance by only 1 ULP.
 	//
 	// Changing the rounding behavior causes issues in other parts of the system where we end up overconsuming the final amount in.
 	if sqrtPriceNext.Sub(sqrtPriceTarget).Equal(smallestBigDec) && amountZeroIn.Sub(amountZeroInRemainingLessSpreadReward).Equal(oneBigDec) {
