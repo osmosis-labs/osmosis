@@ -75,7 +75,7 @@ type SwapResult struct {
 // Note, the value is chosen arbitrarily.
 // From tests, there should be no reason for a swap to make more than 2 iterations without
 // progress. However, we leave a buffer of 1_000 to account for any unforeseen edge cases.
-const swapNoProgressLimit = 100
+const swapNoProgressLimit = 5
 
 func newSwapState(specifiedAmount osmomath.Int, p types.ConcentratedPoolExtension, strategy swapstrategy.SwapStrategy) SwapState {
 	return SwapState{
@@ -514,6 +514,10 @@ func (k Keeper) computeInAmtGivenOut(
 			return SwapResult{}, PoolUpdates{}, err
 		}
 
+		fmt.Printf("\nswap step begin\n")
+		fmt.Println("start tick", swapState.tick)
+		fmt.Println("nextInitializedTick", nextInitializedTick)
+
 		// Utilizing the bucket's liquidity and knowing the sqrt price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new computedSqrtPrice after this swap
 		computedSqrtPrice, amountOut, amountIn, spreadRewardChargeTotal := swapStrategy.ComputeSwapWithinBucketInGivenOut(
@@ -584,8 +588,10 @@ func (k Keeper) computeInAmtGivenOut(
 	// Round amount out down to avoid over charging the pool.
 	amountOut := desiredTokenOut.Amount.ToLegacyDec().Sub(swapState.amountSpecifiedRemaining).TruncateInt()
 
-	ctx.Logger().Debug("final amount in", amountIn)
-	ctx.Logger().Debug("final amount out", amountOut)
+	fmt.Println("final amount in", amountIn)
+	fmt.Println("final amount out", amountOut)
+
+	fmt.Println("final tick", swapState.tick)
 
 	return SwapResult{
 		AmountIn:      amountIn,
@@ -595,12 +601,12 @@ func (k Keeper) computeInAmtGivenOut(
 }
 
 func emitSwapDebugLogs(ctx sdk.Context, swapState SwapState, reachedPrice osmomath.BigDec, amountIn, amountOut, spreadCharge osmomath.Dec) {
-	ctx.Logger().Debug("start sqrt price", swapState.sqrtPrice)
-	ctx.Logger().Debug("reached sqrt price", reachedPrice)
-	ctx.Logger().Debug("liquidity", swapState.liquidity)
-	ctx.Logger().Debug("amountIn", amountIn)
-	ctx.Logger().Debug("amountOut", amountOut)
-	ctx.Logger().Debug("spreadRewardChargeTotal", spreadCharge)
+	fmt.Println("start sqrt price", swapState.sqrtPrice)
+	fmt.Println("reached sqrt price", reachedPrice)
+	fmt.Println("liquidity", swapState.liquidity)
+	fmt.Println("amountIn", amountIn)
+	fmt.Println("amountOut", amountOut)
+	fmt.Println("spreadRewardChargeTotal", spreadCharge)
 }
 
 // logic for crossing a tick during a swap

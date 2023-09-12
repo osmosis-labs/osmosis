@@ -649,7 +649,7 @@ func (s *KeeperTestSuite) TestGetUserUnbondingPositions() {
 						PositionId: 3,
 						Address:    defaultAddress.String(),
 						PoolId:     1,
-						LowerTick:  types.MinInitializedTick,
+						LowerTick:  types.MinInitializedTickV2,
 						UpperTick:  types.MaxTick,
 						JoinTime:   defaultBlockTime,
 						Liquidity:  osmomath.MustNewDecFromStr("10000.000000000000001000"),

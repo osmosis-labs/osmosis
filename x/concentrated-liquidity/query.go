@@ -27,7 +27,7 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 
 	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
 	// we do -1 to make min tick inclusive.
-	currentTick := types.MinCurrentTick
+	currentTick := types.MinCurrentTickV2
 
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, currentTick)
 	defer nextTickIter.Close()
@@ -137,12 +137,12 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	// use max or min tick if provided bound is nil
 
-	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", types.MinInitializedTick))
+	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", types.MinInitializedTickV2))
 	ctx.Logger().Debug(fmt.Sprintf("max_tick %d\n", types.MaxTick))
 
 	if boundTick.IsNil() {
 		if zeroForOne {
-			boundTick = osmomath.NewInt(types.MinInitializedTick)
+			boundTick = osmomath.NewInt(types.MinInitializedTickV2)
 		} else {
 			boundTick = osmomath.NewInt(types.MaxTick)
 		}

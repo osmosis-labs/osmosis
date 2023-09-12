@@ -74,7 +74,7 @@ func (s *KeeperTestSuite) validateIteratorLeftZeroForOne(poolId uint64, expected
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
-	zeroForOneSwapStrategy, _, err := s.App.ConcentratedLiquidityKeeper.SetupSwapStrategy(s.Ctx, pool, osmomath.ZeroDec(), pool.GetToken0(), types.MinSqrtPriceBigDec)
+	zeroForOneSwapStrategy, _, err := s.App.ConcentratedLiquidityKeeper.SetupSwapStrategy(s.Ctx, pool, osmomath.ZeroDec(), pool.GetToken0(), types.MinSqrtPriceV2)
 	s.Require().NoError(err)
 	initializedTickValue := pool.GetCurrentTick()
 	iter := zeroForOneSwapStrategy.InitializeNextTickIterator(s.Ctx, pool.GetId(), initializedTickValue)
@@ -1038,10 +1038,10 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 		for i, swapTicksAway := range tc.swapEndTicksAwayFromOriginalCurrent {
 			// We special case the min and max tick to be given by absolute values
 			// rather than relative to the original current tick.
-			if swapTicksAway == types.MinInitializedTick {
+			if swapTicksAway == types.MinInitializedTickV2 {
 				// In zero for one direction, we kick the tick back by one while crossing.
 				// This is to ensure that our definition of "active bucket" is correct.
-				expectedSwapEndTicks[i] = types.MinCurrentTick
+				expectedSwapEndTicks[i] = types.MinCurrentTickV2
 			} else if swapTicksAway == types.MaxTick {
 				expectedSwapEndTicks[i] = types.MaxTick
 			} else {
@@ -1105,7 +1105,7 @@ func (s *KeeperTestSuite) TestSwaps_Contiguous_Initialized_TickSpacingOne() {
 			isPositionActiveFlag:                []bool{true, true, true, false},
 		},
 		"zero for one, swap beyond the leftmost tick": {
-			swapEndTicksAwayFromOriginalCurrent: []int64{-3, types.MinInitializedTick},
+			swapEndTicksAwayFromOriginalCurrent: []int64{-3, types.MinInitializedTickV2},
 			isPositionActiveFlag:                []bool{false, false, false, false},
 		},
 
@@ -1334,17 +1334,17 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 
 		// Compute tokenIn amount necessary to reach the min tick.
 		const isZeroForOne = true
-		tokenIn, _, _ := s.computeSwapAmounts(poolId, osmomath.BigDec{}, types.MinInitializedTick, isZeroForOne, shouldStayWithinTheSameBucket)
+		tokenIn, _, _ := s.computeSwapAmounts(poolId, osmomath.BigDec{}, types.MinInitializedTickV2, isZeroForOne, shouldStayWithinTheSameBucket)
 
 		// Swap the computed large amount.
 		s.swapZeroForOneLeft(poolId, sdk.NewCoin(tokenZeroDenom, tokenIn.Ceil().TruncateInt()))
 
 		// Assert that min tick is crossed and liquidity is zero.
-		s.assertPoolTickEquals(poolId, types.MinCurrentTick)
+		s.assertPoolTickEquals(poolId, types.MinCurrentTickV2)
 		s.assertPoolLiquidityEquals(poolId, osmomath.ZeroDec())
 
 		// Assert that full range positions are now inactive.
-		s.assertPositionOutOfRange(poolId, types.MinInitializedTick, types.MaxTick)
+		s.assertPositionOutOfRange(poolId, types.MinInitializedTickV2, types.MaxTick)
 
 		// Refetch pool
 		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
@@ -1387,7 +1387,7 @@ func (s *KeeperTestSuite) TestSwapOutGivenIn_SwapToAllowedBoundaries() {
 		s.assertPoolLiquidityEquals(poolId, osmomath.ZeroDec())
 
 		// Assert that full range positions are now inactive.
-		s.assertPositionOutOfRange(poolId, types.MinInitializedTick, types.MaxTick)
+		s.assertPositionOutOfRange(poolId, types.MinInitializedTickV2, types.MaxTick)
 
 		// Refetch pool
 		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)

@@ -46,7 +46,12 @@ func TestFuzz_Many(t *testing.T) {
 func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
 	// Seed 1688572291 - gives mismatch between tokenIn given to "out given in" and token in returned from "in given out"
 	// Seed 1688658883- causes an error in swap in given out due to rounding (acceptable).
-	r := rand.New(rand.NewSource(1688658883))
+	// Seed 1694529692 - proves issues in rounding direction of GetNextSqrtPriceFromAmount0InRoundingUp, proving
+	// that we must not QuoRoundUp for the last term in the formula.
+	// To repro: set up a breakpoint at the top of computeSwapOutGivenIn, and set count to 15.
+	// On the third (last) swap step for that swap, observe that the final `sqrtPriceNext` is off by one
+	// BigDec ULP, showing that this rounding bheavior was the issue.
+	r := rand.New(rand.NewSource(1694529692))
 	s.individualFuzz(r, 0, 30, 10)
 
 	s.validateNoErrors(s.collectedErrors)
