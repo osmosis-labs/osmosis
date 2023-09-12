@@ -45,7 +45,6 @@ func GetSignersAndSignatures(
 	feePayer string,
 	msgIndex int,
 ) ([]sdk.AccAddress, []signing.SignatureV2, error) {
-
 	// Map to associate each signer with its signature.
 	signerToSignature := make(map[string]signing.SignatureV2)
 	sigIndex := 0
