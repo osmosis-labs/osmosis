@@ -173,7 +173,7 @@ func withSp1(twap types.TwapRecord, sp osmomath.Dec) types.TwapRecord {
 // TestTWAPInitGenesis tests that genesis is initialized correctly
 // with different parameters and state.
 // Asserts that the most recent records are set correctly.
-func (suite *TestSuite) TestTwapInitGenesis() {
+func (s *TestSuite) TestTwapInitGenesis() {
 	testCases := map[string]struct {
 		twapGenesis *types.GenesisState
 
@@ -235,14 +235,14 @@ func (suite *TestSuite) TestTwapInitGenesis() {
 	}
 
 	for name, tc := range testCases {
-		suite.Run(name, func() {
-			suite.Setup()
+		s.Run(name, func() {
+			s.Setup()
 			// Setup.
-			ctx := suite.Ctx
-			twapKeeper := suite.App.TwapKeeper
+			ctx := s.Ctx
+			twapKeeper := s.App.TwapKeeper
 
 			// Test.
-			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() { twapKeeper.InitGenesis(ctx, tc.twapGenesis) })
+			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() { twapKeeper.InitGenesis(ctx, tc.twapGenesis) })
 			if tc.expectPanic {
 				return
 			}
@@ -250,12 +250,12 @@ func (suite *TestSuite) TestTwapInitGenesis() {
 			// Assertions.
 
 			// Parameters were set.
-			suite.Require().Equal(tc.twapGenesis.Params, twapKeeper.GetParams(ctx))
+			s.Require().Equal(tc.twapGenesis.Params, twapKeeper.GetParams(ctx))
 
 			for _, expectedMostRecentRecord := range tc.expectedMostRecentRecord {
 				record, err := twapKeeper.GetMostRecentRecordStoreRepresentation(ctx, expectedMostRecentRecord.PoolId, expectedMostRecentRecord.Asset0Denom, expectedMostRecentRecord.Asset1Denom)
-				suite.Require().NoError(err)
-				suite.Require().Equal(expectedMostRecentRecord, record)
+				s.Require().NoError(err)
+				s.Require().Equal(expectedMostRecentRecord, record)
 			}
 		})
 	}
@@ -264,7 +264,7 @@ func (suite *TestSuite) TestTwapInitGenesis() {
 // TestTWAPExportGenesis tests that genesis is exported correctly.
 // It first initializes genesis to the expected value. Then, attempts
 // to export it. Lastly, compares exported to the expected.
-func (suite *TestSuite) TestTWAPExportGenesis() {
+func (s *TestSuite) TestTWAPExportGenesis() {
 	testCases := map[string]struct {
 		expectedGenesis *types.GenesisState
 	}{
@@ -283,11 +283,11 @@ func (suite *TestSuite) TestTWAPExportGenesis() {
 	}
 
 	for name, tc := range testCases {
-		suite.Run(name, func() {
-			suite.Setup()
+		s.Run(name, func() {
+			s.Setup()
 			// Setup.
-			app := suite.App
-			ctx := suite.Ctx
+			app := s.App
+			ctx := s.Ctx
 			twapKeeper := app.TwapKeeper
 
 			twapKeeper.InitGenesis(ctx, tc.expectedGenesis)
@@ -296,7 +296,7 @@ func (suite *TestSuite) TestTWAPExportGenesis() {
 			actualGenesis := twapKeeper.ExportGenesis(ctx)
 
 			// Assertions.
-			suite.Require().Equal(tc.expectedGenesis.Params, actualGenesis.Params)
+			s.Require().Equal(tc.expectedGenesis.Params, actualGenesis.Params)
 
 			// Sort expected by time. This is done because the exported genesis returns
 			// recors in ascending order by time.
@@ -304,7 +304,7 @@ func (suite *TestSuite) TestTWAPExportGenesis() {
 				return tc.expectedGenesis.Twaps[i].Time.Before(tc.expectedGenesis.Twaps[j].Time)
 			})
 
-			suite.Require().Equal(tc.expectedGenesis.Twaps, actualGenesis.Twaps)
+			s.Require().Equal(tc.expectedGenesis.Twaps, actualGenesis.Twaps)
 		})
 	}
 }
@@ -361,7 +361,7 @@ func (s *TestSuite) validateExpectedRecords(expectedRecords []types.TwapRecord) 
 // - 3 records at time t - 1 seconds, with pool id 2 (3 asset pool)
 // - 1 record at time t, with pool id 3
 // - 1 record at time t + 1 seconds, with pool id 3
-func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord) {
+func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord) { //nolint:revive // this function breaks the function result limit of 4 return results.  TODO: fixme
 	baseRecord := newEmptyPriceRecord(basePoolId, t, denom0, denom1)
 
 	tMin1 := t.Add(-time.Second)
@@ -384,7 +384,7 @@ func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, ty
 // - 3 records at time t
 // - 3 records t time t + 1 seconds
 // all returned records belong to the same pool with poolId
-func (s *TestSuite) CreateTestRecordsFromTimeInPool(t time.Time, poolId uint64) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord,
+func (s *TestSuite) CreateTestRecordsFromTimeInPool(t time.Time, poolId uint64) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, //nolint:revive // this function breaks the function result limit of 4 return results.  TODO: fixme
 	types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord,
 ) {
 	baseRecordAB := newEmptyPriceRecord(poolId, t, denom0, denom1)
@@ -517,7 +517,7 @@ func newExpRecord(accum0, accum1, geomAccum osmomath.Dec) types.TwapRecord {
 	}
 }
 
-func newThreeAssetRecord(poolId uint64, t time.Time, sp0, accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC osmomath.Dec) []types.TwapRecord {
+func newThreeAssetRecord(poolId uint64, t time.Time, sp0, accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC osmomath.Dec) []types.TwapRecord { //nolint:unparam // poolID always receives 2 but this could change later
 	spA := sp0
 	spB := osmomath.OneDec().Quo(sp0)
 	spC := sp0.Mul(osmomath.NewDec(2))
@@ -587,7 +587,7 @@ func newOneSidedGeometricRecord(time time.Time, accum osmomath.Dec) types.TwapRe
 	return record
 }
 
-func newThreeAssetOneSidedRecord(time time.Time, accum osmomath.Dec, useP0 bool) []types.TwapRecord {
+func newThreeAssetOneSidedRecord(time time.Time, accum osmomath.Dec, useP0 bool) []types.TwapRecord { //nolint:unparam // useP0 always true, but this could change later.
 	record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
 	if useP0 {
 		record.P0ArithmeticTwapAccumulator = accum

@@ -1,7 +1,6 @@
 package balancer_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 )
 
@@ -35,11 +35,12 @@ func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares osm
 		MultiplicativeTolerance: allowedErrRatioDec,
 	}
 
-	require.Equal(
+	osmoassert.Equal(
 		t,
-		0,
-		errTolerance.Compare(expectedShares, actualShares),
-		fmt.Sprintf("expectedShares: %s, actualShares: %s", expectedShares.String(), actualShares.String()))
+		errTolerance,
+		expectedShares,
+		actualShares,
+	)
 }
 
 func assertExpectedLiquidity(t *testing.T, tokensJoined, liquidity sdk.Coins) {

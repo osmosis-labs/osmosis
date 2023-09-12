@@ -20,8 +20,8 @@ type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (suite *UpgradeTestSuite) SetupTest() {
-	suite.Setup()
+func (s *UpgradeTestSuite) SetupTest() {
+	s.Setup()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -30,23 +30,23 @@ func TestKeeperTestSuite(t *testing.T) {
 
 const dummyUpgradeHeight = 5
 
-func dummyUpgrade(suite *UpgradeTestSuite) {
-	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
+func dummyUpgrade(s *UpgradeTestSuite) {
+	s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
 	plan := upgradetypes.Plan{Name: "v13", Height: dummyUpgradeHeight}
-	err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
-	suite.Require().NoError(err)
-	_, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
-	suite.Require().True(exists)
+	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
+	s.Require().NoError(err)
+	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().True(exists)
 
-	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
-	suite.Require().NotPanics(func() {
+	s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
+	s.Require().NotPanics(func() {
 		beginBlockRequest := abci.RequestBeginBlock{}
-		suite.App.BeginBlocker(suite.Ctx, beginBlockRequest)
+		s.App.BeginBlocker(s.Ctx, beginBlockRequest)
 	})
 }
 
-func (suite *UpgradeTestSuite) TestUpgrade() {
-	suite.SkipIfWSL()
+func (s *UpgradeTestSuite) TestUpgrade() {
+	s.SkipIfWSL()
 	testCases := []struct {
 		name         string
 		pre_upgrade  func()
@@ -57,49 +57,49 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 			"Test that the upgrade succeeds",
 			func() {
 				// The module doesn't need an account anymore, but when the upgrade happened we did:
-				// acc := suite.App.AccountKeeper.GetAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
-				// suite.App.AccountKeeper.RemoveAccount(suite.Ctx, acc)
+				// acc := s.App.AccountKeeper.GetAccount(s.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
+				// s.App.AccountKeeper.RemoveAccount(s.Ctx, acc)
 
 				// Because of SDK version map bug, we can't do the following, and instaed do a massive hack
-				// vm := suite.App.UpgradeKeeper.GetModuleVersionMap(suite.Ctx)
+				// vm := s.App.UpgradeKeeper.GetModuleVersionMap(s.Ctx)
 				// delete(vm, ibchookstypes.ModuleName)
 				// OR
 				// vm[ibchookstypes.ModuleName] = 0
-				// suite.App.UpgradeKeeper.SetModuleVersionMap(suite.Ctx, vm)
-				upgradeStoreKey := suite.App.AppKeepers.GetKey(upgradetypes.StoreKey)
-				store := suite.Ctx.KVStore(upgradeStoreKey)
+				// s.App.UpgradeKeeper.SetModuleVersionMap(s.Ctx, vm)
+				upgradeStoreKey := s.App.AppKeepers.GetKey(upgradetypes.StoreKey)
+				store := s.Ctx.KVStore(upgradeStoreKey)
 				versionStore := prefix.NewStore(store, []byte{upgradetypes.VersionMapByte})
 				versionStore.Delete([]byte(ibchookstypes.ModuleName))
 
 				// Same comment as above: this was the case when the upgrade happened, but we don't have accounts anymore
-				// hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
-				// suite.Require().False(hasAcc)
+				// hasAcc := s.App.AccountKeeper.HasAccount(s.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
+				// s.Require().False(hasAcc)
 			},
-			func() { dummyUpgrade(suite) },
+			func() { dummyUpgrade(s) },
 			func() {
 				// Same comment as pre-upgrade. We had an account, but now we don't anymore
-				// hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
-				// suite.Require().True(hasAcc)
+				// hasAcc := s.App.AccountKeeper.HasAccount(s.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
+				// s.Require().True(hasAcc)
 			},
 		},
 		{
 			"Test that the contract address is set in the params",
 			func() {},
-			func() { dummyUpgrade(suite) },
+			func() { dummyUpgrade(s) },
 			func() {
 				// The contract has been uploaded and the param is set
-				paramSpace, ok := suite.App.ParamsKeeper.GetSubspace(ibcratelimittypes.ModuleName)
-				suite.Require().True(ok)
+				paramSpace, ok := s.App.ParamsKeeper.GetSubspace(ibcratelimittypes.ModuleName)
+				s.Require().True(ok)
 				var contract string
-				paramSpace.GetIfExists(suite.Ctx, ibcratelimittypes.KeyContractAddress, &contract)
-				suite.Require().NotEmpty(contract)
+				paramSpace.GetIfExists(s.Ctx, ibcratelimittypes.KeyContractAddress, &contract)
+				s.Require().NotEmpty(contract)
 			},
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest() // reset
+		s.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			s.SetupTest() // reset
 
 			tc.pre_upgrade()
 			tc.upgrade()

@@ -14,15 +14,15 @@ type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (suite *UpgradeTestSuite) SetupTest() {
-	suite.Setup()
+func (s *UpgradeTestSuite) SetupTest() {
+	s.Setup()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(UpgradeTestSuite))
 }
 
-func (suite *UpgradeTestSuite) TestUpgradePayments() {
+func (s *UpgradeTestSuite) TestUpgradePayments() {
 	testCases := []struct {
 		msg     string
 		upgrade func()
@@ -32,20 +32,20 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 			func() {
 				// run upgrade
 				// First run block N-1, begin new block takes ctx height + 1
-				suite.Ctx = suite.Ctx.WithBlockHeight(v10.ForkHeight - 2)
-				suite.BeginNewBlock(false)
+				s.Ctx = s.Ctx.WithBlockHeight(v10.ForkHeight - 2)
+				s.BeginNewBlock(false)
 
 				// run upgrade height
-				suite.Require().NotPanics(func() {
-					suite.BeginNewBlock(false)
+				s.Require().NotPanics(func() {
+					s.BeginNewBlock(false)
 				})
 			},
 		},
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
-			suite.SetupTest() // reset
+		s.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			s.SetupTest() // reset
 			tc.upgrade()
 		})
 	}

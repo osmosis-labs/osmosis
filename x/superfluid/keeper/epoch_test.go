@@ -20,7 +20,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 	testCases := []struct {
 		name                  string
 		asset                 types.SuperfluidAsset
-		expectedMultiplier    sdk.Dec
+		expectedMultiplier    osmomath.Dec
 		removeStakingAsset    bool
 		poolDoesNotExist      bool
 		expectedError         error

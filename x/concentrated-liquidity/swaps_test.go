@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
@@ -76,6 +77,12 @@ var (
 	oneAdditiveTolerance = osmomath.ErrTolerance{
 		AdditiveTolerance: osmomath.OneDec(),
 	}
+
+	oneAdditiveToleranceRoundDown = osmomath.ErrTolerance{
+		AdditiveTolerance: osmomath.OneDec(),
+		RoundingDir:       osmomath.RoundDown,
+	}
+
 	swapOutGivenInCases = map[string]SwapTest{
 		//  One price range
 		//
@@ -2004,12 +2011,11 @@ func (s *KeeperTestSuite) assertSpreadRewardAccum(test SwapTest, poolId uint64) 
 	}
 	spreadRewardVal := spreadRewardAccumValue.AmountOf(amountOfDenom)
 	s.Require().Equal(1, spreadRewardAccumValue.Len(), "spread reward accumulator should only have one denom, was (%s)", spreadRewardAccumValue)
-	s.Require().Equal(0,
-		additiveSpreadRewardGrowthGlobalErrTolerance.CompareBigDec(
-			osmomath.BigDecFromDec(test.expectedSpreadRewardGrowthAccumulatorValue),
-			osmomath.BigDecFromDec(spreadRewardVal),
-		),
-		fmt.Sprintf("expected %s, got %s", test.expectedSpreadRewardGrowthAccumulatorValue.String(), spreadRewardVal.String()),
+	osmoassert.Equal(
+		s.T(),
+		additiveSpreadRewardGrowthGlobalErrTolerance,
+		osmomath.BigDecFromDec(test.expectedSpreadRewardGrowthAccumulatorValue),
+		osmomath.BigDecFromDec(spreadRewardVal),
 	)
 }
 
@@ -2027,9 +2033,9 @@ func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.Concent
 
 	newLowerTick, newUpperTick := s.lowerUpperPricesToTick(test.newLowerPrice, test.newUpperPrice, pool.GetTickSpacing())
 
-	_, lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
+	lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick)
 	s.Require().NoError(err)
-	_, upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
+	upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick)
 	s.Require().NoError(err)
 
 	if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
@@ -3088,7 +3094,7 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 	multiplicativeTolerance = osmomath.ErrTolerance{
 		MultiplicativeTolerance: osmomath.MustNewDecFromStr("0.001"),
 	}
-	s.Require().Equal(0, multiplicativeTolerance.Compare(oldSpotPrice.RoundInt(), newSpotPrice.RoundInt()))
+	osmoassert.Equal(s.T(), multiplicativeTolerance, oldSpotPrice.RoundInt(), newSpotPrice.RoundInt())
 
 	// Assure that user balance now as it was before both swaps.
 	// TODO: Come back to this choice after deciding if we are using BigDec for swaps
@@ -3098,12 +3104,12 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 	for _, coin := range userBalanceBeforeSwap {
 		beforeSwap := userBalanceBeforeSwap.AmountOf(coin.Denom)
 		afterSwap := userBalanceAfterSwap.AmountOf(coin.Denom)
-		s.Require().Equal(0, multiplicativeTolerance.Compare(beforeSwap, afterSwap), fmt.Sprintf("user balance before swap: %s, after swap: %s", beforeSwap, afterSwap))
+		osmoassert.Equal(s.T(), multiplicativeTolerance, beforeSwap, afterSwap)
 	}
 	for _, coin := range poolBalanceBeforeSwap {
 		beforeSwap := poolBalanceBeforeSwap.AmountOf(coin.Denom)
 		afterSwap := poolBalanceAfterSwap.AmountOf(coin.Denom)
-		s.Require().Equal(0, multiplicativeTolerance.Compare(beforeSwap, afterSwap), fmt.Sprintf("pool balance before swap: %s, after swap: %s", beforeSwap, afterSwap))
+		osmoassert.Equal(s.T(), multiplicativeTolerance, beforeSwap, afterSwap)
 	}
 }
 
@@ -3116,7 +3122,7 @@ func (s *KeeperTestSuite) validateAmountsWithTolerance(amountA osmomath.Int, amo
 		// This may occcur for small amounts where the multiplicative tolerance ends up being
 		// too restrictive for the rounding difference of just 1. E.g. 100 vs 101 does not satisfy the
 		// 0.01% multiplciative margin of error but it is acceptable due to expected rounding epsilon.
-		s.Require().Equal(0, oneAdditiveTolerance.Compare(amountA, amountB), "amountA: %s, amountB: %s", amountA, amountB)
+		osmoassert.Equal(s.T(), oneAdditiveTolerance, amountA, amountB)
 	} else {
 		s.Require().Equal(0, multCompare, "amountA: %s, amountB: %s", amountA, amountB)
 	}
@@ -3214,9 +3220,9 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedTokenOut := osmomath.NewInt(982676)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
-	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice), "expected sqrt price: %s, actual sqrt price: %s", expectedSqrtPrice, actualSqrtPrice)
-	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenIn, totalTokenIn.Amount))
-	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenOut, totalTokenOut.Amount))
+	osmoassert.Equal(s.T(), multiplicativeTolerance, expectedSqrtPrice, actualSqrtPrice)
+	osmoassert.Equal(s.T(), multiplicativeTolerance, expectedTokenIn, totalTokenIn.Amount)
+	osmoassert.Equal(s.T(), multiplicativeTolerance, expectedTokenOut, totalTokenOut.Amount)
 
 	// Withdraw all full range positions
 	for _, positionId := range positionIds[0] {
@@ -3274,9 +3280,9 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedTokenOut = osmomath.NewInt(5052068983)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
-	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
-	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenIn, totalTokenIn.Amount))
-	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenOut, totalTokenOut.Amount))
+	osmoassert.Equal(s.T(), multiplicativeTolerance, expectedSqrtPrice, actualSqrtPrice)
+	osmoassert.Equal(s.T(), multiplicativeTolerance, expectedTokenIn, totalTokenIn.Amount)
+	osmoassert.Equal(s.T(), multiplicativeTolerance, expectedTokenOut, totalTokenOut.Amount)
 
 	// Withdraw all narrow range positions
 	for _, positionId := range positionIds[1] {
@@ -3334,9 +3340,9 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedTokenOut = osmomath.NewInt(882804)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
-	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
-	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenIn, totalTokenIn.Amount))
-	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenOut, totalTokenOut.Amount))
+	osmoassert.Equal(s.T(), multiplicativeTolerance, expectedSqrtPrice, actualSqrtPrice)
+	osmoassert.Equal(s.T(), multiplicativeTolerance, expectedTokenIn, totalTokenIn.Amount)
+	osmoassert.Equal(s.T(), multiplicativeTolerance, expectedTokenOut, totalTokenOut.Amount)
 
 	// Withdraw all consecutive range position (in relation to narrow range position)
 	for _, positionId := range positionIds[2] {
@@ -3380,9 +3386,9 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedTokenOut = osmomath.NewInt(4509814620)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
-	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
-	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenIn, totalTokenIn.Amount))
-	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenOut, totalTokenOut.Amount))
+	osmoassert.Equal(s.T(), multiplicativeTolerance, expectedSqrtPrice, actualSqrtPrice)
+	osmoassert.Equal(s.T(), multiplicativeTolerance, expectedTokenIn, totalTokenIn.Amount)
+	osmoassert.Equal(s.T(), multiplicativeTolerance, expectedTokenOut, totalTokenOut.Amount)
 }
 
 // TestInfiniteSwapLoop_OutGivenIn demonstrates a case where an infinite loop can be triggered in swap logic if no
@@ -3499,10 +3505,76 @@ func (s *KeeperTestSuite) TestComputeMaxInAmtGivenMaxTicksCrossed() {
 				s.Require().NoError(err)
 
 				errTolerance := osmomath.ErrTolerance{AdditiveTolerance: osmomath.NewDec(int64(test.maxTicksCrossed))}
-				s.Require().Equal(0, errTolerance.Compare(expectedResultingTokenOutAmount, resultingTokenOut.Amount), "expected: %s, got: %s", expectedResultingTokenOutAmount, resultingTokenOut.Amount)
+				osmoassert.Equal(s.T(), errTolerance, expectedResultingTokenOutAmount, resultingTokenOut.Amount)
 			}
 		})
 	}
+}
+
+// This test validates that swapping over the new extended price range in the lower
+// direction functions as expected. It validates that there are no unexpected failures
+// or panics when swapping to the new min tick and back.
+// Additionally, it validates that the swap amounts are roughly equal to the inverse amounts of a given swap.
+func (s *KeeperTestSuite) TestSwap_MinSpotPriceMigration() {
+	s.Run("out given in", func() {
+		s.SetupTest()
+		// Validated by the helper method.
+		// This helper is reused in other more complex tests.
+		s.swapToMinTickAndBack(osmomath.ZeroDec(), emptyCoins)
+	})
+
+	s.Run("in given out", func() {
+		s.SetupTest()
+
+		poolId, _ := s.setupPositionsForMinSpotPriceMigration(osmomath.ZeroDec())
+
+		// Refetch pool
+		pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		s.Require().NoError(err)
+
+		originalTick := pool.GetCurrentTick()
+
+		// esimate amount in to swap left all the way until the new min initialized tick
+		amountOneOut, _, _ := s.computeSwapAmountsInGivenOut(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTickV2, true, false)
+
+		// estimate the amount in to fund
+		amountZeroIn, _, _ := s.computeSwapAmounts(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTickV2, true, false)
+
+		// Fund swapper
+		swapper := s.TestAccs[1]
+		s.FundAcc(swapper, sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amountZeroIn.TruncateInt())))
+
+		// perform the swap to the new min initialized tick.
+		coinOneOut := sdk.NewCoin(pool.GetToken1(), amountOneOut.TruncateInt())
+		tokenZeroIn, tokenOneOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
+			s.Ctx, swapper, pool,
+			coinOneOut, pool.GetToken0(),
+			osmomath.ZeroDec(), osmomath.ZeroDec(),
+		)
+		s.Require().NoError(err)
+
+		// Refetch pool
+		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		s.Require().NoError(err)
+
+		// Confirm all liquidity was consumed and `MinCurrentTick` set
+		s.Require().Equal(types.MinCurrentTick, pool.GetCurrentTick())
+
+		// Esimate the amount in that needs to be funded due to rounding differences.
+		amountOneIn, _, _ := s.computeSwapAmounts(poolId, pool.GetCurrentSqrtPrice(), originalTick, false, false)
+		s.FundAcc(swapper, sdk.NewCoins(sdk.NewCoin(pool.GetToken1(), amountOneIn.Ceil().TruncateInt().Sub(tokenOneOut.Amount))))
+
+		// Swap amount out to the end up in the original tick
+		inverseTokenOut, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
+			s.Ctx, swapper, pool,
+			tokenZeroIn, pool.GetToken1(),
+			osmomath.ZeroDec(), osmomath.ZeroDec(),
+		)
+		s.Require().NoError(err)
+
+		// Original amount in should roughly equal the amount out when performing the inverse swap
+		osmoassert.Equal(s.T(), multiplicativeTolerance, coinOneOut.Amount, inverseTokenOut.Amount)
+	})
 }
 
 func (s *KeeperTestSuite) createPositionAndFundAcc(clPool types.ConcentratedPoolExtension, lowerTick, upperTick int64) (amt0, amt1 osmomath.Int) {

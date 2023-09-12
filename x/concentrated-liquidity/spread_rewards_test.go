@@ -1,13 +1,13 @@
 package concentrated_liquidity_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
@@ -35,6 +35,7 @@ var (
 	oneEthCoins = sdk.NewDecCoins(oneEth)
 	onlyUSDC    = [][]string{{USDC}, {USDC}, {USDC}, {USDC}}
 	onlyETH     = [][]string{{ETH}, {ETH}, {ETH}, {ETH}}
+	emptyCoins  = sdk.NewCoins()
 )
 
 func (s *KeeperTestSuite) TestCreateAndGetSpreadRewardAccumulator() {
@@ -1478,6 +1479,46 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	s.Require().Equal(sdk.Coins(nil), collectedThree)
 }
 
+// This test validates that spread rewards are collected without issues
+// when positions are created over the new extended range.
+func (s *KeeperTestSuite) TestCollectSpreadRewards_MinSpotPriceMigration() {
+	s.SetupTest()
+
+	spreadFactor := types.AuthorizedSpreadFactors[1]
+	s.Require().False(spreadFactor.IsZero())
+
+	poolId, positions, coinsSwappedIn := s.swapToMinTickAndBack(spreadFactor, emptyCoins)
+
+	s.Require().Len(coinsSwappedIn, 2)
+	tokenInZeroForOne := coinsSwappedIn[0]
+	tokenInOneForZero := coinsSwappedIn[1]
+
+	// fetch pool
+	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	expectedTotalSpreadRewards := sdk.NewCoins(
+		sdk.NewCoin(pool.GetToken0(), tokenInZeroForOne.Amount.ToLegacyDec().Mul(spreadFactor).TruncateInt()),
+		sdk.NewCoin(pool.GetToken1(), tokenInOneForZero.Amount.ToLegacyDec().Mul(spreadFactor).TruncateInt()),
+	)
+
+	actualCollected := sdk.NewCoins()
+
+	// Collect spread rewards
+	for _, position := range positions {
+		collected, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, s.TestAccs[0], position.ID)
+		s.Require().NoError(err)
+
+		actualCollected = actualCollected.Add(collected...)
+	}
+
+	// Validate that the total spread rewards collected is equal to the expected total spread rewards
+	s.Require().Equal(len(expectedTotalSpreadRewards), len(actualCollected))
+	for _, coin := range expectedTotalSpreadRewards {
+		osmoassert.Equal(s.T(), oneAdditiveTolerance, coin.Amount, actualCollected.AmountOf(coin.Denom))
+	}
+}
+
 // CollectAndAssertSpreadRewards collects spread rewards from a given pool for all positions and verifies that the total spread rewards collected match the expected total spread rewards.
 // The method also checks that if the ticks that were active during the swap lie within the range of a position, then the position's spread reward accumulators
 // are not empty. The total spread rewards collected are compared to the expected total spread rewards within an additive tolerance defined by an error tolerance struct.
@@ -1512,7 +1553,7 @@ func (s *KeeperTestSuite) CollectAndAssertSpreadRewards(ctx sdk.Context, poolId 
 	for _, coin := range totalSpreadRewardsCollected {
 		expected := totalSpreadRewards.AmountOf(coin.Denom)
 		actual := coin.Amount
-		s.Require().Equal(0, errTolerance.Compare(expected, actual), fmt.Sprintf("expected (%s), actual (%s)", expected, actual))
+		osmoassert.Equal(s.T(), errTolerance, expected, actual)
 	}
 }
 

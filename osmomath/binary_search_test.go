@@ -367,6 +367,14 @@ func TestErrTolerance_Compare(t *testing.T) {
 			if gotBigDecRev != -tt.expectedCompareResult {
 				t.Errorf("ErrTolerance.CompareBigDec() = %v, want %v", gotBigDecRev, -tt.expectedCompareResult)
 			}
+			gotDec := tt.tol.CompareDec(NewDec(tt.intInput), NewDec(tt.intReference))
+			if gotDec != tt.expectedCompareResult {
+				t.Errorf("ErrTolerance.CompareBigDec() = %v, want %v", gotDec, tt.expectedCompareResult)
+			}
+			gotDecRev := tt.tol.CompareDec(NewDec(tt.intReference), NewDec(tt.intInput))
+			if gotDecRev != -tt.expectedCompareResult {
+				t.Errorf("ErrTolerance.CompareBigDec() = %v, want %v", gotDecRev, -tt.expectedCompareResult)
+			}
 		})
 	}
 }
