@@ -11,6 +11,7 @@ const (
 type AuthenticatorData interface{}
 
 type Authenticator interface {
+	// TODO: Rename to DefaultGas or StaticGas. Alt. pass the context and consume the gas here
 	Gas() uint64
 
 	Type() string
@@ -30,6 +31,12 @@ type Authenticator interface {
 		authenticationData AuthenticatorData,
 	) (bool, error)
 
+	AuthenticationFailed(
+		ctx sdk.Context,
+		authenticatorData AuthenticatorData,
+		msg sdk.Msg,
+	)
+
 	ConfirmExecution(
 		ctx sdk.Context,
 		msg sdk.Msg,
@@ -40,4 +47,8 @@ type Authenticator interface {
 	// Optional Hooks. ToDo: Revisit this when adding the authenticator storage and messages
 	// OnAuthenticatorAdded(...) bool
 	// OnAuthenticatorRemoved(...) bool
+}
+
+type AccountGetter interface {
+	GetAccount(ctx sdk.Context, msg sdk.Msg, tx sdk.Tx) (sdk.AccAddress, error)
 }

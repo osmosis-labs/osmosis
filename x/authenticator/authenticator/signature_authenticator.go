@@ -210,6 +210,9 @@ func (sva SignatureVerificationAuthenticator) Authenticate(
 	return true, nil
 }
 
+func (sva SignatureVerificationAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData AuthenticatorData, msg sdk.Msg) {
+}
+
 func (sva SignatureVerificationAuthenticator) ConfirmExecution(
 	ctx sdk.Context,
 	msg sdk.Msg,

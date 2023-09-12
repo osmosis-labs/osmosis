@@ -31,6 +31,9 @@ func (m MockAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authentica
 	return true, nil
 }
 
+func (m MockAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData authenticator.AuthenticatorData, msg sdk.Msg) {
+}
+
 func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData authenticator.AuthenticatorData) bool {
 	return true
 }
@@ -120,6 +123,9 @@ func (m MockAuthenticatorFail) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx,
 
 func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) (bool, error) {
 	return false, nil
+}
+
+func (m MockAuthenticatorFail) AuthenticationFailed(ctx sdk.Context, authenticatorData authenticator.AuthenticatorData, msg sdk.Msg) {
 }
 
 func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData authenticator.AuthenticatorData) bool {
