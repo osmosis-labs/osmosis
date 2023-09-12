@@ -113,6 +113,17 @@ jobs:
 
           # Remove containers with names starting with "hermes-relayer"
           docker ps -aqf "name=hermes-relayer*" | xargs -r docker rm -f
+
+          # Get a list of all networks
+          NETWORKS=$(docker network ls --filter "name=osmosis-testnet" --format "{{.ID}}")
+
+          # Remove all the disconnected networks
+          for NETWORK in $NETWORKS; do
+              echo "Pruning $NETWORK..."
+              docker network rm $NETWORK
+          done
+
+          echo "Done pruning osmosis-testnet networks."
       - name: Check out repository code
         uses: actions/checkout@v4
         with:
@@ -159,3 +170,14 @@ jobs:
 
           # Remove containers with names starting with "hermes-relayer"
           docker ps -aqf "name=hermes-relayer*" | xargs -r docker rm -f
+
+          # Get a list of all networks
+          NETWORKS=$(docker network ls --filter "name=osmosis-testnet" --format "{{.ID}}")
+
+          # Remove all the disconnected networks
+          for NETWORK in $NETWORKS; do
+              echo "Pruning $NETWORK..."
+              docker network rm $NETWORK
+          done
+
+          echo "Done pruning osmosis-testnet networks."
