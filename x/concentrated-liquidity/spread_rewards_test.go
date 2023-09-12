@@ -1375,12 +1375,12 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_Swaps() {
 	s.CollectAndAssertSpreadRewards(s.Ctx, clPool.GetId(), totalSpreadRewardsExpected, positionIds, [][]int64{ticksActivatedAfterEachSwap}, onlyUSDC, positions)
 
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
-	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPriceBigDec, positions.numSwaps)
+	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPriceV2, positions.numSwaps)
 	s.CollectAndAssertSpreadRewards(s.Ctx, clPool.GetId(), totalSpreadRewardsExpected, positionIds, [][]int64{ticksActivatedAfterEachSwap}, onlyETH, positions)
 
 	// Do the same swaps as before, however this time we collect spread rewards after both swap directions are complete.
 	ticksActivatedAfterEachSwapUp, totalSpreadRewardsExpectedUp, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPriceBigDec, positions.numSwaps)
-	ticksActivatedAfterEachSwapDown, totalSpreadRewardsExpectedDown, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPriceBigDec, positions.numSwaps)
+	ticksActivatedAfterEachSwapDown, totalSpreadRewardsExpectedDown, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPriceV2, positions.numSwaps)
 	totalSpreadRewardsExpected = totalSpreadRewardsExpectedUp.Add(totalSpreadRewardsExpectedDown...)
 
 	// We expect all positions to have both denoms in their spread reward accumulators except USDC for the overlapping range position since
@@ -1447,7 +1447,7 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	fullLiquidity := positionDataTwo.Liquidity
 
 	// Swap once in the other direction.
-	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin0, USDC, types.MinSpotPriceBigDec, 1)
+	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin0, USDC, types.MinSpotPriceV2, 1)
 
 	// This should claim under the hood for position 2 since full liquidity is removed.
 	balanceBeforeWithdraw := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
@@ -1515,7 +1515,7 @@ func (s *KeeperTestSuite) TestCollectSpreadRewards_MinSpotPriceMigration() {
 	// Validate that the total spread rewards collected is equal to the expected total spread rewards
 	s.Require().Equal(len(expectedTotalSpreadRewards), len(actualCollected))
 	for _, coin := range expectedTotalSpreadRewards {
-		osmoassert.Equal(s.T(), oneAdditiveTolerance, coin.Amount, actualCollected.AmountOf(coin.Denom))
+		osmoassert.Equal(s.T(), multiplicativeTolerance, coin.Amount, actualCollected.AmountOf(coin.Denom))
 	}
 }
 

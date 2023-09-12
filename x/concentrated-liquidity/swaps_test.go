@@ -3235,7 +3235,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	}
 
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
-	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin0, USDC, types.MinSpotPriceBigDec, positions.numSwaps)
+	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin0, USDC, types.MinSpotPriceV2, positions.numSwaps)
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
 
@@ -3355,7 +3355,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	}
 
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
-	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin0, USDC, types.MinSpotPriceBigDec, positions.numSwaps)
+	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin0, USDC, types.MinSpotPriceV2, positions.numSwaps)
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 	s.Require().NoError(err)
 
@@ -3535,14 +3535,23 @@ func (s *KeeperTestSuite) TestSwap_MinSpotPriceMigration() {
 		originalTick := pool.GetCurrentTick()
 
 		// esimate amount in to swap left all the way until the new min initialized tick
-		amountOneOut, _, _ := s.computeSwapAmountsInGivenOut(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTick, true, false)
+		amountOneOut, _, _ := s.computeSwapAmountsInGivenOut(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTickV2, true, false)
 
 		// estimate the amount in to fund
-		amountZeroIn, _, _ := s.computeSwapAmounts(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTick, true, false)
+		amountZeroIn, _, _ := s.computeSwapAmounts(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTickV2, true, false)
+
+		fmt.Println("estimated amountOneOut", amountOneOut)
+		fmt.Println("estimated amountZeroIn", amountZeroIn)
+
+		fmt.Println("token one before", s.App.BankKeeper.GetBalance(s.Ctx, s.TestAccs[1], pool.GetToken1()))
 
 		// Fund swapper
 		swapper := s.TestAccs[1]
-		s.FundAcc(swapper, sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amountZeroIn.TruncateInt())))
+		s.FundAcc(swapper, sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amountZeroIn.Ceil().TruncateInt())))
+
+		// zero (in) for given one (out)
+
+		fmt.Printf("SWAP ONE\n\n\n")
 
 		// perform the swap to the new min initialized tick.
 		coinOneOut := sdk.NewCoin(pool.GetToken1(), amountOneOut.TruncateInt())
@@ -3553,27 +3562,39 @@ func (s *KeeperTestSuite) TestSwap_MinSpotPriceMigration() {
 		)
 		s.Require().NoError(err)
 
+		fmt.Printf("\n\n")
+
+		fmt.Println("actual tokenZeroIn", tokenZeroIn)
+
+		fmt.Println("token one after", s.App.BankKeeper.GetBalance(s.Ctx, s.TestAccs[1], pool.GetToken1()))
+
 		// Refetch pool
 		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 		s.Require().NoError(err)
 
 		// Confirm all liquidity was consumed and `MinCurrentTick` set
-		s.Require().Equal(types.MinCurrentTick, pool.GetCurrentTick())
+		// TODO: consider adding this to setupPositionsForMinSpotPriceMigration
+		s.Require().Equal(types.MinCurrentTickV2, pool.GetCurrentTick())
 
 		// Esimate the amount in that needs to be funded due to rounding differences.
 		amountOneIn, _, _ := s.computeSwapAmounts(poolId, pool.GetCurrentSqrtPrice(), originalTick, false, false)
 		s.FundAcc(swapper, sdk.NewCoins(sdk.NewCoin(pool.GetToken1(), amountOneIn.Ceil().TruncateInt().Sub(tokenOneOut.Amount))))
 
 		// Swap amount out to the end up in the original tick
-		inverseTokenOut, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
+		tokenOneIn, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
 			s.Ctx, swapper, pool,
 			tokenZeroIn, pool.GetToken1(),
 			osmomath.ZeroDec(), osmomath.ZeroBigDec(),
 		)
 		s.Require().NoError(err)
 
+		pool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+		s.Require().NoError(err)
+
+		osmoassert.Equal(s.T(), multiplicativeTolerance, osmomath.NewInt(originalTick), osmomath.NewInt(pool.GetCurrentTick()))
+
 		// Original amount in should roughly equal the amount out when performing the inverse swap
-		osmoassert.Equal(s.T(), multiplicativeTolerance, coinOneOut.Amount, inverseTokenOut.Amount)
+		osmoassert.Equal(s.T(), multiplicativeTolerance, coinOneOut.Amount, tokenOneIn.Amount)
 	})
 }
 

@@ -36,8 +36,8 @@ var (
 	// DefaultMinTick to tyoes.MinInitializedTickV2 and
 	// DefaultMinCurrentTick to types.MinCurrentTickV2 upon
 	// completion of https://github.com/osmosis-labs/osmosis/issues/5726
-	DefaultMinTick, DefaultMaxTick       = types.MinInitializedTick, types.MaxTick
-	DefaultMinCurrentTick                = types.MinCurrentTick
+	DefaultMinTick, DefaultMaxTick       = types.MinInitializedTickV2, types.MaxTick
+	DefaultMinCurrentTick                = types.MinCurrentTickV2
 	DefaultLowerPrice                    = osmomath.NewDec(4545)
 	DefaultLowerTick                     = int64(30545000)
 	DefaultUpperPrice                    = osmomath.NewDec(5500)
@@ -523,6 +523,9 @@ func (s *KeeperTestSuite) swapToMinTickAndBack(spreadFactor osmomath.Dec, incent
 	incentiveCreator := s.TestAccs[2]
 	s.FundAcc(incentiveCreator, incentiveRewards)
 
+	// By default we want to swap all the way to MinInitializedTickV2
+	shouldCrossTick := true
+
 	// Create incentive rewards if desired
 	if !incentiveRewards.Empty() {
 		s.Require().Len(incentiveRewards, 1)
@@ -532,10 +535,15 @@ func (s *KeeperTestSuite) swapToMinTickAndBack(spreadFactor osmomath.Dec, incent
 			s.Ctx, poolId, s.TestAccs[2],
 			incentiveCoin, incentiveCoin.Amount.ToLegacyDec().Quo(osmomath.NewDec(migrationTestTimeBetweenSwapsSecs)), s.Ctx.BlockTime(), time.Nanosecond)
 		s.Require().NoError(err)
+
+		// With incentive tests, we do not want to cross the MinInitializedTick.
+		// If that happens, the liquidity in the current tick is zero. As a result,
+		// the incentive distirbution fails.
+		shouldCrossTick = false
 	}
 
 	// esimate amount in to swap left all the way until the new min initialized tick
-	amountZeroIn, _, _ := s.computeSwapAmounts(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTickV2, true, false)
+	amountZeroIn, _, _ := s.computeSwapAmounts(poolId, pool.GetCurrentSqrtPrice(), types.MinInitializedTickV2, true, !shouldCrossTick)
 
 	// Fund swapper
 	swapper := s.TestAccs[1]

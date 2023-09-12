@@ -598,8 +598,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				// * liquidity = FullRangeLiquidityAmt
 				// * sqrtPriceB = DefaultCurrSqrtPrice
 				// * sqrtPriceA = MinSqrtPrice
-				// Exact calculation: https://www.wolframalpha.com/input?i=70710678.118654752940000000+*+%2870.710678118654752440+-+0.000001000000000000%29
-				amount1Expected:  osmomath.NewInt(4999999929),
+				// Exact calculation: https://www.wolframalpha.com/input?i=70710678.118654752940000000+*+%2870.710678118654752440+-+0.000000000000001%29
+				amount1Expected:  osmomath.NewInt(4999999999),
 				liquidityAmount:  FullRangeLiquidityAmt,
 				underlyingLockId: 1,
 			},
@@ -1028,8 +1028,8 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				// We calculate calc amount1 by using the following equation:
 				// liq * (sqrtPriceB - sqrtPriceA), where liq is equal to the original joined liq + added liq, sqrtPriceB is current sqrt price, and sqrtPriceA is min sqrt price.
 				// Note that these numbers were calculated using `GetLiquidityFromAmounts` and `TickToSqrtPrice` and thus assume correctness of those functions.
-				// https://www.wolframalpha.com/input?i=212041526.154556192317664016+*+%2870.728769315114743566+-+0.000001000000000000%29
-				amount1Expected: osmomath.NewInt(14997435977),
+				// https://www.wolframalpha.com/input?i=212041526.154556192317664016+*+%2870.728769315114743566+-+0.000000000000001000%29
+				amount1Expected: osmomath.NewInt(14997436189),
 			},
 			timeElapsed:  defaultTimeElapsed,
 			amount0ToAdd: amount0PerfectRatio,

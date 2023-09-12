@@ -1104,10 +1104,10 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 			name:                    "err: upper tick is not max tick",
 			owner:                   defaultAddress,
 			createFullRangePosition: false,
-			lowerTick:               types.MinInitializedTick,
+			lowerTick:               types.MinInitializedTickV2,
 			upperTick:               DefaultUpperTick,
 			remainingLockDuration:   24 * time.Hour,
-			expectedErr:             types.PositionNotFullRangeError{PositionId: 1, LowerTick: types.MinInitializedTick, UpperTick: DefaultUpperTick},
+			expectedErr:             types.PositionNotFullRangeError{PositionId: 1, LowerTick: types.MinInitializedTickV2, UpperTick: DefaultUpperTick},
 		},
 	}
 
@@ -1606,7 +1606,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		{
 			name:            "full range + position overlapping min tick. update liquidity upwards",
 			positionCoins:   sdk.NewCoins(DefaultCoin0, DefaultCoin1),
-			lowerTick:       DefaultMinTick,
+			lowerTick:       types.MinInitializedTickV2,
 			upperTick:       DefaultUpperTick, // max tick doesn't overlap, should not count towards full range liquidity
 			updateLiquidity: osmomath.NewDec(100),
 		},
@@ -1764,7 +1764,7 @@ func (s *KeeperTestSuite) TestCreateFullRangePositionLocked() {
 			s.Require().NoError(err)
 			s.Require().Equal(s.Ctx.BlockTime(), position.JoinTime)
 			s.Require().Equal(types.MaxTick, position.UpperTick)
-			s.Require().Equal(types.MinInitializedTick, position.LowerTick)
+			s.Require().Equal(types.MinInitializedTickV2, position.LowerTick)
 			s.Require().Equal(positionData.Liquidity, position.Liquidity)
 
 			// Check locked
@@ -1926,7 +1926,7 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 		},
 		"one range on min tick": {
 			tickRanges: [][]int64{
-				{types.MinInitializedTick, types.MinInitializedTick + 100},
+				{types.MinInitializedTickV2, types.MinInitializedTickV2 + 100},
 			},
 			rangeTestParams: withDoubleFundedLP(DefaultRangeTestParams),
 		},
@@ -1934,7 +1934,7 @@ func (s *KeeperTestSuite) TestMultipleRanges() {
 			tickRanges: [][]int64{
 				{0, 1},
 			},
-			rangeTestParams: withCurrentTick(DefaultRangeTestParams, types.MinInitializedTick),
+			rangeTestParams: withCurrentTick(DefaultRangeTestParams, types.MinInitializedTickV2),
 		},
 		"three overlapping ranges with no swaps, current tick in one": {
 			tickRanges: [][]int64{

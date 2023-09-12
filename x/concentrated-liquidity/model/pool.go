@@ -295,10 +295,10 @@ func (p *Pool) ApplySwap(newLiquidity osmomath.Dec, newCurrentTick int64, newCur
 	}
 
 	// Check if the new tick provided is within boundaries of the pool's precision factor.
-	if newCurrentTick < types.MinCurrentTick || newCurrentTick > types.MaxTick {
+	if newCurrentTick < types.MinCurrentTickV2 || newCurrentTick > types.MaxTick {
 		return types.TickIndexNotWithinBoundariesError{
 			MaxTick:    types.MaxTick,
-			MinTick:    types.MinCurrentTick,
+			MinTick:    types.MinCurrentTickV2,
 			ActualTick: newCurrentTick,
 		}
 	}

@@ -3556,7 +3556,7 @@ func (s *KeeperTestSuite) TestGetIncentiveRecordSerialized() {
 func (s *KeeperTestSuite) TestCollectIncentives_MinSpotPriceMigration() {
 	s.SetupTest()
 
-	incentiveAmount := osmomath.NewInt(1000)
+	incentiveAmount := osmomath.NewInt(1_000_000_000)
 	incentiveCoin := sdk.NewCoin(OSMO, incentiveAmount)
 	expectedTotalIncentiveRewards := sdk.NewCoins(incentiveCoin)
 	_, positions, _ := s.swapToMinTickAndBack(osmomath.ZeroDec(), expectedTotalIncentiveRewards)

@@ -271,8 +271,8 @@ func (s zeroForOneStrategy) UpdateTickAfterCrossing(nextTick int64) int64 {
 // types.MinSqrtRatio <= sqrtPrice <= current square root price
 func (s zeroForOneStrategy) ValidateSqrtPrice(sqrtPrice osmomath.BigDec, currentSqrtPrice osmomath.BigDec) error {
 	// check that the price limit is below the current sqrt price but not lower than the minimum sqrt price if we are swapping asset0 for asset1
-	if sqrtPrice.GT(currentSqrtPrice) || sqrtPrice.LT(types.MinSqrtPriceBigDec) {
-		return types.SqrtPriceValidationError{SqrtPriceLimit: sqrtPrice, LowerBound: types.MinSqrtPriceBigDec, UpperBound: currentSqrtPrice}
+	if sqrtPrice.GT(currentSqrtPrice) || sqrtPrice.LT(types.MinSqrtPriceV2) {
+		return types.SqrtPriceValidationError{SqrtPriceLimit: sqrtPrice, LowerBound: types.MinSqrtPriceV2, UpperBound: currentSqrtPrice}
 	}
 	return nil
 }

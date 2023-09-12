@@ -106,7 +106,7 @@ func New(zeroForOne bool, sqrtPriceLimit osmomath.BigDec, storeKey sdk.StoreKey,
 // If one in for zero out, the price is increasing. Therefore, max spot price is the limit.
 func GetPriceLimit(zeroForOne bool) osmomath.BigDec {
 	if zeroForOne {
-		return types.MinSpotPriceBigDec
+		return types.MinSpotPriceV2
 	}
 	return types.MaxSpotPriceBigDec
 }
@@ -123,9 +123,9 @@ func GetPriceLimit(zeroForOne bool) osmomath.BigDec {
 func GetSqrtPriceLimit(priceLimit osmomath.BigDec, zeroForOne bool) (osmomath.BigDec, error) {
 	if priceLimit.IsZero() {
 		if zeroForOne {
-			return types.MinSqrtPriceBigDec, nil
+			return types.MinSqrtPriceV2, nil
 		}
-		return osmomath.BigDecFromDec(types.MaxSqrtPrice), nil
+		return types.MaxSqrtPriceBigDec, nil
 	}
 
 	if priceLimit.LT(types.MinSpotPriceV2) || priceLimit.GT(types.MaxSpotPriceBigDec) {

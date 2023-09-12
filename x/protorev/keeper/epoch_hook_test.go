@@ -161,7 +161,7 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 			},
 			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochTwo": {
-					"uosmo": {Liquidity: osmomath.Int(osmomath.NewUintFromString("999999000000000001000000000000000000")), PoolId: 50},
+					"uosmo": {Liquidity: osmomath.Int(osmomath.NewUintFromString("999999999999999001000000000000000000")), PoolId: 50},
 				},
 			},
 		},
@@ -176,7 +176,19 @@ func (s *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 
 			err := s.App.ProtoRevKeeper.UpdateHighestLiquidityPools(s.Ctx, tc.inputBaseDenomPools)
 			s.Require().NoError(err)
-			s.Require().Equal(tc.inputBaseDenomPools, tc.expectedBaseDenomPools)
+
+			// Iterate over all expected epochs and all expected pools and compare them individually with the actual.
+			for epochKey, epoch := range tc.expectedBaseDenomPools {
+				actualEpoch, ok := tc.inputBaseDenomPools[epochKey]
+				s.Require().True(ok)
+				for poolKey, pool := range epoch {
+					actualPool, ok := actualEpoch[poolKey]
+					s.Require().True(ok)
+
+					s.Require().Equal(pool.PoolId, actualPool.PoolId)
+					s.Require().Equal(pool.Liquidity.String(), actualPool.Liquidity.String())
+				}
+			}
 		})
 	}
 }

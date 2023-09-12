@@ -257,7 +257,7 @@ func (suite *StrategyTestSuite) TestGetPriceLimit() {
 	}{
 		"zero for one -> min": {
 			zeroForOne: true,
-			expected:   types.MinSpotPriceBigDec,
+			expected:   types.MinSpotPriceV2,
 		},
 		"one for zero -> max": {
 			zeroForOne: false,
@@ -294,8 +294,8 @@ func (suite *StrategyTestSuite) TestGetSqrtPriceLimit() {
 	}{
 		"zero for one -> min": {
 			zeroForOne: true,
-			priceLimit: types.MinSpotPriceBigDec,
-			expected:   types.MinSqrtPriceBigDec,
+			priceLimit: types.MinSpotPriceV2,
+			expected:   types.MinSqrtPriceV2,
 		},
 		"one for zero -> max": {
 			zeroForOne: false,
@@ -305,7 +305,7 @@ func (suite *StrategyTestSuite) TestGetSqrtPriceLimit() {
 		"zero and zero for one -> min": {
 			zeroForOne: true,
 			priceLimit: zeroBigDec,
-			expected:   types.MinSqrtPriceBigDec,
+			expected:   types.MinSqrtPriceV2,
 		},
 		"zero and one for zero -> max": {
 			zeroForOne: false,
