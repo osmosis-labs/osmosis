@@ -8,13 +8,13 @@ import "github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 func (a *AccountAuthenticator) AsAuthenticator(
 	am *authenticator.AuthenticatorManager,
 ) authenticator.Authenticator {
-	for _, authenticator := range am.GetRegisteredAuthenticators() {
-		if authenticator.Type() == a.Type {
-			authenticator, err := authenticator.Initialize(a.Data)
+	for _, authenticatorCode := range am.GetRegisteredAuthenticators() {
+		if authenticatorCode.Type() == a.Type {
+			instance, err := authenticatorCode.Initialize(a.Data)
 			if err != nil {
 				return nil // ToDo: We should probably handle errors here
 			}
-			return authenticator
+			return instance
 		}
 	}
 	return nil

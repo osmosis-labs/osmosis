@@ -2,7 +2,6 @@ package authenticator_test
 
 import (
 	"fmt"
-
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"testing"
@@ -295,7 +294,7 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 	}
 }
 
-// This is an experiment to determine how the fees are being taken even if the tx fails
+// This is an experiment to determine how internal authenticator state is managed
 func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
 	successSendMsg := &banktypes.MsgSend{
 		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
@@ -321,12 +320,45 @@ func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
 	s.Require().Error(err, "Succeeded sending tx that should fail")
 
 	// Incremented by one. Only on the ante.
-	s.Require().Equal(stateful.GetValue(s.chainA.GetContext()), 1)
+	s.Require().Equal(1, stateful.GetValue(s.chainA.GetContext()))
 
 	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], successSendMsg)
 	fmt.Println("err: ", err)
 	s.Require().NoError(err, "Failed to send bank tx with enough funds")
 
 	// Incremented by 2. Ante and Post
-	s.Require().Equal(stateful.GetValue(s.chainA.GetContext()), 3)
+	s.Require().Equal(3, stateful.GetValue(s.chainA.GetContext()))
+}
+
+// This is an experiment to determine how to deal with some authenticators succeeding and others failing
+func (s *AuthenticatorSuite) TestAuthenticatorMultiMsgExperiment() {
+	successSendMsg := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
+	}
+
+	storeKey := s.app.GetKVStoreKey()[authenticatortypes.StoreKey]
+	maxAmount := MaxAmountAuthenticator{KvStoreKey: storeKey}
+	stateful := StatefulAuthenticator{KvStoreKey: storeKey}
+
+	s.app.AuthenticatorManager.RegisterAuthenticator(maxAmount)
+	s.app.AuthenticatorManager.RegisterAuthenticator(stateful)
+
+	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "MaxAmountAuthenticator", []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+	//err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "Stateful", []byte{})
+	//s.Require().NoError(err, "Failed to add authenticator")
+	// check account balances
+
+	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], successSendMsg, successSendMsg)
+	fmt.Println("err: ", err)
+	s.Require().NoError(err)
+	s.Require().Equal(int64(2_000), maxAmount.GetAmount(s.chainA.GetContext()).Int64())
+
+	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], successSendMsg, successSendMsg)
+	fmt.Println("err: ", err)
+	s.Require().Error(err)
+	s.Require().Equal(int64(2_000), maxAmount.GetAmount(s.chainA.GetContext()).Int64())
+
 }
