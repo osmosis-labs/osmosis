@@ -85,7 +85,7 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 	// If the computed sqrtPriceNext is 1 BigDec ULP away from the sqrtPriceTarget AND
 	// amount zero in needed to reach target is 1 unit greater than the amount zero remaining after spread rewards,
 	// we deems this as a rounding error and make sqrtPriceNext equal to sqrtPriceTarget
-	// while consuming all amoung in actually remaining.
+	// while consuming all among in actually remaining.
 	//
 	// Without this change, we reach an infinite loop swap condition where we try to swap until the target but fail to consume
 	// any amount in to advance the swap by only one ULP.
