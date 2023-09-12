@@ -26,6 +26,10 @@ type zeroForOneStrategy struct {
 
 var _ SwapStrategy = (*zeroForOneStrategy)(nil)
 
+var (
+	smallestBigDec = osmomath.SmallestBigDec()
+)
+
 func (s zeroForOneStrategy) ZeroForOne() bool { return true }
 
 // GetSqrtTargetPrice returns the target square root price given the next tick square root price.
@@ -75,6 +79,21 @@ func (s zeroForOneStrategy) ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, 
 	} else {
 		// Otherwise, compute the next sqrt price based on the amount remaining after spread reward.
 		sqrtPriceNext = math.GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidityBigDec, amountZeroInRemainingLessSpreadReward)
+	}
+
+	// This edge case deals with an edge case stemming from rounding.
+	// If the computed sqrtPriceNext is 1 BigDec ULP away from the sqrtPriceTarget AND
+	// amount zero in needed to reach target is 1 unit greater than the amount zero remaining after spread rewards,
+	// we deems this as a rounding error and make sqrtPriceNext equal to sqrtPriceTarget
+	// while consuming all amoung in actually remaining.
+	//
+	// Without this change, we reach an infinite loop swap condition where we try to swap until the target but fail to consume
+	// any amount in to advance the swap by only one ULP.
+	//
+	// Changing the rounding behavior causes issues in other parts of the system where we end up overconsuming the final amount in.
+	if sqrtPriceNext.Sub(sqrtPriceTarget).Equal(smallestBigDec) && amountZeroIn.Sub(amountZeroInRemainingLessSpreadReward).Equal(oneBigDec) {
+		sqrtPriceNext = sqrtPriceTarget
+		amountZeroIn = amountZeroInRemainingLessSpreadReward
 	}
 
 	hasReachedTarget := sqrtPriceTarget.Equal(sqrtPriceNext)

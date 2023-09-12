@@ -61,7 +61,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 	// sqrtPriceCurrent, sqrtPriceTarget, liquidity are all set to defaults defined above.
 	tests := map[string]struct {
 		sqrtPriceCurrent osmomath.BigDec
-		sqrtPriceTarget  osmomath.Dec
+		sqrtPriceTarget  osmomath.BigDec
 		liquidity        osmomath.Dec
 
 		amountZeroInRemaining osmomath.Dec
@@ -74,7 +74,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 	}{
 		"1: no spread reward - reach target": {
 			sqrtPriceCurrent: sqrtPriceCurrent,
-			sqrtPriceTarget:  sqrtPriceTarget,
+			sqrtPriceTarget:  osmomath.BigDecFromDec(sqrtPriceTarget),
 			liquidity:        defaultLiquidity,
 
 			// add 100 more
@@ -90,7 +90,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		},
 		"2: no spread reward - do not reach target": {
 			sqrtPriceCurrent: sqrtPriceCurrent,
-			sqrtPriceTarget:  sqrtPriceTarget,
+			sqrtPriceTarget:  osmomath.BigDecFromDec(sqrtPriceTarget),
 			liquidity:        defaultLiquidity,
 
 			amountZeroInRemaining: defaultAmountZero.Sub(osmomath.NewDec(100)),
@@ -104,7 +104,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		},
 		"3: 3% spread reward - reach target": {
 			sqrtPriceCurrent: sqrtPriceCurrent,
-			sqrtPriceTarget:  sqrtPriceTarget,
+			sqrtPriceTarget:  osmomath.BigDecFromDec(sqrtPriceTarget),
 			liquidity:        defaultLiquidity,
 
 			// add 100 more
@@ -120,7 +120,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		},
 		"4: 3% spread reward - do not reach target": {
 			sqrtPriceCurrent: sqrtPriceCurrent,
-			sqrtPriceTarget:  sqrtPriceTarget,
+			sqrtPriceTarget:  osmomath.BigDecFromDec(sqrtPriceTarget),
 			liquidity:        defaultLiquidity,
 
 			amountZeroInRemaining: defaultAmountZero.Sub(osmomath.NewDec(100)).Quo(one.Sub(defaultSpreadReward)),
@@ -138,7 +138,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		"5: sub osmomath.Dec ULP precision movement. Supported by osmomath.BigDec ULP": {
 			// Note the numbers are hand-picked to reproduce this specific case.
 			sqrtPriceCurrent: osmomath.MustNewBigDecFromStr("0.000001000049998751"),
-			sqrtPriceTarget:  osmomath.MustNewDecFromStr("0.000001000049998750"),
+			sqrtPriceTarget:  osmomath.MustNewBigDecFromStr("0.000001000049998750"),
 			liquidity:        osmomath.MustNewDecFromStr("100002498062401598791.937822606808718081"),
 
 			amountZeroInRemaining: osmomath.NewDec(99),
@@ -159,7 +159,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		"6: sub osmomath.BigDec ULP precision movement. Nothing charged for amountIn due to precision loss. No amounts consumed": {
 			// Note the numbers are hand-picked to reproduce this specific case.
 			sqrtPriceCurrent: osmomath.MustNewBigDecFromStr("0.000001000049998751"),
-			sqrtPriceTarget:  osmomath.MustNewDecFromStr("0.000001000049998750"),
+			sqrtPriceTarget:  osmomath.MustNewBigDecFromStr("0.000001000049998750"),
 			liquidity:        osmomath.MustNewDecFromStr("100002498062401598791.937822606808718081"),
 
 			amountZeroInRemaining: osmomath.SmallestDec(),
@@ -176,7 +176,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 		"7: precisely osmomath.BigDec ULP precision movement. Amounts in and out are consumed.": {
 			// Note the numbers are hand-picked to reproduce this specific case.
 			sqrtPriceCurrent: osmomath.MustNewBigDecFromStr("0.000001000049998751"),
-			sqrtPriceTarget:  osmomath.MustNewDecFromStr("0.000001000049998750"),
+			sqrtPriceTarget:  osmomath.MustNewBigDecFromStr("0.000001000049998750"),
 			liquidity:        osmomath.MustNewDecFromStr("100002498062401598791.937822606808718081"),
 
 			amountZeroInRemaining: osmomath.SmallestDec().MulInt64(100000000000000),
@@ -195,12 +195,36 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_ZeroForOne() {
 			expectedAmountOneOut:            osmomath.SmallestDec().MulInt64(100),
 			expectedSpreadRewardChargeTotal: osmomath.ZeroDec(),
 		},
+		"8 one ULP off from reaching target and one token zero in away (from fuzz seed 1694529692)": {
+			sqrtPriceCurrent:      types.MinSqrtPriceBigDec,
+			sqrtPriceTarget:       types.MinSqrtPriceV2,
+			liquidity:             osmomath.MustNewDecFromStr("480519227415939839.324992153049511386"),
+			amountZeroInRemaining: osmomath.MustNewDecFromStr("480519226935420611909052313724519.000000000000000000"),
+			spreadFactor:          osmomath.ZeroDec(),
+
+			expectedSqrtPriceNext:           types.MinSqrtPriceV2,
+			amountZeroInConsumed:            osmomath.MustNewDecFromStr("480519226935420611909052313724519.000000000000000000"),
+			expectedAmountOneOut:            osmomath.MustNewDecFromStr("480519226935.420611909052313724"),
+			expectedSpreadRewardChargeTotal: osmomath.ZeroDec(),
+		},
+		"9 one ULP off from reaching target and one token zero in away (from fuzz seed 1694529692)": {
+			sqrtPriceCurrent:      types.MinSqrtPriceV2.Add(osmomath.SmallestBigDec()),
+			sqrtPriceTarget:       types.MinSqrtPriceV2,
+			liquidity:             osmomath.MustNewDecFromStr("480519227415939839.324992153049511386"),
+			amountZeroInRemaining: osmomath.MustNewDecFromStr("480519227415.000000000000000000"),
+			spreadFactor:          osmomath.ZeroDec(),
+
+			expectedSqrtPriceNext:           types.MinSqrtPriceV2,
+			amountZeroInConsumed:            osmomath.MustNewDecFromStr("480519227415.000000000000000000"),
+			expectedAmountOneOut:            osmomath.ZeroDec(),
+			expectedSpreadRewardChargeTotal: osmomath.ZeroDec(),
+		},
 	}
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			strategy := suite.setupNewZeroForOneSwapStrategy(types.MaxSqrtPrice, tc.spreadFactor)
-			sqrtPriceNext, amountZeroIn, amountOneOut, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketOutGivenIn(tc.sqrtPriceCurrent, osmomath.BigDecFromDec(tc.sqrtPriceTarget), tc.liquidity, tc.amountZeroInRemaining)
+			sqrtPriceNext, amountZeroIn, amountOneOut, spreadRewardChargeTotal := strategy.ComputeSwapWithinBucketOutGivenIn(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountZeroInRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.expectedAmountOneOut, amountOneOut)
