@@ -36,6 +36,7 @@ type BigIntDecorator interface {
 }
 
 // Precision returns a precision of decimal's underlying implementation
+// Panics if decimal's underlying type is not one of BigDec, Dec, Int or Uint
 func Precision(decimal interface{}) int64 {
 	switch any(decimal).(type) {
 	case osmomath.BigDec:
