@@ -565,7 +565,9 @@ func (d BigDec) Dec() Dec {
 
 // DecWithPrecision converts BigDec to Dec with desired precision
 // Example:
-// BigDec:
+// BigDec: 1.010100000000153000000000000000000000
+// precision: 4
+// Output Dec: 1.010100000000000000
 func (d BigDec) DecWithPrecision(precision int64) Dec {
 	var precisionFactor *big.Int
 	if precision > PrecisionDec {
