@@ -82,3 +82,21 @@ func BenchmarkSqrtPow(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkSlowPowCases(b *testing.B) {
+	tests := []struct {
+		base Dec
+		exp  Dec
+	}{
+		{
+			base: MustNewDecFromStr("1.99999999999999"),
+			exp:  MustNewDecFromStr("0.1"),
+		},
+	}
+
+	for i := 0; i < b.N; i++ {
+		for _, test := range tests {
+			Pow(test.base, test.exp)
+		}
+	}
+}
