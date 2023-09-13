@@ -1602,12 +1602,14 @@ func (s *decimalTestSuite) TestDecWithPrecision_Mutative() {
 		// test cases with custom precision:
 		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000"), 12, false},
 		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000"), 12, false},
-		// // specified precision is the same as the initial precision: 12.3453123123 -> 12.3453123123
+		// specified precision is the same as the initial precision: 12.3453123123 -> 12.3453123123
 		{osmomath.NewBigDecWithPrec(123453123123, 10), sdk.MustNewDecFromStr("12.3453123123"), 10, false},
-		// // cut precision to 5 decimals: 3212.4623423462346 - 3212.46234
+		// cut precision to 5 decimals: 3212.4623423462346 - 3212.46234
 		{osmomath.NewBigDecWithPrec(32124623423462346, 13), sdk.MustNewDecFromStr("3212.46234"), 5, false},
 		// no decimal point: 18012004 -> 18012004
 		{osmomath.NewBigDecWithPrec(18012004, 0), sdk.MustNewDecFromStr("18012004"), 13, false},
+		// BigDec has precision bigger than Dec's max precision
+		{osmomath.MustNewBigDecFromStr("1.1234000000000000000000000001234"), sdk.MustNewDecFromStr("1.1234"), 4, false},
 		// if we try to convert to osmomath.Dec while specifying bigger precision than sdk.Dec has, panics
 		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), osmomath.DecPrecision + 2, true},
 	}
