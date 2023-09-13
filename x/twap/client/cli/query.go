@@ -141,6 +141,11 @@ Example:
 					return err
 				}
 
+				clientCtx, err = getClientQueryContextFromHeight(cmd, height)
+				if err != nil {
+					return err
+				}
+
 				queryClient := queryproto.NewQueryClient(clientCtx)
 
 				res, err := queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
