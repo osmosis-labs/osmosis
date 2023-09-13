@@ -30,18 +30,105 @@ func TestDecimalTestSuite(t *testing.T) {
 	suite.Run(t, new(decimalTestSuite))
 }
 
+// BigIntDecorator is implemented by osmomath's numerical values, as Dec, BigDec, Int, Uint
+type BigIntDecorator interface {
+	BigInt() *big.Int
+}
+
+// Precision returns a precision of decimal's underlying implementation
+func Precision(decimal interface{}) int64 {
+	switch any(decimal).(type) {
+	case osmomath.BigDec:
+		return osmomath.PrecisionBigDec
+	case osmomath.Dec:
+		return osmomath.PrecisionDec
+	case osmomath.Int, osmomath.Uint:
+		return 0
+	default:
+		panic(fmt.Sprintf("%T type is not a decimal", decimal))
+	}
+}
+
+// mutResultToAssert is a struct with numerical values scaled to the same precision (0)
+type mutResultToAssert struct {
+	expectedResult        big.Int
+	startValue            big.Int
+	mutativeResult        big.Int
+	nonMutativeResult     big.Int
+	mutativeStartValue    big.Int
+	nonMutativeStartValue big.Int
+}
+
 // assertMutResult given expected value after applying a math operation, a start value,
 // mutative and non mutative results with start values, asserts that mutation are only applied
 // to the mutative versions. Also, asserts that both results match the expected value.
-func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue osmomath.BigDec) {
+func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue interface{}) {
+	r := scale(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue)
+
 	// assert both results are as expected.
-	s.Require().Equal(expectedResult, mutativeResult)
-	s.Require().Equal(expectedResult, nonMutativeResult)
+	s.Require().Equal(r.expectedResult, r.mutativeResult)
+	s.Require().Equal(r.expectedResult, r.nonMutativeResult)
 
 	// assert that mutative method mutated the receiver
-	s.Require().Equal(mutativeStartValue, expectedResult)
+	s.Require().Equal(r.mutativeStartValue, r.expectedResult)
 	// assert that non-mutative method did not mutate the receiver
-	s.Require().Equal(nonMutativeStartValue, startValue)
+	s.Require().Equal(r.nonMutativeStartValue, r.startValue)
+}
+
+// scale scales all assertion values to the same big.Int type
+//
+// BigDec, Dec, Int, etc, are just wrappers around big.Int values, some of which are multiplied
+// by some constant factor and are being treated as if they are decimal numbers.
+// Because of this multiplication, it is not possible to directly compare different osmomath numericals (Dec with Int, BigDec with Dec, etc),
+// but if we chop the precision of all numericals, we will be able to compare them.
+// scale() does exactly that.
+//
+// Example:
+//
+// Dec{big.Int{1000000000000000000}} v Int{big.Int{1}}         [CONTRACT: treat Int and Uint as 0-precision numericals]
+//
+// Dec internally does not hold decimal values, it holds big.Int scaled with 18 precision numbers
+// To compare the two above, we need to "scale" them to a common precision.
+// To do that, we need to divide underlying big.Int of Dec by 10^PrecisionDec and then compare it with Int's underlying big.Int
+func scale(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue interface{}) mutResultToAssert {
+	// scale expectedResult
+	expectedResultT := expectedResult.(BigIntDecorator)
+	expectedResultScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(expectedResult)), nil)
+	expectedResultBig := new(big.Int).Quo(expectedResultT.BigInt(), expectedResultScaler)
+
+	// scale startValue
+	startValueT := startValue.(BigIntDecorator)
+	startValueScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(startValue)), nil)
+	startValueBig := new(big.Int).Quo(startValueT.BigInt(), startValueScaler)
+
+	// scale mutativeResult
+	mutativeResultT := mutativeResult.(BigIntDecorator)
+	mutativeResultScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(mutativeResult)), nil)
+	mutativeResultBig := new(big.Int).Quo(mutativeResultT.BigInt(), mutativeResultScaler)
+
+	// scale nonMutativeResult
+	nonMutativeResultT := nonMutativeResult.(BigIntDecorator)
+	nonMutativeResultScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(nonMutativeResult)), nil)
+	nonMutativeResultBig := new(big.Int).Quo(nonMutativeResultT.BigInt(), nonMutativeResultScaler)
+
+	// scale mutativeStartValue
+	mutativeStartValueT := mutativeStartValue.(BigIntDecorator)
+	mutativeStartValueScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(mutativeStartValue)), nil)
+	mutativeStartValueBig := new(big.Int).Quo(mutativeStartValueT.BigInt(), mutativeStartValueScaler)
+
+	// scale nonMutativeStartValue
+	nonMutativeStartValueT := nonMutativeStartValue.(BigIntDecorator)
+	nonMutativeStartValueScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(nonMutativeStartValue)), nil)
+	nonMutativeStartValueBig := new(big.Int).Quo(nonMutativeStartValueT.BigInt(), nonMutativeStartValueScaler)
+
+	return mutResultToAssert{
+		*expectedResultBig,
+		*startValueBig,
+		*mutativeResultBig,
+		*nonMutativeResultBig,
+		*mutativeStartValueBig,
+		*nonMutativeStartValueBig,
+	}
 }
 
 func (s *decimalTestSuite) TestAddMut() {
@@ -1503,28 +1590,21 @@ func (s *decimalTestSuite) TestPower() {
 	}
 }
 
-func (s *decimalTestSuite) TestDec_WithPrecision() {
+func (s *decimalTestSuite) TestDecWithPrecision_Mutative() {
 	tests := []struct {
 		d         osmomath.BigDec
 		want      osmomath.Dec
 		precision uint64
 		expPanic  bool
 	}{
-		// test cases for basic SDKDec() conversion
-		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000000000"), osmomath.DecPrecision, false},
-		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000000000"), osmomath.DecPrecision, false},
-		{osmomath.NewBigDec(10), sdk.MustNewDecFromStr("10.000000000000000000"), osmomath.DecPrecision, false},
-		{osmomath.NewBigDec(12340), sdk.MustNewDecFromStr("12340.000000000000000000"), osmomath.DecPrecision, false},
-		{osmomath.NewBigDecWithPrec(12340, 4), sdk.MustNewDecFromStr("1.234000000000000000"), osmomath.DecPrecision, false},
-		{osmomath.NewBigDecWithPrec(12340, 5), sdk.MustNewDecFromStr("0.123400000000000000"), osmomath.DecPrecision, false},
-		{osmomath.NewBigDecWithPrec(12340, 8), sdk.MustNewDecFromStr("0.000123400000000000"), osmomath.DecPrecision, false},
-		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), osmomath.DecPrecision, false},
+		// basic Dec conversion, since precision is osmomath.PrecisionDec
+		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), osmomath.PrecisionDec, false},
 		// test cases with custom precision:
 		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000"), 12, false},
 		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000"), 12, false},
-		// specified precision is the same as the initial precision: 12.3453123123 -> 12.3453123123
+		// // specified precision is the same as the initial precision: 12.3453123123 -> 12.3453123123
 		{osmomath.NewBigDecWithPrec(123453123123, 10), sdk.MustNewDecFromStr("12.3453123123"), 10, false},
-		// cut precision to 5 decimals: 3212.4623423462346 - 3212.46234
+		// // cut precision to 5 decimals: 3212.4623423462346 - 3212.46234
 		{osmomath.NewBigDecWithPrec(32124623423462346, 13), sdk.MustNewDecFromStr("3212.46234"), 5, false},
 		// no decimal point: 18012004 -> 18012004
 		{osmomath.NewBigDecWithPrec(18012004, 0), sdk.MustNewDecFromStr("18012004"), 13, false},
@@ -1532,18 +1612,22 @@ func (s *decimalTestSuite) TestDec_WithPrecision() {
 		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), osmomath.DecPrecision + 2, true},
 	}
 
-	for tcIndex, tc := range tests {
-		name := "testcase_" + fmt.Sprint(tcIndex)
+	for id, tc := range tests {
+		name := "testcase_" + fmt.Sprint(id)
 		s.Run(name, func() {
-			osmomath.ConditionalPanic(s.T(), tc.expPanic, func() {
-				var got osmomath.Dec
-				if tc.precision == osmomath.DecPrecision {
-					got = tc.d.Dec()
-				} else {
-					got = tc.d.DecWithPrecision(tc.precision)
-				}
-				s.Require().Equal(tc.want, got, "bad Dec conversion, index: %v", tcIndex)
-			})
+			if tc.expPanic {
+				s.Require().Panics(func() {
+					tc.startValue.DecWithPrecision(tc.precision)
+				})
+			} else {
+				startMut := tc.startValue.Clone()
+				startNonMut := tc.startValue.Clone()
+
+				resultMut := startMut.DecWithPrecisionMut(tc.precision)
+				resultNonMut := startNonMut.DecWithPrecision(tc.precision)
+
+				s.assertMutResult(tc.expectedMutResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+			}
 		})
 	}
 }
