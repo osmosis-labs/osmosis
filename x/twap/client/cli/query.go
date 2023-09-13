@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 
+	cosmossdk_io_math "cosmossdk.io/math"
+
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	poolmanager "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v19/x/twap/client/queryproto"
@@ -30,7 +32,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 	cmd.AddCommand(GetQueryArithmeticCommand())
 	cmd.AddCommand(GetQueryGeometricCommand())
-
+	cmd.AddCommand(GetQueryExtraArithmeticCommand())
 	return cmd
 }
 
@@ -81,6 +83,154 @@ Example:
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// GetQueryExtraArithmeticCommand returns an arithmetic twap query command with no [start, end] range limit.
+func GetQueryExtraArithmeticCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "extra-arithmetic [poolid] [base denom] [start time] [end time]",
+		Short:   "Query extra arithmetic twap",
+		Aliases: []string{"extra-twap"},
+		Long: osmocli.FormatLongDescDirect(`Query arithmetic twap for pool. Start time must be unix time. End time can be unix time or duration.
+
+Example:
+{{.CommandPrefix}} extra-arithmetic 1 uosmo 1667088000 24h
+{{.CommandPrefix}} extra-arithmetic 1 uosmo 1667088000 1667174400
+`, types.ModuleName),
+		Args: cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// boilerplate parse fields
+			twapArgs, err := twapQueryParseArgs(args)
+			if err != nil {
+				return err
+			}
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, twapArgs.PoolId, twapArgs.BaseDenom)
+			if err != nil {
+				return err
+			}
+
+			node, err := clientCtx.GetNode()
+			if err != nil {
+				return err
+			}
+			nodeStatus, err := node.Status(context.Background())
+			if err != nil {
+				return err
+			}
+
+			latestHeight := nodeStatus.SyncInfo.LatestBlockHeight
+			diffAccum := cosmossdk_io_math.LegacyZeroDec()
+			diffTime := types.CanonicalTimeMs(twapArgs.EndTime) - types.CanonicalTimeMs(twapArgs.StartTime)
+
+			// Get twap of 2 days chunk then calculate final twap
+			for twapArgs.StartTime.Before(twapArgs.EndTime) {
+				tempStartTime := twapArgs.StartTime
+				tempEndTime := twapArgs.EndTime
+
+				if twapArgs.EndTime.Add(-time.Hour * 48).After(twapArgs.StartTime) {
+					tempStartTime = twapArgs.EndTime.Add(-time.Hour * 48)
+				}
+
+				height, err := findBlockByTime(clientCtx, tempEndTime, latestHeight)
+				if err != nil {
+					return err
+				}
+
+				queryClient := queryproto.NewQueryClient(clientCtx)
+
+				res, err := queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
+					PoolId:     twapArgs.PoolId,
+					BaseAsset:  twapArgs.BaseDenom,
+					QuoteAsset: quoteDenom,
+					StartTime:  tempStartTime,
+					EndTime:    &tempEndTime,
+				})
+				if err != nil {
+					return err
+				}
+
+				timeDelta := types.CanonicalTimeMs(tempEndTime) - types.CanonicalTimeMs(tempStartTime)
+				diffAccum = diffAccum.Add(res.ArithmeticTwap.MulInt64(timeDelta))
+				twapArgs.StartTime = twapArgs.EndTime.Add(-time.Hour * 48)
+				latestHeight = height
+			}
+
+			twap := diffAccum.QuoInt64(diffTime)
+
+			return clientCtx.PrintProto(&queryproto.ArithmeticTwapResponse{ArithmeticTwap: twap})
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// Get Client Query Context at a given height
+func getClientQueryContextFromHeight(cmd *cobra.Command, height int64) (client.Context, error) {
+	ctx := client.GetClientContextFromCmd(cmd)
+	ctx = ctx.WithHeight(height)
+	return client.ReadPersistentCommandFlags(ctx, cmd.Flags())
+}
+
+// Try to find the block containing the given timestamp
+func findBlockByTime(clientCtx client.Context, time time.Time, currentHeight int64) (int64, error) {
+	// Currently we hardcode this value
+	// TODO: Fetch block time from somewhere
+	blockTime := 5.84
+	client, _ := clientCtx.GetNode()
+
+	currentBlockResult, err := client.Block(context.Background(), &currentHeight)
+	if err != nil {
+		return -1, err
+	}
+	diffTime := currentBlockResult.Block.Time.Sub(time)
+	estimateBlock := currentHeight - int64(diffTime.Seconds()/5.84)
+	estimateBlockResult, err := client.Block(context.Background(), &estimateBlock)
+	if err != nil {
+		return -1, err
+	}
+
+	if estimateBlockResult.Block.Header.Time.Before(time) {
+		// Use blockTime to limit the search range,
+		// when estimateBlock is 5 blocks away from targetBlock,
+		// loop each block to search for the most accurate one
+		for estimateBlockResult.Block.Header.Time.Before(time) {
+			estimateBlockDelta := int64(time.Sub(estimateBlockResult.Block.Header.Time).Seconds() / blockTime)
+			if estimateBlockDelta > 5 {
+				estimateBlock += estimateBlockDelta
+			} else {
+				estimateBlock += 1
+			}
+
+			estimateBlockResult, err = client.Block(context.Background(), &estimateBlock)
+			if err != nil {
+				return -1, err
+			}
+		}
+		return estimateBlock, nil
+	}
+	if estimateBlockResult.Block.Header.Time.After(time) {
+		for estimateBlockResult.Block.Header.Time.After(time) {
+			estimateBlockDelta := int64(estimateBlockResult.Block.Header.Time.Sub(time).Seconds() / blockTime)
+			if estimateBlockDelta > 5 {
+				estimateBlock -= estimateBlockDelta
+			} else {
+				estimateBlock -= 1
+			}
+			estimateBlockResult, err = client.Block(context.Background(), &estimateBlock)
+			if err != nil {
+				return -1, err
+			}
+		}
+		return estimateBlock + 1, nil
+	}
+	return estimateBlock, nil
 }
 
 // GetQueryGeometricCommand returns a geometric twap query command.
