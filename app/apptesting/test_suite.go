@@ -55,10 +55,11 @@ type KeeperTestHelper struct {
 	// this is not always enabled, because some tests may take a painful performance hit due to CacheKv.
 	withCaching bool
 
-	App         *app.OsmosisApp
-	Ctx         sdk.Context
-	QueryHelper *baseapp.QueryServiceTestHelper
-	TestAccs    []sdk.AccAddress
+	App           *app.OsmosisApp
+	Ctx           sdk.Context
+	QueryHelper   *baseapp.QueryServiceTestHelper
+	TestAccs      []sdk.AccAddress
+	UniqueDenomId uint64
 }
 
 var (

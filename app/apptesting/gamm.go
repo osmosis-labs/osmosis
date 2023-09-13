@@ -154,8 +154,18 @@ func (s *KeeperTestHelper) PrepareImbalancedStableswapPool() uint64 {
 // PrepareBalancerPoolWithPoolParams sets up a Balancer pool with poolParams.
 // Uses default pool assets.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {
-	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
-	return s.PrepareCustomBalancerPool(DefaultPoolAssets, poolParams)
+	defaultAcctFunds := DefaultAcctFunds
+	for i, poolAsset := range DefaultPoolAssets {
+		poolAsset.Token.Denom = poolAsset.Token.Denom + "-" + sdk.NewUint(s.UniqueDenomId).String()
+		defaultAcctFunds[i].Denom = poolAsset.Token.Denom
+	}
+	s.FundAcc(s.TestAccs[0], defaultAcctFunds)
+	defaultPoolAssets := DefaultPoolAssets
+	for i := range defaultPoolAssets {
+		defaultPoolAssets[i].Token.Denom = defaultPoolAssets[i].Token.Denom + "-" + sdk.NewUint(s.UniqueDenomId).String()
+	}
+	s.UniqueDenomId++
+	return s.PrepareCustomBalancerPool(defaultPoolAssets, poolParams)
 }
 
 // PrepareCustomBalancerPool sets up a Balancer pool with an array of assets and given parameters
