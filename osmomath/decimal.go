@@ -591,7 +591,7 @@ func (d BigDec) Dec() Dec {
 	return copy.DecMut()
 }
 
-// Dec returns the osmomath.Dec representation of a BigDec and mutates the receiver.
+// Dec returns the Dec representation of a BigDec and mutates the receiver.
 // Values in any additional decimal places are truncated.
 func (d BigDec) DecMut() Dec {
 	return d.DecWithPrecisionMut(PrecisionDec)
