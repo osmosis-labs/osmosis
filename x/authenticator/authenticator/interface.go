@@ -11,9 +11,10 @@ const (
 )
 
 // AuthenticatorData represents the data needed to verify a signer address and message signature
+// TODO: make this less like a void pointer
 type AuthenticatorData interface{}
 
-// Authenticator is an interface used to represent all the authentication fucntionality needed to
+// Authenticator is an interface used to represent all the authentication functionality needed to
 // verifiy a transaction, pay fees for a transaction and consume gas for verifing a transaction
 type Authenticator interface {
 	// TODO: Rename to DefaultGas or StaticGas. Alt. pass the context and consume the gas here

@@ -23,7 +23,7 @@ func (m MockAuthenticator) Gas() uint64 {
 	return 1000
 }
 
-func (m MockAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex uint8, simulate bool) (authenticator.AuthenticatorData, error) {
+func (m MockAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (authenticator.AuthenticatorData, error) {
 	return "mock", nil
 }
 
@@ -117,7 +117,7 @@ func (m MockAuthenticatorFail) Gas() uint64 {
 	return 1000
 }
 
-func (m MockAuthenticatorFail) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex uint8, simulate bool) (authenticator.AuthenticatorData, error) {
+func (m MockAuthenticatorFail) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (authenticator.AuthenticatorData, error) {
 	return "mock-fail", nil
 }
 

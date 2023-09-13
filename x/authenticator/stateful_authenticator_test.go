@@ -2,6 +2,7 @@ package authenticator_test
 
 import (
 	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -33,7 +34,7 @@ func (s StatefulAuthenticator) Initialize(data []byte) (authenticator.Authentica
 	return s, nil
 }
 
-func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex uint8, simulate bool) (authenticator.AuthenticatorData, error) {
+func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (authenticator.AuthenticatorData, error) {
 	// TODO: We probably want the context here. Specifically a read-only cachecontext
 	return StatefulAuthenticatorData{Value: s.GetValue(ctx)}, nil
 }
@@ -95,7 +96,7 @@ func (m MaxAmountAuthenticator) Initialize(data []byte) (authenticator.Authentic
 	return m, nil
 }
 
-func (m MaxAmountAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex uint8, simulate bool) (authenticator.AuthenticatorData, error) {
+func (m MaxAmountAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (authenticator.AuthenticatorData, error) {
 	return MaxAmountAuthenticatorData{}, nil
 }
 

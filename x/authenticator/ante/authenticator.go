@@ -97,6 +97,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			}
 		}
 
+		// if authentation failed, allow reverting of state
 		if !msgAuthenticated {
 			for _, callData := range calledAuthenticators {
 				callData.authenticator.AuthenticationFailed(ctx, callData.authenticatorData, callData.msg)

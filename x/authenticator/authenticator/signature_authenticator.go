@@ -76,7 +76,7 @@ type SignatureData struct {
 func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 	ctx sdk.Context,
 	tx sdk.Tx,
-	// TODO: revisit msg index fucntionality
+	// TODO: revisit msg index functionality
 	messageIndex int8,
 	simulate bool,
 ) (AuthenticatorData, error) {
@@ -93,26 +93,29 @@ func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 		return SignatureData{}, err
 	}
 
-	msgs := sigTx.GetMsgs()
+	// We get the signers here for an invariant check
 	signers := sigTx.GetSigners()
+	msgs := sigTx.GetMsgs()
 
 	msgSigners, msgSignatures, err := GetSignersAndSignatures(
 		msgs,
 		signatures,
+		// TODO: what do we need to pass in here for the fee payer to function?
 		"",
+		// TODO: We need to clearly define why the message index is needed here.
 		int(messageIndex),
 	)
 	if err != nil {
 		return SignatureData{}, err
 	}
 
-	// NOTE: added invariant check to ensure our code is working as before
+	// NOTE: added signer invariant check to ensure our code is working as before
 	if len(signers) != len(msgSigners) {
 		return SignatureData{},
 			sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invariant check failed, old signers don't match new signers")
 	}
 
-	// NOTE: added invariant check to ensure our code is working as before
+	// NOTE: added signature invariant check to ensure our code is working as before
 	if len(signatures) != len(msgSignatures) {
 		return SignatureData{},
 			sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invariant check failed, old signatures don't match new signatures")
