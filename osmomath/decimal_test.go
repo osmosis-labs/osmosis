@@ -1508,8 +1508,6 @@ func (s *decimalTestSuite) TestDec_WithPrecision() {
 		{osmomath.NewBigDecWithPrec(32124623423462346, 13), sdk.MustNewDecFromStr("3212.46234"), 5, false},
 		// no decimal point: 18012004 -> 18012004
 		{osmomath.NewBigDecWithPrec(18012004, 0), sdk.MustNewDecFromStr("18012004"), 13, false},
-		// if we try to convert to sdk.Dec while specifying bigger precision than sdk.Dec has, converts with maximum precision possible (osmomath.PrecisionDec)
-		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), osmomath.PrecisionDec + 2, false},
 	}
 
 	for tcIndex, tc := range tests {

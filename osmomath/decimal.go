@@ -563,11 +563,11 @@ func (d BigDec) Dec() Dec {
 	return d.DecWithPrecision(PrecisionDec)
 }
 
+// DecWithPrecision converts BigDec to Dec with desired precision
 func (d BigDec) DecWithPrecision(precision int64) Dec {
 	var precisionFactor *big.Int
-	if precision >= PrecisionDec { // if provided precision is more than Dec's precision, assume conversion to native Dec (no precision lost)
-		precisionFactor = precisionFactors[PrecisionDec]
-		precision = PrecisionDec
+	if precision > PrecisionDec {
+		panic(fmt.Sprintf("maximum Dec precision is (%v), provided (%v)", PrecisionDec, precision))
 	} else {
 		precisionFactor = precisionFactors[precision]
 	}
