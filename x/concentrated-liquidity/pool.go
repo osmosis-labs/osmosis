@@ -41,6 +41,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	tickSpacing := concentratedPool.GetTickSpacing()
 	spreadFactor := concentratedPool.GetSpreadFactor(ctx)
 	poolId := concentratedPool.GetId()
+	baseAsset := concentratedPool.GetToken0()
 	quoteAsset := concentratedPool.GetToken1()
 	poolManagerParams := k.poolmanagerKeeper.GetParams(ctx)
 
@@ -54,6 +55,10 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 
 	if !validateAuthorizedQuoteDenoms(quoteAsset, poolManagerParams.AuthorizedQuoteDenoms) {
 		return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: poolManagerParams.AuthorizedQuoteDenoms}
+	}
+
+	if !validateDoubleQuoteDenomOrder(baseAsset, quoteAsset, poolManagerParams.AuthorizedQuoteDenoms) {
+		return types.DoubleQuoteDenomOrderError{ProvidedBaseDenom: baseAsset, ProvidedQuoteDenom: quoteAsset}
 	}
 
 	if err := k.createSpreadRewardAccumulator(ctx, poolId); err != nil {
@@ -337,6 +342,37 @@ func validateAuthorizedQuoteDenoms(denom1 string, authorizedQuoteDenoms []string
 		}
 	}
 	return false
+}
+
+// validateDoubleQuoteDenomOrder validates that if both denom1 and denom0 are authorized quote assets,
+// then the higher precedence asset is the quote asset, not the base asset
+// It returns a boolean indicating if denom1 comes before denom0
+//
+// Parameters:
+// - ctx: sdk.Context - The context object
+// - denom1: string - The denom1 string to be checked
+// - authorizedQuoteDenoms: []string - The list of authorized quote denoms
+//
+// Returns:
+// - bool: A boolean indicating if the denom1 is authorized or not.
+func validateDoubleQuoteDenomOrder(baseAsset string, quoteAsset string, authorizedQuoteDenoms []string) bool {
+	quoteRank := -1
+	baseRank := -1
+
+	for i, authorizedQuoteDenom := range authorizedQuoteDenoms {
+		if quoteAsset == authorizedQuoteDenom {
+			quoteRank = i
+		}
+		if baseAsset == authorizedQuoteDenom {
+			baseRank = i
+		}
+	}
+
+	if quoteRank == -1 || baseRank == -1 {
+		return true
+	}
+
+	return quoteRank < baseRank
 }
 
 // GetLinkedBalancerPoolID is a wrapper function for gammKeeper.GetLinkedBalancerPoolID in order to allow

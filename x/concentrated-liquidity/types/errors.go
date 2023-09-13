@@ -692,6 +692,15 @@ func (e UnauthorizedQuoteDenomError) Error() string {
 	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s), must be one of the following: (%s)", e.ProvidedQuoteDenom, e.AuthorizedQuoteDenoms)
 }
 
+type DoubleQuoteDenomOrderError struct {
+	ProvidedQuoteDenom string
+	ProvidedBaseDenom  string
+}
+
+func (e DoubleQuoteDenomOrderError) Error() string {
+	return fmt.Sprintf("attempted to create pool with base asset %s and quote asset %s. %s has higher quote asset priority than %s.", e.ProvidedBaseDenom, e.ProvidedQuoteDenom, e.ProvidedQuoteDenom, e.ProvidedBaseDenom)
+}
+
 type UnauthorizedSpreadFactorError struct {
 	ProvidedSpreadFactor    osmomath.Dec
 	AuthorizedSpreadFactors []osmomath.Dec
