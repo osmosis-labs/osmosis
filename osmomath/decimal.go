@@ -616,8 +616,7 @@ func (d BigDec) DecWithPrecision(precision uint64) Dec {
 	intRepresentation := new(big.Int).Quo(d.BigInt(), precisionFactor)
 
 	// Extends Dec's Int representation with amount of zeros equal to the difference between PrecisionBigDec and PrecisionDec
-	intRepresentationBigDec := new(big.Int).Mul(intRepresentation, precisionFactors[PrecisionDec])
-	*d.i = *intRepresentationBigDec
+	d.ChopPrecisionMut(precision)
 
 	// convert int representation back to SDK Dec precision
 	truncatedDec := NewDecFromBigIntWithPrec(intRepresentation, int64(precision))
