@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -96,6 +97,45 @@ func (k Keeper) setParams(ctx sdk.Context, params types.Params) {
 // ValidatePermissionlessPoolCreationEnabled returns nil if permissionless pool creation in the module is enabled.
 // Pools in gamm module have permissionless pool creation enabled, thus always return nil.
 func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error {
+	return nil
+}
+
+// ValidatePoolHasUniqueParams checks if a pool with the same denoms and spread factor already exists
+// before creating a new pool.
+func (k Keeper) ValidatePoolHasUniqueParams(ctx sdk.Context, pool poolmanagertypes.PoolI, msg poolmanagertypes.CreatePoolMsg) error {
+	providedGammPool, ok := pool.(types.CFMMPoolI)
+	if !ok {
+		return types.ErrWrongPoolType
+	}
+
+	pools, err := k.GetPools(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, pool := range pools {
+		gammPool, err := k.GetCFMMPool(ctx, pool.GetId())
+		if err != nil {
+			return err
+		}
+
+		// Check if denoms are the same
+		gammPoolAssets := gammPool.GetTotalPoolLiquidity(ctx)
+		initialLiquidity := msg.InitialLiquidity()
+
+		sameDenoms := true
+		for i, coin := range gammPoolAssets {
+			if !coin.IsEqual(initialLiquidity[i]) {
+				sameDenoms = false
+			}
+		}
+
+		if sameDenoms {
+			if gammPool.GetSpreadFactor(ctx).Equal(providedGammPool.GetSpreadFactor(ctx)) {
+				return types.DuplicatePoolError{PoolId: pool.GetId()}
+			}
+		}
+	}
 	return nil
 }
 

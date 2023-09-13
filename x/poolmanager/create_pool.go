@@ -113,6 +113,12 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 		return nil, err
 	}
 
+	swapModule := k.routes[poolType]
+	err = swapModule.ValidatePoolHasUniqueParams(ctx, pool, msg)
+	if err != nil {
+		return nil, err
+	}
+
 	// Store the pool ID to pool type mapping in state.
 	k.SetPoolRoute(ctx, poolId, poolType)
 
@@ -122,7 +128,6 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 	}
 
 	// Run the respective pool type's initialization logic.
-	swapModule := k.routes[poolType]
 	if err := swapModule.InitializePool(ctx, pool, msg.PoolCreator()); err != nil {
 		return nil, err
 	}

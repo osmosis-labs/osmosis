@@ -16,6 +16,7 @@ var (
 	ErrPositionNotFound                   = errors.New("position not found")
 	ErrZeroPositionId                     = errors.New("invalid position id, cannot be 0")
 	ErrPermissionlessPoolCreationDisabled = errors.New("permissionless pool creation is disabled for the concentrated liquidity module")
+	ErrWrongPoolType                      = errors.New("pool not of type ConcentratedPoolExtension")
 	ErrZeroLiquidity                      = errors.New("liquidity cannot be 0")
 	ErrNextTickInfoNil                    = errors.New("next tick info cannot be nil")
 	ErrPoolNil                            = errors.New("pool cannot be nil")
@@ -886,4 +887,12 @@ type ComputedSqrtPriceInequalityError struct {
 
 func (e ComputedSqrtPriceInequalityError) Error() string {
 	return fmt.Sprintf("edge case has occurred when swapping at tick boundaries, with izZeroForOne (%t), NextInitializedTickSqrtPrice (%s), computedSqrtPrice (%s). Please try again with a different swap amount", e.IsZeroForOne, e.NextInitializedTickSqrtPrice, e.ComputedSqrtPrice)
+}
+
+type DuplicatePoolError struct {
+	PoolId uint64
+}
+
+func (e DuplicatePoolError) Error() string {
+	return fmt.Sprintf("pool with same base/quote, spread factor, and tick spacing (poolID %d) already exists", e.PoolId)
 }

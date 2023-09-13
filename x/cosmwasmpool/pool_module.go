@@ -362,6 +362,43 @@ func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error
 	return nil
 }
 
+// ValidatePoolHasUniqueParams checks if a pool with the same denoms and spread factor already exists
+// before creating a new pool.
+func (k Keeper) ValidatePoolHasUniqueParams(ctx sdk.Context, pool poolmanagertypes.PoolI, msg poolmanagertypes.CreatePoolMsg) error {
+	providedCwPool, ok := pool.(types.CosmWasmExtension)
+	if !ok {
+		return types.ErrWrongPoolType
+	}
+
+	pools, err := k.GetPools(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, pool := range pools {
+		cwPool, ok := pool.(types.CosmWasmExtension)
+		if !ok {
+			return types.ErrWrongPoolType
+		}
+		cwPoolAssets := cwPool.GetTotalPoolLiquidity(ctx)
+		initialLiquidity := msg.InitialLiquidity()
+
+		sameDenoms := true
+		for i, coin := range cwPoolAssets {
+			if !coin.IsEqual(initialLiquidity[i]) {
+				sameDenoms = false
+			}
+		}
+
+		if sameDenoms {
+			if cwPool.GetSpreadFactor(ctx).Equal(providedCwPool.GetSpreadFactor(ctx)) {
+				return types.DuplicatePoolError{PoolId: pool.GetId()}
+			}
+		}
+	}
+	return nil
+}
+
 // GetTotalPoolLiquidity retrieves the total liquidity of a specific pool identified by poolId.
 //
 // Parameters:

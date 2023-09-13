@@ -95,6 +95,10 @@ type PoolModuleI interface {
 	// Otherwise, returns an error.
 	ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error
 
+	// ValidatePoolHasUniqueParams checks if a pool with the same denoms, spread factor and tick spacing (if applicable) already exists
+	// prior to creating a new pool.
+	ValidatePoolHasUniqueParams(ctx sdk.Context, pool PoolI, msg CreatePoolMsg) error
+
 	// GetTotalLiquidity returns the total liquidity of all the pools in the module.
 	GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error)
 }

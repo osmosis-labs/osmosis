@@ -11,6 +11,7 @@ var (
 	ErrEmptyPoolIds                         = errors.New("pool id list cannot be empty")
 	ErrNoneOfCodeIdAndContractCodeSpecified = errors.New("both code id and byte code are unset. Only one must be specified.")
 	ErrBothOfCodeIdAndContractCodeSpecified = errors.New("both code id and byte code are set. Only one must be specified.")
+	ErrWrongPoolType                        = errors.New("pool not of type CosmWasmExtension")
 )
 
 type InvalidPoolTypeError struct {
@@ -45,4 +46,12 @@ type NegativeExcessiveTokenInAmountError struct {
 
 func (e NegativeExcessiveTokenInAmountError) Error() string {
 	return fmt.Sprintf("excessive token in amount cannot be negative. token in max amount = %d, token in required amount = %d, token in excessive amount = %d", e.TokenInMaxAmount, e.TokenInRequiredAmount, e.TokenInExcessiveAmount)
+}
+
+type DuplicatePoolError struct {
+	PoolId uint64
+}
+
+func (e DuplicatePoolError) Error() string {
+	return fmt.Sprintf("pool with same base/quote and spread factor (poolID %d) already exists", e.PoolId)
 }

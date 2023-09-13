@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 type Keeper struct {
@@ -123,6 +124,38 @@ func (k *Keeper) SetListeners(listeners types.ConcentratedLiquidityListeners) *K
 func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error {
 	if !k.GetParams(ctx).IsPermissionlessPoolCreationEnabled {
 		return types.ErrPermissionlessPoolCreationDisabled
+	}
+	return nil
+}
+
+// ValidatePoolHasUniqueParams checks if a pool with the same denoms, spread factor and tick spacing already exists
+// before creating a new pool.
+func (k Keeper) ValidatePoolHasUniqueParams(ctx sdk.Context, pool poolmanagertypes.PoolI, msg poolmanagertypes.CreatePoolMsg) error {
+	providedClPool, ok := pool.(types.ConcentratedPoolExtension)
+	if !ok {
+		return types.ErrWrongPoolType
+	}
+
+	pools, err := k.GetPools(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, pool := range pools {
+		clPool, err := k.GetConcentratedPoolById(ctx, pool.GetId())
+		if err != nil {
+			return err
+		}
+		// Check if base/quote is the same
+		if clPool.GetToken0() == providedClPool.GetToken0() && clPool.GetToken1() == providedClPool.GetToken1() {
+			// Check if spread factor is the same
+			if clPool.GetSpreadFactor(ctx).Equal(providedClPool.GetSpreadFactor(ctx)) {
+				// Check if tick spacing is the same
+				if clPool.GetTickSpacing() == providedClPool.GetTickSpacing() {
+					return types.DuplicatePoolError{PoolId: pool.GetId()}
+				}
+			}
+		}
 	}
 	return nil
 }

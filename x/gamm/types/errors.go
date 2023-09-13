@@ -66,6 +66,14 @@ func (e MustHaveTwoDenomsError) Error() string {
 	return fmt.Sprintf("can only have 2 denoms in CL pool, got (%d)", e.NumDenoms)
 }
 
+type DuplicatePoolError struct {
+	PoolId uint64
+}
+
+func (e DuplicatePoolError) Error() string {
+	return fmt.Sprintf("pool with same base/quote and spread factor (poolID %d) already exists", e.PoolId)
+}
+
 // x/gamm module sentinel errors.
 var (
 	ErrPoolNotFound        = errorsmod.Register(ModuleName, 1, "pool not found")
@@ -108,4 +116,5 @@ var (
 	ErrHitMinScaledAssets         = errorsmod.Register(ModuleName, 66, "post-scaled pool assets can not be less than 1")
 	ErrNoGaugeToRedirect          = errorsmod.Register(ModuleName, 67, "could not find gauge to redirect")
 	ErrMustHaveTwoDenoms          = errorsmod.Register(ModuleName, 68, "can only have 2 denoms in CL pool")
+	ErrWrongPoolType              = errorsmod.Register(ModuleName, 69, "pool not of type CFMMPoolI")
 )
