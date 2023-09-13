@@ -585,13 +585,19 @@ func (d BigDec) MustFloat64() float64 {
 	}
 }
 
-// Dec returns the osmomath.Dec representation of a BigDec.
-// Values in any additional decimal places are truncated.
+// Dec is a non-mutative version of DecMut
 func (d BigDec) Dec() Dec {
-	return d.DecWithPrecision(DecPrecision)
+	copy := d.Clone()
+	return copy.DecMut()
 }
 
-// DecWithPrecision converts BigDec to Dec with desired precision
+// Dec returns the osmomath.Dec representation of a BigDec and mutates the receiver.
+// Values in any additional decimal places are truncated.
+func (d BigDec) DecMut() Dec {
+	return d.DecWithPrecisionMut(PrecisionDec)
+}
+
+// DecWithPrecisionMut converts BigDec to Dec with desired precision and mutates a receiver
 // Example:
 // BigDec: 1.010100000000153000000000000000000000
 // precision: 4
@@ -609,10 +615,20 @@ func (d BigDec) DecWithPrecision(precision uint64) Dec {
 	// This relies on big.Int's Quo function doing floor division
 	intRepresentation := new(big.Int).Quo(d.BigInt(), precisionFactor)
 
+	// Extends Dec's Int representation with amount of zeros equal to the difference between PrecisionBigDec and PrecisionDec
+	intRepresentationBigDec := new(big.Int).Mul(intRepresentation, precisionFactors[PrecisionDec])
+	*d.i = *intRepresentationBigDec
+
 	// convert int representation back to SDK Dec precision
 	truncatedDec := NewDecFromBigIntWithPrec(intRepresentation, int64(precision))
 
 	return truncatedDec
+}
+
+// DecWithPrecision is a non-mutative version of DecWithPrecisionMut
+func (d BigDec) DecWithPrecision(precision int64) Dec {
+	copy := d.Clone()
+	return copy.DecWithPrecisionMut(precision)
 }
 
 // ChopPrecisionMut truncates all decimals after precision numbers after decimal point. Mutative
