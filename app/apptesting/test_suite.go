@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -55,11 +56,11 @@ type KeeperTestHelper struct {
 	// this is not always enabled, because some tests may take a painful performance hit due to CacheKv.
 	withCaching bool
 
-	App           *app.OsmosisApp
-	Ctx           sdk.Context
-	QueryHelper   *baseapp.QueryServiceTestHelper
-	TestAccs      []sdk.AccAddress
-	UniqueDenomId uint64
+	App         *app.OsmosisApp
+	Ctx         sdk.Context
+	QueryHelper *baseapp.QueryServiceTestHelper
+	TestAccs    []sdk.AccAddress
+	Appender    Appender
 }
 
 var (
@@ -76,6 +77,7 @@ func init() {
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
 // preserves the caching enabled/disabled state.
 func (s *KeeperTestHelper) Setup() {
+	NewAppender()
 	dir, err := os.MkdirTemp("", "osmosisd-test-home")
 	if err != nil {
 		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
@@ -545,4 +547,42 @@ func GenerateTestAddrs() (string, string) {
 	validAddr := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid").String()
 	return validAddr, invalidAddr
+}
+
+type Appender struct {
+	current []byte
+	mu      sync.Mutex
+}
+
+func NewAppender() *Appender {
+	return &Appender{
+		current: []byte{'a' - 1}, // start one less than 'a' so that the first increment makes it 'a'
+	}
+}
+
+func (a *Appender) AppendNext(s string) string {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	a.increment()
+
+	return s + string(a.current)
+}
+
+// increment will update the current slice to the next letter sequence
+func (a *Appender) increment() {
+	for i := len(a.current) - 1; i >= 0; i-- {
+		if a.current[i] < 'z' {
+			a.current[i]++
+			break
+		}
+
+		// if it's 'z', then set it to 'a' and check the previous letter
+		a.current[i] = 'a'
+
+		// if it's the first letter, then we need to prepend another 'a'
+		if i == 0 {
+			a.current = append([]byte{'a'}, a.current...)
+		}
+	}
 }

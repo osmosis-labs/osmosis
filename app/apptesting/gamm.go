@@ -156,15 +156,14 @@ func (s *KeeperTestHelper) PrepareImbalancedStableswapPool() uint64 {
 func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {
 	defaultAcctFunds := DefaultAcctFunds
 	for i, poolAsset := range DefaultPoolAssets {
-		poolAsset.Token.Denom = poolAsset.Token.Denom + "-" + sdk.NewUint(s.UniqueDenomId).String()
+		poolAsset.Token.Denom = s.Appender.AppendNext(poolAsset.Token.Denom)
 		defaultAcctFunds[i].Denom = poolAsset.Token.Denom
 	}
 	s.FundAcc(s.TestAccs[0], defaultAcctFunds)
 	defaultPoolAssets := DefaultPoolAssets
 	for i := range defaultPoolAssets {
-		defaultPoolAssets[i].Token.Denom = defaultPoolAssets[i].Token.Denom + "-" + sdk.NewUint(s.UniqueDenomId).String()
+		defaultPoolAssets[i].Token.Denom = s.Appender.AppendNext(defaultPoolAssets[i].Token.Denom)
 	}
-	s.UniqueDenomId++
 	return s.PrepareCustomBalancerPool(defaultPoolAssets, poolParams)
 }
 
