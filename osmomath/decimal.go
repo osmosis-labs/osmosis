@@ -247,14 +247,14 @@ func (d BigDec) Add(d2 BigDec) BigDec {
 }
 
 // mutative addition
-func (d BigDec) AddMut(d2 BigDec) BigDec {
+func (d *BigDec) AddMut(d2 BigDec) BigDec {
 	d.i.Add(d.i, d2.i)
 
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
 
-	return d
+	return *d
 }
 
 // subtraction
@@ -285,7 +285,7 @@ func (d BigDec) Mul(d2 BigDec) BigDec {
 
 // Mut performs non-mutative multiplication.
 // The receiver is not modifier but the result is.
-func (d BigDec) MulMut(d2 BigDec) BigDec {
+func (d *BigDec) MulMut(d2 BigDec) BigDec {
 	d.i.Mul(d.i, d2.i)
 	d.i = chopPrecisionAndRound(d.i)
 
@@ -345,7 +345,7 @@ func (d BigDec) Quo(d2 BigDec) BigDec {
 }
 
 // mutative quotient
-func (d BigDec) QuoMut(d2 BigDec) BigDec {
+func (d *BigDec) QuoMut(d2 BigDec) BigDec {
 	// multiply precision twice
 	d.i.Mul(d.i, precisionReuse)
 	d.i.Mul(d.i, precisionReuse)
@@ -356,7 +356,7 @@ func (d BigDec) QuoMut(d2 BigDec) BigDec {
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
-	return d
+	return *d
 }
 func (d BigDec) QuoRaw(d2 int64) BigDec {
 	// multiply precision, so we can chop it later
