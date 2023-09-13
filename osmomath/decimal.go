@@ -593,7 +593,7 @@ func (d BigDec) Dec() Dec {
 
 // Dec returns the Dec representation of a BigDec and mutates the receiver.
 // Values in any additional decimal places are truncated.
-func (d BigDec) DecMut() Dec {
+func (d *BigDec) DecMut() Dec {
 	return d.DecWithPrecisionMut(PrecisionDec)
 }
 
