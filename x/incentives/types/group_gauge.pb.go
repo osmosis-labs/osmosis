@@ -150,9 +150,10 @@ func (m *InternalGaugeRecord) GetGaugeId() uint64 {
 	return 0
 }
 
-// Gauge is an object that stores GroupGaugeId as well as internalGaugeIds. We
-// linked these two together so that we can distribute tokens from groupGauge to
-// internalGauges.
+// GroupGauge is an object that stores GroupGaugeId, a list of gauge info, and a
+// splitting policy. These are grouped into a single abstraction to allow for
+// distribution of group incentives to internal gauges according to the
+// specified splitting policy.
 type GroupGauge struct {
 	GroupGaugeId      uint64            `protobuf:"varint,1,opt,name=group_gauge_id,json=groupGaugeId,proto3" json:"group_gauge_id,omitempty"`
 	InternalGaugeInfo InternalGaugeInfo `protobuf:"bytes,2,opt,name=internal_gauge_info,json=internalGaugeInfo,proto3" json:"internal_gauge_info"`
