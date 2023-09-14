@@ -280,6 +280,10 @@ func (suite *StrategyTestSuite) TestGetPriceLimit() {
 // Above min, the dec sqrt is used.
 func (suite *StrategyTestSuite) TestGetSqrtPriceLimit() {
 	var (
+		// The ULP difference between the values is made for testing
+		// the execution flow of `GetSqrtPriceLimit`. This is unrelated
+		// to testing monotonicity of tick-to-sqrt price conversions
+		// that can be found in the rest of the test suite.
 		oneULPUnderThreshold = types.MinSpotPriceBigDec.Sub(oneULPBigDec)
 		atThreshold          = types.MinSpotPriceBigDec
 		oneULPAboveThreshold = types.MinSpotPriceBigDec.Add(oneULPBigDec)
