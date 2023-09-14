@@ -43,6 +43,8 @@ func GetSignersAndSignatures(
 	msgs []sdk.Msg,
 	suppliedSignatures []signing.SignatureV2,
 	feePayer string,
+	// we use the message index to get signers and signatures for
+	// a specific message, with all messages.
 	msgIndex int,
 ) ([]sdk.AccAddress, []signing.SignatureV2, error) {
 	// Map to associate each signer with its signature.
@@ -56,8 +58,18 @@ func GetSignersAndSignatures(
 		for _, signer := range msg.GetSigners() {
 			signerStr := signer.String()
 			if _, exists := signerToSignature[signerStr]; !exists {
+				// sanity check for runtime error: index out of range with
+				// the sigIndex can be more that the supplied signatures
+				if sigIndex >= len(suppliedSignatures) {
+					return nil, nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not enough signatures provided")
+				}
 				signerToSignature[signerStr] = suppliedSignatures[sigIndex]
 				sigIndex++
+			} else {
+				// ensure that number of signers and signatures are the same
+				// this also ensures that each message has a signer
+				// NOTE: This is the same behavior that currently exists in the node
+				return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signers")
 			}
 
 			// If dealing with a specific message, capture its signers.
@@ -86,6 +98,11 @@ func GetSignersAndSignatures(
 				return nil, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid fee payer address")
 			}
 			resultSigners = append(resultSigners, feePayerAddr)
+			// sanity check for runtime error: index out of range with
+			// the sigIndex can be more that the supplied signatures
+			if sigIndex >= len(suppliedSignatures) {
+				return nil, nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not enough signatures provided for fee payer")
+			}
 			signerToSignature[feePayer] = suppliedSignatures[sigIndex]
 		}
 		// TODO: Consider always returning the fee payer separately

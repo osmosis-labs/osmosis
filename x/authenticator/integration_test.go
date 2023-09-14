@@ -2,6 +2,7 @@ package authenticator_test
 
 import (
 	"fmt"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"testing"
