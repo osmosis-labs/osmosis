@@ -51,7 +51,7 @@ func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
 	// To repro: set up a breakpoint at the top of computeSwapOutGivenIn, and set count to 15.
 	// On the third (last) swap step for that swap, observe that the final `sqrtPriceNext` is off by one
 	// BigDec ULP, showing that this rounding bheavior was the issue.
-	r := rand.New(rand.NewSource(1694529692))
+	r := rand.New(rand.NewSource(1694694614))
 	s.individualFuzz(r, 0, 30, 10)
 
 	s.validateNoErrors(s.collectedErrors)
@@ -192,24 +192,6 @@ func (s *KeeperTestSuite) swapRandomAmount(r *rand.Rand, pool types.Concentrated
 	swapInDenom, swapOutDenom := zfoToDenoms(zfo, pool)
 	swapAmt := randomIntAmount(r)
 
-	// Need to make sure that amount in does not yield zero.
-	// At low min spot prices, such cases might lead to an infinite loop error.
-	// We don't want to skip such error as acceptable, as a result, we
-	// prevent amounts of swap in that yield zero out in general.
-	spotPrice := pool.GetCurrentSqrtPrice().PowerInteger(2)
-	if swapInDenom == pool.GetToken1() {
-		spotPrice := osmomath.OneBigDec().Quo(spotPrice)
-
-		// Failed to get an approriate amount to swap in but not fatal.
-		if spotPrice.IsZero() {
-			return false, false
-		}
-	}
-	amountOut := spotPrice.Mul(osmomath.NewBigDecFromBigInt(swapAmt.BigInt()))
-	if !amountOut.TruncateInt().IsPositive() {
-		return false, false
-	}
-
 	swapInCoin := sdk.NewCoin(swapInDenom, swapAmt)
 	return s.swap(pool, swapInCoin, swapOutDenom)
 }
@@ -295,6 +277,14 @@ func tickAmtChange(r *rand.Rand, targetAmount osmomath.Dec) osmomath.Dec {
 }
 
 func (s *KeeperTestSuite) swap(pool types.ConcentratedPoolExtension, swapInFunded sdk.Coin, swapOutDenom string) (didSwap bool, fatalErr bool) {
+	atLeastOneOut, shouldSkip := shouldSkipDueToInvalidAmountInChoice(swapInFunded.Amount, swapInFunded.Denom, pool)
+
+	if shouldSkip {
+		return false, false
+	}
+
+	swapInFunded.Amount = atLeastOneOut
+
 	// Reason for adding one int:
 	// Seed 1688658883- causes an error in swap in given out due to rounding (acceptable). This is because we use
 	// token out from "swap out given in" as an input to "in given out". "in given out" rounds by one in pool's favor
@@ -595,4 +585,35 @@ func roundTickDownSpacing(tickIndex int64, tickSpacing int64) int64 {
 
 func randomIntAmount(r *rand.Rand) osmomath.Int {
 	return osmomath.NewInt(r.Int63n(maxAmountDeposited))
+}
+
+// returns true if the swap should be skipped due to either producing 0 out at this spot price,
+// or failing to get the spot price to confirm.
+//
+// Reasonn for this: at low min spot prices, such cases might lead to an infinite loop error.
+// We don't want to skip such error as acceptable, as a result, we
+// prevent amounts of swap in that yield zero out in general.
+func shouldSkipDueToInvalidAmountInChoice(amountIn osmomath.Int, denomIn string, pool types.ConcentratedPoolExtension) (osmomath.Int, bool) {
+	spotPrice := pool.GetCurrentSqrtPrice().PowerInteger(2)
+
+	amountOutPriceInTermsOfIn := spotPrice
+	if denomIn == pool.GetToken1() {
+		amountOutPriceInTermsOfIn = osmomath.OneBigDec().Quo(spotPrice)
+
+		// Failed to get an approriate amount to swap in but not fatal.
+		if amountOutPriceInTermsOfIn.IsZero() {
+			return osmomath.Int{}, true
+		}
+	}
+	amountOut := amountOutPriceInTermsOfIn.Mul(osmomath.NewBigDecFromBigInt(amountIn.BigInt()))
+	if amountOut.IsZero() {
+		return osmomath.Int{}, true
+	}
+
+	amountInPriceInTermsOfOut := osmomath.OneBigDec().Quo(amountOutPriceInTermsOfIn).Ceil()
+
+	// Add amount in for randomness
+	atLeastOneOut := amountInPriceInTermsOfOut.DecRoundUp().TruncateInt().Add(amountIn)
+
+	return atLeastOneOut, false
 }

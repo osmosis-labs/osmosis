@@ -75,7 +75,7 @@ type SwapResult struct {
 // Note, the value is chosen arbitrarily.
 // From tests, there should be no reason for a swap to make more than 2 iterations without
 // progress. However, we leave a buffer of 1_000 to account for any unforeseen edge cases.
-const swapNoProgressLimit = 5
+const swapNoProgressLimit = 3
 
 func newSwapState(specifiedAmount osmomath.Int, p types.ConcentratedPoolExtension, strategy swapstrategy.SwapStrategy) SwapState {
 	return SwapState{
@@ -387,6 +387,8 @@ func (k Keeper) computeOutAmtGivenIn(
 		if err != nil {
 			return SwapResult{}, PoolUpdates{}, err
 		}
+
+		fmt.Println("amountSpecifiedRemaining", swapState.amountSpecifiedRemaining)
 
 		// Utilizing the bucket's liquidity and knowing the sqrt price target, we calculate how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new computedSqrtPrice after this swap
