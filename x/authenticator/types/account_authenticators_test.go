@@ -19,7 +19,7 @@ func (m MockAuthenticator) Initialize(data []byte) (authenticator.Authenticator,
 	return m, nil
 }
 
-func (m MockAuthenticator) Gas() uint64 {
+func (m MockAuthenticator) StaticGas() uint64 {
 	return 1000
 }
 
@@ -113,7 +113,7 @@ func (m MockAuthenticatorFail) Initialize(data []byte) (authenticator.Authentica
 	return m, nil
 }
 
-func (m MockAuthenticatorFail) Gas() uint64 {
+func (m MockAuthenticatorFail) StaticGas() uint64 {
 	return 1000
 }
 
