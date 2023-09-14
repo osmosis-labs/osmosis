@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	db "github.com/tendermint/tm-db"
+	db "github.com/cometbft/cometbft-db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 

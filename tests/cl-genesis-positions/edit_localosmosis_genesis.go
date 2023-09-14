@@ -12,7 +12,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	tmjson "github.com/tendermint/tendermint/libs/json"
+	tmjson "github.com/cometbft/cometbft/libs/json"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
