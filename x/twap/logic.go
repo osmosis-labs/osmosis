@@ -235,7 +235,7 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	}
 
 	// NOTE: An edge case exists here. If a pool is drained of all it's liquidity, and then the pool's
-	// spot price is set to exactly zero and one queries the GeometricTWAP, the the result will be zero.
+	// spot price is set to exactly one and the GeometricTWAP is queried, the the result will be zero.
 	// This is because the P0LastSpotPrice is one, which makes log_{2}{P_0} = 0, and thus the geometric
 	// accumulator is the same as the time of pool drain.
 
