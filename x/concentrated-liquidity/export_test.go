@@ -60,7 +60,7 @@ func (k Keeper) SwapOutAmtGivenIn(
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	spreadFactor osmomath.Dec,
-	priceLimit osmomath.Dec) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
+	priceLimit osmomath.BigDec) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
 	return k.swapOutAmtGivenIn(ctx, sender, pool, tokenIn, tokenOutDenom, spreadFactor, priceLimit)
 }
 
@@ -70,7 +70,7 @@ func (k Keeper) ComputeOutAmtGivenIn(
 	tokenInMin sdk.Coin,
 	tokenOutDenom string,
 	spreadFactor osmomath.Dec,
-	priceLimit osmomath.Dec,
+	priceLimit osmomath.BigDec,
 
 ) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
 	return k.computeOutAmtGivenIn(ctx, poolId, tokenInMin, tokenOutDenom, spreadFactor, priceLimit)
@@ -83,7 +83,7 @@ func (k Keeper) SwapInAmtGivenOut(
 	desiredTokenOut sdk.Coin,
 	tokenInDenom string,
 	spreadFactor osmomath.Dec,
-	priceLimit osmomath.Dec) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
+	priceLimit osmomath.BigDec) (calcTokenIn, calcTokenOut sdk.Coin, poolUpdates PoolUpdates, err error) {
 	return k.swapInAmtGivenOut(ctx, sender, pool, desiredTokenOut, tokenInDenom, spreadFactor, priceLimit)
 }
 
@@ -92,7 +92,7 @@ func (k Keeper) ComputeInAmtGivenOut(
 	desiredTokenOut sdk.Coin,
 	tokenInDenom string,
 	spreadFactor osmomath.Dec,
-	priceLimit osmomath.Dec,
+	priceLimit osmomath.BigDec,
 	poolId uint64,
 
 ) (swapResult SwapResult, poolUpdates PoolUpdates, err error) {
@@ -321,7 +321,7 @@ func (k Keeper) GetLargestSupportedUptimeDuration(ctx sdk.Context) time.Duration
 
 func (k Keeper) SetupSwapStrategy(ctx sdk.Context, p types.ConcentratedPoolExtension,
 	spreadFactor osmomath.Dec, tokenInDenom string,
-	priceLimit osmomath.Dec) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit osmomath.BigDec, err error) {
+	priceLimit osmomath.BigDec) (strategy swapstrategy.SwapStrategy, sqrtPriceLimit osmomath.BigDec, err error) {
 	return k.setupSwapStrategy(p, spreadFactor, tokenInDenom, priceLimit)
 }
 
