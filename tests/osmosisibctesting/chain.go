@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
-	"github.com/cosmos/ibc-go/v7/testing/simapp/helpers"
 
 	"github.com/osmosis-labs/osmosis/v19/app"
 )
@@ -63,11 +63,11 @@ func SignAndDeliver(
 	txCfg client.TxConfig, app *baseapp.BaseApp, header tmproto.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
-	tx, _ := helpers.GenTx(
+	tx, _ := sims.GenTx(
 		txCfg,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 2500)},
-		helpers.DefaultGenTxGas,
+		sims.SimAppChainID,
 		chainID,
 		accNums,
 		accSeqs,

@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/simapp"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
@@ -23,6 +22,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -186,13 +186,13 @@ func (s *KeeperTestHelper) Commit() {
 
 // FundAcc funds target address with specified amount.
 func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
-	err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
+	err := testutil.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
 	s.Require().NoError(err)
 }
 
 // FundModuleAcc funds target modules with specified amount.
 func (s *KeeperTestHelper) FundModuleAcc(moduleName string, amounts sdk.Coins) {
-	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, moduleName, amounts)
+	err := testutil.FundModuleAccount(s.App.BankKeeper, s.Ctx, moduleName, amounts)
 	s.Require().NoError(err)
 }
 
@@ -330,7 +330,7 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 
 	// allocate reward tokens to distribution module
 	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, rewardAmt)}
-	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, distrtypes.ModuleName, coins)
+	err := testutil.FundModuleAccount(s.App.BankKeeper, s.Ctx, distrtypes.ModuleName, coins)
 	s.Require().NoError(err)
 
 	// allocate rewards to validator

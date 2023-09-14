@@ -4,15 +4,15 @@ import (
 	"reflect"
 	"testing"
 
-	"cosmossdk.io/simapp"
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
+	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/stretchr/testify/require"
 )
 
 func TestOrderEndBlockers_Determinism(t *testing.T) {
 	db := dbm.NewMemDB()
-	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, simapp.EmptyAppOptions{}, EmptyWasmOpts)
+	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, sims.EmptyAppOptions{}, EmptyWasmOpts)
 
 	for i := 0; i < 1000; i++ {
 		a := OrderEndBlockers(app.mm.ModuleNames())

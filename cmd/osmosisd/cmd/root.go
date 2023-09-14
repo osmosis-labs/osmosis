@@ -19,7 +19,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/app/params"
 
 	dbm "github.com/cometbft/cometbft-db"
-	tmcmds "github.com/cometbft/cometbft/cmd/tendermint/commands"
+	tmcmds "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/cast"

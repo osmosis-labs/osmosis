@@ -3,9 +3,9 @@ package simtypes
 import (
 	"math/rand"
 
-	"cosmossdk.io/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
@@ -57,11 +57,11 @@ func GenAndDeliverTx(
 	moduleName string,
 ) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 	account := ak.GetAccount(ctx, simAccount.Address)
-	tx, err := helpers.GenTx(
+	tx, err := sims.GenTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		sims.DefaultGenTxGas,
 		ctx.ChainID(),
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},

@@ -8,7 +8,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
 
-	"cosmossdk.io/simapp"
+	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -29,14 +29,14 @@ func getDefaultGenesisStateBytes() []byte {
 // SetupWithCustomHome initializes a new OsmosisApp with a custom home directory
 func SetupWithCustomHome(isCheckTx bool, dir string) *OsmosisApp {
 	db := dbm.NewMemDB()
-	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, simapp.EmptyAppOptions{}, EmptyWasmOpts)
+	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts)
 	if !isCheckTx {
 		stateBytes := getDefaultGenesisStateBytes()
 
 		app.InitChain(
 			abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: simapp.DefaultConsensusParams,
+				ConsensusParams: sims.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			},
 		)
@@ -61,7 +61,7 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 	if err != nil {
 		panic(err)
 	}
-	app = NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, simapp.EmptyAppOptions{}, EmptyWasmOpts)
+	app = NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, sims.EmptyAppOptions{}, EmptyWasmOpts)
 	if !isCheckTx {
 		genesisState := NewDefaultGenesisState()
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -72,7 +72,7 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 		app.InitChain(
 			abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: simapp.DefaultConsensusParams,
+				ConsensusParams: sims.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			},
 		)

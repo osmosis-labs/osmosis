@@ -10,8 +10,8 @@ import (
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"cosmossdk.io/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app"
@@ -25,7 +25,7 @@ func CreateTestInput() (*app.OsmosisApp, sdk.Context) {
 
 func FundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, acct sdk.AccAddress) {
 	t.Helper()
-	err := simapp.FundAccount(osmosis.BankKeeper, ctx, acct, sdk.NewCoins(
+	err := testutil.FundAccount(osmosis.BankKeeper, ctx, acct, sdk.NewCoins(
 		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
 	))
 	require.NoError(t, err)

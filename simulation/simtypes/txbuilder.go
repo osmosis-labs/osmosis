@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -131,7 +131,7 @@ func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 func getGas(msg sdk.Msg) uint64 {
 	_, ok := msg.(*tokenfactorytypes.MsgCreateDenom)
 	if ok {
-		return uint64(tokenfactorytypes.DefaultCreationGasFee + helpers.DefaultGenTxGas)
+		return uint64(tokenfactorytypes.DefaultCreationGasFee + sims.DefaultGenTxGas)
 	}
-	return uint64(helpers.DefaultGenTxGas)
+	return uint64(sims.DefaultGenTxGas)
 }

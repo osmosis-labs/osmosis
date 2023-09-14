@@ -6,14 +6,14 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 
-	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -51,7 +51,7 @@ func NewAppConstructor() network.AppConstructor {
 	return func(val network.Validator) servertypes.Application {
 		return NewOsmosisApp(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-			simapp.EmptyAppOptions{},
+			sims.EmptyAppOptions{},
 			EmptyWasmOpts,
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)

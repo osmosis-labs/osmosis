@@ -16,6 +16,7 @@ import (
 	poolmanagertestutil "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/testutil"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -23,7 +24,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 )
 
 type IntegrationTestSuite struct {
@@ -31,6 +31,13 @@ type IntegrationTestSuite struct {
 
 	cfg     network.Config
 	network *network.Network
+}
+
+func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := []string{from.String(), to.String(), amount.String()}
+	args = append(args, extraArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, bankcli.NewSendTxCmd(), args)
 }
 
 var testAddresses = osmoutils.CreateRandomAccounts(3)
@@ -264,7 +271,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 
-	_, err = banktestutil.MsgSendExec(
+	_, err = MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		newAddr,

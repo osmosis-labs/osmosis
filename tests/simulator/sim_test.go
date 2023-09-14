@@ -10,7 +10,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/simapp/helpers"
+	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	osmosim "github.com/osmosis-labs/osmosis/v19/simulation/executor"
@@ -93,7 +93,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.BlockSize = 5
 	config.OnOperation = false
 	config.AllInvariants = false
-	config.InitializationConfig.ChainID = helpers.SimAppChainID
+	config.InitializationConfig.ChainID = sims.SimAppChainID
 
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.
