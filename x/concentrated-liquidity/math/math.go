@@ -18,8 +18,7 @@ func Liquidity0(amount osmomath.Int, sqrtPriceA, sqrtPriceB osmomath.BigDec) osm
 
 	// We convert to BigDec to avoid precision loss when calculating liquidity. Without doing this,
 	// our liquidity calculations will be off from our theoretical calculations within our tests.
-	// TODO (perf): consider better conversion helpers to minimize reallocations.
-	amountBigDec := osmomath.BigDecFromDec(amount.ToLegacyDec())
+	amountBigDec := osmomath.BigDecFromSDKInt(amount)
 
 	product := sqrtPriceA.Mul(sqrtPriceB)
 	diff := sqrtPriceB.Sub(sqrtPriceA)
