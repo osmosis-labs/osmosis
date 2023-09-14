@@ -165,13 +165,15 @@ func (k Keeper) CalculateSpotPrice(
 	}
 
 	if price.IsZero() {
-		return osmomath.Dec{}, types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromDec(price), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
+		return osmomath.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
-	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
-		return osmomath.Dec{}, types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromDec(price), MinSpotPrice: types.MinSpotPriceBigDec, MaxSpotPrice: types.MaxSpotPrice}
+	if price.GT(types.MaxSpotPriceBigDec) || price.LT(types.MinSpotPriceBigDec) {
+		return osmomath.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceBigDec, MaxSpotPrice: types.MaxSpotPrice}
 	}
 
-	return price, nil
+	// TODO: remove before https://github.com/osmosis-labs/osmosis/issues/5726 is complete.
+	// Acceptable for backwards compatibility with v19.x.
+	return price.Dec(), nil
 }
 
 // GetTotalPoolLiquidity returns the coins in the pool owned by all LPs

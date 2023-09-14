@@ -337,7 +337,6 @@ func TestCalcAmount1Delta(t *testing.T) {
 			// from clmath decimal import *
 			// calc_amount_one_delta(liq, sqrtPriceA, sqrtPriceB, False)
 			// Actual result: 0.000000000000000000000000000103787163
-			// Gets rounded up to 1. Is this acceptable when the multiplicative difference is so large?
 			amount1Expected: osmomath.MustNewBigDecFromStr("0.000000000000000000000000000103787163").Ceil(),
 		},
 	}
