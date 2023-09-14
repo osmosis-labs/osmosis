@@ -2,13 +2,13 @@ package poolmanager_test
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/tests/mocks"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
@@ -2342,7 +2342,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			}
 
 			// Ensure output amount is within tolerance
-			s.Require().Equal(0, errTolerance.Compare(tc.expectedTokenOutEstimate, tokenOut), fmt.Sprintf("expected %s, got %s", tc.expectedTokenOutEstimate, tokenOut))
+			osmoassert.Equal(s.T(), errTolerance, tc.expectedTokenOutEstimate, tokenOut)
 
 			// -- Ensure taker fee distributions have properly executed --
 
@@ -2650,7 +2650,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 				MultiplicativeTolerance: multiplicativeTolerance,
 			}
 
-			s.Require().Equal(0, errTolerance.Compare(tc.expectedTokenInEstimate, tokenIn), fmt.Sprintf("expected %s, got %s", tc.expectedTokenInEstimate, tokenIn))
+			osmoassert.Equal(s.T(), errTolerance, tc.expectedTokenInEstimate, tokenIn)
 		})
 	}
 }
@@ -3602,7 +3602,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			}
 
 			// Ensure output amount is within tolerance
-			s.Require().Equal(0, errTolerance.Compare(tc.expectedTokenOutEstimate, tokenOut), fmt.Sprintf("expected %s, got %s", tc.expectedTokenOutEstimate, tokenOut))
+			osmoassert.Equal(s.T(), errTolerance, tc.expectedTokenOutEstimate, tokenOut)
 
 			// -- Ensure taker fee distributions have properly executed --
 

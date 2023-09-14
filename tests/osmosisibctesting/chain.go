@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"time"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -60,9 +58,19 @@ func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*sdk.Result, error) {
 }
 
 // SendMsgsNoCheck is an alternative to ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
-func (chain *TestChain) SendMsgsFromPrivKey(account authtypes.AccountI, privKey cryptotypes.PrivKey, msgs ...sdk.Msg) (*sdk.Result, error) {
+func (chain *TestChain) SendMsgsFromPrivKeys(privKeys []cryptotypes.PrivKey, msgs ...sdk.Msg) (*sdk.Result, error) {
 	// ensure the chain has the latest time
 	chain.Coordinator.UpdateTimeForChain(chain.TestChain)
+
+	// extract account numbers and sequences from messages
+	accountNumbers := make([]uint64, len(msgs))
+	accountSequences := make([]uint64, len(msgs))
+	for i, msg := range msgs {
+		signer := msg.GetSigners()[0]
+		account := chain.GetOsmosisApp().AccountKeeper.GetAccount(chain.GetContext(), signer)
+		accountNumbers[i] = account.GetAccountNumber()
+		accountSequences[i] = account.GetSequence()
+	}
 
 	_, r, err := SignAndDeliver(
 		chain.TxConfig,
@@ -70,9 +78,9 @@ func (chain *TestChain) SendMsgsFromPrivKey(account authtypes.AccountI, privKey 
 		chain.GetContext().BlockHeader(),
 		msgs,
 		chain.ChainID,
-		[]uint64{account.GetAccountNumber()},
-		[]uint64{account.GetSequence()},
-		privKey,
+		accountNumbers,
+		accountSequences,
+		privKeys...,
 	)
 	if err != nil {
 		return nil, err
@@ -81,10 +89,14 @@ func (chain *TestChain) SendMsgsFromPrivKey(account authtypes.AccountI, privKey 
 	// SignAndDeliver calls app.Commit()
 	chain.NextBlock()
 
-	// increment sequence for successful transaction execution
-	err = account.SetSequence(account.GetSequence() + 1)
-	if err != nil {
-		return nil, err
+	// increment sequences for successful transaction execution
+	for _, msg := range msgs {
+		signer := msg.GetSigners()[0]
+		account := chain.GetOsmosisApp().AccountKeeper.GetAccount(chain.GetContext(), signer)
+		err = account.SetSequence(account.GetSequence() + 1)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	chain.Coordinator.IncrementTime()

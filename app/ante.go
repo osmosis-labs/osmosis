@@ -62,7 +62,7 @@ func NewAnteHandler(
 		ante.NewValidateSigCountDecorator(accountKeeper),
 		// ante.NewSigGasConsumeDecorator(accountKeeper, sigGasConsumer),
 		// Our authenticator decorator
-		authante.NewAuthenticatorDecorator(authenticatorKeeper),
+		authante.NewAuthenticatorDecorator(authenticatorKeeper, 20_000), // TODO: what's a good value for maxFeePayerGas?
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewAnteDecorator(channelKeeper),
 	)

@@ -27,8 +27,8 @@ type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (suite *UpgradeTestSuite) SetupTest() {
-	suite.Setup()
+func (s *UpgradeTestSuite) SetupTest() {
+	s.Setup()
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
@@ -41,12 +41,7 @@ const (
 	shareStaysLocked = 10000
 )
 
-func assertEqual(suite *UpgradeTestSuite, pre, post interface{}) {
-	suite.Require().Equal(pre, post)
-}
-
 func (s *UpgradeTestSuite) TestUpgrade() {
-
 	s.T().Skip("This test is skipped because it is not relevant anymore. It is kept here for reference.")
 
 	// set up pools first to match v17 state(including linked cl pools)
@@ -113,22 +108,21 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(toSwap))
 	_, err = s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], updatedCLPool, toSwap, pool.GetToken1(), osmomath.NewInt(1), osmomath.ZeroDec())
 	s.Require().NoError(err)
-
 }
 
-func (suite *UpgradeTestSuite) imitateUpgrade() {
-	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
+func (s *UpgradeTestSuite) imitateUpgrade() {
+	s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight - 1)
 	plan := upgradetypes.Plan{Name: "v18", Height: dummyUpgradeHeight}
-	err := suite.App.UpgradeKeeper.ScheduleUpgrade(suite.Ctx, plan)
-	suite.Require().NoError(err)
-	_, exists := suite.App.UpgradeKeeper.GetUpgradePlan(suite.Ctx)
-	suite.Require().True(exists)
+	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
+	s.Require().NoError(err)
+	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
+	s.Require().True(exists)
 
-	suite.Ctx = suite.Ctx.WithBlockHeight(dummyUpgradeHeight)
+	s.Ctx = s.Ctx.WithBlockHeight(dummyUpgradeHeight)
 }
 
 // first set up pool state to mainnet state
-func (suite *UpgradeTestSuite) setupPoolsToMainnetState() {
+func (s *UpgradeTestSuite) setupPoolsToMainnetState() {
 	var lastPoolID uint64 // To keep track of the last assigned pool ID
 
 	// Sort AssetPairs based on LinkedClassicPool values.
@@ -144,13 +138,13 @@ func (suite *UpgradeTestSuite) setupPoolsToMainnetState() {
 		// create dummy pools to fill the gap.
 		for lastPoolID+1 < poolID {
 			poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, osmomath.NewInt(100000000000)), sdk.NewCoin(assetPair.QuoteAsset, osmomath.NewInt(100000000000)))
-			suite.PrepareBalancerPoolWithCoins(poolCoins...)
+			s.PrepareBalancerPoolWithCoins(poolCoins...)
 			lastPoolID++
 		}
 
 		// Now create the pool with the correct pool ID.
 		poolCoins := sdk.NewCoins(sdk.NewCoin(assetPair.BaseAsset, osmomath.NewInt(100000000000)), sdk.NewCoin(assetPair.QuoteAsset, osmomath.NewInt(100000000000)))
-		suite.PrepareBalancerPoolWithCoins(poolCoins...)
+		s.PrepareBalancerPoolWithCoins(poolCoins...)
 
 		// Enable the GAMM pool for superfluid if the record says so.
 		if assetPair.Superfluid {
@@ -159,7 +153,7 @@ func (suite *UpgradeTestSuite) setupPoolsToMainnetState() {
 				Denom:     poolShareDenom,
 				AssetType: superfluidtypes.SuperfluidAssetTypeLPShare,
 			}
-			suite.App.SuperfluidKeeper.SetSuperfluidAsset(suite.Ctx, superfluidAsset)
+			s.App.SuperfluidKeeper.SetSuperfluidAsset(s.Ctx, superfluidAsset)
 		}
 
 		// Update the lastPoolID to the current pool ID.
@@ -168,7 +162,7 @@ func (suite *UpgradeTestSuite) setupPoolsToMainnetState() {
 }
 
 // setupCorruptedState aligns the testing environment with the mainnet state.
-// By running this method, it will modify the lockup accumulator to be deleted which has happended in v4.0.0 upgrade.
+// By running this method, it will modify the lockup accumulator to be deleted which has happened in v4.0.0 upgrade.
 // In this method, we join pool 3, then delete denom accum store in the lockup module to have the testing environment
 // in the correct state.
 func (s *UpgradeTestSuite) setupCorruptedState() {
@@ -228,17 +222,17 @@ func (s *UpgradeTestSuite) setupCorruptedState() {
 // `AfterEpochEnd` was panicing.
 // We can do this check by creating a CL pool, then trying to distribute using that specific
 // CL pool gauge. If our test setup was correct, this should panic.
-func (suite *UpgradeTestSuite) ensurePreUpgradeDistributionPanics() {
-	epochInfo := suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx)
+func (s *UpgradeTestSuite) ensurePreUpgradeDistributionPanics() {
+	epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
 
 	// add pool 3 denom (AKT) ti authorized quote denom param.
-	clParams := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
+	clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
 	authorizedQuoteDenom := append(clParams.AuthorizedQuoteDenoms, v17.AKTIBCDenom)
 	clParams.AuthorizedQuoteDenoms = authorizedQuoteDenom
-	suite.App.ConcentratedLiquidityKeeper.SetParams(suite.Ctx, clParams)
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
 
 	// prepare CL pool with the same denom as pool 3, which is the pool we are testing with
-	clPool := suite.PrepareConcentratedPoolWithCoins(v17.AKTIBCDenom, v17.OSMO)
+	clPool := s.PrepareConcentratedPoolWithCoins(v17.AKTIBCDenom, v17.OSMO)
 	balancerToCLPoolLink := []gammmigration.BalancerToConcentratedPoolLink{
 		{
 			BalancerPoolId: 3,
@@ -250,28 +244,29 @@ func (suite *UpgradeTestSuite) ensurePreUpgradeDistributionPanics() {
 	migrationInfo := gammmigration.MigrationRecords{
 		BalancerToConcentratedPoolLinks: balancerToCLPoolLink,
 	}
-	suite.App.GAMMKeeper.SetMigrationRecords(suite.Ctx, migrationInfo)
+	s.App.GAMMKeeper.SetMigrationRecords(s.Ctx, migrationInfo)
 
 	// add new coins to the CL pool gauge so that it would be distributed after epoch ends then trigger panic
 	coinsToAdd := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(1000)))
-	gagueId, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, clPool.GetId(), epochInfo.Duration)
-	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gagueId)
-	suite.Require().NoError(err)
+	gagueId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), epochInfo.Duration)
+	s.Require().NoError(err)
+	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gagueId)
+	s.Require().NoError(err)
 
 	addr := sdk.AccAddress([]byte("addrx---------------"))
-	suite.FundAcc(addr, coinsToAdd)
-	err = suite.App.IncentivesKeeper.AddToGaugeRewards(suite.Ctx, addr, coinsToAdd, gauge.Id)
-	suite.Require().NoError(err)
+	s.FundAcc(addr, coinsToAdd)
+	err = s.App.IncentivesKeeper.AddToGaugeRewards(s.Ctx, addr, coinsToAdd, gauge.Id)
+	s.Require().NoError(err)
 
 	// add block time so that rewards get distributed
-	suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(time.Hour * 25))
-	suite.BeginNewBlock(false)
-	suite.App.EpochsKeeper.BeforeEpochStart(suite.Ctx, epochInfo.GetIdentifier(), 1)
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 25))
+	s.BeginNewBlock(false)
+	s.App.EpochsKeeper.BeforeEpochStart(s.Ctx, epochInfo.GetIdentifier(), 1)
 
-	suite.Require().Panics(func() {
-		suite.App.IncentivesKeeper.AfterEpochEnd(suite.Ctx, epochInfo.GetIdentifier(), 1)
+	s.Require().Panics(func() {
+		err = s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 1)
+		s.Require().NoError(err)
 	})
-
 }
 
 // clearDenomAccumulationStore clears denom accumulation store in the lockup keeper,
@@ -303,7 +298,8 @@ func (s *UpgradeTestSuite) ensurePostUpgradeDistributionWorks() {
 	s.App.EpochsKeeper.BeforeEpochStart(s.Ctx, epochInfo.GetIdentifier(), 1)
 
 	s.Require().NotPanics(func() {
-		s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 1)
+		err := s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), 1)
+		s.Require().NoError(err)
 	})
 }
 

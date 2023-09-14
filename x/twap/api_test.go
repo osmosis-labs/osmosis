@@ -20,8 +20,8 @@ var (
 	// base asset as the lexicographically smaller denom and the quote as the larger. When
 	// set to false, this order is switched. These constants are provided to understand the
 	// base/quote asset for every test at a glance rather than a raw boolean value.
-	baseQuoteAB, baseQuoteCA              = true, true
-	baseQuoteBA, baseQuoteAC, baseQuoteCB = false, false, false
+	baseQuoteAB = true
+	baseQuoteBA = false
 
 	ThreePlusOneThird osmomath.Dec = osmomath.MustNewDecFromStr("3.333333333333333333")
 
@@ -156,7 +156,7 @@ func makeSimpleTwapInput(startTime time.Time, endTime time.Time, isQuoteTokenA b
 	return getTwapInput{1, quoteAssetDenom, baseAssetDenom, startTime, endTime}
 }
 
-func makeSimpleThreeAssetTwapInput(startTime time.Time, endTime time.Time, baseQuoteAB, baseQuoteCA, baseQuoteBC bool) []getTwapInput {
+func makeSimpleThreeAssetTwapInput(startTime time.Time, endTime time.Time, baseQuoteAB bool) []getTwapInput {
 	var twapInput []getTwapInput
 	twapInput = formatSimpleTwapInput(twapInput, startTime, endTime, baseQuoteAB, denom0, denom1, 2)
 	twapInput = formatSimpleTwapInput(twapInput, startTime, endTime, baseQuoteAB, denom2, denom0, 2)
@@ -393,7 +393,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 				tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC,
 			},
 			ctxTime: tPlusOneMin,
-			input:   makeSimpleThreeAssetTwapInput(baseTime, baseTime.Add(20*time.Second), baseQuoteBA, baseQuoteCA, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapInput(baseTime, baseTime.Add(20*time.Second), baseQuoteBA),
 			// A 10 for 10s, 5 for 10s = 150/20 = 7.5
 			// C 20 for 10s, 10 for 10s = 300/20 = 15
 			// B .1 for 10s, .2 for 10s = 3/20 = 0.15
@@ -406,7 +406,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 				tPlus20sp2ThreeAssetRecordAB, tPlus20sp2ThreeAssetRecordAC, tPlus20sp2ThreeAssetRecordBC,
 			},
 			ctxTime: tPlusOneMin,
-			input:   makeSimpleThreeAssetTwapInput(baseTime.Add(10*time.Second), baseTime.Add(30*time.Second), baseQuoteBA, baseQuoteCA, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapInput(baseTime.Add(10*time.Second), baseTime.Add(30*time.Second), baseQuoteBA),
 			// A 5 for 10s, 2 for 10s = 70/20 = 3.5
 			// C 10 for 10s, 4 for 10s = 140/20 = 7
 			// B .2 for 10s, .5 for 10s = 7/20 = 0.35
@@ -420,7 +420,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 				tPlus20sp2ThreeAssetRecordAB, tPlus20sp2ThreeAssetRecordAC, tPlus20sp2ThreeAssetRecordBC,
 			},
 			ctxTime: tPlusOneMin,
-			input:   makeSimpleThreeAssetTwapInput(baseTime.Add(15*time.Second), baseTime.Add(30*time.Second), baseQuoteBA, baseQuoteAC, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapInput(baseTime.Add(15*time.Second), baseTime.Add(30*time.Second), baseQuoteBA),
 			// A 5 for 5s, 2 for 10s = 45/15 = 3
 			// C 10 for 5s, 4 for 10s = 140/15 = 6
 			// B .2 for 5s, .5 for 10s = 7/15 = .4
@@ -474,7 +474,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 		accumBeforeKeepThreshold0, accumBeforeKeepThreshold1 = osmomath.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10), osmomath.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10)
 		geomAccumBeforeKeepThreshold                         = osmomath.NewDec(periodBetweenBaseAndOneHourBeforeThreshold).Mul(logTen)
 		// recordBeforeKeepThreshold is a record with t=baseTime+keepPeriod-1h, sp0=30(sp1=0.3) accumulators set relative to baseRecord
-		recordBeforeKeepThreshold types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(oneHourBeforeKeepThreshold, osmomath.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1, geomAccumBeforeKeepThreshold)
+		recordBeforeKeepThreshold = newTwoAssetPoolTwapRecordWithDefaults(oneHourBeforeKeepThreshold, osmomath.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1, geomAccumBeforeKeepThreshold)
 	)
 
 	// N.B.: when ctxTime = end time, we trigger the "TWAP to now path".
@@ -636,7 +636,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod_ThreeAsset() {
 				recordBeforeKeepThresholdAB, recordBeforeKeepThresholdAC, recordBeforeKeepThresholdBC,
 			},
 			ctxTime: baseTimePlusKeepPeriod,
-			input:   makeSimpleThreeAssetTwapInput(baseTime, baseTimePlusKeepPeriod, baseQuoteBA, baseQuoteAC, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapInput(baseTime, baseTimePlusKeepPeriod, baseQuoteBA),
 			// A 10 for 169200s, 30 for 3600s = 1800000/172800 = 10.416666
 			// C 20 for 169200s, 60 for 3600s = 100/172800 = 20.83333333
 			// B .1 for 169200s, .033 for 3600s = 17040/172800 = 0.0986111
@@ -648,7 +648,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod_ThreeAsset() {
 				recordBeforeKeepThresholdAB, recordBeforeKeepThresholdAC, recordBeforeKeepThresholdBC,
 			},
 			ctxTime: oneHourAfterKeepThreshold,
-			input:   makeSimpleThreeAssetTwapInput(baseTime, oneHourAfterKeepThreshold.Add(-time.Millisecond), baseQuoteBA, baseQuoteAC, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapInput(baseTime, oneHourAfterKeepThreshold.Add(-time.Millisecond), baseQuoteBA),
 			// A 10 for 169200000ms, 30 for 7199999ms = 1907999970/176399999 = 10.81632642
 			// C 20 for 169200000ms, 60 for 7199999ms = 3815999940/176399999 = 21.6326528
 			// B .1 for 169200000ms, .033 for 7199999ms = 17159999/176399999 = 0.09727891
@@ -783,8 +783,8 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 }
 
 func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
-	makeSimpleThreeAssetTwapToNowInput := func(startTime time.Time, baseQuoteAB, baseQuoteAC, baseQuoteBC bool) []getTwapInput {
-		return makeSimpleThreeAssetTwapInput(startTime, startTime, baseQuoteAB, baseQuoteAC, baseQuoteBC)
+	makeSimpleThreeAssetTwapToNowInput := func(startTime time.Time, baseQuoteAB bool) []getTwapInput {
+		return makeSimpleThreeAssetTwapInput(startTime, startTime, baseQuoteAB)
 	}
 
 	tests := map[string]struct {
@@ -800,7 +800,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 				tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC,
 			},
 			ctxTime: tPlusOneMin,
-			input:   makeSimpleThreeAssetTwapToNowInput(baseTime.Add(10*time.Second), baseQuoteBA, baseQuoteAC, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapToNowInput(baseTime.Add(10*time.Second), baseQuoteBA),
 			// A 10 for 0s, 5 for 10s = 50/10 = 5
 			// C 20 for 0s, 10 for 10s = 100/10 = 10
 			// B .1 for 0s, .2 for 10s = 2/10 = 0.2
@@ -812,7 +812,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 				tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC,
 			},
 			ctxTime: baseTime.Add(20 * time.Second),
-			input:   makeSimpleThreeAssetTwapToNowInput(baseTime.Add(5*time.Second), baseQuoteBA, baseQuoteCA, baseQuoteCB),
+			input:   makeSimpleThreeAssetTwapToNowInput(baseTime.Add(5*time.Second), baseQuoteBA),
 			// A 10 for 5s, 5 for 10s = 100/15 = 6 + 2/3 = 6.66666666
 			// C 20 for 5s, 10 for 10s = 200/15 = 13 + 1/3 = 13.333333
 			// B .1 for 5s, .2 for 10s = 2.5/15 = 0.1666666

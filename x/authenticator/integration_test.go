@@ -36,6 +36,8 @@ type AuthenticatorSuite struct {
 	Account  authtypes.AccountI
 }
 
+type pks = []cryptotypes.PrivKey
+
 func TestAuthenticatorSuite(t *testing.T) {
 	suite.Run(t, new(AuthenticatorSuite))
 }
@@ -67,7 +69,6 @@ func (s *AuthenticatorSuite) SetupTest() {
 
 	// get the account
 	s.Account = s.app.AccountKeeper.GetAccount(s.chainA.GetContext(), accountAddr)
-
 }
 
 func (s *AuthenticatorSuite) TestKeyRotationStory() {
@@ -79,7 +80,7 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	}
 
 	// Send msg from accounts default privkey
-	_, err := s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], sendMsg)
+	_, err := s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
 	s.Require().NoError(err, "Failed to send bank tx using the first private key")
 
 	// Change account's authenticator
@@ -87,11 +88,11 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	s.Require().NoError(err, "Failed to add authenticator")
 
 	// Submit a bank send tx using the second private key
-	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[1], sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[1]}, sendMsg)
 	s.Require().NoError(err, "Failed to send bank tx using the second private key")
 
 	// Try to send again osing the original PrivKey. This should fail
-	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
 	s.Require().Error(err, "Sending from the original PrivKey succeeded. This should fail")
 
 	// Remove the account's authenticator
@@ -99,7 +100,7 @@ func (s *AuthenticatorSuite) TestKeyRotationStory() {
 	s.Require().NoError(err, "Failed to remove authenticator")
 
 	// Sending from the default PrivKey now works again
-	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], sendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
 	s.Require().NoError(err, "Failed to send bank tx using the first private key after removing the authenticator")
 
 }
@@ -189,8 +190,8 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 					KeysToAdd:              []int{0, 1},
 					AuthenticatorsToRemove: []int{},
 					Sends: []SendTest{
-						{PrivKeyIndex: 1, ShouldSucceed: true},
 						{PrivKeyIndex: 0, ShouldSucceed: true},
+						{PrivKeyIndex: 1, ShouldSucceed: true},
 					},
 				},
 			},
@@ -283,7 +284,7 @@ func (s *AuthenticatorSuite) TestKeyRotation() {
 
 				// Send for the current step
 				for _, send := range step.Sends {
-					_, err := s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[send.PrivKeyIndex], sendMsg)
+					_, err := s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[send.PrivKeyIndex]}, sendMsg)
 					if send.ShouldSucceed {
 						s.Require().NoError(err, tc.Description)
 					} else {
@@ -316,20 +317,22 @@ func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
 
 	// check account balances
 
-	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], failSendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, failSendMsg)
 	fmt.Println("err: ", err)
 	s.Require().Error(err, "Succeeded sending tx that should fail")
 
 	// Incremented by one. Only on the ante.
 	s.Require().Equal(1, stateful.GetValue(s.chainA.GetContext()))
 
-	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], successSendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, successSendMsg)
 	fmt.Println("err: ", err)
 	s.Require().NoError(err, "Failed to send bank tx with enough funds")
 
 	// Incremented by 2. Ante and Post
 	s.Require().Equal(3, stateful.GetValue(s.chainA.GetContext()))
 }
+
+// TODO: Cleanup experiment tests
 
 // This is an experiment to determine how to deal with some authenticators succeeding and others failing
 func (s *AuthenticatorSuite) TestAuthenticatorMultiMsgExperiment() {
@@ -352,14 +355,81 @@ func (s *AuthenticatorSuite) TestAuthenticatorMultiMsgExperiment() {
 	//s.Require().NoError(err, "Failed to add authenticator")
 	// check account balances
 
-	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], successSendMsg, successSendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, successSendMsg, successSendMsg)
 	fmt.Println("err: ", err)
 	s.Require().NoError(err)
 	s.Require().Equal(int64(2_000), maxAmount.GetAmount(s.chainA.GetContext()).Int64())
 
-	_, err = s.chainA.SendMsgsFromPrivKey(s.Account, s.PrivKeys[0], successSendMsg, successSendMsg)
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, successSendMsg, successSendMsg)
 	fmt.Println("err: ", err)
 	s.Require().Error(err)
 	s.Require().Equal(int64(2_000), maxAmount.GetAmount(s.chainA.GetContext()).Int64())
+}
 
+// This is an experiment to determine how internal authenticator state is managed
+func (s *AuthenticatorSuite) TestAuthenticatorGas() {
+	sendFromAcc1 := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
+	}
+
+	// Initialize the second account
+	accountAddr := sdk.AccAddress(s.PrivKeys[1].PubKey().Address())
+
+	// fund the account
+	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000))
+	err := s.app.BankKeeper.SendCoins(s.chainA.GetContext(), s.chainA.SenderAccount.GetAddress(), accountAddr, coins)
+	s.Require().NoError(err, "Failed to send bank tx using the first private key")
+
+	// get the account
+	account2 := s.app.AccountKeeper.GetAccount(s.chainA.GetContext(), accountAddr)
+
+	sendFromAcc2 := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", account2.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", account2.GetAddress()),
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
+	}
+
+	alwaysLow := TestingAuthenticator{Approve: Always, GasConsumption: 0}
+	alwaysHigh := TestingAuthenticator{Approve: Always, GasConsumption: 4_000}
+	neverHigh := TestingAuthenticator{Approve: Never, GasConsumption: 8_000}
+
+	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysLow)
+	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysHigh)
+	s.app.AuthenticatorManager.RegisterAuthenticator(neverHigh)
+
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), alwaysLow.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), alwaysHigh.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+
+	// Both account 0 and account 1 can send
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendFromAcc1)
+	s.Require().NoError(err)
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[1]}, sendFromAcc2)
+	s.Require().NoError(err)
+
+	// Remove account2's authenticator
+	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), account2.GetAddress(), 1)
+	s.Require().NoError(err, "Failed to remove authenticator")
+
+	// Add two authenticators that are never high, and one always high.
+	// This allows account2 to execute but *only* after consuming >9k gas
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), neverHigh.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), neverHigh.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), account2.GetAddress(), alwaysHigh.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+
+	// This should fail, as authenticating the fee payer needs to be done with low gas
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[1]}, sendFromAcc2)
+	fmt.Println(err.Error())
+	s.Require().Error(err)
+	s.Require().ErrorContains(err, "gas")
+
+	// This should work, since the fee payer has already been authenticated so the gas limit is raised
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0], s.PrivKeys[1]}, sendFromAcc1, sendFromAcc2)
+	s.Require().NoError(err)
 }

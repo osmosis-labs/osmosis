@@ -17,26 +17,27 @@ type AuthenticatorData interface{}
 // Authenticator is an interface used to represent all the authentication functionality needed to
 // verifiy a transaction, pay fees for a transaction and consume gas for verifing a transaction
 type Authenticator interface {
-	// TODO: Rename to DefaultGas or StaticGas. Alt. pass the context and consume the gas here
-	// Gas defines what gas the authenticator uses per signatures verification
-	Gas() uint64
-
 	// Type() defines the different types of authenticator, e.g SignatureVerificationAuthenticator
 	// or CosmWasmAuthenticator. Each type of authenticator needs to be registered in the AuthenticatorManager
 	// and these Types are used to store and link the data structure to the Authenticator logic
 	Type() string
 
+	// Gas defines what gas the authenticator uses per signatures verification
+	StaticGas() uint64
+
 	// Initialize is used when the authenticator associated to an account is retrieved
 	//  from the store. The data stored for each (account, authenticator) pair will be
 	// passed to this method.
-	// For example, the SignatureVerificationAuthenticator requires a PublicKey to check 
+	// For example, the SignatureVerificationAuthenticator requires a PublicKey to check
 	// the signature, but the auth module is not aware of the public key.
 	// By storing the public key along with the authenticator, we can Initialize() the code with that
 	// data, which allows the same authenticator code to verify signatures for different public keys
 	Initialize(data []byte) (Authenticator, error)
 
-	// GetAuthenticationData gets signatures and signer data from a transaction
-	// it returns an interface that is defined as a concrete type. This is used in an ante handler.
+	// GetAuthenticationData gets any authentication data needed from a transaction
+	// it returns an interface that is defined as a concrete type by the implementer of the interface.
+	// This is used in an ante handler with Authenticate to ensure the user has correct permission to execute
+	// a message.
 	GetAuthenticationData(
 		ctx sdk.Context, // sdk Context is used to get data associated with the authentication data
 		tx sdk.Tx, // we pass the transaction into the getter function to parse the signatures and signers

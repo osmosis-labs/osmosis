@@ -63,7 +63,7 @@ func (s *KeeperTestSuite) CreatePositionTickSpacingsFromCurrentTick(poolId uint6
 
 // tickToSqrtPrice a helper to convert a tick to a sqrt price.
 func (s *KeeperTestSuite) tickToSqrtPrice(tick int64) osmomath.BigDec {
-	_, sqrtPrice, err := math.TickToSqrtPrice(tick)
+	sqrtPrice, err := math.TickToSqrtPrice(tick)
 	s.Require().NoError(err)
 	return sqrtPrice
 }
@@ -381,7 +381,7 @@ func (s *KeeperTestSuite) computeSwapAmountsInGivenOut(poolId uint64, curSqrtPri
 		var isWithinDesiredBucketAfterSwap bool
 		if isZeroForOne {
 			// Round up so that we cross the tick by default.
-			curAmountOut := math.CalcAmount1Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, false)
+			curAmountOut := math.CalcAmount1Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true)
 
 			amountOut = amountOut.Add(curAmountOut.Dec())
 
