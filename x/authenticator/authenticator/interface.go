@@ -26,10 +26,13 @@ type Authenticator interface {
 	// and these Types are used to store and link the data structure to the Authenticator logic
 	Type() string
 
-	// Initialize is used when an authenticator has been added to the store with
-	// some data, e.g a Public Key but the auth module is not aware of the public key
-	// we then call Initialize on the data, which allows the module to authenticated
-	// a transaction and message
+	// Initialize is used when the authenticator associated to an account is retrieved
+	//  from the store. The data stored for each (account, authenticator) pair will be
+	// passed to this method.
+	// For example, the SignatureVerificationAuthenticator requires a PublicKey to check 
+	// the signature, but the auth module is not aware of the public key.
+	// By storing the public key along with the authenticator, we can Initialize() the code with that
+	// data, which allows the same authenticator code to verify signatures for different public keys
 	Initialize(data []byte) (Authenticator, error)
 
 	// GetAuthenticationData gets signatures and signer data from a transaction
