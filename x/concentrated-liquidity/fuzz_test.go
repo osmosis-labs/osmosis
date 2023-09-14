@@ -191,6 +191,25 @@ func (s *KeeperTestSuite) swapRandomAmount(r *rand.Rand, pool types.Concentrated
 	fmt.Println("swap type: random amount")
 	swapInDenom, swapOutDenom := zfoToDenoms(zfo, pool)
 	swapAmt := randomIntAmount(r)
+
+	// Need to make sure that amount in does not yield zero.
+	// At low min spot prices, such cases might lead to an infinite loop error.
+	// We don't want to skip such error as acceptable, as a result, we
+	// prevent amounts of swap in that yield zero out in general.
+	spotPrice := pool.GetCurrentSqrtPrice().PowerInteger(2)
+	if swapInDenom == pool.GetToken1() {
+		spotPrice := osmomath.OneBigDec().Quo(spotPrice)
+
+		// Failed to get an approriate amount to swap in but not fatal.
+		if spotPrice.IsZero() {
+			return false, false
+		}
+	}
+	amountOut := spotPrice.Mul(osmomath.NewBigDecFromBigInt(swapAmt.BigInt()))
+	if !amountOut.TruncateInt().IsPositive() {
+		return false, false
+	}
+
 	swapInCoin := sdk.NewCoin(swapInDenom, swapAmt)
 	return s.swap(pool, swapInCoin, swapOutDenom)
 }
