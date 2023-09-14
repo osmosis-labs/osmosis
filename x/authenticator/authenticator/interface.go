@@ -44,7 +44,7 @@ type Authenticator interface {
 		simulate bool, // simulate is used to simulate transactions
 	) (AuthenticatorData, error)
 
-	// Authenticate authenticates a message based on the signer and signature parsed from the GetAuthenticationData function
+	// Authenticate authenticates a message based on the signer and data parsed from the GetAuthenticationData function
 	// the returns true is authenticated or false if not authicated. This is used in an ante handler.
 	// NOTE: Consume gas happens in this function.
 	Authenticate(
