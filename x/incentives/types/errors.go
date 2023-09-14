@@ -3,7 +3,7 @@ package types
 import (
 	fmt "fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 type UnsupportedSplittingPolicyError struct {
@@ -25,8 +25,8 @@ func (e NoPoolVolumeError) Error() string {
 
 type CumulativeVolumeDecreasedError struct {
 	PoolId         uint64
-	PreviousVolume sdk.Int
-	NewVolume      sdk.Int
+	PreviousVolume osmomath.Int
+	NewVolume      osmomath.Int
 }
 
 func (e CumulativeVolumeDecreasedError) Error() string {
