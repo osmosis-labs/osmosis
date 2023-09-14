@@ -48,6 +48,7 @@ func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authen
 	//ctx.GasMeter().ConsumeGas(100_000_000, "loads of gas")
 	s.SetValue(ctx, statefulData.Value+1)
 	return true, nil
+
 }
 
 func (s StatefulAuthenticator) SetValue(ctx sdk.Context, value int) {

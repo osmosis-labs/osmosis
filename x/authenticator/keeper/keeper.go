@@ -99,7 +99,6 @@ func (k Keeper) GetAuthenticatorsForAccountOrDefault(
 	}
 
 	return authenticators, nil
-
 }
 
 // GetNextAuthenticatorId returns the next authenticator id.

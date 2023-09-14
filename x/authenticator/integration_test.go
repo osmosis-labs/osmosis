@@ -331,6 +331,8 @@ func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
 	s.Require().Equal(3, stateful.GetValue(s.chainA.GetContext()))
 }
 
+// TODO: Cleanup experiment tests
+
 // This is an experiment to determine how to deal with some authenticators succeeding and others failing
 func (s *AuthenticatorSuite) TestAuthenticatorMultiMsgExperiment() {
 	successSendMsg := &banktypes.MsgSend{
