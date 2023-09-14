@@ -176,7 +176,7 @@ func (t TestingAuthenticator) Initialize(data []byte) (authenticator.Authenticat
 	return t, nil
 }
 
-func (t TestingAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex uint8, simulate bool) (authenticator.AuthenticatorData, error) {
+func (t TestingAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (authenticator.AuthenticatorData, error) {
 	return TestingAuthenticatorData{}, nil
 }
 
