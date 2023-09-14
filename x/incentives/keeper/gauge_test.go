@@ -585,7 +585,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 }
 
 func (s *KeeperTestSuite) TestCreateGroupGauge() {
-	// Skip this until group gauge creation refactor is complete
+	// TODO: Re-enable this once gauge creation refactor is complete in https://github.com/osmosis-labs/osmosis/issues/6404
 	s.T().Skip()
 
 	coinsToAdd := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))
@@ -705,7 +705,7 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 }
 
 func (s *KeeperTestSuite) TestAddToGaugeRewardsFromGauge() {
-	// We skip this until group gauge creation logic refactor is complete
+	// TODO: reenable this once gauge creation refactor is complete in https://github.com/osmosis-labs/osmosis/issues/6404
 	s.T().Skip()
 
 	coinsToTransfer := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))

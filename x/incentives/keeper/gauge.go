@@ -300,6 +300,7 @@ func (k Keeper) getWeightBySplittingPolicy(ctx sdk.Context, poolId uint64, split
 // Note: we donot have to bankSend for this gauge transfer because all the available incentive has already been bank sent
 // when we create Group Gauge. Now we are just allocating funds from groupGauge to internalGauge.
 // CONTRACT: internalGaugeId should be present in the group gauge.
+// TODO: revisit, clean up, and test this function as part of https://github.com/osmosis-labs/osmosis/issues/6402
 func (k Keeper) AddToGaugeRewardsFromGauge(ctx sdk.Context, groupGaugeId uint64, coins sdk.Coins, internalGaugeId uint64) error {
 	groupGauge, err := k.GetGaugeByID(ctx, groupGaugeId)
 	if err != nil {

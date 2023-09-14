@@ -1159,7 +1159,7 @@ func (s *KeeperTestSuite) IncentivizeInternalGauge(poolIds []uint64, epochDurati
 	s.Require().NoError(err)
 }
 func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
-	// We skip these tests until allocating across gauges for volume splitting is implemented.
+	// TODO: re-enable this test once gauge allocation logic is implemented in https://github.com/osmosis-labs/osmosis/issues/6402
 	s.T().Skip()
 
 	tests := []struct {
@@ -1387,6 +1387,7 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 
 			// check internalGauges matches what we expect
 			// TODO: assert initialization logic correctness once it is implemented
+			// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6404
 
 			for epoch := uint64(1); epoch <= tc.createGauge.numEpochPaidOver; epoch++ {
 				// ******************** EPOCH PASSED ********************* //

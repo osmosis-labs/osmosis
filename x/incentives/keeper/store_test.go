@@ -42,7 +42,7 @@ func (s *KeeperTestSuite) TestGaugeReferencesManagement() {
 }
 
 func (s *KeeperTestSuite) TestGetGroupGaugeById() {
-	// Skip this until group gauge creation refactor is complete and this test can be updated
+	// TODO: Re-enable this once gauge creation refactor is complete in https://github.com/osmosis-labs/osmosis/issues/6404
 	s.T().Skip()
 
 	tests := map[string]struct {
