@@ -75,7 +75,7 @@ func SignAndDeliver(
 	)
 
 	// Simulate a sending a transaction and committing a block
-	gInfo, res, err := app.Deliver(txCfg.TxEncoder(), tx)
+	gInfo, res, err := app.DeliverTx(txCfg.TxEncoder(), tx)
 
 	return gInfo, res, err
 }

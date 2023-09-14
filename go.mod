@@ -7,7 +7,9 @@ require (
 	cosmossdk.io/math v1.1.2
 	cosmossdk.io/simapp v0.0.0-20230323161446-0af178d721ff
 	github.com/CosmWasm/wasmd v0.40.1
+	github.com/cometbft/cometbft v0.37.0-rc1
 	github.com/cometbft/cometbft v0.37.2
+	github.com/cometbft/cometbft-db v0.6.8-0.20220506192307-f628bb5dc95b
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.47.5
@@ -36,8 +38,6 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
-	github.com/cometbft/cometbft v0.37.0-rc1
-	github.com/cometbft/cometbft-db v0.6.8-0.20220506192307-f628bb5dc95b
 	github.com/tidwall/btree v1.6.0
 	github.com/tidwall/gjson v1.16.0
 	go.uber.org/multierr v1.11.0
@@ -340,8 +340,8 @@ replace (
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-	// Informal Tendermint fork
-	//github.com/cometbft/cometbft => github.com/informalsystems/tendermint v0.34.24
-	// use grpc compatible with cosmos protobufs
-	google.golang.org/grpc => google.golang.org/grpc v1.33.2
+// Informal Tendermint fork
+//github.com/cometbft/cometbft => github.com/informalsystems/tendermint v0.34.24
+// use grpc compatible with cosmos protobufs
+//google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )

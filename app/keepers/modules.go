@@ -2,7 +2,6 @@ package keepers
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
 	"github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/router"
 	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
@@ -69,7 +68,6 @@ var AppModuleBasics = []module.AppModuleBasic{
 	distr.AppModuleBasic{},
 	gov.NewAppModuleBasic(
 		append(
-			wasmclient.ProposalHandlers,
 			paramsclient.ProposalHandler,
 			distrclient.ProposalHandler,
 			upgradeclient.ProposalHandler,
