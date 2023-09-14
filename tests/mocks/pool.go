@@ -9,6 +9,7 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
+	osmomath "github.com/osmosis-labs/osmosis/osmomath"
 	types0 "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
@@ -78,10 +79,10 @@ func (mr *MockPoolIMockRecorder) GetId() *gomock.Call {
 }
 
 // GetSpreadFactor mocks base method.
-func (m *MockPoolI) GetSpreadFactor(ctx types.Context) types.Dec {
+func (m *MockPoolI) GetSpreadFactor(ctx types.Context) osmomath.Dec {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSpreadFactor", ctx)
-	ret0, _ := ret[0].(types.Dec)
+	ret0, _ := ret[0].(osmomath.Dec)
 	return ret0
 }
 
@@ -89,20 +90,6 @@ func (m *MockPoolI) GetSpreadFactor(ctx types.Context) types.Dec {
 func (mr *MockPoolIMockRecorder) GetSpreadFactor(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpreadFactor", reflect.TypeOf((*MockPoolI)(nil).GetSpreadFactor), ctx)
-}
-
-// GetTakerFee mocks base method.
-func (m *MockPoolI) GetTakerFee() types.Dec {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTakerFee")
-	ret0, _ := ret[0].(types.Dec)
-	return ret0
-}
-
-// GetTakerFee indicates an expected call of GetTakerFee.
-func (mr *MockPoolIMockRecorder) GetTakerFee() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTakerFee", reflect.TypeOf((*MockPoolI)(nil).GetTakerFee))
 }
 
 // GetType mocks base method.
@@ -157,23 +144,11 @@ func (mr *MockPoolIMockRecorder) Reset() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reset", reflect.TypeOf((*MockPoolI)(nil).Reset))
 }
 
-// SetTakerFee mocks base method.
-func (m *MockPoolI) SetTakerFee(newTakerFee types.Dec) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetTakerFee", newTakerFee)
-}
-
-// SetTakerFee indicates an expected call of SetTakerFee.
-func (mr *MockPoolIMockRecorder) SetTakerFee(newTakerFee interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTakerFee", reflect.TypeOf((*MockPoolI)(nil).SetTakerFee), newTakerFee)
-}
-
 // SpotPrice mocks base method.
-func (m *MockPoolI) SpotPrice(ctx types.Context, quoteAssetDenom, baseAssetDenom string) (types.Dec, error) {
+func (m *MockPoolI) SpotPrice(ctx types.Context, quoteAssetDenom, baseAssetDenom string) (osmomath.BigDec, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SpotPrice", ctx, quoteAssetDenom, baseAssetDenom)
-	ret0, _ := ret[0].(types.Dec)
+	ret0, _ := ret[0].(osmomath.BigDec)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
