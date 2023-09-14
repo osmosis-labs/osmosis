@@ -21,8 +21,8 @@ type Authenticator interface {
 	// Gas defines what gas the authenticator uses per signatures verification
 	Gas() uint64
 
-	// Types defines the different types of authenticator, e.g SignatureVerificationAuthenticator
-	// or CosmWasmAuthenticator. Each types of authenticator needs to be registered by the AuthenticatorManager
+	// Type() defines the different types of authenticator, e.g SignatureVerificationAuthenticator
+	// or CosmWasmAuthenticator. Each type of authenticator needs to be registered in the AuthenticatorManager
 	// and these Types are used to store and link the data structure to the Authenticator logic
 	Type() string
 
