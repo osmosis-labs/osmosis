@@ -25,7 +25,7 @@ enum SplittingPolicy {
 // us sidestep a refactor to avoid an import cycle.
 message InternalGaugeInfo {
   string total_weight = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"total_weight\"",
     (gogoproto.nullable) = false
   ];
@@ -38,11 +38,11 @@ message InternalGaugeRecord {
 
   uint64 gauge_id = 1 [ (gogoproto.moretags) = "yaml:\"gauge_id\"" ];
   string current_weight = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
   string cumulative_weight = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
 }

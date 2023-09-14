@@ -54,22 +54,22 @@ func (s *KeeperTestSuite) TestGetGroupGaugeById() {
 			expectedRecord: types.GroupGauge{
 				GroupGaugeId: uint64(5),
 				InternalGaugeInfo: types.InternalGaugeInfo{
-					TotalWeight: sdk.NewInt(150),
+					TotalWeight: osmomath.NewInt(150),
 					GaugeRecords: []types.InternalGaugeRecord{
 						{
 							GaugeId:          2,
-							CurrentWeight:    sdk.NewInt(50),
-							CumulativeWeight: sdk.NewInt(50),
+							CurrentWeight:    osmomath.NewInt(50),
+							CumulativeWeight: osmomath.NewInt(50),
 						},
 						{
 							GaugeId:          3,
-							CurrentWeight:    sdk.NewInt(50),
-							CumulativeWeight: sdk.NewInt(50),
+							CurrentWeight:    osmomath.NewInt(50),
+							CumulativeWeight: osmomath.NewInt(50),
 						},
 						{
 							GaugeId:          4,
-							CurrentWeight:    sdk.NewInt(50),
-							CumulativeWeight: sdk.NewInt(50),
+							CurrentWeight:    osmomath.NewInt(50),
+							CumulativeWeight: osmomath.NewInt(50),
 						},
 					},
 				},
