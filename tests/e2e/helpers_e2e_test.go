@@ -160,4 +160,5 @@ func runFuncsInParallelAndBlock(funcs []func()) {
 			g()
 		}(f)
 	}
+	wg.Wait()
 }

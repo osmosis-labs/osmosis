@@ -11,6 +11,7 @@ import (
 	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	types1 "github.com/cosmos/cosmos-sdk/x/bank/types"
 	gomock "github.com/golang/mock/gomock"
+	osmomath "github.com/osmosis-labs/osmosis/osmomath"
 	types2 "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
@@ -229,7 +230,7 @@ func (m *MockPoolModuleI) EXPECT() *MockPoolModuleIMockRecorder {
 }
 
 // CalcInAmtGivenOut mocks base method.
-func (m *MockPoolModuleI) CalcInAmtGivenOut(ctx types.Context, poolI types2.PoolI, tokenOut types.Coin, tokenInDenom string, spreadFactor types.Dec) (types.Coin, error) {
+func (m *MockPoolModuleI) CalcInAmtGivenOut(ctx types.Context, poolI types2.PoolI, tokenOut types.Coin, tokenInDenom string, spreadFactor osmomath.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalcInAmtGivenOut", ctx, poolI, tokenOut, tokenInDenom, spreadFactor)
 	ret0, _ := ret[0].(types.Coin)
@@ -244,7 +245,7 @@ func (mr *MockPoolModuleIMockRecorder) CalcInAmtGivenOut(ctx, poolI, tokenOut, t
 }
 
 // CalcOutAmtGivenIn mocks base method.
-func (m *MockPoolModuleI) CalcOutAmtGivenIn(ctx types.Context, poolI types2.PoolI, tokenIn types.Coin, tokenOutDenom string, spreadFactor types.Dec) (types.Coin, error) {
+func (m *MockPoolModuleI) CalcOutAmtGivenIn(ctx types.Context, poolI types2.PoolI, tokenIn types.Coin, tokenOutDenom string, spreadFactor osmomath.Dec) (types.Coin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalcOutAmtGivenIn", ctx, poolI, tokenIn, tokenOutDenom, spreadFactor)
 	ret0, _ := ret[0].(types.Coin)
@@ -259,10 +260,10 @@ func (mr *MockPoolModuleIMockRecorder) CalcOutAmtGivenIn(ctx, poolI, tokenIn, to
 }
 
 // CalculateSpotPrice mocks base method.
-func (m *MockPoolModuleI) CalculateSpotPrice(ctx types.Context, poolId uint64, quoteAssetDenom, baseAssetDenom string) (types.Dec, error) {
+func (m *MockPoolModuleI) CalculateSpotPrice(ctx types.Context, poolId uint64, quoteAssetDenom, baseAssetDenom string) (osmomath.Dec, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalculateSpotPrice", ctx, poolId, quoteAssetDenom, baseAssetDenom)
-	ret0, _ := ret[0].(types.Dec)
+	ret0, _ := ret[0].(osmomath.Dec)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -363,10 +364,10 @@ func (mr *MockPoolModuleIMockRecorder) InitializePool(ctx, pool, creatorAddress 
 }
 
 // SwapExactAmountIn mocks base method.
-func (m *MockPoolModuleI) SwapExactAmountIn(ctx types.Context, sender types.AccAddress, pool types2.PoolI, tokenIn types.Coin, tokenOutDenom string, tokenOutMinAmount types.Int, spreadFactor types.Dec) (types.Int, error) {
+func (m *MockPoolModuleI) SwapExactAmountIn(ctx types.Context, sender types.AccAddress, pool types2.PoolI, tokenIn types.Coin, tokenOutDenom string, tokenOutMinAmount osmomath.Int, spreadFactor osmomath.Dec) (osmomath.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SwapExactAmountIn", ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, spreadFactor)
-	ret0, _ := ret[0].(types.Int)
+	ret0, _ := ret[0].(osmomath.Int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -378,10 +379,10 @@ func (mr *MockPoolModuleIMockRecorder) SwapExactAmountIn(ctx, sender, pool, toke
 }
 
 // SwapExactAmountOut mocks base method.
-func (m *MockPoolModuleI) SwapExactAmountOut(ctx types.Context, sender types.AccAddress, pool types2.PoolI, tokenInDenom string, tokenInMaxAmount types.Int, tokenOut types.Coin, spreadFactor types.Dec) (types.Int, error) {
+func (m *MockPoolModuleI) SwapExactAmountOut(ctx types.Context, sender types.AccAddress, pool types2.PoolI, tokenInDenom string, tokenInMaxAmount osmomath.Int, tokenOut types.Coin, spreadFactor osmomath.Dec) (osmomath.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SwapExactAmountOut", ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, spreadFactor)
-	ret0, _ := ret[0].(types.Int)
+	ret0, _ := ret[0].(osmomath.Int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -506,4 +507,79 @@ func (m *MockMultihopRoute) PoolIds() []uint64 {
 func (mr *MockMultihopRouteMockRecorder) PoolIds() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PoolIds", reflect.TypeOf((*MockMultihopRoute)(nil).PoolIds))
+}
+
+// MockStakingKeeper is a mock of StakingKeeper interface.
+type MockStakingKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockStakingKeeperMockRecorder
+}
+
+// MockStakingKeeperMockRecorder is the mock recorder for MockStakingKeeper.
+type MockStakingKeeperMockRecorder struct {
+	mock *MockStakingKeeper
+}
+
+// NewMockStakingKeeper creates a new mock instance.
+func NewMockStakingKeeper(ctrl *gomock.Controller) *MockStakingKeeper {
+	mock := &MockStakingKeeper{ctrl: ctrl}
+	mock.recorder = &MockStakingKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
+	return m.recorder
+}
+
+// BondDenom mocks base method.
+func (m *MockStakingKeeper) BondDenom(ctx types.Context) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BondDenom", ctx)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// BondDenom indicates an expected call of BondDenom.
+func (mr *MockStakingKeeperMockRecorder) BondDenom(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondDenom", reflect.TypeOf((*MockStakingKeeper)(nil).BondDenom), ctx)
+}
+
+// MockProtorevKeeper is a mock of ProtorevKeeper interface.
+type MockProtorevKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockProtorevKeeperMockRecorder
+}
+
+// MockProtorevKeeperMockRecorder is the mock recorder for MockProtorevKeeper.
+type MockProtorevKeeperMockRecorder struct {
+	mock *MockProtorevKeeper
+}
+
+// NewMockProtorevKeeper creates a new mock instance.
+func NewMockProtorevKeeper(ctrl *gomock.Controller) *MockProtorevKeeper {
+	mock := &MockProtorevKeeper{ctrl: ctrl}
+	mock.recorder = &MockProtorevKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockProtorevKeeper) EXPECT() *MockProtorevKeeperMockRecorder {
+	return m.recorder
+}
+
+// GetPoolForDenomPair mocks base method.
+func (m *MockProtorevKeeper) GetPoolForDenomPair(ctx types.Context, baseDenom, denomToMatch string) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPoolForDenomPair", ctx, baseDenom, denomToMatch)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPoolForDenomPair indicates an expected call of GetPoolForDenomPair.
+func (mr *MockProtorevKeeperMockRecorder) GetPoolForDenomPair(ctx, baseDenom, denomToMatch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPoolForDenomPair", reflect.TypeOf((*MockProtorevKeeper)(nil).GetPoolForDenomPair), ctx, baseDenom, denomToMatch)
 }
