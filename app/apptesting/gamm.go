@@ -294,7 +294,7 @@ func (s *KeeperTestHelper) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, poo
 	// Amount of quote token need to trade to get target spot price
 	// AmoutQuoteTokenNeedToTrade = AmoutQuoTokenNow * ((targetSpotPrice/spotPriceNow)^((weight_base/(weight_base + weight_quote))) -1 )
 
-	ratioPrice := targetSpotPrice.Quo(spotPriceNow)
+	ratioPrice := targetSpotPrice.Quo(spotPriceNow.Dec())
 	ratioWeight := (baseAsset.Weight.ToLegacyDec()).Quo(baseAsset.Weight.ToLegacyDec().Add(quoteAsset.Weight.ToLegacyDec()))
 
 	amountTrade = quoteAsset.Token.Amount.ToLegacyDec().Mul(osmomath.Pow(ratioPrice, ratioWeight).Sub(osmomath.OneDec()))
