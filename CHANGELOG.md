@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6352](https://github.com/osmosis-labs/osmosis/pull/6352) Reduce error blow-up in CalcAmount0Delta by changing the order of math operations.
 * [#6379](https://github.com/osmosis-labs/osmosis/pull/6379) Fix rounding edge case in zfo strategy that leads to
 infinite loop in swap out given in.
+* [#6368](https://github.com/osmosis-labs/osmosis/pull/6368) Stricter rounding behavior in CL math's CalcAmount0Delta and GetNextSqrtPriceFromAmount0InRoundingUp
 
 ### API Breaks
 

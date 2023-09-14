@@ -1,4 +1,5 @@
 from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING, getcontext
+from math import *
 
 class Coin:
     # Define this class based on what fields sdk.Coin has.
@@ -114,12 +115,11 @@ def calc_amount_zero_delta(liquidity, sqrtPriceA, sqrtPriceB, roundUp):
     diff = sqrtPriceA - sqrtPriceB
 
     product_num = liquidity * diff
-    product_denom = sqrtPriceA * sqrtPriceB
 
     if roundUp:
-        return round_osmo_prec_up(round_osmo_prec_up(product_num) / round_osmo_prec_down(product_denom))
+        return round_osmo_prec_up(round_osmo_prec_up(round_osmo_prec_up(product_num) / sqrtPriceA) / sqrtPriceB)
 
-    return round_osmo_prec_down(round_osmo_prec_down(product_num) / round_osmo_prec_up(product_denom))
+    return round_osmo_prec_down(round_osmo_prec_down(round_osmo_prec_down(product_num) / sqrtPriceA)/ sqrtPriceB)
 
 def calc_amount_one_delta(liquidity, sqrtPriceA, sqrtPriceB, roundUp):
     if sqrtPriceB > sqrtPriceA:
