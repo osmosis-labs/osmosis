@@ -46,7 +46,7 @@ func (p CosmWasmPool) IsActive(ctx sdk.Context) bool {
 	panic("CosmWasmPool.IsActive not implemented")
 }
 
-func (p CosmWasmPool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (osmomath.Dec, error) {
+func (p CosmWasmPool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (osmomath.BigDec, error) {
 	panic("CosmWasmPool.SpotPrice not implemented")
 }
 

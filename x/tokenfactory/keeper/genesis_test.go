@@ -38,7 +38,16 @@ func (s *KeeperTestSuite) TestGenesis() {
 	for i, denom := range genesisState.FactoryDenoms {
 		// hacky, sets bank metadata to exist if i != 0, to cover both cases.
 		if i != 0 {
-			app.BankKeeper.SetDenomMetaData(s.Ctx, banktypes.Metadata{Base: denom.GetDenom(), Display: "test"})
+			app.BankKeeper.SetDenomMetaData(s.Ctx, banktypes.Metadata{
+				DenomUnits: []*banktypes.DenomUnit{{
+					Denom:    denom.GetDenom(),
+					Exponent: 0,
+				}},
+				Base:    denom.GetDenom(),
+				Display: denom.GetDenom(),
+				Name:    denom.GetDenom(),
+				Symbol:  denom.GetDenom(),
+			})
 		}
 	}
 
@@ -57,14 +66,27 @@ func (s *KeeperTestSuite) TestGenesis() {
 	s.Require().NotNil(exportedGenesis)
 	s.Require().Equal(genesisState, *exportedGenesis)
 
+	// verify that the exported bank genesis is valid
 	app.BankKeeper.SetParams(s.Ctx, banktypes.DefaultParams())
-	app.BankKeeper.InitGenesis(s.Ctx, app.BankKeeper.ExportGenesis(s.Ctx))
+	exportedBankGenesis := app.BankKeeper.ExportGenesis(s.Ctx)
+	s.Require().NoError(exportedBankGenesis.Validate())
+
+	app.BankKeeper.InitGenesis(s.Ctx, exportedBankGenesis)
 	for i, denom := range genesisState.FactoryDenoms {
 		// hacky, check whether bank metadata is not replaced if i != 0, to cover both cases.
 		if i != 0 {
 			metadata, found := app.BankKeeper.GetDenomMetaData(s.Ctx, denom.GetDenom())
 			s.Require().True(found)
-			s.Require().Equal(metadata, banktypes.Metadata{Base: denom.GetDenom(), Display: "test"})
+			s.Require().EqualValues(metadata, banktypes.Metadata{
+				DenomUnits: []*banktypes.DenomUnit{{
+					Denom:    denom.GetDenom(),
+					Exponent: 0,
+				}},
+				Base:    denom.GetDenom(),
+				Display: denom.GetDenom(),
+				Name:    denom.GetDenom(),
+				Symbol:  denom.GetDenom(),
+			})
 		}
 	}
 }

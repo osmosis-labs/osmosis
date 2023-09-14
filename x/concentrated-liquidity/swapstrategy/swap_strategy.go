@@ -125,7 +125,7 @@ func GetSqrtPriceLimit(priceLimit osmomath.BigDec, zeroForOne bool) (osmomath.Bi
 		if zeroForOne {
 			return types.MinSqrtPriceBigDec, nil
 		}
-		return osmomath.BigDecFromDec(types.MaxSqrtPrice), nil
+		return types.MaxSqrtPriceBigDec, nil
 	}
 
 	if priceLimit.LT(types.MinSpotPriceV2) || priceLimit.GT(types.MaxSpotPriceBigDec) {
