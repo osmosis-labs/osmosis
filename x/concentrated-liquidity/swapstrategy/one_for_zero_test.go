@@ -159,7 +159,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedAmountOut:               osmomath.ZeroDec(),
 			expectedSpreadRewardChargeTotal: osmomath.ZeroDec(),
 		},
-		"7: invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price": {
+		// This edge case does not occur anymore. The fix observed in PR: https://github.com/osmosis-labs/osmosis/pull/6352
+		// See linked issue for detals of the change.
+		"7: (fixed) invalid zero difference between sqrt price current and sqrt price next due to precision loss, full amount remaining in is charged and amount out calculated from sqrt price": {
 			// Note the numbers are hand-picked to reproduce this specific case.
 			sqrtPriceCurrent: osmomath.BigDecFromDec(osmomath.MustNewDecFromStr("0.000001000049998750")),
 			sqrtPriceTarget:  osmomath.MustNewDecFromStr("0.000001000049998751"),
@@ -175,12 +177,21 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedAmountInConsumed: osmomath.NewDec(99),
 			// liquidity * (sqrtPriceNext - sqrtPriceCurrent) / (sqrtPriceNext * sqrtPriceCurrent)
 			// calculated with x/concentrated-liquidity/python/clmath.py
+			// # Calculate amount in until sqrtPriceTarget
+			// amountIn = calc_amount_one_delta(liquidity, sqrtPriceCurrent, sqrtPriceTarget, True)
+			// Decimal('100.002498062401598791937822606808718081')
+			// # Greater than amountOneInRemaining => calculate sqrtPriceNext
+			//
+			// amountOneInRemaining = Decimal('99')
+			// sqrtPriceNext = get_next_sqrt_price_from_amount1_in_round_down(liquidity, sqrtPriceCurrent, amountOneInRemaining)
+			// Decimal("0.000001000049998750989975269800000000")
+			//
 			// diff = (sqrtPriceNext - sqrtPriceCurrent)
-			// diff = round_decimal(diff, 36, ROUND_FLOOR) (0.000000000000000000989975269800000000)
-			// mul = (sqrtPriceNext * sqrtPriceCurrent)
-			// mul = round_decimal(mul, 36, ROUND_CEILING) (0.000000000001000100000000865026329827)
-			//  round_decimal(liquidity * diff / mul, 36, ROUND_FLOOR)
-			expectedAmountOut:               osmomath.MustNewBigDecFromStr("98990100989815.389417309844929293132374729779331247").Dec(),
+			// diff = round_decimal(diff, 36, ROUND_FLOOR)
+			// mul = round_decimal(liquidity * diff, 36, ROUND_FLOOR)
+			// div1= round_decimal(mul / sqrtPriceNext, 36, ROUND_FLOOR)
+			// round_decimal(div1 / sqrtPriceCurrent, 36, ROUND_FLOOR)
+			expectedAmountOut:               osmomath.MustNewBigDecFromStr("98990100989815.389417309941839547862158319016747061").Dec(),
 			expectedSpreadRewardChargeTotal: osmomath.ZeroDec(),
 		},
 		"8: invalid zero difference between sqrt price current and sqrt price next due to precision loss. Returns 0 for amounts out. Note that the caller should detect this and fail.": {

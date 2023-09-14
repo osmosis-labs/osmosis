@@ -10,8 +10,8 @@ import (
 // ints are within a certain error tolerance of one another,
 // and (optionally) that they are rounding in the correct direction.
 // ErrTolerance.Compare(a, b) returns true iff:
-// * RoundingMode = RoundUp, then b >= a
-// * RoundingMode = RoundDown, then b <= a
+// * RoundingMode = RoundUp, then a <= b
+// * RoundingMode = RoundDown, then a >= b
 // * |a - b| <= AdditiveTolerance
 // * |a - b| / min(a, b) <= MultiplicativeTolerance
 //
@@ -134,6 +134,63 @@ func (e ErrTolerance) CompareBigDec(expected BigDec, actual BigDec) int {
 		errTerm := diff.Quo(minValue)
 		// fmt.Printf("err term %v\n", errTerm)
 		if errTerm.GT(BigDecFromDec(e.MultiplicativeTolerance)) {
+			return comparisonSign
+		}
+	}
+
+	return 0
+}
+
+// CompareDec validates if actual is within errTolerance of expected.
+// returns 0 if it is
+// returns 1 if not, and expected > actual.
+// returns -1 if not, and expected < actual
+func (e ErrTolerance) CompareDec(expected Dec, actual Dec) int {
+	// Ensure that even if expected is within tolerance of actual, we don't count it as equal if its in the wrong direction.
+	// so if we're supposed to round down, it must be that `expected >= actual`.
+	// likewise if we're supposed to round up, it must be that `expected <= actual`.
+	// If neither of the above, then rounding direction does not enforce a constraint.
+	if e.RoundingDir == RoundDown {
+		if expected.LT(actual) {
+			return -1
+		}
+	} else if e.RoundingDir == RoundUp {
+		if expected.GT(actual) {
+			return 1
+		}
+	}
+
+	diff := expected.Sub(actual).Abs()
+
+	comparisonSign := 0
+	if expected.GT(actual) {
+		comparisonSign = 1
+	} else if expected.LT(actual) {
+		comparisonSign = -1
+	}
+
+	// Check additive tolerance equations
+	if !e.AdditiveTolerance.IsNil() {
+		// if no error accepted, do a direct compare.
+		if e.AdditiveTolerance.IsZero() {
+			if expected.Equal(actual) {
+				return 0
+			}
+		}
+
+		if diff.GT(e.AdditiveTolerance) {
+			return comparisonSign
+		}
+	}
+	// Check multiplicative tolerance equations
+	if !e.MultiplicativeTolerance.IsNil() && !e.MultiplicativeTolerance.IsZero() {
+		minValue := MinDec(expected.Abs(), actual.Abs())
+		if minValue.IsZero() {
+			return comparisonSign
+		}
+
+		errTerm := diff.Quo(minValue)
+		if errTerm.GT(e.MultiplicativeTolerance) {
 			return comparisonSign
 		}
 	}

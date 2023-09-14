@@ -26,16 +26,19 @@ const (
 	skipCleanupEnv = "OSMOSIS_E2E_SKIP_CLEANUP"
 	// Environment variable name to determine what version we are upgrading to
 	upgradeVersionEnv = "OSMOSIS_E2E_UPGRADE_VERSION"
+	// Environment variable name to determine if we are running tests marked as scheduled
+	scheduledTestEv = "OSMOSIS_E2E_SCHEDULED"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	configurer    configurer.Configurer
-	skipUpgrade   bool
-	skipIBC       bool
-	skipStateSync bool
-	mutex         sync.Mutex
+	configurer       configurer.Configurer
+	skipUpgrade      bool
+	skipIBC          bool
+	skipStateSync    bool
+	runScheduledTest bool
+	mutex            sync.Mutex
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -69,6 +72,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 	}
 	upgradeSettings.IsEnabled = !s.skipUpgrade
+
+	if str := os.Getenv(scheduledTestEv); len(str) > 0 {
+		s.runScheduledTest, err = strconv.ParseBool(str)
+		s.Require().NoError(err)
+		if s.runScheduledTest {
+			s.T().Logf("%s was true, running all tests", scheduledTestEv)
+		}
+	}
 
 	if str := os.Getenv(forkHeightEnv); len(str) > 0 {
 		upgradeSettings.ForkHeight, err = strconv.ParseInt(str, 0, 64)

@@ -54,84 +54,108 @@ func PriceToTickRoundDownSpacing(price osmomath.BigDec, tickSpacing uint64) (int
 func TestTickToSqrtPrice(t *testing.T) {
 	testCases := map[string]struct {
 		tickIndex     int64
-		expectedPrice osmomath.Dec
+		expectedPrice osmomath.BigDec
 		expectedError error
 	}{
 		"Ten billionths cent increments at the millionths place: 1": {
 			tickIndex:     -51630100,
-			expectedPrice: osmomath.MustNewDecFromStr("0.0000033699"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.0000033699"),
 		},
 		"Ten billionths cent increments at the millionths place: 2": {
 			tickIndex:     -51630000,
-			expectedPrice: osmomath.MustNewDecFromStr("0.0000033700"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.0000033700"),
 		},
 		"One millionths cent increments at the hundredths place: 1": {
 			tickIndex:     -11999800,
-			expectedPrice: osmomath.MustNewDecFromStr("0.070002"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.070002"),
 		},
 		"One millionths cent increments at the hundredths place: 2": {
 			tickIndex:     -11999700,
-			expectedPrice: osmomath.MustNewDecFromStr("0.070003"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.070003"),
 		},
 		"One hundred thousandth cent increments at the tenths place: 1": {
 			tickIndex:     -999800,
-			expectedPrice: osmomath.MustNewDecFromStr("0.90002"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.90002"),
 		},
 		"One hundred thousandth cent increments at the tenths place: 2": {
 			tickIndex:     -999700,
-			expectedPrice: osmomath.MustNewDecFromStr("0.90003"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.90003"),
 		},
 		"One ten thousandth cent increments at the ones place: 1": {
 			tickIndex:     1000000,
-			expectedPrice: osmomath.MustNewDecFromStr("2"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("2"),
 		},
 		"One dollar increments at the ten thousands place: 2": {
 			tickIndex:     1000100,
-			expectedPrice: osmomath.MustNewDecFromStr("2.0001"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("2.0001"),
 		},
 		"One thousandth cent increments at the tens place: 1": {
 			tickIndex:     9200100,
-			expectedPrice: osmomath.MustNewDecFromStr("12.001"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("12.001"),
 		},
 		"One thousandth cent increments at the tens place: 2": {
 			tickIndex:     9200200,
-			expectedPrice: osmomath.MustNewDecFromStr("12.002"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("12.002"),
 		},
 		"One cent increments at the hundreds place: 1": {
 			tickIndex:     18320100,
-			expectedPrice: osmomath.MustNewDecFromStr("132.01"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("132.01"),
 		},
 		"One cent increments at the hundreds place: 2": {
 			tickIndex:     18320200,
-			expectedPrice: osmomath.MustNewDecFromStr("132.02"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("132.02"),
 		},
 		"Ten cent increments at the thousands place: 1": {
 			tickIndex:     27732100,
-			expectedPrice: osmomath.MustNewDecFromStr("1732.10"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("1732.10"),
 		},
 		"Ten cent increments at the thousands place: 2": {
 			tickIndex:     27732200,
-			expectedPrice: osmomath.MustNewDecFromStr("1732.20"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("1732.20"),
 		},
 		"Dollar increments at the ten thousands place: 1": {
 			tickIndex:     36073200,
-			expectedPrice: osmomath.MustNewDecFromStr("10732"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("10732"),
 		},
 		"Dollar increments at the ten thousands place: 2": {
 			tickIndex:     36073300,
-			expectedPrice: osmomath.MustNewDecFromStr("10733"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("10733"),
 		},
 		"Max tick and min k": {
 			tickIndex:     342000000,
-			expectedPrice: types.MaxSpotPrice,
+			expectedPrice: types.MaxSpotPriceBigDec,
 		},
-		"Min tick and max k": {
-			tickIndex:     types.MinInitializedTick,
-			expectedPrice: types.MinSpotPrice,
+		"tickIndex is MinInitializedTickV1": {
+			tickIndex: types.MinInitializedTick,
+			// 1 order of magnitude below min spot price of 10^-12 + 6 orders of magnitude smaller
+			// to account for exponent at price one of -6.
+			expectedPrice: types.MinSpotPriceBigDec,
+		},
+		"tickIndex is MinCurrentTickV1": {
+			tickIndex: types.MinCurrentTick,
+			// 1 order of magnitude below min spot price of 10^-12 + 6 orders of magnitude smaller
+			// to account for exponent at price one of -6.
+			expectedPrice: types.MinSpotPriceBigDec.Sub(osmomath.BigDecFromDec(osmomath.SmallestDec()).Quo(bigTenDec)),
+		},
+		"tickIndex is MinInitializedTickV2": {
+			tickIndex:     types.MinInitializedTickV2,
+			expectedPrice: types.MinSpotPriceV2,
+		},
+		"tickIndex is MinCurrentTickV2": {
+			tickIndex:     types.MinCurrentTickV2,
+			expectedPrice: types.MinSpotPriceV2,
+		},
+		"tickIndex is MinInitializedTick + 1 ULP": {
+			tickIndex:     types.MinInitializedTickV2 + 1,
+			expectedPrice: types.MinSpotPriceV2.Add(smallestBigDec),
+		},
+		"tickIndex is MinInitializedTick + 2 ULP": {
+			tickIndex:     types.MinInitializedTickV2 + 2,
+			expectedPrice: types.MinSpotPriceV2.Add(smallestBigDec.MulInt64(2)),
 		},
 		"error: tickIndex less than minimum": {
-			tickIndex:     types.MinCurrentTick - 1,
-			expectedError: types.TickIndexMinimumError{MinTick: types.MinCurrentTick},
+			tickIndex:     types.MinCurrentTickV2 - 1,
+			expectedError: types.TickIndexMinimumError{MinTick: types.MinCurrentTickV2},
 		},
 		"error: tickIndex greater than maximum": {
 			tickIndex:     types.MaxTick + 1,
@@ -139,84 +163,89 @@ func TestTickToSqrtPrice(t *testing.T) {
 		},
 		"Gyen <> USD, tick -20594000 -> price 0.0074060": {
 			tickIndex:     -20594000,
-			expectedPrice: osmomath.MustNewDecFromStr("0.007406000000000000"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.007406000000000000"),
 		},
 		"Gyen <> USD, tick -20594000 + 100 -> price 0.0074061": {
 			tickIndex:     -20593900,
-			expectedPrice: osmomath.MustNewDecFromStr("0.007406100000000000"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.007406100000000000"),
 		},
 		"Spell <> USD, tick -29204000 -> price 0.00077960": {
 			tickIndex:     -29204000,
-			expectedPrice: osmomath.MustNewDecFromStr("0.000779600000000000"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.000779600000000000"),
 		},
 		"Spell <> USD, tick -29204000 + 100 -> price 0.00077961": {
 			tickIndex:     -29203900,
-			expectedPrice: osmomath.MustNewDecFromStr("0.000779610000000000"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.000779610000000000"),
 		},
 		"Atom <> Osmo, tick -12150000 -> price 0.068500": {
 			tickIndex:     -12150000,
-			expectedPrice: osmomath.MustNewDecFromStr("0.068500000000000000"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.068500000000000000"),
 		},
 		"Atom <> Osmo, tick -12150000 + 100 -> price 0.068501": {
 			tickIndex:     -12149900,
-			expectedPrice: osmomath.MustNewDecFromStr("0.068501000000000000"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.068501000000000000"),
 		},
 		"Boot <> Osmo, tick 64576000 -> price 25760000": {
 			tickIndex:     64576000,
-			expectedPrice: osmomath.MustNewDecFromStr("25760000"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("25760000"),
 		},
 		"Boot <> Osmo, tick 64576000 + 100 -> price 25760000": {
 			tickIndex:     64576100,
-			expectedPrice: osmomath.MustNewDecFromStr("25761000"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("25761000"),
 		},
 		"BTC <> USD, tick 38035200 -> price 30352": {
 			tickIndex:     38035200,
-			expectedPrice: osmomath.MustNewDecFromStr("30352"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("30352"),
 		},
 		"BTC <> USD, tick 38035200 + 100 -> price 30353": {
 			tickIndex:     38035300,
-			expectedPrice: osmomath.MustNewDecFromStr("30353"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("30353"),
 		},
 		"SHIB <> USD, tick -44821000 -> price 0.000011790": {
 			tickIndex:     -44821000,
-			expectedPrice: osmomath.MustNewDecFromStr("0.00001179"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.00001179"),
 		},
 		"SHIB <> USD, tick -44821100 + 100 -> price 0.000011791": {
 			tickIndex:     -44820900,
-			expectedPrice: osmomath.MustNewDecFromStr("0.000011791"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.000011791"),
 		},
 		"ETH <> BTC, tick -12104000 -> price 0.068960": {
 			tickIndex:     -12104000,
-			expectedPrice: osmomath.MustNewDecFromStr("0.068960"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.068960"),
 		},
 		"ETH <> BTC, tick -121044000 + 1 -> price 0.068961": {
 			tickIndex:     -12103900,
-			expectedPrice: osmomath.MustNewDecFromStr("0.068961"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("0.068961"),
 		},
 		"one tick spacing interval smaller than max sqrt price, max tick neg six - 100 -> one tick spacing interval smaller than max sqrt price": {
 			tickIndex:     types.MaxTick - 100,
-			expectedPrice: osmomath.MustNewDecFromStr("99999000000000000000000000000000000000"),
+			expectedPrice: osmomath.MustNewBigDecFromStr("99999000000000000000000000000000000000"),
 		},
 		"max sqrt price, max tick neg six -> max spot price": {
 			tickIndex:     types.MaxTick,
-			expectedPrice: types.MaxSpotPrice,
+			expectedPrice: types.MaxSpotPriceBigDec,
 		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			price, sqrtPrice, err := math.TickToSqrtPrice(tc.tickIndex)
+			sqrtPrice, err := math.TickToSqrtPrice(tc.tickIndex)
 			if tc.expectedError != nil {
 				require.Error(t, err)
 				require.Equal(t, tc.expectedError.Error(), err.Error())
 				return
 			}
 			require.NoError(t, err)
-			expectedSqrtPrice, err := osmomath.MonotonicSqrt(tc.expectedPrice)
-			require.NoError(t, err)
 
-			require.Equal(t, osmomath.BigDecFromDec(tc.expectedPrice).String(), price.String())
-			require.Equal(t, osmomath.BigDecFromDec(expectedSqrtPrice).String(), sqrtPrice.String())
+			var expectedSqrtPrice osmomath.BigDec
+			if tc.expectedPrice.LT(types.MinSpotPriceBigDec) {
+				expectedSqrtPrice = osmomath.MustMonotonicSqrtBigDec(tc.expectedPrice)
+			} else {
+				expectedSqrtPrice = osmomath.BigDecFromDec(osmomath.MustMonotonicSqrt(tc.expectedPrice.Dec()))
+				require.NoError(t, err)
+			}
+
+			require.Equal(t, expectedSqrtPrice.String(), sqrtPrice.String())
 		})
 	}
 }
@@ -260,9 +289,9 @@ func TestTicksToSqrtPrice(t *testing.T) {
 			expectedLowerPrice: types.MinSpotPrice,
 		},
 		"error: lowerTickIndex less than minimum": {
-			lowerTickIndex: osmomath.NewInt(types.MinCurrentTick - 1),
+			lowerTickIndex: osmomath.NewInt(types.MinCurrentTickV2 - 1),
 			upperTickIndex: osmomath.NewInt(36073300),
-			expectedError:  types.TickIndexMinimumError{MinTick: types.MinCurrentTick},
+			expectedError:  types.TickIndexMinimumError{MinTick: types.MinCurrentTickV2},
 		},
 		"error: upperTickIndex greater than maximum": {
 			lowerTickIndex: osmomath.NewInt(types.MinInitializedTick),
@@ -386,8 +415,8 @@ func TestPriceToTick(t *testing.T) {
 			expectedError: types.PriceBoundError{ProvidedPrice: osmomath.BigDecFromDec(types.MaxSpotPrice.Add(osmomath.OneDec())), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice},
 		},
 		"price is smaller than min spot price": {
-			price:         types.MinSpotPriceV2.Quo(bigTenDec),
-			expectedError: types.PriceBoundError{ProvidedPrice: types.MinSpotPriceV2.Quo(bigTenDec), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice},
+			price:         osmomath.ZeroBigDec(),
+			expectedError: types.PriceBoundError{ProvidedPrice: osmomath.ZeroBigDec(), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice},
 		},
 	}
 	for name, tc := range testCases {
@@ -438,7 +467,7 @@ func TestPriceToTickRoundDown(t *testing.T) {
 			tickExpected: -300,
 		},
 		"tick spacing 100, MinSpotPrice, MinTick": {
-			price:        types.MinSpotPriceBigDec,
+			price:        osmomath.BigDecFromDec(types.MinSpotPrice),
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: types.MinInitializedTick,
 		},
@@ -531,7 +560,7 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 			tickExpected: types.MaxTick - 1, // still max
 		},
 		"min spot price": {
-			price:        types.MinSpotPriceBigDec,
+			price:        osmomath.BigDecFromDec(types.MinSpotPrice),
 			tickExpected: types.MinInitializedTick,
 		},
 		"smallest + min price + tick": {
@@ -606,7 +635,7 @@ func TestTickToSqrtPricePriceToTick_InverseRelationship(t *testing.T) {
 			require.Equal(t, tickFromPrice, inverseTickFromPrice)
 
 			// 4. Validate PriceToTick and TickToSqrtPrice functions
-			_, sqrtPrice, err := math.TickToSqrtPrice(tickFromPrice)
+			sqrtPrice, err := math.TickToSqrtPrice(tickFromPrice)
 			require.NoError(t, err)
 
 			// TODO: investigate this separately
@@ -646,6 +675,77 @@ func TestPriceToTick_ErrorCases(t *testing.T) {
 		})
 	}
 }
+
+func TestTickToPrice_SuccessCases(t *testing.T) {
+	testCases := map[string]struct {
+		tickIndex     int64
+		expectedPrice osmomath.BigDec
+		expectedErr   error
+	}{
+		"tick index is Max tick": {
+			tickIndex:     types.MaxTick,
+			expectedPrice: osmomath.BigDecFromDec(types.MaxSpotPrice),
+		},
+		"tick index is between Min tick V1 and Max tick": {
+			tickIndex:     123456,
+			expectedPrice: osmomath.OneBigDec().Add(osmomath.NewBigDec(123456).Mul(osmomath.NewBigDecWithPrec(1, 6))),
+		},
+		"tick index is V1 MinInitializedTick": {
+			tickIndex:     types.MinInitializedTick,
+			expectedPrice: osmomath.BigDecFromDec(types.MinSpotPrice),
+		},
+		"tick index is V1 MinCurrentTick": {
+			tickIndex:     types.MinCurrentTick,
+			expectedPrice: osmomath.BigDecFromDec(types.MinSpotPrice).Sub(osmomath.NewBigDecWithPrec(1, 13+(-types.ExponentAtPriceOne))),
+		},
+		"tick index is V2 MinInitializedTick": {
+			tickIndex:     types.MinInitializedTickV2,
+			expectedPrice: types.MinSpotPriceV2,
+		},
+		"tick index is V2 MinCurrentTickV2": {
+			tickIndex:     types.MinCurrentTickV2,
+			expectedPrice: types.MinSpotPriceV2,
+		},
+		"tick index is V2 MinInitializedTick + 1": {
+			tickIndex:     types.MinInitializedTickV2 + 1,
+			expectedPrice: types.MinSpotPriceV2.Add(smallestBigDec),
+		},
+		"tick index is V2 MinInitializedTick + 2": {
+			tickIndex:     types.MinInitializedTickV2 + 2,
+			expectedPrice: types.MinSpotPriceV2.Add(smallestBigDec).Add(smallestBigDec),
+		},
+		// Computed in Python:
+		// geometricExponentIncrementDistanceInTicks = 9000000
+		// tickIndex = -9000000 * 18 - 123456
+		// geometricExponentDelta = tickIndex // geometricExponentIncrementDistanceInTicks + 1 # add one because Python is a floor division when Go is truncation towards zero.
+		// exponentAtCurrentTick = -6 + geometricExponentDelta - 1
+		// currentAdditiveIncrementInTicks = 10**exponentAtCurrentTick
+		// numAdditiveTicks = tickIndex - (geometricExponentDelta * geometricExponentIncrementDistanceInTicks)
+		// 10**geometricExponentDelta + numAdditiveTicks * currentAdditiveIncrementInTicks
+		// 9.876544e-19
+		"tick index is between V2 MinInitializedTick and V1 MinInitializedTick": {
+			tickIndex:     -9000000*18 - 123456,
+			expectedPrice: osmomath.NewBigDecWithPrec(9876544, 6+19), // 6 for number of digits after, 18 for geometric multiplier and 1 for negative ticks
+		},
+	}
+	for name, tc := range testCases {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			price, err := math.TickToPrice(tc.tickIndex)
+
+			if tc.expectedErr != nil {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			require.Equal(t, tc.expectedPrice, price)
+		})
+	}
+}
+
 func TestTickToPrice_ErrorCases(t *testing.T) {
 	testCases := map[string]struct {
 		tickIndex int64
@@ -654,7 +754,7 @@ func TestTickToPrice_ErrorCases(t *testing.T) {
 			tickIndex: types.MaxTick + 1,
 		},
 		"tick index is less than min tick": {
-			tickIndex: types.MinCurrentTick - 1,
+			tickIndex: types.MinCurrentTickV2 - 1,
 		},
 	}
 	for name, tc := range testCases {
@@ -697,11 +797,11 @@ func TestCalculatePriceToTick(t *testing.T) {
 			expectedTickIndex: 72000001,
 		},
 		"MinSpotPrice V1 -> MinInitializedTick": {
-			price:             types.MinSpotPriceBigDec,
+			price:             osmomath.BigDecFromDec(types.MinSpotPrice),
 			expectedTickIndex: types.MinInitializedTick,
 		},
 		"MinSpotPrice V1 - 10^-19 -> MinCurrentTick": {
-			price:             types.MinSpotPriceBigDec.Sub(osmomath.NewBigDecWithPrec(1, 19)),
+			price:             osmomath.BigDecFromDec(types.MinSpotPrice).Sub(osmomath.NewBigDecWithPrec(1, 19)),
 			expectedTickIndex: types.MinCurrentTick,
 		},
 		"MinSpotPrice V2 -> MinInitializedTick V2": {
@@ -720,7 +820,7 @@ func TestCalculatePriceToTick(t *testing.T) {
 			require.Equal(t, tc.expectedTickIndex, tickIndex)
 
 			// Only run tests on the BigDec version on range [MinCurrentTickV2, MinCurrentTick]
-			if tc.price.LT(types.MinSpotPriceBigDec) {
+			if tc.price.LT(osmomath.BigDecFromDec(types.MinSpotPrice)) {
 				return
 			}
 
@@ -729,6 +829,35 @@ func TestCalculatePriceToTick(t *testing.T) {
 			require.Equal(t, tc.expectedTickIndex, tickIndex)
 		})
 	}
+}
+
+// This test validates that conversions	at the new initialized boundary are sound.
+func TestSqrtPriceToTick_MinInitializedTickV2(t *testing.T) {
+	minSqrtPrice, err := osmomath.MonotonicSqrtBigDec(types.MinSpotPriceV2)
+	require.NoError(t, err)
+
+	tickIndex, err := math.CalculateSqrtPriceToTick(minSqrtPrice)
+	require.NoError(t, err)
+	require.Equal(t, types.MinInitializedTickV2, tickIndex)
+}
+
+// This test validates that tick conversions at the old initialized boundary are sound.
+func TestSqrtPriceToTick_MinInitializedTickV1(t *testing.T) {
+	minSqrtPrice, err := osmomath.MonotonicSqrt(types.MinSpotPrice)
+	require.NoError(t, err)
+
+	minSpotPrice := osmomath.BigDecFromDec(minSqrtPrice)
+	tickIndex, err := math.CalculateSqrtPriceToTick(minSpotPrice)
+	require.NoError(t, err)
+	require.Equal(t, types.MinInitializedTick, tickIndex)
+
+	// Subtract one ULP given exponent at price one of -6.
+	minSpotPriceMinusULP := minSpotPrice.Sub(osmomath.NewBigDecWithPrec(1, 19+6))
+	tickIndex, err = math.CalculateSqrtPriceToTick(minSpotPriceMinusULP)
+	require.NoError(t, err)
+
+	// The tick index should be one less than the min initialized tick.
+	require.Equal(t, types.MinInitializedTick-1, tickIndex)
 }
 
 func TestPowTenInternal(t *testing.T) {
@@ -761,21 +890,21 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 	sdkULP := osmomath.BigDecFromDec(osmomath.SmallestDec())
 
 	// Compute reference values that need to be satisfied
-	_, sqp1, err := math.TickToSqrtPrice(1)
+	sqp1, err := math.TickToSqrtPrice(1)
 	require.NoError(t, err)
-	_, sqp99, err := math.TickToSqrtPrice(99)
+	sqp99, err := math.TickToSqrtPrice(99)
 	require.NoError(t, err)
-	_, sqp100, err := math.TickToSqrtPrice(100)
+	sqp100, err := math.TickToSqrtPrice(100)
 	require.NoError(t, err)
-	_, sqpn100, err := math.TickToSqrtPrice(-100)
+	sqpn100, err := math.TickToSqrtPrice(-100)
 	require.NoError(t, err)
-	_, sqpn101, err := math.TickToSqrtPrice(-101)
+	sqpn101, err := math.TickToSqrtPrice(-101)
 	require.NoError(t, err)
-	_, sqpMaxTickSubOne, err := math.TickToSqrtPrice(types.MaxTick - 1)
+	sqpMaxTickSubOne, err := math.TickToSqrtPrice(types.MaxTick - 1)
 	require.NoError(t, err)
-	_, sqpMinTickPlusOne, err := math.TickToSqrtPrice(types.MinInitializedTick + 1)
+	sqpMinTickPlusOne, err := math.TickToSqrtPrice(types.MinInitializedTick + 1)
 	require.NoError(t, err)
-	_, sqpMinTickPlusTwo, err := math.TickToSqrtPrice(types.MinInitializedTick + 2)
+	sqpMinTickPlusTwo, err := math.TickToSqrtPrice(types.MinInitializedTick + 2)
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
@@ -901,12 +1030,12 @@ func TestSqrtPriceToTickRoundDownSpacing(t *testing.T) {
 
 			// Ensure returned bucket properly encapsulates given sqrt price, skipping the upper bound
 			// check if we're on the max tick
-			_, inverseSqrtPrice, err := math.TickToSqrtPrice(tickIndex)
+			inverseSqrtPrice, err := math.TickToSqrtPrice(tickIndex)
 			require.NoError(t, err)
 			require.True(t, inverseSqrtPrice.LTE(tc.sqrtPrice))
 
 			if tc.tickExpected != types.MaxTick {
-				_, inverseSqrtPriceTickAbove, err := math.TickToSqrtPrice(tickIndex + int64(tc.tickSpacing))
+				inverseSqrtPriceTickAbove, err := math.TickToSqrtPrice(tickIndex + int64(tc.tickSpacing))
 				require.NoError(t, err)
 				require.True(t, inverseSqrtPriceTickAbove.GT(tc.sqrtPrice))
 			}

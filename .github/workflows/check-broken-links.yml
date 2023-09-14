@@ -9,7 +9,7 @@ jobs:
   check_links:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Close Existing Broken Links Issue(s)
         uses: actions/stale@v8

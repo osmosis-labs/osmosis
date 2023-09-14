@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
@@ -333,8 +334,8 @@ func (s *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 					RoundingDir: osmomath.RoundUp,
 				}
 
-				s.Require().Equal(0, errTolerance.Compare(asset0PreSlash.Sub(asset0PostSlash).Amount, underlyingAssetsToSlash[0].Amount))
-				s.Require().Equal(0, errTolerance.Compare(asset1PreSlash.Sub(asset1PostSlash).Amount, underlyingAssetsToSlash[1].Amount))
+				osmoassert.Equal(s.T(), errTolerance, asset0PreSlash.Sub(asset0PostSlash).Amount, underlyingAssetsToSlash[0].Amount)
+				osmoassert.Equal(s.T(), errTolerance, asset1PreSlash.Sub(asset1PostSlash).Amount, underlyingAssetsToSlash[1].Amount)
 
 				// Check that the fee accumulator has been updated by the amount it was slashed.
 				feeAccumPostSlash, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, clPoolId)
