@@ -2,7 +2,7 @@ go 1.20
 
 //use ./osmomath
 //
-//use ./osmoutils
+use ./osmoutils
 //
 //use ./x/ibc-hooks
 //
