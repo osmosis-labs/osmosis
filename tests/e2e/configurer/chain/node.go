@@ -128,7 +128,8 @@ func (n *NodeConfig) WaitForNumHeights(numBlocks int) {
 	targetHeight += int64(numBlocks)
 	// Ensure the nodes are making progress.
 	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
-		curHeight := syncInfo.LatestBlockHeight
+		curHeight, err := n.QueryCurrentHeight()
+		require.NoError(n.t, err)
 
 		if curHeight < targetHeight {
 			n.t.Logf("current block height is %d, waiting to reach: %d", curHeight, targetHeight)
