@@ -5,12 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/simapp"
-	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	clienttx clienttx "github.com/cosmos/coclient/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/bankitest"l
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
@@ -353,7 +353,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 				accSeqs[0],
 			)
 
-			err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, txFee)
+			err := testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, txFee)
 			s.Require().NoError(err)
 
 			var tx authsigning.Tx
@@ -692,7 +692,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
 	acc1 := s.App.AccountKeeper.NewAccountWithAddress(s.Ctx, addr0)
 	s.App.AccountKeeper.SetAccount(s.Ctx, acc1)
-	err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000))))
+	err = testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, osmomath.NewInt(10000))))
 	s.Require().NoError(err)
 
 	// Build the tx

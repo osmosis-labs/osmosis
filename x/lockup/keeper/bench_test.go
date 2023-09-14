@@ -13,9 +13,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 
-	"cosmossdk.io/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 )
 
 func Min(x, y int) int {
@@ -55,7 +55,7 @@ func benchmarkResetLogic(b *testing.B, numLockups int) {
 		for j := 0; j < numDenoms; j++ {
 			coins = coins.Add(sdk.NewInt64Coin(fmt.Sprintf("token%d", j), r.Int63n(100000000)))
 		}
-		_ = simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
+		_ = testutil.FundAccount(app.BankKeeper, ctx, addr, coins)
 		app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(addr, nil, 0, 0))
 		addrs = append(addrs, addr)
 	}

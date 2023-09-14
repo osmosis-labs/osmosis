@@ -14,8 +14,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -1595,7 +1595,7 @@ func (s *KeeperTestSuite) SetupUnbondConvertAndStakeTest(ctx sdk.Context, superf
 	poolCreateAcc = delAddrs[0]
 	poolJoinAcc = delAddrs[1]
 	for _, acc := range delAddrs {
-		err := simapp.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
+		err := testutil.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
 		s.Require().NoError(err)
 	}
 

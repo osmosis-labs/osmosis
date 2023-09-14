@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"time"
 
-	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -13,6 +12,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -100,7 +100,7 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 
 				// Deposit some fee amount (non-native-denom) to the fee module account
 				_, _, addr0 := testdata.KeyTestPubAddr()
-				err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.Coins{coin})
+				err = testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, sdk.Coins{coin})
 				s.NoError(err)
 				err = s.App.BankKeeper.SendCoinsFromAccountToModule(s.Ctx, addr0, types.FeeCollectorForStakingRewardsName, sdk.Coins{coin})
 				s.NoError(err)

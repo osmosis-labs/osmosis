@@ -3,13 +3,13 @@ package keeper_test
 import (
 	"fmt"
 
-	"cosmossdk.io/simapp"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/txfees/keeper"
@@ -194,7 +194,7 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 				accSeqs[0],
 			)
 
-			err = simapp.FundAccount(s.App.BankKeeper, s.Ctx, addr0, tc.txFee)
+			err = testutil.FundAccount(s.App.BankKeeper, s.Ctx, addr0, tc.txFee)
 			s.Require().NoError(err)
 
 			tx := s.BuildTx(txBuilder, msgs, sigV2, "", tc.txFee, gasLimit)
