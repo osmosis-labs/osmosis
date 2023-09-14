@@ -213,6 +213,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 // Note: we should expect that the internal gauges consist of the gauges that are automatically created for each pool upon pool creation, as even non-perpetual
 // external incentives would likely want to route through these.
 // TODO: change this to take in list of pool IDs instead and fetch the gauge IDs under the hood.
+// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6404
 func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64, gaugetype lockuptypes.LockQueryType, splittingPolicy types.SplittingPolicy) (uint64, error) {
 	if len(internalGaugeIds) == 0 {
 		return 0, fmt.Errorf("No internalGauge provided.")
@@ -225,32 +226,6 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	// TODO: remove this check once volume splitting is implemented
 	if splittingPolicy != types.Evenly {
 		return 0, fmt.Errorf("Invalid splitting policy, needs to be Evenly got %s", splittingPolicy)
-	}
-
-	// check that all the internalGaugeIds exist
-	// TODO: when internal ids are pulled from pool IDs, initialize distr record with zero weight here.
-	internalGauges, err := k.GetGaugeFromIDs(ctx, internalGaugeIds)
-	if err != nil {
-		return 0, fmt.Errorf("Invalid internalGaugeIds, please make sure all the internalGauge have been created.")
-	}
-
-	// check that all internalGauges are perp
-	// TODO: check if they're default pool gauges instead (similar to in ExternalIncentives query).
-	// This doubles as a uniqueness check to avoid the spam vector of creating a group gauge that targets the same pool multiple times.
-	//
-	// TODO (VS): abstract this initialization logic into a helper based on splitting policy. If VS, set initial values to osmo volume &
-	// error if any is 0.
-	records := []types.InternalGaugeRecord{}
-	for _, gauge := range internalGauges {
-		if !gauge.IsPerpetual {
-			return 0, fmt.Errorf("Internal Gauge id %d is non-perp, all internalGauge must be perpetual Gauge.", gauge.Id)
-		}
-
-		records = append(records, types.InternalGaugeRecord{
-			GaugeId:          gauge.Id,
-			CurrentWeight:    sdk.ZeroInt(),
-			CumulativeWeight: sdk.ZeroInt(),
-		})
 	}
 
 	nextGaugeId := k.GetLastGaugeID(ctx) + 1
@@ -274,7 +249,8 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 		return 0, err
 	}
 
-	// TODO: initialize using initGaugeInfoBySplittingPolicy
+	// TODO: initialize using initGaugeInfo
+	// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6401
 	initialInternalGaugeInfo := types.InternalGaugeInfo{}
 
 	newGroupGauge := types.GroupGauge{
@@ -286,7 +262,8 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	k.SetGroupGauge(ctx, newGroupGauge)
 	k.SetLastGaugeID(ctx, gauge.Id)
 
-	// TODO: check if this is necessary, will investigate this in following PR.
+	// TODO: check if this is necessary.
+	// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6405
 	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
 	activeOrUpcomingGauge := true
 
@@ -298,28 +275,23 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	return nextGaugeId, nil
 }
 
-// initGaugeInfoBySplittingPolicy takes in a list of pool IDs and a splitting policy and returns a InternalGaugeInfo struct initialized based on the splitting policy.
-// func (k Keeper) initGaugeInfoBySplittingPolicy(ctx sdk.Context, poolIds []uint64, splittingPolicy types.SplittingPolicy) (types.InternalGaugeInfo, error) {
-// }
-
+// nolint: unused
 // getWeightBySplittingPolicy takes in a pool ID, splitting policy, and current weight, and returns the updated weight (should be positive)
-func (k Keeper) getWeightBySplittingPolicy(ctx sdk.Context, poolId uint64, splittingPolicy types.SplittingPolicy, currentWeight sdk.Int) (sdk.Int, error) {
+func (k Keeper) getWeightBySplittingPolicy(ctx sdk.Context, poolId uint64, splittingPolicy types.SplittingPolicy, currentWeight osmomath.Int) (osmomath.Int, error) {
 	switch splittingPolicy {
 	case types.Evenly:
-		return sdk.OneInt(), nil
+		return osmomath.OneInt(), nil
 	case types.Volume:
 		// Set the weight to diff between the current volume of the pool
 		totalVolume := k.pmk.GetOsmoVolumeForPool(ctx, poolId)
 
 		if totalVolume.LT(currentWeight) {
-			// TODO (VS): move this into an error type
-			return sdk.ZeroInt(), fmt.Errorf("Current volume %s is greater than total volume %s", currentWeight, totalVolume)
+			return osmomath.ZeroInt(), types.CumulativeVolumeDecreasedError{PoolId: poolId, PreviousVolume: currentWeight, NewVolume: totalVolume}
 		}
 
 		return totalVolume.Sub(currentWeight), nil
 	default:
-		// TODO (VS): move this into an error type
-		return sdk.ZeroInt(), fmt.Errorf("Unknown splitting policy")
+		return osmomath.ZeroInt(), types.UnsupportedSplittingPolicyError{SplittingPolicy: splittingPolicy}
 	}
 }
 

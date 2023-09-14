@@ -372,7 +372,8 @@ func (k Keeper) syncVolumeSplitGauge(ctx sdk.Context, groupGauge types.GroupGaug
 			gaugeDuration = k.GetEpochInfo(ctx).Duration
 		} else {
 			// Otherwise, it's a balancer pool so we set it to longest lockable duration
-			// TODO: add support for CW pools once there's clarity around default gauge type
+			// TODO: add support for CW pools once there's clarity around default gauge type.
+			// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6403
 			gaugeDuration, err = k.pik.GetLongestLockableDuration(ctx)
 			if err != nil {
 				return err

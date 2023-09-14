@@ -1386,10 +1386,7 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 			s.Require().NoError(err)
 
 			// check internalGauges matches what we expect
-			// TODO: check this against group gauge distr records
-			// groupGaugeObj, err := s.App.IncentivesKeeper.GetGroupGaugeById(s.Ctx, groupGaugeId)
-			// s.Require().NoError(err)
-			// s.Require().Equal(groupGaugeObj.InternalIds, tc.createGauge.internalGaugeIds)
+			// TODO: assert initialization logic correctness once it is implemented
 
 			for epoch := uint64(1); epoch <= tc.createGauge.numEpochPaidOver; epoch++ {
 				// ******************** EPOCH PASSED ********************* //
