@@ -566,8 +566,8 @@ func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset st
 		"pool_id", strconv.FormatInt(int64(poolId), 10),
 		"base_asset", baseAsset,
 		"quote_asset", quoteAsset,
-		"start_time", startTime.Format(time.RFC3339Nano),
-		"end_time", endTime.Format(time.RFC3339Nano),
+		"start_time", startTime.UTC().String(),
+		"end_time", endTime.UTC().String(),
 	)
 	if err != nil {
 		return osmomath.Dec{}, err
@@ -587,7 +587,7 @@ func (n *NodeConfig) QueryGeometricTwapToNow(poolId uint64, baseAsset, quoteAsse
 		"pool_id", strconv.FormatInt(int64(poolId), 10),
 		"base_asset", baseAsset,
 		"quote_asset", quoteAsset,
-		"start_time", startTime.Format(time.RFC3339Nano),
+		"start_time", startTime.UTC().String(),
 	)
 	if err != nil {
 		return osmomath.Dec{}, err
@@ -607,8 +607,8 @@ func (n *NodeConfig) QueryGeometricTwap(poolId uint64, baseAsset, quoteAsset str
 		"pool_id", strconv.FormatInt(int64(poolId), 10),
 		"base_asset", baseAsset,
 		"quote_asset", quoteAsset,
-		"start_time", startTime.Format(time.RFC3339Nano),
-		"end_time", endTime.Format(time.RFC3339Nano),
+		"start_time", startTime.UTC().String(),
+		"end_time", endTime.UTC().String(),
 	)
 	if err != nil {
 		return osmomath.Dec{}, err
