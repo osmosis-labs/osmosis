@@ -123,13 +123,16 @@ func (n *NodeConfig) Stop() error {
 }
 
 func (n *NodeConfig) WaitForNumHeights(numBlocks int) {
-	targetHeight, err := n.QueryCurrentHeight()
+	currentHeight, err := n.QueryCurrentHeight()
 	require.NoError(n.t, err)
-	targetHeight += int64(numBlocks)
+	status, err := n.rpcClient.Status(context.Background())
+	require.NoError(n.t, err)
+	status.SyncInfo.LatestBlockHeight = currentHeight
+
+	targetHeight := currentHeight + int64(numBlocks)
 	// Ensure the nodes are making progress.
 	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
-		curHeight, err := n.QueryCurrentHeight()
-		require.NoError(n.t, err)
+		curHeight := syncInfo.LatestBlockHeight
 
 		if curHeight < targetHeight {
 			n.t.Logf("current block height is %d, waiting to reach: %d", curHeight, targetHeight)
