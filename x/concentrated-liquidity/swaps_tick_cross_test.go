@@ -74,7 +74,7 @@ func (s *KeeperTestSuite) validateIteratorLeftZeroForOne(poolId uint64, expected
 	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
 
-	zeroForOneSwapStrategy, _, err := s.App.ConcentratedLiquidityKeeper.SetupSwapStrategy(s.Ctx, pool, osmomath.ZeroDec(), pool.GetToken0(), types.MinSqrtPrice)
+	zeroForOneSwapStrategy, _, err := s.App.ConcentratedLiquidityKeeper.SetupSwapStrategy(s.Ctx, pool, osmomath.ZeroDec(), pool.GetToken0(), types.MinSqrtPriceBigDec)
 	s.Require().NoError(err)
 	initializedTickValue := pool.GetCurrentTick()
 	iter := zeroForOneSwapStrategy.InitializeNextTickIterator(s.Ctx, pool.GetId(), initializedTickValue)

@@ -55,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#6256](https://github.com/osmosis-labs/osmosis/pull/6256) Refactor CalcPriceToTick to operate on BigDec price to support new price range.
 * [#6317](https://github.com/osmosis-labs/osmosis/pull/6317) Remove price return from CL `math.TickToSqrtPrice`
+* [#6368](https://github.com/osmosis-labs/osmosis/pull/6368) Convert priceLimit API in CL swaps to BigDec 
 * [#6371](https://github.com/osmosis-labs/osmosis/pull/6371) Change PoolI.SpotPrice API from Dec (18 decimals) to BigDec (36 decimals), maintain state-compatibility. 
 
 ### Client Breaks
