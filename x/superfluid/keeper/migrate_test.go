@@ -7,8 +7,8 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	sdk"github.com/cosmos/cosmos-sdk/tyyppe"
-	hub.com/cosmos/cosmos-sdk/x/k/x/banbantetutilstutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
