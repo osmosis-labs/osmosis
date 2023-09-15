@@ -247,7 +247,13 @@ func (k Keeper) getTickByTickIndex(ctx sdk.Context, poolId uint64, tickIndex int
 
 // GetNumNextInitializedTicks is a method that returns an array of TickLiquidityNet objects representing the net liquidity in the direction of swapping the given token in
 // for a given pool. The number of ticks returned is determined by the numberOfNextInitializedTicks parameter.
+// The max number of initialized ticks that can be returned is 100.
 func (k Keeper) GetNumNextInitializedTicks(ctx sdk.Context, poolId, numberOfNextInitializedTicks uint64, tokenInDenom string) ([]queryproto.TickLiquidityNet, error) {
+	maxNumberOfTicks := uint64(100)
+	if numberOfNextInitializedTicks > maxNumberOfTicks {
+		return []queryproto.TickLiquidityNet{}, types.NumberOfTicksExceedsMaxError{NumberOfTicks: numberOfNextInitializedTicks, MaxNumberOfTicks: maxNumberOfTicks}
+	}
+
 	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return []queryproto.TickLiquidityNet{}, err
