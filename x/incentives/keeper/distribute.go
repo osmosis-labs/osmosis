@@ -267,46 +267,84 @@ func (k Keeper) distributeSyntheticInternal(
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
 }
 
-// AllocateAcrossGauges gets all the active groupGauges and distributes tokens based on the splitting policy of each gauge.
+// AllocateAcrossGauges gets all the active groupGauges and distributes tokens based on the splitting
+// policy of each gauge. (Currently on volume splitting policy is supported).
 // After each iteration we update the groupGauge by modifying filledEpoch and distributed coins.
 func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
-	currTime := ctx.BlockTime()
-
 	groupGauges, err := k.GetAllGroupGauges(ctx)
 	if err != nil {
 		return err
 	}
 
-	for _, groupGauge := range groupGauges {
-		gauge, err := k.GetGaugeByID(ctx, groupGauge.GroupGaugeId)
+	for _, group := range groupGauges {
+		err = k.syncGroupGaugeWeights(ctx, group)
+		if err != nil {
+			ctx.Logger().Error("error syncing group gauge weights", "error", err.Error(), "group gauge id", group.GroupGaugeId)
+			continue
+		}
+
+		// Get the gauge corresponding to the groupd gauge.
+		// TODO: consider renaming GroupGauge to simply Group for clarity.
+		gauge, err := k.GetGaugeByID(ctx, group.GroupGaugeId)
 		if err != nil {
 			return err
 		}
 
-		// TODO: handle this error quietly
-		err = k.syncGroupGaugeWeights(ctx, groupGauge)
-		if err != nil {
-			return err
-		}
+		// Proceed to distribution if the GroupGauge is Active
+		if gauge.IsActiveGauge(ctx.BlockTime()) {
 
-		// TODO: Get amount to distribute in coins (based on perpetual or non perpetual)
-		coinsToDistribute := sdk.Coins{}
+			// Get amount to distribute in coins (based on perpetual or non perpetual group gauge)
+			coinsToDistribute := gauge.Coins
+			if !gauge.IsPerpetual {
+				remainingEpochs := int64(gauge.NumEpochsPaidOver - gauge.FilledEpochs)
+				coinsToDistribute = coinsToDistribute.Sub(gauge.DistributedCoins)
+				for i, coin := range coinsToDistribute {
+					coinsToDistribute[i].Amount = coin.Amount.Quo(osmomath.NewInt(remainingEpochs))
+				}
+			}
 
-		// only allow distribution if the GroupGauge is Active
-		if gauge.IsActiveGauge(currTime) {
-			for _, distrRecord := range groupGauge.InternalGaugeInfo.GaugeRecords {
+			// TODO: is this needed?
+			// Continue to the next g
+			// if coinsToDistribute.IsZero() {
+			// 	continue
+			// }
+
+			// We track this for distributing all the remaining amount in the last
+			// gauge without leaving truncation dust.
+			amountDistributed := sdk.NewCoins()
+			totalWeight := group.InternalGaugeInfo.TotalWeight
+			gaugeCount := len(group.InternalGaugeInfo.GaugeRecords)
+			for gaugeIndex, distrRecord := range group.InternalGaugeInfo.GaugeRecords {
 				moduleAccount := k.ak.GetModuleAddress(types.ModuleName)
 
-				// TODO: calculate pro-rata share based on record's weight and total weight
-				// shareOfDistribution := sdk.ZeroDec()
+				// Q: why are these not defined as Decs?
+				shareOfDistribution := distrRecord.CurrentWeight.ToLegacyDec().Quo(totalWeight.ToLegacyDec())
 
-				// TODO: loop through `coinsToDistribute` and add pro-rata share to `amountToAdd`
-				amountToAdd := coinsToDistribute
+				// For the last gauge, distribute all remaining amounts.
+				// Special case the last gauge to avoid leaving truncation dust in the gauge
+				// and consume the amounts in-full.
+				if gaugeIndex == gaugeCount-1 {
+					err = k.AddToGaugeRewards(ctx, moduleAccount, coinsToDistribute.Sub(amountDistributed), distrRecord.GaugeId)
+					if err != nil {
+						return err
+					}
+					break
+				}
 
-				err = k.AddToGaugeRewards(ctx, moduleAccount, amountToAdd, distrRecord.GaugeId)
+				// Loop through `coinsToDistribute` and add pro-rata share to `currentGaugeCoins`
+				// Make deep copy
+				currentGaugeCoins := coinsToDistribute
+				for i, coin := range currentGaugeCoins {
+					currentGaugeCoins[i].Amount = coin.Amount.ToLegacyDec().Mul(shareOfDistribution).TruncateInt()
+				}
+
+				err = k.AddToGaugeRewards(ctx, moduleAccount, currentGaugeCoins, distrRecord.GaugeId)
 				if err != nil {
 					return err
 				}
+
+				// Update total distirbuted amount.
+				amountDistributed = amountDistributed.Add(currentGaugeCoins...)
 			}
 
 			// we distribute tokens from groupGauge to internal gauge therefore update groupGauge fields
