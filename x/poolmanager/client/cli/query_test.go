@@ -58,6 +58,12 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			},
 			&poolmanagerqueryproto.EstimateSwapExactAmountOutResponse{},
 		},
+		{
+			"Query params",
+			"/osmosis.poolmanager.v1beta1.Query/Params",
+			&poolmanagerqueryproto.ParamsRequest{},
+			&poolmanagerqueryproto.ParamsResponse{},
+		},
 	}
 
 	for _, tc := range testCases {
