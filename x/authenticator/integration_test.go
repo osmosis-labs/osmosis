@@ -1,7 +1,9 @@
 package authenticator_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/testutils"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -55,8 +57,8 @@ func (s *AuthenticatorSuite) SetupTest() {
 	s.app = s.chainA.GetOsmosisApp()
 
 	// Initialize two private keys for testing
-	s.PrivKeys = make([]cryptotypes.PrivKey, 2)
-	for i := 0; i < 2; i++ {
+	s.PrivKeys = make([]cryptotypes.PrivKey, 3)
+	for i := 0; i < 3; i++ {
 		s.PrivKeys[i] = secp256k1.GenPrivKey()
 	}
 
@@ -433,4 +435,78 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 	// This should work, since the fee payer has already been authenticated so the gas limit is raised
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0], s.PrivKeys[1]}, sendFromAcc1, sendFromAcc2)
 	s.Require().NoError(err)
+}
+
+func (s *AuthenticatorSuite) TestCompositeAuthenticatorIntegration() {
+	// create Send Msg
+	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100))
+	sendMsg := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		Amount:      coins,
+	}
+
+	anyOf := authenticator.NewAnyOfAuthenticator(s.app.AuthenticatorManager)
+	allOf := authenticator.NewAllOfAuthenticator(s.app.AuthenticatorManager)
+
+	s.app.AuthenticatorManager.RegisterAuthenticator(anyOf)
+	s.app.AuthenticatorManager.RegisterAuthenticator(allOf)
+
+	// construct InitializationData for each SigVerificationAuthenticator
+	initDataPrivKey0 := authenticator.InitializationData{
+		AuthenticatorType: "SignatureVerificationAuthenticator",
+		Data:              s.PrivKeys[0].PubKey().Bytes(),
+	}
+	initDataPrivKey1 := authenticator.InitializationData{
+		AuthenticatorType: "SignatureVerificationAuthenticator",
+		Data:              s.PrivKeys[1].PubKey().Bytes(),
+	}
+	initDataPrivKey2 := authenticator.InitializationData{
+		AuthenticatorType: "SignatureVerificationAuthenticator",
+		Data:              s.PrivKeys[2].PubKey().Bytes(),
+	}
+
+	// 3. Serialize SigVerificationAuthenticator InitializationData
+	dataPrivKey0, err := json.Marshal(initDataPrivKey0)
+	s.Require().NoError(err)
+	dataPrivKey1, err := json.Marshal(initDataPrivKey1)
+	s.Require().NoError(err)
+
+	// construct InitializationData for AnyOf authenticator
+	initDataAnyOf := authenticator.InitializationData{
+		AuthenticatorType: anyOf.Type(),
+		Data:              append(dataPrivKey0, dataPrivKey1...),
+	}
+
+	// 5. Combine to construct the final composite for AllOf authenticator
+	compositeAuthData := []authenticator.InitializationData{
+		initDataAnyOf,
+		initDataPrivKey2,
+	}
+
+	// serialize the AllOf InitializationData
+	dataAllOf, err := json.Marshal(compositeAuthData)
+	s.Require().NoError(err)
+
+	// Set the authenticator to our account
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), allOf.Type(), dataAllOf)
+	s.Require().NoError(err)
+
+	// Current State AllOf(AnyOf(Sig0, Sig1), Sig2)
+
+	// 0 fails
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
+	s.Require().Error(err)
+
+	// 2 fails
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[2]}, sendMsg)
+	s.Require().Error(err)
+
+	// 0 and 2 succeeds
+	// TODO: This doesn't work right now because there are checks on the number of sigs matching
+	//       senders (validation will prob fail for the same reason). We may want to test AllOf
+	//       with a different authenticator (MaxAmountAuthenticator?) and use multisig instead
+	//       of AllOf for validating multiple signatures
+	//_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0], s.PrivKeys[2]}, sendMsg)
+	//s.Require().NoError(err)
 }
