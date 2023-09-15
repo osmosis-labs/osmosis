@@ -338,7 +338,7 @@ message NumNextInitializedTicksResponse {
   int64 current_tick = 2;
   string current_liquidity = 3 [
 
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"current_liquidity\"",
     (gogoproto.nullable) = false
   ];

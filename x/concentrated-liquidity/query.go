@@ -270,12 +270,12 @@ func (k Keeper) GetNumNextInitializedTicks(ctx sdk.Context, poolId, numberOfNext
 	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", types.MinInitializedTick))
 	ctx.Logger().Debug(fmt.Sprintf("max_tick %d\n", types.MaxTick))
 
-	var boundTick osmomath.Int
+	var boundTick sdk.Int
 	if boundTick.IsNil() {
 		if zeroForOne {
-			boundTick = osmomath.NewInt(types.MinInitializedTick)
+			boundTick = sdk.NewInt(types.MinInitializedTick)
 		} else {
-			boundTick = osmomath.NewInt(types.MaxTick)
+			boundTick = sdk.NewInt(types.MaxTick)
 		}
 	}
 
