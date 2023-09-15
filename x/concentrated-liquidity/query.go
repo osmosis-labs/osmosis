@@ -244,3 +244,95 @@ func (k Keeper) getTickByTickIndex(ctx sdk.Context, poolId uint64, tickIndex int
 	}
 	return tickStruct, nil
 }
+
+// GetNumNextInitializedTicks is a method that returns an array of TickLiquidityNet objects representing the net liquidity in the direction of swapping the given token in
+// for a given pool. The number of ticks returned is determined by the numberOfNextInitializedTicks parameter.
+func (k Keeper) GetNumNextInitializedTicks(ctx sdk.Context, poolId, numberOfNextInitializedTicks uint64, tokenInDenom string) ([]queryproto.TickLiquidityNet, error) {
+	p, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return []queryproto.TickLiquidityNet{}, err
+	}
+
+	startTick := p.GetCurrentTick()
+
+	// sanity check that given tokenIn is an asset in pool.
+	if tokenInDenom != p.GetToken0() && tokenInDenom != p.GetToken1() {
+		return []queryproto.TickLiquidityNet{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenInDenom}
+	}
+
+	// figure out zero for one depending on the token in.
+	zeroForOne := p.GetToken0() == tokenInDenom
+
+	ctx.Logger().Debug(fmt.Sprintf("is_zero_for_one %t\n", zeroForOne))
+
+	// the boundTick will always be the min and max tick depending on the swap direction.
+	// we can narrow this down later to some max number of ticks to iterate through.
+	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", types.MinInitializedTick))
+	ctx.Logger().Debug(fmt.Sprintf("max_tick %d\n", types.MaxTick))
+
+	var boundTick osmomath.Int
+	if boundTick.IsNil() {
+		if zeroForOne {
+			boundTick = osmomath.NewInt(types.MinInitializedTick)
+		} else {
+			boundTick = osmomath.NewInt(types.MaxTick)
+		}
+	}
+
+	currentTickSqrtPrice, err := math.TickToSqrtPrice(startTick)
+	if err != nil {
+		return []queryproto.TickLiquidityNet{}, err
+	}
+
+	ctx.Logger().Debug(fmt.Sprintf("currentTick %d; current tick's sqrt price%s\n", startTick, currentTickSqrtPrice))
+
+	// iterator assignments
+	store := ctx.KVStore(k.storeKey)
+	prefixBz := types.KeyTickPrefixByPoolId(poolId)
+	prefixStore := prefix.NewStore(store, prefixBz)
+
+	// If zero for one, we use reverse iterator. As a result, we need to increment the start tick by 1
+	// so that we include the start tick in the search.
+	//
+	// If one for zero, we use forward iterator. However, our definition of the active range is inclusive
+	// of the lower bound. As a result, current liquidity must already include the lower bound tick
+	// so we skip it.
+	startTick = startTick + 1
+
+	startTickKey := types.TickIndexToBytes(startTick)
+	boundTickKey := types.TickIndexToBytes(boundTick.Int64())
+
+	// define iterator depending on swap strategy
+	var iterator db.Iterator
+	if zeroForOne {
+		iterator = prefixStore.ReverseIterator(boundTickKey, startTickKey)
+	} else {
+		iterator = prefixStore.Iterator(startTickKey, storetypes.InclusiveEndBytes(boundTickKey))
+	}
+
+	liquidityDepths := []queryproto.TickLiquidityNet{}
+
+	iterationCount := uint64(0)
+
+	defer iterator.Close()
+	for ; iterator.Valid() && iterationCount < numberOfNextInitializedTicks; iterator.Next() {
+		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
+		if err != nil {
+			return []queryproto.TickLiquidityNet{}, err
+		}
+
+		tickStruct, err := ParseTickFromBz(iterator.Value())
+		if err != nil {
+			return []queryproto.TickLiquidityNet{}, err
+		}
+
+		liquidityDepth := queryproto.TickLiquidityNet{
+			LiquidityNet: tickStruct.LiquidityNet,
+			TickIndex:    tickIndex,
+		}
+		liquidityDepths = append(liquidityDepths, liquidityDepth)
+		iterationCount++
+	}
+
+	return liquidityDepths, nil
+}

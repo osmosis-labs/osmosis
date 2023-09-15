@@ -42,6 +42,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+<<<<<<< HEAD
+=======
+### Features
+
+* [#6416](https://github.com/osmosis-labs/osmosis/pull/6416) feat[CL]: add num initialized ticks query
+
+### State Breaking
+
+* [#6344](https://github.com/osmosis-labs/osmosis/pull/6344) fix: set name, display and symbol of denom metadata in tokenfactory's CreateDenom
+* [#6279](https://github.com/osmosis-labs/osmosis/pull/6279) fix prop-597 introduced issue
+* [#6282](https://github.com/osmosis-labs/osmosis/pull/6282) Fix CreateCanonicalConcentratedLiquidityPoolAndMigrationLink overriding migration records
+
+>>>>>>> 9f664d71 (feat[CL]: add num initialized ticks query (#6416))
 ### Bug Fixes
 
 * [#6334](https://github.com/osmosis-labs/osmosis/pull/6334) fix: enable taker fee cli
