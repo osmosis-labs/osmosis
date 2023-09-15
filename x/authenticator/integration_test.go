@@ -2,6 +2,7 @@ package authenticator_test
 
 import (
 	"fmt"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/testutils"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -310,7 +311,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000_000)),
 	}
 
-	stateful := StatefulAuthenticator{KvStoreKey: s.app.GetKVStoreKey()[authenticatortypes.StoreKey]}
+	stateful := testutils.StatefulAuthenticator{KvStoreKey: s.app.GetKVStoreKey()[authenticatortypes.StoreKey]}
 	s.app.AuthenticatorManager.RegisterAuthenticator(stateful)
 	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "Stateful", []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
@@ -343,8 +344,8 @@ func (s *AuthenticatorSuite) TestAuthenticatorMultiMsgExperiment() {
 	}
 
 	storeKey := s.app.GetKVStoreKey()[authenticatortypes.StoreKey]
-	maxAmount := MaxAmountAuthenticator{KvStoreKey: storeKey}
-	stateful := StatefulAuthenticator{KvStoreKey: storeKey}
+	maxAmount := testutils.MaxAmountAuthenticator{KvStoreKey: storeKey}
+	stateful := testutils.StatefulAuthenticator{KvStoreKey: storeKey}
 
 	s.app.AuthenticatorManager.RegisterAuthenticator(maxAmount)
 	s.app.AuthenticatorManager.RegisterAuthenticator(stateful)
@@ -391,9 +392,9 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
 	}
 
-	alwaysLow := TestingAuthenticator{Approve: Always, GasConsumption: 0}
-	alwaysHigh := TestingAuthenticator{Approve: Always, GasConsumption: 4_000}
-	neverHigh := TestingAuthenticator{Approve: Never, GasConsumption: 8_000}
+	alwaysLow := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 0}
+	alwaysHigh := testutils.TestingAuthenticator{Approve: testutils.Always, GasConsumption: 4_000}
+	neverHigh := testutils.TestingAuthenticator{Approve: testutils.Never, GasConsumption: 8_000}
 
 	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysLow)
 	s.app.AuthenticatorManager.RegisterAuthenticator(alwaysHigh)
