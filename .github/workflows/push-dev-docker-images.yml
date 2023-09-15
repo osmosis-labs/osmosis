@@ -38,10 +38,10 @@ jobs:
         fetch-depth: 0
     - 
       name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
     - 
       name: Login to DockerHub
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -66,7 +66,7 @@ jobs:
         echo "OSMOSIS_VERSION=${{ github.ref_name }}-$SHORT_SHA" >> $GITHUB_ENV
     - 
       name: Build and Push Docker Images
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       with:
         file: Dockerfile
         context: .
@@ -81,7 +81,7 @@ jobs:
           ${{ env.OSMOSIS_DEV_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
     - 
       name: Build and Push E2E Init Docker Images
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       with:
         file: tests/e2e/initialization/init.Dockerfile
         context: .
