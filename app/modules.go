@@ -189,7 +189,6 @@ func appModules(
 		icq.NewAppModule(*app.AppKeepers.ICQKeeper),
 		packetforward.NewAppModule(app.PacketForwardKeeper),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
-		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
 		authenticator.NewAppModule(appCodec, *app.AuthenticatorKeeper),
 	}
 }
