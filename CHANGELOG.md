@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Features
+
+* [#6416](https://github.com/osmosis-labs/osmosis/pull/6416) feat[CL]: add num initialized ticks query
+
 ### State Breaking
 
 * [#6344](https://github.com/osmosis-labs/osmosis/pull/6344) fix: set name, display and symbol of denom metadata in tokenfactory's CreateDenom
