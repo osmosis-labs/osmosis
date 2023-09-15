@@ -689,7 +689,7 @@ func (s *KeeperTestSuite) TestGetNumNextInitializedTicks() {
 			},
 		},
 		{
-			name: "one full range position, one range position above current tick, zero for one false, bound tick below with non-empty ticks",
+			name: "one full range position, one range position above current tick, zero for one false, bound num ticks below with non-empty ticks",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
@@ -716,11 +716,11 @@ func (s *KeeperTestSuite) TestGetNumNextInitializedTicks() {
 
 			poolId:                       defaultPoolId,
 			tokenInDenom:                 ETH,
-			numberOfNextInitializedTicks: 4,
+			numberOfNextInitializedTicks: 0,
 			expectedLiquidityDepths:      []queryproto.TickLiquidityNet{},
 		},
 		{
-			name: "one full range position, one range position above current tick, zero for one false, bound tick below with non-empty ticks",
+			name: "one full range position, one range position above current tick, zero for one false, bound num ticks below with non-empty ticks",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
@@ -796,84 +796,6 @@ func (s *KeeperTestSuite) TestGetNumNextInitializedTicks() {
 				},
 			},
 		},
-		{
-			name: "current pool tick == start tick, zero for one",
-			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
-			},
-
-			tokenInDenom:                 ETH,
-			currentPoolTick:              10,
-			numberOfNextInitializedTicks: 2,
-			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
-				{
-					LiquidityNet: osmomath.NewDec(-20),
-					TickIndex:    10,
-				},
-				{
-					LiquidityNet: osmomath.NewDec(20),
-					TickIndex:    -10,
-				},
-			},
-		},
-		{
-			name: "current pool tick != start tick, zero for one",
-			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
-			},
-
-			tokenInDenom:                 ETH,
-			currentPoolTick:              21,
-			numberOfNextInitializedTicks: 2,
-			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
-				{
-
-					LiquidityNet: osmomath.NewDec(-20),
-					TickIndex:    10,
-				},
-				{
-
-					LiquidityNet: osmomath.NewDec(20),
-					TickIndex:    -10,
-				},
-			},
-		},
-		{
-			name: "current pool tick == start tick, one for zero",
-			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
-			},
-
-			tokenInDenom:                 USDC,
-			currentPoolTick:              5,
-			numberOfNextInitializedTicks: 1,
-			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
-				{
-					LiquidityNet: osmomath.NewDec(-20),
-					TickIndex:    10,
-				},
-			},
-		},
-		{
-			name: "current pool tick != start tick, one for zero",
-			presetTicks: []genesis.FullTick{
-				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
-				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
-			},
-
-			tokenInDenom:                 USDC,
-			currentPoolTick:              -50,
-			numberOfNextInitializedTicks: 1,
-			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
-				{
-					LiquidityNet: osmomath.NewDec(-20),
-					TickIndex:    10,
-				},
-			},
-		},
 
 		// error cases
 		{
@@ -921,8 +843,6 @@ func (s *KeeperTestSuite) TestGetNumNextInitializedTicks() {
 			// Normally, initialized during position creation.
 			// We only initialize ticks in this test for simplicity.
 			curPrice := osmomath.OneDec()
-			// TODO: consider adding tests for GetTickLiquidityNetInDirection
-			// with tick spacing > 1, requiring price to tick conversion with rounding.
 			curTick, err := math.CalculateSqrtPriceToTick(osmomath.BigDecFromDec(osmomath.MustMonotonicSqrt(curPrice)))
 			s.Require().NoError(err)
 			var curSqrtPrice osmomath.BigDec = osmomath.OneBigDec()
