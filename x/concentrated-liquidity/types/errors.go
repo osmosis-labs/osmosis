@@ -698,7 +698,7 @@ type DoubleQuoteDenomOrderError struct {
 }
 
 func (e DoubleQuoteDenomOrderError) Error() string {
-	return fmt.Sprintf("attempted to create pool with base asset %s and quote asset %s. %s has higher quote asset priority than %s.", e.ProvidedBaseDenom, e.ProvidedQuoteDenom, e.ProvidedQuoteDenom, e.ProvidedBaseDenom)
+	return fmt.Sprintf("attempted to create pool with base asset %s and quote asset %s. %s has higher quote asset priority than %s.", e.ProvidedBaseDenom, e.ProvidedQuoteDenom, e.ProvidedBaseDenom, e.ProvidedQuoteDenom)
 }
 
 type UnauthorizedSpreadFactorError struct {

@@ -437,6 +437,49 @@ func (s *KeeperTestSuite) TestSetPool() {
 	}
 }
 
+func (s *KeeperTestSuite) TestValidateDoubleQuoteDenomOrder() {
+	tests := []struct {
+		name                  string
+		quoteDenom            string
+		baseDenom             string
+		authorizedQuoteDenoms []string
+		expectValid           bool
+	}{
+		{
+			name:                  "not both quote assets - true",
+			baseDenom:             FOO,
+			quoteDenom:            ETH,
+			authorizedQuoteDenoms: []string{USDC, ETH},
+			expectValid:           true,
+		},
+		{
+			name:                  "correct order - true",
+			baseDenom:             ETH,
+			quoteDenom:            USDC,
+			authorizedQuoteDenoms: []string{USDC, ETH},
+			expectValid:           true,
+		},
+		{
+			name:                  "wrong order - false",
+			baseDenom:             USDC,
+			quoteDenom:            ETH,
+			authorizedQuoteDenoms: []string{USDC, ETH},
+			expectValid:           false,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+
+			// Method under test.
+			isValid := cl.ValidateDoubleQuoteDenomOrder(s.Ctx, test.baseDenom, test.quoteDenom, test.authorizedQuoteDenoms)
+
+			s.Require().Equal(test.expectValid, isValid)
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestValidateAuthorizedQuoteDenoms() {
 	tests := []struct {
 		name                  string

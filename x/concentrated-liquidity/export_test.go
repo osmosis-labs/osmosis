@@ -307,6 +307,10 @@ func ValidateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuo
 	return validateAuthorizedQuoteDenoms(denom1, authorizedQuoteDenoms)
 }
 
+func ValidateDoubleQuoteDenomOrder(ctx sdk.Context, baseDenom, quoteDenom string, authorizedQuoteDenoms []string) bool {
+	return validateDoubleQuoteDenomOrder(baseDenom, quoteDenom, authorizedQuoteDenoms)
+}
+
 func (k Keeper) ValidatePositionUpdateById(ctx sdk.Context, positionId uint64, updateInitiator sdk.AccAddress, lowerTickGiven int64, upperTickGiven int64, liquidityDeltaGiven osmomath.Dec, joinTimeGiven time.Time, poolIdGiven uint64) error {
 	return k.validatePositionUpdateById(ctx, positionId, updateInitiator, lowerTickGiven, upperTickGiven, liquidityDeltaGiven, joinTimeGiven, poolIdGiven)
 }
