@@ -69,3 +69,8 @@ queries:
       query_func: "k.GetTotalLiquidity"
     cli:
       cmd: "GetTotalLiquidity"
+  NumNextInitializedTicks:
+    proto_wrapper:
+      query_func: "k.NumNextInitializedTicks"
+    cli:
+      cmd: "NumNextInitializedTicks"
