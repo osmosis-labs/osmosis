@@ -52,6 +52,7 @@ func DefaultParams() Params {
 		BalancerSharesRewardDiscount:        DefaultBalancerSharesDiscount,
 		AuthorizedUptimes:                   DefaultAuthorizedUptimes,
 		IsPermissionlessPoolCreationEnabled: false,
+		UnrestrictedPoolCreatorWhitelist:    DefaultUnrestrictedPoolCreatorWhitelist,
 	}
 }
 
@@ -73,6 +74,9 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateAuthorizedUptimes(p.AuthorizedUptimes); err != nil {
+		return err
+	}
+	if err := validateUnrestrictedPoolCreatorWhitelist(p.UnrestrictedPoolCreatorWhitelist); err != nil {
 		return err
 	}
 	return nil
@@ -230,6 +234,30 @@ func validateAuthorizedUptimes(i interface{}) error {
 
 		if !supported {
 			return UptimeNotSupportedError{Uptime: uptime}
+		}
+	}
+
+	return nil
+}
+
+// validateUnrestrictedPoolCreatorWhitelist validates a slice of addresses
+// that are allowed to bypass the restrictions on permissionless pool creation
+//
+// Parameters:
+// - i: The parameter to validate.
+//
+// Returns:
+// - An error if any of the strings are not addresses
+func validateUnrestrictedPoolCreatorWhitelist(i interface{}) error {
+	whitelist, ok := i.([]string)
+
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	for _, a := range whitelist {
+		if _, err := sdk.AccAddressFromBech32(a); err != nil {
+			return fmt.Errorf("invalid address")
 		}
 	}
 
