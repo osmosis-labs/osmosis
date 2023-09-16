@@ -22,15 +22,15 @@ var (
 
 func NewMsgCreateConcentratedPool(
 	sender sdk.AccAddress,
-	denom0 string,
-	denom1 string,
+	baseDenom string,
+	quoteDenom string,
 	tickSpacing uint64,
 	spreadFactor osmomath.Dec,
 ) MsgCreateConcentratedPool {
 	return MsgCreateConcentratedPool{
 		Sender:       sender.String(),
-		Denom0:       denom0,
-		Denom1:       denom1,
+		Denom0:       baseDenom,
+		Denom1:       quoteDenom,
 		TickSpacing:  tickSpacing,
 		SpreadFactor: spreadFactor,
 	}

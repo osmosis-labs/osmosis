@@ -83,12 +83,12 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndLockedFullRangePos
 }
 
 // PrepareCustomConcentratedPool sets up a concentrated liquidity pool with the custom parameters.
-func (s *KeeperTestHelper) PrepareCustomConcentratedPool(owner sdk.AccAddress, denom0, denom1 string, tickSpacing uint64, spreadFactor osmomath.Dec) types.ConcentratedPoolExtension {
+func (s *KeeperTestHelper) PrepareCustomConcentratedPool(owner sdk.AccAddress, baseDenom, quoteDenom string, tickSpacing uint64, spreadFactor osmomath.Dec) types.ConcentratedPoolExtension {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
 	// Create a concentrated pool via the poolmanager
-	poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(owner, denom0, denom1, tickSpacing, spreadFactor))
+	poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(owner, baseDenom, quoteDenom, tickSpacing, spreadFactor))
 	s.Require().NoError(err)
 
 	// Retrieve the poolInterface via the poolID
