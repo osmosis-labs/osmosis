@@ -143,7 +143,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 					lastPoolID = poolID
 				}
 
-				existingPool := s.PrepareConcentratedPoolWithCoins("ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4", "uosmo")
+				existingPool := s.PrepareConcentratedPoolWithCoins("uosmo", "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4")
 				existingPool2 := s.PrepareConcentratedPoolWithCoins("akash", "uosmo")
 				existingBalancerPoolId := s.PrepareBalancerPoolWithCoins(sdk.NewCoin("atom", osmomath.NewInt(10000000000)), sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)))
 
