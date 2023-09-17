@@ -80,10 +80,10 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		if !validateAuthorizedQuoteDenoms(quoteAsset, poolManagerParams.AuthorizedQuoteDenoms) {
 			return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: poolManagerParams.AuthorizedQuoteDenoms}
 		}
-	}
 
-	if !validateDoubleQuoteDenomOrder(baseAsset, quoteAsset, poolManagerParams.AuthorizedQuoteDenoms) {
-		return types.DoubleQuoteDenomOrderError{ProvidedBaseDenom: baseAsset, ProvidedQuoteDenom: quoteAsset}
+		if !validateDoubleQuoteDenomOrder(baseAsset, quoteAsset, poolManagerParams.AuthorizedQuoteDenoms) {
+			return types.DoubleQuoteDenomOrderError{ProvidedBaseDenom: baseAsset, ProvidedQuoteDenom: quoteAsset}
+		}
 	}
 
 	if err := k.createSpreadRewardAccumulator(ctx, poolId); err != nil {
