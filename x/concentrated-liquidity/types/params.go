@@ -28,7 +28,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomath.Dec, discountRate osmomath.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool) Params {
+func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomath.Dec, discountRate osmomath.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool, unrestrictedPoolCreatorWhitelist []string) Params {
 	return Params{
 		AuthorizedTickSpacing:               authorizedTickSpacing,
 		AuthorizedSpreadFactors:             authorizedSpreadFactors,
@@ -36,6 +36,7 @@ func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomat
 		BalancerSharesRewardDiscount:        discountRate,
 		AuthorizedUptimes:                   authorizedUptimes,
 		IsPermissionlessPoolCreationEnabled: isPermissionlessPoolCreationEnabled,
+		UnrestrictedPoolCreatorWhitelist:    unrestrictedPoolCreatorWhitelist,
 	}
 }
 
