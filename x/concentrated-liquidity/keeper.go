@@ -120,11 +120,11 @@ func (k *Keeper) SetListeners(listeners types.ConcentratedLiquidityListeners) *K
 
 // ValidatePermissionlessPoolCreationEnabled returns nil if permissionless pool creation in the module is enabled.
 // Otherwise, returns an error.
-func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error {
+func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) bool {
 	if !k.GetParams(ctx).IsPermissionlessPoolCreationEnabled {
-		return types.ErrPermissionlessPoolCreationDisabled
+		return false
 	}
-	return nil
+	return true
 }
 
 // GetAuthorizedQuoteDenoms gets the authorized quote denoms from the poolmanager keeper.

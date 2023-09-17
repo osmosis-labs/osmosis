@@ -30,16 +30,12 @@ func (k Keeper) validateCreatedPool(poolId uint64, pool types.PoolI) error {
 // - Minting LP shares to pool creator
 // - Setting metadata for the shares
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
-	// Get pool module interface from the pool type.
+	// Check that the pool type exists
+	// TODO: see if we can get rid of this check
 	poolType := msg.GetPoolType()
-	poolModule, ok := k.routes[poolType]
+	_, ok := k.routes[poolType]
 	if !ok {
 		return 0, types.InvalidPoolTypeError{PoolType: poolType}
-	}
-
-	// Confirm that permissionless pool creation is enabled for the module.
-	if err := poolModule.ValidatePermissionlessPoolCreationEnabled(ctx); err != nil {
-		return 0, err
 	}
 
 	// createPoolZeroLiquidityNoCreationFee contains shared pool creation logic between this function (CreatePool) and
@@ -56,6 +52,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	if err := k.communityPoolKeeper.FundCommunityPool(ctx, poolCreationFee, sender); err != nil {
 		return 0, err
 	}
+
+	// TODO see what happens if this is called for gamm
 
 	// Send initial liquidity from pool creator to pool module account.
 	initialPoolLiquidity := msg.InitialLiquidity()
