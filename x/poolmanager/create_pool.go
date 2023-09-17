@@ -31,7 +31,6 @@ func (k Keeper) validateCreatedPool(poolId uint64, pool types.PoolI) error {
 // - Setting metadata for the shares
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
 	// Check that the pool type exists
-	// TODO: see if we can get rid of this check
 	poolType := msg.GetPoolType()
 	_, ok := k.routes[poolType]
 	if !ok {
@@ -52,8 +51,6 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	if err := k.communityPoolKeeper.FundCommunityPool(ctx, poolCreationFee, sender); err != nil {
 		return 0, err
 	}
-
-	// TODO see what happens if this is called for gamm
 
 	// Send initial liquidity from pool creator to pool module account.
 	initialPoolLiquidity := msg.InitialLiquidity()
