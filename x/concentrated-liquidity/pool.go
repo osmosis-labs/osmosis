@@ -64,7 +64,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	}
 
 	if !bypassRestrictions {
-		if !k.ValidatePermissionlessPoolCreationEnabled(ctx) {
+		if !k.IsPermissionlessPoolCreationEnabled(ctx) {
 			return types.ErrPermissionlessPoolCreationDisabled
 		}
 
