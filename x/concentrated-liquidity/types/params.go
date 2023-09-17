@@ -18,6 +18,7 @@ var (
 	KeyAuthorizedQuoteDenoms              = []byte("AuthorizedQuoteDenoms")
 	KeyAuthorizedUptimes                  = []byte("AuthorizedUptimes")
 	KeyIsPermisionlessPoolCreationEnabled = []byte("IsPermisionlessPoolCreationEnabled")
+	KeyUnrestrictedPoolCreatorWhitelist   = []byte("UnrestrictedPoolCreatorWhitelist")
 
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -91,6 +92,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyIsPermisionlessPoolCreationEnabled, &p.IsPermissionlessPoolCreationEnabled, validateIsPermissionLessPoolCreationEnabled),
 		paramtypes.NewParamSetPair(KeyDiscountRate, &p.BalancerSharesRewardDiscount, validateBalancerSharesDiscount),
 		paramtypes.NewParamSetPair(KeyAuthorizedUptimes, &p.AuthorizedUptimes, validateAuthorizedUptimes),
+		paramtypes.NewParamSetPair(KeyUnrestrictedPoolCreatorWhitelist, &p.UnrestrictedPoolCreatorWhitelist, validateUnrestrictedPoolCreatorWhitelist),
 	}
 }
 
