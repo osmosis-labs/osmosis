@@ -546,7 +546,7 @@ func (s *KeeperTestSuite) swapToMinTickAndBack(spreadFactor osmomath.Dec, incent
 	actualSwappedInZeroForOne, tokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 		s.Ctx, swapper, pool,
 		coinZeroIn, pool.GetToken1(),
-		spreadFactor, osmomath.ZeroDec(),
+		spreadFactor, osmomath.ZeroBigDec(),
 	)
 	s.Require().NoError(err)
 
@@ -562,7 +562,7 @@ func (s *KeeperTestSuite) swapToMinTickAndBack(spreadFactor osmomath.Dec, incent
 	actualSwappedInOneForZero, inverseTokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 		s.Ctx, swapper, pool,
 		tokenOut, pool.GetToken0(),
-		spreadFactor, osmomath.ZeroDec(),
+		spreadFactor, osmomath.ZeroBigDec(),
 	)
 	s.Require().NoError(err)
 

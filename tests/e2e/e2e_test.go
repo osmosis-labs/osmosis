@@ -946,9 +946,9 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	// uosmo = 1_000_000 + 1_000_000 = 2_000_000
 
 	timeAfterSwap := chainANode.QueryLatestBlockTime()
-	chainA.WaitForNumHeights(2)
+	chainA.WaitForNumHeights(1)
 	timeAfterSwapPlus1Height := chainANode.QueryLatestBlockTime()
-
+	chainA.WaitForNumHeights(1)
 	s.T().Log("querying for the TWAP from after swap to now")
 	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwapPlus1Height)
 	s.Require().NoError(err)
