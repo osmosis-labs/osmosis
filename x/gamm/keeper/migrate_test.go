@@ -9,6 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
@@ -289,13 +290,13 @@ func (s *KeeperTestSuite) TestMigrate() {
 
 		// The balance in the cl pool should be equal to what the user previously had in the gamm pool.
 		// This test is within 100 shares due to rounding that occurs from utilizing .000000000000000001 instead of 0.
-		s.Require().Equal(0, test.errTolerance.Compare(userEthBalanceTransferredToClPool.Amount, clPoolEthBalanceAfterMigration.Amount))
-		s.Require().Equal(0, test.errTolerance.Compare(userUsdcBalanceTransferredToClPool.Amount, clPoolUsdcBalanceAfterMigration.Amount))
+		osmoassert.Equal(s.T(), test.errTolerance, userEthBalanceTransferredToClPool.Amount, clPoolEthBalanceAfterMigration.Amount)
+		osmoassert.Equal(s.T(), test.errTolerance, userUsdcBalanceTransferredToClPool.Amount, clPoolUsdcBalanceAfterMigration.Amount)
 
 		// Assert user amount transferred to cl pool from gamm pool should be equal to the amount we migrated from the migrate message.
 		// This test is within 100 shares due to rounding that occurs from utilizing .000000000000000001 instead of 0.
-		s.Require().Equal(0, test.errTolerance.Compare(userEthBalanceTransferredToClPool.Amount, positionData.Amount0))
-		s.Require().Equal(0, test.errTolerance.Compare(userUsdcBalanceTransferredToClPool.Amount, positionData.Amount0))
+		osmoassert.Equal(s.T(), test.errTolerance, userEthBalanceTransferredToClPool.Amount, positionData.Amount0)
+		osmoassert.Equal(s.T(), test.errTolerance, userUsdcBalanceTransferredToClPool.Amount, positionData.Amount0)
 	}
 }
 
@@ -1153,8 +1154,13 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 
 			balancerId := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
 
-			// Another pool for testing that its gauge links are unchanged
+			// Another pool for testing that its gauge and migration links are unchanged.
 			balancerId2 := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+
+			// Another pool for testing that previously existing migration links don't get overwritten.
+			balancerId3 := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+
+			clPoolOld, err := s.App.GAMMKeeper.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(s.Ctx, balancerId3, tc.desiredDenom0, osmomath.ZeroDec(), defaultTickSpacing)
 
 			balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerId)
 			s.Require().NoError(err)
@@ -1188,8 +1194,8 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			s.Require().NoError(err)
 
 			// Get the new concentrated pool.
-			// Note, + 2 becuse we create 2 balancer pools during test setup, and 1 concentrated pool during migration.
-			clPoolInState, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, validPoolId+2)
+			// Note, +4 because we create 3 balancer pools and 1 cl pool during test setup, and 1 concentrated pool during migration.
+			clPoolInState, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, validPoolId+4)
 			s.Require().NoError(err)
 			s.Require().Equal(clPool, clPoolInState)
 
@@ -1227,6 +1233,10 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 					{
 						BalancerPoolId: balancerId,
 						ClPoolId:       clPoolInState.GetId(),
+					},
+					{
+						BalancerPoolId: balancerId3,
+						ClPoolId:       clPoolOld.GetId(),
 					},
 				},
 			})

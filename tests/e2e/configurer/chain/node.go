@@ -122,6 +122,24 @@ func (n *NodeConfig) Stop() error {
 	return nil
 }
 
+func (n *NodeConfig) WaitForNumHeights(numBlocks int) {
+	targetHeight, err := n.QueryCurrentHeight()
+	require.NoError(n.t, err)
+	targetHeight += int64(numBlocks)
+	// Ensure the nodes are making progress.
+	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
+		curHeight := syncInfo.LatestBlockHeight
+
+		if curHeight < targetHeight {
+			n.t.Logf("current block height is %d, waiting to reach: %d", curHeight, targetHeight)
+			return false
+		}
+
+		return !syncInfo.CatchingUp
+	}
+	n.WaitUntil(doneCondition)
+}
+
 // WaitUntil waits until node reaches doneCondition. Return nil
 // if reached, error otherwise.
 func (n *NodeConfig) WaitUntil(doneCondition func(syncInfo coretypes.SyncInfo) bool) {

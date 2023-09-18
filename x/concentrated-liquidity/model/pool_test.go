@@ -216,7 +216,9 @@ func (s *ConcentratedPoolTestSuite) TestSpotPrice() {
 
 				// We use elipson due to sqrt approximation
 				elipson := osmomath.MustNewDecFromStr("0.0000000000000001")
-				s.Require().True(spotPriceFromMethod.Sub(tc.expectedSpotPrice).Abs().LT(elipson))
+				// TODO: truncation is acceptable temporary
+				// remove before https://github.com/osmosis-labs/osmosis/issues/5726 is complete
+				s.Require().True(spotPriceFromMethod.Dec().Sub(tc.expectedSpotPrice).Abs().LT(elipson))
 			}
 		})
 	}
@@ -567,7 +569,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 	var (
 		tickToSqrtPrice = func(tick int64) osmomath.BigDec {
-			_, sqrtPrice, err := clmath.TickToSqrtPrice(tick)
+			sqrtPrice, err := clmath.TickToSqrtPrice(tick)
 			suite.Require().NoError(err)
 			return sqrtPrice
 		}
@@ -695,7 +697,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			pool := model.Pool{
 				CurrentTick: tc.currentTick,
 			}
-			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
+			currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
 			pool.CurrentSqrtPrice = currenTicktSqrtPrice
 
 			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
@@ -790,7 +792,7 @@ func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
 				CurrentTick:          tc.currentTick,
 				CurrentTickLiquidity: defaultLiquidityAmt,
 			}
-			_, currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
+			currenTicktSqrtPrice, _ := clmath.TickToSqrtPrice(pool.CurrentTick)
 			pool.CurrentSqrtPrice = currenTicktSqrtPrice
 
 			wasUpdated := pool.UpdateLiquidityIfActivePosition(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)

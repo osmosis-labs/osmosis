@@ -151,6 +151,7 @@ func (c *Config) WaitUntilHeight(height int64) {
 }
 
 // WaitForNumHeights waits for all nodes to go through a given number of heights.
+// TODO: Remove in favor of node.WaitForNumHeights
 func (c *Config) WaitForNumHeights(heightsToWait int64) {
 	node, err := c.GetDefaultNode()
 	require.NoError(c.t, err)
