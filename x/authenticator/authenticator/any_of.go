@@ -117,15 +117,10 @@ func (aoa AnyOfAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticato
 	}
 }
 
-func (aoa AnyOfAuthenticator) ConfirmExecution(
-	ctx sdk.Context,
-	msg sdk.Msg,
-	authenticated bool,
-	authenticationData AuthenticatorData,
-) bool {
+func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) bool {
 	// Call ConfirmExecution on executed sub-authenticators
 	for _, auth := range aoa.executedAuths {
-		if !auth.ConfirmExecution(ctx, msg, authenticated, authenticationData) {
+		if !auth.ConfirmExecution(ctx, msg, authenticationData) {
 			return false
 		}
 	}

@@ -3,6 +3,7 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/testutils"
 
@@ -509,4 +510,45 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorIntegration() {
 	//       of AllOf for validating multiple signatures
 	//_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0], s.PrivKeys[2]}, sendMsg)
 	//s.Require().NoError(err)
+}
+
+func (s *AuthenticatorSuite) TestSpendWithinLimit() {
+	spendLimitStoreKey := s.app.GetKVStoreKey()[authenticatortypes.StoreKey]
+	spendLimitStore := prefix.NewStore(s.chainA.GetContext().KVStore(spendLimitStoreKey), []byte("spendLimitAuthenticator"))
+
+	spendLimit := authenticator.NewSpendLimitAuthenticator(spendLimitStore, "allUSD", s.app.BankKeeper)
+	s.app.AuthenticatorManager.RegisterAuthenticator(spendLimit)
+
+	initData := []byte(`{"allowed_delta": 1000, "period": "day"}`)
+	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), spendLimit.Type(), initData)
+	s.Require().NoError(err, "Failed to add authenticator")
+
+	amountToSend := int64(500)
+	// Create a send message
+	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, amountToSend))
+	sendMsg := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.PrivKeys[1].PubKey().Address()),
+		Amount:      coins,
+	}
+
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
+	s.Require().Error(err)
+	s.Require().ErrorContains(err, "unauthorized") // Spend limit only rejects. Never authorizes
+
+	// Add a SigVerificationAuthenticator to the account
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerificationAuthenticator", s.PrivKeys[0].PubKey().Bytes())
+	s.Require().NoError(err, "Failed to add authenticator")
+
+	// sending 500 ok
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
+	s.Require().NoError(err)
+
+	// sending 500 ok  (1000 limit reached)
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
+	s.Require().NoError(err)
+
+	// sending again fails
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
+	s.Require().Error(err)
 }

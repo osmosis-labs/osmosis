@@ -55,6 +55,6 @@ func (t TestingAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authent
 func (t TestingAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData authenticator.AuthenticatorData, msg sdk.Msg) {
 }
 
-func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData authenticator.AuthenticatorData) bool {
+func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) bool {
 	return true
 }

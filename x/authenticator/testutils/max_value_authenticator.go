@@ -48,7 +48,7 @@ func (m MaxAmountAuthenticator) AuthenticationFailed(ctx sdk.Context, authentica
 }
 
 // TODO: Consider doing something like SetPubKey for determining if this authenticator was the one that authenticated the tx
-func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData authenticator.AuthenticatorData) bool {
+func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) bool {
 	send := msg.(*banktypes.MsgSend)
 	m.SetAmount(ctx, m.GetAmount(ctx).Add(send.Amount[0].Amount))
 	return true

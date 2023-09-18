@@ -67,7 +67,7 @@ func (s StatefulAuthenticator) GetValue(ctx sdk.Context) int {
 func (s StatefulAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData authenticator.AuthenticatorData, msg sdk.Msg) {
 }
 
-func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticated bool, authenticationData authenticator.AuthenticatorData) bool {
+func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) bool {
 	s.SetValue(ctx, s.GetValue(ctx)+1)
 	return true
 }
