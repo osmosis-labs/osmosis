@@ -770,8 +770,8 @@ Every node should upgrade their software version to v8.0.0 before the upgrade bl
 
 ### SDK fork updates
 
-* [sdk-#136](https://github.com/osmosis-labs/iavl/pull/136) add after validator slash hook
-* [sdk-#137](https://github.com/osmosis-labs/iavl/pull/137) backport feat: Modify grpc gateway to be concurrent
+* [sdk-#136](https://github.com/osmosis-labs/cosmos-sdk/pull/136) add after validator slash hook
+* [sdk-#137](https://github.com/osmosis-labs/cosmos-sdk/pull/137) backport feat: Modify grpc gateway to be concurrent
 * [sdk-#146](https://github.com/osmosis-labs/cosmos-sdk/pull/146) extra logs during commit
 * [sdk-#151](https://github.com/osmosis-labs/cosmos-sdk/pull/151) fix logs related to store keys and commit hash
 * [sdk-#140](https://github.com/osmosis-labs/cosmos-sdk/pull/140) refactor: snapshot and pruning functionality
@@ -969,7 +969,7 @@ The Osmosis Boron release is made!
 Notable features include:
 
 * Upgrading from SDK v0.42 to [SDK v0.44](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/RELEASE_NOTES.md), bringing efficiency improvements, integrations and Rosetta support.
-* Bringing in the new modules [Bech32IBC](https://github.com/osmosis-labs/bech32-ibc/), [Authz](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec), [TxFees](https://github.com/osmosis-labs/osmosis/tree/main/x/txfees)
+* Bringing in the new modules [Bech32IBC](https://github.com/osmosis-labs/bech32-ibc/), [Authz](https://github.com/cosmos/cosmos-sdk/tree/main/x/authz), [TxFees](https://github.com/osmosis-labs/osmosis/tree/main/x/txfees)
 * Upgrading to IBC v2, allowing for improved Ethereum Bridge and CosmWasm support
 * Implementing Osmosis chain governance's [Proposal 32](https://www.mintscan.io/osmosis/proposals/32)
 * Large suite of gas bugs fixed. (Including several that we have not seen on chain)
@@ -1024,14 +1024,14 @@ Upgrade instructions for node operators can be found [here](https://github.com/o
 * Added changelog and info about changelog format.
 * Fix accumulation store only counting bonded tokens, not unbonding tokens, that prevented the front-end from using more correct APY estimates. (Previously, the front-end could only underestimate rewards)
 
-## [v3.2.0](https://github.com/osmosis/osmosis-labs/releases/tag/v2.0.0) - 2021-06-28
+## [v3.1.0](https://github.com/osmosis-labs/osmosis/releases/tag/v3.1.0) - 2021-06-28
 
 * Update the cosmos-sdk version we modify to v0.42.9
 * Fix a bug in the min commission rate code that allows validators to be created with commission rates less than the minimum.
 * Automatically upgrade any validator with less than the minimum comission rate to the minimum at upgrade time.
 * Unbrick on-chain governance, by fixing the deposit parameter to use `uosmo` instead of `osmo`.
 
-## [v1.0.2](https://github.com/osmosis/osmosis-labs/releases/tag/v1.0.2) - 2021-06-18
+## [v1.0.2](https://github.com/osmosis-labs/osmosis/releases/tag/v1.0.2) - 2021-06-18
 
 This release improves the CLI UX of creating and querying gauges.
 
@@ -1039,6 +1039,6 @@ This release improves the CLI UX of creating and querying gauges.
 
 This release fixes a bug in `osmosisd version` always displaying 0.0.1.
 
-## [v1.0.0](https://github.com/osmosis/osmosis-labs/releases/tag/v1.0.0) - 2021-06-16
+## [v1.0.0](https://github.com/osmosis-labs/osmosis/releases/tag/v1.0.0-rc0) - 2021-06-16
 
 Initial Release!
