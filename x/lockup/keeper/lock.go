@@ -619,7 +619,7 @@ func (k Keeper) InitializeAllLocks(ctx sdk.Context, locks []types.PeriodLock) er
 	for i, lock := range locks {
 		if i%25000 == 0 {
 			msg := fmt.Sprintf("Reset %d lock refs, cur lock ID %d", i, lock.ID)
-			ctx.Logger().Info(msg)
+			ctx.Logger().Debug(msg)
 		}
 		err := k.setLockAndAddLockRefs(ctx, lock)
 		if err != nil {
@@ -666,7 +666,7 @@ func (k Keeper) writeDurationValuesToAccumTree(ctx sdk.Context, denom string, du
 	// add them all to accumulation store
 	msg := fmt.Sprintf("Setting accumulation entries for locks for %s, there are %d distinct durations",
 		denom, len(durations))
-	ctx.Logger().Info(msg)
+	ctx.Logger().Debug(msg)
 	for _, d := range durations {
 		amt := durationValueMap[d]
 		k.accumulationStore(ctx, denom).Increase(accumulationKey(d), amt)
@@ -683,7 +683,7 @@ func (k Keeper) InitializeAllSyntheticLocks(ctx sdk.Context, syntheticLocks []ty
 	for i, synthLock := range syntheticLocks {
 		if i%25000 == 0 {
 			msg := fmt.Sprintf("Reset %d synthetic lock refs", i)
-			ctx.Logger().Info(msg)
+			ctx.Logger().Debug(msg)
 		}
 
 		// Add to the accumlation store cache
@@ -730,7 +730,7 @@ func (k Keeper) InitializeAllSyntheticLocks(ctx sdk.Context, syntheticLocks []ty
 		// add them all to accumulation store
 		msg := fmt.Sprintf("Setting accumulation entries for locks for %s, there are %d distinct durations",
 			denom, len(durations))
-		ctx.Logger().Info(msg)
+		ctx.Logger().Debug(msg)
 		for _, d := range durations {
 			amt := curDurationMap[d]
 			k.accumulationStore(ctx, denom).Increase(accumulationKey(d), amt)

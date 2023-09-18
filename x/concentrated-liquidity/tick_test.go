@@ -747,27 +747,27 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 		},
 		{
 			name:          "lower tick is smaller than min tick",
-			lowerTick:     DefaultMinTick - 2,
+			lowerTick:     types.MinInitializedTickV2 - 2,
 			upperTick:     2,
-			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 2, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+			expectedError: types.InvalidTickError{Tick: types.MinInitializedTickV2 - 2, IsLower: true, MinTick: types.MinInitializedTickV2, MaxTick: DefaultMaxTick},
 		},
 		{
 			name:          "lower tick is greater than max tick",
 			lowerTick:     DefaultMaxTick + 2,
 			upperTick:     DefaultMaxTick + 4,
-			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 2, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 2, IsLower: true, MinTick: types.MinInitializedTickV2, MaxTick: DefaultMaxTick},
 		},
 		{
 			name:          "upper tick is smaller than min tick",
 			lowerTick:     2,
-			upperTick:     DefaultMinTick - 2,
-			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 2, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+			upperTick:     types.MinInitializedTickV2 - 2,
+			expectedError: types.InvalidTickError{Tick: types.MinInitializedTickV2 - 2, IsLower: false, MinTick: types.MinInitializedTickV2, MaxTick: DefaultMaxTick},
 		},
 		{
 			name:          "upper tick is greater than max tick",
 			lowerTick:     2,
 			upperTick:     DefaultMaxTick + 2,
-			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 2, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 2, IsLower: false, MinTick: types.MinInitializedTickV2, MaxTick: DefaultMaxTick},
 		},
 		{
 			name:      "lower tick is greater than upper tick",
@@ -781,14 +781,14 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 			lowerTick: types.MaxTick,
 			upperTick: types.MaxTick,
 
-			expectedError: types.InvalidTickError{Tick: types.MaxTick, IsLower: true, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick},
+			expectedError: types.InvalidTickError{Tick: types.MaxTick, IsLower: true, MinTick: types.MinInitializedTickV2, MaxTick: types.MaxTick},
 		},
 		{
 			name:      "upper tick is equal to min tick.",
-			lowerTick: types.MinInitializedTick,
-			upperTick: types.MinInitializedTick,
+			lowerTick: types.MinInitializedTickV2,
+			upperTick: types.MinInitializedTickV2,
 
-			expectedError: types.InvalidTickError{Tick: types.MinInitializedTick, IsLower: false, MinTick: types.MinInitializedTick, MaxTick: types.MaxTick},
+			expectedError: types.InvalidTickError{Tick: types.MinInitializedTickV2, IsLower: false, MinTick: types.MinInitializedTickV2, MaxTick: types.MaxTick},
 		},
 	}
 

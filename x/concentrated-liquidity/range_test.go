@@ -357,7 +357,7 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 	}
 
 	// Note that we set the price limit to zero to ensure that the swap can execute in either direction (gets automatically set to correct limit)
-	swappedIn, swappedOut, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), osmomath.ZeroDec())
+	swappedIn, swappedOut, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), osmomath.ZeroBigDec())
 	s.Require().NoError(err)
 
 	return swappedIn, swappedOut
@@ -439,7 +439,7 @@ func (s *KeeperTestSuite) getInitialPositionAssets(pool types.ConcentratedPoolEx
 
 	// Calculate asset amounts that would be required to get the required spot price (rounding up on asset1 to ensure we stay in the intended tick)
 	asset0Amount := osmomath.NewInt(100000000000000)
-	asset1Amount := osmomath.NewDecFromInt(asset0Amount).Mul(requiredPrice.Dec()).Ceil().TruncateInt()
+	asset1Amount := osmomath.BigDecFromDec(osmomath.NewDecFromInt(asset0Amount)).Mul(requiredPrice).Ceil().Dec().TruncateInt()
 
 	assetCoins := sdk.NewCoins(
 		sdk.NewCoin(pool.GetToken0(), asset0Amount),
