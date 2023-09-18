@@ -393,7 +393,7 @@ func (d BigDec) QuoTruncateMut(d2 BigDec) BigDec {
 	d.i.Mul(d.i, squaredPrecisionReuse)
 	d.i.Quo(d.i, d2.i)
 
-	chopPrecisionAndTruncate(d.i)
+	chopPrecisionAndTruncateMut(d.i)
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
@@ -716,6 +716,12 @@ func (d BigDec) RoundInt() BigInt {
 // chopPrecisionAndTruncate is similar to chopPrecisionAndRound,
 // but always rounds down. It does not mutate the input.
 func chopPrecisionAndTruncate(d *big.Int) *big.Int {
+	return new(big.Int).Quo(d, precisionReuse)
+}
+
+// chopPrecisionAndTruncate is similar to chopPrecisionAndRound,
+// but always rounds down. It mutates the input.
+func chopPrecisionAndTruncateMut(d *big.Int) *big.Int {
 	return d.Quo(d, precisionReuse)
 }
 
