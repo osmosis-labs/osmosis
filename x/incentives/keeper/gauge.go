@@ -338,7 +338,7 @@ func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins s
 		return err
 	}
 	if gauge.IsFinishedGauge(ctx.BlockTime()) {
-		return errors.New("gauge is already completed")
+		return types.GaugeFinishedError{GaugeId: gaugeID}
 	}
 
 	// Fixed gas consumption adding reward to gauges based on the number of coins to add

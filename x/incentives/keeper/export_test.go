@@ -46,3 +46,8 @@ func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sd
 func (k Keeper) SyncGroupGaugeWeights(ctx sdk.Context, groupGauge types.GroupGauge) error {
 	return k.syncGroupGaugeWeights(ctx, groupGauge)
 }
+
+// SetGauge sets the regular gauge to state.
+func (k Keeper) SetGauge(ctx sdk.Context, gauge *types.Gauge) error {
+	return k.setGauge(ctx, gauge)
+}

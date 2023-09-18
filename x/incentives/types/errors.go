@@ -32,3 +32,11 @@ type CumulativeVolumeDecreasedError struct {
 func (e CumulativeVolumeDecreasedError) Error() string {
 	return fmt.Sprintf("Cumulative volume should not be able to decrease. Pool id (%d), previous volume (%s), new volume (%s)", e.PoolId, e.PreviousVolume, e.NewVolume)
 }
+
+type GaugeFinishedError struct {
+	GaugeId uint64
+}
+
+func (e GaugeFinishedError) Error() string {
+	return fmt.Sprintf("Gauge with id %d has already finished.", e.GaugeId)
+}
