@@ -161,6 +161,7 @@ Fixes mainnet bugs w/ incorrect accumulation sumtrees, and CL handling for a bal
 * [#5953] (https://github.com/osmosis-labs/osmosis/pull/5953) Supporting two pool routes in ProtoRev
 * [#6012](https://github.com/osmosis-labs/osmosis/pull/6012) chore: add autocomplete to makefile
 * [#6085](https://github.com/osmosis-labs/osmosis/pull/6085) (v18: feat) Volume-Split, setup gauges to split evenly
+* [#6412](https://github.com/osmosis-labs/osmosis/pull/6412) add CLI query poolmanager params
 
 ### Minor improvements & Bug Fixes
 
