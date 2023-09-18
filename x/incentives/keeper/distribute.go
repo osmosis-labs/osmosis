@@ -115,11 +115,11 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 				return err
 			}
 
-			// Update total distirbuted amount.
+			// Update total distribute amount.
 			amountDistributed = amountDistributed.Add(currentGaugeCoins...)
 		}
 
-		// Update total coins distributed and filled epoch of teh group gauge.
+		// Update total coins distributed and filled epoch of the group gauge.
 		if err = k.updateGaugePostDistribute(ctx, *groupGauge, coinsToDistribute); err != nil {
 			return err
 		}
