@@ -37,6 +37,7 @@ const (
 
 var (
 	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionBigDec), nil)
+	squaredPrecisionReuse = new(big.Int).Mul(precisionReuse, precisionReuse)
 	precisionReuseSDK    = new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionDec), nil)
 	fivePrecision        = new(big.Int).Quo(precisionReuse, big.NewInt(2))
 	precisionMultipliers []*big.Int
@@ -371,19 +372,17 @@ func (d BigDec) QuoRaw(d2 int64) BigDec {
 	return BigDec{chopped}
 }
 
-// quotient truncate
+// quotient truncate (mutable)
 func (d BigDec) QuoTruncate(d2 BigDec) BigDec {
 	// multiply precision twice
-	mul := new(big.Int).Mul(d.i, precisionReuse)
-	mul.Mul(mul, precisionReuse)
+	d.i.Mul(d.i, squaredPrecisionReuse)
+	d.i.Quo(d.i, d2.i)
 
-	quo := mul.Quo(mul, d2.i)
-	chopped := chopPrecisionAndTruncate(quo)
-
-	if chopped.BitLen() > maxDecBitLen {
+	chopPrecisionAndTruncate(d.i)
+	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
-	return BigDec{chopped}
+	return d
 }
 
 // quotient, round up
@@ -702,7 +701,7 @@ func (d BigDec) RoundInt() BigInt {
 // chopPrecisionAndTruncate is similar to chopPrecisionAndRound,
 // but always rounds down. It does not mutate the input.
 func chopPrecisionAndTruncate(d *big.Int) *big.Int {
-	return new(big.Int).Quo(d, precisionReuse)
+	return d.Quo(d, precisionReuse)
 }
 
 // TruncateInt64 truncates the decimals from the number and returns an int64
