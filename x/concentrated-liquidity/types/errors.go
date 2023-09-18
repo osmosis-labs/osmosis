@@ -887,3 +887,12 @@ type ComputedSqrtPriceInequalityError struct {
 func (e ComputedSqrtPriceInequalityError) Error() string {
 	return fmt.Sprintf("edge case has occurred when swapping at tick boundaries, with izZeroForOne (%t), NextInitializedTickSqrtPrice (%s), computedSqrtPrice (%s). Please try again with a different swap amount", e.IsZeroForOne, e.NextInitializedTickSqrtPrice, e.ComputedSqrtPrice)
 }
+
+type NumberOfTicksExceedsMaxError struct {
+	NumberOfTicks    uint64
+	MaxNumberOfTicks uint64
+}
+
+func (e NumberOfTicksExceedsMaxError) Error() string {
+	return fmt.Sprintf("number of ticks exceeds max ticks. Provided number of ticks (%d), max ticks (%d)", e.NumberOfTicks, e.MaxNumberOfTicks)
+}
