@@ -24,7 +24,11 @@ const (
 	// It should be uploaded to Docker Hub. OSMOSIS_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
 	previousVersionOsmoRepository = "osmolabs/osmosis"
+<<<<<<< HEAD
 	previousVersionOsmoTag        = "18.0.0-alpine"
+=======
+	previousVersionOsmoTag        = "19.0.0-alpine"
+>>>>>>> 2bb6be9d (bug: send non osmo txfees to community pool instead of stakers (#6426))
 	// Pre-upgrade repo/tag for osmosis initialization (this should be one version below upgradeVersion)
 	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
 	previousVersionInitTag        = "v18-faster-blocks"
