@@ -249,8 +249,8 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	} else {
-		// sends to FeeCollectorForStakingRewardsName module account
-		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorForStakingRewardsName, fees)
+		// sends to FeeCollectorForCommunityPoolName module account
+		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorForCommunityPoolName, fees)
 		if err != nil {
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
