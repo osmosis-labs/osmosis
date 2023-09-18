@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Features
+
+* [#6427](https://github.com/osmosis-labs/osmosis/pull/6427) sdk.Coins Mul and Quo helpers in osmoutils
+
 ### Misc Improvements
 
 * [#6309](https://github.com/osmosis-labs/osmosis/pull/6309) Add  Cosmwasm Pool Queries to Stargate Query
