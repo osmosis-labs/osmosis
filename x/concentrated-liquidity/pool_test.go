@@ -114,11 +114,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			if len(test.unrestrictedPoolCreatorWhitelist) > 0 {
 				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
 				params.UnrestrictedPoolCreatorWhitelist = test.unrestrictedPoolCreatorWhitelist
-				fmt.Println("setting")
-				fmt.Println(params.UnrestrictedPoolCreatorWhitelist)
 				s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
-				fmt.Println("getting")
-				fmt.Println(s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx).UnrestrictedPoolCreatorWhitelist)
 			}
 
 			s.setListenerMockOnConcentratedLiquidityKeeper()
