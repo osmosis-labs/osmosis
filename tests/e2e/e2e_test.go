@@ -45,114 +45,114 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.SetDefaultTakerFeeChainB()
 	})
 
-	// // Zero Dependent Tests
-	// s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
-	// 	t.Parallel()
-	// 	s.CreateConcentratedLiquidityPoolVoting_And_TWAP()
-	// })
+	// Zero Dependent Tests
+	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
+		t.Parallel()
+		s.CreateConcentratedLiquidityPoolVoting_And_TWAP()
+	})
 
-	// s.T().Run("ProtoRev", func(t *testing.T) {
-	// 	t.Parallel()
-	// 	s.ProtoRev()
-	// })
+	s.T().Run("ProtoRev", func(t *testing.T) {
+		t.Parallel()
+		s.ProtoRev()
+	})
 
-	// s.T().Run("ConcentratedLiquidity", func(t *testing.T) {
-	// 	t.Parallel()
-	// 	s.ConcentratedLiquidity()
-	// })
+	s.T().Run("ConcentratedLiquidity", func(t *testing.T) {
+		t.Parallel()
+		s.ConcentratedLiquidity()
+	})
 
-	// s.T().Run("SuperfluidVoting", func(t *testing.T) {
-	// 	t.Parallel()
-	// 	s.SuperfluidVoting()
-	// })
+	s.T().Run("SuperfluidVoting", func(t *testing.T) {
+		t.Parallel()
+		s.SuperfluidVoting()
+	})
 
-	// s.T().Run("AddToExistingLock", func(t *testing.T) {
-	// 	t.Parallel()
-	// 	s.AddToExistingLock()
-	// })
+	s.T().Run("AddToExistingLock", func(t *testing.T) {
+		t.Parallel()
+		s.AddToExistingLock()
+	})
 
-	// s.T().Run("ExpeditedProposals", func(t *testing.T) {
-	// 	t.Parallel()
-	// 	s.ExpeditedProposals()
-	// })
+	s.T().Run("ExpeditedProposals", func(t *testing.T) {
+		t.Parallel()
+		s.ExpeditedProposals()
+	})
 
-	// s.T().Run("GeometricTWAP", func(t *testing.T) {
-	// 	t.Parallel()
-	// 	s.GeometricTWAP()
-	// })
+	s.T().Run("GeometricTWAP", func(t *testing.T) {
+		t.Parallel()
+		s.GeometricTWAP()
+	})
 
-	// s.T().Run("LargeWasmUpload", func(t *testing.T) {
-	// 	t.Parallel()
-	// 	s.LargeWasmUpload()
-	// })
+	s.T().Run("LargeWasmUpload", func(t *testing.T) {
+		t.Parallel()
+		s.LargeWasmUpload()
+	})
 
 	s.T().Run("StableSwap", func(t *testing.T) {
 		t.Parallel()
 		s.StableSwap()
 	})
 
-	// // Test currently disabled
-	// // s.T().Run("ArithmeticTWAP", func(t *testing.T) {
-	// // 	t.Parallel()
-	// // 	s.ArithmeticTWAP()
-	// // })
+	// Test currently disabled
+	// s.T().Run("ArithmeticTWAP", func(t *testing.T) {
+	// 	t.Parallel()
+	// 	s.ArithmeticTWAP()
+	// })
 
-	// // State Sync Dependent Tests
+	// State Sync Dependent Tests
 
-	// if s.skipStateSync || !s.runScheduledTest {
-	// 	s.T().Skip()
-	// } else {
-	// 	s.T().Run("StateSync", func(t *testing.T) {
-	// 		t.Parallel()
-	// 		s.StateSync()
-	// 	})
-	// }
+	if s.skipStateSync || !s.runScheduledTest {
+		s.T().Skip()
+	} else {
+		s.T().Run("StateSync", func(t *testing.T) {
+			t.Parallel()
+			s.StateSync()
+		})
+	}
 
-	// // Upgrade Dependent Tests
+	// Upgrade Dependent Tests
 
-	// if s.skipUpgrade {
-	// 	s.T().Skip("Skipping GeometricTwapMigration test")
-	// } else {
-	// 	s.T().Run("GeometricTwapMigration", func(t *testing.T) {
-	// 		t.Parallel()
-	// 		s.GeometricTwapMigration()
-	// 	})
-	// }
+	if s.skipUpgrade {
+		s.T().Skip("Skipping GeometricTwapMigration test")
+	} else {
+		s.T().Run("GeometricTwapMigration", func(t *testing.T) {
+			t.Parallel()
+			s.GeometricTwapMigration()
+		})
+	}
 
-	// if s.skipUpgrade {
-	// 	s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
-	// } else {
-	// 	s.T().Run("AddToExistingLockPostUpgrade", func(t *testing.T) {
-	// 		t.Parallel()
-	// 		s.AddToExistingLockPostUpgrade()
-	// 	})
-	// }
+	if s.skipUpgrade {
+		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
+	} else {
+		s.T().Run("AddToExistingLockPostUpgrade", func(t *testing.T) {
+			t.Parallel()
+			s.AddToExistingLockPostUpgrade()
+		})
+	}
 
-	// // IBC Dependent Tests
+	// IBC Dependent Tests
 
-	// if s.skipIBC {
-	// 	s.T().Skip("Skipping IBC tests")
-	// } else {
-	// 	s.T().Run("IBCTokenTransferRateLimiting", func(t *testing.T) {
-	// 		t.Parallel()
-	// 		s.IBCTokenTransferRateLimiting()
-	// 	})
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	} else {
+		s.T().Run("IBCTokenTransferRateLimiting", func(t *testing.T) {
+			t.Parallel()
+			s.IBCTokenTransferRateLimiting()
+		})
 
-	// 	s.T().Run("IBCTokenTransferAndCreatePool", func(t *testing.T) {
-	// 		t.Parallel()
-	// 		s.IBCTokenTransferAndCreatePool()
-	// 	})
+		s.T().Run("IBCTokenTransferAndCreatePool", func(t *testing.T) {
+			t.Parallel()
+			s.IBCTokenTransferAndCreatePool()
+		})
 
-	// 	s.T().Run("IBCWasmHooks", func(t *testing.T) {
-	// 		t.Parallel()
-	// 		s.IBCWasmHooks()
-	// 	})
+		s.T().Run("IBCWasmHooks", func(t *testing.T) {
+			t.Parallel()
+			s.IBCWasmHooks()
+		})
 
-	// 	s.T().Run("PacketForwarding", func(t *testing.T) {
-	// 		t.Parallel()
-	// 		s.PacketForwarding()
-	// 	})
-	// }
+		s.T().Run("PacketForwarding", func(t *testing.T) {
+			t.Parallel()
+			s.PacketForwarding()
+		})
+	}
 }
 
 // TestProtoRev is a test that ensures that the protorev module is working as expected. In particular, this tests and ensures that:
