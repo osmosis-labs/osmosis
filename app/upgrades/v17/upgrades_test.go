@@ -526,17 +526,15 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 		s.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			s.SetupTest() // reset
 
-			// Before, pool creation fee was going directly to the community pool.
-			// Now, it stages in the feeCollector and is distributed to the community pool at the end of the epoch.
-			// We were previously relying on pool creation fees funding the community pool immediately, so we
-			// set it to zero here and fund the community pool directly for simplicity sake.
+			// This test relied on pool creation fees being sent in OSMO
+			// to the community pool. We change the baseDenom and poolCreationFee
+			// back to OSMO for this test.
+			s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "uosmo")
 			poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
-			poolManagerParams.PoolCreationFee = sdk.Coins{}
+			if len(poolManagerParams.PoolCreationFee) > 0 {
+				poolManagerParams.PoolCreationFee[0].Denom = "uosmo"
+			}
 			s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
-			coinsToFund := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)))
-			s.FundAcc(s.TestAccs[0], coinsToFund)
-			err := s.App.DistrKeeper.FundCommunityPool(s.Ctx, coinsToFund, s.TestAccs[0])
-			s.Require().NoError(err)
 
 			expectedCoinsUsedInUpgradeHandler, lastPoolID := tc.pre_upgrade(&s.App.AppKeepers)
 			tc.upgrade(&s.App.AppKeepers, expectedCoinsUsedInUpgradeHandler, lastPoolID)
