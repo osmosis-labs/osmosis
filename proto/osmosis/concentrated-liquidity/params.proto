@@ -61,6 +61,8 @@ message Params {
   // allowed to bypass restrictions on permissionless supercharged pool
   // creation, like pool_creation_enabled, restricted quote assets, no
   // double creation of pools, etc.
-  repeated string unrestricted_pool_creator_whitelist = 7
-      [ (gogoproto.moretags) = "yaml:\"unrestricted_pool_creator_whitelist\"" ];
+  repeated string unrestricted_pool_creator_whitelist = 7 [
+    (gogoproto.moretags) = "yaml:\"unrestricted_pool_creator_whitelist\"",
+    (gogoproto.nullable) = true
+  ];
 }
