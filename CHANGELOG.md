@@ -58,6 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    * Note: with the update, the Dec and Int do not get initialized to zero values
    by default in proto marhaling/unmarshaling. Instead, they get set to nil values.
    * maxDecBitLen has changed by one bit so overflow panic can be triggerred sooner.
+* [#6368](https://github.com/osmosis-labs/osmosis/pull/6368) Convert priceLimit API in CL swaps to BigDec 
+
 
 ## v19.0.0
 
