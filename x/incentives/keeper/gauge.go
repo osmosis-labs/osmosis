@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -441,7 +440,7 @@ func (k Keeper) addToGaugeRewards(ctx sdk.Context, coins sdk.Coins, gaugeID uint
 		return err
 	}
 	if gauge.IsFinishedGauge(ctx.BlockTime()) {
-		return errors.New("gauge is already completed")
+		return types.UnexpectedFinishedGaugeError{GaugeId: gaugeID}
 	}
 
 	gauge.Coins = gauge.Coins.Add(coins...)
