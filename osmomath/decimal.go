@@ -37,6 +37,7 @@ const (
 
 var (
 	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionBigDec), nil)
+	squaredPrecisionReuse = new(big.Int).Mul(precisionReuse, precisionReuse)
 	precisionReuseSDK    = new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionDec), nil)
 	fivePrecision        = new(big.Int).Quo(precisionReuse, big.NewInt(2))
 	precisionMultipliers []*big.Int
@@ -399,6 +400,20 @@ func (d BigDec) QuoRoundUp(d2 BigDec) BigDec {
 		panic("Int overflow")
 	}
 	return BigDec{chopped}
+}
+
+// quotient, round up (mutative)
+func (d BigDec) QuoRoundUpMut(d2 BigDec) BigDec {
+	// multiply precision twice
+	d.i.Mul(d.i, squaredPrecisionReuse)
+	d.i.Quo(d.i, d2.i)
+
+	chopPrecisionAndRoundUpBigDec(d.i)
+
+	if d.i.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return BigDec{d.i}
 }
 
 // quotient

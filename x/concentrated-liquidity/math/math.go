@@ -80,7 +80,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 		// Note that the order of divisions is important here. First, we divide by a larger number (sqrtPriceB) and then by a smaller number (sqrtPriceA).
 		// This leads to a smaller error amplification. This only matters in cases where at least one of the sqrt prices is below 1.
 		// TODO (perf): QuoRoundUpMut with no reallocation.
-		return liq.MulRoundUp(diff).QuoRoundUp(sqrtPriceB).QuoRoundUp(sqrtPriceA).Ceil()
+		return liq.MulRoundUp(diff).QuoRoundUpMut(sqrtPriceB).QuoRoundUpMut(sqrtPriceA).Ceil()
 	}
 	// These are truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
