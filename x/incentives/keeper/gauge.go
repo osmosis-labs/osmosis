@@ -433,7 +433,7 @@ func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins s
 // - gauge is finished.
 // - fails to store an updated gauge to state
 //
-// Notes: does not do token transfers since it is used internally for token transfering value within the
+// Notes: does not do token transfers since it is used internally for token transferring value within the
 // incentives module or by higher level functions that do transfer.
 func (k Keeper) addToGaugeRewards(ctx sdk.Context, coins sdk.Coins, gaugeID uint64) error {
 	gauge, err := k.GetGaugeByID(ctx, gaugeID)
