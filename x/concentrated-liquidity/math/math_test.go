@@ -619,4 +619,3 @@ func TestGetNextSqrtPriceFromAmount1OutRoundingDown(t *testing.T) {
 	}
 	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount1OutRoundingDown", math.GetNextSqrtPriceFromAmount1OutRoundingDown, tests)
 }
-
