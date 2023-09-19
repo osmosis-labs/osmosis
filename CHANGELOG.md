@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 * [#6416](https://github.com/osmosis-labs/osmosis/pull/6416) feat[CL]: add num initialized ticks query
+* [#6442](https://github.com/osmosis-labs/osmosis/pull/6442) feat: allow alternate denoms for protocol fees
 
 ### State Breaking
 
