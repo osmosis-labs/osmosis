@@ -709,7 +709,7 @@ func chopPrecisionAndRoundUpMut(d *big.Int, precisionReuse *big.Int) *big.Int {
 	}
 
 	// get the truncated quotient and remainder
-	_, rem := d.QuoRem(d, precisionReuse, zeroInt)
+	_, rem := d.QuoRem(d, precisionReuse, big.NewInt(0))
 
 	if rem.Sign() == 0 { // remainder is zero
 		return d
