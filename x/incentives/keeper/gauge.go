@@ -295,49 +295,6 @@ func (k Keeper) getWeightBySplittingPolicy(ctx sdk.Context, poolId uint64, split
 	}
 }
 
-// AddToGaugeRewards adds coins to gauge.
-func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error {
-	if err := k.addToGaugeRewards(ctx, coins, gaugeID); err != nil {
-		return err
-	}
-
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, coins); err != nil {
-		return err
-	}
-	return nil
-}
-
-// addToGaugeRewards adds coins to gauge with the given ID.
-//
-// Returns error if:
-// - fails to retrieve gauge from state
-// - gauge is finished.
-// - fails to store an updated gauge to state
-//
-// Notes: does not do token transfers since it is used internally for token transfering value within the
-// incentives module or by higher level functions that do transfer.
-func (k Keeper) addToGaugeRewards(ctx sdk.Context, coins sdk.Coins, gaugeID uint64) error {
-	gauge, err := k.GetGaugeByID(ctx, gaugeID)
-	if err != nil {
-		return err
-	}
-	if gauge.IsFinishedGauge(ctx.BlockTime()) {
-		return errors.New("gauge is already completed")
-	}
-
-	gauge.Coins = gauge.Coins.Add(coins...)
-	err = k.setGauge(ctx, gauge)
-	if err != nil {
-		return err
-	}
-
-	// Fixed gas consumption adding reward to gauges based on the number of coins to add
-	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForAddRewardToGauge*(len(coins)+len(gauge.Coins))), "scaling gas cost for adding to gauge rewards")
-
-	k.hooks.AfterAddToGauge(ctx, gauge.Id)
-	return nil
-}
-
 // GetGaugeByID returns gauge from gauge ID.
 func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, error) {
 	gauge := types.Gauge{}
@@ -455,6 +412,49 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 	params := k.GetParams(ctx)
 	return k.ek.GetEpochInfo(ctx, params.DistrEpochIdentifier)
+}
+
+// AddToGaugeRewards adds coins to gauge.
+func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error {
+	if err := k.addToGaugeRewards(ctx, coins, gaugeID); err != nil {
+		return err
+	}
+
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, coins); err != nil {
+		return err
+	}
+	return nil
+}
+
+// addToGaugeRewards adds coins to gauge with the given ID.
+//
+// Returns error if:
+// - fails to retrieve gauge from state
+// - gauge is finished.
+// - fails to store an updated gauge to state
+//
+// Notes: does not do token transfers since it is used internally for token transfering value within the
+// incentives module or by higher level functions that do transfer.
+func (k Keeper) addToGaugeRewards(ctx sdk.Context, coins sdk.Coins, gaugeID uint64) error {
+	gauge, err := k.GetGaugeByID(ctx, gaugeID)
+	if err != nil {
+		return err
+	}
+	if gauge.IsFinishedGauge(ctx.BlockTime()) {
+		return errors.New("gauge is already completed")
+	}
+
+	gauge.Coins = gauge.Coins.Add(coins...)
+	err = k.setGauge(ctx, gauge)
+	if err != nil {
+		return err
+	}
+
+	// Fixed gas consumption adding reward to gauges based on the number of coins to add
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForAddRewardToGauge*(len(coins)+len(gauge.Coins))), "scaling gas cost for adding to gauge rewards")
+
+	k.hooks.AfterAddToGauge(ctx, gauge.Id)
+	return nil
 }
 
 // chargeFeeIfSufficientFeeDenomBalance charges fee in the base denom on the address if the address has
