@@ -22,11 +22,11 @@ type Authenticator interface {
 	// and these Types are used to store and link the data structure to the Authenticator logic
 	Type() string
 
-	// Gas defines what gas the authenticator uses per signatures verification
+	// StaticGas defines what gas the authenticator uses per signatures verification
 	StaticGas() uint64
 
 	// Initialize is used when the authenticator associated to an account is retrieved
-	//  from the store. The data stored for each (account, authenticator) pair will be
+	// from the store. The data stored for each (account, authenticator) pair will be
 	// passed to this method.
 	// For example, the SignatureVerificationAuthenticator requires a PublicKey to check
 	// the signature, but the auth module is not aware of the public key.
@@ -47,7 +47,7 @@ type Authenticator interface {
 
 	// Authenticate authenticates a message based on the signer and data parsed from the GetAuthenticationData function
 	// the returns true is authenticated or false if not authicated. This is used in an ante handler.
-	// NOTE: Consume gas happens in this function.
+	// NOTE: Consume gas per signature happens in this function.
 	Authenticate(
 		ctx sdk.Context, // sdk Context is used to get data for use in authentication and to consume gas
 		msg sdk.Msg, // a msg is passed into the authenticate function to allow the authentication data to verify the signature
@@ -73,8 +73,4 @@ type Authenticator interface {
 	// Optional Hooks. TODO: Revisit this when adding the authenticator storage and messages
 	// OnAuthenticatorAdded(...) bool
 	// OnAuthenticatorRemoved(...) bool
-}
-
-type AccountGetter interface {
-	GetAccount(ctx sdk.Context, msg sdk.Msg, tx sdk.Tx) (sdk.AccAddress, error)
 }

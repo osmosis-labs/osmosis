@@ -48,6 +48,7 @@ func GetSignersAndSignatures(
 	msgIndex int,
 ) ([]sdk.AccAddress, []signing.SignatureV2, error) {
 	// Map to associate each signer with its signature.
+	// TODO: is this deterministic?
 	signerToSignature := make(map[string]signing.SignatureV2)
 	sigIndex := 0
 	specificMsg := msgIndex != -1
