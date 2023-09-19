@@ -7,7 +7,6 @@ import (
 
 var (
 	sdkOneDec      = osmomath.OneDec()
-	sdkNineDec     = osmomath.NewDec(9)
 	sdkTenDec      = osmomath.NewDec(10)
 	powersOfTen    []osmomath.Dec
 	negPowersOfTen []osmomath.Dec
