@@ -387,7 +387,7 @@ func (d BigDec) QuoTruncate(d2 BigDec) BigDec {
 	return BigDec{chopped}
 }
 
-// quotient truncate (mutable)
+// quotient truncate (mutative)
 func (d BigDec) QuoTruncateMut(d2 BigDec) BigDec {
 	// multiply precision twice
 	d.i.Mul(d.i, squaredPrecisionReuse)
