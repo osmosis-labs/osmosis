@@ -120,6 +120,12 @@ func (s *KeeperTestHelper) setupGeneral() {
 	s.TestAccs = []sdk.AccAddress{}
 	s.TestAccs = append(s.TestAccs, baseTestAccts...)
 	s.SetupConcentratedLiquidityDenomsAndPoolCreation()
+	// We set osmo protocol fees to be in the same denom as the base denom
+	// If we didn't do this, we would need to create a pool and add a fee token
+	// for every test that pays a protocol fee in order for the fee to be routed through the
+	// correct pool to match the base denom. We instead opt to test logic directly
+	// in the respective module in order to simplify the remaining tests.
+	s.SetFeesToMatchBaseDenom()
 	s.hasUsedAbci = false
 }
 
@@ -345,7 +351,7 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []o
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
-	params := s.App.GAMMKeeper.GetParams(s.Ctx)
+	params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 
 	pools := []gammtypes.CFMMPoolI{}
 	for index, multiplier := range multipliers {
@@ -544,4 +550,23 @@ func GenerateTestAddrs() (string, string) {
 	validAddr := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid").String()
 	return validAddr, invalidAddr
+}
+
+func (s *KeeperTestHelper) SetFeesToMatchBaseDenom() {
+	baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+	s.Require().NoError(err)
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	if len(poolManagerParams.PoolCreationFee) > 0 {
+		poolManagerParams.PoolCreationFee[0].Denom = baseDenom
+	}
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
+
+	incentivesParams := s.App.IncentivesKeeper.GetParams(s.Ctx)
+	if len(incentivesParams.CreateGaugeFee) > 0 {
+		incentivesParams.CreateGaugeFee[0].Denom = baseDenom
+	}
+	if len(incentivesParams.AddToGaugeFee) > 0 {
+		incentivesParams.AddToGaugeFee[0].Denom = baseDenom
+	}
+	s.App.IncentivesKeeper.SetParams(s.Ctx, incentivesParams)
 }

@@ -50,11 +50,23 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
-	// Send pool creation fee from pool creator to community pool
+	// Retrieve the pool creation fee. If provided fee not in baseDenom, change to baseDenom.
+	// Retrieve it from the sender's account.
+	// Since we hardcode baseDenom here, the fee gets sent directly to the community pool.
+	// If we ever decide to make the fee denom user defined, a non osmo denom would get sent to the nonNativeFeeCollectorForCommunityPool.
+	// At epoch end, it would get swapped to osmo, and then sent to the community pool.
 	poolCreationFee := k.GetParams(ctx).PoolCreationFee
-	sender := msg.PoolCreator()
-	if err := k.communityPoolKeeper.FundCommunityPool(ctx, poolCreationFee, sender); err != nil {
+	baseDenom, err := k.txfeesKeeper.GetBaseDenom(ctx)
+	if err != nil {
 		return 0, err
+	}
+
+	sender := msg.PoolCreator()
+	if len(poolCreationFee) > 0 {
+		err = k.txfeesKeeper.ComputeAndRetrieveFeeFromAcc(ctx, poolCreationFee[0], baseDenom, sender)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	// Send initial liquidity from pool creator to pool module account.

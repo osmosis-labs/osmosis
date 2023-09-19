@@ -86,9 +86,9 @@ func (s *KeeperTestSuite) TestJoinPoolGas() {
 }
 
 func (s *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
-	// mint some usomo to account
+	// mint some stake to account
 	s.FundAcc(defaultAddr, sdk.NewCoins(
-		sdk.NewCoin("uosmo", osmomath.NewInt(1000000000000000000)),
+		sdk.NewCoin("stake", osmomath.NewInt(1000000000000000000)),
 	))
 
 	// number of distinct denom to test

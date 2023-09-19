@@ -19,7 +19,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 
@@ -69,7 +68,6 @@ var (
 	FullRangeLiquidityAmt = osmomath.MustNewDecFromStr("70710678.118654752941000000")
 
 	DefaultTickSpacing                             = uint64(100)
-	PoolCreationFee                                = poolmanagertypes.DefaultParams().PoolCreationFee
 	sqrt4000                                       = osmomath.MustNewDecFromStr("63.245553203367586640")
 	sqrt4994                                       = osmomath.MustNewDecFromStr("70.668238976219012614")
 	sqrt4999                                       = osmomath.MustNewDecFromStr("70.703606697254136613")

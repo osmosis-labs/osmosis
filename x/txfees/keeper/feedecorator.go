@@ -136,6 +136,32 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice osmomath.Dec, g
 	return nil
 }
 
+func (k Keeper) ComputeAndRetrieveFeeFromAcc(ctx sdk.Context, requiredFeeFromParam sdk.Coin, desiredDenomToPayFee string, sender sdk.AccAddress) error {
+	baseDenom, err := k.GetBaseDenom(ctx)
+	if err != nil {
+		return err
+	}
+
+	requiredFeeInBaseDenom := requiredFeeFromParam
+	if requiredFeeFromParam.Denom != baseDenom {
+		requiredFeeInBaseDenom, err = k.ConvertToBaseToken(ctx, requiredFeeFromParam)
+		if err != nil {
+			return err
+		}
+	}
+
+	requiredFee := requiredFeeInBaseDenom
+
+	if requiredFeeInBaseDenom.Denom != desiredDenomToPayFee {
+		requiredFee, err = k.ConvertBaseTokenToFeeToken(ctx, requiredFeeInBaseDenom, desiredDenomToPayFee)
+		if err != nil {
+			return err
+		}
+	}
+
+	return DeductFeesToCommunityPool(k, k.bankKeeper, k.distributionKeeper, ctx, k.accountKeeper.GetAccount(ctx, sender), sdk.NewCoins(requiredFee))
+}
+
 func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) osmomath.Dec {
 	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
 	// the check below prevents tx gas from getting over HighGasTxThreshold which is default to 1_000_000
@@ -251,6 +277,35 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 	} else {
 		// sends to FeeCollectorForStakingRewardsName module account
 		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorForStakingRewardsName, fees)
+		if err != nil {
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		}
+	}
+
+	return nil
+}
+
+func DeductFeesToCommunityPool(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, distributionKeeper types.DistributionKeeper, ctx sdk.Context, acc authtypes.AccountI, fees sdk.Coins) error {
+	// Checks the validity of the fee tokens (sorted, have positive amount, valid and unique denomination)
+	if !fees.IsValid() {
+		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
+	}
+
+	// pulls base denom from TxFeesKeeper (should be uOSMO)
+	baseDenom, err := txFeesKeeper.GetBaseDenom(ctx)
+	if err != nil {
+		return err
+	}
+
+	// checks if input fee is uOSMO (assumes only one fee token exists in the fees array (as per the check in mempoolFeeDecorator))
+	if fees[0].Denom == baseDenom {
+		err := distributionKeeper.FundCommunityPool(ctx, fees, acc.GetAddress())
+		if err != nil {
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+		}
+	} else {
+		// sends to FeeCollectorForCommunityPoolName module account
+		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorForCommunityPoolName, fees)
 		if err != nil {
 			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 		}

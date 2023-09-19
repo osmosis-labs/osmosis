@@ -3,17 +3,9 @@ package types
 import (
 	time "time"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-var (
-	// CreateGaugeFee is the fee required to create a new gauge.
-	CreateGaugeFee = osmomath.NewInt(50 * 1_000_000)
-	// AddToGagugeFee is the fee required to add to gauge.
-	AddToGaugeFee = osmomath.NewInt(25 * 1_000_000)
 )
 
 // NewGauge creates a new gauge struct given the required gauge parameters.

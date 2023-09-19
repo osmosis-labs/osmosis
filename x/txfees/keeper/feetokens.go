@@ -11,6 +11,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+type FeeConversionHelpers interface {
+	ComputeAndRetrieveFeeFromAcc(ctx sdk.Context, requiredFeeFromParam sdk.Coin, desiredDenomToPayFee string, sender sdk.AccAddress) error
+}
+
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount.
 func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin, error) {
 	baseDenom, err := k.GetBaseDenom(ctx)
@@ -35,6 +39,25 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 	return sdk.NewCoin(baseDenom, spotPrice.MulInt(inputFee.Amount).RoundInt()), nil
 }
 
+func (k Keeper) ConvertBaseTokenToFeeToken(ctx sdk.Context, baseToken sdk.Coin, feeTokenDenom string) (sdk.Coin, error) {
+	// Get fee token
+	feeToken, err := k.GetFeeToken(ctx, feeTokenDenom)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	// Calculate spot price for fee token
+	spotPrice, err := k.CalcFeeSpotPrice(ctx, feeToken.Denom)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	// Convert base token to fee token
+	feeAmount := baseToken.Amount.Quo(spotPrice.RoundInt())
+
+	return sdk.NewCoin(feeTokenDenom, feeAmount), nil
+}
+
 // CalcFeeSpotPrice converts the provided tx fees into their equivalent value in the base denomination.
 // Spot Price Calculation: spotPrice / (1 - spreadFactor),
 // where spotPrice is defined as:
@@ -50,7 +73,7 @@ func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (osmomath.D
 		return osmomath.Dec{}, err
 	}
 
-	spotPrice, err := k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
+	spotPrice, err := k.poolManager.RouteCalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
 	if err != nil {
 		return osmomath.Dec{}, err
 	}
@@ -102,7 +125,7 @@ func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error
 	// - feeToken.Denom exists
 	// - feeToken.PoolID exists
 	// - feeToken.PoolID has both feeToken.Denom and baseDenom
-	_, err = k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, feeToken.Denom, baseDenom)
+	_, err = k.poolManager.RouteCalculateSpotPrice(ctx, feeToken.PoolID, feeToken.Denom, baseDenom)
 
 	return err
 }

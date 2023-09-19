@@ -346,11 +346,24 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 		appKeepers.StakingKeeper,
 		appKeepers.ProtoRevKeeper,
+		appKeepers.TxFeesKeeper,
 	)
 	appKeepers.PoolManagerKeeper.SetStakingKeeper(appKeepers.StakingKeeper)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)
 	appKeepers.ConcentratedLiquidityKeeper.SetPoolManagerKeeper(appKeepers.PoolManagerKeeper)
 	appKeepers.CosmwasmPoolKeeper.SetPoolManagerKeeper(appKeepers.PoolManagerKeeper)
+
+	txFeesKeeper := txfeeskeeper.NewKeeper(
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.keys[txfeestypes.StoreKey],
+		appKeepers.PoolManagerKeeper,
+		appKeepers.GAMMKeeper,
+		appKeepers.ProtoRevKeeper,
+		appKeepers.DistrKeeper,
+	)
+	appKeepers.TxFeesKeeper = &txFeesKeeper
+	appKeepers.PoolManagerKeeper.SetTxFeesKeeper(appKeepers.TxFeesKeeper)
 
 	appKeepers.TwapKeeper = twap.NewKeeper(
 		appKeepers.keys[twaptypes.StoreKey],
@@ -372,17 +385,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.ProtoRevKeeper = &protorevKeeper
 	appKeepers.PoolManagerKeeper.SetProtorevKeeper(appKeepers.ProtoRevKeeper)
-
-	txFeesKeeper := txfeeskeeper.NewKeeper(
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.keys[txfeestypes.StoreKey],
-		appKeepers.PoolManagerKeeper,
-		appKeepers.GAMMKeeper,
-		appKeepers.ProtoRevKeeper,
-		appKeepers.DistrKeeper,
-	)
-	appKeepers.TxFeesKeeper = &txFeesKeeper
+	appKeepers.TxFeesKeeper.SetProtorevKeeper(appKeepers.ProtoRevKeeper)
 
 	appKeepers.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appKeepers.keys[incentivestypes.StoreKey],

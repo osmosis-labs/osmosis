@@ -33,9 +33,17 @@ func (server msgServer) CreateGauge(goCtx context.Context, msg *types.MsgCreateG
 	if err != nil {
 		return nil, err
 	}
+	createGaugeFee := server.keeper.GetParams(ctx).CreateGaugeFee
+	baseDenom, err := server.keeper.tk.GetBaseDenom(ctx)
+	if err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
 
-	if err := server.keeper.chargeFeeIfSufficientFeeDenomBalance(ctx, owner, types.CreateGaugeFee, msg.Coins); err != nil {
-		return nil, err
+	if len(createGaugeFee) > 0 {
+		err = server.keeper.tk.ComputeAndRetrieveFeeFromAcc(ctx, createGaugeFee[0], baseDenom, owner)
+		if err != nil {
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		}
 	}
 
 	gaugeID, err := server.keeper.CreateGauge(ctx, msg.IsPerpetual, owner, msg.Coins, msg.DistributeTo, msg.StartTime, msg.NumEpochsPaidOver, msg.PoolId)
@@ -62,9 +70,19 @@ func (server msgServer) AddToGauge(goCtx context.Context, msg *types.MsgAddToGau
 		return nil, err
 	}
 
-	if err := server.keeper.chargeFeeIfSufficientFeeDenomBalance(ctx, owner, types.AddToGaugeFee, msg.Rewards); err != nil {
-		return nil, err
+	addToGaugeFee := server.keeper.GetParams(ctx).AddToGaugeFee
+	baseDenom, err := server.keeper.tk.GetBaseDenom(ctx)
+	if err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
+
+	if len(addToGaugeFee) > 0 {
+		err = server.keeper.tk.ComputeAndRetrieveFeeFromAcc(ctx, addToGaugeFee[0], baseDenom, owner)
+		if err != nil {
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		}
+	}
+
 	err = server.keeper.AddToGaugeRewards(ctx, owner, msg.Rewards, msg.GaugeId)
 	if err != nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())

@@ -100,3 +100,24 @@ func (chain *TestChain) GetOsmosisApp() *app.OsmosisApp {
 	v, _ := chain.App.(*app.OsmosisApp)
 	return v
 }
+
+func (chain *TestChain) SetFeesToDefaultBondDenom() error {
+	poolManagerKeeper := chain.GetOsmosisApp().PoolManagerKeeper
+	incentivesKeeper := chain.GetOsmosisApp().IncentivesKeeper
+	ctx := chain.GetContext()
+	poolManagerParams := poolManagerKeeper.GetParams(ctx)
+	if len(poolManagerParams.PoolCreationFee) > 0 {
+		poolManagerParams.PoolCreationFee[0].Denom = sdk.DefaultBondDenom
+	}
+	poolManagerKeeper.SetParams(ctx, poolManagerParams)
+
+	incentivesParams := incentivesKeeper.GetParams(ctx)
+	if len(incentivesParams.CreateGaugeFee) > 0 {
+		incentivesParams.CreateGaugeFee[0].Denom = sdk.DefaultBondDenom
+	}
+	if len(incentivesParams.AddToGaugeFee) > 0 {
+		incentivesParams.AddToGaugeFee[0].Denom = sdk.DefaultBondDenom
+	}
+	incentivesKeeper.SetParams(ctx, incentivesParams)
+	return nil
+}

@@ -45,6 +45,7 @@ type CommunityPoolKeeper interface {
 // TxFeesKeeper defines the expected interface needed to managing transaction fees.
 type TxFeesKeeper interface {
 	GetBaseDenom(ctx sdk.Context) (denom string, err error)
+	ComputeAndRetrieveFeeFromAcc(ctx sdk.Context, requiredFeeFromParam sdk.Coin, desiredDenomToPayFee string, sender sdk.AccAddress) error
 }
 
 type ConcentratedLiquidityKeeper interface {

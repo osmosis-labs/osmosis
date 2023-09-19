@@ -52,7 +52,7 @@ func (s *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			ctx := s.Ctx
 
 			// Retrieve the pool creation fee from poolmanager params.
-			poolmanagerParams := poolmanagertypes.DefaultParams()
+			poolmanagerParams := s.App.PoolManagerKeeper.GetParams(ctx)
 
 			// Fund account to pay for the pool creation fee.
 			s.FundAcc(s.TestAccs[0], poolmanagerParams.PoolCreationFee)

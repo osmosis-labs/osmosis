@@ -31,6 +31,7 @@ type UpgradeTestSuite struct {
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 	sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
+	sdk.NewCoin("stake", osmomath.NewInt(10000000000)),
 	sdk.NewCoin("foo", osmomath.NewInt(10000000)),
 	sdk.NewCoin("bar", osmomath.NewInt(10000000)),
 	sdk.NewCoin("baz", osmomath.NewInt(10000000)),
@@ -79,11 +80,6 @@ func (s *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 
 		s.Require().Equal(gammKeeperType, reflect.TypeOf(swapModule))
 	}
-
-	// validate params
-	gammPoolCreationFee := gammKeeper.GetParams(ctx).PoolCreationFee
-	poolmanagerPoolCreationFee := poolmanagerKeeper.GetParams(ctx).PoolCreationFee
-	s.Require().Equal(gammPoolCreationFee, poolmanagerPoolCreationFee)
 }
 
 func (s *UpgradeTestSuite) TestMigrateBalancerToStablePools() {

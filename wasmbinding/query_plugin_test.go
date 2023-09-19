@@ -41,10 +41,35 @@ type StargateTestSuite struct {
 func (suite *StargateTestSuite) SetupTest() {
 	suite.app = app.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	// We set osmo protocol fees to be in the same denom as the base denom
+	// If we didn't do this, we would need to create a pool and add a fee token
+	// for every test that pays a protocol fee in order for the fee to be routed through the
+	// correct pool to match the base denom. We instead opt to test logic directly
+	// in the respective module in order to simplify the remaining tests.
+	suite.SetFeesToMatchBaseDenom()
 }
 
 func TestStargateTestSuite(t *testing.T) {
 	suite.Run(t, new(StargateTestSuite))
+}
+
+func (s *StargateTestSuite) SetFeesToMatchBaseDenom() {
+	baseDenom, err := s.app.TxFeesKeeper.GetBaseDenom(s.ctx)
+	s.Require().NoError(err)
+	poolManagerParams := s.app.PoolManagerKeeper.GetParams(s.ctx)
+	if len(poolManagerParams.PoolCreationFee) > 0 {
+		poolManagerParams.PoolCreationFee[0].Denom = baseDenom
+	}
+	s.app.PoolManagerKeeper.SetParams(s.ctx, poolManagerParams)
+
+	incentivesParams := s.app.IncentivesKeeper.GetParams(s.ctx)
+	if len(incentivesParams.CreateGaugeFee) > 0 {
+		incentivesParams.CreateGaugeFee[0].Denom = baseDenom
+	}
+	if len(incentivesParams.AddToGaugeFee) > 0 {
+		incentivesParams.AddToGaugeFee[0].Denom = baseDenom
+	}
+	s.app.IncentivesKeeper.SetParams(s.ctx, incentivesParams)
 }
 
 func (suite *StargateTestSuite) TestStargateQuerier() {

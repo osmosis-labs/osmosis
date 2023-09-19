@@ -125,16 +125,17 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankK
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		incentivesParams := k.GetParams(ctx)
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
-		if simCoins.AmountOf(sdk.DefaultBondDenom).LT(types.CreateGaugeFee) {
+		if simCoins.AmountOf(sdk.DefaultBondDenom).LT(incentivesParams.CreateGaugeFee[0].Amount) {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgCreateGauge, "Account have no coin"), nil, nil
 		}
 
 		isPerpetual := r.Int()%2 == 0
 		distributeTo := genQueryCondition(r, ctx.BlockTime(), simCoins, types.DefaultGenesis().LockableDurations)
-		rewards := genRewardCoins(r, simCoins, types.CreateGaugeFee)
+		rewards := genRewardCoins(r, simCoins, incentivesParams.CreateGaugeFee[0].Amount)
 		startTimeSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 		startTime := ctx.BlockTime().Add(time.Duration(startTimeSecs) * time.Second)
 		durationSecs := r.Intn(1*60*60*24*7) + 1*60*60*24 // range of 1 week, min 1 day
@@ -164,9 +165,10 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKe
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		incentivesParams := k.GetParams(ctx)
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
-		if simCoins.AmountOf(sdk.DefaultBondDenom).LT(types.AddToGaugeFee) {
+		if simCoins.AmountOf(sdk.DefaultBondDenom).LT(incentivesParams.AddToGaugeFee[0].Amount) {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgAddToGauge, "Account have no coin"), nil, nil
 		}
@@ -181,7 +183,7 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKe
 				types.ModuleName, types.TypeMsgAddToGauge, "Selected a gauge that is finished"), nil, nil
 		}
 
-		rewards := genRewardCoins(r, simCoins, types.AddToGaugeFee)
+		rewards := genRewardCoins(r, simCoins, incentivesParams.AddToGaugeFee[0].Amount)
 		msg := types.MsgAddToGauge{
 			Owner:   simAccount.Address.String(),
 			GaugeId: gauge.Id,

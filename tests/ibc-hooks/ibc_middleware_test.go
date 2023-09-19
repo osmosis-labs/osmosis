@@ -96,6 +96,17 @@ func (suite *HooksTestSuite) SetupTest() {
 	suite.coordinator.Setup(suite.pathBC)
 	suite.pathAC = NewTransferPath(suite.chainA, suite.chainC)
 	suite.coordinator.Setup(suite.pathAC)
+	// We set osmo protocol fees to be in the same denom as the base denom
+	// If we didn't do this, we would need to create a pool and add a fee token
+	// for every test that pays a protocol fee in order for the fee to be routed through the
+	// correct pool to match the base denom. We instead opt to test logic directly
+	// in the respective module in order to simplify the remaining tests.
+	err = suite.chainA.SetFeesToDefaultBondDenom()
+	suite.Require().NoError(err)
+	err = suite.chainB.SetFeesToDefaultBondDenom()
+	suite.Require().NoError(err)
+	err = suite.chainC.SetFeesToDefaultBondDenom()
+	suite.Require().NoError(err)
 }
 
 func NewTransferPath(chainA, chainB *osmosisibctesting.TestChain) *ibctesting.Path {
@@ -1920,7 +1931,7 @@ func (suite *HooksTestSuite) SendAndAckPacketThroughPath(packetPath []Direction,
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
 	suite.Require().NoError(err)
 
-	for i, _ := range packetPath {
+	for i := range packetPath {
 		packet = packetStack[len(packetStack)-i-1]
 		direction := packetPath[len(packetPath)-i-1]
 		// sender Acknowledges

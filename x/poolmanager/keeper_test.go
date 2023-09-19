@@ -59,6 +59,10 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.App.TxFeesKeeper.SetBaseDenom(s.Ctx, "uosmo")
 	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 	poolManagerParams.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo = "baz"
+
+	// Because we set the bond denom to uosmo, set the pool creation fee to uosmo.
+	poolManagerParams.PoolCreationFee[0].Denom = "uosmo"
+
 	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 }
 

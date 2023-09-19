@@ -77,12 +77,11 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		},
 	}
 
-	finalOutputAmount := osmomath.NewInt(0)
-
 	for _, tc := range tests {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			finalOutputAmount := osmomath.NewInt(0)
 			for i, coin := range tc.coins {
 				// Get the output amount in osmo denom
 				pool, ok := tc.poolTypes[i].(gammtypes.CFMMPoolI)
@@ -110,6 +109,10 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			moduleAddrNonNativeFee := s.App.AccountKeeper.GetModuleAddress(types.FeeCollectorForStakingRewardsName)
 			s.Equal(s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddrNonNativeFee), tc.coins)
 
+			// check the balance of the native-basedenom in module
+			moduleAddrFee := s.App.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
+			moduleBaseDenomBalancePre := s.App.BankKeeper.GetBalance(s.Ctx, moduleAddrFee, tc.baseDenom)
+
 			// End of epoch, so all the non-osmo fee amount should be swapped to osmo and transfer to fee module account
 			params := s.App.IncentivesKeeper.GetParams(s.Ctx)
 			futureCtx := s.Ctx.WithBlockTime(time.Now().Add(time.Minute))
@@ -117,13 +120,13 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			s.NoError(err)
 
 			// check the balance of the native-basedenom in module
-			moduleAddrFee := s.App.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
-			moduleBaseDenomBalance := s.App.BankKeeper.GetBalance(s.Ctx, moduleAddrFee, tc.baseDenom)
+			moduleBaseDenomBalancePost := s.App.BankKeeper.GetBalance(s.Ctx, moduleAddrFee, tc.baseDenom)
+			actualBalance := moduleBaseDenomBalancePost.Amount.Sub(moduleBaseDenomBalancePre.Amount)
 
 			// non-osmos module account should be empty as all the funds should be transferred to osmo module
 			s.Empty(s.App.BankKeeper.GetAllBalances(s.Ctx, moduleAddrNonNativeFee))
 			// check that the total osmo amount has been transferred to module account
-			s.Equal(moduleBaseDenomBalance.Amount.String(), finalOutputAmount.String())
+			s.Equal(finalOutputAmount.String(), actualBalance.String())
 		})
 	}
 }

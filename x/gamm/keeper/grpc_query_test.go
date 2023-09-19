@@ -173,6 +173,7 @@ func (s *KeeperTestSuite) TestPoolsWithFilter() {
 	var (
 		defaultAcctFunds sdk.Coins = sdk.NewCoins(
 			sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
+			sdk.NewCoin("stake", osmomath.NewInt(10000000000)),
 			sdk.NewCoin("foo", osmomath.NewInt(10000000)),
 			sdk.NewCoin("bar", osmomath.NewInt(10000000)),
 			sdk.NewCoin("baz", osmomath.NewInt(10000000)),

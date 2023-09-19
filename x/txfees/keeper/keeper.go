@@ -52,3 +52,7 @@ func (k Keeper) GetFeeTokensStore(ctx sdk.Context) sdk.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.FeeTokensStorePrefix)
 }
+
+func (k *Keeper) SetProtorevKeeper(protorevKeeper types.ProtorevKeeper) {
+	k.protorevKeeper = protorevKeeper
+}

@@ -116,3 +116,8 @@ type StakingKeeper interface {
 type ProtorevKeeper interface {
 	GetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error)
 }
+
+type TxFeesKeeper interface {
+	GetBaseDenom(ctx sdk.Context) (denom string, err error)
+	ComputeAndRetrieveFeeFromAcc(ctx sdk.Context, requiredFeeFromParam sdk.Coin, desiredDenomToPayFee string, sender sdk.AccAddress) error
+}

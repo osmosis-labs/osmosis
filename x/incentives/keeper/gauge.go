@@ -8,15 +8,11 @@ import (
 	"strings"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
@@ -476,28 +472,4 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 	params := k.GetParams(ctx)
 	return k.ek.GetEpochInfo(ctx, params.DistrEpochIdentifier)
-}
-
-// chargeFeeIfSufficientFeeDenomBalance charges fee in the base denom on the address if the address has
-// balance that is less than fee + amount of the coin from gaugeCoins that is of base denom.
-// gaugeCoins might not have a coin of tx base denom. In that case, fee is only compared to balance.
-// The fee is sent to the community pool.
-// Returns nil on success, error otherwise.
-func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee osmomath.Int, gaugeCoins sdk.Coins) (err error) {
-	feeDenom, err := k.tk.GetBaseDenom(ctx)
-	if err != nil {
-		return err
-	}
-
-	totalCost := gaugeCoins.AmountOf(feeDenom).Add(fee)
-	accountBalance := k.bk.GetBalance(ctx, address, feeDenom).Amount
-
-	if accountBalance.LT(totalCost) {
-		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "account's balance of %s (%s) is less than the total cost of the message (%s)", feeDenom, accountBalance, totalCost)
-	}
-
-	if err := k.ck.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(feeDenom, fee)), address); err != nil {
-		return err
-	}
-	return nil
 }

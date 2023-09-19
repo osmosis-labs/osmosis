@@ -3,7 +3,6 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 )
 
@@ -35,9 +34,4 @@ func (k Keeper) MoveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gaug
 // MoveActiveGaugeToFinishedGauge moves a gauge that has completed its distribution from an active to a finished status.
 func (k Keeper) MoveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gauge) error {
 	return k.moveActiveGaugeToFinishedGauge(ctx, gauge)
-}
-
-// ChargeFeeIfSufficientFeeDenomBalance see chargeFeeIfSufficientFeeDenomBalance spec.
-func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee osmomath.Int, gaugeCoins sdk.Coins) error {
-	return k.chargeFeeIfSufficientFeeDenomBalance(ctx, address, fee, gaugeCoins)
 }

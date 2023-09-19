@@ -21,6 +21,7 @@ const (
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 	sdk.NewCoin(UOSMO, osmomath.NewInt(10000000000)),
+	sdk.NewCoin(STAKE, osmomath.NewInt(10000000000)),
 	sdk.NewCoin(FOO, osmomath.NewInt(10000000000)),
 	sdk.NewCoin(BAR, osmomath.NewInt(10000000000)),
 	sdk.NewCoin(BAZ, osmomath.NewInt(10000000000)),
@@ -160,8 +161,10 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer
 
 // PrepareCustomBalancerPool sets up a Balancer pool with an array of assets and given parameters
 func (s *KeeperTestHelper) PrepareCustomBalancerPool(assets []balancer.PoolAsset, params balancer.PoolParams) uint64 {
-	// Add coins for pool creation fee + coins needed to mint balances
-	fundCoins := sdk.NewCoins(sdk.NewCoin(UOSMO, osmomath.NewInt(10000000000)))
+	// Add needed to mint balances
+	baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+	s.NoError(err)
+	fundCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, osmomath.NewInt(10000000000)))
 	for _, a := range assets {
 		fundCoins = fundCoins.Add(a.Token)
 	}

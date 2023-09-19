@@ -88,6 +88,7 @@ func (s *KeeperTestSuite) TestGammExportGenesis() {
 	acc1 := s.TestAccs[0]
 	err := simapp.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
 		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
+		sdk.NewCoin("stake", osmomath.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
 	))
@@ -133,6 +134,7 @@ func (s *KeeperTestSuite) TestMarshalUnmarshalGenesis() {
 	acc1 := s.TestAccs[0]
 	err := simapp.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
 		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
+		sdk.NewCoin("stake", osmomath.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
 	))

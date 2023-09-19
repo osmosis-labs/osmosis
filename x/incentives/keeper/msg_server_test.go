@@ -87,7 +87,6 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 		testAccountPubkey := secp256k1.GenPrivKeyFromSecret([]byte("acc")).PubKey()
 		testAccountAddress := sdk.AccAddress(testAccountPubkey.Address())
 
-		ctx := s.Ctx
 		bankKeeper := s.App.BankKeeper
 		accountKeeper := s.App.AccountKeeper
 		msgServer := keeper.NewMsgServerImpl(s.App.IncentivesKeeper)
@@ -99,7 +98,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 				"module",
 				"permission",
 			)
-			accountKeeper.SetModuleAccount(ctx, modAcc)
+			accountKeeper.SetModuleAccount(s.Ctx, modAcc)
 		}
 
 		s.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
@@ -118,7 +117,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 			NumEpochsPaidOver: 1,
 		}
 		// System under test.
-		_, err := msgServer.CreateGauge(sdk.WrapSDKContext(ctx), msg)
+		_, err := msgServer.CreateGauge(sdk.WrapSDKContext(s.Ctx), msg)
 
 		if tc.expectErr {
 			s.Require().Error(err)
@@ -126,14 +125,14 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 			s.Require().NoError(err)
 		}
 
-		balanceAmount := bankKeeper.GetAllBalances(ctx, testAccountAddress)
+		balanceAmount := bankKeeper.GetAllBalances(s.Ctx, testAccountAddress)
 
-		if tc.expectErr {
-			s.Require().Equal(tc.accountBalanceToFund.String(), balanceAmount.String(), "test: %v", tc.name)
-		} else {
-			fee := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, types.CreateGaugeFee))
+		if !tc.expectErr {
+			createGaugeFee := s.App.IncentivesKeeper.GetParams(s.Ctx).CreateGaugeFee
+			feeInBaseDenom, err := s.App.TxFeesKeeper.ConvertToBaseToken(s.Ctx, createGaugeFee[0])
+			s.Require().NoError(err)
 			accountBalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition)
-			finalAccountBalance := accountBalance.Sub(fee)
+			finalAccountBalance := accountBalance.Sub(sdk.NewCoins(feeInBaseDenom))
 			s.Require().Equal(finalAccountBalance.String(), balanceAmount.String(), "test: %v", tc.name)
 		}
 	}
@@ -247,9 +246,11 @@ func (s *KeeperTestSuite) TestAddToGauge_Fee() {
 		bal := bankKeeper.GetAllBalances(s.Ctx, testAccountAddress)
 
 		if !tc.expectErr {
-			fee := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, types.AddToGaugeFee))
+			addToGaugeFee := s.App.IncentivesKeeper.GetParams(s.Ctx).AddToGaugeFee
+			feeInBaseDenom, err := s.App.TxFeesKeeper.ConvertToBaseToken(s.Ctx, addToGaugeFee[0])
+			s.Require().NoError(err)
 			accountBalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition)
-			finalAccountBalance := accountBalance.Sub(fee)
+			finalAccountBalance := accountBalance.Sub(sdk.NewCoins(feeInBaseDenom))
 			s.Require().Equal(finalAccountBalance.String(), bal.String(), "test: %v", tc.name)
 		} else if tc.expectErr && !tc.isGaugeComplete {
 			s.Require().Equal(tc.accountBalanceToFund.String(), bal.String(), "test: %v", tc.name)

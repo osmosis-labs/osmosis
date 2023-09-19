@@ -387,7 +387,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			tc = baseConfigCopy
 
 			// Fund account to pay for the pool creation spread reward.
-			s.FundAcc(s.TestAccs[0], PoolCreationFee)
+			s.FundAcc(s.TestAccs[0], s.App.PoolManagerKeeper.GetParams(s.Ctx).PoolCreationFee)
 
 			// Create a CL pool with custom tickSpacing
 			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, osmomath.ZeroDec()))
@@ -2020,7 +2020,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			// Fund account to pay for the pool creation spread reward.
-			s.FundAcc(s.TestAccs[0], PoolCreationFee)
+			s.FundAcc(s.TestAccs[0], s.App.PoolManagerKeeper.GetParams(s.Ctx).PoolCreationFee)
 
 			// Create a CL pool with custom tickSpacing
 			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, osmomath.ZeroDec()))

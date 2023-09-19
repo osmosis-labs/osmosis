@@ -14,7 +14,7 @@ import (
 )
 
 func (s *KeeperTestSuite) createGammPool(denoms []string) uint64 {
-	coins := s.App.GAMMKeeper.GetParams(s.Ctx).PoolCreationFee
+	coins := s.App.PoolManagerKeeper.GetParams(s.Ctx).PoolCreationFee
 	poolAssets := []balancer.PoolAsset{}
 	for _, denom := range denoms {
 		coins = coins.Add(sdk.NewInt64Coin(denom, 1000000000000000000))
