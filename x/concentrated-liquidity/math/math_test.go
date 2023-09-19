@@ -619,3 +619,20 @@ func TestGetNextSqrtPriceFromAmount1OutRoundingDown(t *testing.T) {
 	}
 	runSqrtRoundingTestCase(t, "TestGetNextSqrtPriceFromAmount1OutRoundingDown", math.GetNextSqrtPriceFromAmount1OutRoundingDown, tests)
 }
+
+var sink interface{}
+
+func BenchmarkQuoTruncate(b *testing.B) {
+	b1 := osmomath.NewBigDec(1000000000)
+	b2 := osmomath.NewBigDec(4371)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		sink = b1.QuoTruncateMut(b2)
+	}
+
+	if sink == nil {
+		b.Fatal("Benchmark did not run")
+	}
+	sink = (interface{})(nil)
+}
