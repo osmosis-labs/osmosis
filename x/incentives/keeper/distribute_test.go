@@ -1435,7 +1435,7 @@ func withNonPerpetualEpochs(gauge types.Gauge, filledEpochs uint64, numEpochsPai
 	return gauge
 }
 
-// withCoinsToDistribute sets total and distributed coins on the gauge
+// withGaugeId sets the id of the gauge to given and returns the gauge.
 func withGaugeId(gauge types.Gauge, id uint64) types.Gauge {
 	gauge.Id = id
 	return gauge
