@@ -17,6 +17,7 @@ import (
 	gammv2types "github.com/osmosis-labs/osmosis/v19/x/gamm/v2types"
 
 	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/client/queryproto"
 	downtimequerytypes "github.com/osmosis-labs/osmosis/v19/x/downtime-detector/client/queryproto"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
@@ -33,6 +34,8 @@ import (
 
 // stargateWhitelist keeps whitelist and its deterministic
 // response binding for stargate queries.
+// CONTRACT: since results of queries go into blocks, queries being added here should always be
+// deterministic or can cause non-determinism in the state machine.
 //
 // The query can be multi-thread, so we have to use
 // thread safe sync.Map.
@@ -78,6 +81,10 @@ func init() {
 	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Validator", &stakingtypes.QueryValidatorResponse{})
 
 	// osmosis queries
+	// cosmwasm pool
+	setWhitelistedQuery("/osmosis.cosmwasmpool.v1beta1.Query/Pools", &cosmwasmpooltypes.PoolsResponse{})
+	setWhitelistedQuery("/osmosis.cosmwasmpool.v1beta1.Query/Params", &cosmwasmpooltypes.ParamsResponse{})
+	setWhitelistedQuery("/osmosis.cosmwasmpool.v1beta1.Query/ContractInfoByPoolId", &cosmwasmpooltypes.ContractInfoByPoolIdResponse{})
 
 	// epochs
 	setWhitelistedQuery("/osmosis.epochs.v1beta1.Query/EpochInfos", &epochtypes.QueryEpochsInfoResponse{})
