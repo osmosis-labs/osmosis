@@ -1,16 +1,14 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -334,6 +332,27 @@ func (s *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 }
 
 func (s *KeeperTestSuite) TestAddToGaugeRewards() {
+
+	defaultCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 12))
+
+	// since most of the same functionality and edge cases are tested by a higher level
+	// AddToGaugeRewards down below, we only include a happy path test for the internal helper.
+	s.Run("internal helper basic happy path test", func() {
+		s.SetupTest()
+		const defaultGaugeId = uint64(1)
+
+		_, _, _, _ = s.SetupNewGauge(true, defaultCoins)
+
+		err := s.App.IncentivesKeeper.AddToGaugeRewardsInternal(s.Ctx, defaultCoins, defaultGaugeId)
+		s.Require().NoError(err)
+
+		gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, defaultGaugeId)
+		s.Require().NoError(err)
+
+		// validate final coins were updated
+		s.Require().Equal(defaultCoins.Add(defaultCoins...), gauge.Coins)
+	})
+
 	testCases := []struct {
 		name               string
 		owner              sdk.AccAddress
@@ -390,7 +409,7 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			_, _, existingGaugeCoins, _ := s.SetupNewGauge(true, sdk.Coins{sdk.NewInt64Coin("stake", 12)})
+			_, _, existingGaugeCoins, _ := s.SetupNewGauge(true, defaultCoins)
 
 			s.FundAcc(tc.owner, tc.coinsToAdd)
 
@@ -408,7 +427,6 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 
 				// Ensure that at least the minimum amount of gas was charged (based on number of additional gauge coins)
 				gasConsumed := s.Ctx.GasMeter().GasConsumed() - existingGasConsumed
-				fmt.Println(gasConsumed, tc.minimumGasConsumed)
 				s.Require().True(gasConsumed >= tc.minimumGasConsumed)
 
 				// existing coins gets added to the module when we create gauge and add to gauge
@@ -702,77 +720,4 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 
 		})
 	}
-}
-
-func (s *KeeperTestSuite) TestAddToGaugeRewardsFromGauge() {
-	// TODO: reenable this once gauge creation refactor is complete in https://github.com/osmosis-labs/osmosis/issues/6404
-	s.T().Skip()
-
-	coinsToTransfer := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))
-	tests := []struct {
-		name            string
-		groupGaugeId    uint64
-		internalGaugeId uint64
-		coinsToTransfer sdk.Coins
-		expectErr       bool
-	}{
-		{
-			name:            "Happy case: Valid gaugeId with valid Internal GaugeId",
-			groupGaugeId:    3,
-			internalGaugeId: 2,
-			coinsToTransfer: coinsToTransfer,
-			expectErr:       false,
-		},
-		{
-			name:            "Error: InternalGauge is not present in groupGauge",
-			groupGaugeId:    3,
-			internalGaugeId: 1,
-			coinsToTransfer: coinsToTransfer,
-			expectErr:       true,
-		},
-		{
-			name:            "Error: Not enough tokens to transfer",
-			groupGaugeId:    3,
-			internalGaugeId: 2,
-			coinsToTransfer: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
-			expectErr:       true,
-		},
-		{
-			name:            "Error: GroupGaugeId doesnot exist",
-			groupGaugeId:    5,
-			internalGaugeId: 2,
-			coinsToTransfer: coinsToTransfer,
-			expectErr:       true,
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))) // 1,000 osmo
-			clPool := s.PrepareConcentratedPool()                                                      // gaugeid = 1
-
-			// create internal Gauge
-			internalGauge1 := s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(1)) // gauge id = 2
-
-			// create group gauge
-			_, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))), uint64(1), s.TestAccs[1], []uint64{internalGauge1}, lockuptypes.ByGroup, types.Evenly) // gauge id = 3
-			s.Require().NoError(err)
-
-			err = s.App.IncentivesKeeper.AddToGaugeRewardsFromGauge(s.Ctx, tc.groupGaugeId, tc.coinsToTransfer, tc.internalGaugeId)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-
-				// check that the coins have been transferred
-				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, tc.groupGaugeId)
-				s.Require().NoError(err)
-
-				s.Require().Equal(gauge.Coins, tc.coinsToTransfer)
-
-			}
-		})
-	}
-
 }

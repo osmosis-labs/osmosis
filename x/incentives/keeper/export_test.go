@@ -51,3 +51,8 @@ func (k Keeper) SyncGroupGaugeWeights(ctx sdk.Context, groupGauge types.GroupGau
 func (k Keeper) SetGauge(ctx sdk.Context, gauge *types.Gauge) error {
 	return k.setGauge(ctx, gauge)
 }
+
+// exporting an internal helper for testing
+func (k Keeper) AddToGaugeRewardsInternal(ctx sdk.Context, coins sdk.Coins, gaugeID uint64) error {
+	return k.addToGaugeRewards(ctx, coins, gaugeID)
+}
