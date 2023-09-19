@@ -7,6 +7,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -137,7 +138,7 @@ func (s *KeeperTestSuite) TestGetPeriodLocks() {
 func (s *KeeperTestSuite) TestUnlock() {
 	s.SetupTest()
 	initialLockCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	concentratedShareCoins := sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(10)))
+	concentratedShareCoins := sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), osmomath.NewInt(10)))
 
 	testCases := []struct {
 		name                          string
@@ -330,23 +331,23 @@ func (s *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 	}{
 		{
 			name:                       "unlock lock with gamm shares",
-			coinsLocked:                sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
+			coinsLocked:                sdk.NewCoins(sdk.NewCoin("gamm/pool/1", osmomath.NewInt(100))),
 			coinsBurned:                sdk.NewCoins(),
-			expectedFinalCoinsSentBack: sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
+			expectedFinalCoinsSentBack: sdk.NewCoins(sdk.NewCoin("gamm/pool/1", osmomath.NewInt(100))),
 			expectedError:              false,
 		},
 		{
 			name:                       "unlock lock with cl shares",
-			coinsLocked:                sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(100))),
-			coinsBurned:                sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(100))),
+			coinsLocked:                sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), osmomath.NewInt(100))),
+			coinsBurned:                sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), osmomath.NewInt(100))),
 			expectedFinalCoinsSentBack: sdk.NewCoins(),
 			expectedError:              false,
 		},
 		{
 			name:                       "unlock lock with gamm and cl shares (should not be possible)",
-			coinsLocked:                sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100)), sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
-			coinsBurned:                sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
-			expectedFinalCoinsSentBack: sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
+			coinsLocked:                sdk.NewCoins(sdk.NewCoin("gamm/pool/1", osmomath.NewInt(100)), sdk.NewCoin("cl/pool/1/1", osmomath.NewInt(100))),
+			coinsBurned:                sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", osmomath.NewInt(100))),
+			expectedFinalCoinsSentBack: sdk.NewCoins(sdk.NewCoin("gamm/pool/1", osmomath.NewInt(100))),
 			expectedError:              false,
 		},
 	}
@@ -415,7 +416,7 @@ func (s *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 					s.Require().Equal(assetsSupplyAtLockStart.AmountOf(coin.Denom).String(), assetsSupplyAtLockEnd.AmountOf(coin.Denom).String())
 				} else if coin.Denom == "cl/pool/1/1" {
 					// The supply should be zero
-					s.Require().Equal(sdk.ZeroInt().String(), assetsSupplyAtLockEnd.AmountOf(coin.Denom).String())
+					s.Require().Equal(osmomath.ZeroInt().String(), assetsSupplyAtLockEnd.AmountOf(coin.Denom).String())
 				}
 			}
 		})
@@ -530,11 +531,11 @@ func (s *KeeperTestSuite) TestCreateLock() {
 
 	// check balance
 	balance := s.App.BankKeeper.GetBalance(s.Ctx, addr1, "stake")
-	s.Require().Equal(sdk.ZeroInt(), balance.Amount)
+	s.Require().Equal(osmomath.ZeroInt(), balance.Amount)
 
 	acc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, types.ModuleName)
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, acc.GetAddress(), "stake")
-	s.Require().Equal(sdk.NewInt(30), balance.Amount)
+	s.Require().Equal(osmomath.NewInt(30), balance.Amount)
 }
 
 func (s *KeeperTestSuite) TestSetLockRewardReceiverAddress() {
@@ -666,11 +667,11 @@ func (s *KeeperTestSuite) TestCreateLockNoSend() {
 
 	// check that send did not occur and balances are unchanged
 	balance := s.App.BankKeeper.GetBalance(s.Ctx, addr1, "stake")
-	s.Require().Equal(sdk.NewInt(originalLockBalance).String(), balance.Amount.String())
+	s.Require().Equal(osmomath.NewInt(originalLockBalance).String(), balance.Amount.String())
 
 	acc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, types.ModuleName)
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, acc.GetAddress(), "stake")
-	s.Require().Equal(sdk.ZeroInt().String(), balance.Amount.String())
+	s.Require().Equal(osmomath.ZeroInt().String(), balance.Amount.String())
 }
 
 func (s *KeeperTestSuite) TestAddTokensToLock() {
@@ -706,13 +707,13 @@ func (s *KeeperTestSuite) TestAddTokensToLock() {
 		},
 		{
 			name:           "lock invalid tokens",
-			tokenToAdd:     sdk.NewCoin("unknown", sdk.NewInt(10)),
+			tokenToAdd:     sdk.NewCoin("unknown", osmomath.NewInt(10)),
 			duration:       time.Second,
 			lockingAddress: addr1,
 		},
 		{
 			name:           "token to add exceeds balance",
-			tokenToAdd:     sdk.NewCoin("stake", sdk.NewInt(20)),
+			tokenToAdd:     sdk.NewCoin("stake", osmomath.NewInt(20)),
 			duration:       time.Second,
 			lockingAddress: addr1,
 		},
@@ -883,15 +884,15 @@ func (s *KeeperTestSuite) TestLock() {
 
 	// Since lock method no longer sends the underlying coins, the account balance should be unchanged
 	balance := s.App.BankKeeper.GetBalance(s.Ctx, addr1, "stake")
-	s.Require().Equal(sdk.NewInt(10).String(), balance.Amount.String())
+	s.Require().Equal(osmomath.NewInt(10).String(), balance.Amount.String())
 
 	acc := s.App.AccountKeeper.GetModuleAccount(s.Ctx, types.ModuleName)
 	balance = s.App.BankKeeper.GetBalance(s.Ctx, acc.GetAddress(), "stake")
-	s.Require().Equal(sdk.NewInt(0).String(), balance.Amount.String())
+	s.Require().Equal(osmomath.NewInt(0).String(), balance.Amount.String())
 }
 func (s *KeeperTestSuite) TestSplitLock() {
-	defaultAmount := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(200)))
-	defaultHalfAmount := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(40)), sdk.NewCoin("bar", sdk.NewInt(110)))
+	defaultAmount := sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(100)), sdk.NewCoin("bar", osmomath.NewInt(200)))
+	defaultHalfAmount := sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(40)), sdk.NewCoin("bar", osmomath.NewInt(110)))
 	testCases := []struct {
 		name                      string
 		amountToSplit             sdk.Coins
@@ -1270,28 +1271,28 @@ func (s *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn() {
 	testCases := []struct {
 		name             string
 		positionCoins    sdk.Coins
-		liquidityToSlash sdk.Dec
+		liquidityToSlash osmomath.Dec
 		denomToSlash     string
 		expectError      bool
 	}{
 		{
 			name:             "happy path",
-			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000))),
-			liquidityToSlash: sdk.NewDec(10000000),
+			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(1000000)), sdk.NewCoin("usdc", osmomath.NewInt(5000000000))),
+			liquidityToSlash: osmomath.NewDec(10000000),
 			denomToSlash:     cltypes.GetConcentratedLockupDenomFromPoolId(1),
 		},
 		{
 			name:             "error: attempt to slash more liquidity than the lock has",
-			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000))),
-			liquidityToSlash: sdk.NewDec(100000000),
+			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(1000000)), sdk.NewCoin("usdc", osmomath.NewInt(5000000000))),
+			liquidityToSlash: osmomath.NewDec(100000000),
 			denomToSlash:     cltypes.GetConcentratedLockupDenomFromPoolId(1),
 			expectError:      true,
 		},
 		{
 			name:             "error: attempt to slash a denom that does not exist in the lock",
-			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000))),
+			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(1000000)), sdk.NewCoin("usdc", osmomath.NewInt(5000000000))),
 			denomToSlash:     cltypes.GetConcentratedLockupDenomFromPoolId(2),
-			liquidityToSlash: sdk.NewDec(10000000),
+			liquidityToSlash: osmomath.NewDec(10000000),
 			expectError:      true,
 		},
 	}
@@ -1477,7 +1478,7 @@ func (s *KeeperTestSuite) TestForceUnlock() {
 	for _, tc := range testCases {
 		// set up test and create default lock
 		s.SetupTest()
-		coinsToLock := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000000)))
+		coinsToLock := sdk.NewCoins(sdk.NewCoin("stake", osmomath.NewInt(10000000)))
 		s.FundAcc(addr1, sdk.NewCoins(coinsToLock...))
 		lock, err := s.App.LockupKeeper.CreateLock(s.Ctx, addr1, coinsToLock, time.Minute)
 		s.Require().NoError(err)
@@ -1519,7 +1520,7 @@ func (s *KeeperTestSuite) TestPartialForceUnlock() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	defaultDenomToLock := "stake"
-	defaultAmountToLock := sdk.NewInt(10000000)
+	defaultAmountToLock := osmomath.NewInt(10000000)
 	coinsToLock := sdk.NewCoins(sdk.NewCoin("stake", defaultAmountToLock))
 
 	testCases := []struct {
@@ -1534,12 +1535,12 @@ func (s *KeeperTestSuite) TestPartialForceUnlock() {
 		},
 		{
 			name:               "partial unlock",
-			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock.Quo(sdk.NewInt(2)))},
+			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock.Quo(osmomath.NewInt(2)))},
 			expectedPass:       true,
 		},
 		{
 			name:               "unlock more than locked",
-			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock.Add(sdk.NewInt(2)))},
+			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock.Add(osmomath.NewInt(2)))},
 			expectedPass:       false,
 		},
 		{
@@ -1574,7 +1575,7 @@ func (s *KeeperTestSuite) TestPartialForceUnlock() {
 
 			// check balance
 			balanceAfterForceUnlock := s.App.BankKeeper.GetBalance(s.Ctx, addr1, "stake")
-			s.Require().Equal(sdk.NewInt(0), balanceAfterForceUnlock.Amount)
+			s.Require().Equal(osmomath.NewInt(0), balanceAfterForceUnlock.Amount)
 		}
 	}
 }

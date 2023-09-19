@@ -78,7 +78,7 @@ message PoolParams {
   option (amino.name) = "osmosis/gamm/BalancerPoolParams";
 
   string swap_fee = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
   ];
@@ -86,7 +86,7 @@ message PoolParams {
   // pools can maintain a non-zero fee. No new pool can be created with non-zero
   // fee anymore
   string exit_fee = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"exit_fee\"",
     (gogoproto.nullable) = false
   ];
@@ -107,7 +107,7 @@ message PoolAsset {
       [ (gogoproto.moretags) = "yaml:\"token\"", (gogoproto.nullable) = false ];
   // Weight that is not normalized. This weight must be less than 2^50
   string weight = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"weight\"",
     (gogoproto.nullable) = false
   ];
@@ -151,7 +151,7 @@ message Pool {
   ];
   // sum of all non-normalized pool weights
   string total_weight = 7 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"total_weight\"",
     (gogoproto.nullable) = false
   ];

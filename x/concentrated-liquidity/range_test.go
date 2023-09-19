@@ -21,13 +21,13 @@ type RangeTestParams struct {
 	// Base number of positions for each range
 	baseNumPositions int
 	// Base amount to swap for each swap
-	baseSwapAmount sdk.Int
+	baseSwapAmount osmomath.Int
 	// Base amount to add after each new position
 	baseTimeBetweenJoins time.Duration
 	// Base incentive amount to have on each incentive record
-	baseIncentiveAmount sdk.Int
+	baseIncentiveAmount osmomath.Int
 	// Base emission rate per second for incentive
-	baseEmissionRate sdk.Dec
+	baseEmissionRate osmomath.Dec
 	// Base denom for each incentive record (ID appended to this)
 	baseIncentiveDenom string
 	// List of addresses to swap from (randomly selected for each swap)
@@ -35,7 +35,7 @@ type RangeTestParams struct {
 
 	// -- Pool params --
 
-	spreadFactor sdk.Dec
+	spreadFactor osmomath.Dec
 	tickSpacing  uint64
 
 	// -- Fuzz params --
@@ -67,12 +67,12 @@ var (
 	DefaultRangeTestParams = RangeTestParams{
 		// Base amounts
 		baseNumPositions:     10,
-		baseAssets:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(5000000000)), sdk.NewCoin(USDC, sdk.NewInt(5000000000))),
+		baseAssets:           sdk.NewCoins(sdk.NewCoin(ETH, osmomath.NewInt(5000000000)), sdk.NewCoin(USDC, osmomath.NewInt(5000000000))),
 		baseTimeBetweenJoins: time.Hour,
-		baseSwapAmount:       sdk.NewInt(10000000),
+		baseSwapAmount:       osmomath.NewInt(10000000),
 		numSwapAddresses:     10,
-		baseIncentiveAmount:  sdk.NewInt(1000000000000000000),
-		baseEmissionRate:     sdk.NewDec(1),
+		baseIncentiveAmount:  osmomath.NewInt(1000000000000000000),
+		baseEmissionRate:     osmomath.NewDec(1),
 		baseIncentiveDenom:   "incentiveDenom",
 
 		// Pool params
@@ -88,12 +88,12 @@ var (
 	RangeTestParamsLargeSwap = RangeTestParams{
 		// Base amounts
 		baseNumPositions:     10,
-		baseAssets:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(5000000000)), sdk.NewCoin(USDC, sdk.NewInt(5000000000))),
+		baseAssets:           sdk.NewCoins(sdk.NewCoin(ETH, osmomath.NewInt(5000000000)), sdk.NewCoin(USDC, osmomath.NewInt(5000000000))),
 		baseTimeBetweenJoins: time.Hour,
-		baseSwapAmount:       sdk.Int(sdk.MustNewDecFromStr("100000000000000000000000000000000000000")),
+		baseSwapAmount:       osmomath.Int(osmomath.MustNewDecFromStr("100000000000000000000000000000000000000")),
 		numSwapAddresses:     10,
-		baseIncentiveAmount:  sdk.NewInt(1000000000000000000),
-		baseEmissionRate:     sdk.NewDec(1),
+		baseIncentiveAmount:  osmomath.NewInt(1000000000000000000),
+		baseEmissionRate:     osmomath.NewDec(1),
 		baseIncentiveDenom:   "incentiveDenom",
 
 		// Pool params
@@ -108,10 +108,10 @@ var (
 	RangeTestParamsNoFuzzNoSwap = RangeTestParams{
 		// Base amounts
 		baseNumPositions:     1,
-		baseAssets:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(5000000000)), sdk.NewCoin(USDC, sdk.NewInt(5000000000))),
+		baseAssets:           sdk.NewCoins(sdk.NewCoin(ETH, osmomath.NewInt(5000000000)), sdk.NewCoin(USDC, osmomath.NewInt(5000000000))),
 		baseTimeBetweenJoins: time.Hour,
-		baseIncentiveAmount:  sdk.NewInt(1000000000000000000),
-		baseEmissionRate:     sdk.NewDec(1),
+		baseIncentiveAmount:  osmomath.NewInt(1000000000000000000),
+		baseEmissionRate:     osmomath.NewDec(1),
 		baseIncentiveDenom:   "incentiveDenom",
 
 		// Pool params
@@ -136,7 +136,7 @@ func withTickSpacing(params RangeTestParams, tickSpacing uint64) RangeTestParams
 }
 
 func withNoSwap(params RangeTestParams) RangeTestParams {
-	params.baseSwapAmount = sdk.Int{}
+	params.baseSwapAmount = osmomath.Int{}
 	return params
 }
 
@@ -162,7 +162,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 
 	// --- Incentive setup ---
 
-	if testParams.baseIncentiveAmount != (sdk.Int{}) {
+	if testParams.baseIncentiveAmount != (osmomath.Int{}) {
 		incentiveAddr := apptesting.CreateRandomAccounts(1)[0]
 		incentiveAmt := testParams.baseIncentiveAmount
 		emissionRate := testParams.baseEmissionRate
@@ -178,7 +178,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 	// 1. Set up a position
 	// 2. Let time elapse
 	// 3. Execute a swap
-	totalLiquidity, totalAssets, totalTimeElapsed, allPositionIds, lastVisitedBlockIndex, cumulativeEmittedIncentives, lastIncentiveTrackerUpdate := sdk.ZeroDec(), sdk.NewCoins(), time.Duration(0), []uint64{}, 0, sdk.DecCoins{}, s.Ctx.BlockTime()
+	totalLiquidity, totalAssets, totalTimeElapsed, allPositionIds, lastVisitedBlockIndex, cumulativeEmittedIncentives, lastIncentiveTrackerUpdate := osmomath.ZeroDec(), sdk.NewCoins(), time.Duration(0), []uint64{}, 0, sdk.DecCoins{}, s.Ctx.BlockTime()
 	for curRange := range ranges {
 		curBlock := 0
 		startNumPositions := len(allPositionIds)
@@ -202,7 +202,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 				curAssets = s.getInitialPositionAssets(pool, testParams.startingCurrentTick)
 			}
 
-			roundingError := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), sdk.OneInt()), sdk.NewCoin(pool.GetToken1(), sdk.OneInt()))
+			roundingError := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), osmomath.OneInt()), sdk.NewCoin(pool.GetToken1(), osmomath.OneInt()))
 			s.FundAcc(curAddr, curAssets.Add(roundingError...))
 
 			// Double fund LP address if applicable
@@ -216,7 +216,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			cumulativeEmittedIncentives, lastIncentiveTrackerUpdate = s.trackEmittedIncentives(cumulativeEmittedIncentives, lastIncentiveTrackerUpdate)
 
 			// Set up position
-			positionData, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), curAddr, curAssets, sdk.ZeroInt(), sdk.ZeroInt(), ranges[curRange][0], ranges[curRange][1])
+			positionData, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), curAddr, curAssets, osmomath.ZeroInt(), osmomath.ZeroInt(), ranges[curRange][0], ranges[curRange][1])
 			s.Require().NoError(err)
 
 			// Ensure position was set up correctly and didn't break global invariants
@@ -234,7 +234,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			// Track changes to state
 			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), positionData.Amount0), sdk.NewCoin(pool.GetToken1(), positionData.Amount1))
 			totalAssets = totalAssets.Add(actualAddedCoins...)
-			if testParams.baseSwapAmount != (sdk.Int{}) {
+			if testParams.baseSwapAmount != (osmomath.Int{}) {
 				totalAssets = totalAssets.Add(swappedIn).Sub(sdk.NewCoins(swappedOut))
 			}
 			totalLiquidity = totalLiquidity.Add(positionData.Liquidity)
@@ -302,9 +302,9 @@ func (s *KeeperTestSuite) prepareNumPositionSlice(ranges [][]int64, baseNumPosit
 // The direction of the swap is chosen randomly, but the swap function used is always SwapInGivenOut to
 // ensure it is always possible to swap against the pool without having to use lower level calc functions.
 // TODO: Make swaps that target getting to a tick boundary exactly
-func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExtension, swapAddresses []sdk.AccAddress, baseSwapAmount sdk.Int, fuzzSwap bool) (sdk.Coin, sdk.Coin) {
+func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExtension, swapAddresses []sdk.AccAddress, baseSwapAmount osmomath.Int, fuzzSwap bool) (sdk.Coin, sdk.Coin) {
 	// Quietly skip if no swap assets or swap addresses provided
-	if (baseSwapAmount == sdk.Int{}) || len(swapAddresses) == 0 {
+	if (baseSwapAmount == osmomath.Int{}) || len(swapAddresses) == 0 {
 		return sdk.Coin{}, sdk.Coin{}
 	}
 
@@ -332,13 +332,13 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 	}
 
 	// TODO: pick a more granular amount to fund without losing ability to swap at really high/low ticks
-	swapInFunded := sdk.NewCoin(swapInDenom, sdk.Int(sdk.MustNewDecFromStr("10000000000000000000000000000000000000000")))
+	swapInFunded := sdk.NewCoin(swapInDenom, osmomath.Int(osmomath.MustNewDecFromStr("10000000000000000000000000000000000000000")))
 	s.FundAcc(swapAddress, sdk.NewCoins(swapInFunded))
 
-	baseSwapOutAmount := sdk.MinInt(baseSwapAmount, poolLiquidity.AmountOf(swapOutDenom).ToDec().Mul(sdk.MustNewDecFromStr("0.5")).TruncateInt())
+	baseSwapOutAmount := osmomath.MinInt(baseSwapAmount, poolLiquidity.AmountOf(swapOutDenom).ToLegacyDec().Mul(osmomath.MustNewDecFromStr("0.5")).TruncateInt())
 	if fuzzSwap {
 		// Fuzz +/- 100% of base swap amount
-		baseSwapOutAmount = sdk.NewInt(fuzzInt64(baseSwapOutAmount.Int64(), 2))
+		baseSwapOutAmount = osmomath.NewInt(fuzzInt64(baseSwapOutAmount.Int64(), 2))
 	}
 
 	swapOutCoin := sdk.NewCoin(swapOutDenom, baseSwapOutAmount)
@@ -349,7 +349,7 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 		s.Require().NoError(err)
 
 		poolSpotPrice := pool.GetCurrentSqrtPrice().PowerInteger(2)
-		minSwapOutAmount := poolSpotPrice.Mul(osmomath.SmallestDec()).TruncateDec().SDKDec().TruncateInt()
+		minSwapOutAmount := poolSpotPrice.Mul(osmomath.SmallestBigDec()).TruncateDec().Dec().TruncateInt()
 		poolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
 		if poolBalances.AmountOf(swapOutDenom).LTE(minSwapOutAmount) {
 			return sdk.Coin{}, sdk.Coin{}
@@ -357,7 +357,7 @@ func (s *KeeperTestSuite) executeRandomizedSwap(pool types.ConcentratedPoolExten
 	}
 
 	// Note that we set the price limit to zero to ensure that the swap can execute in either direction (gets automatically set to correct limit)
-	swappedIn, swappedOut, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	swappedIn, swappedOut, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, swapOutCoin, swapInDenom, pool.GetSpreadFactor(s.Ctx), osmomath.ZeroDec())
 	s.Require().NoError(err)
 
 	return swappedIn, swappedOut
@@ -409,15 +409,15 @@ func (s *KeeperTestSuite) trackEmittedIncentives(cumulativeTrackedIncentives sdk
 			continue
 		}
 
-		secondsEmitted := sdk.ZeroDec()
+		secondsEmitted := osmomath.ZeroDec()
 		if recordStartTime.Before(lastTrackerUpdateTime) {
 			// If the record started emitting prior to the last incentiveCreationTime (the last time we checkpointed),
 			// then we assume it has been emitting for the whole period since then.
-			secondsEmitted = sdk.NewDec(int64(s.Ctx.BlockTime().Sub(lastTrackerUpdateTime))).QuoInt64(int64(time.Second))
+			secondsEmitted = osmomath.NewDec(int64(s.Ctx.BlockTime().Sub(lastTrackerUpdateTime))).QuoInt64(int64(time.Second))
 		} else if recordStartTime.Before(s.Ctx.BlockTime()) {
 			// If the record started emitting between the last incentiveCreationTime and now, then we only track the
 			// emissions between when it started and now.
-			secondsEmitted = sdk.NewDec(int64(s.Ctx.BlockTime().Sub(recordStartTime))).QuoInt64(int64(time.Second))
+			secondsEmitted = osmomath.NewDec(int64(s.Ctx.BlockTime().Sub(recordStartTime))).QuoInt64(int64(time.Second))
 		}
 
 		emissionRate := incentiveRecord.IncentiveRecordBody.EmissionRate
@@ -438,8 +438,8 @@ func (s *KeeperTestSuite) getInitialPositionAssets(pool types.ConcentratedPoolEx
 	s.Require().NoError(err)
 
 	// Calculate asset amounts that would be required to get the required spot price (rounding up on asset1 to ensure we stay in the intended tick)
-	asset0Amount := sdk.NewInt(100000000000000)
-	asset1Amount := sdk.NewDecFromInt(asset0Amount).Mul(requiredPrice.SDKDec()).Ceil().TruncateInt()
+	asset0Amount := osmomath.NewInt(100000000000000)
+	asset1Amount := osmomath.NewDecFromInt(asset0Amount).Mul(requiredPrice.Dec()).Ceil().TruncateInt()
 
 	assetCoins := sdk.NewCoins(
 		sdk.NewCoin(pool.GetToken0(), asset0Amount),
@@ -457,7 +457,7 @@ func getRandomizedAssets(baseAssets sdk.Coins, fuzzAssets bool) sdk.Coins {
 		for coinIndex, coin := range baseAssets {
 			// Fuzz +/- 100% of current amount
 			newAmount := fuzzInt64(coin.Amount.Int64(), 2)
-			fuzzedAssets[coinIndex] = sdk.NewCoin(coin.Denom, sdk.NewInt(newAmount))
+			fuzzedAssets[coinIndex] = sdk.NewCoin(coin.Denom, osmomath.NewInt(newAmount))
 		}
 
 		finalAssets = fuzzedAssets

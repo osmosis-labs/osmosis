@@ -116,7 +116,7 @@ message Route {
   // The step size that will be used to find the optimal swap amount in the
   // binary search
   string step_size = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = true
   ];
 }

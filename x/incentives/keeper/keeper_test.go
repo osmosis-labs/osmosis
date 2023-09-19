@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
@@ -48,7 +49,7 @@ func (s *KeeperTestSuite) ValidateNotDistributedGauge(gaugeID uint64) {
 	s.ValidateDistributedGauge(gaugeID, 0, sdk.Coins(nil))
 }
 
-func (s *KeeperTestSuite) ValidateIncentiveRecord(poolId uint64, remainingCoin sdk.DecCoin, emissionRate sdk.Dec, incentiveRecord cltypes.IncentiveRecord) {
+func (s *KeeperTestSuite) ValidateIncentiveRecord(poolId uint64, remainingCoin sdk.DecCoin, emissionRate osmomath.Dec, incentiveRecord cltypes.IncentiveRecord) {
 	s.Require().Equal(poolId, incentiveRecord.PoolId)
 	s.Require().Equal(emissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
 	s.Require().Equal(types.DefaultConcentratedUptime, incentiveRecord.MinUptime)

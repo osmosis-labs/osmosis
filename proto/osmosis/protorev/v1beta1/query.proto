@@ -136,7 +136,7 @@ message QueryGetProtoRevNumberOfTradesRequest {}
 message QueryGetProtoRevNumberOfTradesResponse {
   // number_of_trades is the number of trades the module has executed
   string number_of_trades = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"number_of_trades\""
   ];

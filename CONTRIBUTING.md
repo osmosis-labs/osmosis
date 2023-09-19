@@ -219,13 +219,13 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
             poolAssets: []balancer.PoolAsset {
                 {
                     Token:  sdk.NewInt64Coin("uosmo", 1e12),
-                    Weight: sdk.NewInt(100),
+                    Weight: osmomath.NewInt(100),
                 },
             },
             expectedPoolAssetsByDenom: map[string]balancer.PoolAsset {
                 "uosmo": {
                     Token:  sdk.NewInt64Coin("uosmo", 1e12),
-                    Weight: sdk.NewInt(100),
+                    Weight: osmomath.NewInt(100),
                 },
             },
         },
@@ -234,10 +234,10 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
             poolAssets: []balancer.PoolAsset {
                 {
                     Token:  sdk.NewInt64Coin("uosmo", 1e12),
-                    Weight: sdk.NewInt(100),
+                    Weight: osmomath.NewInt(100),
                 }, {
                     Token:  sdk.NewInt64Coin("uosmo", 123),
-                    Weight: sdk.NewInt(400),
+                    Weight: osmomath.NewInt(400),
                 },
             },
             err: fmt.Errorf(balancer.ErrMsgFormatRepeatingPoolAssetsNotAllowed, "uosmo"),
@@ -495,7 +495,7 @@ Additionally, this affects `LastResultsHash` because it contains a `Data` field 
 Version A
 
 ```go
-func (sk Keeper) validateAmount(ctx context.Context, amount sdk.Int) error {
+func (sk Keeper) validateAmount(ctx context.Context, amount osmomath.Int) error {
     if amount.IsNegative() {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "amount must be positive or zero")
     }
@@ -506,7 +506,7 @@ func (sk Keeper) validateAmount(ctx context.Context, amount sdk.Int) error {
 Version B
 
 ```go
-func (sk Keeper) validateAmount(ctx context.Context, amount sdk.Int) error {
+func (sk Keeper) validateAmount(ctx context.Context, amount osmomath.Int) error {
     if amount.IsNegative() || amount.IsZero() {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "amount must be positive")
     }

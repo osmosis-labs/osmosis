@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	v8constants "github.com/osmosis-labs/osmosis/v19/app/upgrades/v8/constants"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
@@ -17,7 +18,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 )
 
-var defaultFunds = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", sdk.NewInt(5000000000)))
+var defaultFunds = sdk.NewCoins(defaultPoolAssets[0].Token, sdk.NewCoin("stake", osmomath.NewInt(5000000000)))
 
 func (s *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 	type param struct {
@@ -64,11 +65,11 @@ func (s *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 			lockupMsgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
 			c := sdk.WrapSDKContext(s.Ctx)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 			// If there is no coinsToLock in the param, use pool denom
 			if test.param.coinsToLock.Empty() {
-				test.param.coinsToLock = sdk.NewCoins(sdk.NewCoin(denoms[0], sdk.NewInt(20)))
+				test.param.coinsToLock = sdk.NewCoins(sdk.NewCoin(denoms[0], osmomath.NewInt(20)))
 			}
 			s.FundAcc(test.param.lockOwner, test.param.coinsToLock)
 			resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
@@ -386,7 +387,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
 		// setup validators
 		valAddrs := s.SetupValidators(test.validatorStats)
 
-		denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+		denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20)})
 
 		// setup superfluid delegations
 		s.setupSuperfluidDelegations(valAddrs, test.superDelegations, denoms)
@@ -419,7 +420,7 @@ func (s *KeeperTestSuite) TestMsgSuperfluidUnbondLock_Event() {
 	// setup validators
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 	// setup superfluid delegations
 	_, _, locks := s.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 1000000}}, denoms)
@@ -454,7 +455,7 @@ func (s *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
 	// setup validators
 	valAddrs := s.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-	denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+	denoms, poolIds := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20)})
 
 	// whitelist designated pools
 	s.App.SuperfluidKeeper.SetUnpoolAllowedPools(s.Ctx, poolIds)
@@ -483,8 +484,8 @@ func (s *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosit
 
 	// Set balancer pool (foo and stake) and make its respective gamm share an authorized superfluid asset
 	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], balancer.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDec(0),
+		SwapFee: osmomath.NewDecWithPrec(1, 2),
+		ExitFee: osmomath.NewDec(0),
 	}, defaultPoolAssets, defaultFutureGovernor)
 	balancerPooId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
 	s.Require().NoError(err)
@@ -498,7 +499,7 @@ func (s *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosit
 	s.Require().NoError(err)
 
 	// Set concentrated pool with the same denoms as the balancer pool (foo and stake)
-	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, sdk.ZeroDec())
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, osmomath.ZeroDec())
 
 	// Set migration link between the balancer and concentrated pool
 	migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{

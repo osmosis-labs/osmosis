@@ -21,7 +21,7 @@ message PoolParams {
   option (amino.name) = "osmosis/gamm/StableswapPoolParams";
 
   string swap_fee = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
   ];
@@ -29,7 +29,7 @@ message PoolParams {
   // pools can maintain a non-zero fee. No new pool can be created with non-zero
   // fee anymore
   string exit_fee = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"exit_fee\"",
     (gogoproto.nullable) = false
   ];

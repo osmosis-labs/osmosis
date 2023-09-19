@@ -9,6 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/tests/osmosisibctesting"
 )
 
@@ -72,7 +74,7 @@ func (suite *HooksTestSuite) TransferCW20Tokens(path *ibctesting.Path, cw20Addr,
 	return result, ack
 }
 
-func (suite *HooksTestSuite) setupCW20PoolAndRoutes(chain *osmosisibctesting.TestChain, swaprouterAddr sdk.AccAddress, cw20IbcDenom string, amount sdk.Int) {
+func (suite *HooksTestSuite) setupCW20PoolAndRoutes(chain *osmosisibctesting.TestChain, swaprouterAddr sdk.AccAddress, cw20IbcDenom string, amount osmomath.Int) {
 	osmosisAppA := chain.GetOsmosisApp()
 	poolId := suite.CreateIBCPoolOnChain(ChainA, cw20IbcDenom, sdk.DefaultBondDenom, amount)
 
@@ -88,10 +90,10 @@ func (suite *HooksTestSuite) setupCW20PoolAndRoutes(chain *osmosisibctesting.Tes
 	suite.Require().NoError(err)
 }
 
-func (suite *HooksTestSuite) getCW20Balance(chain *osmosisibctesting.TestChain, cw20Addr, addr sdk.AccAddress) sdk.Int {
+func (suite *HooksTestSuite) getCW20Balance(chain *osmosisibctesting.TestChain, cw20Addr, addr sdk.AccAddress) osmomath.Int {
 	queryMsg := fmt.Sprintf(`{"balance":{"address":"%s"}}`, addr)
 	res := chain.QueryContractJson(&suite.Suite, cw20Addr, []byte(queryMsg))
-	balance, ok := sdk.NewIntFromString(res.Get("balance").String())
+	balance, ok := osmomath.NewIntFromString(res.Get("balance").String())
 	if !ok {
 		panic("could not parse balance")
 	}
@@ -122,7 +124,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	osmosisAppB := chainB.GetOsmosisApp()
 
 	// Send some cwtoken tokens from B to A via the new path
-	amount := sdk.NewInt(defaultPoolAmount)
+	amount := osmomath.NewInt(defaultPoolAmount)
 	suite.TransferCW20Tokens(path, cw20Addr, cw20ics20Addr, chainA.SenderAccount.GetAddress(), amount.String(), "")
 
 	// Create a pool for that token
@@ -162,7 +164,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	)
 	xcsMsg = fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
 
-	transferMsg := NewMsgTransfer(sdk.NewCoin(stakeAB, sdk.NewInt(10)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), suite.pathAB.EndpointB.ChannelID, xcsMsg)
+	transferMsg := NewMsgTransfer(sdk.NewCoin(stakeAB, osmomath.NewInt(10)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), suite.pathAB.EndpointB.ChannelID, xcsMsg)
 	_, recvResult, _, _ := suite.FullSend(transferMsg, BtoA)
 
 	packet, err = ibctesting.ParsePacketFromEvents(recvResult.GetEvents())

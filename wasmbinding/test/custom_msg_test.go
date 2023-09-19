@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 
 	"github.com/stretchr/testify/require"
@@ -66,7 +67,7 @@ func TestMintMsg(t *testing.T) {
 	require.NoError(t, err)
 	sunDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
-	amount, ok := sdk.NewIntFromString("808010808")
+	amount, ok := osmomath.NewIntFromString("808010808")
 	require.True(t, ok)
 	msg = bindings.OsmosisMsg{MintTokens: &bindings.MintTokens{
 		Denom:         sunDenom,
@@ -191,7 +192,7 @@ func TestBurnMsg(t *testing.T) {
 	require.NoError(t, err)
 	sunDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
-	amount, ok := sdk.NewIntFromString("808010808")
+	amount, ok := osmomath.NewIntFromString("808010808")
 	require.True(t, ok)
 
 	msg = bindings.OsmosisMsg{MintTokens: &bindings.MintTokens{

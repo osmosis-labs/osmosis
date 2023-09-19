@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	poolmanager "github.com/osmosis-labs/osmosis/v19/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
@@ -14,14 +15,14 @@ func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 	denoms, err := s.App.PoolManagerKeeper.RouteGetPoolDenoms(s.Ctx, poolId)
 	s.Require().NoError(err)
 
-	swapIn := sdk.NewCoins(sdk.NewCoin(denoms[0], sdk.NewInt(1000)))
+	swapIn := sdk.NewCoins(sdk.NewCoin(denoms[0], osmomath.NewInt(1000)))
 	s.FundAcc(s.TestAccs[0], swapIn)
 
 	msg := poolmanagertypes.MsgSwapExactAmountIn{
 		Sender:            s.TestAccs[0].String(),
 		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: poolId, TokenOutDenom: denoms[1]}},
 		TokenIn:           swapIn[0],
-		TokenOutMinAmount: sdk.ZeroInt(),
+		TokenOutMinAmount: osmomath.ZeroInt(),
 	}
 
 	poolManagerMsgServer := poolmanager.NewMsgServerImpl(s.App.PoolManagerKeeper)
@@ -49,16 +50,16 @@ func (s *KeeperTestHelper) CreatePoolFromType(poolType poolmanagertypes.PoolType
 
 // CreatePoolFromTypeWithCoins creates a pool with the given type and initialized with the given coins.
 func (s *KeeperTestHelper) CreatePoolFromTypeWithCoins(poolType poolmanagertypes.PoolType, coins sdk.Coins) uint64 {
-	return s.CreatePoolFromTypeWithCoinsAndSpreadFactor(poolType, coins, sdk.ZeroDec())
+	return s.CreatePoolFromTypeWithCoinsAndSpreadFactor(poolType, coins, osmomath.ZeroDec())
 }
 
 // CreatePoolFromTypeWithCoinsAndSpreadFactor creates a pool with given type, initialized with the given coins as initial liquidity and spread factor.
-func (s *KeeperTestHelper) CreatePoolFromTypeWithCoinsAndSpreadFactor(poolType poolmanagertypes.PoolType, coins sdk.Coins, spreadFactor sdk.Dec) uint64 {
+func (s *KeeperTestHelper) CreatePoolFromTypeWithCoinsAndSpreadFactor(poolType poolmanagertypes.PoolType, coins sdk.Coins, spreadFactor osmomath.Dec) uint64 {
 	switch poolType {
 	case poolmanagertypes.Balancer:
 		poolId := s.PrepareCustomBalancerPoolFromCoins(coins, balancer.PoolParams{
 			SwapFee: spreadFactor,
-			ExitFee: sdk.ZeroDec(),
+			ExitFee: osmomath.ZeroDec(),
 		})
 		return poolId
 	case poolmanagertypes.Concentrated:

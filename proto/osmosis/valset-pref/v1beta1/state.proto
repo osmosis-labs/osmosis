@@ -19,7 +19,7 @@ message ValidatorPreference {
       [ (gogoproto.moretags) = "yaml:\"val_oper_address\"" ];
   // weight is decimal between 0 and 1, and they all sum to 1.
   string weight = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

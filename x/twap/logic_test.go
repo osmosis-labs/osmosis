@@ -20,13 +20,13 @@ import (
 )
 
 var (
-	zeroDec              = sdk.ZeroDec()
-	oneDec               = sdk.OneDec()
+	zeroDec              = osmomath.ZeroDec()
+	oneDec               = osmomath.OneDec()
 	twoDec               = oneDec.Add(oneDec)
-	pointFiveDec         = sdk.OneDec().Quo(twoDec)
-	OneSec               = sdk.MustNewDecFromStr("1000.000000000000000000")
-	logTen               = twap.TwapLog(sdk.NewDec(10))
-	logOneOverTen        = twap.TwapLog(sdk.OneDec().QuoInt64(10))
+	pointFiveDec         = osmomath.OneDec().Quo(twoDec)
+	OneSec               = osmomath.MustNewDecFromStr("1000.000000000000000000")
+	logTen               = twap.TwapLog(osmomath.NewDec(10))
+	logOneOverTen        = twap.TwapLog(osmomath.OneDec().QuoInt64(10))
 	tenSecAccum          = OneSec.MulInt64(10)
 	geometricTenSecAccum = OneSec.Mul(logTen)
 )
@@ -42,29 +42,29 @@ func (s *TestSuite) TestGetSpotPrices() {
 	testCases := map[string]struct {
 		poolID                uint64
 		prevErrTime           time.Time
-		mockSp0               sdk.Dec
-		mockSp1               sdk.Dec
+		mockSp0               osmomath.Dec
+		mockSp1               osmomath.Dec
 		mockSp0Err            error
 		mockSp1Err            error
-		expectedSp0           sdk.Dec
-		expectedSp1           sdk.Dec
+		expectedSp0           osmomath.Dec
+		expectedSp1           osmomath.Dec
 		expectedLatestErrTime time.Time
 	}{
 		"zero sp": {
 			poolID:                poolID,
 			prevErrTime:           currTime,
-			mockSp0:               sdk.ZeroDec(),
-			mockSp1:               sdk.ZeroDec(),
+			mockSp0:               osmomath.ZeroDec(),
+			mockSp1:               osmomath.ZeroDec(),
 			mockSp0Err:            fmt.Errorf("foo"),
-			expectedSp0:           sdk.ZeroDec(),
-			expectedSp1:           sdk.ZeroDec(),
+			expectedSp0:           osmomath.ZeroDec(),
+			expectedSp1:           osmomath.ZeroDec(),
 			expectedLatestErrTime: ctx.BlockTime(),
 		},
 		"exceeds max spot price": {
 			poolID:                poolID,
 			prevErrTime:           currTime,
-			mockSp0:               types.MaxSpotPrice.Add(sdk.OneDec()),
-			mockSp1:               types.MaxSpotPrice.Add(sdk.OneDec()),
+			mockSp0:               types.MaxSpotPrice.Add(osmomath.OneDec()),
+			mockSp1:               types.MaxSpotPrice.Add(osmomath.OneDec()),
 			expectedSp0:           types.MaxSpotPrice,
 			expectedSp1:           types.MaxSpotPrice,
 			expectedLatestErrTime: ctx.BlockTime(),
@@ -72,10 +72,10 @@ func (s *TestSuite) TestGetSpotPrices() {
 		"valid spot prices": {
 			poolID:                poolID,
 			prevErrTime:           currTime,
-			mockSp0:               sdk.NewDecWithPrec(55, 2),
-			mockSp1:               sdk.NewDecWithPrec(6, 1),
-			expectedSp0:           sdk.NewDecWithPrec(55, 2),
-			expectedSp1:           sdk.NewDecWithPrec(6, 1),
+			mockSp0:               osmomath.NewDecWithPrec(55, 2),
+			mockSp1:               osmomath.NewDecWithPrec(6, 1),
+			expectedSp0:           osmomath.NewDecWithPrec(55, 2),
+			expectedSp1:           osmomath.NewDecWithPrec(6, 1),
 			expectedLatestErrTime: currTime,
 		},
 	}
@@ -156,9 +156,9 @@ func (s *TestSuite) TestNewTwapRecord() {
 					s.Require().Equal(test.poolId, twapRecord.PoolId)
 					s.Require().Equal(s.Ctx.BlockHeight(), twapRecord.Height)
 					s.Require().Equal(s.Ctx.BlockTime(), twapRecord.Time)
-					s.Require().Equal(sdk.ZeroDec(), twapRecord.P0ArithmeticTwapAccumulator)
-					s.Require().Equal(sdk.ZeroDec(), twapRecord.P1ArithmeticTwapAccumulator)
-					s.Require().Equal(sdk.ZeroDec(), twapRecord.GeometricTwapAccumulator)
+					s.Require().Equal(osmomath.ZeroDec(), twapRecord.P0ArithmeticTwapAccumulator)
+					s.Require().Equal(osmomath.ZeroDec(), twapRecord.P1ArithmeticTwapAccumulator)
+					s.Require().Equal(osmomath.ZeroDec(), twapRecord.GeometricTwapAccumulator)
 				}
 			})
 		}
@@ -170,14 +170,14 @@ func (s *TestSuite) TestUpdateRecord() {
 	programmableAmmInterface := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
 	s.App.TwapKeeper.SetAmmInterface(programmableAmmInterface)
 
-	spotPriceResOne := twapmock.SpotPriceResult{Sp: sdk.OneDec(), Err: nil}
-	spotPriceResOneErr := twapmock.SpotPriceResult{Sp: sdk.OneDec(), Err: errors.New("dummy err")}
-	spotPriceResOneErrNilDec := twapmock.SpotPriceResult{Sp: sdk.Dec{}, Err: errors.New("dummy err")}
+	spotPriceResOne := twapmock.SpotPriceResult{Sp: osmomath.OneDec(), Err: nil}
+	spotPriceResOneErr := twapmock.SpotPriceResult{Sp: osmomath.OneDec(), Err: errors.New("dummy err")}
+	spotPriceResOneErrNilDec := twapmock.SpotPriceResult{Sp: osmomath.Dec{}, Err: errors.New("dummy err")}
 	baseTime := time.Unix(2, 0).UTC()
 	updateTime := time.Unix(3, 0).UTC()
 	baseTimeMinusOne := time.Unix(1, 0).UTC()
 
-	zeroAccumNoErrSp10Record := newRecord(poolId, baseTime, sdk.NewDec(10), zeroDec, zeroDec, zeroDec)
+	zeroAccumNoErrSp10Record := newRecord(poolId, baseTime, osmomath.NewDec(10), zeroDec, zeroDec, zeroDec)
 	sp10OneTimeUnitAccumRecord := newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10), geometricTenSecAccum)
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
@@ -202,13 +202,13 @@ func (s *TestSuite) TestUpdateRecord() {
 			record:           zeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOneErrNilDec,
 			spotPriceResult1: spotPriceResOne,
-			expRecord:        withSp0(withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime), sdk.ZeroDec()),
+			expRecord:        withSp0(withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime), osmomath.ZeroDec()),
 		},
 		"0 accum start, sp1 err at update with nil dec": {
 			record:           zeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOneErrNilDec,
-			expRecord:        withSp1(withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime), sdk.ZeroDec()),
+			expRecord:        withSp1(withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime), osmomath.ZeroDec()),
 		},
 		"startRecord err time preserved": {
 			record:           withLastErrTime(zeroAccumNoErrSp10Record, baseTimeMinusOne),
@@ -229,10 +229,10 @@ func (s *TestSuite) TestUpdateRecord() {
 			s.Ctx = s.Ctx.WithBlockTime(updateTime.UTC())
 			test.record.PoolId = poolId
 			test.expRecord.PoolId = poolId
-			if (test.expRecord.P0LastSpotPrice == sdk.Dec{}) {
+			if (test.expRecord.P0LastSpotPrice == osmomath.Dec{}) {
 				test.expRecord.P0LastSpotPrice = test.spotPriceResult0.Sp
 			}
-			if (test.expRecord.P1LastSpotPrice == sdk.Dec{}) {
+			if (test.expRecord.P1LastSpotPrice == osmomath.Dec{}) {
 				test.expRecord.P1LastSpotPrice = test.spotPriceResult1.Sp
 			}
 			test.expRecord.Height = s.Ctx.BlockHeight()
@@ -254,7 +254,7 @@ func (s *TestSuite) TestUpdateRecord() {
 
 func TestRecordWithUpdatedAccumulators(t *testing.T) {
 	poolId := uint64(1)
-	defaultRecord := newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec, pointFiveDec)
+	defaultRecord := newRecord(poolId, time.Unix(1, 0), osmomath.NewDec(10), oneDec, twoDec, pointFiveDec)
 	tests := map[string]struct {
 		record      types.TwapRecord
 		newTime     time.Time
@@ -262,7 +262,7 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 		expectPanic bool
 	}{
 		"accum with zero value": {
-			record:    newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec),
+			record:    newRecord(poolId, time.Unix(1, 0), osmomath.NewDec(10), zeroDec, zeroDec, zeroDec),
 			newTime:   time.Unix(2, 0),
 			expRecord: newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10), geometricTenSecAccum),
 		},
@@ -272,7 +272,7 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(10)), twoDec.Add(OneSec.QuoInt64(10)), pointFiveDec.Add(geometricTenSecAccum)),
 		},
 		"larger time interval": {
-			record:    newRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), oneDec, twoDec, pointFiveDec),
+			record:    newRecord(poolId, time.Unix(11, 0), osmomath.NewDec(10), oneDec, twoDec, pointFiveDec),
 			newTime:   time.Unix(55, 0),
 			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(44*10)), twoDec.Add(OneSec.MulInt64(44).QuoInt64(10)), pointFiveDec.Add(OneSec.MulInt64(44).Mul(logTen))),
 		},
@@ -282,22 +282,22 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			expRecord: newExpRecord(oneDec, twoDec, pointFiveDec),
 		},
 		"sp0 - zero spot price - accum0 unchanged, accum1 updated, geom accum unchanged, last err time set": {
-			record:    withPrice0Set(defaultRecord, sdk.ZeroDec()),
+			record:    withPrice0Set(defaultRecord, osmomath.ZeroDec()),
 			newTime:   defaultRecord.Time.Add(time.Second),
-			expRecord: withLastErrTime(newExpRecord(oneDec, twoDec.Add(sdk.NewDecWithPrec(1, 1).Mul(OneSec)), pointFiveDec), defaultRecord.Time.Add(time.Second)),
+			expRecord: withLastErrTime(newExpRecord(oneDec, twoDec.Add(osmomath.NewDecWithPrec(1, 1).Mul(OneSec)), pointFiveDec), defaultRecord.Time.Add(time.Second)),
 		},
 		"sp1 - zero spot price - accum0 updated, accum1 unchanged, geom accum updated correctly": {
-			record:    withPrice1Set(defaultRecord, sdk.ZeroDec()),
+			record:    withPrice1Set(defaultRecord, osmomath.ZeroDec()),
 			newTime:   defaultRecord.Time.Add(time.Second),
 			expRecord: newExpRecord(tenSecAccum.Add(oneDec), twoDec, pointFiveDec.Add(geometricTenSecAccum)),
 		},
 		"both sp - zero spot price - accum0 unchange, accum1 unchanged, geom accum unchanged": {
-			record:    withPrice1Set(withPrice0Set(defaultRecord, sdk.ZeroDec()), sdk.ZeroDec()),
+			record:    withPrice1Set(withPrice0Set(defaultRecord, osmomath.ZeroDec()), osmomath.ZeroDec()),
 			newTime:   defaultRecord.Time.Add(time.Second),
 			expRecord: withLastErrTime(newExpRecord(oneDec, twoDec, pointFiveDec), defaultRecord.Time.Add(time.Second)),
 		},
 		"spot price of one - geom accumulator 0": {
-			record:    withPrice1Set(withPrice0Set(defaultRecord, sdk.OneDec()), sdk.OneDec()),
+			record:    withPrice1Set(withPrice0Set(defaultRecord, osmomath.OneDec()), osmomath.OneDec()),
 			newTime:   defaultRecord.Time.Add(time.Second),
 			expRecord: newExpRecord(oneDec.Add(OneSec), twoDec.Add(OneSec), pointFiveDec),
 		},
@@ -333,17 +333,17 @@ func TestRecordWithUpdatedAccumulators_ThreeAsset(t *testing.T) {
 		expRecord       []types.TwapRecord
 	}{
 		"accum with zero value": {
-			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec, zeroDec, zeroDec, zeroDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), osmomath.NewDec(10), zeroDec, zeroDec, zeroDec, zeroDec, zeroDec, zeroDec),
 			interpolateTime: time.Unix(2, 0),
 			expRecord:       newThreeAssetExpRecord(poolId, OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.MulInt64(20), geometricTenSecAccum, geometricTenSecAccum, OneSec.Mul(logOneOverTen)),
 		},
 		"small starting accumulators": {
-			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), twoDec, oneDec, twoDec, oneDec, twoDec, oneDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), osmomath.NewDec(10), twoDec, oneDec, twoDec, oneDec, twoDec, oneDec),
 			interpolateTime: time.Unix(2, 0),
 			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(10)), oneDec.Add(OneSec.QuoInt64(10)), twoDec.Add(OneSec.MulInt64(20)), oneDec.Add(geometricTenSecAccum), twoDec.Add(geometricTenSecAccum), oneDec.Add(OneSec.Mul(logOneOverTen))),
 		},
 		"larger time interval": {
-			record:          newThreeAssetRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), twoDec, oneDec, twoDec, oneDec, twoDec, oneDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(11, 0), osmomath.NewDec(10), twoDec, oneDec, twoDec, oneDec, twoDec, oneDec),
 			interpolateTime: time.Unix(55, 0),
 			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(44*10)), oneDec.Add(OneSec.MulInt64(44).QuoInt64(10)), twoDec.Add(OneSec.MulInt64(44*20)), oneDec.Add(OneSec.MulInt64(44).Mul(logTen)), twoDec.Add(OneSec.MulInt64(44).Mul(logTen)), oneDec.Add(OneSec.MulInt64(44).Mul(logOneOverTen))),
 		},
@@ -365,7 +365,7 @@ func TestRecordWithUpdatedAccumulators_ThreeAsset(t *testing.T) {
 }
 
 func (s *TestSuite) TestGetInterpolatedRecord() {
-	baseRecord := newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec().Quo(twoDec))
+	baseRecord := newTwoAssetPoolTwapRecordWithDefaults(baseTime, osmomath.OneDec(), osmomath.OneDec(), osmomath.OneDec(), osmomath.OneDec().Quo(twoDec))
 
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
@@ -374,7 +374,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 		testDenom0          string
 		testDenom1          string
 		testTime            time.Time
-		expectedAccumulator sdk.Dec
+		expectedAccumulator osmomath.Dec
 		expectedErr         error
 		expectedLastErrTime time.Time
 	}{
@@ -392,7 +392,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 			testDenom1:      baseRecord.Asset1Denom,
 			testTime:        baseTime.Add(time.Second),
 			// 1(spot price) * 1000(one sec in milli-seconds)
-			expectedAccumulator: baseRecord.P0ArithmeticTwapAccumulator.Add(sdk.NewDec(1000)),
+			expectedAccumulator: baseRecord.P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(1000)),
 		},
 		"call 1 second after existing record with error": {
 			recordsToPreSet: withLastErrTime(baseRecord, baseTime),
@@ -401,7 +401,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 			testDenom1:      baseRecord.Asset1Denom,
 			testTime:        baseTime.Add(time.Second),
 			// 1(spot price) * 1000(one sec in milli-seconds)
-			expectedAccumulator: baseRecord.P0ArithmeticTwapAccumulator.Add(sdk.NewDec(1000)),
+			expectedAccumulator: baseRecord.P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(1000)),
 			expectedLastErrTime: baseTime.Add(time.Second),
 		},
 		"call 1 second before existing record": {
@@ -463,13 +463,13 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 }
 
 func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
-	baseRecord := newThreeAssetRecord(2, baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	baseRecord := newThreeAssetRecord(2, baseTime, osmomath.NewDec(10), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec(), osmomath.ZeroDec())
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
 		recordsToPreSet       []types.TwapRecord
 		testTime              time.Time
-		expectedP0Accumulator []sdk.Dec
-		expectedP1Accumulator []sdk.Dec
+		expectedP0Accumulator []osmomath.Dec
+		expectedP1Accumulator []osmomath.Dec
 		expectedErr           error
 	}{
 		"call 1 second after existing record": {
@@ -479,18 +479,18 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 			// A 10 spot price * 1000ms = 10000
 			// A 10 spot price * 1000ms = 10000
 			// B .1 spot price * 1000ms = 100
-			expectedP0Accumulator: []sdk.Dec{
-				baseRecord[0].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
-				baseRecord[1].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
-				baseRecord[2].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
+			expectedP0Accumulator: []osmomath.Dec{
+				baseRecord[0].P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(10000)),
+				baseRecord[1].P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(10000)),
+				baseRecord[2].P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(100)),
 			},
 			// B .1 spot price * 1000ms = 100
 			// C 20 spot price * 1000ms = 20000
 			// C 20 spot price * 1000ms = 20000
-			expectedP1Accumulator: []sdk.Dec{
-				baseRecord[0].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
-				baseRecord[1].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
-				baseRecord[2].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
+			expectedP1Accumulator: []osmomath.Dec{
+				baseRecord[0].P1ArithmeticTwapAccumulator.Add(osmomath.NewDec(100)),
+				baseRecord[1].P1ArithmeticTwapAccumulator.Add(osmomath.NewDec(20000)),
+				baseRecord[2].P1ArithmeticTwapAccumulator.Add(osmomath.NewDec(20000)),
 			},
 		},
 		"call 1 second after existing record with error": {
@@ -504,18 +504,18 @@ func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
 			// A 10 spot price * 1000ms = 10000
 			// A 10 spot price * 1000ms = 10000
 			// B .1 spot price * 1000ms = 100
-			expectedP0Accumulator: []sdk.Dec{
-				baseRecord[0].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
-				baseRecord[1].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(10000)),
-				baseRecord[2].P0ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
+			expectedP0Accumulator: []osmomath.Dec{
+				baseRecord[0].P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(10000)),
+				baseRecord[1].P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(10000)),
+				baseRecord[2].P0ArithmeticTwapAccumulator.Add(osmomath.NewDec(100)),
 			},
 			// B .1 spot price * 1000ms = 100
 			// C 20 spot price * 1000ms = 20000
 			// C 20 spot price * 1000ms = 20000
-			expectedP1Accumulator: []sdk.Dec{
-				baseRecord[0].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(100)),
-				baseRecord[1].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
-				baseRecord[2].P1ArithmeticTwapAccumulator.Add(sdk.NewDec(20000)),
+			expectedP1Accumulator: []osmomath.Dec{
+				baseRecord[0].P1ArithmeticTwapAccumulator.Add(osmomath.NewDec(100)),
+				baseRecord[1].P1ArithmeticTwapAccumulator.Add(osmomath.NewDec(20000)),
+				baseRecord[2].P1ArithmeticTwapAccumulator.Add(osmomath.NewDec(20000)),
 			},
 		},
 		"call 1 second before existing record": {
@@ -569,7 +569,7 @@ type computeThreeAssetArithmeticTwapTestCase struct {
 	startRecord []types.TwapRecord
 	endRecord   []types.TwapRecord
 	quoteAsset  []string
-	expTwap     []sdk.Dec
+	expTwap     []osmomath.Dec
 	expErr      bool
 }
 
@@ -643,13 +643,13 @@ func (s *TestSuite) TestUpdateRecords() {
 	type spOverride struct {
 		baseDenom   string
 		quoteDenom  string
-		overrideSp  sdk.Dec
+		overrideSp  osmomath.Dec
 		overrideErr error
 	}
 
 	type expectedResults struct {
-		spotPriceA    sdk.Dec
-		spotPriceB    sdk.Dec
+		spotPriceA    osmomath.Dec
+		spotPriceB    osmomath.Dec
 		lastErrorTime time.Time
 		isMostRecent  bool
 	}
@@ -701,17 +701,17 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: sdk.NewDec(2),
+					overrideSp: osmomath.NewDec(2),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: baseRecord.Asset0Denom,
-					overrideSp: sdk.NewDecWithPrec(2, 1),
+					overrideSp: osmomath.NewDecWithPrec(2, 1),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: "extradenom",
-					overrideSp: sdk.NewDecWithPrec(3, 1),
+					overrideSp: osmomath.NewDecWithPrec(3, 1),
 				},
 			},
 
@@ -726,12 +726,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: sdk.NewDec(2),
+					overrideSp: osmomath.NewDec(2),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: baseRecord.Asset0Denom,
-					overrideSp: sdk.NewDecWithPrec(2, 1),
+					overrideSp: osmomath.NewDecWithPrec(2, 1),
 				},
 			},
 
@@ -743,8 +743,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record added.
 				{
-					spotPriceA:   sdk.NewDec(2),
-					spotPriceB:   sdk.NewDecWithPrec(2, 1),
+					spotPriceA:   osmomath.NewDec(2),
+					spotPriceB:   osmomath.NewDecWithPrec(2, 1),
 					isMostRecent: true,
 				},
 			},
@@ -763,7 +763,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:   baseRecord.Asset1Denom,
 					quoteDenom:  baseRecord.Asset0Denom,
-					overrideSp:  sdk.NewDecWithPrec(2, 1),
+					overrideSp:  osmomath.NewDecWithPrec(2, 1),
 					overrideErr: spError,
 				},
 			},
@@ -776,8 +776,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record added.
 				{
-					spotPriceA:    sdk.ZeroDec(),
-					spotPriceB:    sdk.NewDecWithPrec(2, 1),
+					spotPriceA:    osmomath.ZeroDec(),
+					spotPriceB:    osmomath.NewDecWithPrec(2, 1),
 					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
 					isMostRecent:  true,
 				},
@@ -792,12 +792,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 				{
 					baseDenom:   baseRecord.Asset1Denom,
 					quoteDenom:  baseRecord.Asset0Denom,
-					overrideSp:  types.MaxSpotPrice.Add(sdk.OneDec()),
+					overrideSp:  types.MaxSpotPrice.Add(osmomath.OneDec()),
 					overrideErr: nil, // twap logic should identify the large spot price and mark it as error.
 				},
 			},
@@ -810,7 +810,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record added.
 				{
-					spotPriceA:    sdk.OneDec(),
+					spotPriceA:    osmomath.OneDec(),
 					spotPriceB:    types.MaxSpotPrice,               // Although the price returned from AMM was MaxSpotPrice + 1, it is reset to just MaxSpotPrice.
 					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
 					isMostRecent:  true,
@@ -826,12 +826,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: baseRecord.Asset0Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 			},
 
@@ -844,8 +844,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record added.
 				{
-					spotPriceA:    sdk.OneDec(),
-					spotPriceB:    sdk.OneDec(),
+					spotPriceA:    osmomath.OneDec(),
+					spotPriceB:    osmomath.OneDec(),
 					lastErrorTime: baseRecord.Time,
 					isMostRecent:  true,
 				},
@@ -860,7 +860,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 				{
 					baseDenom:   baseRecord.Asset1Denom,
@@ -878,8 +878,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record added.
 				{
-					spotPriceA:    sdk.OneDec(),
-					spotPriceB:    sdk.ZeroDec(),
+					spotPriceA:    osmomath.OneDec(),
+					spotPriceB:    osmomath.ZeroDec(),
 					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
 					isMostRecent:  true,
 				},
@@ -895,12 +895,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: baseRecord.Asset0Denom,
-					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
 				},
 			},
 
@@ -917,8 +917,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record added.
 				{
-					spotPriceA:   sdk.OneDec(),
-					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
+					spotPriceA:   osmomath.OneDec(),
+					spotPriceB:   osmomath.OneDec().Add(osmomath.OneDec()),
 					isMostRecent: true,
 				},
 			},
@@ -934,12 +934,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: baseRecord.Asset0Denom,
-					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
 				},
 			},
 
@@ -964,12 +964,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  mostRecentRecordPoolOne.Asset0Denom,
 					quoteDenom: mostRecentRecordPoolOne.Asset1Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 				{
 					baseDenom:  mostRecentRecordPoolOne.Asset1Denom,
 					quoteDenom: mostRecentRecordPoolOne.Asset0Denom,
-					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
 				},
 			},
 
@@ -992,19 +992,19 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  baseRecord.Asset0Denom,
 					quoteDenom: baseRecord.Asset1Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
 					quoteDenom: baseRecord.Asset0Denom,
-					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
 				},
 			},
 
 			expectedHistoricalRecords: []expectedResults{
 				{
-					spotPriceA:   sdk.OneDec(),
-					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
+					spotPriceA:   osmomath.OneDec(),
+					spotPriceB:   osmomath.OneDec().Add(osmomath.OneDec()),
 					isMostRecent: true,
 				},
 			},
@@ -1023,12 +1023,12 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  mostRecentRecordPoolOne.Asset0Denom,
 					quoteDenom: mostRecentRecordPoolOne.Asset1Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 				{
 					baseDenom:  mostRecentRecordPoolOne.Asset1Denom,
 					quoteDenom: mostRecentRecordPoolOne.Asset0Denom,
-					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
 				},
 			},
 			expectError: types.InvalidUpdateRecordError{},
@@ -1041,32 +1041,32 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  threeAssetRecordAB.Asset0Denom,
 					quoteDenom: threeAssetRecordAB.Asset1Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 				{
 					baseDenom:  threeAssetRecordAB.Asset1Denom,
 					quoteDenom: threeAssetRecordAB.Asset0Denom,
-					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
 				},
 				{
 					baseDenom:  threeAssetRecordAC.Asset0Denom,
 					quoteDenom: threeAssetRecordAC.Asset1Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 				{
 					baseDenom:  threeAssetRecordAC.Asset1Denom,
 					quoteDenom: threeAssetRecordAC.Asset0Denom,
-					overrideSp: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
+					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()).Add(osmomath.OneDec()),
 				},
 				{
 					baseDenom:  threeAssetRecordBC.Asset0Denom,
 					quoteDenom: threeAssetRecordBC.Asset1Denom,
-					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
 				},
 				{
 					baseDenom:  threeAssetRecordBC.Asset1Denom,
 					quoteDenom: threeAssetRecordBC.Asset0Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 			},
 
@@ -1083,8 +1083,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record AB added.
 				{
-					spotPriceA:   sdk.OneDec(),
-					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
+					spotPriceA:   osmomath.OneDec(),
+					spotPriceB:   osmomath.OneDec().Add(osmomath.OneDec()),
 					isMostRecent: true,
 				},
 				// The original record AC at t.
@@ -1099,8 +1099,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record AC added.
 				{
-					spotPriceA:   sdk.OneDec(),
-					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
+					spotPriceA:   osmomath.OneDec(),
+					spotPriceB:   osmomath.OneDec().Add(osmomath.OneDec()).Add(osmomath.OneDec()),
 					isMostRecent: true,
 				},
 				// The original record BC at t.
@@ -1115,8 +1115,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record BC added.
 				{
-					spotPriceA:   sdk.OneDec().Add(sdk.OneDec()),
-					spotPriceB:   sdk.OneDec(),
+					spotPriceA:   osmomath.OneDec().Add(osmomath.OneDec()),
+					spotPriceB:   osmomath.OneDec(),
 					isMostRecent: true,
 				},
 			},
@@ -1129,33 +1129,33 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:  threeAssetRecordAB.Asset0Denom,
 					quoteDenom: threeAssetRecordAB.Asset1Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 				{
 					baseDenom:  threeAssetRecordAB.Asset1Denom,
 					quoteDenom: threeAssetRecordAB.Asset0Denom,
-					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
 				},
 				{
 					baseDenom:  threeAssetRecordAC.Asset0Denom,
 					quoteDenom: threeAssetRecordAC.Asset1Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 				{
 					baseDenom:   threeAssetRecordAC.Asset1Denom,
 					quoteDenom:  threeAssetRecordAC.Asset0Denom,
-					overrideSp:  types.MaxSpotPrice.Add(sdk.OneDec()),
+					overrideSp:  types.MaxSpotPrice.Add(osmomath.OneDec()),
 					overrideErr: nil, // twap logic should identify the large spot price and mark it as error.
 				},
 				{
 					baseDenom:  threeAssetRecordBC.Asset0Denom,
 					quoteDenom: threeAssetRecordBC.Asset1Denom,
-					overrideSp: sdk.OneDec(),
+					overrideSp: osmomath.OneDec(),
 				},
 				{
 					baseDenom:  threeAssetRecordBC.Asset1Denom,
 					quoteDenom: threeAssetRecordBC.Asset0Denom,
-					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+					overrideSp: osmomath.OneDec().Add(osmomath.OneDec()),
 				},
 			},
 
@@ -1173,8 +1173,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record AB added.
 				{
-					spotPriceA:    sdk.OneDec(),
-					spotPriceB:    sdk.OneDec().Add(sdk.OneDec()),
+					spotPriceA:    osmomath.OneDec(),
+					spotPriceB:    osmomath.OneDec().Add(osmomath.OneDec()),
 					lastErrorTime: tPlus10sp5ThreeAssetRecordAB.Time,
 					isMostRecent:  true,
 				},
@@ -1190,7 +1190,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record AC added.
 				{
-					spotPriceA:    sdk.OneDec(),
+					spotPriceA:    osmomath.OneDec(),
 					spotPriceB:    types.MaxSpotPrice,                            // Although the price returned from AMM was MaxSpotPrice + 1, it is reset to just MaxSpotPrice.
 					lastErrorTime: threeAssetRecordAC.Time.Add(time.Second * 11), // equals to block time
 					isMostRecent:  true,
@@ -1207,8 +1207,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record BC added.
 				{
-					spotPriceA:   sdk.OneDec(),
-					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
+					spotPriceA:   osmomath.OneDec(),
+					spotPriceB:   osmomath.OneDec().Add(osmomath.OneDec()),
 					isMostRecent: true,
 				},
 			},
@@ -1361,7 +1361,7 @@ func (s *TestSuite) TestAfterCreatePool() {
 // This tests the behavior of computeArithmeticTwap, around error returning
 // when there has been an intermediate spot price error.
 func (s *TestSuite) TestComputeArithmeticTwapWithSpotPriceError() {
-	newOneSidedRecordWErrorTime := func(time time.Time, accum sdk.Dec, useP0 bool, errTime time.Time) types.TwapRecord {
+	newOneSidedRecordWErrorTime := func(time time.Time, accum osmomath.Dec, useP0 bool, errTime time.Time) types.TwapRecord {
 		record := newOneSidedRecord(time, accum, useP0)
 		record.LastErrorTime = errTime
 		return record
@@ -1374,41 +1374,41 @@ func (s *TestSuite) TestComputeArithmeticTwapWithSpotPriceError() {
 	tests := map[string]computeTwapTestCase{
 		// should error, since end time may have been used to interpolate this value
 		"errAtEndTime from end record": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			startRecord: newOneSidedRecord(baseTime, osmomath.ZeroDec(), true),
 			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec, true, tPlusOne),
 			quoteAsset:  denom0,
-			expTwap:     sdk.OneDec(),
+			expTwap:     osmomath.OneDec(),
 			expErr:      true,
 		},
 		// should error, since start time may have been used to interpolate this value
 		"err at StartTime exactly from end record": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			startRecord: newOneSidedRecord(baseTime, osmomath.ZeroDec(), true),
 			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec, true, baseTime),
 			quoteAsset:  denom0,
-			expTwap:     sdk.OneDec(),
+			expTwap:     osmomath.OneDec(),
 			expErr:      true,
 		},
 		// should error, since start record is erroneous
 		"err at StartTime exactly from start record": {
-			startRecord: newOneSidedRecordWErrorTime(baseTime, sdk.ZeroDec(), true, baseTime),
+			startRecord: newOneSidedRecordWErrorTime(baseTime, osmomath.ZeroDec(), true, baseTime),
 			endRecord:   newOneSidedRecord(tPlusOne, OneSec, true),
 			quoteAsset:  denom0,
-			expTwap:     sdk.OneDec(),
+			expTwap:     osmomath.OneDec(),
 			expErr:      true,
 		},
 		"err before StartTime": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			startRecord: newOneSidedRecord(baseTime, osmomath.ZeroDec(), true),
 			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec, true, tMinOne),
 			quoteAsset:  denom0,
-			expTwap:     sdk.OneDec(),
+			expTwap:     osmomath.OneDec(),
 			expErr:      false,
 		},
 		// Should not happen, but if it did would error
 		"err after EndTime": {
-			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			startRecord: newOneSidedRecord(baseTime, osmomath.ZeroDec(), true),
 			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec.MulInt64(2), true, baseTime.Add(20*time.Second)),
 			quoteAsset:  denom0,
-			expTwap:     sdk.OneDec().MulInt64(2),
+			expTwap:     osmomath.OneDec().MulInt64(2),
 			expErr:      true,
 		},
 	}
@@ -1424,8 +1424,8 @@ func (s *TestSuite) TestComputeArithmeticTwapWithSpotPriceError() {
 // TestTwapLog_CorrectBase tests that the base of 2 is used for the twap log function.
 // log_2{16} = 4
 func (s *TestSuite) TestTwapLog_CorrectBase() {
-	logOf := sdk.NewDec(16)
-	expectedValue := sdk.NewDec(4)
+	logOf := osmomath.NewDec(16)
+	expectedValue := osmomath.NewDec(4)
 
 	result := twap.TwapLog(logOf)
 
@@ -1434,33 +1434,33 @@ func (s *TestSuite) TestTwapLog_CorrectBase() {
 
 func (s *TestSuite) TestTwapLog() {
 	smallestAdditiveTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.SmallestDec(),
+		AdditiveTolerance: osmomath.SmallestDec(),
 	}
 
 	testcases := []struct {
 		name        string
-		price       sdk.Dec
-		expected    sdk.Dec
+		price       osmomath.Dec
+		expected    osmomath.Dec
 		expectPanic bool
 	}{
 		{
 			"max spot price",
 			gammtypes.MaxSpotPrice,
 			// log_2{2^128 - 1} = 128
-			sdk.MustNewDecFromStr("127.999999999999999999"),
+			osmomath.MustNewDecFromStr("127.999999999999999999"),
 			false,
 		},
 		{
 			"zero price - panic",
-			sdk.ZeroDec(),
-			sdk.Dec{},
+			osmomath.ZeroDec(),
+			osmomath.Dec{},
 			true,
 		},
 		{
 			"smallest dec",
-			sdk.SmallestDec(),
+			osmomath.SmallestDec(),
 			// https://www.wolframalpha.com/input?i=log+base+2+of+%2810%5E-18%29+with+20+digits
-			sdk.MustNewDecFromStr("59.794705707972522262").Neg(),
+			osmomath.MustNewDecFromStr("59.794705707972522262").Neg(),
 			false,
 		},
 	}
@@ -1471,15 +1471,15 @@ func (s *TestSuite) TestTwapLog() {
 				result := twap.TwapLog(tc.price)
 
 				smallestAdditiveTolerance.CompareBigDec(
-					osmomath.BigDecFromSDKDec(tc.expected),
-					osmomath.BigDecFromSDKDec(result),
+					osmomath.BigDecFromDec(tc.expected),
+					osmomath.BigDecFromDec(result),
 				)
 			})
 		})
 	}
 }
 
-func testCaseFromDeltas(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
+func testCaseFromDeltas(s *TestSuite, startAccum, accumDiff osmomath.Dec, timeDelta time.Duration, expectedTwap osmomath.Dec) computeTwapTestCase {
 	return computeTwapTestCase{
 		newOneSidedRecord(baseTime, startAccum, true),
 		newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
@@ -1495,7 +1495,7 @@ func testCaseFromDeltas(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta t
 	}
 }
 
-func testCaseFromDeltasAsset1(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
+func testCaseFromDeltasAsset1(s *TestSuite, startAccum, accumDiff osmomath.Dec, timeDelta time.Duration, expectedTwap osmomath.Dec) computeTwapTestCase {
 	return computeTwapTestCase{
 		newOneSidedRecord(baseTime, startAccum, false),
 		newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), false),
@@ -1511,7 +1511,7 @@ func testCaseFromDeltasAsset1(s *TestSuite, startAccum, accumDiff sdk.Dec, timeD
 	}
 }
 
-func geometricTestCaseFromDeltas0(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
+func geometricTestCaseFromDeltas0(s *TestSuite, startAccum, accumDiff osmomath.Dec, timeDelta time.Duration, expectedTwap osmomath.Dec) computeTwapTestCase {
 	return computeTwapTestCase{
 		newOneSidedGeometricRecord(baseTime, startAccum),
 		newOneSidedGeometricRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff)),
@@ -1527,16 +1527,16 @@ func geometricTestCaseFromDeltas0(s *TestSuite, startAccum, accumDiff sdk.Dec, t
 	}
 }
 
-func geometricTestCaseFromDeltas1(s *TestSuite, startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTwapTestCase {
-	return geometricTestCaseFromDeltas0(s, startAccum, accumDiff, timeDelta, sdk.OneDec().Quo(expectedTwap))
+func geometricTestCaseFromDeltas1(s *TestSuite, startAccum, accumDiff osmomath.Dec, timeDelta time.Duration, expectedTwap osmomath.Dec) computeTwapTestCase {
+	return geometricTestCaseFromDeltas0(s, startAccum, accumDiff, timeDelta, osmomath.OneDec().Quo(expectedTwap))
 }
 
-func testThreeAssetCaseFromDeltas(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeThreeAssetArithmeticTwapTestCase {
+func testThreeAssetCaseFromDeltas(startAccum, accumDiff osmomath.Dec, timeDelta time.Duration, expectedTwap osmomath.Dec) computeThreeAssetArithmeticTwapTestCase {
 	return computeThreeAssetArithmeticTwapTestCase{
 		newThreeAssetOneSidedRecord(baseTime, startAccum, true),
 		newThreeAssetOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
 		[]string{denom0, denom0, denom1},
-		[]sdk.Dec{expectedTwap, expectedTwap, expectedTwap},
+		[]osmomath.Dec{expectedTwap, expectedTwap, expectedTwap},
 		false,
 	}
 }

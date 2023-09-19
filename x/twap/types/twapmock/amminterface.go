@@ -3,6 +3,7 @@ package twapmock
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
 )
 
@@ -21,7 +22,7 @@ type SpotPriceInput struct {
 	quoteDenom string
 }
 type SpotPriceResult struct {
-	Sp  sdk.Dec
+	Sp  osmomath.Dec
 	Err error
 }
 
@@ -52,7 +53,7 @@ func (p *ProgrammedPoolManagerInterface) ProgramPoolDenomsOverride(poolId uint64
 }
 
 func (p *ProgrammedPoolManagerInterface) ProgramPoolSpotPriceOverride(poolId uint64,
-	quoteDenom, baseDenom string, overrideSp sdk.Dec, overrideErr error,
+	quoteDenom, baseDenom string, overrideSp osmomath.Dec, overrideErr error,
 ) {
 	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	p.programmedSpotPrice[input] = SpotPriceResult{overrideSp, overrideErr}
@@ -73,7 +74,7 @@ func (p *ProgrammedPoolManagerInterface) RouteCalculateSpotPrice(ctx sdk.Context
 	poolId uint64,
 	quoteDenom,
 	baseDenom string,
-) (price sdk.Dec, err error) {
+) (price osmomath.Dec, err error) {
 	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	if res, ok := p.programmedSpotPrice[input]; ok {
 		return res.Sp, res.Err

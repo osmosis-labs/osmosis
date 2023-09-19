@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/events"
@@ -40,15 +41,15 @@ func (suite *PoolManagerEventsTestSuite) TestEmitSwapEvent() {
 			ctx:             suite.CreateTestContext(),
 			testAccountAddr: sdk.AccAddress([]byte(addressString)),
 			poolId:          1,
-			tokensIn:        sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(1234))),
-			tokensOut:       sdk.NewCoins(sdk.NewCoin(testDenomB, sdk.NewInt(5678))),
+			tokensIn:        sdk.NewCoins(sdk.NewCoin(testDenomA, osmomath.NewInt(1234))),
+			tokensOut:       sdk.NewCoins(sdk.NewCoin(testDenomB, osmomath.NewInt(5678))),
 		},
 		"valid with multiple tokens in and out": {
 			ctx:             suite.CreateTestContext(),
 			testAccountAddr: sdk.AccAddress([]byte(addressString)),
 			poolId:          200,
-			tokensIn:        sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(12)), sdk.NewCoin(testDenomB, sdk.NewInt(99))),
-			tokensOut:       sdk.NewCoins(sdk.NewCoin(testDenomC, sdk.NewInt(88)), sdk.NewCoin(testDenomD, sdk.NewInt(34))),
+			tokensIn:        sdk.NewCoins(sdk.NewCoin(testDenomA, osmomath.NewInt(12)), sdk.NewCoin(testDenomB, osmomath.NewInt(99))),
+			tokensOut:       sdk.NewCoins(sdk.NewCoin(testDenomC, osmomath.NewInt(88)), sdk.NewCoin(testDenomD, osmomath.NewInt(34))),
 		},
 	}
 
@@ -94,13 +95,13 @@ func (suite *PoolManagerEventsTestSuite) TestEmitAddLiquidityEvent() {
 			ctx:             suite.CreateTestContext(),
 			testAccountAddr: sdk.AccAddress([]byte(addressString)),
 			poolId:          1,
-			tokensIn:        sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(1234))),
+			tokensIn:        sdk.NewCoins(sdk.NewCoin(testDenomA, osmomath.NewInt(1234))),
 		},
 		"valid with multiple tokens in": {
 			ctx:             suite.CreateTestContext(),
 			testAccountAddr: sdk.AccAddress([]byte(addressString)),
 			poolId:          200,
-			tokensIn:        sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(12)), sdk.NewCoin(testDenomB, sdk.NewInt(99))),
+			tokensIn:        sdk.NewCoins(sdk.NewCoin(testDenomA, osmomath.NewInt(12)), sdk.NewCoin(testDenomB, osmomath.NewInt(99))),
 		},
 	}
 
@@ -145,13 +146,13 @@ func (suite *PoolManagerEventsTestSuite) TestEmitRemoveLiquidityEvent() {
 			ctx:             suite.CreateTestContext(),
 			testAccountAddr: sdk.AccAddress([]byte(addressString)),
 			poolId:          1,
-			tokensOut:       sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(1234))),
+			tokensOut:       sdk.NewCoins(sdk.NewCoin(testDenomA, osmomath.NewInt(1234))),
 		},
 		"valid with multiple tokens out": {
 			ctx:             suite.CreateTestContext(),
 			testAccountAddr: sdk.AccAddress([]byte(addressString)),
 			poolId:          200,
-			tokensOut:       sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(12)), sdk.NewCoin(testDenomB, sdk.NewInt(99))),
+			tokensOut:       sdk.NewCoins(sdk.NewCoin(testDenomA, osmomath.NewInt(12)), sdk.NewCoin(testDenomB, osmomath.NewInt(99))),
 		},
 	}
 

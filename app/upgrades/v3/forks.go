@@ -5,6 +5,7 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 )
 
@@ -22,7 +23,7 @@ func RunForkLogic(ctx sdk.Context, keepers *keepers.AppKeepers) {
 // not exist, which makes it impossible for a proposal to go to a vote.
 func FixMinDepositDenom(ctx sdk.Context, gov *govkeeper.Keeper) {
 	params := gov.GetDepositParams(ctx)
-	params.MinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(500000000)))
+	params.MinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(500000000)))
 	gov.SetDepositParams(ctx, params)
 }
 

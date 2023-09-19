@@ -38,7 +38,7 @@ type CFMMTestCase struct {
 }
 
 var (
-	overflowDec           = osmomath.NewDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1)))
+	overflowDec           = osmomath.NewBigDecFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(1024), nil), big.NewInt(1)))
 	twoAssetCFMMTestCases = map[string]CFMMTestCase{
 		// sanity checks
 		"small pool small input": {
@@ -417,7 +417,7 @@ func TestStableSwapTestSuite(t *testing.T) {
 }
 
 func TestCFMMInvariantTwoAssets(t *testing.T) {
-	kErrTolerance := osmomath.OneDec()
+	kErrTolerance := osmomath.OneBigDec()
 
 	tests := twoAssetCFMMTestCases
 
@@ -442,7 +442,7 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 }
 
 func TestCFMMInvariantTwoAssetsDirect(t *testing.T) {
-	kErrTolerance := osmomath.OneDec()
+	kErrTolerance := osmomath.OneBigDec()
 
 	tests := twoAssetCFMMTestCases
 
@@ -512,13 +512,13 @@ func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 	scaled_y4_quo_k2 := scaled_y4_quo_k.Mul(scaled_y4_quo_k)
 
 	// let sqrt_term = sqrt(1 + scaled_y4_quo_k2)
-	sqrt_term, err := (osmomath.OneDec().Add(scaled_y4_quo_k2)).ApproxRoot(2)
+	sqrt_term, err := (osmomath.OneBigDec().Add(scaled_y4_quo_k2)).ApproxRoot(2)
 	if err != nil {
 		panic(err)
 	}
 
 	// let common_factor = [y^2 * 9k) * (sqrt_term + 1)]^(1/3)
-	common_factor, err := (y2.MulInt64(9).Mul(k).Mul((sqrt_term.Add(osmomath.OneDec())))).ApproxRoot(3)
+	common_factor, err := (y2.MulInt64(9).Mul(k).Mul((sqrt_term.Add(osmomath.OneBigDec())))).ApproxRoot(3)
 	if err != nil {
 		panic(err)
 	}
@@ -553,7 +553,7 @@ func cfmmConstant(xReserve, yReserve osmomath.BigDec) osmomath.BigDec {
 }
 
 func TestCFMMInvariantMultiAssets(t *testing.T) {
-	kErrTolerance := osmomath.OneDec()
+	kErrTolerance := osmomath.OneBigDec()
 
 	tests := multiAssetCFMMTestCases
 
@@ -588,7 +588,7 @@ func cfmmConstantMulti(xReserve, yReserve, u, v osmomath.BigDec) osmomath.BigDec
 }
 
 func TestCFMMInvariantMultiAssetsDirect(t *testing.T) {
-	kErrTolerance := osmomath.OneDec()
+	kErrTolerance := osmomath.OneBigDec()
 
 	tests := multiAssetCFMMTestCases
 
@@ -689,7 +689,7 @@ func solveCFMMMultiDirect(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) 
 }
 
 func TestCFMMInvariantMultiAssetsBinarySearch(t *testing.T) {
-	kErrTolerance := osmomath.OneDec()
+	kErrTolerance := osmomath.OneBigDec()
 
 	tests := multiAssetCFMMTestCases
 
@@ -731,8 +731,8 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
-				sdk.NewCoin("ion", sdk.NewInt(1_000_000_000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)),
+				sdk.NewCoin("ion", osmomath.NewInt(1_000_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000_000)),
 			),
 			scalingFactors: []uint64{1, 1},
 		},
@@ -742,8 +742,8 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
-				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(500_000)),
+				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(500_000)),
 			),
 			scalingFactors: []uint64{1, 1},
 		},
@@ -753,8 +753,8 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
-				sdk.NewCoin("ion", sdk.NewInt(1_000_000_000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(1_000)),
+				sdk.NewCoin("ion", osmomath.NewInt(1_000_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000)),
 			),
 			scalingFactors: []uint64{1, 1},
 		},
@@ -764,8 +764,8 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
-				sdk.NewCoin("ion", sdk.NewInt(1_000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)),
+				sdk.NewCoin("ion", osmomath.NewInt(1_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000_000)),
 			),
 			scalingFactors: []uint64{1, 1},
 		},
@@ -775,8 +775,8 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
-				sdk.NewCoin("ion", sdk.NewInt(1_000_000_000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000)),
+				sdk.NewCoin("ion", osmomath.NewInt(1_000_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000_000)),
 			),
 			scalingFactors: []uint64{1, 8},
 		},
@@ -786,8 +786,8 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
-				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(500_000)),
+				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(500_000)),
 			),
 			scalingFactors: []uint64{1, 9},
 		},
@@ -799,9 +799,9 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
-				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000)),
-				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000)),
+				sdk.NewCoin("foo", osmomath.NewInt(1_000_000)),
 			),
 			scalingFactors: []uint64{1, 1, 1},
 		},
@@ -811,9 +811,9 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
-				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(500_000)),
-				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(500_000)),
+				sdk.NewCoin("foo", osmomath.NewInt(1_000_000)),
 			),
 			scalingFactors: []uint64{1, 1, 1},
 		},
@@ -823,9 +823,9 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
-				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(1_000)),
-				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000)),
+				sdk.NewCoin("foo", osmomath.NewInt(1_000_000)),
 			),
 			scalingFactors: []uint64{1, 1, 1},
 		},
@@ -835,9 +835,9 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
-				sdk.NewCoin("ion", sdk.NewInt(1_000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000)),
-				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("ion", osmomath.NewInt(1_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000)),
+				sdk.NewCoin("foo", osmomath.NewInt(1_000_000)),
 			),
 			scalingFactors: []uint64{1, 1, 1},
 		},
@@ -847,9 +847,9 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
-				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(1_000_000)),
-				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000)),
+				sdk.NewCoin("foo", osmomath.NewInt(1_000_000)),
 			),
 			scalingFactors: []uint64{5, 3, 9},
 		},
@@ -859,16 +859,16 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			initialCalcOut: 100,
 
 			poolLiquidity: sdk.NewCoins(
-				sdk.NewCoin("ion", sdk.NewInt(1_000_000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(500_000)),
-				sdk.NewCoin("foo", sdk.NewInt(1_000_000)),
+				sdk.NewCoin("ion", osmomath.NewInt(1_000_000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(500_000)),
+				sdk.NewCoin("foo", osmomath.NewInt(1_000_000)),
 			),
 			scalingFactors: []uint64{100, 76, 33},
 		},
 	}
 	// create randomized test cases
 	r := rand.New(rand.NewSource(12345))
-	coinMax := sdk.NewInt(10).ToDec().Power(30).TruncateInt()
+	coinMax := osmomath.NewInt(10).ToLegacyDec().Power(30).TruncateInt()
 	for c := 2; c < 5; c++ {
 		for i := 0; i < 10; i++ {
 			coins := sdk.NewCoins()
@@ -904,17 +904,17 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			suite.Run(getTestCaseName(name, tc, spreadFactor), func() {
 				ctx := suite.CreateTestContext()
 
-				spreadFactorDec, err := sdk.NewDecFromStr(spreadFactor)
+				spreadFactorDec, err := osmomath.NewDecFromStr(spreadFactor)
 				suite.Require().NoError(err)
 
-				exitFeeDec, err := sdk.NewDecFromStr("0")
+				exitFeeDec, err := osmomath.NewDecFromStr("0")
 				suite.Require().NoError(err)
 
 				// TODO: add scaling factors into inverse relationship tests
 				pool := createTestPool(suite.T(), tc.poolLiquidity, spreadFactorDec, exitFeeDec, tc.scalingFactors)
 				suite.Require().NotNil(pool)
 				errTolerance := osmomath.ErrTolerance{
-					AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12),
+					AdditiveTolerance: osmomath.Dec{}, MultiplicativeTolerance: osmomath.NewDecWithPrec(1, 12),
 				}
 				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, tc.denomIn, tc.denomOut, tc.initialCalcOut, spreadFactorDec, errTolerance)
 			})
@@ -945,7 +945,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_Slippage_LiquidityRelation() {
 	for name, tc := range testcases {
 		for _, spreadFactor := range spreadFactorCases {
 			createPoolFn := func(ctx sdk.Context, liq sdk.Coins) types.CFMMPoolI {
-				return createTestPool(suite.T(), liq, sdk.MustNewDecFromStr(spreadFactor), sdk.ZeroDec(), tc.scalingFactors)
+				return createTestPool(suite.T(), liq, osmomath.MustNewDecFromStr(spreadFactor), osmomath.ZeroDec(), tc.scalingFactors)
 			}
 			ctx := sdk.Context{}
 			test_helpers.TestSlippageRelationWithLiquidityIncrease(name, suite.T(), ctx, createPoolFn, tc.initialLiquidity)
@@ -954,7 +954,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_Slippage_LiquidityRelation() {
 }
 
 func calcUReserve(remReserves []osmomath.BigDec) osmomath.BigDec {
-	uReserve := osmomath.OneDec()
+	uReserve := osmomath.OneBigDec()
 	for _, assetReserve := range remReserves {
 		uReserve = uReserve.Mul(assetReserve)
 	}
@@ -962,7 +962,7 @@ func calcUReserve(remReserves []osmomath.BigDec) osmomath.BigDec {
 }
 
 func calcWSumSquares(remReserves []osmomath.BigDec) osmomath.BigDec {
-	wSumSquares := osmomath.ZeroDec()
+	wSumSquares := osmomath.ZeroBigDec()
 	for _, assetReserve := range remReserves {
 		wSumSquares = wSumSquares.Add(assetReserve.Mul(assetReserve))
 	}
@@ -974,83 +974,83 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 		tokenIn        sdk.Coin
 		poolAssets     sdk.Coins
 		scalingFactors []uint64
-		spreadFactor   sdk.Dec
-		expectedOut    sdk.Int
+		spreadFactor   osmomath.Dec
+		expectedOut    osmomath.Int
 	}
 
 	tests := map[string]testcase{
 		// no spread factors
 		"even two asset pool, no spread factor": {
-			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			tokenIn:        sdk.NewCoin("foo", osmomath.NewInt(100)),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			spreadFactor:   sdk.ZeroDec(),
-			expectedOut:    sdk.NewInt(100),
+			spreadFactor:   osmomath.ZeroDec(),
+			expectedOut:    osmomath.NewInt(100),
 		},
 		"uneven two asset pool, no spread factor": {
-			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			tokenIn:        sdk.NewCoin("foo", osmomath.NewInt(100)),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
-			spreadFactor:   sdk.ZeroDec(),
-			expectedOut:    sdk.NewInt(100),
+			spreadFactor:   osmomath.ZeroDec(),
+			expectedOut:    osmomath.NewInt(100),
 		},
 		"even 3-asset pool, no spread factor": {
-			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(1000)),
+			tokenIn:        sdk.NewCoin("asset/a", osmomath.NewInt(1000)),
 			poolAssets:     threeEvenStablePoolAssets,
 			scalingFactors: defaultThreeAssetScalingFactors,
-			spreadFactor:   sdk.ZeroDec(),
-			expectedOut:    sdk.NewInt(1000),
+			spreadFactor:   osmomath.ZeroDec(),
+			expectedOut:    osmomath.NewInt(1000),
 		},
 		"uneven 3-asset pool, no spread factor": {
-			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			tokenIn:        sdk.NewCoin("asset/a", osmomath.NewInt(100)),
 			poolAssets:     threeUnevenStablePoolAssets,
 			scalingFactors: defaultThreeAssetScalingFactors,
-			spreadFactor:   sdk.ZeroDec(),
-			expectedOut:    sdk.NewInt(100),
+			spreadFactor:   osmomath.ZeroDec(),
+			expectedOut:    osmomath.NewInt(100),
 		},
 
 		// with spread factors
 		"even two asset pool, default spread factor": {
-			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			tokenIn:        sdk.NewCoin("foo", osmomath.NewInt(100)),
 			poolAssets:     twoEvenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			spreadFactor:   defaultSpreadFactor,
-			expectedOut:    sdk.NewInt(100 - 3),
+			expectedOut:    osmomath.NewInt(100 - 3),
 		},
 		"uneven two asset pool, default spread factor": {
-			tokenIn:        sdk.NewCoin("foo", sdk.NewInt(100)),
+			tokenIn:        sdk.NewCoin("foo", osmomath.NewInt(100)),
 			poolAssets:     twoUnevenStablePoolAssets,
 			scalingFactors: defaultTwoAssetScalingFactors,
 			spreadFactor:   defaultSpreadFactor,
-			expectedOut:    sdk.NewInt(100 - 3),
+			expectedOut:    osmomath.NewInt(100 - 3),
 		},
 		"even 3-asset pool, default spread factor": {
-			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			tokenIn:        sdk.NewCoin("asset/a", osmomath.NewInt(100)),
 			poolAssets:     threeEvenStablePoolAssets,
 			scalingFactors: defaultThreeAssetScalingFactors,
 			spreadFactor:   defaultSpreadFactor,
-			expectedOut:    sdk.NewInt(100 - 3),
+			expectedOut:    osmomath.NewInt(100 - 3),
 		},
 		"uneven 3-asset pool, default spread factor": {
-			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			tokenIn:        sdk.NewCoin("asset/a", osmomath.NewInt(100)),
 			poolAssets:     threeUnevenStablePoolAssets,
 			scalingFactors: defaultThreeAssetScalingFactors,
 			spreadFactor:   defaultSpreadFactor,
-			expectedOut:    sdk.NewInt(100 - 3),
+			expectedOut:    osmomath.NewInt(100 - 3),
 		},
 		"even 3-asset pool, 0.03 spread factor": {
-			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			tokenIn:        sdk.NewCoin("asset/a", osmomath.NewInt(100)),
 			poolAssets:     threeEvenStablePoolAssets,
 			scalingFactors: defaultThreeAssetScalingFactors,
-			spreadFactor:   sdk.MustNewDecFromStr("0.03"),
-			expectedOut:    sdk.NewInt(100 - 3),
+			spreadFactor:   osmomath.MustNewDecFromStr("0.03"),
+			expectedOut:    osmomath.NewInt(100 - 3),
 		},
 		"uneven 3-asset pool, 0.03 spread factor": {
-			tokenIn:        sdk.NewCoin("asset/a", sdk.NewInt(100)),
+			tokenIn:        sdk.NewCoin("asset/a", osmomath.NewInt(100)),
 			poolAssets:     threeUnevenStablePoolAssets,
 			scalingFactors: defaultThreeAssetScalingFactors,
-			spreadFactor:   sdk.MustNewDecFromStr("0.03"),
-			expectedOut:    sdk.NewInt(100 - 3),
+			spreadFactor:   osmomath.MustNewDecFromStr("0.03"),
+			expectedOut:    osmomath.NewInt(100 - 3),
 		},
 	}
 
@@ -1063,13 +1063,13 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 			require.NoError(t, err, "test: %s", name)
 
 			p.updatePoolForJoin(sdk.Coins{tc.tokenIn}, shares)
-			exitTokens, err := p.ExitPool(ctx, shares, sdk.ZeroDec())
+			exitTokens, err := p.ExitPool(ctx, shares, osmomath.ZeroDec())
 			require.NoError(t, err, "test: %s", name)
 
-			// since each asset swap can have up to sdk.OneInt() error, our expected error bound is 1*numAssets
-			correctnessThreshold := sdk.OneInt().Mul(sdk.NewInt(int64(len(p.PoolLiquidity))))
+			// since each asset swap can have up to osmomath.OneInt() error, our expected error bound is 1*numAssets
+			correctnessThreshold := osmomath.OneInt().Mul(osmomath.NewInt(int64(len(p.PoolLiquidity))))
 
-			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom, sdk.ZeroDec())
+			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom, osmomath.ZeroDec())
 			require.NoError(t, err, "test: %s", name)
 			require.True(t, tokenOutAmount.LTE(tc.tokenIn.Amount))
 			require.True(t, tc.expectedOut.Sub(tokenOutAmount).Abs().LTE(correctnessThreshold))
@@ -1079,14 +1079,14 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 
 func TestJoinPoolSharesInternal(t *testing.T) {
 	tenPercentOfTwoPoolRaw := int64(1000000000 / 10)
-	tenPercentOfTwoPoolCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(int64(1000000000/10))), sdk.NewCoin("bar", sdk.NewInt(int64(1000000000/10))))
+	tenPercentOfTwoPoolCoins := sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(int64(1000000000/10))), sdk.NewCoin("bar", osmomath.NewInt(int64(1000000000/10))))
 	twoAssetPlusTenPercent := twoEvenStablePoolAssets.Add(tenPercentOfTwoPoolCoins...)
 	type testcase struct {
 		tokensIn        sdk.Coins
 		poolAssets      sdk.Coins
 		scalingFactors  []uint64
-		spreadFactor    sdk.Dec
-		expNumShare     sdk.Int
+		spreadFactor    osmomath.Dec
+		expNumShare     osmomath.Int
 		expTokensJoined sdk.Coins
 		expPoolAssets   sdk.Coins
 		expectPass      bool
@@ -1097,19 +1097,19 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 			tokensIn:        tenPercentOfTwoPoolCoins,
 			poolAssets:      twoEvenStablePoolAssets,
 			scalingFactors:  defaultTwoAssetScalingFactors,
-			spreadFactor:    sdk.ZeroDec(),
-			expNumShare:     sdk.NewIntFromUint64(10000000000000000000),
+			spreadFactor:    osmomath.ZeroDec(),
+			expNumShare:     osmomath.NewIntFromUint64(10000000000000000000),
 			expTokensJoined: tenPercentOfTwoPoolCoins,
 			expPoolAssets:   twoAssetPlusTenPercent,
 			expectPass:      true,
 		},
 		"even two asset pool, different tokenIn ratio with pool": {
-			tokensIn:        sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tenPercentOfTwoPoolRaw)), sdk.NewCoin("bar", sdk.NewInt(10+tenPercentOfTwoPoolRaw))),
+			tokensIn:        sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(tenPercentOfTwoPoolRaw)), sdk.NewCoin("bar", osmomath.NewInt(10+tenPercentOfTwoPoolRaw))),
 			poolAssets:      twoEvenStablePoolAssets,
 			scalingFactors:  defaultTwoAssetScalingFactors,
-			spreadFactor:    sdk.ZeroDec(),
-			expNumShare:     sdk.NewIntFromUint64(10000000000000000000),
-			expTokensJoined: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tenPercentOfTwoPoolRaw)), sdk.NewCoin("bar", sdk.NewInt(tenPercentOfTwoPoolRaw))),
+			spreadFactor:    osmomath.ZeroDec(),
+			expNumShare:     osmomath.NewIntFromUint64(10000000000000000000),
+			expTokensJoined: sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(tenPercentOfTwoPoolRaw)), sdk.NewCoin("bar", osmomath.NewInt(tenPercentOfTwoPoolRaw))),
 			expPoolAssets:   twoAssetPlusTenPercent,
 			expectPass:      true,
 		},
@@ -1123,8 +1123,8 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset),
 			),
 			scalingFactors:  defaultTwoAssetScalingFactors,
-			spreadFactor:    sdk.ZeroDec(),
-			expNumShare:     sdk.ZeroInt(),
+			spreadFactor:    osmomath.ZeroDec(),
+			expNumShare:     osmomath.ZeroInt(),
 			expTokensJoined: sdk.Coins{},
 			expPoolAssets: sdk.NewCoins(
 				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
@@ -1141,8 +1141,8 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset),
 			),
 			scalingFactors:  defaultTwoAssetScalingFactors,
-			spreadFactor:    sdk.ZeroDec(),
-			expNumShare:     sdk.ZeroInt(),
+			spreadFactor:    osmomath.ZeroDec(),
+			expNumShare:     osmomath.ZeroInt(),
 			expTokensJoined: sdk.Coins{},
 			expPoolAssets: sdk.NewCoins(
 				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset),
@@ -1156,11 +1156,11 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 				sdk.NewInt64Coin("bar", 1),
 			),
 			poolAssets: sdk.NewCoins(
-				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset.Sub(sdk.NewInt(1))),
-				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset.Sub(sdk.NewInt(1))),
+				sdk.NewCoin("foo", types.StableswapMaxScaledAmtPerAsset.Sub(osmomath.NewInt(1))),
+				sdk.NewCoin("bar", types.StableswapMaxScaledAmtPerAsset.Sub(osmomath.NewInt(1))),
 			),
 			scalingFactors: defaultTwoAssetScalingFactors,
-			spreadFactor:   sdk.ZeroDec(),
+			spreadFactor:   osmomath.ZeroDec(),
 			expNumShare:    types.InitPoolSharesSupply.Quo(types.StableswapMaxScaledAmtPerAsset),
 			expTokensJoined: sdk.NewCoins(
 				sdk.NewInt64Coin("foo", 1),
@@ -1192,38 +1192,38 @@ func TestJoinPoolSharesInternal(t *testing.T) {
 }
 
 func TestSingleAssetJoinSpreadFactorRatio(t *testing.T) {
-	largeInt, ok := sdk.NewIntFromString("123456789012345678")
+	largeInt, ok := osmomath.NewIntFromString("123456789012345678")
 	require.True(t, ok)
 	type testcase struct {
 		poolLiquidity  sdk.Coins
 		scalingFactors []uint64
 		tokenInDenom   string
-		expectedRatio  sdk.Dec
+		expectedRatio  osmomath.Dec
 	}
 	tests := map[string]testcase{
 		"godoc-example": {
 			poolLiquidity:  sdk.NewCoins(sdk.NewInt64Coin("tokenA", 80), sdk.NewInt64Coin("tokenB", 20)),
 			scalingFactors: []uint64{1, 1},
 			tokenInDenom:   "tokenA",
-			expectedRatio:  sdk.MustNewDecFromStr("0.2"),
+			expectedRatio:  osmomath.MustNewDecFromStr("0.2"),
 		},
 		"godoc-example-denom-rev": {
 			poolLiquidity:  sdk.NewCoins(sdk.NewInt64Coin("tokenA", 80), sdk.NewInt64Coin("tokenB", 20)),
 			scalingFactors: []uint64{1, 1},
 			tokenInDenom:   "tokenB",
-			expectedRatio:  sdk.MustNewDecFromStr("0.8"),
+			expectedRatio:  osmomath.MustNewDecFromStr("0.8"),
 		},
 		"80:20 -> 1:1 scaling factor": {
 			poolLiquidity:  sdk.NewCoins(sdk.NewInt64Coin("tokenA", 80), sdk.NewInt64Coin("tokenB", 20)),
 			scalingFactors: []uint64{80, 20},
 			tokenInDenom:   "tokenA",
-			expectedRatio:  sdk.MustNewDecFromStr("0.5"),
+			expectedRatio:  osmomath.MustNewDecFromStr("0.5"),
 		},
 		"80:20 -> 2:1 scaling factor": {
 			poolLiquidity:  sdk.NewCoins(sdk.NewInt64Coin("tokenA", 80), sdk.NewInt64Coin("tokenB", 20)),
 			scalingFactors: []uint64{40, 20},
 			tokenInDenom:   "tokenA",
-			expectedRatio:  sdk.MustNewDecFromStr("0.333333333333333334"),
+			expectedRatio:  osmomath.MustNewDecFromStr("0.333333333333333334"),
 		},
 		"60:40:40, large numbers": {
 			poolLiquidity: sdk.NewCoins(
@@ -1233,7 +1233,7 @@ func TestSingleAssetJoinSpreadFactorRatio(t *testing.T) {
 			scalingFactors: []uint64{1, 1, 1},
 			tokenInDenom:   "tokenA",
 			// 1 - (6 / 14) = 8/14 = 4/7 ~= 0.571428571428571429
-			expectedRatio: sdk.MustNewDecFromStr("0.571428571428571429"),
+			expectedRatio: osmomath.MustNewDecFromStr("0.571428571428571429"),
 		},
 	}
 	for name, tc := range tests {

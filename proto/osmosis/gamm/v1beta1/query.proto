@@ -176,7 +176,7 @@ message QueryCalcJoinPoolSharesRequest {
 }
 message QueryCalcJoinPoolSharesResponse {
   string share_out_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"share_out_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -190,7 +190,7 @@ message QueryCalcJoinPoolSharesResponse {
 message QueryCalcExitPoolCoinsFromSharesRequest {
   uint64 pool_id = 1;
   string share_in_amount = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
 }
@@ -249,7 +249,7 @@ message QueryCalcJoinPoolNoSwapSharesResponse {
     (gogoproto.nullable) = false
   ];
   string shares_out = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
 }
@@ -306,7 +306,7 @@ message QuerySwapExactAmountInRequest {
 message QuerySwapExactAmountInResponse {
   option deprecated = true;
   string token_out_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_out_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -327,7 +327,7 @@ message QuerySwapExactAmountOutRequest {
 message QuerySwapExactAmountOutResponse {
   option deprecated = true;
   string token_in_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",
     (gogoproto.nullable) = false
   ];

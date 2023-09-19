@@ -1,11 +1,11 @@
 package swapstrategy
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import "github.com/osmosis-labs/osmosis/osmomath"
 
-func ComputeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget bool, amountIn, amountSpecifiedRemaining, spreadFactor sdk.Dec) sdk.Dec {
+func ComputeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget bool, amountIn, amountSpecifiedRemaining, spreadFactor osmomath.Dec) osmomath.Dec {
 	return computeSpreadRewardChargePerSwapStepOutGivenIn(hasReachedTarget, amountIn, amountSpecifiedRemaining, spreadFactor)
 }
 
-func ComputeSpreadRewardChargeFromAmountIn(amountIn, spreadFactor sdk.Dec) sdk.Dec {
+func ComputeSpreadRewardChargeFromAmountIn(amountIn, spreadFactor osmomath.Dec) osmomath.Dec {
 	return computeSpreadRewardChargeFromAmountIn(amountIn, spreadFactor)
 }

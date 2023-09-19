@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
@@ -28,7 +29,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 		{
 			name:               "update LP token Osmo equivalent successfully",
 			asset:              types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
-			expectedMultiplier: sdk.MustNewDecFromStr("0.01"),
+			expectedMultiplier: osmomath.MustNewDecFromStr("0.01"),
 		},
 		{
 			name:             "update LP token Osmo equivalent with pool unexpectedly deleted",
@@ -45,7 +46,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 		{
 			name:               "update concentrated share Osmo equivalent successfully",
 			asset:              types.SuperfluidAsset{Denom: cltypes.GetConcentratedLockupDenomFromPoolId(1), AssetType: types.SuperfluidAssetTypeConcentratedShare},
-			expectedMultiplier: sdk.MustNewDecFromStr("1"),
+			expectedMultiplier: osmomath.MustNewDecFromStr("1"),
 		},
 		{
 			name:             "update concentrated share Osmo equivalent with pool unexpectedly deleted",
@@ -75,11 +76,11 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			if tc.removeStakingAsset {
 				stakeDenom = "bar"
 			}
-			poolCoins := sdk.NewCoins(sdk.NewCoin(stakeDenom, sdk.NewInt(1000000000000000000)), sdk.NewCoin("foo", sdk.NewInt(1000000000000000000)))
+			poolCoins := sdk.NewCoins(sdk.NewCoin(stakeDenom, osmomath.NewInt(1000000000000000000)), sdk.NewCoin("foo", osmomath.NewInt(1000000000000000000)))
 
 			// Ensure that the multiplier is zero before the test
 			multiplier := superfluidKeeper.GetOsmoEquivalentMultiplier(ctx, tc.asset.Denom)
-			s.Require().Equal(multiplier, sdk.ZeroDec())
+			s.Require().Equal(multiplier, osmomath.ZeroDec())
 
 			// Create the respective pool if the test case requires it
 			if !tc.poolDoesNotExist {
@@ -100,7 +101,7 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 				// Ensure unwind superfluid asset is called
 				// Check that multiplier was not set
 				multiplier := superfluidKeeper.GetOsmoEquivalentMultiplier(ctx, tc.asset.Denom)
-				s.Require().Equal(multiplier, sdk.ZeroDec())
+				s.Require().Equal(multiplier, osmomath.ZeroDec())
 				// Check that the asset was deleted
 				_, err := superfluidKeeper.GetSuperfluidAsset(ctx, tc.asset.Denom)
 				s.Require().Error(err)
@@ -111,10 +112,10 @@ func (s *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 				multiplier := superfluidKeeper.GetOsmoEquivalentMultiplier(ctx, tc.asset.Denom)
 
 				if !tc.expectedZeroMultipler {
-					s.Require().NotEqual(multiplier, sdk.ZeroDec())
+					s.Require().NotEqual(multiplier, osmomath.ZeroDec())
 				} else {
 					// Zero on success is expected on CL errors since those are surrounded with `ApplyFuncIfNoError`
-					s.Require().Equal(multiplier, sdk.ZeroDec())
+					s.Require().Equal(multiplier, osmomath.ZeroDec())
 				}
 			}
 		})
@@ -199,7 +200,7 @@ func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 			// setup validators
 			valAddrs := s.SetupValidators(tc.validatorStats)
 
-			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+			denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 			// setup superfluid delegations
 			_, intermediaryAccs, _ := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -207,7 +208,7 @@ func (s *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 
 			// allocate rewards to designated validators
 			for _, valIndex := range tc.rewardedVals {
-				s.AllocateRewardsToValidator(valAddrs[valIndex], sdk.NewInt(20000))
+				s.AllocateRewardsToValidator(valAddrs[valIndex], osmomath.NewInt(20000))
 			}
 
 			// move intermediary account delegation rewards to gauges
@@ -260,7 +261,7 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 				// setup validators
 				valAddrs := s.SetupValidators(tc.validatorStats)
 
-				denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+				denoms, _ := s.SetupGammPoolsAndSuperfluidAssets([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 
 				// setup superfluid delegations
 				delAddresses, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -284,7 +285,7 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 
 				// allocate rewards to designated validators
 				for _, valIndex := range tc.rewardedVals {
-					s.AllocateRewardsToValidator(valAddrs[valIndex], sdk.NewInt(20000))
+					s.AllocateRewardsToValidator(valAddrs[valIndex], osmomath.NewInt(20000))
 				}
 
 				// move intermediary account delegation rewards to gauges
@@ -364,7 +365,7 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 								rewardReceiver = lock.Owner
 							}
 							delegatorBalance := s.App.BankKeeper.GetBalance(s.Ctx, sdk.MustAccAddressFromBech32(rewardReceiver), bondDenom)
-							s.Require().Equal(sdk.ZeroInt(), delegatorBalance.Amount)
+							s.Require().Equal(osmomath.ZeroInt(), delegatorBalance.Amount)
 						}
 					}
 				}

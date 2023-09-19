@@ -14,7 +14,7 @@ message Params {
   // volatilities, and have base staking be 'resistant' to volatility.
   string minimum_risk_factor = 1 [
     (gogoproto.moretags) = "yaml:\"minimum_risk_factor\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

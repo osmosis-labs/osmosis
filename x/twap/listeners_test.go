@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/x/twap"
 	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
@@ -197,8 +198,8 @@ func (s *TestSuite) TestEndBlock() {
 					s.Require().Equal(twapAfterPoolCreation.Time, baseTime)
 
 					// accumulators should not have increased, as they are going through the first epoch
-					s.Require().Equal(sdk.ZeroDec(), twapAfterBlock1.P0ArithmeticTwapAccumulator)
-					s.Require().Equal(sdk.ZeroDec(), twapAfterBlock1.P1ArithmeticTwapAccumulator)
+					s.Require().Equal(osmomath.ZeroDec(), twapAfterBlock1.P0ArithmeticTwapAccumulator)
+					s.Require().Equal(osmomath.ZeroDec(), twapAfterBlock1.P1ArithmeticTwapAccumulator)
 				}
 
 				// check if spot price has been correctly updated in twap record

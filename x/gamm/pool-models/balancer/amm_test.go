@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/internal/test_helpers"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
@@ -25,24 +26,24 @@ func TestBalancerPoolParams(t *testing.T) {
 	// errors or succeeds as intended. Furthermore, it checks that
 	// NewPool panics in the error case.
 	tests := []struct {
-		SpreadFactor sdk.Dec
-		ExitFee      sdk.Dec
+		SpreadFactor osmomath.Dec
+		ExitFee      osmomath.Dec
 		shouldErr    bool
 	}{
 		// Should work
 		{defaultSpreadFactor, defaultZeroExitFee, noErr},
 		// Can't set the spread factor as negative
-		{sdk.NewDecWithPrec(-1, 2), defaultZeroExitFee, wantErr},
+		{osmomath.NewDecWithPrec(-1, 2), defaultZeroExitFee, wantErr},
 		// Can't set the spread factor as 1
-		{sdk.NewDec(1), defaultZeroExitFee, wantErr},
+		{osmomath.NewDec(1), defaultZeroExitFee, wantErr},
 		// Can't set the spread factor above 1
-		{sdk.NewDecWithPrec(15, 1), defaultZeroExitFee, wantErr},
+		{osmomath.NewDecWithPrec(15, 1), defaultZeroExitFee, wantErr},
 		// Can't set the exit fee as negative
-		{defaultSpreadFactor, sdk.NewDecWithPrec(-1, 2), wantErr},
+		{defaultSpreadFactor, osmomath.NewDecWithPrec(-1, 2), wantErr},
 		// Can't set the exit fee as 1
-		{defaultSpreadFactor, sdk.NewDec(1), wantErr},
+		{defaultSpreadFactor, osmomath.NewDec(1), wantErr},
 		// Can't set the exit fee above 1
-		{defaultSpreadFactor, sdk.NewDecWithPrec(15, 1), wantErr},
+		{defaultSpreadFactor, osmomath.NewDecWithPrec(15, 1), wantErr},
 	}
 
 	for i, params := range tests {
@@ -71,19 +72,19 @@ func (s *KeeperTestSuite) TestEnsureDenomInPool() {
 	}{
 		"all of tokensIn is in pool asset map": {
 			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
-			tokensIn:    sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt())),
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("uatom", osmomath.OneInt())),
 			expectPass:  true,
 			expectedErr: nil,
 		},
 		"one of tokensIn is in pool asset map": {
 			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
-			tokensIn:    sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt()), sdk.NewCoin("foo", sdk.OneInt())),
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("uatom", osmomath.OneInt()), sdk.NewCoin("foo", osmomath.OneInt())),
 			expectPass:  false,
 			expectedErr: types.ErrDenomNotFoundInPool,
 		},
 		"none of tokensIn is in pool asset map": {
 			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
-			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdk.OneInt())),
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", osmomath.OneInt())),
 			expectPass:  false,
 			expectedErr: types.ErrDenomNotFoundInPool,
 		},

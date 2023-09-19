@@ -31,7 +31,7 @@ message Pool {
 
   // Amount of total liquidity
   string current_tick_liquidity = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"current_tick_liquidity\"",
     (gogoproto.nullable) = false
   ];
@@ -53,7 +53,7 @@ message Pool {
 
   // spread_factor is the ratio that is charged on the amount of token in.
   string spread_factor = 12 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"spread_factor\"",
     (gogoproto.nullable) = false
   ];

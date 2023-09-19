@@ -18,13 +18,13 @@ message SwapExactAmountIn {
   // token_out_min_amount is the minimum amount of token_out to be received from
   // the pool.
   string token_out_min_amount = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
 
   // swap_fee is the swap fee for this swap estimate.
   string swap_fee = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }
@@ -38,7 +38,7 @@ message SwapExactAmountInSudoMsg {
 message SwapExactAmountInSudoMsgResponse {
   // token_out_amount is the token out computed from this swap estimate call.
   string token_out_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
 }
@@ -55,13 +55,13 @@ message SwapExactAmountOut {
   // token_in_max_amount is the maximum amount of token_in to be sent to the
   // pool.
   string token_in_max_amount = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
 
   // swap_fee is the swap fee for this swap estimate.
   string swap_fee = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }
@@ -75,7 +75,7 @@ message SwapExactAmountOutSudoMsg {
 message SwapExactAmountOutSudoMsgResponse {
   // token_in_amount is the token in computed from this swap estimate call.
   string token_in_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
 }

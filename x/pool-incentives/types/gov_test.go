@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 )
 
 func TestUpdatePoolIncentivesProposalMarshalUnmarshal(t *testing.T) {
@@ -42,7 +42,7 @@ func TestUpdatePoolIncentivesProposalMarshalUnmarshal(t *testing.T) {
 				Records: []types.DistrRecord{
 					{
 						GaugeId: 1,
-						Weight:  sdk.NewInt(1),
+						Weight:  osmomath.NewInt(1),
 					},
 				},
 			},
@@ -54,7 +54,7 @@ func TestUpdatePoolIncentivesProposalMarshalUnmarshal(t *testing.T) {
 				Records: []types.DistrRecord{
 					{
 						GaugeId: 1,
-						Weight:  sdk.NewInt(0),
+						Weight:  osmomath.NewInt(0),
 					},
 				},
 			},
@@ -66,11 +66,11 @@ func TestUpdatePoolIncentivesProposalMarshalUnmarshal(t *testing.T) {
 				Records: []types.DistrRecord{
 					{
 						GaugeId: 1,
-						Weight:  sdk.NewInt(1),
+						Weight:  osmomath.NewInt(1),
 					},
 					{
 						GaugeId: 2,
-						Weight:  sdk.NewInt(1),
+						Weight:  osmomath.NewInt(1),
 					},
 				},
 			},

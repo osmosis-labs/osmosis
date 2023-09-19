@@ -11,6 +11,7 @@ import (
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 )
@@ -34,9 +35,9 @@ func (s *QueryTestSuite) SetupSuite() {
 		time.Hour * 24 * 21,
 	})
 	// set up pool
-	s.SetupGammPoolsWithBondDenomMultiplier([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+	s.SetupGammPoolsWithBondDenomMultiplier([]osmomath.Dec{osmomath.NewDec(20), osmomath.NewDec(20)})
 	// set up lock with id = 1
-	s.LockTokens(s.TestAccs[0], sdk.Coins{sdk.NewCoin("gamm/pool/1", sdk.NewInt(1000000))}, time.Hour*24*21)
+	s.LockTokens(s.TestAccs[0], sdk.Coins{sdk.NewCoin("gamm/pool/1", osmomath.NewInt(1000000))}, time.Hour*24*21)
 	// set up validator
 	s.val = s.SetupValidator(stakingtypes.Bonded)
 	// set up sfs asset
