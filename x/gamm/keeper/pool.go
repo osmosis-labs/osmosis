@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
@@ -149,7 +150,7 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 // on remaining locks before calling this function.
 // func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64, excludedModules []string) (err error) {
 // 	pools := make(map[string]types.CFMMPoolI)
-// 	totalShares := make(map[string]sdk.Int)
+// 	totalShares := make(map[string]osmomath.Int)
 // 	for _, poolId := range poolIds {
 // 		pool, err := k.GetPool(ctx, poolId)
 // 		if err != nil {
@@ -299,10 +300,10 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 }
 
 // GetTotalPoolShares returns the total number of pool shares for the given pool.
-func (k Keeper) GetTotalPoolShares(ctx sdk.Context, poolId uint64) (sdk.Int, error) {
+func (k Keeper) GetTotalPoolShares(ctx sdk.Context, poolId uint64) (osmomath.Int, error) {
 	pool, err := k.GetCFMMPool(ctx, poolId)
 	if err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 
 	return pool.GetTotalShares(), nil
@@ -357,6 +358,6 @@ func asCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 
 // GetTradingPairTakerFee is a wrapper for poolmanager's GetTradingPairTakerFee, and is solely used
 // to get access to this method for use in sim_msgs.go for the GAMM module.
-func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (sdk.Dec, error) {
+func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (osmomath.Dec, error) {
 	return k.poolManager.GetTradingPairTakerFee(ctx, denom0, denom1)
 }

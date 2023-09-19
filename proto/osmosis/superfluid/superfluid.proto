@@ -55,7 +55,7 @@ message OsmoEquivalentMultiplierRecord {
   string denom = 2;
   string multiplier = 3 [
     (gogoproto.moretags) = "yaml:\"multiplier\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

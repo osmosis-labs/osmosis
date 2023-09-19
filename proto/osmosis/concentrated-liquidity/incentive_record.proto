@@ -45,7 +45,7 @@ message IncentiveRecordBody {
 
   // emission_rate is the incentive emission rate per second
   string emission_rate = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"emission_rate\"",
     (gogoproto.nullable) = false
   ];

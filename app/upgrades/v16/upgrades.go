@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
 
@@ -45,7 +46,7 @@ var (
 	ATOMIBCDenom = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
 	DAIIBCDenom  = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
 	USDCIBCDenom = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
-	SpreadFactor = sdk.MustNewDecFromStr("0.002")
+	SpreadFactor = osmomath.MustNewDecFromStr("0.002")
 
 	// authorized_quote_denoms quote assets that can be used as token1
 	// when creating a pool. We limit the quote assets to a small set
@@ -83,7 +84,7 @@ func CreateUpgradeHandler(
 		// Update expedited governance param
 		// In particular, set expedited quorum to 2/3.
 		params := keepers.GovKeeper.GetTallyParams(ctx)
-		params.ExpeditedQuorum = sdk.NewDec(2).Quo(sdk.NewDec(3))
+		params.ExpeditedQuorum = osmomath.NewDec(2).Quo(osmomath.NewDec(3))
 		keepers.GovKeeper.SetTallyParams(ctx, params)
 
 		// Add cosmwasmpool module address to the list of allowed addresses to upload contract code.
@@ -137,12 +138,12 @@ func CreateUpgradeHandler(
 		communityPoolAddress := keepers.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
 
 		// Determine the amount of OSMO that can be bought with 1 DAI.
-		oneDai := sdk.NewCoin(DAIIBCDenom, sdk.NewInt(1000000000000000000))
+		oneDai := sdk.NewCoin(DAIIBCDenom, osmomath.NewInt(1000000000000000000))
 		daiOsmoGammPool, err := keepers.PoolManagerKeeper.GetPool(ctx, DaiOsmoPoolId)
 		if err != nil {
 			return nil, err
 		}
-		respectiveOsmo, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, daiOsmoGammPool, oneDai, DesiredDenom0, sdk.ZeroDec())
+		respectiveOsmo, err := keepers.GAMMKeeper.CalcOutAmtGivenIn(ctx, daiOsmoGammPool, oneDai, DesiredDenom0, osmomath.ZeroDec())
 		if err != nil {
 			return nil, err
 		}

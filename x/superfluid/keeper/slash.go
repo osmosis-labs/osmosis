@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
@@ -19,7 +20,7 @@ import (
 // Furthermore, if the infraction height is sufficiently old, slashes unbondings
 // Note: Based on sdk.staking.Slash function review, slashed tokens are burnt not sent to community pool
 // we ignore that, and send the underliyng tokens to the community pool anyway.
-func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor sdk.Dec) {
+func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAddress, infractionHeight int64, slashFactor osmomath.Dec) {
 	// Important note: The SDK slashing for historical heights is wrong.
 	// It defines a "slash amount" off of the live staked amount.
 	// Then it charges all the unbondings & redelegations at the slash factor.
@@ -60,10 +61,10 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 	}
 }
 
-func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.SyntheticLock, slashFactor sdk.Dec) {
+func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.SyntheticLock, slashFactor osmomath.Dec) {
 	// Only single token lock is allowed here
 	lock, _ := k.lk.GetLockByID(ctx, synthLock.UnderlyingLockId)
-	slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor)
+	slashAmt := lock.Coins[0].Amount.ToLegacyDec().Mul(slashFactor)
 	lockSharesToSlash := sdk.NewCoins(sdk.NewCoin(lock.Coins[0].Denom, slashAmt.TruncateInt()))
 
 	// If the slashCoins contains a cl denom, we need to update the underlying cl position to reflect the slash.
@@ -92,7 +93,7 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 // 1. Figures out the underlying assets from the liquidity being slashed and creates a coin object this represents
 // 2. Sets the cl position's liquidity state entry to reflect the slash
 // 3. Returns the pool address that will send the underlying coins as well as the underlying coins to slash
-func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Dec) (sdk.AccAddress, sdk.Coins, error) {
+func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt osmomath.Dec) (sdk.AccAddress, sdk.Coins, error) {
 	// Ensure lock is a single coin lock
 	if len(lock.Coins) != 1 {
 		return sdk.AccAddress{}, sdk.Coins{}, fmt.Errorf("lock must be a single coin lock, got %s", lock.Coins)

@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/mint/types"
 )
 
@@ -25,13 +26,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	// x/auth SDK module. Therefore, we check for existence here
 	// to avoid overwriting pre-existing genesis account data.
 	if !k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
-		totalDeveloperVestingCoins := sdk.NewCoin(data.Params.MintDenom, sdk.NewInt(developerVestingAmount))
+		totalDeveloperVestingCoins := sdk.NewCoin(data.Params.MintDenom, osmomath.NewInt(developerVestingAmount))
 
 		if err := k.createDeveloperVestingModuleAccount(ctx, totalDeveloperVestingCoins); err != nil {
 			panic(err)
 		}
 
-		k.bankKeeper.AddSupplyOffset(ctx, data.Params.MintDenom, sdk.NewInt(developerVestingAmount).Neg())
+		k.bankKeeper.AddSupplyOffset(ctx, data.Params.MintDenom, osmomath.NewInt(developerVestingAmount).Neg())
 	}
 
 	k.setLastReductionEpochNum(ctx, data.ReductionStartedEpoch)

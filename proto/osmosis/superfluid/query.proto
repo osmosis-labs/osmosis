@@ -190,12 +190,12 @@ message QueryTotalDelegationByValidatorForDenomResponse {
 message Delegations {
   string val_addr = 1;
   string amount_sfsd = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"amount_sfsd\"",
     (gogoproto.nullable) = false
   ];
   string osmo_equivalent = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"osmo_equivalent\"",
     (gogoproto.nullable) = false
   ];
@@ -204,7 +204,7 @@ message TotalSuperfluidDelegationsRequest {}
 
 message TotalSuperfluidDelegationsResponse {
   string total_delegations = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"total_superfluid_delegations\"",
     (gogoproto.nullable) = false
   ];

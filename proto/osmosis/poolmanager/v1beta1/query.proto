@@ -146,7 +146,7 @@ message EstimateSinglePoolSwapExactAmountInRequest {
 
 message EstimateSwapExactAmountInResponse {
   string token_out_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_out_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -182,7 +182,7 @@ message EstimateSinglePoolSwapExactAmountOutRequest {
 
 message EstimateSwapExactAmountOutResponse {
   string token_in_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",
     (gogoproto.nullable) = false
   ];

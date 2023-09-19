@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
@@ -16,7 +17,7 @@ import (
 )
 
 // a helper function used to multiply coins
-func mulCoins(coins sdk.Coins, multiplier sdk.Dec) sdk.Coins {
+func mulCoins(coins sdk.Coins, multiplier osmomath.Dec) sdk.Coins {
 	outCoins := sdk.Coins{}
 	for _, coin := range coins {
 		outCoin := sdk.NewCoin(coin.Denom, multiplier.MulInt(coin.Amount).TruncateInt())
@@ -36,15 +37,15 @@ func TestCalcExitPool(t *testing.T) {
 	)
 
 	threeBalancerPoolAssets := []balancer.PoolAsset{
-		{Token: sdk.NewInt64Coin("foo", 2000000000), Weight: sdk.NewIntFromUint64(5)},
-		{Token: sdk.NewInt64Coin("bar", 3000000000), Weight: sdk.NewIntFromUint64(5)},
-		{Token: sdk.NewInt64Coin("baz", 4000000000), Weight: sdk.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("foo", 2000000000), Weight: osmomath.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("bar", 3000000000), Weight: osmomath.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("baz", 4000000000), Weight: osmomath.NewIntFromUint64(5)},
 	}
 
 	// create these pools used for testing
 	twoAssetPool, err := stableswap.NewStableswapPool(
 		1,
-		stableswap.PoolParams{ExitFee: sdk.ZeroDec()},
+		stableswap.PoolParams{ExitFee: osmomath.ZeroDec()},
 		twoStablePoolAssets,
 		[]uint64{1, 1},
 		"",
@@ -54,7 +55,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	threeAssetPool, err := balancer.NewBalancerPool(
 		1,
-		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+		balancer.PoolParams{SwapFee: osmomath.ZeroDec(), ExitFee: osmomath.ZeroDec()},
 		threeBalancerPoolAssets,
 		"",
 		time.Now(),
@@ -63,7 +64,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	twoAssetPoolWithExitFee, err := stableswap.NewStableswapPool(
 		1,
-		stableswap.PoolParams{ExitFee: sdk.MustNewDecFromStr("0.0001")},
+		stableswap.PoolParams{ExitFee: osmomath.MustNewDecFromStr("0.0001")},
 		twoStablePoolAssets,
 		[]uint64{1, 1},
 		"",
@@ -73,7 +74,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	threeAssetPoolWithExitFee, err := balancer.NewBalancerPool(
 		1,
-		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.MustNewDecFromStr("0.0002")},
+		balancer.PoolParams{SwapFee: osmomath.ZeroDec(), ExitFee: osmomath.MustNewDecFromStr("0.0002")},
 		threeBalancerPoolAssets,
 		"",
 		time.Now(),
@@ -83,7 +84,7 @@ func TestCalcExitPool(t *testing.T) {
 	tests := []struct {
 		name          string
 		pool          gammtypes.CFMMPoolI
-		exitingShares sdk.Int
+		exitingShares osmomath.Int
 		expError      bool
 	}{
 		{
@@ -107,7 +108,7 @@ func TestCalcExitPool(t *testing.T) {
 		{
 			name:          "three-asset pool, valid exiting shares",
 			pool:          &threeAssetPool,
-			exitingShares: sdk.NewIntFromUint64(3000000000000),
+			exitingShares: osmomath.NewIntFromUint64(3000000000000),
 			expError:      false,
 		},
 		{
@@ -119,7 +120,7 @@ func TestCalcExitPool(t *testing.T) {
 		{
 			name:          "three-asset pool with exit fee, valid exiting shares",
 			pool:          &threeAssetPoolWithExitFee,
-			exitingShares: sdk.NewIntFromUint64(7000000000000),
+			exitingShares: osmomath.NewIntFromUint64(7000000000000),
 			expError:      false,
 		},
 	}
@@ -134,7 +135,7 @@ func TestCalcExitPool(t *testing.T) {
 			require.NoError(t, err, "test: %v", test.name)
 
 			// exitCoins = ( (1 - exitFee) * exitingShares / poolTotalShares ) * poolTotalLiquidity
-			expExitCoins := mulCoins(test.pool.GetTotalPoolLiquidity(emptyContext), (sdk.OneDec().Sub(exitFee)).MulInt(test.exitingShares).QuoInt(test.pool.GetTotalShares()))
+			expExitCoins := mulCoins(test.pool.GetTotalPoolLiquidity(emptyContext), (osmomath.OneDec().Sub(exitFee)).MulInt(test.exitingShares).QuoInt(test.pool.GetTotalShares()))
 			require.Equal(t, expExitCoins.Sort().String(), exitCoins.Sort().String(), "test: %v", test.name)
 		}
 	}
@@ -144,15 +145,15 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 	emptyContext := sdk.Context{}
 
 	balancerPoolAsset := []balancer.PoolAsset{
-		{Token: sdk.NewInt64Coin("foo", 100), Weight: sdk.NewIntFromUint64(5)},
-		{Token: sdk.NewInt64Coin("bar", 100), Weight: sdk.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("foo", 100), Weight: osmomath.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("bar", 100), Weight: osmomath.NewIntFromUint64(5)},
 	}
 
 	tests := []struct {
 		name        string
 		pool        func() poolmanagertypes.PoolI
 		tokensIn    sdk.Coins
-		expNumShare sdk.Int
+		expNumShare osmomath.Int
 		expRemCoin  sdk.Coins
 	}{
 		{
@@ -160,7 +161,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 			pool: func() poolmanagertypes.PoolI {
 				balancerPool, err := balancer.NewBalancerPool(
 					1,
-					balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+					balancer.PoolParams{SwapFee: osmomath.ZeroDec(), ExitFee: osmomath.ZeroDec()},
 					balancerPoolAsset,
 					"",
 					time.Now(),
@@ -168,8 +169,8 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 				require.NoError(t, err)
 				return &balancerPool
 			},
-			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
-			expNumShare: sdk.NewIntFromUint64(10000000000000000000),
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(10)), sdk.NewCoin("bar", osmomath.NewInt(10))),
+			expNumShare: osmomath.NewIntFromUint64(10000000000000000000),
 			expRemCoin:  sdk.Coins{},
 		},
 		{
@@ -177,7 +178,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 			pool: func() poolmanagertypes.PoolI {
 				balancerPool, err := balancer.NewBalancerPool(
 					1,
-					balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+					balancer.PoolParams{SwapFee: osmomath.ZeroDec(), ExitFee: osmomath.ZeroDec()},
 					balancerPoolAsset,
 					"",
 					time.Now(),
@@ -185,16 +186,16 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 				require.NoError(t, err)
 				return &balancerPool
 			},
-			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(11))),
-			expNumShare: sdk.NewIntFromUint64(10000000000000000000),
-			expRemCoin:  sdk.NewCoins(sdk.NewCoin("bar", sdk.NewIntFromUint64(1))),
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(10)), sdk.NewCoin("bar", osmomath.NewInt(11))),
+			expNumShare: osmomath.NewIntFromUint64(10000000000000000000),
+			expRemCoin:  sdk.NewCoins(sdk.NewCoin("bar", osmomath.NewIntFromUint64(1))),
 		},
 	}
 
 	for _, test := range tests {
 		balancerPool, err := balancer.NewBalancerPool(
 			1,
-			balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+			balancer.PoolParams{SwapFee: osmomath.ZeroDec(), ExitFee: osmomath.ZeroDec()},
 			balancerPoolAsset,
 			"",
 			time.Now(),

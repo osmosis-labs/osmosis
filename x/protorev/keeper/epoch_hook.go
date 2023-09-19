@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -12,7 +13,7 @@ type EpochHooks struct {
 
 // Struct used to track the pool with the highest liquidity
 type LiquidityPoolStruct struct {
-	Liquidity sdk.Int
+	Liquidity osmomath.Int
 	PoolId    uint64
 }
 

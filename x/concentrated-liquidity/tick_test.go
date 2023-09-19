@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
@@ -26,7 +27,7 @@ func withPoolId(tick genesis.FullTick, poolId uint64) genesis.FullTick {
 	return tick
 }
 
-func withLiquidityNetandTickIndex(tick genesis.FullTick, tickIndex int64, liquidityNet sdk.Dec) genesis.FullTick {
+func withLiquidityNetandTickIndex(tick genesis.FullTick, tickIndex int64, liquidityNet osmomath.Dec) genesis.FullTick {
 	tick.TickIndex = tickIndex
 	tick.Info.LiquidityNet = liquidityNet
 
@@ -87,7 +88,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 	type param struct {
 		poolId           uint64
 		tickIndex        int64
-		liquidityIn      sdk.Dec
+		liquidityIn      osmomath.Dec
 		initLiquidityNet bool
 		upper            bool
 	}
@@ -96,8 +97,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		name                   string
 		param                  param
 		tickExists             bool
-		expectedLiquidityNet   sdk.Dec
-		expectedLiquidityGross sdk.Dec
+		expectedLiquidityNet   osmomath.Dec
+		expectedLiquidityGross osmomath.Dec
 		minimumGasConsumed     bool
 		expectedErr            error
 	}{
@@ -124,7 +125,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				initLiquidityNet: true,
 			},
 			tickExists:             false,
-			expectedLiquidityNet:   sdk.ZeroDec(),
+			expectedLiquidityNet:   osmomath.ZeroDec(),
 			expectedLiquidityGross: DefaultLiquidityAmt,
 			minimumGasConsumed:     false,
 		},
@@ -150,8 +151,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				upper:       true,
 			},
 			tickExists:             true,
-			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)).Neg(),
-			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(osmomath.NewDec(2)).Neg(),
+			expectedLiquidityGross: DefaultLiquidityAmt.Mul(osmomath.NewDec(2)),
 			minimumGasConsumed:     false,
 		},
 		{
@@ -163,8 +164,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				upper:       false,
 			},
 			tickExists:             true,
-			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
-			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(osmomath.NewDec(2)),
+			expectedLiquidityGross: DefaultLiquidityAmt.Mul(osmomath.NewDec(2)),
 			minimumGasConsumed:     false,
 		},
 		{
@@ -202,8 +203,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				upper:       true,
 			},
 			tickExists:             true,
-			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)).Neg(),
-			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(osmomath.NewDec(2)).Neg(),
+			expectedLiquidityGross: DefaultLiquidityAmt.Mul(osmomath.NewDec(2)),
 			minimumGasConsumed:     false,
 		},
 		{
@@ -215,8 +216,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				upper:       false,
 			},
 			tickExists:             true,
-			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
-			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(osmomath.NewDec(2)),
+			expectedLiquidityGross: DefaultLiquidityAmt.Mul(osmomath.NewDec(2)),
 			minimumGasConsumed:     false,
 		},
 		{
@@ -241,8 +242,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				upper:       true,
 			},
 			tickExists:             true,
-			expectedLiquidityNet:   sdk.ZeroDec(),
-			expectedLiquidityGross: sdk.ZeroDec(),
+			expectedLiquidityNet:   osmomath.ZeroDec(),
+			expectedLiquidityGross: osmomath.ZeroDec(),
 			minimumGasConsumed:     false,
 		},
 		{
@@ -254,8 +255,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 				upper:       false,
 			},
 			tickExists:             true,
-			expectedLiquidityNet:   sdk.ZeroDec(),
-			expectedLiquidityGross: sdk.ZeroDec(),
+			expectedLiquidityNet:   osmomath.ZeroDec(),
+			expectedLiquidityGross: osmomath.ZeroDec(),
 			minimumGasConsumed:     false,
 		},
 		{
@@ -286,11 +287,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			s.Require().NoError(err)
 
 			// manually update accumulator for testing
-			defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+			defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin("foo", osmomath.NewInt(50)))
 			spreadFactorAccum.AddToAccumulator(defaultAccumCoins)
 
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
-			preexistingLiquidity := sdk.ZeroDec()
+			preexistingLiquidity := osmomath.ZeroDec()
 			if test.tickExists {
 				tickInfoBefore, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
 				s.Require().NoError(err)
@@ -411,7 +412,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
 			// Note that both SpreadRewardGrowthOutside and UptimeGrowthOutsides are updated.
 			// We expect uptime trackers to be initialized to global accums since tick <= active tick
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenomsModel},
+			expectedTickInfo: model.TickInfo{LiquidityGross: osmomath.ZeroDec(), LiquidityNet: osmomath.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenomsModel},
 		},
 		{
 			name:                     "Get tick info for active tick on existing pool with existing tick",
@@ -419,21 +420,21 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			tickToGet:                DefaultCurrTick,
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
 			// Both spread reward growth and uptime trackers are set to global since tickToGet <= current tick
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenomsModel},
+			expectedTickInfo: model.TickInfo{LiquidityGross: osmomath.ZeroDec(), LiquidityNet: osmomath.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenomsModel},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick > tick)",
 			poolToGet: validPoolId,
 			tickToGet: DefaultCurrTick + 1,
 			// Note that SpreadRewardGrowthOutside and UptimeGrowthOutside(s) are not initialized.
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), UptimeTrackers: emptyUptimeTrackersModel},
+			expectedTickInfo: model.TickInfo{LiquidityGross: osmomath.ZeroDec(), LiquidityNet: osmomath.ZeroDec(), UptimeTrackers: emptyUptimeTrackersModel},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick == tick), initialized spread reward growth outside",
 			poolToGet: validPoolId,
 			tickToGet: DefaultCurrTick,
 			// Note that SpreadRewardGrowthOutside and UptimeGrowthOutside(s) are initialized.
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: emptyUptimeTrackersModel},
+			expectedTickInfo: model.TickInfo{LiquidityGross: osmomath.ZeroDec(), LiquidityNet: osmomath.ZeroDec(), SpreadRewardGrowthOppositeDirectionOfLastTraversal: sdk.NewDecCoins(oneEth), UptimeTrackers: emptyUptimeTrackersModel},
 		},
 		{
 			name:        "Get tick info on a non-existing pool with no existing tick",
@@ -489,7 +490,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 		preInitializedTickIndex     = DefaultCurrTick - 2
 		expectedUptimes             = getExpectedUptimes()
 		emptyUptimeTrackers         = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
-		defaultAdditiveSpreadFactor = sdk.NewDecCoinFromDec(USDC, sdk.NewDec(1000))
+		defaultAdditiveSpreadFactor = sdk.NewDecCoinFromDec(USDC, osmomath.NewDec(1000))
 	)
 
 	tests := []struct {
@@ -501,7 +502,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 		globalUptimeAccumDelta                                         []sdk.DecCoins
 		expectedUptimeTrackers                                         []model.UptimeTracker
 		additiveSpreadFactor                                           sdk.DecCoin
-		expectedLiquidityDelta                                         sdk.Dec
+		expectedLiquidityDelta                                         osmomath.Dec
 		expectedTickSpreadRewardGrowthOppositeDirectionOfLastTraversal sdk.DecCoins
 		expectedErr                                                    error
 	}{
@@ -560,7 +561,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			// This is because we init them to zero (since target tick is above current tick),
 			// so when we cross the tick and "flip" it, we expect it to be the global value - 0 = global value.
 			expectedUptimeTrackers: wrapUptimeTrackers(expectedUptimes.threeHundredTokensMultiDenom),
-			expectedLiquidityDelta: sdk.ZeroDec(),
+			expectedLiquidityDelta: osmomath.ZeroDec(),
 			expectedTickSpreadRewardGrowthOppositeDirectionOfLastTraversal: DefaultSpreadRewardAccumCoins.Add(defaultAdditiveSpreadFactor).Add(DefaultSpreadRewardAccumCoins...),
 		},
 		{
@@ -610,13 +611,13 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 			if test.poolToGet == validPoolId {
 				s.FundAcc(s.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
-				 _, err := s.clk.CreatePosition(s.Ctx, test.poolToGet, s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				_, err := s.clk.CreatePosition(s.Ctx, test.poolToGet, s.TestAccs[0], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
 			}
 
 			// Charge spread factor to make sure that the global spread factor accumulator is always updated.
 			// This is to test that the per-tick spread reward growth accumulator gets initialized.
-			defaultAccumCoins := sdk.NewDecCoin("foo", sdk.NewInt(50))
+			defaultAccumCoins := sdk.NewDecCoin("foo", osmomath.NewInt(50))
 			s.AddToSpreadRewardAccumulator(validPoolId, defaultAccumCoins)
 
 			// Initialize global uptime accums
@@ -679,7 +680,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				s.Require().NoError(err)
 
 				// accum value should not have changed
-				s.Require().Equal(accum.GetValue(), sdk.NewDecCoins(defaultAccumCoins).MulDec(sdk.NewDec(2)))
+				s.Require().Equal(accum.GetValue(), sdk.NewDecCoins(defaultAccumCoins).MulDec(osmomath.NewDec(2)))
 
 				// check if the tick spread reward growth outside has been correctly subtracted
 				tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)

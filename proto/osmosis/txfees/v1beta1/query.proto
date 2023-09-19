@@ -56,7 +56,7 @@ message QueryDenomSpotPriceResponse {
   uint64 poolID = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string spot_price = 2 [
     (gogoproto.moretags) = "yaml:\"spot_price\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

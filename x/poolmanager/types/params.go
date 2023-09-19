@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,7 +27,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(poolCreationFee sdk.Coins,
-	defaultTakerFee sdk.Dec,
+	defaultTakerFee osmomath.Dec,
 	osmoTakerFeeDistribution, nonOsmoTakerFeeDistribution TakerFeeDistributionPercentage,
 	adminAddresses, authorizedQuoteDenoms []string,
 	communityPoolDenomToSwapNonWhitelistedAssetsTo string) Params {
@@ -48,14 +49,14 @@ func DefaultParams() Params {
 	return Params{
 		PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
 		TakerFeeParams: TakerFeeParams{
-			DefaultTakerFee: sdk.ZeroDec(), // 0%
+			DefaultTakerFee: osmomath.ZeroDec(), // 0%
 			OsmoTakerFeeDistribution: TakerFeeDistributionPercentage{
-				StakingRewards: sdk.MustNewDecFromStr("1"), // 100%
-				CommunityPool:  sdk.MustNewDecFromStr("0"), // 0%
+				StakingRewards: osmomath.MustNewDecFromStr("1"), // 100%
+				CommunityPool:  osmomath.MustNewDecFromStr("0"), // 0%
 			},
 			NonOsmoTakerFeeDistribution: TakerFeeDistributionPercentage{
-				StakingRewards: sdk.MustNewDecFromStr("0.67"), // 67%
-				CommunityPool:  sdk.MustNewDecFromStr("0.33"), // 33%
+				StakingRewards: osmomath.MustNewDecFromStr("0.67"), // 67%
+				CommunityPool:  osmomath.MustNewDecFromStr("0.33"), // 33%
 			},
 			AdminAddresses: []string{},
 			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
@@ -123,15 +124,15 @@ func validatePoolCreationFee(i interface{}) error {
 }
 
 func validateDefaultTakerFee(i interface{}) error {
-	// Convert the given parameter to sdk.Dec.
-	defaultTakerFee, ok := i.(sdk.Dec)
+	// Convert the given parameter to osmomath.Dec.
+	defaultTakerFee, ok := i.(osmomath.Dec)
 
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	// Ensure that the passed in discount rate is between 0 and 1.
-	if defaultTakerFee.IsNegative() || defaultTakerFee.GT(sdk.OneDec()) {
+	if defaultTakerFee.IsNegative() || defaultTakerFee.GT(osmomath.OneDec()) {
 		return fmt.Errorf("invalid default taker fee: %s", defaultTakerFee)
 	}
 
@@ -139,17 +140,17 @@ func validateDefaultTakerFee(i interface{}) error {
 }
 
 func validateTakerFeeDistribution(i interface{}) error {
-	// Convert the given parameter to sdk.Dec.
+	// Convert the given parameter to osmomath.Dec.
 	takerFeeDistribution, ok := i.(TakerFeeDistributionPercentage)
 
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if takerFeeDistribution.StakingRewards.IsNegative() || takerFeeDistribution.StakingRewards.GT(sdk.OneDec()) {
+	if takerFeeDistribution.StakingRewards.IsNegative() || takerFeeDistribution.StakingRewards.GT(osmomath.OneDec()) {
 		return fmt.Errorf("invalid staking rewards distribution: %s", takerFeeDistribution.StakingRewards)
 	}
-	if takerFeeDistribution.CommunityPool.IsNegative() || takerFeeDistribution.CommunityPool.GT(sdk.OneDec()) {
+	if takerFeeDistribution.CommunityPool.IsNegative() || takerFeeDistribution.CommunityPool.GT(osmomath.OneDec()) {
 		return fmt.Errorf("invalid community pool distribution: %s", takerFeeDistribution.CommunityPool)
 	}
 
@@ -235,7 +236,7 @@ func validateDenomPairTakerFees(pairs []DenomPairTakerFee) error {
 		}
 
 		takerFee := record.TakerFee
-		if takerFee.IsNegative() || takerFee.GTE(sdk.OneDec()) {
+		if takerFee.IsNegative() || takerFee.GTE(osmomath.OneDec()) {
 			return fmt.Errorf("taker fee must be between 0 and 1: %s", takerFee.String())
 		}
 	}

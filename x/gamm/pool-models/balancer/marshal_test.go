@@ -8,6 +8,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,12 +19,12 @@ func TestPoolJson(t *testing.T) {
 
 	jsonAssetTest := []balancer.PoolAsset{
 		{
-			Weight: sdk.NewInt(200),
-			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
+			Weight: osmomath.NewInt(200),
+			Token:  sdk.NewCoin("test2", osmomath.NewInt(50000)),
 		},
 		{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin("test1", sdk.NewInt(10000)),
+			Weight: osmomath.NewInt(100),
+			Token:  sdk.NewCoin("test1", osmomath.NewInt(10000)),
 		},
 	}
 	pacc, err := balancer.NewBalancerPool(poolId, balancer.PoolParams{
@@ -55,23 +56,23 @@ func TestPoolProtoMarshal(t *testing.T) {
 
 	require.Equal(t, pool2.Id, uint64(10))
 	require.Equal(t, pool2.PoolParams.SwapFee, defaultSpreadFactor)
-	require.Equal(t, pool2.PoolParams.ExitFee, sdk.MustNewDecFromStr("0.025"))
+	require.Equal(t, pool2.PoolParams.ExitFee, osmomath.MustNewDecFromStr("0.025"))
 	require.Equal(t, pool2.FuturePoolGovernor, "")
-	require.Equal(t, pool2.TotalShares, sdk.Coin{Denom: "gamm/pool/10", Amount: sdk.ZeroInt()})
+	require.Equal(t, pool2.TotalShares, sdk.Coin{Denom: "gamm/pool/10", Amount: osmomath.ZeroInt()})
 	require.Equal(t, pool2.PoolAssets, []balancer.PoolAsset{
 		{
 			Token: sdk.Coin{
 				Denom:  "test1",
-				Amount: sdk.NewInt(10000),
+				Amount: osmomath.NewInt(10000),
 			},
-			Weight: sdk.NewInt(107374182400),
+			Weight: osmomath.NewInt(107374182400),
 		},
 		{
 			Token: sdk.Coin{
 				Denom:  "test2",
-				Amount: sdk.NewInt(50000),
+				Amount: osmomath.NewInt(50000),
 			},
-			Weight: sdk.NewInt(214748364800),
+			Weight: osmomath.NewInt(214748364800),
 		},
 	})
 }

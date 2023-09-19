@@ -36,7 +36,7 @@ message Route {
   // The step size that will be used to find the optimal swap amount in the
   // binary search
   string step_size = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"step_size\""
   ];
@@ -65,7 +65,7 @@ message RouteStatistics {
   // number_of_trades is the number of trades the module has executed using this
   // route
   string number_of_trades = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"number_of_trades\""
   ];
@@ -172,7 +172,7 @@ message BaseDenom {
   // The step size of the binary search that is used to find the optimal swap
   // amount
   string step_size = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"step_size\""
   ];

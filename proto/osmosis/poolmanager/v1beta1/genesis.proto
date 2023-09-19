@@ -49,7 +49,7 @@ message TakerFeeParams {
   // default_taker_fee is the fee used when creating a new pool that doesn't
   // fall under a custom pool taker fee or stableswap taker fee category.
   string default_taker_fee = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.customname) = "DefaultTakerFee",
     (gogoproto.nullable) = false
   ];
@@ -94,12 +94,12 @@ message TakerFeeParams {
 // gets distributed to the available categories.
 message TakerFeeDistributionPercentage {
   string staking_rewards = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"staking_rewards\"",
     (gogoproto.nullable) = false
   ];
   string community_pool = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"community_pool\"",
     (gogoproto.nullable) = false
   ];

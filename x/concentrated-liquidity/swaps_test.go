@@ -32,10 +32,10 @@ type SwapTest struct {
 	tokenInDenom string
 
 	// Shared.
-	priceLimit               sdk.Dec
-	spreadFactor             sdk.Dec
-	secondPositionLowerPrice sdk.Dec
-	secondPositionUpperPrice sdk.Dec
+	priceLimit               osmomath.Dec
+	spreadFactor             osmomath.Dec
+	secondPositionLowerPrice osmomath.Dec
+	secondPositionUpperPrice osmomath.Dec
 
 	expectedTokenIn                            sdk.Coin
 	expectedTokenOut                           sdk.Coin
@@ -43,15 +43,15 @@ type SwapTest struct {
 	expectedSqrtPrice                          osmomath.BigDec
 	expectedLowerTickSpreadRewardGrowth        sdk.DecCoins
 	expectedUpperTickSpreadRewardGrowth        sdk.DecCoins
-	expectedSpreadRewardGrowthAccumulatorValue sdk.Dec
+	expectedSpreadRewardGrowthAccumulatorValue osmomath.Dec
 	// since we use different values for the seondary position's tick, save (tick, expectedSpreadRewardGrowth) tuple
 	expectedSecondLowerTickSpreadRewardGrowth secondPosition
 	expectedSecondUpperTickSpreadRewardGrowth secondPosition
 
-	newLowerPrice  sdk.Dec
-	newUpperPrice  sdk.Dec
-	poolLiqAmount0 sdk.Int
-	poolLiqAmount1 sdk.Int
+	newLowerPrice  osmomath.Dec
+	newUpperPrice  osmomath.Dec
+	poolLiqAmount0 osmomath.Int
+	poolLiqAmount1 osmomath.Int
 	expectErr      bool
 }
 
@@ -61,20 +61,20 @@ type positionMeta struct {
 	positionId uint64
 	lowerTick  int64
 	upperTick  int64
-	liquidity  sdk.Dec
+	liquidity  osmomath.Dec
 }
 
 var (
-	swapFundCoins = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000)))
+	swapFundCoins = sdk.NewCoins(sdk.NewCoin("eth", osmomath.NewInt(10000000000000)), sdk.NewCoin("usdc", osmomath.NewInt(1000000000000)))
 
 	// Allow 0.01% margin of error.
 	multiplicativeTolerance = osmomath.ErrTolerance{
-		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
+		MultiplicativeTolerance: osmomath.MustNewDecFromStr("0.0001"),
 	}
 	// Allow additive margin equal of 1. It may stem from round up token in and rounding down
 	// tokenOut in favor of the pool.
 	oneAdditiveTolerance = osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.OneDec(),
+		AdditiveTolerance: osmomath.OneDec(),
 	}
 	swapOutGivenInCases = map[string]SwapTest{
 		//  One price range
@@ -82,10 +82,10 @@ var (
 		//          5000
 		//  4545 -----|----- 5500
 		"single position within one tick: usdc -> eth": {
-			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenIn:       sdk.NewCoin("usdc", osmomath.NewInt(42000000)),
 			tokenOutDenom: "eth",
-			priceLimit:    sdk.NewDec(5004),
-			spreadFactor:  sdk.ZeroDec(),
+			priceLimit:    osmomath.NewDec(5004),
+			spreadFactor:  osmomath.ZeroDec(),
 			// from math import *
 			// from decimal import *
 
@@ -115,18 +115,18 @@ var (
 			// print(sqrt_next)
 			// print(token_in)
 			// print(token_out)
-			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8396)),
+			expectedTokenIn:  sdk.NewCoin("usdc", osmomath.NewInt(42000000)),
+			expectedTokenOut: sdk.NewCoin("eth", osmomath.NewInt(8396)),
 			expectedTick:     31003913,
 			// Corresponds to sqrt_next in script above
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.738348247484497718514800000003600626"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.738348247484497718514800000003600626"),
 			// tick's accum coins stay same since crossing tick does not occur in this case
 		},
 		"single position within one tick: usdc -> eth, with zero price limit": {
-			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenIn:       sdk.NewCoin("usdc", osmomath.NewInt(42000000)),
 			tokenOutDenom: "eth",
-			priceLimit:    sdk.ZeroDec(),
-			spreadFactor:  sdk.ZeroDec(),
+			priceLimit:    osmomath.ZeroDec(),
+			spreadFactor:  osmomath.ZeroDec(),
 			// from math import *
 			// from decimal import *
 
@@ -156,18 +156,18 @@ var (
 			// print(sqrt_next)
 			// print(token_in)
 			// print(token_out)
-			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8396)),
+			expectedTokenIn:  sdk.NewCoin("usdc", osmomath.NewInt(42000000)),
+			expectedTokenOut: sdk.NewCoin("eth", osmomath.NewInt(8396)),
 			expectedTick:     31003913,
 			// Corresponds to sqrt_next in script above
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.738348247484497718514800000003600626"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.738348247484497718514800000003600626"),
 			// tick's accum coins stay same since crossing tick does not occur in this case
 		},
 		"single position within one tick: eth -> usdc": {
-			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenIn:       sdk.NewCoin("eth", osmomath.NewInt(13370)),
 			tokenOutDenom: "usdc",
-			priceLimit:    sdk.NewDec(4993),
-			spreadFactor:  sdk.ZeroDec(),
+			priceLimit:    osmomath.NewDec(4993),
+			spreadFactor:  osmomath.ZeroDec(),
 			// from math import *
 			// from decimal import *
 
@@ -195,16 +195,16 @@ var (
 			// print(sqrt_next)
 			// print(token_out)
 			// print(token_in)
-			expectedTokenIn:   sdk.NewCoin("eth", sdk.NewInt(13370)),
-			expectedTokenOut:  sdk.NewCoin("usdc", sdk.NewInt(66808388)),
+			expectedTokenIn:   sdk.NewCoin("eth", osmomath.NewInt(13370)),
+			expectedTokenOut:  sdk.NewCoin("usdc", osmomath.NewInt(66808388)),
 			expectedTick:      30993777,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.666663910857144332134093938182290274"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.666663910857144332134093938182290274"),
 		},
 		"single position within one tick: eth -> usdc, with zero price limit": {
-			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenIn:       sdk.NewCoin("eth", osmomath.NewInt(13370)),
 			tokenOutDenom: "usdc",
-			priceLimit:    sdk.ZeroDec(),
-			spreadFactor:  sdk.ZeroDec(),
+			priceLimit:    osmomath.ZeroDec(),
+			spreadFactor:  osmomath.ZeroDec(),
 			// from math import *
 			// from decimal import *
 
@@ -226,12 +226,12 @@ var (
 			// print(sqrt_next)
 			// print(expectedTokenIn)
 			// print(expectedTokenOut)
-			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(13370)),
-			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66808388)),
+			expectedTokenIn:  sdk.NewCoin("eth", osmomath.NewInt(13370)),
+			expectedTokenOut: sdk.NewCoin("usdc", osmomath.NewInt(66808388)),
 			expectedTick:     30993777,
 			// True value with arbitrary precision: 70.6666639108571443321...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 70.666663910857144333
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.666663910857144332134093938182290274"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.666663910857144332134093938182290274"),
 		},
 		//  Two equal price ranges
 		//
@@ -239,10 +239,10 @@ var (
 		//  4545 -----|----- 5500
 		//  4545 -----|----- 5500
 		"two positions within one tick: usdc -> eth": {
-			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenIn:                  sdk.NewCoin("usdc", osmomath.NewInt(42000000)),
 			tokenOutDenom:            "eth",
-			priceLimit:               sdk.NewDec(5002),
-			spreadFactor:             sdk.ZeroDec(),
+			priceLimit:               osmomath.NewDec(5002),
+			spreadFactor:             osmomath.ZeroDec(),
 			secondPositionLowerPrice: DefaultLowerPrice,
 			secondPositionUpperPrice: DefaultUpperPrice,
 			// from math import *
@@ -265,20 +265,20 @@ var (
 			// print(sqrt_next)
 			// print(token_in)
 			// print(token_out)
-			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8398)),
+			expectedTokenIn:  sdk.NewCoin("usdc", osmomath.NewInt(42000000)),
+			expectedTokenOut: sdk.NewCoin("eth", osmomath.NewInt(8398)),
 			expectedTick:     31001956,
 			// Corresponds to sqrt_next in script above
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.724513183069625079757400000001800313"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.724513183069625079757400000001800313"),
 			// two positions with same liquidity entered
-			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
-			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
+			poolLiqAmount0: osmomath.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1: osmomath.NewInt(5000000000).MulRaw(2),
 		},
 		"two positions within one tick: eth -> usdc": {
-			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenIn:                  sdk.NewCoin("eth", osmomath.NewInt(13370)),
 			tokenOutDenom:            "usdc",
-			priceLimit:               sdk.NewDec(4996),
-			spreadFactor:             sdk.ZeroDec(),
+			priceLimit:               osmomath.NewDec(4996),
+			spreadFactor:             osmomath.ZeroDec(),
 			secondPositionLowerPrice: DefaultLowerPrice,
 			secondPositionUpperPrice: DefaultUpperPrice,
 			// from math import *
@@ -302,15 +302,15 @@ var (
 			// print(sqrt_next)
 			// print(expectedTokenIn)
 			// print(expectedTokenOut)
-			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(13370)),
-			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66829187)),
+			expectedTokenIn:  sdk.NewCoin("eth", osmomath.NewInt(13370)),
+			expectedTokenOut: sdk.NewCoin("usdc", osmomath.NewInt(66829187)),
 			expectedTick:     30996887,
 			// True value with arbitrary precision: 70.6886641634088363202...
 			// Expected value due to our monotonic sqrt's >= true value guarantee: 70.688664163408836321
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.688664163408836320215015370847179540"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.688664163408836320215015370847179540"),
 			// two positions with same liquidity entered
-			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
-			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
+			poolLiqAmount0: osmomath.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1: osmomath.NewInt(5000000000).MulRaw(2),
 		},
 		//  Consecutive price ranges
 
@@ -319,12 +319,12 @@ var (
 		//             5500 ----------- 6250
 
 		"two positions with consecutive price ranges: usdc -> eth": {
-			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenIn:                  sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
 			tokenOutDenom:            "eth",
-			priceLimit:               sdk.NewDec(6255),
-			spreadFactor:             sdk.ZeroDec(),
-			secondPositionLowerPrice: sdk.NewDec(5500),
-			secondPositionUpperPrice: sdk.NewDec(6250),
+			priceLimit:               osmomath.NewDec(6255),
+			spreadFactor:             osmomath.ZeroDec(),
+			secondPositionLowerPrice: osmomath.NewDec(5500),
+			secondPositionUpperPrice: osmomath.NewDec(6250),
 			// from math import *
 			// from decimal import *
 			// # Range 1: From 5000 to 5500
@@ -356,16 +356,16 @@ var (
 			// print(sqrt_next_2)
 			// print(token_in)
 			// print(token_out)
-			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1820630)),
+			expectedTokenIn:  sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
+			expectedTokenOut: sdk.NewCoin("eth", osmomath.NewInt(1820630)),
 			expectedTick:     32105414,
 			// Equivalent to sqrt_next_2 in the script above
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("78.137149196095607130096044752300452857"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("78.137149196095607130096044752300452857"),
 			//  second positions both have greater tick than the current tick, thus never initialized
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 315000, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice: sdk.NewDec(5500),
-			newUpperPrice: sdk.NewDec(6250),
+			newLowerPrice: osmomath.NewDec(5500),
+			newUpperPrice: osmomath.NewDec(6250),
 		},
 		//  Consecutive price ranges
 		//
@@ -374,14 +374,14 @@ var (
 		//  4000 ----------- 4545
 		//
 		"two positions with consecutive price ranges: eth -> usdc": {
-			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			tokenIn:                  sdk.NewCoin("eth", osmomath.NewInt(2000000)),
 			tokenOutDenom:            "usdc",
-			priceLimit:               sdk.NewDec(3900),
-			spreadFactor:             sdk.ZeroDec(),
-			secondPositionLowerPrice: sdk.NewDec(4000),
-			secondPositionUpperPrice: sdk.NewDec(4545),
-			expectedTokenIn:          sdk.NewCoin("eth", sdk.NewInt(2000000)),
-			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(9103422788)),
+			priceLimit:               osmomath.NewDec(3900),
+			spreadFactor:             osmomath.ZeroDec(),
+			secondPositionLowerPrice: osmomath.NewDec(4000),
+			secondPositionUpperPrice: osmomath.NewDec(4545),
+			expectedTokenIn:          sdk.NewCoin("eth", osmomath.NewInt(2000000)),
+			expectedTokenOut:         sdk.NewCoin("usdc", osmomath.NewInt(9103422788)),
 			// crosses one tick with spread reward growth outside
 			expectedTick: 30095166,
 			// from math import *
@@ -413,16 +413,16 @@ var (
 
 			// print(sqrt_next_2)
 			// print(token_out)
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("63.993489023323078692803734142129673908"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("63.993489023323078692803734142129673908"),
 			// crossing tick happens single time for each upper tick and lower tick.
 			// Thus the tick's spread reward growth is DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins
-			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedLowerTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth: DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
 			//  second positions both have greater tick than the current tick, thus never initialized
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 300000, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 305450, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice: sdk.NewDec(4000),
-			newUpperPrice: sdk.NewDec(4545),
+			newLowerPrice: osmomath.NewDec(4000),
+			newUpperPrice: osmomath.NewDec(4545),
 		},
 		//  Partially overlapping price ranges
 
@@ -431,14 +431,14 @@ var (
 		//        5001 ----------- 6250
 		//
 		"two positions with partially overlapping price ranges: usdc -> eth": {
-			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenIn:                  sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
 			tokenOutDenom:            "eth",
-			priceLimit:               sdk.NewDec(6056),
-			spreadFactor:             sdk.ZeroDec(),
-			secondPositionLowerPrice: sdk.NewDec(5001),
-			secondPositionUpperPrice: sdk.NewDec(6250),
-			expectedTokenIn:          sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut:         sdk.NewCoin("eth", sdk.NewInt(1864161)),
+			priceLimit:               osmomath.NewDec(6056),
+			spreadFactor:             osmomath.ZeroDec(),
+			secondPositionLowerPrice: osmomath.NewDec(5001),
+			secondPositionUpperPrice: osmomath.NewDec(6250),
+			expectedTokenIn:          sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
+			expectedTokenOut:         sdk.NewCoin("eth", osmomath.NewInt(1864161)),
 			expectedTick:             32055919,
 			// from math import *
 			// from decimal import *
@@ -476,19 +476,19 @@ var (
 
 			// print(sqrt_next_3)
 			// print(token_out)
-			expectedSqrtPrice:                         osmomath.MustNewDecFromStr("77.819789636800169393792766394158739007"),
+			expectedSqrtPrice:                         osmomath.MustNewBigDecFromStr("77.819789636800169393792766394158739007"),
 			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
 			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice:                             sdk.NewDec(5001),
-			newUpperPrice:                             sdk.NewDec(6250),
+			newLowerPrice:                             osmomath.NewDec(5001),
+			newUpperPrice:                             osmomath.NewDec(6250),
 		},
 		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc -> eth": {
-			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
+			tokenIn:       sdk.NewCoin("usdc", osmomath.NewInt(8500000000)),
 			tokenOutDenom: "eth",
-			priceLimit:    sdk.NewDec(6056),
-			spreadFactor:  sdk.ZeroDec(),
+			priceLimit:    osmomath.NewDec(6056),
+			spreadFactor:  osmomath.ZeroDec(),
 			// from math import *
 			// from decimal import *
 			// getcontext().prec = 60
@@ -530,19 +530,19 @@ var (
 			// print(sqrt_next_3)
 			// print(token_in)
 			// print(token_out)
-			secondPositionLowerPrice:                  sdk.NewDec(5001),
-			secondPositionUpperPrice:                  sdk.NewDec(6250),
-			expectedTokenIn:                           sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
-			expectedTokenOut:                          sdk.NewCoin("eth", sdk.NewInt(1609138)),
+			secondPositionLowerPrice:                  osmomath.NewDec(5001),
+			secondPositionUpperPrice:                  osmomath.NewDec(6250),
+			expectedTokenIn:                           sdk.NewCoin("usdc", osmomath.NewInt(8500000000)),
+			expectedTokenOut:                          sdk.NewCoin("eth", osmomath.NewInt(1609138)),
 			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
 			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedTick:                              31712695,
 			// Corresponds to sqrt_next_3 in the script above
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("75.582373164412551492069079174313215667"),
-			newLowerPrice:     sdk.NewDec(5001),
-			newUpperPrice:     sdk.NewDec(6250),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("75.582373164412551492069079174313215667"),
+			newLowerPrice:     osmomath.NewDec(5001),
+			newUpperPrice:     osmomath.NewDec(6250),
 		},
 		//  Partially overlapping price ranges
 		//
@@ -551,10 +551,10 @@ var (
 		//  4000 ----------- 4999
 		//
 		"two positions with partially overlapping price ranges: eth -> usdc": {
-			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			tokenIn:       sdk.NewCoin("eth", osmomath.NewInt(2000000)),
 			tokenOutDenom: "usdc",
-			priceLimit:    sdk.NewDec(4128),
-			spreadFactor:  sdk.ZeroDec(),
+			priceLimit:    osmomath.NewDec(4128),
+			spreadFactor:  osmomath.ZeroDec(),
 			// from math import *
 			// from decimal import *
 			// getcontext().prec = 60
@@ -595,34 +595,34 @@ var (
 			// print(sqrt_next_2)
 			// print(token_in)
 			// print(token_out)
-			secondPositionLowerPrice: sdk.NewDec(4000),
-			secondPositionUpperPrice: sdk.NewDec(4999),
-			expectedTokenIn:          sdk.NewCoin("eth", sdk.NewInt(2000000)),
-			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(9321276930)),
+			secondPositionLowerPrice: osmomath.NewDec(4000),
+			secondPositionUpperPrice: osmomath.NewDec(4999),
+			expectedTokenIn:          sdk.NewCoin("eth", osmomath.NewInt(2000000)),
+			expectedTokenOut:         sdk.NewCoin("usdc", osmomath.NewInt(9321276930)),
 			expectedTick:             30129083,
 			// Corresponds to sqrt_next_2 in the script above
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("64.257943794993248953756640624575523292"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("64.257943794993248953756640624575523292"),
 			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
 			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
-			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 300000, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 309990, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice: sdk.NewDec(4000),
-			newUpperPrice: sdk.NewDec(4999),
+			newLowerPrice: osmomath.NewDec(4000),
+			newUpperPrice: osmomath.NewDec(4999),
 		},
 		//          		5000
 		//  		4545 -----|----- 5500
 		//  4000 ---------- 4999
 		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc": {
-			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(1800000)),
+			tokenIn:                  sdk.NewCoin("eth", osmomath.NewInt(1800000)),
 			tokenOutDenom:            "usdc",
-			priceLimit:               sdk.NewDec(4128),
-			spreadFactor:             sdk.ZeroDec(),
-			secondPositionLowerPrice: sdk.NewDec(4000),
-			secondPositionUpperPrice: sdk.NewDec(4999),
-			expectedTokenIn:          sdk.NewCoin("eth", sdk.NewInt(1800000)),
-			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(8479320318)),
+			priceLimit:               osmomath.NewDec(4128),
+			spreadFactor:             osmomath.ZeroDec(),
+			secondPositionLowerPrice: osmomath.NewDec(4000),
+			secondPositionUpperPrice: osmomath.NewDec(4999),
+			expectedTokenIn:          sdk.NewCoin("eth", osmomath.NewInt(1800000)),
+			expectedTokenOut:         sdk.NewCoin("usdc", osmomath.NewInt(8479320318)),
 			expectedTick:             30292059,
 			// from math import *
 			// from decimal import *
@@ -659,15 +659,15 @@ var (
 
 			// print(sqrt_next_3)
 			// print(token_out)
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("65.513815285481060959469337552596846421"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("65.513815285481060959469337552596846421"),
 			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
 			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
-			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 300000, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 309990, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice: sdk.NewDec(4000),
-			newUpperPrice: sdk.NewDec(4999),
+			newLowerPrice: osmomath.NewDec(4000),
+			newUpperPrice: osmomath.NewDec(4999),
 		},
 		//  Sequential price ranges with a gap
 		//
@@ -676,14 +676,14 @@ var (
 		//              5501 ----------- 6250
 		//
 		"two sequential positions with a gap": {
-			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenIn:                  sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
 			tokenOutDenom:            "eth",
-			priceLimit:               sdk.NewDec(6106),
-			spreadFactor:             sdk.ZeroDec(),
-			secondPositionLowerPrice: sdk.NewDec(5501),
-			secondPositionUpperPrice: sdk.NewDec(6250),
-			expectedTokenIn:          sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut:         sdk.NewCoin("eth", sdk.NewInt(1820545)),
+			priceLimit:               osmomath.NewDec(6106),
+			spreadFactor:             osmomath.ZeroDec(),
+			secondPositionLowerPrice: osmomath.NewDec(5501),
+			secondPositionUpperPrice: osmomath.NewDec(6250),
+			expectedTokenIn:          sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
+			expectedTokenOut:         sdk.NewCoin("eth", osmomath.NewInt(1820545)),
 			expectedTick:             32105555,
 			// from math import *
 			// from decimal import *
@@ -720,22 +720,22 @@ var (
 
 			// print(sqrt_next_3)
 			// print(token_out)
-			expectedSqrtPrice:                         osmomath.MustNewDecFromStr("78.138055169663761658508234345605157554"),
+			expectedSqrtPrice:                         osmomath.MustNewBigDecFromStr("78.138055169663761658508234345605157554"),
 			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
 			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins,
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315010, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice:                             sdk.NewDec(5501),
-			newUpperPrice:                             sdk.NewDec(6250),
+			newLowerPrice:                             osmomath.NewDec(5501),
+			newUpperPrice:                             osmomath.NewDec(6250),
 		},
 		// Slippage protection doesn't cause a failure but interrupts early.
 		//          5000
 		//  4545 ---!-|----- 5500
 		"single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc": {
-			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenIn:       sdk.NewCoin("eth", osmomath.NewInt(13370)),
 			tokenOutDenom: "usdc",
-			priceLimit:    sdk.NewDec(4994),
-			spreadFactor:  sdk.ZeroDec(),
+			priceLimit:    osmomath.NewDec(4994),
+			spreadFactor:  osmomath.ZeroDec(),
 			// from math import *
 			// from decimal import *
 			//
@@ -755,14 +755,14 @@ var (
 			// print(sqrt_next)
 			// print(expectedTokenIn)
 			// print(expectedTokenOut)
-			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(12892)),
-			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(64417624)),
+			expectedTokenIn:  sdk.NewCoin("eth", osmomath.NewInt(12892)),
+			expectedTokenOut: sdk.NewCoin("usdc", osmomath.NewInt(64417624)),
 			expectedTick: func() int64 {
-				tick, _ := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt4994), DefaultTickSpacing)
+				tick, _ := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromDec(sqrt4994), DefaultTickSpacing)
 				return tick
 			}(),
 			// Since the next sqrt price is based on the price limit, we can calculate this directly.
-			expectedSqrtPrice: osmomath.BigDecFromSDKDec(osmomath.MustMonotonicSqrt(sdk.NewDec(4994))),
+			expectedSqrtPrice: osmomath.BigDecFromDec(osmomath.MustMonotonicSqrt(osmomath.NewDec(4994))),
 		},
 	}
 
@@ -772,15 +772,15 @@ var (
 		"spread factor 1 - single position within one tick: usdc -> eth (1% spread factor)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:           sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenIn:           sdk.NewCoin("usdc", osmomath.NewInt(42000000)),
 			tokenOutDenom:     "eth",
-			priceLimit:        sdk.NewDec(5004),
-			spreadFactor:      sdk.MustNewDecFromStr("0.01"),
-			expectedTokenIn:   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-			expectedTokenOut:  sdk.NewCoin("eth", sdk.NewInt(8312)),
+			priceLimit:        osmomath.NewDec(5004),
+			spreadFactor:      osmomath.MustNewDecFromStr("0.01"),
+			expectedTokenIn:   sdk.NewCoin("usdc", osmomath.NewInt(42000000)),
+			expectedTokenOut:  sdk.NewCoin("eth", osmomath.NewInt(8312)),
 			expectedTick:      31003800,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.738071546196200264"),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000276701288297452"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.738071546196200264"),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000276701288297452"),
 		},
 		//          5000
 		//  4545 -----|----- 5500
@@ -788,20 +788,20 @@ var (
 		"spread factor 2 - two positions within one tick: eth -> usdc (3% spread factor) ": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenIn:                  sdk.NewCoin("eth", osmomath.NewInt(13370)),
 			tokenOutDenom:            "usdc",
-			priceLimit:               sdk.NewDec(4990),
-			spreadFactor:             sdk.MustNewDecFromStr("0.03"),
+			priceLimit:               osmomath.NewDec(4990),
+			spreadFactor:             osmomath.MustNewDecFromStr("0.03"),
 			secondPositionLowerPrice: DefaultLowerPrice,
 			secondPositionUpperPrice: DefaultUpperPrice,
-			expectedTokenIn:          sdk.NewCoin("eth", sdk.NewInt(13370)),
-			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(64824917)),
+			expectedTokenIn:          sdk.NewCoin("eth", osmomath.NewInt(13370)),
+			expectedTokenOut:         sdk.NewCoin("usdc", osmomath.NewInt(64824917)),
 			expectedTick:             30996900,
-			expectedSqrtPrice:        osmomath.MustNewDecFromStr("70.689324382628080102"),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000132091924532"),
+			expectedSqrtPrice:        osmomath.MustNewBigDecFromStr("70.689324382628080102"),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000000132091924532"),
 			// two positions with same liquidity entered
-			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
-			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
+			poolLiqAmount0: osmomath.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1: osmomath.NewInt(5000000000).MulRaw(2),
 		},
 		//          		   5000
 		//  		   4545 -----|----- 5500
@@ -809,19 +809,19 @@ var (
 		"spread factor 3 - two positions with consecutive price ranges: eth -> usdc (5% spread factor)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			tokenIn:                  sdk.NewCoin("eth", osmomath.NewInt(2000000)),
 			tokenOutDenom:            "usdc",
-			priceLimit:               sdk.NewDec(4094),
-			spreadFactor:             sdk.MustNewDecFromStr("0.05"),
-			secondPositionLowerPrice: sdk.NewDec(4000),
-			secondPositionUpperPrice: sdk.NewDec(4545),
-			expectedTokenIn:          sdk.NewCoin("eth", sdk.NewInt(2000000)),
-			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(8691708221)),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000073738597832046"),
+			priceLimit:               osmomath.NewDec(4094),
+			spreadFactor:             osmomath.MustNewDecFromStr("0.05"),
+			secondPositionLowerPrice: osmomath.NewDec(4000),
+			secondPositionUpperPrice: osmomath.NewDec(4545),
+			expectedTokenIn:          sdk.NewCoin("eth", osmomath.NewInt(2000000)),
+			expectedTokenOut:         sdk.NewCoin("usdc", osmomath.NewInt(8691708221)),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000073738597832046"),
 			expectedTick:      30139200,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("64.336946417392457832"),
-			newLowerPrice:     sdk.NewDec(4000),
-			newUpperPrice:     sdk.NewDec(4545),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("64.336946417392457832"),
+			newLowerPrice:     osmomath.NewDec(4000),
+			newUpperPrice:     osmomath.NewDec(4545),
 		},
 		//          5000
 		//  4545 -----|----- 5500
@@ -829,19 +829,19 @@ var (
 		"spread factor 4 - two positions with partially overlapping price ranges: usdc -> eth (10% spread factor)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenIn:                  sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
 			tokenOutDenom:            "eth",
-			priceLimit:               sdk.NewDec(6056),
-			spreadFactor:             sdk.MustNewDecFromStr("0.1"),
-			secondPositionLowerPrice: sdk.NewDec(5001),
-			secondPositionUpperPrice: sdk.NewDec(6250),
-			expectedTokenIn:          sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut:         sdk.NewCoin("eth", sdk.NewInt(1695807)),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.624166726347032857"),
+			priceLimit:               osmomath.NewDec(6056),
+			spreadFactor:             osmomath.MustNewDecFromStr("0.1"),
+			secondPositionLowerPrice: osmomath.NewDec(5001),
+			secondPositionUpperPrice: osmomath.NewDec(6250),
+			expectedTokenIn:          sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
+			expectedTokenOut:         sdk.NewCoin("eth", osmomath.NewInt(1695807)),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.624166726347032857"),
 			expectedTick:      31825900,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("76.328178655208424124"),
-			newLowerPrice:     sdk.NewDec(5001),
-			newUpperPrice:     sdk.NewDec(6250),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("76.328178655208424124"),
+			newLowerPrice:     osmomath.NewDec(5001),
+			newUpperPrice:     osmomath.NewDec(6250),
 		},
 		//          		5000
 		//  		4545 -----|----- 5500
@@ -849,19 +849,19 @@ var (
 		"spread factor 5 - two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc (0.5% spread factor)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(1800000)),
+			tokenIn:                  sdk.NewCoin("eth", osmomath.NewInt(1800000)),
 			tokenOutDenom:            "usdc",
-			priceLimit:               sdk.NewDec(4128),
-			spreadFactor:             sdk.MustNewDecFromStr("0.005"),
-			secondPositionLowerPrice: sdk.NewDec(4000),
-			secondPositionUpperPrice: sdk.NewDec(4999),
-			expectedTokenIn:          sdk.NewCoin("eth", sdk.NewInt(1800000)),
-			expectedTokenOut:         sdk.NewCoin("usdc", sdk.NewInt(8440657775)),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000005569829831408"),
+			priceLimit:               osmomath.NewDec(4128),
+			spreadFactor:             osmomath.MustNewDecFromStr("0.005"),
+			secondPositionLowerPrice: osmomath.NewDec(4000),
+			secondPositionUpperPrice: osmomath.NewDec(4999),
+			expectedTokenIn:          sdk.NewCoin("eth", osmomath.NewInt(1800000)),
+			expectedTokenOut:         sdk.NewCoin("usdc", osmomath.NewInt(8440657775)),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000005569829831408"),
 			expectedTick:      30299600,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("65.571484748647169032"),
-			newLowerPrice:     sdk.NewDec(4000),
-			newUpperPrice:     sdk.NewDec(4999),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("65.571484748647169032"),
+			newLowerPrice:     osmomath.NewDec(4000),
+			newUpperPrice:     osmomath.NewDec(4999),
 		},
 		//          5000
 		//  4545 -----|----- 5500
@@ -869,53 +869,53 @@ var (
 		"spread factor 6 - two sequential positions with a gap usdc -> eth (3% spread factor)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenIn:                  sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
 			tokenOutDenom:            "eth",
-			priceLimit:               sdk.NewDec(6106),
-			secondPositionLowerPrice: sdk.NewDec(5501),
-			secondPositionUpperPrice: sdk.NewDec(6250),
-			spreadFactor:             sdk.MustNewDecFromStr("0.03"),
-			expectedTokenIn:          sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut:         sdk.NewCoin("eth", sdk.NewInt(1771252)),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.221769187794051751"),
+			priceLimit:               osmomath.NewDec(6106),
+			secondPositionLowerPrice: osmomath.NewDec(5501),
+			secondPositionUpperPrice: osmomath.NewDec(6250),
+			spreadFactor:             osmomath.MustNewDecFromStr("0.03"),
+			expectedTokenIn:          sdk.NewCoin("usdc", osmomath.NewInt(10000000000)),
+			expectedTokenOut:         sdk.NewCoin("eth", osmomath.NewInt(1771252)),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.221769187794051751"),
 			expectedTick:      32066500,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("77.887956882326389372"),
-			newLowerPrice:     sdk.NewDec(5501),
-			newUpperPrice:     sdk.NewDec(6250),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("77.887956882326389372"),
+			newLowerPrice:     osmomath.NewDec(5501),
+			newUpperPrice:     osmomath.NewDec(6250),
 		},
 		//          5000
 		//  4545 ---!-|----- 5500
 		"spread factor 7: single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc (1% spread factor)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:          sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenIn:          sdk.NewCoin("eth", osmomath.NewInt(13370)),
 			tokenOutDenom:    "usdc",
-			priceLimit:       sdk.NewDec(4994),
-			spreadFactor:     sdk.MustNewDecFromStr("0.01"),
-			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(13023)),
-			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(64417624)),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000085792039652"),
+			priceLimit:       osmomath.NewDec(4994),
+			spreadFactor:     osmomath.MustNewDecFromStr("0.01"),
+			expectedTokenIn:  sdk.NewCoin("eth", osmomath.NewInt(13023)),
+			expectedTokenOut: sdk.NewCoin("usdc", osmomath.NewInt(64417624)),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000000085792039652"),
 			expectedTick: func() int64 {
-				tick, _ := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(sqrt4994), DefaultTickSpacing)
+				tick, _ := math.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromDec(sqrt4994), DefaultTickSpacing)
 				return tick
 			}(),
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.668238976219012614"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.668238976219012614"),
 		},
 	}
 
 	swapOutGivenInErrorCases = map[string]SwapTest{
 		"single position within one tick, trade does not complete due to lack of liquidity: usdc -> eth": {
-			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(5300000000)),
+			tokenIn:       sdk.NewCoin("usdc", osmomath.NewInt(5300000000)),
 			tokenOutDenom: "eth",
-			priceLimit:    sdk.NewDec(6000),
-			spreadFactor:  sdk.ZeroDec(),
+			priceLimit:    osmomath.NewDec(6000),
+			spreadFactor:  osmomath.ZeroDec(),
 			expectErr:     true,
 		},
 		"single position within one tick, trade does not complete due to lack of liquidity: eth -> usdc": {
-			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(1100000)),
+			tokenIn:       sdk.NewCoin("eth", osmomath.NewInt(1100000)),
 			tokenOutDenom: "usdc",
-			priceLimit:    sdk.NewDec(4000),
-			spreadFactor:  sdk.ZeroDec(),
+			priceLimit:    osmomath.NewDec(4000),
+			spreadFactor:  osmomath.ZeroDec(),
 			expectErr:     true,
 		},
 	}
@@ -927,10 +927,10 @@ var (
 		//          5000
 		//  4545 -----|----- 5500
 		"single position within one tick: eth (in) -> usdc (out) | zfo": {
-			tokenOut:     sdk.NewCoin(USDC, sdk.NewInt(42000000)),
+			tokenOut:     sdk.NewCoin(USDC, osmomath.NewInt(42000000)),
 			tokenInDenom: ETH,
-			priceLimit:   sdk.NewDec(4993),
-			spreadFactor: sdk.ZeroDec(),
+			priceLimit:   osmomath.NewDec(4993),
+			spreadFactor: osmomath.ZeroDec(),
 			// from math import *
 			// from decimal import *
 
@@ -950,16 +950,16 @@ var (
 			// token_in = token_in = liq * (sqrt_cur - sqrt_next) / (sqrt_cur * sqrt_next)
 			// print(sqrt_next)
 			// print(token_in)
-			expectedTokenOut:  sdk.NewCoin(USDC, sdk.NewInt(42000000)),
-			expectedTokenIn:   sdk.NewCoin(ETH, sdk.NewInt(8404)),
+			expectedTokenOut:  sdk.NewCoin(USDC, osmomath.NewInt(42000000)),
+			expectedTokenIn:   sdk.NewCoin(ETH, osmomath.NewInt(8404)),
 			expectedTick:      30996087,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.683007989825007163485199999996399373"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.683007989825007163485199999996399373"),
 		},
 		"single position within one tick: usdc (in) -> eth (out) ofz": {
-			tokenOut:     sdk.NewCoin(ETH, sdk.NewInt(13370)),
+			tokenOut:     sdk.NewCoin(ETH, osmomath.NewInt(13370)),
 			tokenInDenom: USDC,
-			priceLimit:   sdk.NewDec(5010),
-			spreadFactor: sdk.ZeroDec(),
+			priceLimit:   osmomath.NewDec(5010),
+			spreadFactor: osmomath.ZeroDec(),
 			// from math import *
 			// from decimal import *
 			// import sys
@@ -974,10 +974,10 @@ var (
 			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next))
 			// print(sqrt_next)
 			// print(token_in)
-			expectedTokenOut:  sdk.NewCoin(ETH, sdk.NewInt(13370)),
-			expectedTokenIn:   sdk.NewCoin(USDC, sdk.NewInt(66891663)),
+			expectedTokenOut:  sdk.NewCoin(ETH, osmomath.NewInt(13370)),
+			expectedTokenIn:   sdk.NewCoin(USDC, osmomath.NewInt(66891663)),
 			expectedTick:      31006234,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.754747188468900467378792612053774781"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.754747188468900467378792612053774781"),
 		},
 		//  Two equal price ranges
 		//
@@ -985,10 +985,10 @@ var (
 		//  4545 -----|----- 5500
 		//  4545 -----|----- 5500
 		"two positions within one tick: eth (in) -> usdc (out) | zfo": {
-			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(66829187)),
+			tokenOut:                 sdk.NewCoin("usdc", osmomath.NewInt(66829187)),
 			tokenInDenom:             "eth",
-			priceLimit:               sdk.NewDec(4990),
-			spreadFactor:             sdk.ZeroDec(),
+			priceLimit:               osmomath.NewDec(4990),
+			spreadFactor:             osmomath.ZeroDec(),
 			secondPositionLowerPrice: DefaultLowerPrice,
 			secondPositionUpperPrice: DefaultUpperPrice,
 			// from math import *
@@ -1011,21 +1011,21 @@ var (
 			// token_in = token_in = liq * (sqrt_cur - sqrt_next) / (sqrt_cur * sqrt_next)
 			// print(sqrt_next)
 			// print(token_in)
-			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(66829187)),
-			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(13370)),
+			expectedTokenOut: sdk.NewCoin("usdc", osmomath.NewInt(66829187)),
+			expectedTokenIn:  sdk.NewCoin("eth", osmomath.NewInt(13370)),
 			expectedTick:     30996887,
 			// This value is the direct output of sqrt_next in the script above.
 			// The precision is exact because we properly handle rounding behavior in intermediate steps.
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.688664163727643651554720661097135393"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.688664163727643651554720661097135393"),
 			// two positions with same liquidity entered
-			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
-			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
+			poolLiqAmount0: osmomath.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1: osmomath.NewInt(5000000000).MulRaw(2),
 		},
 		"two positions within one tick: usdc (in) -> eth (out) | ofz": {
-			tokenOut:                 sdk.NewCoin("eth", sdk.NewInt(8398)),
+			tokenOut:                 sdk.NewCoin("eth", osmomath.NewInt(8398)),
 			tokenInDenom:             "usdc",
-			priceLimit:               sdk.NewDec(5020),
-			spreadFactor:             sdk.ZeroDec(),
+			priceLimit:               osmomath.NewDec(5020),
+			spreadFactor:             osmomath.ZeroDec(),
 			secondPositionLowerPrice: DefaultLowerPrice,
 			secondPositionUpperPrice: DefaultUpperPrice,
 			// from math import *
@@ -1042,13 +1042,13 @@ var (
 			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next))
 			// print(sqrt_next)
 			// print(token_in)
-			expectedTokenOut:  sdk.NewCoin("eth", sdk.NewInt(8398)),
-			expectedTokenIn:   sdk.NewCoin("usdc", sdk.NewInt(41998216)),
+			expectedTokenOut:  sdk.NewCoin("eth", osmomath.NewInt(8398)),
+			expectedTokenIn:   sdk.NewCoin("usdc", osmomath.NewInt(41998216)),
 			expectedTick:      31001956,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.724512595179305566327821490232558005"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.724512595179305566327821490232558005"),
 			// two positions with same liquidity entered
-			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
-			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
+			poolLiqAmount0: osmomath.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1: osmomath.NewInt(5000000000).MulRaw(2),
 		},
 		//  Consecutive price ranges
 		//
@@ -1056,12 +1056,12 @@ var (
 		//             4545 -----|----- 5500
 		//  4000 ----------- 4545
 		"two positions with consecutive price ranges: eth (in) -> usdc (out) | zfo": {
-			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(9103422788)),
+			tokenOut:                 sdk.NewCoin("usdc", osmomath.NewInt(9103422788)),
 			tokenInDenom:             "eth",
-			priceLimit:               sdk.NewDec(3900),
-			spreadFactor:             sdk.ZeroDec(),
-			secondPositionLowerPrice: sdk.NewDec(4000),
-			secondPositionUpperPrice: sdk.NewDec(4545),
+			priceLimit:               osmomath.NewDec(3900),
+			spreadFactor:             osmomath.ZeroDec(),
+			secondPositionLowerPrice: osmomath.NewDec(4000),
+			secondPositionUpperPrice: osmomath.NewDec(4545),
 			// from math import *
 			// from decimal import *
 
@@ -1098,17 +1098,17 @@ var (
 			// print(sqrt_next_2)
 			// print(token_in)
 			// print(token_out_2)
-			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(9103422788)),
-			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			expectedTokenOut: sdk.NewCoin("usdc", osmomath.NewInt(9103422788)),
+			expectedTokenIn:  sdk.NewCoin("eth", osmomath.NewInt(2000000)),
 			expectedTick:     30095166,
 
-			expectedSqrtPrice:                         osmomath.MustNewDecFromStr("63.993489023888951975210711246458277671"),
-			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedSqrtPrice:                         osmomath.MustNewBigDecFromStr("63.993489023888951975210711246458277671"),
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315000, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice:                             sdk.NewDec(4000),
-			newUpperPrice:                             sdk.NewDec(4545),
+			newLowerPrice:                             osmomath.NewDec(4000),
+			newUpperPrice:                             osmomath.NewDec(4545),
 		},
 		//  Consecutive price ranges
 		//
@@ -1117,12 +1117,12 @@ var (
 		//             5500 ----------- 6250
 		//
 		"two positions with consecutive price ranges: usdc (in) -> eth (out) | ofz": {
-			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820630)),
+			tokenOut:                 sdk.NewCoin(ETH, osmomath.NewInt(1820630)),
 			tokenInDenom:             USDC,
-			priceLimit:               sdk.NewDec(6106),
-			spreadFactor:             sdk.ZeroDec(),
-			secondPositionLowerPrice: sdk.NewDec(5500), // 315000
-			secondPositionUpperPrice: sdk.NewDec(6250), // 322500
+			priceLimit:               osmomath.NewDec(6106),
+			spreadFactor:             osmomath.ZeroDec(),
+			secondPositionLowerPrice: osmomath.NewDec(5500), // 315000
+			secondPositionUpperPrice: osmomath.NewDec(6250), // 322500
 			// from math import *
 			// from decimal import *
 
@@ -1159,14 +1159,14 @@ var (
 			// print(sqrt_next_2)
 			// print(token_in)
 			// print(token_out_2)
-			expectedTokenOut:  sdk.NewCoin(ETH, sdk.NewInt(1820630)),
-			expectedTokenIn:   sdk.NewCoin(USDC, sdk.NewInt(9999999570)),
+			expectedTokenOut:  sdk.NewCoin(ETH, osmomath.NewInt(1820630)),
+			expectedTokenIn:   sdk.NewCoin(USDC, osmomath.NewInt(9999999570)),
 			expectedTick:      32105414,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("78.137148837036751554352224945360339905"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("78.137148837036751554352224945360339905"),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315000, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice: sdk.NewDec(5500),
-			newUpperPrice: sdk.NewDec(6250),
+			newLowerPrice: osmomath.NewDec(5500),
+			newUpperPrice: osmomath.NewDec(6250),
 		},
 		//  Partially overlapping price ranges
 		//
@@ -1175,12 +1175,12 @@ var (
 		//  4000 ----------- 4999
 		//
 		"two positions with partially overlapping price ranges: eth (in) -> usdc (out) | zfo": {
-			tokenOut:                 sdk.NewCoin(USDC, sdk.NewInt(9321276930)),
+			tokenOut:                 sdk.NewCoin(USDC, osmomath.NewInt(9321276930)),
 			tokenInDenom:             ETH,
-			priceLimit:               sdk.NewDec(4128),
-			spreadFactor:             sdk.ZeroDec(),
-			secondPositionLowerPrice: sdk.NewDec(4000),
-			secondPositionUpperPrice: sdk.NewDec(4999),
+			priceLimit:               osmomath.NewDec(4128),
+			spreadFactor:             osmomath.ZeroDec(),
+			secondPositionLowerPrice: osmomath.NewDec(4000),
+			secondPositionUpperPrice: osmomath.NewDec(4999),
 			// from math import *
 			// from decimal import *
 
@@ -1227,29 +1227,29 @@ var (
 			// print(sqrt_next_3)
 			// print(token_in)
 			// print(token_out_2)
-			expectedTokenIn:   sdk.NewCoin("eth", sdk.NewInt(2000000)),
-			expectedTokenOut:  sdk.NewCoin("usdc", sdk.NewInt(9321276930)),
+			expectedTokenIn:   sdk.NewCoin("eth", osmomath.NewInt(2000000)),
+			expectedTokenOut:  sdk.NewCoin("usdc", osmomath.NewInt(9321276930)),
 			expectedTick:      30129083,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("64.257943796086567725876595411582357676"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("64.257943796086567725876595411582357676"),
 			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
 			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
-			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 300000, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 309990, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice: sdk.NewDec(4000),
-			newUpperPrice: sdk.NewDec(4999),
+			newLowerPrice: osmomath.NewDec(4000),
+			newUpperPrice: osmomath.NewDec(4999),
 		},
 		//          		5000
 		//  		4545 -----|----- 5500
 		//  4000 ---------- 4999
 		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth (in) -> usdc (out) | zfo": {
-			tokenOut:                 sdk.NewCoin(USDC, sdk.NewInt(8479320318)),
+			tokenOut:                 sdk.NewCoin(USDC, osmomath.NewInt(8479320318)),
 			tokenInDenom:             ETH,
-			priceLimit:               sdk.NewDec(4128),
-			spreadFactor:             sdk.ZeroDec(),
-			secondPositionLowerPrice: sdk.NewDec(4000),
-			secondPositionUpperPrice: sdk.NewDec(4999),
+			priceLimit:               osmomath.NewDec(4128),
+			spreadFactor:             osmomath.ZeroDec(),
+			secondPositionLowerPrice: osmomath.NewDec(4000),
+			secondPositionUpperPrice: osmomath.NewDec(4999),
 			// from math import *
 			// from decimal import *
 
@@ -1295,18 +1295,18 @@ var (
 			// print(sqrt_next_3)
 			// print(token_in)
 			// print(token_out_2)
-			expectedTokenIn:   sdk.NewCoin(ETH, sdk.NewInt(1800000)),
-			expectedTokenOut:  sdk.NewCoin(USDC, sdk.NewInt(8479320318)),
+			expectedTokenIn:   sdk.NewCoin(ETH, osmomath.NewInt(1800000)),
+			expectedTokenOut:  sdk.NewCoin(USDC, osmomath.NewInt(8479320318)),
 			expectedTick:      30292059,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("65.513815286452064191403749708246274698"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("65.513815286452064191403749708246274698"),
 			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
 			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
-			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 300000, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 309990, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice: sdk.NewDec(4000),
-			newUpperPrice: sdk.NewDec(4999),
+			newLowerPrice: osmomath.NewDec(4000),
+			newUpperPrice: osmomath.NewDec(4999),
 		},
 		//  Partially overlapping price ranges
 
@@ -1315,12 +1315,12 @@ var (
 		//        5001 ----------- 6250
 		//
 		"two positions with partially overlapping price ranges: usdc (in) -> eth (out) | ofz": {
-			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1864161)),
+			tokenOut:                 sdk.NewCoin(ETH, osmomath.NewInt(1864161)),
 			tokenInDenom:             USDC,
-			priceLimit:               sdk.NewDec(6056),
-			spreadFactor:             sdk.ZeroDec(),
-			secondPositionLowerPrice: sdk.NewDec(5001),
-			secondPositionUpperPrice: sdk.NewDec(6250),
+			priceLimit:               osmomath.NewDec(6056),
+			spreadFactor:             osmomath.ZeroDec(),
+			secondPositionLowerPrice: osmomath.NewDec(5001),
+			secondPositionUpperPrice: osmomath.NewDec(6250),
 			// from math import *
 			// from decimal import *
 
@@ -1366,22 +1366,22 @@ var (
 			// print(sqrt_next_3)
 			// print(token_in)
 			// print(token_out_2)
-			expectedTokenIn:   sdk.NewCoin(USDC, sdk.NewInt(9999994688)),
-			expectedTokenOut:  sdk.NewCoin(ETH, sdk.NewInt(1864161)),
+			expectedTokenIn:   sdk.NewCoin(USDC, osmomath.NewInt(9999994688)),
+			expectedTokenOut:  sdk.NewCoin(ETH, osmomath.NewInt(1864161)),
 			expectedTick:      32055918,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("77.819781711876553578435870496972242531"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("77.819781711876553578435870496972242531"),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice: sdk.NewDec(5001),
-			newUpperPrice: sdk.NewDec(6250),
+			newLowerPrice: osmomath.NewDec(5001),
+			newUpperPrice: osmomath.NewDec(6250),
 		},
 		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc (in) -> eth (out) | ofz": {
-			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1609138)),
+			tokenOut:                 sdk.NewCoin(ETH, osmomath.NewInt(1609138)),
 			tokenInDenom:             USDC,
-			priceLimit:               sdk.NewDec(6056),
-			spreadFactor:             sdk.ZeroDec(),
-			secondPositionLowerPrice: sdk.NewDec(5001),
-			secondPositionUpperPrice: sdk.NewDec(6250),
+			priceLimit:               osmomath.NewDec(6056),
+			spreadFactor:             osmomath.ZeroDec(),
+			secondPositionLowerPrice: osmomath.NewDec(5001),
+			secondPositionUpperPrice: osmomath.NewDec(6250),
 			// from math import *
 			// from decimal import *
 
@@ -1433,14 +1433,14 @@ var (
 			// print(token_in)
 			// print(spread_rewards_growth)
 			// print(token_out_2)
-			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(8499999458)),
-			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(1609138)),
+			expectedTokenIn:  sdk.NewCoin(USDC, osmomath.NewInt(8499999458)),
+			expectedTokenOut: sdk.NewCoin(ETH, osmomath.NewInt(1609138)),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedTick:      31712695,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("75.582372355128594342857800328292876450"),
-			newLowerPrice:     sdk.NewDec(5001),
-			newUpperPrice:     sdk.NewDec(6250),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("75.582372355128594342857800328292876450"),
+			newLowerPrice:     osmomath.NewDec(5001),
+			newUpperPrice:     osmomath.NewDec(6250),
 		},
 		//  Sequential price ranges with a gap
 		//
@@ -1449,12 +1449,12 @@ var (
 		//              5501 ----------- 6250
 		//
 		"two sequential positions with a gap usdc (in) -> eth (out) | ofz": {
-			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820545)),
+			tokenOut:                 sdk.NewCoin(ETH, osmomath.NewInt(1820545)),
 			tokenInDenom:             USDC,
-			priceLimit:               sdk.NewDec(6106),
-			spreadFactor:             sdk.ZeroDec(),
-			secondPositionLowerPrice: sdk.NewDec(5501), // 315010
-			secondPositionUpperPrice: sdk.NewDec(6250), // 322500
+			priceLimit:               osmomath.NewDec(6106),
+			spreadFactor:             osmomath.ZeroDec(),
+			secondPositionLowerPrice: osmomath.NewDec(5501), // 315010
+			secondPositionUpperPrice: osmomath.NewDec(6250), // 322500
 			// from math import *
 			// from decimal import *
 
@@ -1491,21 +1491,21 @@ var (
 			// print(sqrt_next_2)
 			// print(token_in_2)
 			// print(token_out_2)
-			expectedTokenOut:  sdk.NewCoin(ETH, sdk.NewInt(1820545)),
-			expectedTokenIn:   sdk.NewCoin(USDC, sdk.NewInt(9999994756)),
+			expectedTokenOut:  sdk.NewCoin(ETH, osmomath.NewInt(1820545)),
+			expectedTokenIn:   sdk.NewCoin(USDC, osmomath.NewInt(9999994756)),
 			expectedTick:      32105554,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("78.138050797173647031951910080474560428"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("78.138050797173647031951910080474560428"),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315010, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice: sdk.NewDec(5501),
-			newUpperPrice: sdk.NewDec(6250),
+			newLowerPrice: osmomath.NewDec(5501),
+			newUpperPrice: osmomath.NewDec(6250),
 		},
 		// Slippage protection doesn't cause a failure but interrupts early.
 		"single position within one tick, trade completes but slippage protection interrupts trade early: usdc (in) -> eth (out) | ofz": {
-			tokenOut:     sdk.NewCoin(ETH, sdk.NewInt(1820545)),
+			tokenOut:     sdk.NewCoin(ETH, osmomath.NewInt(1820545)),
 			tokenInDenom: USDC,
-			priceLimit:   sdk.NewDec(5002),
-			spreadFactor: sdk.ZeroDec(),
+			priceLimit:   osmomath.NewDec(5002),
+			spreadFactor: osmomath.ZeroDec(),
 			// from math import *
 			// from decimal import *
 			// # Range 1: From 5000 to 5002
@@ -1520,20 +1520,20 @@ var (
 			// # Summary:
 			// print(sqrt_next_1)
 			// print(token_in_1)
-			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(4291)),
-			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(21463952)),
+			expectedTokenOut: sdk.NewCoin(ETH, osmomath.NewInt(4291)),
+			expectedTokenIn:  sdk.NewCoin(USDC, osmomath.NewInt(21463952)),
 			expectedTick:     31002000,
 			// Since we know we're going up to the price limit, we can calculate the sqrt price exactly.
-			expectedSqrtPrice: osmomath.BigDecFromSDKDec(osmomath.MustMonotonicSqrt(sdk.NewDec(5002))),
+			expectedSqrtPrice: osmomath.BigDecFromDec(osmomath.MustMonotonicSqrt(osmomath.NewDec(5002))),
 		},
 	}
 
 	swapInGivenOutSpreadRewardTestCases = map[string]SwapTest{
 		"spread factor 1: single position within one tick: eth (in) -> usdc (out) (1% spread factor) | zfo": {
-			tokenOut:     sdk.NewCoin(USDC, sdk.NewInt(42000000)),
+			tokenOut:     sdk.NewCoin(USDC, osmomath.NewInt(42000000)),
 			tokenInDenom: ETH,
-			priceLimit:   sdk.NewDec(4993),
-			spreadFactor: sdk.MustNewDecFromStr("0.01"),
+			priceLimit:   osmomath.NewDec(4993),
+			spreadFactor: osmomath.MustNewDecFromStr("0.01"),
 			// from math import *
 			// from decimal import *
 
@@ -1558,19 +1558,19 @@ var (
 			// print(sqrt_next)
 			// print(token_in)
 			// print(spread_rewards_growth)
-			expectedTokenOut: sdk.NewCoin(USDC, sdk.NewInt(42000000)),
-			expectedTokenIn:  sdk.NewCoin(ETH, sdk.NewInt(8489)),
+			expectedTokenOut: sdk.NewCoin(USDC, osmomath.NewInt(42000000)),
+			expectedTokenIn:  sdk.NewCoin(ETH, osmomath.NewInt(8489)),
 			expectedTick:     30996087,
 			// This value is the direct output of sqrt_next in the script above.
 			// The precision is exact because we properly handle rounding behavior in intermediate steps.
-			expectedSqrtPrice:                          osmomath.MustNewDecFromStr("70.683007989825007163485199999996399373"),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000055925868851"),
+			expectedSqrtPrice:                          osmomath.MustNewBigDecFromStr("70.683007989825007163485199999996399373"),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000000055925868851"),
 		},
 		"spread factor 2: two positions within one tick: usdc (in) -> eth (out) (3% spread factor) | ofz": {
-			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(8398)),
+			tokenOut:                 sdk.NewCoin(ETH, osmomath.NewInt(8398)),
 			tokenInDenom:             USDC,
-			priceLimit:               sdk.NewDec(5020),
-			spreadFactor:             sdk.MustNewDecFromStr("0.03"),
+			priceLimit:               osmomath.NewDec(5020),
+			spreadFactor:             osmomath.MustNewDecFromStr("0.03"),
 			secondPositionLowerPrice: DefaultLowerPrice,
 			secondPositionUpperPrice: DefaultUpperPrice,
 			// from math import *
@@ -1600,22 +1600,22 @@ var (
 			// print(sqrt_next)
 			// print(token_in)
 			// print(spread_rewards_growth)
-			expectedTokenOut:  sdk.NewCoin(ETH, sdk.NewInt(8398)),
-			expectedTokenIn:   sdk.NewCoin(USDC, sdk.NewInt(43297130)),
+			expectedTokenOut:  sdk.NewCoin(ETH, osmomath.NewInt(8398)),
+			expectedTokenIn:   sdk.NewCoin(USDC, osmomath.NewInt(43297130)),
 			expectedTick:      31001956,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.724512595179305566327821490232558005"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.724512595179305566327821490232558005"),
 			// two positions with same liquidity entered
-			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
-			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000427870415073442"),
+			poolLiqAmount0: osmomath.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1: osmomath.NewInt(5000000000).MulRaw(2),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000427870415073442"),
 		},
 		"spread factor 3: two positions with consecutive price ranges: usdc (in) -> eth (out) (0.1% spread factor) | ofz": {
-			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820630)),
+			tokenOut:                 sdk.NewCoin(ETH, osmomath.NewInt(1820630)),
 			tokenInDenom:             USDC,
-			priceLimit:               sdk.NewDec(6106),
-			spreadFactor:             sdk.MustNewDecFromStr("0.001"),
-			secondPositionLowerPrice: sdk.NewDec(5500), // 315000
-			secondPositionUpperPrice: sdk.NewDec(6250), // 322500
+			priceLimit:               osmomath.NewDec(6106),
+			spreadFactor:             osmomath.MustNewDecFromStr("0.001"),
+			secondPositionLowerPrice: osmomath.NewDec(5500), // 315000
+			secondPositionUpperPrice: osmomath.NewDec(6250), // 322500
 			// from math import *
 			// from decimal import *
 
@@ -1658,23 +1658,23 @@ var (
 			// print(sqrt_next_2)
 			// print(token_in)
 			// print(spread_rewards_growth)
-			expectedTokenOut:  sdk.NewCoin(ETH, sdk.NewInt(1820630)),
-			expectedTokenIn:   sdk.NewCoin(USDC, sdk.NewInt(10010009580)),
+			expectedTokenOut:  sdk.NewCoin(ETH, osmomath.NewInt(1820630)),
+			expectedTokenIn:   sdk.NewCoin(USDC, osmomath.NewInt(10010009580)),
 			expectedTick:      32105414,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("78.137148837036751554352224945360339905"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("78.137148837036751554352224945360339905"),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315000, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice: sdk.NewDec(5500),
-			newUpperPrice: sdk.NewDec(6250),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.007433904623597252"),
+			newLowerPrice: osmomath.NewDec(5500),
+			newUpperPrice: osmomath.NewDec(6250),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.007433904623597252"),
 		},
 		"spread factor 4: two positions with partially overlapping price ranges: eth (in) -> usdc (out) (10% spread factor) | zfo": {
-			tokenOut:                 sdk.NewCoin(USDC, sdk.NewInt(9321276930)),
+			tokenOut:                 sdk.NewCoin(USDC, osmomath.NewInt(9321276930)),
 			tokenInDenom:             ETH,
-			priceLimit:               sdk.NewDec(4128),
-			spreadFactor:             sdk.MustNewDecFromStr("0.1"),
-			secondPositionLowerPrice: sdk.NewDec(4000),
-			secondPositionUpperPrice: sdk.NewDec(4999),
+			priceLimit:               osmomath.NewDec(4128),
+			spreadFactor:             osmomath.MustNewDecFromStr("0.1"),
+			secondPositionLowerPrice: osmomath.NewDec(4000),
+			secondPositionUpperPrice: osmomath.NewDec(4999),
 			// from math import *
 			// from decimal import *
 
@@ -1726,27 +1726,27 @@ var (
 			// print(token_in)
 			// print(spread_rewards_growth)
 			// print(token_out_2)
-			expectedTokenIn:   sdk.NewCoin("eth", sdk.NewInt(2222223)),
-			expectedTokenOut:  sdk.NewCoin("usdc", sdk.NewInt(9321276930)),
+			expectedTokenIn:   sdk.NewCoin("eth", osmomath.NewInt(2222223)),
+			expectedTokenOut:  sdk.NewCoin("usdc", osmomath.NewInt(9321276930)),
 			expectedTick:      30129083,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("64.257943796086567725876595411582357676"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("64.257943796086567725876595411582357676"),
 			// Started from DefaultSpreadRewardAccumCoins * 3, crossed tick once, thus becoming
 			// DefaultSpreadRewardAccumCoins * 3 - DefaultSpreadRewardAccumCoins = DefaultSpreadRewardAccumCoins * 2
-			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedLowerTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
+			expectedUpperTickSpreadRewardGrowth:       DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 300000, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 309990, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice: sdk.NewDec(4000),
-			newUpperPrice: sdk.NewDec(4999),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000157793641388331"),
+			newLowerPrice: osmomath.NewDec(4000),
+			newUpperPrice: osmomath.NewDec(4999),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000157793641388331"),
 		},
 		"spread factor 5: two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc (in) -> eth (out) (5% spread factor) | ofz": {
-			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1609138)),
+			tokenOut:                 sdk.NewCoin(ETH, osmomath.NewInt(1609138)),
 			tokenInDenom:             USDC,
-			priceLimit:               sdk.NewDec(6056),
-			spreadFactor:             sdk.MustNewDecFromStr("0.05"),
-			secondPositionLowerPrice: sdk.NewDec(5001),
-			secondPositionUpperPrice: sdk.NewDec(6250),
+			priceLimit:               osmomath.NewDec(6056),
+			spreadFactor:             osmomath.MustNewDecFromStr("0.05"),
+			secondPositionLowerPrice: osmomath.NewDec(5001),
+			secondPositionUpperPrice: osmomath.NewDec(6250),
 			// from math import *
 			// from decimal import *
 
@@ -1798,23 +1798,23 @@ var (
 			// print(token_in)
 			// print(spread_rewards_growth)
 			// print(token_out_2)
-			expectedTokenIn:  sdk.NewCoin(USDC, sdk.NewInt(8947367851)),
-			expectedTokenOut: sdk.NewCoin(ETH, sdk.NewInt(1609138)),
+			expectedTokenIn:  sdk.NewCoin(USDC, osmomath.NewInt(8947367851)),
+			expectedTokenOut: sdk.NewCoin(ETH, osmomath.NewInt(1609138)),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 310010, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedTick:      31712695,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("75.582372355128594342857800328292876450"),
-			newLowerPrice:     sdk.NewDec(5001),
-			newUpperPrice:     sdk.NewDec(6250),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.256404959888119530"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("75.582372355128594342857800328292876450"),
+			newLowerPrice:     osmomath.NewDec(5001),
+			newUpperPrice:     osmomath.NewDec(6250),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.256404959888119530"),
 		},
 		"spread factor 6: two sequential positions with a gap usdc (in) -> eth (out) (0.03% spread factor) | ofz": {
-			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820545)),
+			tokenOut:                 sdk.NewCoin(ETH, osmomath.NewInt(1820545)),
 			tokenInDenom:             USDC,
-			priceLimit:               sdk.NewDec(6106),
-			spreadFactor:             sdk.MustNewDecFromStr("0.0003"),
-			secondPositionLowerPrice: sdk.NewDec(5501), // 315010
-			secondPositionUpperPrice: sdk.NewDec(6250), // 322500
+			priceLimit:               osmomath.NewDec(6106),
+			spreadFactor:             osmomath.MustNewDecFromStr("0.0003"),
+			secondPositionLowerPrice: osmomath.NewDec(5501), // 315010
+			secondPositionUpperPrice: osmomath.NewDec(6250), // 322500
 			// from math import *
 			// from decimal import *
 
@@ -1856,21 +1856,21 @@ var (
 			// print(token_in)
 			// print(spread_rewards_growth)
 			// print(token_out_2)
-			expectedTokenOut:  sdk.NewCoin(ETH, sdk.NewInt(1820545)),
-			expectedTokenIn:   sdk.NewCoin(USDC, sdk.NewInt(10002995655)),
+			expectedTokenOut:  sdk.NewCoin(ETH, osmomath.NewInt(1820545)),
+			expectedTokenIn:   sdk.NewCoin(USDC, osmomath.NewInt(10002995655)),
 			expectedTick:      32105554,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("78.138050797173647031951910080474560428"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("78.138050797173647031951910080474560428"),
 			expectedSecondLowerTickSpreadRewardGrowth: secondPosition{tickIndex: 315010, expectedSpreadRewardGrowth: cl.EmptyCoins},
 			expectedSecondUpperTickSpreadRewardGrowth: secondPosition{tickIndex: 322500, expectedSpreadRewardGrowth: cl.EmptyCoins},
-			newLowerPrice: sdk.NewDec(5501),
-			newUpperPrice: sdk.NewDec(6250),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.002226857353494143"),
+			newLowerPrice: osmomath.NewDec(5501),
+			newUpperPrice: osmomath.NewDec(6250),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.002226857353494143"),
 		},
 		"spread factor 7: single position within one tick, trade completes but slippage protection interrupts trade early: usdc (in) -> eth (out) (1% spread factor) | ofz": {
-			tokenOut:     sdk.NewCoin(ETH, sdk.NewInt(1820545)),
+			tokenOut:     sdk.NewCoin(ETH, osmomath.NewInt(1820545)),
 			tokenInDenom: USDC,
-			priceLimit:   sdk.NewDec(5002),
-			spreadFactor: sdk.MustNewDecFromStr("0.01"),
+			priceLimit:   osmomath.NewDec(5002),
+			spreadFactor: osmomath.MustNewDecFromStr("0.01"),
 			// from math import *
 			// from decimal import *
 			// # Range 1: From 5000 to 5002
@@ -1890,34 +1890,34 @@ var (
 			// print(sqrt_next_1)
 			// print(token_in)
 			// print(spread_rewards_growth)
-			expectedTokenOut:  sdk.NewCoin(ETH, sdk.NewInt(4291)),
-			expectedTokenIn:   sdk.NewCoin(USDC, sdk.NewInt(21680760)),
+			expectedTokenOut:  sdk.NewCoin(ETH, osmomath.NewInt(4291)),
+			expectedTokenIn:   sdk.NewCoin(USDC, osmomath.NewInt(21680760)),
 			expectedTick:      31002000,
-			expectedSqrtPrice: osmomath.MustNewDecFromStr("70.724818840347693040"),
-			expectedSpreadRewardGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000142835574082604"),
+			expectedSqrtPrice: osmomath.MustNewBigDecFromStr("70.724818840347693040"),
+			expectedSpreadRewardGrowthAccumulatorValue: osmomath.MustNewDecFromStr("0.000142835574082604"),
 		},
 	}
 
 	swapInGivenOutErrorTestCases = map[string]SwapTest{
 		"single position within one tick, trade does not complete due to lack of liquidity: usdc -> eth ": {
-			tokenOut:     sdk.NewCoin("usdc", sdk.NewInt(5300000000)),
+			tokenOut:     sdk.NewCoin("usdc", osmomath.NewInt(5300000000)),
 			tokenInDenom: "eth",
-			priceLimit:   sdk.NewDec(6000),
-			spreadFactor: sdk.ZeroDec(),
+			priceLimit:   osmomath.NewDec(6000),
+			spreadFactor: osmomath.ZeroDec(),
 			expectErr:    true,
 		},
 		"single position within one tick, trade does not complete due to lack of liquidity: eth -> usdc ": {
-			tokenOut:     sdk.NewCoin("eth", sdk.NewInt(1100000)),
+			tokenOut:     sdk.NewCoin("eth", osmomath.NewInt(1100000)),
 			tokenInDenom: "usdc",
-			priceLimit:   sdk.NewDec(4000),
-			spreadFactor: sdk.ZeroDec(),
+			priceLimit:   osmomath.NewDec(4000),
+			spreadFactor: osmomath.ZeroDec(),
 			expectErr:    true,
 		},
 	}
 
 	additiveSpreadRewardGrowthGlobalErrTolerance = osmomath.ErrTolerance{
 		// 2 * 10^-18
-		AdditiveTolerance: sdk.SmallestDec().Mul(sdk.NewDec(2)),
+		AdditiveTolerance: osmomath.SmallestDec().Mul(osmomath.NewDec(2)),
 	}
 )
 
@@ -1959,7 +1959,7 @@ func (s *KeeperTestSuite) preparePoolAndDefaultPositions(test SwapTest) types.Co
 	return pool
 }
 
-func (s *KeeperTestSuite) preparePoolWithCustSpread(spread sdk.Dec) types.ConcentratedPoolExtension {
+func (s *KeeperTestSuite) preparePoolWithCustSpread(spread osmomath.Dec) types.ConcentratedPoolExtension {
 	clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
 	clParams.AuthorizedSpreadFactors = append(clParams.AuthorizedSpreadFactors, spread)
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
@@ -2006,8 +2006,8 @@ func (s *KeeperTestSuite) assertSpreadRewardAccum(test SwapTest, poolId uint64) 
 	s.Require().Equal(1, spreadRewardAccumValue.Len(), "spread reward accumulator should only have one denom, was (%s)", spreadRewardAccumValue)
 	s.Require().Equal(0,
 		additiveSpreadRewardGrowthGlobalErrTolerance.CompareBigDec(
-			osmomath.BigDecFromSDKDec(test.expectedSpreadRewardGrowthAccumulatorValue),
-			osmomath.BigDecFromSDKDec(spreadRewardVal),
+			osmomath.BigDecFromDec(test.expectedSpreadRewardGrowthAccumulatorValue),
+			osmomath.BigDecFromDec(spreadRewardVal),
 		),
 		fmt.Sprintf("expected %s, got %s", test.expectedSpreadRewardGrowthAccumulatorValue.String(), spreadRewardVal.String()),
 	)
@@ -2019,7 +2019,7 @@ func (s *KeeperTestSuite) assertZeroSpreadRewards(poolId uint64) {
 	s.Require().Equal(0, spreadRewardAccum.GetValue().Len())
 }
 
-func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.ConcentratedPoolExtension) sdk.Dec {
+func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.ConcentratedPoolExtension) osmomath.Dec {
 	if test.newLowerPrice.IsNil() && test.newUpperPrice.IsNil() {
 		test.newLowerPrice = DefaultLowerPrice
 		test.newUpperPrice = DefaultUpperPrice
@@ -2041,12 +2041,12 @@ func (s *KeeperTestSuite) getExpectedLiquidity(test SwapTest, pool types.Concent
 	return expectedLiquidity
 }
 
-func (s *KeeperTestSuite) lowerUpperPricesToTick(lowerPrice, upperPrice sdk.Dec, tickSpacing uint64) (int64, int64) {
+func (s *KeeperTestSuite) lowerUpperPricesToTick(lowerPrice, upperPrice osmomath.Dec, tickSpacing uint64) (int64, int64) {
 	lowerSqrtPrice := osmomath.MustMonotonicSqrt(lowerPrice)
-	newLowerTick, err := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(lowerSqrtPrice), tickSpacing)
+	newLowerTick, err := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromDec(lowerSqrtPrice), tickSpacing)
 	s.Require().NoError(err)
 	upperSqrtPrice := osmomath.MustMonotonicSqrt(upperPrice)
-	newUpperTick, err := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromSDKDec(upperSqrtPrice), tickSpacing)
+	newUpperTick, err := clmath.SqrtPriceToTickRoundDownSpacing(osmomath.BigDecFromDec(upperSqrtPrice), tickSpacing)
 	s.Require().NoError(err)
 	return newLowerTick, newUpperTick
 }
@@ -2084,7 +2084,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapOutAmtGivenIn() {
 			} else {
 				s.testSwapResult(test, pool, swapResult.AmountIn, swapResult.AmountOut, poolUpdates, err)
 
-				expectedSpreadFactors := swapResult.AmountIn.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
+				expectedSpreadFactors := swapResult.AmountIn.ToLegacyDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
 				s.Require().Equal(expectedSpreadFactors.String(), swapResult.SpreadRewards.TruncateInt().String())
 
 				// check that the pool has not been modified after performing calc
@@ -2115,7 +2115,7 @@ func (s *KeeperTestSuite) TestSwap_NoPositions() {
 	_, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
 		s.Ctx, s.TestAccs[0], pool,
 		DefaultCoin0, DefaultCoin1.Denom,
-		sdk.ZeroDec(), sdk.ZeroDec(),
+		osmomath.ZeroDec(), osmomath.ZeroDec(),
 	)
 	s.Require().Error(err)
 	s.Require().ErrorIs(err, types.NoSpotPriceWhenNoLiquidityError{PoolId: pool.GetId()})
@@ -2123,7 +2123,7 @@ func (s *KeeperTestSuite) TestSwap_NoPositions() {
 	_, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 		s.Ctx, s.TestAccs[0], pool,
 		DefaultCoin0, DefaultCoin1.Denom,
-		sdk.ZeroDec(), sdk.ZeroDec(),
+		osmomath.ZeroDec(), osmomath.ZeroDec(),
 	)
 
 	s.Require().Error(err)
@@ -2138,7 +2138,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 			s.setupAndFundSwapTest()
 
 			// Create default CL pool
-			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.ZeroDec())
+			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, osmomath.ZeroDec())
 
 			// manually update spread factor accumulator for the pool
 			spreadFactorAccum, err := s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
@@ -2152,7 +2152,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 			// add 2*DefaultSpreadRewardAccumCoins to spread factor accumulator, now spread factor accumulator has 3*DefaultSpreadRewardAccumCoins as its value
 			spreadFactorAccum, err = s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
-			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)))
+			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)))
 
 			// perform swap
 			_, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
@@ -2192,7 +2192,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 	}
 }
 
-func (s *KeeperTestSuite) testSwapResult(test SwapTest, pool types.ConcentratedPoolExtension, amountIn, amountOut sdk.Int, poolUpdates cl.PoolUpdates, err error) {
+func (s *KeeperTestSuite) testSwapResult(test SwapTest, pool types.ConcentratedPoolExtension, amountIn, amountOut osmomath.Int, poolUpdates cl.PoolUpdates, err error) {
 	s.Require().NoError(err)
 
 	// check that tokenIn, tokenOut, tick, and sqrtPrice from CalcOut are all what we expected
@@ -2228,7 +2228,7 @@ func (s *KeeperTestSuite) TestComputeAndSwapInAmtGivenOut() {
 			} else {
 				s.testSwapResult(test, pool, swapResult.AmountIn, swapResult.AmountOut, poolUpdates, err)
 
-				expectedSpreadRewards := swapResult.AmountIn.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
+				expectedSpreadRewards := swapResult.AmountIn.ToLegacyDec().Mul(pool.GetSpreadFactor(s.Ctx)).TruncateInt()
 				s.Require().Equal(expectedSpreadRewards.String(), swapResult.SpreadRewards.TruncateInt().String())
 			}
 
@@ -2286,7 +2286,7 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 			// add 2*DefaultSpreadRewardAccumCoins to spread factor accumulator, now spread factor accumulator has 3*DefaultSpreadRewardAccumCoins as its value
 			spreadFactorAccum, err = s.App.ConcentratedLiquidityKeeper.GetSpreadRewardAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
-			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins.MulDec(sdk.NewDec(2)))
+			spreadFactorAccum.AddToAccumulator(DefaultSpreadRewardAccumCoins.MulDec(osmomath.NewDec(2)))
 
 			// perform swap
 			_, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
@@ -2329,9 +2329,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 	type param struct {
 		tokenIn           sdk.Coin
 		tokenOutDenom     string
-		underFundBy       sdk.Int
-		tokenOutMinAmount sdk.Int
-		expectedTokenOut  sdk.Int
+		underFundBy       osmomath.Int
+		tokenOutMinAmount osmomath.Int
+		expectedTokenOut  osmomath.Int
 	}
 
 	// liquidity and sqrtPriceCurrent for all tests are:
@@ -2365,10 +2365,10 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			// print(expectedTokenIn)
 			// print(expectedTokenOut)
 			param: param{
-				tokenIn:           sdk.NewCoin(USDC, sdk.NewInt(42000000)),
+				tokenIn:           sdk.NewCoin(USDC, osmomath.NewInt(42000000)),
 				tokenOutDenom:     ETH,
 				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
-				expectedTokenOut:  sdk.NewInt(8396),
+				expectedTokenOut:  osmomath.NewInt(8396),
 			},
 		},
 		{
@@ -2392,25 +2392,25 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			// print(expectedTokenIn)
 			// print(expectedTokenOut)
 			param: param{
-				tokenIn:           sdk.NewCoin(ETH, sdk.NewInt(13370)),
+				tokenIn:           sdk.NewCoin(ETH, osmomath.NewInt(13370)),
 				tokenOutDenom:     USDC,
 				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
-				expectedTokenOut:  sdk.NewInt(66808388),
+				expectedTokenOut:  osmomath.NewInt(66808388),
 			},
 		},
 		{
 			name: "out is lesser than min amount",
 			param: param{
-				tokenIn:           sdk.NewCoin(USDC, sdk.NewInt(42000000)),
+				tokenIn:           sdk.NewCoin(USDC, osmomath.NewInt(42000000)),
 				tokenOutDenom:     ETH,
-				tokenOutMinAmount: sdk.NewInt(8397),
+				tokenOutMinAmount: osmomath.NewInt(8397),
 			},
-			expectedErr: &types.AmountLessThanMinError{TokenAmount: sdk.NewInt(8396), TokenMin: sdk.NewInt(8397)},
+			expectedErr: &types.AmountLessThanMinError{TokenAmount: osmomath.NewInt(8396), TokenMin: osmomath.NewInt(8397)},
 		},
 		{
 			name: "in and out denom are same",
 			param: param{
-				tokenIn:           sdk.NewCoin(ETH, sdk.NewInt(13370)),
+				tokenIn:           sdk.NewCoin(ETH, osmomath.NewInt(13370)),
 				tokenOutDenom:     ETH,
 				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
 			},
@@ -2419,7 +2419,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 		{
 			name: "unknown in denom",
 			param: param{
-				tokenIn:           sdk.NewCoin("etha", sdk.NewInt(13370)),
+				tokenIn:           sdk.NewCoin("etha", osmomath.NewInt(13370)),
 				tokenOutDenom:     ETH,
 				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
 			},
@@ -2428,7 +2428,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 		{
 			name: "unknown out denom",
 			param: param{
-				tokenIn:           sdk.NewCoin(ETH, sdk.NewInt(13370)),
+				tokenIn:           sdk.NewCoin(ETH, osmomath.NewInt(13370)),
 				tokenOutDenom:     "etha",
 				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
 			},
@@ -2437,20 +2437,20 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 		{
 			name: "insufficient user balance",
 			param: param{
-				tokenIn:           sdk.NewCoin(USDC, sdk.NewInt(42000000)),
+				tokenIn:           sdk.NewCoin(USDC, osmomath.NewInt(42000000)),
 				tokenOutDenom:     ETH,
 				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
-				expectedTokenOut:  sdk.NewInt(8396),
-				underFundBy:       sdk.OneInt(),
+				expectedTokenOut:  osmomath.NewInt(8396),
+				underFundBy:       osmomath.OneInt(),
 			},
 			expectedErr: &types.InsufficientUserBalanceError{},
 		},
 		{
 			name: "calculates zero due to small amount in",
 			param: param{
-				tokenIn:           sdk.NewCoin(USDC, sdk.NewInt(1)),
+				tokenIn:           sdk.NewCoin(USDC, osmomath.NewInt(1)),
 				tokenOutDenom:     ETH,
-				tokenOutMinAmount: sdk.OneInt(),
+				tokenOutMinAmount: osmomath.OneInt(),
 			},
 			expectedErr: &types.InvalidAmountCalculatedError{},
 		},
@@ -2470,7 +2470,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 
 			// The logic below is to trigger a specific error branch
 			// where user does not have enough funds.
-			underFundBy := sdk.ZeroInt()
+			underFundBy := osmomath.ZeroInt()
 			if !test.param.underFundBy.IsNil() {
 				underFundBy = test.param.underFundBy
 			}
@@ -2512,15 +2512,15 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			spotPriceAfter := pool.GetCurrentSqrtPrice().PowerInteger(2)
 
 			// Ratio of the token out should be between the before spot price and after spot price.
-			tradeAvgPrice := tokenOutAmount.ToDec().Quo(test.param.tokenIn.Amount.ToDec())
+			tradeAvgPrice := tokenOutAmount.ToLegacyDec().Quo(test.param.tokenIn.Amount.ToLegacyDec())
 
 			if zeroForOne {
-				s.Require().True(tradeAvgPrice.LT(spotPriceBefore.SDKDec()))
-				s.Require().True(tradeAvgPrice.GT(spotPriceAfter.SDKDec()))
+				s.Require().True(tradeAvgPrice.LT(spotPriceBefore.Dec()))
+				s.Require().True(tradeAvgPrice.GT(spotPriceAfter.Dec()))
 			} else {
-				tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
-				s.Require().True(tradeAvgPrice.GT(spotPriceBefore.SDKDec()))
-				s.Require().True(tradeAvgPrice.LT(spotPriceAfter.SDKDec()))
+				tradeAvgPrice = osmomath.OneDec().Quo(tradeAvgPrice)
+				s.Require().True(tradeAvgPrice.GT(spotPriceBefore.Dec()))
+				s.Require().True(tradeAvgPrice.LT(spotPriceAfter.Dec()))
 			}
 
 			// Validate that listeners were called the desired number of times
@@ -2533,13 +2533,13 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 	// this is used for the test case with price impact protection
 	// to ensure that the balances always have enough funds to cover
 	// the swap and trigger the desired error branch
-	differenceFromMax := sdk.OneInt()
+	differenceFromMax := osmomath.OneInt()
 
 	type param struct {
 		tokenOut         sdk.Coin
 		tokenInDenom     string
-		tokenInMaxAmount sdk.Int
-		expectedTokenIn  sdk.Int
+		tokenInMaxAmount osmomath.Int
+		expectedTokenIn  osmomath.Int
 	}
 
 	tests := []struct {
@@ -2551,7 +2551,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			name: "Proper swap eth > usdc",
 
 			param: param{
-				tokenOut:         sdk.NewCoin(USDC, sdk.NewInt(42000000)),
+				tokenOut:         sdk.NewCoin(USDC, osmomath.NewInt(42000000)),
 				tokenInDenom:     ETH,
 				tokenInMaxAmount: types.MaxSpotPrice.RoundInt(),
 				// from math import *
@@ -2561,7 +2561,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 				// sqrt_next = sqrt_cur - token_out / liq
 				// token_in = math.ceil(liq * (sqrt_cur - sqrt_next) / (sqrt_cur * sqrt_next))
 				// print(token_in)
-				expectedTokenIn: sdk.NewInt(8404),
+				expectedTokenIn: osmomath.NewInt(8404),
 			},
 		},
 		{
@@ -2575,36 +2575,36 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			// token_in = ceil(liq * abs(sqrt_cur - sqrt_next))
 			// print(token_in)
 			param: param{
-				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
+				tokenOut:         sdk.NewCoin(ETH, osmomath.NewInt(13370)),
 				tokenInDenom:     USDC,
 				tokenInMaxAmount: types.MaxSpotPrice.RoundInt(),
-				expectedTokenIn:  sdk.NewInt(66891663),
+				expectedTokenIn:  osmomath.NewInt(66891663),
 			},
 		},
 		{
 			name: "out is more than max amount",
 			param: param{
-				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
+				tokenOut:         sdk.NewCoin(ETH, osmomath.NewInt(13370)),
 				tokenInDenom:     USDC,
-				tokenInMaxAmount: sdk.NewInt(66891663).Sub(differenceFromMax),
-				expectedTokenIn:  sdk.NewInt(66891663),
+				tokenInMaxAmount: osmomath.NewInt(66891663).Sub(differenceFromMax),
+				expectedTokenIn:  osmomath.NewInt(66891663),
 			},
-			expectedErr: &types.AmountGreaterThanMaxError{TokenAmount: sdk.NewInt(66891663), TokenMax: sdk.NewInt(66891663).Sub(differenceFromMax)},
+			expectedErr: &types.AmountGreaterThanMaxError{TokenAmount: osmomath.NewInt(66891663), TokenMax: osmomath.NewInt(66891663).Sub(differenceFromMax)},
 		},
 		{
 			name: "insufficient user balance",
 			param: param{
-				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
+				tokenOut:         sdk.NewCoin(ETH, osmomath.NewInt(13370)),
 				tokenInDenom:     USDC,
-				tokenInMaxAmount: sdk.NewInt(66891663).Sub(differenceFromMax.Mul(sdk.NewInt(2))),
-				expectedTokenIn:  sdk.NewInt(66891663),
+				tokenInMaxAmount: osmomath.NewInt(66891663).Sub(differenceFromMax.Mul(osmomath.NewInt(2))),
+				expectedTokenIn:  osmomath.NewInt(66891663),
 			},
 			expectedErr: &types.InsufficientUserBalanceError{},
 		},
 		{
 			name: "in and out denom are same",
 			param: param{
-				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
+				tokenOut:         sdk.NewCoin(ETH, osmomath.NewInt(13370)),
 				tokenInDenom:     ETH,
 				tokenInMaxAmount: types.MaxSpotPrice.RoundInt(),
 			},
@@ -2613,7 +2613,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 		{
 			name: "unknown out denom",
 			param: param{
-				tokenOut:         sdk.NewCoin("etha", sdk.NewInt(13370)),
+				tokenOut:         sdk.NewCoin("etha", osmomath.NewInt(13370)),
 				tokenInDenom:     ETH,
 				tokenInMaxAmount: types.MaxSpotPrice.RoundInt(),
 			},
@@ -2622,7 +2622,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 		{
 			name: "unknown in denom",
 			param: param{
-				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
+				tokenOut:         sdk.NewCoin(ETH, osmomath.NewInt(13370)),
 				tokenInDenom:     "etha",
 				tokenInMaxAmount: types.MaxSpotPrice.RoundInt(),
 			},
@@ -2682,17 +2682,17 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			spotPriceAfter := pool.GetCurrentSqrtPrice().PowerInteger(2)
 
 			// Ratio of the token out should be between the before spot price and after spot price.
-			tradeAvgPrice := tokenIn.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
+			tradeAvgPrice := tokenIn.ToLegacyDec().Quo(test.param.tokenOut.Amount.ToLegacyDec())
 
 			if zeroForOne {
 				// token in is token zero, token out is token one
-				tradeAvgPrice = sdk.OneDec().Quo(tradeAvgPrice)
-				s.Require().True(tradeAvgPrice.LT(spotPriceBefore.SDKDec()), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
-				s.Require().True(tradeAvgPrice.GT(spotPriceAfter.SDKDec()), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
+				tradeAvgPrice = osmomath.OneDec().Quo(tradeAvgPrice)
+				s.Require().True(tradeAvgPrice.LT(spotPriceBefore.Dec()), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
+				s.Require().True(tradeAvgPrice.GT(spotPriceAfter.Dec()), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
 			} else {
 				// token in is token one, token out is token zero
-				s.Require().True(tradeAvgPrice.GT(spotPriceBefore.SDKDec()), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
-				s.Require().True(tradeAvgPrice.LT(spotPriceAfter.SDKDec()), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
+				s.Require().True(tradeAvgPrice.GT(spotPriceBefore.Dec()), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
+				s.Require().True(tradeAvgPrice.LT(spotPriceAfter.Dec()), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
 			}
 
 			// Validate that listeners were called the desired number of times
@@ -2761,7 +2761,7 @@ func (s *KeeperTestSuite) setupSecondPosition(test SwapTest, pool types.Concentr
 	if !test.secondPositionLowerPrice.IsNil() {
 		newLowerTick, newUpperTick := s.lowerUpperPricesToTick(test.secondPositionLowerPrice, test.secondPositionUpperPrice, pool.GetTickSpacing())
 
-		_, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick, newUpperTick)
+		_, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), newLowerTick, newUpperTick)
 		s.Require().NoError(err)
 	}
 }
@@ -2837,7 +2837,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 			secondTokenIn, secondTokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 				s.Ctx, s.TestAccs[0], poolBefore,
 				firstTokenOut, firstTokenIn.Denom,
-				DefaultZeroSpreadFactor, sdk.ZeroDec(),
+				DefaultZeroSpreadFactor, osmomath.ZeroDec(),
 			)
 			s.Require().NoError(err)
 
@@ -2848,29 +2848,29 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 }
 
 func (s *KeeperTestSuite) TestUpdateSpreadRewardGrowthGlobal() {
-	ten := sdk.NewDec(10)
+	ten := osmomath.NewDec(10)
 
 	tests := map[string]struct {
-		liquidity                        sdk.Dec
-		spreadRewardChargeTotal          sdk.Dec
-		expectedSpreadRewardGrowthGlobal sdk.Dec
+		liquidity                        osmomath.Dec
+		spreadRewardChargeTotal          osmomath.Dec
+		expectedSpreadRewardGrowthGlobal osmomath.Dec
 	}{
 		"zero liquidity -> no-op": {
-			liquidity:                        sdk.ZeroDec(),
+			liquidity:                        osmomath.ZeroDec(),
 			spreadRewardChargeTotal:          ten,
-			expectedSpreadRewardGrowthGlobal: sdk.ZeroDec(),
+			expectedSpreadRewardGrowthGlobal: osmomath.ZeroDec(),
 		},
 		"non-zero liquidity -> updated": {
 			liquidity:               ten,
 			spreadRewardChargeTotal: ten,
 			// 10 / 10 = 1
-			expectedSpreadRewardGrowthGlobal: sdk.OneDec(),
+			expectedSpreadRewardGrowthGlobal: osmomath.OneDec(),
 		},
 		"rounding test: boundary spread reward growth": {
-			liquidity:               ten.Add(ten).Mul(sdk.NewDec(1e18)),
+			liquidity:               ten.Add(ten).Mul(osmomath.NewDec(1e18)),
 			spreadRewardChargeTotal: ten,
 			// 10 / (20 * 10^18) = 5 * 10^-19, which we expect to truncate and leave 0.
-			expectedSpreadRewardGrowthGlobal: sdk.ZeroDec(),
+			expectedSpreadRewardGrowthGlobal: osmomath.ZeroDec(),
 		},
 	}
 
@@ -2882,8 +2882,8 @@ func (s *KeeperTestSuite) TestUpdateSpreadRewardGrowthGlobal() {
 			// Setup.
 			swapState := cl.SwapState{}
 			swapState.SetLiquidity(tc.liquidity)
-			swapState.SetGlobalSpreadRewardGrowthPerUnitLiquidity(sdk.ZeroDec())
-			swapState.SetGlobalSpreadRewardGrowth(sdk.ZeroDec())
+			swapState.SetGlobalSpreadRewardGrowthPerUnitLiquidity(osmomath.ZeroDec())
+			swapState.SetGlobalSpreadRewardGrowth(osmomath.ZeroDec())
 
 			// System under test.
 			swapState.UpdateSpreadRewardGrowthGlobal(tc.spreadRewardChargeTotal)
@@ -2914,7 +2914,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 			secondTokenIn, secondTokenOut, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
 				s.Ctx, s.TestAccs[0], poolBefore,
 				firstTokenIn, firstTokenOut.Denom,
-				DefaultZeroSpreadFactor, sdk.ZeroDec(),
+				DefaultZeroSpreadFactor, osmomath.ZeroDec(),
 			)
 			s.Require().NoError(err)
 
@@ -2926,8 +2926,8 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 
 func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 	var (
-		oneHundredETH         = sdk.NewCoin(ETH, sdk.NewInt(100_000_000))
-		oneHundredUSDC        = sdk.NewCoin(USDC, sdk.NewInt(100_000_000))
+		oneHundredETH         = sdk.NewCoin(ETH, osmomath.NewInt(100_000_000))
+		oneHundredUSDC        = sdk.NewCoin(USDC, osmomath.NewInt(100_000_000))
 		defaultInitialBalance = sdk.NewCoins(oneHundredETH, oneHundredUSDC)
 	)
 
@@ -2936,9 +2936,9 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 		poolInitialBalance   sdk.Coins
 		tokenIn              sdk.Coin
 		tokenOut             sdk.Coin
-		spreadFactor         sdk.Dec
+		spreadFactor         osmomath.Dec
 		newCurrentTick       int64
-		newLiquidity         sdk.Dec
+		newLiquidity         osmomath.Dec
 		newSqrtPrice         osmomath.BigDec
 		expectError          error
 	}{
@@ -2947,9 +2947,9 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			poolInitialBalance:   defaultInitialBalance,
 			tokenIn:              oneHundredETH,
 			tokenOut:             oneHundredUSDC,
-			spreadFactor:         sdk.MustNewDecFromStr("0.003"), // 0.3%
+			spreadFactor:         osmomath.MustNewDecFromStr("0.003"), // 0.3%
 			newCurrentTick:       2,
-			newLiquidity:         sdk.NewDec(2),
+			newLiquidity:         osmomath.NewDec(2),
 			newSqrtPrice:         osmomath.NewBigDec(2),
 		},
 		"success case with different/uneven numbers": {
@@ -2957,9 +2957,9 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			poolInitialBalance:   defaultInitialBalance,
 			tokenIn:              oneHundredETH.Add(oneHundredETH),
 			tokenOut:             oneHundredUSDC,
-			spreadFactor:         sdk.MustNewDecFromStr("0.002"), // 0.2%
+			spreadFactor:         osmomath.MustNewDecFromStr("0.002"), // 0.2%
 			newCurrentTick:       8,
-			newLiquidity:         sdk.NewDec(37),
+			newLiquidity:         osmomath.NewDec(37),
 			newSqrtPrice:         osmomath.NewBigDec(91),
 		},
 		"sender does not have enough balance": {
@@ -2967,9 +2967,9 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			poolInitialBalance:   defaultInitialBalance,
 			tokenIn:              oneHundredETH.Add(oneHundredETH),
 			tokenOut:             oneHundredUSDC,
-			spreadFactor:         sdk.MustNewDecFromStr("0.003"),
+			spreadFactor:         osmomath.MustNewDecFromStr("0.003"),
 			newCurrentTick:       2,
-			newLiquidity:         sdk.NewDec(2),
+			newLiquidity:         osmomath.NewDec(2),
 			newSqrtPrice:         osmomath.NewBigDec(2),
 			expectError:          types.InsufficientUserBalanceError{},
 		},
@@ -2978,9 +2978,9 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			poolInitialBalance:   defaultInitialBalance,
 			tokenIn:              oneHundredETH,
 			tokenOut:             oneHundredUSDC.Add(oneHundredUSDC),
-			spreadFactor:         sdk.MustNewDecFromStr("0.003"),
+			spreadFactor:         osmomath.MustNewDecFromStr("0.003"),
 			newCurrentTick:       2,
-			newLiquidity:         sdk.NewDec(2),
+			newLiquidity:         osmomath.NewDec(2),
 			newSqrtPrice:         osmomath.NewBigDec(2),
 			expectError:          types.InsufficientPoolBalanceError{},
 		},
@@ -2998,7 +2998,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			s.FundAcc(sender, tc.senderInitialBalance)
 
 			// Default pool values are initialized to one.
-			err := pool.ApplySwap(sdk.OneDec(), 1, osmomath.OneDec())
+			err := pool.ApplySwap(osmomath.OneDec(), 1, osmomath.OneBigDec())
 			s.Require().NoError(err)
 
 			// Write default pool to state.
@@ -3008,7 +3008,7 @@ func (s *KeeperTestSuite) TestUpdatePoolForSwap() {
 			// Set mock listener to make sure that is is called when desired.
 			s.setListenerMockOnConcentratedLiquidityKeeper()
 
-			expectedSpreadFactors := tc.tokenIn.Amount.ToDec().Mul(pool.GetSpreadFactor(s.Ctx)).Ceil()
+			expectedSpreadFactors := tc.tokenIn.Amount.ToLegacyDec().Mul(pool.GetSpreadFactor(s.Ctx)).Ceil()
 			expectedSpreadFactorsCoins := sdk.NewCoins(sdk.NewCoin(tc.tokenIn.Denom, expectedSpreadFactors.TruncateInt()))
 			swapDetails := cl.SwapDetails{sender, tc.tokenIn, tc.tokenOut}
 			poolUpdates := cl.PoolUpdates{tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice}
@@ -3086,7 +3086,7 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 	newSpotPrice, err := poolAfter.SpotPrice(s.Ctx, pool.GetToken1(), pool.GetToken0())
 	s.Require().NoError(err)
 	multiplicativeTolerance = osmomath.ErrTolerance{
-		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.001"),
+		MultiplicativeTolerance: osmomath.MustNewDecFromStr("0.001"),
 	}
 	s.Require().Equal(0, multiplicativeTolerance.Compare(oldSpotPrice.RoundInt(), newSpotPrice.RoundInt()))
 
@@ -3109,7 +3109,7 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 
 // validateAmountsWithTolerance validates the given amounts a and b, allowing
 // a negligible multiplicative error and an additive error of 1.
-func (s *KeeperTestSuite) validateAmountsWithTolerance(amountA sdk.Int, amountB sdk.Int) {
+func (s *KeeperTestSuite) validateAmountsWithTolerance(amountA osmomath.Int, amountB osmomath.Int) {
 	multCompare := multiplicativeTolerance.Compare(amountA, amountB)
 	if multCompare != 0 {
 		// If the multiplicative comparison fails, try again with additive tolerance of one.
@@ -3136,14 +3136,14 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 
 	// Determine amount of ETH and USDC to swap per swap.
 	// These values were chosen as to not deplete the entire liquidity, but enough to move the price considerably.
-	swapCoin0 := sdk.NewCoin(ETH, DefaultAmt0.Quo(sdk.NewInt(int64(positions.numSwaps))))
-	swapCoin1 := sdk.NewCoin(USDC, DefaultAmt1.Quo(sdk.NewInt(int64(positions.numSwaps))))
+	swapCoin0 := sdk.NewCoin(ETH, DefaultAmt0.Quo(osmomath.NewInt(int64(positions.numSwaps))))
+	swapCoin1 := sdk.NewCoin(USDC, DefaultAmt1.Quo(osmomath.NewInt(int64(positions.numSwaps))))
 
 	// Default setup only creates 3 accounts, but we need 5 for this test.
 	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
 
 	// Create a default CL pool, but with a 0.3 percent swap spread factor.
-	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.MustNewDecFromStr("0.003"))
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, osmomath.MustNewDecFromStr("0.003"))
 
 	positionIds := make([][]uint64, 4)
 	// Setup full range position across all four accounts
@@ -3208,10 +3208,10 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// print(token_out) # 982676.1324268988579833395181
 
 	// Get expected values from the calculations above
-	expectedSqrtPrice := osmomath.MustNewDecFromStr("71.74138432587113364823838192")
+	expectedSqrtPrice := osmomath.MustNewBigDecFromStr("71.74138432587113364823838192")
 	actualSqrtPrice := clPool.GetCurrentSqrtPrice()
-	expectedTokenIn := swapCoin1.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut := sdk.NewInt(982676)
+	expectedTokenIn := swapCoin1.Amount.Mul(osmomath.NewInt(int64(positions.numSwaps)))
+	expectedTokenOut := osmomath.NewInt(982676)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice), "expected sqrt price: %s, actual sqrt price: %s", expectedSqrtPrice, actualSqrtPrice)
@@ -3268,10 +3268,10 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// print(token_out)    # 5052068983.121266708067570832
 
 	// Get expected values from the calculations above
-	expectedSqrtPrice = osmomath.MustNewDecFromStr("70.64112736841825140176332377")
+	expectedSqrtPrice = osmomath.MustNewBigDecFromStr("70.64112736841825140176332377")
 	actualSqrtPrice = clPool.GetCurrentSqrtPrice()
-	expectedTokenIn = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut = sdk.NewInt(5052068983)
+	expectedTokenIn = swapCoin0.Amount.Mul(osmomath.NewInt(int64(positions.numSwaps)))
+	expectedTokenOut = osmomath.NewInt(5052068983)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
@@ -3328,10 +3328,10 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// print(token_out)    # 882804.6589413517320313885494
 
 	// Get expected values from the calculations above
-	expectedSqrtPrice = osmomath.MustNewDecFromStr("76.22545423006231767390422658")
+	expectedSqrtPrice = osmomath.MustNewBigDecFromStr("76.22545423006231767390422658")
 	actualSqrtPrice = clPool.GetCurrentSqrtPrice()
-	expectedTokenIn = swapCoin1.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut = sdk.NewInt(882804)
+	expectedTokenIn = swapCoin1.Amount.Mul(osmomath.NewInt(int64(positions.numSwaps)))
+	expectedTokenOut = osmomath.NewInt(882804)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
@@ -3374,10 +3374,10 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// print(token_out)  # 4509814620.762503497903902725
 
 	// Get expected values from the calculations above
-	expectedSqrtPrice = osmomath.MustNewDecFromStr("63.97671895942244949922335999")
+	expectedSqrtPrice = osmomath.MustNewBigDecFromStr("63.97671895942244949922335999")
 	actualSqrtPrice = clPool.GetCurrentSqrtPrice()
-	expectedTokenIn = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut = sdk.NewInt(4509814620)
+	expectedTokenIn = swapCoin0.Amount.Mul(osmomath.NewInt(int64(positions.numSwaps)))
+	expectedTokenOut = osmomath.NewInt(4509814620)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
@@ -3396,19 +3396,19 @@ func (s *KeeperTestSuite) TestInfiniteSwapLoop_OutGivenIn() {
 
 	// Create position near min tick
 	s.FundAcc(positionOwner, DefaultRangeTestParams.baseAssets.Add(DefaultRangeTestParams.baseAssets...))
-	_, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), positionOwner, DefaultRangeTestParams.baseAssets, sdk.ZeroInt(), sdk.ZeroInt(), -108000000, -107999900)
+	_, err := s.clk.CreatePosition(s.Ctx, pool.GetId(), positionOwner, DefaultRangeTestParams.baseAssets, osmomath.ZeroInt(), osmomath.ZeroInt(), -108000000, -107999900)
 	s.Require().NoError(err)
 
 	// Swap small amount to get current tick to position above, triggering the problematic function/branch (CalcAmount0Delta)
 	swapAddress := testAccs[1]
-	swapEthFunded := sdk.NewCoin(ETH, sdk.Int(sdk.MustNewDecFromStr("10000000000000000000000000000000000000000")))
-	swapUSDCFunded := sdk.NewCoin(USDC, sdk.Int(sdk.MustNewDecFromStr("10000")))
+	swapEthFunded := sdk.NewCoin(ETH, osmomath.Int(osmomath.MustNewDecFromStr("10000000000000000000000000000000000000000")))
+	swapUSDCFunded := sdk.NewCoin(USDC, osmomath.Int(osmomath.MustNewDecFromStr("10000")))
 	s.FundAcc(swapAddress, sdk.NewCoins(swapEthFunded, swapUSDCFunded))
-	_, tokenOut, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, sdk.NewCoin(USDC, sdk.NewInt(10000)), ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	_, tokenOut, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddress, pool, sdk.NewCoin(USDC, osmomath.NewInt(10000)), ETH, pool.GetSpreadFactor(s.Ctx), osmomath.ZeroDec())
 	s.Require().NoError(err)
 
 	// Swap back in the amount that was swapped out to test the inverse relationship
-	_, _, _, err = s.clk.SwapOutAmtGivenIn(s.Ctx, swapAddress, pool, tokenOut, ETH, pool.GetSpreadFactor(s.Ctx), sdk.ZeroDec())
+	_, _, _, err = s.clk.SwapOutAmtGivenIn(s.Ctx, swapAddress, pool, tokenOut, ETH, pool.GetSpreadFactor(s.Ctx), osmomath.ZeroDec())
 	s.Require().NoError(err)
 }
 
@@ -3469,7 +3469,7 @@ func (s *KeeperTestSuite) TestComputeMaxInAmtGivenMaxTicksCrossed() {
 		s.Run(test.name, func() {
 			s.SetupTest()
 			clPool := s.PrepareConcentratedPool()
-			expectedResultingTokenOutAmount := sdk.ZeroInt()
+			expectedResultingTokenOutAmount := osmomath.ZeroInt()
 
 			// Create positions and calculate expected resulting tokens
 			positions := []struct {
@@ -3498,22 +3498,22 @@ func (s *KeeperTestSuite) TestComputeMaxInAmtGivenMaxTicksCrossed() {
 			} else {
 				s.Require().NoError(err)
 
-				errTolerance := osmomath.ErrTolerance{AdditiveTolerance: sdk.NewDec(int64(test.maxTicksCrossed))}
+				errTolerance := osmomath.ErrTolerance{AdditiveTolerance: osmomath.NewDec(int64(test.maxTicksCrossed))}
 				s.Require().Equal(0, errTolerance.Compare(expectedResultingTokenOutAmount, resultingTokenOut.Amount), "expected: %s, got: %s", expectedResultingTokenOutAmount, resultingTokenOut.Amount)
 			}
 		})
 	}
 }
 
-func (s *KeeperTestSuite) createPositionAndFundAcc(clPool types.ConcentratedPoolExtension, lowerTick, upperTick int64) (amt0, amt1 sdk.Int) {
+func (s *KeeperTestSuite) createPositionAndFundAcc(clPool types.ConcentratedPoolExtension, lowerTick, upperTick int64) (amt0, amt1 osmomath.Int) {
 	s.FundAcc(s.TestAccs[0], DefaultCoins)
-	positionData, _ := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[0], DefaultCoins, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	positionData, _ := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), s.TestAccs[0], DefaultCoins, osmomath.ZeroInt(), osmomath.ZeroInt(), lowerTick, upperTick)
 	amt0 = positionData.Amount0
 	amt1 = positionData.Amount1
 	return
 }
 
-func (s *KeeperTestSuite) calculateExpectedTokens(tokenInDenom string, testMaxTicks, positionMaxTicks uint64, amt0, amt1, currentTotal sdk.Int) sdk.Int {
+func (s *KeeperTestSuite) calculateExpectedTokens(tokenInDenom string, testMaxTicks, positionMaxTicks uint64, amt0, amt1, currentTotal osmomath.Int) osmomath.Int {
 	if tokenInDenom == ETH && testMaxTicks > positionMaxTicks {
 		return currentTotal.Add(amt1)
 	} else if tokenInDenom == USDC && testMaxTicks > positionMaxTicks {

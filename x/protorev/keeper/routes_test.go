@@ -1,8 +1,7 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/osmosis-labs/osmosis/osmomath"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
@@ -203,7 +202,7 @@ func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 
 			baseDenom := types.BaseDenom{
 				Denom:    tc.swapDenom,
-				StepSize: sdk.NewInt(1_000_000),
+				StepSize: osmomath.NewInt(1_000_000),
 			}
 			routeMetaData, err := s.App.ProtoRevKeeper.BuildHighestLiquidityRoute(s.Ctx, baseDenom, tc.swapIn, tc.swapOut, tc.poolId)
 
@@ -229,7 +228,7 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 		swapOut                 string
 		poolId                  uint64
 		expectedRoutes          [][]TestRoute
-		expectedStepSize        []sdk.Int
+		expectedStepSize        []osmomath.Int
 		expectedRoutePoolPoints []uint64
 		hasRoutes               bool
 	}{
@@ -245,7 +244,7 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 					{4, "bitcoin", "Atom"},
 				},
 			},
-			expectedStepSize:        []sdk.Int{sdk.NewInt(1_000_000)},
+			expectedStepSize:        []osmomath.Int{osmomath.NewInt(1_000_000)},
 			expectedRoutePoolPoints: []uint64{6},
 			hasRoutes:               true,
 		},
@@ -262,7 +261,7 @@ func (s *KeeperTestSuite) TestBuildHotRoutes() {
 					{10, "test/2", "Atom"},
 				},
 			},
-			expectedStepSize:        []sdk.Int{sdk.NewInt(1_000_000)},
+			expectedStepSize:        []osmomath.Int{osmomath.NewInt(1_000_000)},
 			expectedRoutePoolPoints: []uint64{8},
 			hasRoutes:               true,
 		},

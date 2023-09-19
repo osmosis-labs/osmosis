@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
@@ -42,7 +43,7 @@ func CreateUpgradeHandler(
 		currentConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
 		defaultPoolManagerParams := poolmanagertypes.DefaultParams()
 		defaultPoolManagerParams.AuthorizedQuoteDenoms = currentConcentratedLiquidityParams.AuthorizedQuoteDenoms
-		defaultPoolManagerParams.TakerFeeParams.DefaultTakerFee = sdk.ZeroDec()
+		defaultPoolManagerParams.TakerFeeParams.DefaultTakerFee = osmomath.ZeroDec()
 		keepers.PoolManagerKeeper.SetParams(ctx, defaultPoolManagerParams)
 
 		return migrations, nil

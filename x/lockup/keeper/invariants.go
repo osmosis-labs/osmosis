@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 )
 
@@ -65,7 +66,7 @@ func AccumulationStoreInvariant(keeper Keeper) sdk.Invariant {
 				})
 
 				locks := keeper.GetLocksLongerThanDurationDenom(ctx, denom, duration)
-				lockupSum := sdk.ZeroInt()
+				lockupSum := osmomath.ZeroInt()
 				for _, lock := range locks {
 					lockupSum = lockupSum.Add(lock.Coins.AmountOf(denom))
 				}
@@ -93,7 +94,7 @@ func LocksBalancesInvariant(keeper Keeper) sdk.Invariant {
 		// loop all denoms on lockup module
 		for _, coin := range balances {
 			denom := coin.Denom
-			lockedAmount := sdk.ZeroInt()
+			lockedAmount := osmomath.ZeroInt()
 			locksByDenom := keeper.GetLocksDenom(ctx, denom)
 			for _, lock := range locksByDenom {
 				lockedAmount = lockedAmount.Add(lock.Coins.AmountOf(denom))

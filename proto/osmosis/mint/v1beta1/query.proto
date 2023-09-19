@@ -39,7 +39,7 @@ message QueryEpochProvisionsRequest {}
 message QueryEpochProvisionsResponse {
   // epoch_provisions is the current minting per epoch provisions value.
   bytes epoch_provisions = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

@@ -65,12 +65,12 @@ message PoolRecordWithCFMMLink {
   string denom1 = 2 [ (gogoproto.moretags) = "yaml:\"denom1\"" ];
   uint64 tick_spacing = 3 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
   string exponent_at_price_one = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"exponent_at_price_one\"",
     (gogoproto.nullable) = false
   ];
   string spread_factor = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"spread_factor\"",
     (gogoproto.nullable) = false
   ];

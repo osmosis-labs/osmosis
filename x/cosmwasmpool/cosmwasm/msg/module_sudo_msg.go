@@ -4,10 +4,12 @@ package msg
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // SwapExactAmountIn
-func NewSwapExactAmountInSudoMsg(sender string, tokenIn sdk.Coin, tokenOutDenom string, tokenOutMin sdk.Int, swapFee sdk.Dec) SwapExactAmountInSudoMsg {
+func NewSwapExactAmountInSudoMsg(sender string, tokenIn sdk.Coin, tokenOutDenom string, tokenOutMin osmomath.Int, swapFee osmomath.Dec) SwapExactAmountInSudoMsg {
 	return SwapExactAmountInSudoMsg{
 		SwapExactAmountIn: SwapExactAmountIn{
 			Sender:            sender,
@@ -20,7 +22,7 @@ func NewSwapExactAmountInSudoMsg(sender string, tokenIn sdk.Coin, tokenOutDenom 
 }
 
 // SwapExactAmountOut
-func NewSwapExactAmountOutSudoMsg(sender string, tokenInDenom string, tokenOut sdk.Coin, tokenInMaxAmount sdk.Int, swapFee sdk.Dec) SwapExactAmountOutSudoMsg {
+func NewSwapExactAmountOutSudoMsg(sender string, tokenInDenom string, tokenOut sdk.Coin, tokenInMaxAmount osmomath.Int, swapFee osmomath.Dec) SwapExactAmountOutSudoMsg {
 	return SwapExactAmountOutSudoMsg{
 		SwapExactAmountOut: SwapExactAmountOut{
 			Sender:           sender,

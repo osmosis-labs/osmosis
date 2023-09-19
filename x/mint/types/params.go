@@ -7,6 +7,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,8 +35,8 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams returns new mint module parameters initialized to the given values.
 func NewParams(
-	mintDenom string, genesisEpochProvisions sdk.Dec, epochIdentifier string,
-	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
+	mintDenom string, genesisEpochProvisions osmomath.Dec, epochIdentifier string,
+	ReductionFactor osmomath.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
 	weightedDevRewardsReceivers []WeightedAddress, mintingRewardsDistributionStartEpoch int64,
 ) Params {
 	return Params{
@@ -54,15 +55,15 @@ func NewParams(
 func DefaultParams() Params {
 	return Params{
 		MintDenom:               sdk.DefaultBondDenom,
-		GenesisEpochProvisions:  sdk.NewDec(5000000),
-		EpochIdentifier:         "week",                   // 1 week
-		ReductionPeriodInEpochs: 156,                      // 3 years
-		ReductionFactor:         sdk.NewDecWithPrec(5, 1), // 0.5
+		GenesisEpochProvisions:  osmomath.NewDec(5000000),
+		EpochIdentifier:         "week",                        // 1 week
+		ReductionPeriodInEpochs: 156,                           // 3 years
+		ReductionFactor:         osmomath.NewDecWithPrec(5, 1), // 0.5
 		DistributionProportions: DistributionProportions{
-			Staking:          sdk.NewDecWithPrec(4, 1), // 0.4
-			PoolIncentives:   sdk.NewDecWithPrec(3, 1), // 0.3
-			DeveloperRewards: sdk.NewDecWithPrec(2, 1), // 0.2
-			CommunityPool:    sdk.NewDecWithPrec(1, 1), // 0.1
+			Staking:          osmomath.NewDecWithPrec(4, 1), // 0.4
+			PoolIncentives:   osmomath.NewDecWithPrec(3, 1), // 0.3
+			DeveloperRewards: osmomath.NewDecWithPrec(2, 1), // 0.2
+			CommunityPool:    osmomath.NewDecWithPrec(1, 1), // 0.1
 		},
 		WeightedDeveloperRewardsReceivers:    []WeightedAddress{},
 		MintingRewardsDistributionStartEpoch: 0,
@@ -121,14 +122,14 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 }
 
 // GetInflationProportion returns the inflation proportion of epoch
-// provisions.
-func (p Params) GetInflationProportion() sdk.Dec {
-	return sdk.OneDec().Sub(p.GetDeveloperVestingProportion())
+// provisions.osmomath.Dec
+func (p Params) GetInflationProportion() osmomath.Dec {
+	return osmomath.OneDec().Sub(p.GetDeveloperVestingProportion())
 }
 
 // GetDeveloperVestingProportion returns the developer vesting proportion of epoch
-// provisions.
-func (p Params) GetDeveloperVestingProportion() sdk.Dec {
+// provisions.osmomath.Dec
+func (p Params) GetDeveloperVestingProportion() osmomath.Dec {
 	return p.DistributionProportions.DeveloperRewards
 }
 
@@ -149,7 +150,7 @@ func validateMintDenom(i interface{}) error {
 }
 
 func validateGenesisEpochProvisions(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(osmomath.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -175,12 +176,12 @@ func validateReductionPeriodInEpochs(i interface{}) error {
 }
 
 func validateReductionFactor(i interface{}) error {
-	v, ok := i.(sdk.Dec)
+	v, ok := i.(osmomath.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.GT(sdk.NewDec(1)) {
+	if v.GT(osmomath.NewDec(1)) {
 		return fmt.Errorf("reduction factor cannot be greater than 1")
 	}
 
@@ -215,7 +216,7 @@ func validateDistributionProportions(i interface{}) error {
 
 	totalProportions := v.Staking.Add(v.PoolIncentives).Add(v.DeveloperRewards).Add(v.CommunityPool)
 
-	if !totalProportions.Equal(sdk.NewDec(1)) {
+	if !totalProportions.Equal(osmomath.NewDec(1)) {
 		return errors.New("total distributions ratio should be 1")
 	}
 
@@ -233,7 +234,7 @@ func validateWeightedDeveloperRewardsReceivers(i interface{}) error {
 		return nil
 	}
 
-	weightSum := sdk.NewDec(0)
+	weightSum := osmomath.NewDec(0)
 	for i, w := range v {
 		// we allow address to be "" to go to community pool
 		if w.Address != "" {
@@ -245,13 +246,13 @@ func validateWeightedDeveloperRewardsReceivers(i interface{}) error {
 		if !w.Weight.IsPositive() {
 			return fmt.Errorf("non-positive weight at %dth", i)
 		}
-		if w.Weight.GT(sdk.NewDec(1)) {
+		if w.Weight.GT(osmomath.NewDec(1)) {
 			return fmt.Errorf("more than 1 weight at %dth", i)
 		}
 		weightSum = weightSum.Add(w.Weight)
 	}
 
-	if !weightSum.Equal(sdk.NewDec(1)) {
+	if !weightSum.Equal(osmomath.NewDec(1)) {
 		return fmt.Errorf("invalid weight sum: %s", weightSum.String())
 	}
 

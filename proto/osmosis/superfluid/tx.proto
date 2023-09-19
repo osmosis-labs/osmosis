@@ -178,17 +178,17 @@ message MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
 
 message MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse {
   string amount0 = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"amount0\"",
     (gogoproto.nullable) = false
   ];
   string amount1 = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"amount1\"",
     (gogoproto.nullable) = false
   ];
   string liquidity_created = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"liquidity_created\"",
     (gogoproto.nullable) = false
   ];
@@ -218,12 +218,12 @@ message MsgAddToConcentratedLiquiditySuperfluidPosition {
 message MsgAddToConcentratedLiquiditySuperfluidPositionResponse {
   uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
   string amount0 = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"amount0\"",
     (gogoproto.nullable) = false
   ];
   string amount1 = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"amount1\"",
     (gogoproto.nullable) = false
   ];
@@ -231,7 +231,7 @@ message MsgAddToConcentratedLiquiditySuperfluidPositionResponse {
   // It includes the liquidity that existed before in the position
   // and the new liquidity that was added to the position.
   string new_liquidity = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"new_liquidity\"",
     (gogoproto.nullable) = false
   ];
@@ -252,7 +252,7 @@ message MsgUnbondConvertAndStake {
   string val_addr = 3;
   // min_amt_to_stake indicates the minimum amount to stake after conversion
   string min_amt_to_stake = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"min_amt_to_stake\"",
     (gogoproto.nullable) = false
   ];
@@ -268,7 +268,7 @@ message MsgUnbondConvertAndStake {
 
 message MsgUnbondConvertAndStakeResponse {
   string total_amt_staked = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"total_amt_staked\"",
     (gogoproto.nullable) = false
   ];

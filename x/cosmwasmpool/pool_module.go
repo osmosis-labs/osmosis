@@ -4,6 +4,7 @@ package cosmwasmpool
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/cosmwasm/msg"
 	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/model"
@@ -167,10 +168,10 @@ func (k Keeper) CalculateSpotPrice(
 	poolId uint64,
 	quoteAssetDenom string,
 	baseAssetDenom string,
-) (price sdk.Dec, err error) {
+) (price osmomath.Dec, err error) {
 	cosmwasmPool, err := k.GetPoolById(ctx, poolId)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 
 	return cosmwasmPool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
@@ -188,7 +189,7 @@ func (k Keeper) CalculateSpotPrice(
 // - swapFee: The fee associated with the swap operation.
 //
 // Returns:
-// - sdk.Int: The actual amount of the output token received after the swap.
+// - osmomath.Int: The actual amount of the output token received after the swap.
 // - error: An error if the swap operation fails or if the pool conversion fails.
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
@@ -196,12 +197,12 @@ func (k Keeper) SwapExactAmountIn(
 	pool poolmanagertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
-	tokenOutMinAmount sdk.Int,
-	swapFee sdk.Dec,
-) (sdk.Int, error) {
+	tokenOutMinAmount osmomath.Int,
+	swapFee osmomath.Dec,
+) (osmomath.Int, error) {
 	cosmwasmPool, err := k.asCosmwasmPool(pool)
 	if err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 
 	// Send token in from sender to the pool
@@ -209,13 +210,13 @@ func (k Keeper) SwapExactAmountIn(
 	// However, note that the contract sends the token back to the sender after the swap
 	// As a result, we do not need to worry about sending it back here.
 	if err := k.bankKeeper.SendCoins(ctx, sender, sdk.MustAccAddressFromBech32(cosmwasmPool.GetContractAddress()), sdk.NewCoins(tokenIn)); err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 
 	request := msg.NewSwapExactAmountInSudoMsg(sender.String(), tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
 	response, err := cosmwasm.Sudo[msg.SwapExactAmountInSudoMsg, msg.SwapExactAmountInSudoMsgResponse](ctx, k.contractKeeper, cosmwasmPool.GetContractAddress(), request)
 	if err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 
 	return response.TokenOutAmount, nil
@@ -238,7 +239,7 @@ func (k Keeper) CalcOutAmtGivenIn(
 	poolI poolmanagertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
-	swapFee sdk.Dec,
+	swapFee osmomath.Dec,
 ) (tokenOut sdk.Coin, err error) {
 	cosmwasmPool, err := k.asCosmwasmPool(poolI)
 	if err != nil {
@@ -266,20 +267,20 @@ func (k Keeper) CalcOutAmtGivenIn(
 // - swapFee: The fee associated with the swap operation.
 //
 // Returns:
-// - sdk.Int: The actual amount of the input token used in the swap.
+// - osmomath.Int: The actual amount of the input token used in the swap.
 // - error: An error if the swap operation fails or if the pool conversion fails.
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	pool poolmanagertypes.PoolI,
 	tokenInDenom string,
-	tokenInMaxAmount sdk.Int,
+	tokenInMaxAmount osmomath.Int,
 	tokenOut sdk.Coin,
-	swapFee sdk.Dec,
-) (tokenInAmount sdk.Int, err error) {
+	swapFee osmomath.Dec,
+) (tokenInAmount osmomath.Int, err error) {
 	cosmwasmPool, err := k.asCosmwasmPool(pool)
 	if err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 
 	contractAddr := sdk.MustAccAddressFromBech32(cosmwasmPool.GetContractAddress())
@@ -288,7 +289,7 @@ func (k Keeper) SwapExactAmountOut(
 	// We do this because sudo message does not support sending coins from the sender
 	// And we need to send the max amount because we do not know how much the contract will use.
 	if err := k.bankKeeper.SendCoins(ctx, sender, contractAddr, sdk.NewCoins(sdk.NewCoin(tokenInDenom, tokenInMaxAmount))); err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 
 	// Note that the contract sends the token out back to the sender after the swap
@@ -296,7 +297,7 @@ func (k Keeper) SwapExactAmountOut(
 	request := msg.NewSwapExactAmountOutSudoMsg(sender.String(), tokenInDenom, tokenOut, tokenInMaxAmount, swapFee)
 	response, err := cosmwasm.Sudo[msg.SwapExactAmountOutSudoMsg, msg.SwapExactAmountOutSudoMsgResponse](ctx, k.contractKeeper, cosmwasmPool.GetContractAddress(), request)
 	if err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 
 	tokenInExcessiveAmount := tokenInMaxAmount.Sub(response.TokenInAmount)
@@ -305,7 +306,7 @@ func (k Keeper) SwapExactAmountOut(
 
 	// required amount should be less than or equal to max amount
 	if tokenInExcessiveAmount.IsNegative() {
-		return sdk.Int{}, types.NegativeExcessiveTokenInAmountError{
+		return osmomath.Int{}, types.NegativeExcessiveTokenInAmountError{
 			TokenInMaxAmount:       tokenInMaxAmount,
 			TokenInRequiredAmount:  response.TokenInAmount,
 			TokenInExcessiveAmount: tokenInExcessiveAmount,
@@ -315,7 +316,7 @@ func (k Keeper) SwapExactAmountOut(
 	// Send excessibe token in from pool back to sender
 	if tokenInExcessiveAmount.IsPositive() {
 		if err := k.bankKeeper.SendCoins(ctx, contractAddr, sender, sdk.NewCoins(sdk.NewCoin(tokenInDenom, tokenInExcessiveAmount))); err != nil {
-			return sdk.Int{}, err
+			return osmomath.Int{}, err
 		}
 	}
 
@@ -339,7 +340,7 @@ func (k Keeper) CalcInAmtGivenOut(
 	poolI poolmanagertypes.PoolI,
 	tokenOut sdk.Coin,
 	tokenInDenom string,
-	swapFee sdk.Dec,
+	swapFee osmomath.Dec,
 ) (tokenIn sdk.Coin, err error) {
 	cosmwasmPool, err := k.asCosmwasmPool(poolI)
 	if err != nil {

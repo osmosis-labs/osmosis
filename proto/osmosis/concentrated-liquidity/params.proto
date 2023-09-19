@@ -15,7 +15,7 @@ message Params {
   repeated uint64 authorized_tick_spacing = 1
       [ (gogoproto.moretags) = "yaml:\"authorized_tick_spacing\"" ];
   repeated string authorized_spread_factors = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"authorized_spread_factors\"",
     (gogoproto.nullable) = false
   ];
@@ -26,7 +26,7 @@ message Params {
   // This field can range from (0,1]. If set to 1, it indicates that all
   // incentives stay at cl pool.
   string balancer_shares_reward_discount = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"balancer_shares_reward_discount\"",
     (gogoproto.nullable) = false
   ];

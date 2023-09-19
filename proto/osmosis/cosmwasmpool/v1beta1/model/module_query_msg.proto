@@ -16,7 +16,7 @@ message CalcOutAmtGivenIn {
 
   // swap_fee is the swap fee for this swap estimate.
   string swap_fee = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }
@@ -42,7 +42,7 @@ message CalcInAmtGivenOut {
 
   // swap_fee is the swap fee for this swap estimate.
   string swap_fee = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }
