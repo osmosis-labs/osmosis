@@ -612,8 +612,6 @@ func (s *TestSuite) TestGetAllHistoricalPoolIndexedTWAPsForPooId() {
 
 			// Assertions.
 			s.Equal(test.expectedRecords, actualRecords)
-
 		})
 	}
-
 }

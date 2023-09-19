@@ -5,6 +5,7 @@ package queryproto
 
 import (
 	context "context"
+	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
@@ -315,7 +316,7 @@ func (m *EstimateSinglePoolSwapExactAmountInRequest) GetTokenOutDenom() string {
 }
 
 type EstimateSwapExactAmountInResponse struct {
-	TokenOutAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=token_out_amount,json=tokenOutAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"token_out_amount" yaml:"token_out_amount"`
+	TokenOutAmount cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=token_out_amount,json=tokenOutAmount,proto3,customtype=cosmossdk.io/math.Int" json:"token_out_amount" yaml:"token_out_amount"`
 }
 
 func (m *EstimateSwapExactAmountInResponse) Reset()         { *m = EstimateSwapExactAmountInResponse{} }
@@ -549,7 +550,7 @@ func (m *EstimateSinglePoolSwapExactAmountOutRequest) GetTokenOut() string {
 }
 
 type EstimateSwapExactAmountOutResponse struct {
-	TokenInAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=token_in_amount,json=tokenInAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"token_in_amount" yaml:"token_in_amount"`
+	TokenInAmount cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=token_in_amount,json=tokenInAmount,proto3,customtype=cosmossdk.io/math.Int" json:"token_in_amount" yaml:"token_in_amount"`
 }
 
 func (m *EstimateSwapExactAmountOutResponse) Reset()         { *m = EstimateSwapExactAmountOutResponse{} }

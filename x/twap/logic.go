@@ -234,6 +234,13 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 		return newRecord
 	}
 
+	// NOTE: An edge case exists here. If a pool is drained of all it's liquidity, and then the pool's
+	// spot price is set to exactly one and the GeometricTWAP is queried, the the result will be zero.
+	// This is because the P0LastSpotPrice is one, which makes log_{2}{P_0} = 0, and thus the geometric
+	// accumulator is the same as the time of pool drain.
+
+	// This is a edge case almost certainly to never be hit in prod, but its good to be aware of.
+
 	// logP0SpotPrice = log_{2}{P_0}
 	logP0SpotPrice := twapLog(record.P0LastSpotPrice)
 	// p0NewGeomAccum = log_{2}{P_0} * timeDelta

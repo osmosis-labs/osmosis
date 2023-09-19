@@ -1,13 +1,13 @@
 package concentrated_liquidity_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
@@ -35,6 +35,7 @@ var (
 	oneEthCoins = sdk.NewDecCoins(oneEth)
 	onlyUSDC    = [][]string{{USDC}, {USDC}, {USDC}, {USDC}}
 	onlyETH     = [][]string{{ETH}, {ETH}, {ETH}, {ETH}}
+	emptyCoins  = sdk.NewCoins()
 )
 
 func (s *KeeperTestSuite) TestCreateAndGetSpreadRewardAccumulator() {
@@ -1370,16 +1371,16 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_Swaps() {
 	}
 
 	// Swap multiple times USDC for ETH, therefore increasing the spot price
-	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPriceBigDec, positions.numSwaps)
 	s.CollectAndAssertSpreadRewards(s.Ctx, clPool.GetId(), totalSpreadRewardsExpected, positionIds, [][]int64{ticksActivatedAfterEachSwap}, onlyUSDC, positions)
 
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
-	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPriceBigDec, positions.numSwaps)
 	s.CollectAndAssertSpreadRewards(s.Ctx, clPool.GetId(), totalSpreadRewardsExpected, positionIds, [][]int64{ticksActivatedAfterEachSwap}, onlyETH, positions)
 
 	// Do the same swaps as before, however this time we collect spread rewards after both swap directions are complete.
-	ticksActivatedAfterEachSwapUp, totalSpreadRewardsExpectedUp, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
-	ticksActivatedAfterEachSwapDown, totalSpreadRewardsExpectedDown, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwapUp, totalSpreadRewardsExpectedUp, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPriceBigDec, positions.numSwaps)
+	ticksActivatedAfterEachSwapDown, totalSpreadRewardsExpectedDown, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPriceBigDec, positions.numSwaps)
 	totalSpreadRewardsExpected = totalSpreadRewardsExpectedUp.Add(totalSpreadRewardsExpectedDown...)
 
 	// We expect all positions to have both denoms in their spread reward accumulators except USDC for the overlapping range position since
@@ -1413,7 +1414,7 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	s.FundAcc(owner, fundCoins)
 
 	// Errors since no position.
-	_, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, owner, pool, sdk.NewCoin(ETH, osmomath.OneInt()), USDC, pool.GetSpreadFactor(s.Ctx), types.MaxSpotPrice)
+	_, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, owner, pool, sdk.NewCoin(ETH, osmomath.OneInt()), USDC, pool.GetSpreadFactor(s.Ctx), types.MaxSpotPriceBigDec)
 	s.Require().Error(err)
 
 	// Create position in the default range 1.
@@ -1421,7 +1422,7 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	s.Require().NoError(err)
 
 	// Swap once.
-	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ := s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, 1)
+	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ := s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin1, ETH, types.MaxSpotPriceBigDec, 1)
 
 	// Withdraw half.
 	halfLiquidity := positionDataOne.Liquidity.Mul(osmomath.NewDecWithPrec(5, 1))
@@ -1446,7 +1447,7 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	fullLiquidity := positionDataTwo.Liquidity
 
 	// Swap once in the other direction.
-	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, 1)
+	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin0, USDC, types.MinSpotPriceBigDec, 1)
 
 	// This should claim under the hood for position 2 since full liquidity is removed.
 	balanceBeforeWithdraw := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
@@ -1476,6 +1477,46 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	collectedThree, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, owner, positionDataThree.ID)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.Coins(nil), collectedThree)
+}
+
+// This test validates that spread rewards are collected without issues
+// when positions are created over the new extended range.
+func (s *KeeperTestSuite) TestCollectSpreadRewards_MinSpotPriceMigration() {
+	s.SetupTest()
+
+	spreadFactor := types.AuthorizedSpreadFactors[1]
+	s.Require().False(spreadFactor.IsZero())
+
+	poolId, positions, coinsSwappedIn := s.swapToMinTickAndBack(spreadFactor, emptyCoins)
+
+	s.Require().Len(coinsSwappedIn, 2)
+	tokenInZeroForOne := coinsSwappedIn[0]
+	tokenInOneForZero := coinsSwappedIn[1]
+
+	// fetch pool
+	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	expectedTotalSpreadRewards := sdk.NewCoins(
+		sdk.NewCoin(pool.GetToken0(), tokenInZeroForOne.Amount.ToLegacyDec().Mul(spreadFactor).TruncateInt()),
+		sdk.NewCoin(pool.GetToken1(), tokenInOneForZero.Amount.ToLegacyDec().Mul(spreadFactor).TruncateInt()),
+	)
+
+	actualCollected := sdk.NewCoins()
+
+	// Collect spread rewards
+	for _, position := range positions {
+		collected, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, s.TestAccs[0], position.ID)
+		s.Require().NoError(err)
+
+		actualCollected = actualCollected.Add(collected...)
+	}
+
+	// Validate that the total spread rewards collected is equal to the expected total spread rewards
+	s.Require().Equal(len(expectedTotalSpreadRewards), len(actualCollected))
+	for _, coin := range expectedTotalSpreadRewards {
+		osmoassert.Equal(s.T(), oneAdditiveTolerance, coin.Amount, actualCollected.AmountOf(coin.Denom))
+	}
 }
 
 // CollectAndAssertSpreadRewards collects spread rewards from a given pool for all positions and verifies that the total spread rewards collected match the expected total spread rewards.
@@ -1512,7 +1553,7 @@ func (s *KeeperTestSuite) CollectAndAssertSpreadRewards(ctx sdk.Context, poolId 
 	for _, coin := range totalSpreadRewardsCollected {
 		expected := totalSpreadRewards.AmountOf(coin.Denom)
 		actual := coin.Amount
-		s.Require().Equal(0, errTolerance.Compare(expected, actual), fmt.Sprintf("expected (%s), actual (%s)", expected, actual))
+		osmoassert.Equal(s.T(), errTolerance, expected, actual)
 	}
 }
 
@@ -1542,7 +1583,7 @@ func (s *KeeperTestSuite) tickStatusInvariance(ticksActivatedAfterEachSwap [][]i
 
 // swapAndTrackXTimesInARow performs `numSwaps` swaps and tracks the tick activated after each swap.
 // It also returns the total spread rewards collected, the total token in, and the total token out.
-func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coin, coinOutDenom string, priceLimit osmomath.Dec, numSwaps int) (ticksActivatedAfterEachSwap []int64, totalSpreadRewards sdk.Coins, totalTokenIn sdk.Coin, totalTokenOut sdk.Coin) {
+func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coin, coinOutDenom string, priceLimit osmomath.BigDec, numSwaps int) (ticksActivatedAfterEachSwap []int64, totalSpreadRewards sdk.Coins, totalTokenIn sdk.Coin, totalTokenOut sdk.Coin) {
 	// Retrieve pool
 	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)
