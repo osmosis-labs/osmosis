@@ -294,9 +294,6 @@ func (s *decimalTestSuite) TestBigDecFromDec() {
 	}
 }
 
-<<<<<<< HEAD
-func (s *decimalTestSuite) TestBigDecFromDecSlice() {
-=======
 func (s *decimalTestSuite) TestBigDecFromSdkInt() {
 	tests := []struct {
 		i        osmomath.Int
@@ -319,7 +316,6 @@ func (s *decimalTestSuite) TestBigDecFromSdkInt() {
 }
 
 func (s *decimalTestSuite) TestBigDecFromSdkDecSlice() {
->>>>>>> e2b521d0 (Convert sdk.Int to BigDec (#6409))
 	tests := []struct {
 		d        []osmomath.Dec
 		want     []osmomath.BigDec
