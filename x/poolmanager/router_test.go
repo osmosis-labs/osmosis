@@ -480,6 +480,28 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 			tokenOutMinAmount:  osmomath.NewInt(1),
 		},
 		{
+			name: "Two routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2), both pools 1 percent fee, sanity check no more half fee applied",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(baz, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 2.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountInRoute{
+				{
+					PoolId:        1,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        2,
+					TokenOutDenom: baz,
+				},
+			},
+			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
+			tokenIn:            sdk.NewCoin("foo", osmomath.NewInt(100000)),
+			tokenOutMinAmount:  osmomath.NewInt(1),
+		},
+		{
 			name: "Three routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
 			poolCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
@@ -735,6 +757,28 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 
 			tokenInMaxAmount: osmomath.NewInt(90000000),
 			tokenOut:         sdk.NewCoin(baz, osmomath.NewInt(100000)),
+		},
+		{
+			name: "Two routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2), both pools 1 percent fee, sanity check no more half fee applied",
+			poolCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 1.
+				sdk.NewCoins(sdk.NewCoin(baz, defaultInitPoolAmount), sdk.NewCoin(uosmo, defaultInitPoolAmount)), // pool 2.
+			},
+			poolType:         []types.PoolType{types.Balancer, types.Balancer},
+			poolSpreadFactor: []osmomath.Dec{defaultPoolSpreadFactor, defaultPoolSpreadFactor},
+			routes: []types.SwapAmountOutRoute{
+				{
+					PoolId:       1,
+					TokenInDenom: foo,
+				},
+				{
+					PoolId:       2,
+					TokenInDenom: uosmo,
+				},
+			},
+			incentivizedGauges: []uint64{1, 2, 3, 4, 5, 6},
+			tokenInMaxAmount:   osmomath.NewInt(90000000),
+			tokenOut:           sdk.NewCoin(baz, osmomath.NewInt(100000)),
 		},
 		{
 			name: "Three routes: Swap - [foo -> uosmo](pool 1) - [uosmo -> baz](pool 2) - [baz -> bar](pool 3), all pools 1 percent fee",
