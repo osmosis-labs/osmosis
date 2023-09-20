@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"encoding/json"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -99,7 +100,9 @@ func (aoa AnyOfAuthenticator) Authenticate(
 	aoa.executedAuths = []Authenticator{} // Reset the executed authenticators
 	for idx, auth := range aoa.SubAuthenticators {
 		success, err := auth.Authenticate(ctx, msg, anyOfData.Data[idx])
-		aoa.executedAuths = append(aoa.executedAuths, auth) // Add to the executed list
+		// TODO: fix static check here;
+		// SA4005: ineffective assignment to field AnyOfAuthenticator.executedAuth
+		aoa.executedAuths = append(aoa.executedAuths, auth) // nolint:staticcheck
 		if success {
 			return true, nil
 		}

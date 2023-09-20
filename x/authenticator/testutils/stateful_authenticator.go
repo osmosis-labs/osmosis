@@ -2,9 +2,11 @@ package testutils
 
 import (
 	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 )
 
@@ -46,7 +48,6 @@ func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authen
 	//ctx.GasMeter().ConsumeGas(100_000_000, "loads of gas")
 	s.SetValue(ctx, statefulData.Value+1)
 	return true, nil
-
 }
 
 func (s StatefulAuthenticator) SetValue(ctx sdk.Context, value int) {

@@ -2,13 +2,16 @@ package authenticator
 
 import (
 	"encoding/json"
+	"math/big"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/utils"
-	"math/big"
-	"time"
 )
 
 type Period string
@@ -23,7 +26,7 @@ type SpendLimitAuthenticator struct {
 	store        sdk.KVStore
 	quoteDenom   string
 	bankKeeper   bankkeeper.Keeper
-	allowedDelta sdk.Int
+	allowedDelta osmomath.Int
 	period       Period
 }
 
@@ -66,7 +69,7 @@ func (sla SpendLimitAuthenticator) GetAuthenticationData(
 	messageIndex int8,
 	simulate bool,
 ) (AuthenticatorData, error) {
-	return nil, nil
+	return SignatureData{}, nil
 }
 
 func (sla SpendLimitAuthenticator) Authenticate(
@@ -126,9 +129,9 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg
 	return true
 }
 
-func (sla SpendLimitAuthenticator) getPriceInQuoteDenom(coin sdk.Coin) sdk.Int {
+func (sla SpendLimitAuthenticator) getPriceInQuoteDenom(_ sdk.Coin) osmomath.Int {
 	// ToDo: Get current price (which pool do we base this on?)
-	return sdk.NewInt(1)
+	return osmomath.NewInt(1)
 }
 
 // STATE
@@ -148,11 +151,11 @@ func (sla SpendLimitAuthenticator) DeleteBlockBalances(ctx sdk.Context, account 
 	osmoutils.DeleteAllKeysFromPrefix(ctx, sla.store, getAccountKey(account))
 }
 
-func (sla SpendLimitAuthenticator) GetSpentInPeriod(account sdk.AccAddress, t time.Time) sdk.Int {
+func (sla SpendLimitAuthenticator) GetSpentInPeriod(account sdk.AccAddress, t time.Time) osmomath.Int {
 	return sdk.NewIntFromBigInt(new(big.Int).SetBytes(sla.store.Get(getPeriodKey(account, sla.period, t))))
 }
 
-func (sla SpendLimitAuthenticator) SetSpentInPeriod(account sdk.AccAddress, t time.Time, spent sdk.Int) {
+func (sla SpendLimitAuthenticator) SetSpentInPeriod(account sdk.AccAddress, t time.Time, spent osmomath.Int) {
 	sla.store.Set(getPeriodKey(account, sla.period, t), spent.BigInt().Bytes())
 }
 
