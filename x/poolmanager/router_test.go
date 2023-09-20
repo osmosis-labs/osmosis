@@ -430,7 +430,6 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 // That is:
 // - to the correct module (concentrated-liquidity or gamm)
 // - over the right routes (hops)
-// - fee reduction is applied correctly
 func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 	tests := []struct {
 		name               string
@@ -670,7 +669,7 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 				_, err := poolmanagerKeeper.RouteExactAmountIn(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenIn, tc.tokenOutMinAmount)
 				s.Require().Error(err)
 			} else {
-				// calculate the swap as separate swaps with either the reduced swap fee or normal fee
+				// calculate the swap as separate swaps
 				expectedMultihopTokenOutAmount := s.calcOutGivenInAmountAsSeparatePoolSwaps(tc.routes, tc.tokenIn)
 
 				// execute the swap
@@ -687,7 +686,6 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountIn() {
 // That is:
 // - to the correct module (concentrated-liquidity or gamm)
 // - over the right routes (hops)
-// - fee reduction is applied correctly
 func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 	tests := []struct {
 		name               string
@@ -887,7 +885,7 @@ func (s *KeeperTestSuite) TestMultihopSwapExactAmountOut() {
 				_, err := poolmanagerKeeper.RouteExactAmountOut(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenInMaxAmount, tc.tokenOut)
 				s.Require().Error(err)
 			} else {
-				// calculate the swap as separate swaps with either the reduced swap fee or normal fee
+				// calculate the swap as separate swaps
 				expectedMultihopTokenInAmount := s.calcInGivenOutAmountAsSeparateSwaps(tc.routes, tc.tokenOut)
 				// execute the swap
 				multihopTokenInAmount, err := poolmanagerKeeper.RouteExactAmountOut(s.Ctx, s.TestAccs[0], tc.routes, tc.tokenInMaxAmount, tc.tokenOut)
@@ -1301,7 +1299,7 @@ func (s *KeeperTestSuite) calcInGivenOutAmountAsSeparateSwaps(routes []types.Swa
 	return nextTokenOut
 }
 
-// calcOutGivenInAmountAsSeparatePoolSwaps calculates the output amount of a series of swaps on PoolManager pools while factoring in reduces swap fee changes.
+// calcOutGivenInAmountAsSeparatePoolSwaps calculates the output amount of a series of swaps on PoolManager pools.
 // If its GAMM pool functions directly to ensure the poolmanager functions route to the correct modules. It it's CL pool functions directly to ensure the
 // poolmanager functions route to the correct modules.
 func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(routes []types.SwapAmountInRoute, tokenIn sdk.Coin) sdk.Coin {
@@ -1314,7 +1312,6 @@ func (s *KeeperTestSuite) calcOutGivenInAmountAsSeparatePoolSwaps(routes []types
 		pool, err := swapModule.GetPool(s.Ctx, hop.PoolId)
 		s.Require().NoError(err)
 
-		// utilize the routeSpreadFactor, sumOfSpreadFactors, and current pool swap fee to calculate the new reduced swap fee
 		spreadFactor := pool.GetSpreadFactor(cacheCtx)
 
 		takerFee, err := s.App.PoolManagerKeeper.GetTradingPairTakerFee(cacheCtx, hop.TokenOutDenom, nextTokenIn.Denom)
@@ -2085,7 +2082,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 				// Set taker fee for pool/pair
 				k.SetDenomPairTakerFee(s.Ctx, pool.initialLiquidity[0].Denom, pool.initialLiquidity[1].Denom, pool.takerFee)
 
-				// Fund sender with initial liqudity
+				// Fund sender with initial liquidity
 				// If not valid, we don't fund to trigger an error case.
 				if !tc.isInvalidSender {
 					s.FundAcc(sender, pool.initialLiquidity)
@@ -2397,7 +2394,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 				// Set taker fee for pool/pair
 				k.SetDenomPairTakerFee(s.Ctx, pool.initialLiquidity[0].Denom, pool.initialLiquidity[1].Denom, pool.takerFee)
 
-				// Fund sender with initial liqudity
+				// Fund sender with initial liquidity
 				// If not valid, we don't fund to trigger an error case.
 				if !tc.isInvalidSender {
 					s.FundAcc(sender, pool.initialLiquidity)
@@ -3031,7 +3028,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			// the swap we don't expect the price to change significantly.
 			// As a result, we roughly expect the amount out to be the same
 			// as the amount in given in another token. However, the actual
-			// amount must be stricly less than the given due to price impact.
+			// amount must be strictly less than the given due to price impact.
 			multiplicativeTolerance := osmomath.OneDec()
 			errTolerance := osmomath.ErrTolerance{
 				RoundingDir:             osmomath.RoundDown,
