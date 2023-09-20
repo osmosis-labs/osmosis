@@ -7,6 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
+	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 )
 
 func CreateUpgradeHandler(
@@ -22,6 +23,12 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+
+		createGaugeFee := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(50000000)))
+		keepers.IncentivesKeeper.SetParam(ctx, incentivetypes.KeyCreateGaugeFee, createGaugeFee)
+
+		addToGaugeFee := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(25000000)))
+		keepers.IncentivesKeeper.SetParam(ctx, incentivetypes.KeyAddToGaugeFee, addToGaugeFee)
 
 		return migrations, nil
 	}
