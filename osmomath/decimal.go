@@ -395,6 +395,19 @@ func (d BigDec) QuoTruncate(d2 BigDec) BigDec {
 	return BigDec{chopped}
 }
 
+// quotient truncate (mutative)
+func (d BigDec) QuoTruncateMut(d2 BigDec) BigDec {
+	// multiply precision twice
+	d.i.Mul(d.i, squaredPrecisionReuse)
+	d.i.Quo(d.i, d2.i)
+
+	chopPrecisionAndTruncateMut(d.i)
+	if d.i.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return d
+}
+
 // quotient, round up
 func (d BigDec) QuoRoundUp(d2 BigDec) BigDec {
 	// multiply precision twice
