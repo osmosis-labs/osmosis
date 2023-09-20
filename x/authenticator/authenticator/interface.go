@@ -64,10 +64,9 @@ type Authenticator interface {
 	// ConfirmExecution is used in the post handler function to enable transaction rules to be enforces.
 	// Rules such as spend and transaction limits. We access the state owned by the account to store and check these values.
 	ConfirmExecution(
-		ctx sdk.Context, // sdk context is used to set and get account authenticator state
-		msg sdk.Msg, // TODO: the message is passed here to check invariants
-		authenticated bool, // TODO: define
-		authenticationData AuthenticatorData, // TODO: define
+		ctx sdk.Context,
+		msg sdk.Msg,
+		authenticationData AuthenticatorData,
 	) bool
 
 	// Optional Hooks. TODO: Revisit this when adding the authenticator storage and messages
