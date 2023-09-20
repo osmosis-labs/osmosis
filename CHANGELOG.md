@@ -65,7 +65,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6352](https://github.com/osmosis-labs/osmosis/pull/6352) Reduce error blow-up in CalcAmount0Delta by changing the order of math operations.
 * [#6368](https://github.com/osmosis-labs/osmosis/pull/6368) Stricter rounding behavior in CL math's CalcAmount0Delta and GetNextSqrtPriceFromAmount0InRoundingUp
 * [#6409](https://github.com/osmosis-labs/osmosis/pull/6409) CL math: Convert Int to BigDec
-* [#6426](https://github.com/osmosis-labs/osmosis/pull/6426) bug: send non osmo txfees to community pool instead of stakers
 
 ### API Breaks
 
