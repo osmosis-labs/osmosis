@@ -357,7 +357,8 @@ The response would be `EstimateTradeBasedOnPriceImpactResponse` which contains t
 - **InputCoin**: (`sdk.Coin`): the actual input amount that would be tradeable under that price impact (might be the full amount).
 - **OutputCoin**: (`sdk.Coin`): the amount of the `ToCoinDenom` tokens being received for the actual `InputCoin` trade.
 
-With that data it is easier for any entity to fill in the `MsgSwapExactAmountIn` details. The response could be filled with a valid trade or an empty one, an empty one indicates that no trade could be estimated.
+With that data it is easier for any entity to fill in the `MsgSwapExactAmountIn` details. The response could be filled with a valid trade or an empty one(InputCoin = 0, OutputCoin = 0), an empty one indicates that no trade could be estimated.
+It will not error if a trade cannot be estimated.
 
 ### Process
 

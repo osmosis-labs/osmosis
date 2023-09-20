@@ -113,7 +113,7 @@ service Query {
   }
 
   // EstimateTradeBasedOnPriceImpact returns an estimated trade based on price
-  // impact.
+  // impact, if a trade cannot be estimated a 0 input and 0 output would be returned.
   rpc EstimateTradeBasedOnPriceImpact(EstimateTradeBasedOnPriceImpactRequest)
       returns (EstimateTradeBasedOnPriceImpactResponse) {
     option (google.api.http).get =
@@ -294,7 +294,8 @@ message EstimateTradeBasedOnPriceImpactRequest {
 }
 
 // EstimateTradeBasedOnPriceImpactResponse represents the response data
-// for an estimated trade based on price impact.
+// for an estimated trade based on price impact. If a trade fails to be estimated the response would be 0,0 for
+// input_coin and output_coin and will not error.
 message EstimateTradeBasedOnPriceImpactResponse {
   // input_coin is the actual input amount that would be tradeable
   // under the specified price impact.
