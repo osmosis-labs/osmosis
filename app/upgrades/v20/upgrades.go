@@ -7,7 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 func CreateUpgradeHandler(
@@ -24,10 +24,8 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		// TODO START: DO NOT LEAVE THIS AS IS.
-		// See my comment here https://github.com/osmosis-labs/osmosis/pull/6420#issuecomment-1726969370
-		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, concentratedliquiditytypes.DefaultParams())
-		// TODO END
+		// Initialize the newly created param
+		keepers.ConcentratedLiquidityKeeper.SetParam(ctx, cltypes.KeyUnrestrictedPoolCreatorWhitelist, []string{})
 
 		return migrations, nil
 	}
