@@ -57,7 +57,7 @@ var (
 	twoBigDec BigDec = MustNewBigDecFromStr("2")
 
 	// precisionFactors are used to adjust the scale of big.Int values to match the desired precision
-	precisionFactors = make(map[int64]*big.Int)
+	precisionFactors = make(map[uint64]*big.Int)
 )
 
 // Decimal errors
@@ -74,8 +74,8 @@ func init() {
 		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
 	}
 
-	for precision := int64(0); precision <= PrecisionBigDec; precision++ {
-		precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionBigDec-precision), nil)
+	for precision := uint64(0); precision <= PrecisionBigDec; precision++ {
+		precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionBigDec-int64(precision)), nil)
 		precisionFactors[precision] = precisionFactor
 	}
 }
@@ -584,7 +584,7 @@ func (d BigDec) Dec() Dec {
 // precision: 4
 // Output Dec: 1.010100000000000000
 // Panics if precision exceeds PrecisionDec
-func (d BigDec) DecWithPrecision(precision int64) Dec {
+func (d BigDec) DecWithPrecision(precision uint64) Dec {
 	var precisionFactor *big.Int
 	if precision > PrecisionDec {
 		panic(fmt.Sprintf("maximum Dec precision is (%v), provided (%v)", PrecisionDec, precision))
@@ -597,7 +597,7 @@ func (d BigDec) DecWithPrecision(precision int64) Dec {
 	intRepresentation := new(big.Int).Quo(d.BigInt(), precisionFactor)
 
 	// convert int representation back to SDK Dec precision
-	truncatedDec := NewDecFromBigIntWithPrec(intRepresentation, precision)
+	truncatedDec := NewDecFromBigIntWithPrec(intRepresentation, int64(precision))
 
 	return truncatedDec
 }
@@ -605,7 +605,7 @@ func (d BigDec) DecWithPrecision(precision int64) Dec {
 // ChopPrecisionMut truncates all decimals after precision numbers after decimal point. Mutative
 // CONTRACT: precision <= PrecisionBigDec
 // Panics if precision exceeds PrecisionBigDec
-func (d *BigDec) ChopPrecisionMut(precision int64) BigDec {
+func (d *BigDec) ChopPrecisionMut(precision uint64) BigDec {
 	if precision > PrecisionBigDec {
 		panic(fmt.Sprintf("maximum BigDec precision is (%v), provided (%v)", PrecisionDec, precision))
 	}
@@ -620,7 +620,7 @@ func (d *BigDec) ChopPrecisionMut(precision int64) BigDec {
 // ChopPrecision truncates all decimals after precision numbers after decimal point
 // CONTRACT: precision <= PrecisionBigDec
 // Panics if precision exceeds PrecisionBigDec
-func (d *BigDec) ChopPrecision(precision int64) BigDec {
+func (d *BigDec) ChopPrecision(precision uint64) BigDec {
 	copy := d.Clone()
 	return copy.ChopPrecisionMut(precision)
 }

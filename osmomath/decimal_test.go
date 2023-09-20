@@ -1508,7 +1508,7 @@ func (s *decimalTestSuite) TestDec_WithPrecision() {
 	tests := []struct {
 		d         osmomath.BigDec
 		want      osmomath.Dec
-		precision int64
+		precision uint64
 		expPanic  bool
 	}{
 		// test cases for basic SDKDec() conversion
@@ -1552,7 +1552,7 @@ func (s *decimalTestSuite) TestChopPrecision_Mutative() {
 	tests := []struct {
 		startValue        osmomath.BigDec
 		expectedMutResult osmomath.BigDec
-		precision         int64
+		precision         uint64
 	}{
 		{osmomath.NewBigDec(0), osmomath.MustNewBigDecFromStr("0"), 0},
 		{osmomath.NewBigDec(1), osmomath.MustNewBigDecFromStr("1"), 0},
