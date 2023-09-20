@@ -75,20 +75,20 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // TrackBeforeSend calls the before send listener contract surpresses any errors
-func (h Hooks) TrackBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) {
-	_ = h.k.callBeforeSendListener(ctx, from, to, amount, false)
+func (h Hooks) TrackBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins, cosmosMsg wasmvmtypes.CosmosMsg) {
+	_ = h.k.callBeforeSendListener(ctx, from, to, amount, cosmosMsg, false)
 }
 
 // TrackBeforeSend calls the before send listener contract returns any errors
-func (h Hooks) BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error {
-	return h.k.callBeforeSendListener(ctx, from, to, amount, true)
+func (h Hooks) BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins, cosmosMsg wasmvmtypes.CosmosMsg) error {
+	return h.k.callBeforeSendListener(ctx, from, to, amount, cosmosMsg, true)
 }
 
 // callBeforeSendListener iterates over each coin and sends corresponding sudo msg to the contract address stored in state.
 // If blockBeforeSend is true, sudoMsg wraps BlockBeforeSendMsg, otherwise sudoMsg wraps TrackBeforeSendMsg.
 // Note that we gas meter trackBeforeSend to prevent infinite contract calls.
 // CONTRACT: this should not be called in beginBlock or endBlock since out of gas will cause this method to panic.
-func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) (err error) {
+func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins, cosmosMsg wasmvmtypes.CosmosMsg, blockBeforeSend bool) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = errorsmod.Wrapf(types.ErrTrackBeforeSendOutOfGas, "%v", r)
@@ -112,18 +112,20 @@ func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress,
 			if blockBeforeSend {
 				msg := types.BlockBeforeSendSudoMsg{
 					BlockBeforeSend: types.BlockBeforeSendMsg{
-						From:   from.String(),
-						To:     to.String(),
-						Amount: CWCoinFromSDKCoin(coin),
+						From:      from.String(),
+						To:        to.String(),
+						Amount:    CWCoinFromSDKCoin(coin),
+						CosmosMsg: cosmosMsg,
 					},
 				}
 				msgBz, err = json.Marshal(msg)
 			} else {
 				msg := types.TrackBeforeSendSudoMsg{
 					TrackBeforeSend: types.TrackBeforeSendMsg{
-						From:   from.String(),
-						To:     to.String(),
-						Amount: CWCoinFromSDKCoin(coin),
+						From:      from.String(),
+						To:        to.String(),
+						Amount:    CWCoinFromSDKCoin(coin),
+						CosmosMsg: cosmosMsg,
 					},
 				}
 				msgBz, err = json.Marshal(msg)

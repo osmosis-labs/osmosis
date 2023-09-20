@@ -13,13 +13,15 @@ type TrackBeforeSendSudoMsg struct {
 }
 
 type TrackBeforeSendMsg struct {
-	From   string           `json:"from"`
-	To     string           `json:"to"`
-	Amount wasmvmtypes.Coin `json:"amount"`
+	From      string                `json:"from"`
+	To        string                `json:"to"`
+	Amount    wasmvmtypes.Coin      `json:"amount"`
+	CosmosMsg wasmvmtypes.CosmosMsg `json:"cosmos_msg"`
 }
 
 type BlockBeforeSendMsg struct {
-	From   string           `json:"from"`
-	To     string           `json:"to"`
-	Amount wasmvmtypes.Coin `json:"amount"`
+	From      string                `json:"from"`
+	To        string                `json:"to"`
+	Amount    wasmvmtypes.Coin      `json:"amount"`
+	CosmosMsg wasmvmtypes.CosmosMsg `json:"cosmos_msg"`
 }
