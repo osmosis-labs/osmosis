@@ -83,7 +83,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 	// The denominator is rounded up to get a smaller final amount.
 	denom := sqrtPriceA.MulRoundUp(sqrtPriceB)
 
-	return liq.MulTruncate(diff).QuoTruncate(denom)
+	return liq.MulTruncate(diff).QuoTruncateMut(denom)
 }
 
 // CalcAmount1Delta takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
