@@ -37,6 +37,7 @@ var (
 	three                   = osmomath.NewDec(3)
 	four                    = osmomath.NewDec(4)
 	five                    = osmomath.NewDec(5)
+	zeroBigDec              = osmomath.ZeroBigDec()
 	sqrt5000                = osmomath.MustNewDecFromStr("70.710678118654752440") // 5000
 	defaultSqrtPriceLower   = osmomath.MustNewDecFromStr("70.688664163408836321") // approx 4996.89
 	defaultSqrtPriceUpper   = sqrt5000
@@ -49,7 +50,7 @@ var (
 	defaultAmountReserves   = osmomath.NewInt(1_000_000_000)
 	DefaultCoins            = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves))
 	oneULPDec               = osmomath.SmallestDec()
-	oneULPBigDec            = osmomath.SmallestDec()
+	oneULPBigDec            = osmomath.SmallestBigDec()
 )
 
 func TestStrategyTestSuite(t *testing.T) {
@@ -251,15 +252,15 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 func (suite *StrategyTestSuite) TestGetPriceLimit() {
 	tests := map[string]struct {
 		zeroForOne bool
-		expected   osmomath.Dec
+		expected   osmomath.BigDec
 	}{
 		"zero for one -> min": {
 			zeroForOne: true,
-			expected:   types.MinSpotPrice,
+			expected:   types.MinSpotPriceBigDec,
 		},
 		"one for zero -> max": {
 			zeroForOne: false,
-			expected:   types.MaxSpotPrice,
+			expected:   types.MaxSpotPriceBigDec,
 		},
 	}
 
