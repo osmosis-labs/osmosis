@@ -130,7 +130,7 @@ func GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidity, amount
 	// denominator = product + liquidity
 	denominator := product
 	denominator.AddMut(liquidity)
-	return liquidity.Mul(sqrtPriceCurrent).QuoRoundUp(denominator)
+	return liquidity.Mul(sqrtPriceCurrent).QuoRoundUpMut(denominator)
 }
 
 // GetNextSqrtPriceFromAmount0OutRoundingUp utilizes sqrtPriceCurrent, liquidity, and amount of denom0 that still needs
@@ -148,7 +148,7 @@ func GetNextSqrtPriceFromAmount0OutRoundingUp(sqrtPriceCurrent, liquidity, amoun
 	denominator := liquidity.Sub(product)
 	// mul round up numerator to make the final result larger
 	// quo round up to make the final result larger
-	return liquidity.MulRoundUp(sqrtPriceCurrent).QuoRoundUp(denominator)
+	return liquidity.MulRoundUp(sqrtPriceCurrent).QuoRoundUpMut(denominator)
 }
 
 // GetNextSqrtPriceFromAmount1InRoundingDown utilizes the current sqrtPriceCurrent, liquidity, and amount of denom1 that still needs
@@ -166,7 +166,7 @@ func GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent, liquidity, amou
 // so that we get the desired output amount out.
 // sqrt_next = sqrt_cur - token_out / liq
 func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amountOneRemainingOut osmomath.BigDec) (sqrtPriceNext osmomath.BigDec) {
-	return sqrtPriceCurrent.Sub(amountOneRemainingOut.QuoRoundUp(liquidity))
+	return sqrtPriceCurrent.Sub(amountOneRemainingOut.QuoRoundUpMut(liquidity))
 }
 
 // GetLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1
