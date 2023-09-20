@@ -40,10 +40,15 @@ func (k Keeper) CalculateSpotPrice(
 		}
 	}()
 
-	spotPrice, err = pool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
+	spotPriceBigDec, err := pool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
 		return osmomath.Dec{}, err
 	}
+
+	// Truncation is acceptable here because both stableswap and balancer
+	// only support 18 decimal places and wrap around the 36 BigDec for
+	// compatibility with the `PoolI.SpotPrice` API
+	spotPrice = spotPriceBigDec.Dec()
 
 	// if spotPrice greater than max spot price, return an error
 	if spotPrice.GT(types.MaxSpotPrice) {

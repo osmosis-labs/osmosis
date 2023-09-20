@@ -312,8 +312,12 @@ func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 
 // SpotPrice calculates the approximate amount of `baseDenom` one would receive for
 // an input dx of `quoteDenom` (to simplify calculations, we approximate dx = 1)
-func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (osmomath.Dec, error) {
-	return p.spotPrice(quoteAssetDenom, baseAssetDenom)
+func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (osmomath.BigDec, error) {
+	spotPriceDec, err := p.spotPrice(quoteAssetDenom, baseAssetDenom)
+	if err != nil {
+		return osmomath.BigDec{}, err
+	}
+	return osmomath.BigDecFromDec(spotPriceDec), nil
 }
 
 func (p Pool) Copy() Pool {
