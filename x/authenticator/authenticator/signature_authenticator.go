@@ -137,10 +137,10 @@ func (sva SignatureVerificationAuthenticator) Authenticate(
 	// NOTE: do we use this msg anywhere
 	msg sdk.Msg,
 	authenticationData AuthenticatorData,
-) (success bool, err error) {
+) AuthenticationResult {
 	verificationData, ok := authenticationData.(SignatureData)
 	if !ok {
-		return false, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "invalid signature verification data")
+		return Rejected("invalid signature verification data", sdkerrors.ErrInvalidType)
 	}
 
 	// First consume gas for verifing the signature
@@ -148,7 +148,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(
 	for _, sig := range verificationData.Signatures {
 		err := authante.DefaultSigVerificationGasConsumer(ctx.GasMeter(), sig, params)
 		if err != nil {
-			return false, err
+			return Rejected("couldn't get gas consumer", err)
 		}
 	}
 
@@ -156,7 +156,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(
 	for i, sig := range verificationData.Signatures {
 		acc, err := authante.GetSignerAcc(ctx, sva.ak, verificationData.Signers[i])
 		if err != nil {
-			return false, err
+			return Rejected("couldn't get signer account", err)
 		}
 
 		// Retrieve pubkey we use either the public key from the authenticator store
@@ -169,17 +169,14 @@ func (sva SignatureVerificationAuthenticator) Authenticate(
 			pubKey = acc.GetPubKey() // TODO: do we want this default?
 		}
 		if !verificationData.Simulate && pubKey == nil {
-			return false, sdkerrors.Wrap(
-				sdkerrors.ErrInvalidPubKey,
-				"pubkey on not set on account or authenticator",
-			)
+			return Rejected("pubkey on not set on account or authenticator", sdkerrors.ErrInvalidPubKey)
 		}
 
 		// Check account sequence number.
 		if sig.Sequence != acc.GetSequence() {
-			return false, sdkerrors.Wrapf(
-				sdkerrors.ErrWrongSequence,
-				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
+			return Rejected(
+				fmt.Sprintf("account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence),
+				sdkerrors.ErrInvalidPubKey,
 			)
 		}
 
@@ -222,18 +219,17 @@ func (sva SignatureVerificationAuthenticator) Authenticate(
 					))
 				}
 				// Errors are reserved for when something unexpected happened. Here authentication just failed, so we
-				// return false
-				return false, nil
+				// return skip
+				return NotAuthenticated()
 			}
 		}
 	}
-	return true, nil
+	return Authenticated()
 }
 
 func (sva SignatureVerificationAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData AuthenticatorData, msg sdk.Msg) {
 }
 
-func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) bool {
-	// To be executed in the post handler
-	return true
+func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult {
+	return Confirm()
 }

@@ -37,15 +37,15 @@ func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx,
 	return StatefulAuthenticatorData{Value: s.GetValue(ctx)}, nil
 }
 
-func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) (bool, error) {
+func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.AuthenticationResult {
 	// TODO: the get should probably happen in the method above and here we should just have this:
 	statefulData, ok := authenticationData.(StatefulAuthenticatorData)
 	if !ok {
-		return false, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "authenticationData is not StatefulAuthenticatorData")
+		return authenticator.Rejected("", sdkerrors.Wrap(sdkerrors.ErrInvalidType, "authenticationData is not StatefulAuthenticatorData"))
 	}
 	//ctx.GasMeter().ConsumeGas(100_000_000, "loads of gas")
 	s.SetValue(ctx, statefulData.Value+1)
-	return true, nil
+	return authenticator.Authenticated()
 
 }
 
@@ -67,7 +67,7 @@ func (s StatefulAuthenticator) GetValue(ctx sdk.Context) int {
 func (s StatefulAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData authenticator.AuthenticatorData, msg sdk.Msg) {
 }
 
-func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) bool {
+func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.ConfirmationResult {
 	s.SetValue(ctx, s.GetValue(ctx)+1)
-	return true
+	return authenticator.Confirm()
 }

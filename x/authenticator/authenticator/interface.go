@@ -52,7 +52,7 @@ type Authenticator interface {
 		ctx sdk.Context, // sdk Context is used to get data for use in authentication and to consume gas
 		msg sdk.Msg, // a msg is passed into the authenticate function to allow the authentication data to verify the signature
 		authenticationData AuthenticatorData, // The authentication data is used to authenticate a message
-	) (bool, error)
+	) AuthenticationResult
 
 	// AuthenticationFailed TODO: define
 	AuthenticationFailed(
@@ -67,7 +67,7 @@ type Authenticator interface {
 		ctx sdk.Context,
 		msg sdk.Msg,
 		authenticationData AuthenticatorData,
-	) bool
+	) ConfirmationResult
 
 	// Optional Hooks. TODO: Revisit this when adding the authenticator storage and messages
 	// OnAuthenticatorAdded(...) bool

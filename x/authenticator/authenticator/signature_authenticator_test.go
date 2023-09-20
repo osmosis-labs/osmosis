@@ -258,14 +258,14 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 
 				// Test Authenticate method
 				if tc.TestData.ShouldSucceedSignatureVerification {
-					success, err := s.SigVerificationAuthenticator.Authenticate(s.Ctx, nil, authData)
+					success := s.SigVerificationAuthenticator.Authenticate(s.Ctx, nil, authData)
 					s.Require().NoError(err)
-					s.Require().True(success)
+					s.Require().True(success.IsAuthenticated())
 
 				} else {
 					// TODO: check error here
-					success, _ := s.SigVerificationAuthenticator.Authenticate(s.Ctx, nil, authData)
-					s.Require().False(success)
+					success := s.SigVerificationAuthenticator.Authenticate(s.Ctx, nil, authData)
+					s.Require().False(success.IsAuthenticated())
 				}
 			} else {
 				authData, err := s.SigVerificationAuthenticator.GetAuthenticationData(s.Ctx, tx, -1, false)

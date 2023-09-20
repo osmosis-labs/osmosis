@@ -49,7 +49,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			//   Another thing we may want to know there is which aithenticator authenticated the tx.
 			//   Maybe we can keep that information with something like the SetPubKeyDecorator
 
-			if !success {
+			if success.IsBlock() {
 				return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution")
 			}
 		}

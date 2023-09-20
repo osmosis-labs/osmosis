@@ -90,24 +90,22 @@ func (aoa AnyOfAuthenticator) Authenticate(
 	ctx sdk.Context,
 	msg sdk.Msg,
 	authenticationData AuthenticatorData,
-) (bool, error) {
+) AuthenticationResult {
 	anyOfData, ok := authenticationData.(AnyOfAuthenticatorData)
 	if !ok {
-		return false, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "invalid authentication data for AnyOfAuthenticator")
+		return Rejected("invalid authentication data for AnyOfAuthenticator", nil)
 	}
 
 	aoa.executedAuths = []Authenticator{} // Reset the executed authenticators
 	for idx, auth := range aoa.SubAuthenticators {
-		success, err := auth.Authenticate(ctx, msg, anyOfData.Data[idx])
+		success := auth.Authenticate(ctx, msg, anyOfData.Data[idx])
 		aoa.executedAuths = append(aoa.executedAuths, auth) // Add to the executed list
-		if success {
-			return true, nil
-		}
-		if err != nil {
-			return false, err
+		if success.IsAuthenticated() || success.IsRejected() {
+			// TODO: Do we want to wrap the error in  case or rejection?
+			return success
 		}
 	}
-	return false, nil
+	return NotAuthenticated()
 }
 
 func (aoa AnyOfAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData AuthenticatorData, msg sdk.Msg) {
@@ -117,12 +115,12 @@ func (aoa AnyOfAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticato
 	}
 }
 
-func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) bool {
+func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult {
 	// Call ConfirmExecution on executed sub-authenticators
 	for _, auth := range aoa.executedAuths {
-		if !auth.ConfirmExecution(ctx, msg, authenticationData) {
-			return false
+		if confirmation := auth.ConfirmExecution(ctx, msg, authenticationData); confirmation.IsBlock() {
+			return confirmation
 		}
 	}
-	return true
+	return Confirm()
 }

@@ -82,21 +82,21 @@ func (aoa AllOfAuthenticator) Authenticate(
 	ctx sdk.Context,
 	msg sdk.Msg,
 	authenticationData AuthenticatorData,
-) (bool, error) {
+) AuthenticationResult {
 	allOfData, ok := authenticationData.(AllOfAuthenticatorData)
 	if !ok {
-		return false, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "invalid authentication data for AllOfAuthenticator")
+		return Rejected("invalid authentication data for AllOfAuthenticator", nil)
 	}
 
 	aoa.executedAuths = []Authenticator{}
 	for idx, auth := range aoa.SubAuthenticators {
-		success, err := auth.Authenticate(ctx, msg, allOfData.Data[idx])
+		success := auth.Authenticate(ctx, msg, allOfData.Data[idx])
 		aoa.executedAuths = append(aoa.executedAuths, auth)
-		if !success {
-			return false, err
+		if !success.IsAuthenticated() {
+			return success
 		}
 	}
-	return true, nil
+	return Authenticated()
 }
 
 func (aoa AllOfAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData AuthenticatorData, msg sdk.Msg) {
@@ -105,11 +105,11 @@ func (aoa AllOfAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticato
 	}
 }
 
-func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) bool {
+func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult {
 	for _, auth := range aoa.executedAuths {
-		if !auth.ConfirmExecution(ctx, msg, authenticationData) {
-			return false
+		if confirmation := auth.ConfirmExecution(ctx, msg, authenticationData); confirmation.IsBlock() {
+			return confirmation
 		}
 	}
-	return true
+	return Confirm()
 }

@@ -129,7 +129,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			calledAuthenticators = append(calledAuthenticators, callData{authenticator: authenticator, authenticatorData: authData, msg: msg})
 
 			cacheCtx, writeContext := ctx.CacheContext() // If there is an error (regardless of whether the tx is authenticated or not), we want to revert the state
-			authenticated, err := authenticator.Authenticate(cacheCtx, msg, authData)
+			authentication := authenticator.Authenticate(cacheCtx, msg, authData)
 			if err != nil {
 				// TODO: Check this assumption. We want authenticators to return true/false to authenticate or not,
 				//       but we also want them to be able to return an error and fully block the tx in that case
@@ -137,7 +137,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			}
 			writeContext() // Alternative, Do we want to do this globally (i.e.: revert for the whole tx)? I want to discuss these semantics
 
-			if authenticated {
+			if authentication.IsAuthenticated() {
 				msgAuthenticated = true
 				// Once the fee payer is authenticated, we can set the gas limit to its original value
 				if !feePayerAuthenticated && account.Equals(feePayer) {
