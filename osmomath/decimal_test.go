@@ -296,6 +296,27 @@ func (s *decimalTestSuite) TestBigDecFromSdkDec() {
 	}
 }
 
+func (s *decimalTestSuite) TestBigDecFromSdkInt() {
+	tests := []struct {
+		i        osmomath.Int
+		want     osmomath.BigDec
+		expPanic bool
+	}{
+		{osmomath.ZeroInt(), osmomath.NewBigDec(0), false},
+		{osmomath.OneInt(), osmomath.NewBigDec(1), false},
+		{osmomath.NewInt(10), osmomath.NewBigDec(10), false},
+		{osmomath.NewInt(10090090090090090), osmomath.NewBigDecWithPrec(10090090090090090, 0), false},
+	}
+	for tcIndex, tc := range tests {
+		if tc.expPanic {
+			s.Require().Panics(func() { osmomath.BigDecFromSDKInt(tc.i) })
+		} else {
+			value := osmomath.BigDecFromSDKInt(tc.i)
+			s.Require().Equal(tc.want, value, "bad osmomath.BigDecFromDec(), index: %v", tcIndex)
+		}
+	}
+}
+
 func (s *decimalTestSuite) TestBigDecFromSdkDecSlice() {
 	tests := []struct {
 		d        []osmomath.Dec
@@ -1559,5 +1580,62 @@ func (s *decimalTestSuite) TestChopPrecision_Mutative() {
 
 			s.assertMutResult(tc.expectedMutResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
 		})
+	}
+}
+func (s *decimalTestSuite) TestQuoRoundUp_MutativeAndNonMutative() {
+	tests := []struct {
+		d1, d2, expQuoRoundUpMut osmomath.BigDec
+	}{
+		{osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(1), osmomath.NewBigDec(0), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(0), osmomath.NewBigDec(1), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(0), osmomath.NewBigDec(-1), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(-1), osmomath.NewBigDec(0), osmomath.NewBigDec(0)},
+
+		{osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1)},
+		{osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(1)},
+		{osmomath.NewBigDec(1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1)},
+		{osmomath.NewBigDec(-1), osmomath.NewBigDec(1), osmomath.NewBigDec(-1)},
+
+		{
+			osmomath.NewBigDec(3), osmomath.NewBigDec(7), osmomath.MustNewBigDecFromStr("0.428571428571428571428571428571428572"),
+		},
+		{
+			osmomath.NewBigDec(2), osmomath.NewBigDec(4), osmomath.NewBigDecWithPrec(5, 1),
+		},
+
+		{osmomath.NewBigDec(100), osmomath.NewBigDec(100), osmomath.NewBigDec(1)},
+
+		{
+			osmomath.NewBigDecWithPrec(15, 1), osmomath.NewBigDecWithPrec(15, 1), osmomath.NewBigDec(1),
+		},
+		{
+			osmomath.NewBigDecWithPrec(3333, 4), osmomath.NewBigDecWithPrec(333, 4), osmomath.MustNewBigDecFromStr("10.009009009009009009009009009009009010"),
+		},
+	}
+
+	for tcIndex, tc := range tests {
+		tc := tc
+
+		if tc.d2.IsZero() { // panic for divide by zero
+			s.Require().Panics(func() { tc.d1.QuoRoundUpMut(tc.d2) })
+		} else {
+
+			copy := tc.d1.Clone()
+
+			nonMutResult := copy.QuoRoundUp(tc.d2)
+
+			// Return is as expected
+			s.Require().Equal(tc.expQuoRoundUpMut, nonMutResult, "exp %v, res %v, tc %d", tc.expQuoRoundUpMut.String(), tc.d1.String(), tcIndex)
+
+			// Receiver is not mutated
+			s.Require().Equal(tc.d1, copy, "exp %v, res %v, tc %d", tc.expQuoRoundUpMut.String(), tc.d1.String(), tcIndex)
+
+			// Receiver is mutated.
+			tc.d1.QuoRoundUpMut(tc.d2)
+
+			// Make sure d1 equals to expected
+			s.Require().True(tc.expQuoRoundUpMut.Equal(tc.d1), "exp %v, res %v, tc %d", tc.expQuoRoundUpMut.String(), tc.d1.String(), tcIndex)
+		}
 	}
 }

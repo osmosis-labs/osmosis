@@ -1154,8 +1154,13 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 
 			balancerId := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
 
-			// Another pool for testing that its gauge links are unchanged
+			// Another pool for testing that its gauge and migration links are unchanged.
 			balancerId2 := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+
+			// Another pool for testing that previously existing migration links don't get overwritten.
+			balancerId3 := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+
+			clPoolOld, err := s.App.GAMMKeeper.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(s.Ctx, balancerId3, tc.desiredDenom0, osmomath.ZeroDec(), defaultTickSpacing)
 
 			balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerId)
 			s.Require().NoError(err)
@@ -1189,8 +1194,8 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			s.Require().NoError(err)
 
 			// Get the new concentrated pool.
-			// Note, + 2 becuse we create 2 balancer pools during test setup, and 1 concentrated pool during migration.
-			clPoolInState, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, validPoolId+2)
+			// Note, +4 because we create 3 balancer pools and 1 cl pool during test setup, and 1 concentrated pool during migration.
+			clPoolInState, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, validPoolId+4)
 			s.Require().NoError(err)
 			s.Require().Equal(clPool, clPoolInState)
 
@@ -1228,6 +1233,10 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 					{
 						BalancerPoolId: balancerId,
 						ClPoolId:       clPoolInState.GetId(),
+					},
+					{
+						BalancerPoolId: balancerId3,
+						ClPoolId:       clPoolOld.GetId(),
 					},
 				},
 			})

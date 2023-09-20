@@ -114,7 +114,7 @@ jobs:
           cp /mnt/data/genesis/osmosis-1/genesis.json $HOME/.osmosisd/config/genesis.json
       - name: ⏬ Download last pre-epoch snapshot
         run: |
-          REPO_MAJOR_VERSION=v14
+          REPO_MAJOR_VERSION=v19
           SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/snapshots.json
 
           # Get the latest pre-epoch snapshot information from bucket
@@ -137,7 +137,7 @@ jobs:
           CONFIG_FOLDER=$HOME/.osmosisd/config
 
           # Find last epoch block comparing repo version to current chain version
-          REPO_MAJOR_VERSION=14
+          REPO_MAJOR_VERSION=19
 
           if [ $REPO_MAJOR_VERSION == $MAINNET_MAJOR_VERSION ]; then
             # I'm in the latest major, fetch the epoch info from the lcd endpoint
