@@ -55,6 +55,9 @@ var (
 	// initialized in init() since requires
 	// precision to be defined.
 	twoBigDec BigDec = MustNewBigDecFromStr("2")
+
+	// precisionFactors are used to adjust the scale of big.Int values to match the desired precision
+	precisionFactors = make(map[uint64]*big.Int)
 )
 
 // Decimal errors
@@ -69,6 +72,11 @@ func init() {
 	precisionMultipliers = make([]*big.Int, PrecisionBigDec+1)
 	for i := 0; i <= PrecisionBigDec; i++ {
 		precisionMultipliers[i] = calcPrecisionMultiplier(int64(i))
+	}
+
+	for precision := uint64(0); precision <= PrecisionBigDec; precision++ {
+		precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionBigDec-int64(precision)), nil)
+		precisionFactors[precision] = precisionFactor
 	}
 }
 
@@ -104,7 +112,7 @@ func NewBigDec(i int64) BigDec {
 }
 
 // create a new BigDec from integer with decimal place at prec
-// CONTRACT: prec <= Precision
+// CONTRACT: prec <= PrecisionBigDec
 func NewBigDecWithPrec(i, prec int64) BigDec {
 	return BigDec{
 		new(big.Int).Mul(big.NewInt(i), precisionMultiplier(prec)),
@@ -112,13 +120,13 @@ func NewBigDecWithPrec(i, prec int64) BigDec {
 }
 
 // create a new BigDec from big integer assuming whole numbers
-// CONTRACT: prec <= Precision
+// CONTRACT: prec <= PrecisionBigDec
 func NewBigDecFromBigInt(i *big.Int) BigDec {
 	return NewBigDecFromBigIntWithPrec(i, 0)
 }
 
 // create a new BigDec from big integer assuming whole numbers
-// CONTRACT: prec <= Precision
+// CONTRACT: prec <= PrecisionBigDec
 func NewBigDecFromBigIntWithPrec(i *big.Int, prec int64) BigDec {
 	return BigDec{
 		new(big.Int).Mul(i, precisionMultiplier(prec)),
@@ -126,13 +134,13 @@ func NewBigDecFromBigIntWithPrec(i *big.Int, prec int64) BigDec {
 }
 
 // create a new BigDec from big integer assuming whole numbers
-// CONTRACT: prec <= Precision
+// CONTRACT: prec <= PrecisionBigDec
 func NewBigDecFromInt(i BigInt) BigDec {
 	return NewBigDecFromIntWithPrec(i, 0)
 }
 
 // create a new BigDec from big integer with decimal place at prec
-// CONTRACT: prec <= Precision
+// CONTRACT: prec <= PrecisionBigDec
 func NewBigDecFromIntWithPrec(i BigInt, prec int64) BigDec {
 	return BigDec{
 		new(big.Int).Mul(i.BigInt(), precisionMultiplier(prec)),
@@ -567,11 +575,21 @@ func (d BigDec) MustFloat64() float64 {
 // Dec returns the osmomath.Dec representation of a BigDec.
 // Values in any additional decimal places are truncated.
 func (d BigDec) Dec() Dec {
-	precisionDiff := PrecisionBigDec - PrecisionDec
-	precisionFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(precisionDiff)), nil)
+	return d.DecWithPrecision(PrecisionDec)
+}
 
-	if precisionDiff < 0 {
-		panic("invalid decimal precision")
+// DecWithPrecision converts BigDec to Dec with desired precision
+// Example:
+// BigDec: 1.010100000000153000000000000000000000
+// precision: 4
+// Output Dec: 1.010100000000000000
+// Panics if precision exceeds PrecisionDec
+func (d BigDec) DecWithPrecision(precision uint64) Dec {
+	var precisionFactor *big.Int
+	if precision > PrecisionDec {
+		panic(fmt.Sprintf("maximum Dec precision is (%v), provided (%v)", PrecisionDec, precision))
+	} else {
+		precisionFactor = precisionFactors[precision]
 	}
 
 	// Truncate any additional decimal values that exist due to BigDec's additional precision
@@ -579,9 +597,32 @@ func (d BigDec) Dec() Dec {
 	intRepresentation := new(big.Int).Quo(d.BigInt(), precisionFactor)
 
 	// convert int representation back to SDK Dec precision
-	truncatedDec := NewDecFromBigIntWithPrec(intRepresentation, PrecisionDec)
+	truncatedDec := NewDecFromBigIntWithPrec(intRepresentation, int64(precision))
 
 	return truncatedDec
+}
+
+// ChopPrecisionMut truncates all decimals after precision numbers after decimal point. Mutative
+// CONTRACT: precision <= PrecisionBigDec
+// Panics if precision exceeds PrecisionBigDec
+func (d *BigDec) ChopPrecisionMut(precision uint64) BigDec {
+	if precision > PrecisionBigDec {
+		panic(fmt.Sprintf("maximum BigDec precision is (%v), provided (%v)", PrecisionDec, precision))
+	}
+
+	precisionFactor := precisionFactors[precision]
+	// big.Quo truncates numbers that would have been after decimal point
+	d.i.Quo(d.i, precisionFactor)
+	d.i.Mul(d.i, precisionFactor)
+	return BigDec{d.i}
+}
+
+// ChopPrecision truncates all decimals after precision numbers after decimal point
+// CONTRACT: precision <= PrecisionBigDec
+// Panics if precision exceeds PrecisionBigDec
+func (d *BigDec) ChopPrecision(precision uint64) BigDec {
+	copy := d.Clone()
+	return copy.ChopPrecisionMut(precision)
 }
 
 // DecRoundUp returns the osmomath.Dec representation of a BigDec.
@@ -676,7 +717,7 @@ func chopPrecisionAndRoundUpBigDec(d *big.Int) *big.Int {
 	return chopPrecisionAndRoundUpMut(copy, precisionReuse)
 }
 
-// chopPrecisionAndRoundUpDec removes  sdk.Precision amount of rightmost digits and rounds up.
+// chopPrecisionAndRoundUpDec removes  PrecisionDec amount of rightmost digits and rounds up.
 // Non-mutative.
 func chopPrecisionAndRoundUpDec(d *big.Int) *big.Int {
 	copy := new(big.Int).Set(d)
