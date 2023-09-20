@@ -176,7 +176,7 @@ func GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent, liquidity, amou
 // so that we get the desired output amount out.
 // sqrt_next = sqrt_cur - token_out / liq
 func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amountOneRemainingOut osmomath.BigDec) (sqrtPriceNext osmomath.BigDec) {
-	return sqrtPriceCurrent.Sub(amountOneRemainingOut.QuoRoundUpMut(liquidity))
+	return sqrtPriceCurrent.Sub(amountOneRemainingOut.QuoRoundUp(liquidity))
 }
 
 // GetLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1
