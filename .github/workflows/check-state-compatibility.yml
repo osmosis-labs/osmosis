@@ -137,7 +137,7 @@ jobs:
           CONFIG_FOLDER=$HOME/.osmosisd/config
 
           # Find last epoch block comparing repo version to current chain version
-          REPO_MAJOR_VERSION=14
+          REPO_MAJOR_VERSION=19
 
           if [ $REPO_MAJOR_VERSION == $MAINNET_MAJOR_VERSION ]; then
             # I'm in the latest major, fetch the epoch info from the lcd endpoint
