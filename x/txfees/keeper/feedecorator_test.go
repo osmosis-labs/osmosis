@@ -209,7 +209,7 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 				if !tc.txFee.IsZero() {
 					moduleName := types.FeeCollectorName
 					if tc.txFee[0].Denom != baseDenom {
-						moduleName = types.FeeCollectorForCommunityPoolName
+						moduleName = types.FeeCollectorForStakingRewardsName
 					}
 					moduleAddr := s.App.AccountKeeper.GetModuleAddress(moduleName)
 					s.Require().Equal(tc.txFee[0], s.App.BankKeeper.GetBalance(s.Ctx, moduleAddr, tc.txFee[0].Denom), tc.name)
