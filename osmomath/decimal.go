@@ -583,6 +583,7 @@ func (d BigDec) Dec() Dec {
 // BigDec: 1.010100000000153000000000000000000000
 // precision: 4
 // Output Dec: 1.010100000000000000
+// Panics if precision exceeds PrecisionDec
 func (d BigDec) DecWithPrecision(precision int64) Dec {
 	var precisionFactor *big.Int
 	if precision > PrecisionDec {
@@ -603,7 +604,12 @@ func (d BigDec) DecWithPrecision(precision int64) Dec {
 
 // ChopPrecisionMut truncates all decimals after precision numbers after decimal point. Mutative
 // CONTRACT: precision <= PrecisionBigDec
+// Panics if precision exceeds PrecisionBigDec
 func (d *BigDec) ChopPrecisionMut(precision int64) BigDec {
+	if precision > PrecisionBigDec {
+		panic(fmt.Sprintf("maximum BigDec precision is (%v), provided (%v)", PrecisionDec, precision))
+	}
+
 	precisionFactor := precisionFactors[precision]
 	// big.Quo truncates numbers that would have been after decimal point
 	d.i.Quo(d.i, precisionFactor)
@@ -613,6 +619,7 @@ func (d *BigDec) ChopPrecisionMut(precision int64) BigDec {
 
 // ChopPrecision truncates all decimals after precision numbers after decimal point
 // CONTRACT: precision <= PrecisionBigDec
+// Panics if precision exceeds PrecisionBigDec
 func (d *BigDec) ChopPrecision(precision int64) BigDec {
 	copy := d.Clone()
 	return copy.ChopPrecisionMut(precision)
