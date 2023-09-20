@@ -24,8 +24,10 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		// Initialize new parameter.
+		// TODO START: DO NOT LEAVE THIS AS IS.
+		// See my comment here https://github.com/osmosis-labs/osmosis/pull/6420#issuecomment-1726969370
 		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, concentratedliquiditytypes.DefaultParams())
+		// TODO END
 
 		return migrations, nil
 	}
