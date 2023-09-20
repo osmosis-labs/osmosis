@@ -37,7 +37,7 @@ var (
 		CurrentWeight:    osmomath.NewInt(100),
 		CumulativeWeight: osmomath.NewInt(200),
 	}
-	defaultGroupGauge = types.GroupGauge{
+	defaultGroup = types.Group{
 		GroupGaugeId: defaultGroupGaugeId,
 		InternalGaugeInfo: types.InternalGaugeInfo{
 			TotalWeight:  defaultGaugeRecordOne.CurrentWeight.Add(defaultGaugeRecordTwo.CurrentWeight),
@@ -45,7 +45,7 @@ var (
 		},
 		SplittingPolicy: types.Volume,
 	}
-	singleRecordGroupGauge = types.GroupGauge{
+	singleRecordGroup = types.Group{
 		GroupGaugeId: defaultGroupGaugeId,
 		InternalGaugeInfo: types.InternalGaugeInfo{
 			TotalWeight:  defaultGaugeRecordOne.CurrentWeight,
@@ -57,7 +57,7 @@ var (
 	emptyCoins = sdk.Coins{}
 )
 
-type GroupGaugeCreationFields struct {
+type GroupCreationFields struct {
 	coins            sdk.Coins
 	numEpochPaidOver uint64
 	owner            sdk.AccAddress
@@ -1166,23 +1166,23 @@ func (s *KeeperTestSuite) IncentivizeInternalGauge(poolIds []uint64, epochDurati
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) WithBaseCaseDifferentCoins(baseCase GroupGaugeCreationFields, newCoins sdk.Coins) GroupGaugeCreationFields {
+func (s *KeeperTestSuite) WithBaseCaseDifferentCoins(baseCase GroupCreationFields, newCoins sdk.Coins) GroupCreationFields {
 	baseCase.coins = newCoins
 	return baseCase
 }
 
-func (s *KeeperTestSuite) WithBaseCaseDifferentEpochPaidOver(baseCase GroupGaugeCreationFields, numEpochPaidOver uint64) GroupGaugeCreationFields {
+func (s *KeeperTestSuite) WithBaseCaseDifferentEpochPaidOver(baseCase GroupCreationFields, numEpochPaidOver uint64) GroupCreationFields {
 	baseCase.numEpochPaidOver = numEpochPaidOver
 	return baseCase
 }
 
-func (s *KeeperTestSuite) WithBaseCaseDifferentInternalGauges(baseCase GroupGaugeCreationFields, internalGauges []uint64) GroupGaugeCreationFields {
+func (s *KeeperTestSuite) WithBaseCaseDifferentInternalGauges(baseCase GroupCreationFields, internalGauges []uint64) GroupCreationFields {
 	baseCase.internalGaugeIds = internalGauges
 	return baseCase
 }
 
-func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
-	// We skip these test until group gauge initialization refactor is complete
+func (s *KeeperTestSuite) TestCreateGroupAndDistribute() {
+	// We skip these test until group initialization refactor is complete
 	s.T().Skip()
 
 	hundredKUosmo := sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))
@@ -1192,7 +1192,7 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 	twentyfiveKUosmo := sdk.NewCoin("uosmo", osmomath.NewInt(25_000_000))
 	twentyfiveKUatom := sdk.NewCoin("uatom", osmomath.NewInt(25_000_000))
 
-	baseCase := &GroupGaugeCreationFields{
+	baseCase := &GroupCreationFields{
 		coins:            sdk.NewCoins(hundredKUosmo),
 		numEpochPaidOver: 1,
 		owner:            s.TestAccs[1],
@@ -1201,57 +1201,57 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 
 	tests := []struct {
 		name                                 string
-		createGauge                          GroupGaugeCreationFields
+		createGauge                          GroupCreationFields
 		expectedCoinsPerInternalGauge        sdk.Coins
 		expectedCoinsDistributedPerEpoch     sdk.Coins
-		expectCreateGroupGaugeError          bool
+		expectCreateGroupError               bool
 		expectDistributeToInternalGaugeError bool
 	}{
 		{
-			name:                             "Valid case: Valid perp-GroupGauge Creation and Distribution",
+			name:                             "Valid case: Valid perp-Group Creation and Distribution",
 			createGauge:                      *baseCase,
 			expectedCoinsPerInternalGauge:    sdk.NewCoins(twentyfiveKUosmo), // 100osmo / 4 = 25osmo
 			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo),
 		},
 		{
-			name:                             "Valid case: Valid perp-GroupGauge Creation with only CL internal gauges and Distribution",
+			name:                             "Valid case: Valid perp-Group Creation with only CL internal gauges and Distribution",
 			createGauge:                      s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{2, 3, 4}),
 			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(33_333_333))),
 			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo),
 		},
 		{
-			name:                             "Valid case: Valid perp-GroupGauge Creation with only GAMM internal gauge and Distribution",
+			name:                             "Valid case: Valid perp-Group Creation with only GAMM internal gauge and Distribution",
 			createGauge:                      s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{5}),
 			expectedCoinsPerInternalGauge:    sdk.NewCoins(hundredKUosmo),
 			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo),
 		},
 		{
-			name:                             "Valid case: Valid non-perpGroupGauge Creation with and Distribution",
+			name:                             "Valid case: Valid non-perpGroup Creation with and Distribution",
 			createGauge:                      s.WithBaseCaseDifferentEpochPaidOver(*baseCase, uint64(4)),
 			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(6_250_000))),
 			expectedCoinsDistributedPerEpoch: sdk.NewCoins(twentyfiveKUosmo),
 		},
 		{
-			name:                             "Valid case: Valid perp-GroupGauge Creation with 2 coins and Distribution",
+			name:                             "Valid case: Valid perp-Group Creation with 2 coins and Distribution",
 			createGauge:                      s.WithBaseCaseDifferentCoins(*baseCase, sdk.NewCoins(hundredKUosmo, hundredKUatom)),
 			expectedCoinsPerInternalGauge:    sdk.NewCoins(twentyfiveKUosmo, twentyfiveKUatom),
 			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo, hundredKUatom),
 		},
 		{
-			name:                             "Valid case: Valid non-perp GroupGauge Creation with 2 coins and Distribution",
+			name:                             "Valid case: Valid non-perp Group Creation with 2 coins and Distribution",
 			createGauge:                      s.WithBaseCaseDifferentEpochPaidOver(s.WithBaseCaseDifferentCoins(*baseCase, sdk.NewCoins(hundredKUosmo, hundredKUatom)), uint64(2)),
 			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(12_500_000)), sdk.NewCoin("uatom", osmomath.NewInt(12_500_000))),
 			expectedCoinsDistributedPerEpoch: sdk.NewCoins(fifetyKUosmo, fifetyKUatom),
 		},
 		{
-			name:                        "InValid case: Creating a GroupGauge with invalid internalIds",
-			createGauge:                 s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{100, 101}),
-			expectCreateGroupGaugeError: true,
+			name:                   "InValid case: Creating a Group with invalid internalIds",
+			createGauge:            s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{100, 101}),
+			expectCreateGroupError: true,
 		},
 		{
-			name:                        "InValid case: Creating a GroupGauge with non-perpetual internalId",
-			createGauge:                 s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{2, 3, 4, 6}),
-			expectCreateGroupGaugeError: true,
+			name:                   "InValid case: Creating a Group with non-perpetual internalId",
+			createGauge:            s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{2, 3, 4, 6}),
+			expectCreateGroupError: true,
 		},
 	}
 
@@ -1269,8 +1269,8 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 			//create 1 non-perp internal Gauge
 			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gauge id = 6
 
-			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, tc.createGauge.coins, tc.createGauge.numEpochPaidOver, tc.createGauge.owner, tc.createGauge.internalGaugeIds, lockuptypes.ByGroup, types.Evenly) // gauge id = 6
-			if tc.expectCreateGroupGaugeError {
+			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, tc.createGauge.coins, tc.createGauge.numEpochPaidOver, tc.createGauge.owner, tc.createGauge.internalGaugeIds, lockuptypes.ByGroup, types.Evenly) // gauge id = 6
+			if tc.expectCreateGroupError {
 				s.Require().Error(err)
 				return
 			}
@@ -1343,8 +1343,8 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 
 }
 
-// deepCopyGroupGauge creates a deep copy of the passed in group gauge.
-func deepCopyGroupGauge(src types.GroupGauge) types.GroupGauge {
+// deepCopyGroup creates a deep copy of the passed in group.
+func deepCopyGroup(src types.Group) types.Group {
 	gaugeRecords := make([]types.InternalGaugeRecord, len(src.InternalGaugeInfo.GaugeRecords))
 	for i, record := range src.InternalGaugeInfo.GaugeRecords {
 		gaugeRecords[i] = types.InternalGaugeRecord{
@@ -1354,7 +1354,7 @@ func deepCopyGroupGauge(src types.GroupGauge) types.GroupGauge {
 		}
 	}
 
-	return types.GroupGauge{
+	return types.Group{
 		GroupGaugeId: src.GroupGaugeId,
 		InternalGaugeInfo: types.InternalGaugeInfo{
 			TotalWeight:  src.InternalGaugeInfo.TotalWeight,
@@ -1375,44 +1375,44 @@ func deepCopyGauge(src types.Gauge) types.Gauge {
 // withUpdatedVolumes takes in a group gauge and a list of updated cumulative volumes (ordered) and updates the contents of the gauge to
 // reflect these new volumes.
 // It is only intended to be used to set expected values for test cases.
-func (s *KeeperTestSuite) withUpdatedVolumes(groupGauge types.GroupGauge, updatedCumulativeVolumes []osmomath.Int) types.GroupGauge {
+func (s *KeeperTestSuite) withUpdatedVolumes(group types.Group, updatedCumulativeVolumes []osmomath.Int) types.Group {
 	// Ensure there aren't more volumes to update than records in group gauge
-	s.Require().True(len(updatedCumulativeVolumes) <= len(groupGauge.InternalGaugeInfo.GaugeRecords))
+	s.Require().True(len(updatedCumulativeVolumes) <= len(group.InternalGaugeInfo.GaugeRecords))
 
 	// We make a deep copy of the group gauge to ensure we don't modify the original input/defaults
-	updatedGroupGauge := deepCopyGroupGauge(groupGauge)
+	updatedGroup := deepCopyGroup(group)
 
 	newTotalWeight := osmomath.ZeroInt()
 	for i, updatedVolume := range updatedCumulativeVolumes {
-		currentRecord := groupGauge.InternalGaugeInfo.GaugeRecords[i]
+		currentRecord := group.InternalGaugeInfo.GaugeRecords[i]
 		updatedRecord := types.InternalGaugeRecord{
 			GaugeId:          currentRecord.GaugeId,
 			CurrentWeight:    updatedVolume.Sub(currentRecord.CumulativeWeight),
 			CumulativeWeight: updatedVolume,
 		}
-		updatedGroupGauge.InternalGaugeInfo.GaugeRecords[i] = updatedRecord
+		updatedGroup.InternalGaugeInfo.GaugeRecords[i] = updatedRecord
 		newTotalWeight = newTotalWeight.Add(updatedRecord.CurrentWeight)
 	}
-	updatedGroupGauge.InternalGaugeInfo.TotalWeight = newTotalWeight
+	updatedGroup.InternalGaugeInfo.TotalWeight = newTotalWeight
 
-	return updatedGroupGauge
+	return updatedGroup
 }
 
-// withSplittingPolicy returns a deep copy of the passed in group gauge with the splitting policy set to the passed in value.
-func withSplittingPolicy(groupGauge types.GroupGauge, splittingPolicy types.SplittingPolicy) types.GroupGauge {
+// withSplittingPolicy returns a deep copy of the passed in group with the splitting policy set to the passed in value.
+func withSplittingPolicy(group types.Group, splittingPolicy types.SplittingPolicy) types.Group {
 	// We make a deep copy of the group gauge to ensure we don't modify the original input/defaults
-	updatedGroupGauge := deepCopyGroupGauge(groupGauge)
-	updatedGroupGauge.SplittingPolicy = splittingPolicy
+	updatedGroup := deepCopyGroup(group)
+	updatedGroup.SplittingPolicy = splittingPolicy
 
-	return updatedGroupGauge
+	return updatedGroup
 }
 
-// withGroupGaugeId returns a deep copy of the passed in group gauge with the group gauge id to the passed in value.
-func withGroupGaugeId(groupGauge types.GroupGauge, groupGaugeId uint64) types.GroupGauge {
+// withGroupGaugeId returns a deep copy of the passed in group with the group id to the passed in value.
+func withGroupGaugeId(group types.Group, groupGaugeId uint64) types.Group {
 	// We make a deep copy of the group gauge to ensure we don't modify the original input/defaults
-	updatedGroupGauge := deepCopyGroupGauge(groupGauge)
-	updatedGroupGauge.GroupGaugeId = groupGaugeId
-	return updatedGroupGauge
+	updatedGroup := deepCopyGroup(group)
+	updatedGroup.GroupGaugeId = groupGaugeId
+	return updatedGroup
 }
 
 // withIsPerpetual sets the isPerpetual flag on the passed in gauge and returns a copy of the gauge.
@@ -1447,48 +1447,48 @@ func withGaugeId(gauge types.Gauge, id uint64) types.Gauge {
 	return gauge
 }
 
-func (s *KeeperTestSuite) TestSyncGroupGaugeWeights() {
+func (s *KeeperTestSuite) TestSyncGroupWeights() {
 	tests := map[string]struct {
-		groupGaugeToSync   types.GroupGauge
+		groupToSync        types.Group
 		updatedPoolVolumes []osmomath.Int
 
-		expectedSyncedGauge types.GroupGauge
+		expectedSyncedGroup types.Group
 		expectedError       error
 	}{
-		"happy path: valid update on group gauge with even volume growth": {
-			groupGaugeToSync: deepCopyGroupGauge(defaultGroupGauge),
+		"happy path: valid update on group with even volume growth": {
+			groupToSync: deepCopyGroup(defaultGroup),
 			updatedPoolVolumes: []osmomath.Int{
 				osmomath.NewInt(300),
 				osmomath.NewInt(300),
 			},
 
-			expectedSyncedGauge: s.withUpdatedVolumes(defaultGroupGauge, []osmomath.Int{osmomath.NewInt(300), osmomath.NewInt(300)}),
+			expectedSyncedGroup: s.withUpdatedVolumes(defaultGroup, []osmomath.Int{osmomath.NewInt(300), osmomath.NewInt(300)}),
 			expectedError:       nil,
 		},
-		"valid update on group gauge with different volume growth": {
-			groupGaugeToSync: deepCopyGroupGauge(defaultGroupGauge),
+		"valid update on group with different volume growth": {
+			groupToSync: deepCopyGroup(defaultGroup),
 			updatedPoolVolumes: []osmomath.Int{
 				osmomath.NewInt(253),
 				osmomath.NewInt(659),
 			},
 
-			expectedSyncedGauge: s.withUpdatedVolumes(defaultGroupGauge, []osmomath.Int{osmomath.NewInt(253), osmomath.NewInt(659)}),
+			expectedSyncedGroup: s.withUpdatedVolumes(defaultGroup, []osmomath.Int{osmomath.NewInt(253), osmomath.NewInt(659)}),
 			expectedError:       nil,
 		},
-		"valid update on group gauge with only one record to sync": {
-			groupGaugeToSync: deepCopyGroupGauge(singleRecordGroupGauge),
+		"valid update on group with only one record to sync": {
+			groupToSync: deepCopyGroup(singleRecordGroup),
 
 			updatedPoolVolumes: []osmomath.Int{
 				osmomath.NewInt(933),
 			},
 
-			expectedSyncedGauge: s.withUpdatedVolumes(singleRecordGroupGauge, []osmomath.Int{osmomath.NewInt(933)}),
+			expectedSyncedGroup: s.withUpdatedVolumes(singleRecordGroup, []osmomath.Int{osmomath.NewInt(933)}),
 			expectedError:       nil,
 		},
 
 		// Error catching
 		"tracked volume has dropped to zero for a pool (no pool volume or volume cannot be found)": {
-			groupGaugeToSync: deepCopyGroupGauge(defaultGroupGauge),
+			groupToSync: deepCopyGroup(defaultGroup),
 			updatedPoolVolumes: []osmomath.Int{
 				osmomath.NewInt(300),
 				osmomath.NewInt(0),
@@ -1497,7 +1497,7 @@ func (s *KeeperTestSuite) TestSyncGroupGaugeWeights() {
 			expectedError: types.NoPoolVolumeError{PoolId: uint64(2)},
 		},
 		"cumulative volume has decreased for a pool (impossible/invalid state)": {
-			groupGaugeToSync: deepCopyGroupGauge(defaultGroupGauge),
+			groupToSync: deepCopyGroup(defaultGroup),
 			updatedPoolVolumes: []osmomath.Int{
 				osmomath.NewInt(300),
 				osmomath.NewInt(100),
@@ -1506,7 +1506,7 @@ func (s *KeeperTestSuite) TestSyncGroupGaugeWeights() {
 			expectedError: types.CumulativeVolumeDecreasedError{PoolId: uint64(2), PreviousVolume: osmomath.NewInt(200), NewVolume: osmomath.NewInt(100)},
 		},
 		"unsupported splitting policy": {
-			groupGaugeToSync: withSplittingPolicy(defaultGroupGauge, types.SplittingPolicy(100)),
+			groupToSync: withSplittingPolicy(defaultGroup, types.SplittingPolicy(100)),
 			updatedPoolVolumes: []osmomath.Int{
 				osmomath.NewInt(300),
 				osmomath.NewInt(300),
@@ -1530,31 +1530,31 @@ func (s *KeeperTestSuite) TestSyncGroupGaugeWeights() {
 			// Update cumulative volumes for pools
 			s.setupVolumes(poolIds, tc.updatedPoolVolumes)
 
-			// Set group gauge in state to make stronger assertions later
-			ik.SetGroupGauge(s.Ctx, tc.groupGaugeToSync)
+			// Set group in state to make stronger assertions later
+			ik.SetGroup(s.Ctx, tc.groupToSync)
 
 			// --- System under test ---
 
-			err := ik.SyncGroupGaugeWeights(s.Ctx, tc.groupGaugeToSync)
+			err := ik.SyncGroupWeights(s.Ctx, tc.groupToSync)
 
 			// --- Assertions ---
 
 			if tc.expectedError != nil {
 				s.Require().ErrorContains(tc.expectedError, err.Error())
 
-				// Ensure group gauge is unchanged in state
-				gaugeInState, err := ik.GetGroupGaugeById(s.Ctx, tc.groupGaugeToSync.GroupGaugeId)
+				// Ensure group is unchanged in state
+				groupInState, err := ik.GetGroupByGaugeID(s.Ctx, tc.groupToSync.GroupGaugeId)
 				s.Require().NoError(err)
-				s.Require().Equal(tc.groupGaugeToSync, gaugeInState)
+				s.Require().Equal(tc.groupToSync, groupInState)
 
 				return
 			}
 
 			s.Require().NoError(err)
 
-			updatedGauge, err := ik.GetGroupGaugeById(s.Ctx, tc.groupGaugeToSync.GroupGaugeId)
+			updatedGroup, err := ik.GetGroupByGaugeID(s.Ctx, tc.groupToSync.GroupGaugeId)
 			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedSyncedGauge, updatedGauge)
+			s.Require().Equal(tc.expectedSyncedGroup, updatedGroup)
 		})
 	}
 }
@@ -1585,7 +1585,7 @@ func (s *KeeperTestSuite) TestSyncGroupGaugeWeights() {
 func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 	// consists of 1:1 mapped group and group gauge.
 	type groupConfig struct {
-		group      types.GroupGauge
+		group      types.Group
 		groupGauge types.Gauge
 
 		expectedSkipped bool
@@ -1602,16 +1602,16 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 	var (
 		// local copies for this test to isolate failures if unexpected
 		// mutations do occur.
-		defaultGroupGauge      = deepCopyGroupGauge(defaultGroupGauge)
-		singleRecordGroupGauge = deepCopyGroupGauge(singleRecordGroupGauge)
+		defaultGroup      = deepCopyGroup(defaultGroup)
+		singleRecordGroup = deepCopyGroup(singleRecordGroup)
 
 		baseTime = time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
 
 		defaultCoins = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))
 
 		// Volume pre-set configurations.
-		balancerOnlyVolumeConfig  = []osmomath.Int{singleRecordGroupGauge.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, osmomath.ZeroInt()}
-		balancerAndCLVolumeConfig = []osmomath.Int{defaultGroupGauge.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, defaultGroupGauge.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight}
+		balancerOnlyVolumeConfig  = []osmomath.Int{singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, osmomath.ZeroInt()}
+		balancerAndCLVolumeConfig = []osmomath.Int{defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight}
 
 		// Remaining coins: 1 x defaultCoins (2x Coins - 1x DistributedCoins)
 		perpetualGauge = types.Gauge{
@@ -1629,7 +1629,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 	nonPerpetualGauge.NumEpochsPaidOver = 2
 
 	// Configure to distribute to the invalid underlying gauge that is non-perpetual and finished.
-	groupToInvalidUnderlying := deepCopyGroupGauge(singleRecordGroupGauge)
+	groupToInvalidUnderlying := deepCopyGroup(singleRecordGroup)
 	groupToInvalidUnderlying.InternalGaugeInfo.GaugeRecords[0].GaugeId = invalidUnderlyingGaugeId
 
 	////////////////////////////// Test-specific helpers
@@ -1638,14 +1638,14 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 	// Returns:
 	// - inputGroups: the groups to pass into the AllocateAcrossGauges function
 	// - preFundCoinsNeededForSuccess: the coins needed to be pre-funded to the module account for the test to succeed
-	configureGroups := func(groups []groupConfig) (inputGroups []types.GroupGauge) {
+	configureGroups := func(groups []groupConfig) (inputGroups []types.Group) {
 		// Set group gauges
-		inputGroups = make([]types.GroupGauge, 0, len(groups))
+		inputGroups = make([]types.Group, 0, len(groups))
 		for _, groupConfig := range groups {
 			group := groupConfig.group
 			groupGauge := groupConfig.groupGauge
 
-			s.App.IncentivesKeeper.SetGroupGauge(s.Ctx, group)
+			s.App.IncentivesKeeper.SetGroup(s.Ctx, group)
 			inputGroups = append(inputGroups, group)
 
 			// Create associated gauge for the group
@@ -1658,10 +1658,10 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 	// returns the expected coins that group is expected to distributed based on the gauge that it
 	// is associated with.
 	// WARNING: only use on the test configuration gauges.
-	estimateDistributedGroupCoins := func(groupGauge types.Gauge) (expecteDistributedCoins sdk.Coins) {
-		expecteDistributedCoins = groupGauge.Coins.Sub(groupGauge.DistributedCoins)
-		if !groupGauge.IsPerpetual {
-			remainingEpochs := groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs
+	estimateDistributedGroupCoins := func(group types.Gauge) (expecteDistributedCoins sdk.Coins) {
+		expecteDistributedCoins = group.Coins.Sub(group.DistributedCoins)
+		if !group.IsPerpetual {
+			remainingEpochs := group.NumEpochsPaidOver - group.FilledEpochs
 
 			// For testing edge case with finished non-perpetual gauge.
 			if remainingEpochs == 0 {
@@ -1676,7 +1676,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 	// mutates the maps from gauge ids to coins to reflect the expected distributions of a given group and the total distribution amount this group
 	// is expected to allocate.
-	updateExpectedGaugeDistributionsMap := func(expectedGaugeDistributionsMap map[uint64]sdk.Coins, group types.GroupGauge, expectedAmountDistributedForGroup sdk.Coins) {
+	updateExpectedGaugeDistributionsMap := func(expectedGaugeDistributionsMap map[uint64]sdk.Coins, group types.Group, expectedAmountDistributedForGroup sdk.Coins) {
 		totalWeight := group.InternalGaugeInfo.TotalWeight
 		if group.SplittingPolicy == types.Volume {
 			for _, underlyingGauge := range group.InternalGaugeInfo.GaugeRecords {
@@ -1743,17 +1743,17 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		"1: one group with perpetual gauge, one underlying gauge, double the volume": {
 			groups: []groupConfig{
 				{
-					group:      singleRecordGroupGauge,
+					group:      singleRecordGroup,
 					groupGauge: perpetualGauge,
 				},
 			},
 
-			volumeToSet: []osmomath.Int{singleRecordGroupGauge.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight.MulRaw(2), osmomath.ZeroInt()},
+			volumeToSet: []osmomath.Int{singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight.MulRaw(2), osmomath.ZeroInt()},
 		},
 		"2: volume (weight) does not change - still distributes": {
 			groups: []groupConfig{
 				{
-					group:      singleRecordGroupGauge,
+					group:      singleRecordGroup,
 					groupGauge: perpetualGauge,
 				},
 			},
@@ -1764,7 +1764,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		"3: one group with non-perpetual gauge, one underlying gauge": {
 			groups: []groupConfig{
 				{
-					group:      singleRecordGroupGauge,
+					group:      singleRecordGroup,
 					groupGauge: nonPerpetualGauge,
 				},
 			},
@@ -1775,7 +1775,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		"4: one group gauge, multiple underlying gauges": {
 			groups: []groupConfig{
 				{
-					group:      defaultGroupGauge,
+					group:      defaultGroup,
 					groupGauge: nonPerpetualGauge,
 				},
 			},
@@ -1786,7 +1786,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		"5: no coins to distribute (the FilledEpoch is still updated)": {
 			groups: []groupConfig{
 				{
-					group:      defaultGroupGauge,
+					group:      defaultGroup,
 					groupGauge: withCoinsToDistribute(deepCopyGauge(nonPerpetualGauge), defaultCoins, defaultCoins),
 				},
 			},
@@ -1800,7 +1800,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		"6: skipped: synching fails due to no volume set": {
 			groups: []groupConfig{
 				{
-					group:      defaultGroupGauge,
+					group:      defaultGroup,
 					groupGauge: withCoinsToDistribute(deepCopyGauge(nonPerpetualGauge), defaultCoins, defaultCoins),
 
 					expectedSkipped: true,
@@ -1814,7 +1814,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		"7: skipping on gauge being inactive": {
 			groups: []groupConfig{
 				{
-					group: defaultGroupGauge,
+					group: defaultGroup,
 					// This makes non-perpetual gauge inactive
 					groupGauge: withNonPerpetualEpochs(deepCopyGauge(nonPerpetualGauge), 1, 1),
 
@@ -1846,22 +1846,22 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		"9: multiple groups with varying number of underlying gauges": {
 			groups: []groupConfig{
 				{
-					group:      singleRecordGroupGauge,
+					group:      singleRecordGroup,
 					groupGauge: perpetualGauge,
 				},
 				{
-					group:      withGroupGaugeId(defaultGroupGauge, 6),
+					group:      withGroupGaugeId(defaultGroup, 6),
 					groupGauge: withGaugeId(deepCopyGauge(nonPerpetualGauge), 6),
 				},
 			},
 
-			volumeToSet: []osmomath.Int{defaultGroupGauge.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, defaultGroupGauge.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight},
+			volumeToSet: []osmomath.Int{defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight},
 		},
 
 		"10: skipping one does not fail the other": {
 			groups: []groupConfig{
 				{
-					group: defaultGroupGauge,
+					group: defaultGroup,
 					// This makes non-perpetual gauge inactive
 					groupGauge: withNonPerpetualEpochs(deepCopyGauge(nonPerpetualGauge), 1, 1),
 
@@ -1869,7 +1869,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 					expectedSkipped: true,
 				},
 				{
-					group:      withGroupGaugeId(defaultGroupGauge, 6),
+					group:      withGroupGaugeId(defaultGroup, 6),
 					groupGauge: withGaugeId(deepCopyGauge(nonPerpetualGauge), 6),
 				},
 			},
@@ -1882,14 +1882,14 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		"11: invalid underlying group gauge (cannot add to finished pool gauge)": {
 			groups: []groupConfig{
 				{
-					group:      singleRecordGroupGauge,
+					group:      singleRecordGroup,
 					groupGauge: perpetualGauge,
 				},
 			},
 
 			volumeToSet: balancerOnlyVolumeConfig,
 
-			expectedError: types.UnexpectedFinishedGaugeError{GaugeId: singleRecordGroupGauge.InternalGaugeInfo.GaugeRecords[0].GaugeId},
+			expectedError: types.UnexpectedFinishedGaugeError{GaugeId: singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].GaugeId},
 		},
 
 		// TODO: even splitting policy test cases once supported.

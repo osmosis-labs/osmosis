@@ -51,7 +51,7 @@ var (
 	NoLockInternalPrefix = "no-lock/i/"
 	NoLockExternalPrefix = "no-lock/e/"
 
-	GroupGaugePrefix = "group_gauge"
+	GroupPrefix = "group_gauge"
 )
 
 func KeyPrefix(p string) []byte {
@@ -68,7 +68,7 @@ func NoLockInternalGaugeDenom(poolId uint64) string {
 	return fmt.Sprintf("%s%d", NoLockInternalPrefix, poolId)
 }
 
-// KeyGroupGaugeForId returns key for a given groupGaugeId.
-func KeyGroupGaugeForId(groupGaugeId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s", GroupGaugePrefix, "|", groupGaugeId, "|"))
+// KeyGroupByGaugeID returns key for a given groupGaugeId.
+func KeyGroupByGaugeID(groupGaugeId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s", GroupPrefix, "|", groupGaugeId, "|"))
 }

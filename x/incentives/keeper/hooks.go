@@ -20,14 +20,14 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	params := k.GetParams(ctx)
 
 	if epochIdentifier == params.DistrEpochIdentifier {
-		groupGauges, err := k.GetAllGroupGauges(ctx)
+		groups, err := k.GetAllGroups(ctx)
 		if err != nil {
 			return err
 		}
 
-		// TODO: temporary allocate to all group gauges. Must be active only.
+		// TODO: temporary allocate to all groups. Must be active only.
 		// Temporary until we decide on a better way to deal with Active/Upcoming/Finished groups.
-		err = k.AllocateAcrossGauges(ctx, groupGauges)
+		err = k.AllocateAcrossGauges(ctx, groups)
 		if err != nil {
 			return err
 		}

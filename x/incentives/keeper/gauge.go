@@ -208,12 +208,12 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	return gauge.Id, nil
 }
 
-// CreateGroupGauge creates a new gauge, that allocates rewards dynamically across its internal gauges based on the given splitting policy.
+// CreateGroup creates a new group. The group is 1:1 mapped to a group gauage that allocates rewards dynamically across its internal pool gauges based on the given splitting policy.
 // Note: we should expect that the internal gauges consist of the gauges that are automatically created for each pool upon pool creation, as even non-perpetual
 // external incentives would likely want to route through these.
 // TODO: change this to take in list of pool IDs instead and fetch the gauge IDs under the hood.
 // Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6404
-func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64, gaugetype lockuptypes.LockQueryType, splittingPolicy types.SplittingPolicy) (uint64, error) {
+func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64, gaugetype lockuptypes.LockQueryType, splittingPolicy types.SplittingPolicy) (uint64, error) {
 	if len(internalGaugeIds) == 0 {
 		return 0, fmt.Errorf("No internalGauge provided.")
 	}
@@ -252,13 +252,13 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6401
 	initialInternalGaugeInfo := types.InternalGaugeInfo{}
 
-	newGroupGauge := types.GroupGauge{
+	newGroup := types.Group{
 		GroupGaugeId:      nextGaugeId,
 		InternalGaugeInfo: initialInternalGaugeInfo,
 		SplittingPolicy:   splittingPolicy,
 	}
 
-	k.SetGroupGauge(ctx, newGroupGauge)
+	k.SetGroup(ctx, newGroup)
 	k.SetLastGaugeID(ctx, gauge.Id)
 
 	// TODO: check if this is necessary.
