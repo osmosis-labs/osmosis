@@ -42,13 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-### Features
-
-* [#6427](https://github.com/osmosis-labs/osmosis/pull/6427) sdk.Coins Mul and Quo helpers in osmoutils
-
 ### Misc Improvements
 
-* [#6309](https://github.com/osmosis-labs/osmosis/pull/6309) Add  Cosmwasm Pool Queries to Stargate Query
+* [#6309](https://github.com/osmosis-labs/osmosis/pull/6309) Add Cosmwasm Pool Queries to Stargate Query
+
 ### Features
 
 * [#6416](https://github.com/osmosis-labs/osmosis/pull/6416) feat[CL]: add num initialized ticks query
@@ -60,11 +57,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6279](https://github.com/osmosis-labs/osmosis/pull/6279) fix prop-597 introduced issue
 * [#6282](https://github.com/osmosis-labs/osmosis/pull/6282) Fix CreateCanonicalConcentratedLiquidityPoolAndMigrationLink overriding migration records
 
+## v19.1.0
+
+### Features
+
+* [#6427](https://github.com/osmosis-labs/osmosis/pull/6427) sdk.Coins Mul and Quo helpers in osmoutils
+* [#6428](https://github.com/osmosis-labs/osmosis/pull/6428) osmomath: QuoTruncateMut
+* [#6437](https://github.com/osmosis-labs/osmosis/pull/6437) mutative version for QuoRoundUp
+* [#6261](https://github.com/osmosis-labs/osmosis/pull/6261) mutative and efficient BigDec truncations with arbitrary decimals
+* [#6416](https://github.com/osmosis-labs/osmosis/pull/6416) feat[CL]: add num initialized ticks query
+
+### Misc Improvements
+
+* [#6392](https://github.com/osmosis-labs/osmosis/pull/6392) Speedup fractional exponentiation
+
 ### Bug Fixes
 
 * [#6334](https://github.com/osmosis-labs/osmosis/pull/6334) fix: enable taker fee cli
 * [#6352](https://github.com/osmosis-labs/osmosis/pull/6352) Reduce error blow-up in CalcAmount0Delta by changing the order of math operations.
 * [#6368](https://github.com/osmosis-labs/osmosis/pull/6368) Stricter rounding behavior in CL math's CalcAmount0Delta and GetNextSqrtPriceFromAmount0InRoundingUp
+* [#6409](https://github.com/osmosis-labs/osmosis/pull/6409) CL math: Convert Int to BigDec
 
 ### API Breaks
 
@@ -72,9 +84,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6317](https://github.com/osmosis-labs/osmosis/pull/6317) Remove price return from CL `math.TickToSqrtPrice`
 * [#6368](https://github.com/osmosis-labs/osmosis/pull/6368) Convert priceLimit API in CL swaps to BigDec 
 * [#6371](https://github.com/osmosis-labs/osmosis/pull/6371) Change PoolI.SpotPrice API from Dec (18 decimals) to BigDec (36 decimals), maintain state-compatibility. 
-
-### Client Breaks
 * [#6388](https://github.com/osmosis-labs/osmosis/pull/6388) Make cosmwasmpool's create pool cli generic
+* [#6238] switch osmomath to sdkmath types and rename BigDec constructors to contain "Big" in the name.
+
+Note: with the update, the Dec and Int do not get initialized to zero values by default in proto marhaling/unmarshaling. Instead, they get set to nil values.
+maxDecBitLen has changed by one bit so overflow panic can be triggerred sooner.
 
 ## v19.0.0
 

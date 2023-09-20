@@ -5,7 +5,7 @@
 # * x/epochs
 # is updated.
 # It is triggerred by a manual workflow:
-# https://github.com/osmosis/osmosis/actions/workflows/go-mod-auto-bump.yml
+# https://github.com/osmosis-labs/osmosis/actions/workflows/go-mod-auto-bump.yml
 
 name: Go Mod Auto Version Update
 on:
