@@ -36,13 +36,14 @@ const (
 )
 
 var (
-	precisionReuse       = new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionBigDec), nil)
-	precisionReuseSDK    = new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionDec), nil)
-	fivePrecision        = new(big.Int).Quo(precisionReuse, big.NewInt(2))
-	precisionMultipliers []*big.Int
-	zeroInt              = big.NewInt(0)
-	oneInt               = big.NewInt(1)
-	tenInt               = big.NewInt(10)
+	precisionReuse        = new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionBigDec), nil)
+	squaredPrecisionReuse = new(big.Int).Mul(precisionReuse, precisionReuse)
+	precisionReuseSDK     = new(big.Int).Exp(big.NewInt(10), big.NewInt(PrecisionDec), nil)
+	fivePrecision         = new(big.Int).Quo(precisionReuse, big.NewInt(2))
+	precisionMultipliers  []*big.Int
+	zeroInt               = big.NewInt(0)
+	oneInt                = big.NewInt(1)
+	tenInt                = big.NewInt(10)
 
 	// log_2(e)
 	// From: https://www.wolframalpha.com/input?i=log_2%28e%29+with+37+digits
@@ -401,6 +402,20 @@ func (d BigDec) QuoRoundUp(d2 BigDec) BigDec {
 	return BigDec{chopped}
 }
 
+// quotient, round up (mutative)
+func (d BigDec) QuoRoundUpMut(d2 BigDec) BigDec {
+	// multiply precision twice
+	d.i.Mul(d.i, squaredPrecisionReuse)
+	d.i.Quo(d.i, d2.i)
+
+	chopPrecisionAndRoundUpMut(d.i, precisionReuse)
+
+	if d.i.BitLen() > maxDecBitLen {
+		panic("Int overflow")
+	}
+	return BigDec{d.i}
+}
+
 // quotient
 func (d BigDec) QuoInt(i BigInt) BigDec {
 	mul := new(big.Int).Quo(d.i, i.i)
@@ -654,36 +669,44 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 }
 
 // chopPrecisionAndRoundUpBigDec removes a Precision amount of rightmost digits and rounds up.
+// Non-mutative.
 func chopPrecisionAndRoundUpBigDec(d *big.Int) *big.Int {
-	return chopPrecisionAndRoundUp(d, precisionReuse)
+	// make copy
+	copy := new(big.Int).Set(d)
+	return chopPrecisionAndRoundUpMut(copy, precisionReuse)
 }
 
 // chopPrecisionAndRoundUpDec removes  sdk.Precision amount of rightmost digits and rounds up.
+// Non-mutative.
 func chopPrecisionAndRoundUpDec(d *big.Int) *big.Int {
-	return chopPrecisionAndRoundUp(d, precisionReuseSDK)
+	copy := new(big.Int).Set(d)
+	return chopPrecisionAndRoundUpMut(copy, precisionReuseSDK)
 }
 
 // chopPrecisionAndRoundUp removes a Precision amount of rightmost digits and rounds up.
-func chopPrecisionAndRoundUp(d *big.Int, precisionReuse *big.Int) *big.Int {
+// Mutates input d.
+// Mutations occur:
+// - By calling chopPrecisionAndTruncateMut.
+// - Using input d directly in QuoRem.
+func chopPrecisionAndRoundUpMut(d *big.Int, precisionReuse *big.Int) *big.Int {
 	// remove the negative and add it back when returning
 	if d.Sign() == -1 {
 		// make d positive, compute chopped value, and then un-mutate d
 		d = d.Neg(d)
 		// truncate since d is negative...
-		d = chopPrecisionAndTruncate(d)
+		d = chopPrecisionAndTruncateMut(d)
 		d = d.Neg(d)
 		return d
 	}
 
 	// get the truncated quotient and remainder
-	quo, rem := d, big.NewInt(0)
-	quo, rem = quo.QuoRem(d, precisionReuse, rem)
+	_, rem := d.QuoRem(d, precisionReuse, big.NewInt(0))
 
 	if rem.Sign() == 0 { // remainder is zero
-		return quo
+		return d
 	}
 
-	return quo.Add(quo, oneInt)
+	return d.Add(d, oneInt)
 }
 
 func chopPrecisionAndRoundNonMutative(d *big.Int) *big.Int {
@@ -709,6 +732,12 @@ func (d BigDec) RoundInt() BigInt {
 // but always rounds down. It does not mutate the input.
 func chopPrecisionAndTruncate(d *big.Int) *big.Int {
 	return new(big.Int).Quo(d, precisionReuse)
+}
+
+// chopPrecisionAndTruncate is similar to chopPrecisionAndRound,
+// but always rounds down. It mutates the input.
+func chopPrecisionAndTruncateMut(d *big.Int) *big.Int {
+	return d.Quo(d, precisionReuse)
 }
 
 // TruncateInt64 truncates the decimals from the number and returns an int64
