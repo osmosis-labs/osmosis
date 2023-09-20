@@ -61,9 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    * maxDecBitLen has changed by one bit so overflow panic can be triggerred sooner.
 * [#6368](https://github.com/osmosis-labs/osmosis/pull/6368) Convert priceLimit API in CL swaps to BigDec 
 
-=======
 * [#6371](https://github.com/osmosis-labs/osmosis/pull/6371) Change PoolI.SpotPrice API from Dec (18 decimals) to BigDec (36 decimals), maintain state-compatibility. 
->>>>>>> c7829083b (updates)
 
 ## v19.0.0
 
