@@ -43,7 +43,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 			// Authenticate the message
 			// TODO: We probably want this method to return an error instead of a bool
-			success := authenticator.ConfirmExecution(ctx, msg, true, authData)
+			success := authenticator.ConfirmExecution(ctx, msg, authData)
 			// TODO: Is the authenticated boolean needed? The idea was to check if the tx was authenticated or not, but
 			//   IIUC post handlers only get called if the tx is authenticated.
 			//   Another thing we may want to know there is which aithenticator authenticated the tx.

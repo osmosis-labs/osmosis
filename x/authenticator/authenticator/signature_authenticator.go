@@ -233,12 +233,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(
 func (sva SignatureVerificationAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData AuthenticatorData, msg sdk.Msg) {
 }
 
-func (sva SignatureVerificationAuthenticator) ConfirmExecution(
-	ctx sdk.Context,
-	msg sdk.Msg,
-	authenticated bool,
-	authenticationData AuthenticatorData,
-) bool {
+func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) bool {
 	// To be executed in the post handler
 	return true
 }
