@@ -1,0 +1,60 @@
+# Workflow: Go Mod Auto-Update Instructions
+#
+# Guides contributors when changes are made to our in-repo Go modules.
+# Links the manual GitHub action to run that updates the Go mods.
+#
+# Triggers: 
+# - Pull Request Opened, Synchronized, Reopened
+#
+# Secrets: 
+# GITHUB_TOKEN: Created automatically by GitHub, used for commenting on the PR
+
+name: Go Mod Auto-Update Instructions
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - 'osmomath/**'
+      - 'osmoutils/**'
+      - 'x/ibc-hooks/**'
+      - 'x/epochs/**'
+
+permissions: 
+  pull-requests: write 
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - 
+        name: Checkout code
+        uses: actions/checkout@v4
+      - 
+        name: Comment on PR
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            **Important Notice** 
+            
+            This PR modifies an in-repo Go module. It is one of:
+            - osmomath
+            - osmoutils
+            - x/ibc-hooks
+            - x/epochs
+            
+            The dependent Go modules, especially the root one, will have to be
+            updated to reflect the changes. Failing to do so might cause e2e to fail.  
+            
+            Please follow the instructions below:
+
+            1. Open https://github.com/osmosis-labs/osmosis/actions/workflows/go-mod-auto-bump.yml
+            2. Provide the current branch name
+            3. On success, confirm if an automated commit corretly updated the go.mod and go.sum files
+            
+            Please let us know if you need any help.
+          mode: upsert
+          comment_tag: instructions
