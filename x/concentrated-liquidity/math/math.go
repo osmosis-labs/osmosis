@@ -18,7 +18,12 @@ func Liquidity0(amount osmomath.Int, sqrtPriceA, sqrtPriceB osmomath.BigDec) osm
 
 	// We convert to BigDec to avoid precision loss when calculating liquidity. Without doing this,
 	// our liquidity calculations will be off from our theoretical calculations within our tests.
+<<<<<<< HEAD
 	amountBigDec := osmomath.BigDecFromDec(amount.ToLegacyDec())
+=======
+	// TODO (perf): consider better conversion helpers to minimize reallocations.
+	amountBigDec := osmomath.BigDecFromSDKInt(amount)
+>>>>>>> e2b521d0 (Convert sdk.Int to BigDec (#6409))
 
 	product := sqrtPriceA.Mul(sqrtPriceB)
 	diff := sqrtPriceB.Sub(sqrtPriceA)
@@ -40,7 +45,12 @@ func Liquidity1(amount osmomath.Int, sqrtPriceA, sqrtPriceB osmomath.BigDec) osm
 
 	// We convert to BigDec to avoid precision loss when calculating liquidity. Without doing this,
 	// our liquidity calculations will be off from our theoretical calculations within our tests.
+<<<<<<< HEAD
 	amountBigDec := osmomath.BigDecFromDec(amount.ToLegacyDec())
+=======
+	// TODO (perf): consider better conversion helpers to minimize reallocations.
+	amountBigDec := osmomath.BigDecFromSDKInt(amount)
+>>>>>>> e2b521d0 (Convert sdk.Int to BigDec (#6409))
 	diff := sqrtPriceB.Sub(sqrtPriceA)
 	if diff.IsZero() {
 		panic(fmt.Sprintf("liquidity1 diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
