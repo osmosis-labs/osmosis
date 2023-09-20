@@ -56,11 +56,8 @@ func NewAnteHandler(
 		ante.NewValidateMemoDecorator(accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(accountKeeper),
 		deductFeeDecorator,
-		// This decorator will have to be replaced with our won decorator.
-		// For now, replacing it with a hacked version to test key rotation
 		authante.NewSetPubKeyDecorator(accountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(accountKeeper),
-		// ante.NewSigGasConsumeDecorator(accountKeeper, sigGasConsumer),
 		// Our authenticator decorator
 		authante.NewAuthenticatorDecorator(authenticatorKeeper, 20_000), // TODO: what's a good value for maxFeePayerGas?
 		ante.NewIncrementSequenceDecorator(accountKeeper),

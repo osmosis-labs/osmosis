@@ -38,6 +38,8 @@ func (sva SignatureVerificationAuthenticator) StaticGas() uint64 {
 }
 
 // NewSignatureVerificationAuthenticator creates a new SignatureVerificationAuthenticator
+// when the app starts a SignatureVerificationAuthenticator is passed to the authentation manager,
+// it will only be instantiated once then used for each signature authentation.
 func NewSignatureVerificationAuthenticator(
 	ak *authkeeper.AccountKeeper,
 	Handler authsigning.SignModeHandler,
@@ -51,6 +53,7 @@ func NewSignatureVerificationAuthenticator(
 // Initialize is used when a secondary account is used as an authenticator,
 // this is used to verify a signature from an account that does not have a public key
 // in the store. In this case we Initialize the authenticator from the authenticators store
+// which should have a public key in the data field.
 func (sva SignatureVerificationAuthenticator) Initialize(
 	data []byte,
 ) (Authenticator, error) {

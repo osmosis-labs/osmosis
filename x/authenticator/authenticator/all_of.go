@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"encoding/json"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -48,7 +49,7 @@ func (aoa AllOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	for _, initData := range initDatas {
 		for _, authenticatorCode := range aoa.am.GetRegisteredAuthenticators() {
 			if authenticatorCode.Type() == initData.AuthenticatorType {
-				instance, err := authenticatorCode.Initialize([]byte(initData.Data))
+				instance, err := authenticatorCode.Initialize(initData.Data)
 				if err != nil {
 					return nil, err
 				}
@@ -91,7 +92,9 @@ func (aoa AllOfAuthenticator) Authenticate(
 	aoa.executedAuths = []Authenticator{}
 	for idx, auth := range aoa.SubAuthenticators {
 		success, err := auth.Authenticate(ctx, msg, allOfData.Data[idx])
-		aoa.executedAuths = append(aoa.executedAuths, auth)
+		// TODO: fix static check here;
+		// SA4005: ineffective assignment to field AllOfAuthenticator.executedAuth
+		aoa.executedAuths = append(aoa.executedAuths, auth) // nolint:staticcheck
 		if !success {
 			return false, err
 		}

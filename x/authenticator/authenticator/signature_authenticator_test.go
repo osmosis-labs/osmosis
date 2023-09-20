@@ -12,10 +12,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	// multisig
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 
 	"github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/app/params"
@@ -125,7 +130,27 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 
 	tests := []SignatureVerificationAuthenticatorTest{
 		{
-			Description: "Successfully verified authenticator",
+			Description: "Test: successfully verified authenticator with one signer: base case: PASS",
+			TestData: SignatureVerificationAuthenticatorTestData{
+				[]sdk.Msg{
+					testMsg1,
+				},
+				[]uint64{0},
+				[]uint64{0},
+				[]cryptotypes.PrivKey{
+					s.TestPrivKeys[0],
+				},
+				[]cryptotypes.PrivKey{
+					s.TestPrivKeys[0],
+				},
+				1,
+				1,
+				true,
+				true,
+			},
+		},
+		{
+			Description: "Test: successfully verified authenticator: multiple signers: PASS",
 			TestData: SignatureVerificationAuthenticatorTestData{
 				[]sdk.Msg{
 					testMsg1,
@@ -148,6 +173,35 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 				3,
 				true,
 				true,
+			},
+		},
+		{
+			// This test case tests if there is two messages with the same signer
+			// with two successful signatures.
+			// NOTE: Intuitively this should pass but it doesn't, which reflects the behavior in the sdk
+			Description: "Test: failed to verified authenticator with 2 messages signed correctly with the same address: FAIL",
+			TestData: SignatureVerificationAuthenticatorTestData{
+				[]sdk.Msg{
+					testMsg1,
+					testMsg2,
+					testMsg2,
+				},
+				[]uint64{0, 0, 0},
+				[]uint64{0, 0, 0},
+				[]cryptotypes.PrivKey{
+					s.TestPrivKeys[0],
+					s.TestPrivKeys[1],
+					s.TestPrivKeys[1],
+				},
+				[]cryptotypes.PrivKey{
+					s.TestPrivKeys[0],
+					s.TestPrivKeys[1],
+					s.TestPrivKeys[1],
+				},
+				0,
+				0,
+				false,
+				false,
 			},
 		},
 		{
@@ -251,10 +305,10 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 				sigData := authData.(authenticator.SignatureData)
 
 				// the signer data should contain x signers
-				s.Require().Equal(len(sigData.Signers), tc.TestData.NumberOfExpectedSigners)
+				s.Require().Equal(tc.TestData.NumberOfExpectedSigners, len(sigData.Signers))
 
 				// the signature data should contain x signatures
-				s.Require().Equal(len(sigData.Signatures), tc.TestData.NumberOfExpectedSignatures)
+				s.Require().Equal(tc.TestData.NumberOfExpectedSignatures, len(sigData.Signatures))
 
 				// Test Authenticate method
 				if tc.TestData.ShouldSucceedSignatureVerification {
@@ -275,10 +329,10 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 				sigData := authData.(authenticator.SignatureData)
 
 				// the signer data should contain x signers
-				s.Require().Equal(len(sigData.Signers), tc.TestData.NumberOfExpectedSigners)
+				s.Require().Equal(tc.TestData.NumberOfExpectedSigners, len(sigData.Signers))
 
 				// the signature data should contain x signatures
-				s.Require().Equal(len(sigData.Signatures), tc.TestData.NumberOfExpectedSignatures)
+				s.Require().Equal(tc.TestData.NumberOfExpectedSignatures, len(sigData.Signatures))
 
 			}
 		})
@@ -286,55 +340,96 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 }
 
 func (s *SigVerifyAuthenticationSuite) TestMultiSignatureAuthenticator() {
-	// TODO: test multi sig
-	s.Require().True(true)
-	//osmoToken := "osmo"
-	//coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+	osmoToken := "osmo"
+	priv := []cryptotypes.PrivKey{
+		s.TestPrivKeys[0],
+		s.TestPrivKeys[1],
+	}
 
-	//// Create a test messages for signing
-	//testMsg1 := &banktypes.MsgSend{
-	//	FromAddress: sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[0]),
-	//	ToAddress:   sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[1]),
-	//	Amount:      coins,
-	//}
-	//testMsg2 := &banktypes.MsgSend{
-	//	FromAddress: sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[1]),
-	//	ToAddress:   sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[1]),
-	//	Amount:      coins,
-	//}
-	//feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
 
-	//tx, err := GenValidTx(
-	//	s.EncodingConfig.TxConfig,
-	//	[]sdk.Msg{
-	//		testMsg1,
-	//		testMsg2,
-	//	},
-	//	feeCoins,
-	//	300000,
-	//	"",
-	//	[]uint64{0, 0},
-	//	[]uint64{0, 0},
-	//	s.TestPrivKeys[0],
-	//	s.TestPrivKeys[1],
-	//)
+	sigs := make([]signing.SignatureV2, 1)
+	gen := s.EncodingConfig.TxConfig
 
-	//// Test GetAuthenticationData
-	//authData, err := s.SigVerificationAuthenticator.GetAuthenticationData(s.Ctx, tx, -1, false)
-	//s.Require().NoError(err)
+	// create a random length memo
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
+	signMode := gen.SignModeHandler().Modes()
 
-	//fmt.Println(s.Ctx.GasMeter().GasConsumed())
+	pkSet1 := generatePubKeysForMultiSig(priv...)
+	multisigKey1 := kmultisig.NewLegacyAminoPubKey(2, pkSet1)
+	multisignature1 := multisig.NewMultisig(len(pkSet1))
 
-	//// the signer data should contain 2 signers
-	//sigData := authData.(authenticator.SignatureData)
-	//s.Require().Equal(len(sigData.Signers), 2)
+	accAddress := sdk.AccAddress(multisigKey1.Address())
+	account := authtypes.NewBaseAccount(accAddress, multisigKey1, 0, 0)
+	s.OsmosisApp.AccountKeeper.SetAccount(s.Ctx, account)
 
-	//// the signature data should contain 2 signatures
-	//s.Require().Equal(len(sigData.Signatures), 2)
+	coins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+	msg := &banktypes.MsgSend{
+		FromAddress: accAddress.String(),
+		ToAddress:   sdk.MustBech32ifyAddressBytes(osmoToken, s.TestAccAddress[1]),
+		Amount:      coins,
+	}
 
-	//// Test Authenticate method
-	//success, err := s.SigVerificationAuthenticator.Authenticate(s.Ctx, nil, authData)
-	//s.Require().True(success)
+	tx := gen.NewTxBuilder()
+	err := tx.SetMsgs(msg)
+	s.Require().NoError(err)
+
+	tx.SetMemo(memo)
+	sigs[0] = signing.SignatureV2{
+		PubKey:   multisigKey1,
+		Data:     &signing.MultiSignatureData{},
+		Sequence: 0,
+	}
+	err = tx.SetSignatures(sigs...)
+	s.Require().NoError(err)
+
+	tx.SetFeeAmount(feeCoins)
+	tx.SetGasLimit(300000)
+	s.Require().NoError(err)
+
+	signerData := authsigning.SignerData{
+		ChainID:       "",
+		AccountNumber: 0,
+		Sequence:      0,
+	}
+
+	// Get the signer bytes, use signModeLegacyAminoJSONHandler
+	signBytes, err := gen.SignModeHandler().GetSignBytes(signMode[1], signerData, tx.GetTx())
+
+	// Generate multisig signatures
+	sigSet1 := generateSignaturesForMultiSig(signBytes, priv...)
+
+	// Add signatures to signaturesv2 struct
+	for i := 0; i < len(pkSet1); i++ {
+		stdSig := legacytx.StdSignature{PubKey: pkSet1[i], Signature: sigSet1[i]}
+		sigV2, err := legacytx.StdSignatureToSignatureV2(s.EncodingConfig.Amino, stdSig)
+		s.Require().NoError(err)
+		err = multisig.AddSignatureV2(multisignature1, sigV2, pkSet1)
+		s.Require().NoError(err)
+	}
+
+	// 1st round: set SignatureV2 with empty signatures, to set correct
+	// signer infos.
+	sigs[0].Data = multisignature1
+
+	err = tx.SetSignatures(sigs...)
+	s.Require().NoError(err)
+
+	// Test GetAuthenticationData
+	authData, err := s.SigVerificationAuthenticator.GetAuthenticationData(s.Ctx, tx.GetTx(), -1, false)
+	s.Require().NoError(err)
+
+	// the signer data should contain 2 signers
+	sigData := authData.(authenticator.SignatureData)
+	s.Require().Equal(1, len(sigData.Signers))
+
+	// the signature data should contain 2 signatures
+	s.Require().Equal(1, len(sigData.Signatures))
+
+	// Test Authenticate method
+	success, err := s.SigVerificationAuthenticator.Authenticate(s.Ctx, nil, authData)
+	s.Require().True(success)
 }
 
 // GenTx generates a signed mock transaction.
@@ -406,72 +501,27 @@ func GenTx(
 	return tx.GetTx(), nil
 }
 
-// GenTx generates a signed mock transaction.
-func GenValidMultiSigTx(
-	gen client.TxConfig,
-	msgs []sdk.Msg,
-	feeAmt sdk.Coins,
-	gas uint64,
-	chainID string,
-	accNums,
-	accSeqs []uint64,
+func generatePubKeysForMultiSig(
 	priv ...cryptotypes.PrivKey,
-) (sdk.Tx, error) {
-	sigs := make([]signing.SignatureV2, len(priv))
-
-	// create a random length memo
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
-	signMode := gen.SignModeHandler().DefaultMode()
-
-	// 1st round: set SignatureV2 with empty signatures, to set correct
-	// signer infos.
+) (pubkeys []cryptotypes.PubKey) {
+	pubkeys = make([]cryptotypes.PubKey, len(priv))
 	for i, p := range priv {
-		sigs[i] = signing.SignatureV2{
-			PubKey: p.PubKey(),
-			Data: &signing.SingleSignatureData{
-				SignMode: signMode,
-			},
-			Sequence: accSeqs[i],
-		}
+		pubkeys[i] = p.PubKey()
 	}
+	return
+}
 
-	tx := gen.NewTxBuilder()
-	err := tx.SetMsgs(msgs...)
-	if err != nil {
-		return nil, err
-	}
-	err = tx.SetSignatures(sigs...)
-	if err != nil {
-		return nil, err
-	}
-	tx.SetMemo(memo)
-	tx.SetFeeAmount(feeAmt)
-	tx.SetGasLimit(gas)
-
-	// 2nd round: once all signer infos are set, every signer can sign.
+func generateSignaturesForMultiSig(
+	msg []byte,
+	priv ...cryptotypes.PrivKey,
+) (signatures [][]byte) {
+	signatures = make([][]byte, len(priv))
 	for i, p := range priv {
-		signerData := authsigning.SignerData{
-			ChainID:       chainID,
-			AccountNumber: accNums[i],
-			Sequence:      accSeqs[i],
-		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
-		if err != nil {
-			panic(err)
-		}
-		_, err = p.Sign(signBytes)
-		if err != nil {
-			panic(err)
-		}
-		// TODO: multisignature data
-		//sigs[i].Data.(*signing.MultiSignatureData).BitArray = sig
-		//sigs[i].Data.(*signing.MultiSignatureData).Signatures = []sig
-		err = tx.SetSignatures(sigs...)
+		var err error
+		signatures[i], err = p.Sign(msg)
 		if err != nil {
 			panic(err)
 		}
 	}
-
-	return tx.GetTx(), nil
+	return
 }
