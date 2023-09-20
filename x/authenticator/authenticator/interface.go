@@ -46,7 +46,7 @@ type Authenticator interface {
 	) (AuthenticatorData, error)
 
 	// Authenticate authenticates a message based on the signer and data parsed from the GetAuthenticationData function
-	// the returns true is authenticated or false if not authicated. This is used in an ante handler.
+	// the returns true is authenticated or false if not authenticated. This is used in an ante handler.
 	// NOTE: Consume gas per signature happens in this function.
 	Authenticate(
 		ctx sdk.Context, // sdk Context is used to get data for use in authentication and to consume gas
