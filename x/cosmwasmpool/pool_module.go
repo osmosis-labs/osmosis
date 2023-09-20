@@ -176,7 +176,7 @@ func (k Keeper) CalculateSpotPrice(
 
 	spotPriceBigDec, err := cosmwasmPool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.Dec{}, err
 	}
 	// Truncation is acceptable here since the only reason cosmwasmPool returns a BigDec
 	// is to maintain compatibility with the `PoolI.SpotPrice` API.
