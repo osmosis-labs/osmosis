@@ -582,6 +582,12 @@ func BigDecFromDec(d Dec) BigDec {
 	return NewBigDecFromBigIntWithPrec(d.BigInt(), PrecisionDec)
 }
 
+// BigDecFromSDKInt returns the BigDec representation of an sdkInt.
+// Values in any additional decimal places are truncated.
+func BigDecFromSDKInt(i Int) BigDec {
+	return NewBigDecFromBigIntWithPrec(i.BigInt(), 0)
+}
+
 // BigDecFromDecSlice returns the []BigDec representation of an []Dec.
 // Values in any additional decimal places are truncated.
 func BigDecFromDecSlice(ds []Dec) []BigDec {
