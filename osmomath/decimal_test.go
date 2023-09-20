@@ -1482,7 +1482,7 @@ func (s *decimalTestSuite) TestPower() {
 	}
 }
 
-func (s *decimalTestSuite) TestQuoRoundUpMut() {
+func (s *decimalTestSuite) TestQuoRoundUp_MutativeAndNonMutative() {
 	tests := []struct {
 		d1, d2, expQuoRoundUpMut osmomath.BigDec
 	}{
@@ -1520,11 +1520,22 @@ func (s *decimalTestSuite) TestQuoRoundUpMut() {
 		if tc.d2.IsZero() { // panic for divide by zero
 			s.Require().Panics(func() { tc.d1.QuoRoundUpMut(tc.d2) })
 		} else {
+
+			copy := tc.d1.Clone()
+
+			nonMutResult := copy.QuoRoundUp(tc.d2)
+
+			// Return is as expected
+			s.Require().Equal(tc.expQuoRoundUpMut, nonMutResult, "exp %v, res %v, tc %d", tc.expQuoRoundUpMut.String(), tc.d1.String(), tcIndex)
+
+			// Receiver is not mutated
+			s.Require().Equal(tc.d1, copy, "exp %v, res %v, tc %d", tc.expQuoRoundUpMut.String(), tc.d1.String(), tcIndex)
+
+			// Receiver is mutated.
 			tc.d1.QuoRoundUpMut(tc.d2)
 
 			// Make sure d1 equals to expected
 			s.Require().True(tc.expQuoRoundUpMut.Equal(tc.d1), "exp %v, res %v, tc %d", tc.expQuoRoundUpMut.String(), tc.d1.String(), tcIndex)
-
 		}
 	}
 }
