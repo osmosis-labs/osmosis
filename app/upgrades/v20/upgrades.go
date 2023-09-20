@@ -23,6 +23,10 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// Initialize new parameter.
+		params := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
+		params.UnrestrictedPoolCreatorWhitelist = []string{}
+
 		return migrations, nil
 	}
 }
