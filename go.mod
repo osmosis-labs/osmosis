@@ -23,7 +23,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230920004639-8744f48ee5fa
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.6
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230920012324-f1a1ca887bd2
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.2
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.8
 	github.com/pkg/errors v0.9.1
@@ -56,7 +56,7 @@ require (
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/butuzov/mirror v1.1.0 // indirect
-	github.com/bytedance/sonic v1.10.1 // indirect
+	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/cosmos/gogoproto v1.4.6 // indirect
 	github.com/cosmos/iavl v0.19.5 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
