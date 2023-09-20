@@ -3090,7 +3090,7 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 	}
 	// Note: spot price truncation is made because the test was created before we changed in from Dec to BigDec
 	// As a result, it is acceptable to truncate for test correctness.
-	s.Require().Equal(0, multiplicativeTolerance, oldSpotPrice.Dec().RoundInt(), newSpotPrice.Dec().RoundInt())
+	s.Require().Equal(0, multiplicativeTolerance.Compare(oldSpotPrice.Dec().RoundInt(), newSpotPrice.Dec().RoundInt()))
 
 	// Assure that user balance now as it was before both swaps.
 	// TODO: Come back to this choice after deciding if we are using BigDec for swaps
