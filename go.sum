@@ -957,12 +957,12 @@ github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230908065430-05346fa12992 h1:
 github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230908065430-05346fa12992/go.mod h1:L6USUt+QX9lIqUVCRs8DFEVRZJbCYbemmtcXb7GfHYE=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
-github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230911120014-b14342e08daf h1:sXSC/RG9sxQCB5QJ5JB+M9Bok7Xbpv2zx9ee6287glw=
-github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230911120014-b14342e08daf/go.mod h1:pIItelRYvonB+H8A6KqucOi7xFnJxzDHaWJqOdFNLI4=
-github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230918184012-da92c9cdf6bd h1:U7r0uBLTWeLrgGOu1re0aTl10yreX1j3dNDu12KqBpE=
-github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230918184012-da92c9cdf6bd/go.mod h1:pIItelRYvonB+H8A6KqucOi7xFnJxzDHaWJqOdFNLI4=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230919070012-03a878db9dad h1:I4m0TxfAAovSmxI0rYvijAVX6JhoYe12VmjM5vcABxU=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230919070012-03a878db9dad/go.mod h1:pIItelRYvonB+H8A6KqucOi7xFnJxzDHaWJqOdFNLI4=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230920134402-0622c30178eb h1:czhTR1cvT+a/f5EAz7kIrX3W9zEBWV/9TKIbxcfV2AE=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230920134402-0622c30178eb/go.mod h1:pIItelRYvonB+H8A6KqucOi7xFnJxzDHaWJqOdFNLI4=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230920134650-28712c635b4f h1:SwZwcklK2EHIQLD8gVTqMsUTD1GpTyF6X8HlMywrxTc=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230920134650-28712c635b4f/go.mod h1:pIItelRYvonB+H8A6KqucOi7xFnJxzDHaWJqOdFNLI4=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230911120014-b14342e08daf h1:r5R/L3tzH+vGPahAdvnVB2Vo0KPhZR0oMNyX4+G2FEo=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230911120014-b14342e08daf/go.mod h1:7VoXHwrSSx8Sii0UFc9YIixF6C/9XfV1pdU2Dliu4WA=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230911120014-b14342e08daf h1:8lkIsAj3L7zxvOZbqVLNJRpSdDxaYhYfAIG7XjPaJiU=
