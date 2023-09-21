@@ -165,7 +165,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, acco
 		if pubKey == nil {
 			// Having a default here keeps this authenticator stateless,
 			// that way we don't have to create specific authenticators with the pubkey of each existing account
-			pubKey = acc.GetPubKey() // TODO: do we want this default?
+			pubKey = acc.GetPubKey()
 		}
 		if !verificationData.Simulate && pubKey == nil {
 			return Rejected("pubkey on not set on account or authenticator", sdkerrors.ErrInvalidPubKey)
@@ -218,7 +218,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, acco
 					))
 				}
 				// Errors are reserved for when something unexpected happened. Here authentication just failed, so we
-				// return skip
+				// return NotAuthenticated()
 				return NotAuthenticated()
 			}
 		}
