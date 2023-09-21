@@ -206,6 +206,14 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	// Wait for all goroutines to complete
 	wg.Wait()
 
+	close(errCh)
+
+	for err := range errCh {
+		if err != nil {
+			return err
+		}
+	}
+
 	config.PreUpgradePoolId = preUpgradePoolId
 	config.PreUpgradeStableSwapPoolId = preUpgradeStableSwapPoolId
 	config.FeePoolId = feePoolId
@@ -272,6 +280,8 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	// Chain A
 
+	var errCh2 = make(chan error, 2)
+
 	go func() {
 		defer wg.Done()
 		// test swap exact amount in for stable swap pool
@@ -282,7 +292,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		defer wg.Done()
 		uc.t.Logf("Uploading rate limiting contract to chainA")
 		_, err := chainANode.SetupRateLimiting("", chainANode.QueryGovModuleAccount(), chainA)
-		errCh <- err
+		errCh2 <- err
 	}()
 
 	go func() {
@@ -303,7 +313,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		defer wg.Done()
 		uc.t.Logf("Uploading rate limiting contract to chainB")
 		_, err := chainBNode.SetupRateLimiting("", chainBNode.QueryGovModuleAccount(), chainB)
-		errCh <- err
+		errCh2 <- err
 	}()
 
 	go func() {
@@ -314,9 +324,9 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	wg.Wait()
 
-	close(errCh)
+	close(errCh2)
 
-	for err := range errCh {
+	for err := range errCh2 {
 		if err != nil {
 			return err
 		}
