@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 )
 
@@ -34,12 +33,6 @@ func NewAuthenticatorDecorator(
 	}
 }
 
-type callData struct {
-	authenticator     authenticatortypes.Authenticator
-	authenticatorData authenticatortypes.AuthenticatorData
-	msg               sdk.Msg
-}
-
 // AnteHandle is the authenticator ante handler
 func (ad AuthenticatorDecorator) AnteHandle(
 	ctx sdk.Context,
@@ -47,17 +40,18 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
-	// keep track of called authenticators so that they can be notified of failed txs
-	calledAuthenticators := make([]callData, 0)
-
 	// Authenticating the fee payer needs to be done with very little gas
-	// This is a spam-prevention strategy. If the fee payer is not authenticated, there will be no one to pay
-	// for the cost of the tx, which would allow an attacker to force a validator to spend resources by running
-	// authenticators on a tx that will never be executed
+	// This is a spam-prevention strategy. This protects from a user adding multiple
+	// authenticators that overuse compute.
+	//
+	// If the fee payer is not authenticated, there will be no one to pay
+	// for the cost of the tx, which would allow an attacker to force a
+	// validator to spend resources by running authenticators on a tx
+	// that will never be executed
 	originalGasMeter := ctx.GasMeter()
-	// TODO: Here we actually want to use min(gasRemaining, maxFeePayerGas), but this may leat to problems because
-	// of the implementation of the InfiniteGasMeter. I think it's ok to allow an overflow here as long as it's
-	// bellow the fee payer gas limit
+	// Ideally we would want to use min(gasRemaining, maxFeePayerGas) here, but this leads to problems because
+	// of the implementation of the InfiniteGasMeter. I think it's ok to allow potentially going over
+	// the original limit as long as it's bellow the fee payer gas limit
 	payerGasMeter := sdk.NewGasMeter(ad.maxFeePayerGas)
 	ctx = ctx.WithGasMeter(payerGasMeter)
 
@@ -88,6 +82,10 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 	}()
 
+	// This is a transient context stored globally throughout the execution of the tx
+	// Any changes will to authenticator storage will be written to the store at the end of the tx
+	cacheCtx := ad.authenticatorKeeper.TransientStore.ResetTransientContext(ctx)
+
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range tx.GetMsgs() {
 		// By default, the first signer is the account
@@ -99,7 +97,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// Get all authenticators for the executing account
 		// If no authenticators are found, use the default authenticator
 		// This is done to keep backwards compatibility by defaulting to a signature verifier on accounts without authenticators
-		authenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(ctx, account)
+		authenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(cacheCtx, account)
 		if err != nil {
 			return sdk.Context{}, err
 		}
@@ -109,34 +107,28 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// use as part of the tx (likely in the signature)
 		// NOTE: we have to make sure that doing that does not make the signature malleable
 		for _, authenticator := range authenticators {
-			// Consume the authenticator's static gas this protects from a user adding multiple
-			// authenticators and trying to overuse compute
-			ctx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
+			// Consume the authenticator's static gas
+			cacheCtx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
 
 			// Get the authentication data for the transaction
-			cacheCtx, _ := ctx.CacheContext() // GetAuthenticationData is not allowed to modify the state
-			authData, err := authenticator.GetAuthenticationData(cacheCtx, tx, int8(msgIndex), simulate)
+			neverWriteCacheCtx, _ := cacheCtx.CacheContext() // GetAuthenticationData is not allowed to modify the state
+			authData, err := authenticator.GetAuthenticationData(neverWriteCacheCtx, tx, int8(msgIndex), simulate)
 			if err != nil {
 				return ctx, err
 			}
 
-			// Keep track of all called authenticators
-			calledAuthenticators = append(calledAuthenticators, callData{authenticator: authenticator, authenticatorData: authData, msg: msg})
-
-			cacheCtx, writeContext := ctx.CacheContext() // If there is an error (regardless of whether the tx is authenticated or not), we want to revert the state
-			authenticated, err := authenticator.Authenticate(cacheCtx, msg, authData)
-			if err != nil {
-				// TODO: Check this assumption. We want authenticators to return true/false to authenticate or not,
-				//       but we also want them to be able to return an error and fully block the tx in that case
-				return ctx, err
+			authentication := authenticator.Authenticate(cacheCtx, account, msg, authData)
+			if authentication.IsRejected() {
+				return ctx, authentication.Error()
 			}
-			writeContext() // Alternative, Do we want to do this globally (i.e.: revert for the whole tx)? I want to discuss these semantics
 
-			if authenticated {
+			if authentication.IsAuthenticated() {
 				msgAuthenticated = true
 				// Once the fee payer is authenticated, we can set the gas limit to its original value
 				if !feePayerAuthenticated && account.Equals(feePayer) {
 					originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
+					// Reset this for both contexts
+					cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
 					ctx = ctx.WithGasMeter(originalGasMeter)
 					feePayerAuthenticated = true
 				}
@@ -144,13 +136,11 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			}
 		}
 
-		// if authentation failed, allow reverting of state
+		// if authentication failed, return an error
 		if !msgAuthenticated {
-			for _, callData := range calledAuthenticators {
-				callData.authenticator.AuthenticationFailed(ctx, callData.authenticatorData, callData.msg)
-			}
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("authentication failed for message %d", msgIndex))
 		}
 	}
+
 	return next(ctx, tx, simulate)
 }

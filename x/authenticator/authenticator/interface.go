@@ -47,29 +47,19 @@ type Authenticator interface {
 
 	// Authenticate authenticates a message based on the signer and data parsed from the GetAuthenticationData function
 	// the returns true is authenticated or false if not authenticated. This is used in an ante handler.
-	// NOTE: Consume gas per signature happens in this function.
+	// NOTE: Consume gas happens in this function.
 	Authenticate(
 		ctx sdk.Context, // sdk Context is used to get data for use in authentication and to consume gas
-		msg sdk.Msg, // a msg is passed into the authenticate function to allow the authentication data to verify the signature
+		account sdk.AccAddress, // The account being authenticated for (usually msg.GetSigners()[0])
+		msg sdk.Msg, // a msg is passed into the authenticate function to allow the authenticators to use its information
 		authenticationData AuthenticatorData, // The authentication data is used to authenticate a message
-	) (bool, error)
-
-	// AuthenticationFailed TODO: define
-	AuthenticationFailed(
-		ctx sdk.Context, // TODO: define
-		authenticatorData AuthenticatorData, // TODO: define
-		msg sdk.Msg, // TODO: define
-	)
+	) AuthenticationResult
 
 	// ConfirmExecution is used in the post handler function to enable transaction rules to be enforces.
 	// Rules such as spend and transaction limits. We access the state owned by the account to store and check these values.
-	ConfirmExecution(
-		ctx sdk.Context,
-		msg sdk.Msg,
-		authenticationData AuthenticatorData,
-	) bool
+	ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult
 
-	// Optional Hooks. TODO: Revisit this when adding the authenticator storage and messages
+	// Optional Hooks. TODO: Revisit this
 	// OnAuthenticatorAdded(...) bool
 	// OnAuthenticatorRemoved(...) bool
 }

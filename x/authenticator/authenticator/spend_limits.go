@@ -72,12 +72,7 @@ func (sla SpendLimitAuthenticator) GetAuthenticationData(
 	return SignatureData{}, nil
 }
 
-func (sla SpendLimitAuthenticator) Authenticate(
-	ctx sdk.Context,
-	msg sdk.Msg,
-	_ AuthenticatorData,
-) (bool, error) {
-	account := msg.GetSigners()[0]
+func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) AuthenticationResult {
 	sla.DeleteBlockBalances(ctx, account)
 	sla.DeletePastPeriods(account, ctx.BlockTime()) // TODO: implement this
 
@@ -86,17 +81,10 @@ func (sla SpendLimitAuthenticator) Authenticate(
 	sla.SetBlockBalance(account, ctx.BlockHeight(), balances)
 
 	// We never authenticate ourselves. We just block authentication after the fact if the balances changed too much
-	return false, nil
+	return NotAuthenticated()
 }
 
-func (sla SpendLimitAuthenticator) AuthenticationFailed(ctx sdk.Context, _ AuthenticatorData, msg sdk.Msg) {
-	account := msg.GetSigners()[0]
-	sla.DeleteBlockBalances(ctx, account)
-}
-
-func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, _ AuthenticatorData) bool {
-	account := msg.GetSigners()[0]
-
+func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult {
 	prevBalances := sla.GetBlockBalance(account, ctx.BlockHeight())
 	currentBalances := sla.bankKeeper.GetAllBalances(ctx, account)
 
@@ -119,14 +107,14 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg
 	spentSoFar := sla.GetSpentInPeriod(account, ctx.BlockTime())
 
 	if delta.Add(spentSoFar).GT(sla.allowedDelta) {
-		return false
+		return Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "spend limit exceeded"))
 	}
 
 	// Update the total spent so far in the current period
 	sla.SetSpentInPeriod(account, ctx.BlockTime(), delta.Add(spentSoFar))
 	osmoutils.DeleteAllKeysFromPrefix(ctx, sla.store, getAccountKey(account))
 
-	return true
+	return Confirm()
 }
 
 func (sla SpendLimitAuthenticator) getPriceInQuoteDenom(_ sdk.Coin) osmomath.Int {

@@ -87,45 +87,28 @@ func (aoa AnyOfAuthenticator) GetAuthenticationData(
 	return AnyOfAuthenticatorData{Data: authDataList}, nil
 }
 
-func (aoa AnyOfAuthenticator) Authenticate(
-	ctx sdk.Context,
-	msg sdk.Msg,
-	authenticationData AuthenticatorData,
-) (bool, error) {
+func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) AuthenticationResult {
 	anyOfData, ok := authenticationData.(AnyOfAuthenticatorData)
 	if !ok {
-		return false, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "invalid authentication data for AnyOfAuthenticator")
+		return Rejected("invalid authentication data for AnyOfAuthenticator", nil)
 	}
 
-	aoa.executedAuths = []Authenticator{} // Reset the executed authenticators
 	for idx, auth := range aoa.SubAuthenticators {
-		success, err := auth.Authenticate(ctx, msg, anyOfData.Data[idx])
-		// TODO: fix static check here;
-		// SA4005: ineffective assignment to field AnyOfAuthenticator.executedAuth
-		aoa.executedAuths = append(aoa.executedAuths, auth) // nolint:staticcheck
-		if success {
-			return true, nil
-		}
-		if err != nil {
-			return false, err
+		result := auth.Authenticate(ctx, nil, msg, anyOfData.Data[idx])
+		if result.IsAuthenticated() || result.IsRejected() {
+			// TODO: Do we want to wrap the error in  case or rejection?
+			return result
 		}
 	}
-	return false, nil
+	return NotAuthenticated()
 }
 
-func (aoa AnyOfAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData AuthenticatorData, msg sdk.Msg) {
-	// Call AuthenticationFailed on executed sub-authenticators
-	for _, auth := range aoa.executedAuths {
-		auth.AuthenticationFailed(ctx, authenticatorData, msg)
-	}
-}
-
-func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) bool {
+func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult {
 	// Call ConfirmExecution on executed sub-authenticators
 	for _, auth := range aoa.executedAuths {
-		if !auth.ConfirmExecution(ctx, msg, authenticationData) {
-			return false
+		if confirmation := auth.ConfirmExecution(ctx, nil, msg, authenticationData); confirmation.IsBlock() {
+			return confirmation
 		}
 	}
-	return true
+	return Confirm()
 }

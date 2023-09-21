@@ -1,5 +1,10 @@
 package authenticator
 
+import (
+	"github.com/cosmos/cosmos-sdk/store"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 type AuthenticatorManager struct {
 	registeredAuthenticators  []Authenticator
 	defaultAuthenticatorIndex int
@@ -71,4 +76,39 @@ func (am *AuthenticatorManager) GetDefaultAuthenticator() Authenticator {
 		panic("Default authenticator not set")
 	}
 	return am.registeredAuthenticators[am.defaultAuthenticatorIndex]
+}
+
+type TransientStore struct {
+	storeKey     sdk.StoreKey
+	transientCtx sdk.Context
+}
+
+func NewTransientStore(storeKey sdk.StoreKey, ctx sdk.Context) *TransientStore {
+	return &TransientStore{
+		storeKey:     storeKey,
+		transientCtx: ctx,
+	}
+}
+
+func (as *TransientStore) ResetTransientContext(ctx sdk.Context) sdk.Context {
+	as.transientCtx, _ = ctx.CacheContext()
+	return as.transientCtx
+}
+
+func (as *TransientStore) GetKvStore() store.KVStore {
+	return as.transientCtx.KVStore(as.storeKey)
+}
+
+func (as *TransientStore) Write(ctx sdk.Context) {
+	if as.transientCtx.IsZero() {
+		panic("Transient context not set")
+	}
+
+	// TODO is there a better way to do this? Ideally we would just copy/move the entire store
+	ctxStore := ctx.KVStore(as.storeKey)
+	iter := as.transientCtx.KVStore(as.storeKey).Iterator(nil, nil)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		ctxStore.Set(iter.Key(), iter.Value())
+	}
 }

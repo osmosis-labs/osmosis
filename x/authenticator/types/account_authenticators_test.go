@@ -27,15 +27,15 @@ func (m MockAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, mes
 	return "mock", nil
 }
 
-func (m MockAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) (bool, error) {
-	return true, nil
+func (m MockAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.AuthenticationResult {
+	return authenticator.Authenticated()
 }
 
 func (m MockAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData authenticator.AuthenticatorData, msg sdk.Msg) {
 }
 
-func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) bool {
-	return true
+func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.ConfirmationResult {
+	return authenticator.Confirm()
 }
 
 func (m MockAuthenticator) Type() string {
@@ -121,15 +121,15 @@ func (m MockAuthenticatorFail) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx,
 	return "mock-fail", nil
 }
 
-func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) (bool, error) {
-	return false, nil
+func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.AuthenticationResult {
+	return authenticator.NotAuthenticated()
 }
 
 func (m MockAuthenticatorFail) AuthenticationFailed(ctx sdk.Context, authenticatorData authenticator.AuthenticatorData, msg sdk.Msg) {
 }
 
-func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) bool {
-	return true
+func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.ConfirmationResult {
+	return authenticator.Confirm()
 }
 
 func (m MockAuthenticatorFail) Type() string {
@@ -153,11 +153,11 @@ func TestMockAuthenticators(t *testing.T) {
 
 	// Testing mockPass
 	dataPass, _ := mockPass.GetAuthenticationData(mockCtx, mockTx, 0, false)
-	isAuthenticatedPass, _ := mockPass.Authenticate(mockCtx, mockMsg, dataPass)
-	require.True(t, isAuthenticatedPass)
+	isAuthenticatedPass := mockPass.Authenticate(mockCtx, nil, mockMsg, dataPass)
+	require.True(t, isAuthenticatedPass.IsAuthenticated())
 
 	// Testing mockFail
 	dataFail, _ := mockFail.GetAuthenticationData(mockCtx, mockTx, 0, false)
-	isAuthenticatedFail, _ := mockFail.Authenticate(mockCtx, mockMsg, dataFail)
-	require.False(t, isAuthenticatedFail)
+	isAuthenticatedFail := mockFail.Authenticate(mockCtx, nil, mockMsg, dataFail)
+	require.False(t, isAuthenticatedFail.IsAuthenticated())
 }

@@ -25,6 +25,7 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 
 	AuthenticatorManager *authenticator.AuthenticatorManager
+	TransientStore       *authenticator.TransientStore
 }
 
 func NewKeeper(
@@ -43,6 +44,7 @@ func NewKeeper(
 		cdc:                  cdc,
 		paramSpace:           ps,
 		AuthenticatorManager: authenticatorManager,
+		TransientStore:       authenticator.NewTransientStore(storeKey, sdk.Context{}),
 	}
 }
 

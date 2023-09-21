@@ -46,17 +46,14 @@ func (t TestingAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, 
 	return TestingAuthenticatorData{}, nil
 }
 
-func (t TestingAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) (bool, error) {
+func (t TestingAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.AuthenticationResult {
 	if t.Approve == Always {
-		return true, nil
+		return authenticator.Authenticated()
 	} else {
-		return false, nil
+		return authenticator.NotAuthenticated()
 	}
 }
 
-func (t TestingAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData authenticator.AuthenticatorData, msg sdk.Msg) {
-}
-
-func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) bool {
-	return true
+func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.ConfirmationResult {
+	return authenticator.Confirm()
 }
