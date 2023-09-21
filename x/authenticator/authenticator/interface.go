@@ -22,11 +22,11 @@ type Authenticator interface {
 	// and these Types are used to store and link the data structure to the Authenticator logic
 	Type() string
 
-	// Gas defines what gas the authenticator uses per signatures verification
+	// StaticGas defines what gas the authenticator uses per signatures verification
 	StaticGas() uint64
 
 	// Initialize is used when the authenticator associated to an account is retrieved
-	//  from the store. The data stored for each (account, authenticator) pair will be
+	// from the store. The data stored for each (account, authenticator) pair will be
 	// passed to this method.
 	// For example, the SignatureVerificationAuthenticator requires a PublicKey to check
 	// the signature, but the auth module is not aware of the public key.
@@ -48,7 +48,12 @@ type Authenticator interface {
 	// Authenticate authenticates a message based on the signer and data parsed from the GetAuthenticationData function
 	// the returns true is authenticated or false if not authenticated. This is used in an ante handler.
 	// NOTE: Consume gas happens in this function.
-	Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) AuthenticationResult
+	Authenticate(
+		ctx sdk.Context,  // sdk Context is used to get data for use in authentication and to consume gas
+		account sdk.AccAddress,  // The account being authenticated for (usually msg.GetSigners()[0])
+		msg sdk.Msg, // a msg is passed into the authenticate function to allow the authenticators to use its information
+		authenticationData AuthenticatorData, // The authentication data is used to authenticate a message
+	) AuthenticationResult
 
 	// ConfirmExecution is used in the post handler function to enable transaction rules to be enforces.
 	// Rules such as spend and transaction limits. We access the state owned by the account to store and check these values.
@@ -57,8 +62,4 @@ type Authenticator interface {
 	// Optional Hooks. TODO: Revisit this
 	// OnAuthenticatorAdded(...) bool
 	// OnAuthenticatorRemoved(...) bool
-}
-
-type AccountGetter interface {
-	GetAccount(ctx sdk.Context, msg sdk.Msg, tx sdk.Tx) (sdk.AccAddress, error)
 }

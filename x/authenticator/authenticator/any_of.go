@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"encoding/json"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -92,13 +93,11 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddre
 		return Rejected("invalid authentication data for AnyOfAuthenticator", nil)
 	}
 
-	aoa.executedAuths = []Authenticator{} // Reset the executed authenticators
 	for idx, auth := range aoa.SubAuthenticators {
-		success := auth.Authenticate(ctx, nil, msg, anyOfData.Data[idx])
-		aoa.executedAuths = append(aoa.executedAuths, auth) // Add to the executed list
-		if success.IsAuthenticated() || success.IsRejected() {
+		result := auth.Authenticate(ctx, nil, msg, anyOfData.Data[idx])
+		if result.IsAuthenticated() || success.IsRejected() {
 			// TODO: Do we want to wrap the error in  case or rejection?
-			return success
+			return result
 		}
 	}
 	return NotAuthenticated()

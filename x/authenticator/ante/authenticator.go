@@ -6,24 +6,20 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 )
 
-type DefaultAccountGetter struct{}
-
-func (DefaultAccountGetter) GetAccount(ctx sdk.Context, msg sdk.Msg, tx sdk.Tx) (sdk.AccAddress, error) {
+func GetAccount(msg sdk.Msg) (sdk.AccAddress, error) {
 	if len(msg.GetSigners()) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "no signers")
 	}
 	return msg.GetSigners()[0], nil
 }
 
-var _ authenticatortypes.AccountGetter = DefaultAccountGetter{}
-
 type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
-	accountGetter       authenticatortypes.AccountGetter
 	maxFeePayerGas      uint64
 }
 
@@ -33,7 +29,6 @@ func NewAuthenticatorDecorator(
 ) AuthenticatorDecorator {
 	return AuthenticatorDecorator{
 		authenticatorKeeper: authenticatorKeeper,
-		accountGetter:       DefaultAccountGetter{},
 		maxFeePayerGas:      maxFeePayerGas,
 	}
 }
@@ -54,16 +49,18 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// keep track of called authenticators so that they can be notified of failed txs
 	calledAuthenticators := make([]callData, 0)
 
-	// Authenticate the fee payer
-
 	// Authenticating the fee payer needs to be done with very little gas
-	// This is a spam-prevention strategy. If the fee payer is not authenticated, there will be no one to pay
-	// for the cost of the tx, which would allow an attacker to force a validator to spend resources by running
-	// authenticators on a tx that will never be executed
+	// This is a spam-prevention strategy. This protects from a user adding multiple
+	// authenticators that overuse compute.
+	//
+	// If the fee payer is not authenticated, there will be no one to pay
+	// for the cost of the tx, which would allow an attacker to force a
+	// validator to spend resources by running authenticators on a tx
+	// that will never be executed
 	originalGasMeter := ctx.GasMeter()
-	// TODO: Here we actually want to use min(gasRemaining, maxFeePayerGas), but this may leat to problems because
-	//   of the implementation of the InfiniteGasMeter. I think it's ok to allow an overflow here as long as it's
-	//   bellow the fee payer gas limit
+	// Ideally we would want to use min(gasRemaining, maxFeePayerGas) here, but this leads to problems because
+	// of the implementation of the InfiniteGasMeter. I think it's ok to allow potentially going over
+	// the original limit as long as it's bellow the fee payer gas limit
 	payerGasMeter := sdk.NewGasMeter(ad.maxFeePayerGas)
 	ctx = ctx.WithGasMeter(payerGasMeter)
 
@@ -72,6 +69,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
+	// The fee payer by default is the first signer of the transaction
 	feePayer := feeTx.FeePayer()
 	feePayerAuthenticated := false
 
@@ -98,7 +96,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range tx.GetMsgs() {
 		// By default, the first signer is the account
-		account, err := ad.accountGetter.GetAccount(cacheCtx, msg, tx)
+		account, err := GetAccount(msg)
 		if err != nil {
 			return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
 		}
@@ -117,7 +115,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// NOTE: we have to make sure that doing that does not make the signature malleable
 		for _, authenticator := range authenticators {
 			// Consume the authenticator's static gas
-			cacheCtx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
+			ctx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
 
 			// Get the authentication data for the transaction
 			neverWriteCacheCtx, _ := cacheCtx.CacheContext() // GetAuthenticationData is not allowed to modify the state
@@ -126,7 +124,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				return ctx, err
 			}
 
-			// Authenticate the message
+			// Keep track of all called authenticators
 			calledAuthenticators = append(calledAuthenticators, callData{authenticator: authenticator, authenticatorData: authData, msg: msg})
 
 			authentication := authenticator.Authenticate(cacheCtx, account, msg, authData)

@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"encoding/json"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -48,7 +49,7 @@ func (aoa AllOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	for _, initData := range initDatas {
 		for _, authenticatorCode := range aoa.am.GetRegisteredAuthenticators() {
 			if authenticatorCode.Type() == initData.AuthenticatorType {
-				instance, err := authenticatorCode.Initialize([]byte(initData.Data))
+				instance, err := authenticatorCode.Initialize(initData.Data)
 				if err != nil {
 					return nil, err
 				}
@@ -84,12 +85,10 @@ func (aoa AllOfAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddre
 		return Rejected("invalid authentication data for AllOfAuthenticator", nil)
 	}
 
-	aoa.executedAuths = []Authenticator{}
 	for idx, auth := range aoa.SubAuthenticators {
-		success := auth.Authenticate(ctx, nil, msg, allOfData.Data[idx])
-		aoa.executedAuths = append(aoa.executedAuths, auth)
-		if !success.IsAuthenticated() {
-			return success
+		result := auth.Authenticate(ctx, account, msg, allOfData.Data[idx])
+		if !result.IsAuthenticated() {
+			return result
 		}
 	}
 	return Authenticated()
