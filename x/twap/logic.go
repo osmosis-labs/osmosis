@@ -70,16 +70,6 @@ func getSpotPrices(
 		sp1BigDec, latestErrTime = types.MaxSpotPriceBigDec, ctx.BlockTime()
 	}
 
-	// Note: truncation is appropriate since we don not support greater precision by design.
-	// If support for pools with outlier spot prices is needed in the future, then this should be revisited.
-	// if !sp0BigDec.IsNil() {
-	// 	sp0 = sp0BigDec.Dec()
-	// }
-
-	// if !sp1BigDec.IsNil() {
-	// 	sp1 = sp1BigDec.Dec()
-	// }
-
 	return sp0BigDec.Dec(), sp1BigDec.Dec(), latestErrTime
 }
 
