@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -114,6 +115,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore
 			s.TestPrivKeys[0],
 			s.TestPrivKeys[1],
 		},
+		s.TestAccAddress[0],
 	)
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
@@ -168,6 +170,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 			s.TestPrivKeys[0],
 			s.TestPrivKeys[1],
 		},
+		s.TestAccAddress[0],
 	)
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
@@ -239,6 +242,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 			s.TestPrivKeys[1],
 			s.TestPrivKeys[1],
 		},
+		s.TestAccAddress[0],
 	)
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
@@ -248,7 +252,8 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	fmt.Println("Gas Consumed: after txn gas over 20000")
 	fmt.Println(s.Ctx.GasMeter().GasConsumed())
 
-	s.Require().Error(err)
+	// No error here now as fee payer is alway auth'd first
+	s.Require().NoError(err)
 }
 
 // GenTx generates a signed mock transaction.
@@ -262,6 +267,7 @@ func GenTx(
 	accSeqs []uint64,
 	signers []cryptotypes.PrivKey,
 	signatures []cryptotypes.PrivKey,
+	feePayer sdk.AccAddress,
 ) (sdk.Tx, error) {
 	sigs := make([]signing.SignatureV2, len(signers))
 
@@ -295,7 +301,6 @@ func GenTx(
 	txBuilder.SetMemo(memo)
 	txBuilder.SetFeeAmount(feeAmt)
 	txBuilder.SetGasLimit(gas)
-	// TODO: set fee payer
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range signatures {

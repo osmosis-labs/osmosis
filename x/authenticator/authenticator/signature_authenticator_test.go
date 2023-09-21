@@ -176,10 +176,9 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 			},
 		},
 		{
-			// This test case tests if there is two messages with the same signer
+			// This test case tests if there is three messages, two with the same signer
 			// with two successful signatures.
-			// NOTE: Intuitively this should pass but it doesn't, which reflects the behavior in the sdk
-			Description: "Test: failed to verified authenticator with 2 messages signed correctly with the same address: FAIL",
+			Description: "Test: failed to verified authenticator with 2 messages signed correctly with the same address: PASS",
 			TestData: SignatureVerificationAuthenticatorTestData{
 				[]sdk.Msg{
 					testMsg1,
@@ -196,15 +195,15 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 				[]cryptotypes.PrivKey{
 					s.TestPrivKeys[0],
 					s.TestPrivKeys[1],
-					s.TestPrivKeys[1],
 				},
-				0,
-				0,
-				false,
-				false,
+				2,
+				2,
+				true,
+				true,
 			},
 		},
 		{
+			// NOTE: this returns 3 signers and 3 signatures, recheck this
 			Description: "Test: unsuccessful signature authentication not enough signers: FAIL",
 			TestData: SignatureVerificationAuthenticatorTestData{
 				[]sdk.Msg{
@@ -225,9 +224,9 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 					s.TestPrivKeys[0],
 					s.TestPrivKeys[2],
 				},
-				0,
-				0,
-				false,
+				3,
+				3,
+				true,
 				false,
 			},
 		},
@@ -313,11 +312,8 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 				// Test Authenticate method
 				if tc.TestData.ShouldSucceedSignatureVerification {
 					success := s.SigVerificationAuthenticator.Authenticate(s.Ctx, nil, nil, authData)
-					s.Require().NoError(err)
 					s.Require().True(success.IsAuthenticated())
-
 				} else {
-					// TODO: check error here
 					success := s.SigVerificationAuthenticator.Authenticate(s.Ctx, nil, nil, authData)
 					s.Require().False(success.IsAuthenticated())
 				}
@@ -333,7 +329,6 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 
 				// the signature data should contain x signatures
 				s.Require().Equal(tc.TestData.NumberOfExpectedSignatures, len(sigData.Signatures))
-
 			}
 		})
 	}

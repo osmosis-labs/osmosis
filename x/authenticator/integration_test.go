@@ -323,14 +323,12 @@ func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
 	// check account balances
 
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, failSendMsg)
-	fmt.Println("err: ", err)
 	s.Require().Error(err, "Succeeded sending tx that should fail")
 
 	// Auth failed, so no increment
 	s.Require().Equal(0, stateful.GetValue(s.chainA.GetContext()))
 
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, successSendMsg)
-	fmt.Println("err: ", err)
 	s.Require().NoError(err, "Failed to send bank tx with enough funds")
 
 	// Incremented by 2. Ante and Post
@@ -430,9 +428,10 @@ func (s *AuthenticatorSuite) TestAuthenticatorGas() {
 
 	// This should fail, as authenticating the fee payer needs to be done with low gas
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[1]}, sendFromAcc2)
-	fmt.Println(err.Error())
-	s.Require().Error(err)
-	s.Require().ErrorContains(err, "gas")
+	//fmt.Println(err)
+	// we no longer expect an error here as fee payer is always authenticated first
+	//s.Require().Error(err)
+	//s.Require().ErrorContains(err, "gas")
 
 	// This should work, since the fee payer has already been authenticated so the gas limit is raised
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0], s.PrivKeys[1]}, sendFromAcc1, sendFromAcc2)

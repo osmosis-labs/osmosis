@@ -33,114 +33,112 @@ func NewAuthenticatorDecorator(
 	}
 }
 
-// AnteHandle is the authenticator ante handler
+// AnteHandle is the authenticator ante handler responsible for processing authentication
+// logic before transaction execution.
 func (ad AuthenticatorDecorator) AnteHandle(
 	ctx sdk.Context,
 	tx sdk.Tx,
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
-	// Authenticating the fee payer needs to be done with very little gas
-	// This is a spam-prevention strategy. This protects from a user adding multiple
-	// authenticators that overuse compute.
-	//
-	// If the fee payer is not authenticated, there will be no one to pay
-	// for the cost of the tx, which would allow an attacker to force a
-	// validator to spend resources by running authenticators on a tx
-	// that will never be executed
-	originalGasMeter := ctx.GasMeter()
-	// Ideally we would want to use min(gasRemaining, maxFeePayerGas) here, but this leads to problems because
-	// of the implementation of the InfiniteGasMeter. I think it's ok to allow potentially going over
-	// the original limit as long as it's bellow the fee payer gas limit
-	payerGasMeter := sdk.NewGasMeter(ad.maxFeePayerGas)
-	ctx = ctx.WithGasMeter(payerGasMeter)
-
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "transaction must be a FeeTx")
 	}
 
-	// The fee payer by default is the first signer of the transaction
+	// Determine the fee payer, which defaults to the first signer of the transaction.
 	feePayer := feeTx.FeePayer()
-	feePayerAuthenticated := false
 
-	// Recover from any OutOfGas panic to return an error with information of the gas limit having been reduced
-	defer func() {
-		if r := recover(); r != nil {
-			if feePayerAuthenticated {
-				panic(r)
-			}
-			switch r.(type) {
-			case sdk.ErrorOutOfGas:
-				log := fmt.Sprintf(
-					"FeePayer not authenticated yet. The gas limit has been reduced to %d. Consumed: %d",
-					ad.maxFeePayerGas, payerGasMeter.GasConsumed())
-				err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
-			default:
-				panic(r)
-			}
-		}
-	}()
-
-	// This is a transient context stored globally throughout the execution of the tx
-	// Any changes will to authenticator storage will be written to the store at the end of the tx
+	// Create a transient context that is globally available during transaction execution.
+	// Any changes made to authenticator storage will be written to the store at the end of the transaction.
 	cacheCtx := ad.authenticatorKeeper.TransientStore.ResetTransientContext(ctx)
 
-	// Authenticate the accounts of all messages
+	// Always authenticate the fee payer first to enable gas to be paid.
+	// The maximum number of authenticators is limited to 15 in the msg_server.
+	feePayerIndex := 0
 	for msgIndex, msg := range tx.GetMsgs() {
-		// By default, the first signer is the account
 		account, err := GetAccount(msg)
 		if err != nil {
-			return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
+			return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized,
+				fmt.Sprintf("failed to retrieve the account for message %d", msgIndex))
 		}
-
-		// Get all authenticators for the executing account
-		// If no authenticators are found, use the default authenticator
-		// This is done to keep backwards compatibility by defaulting to a signature verifier on accounts without authenticators
-		authenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(cacheCtx, account)
-		if err != nil {
-			return sdk.Context{}, err
-		}
-
-		msgAuthenticated := false
-		// TODO: We should consider adding a way for the user to specify which authenticator to
-		// use as part of the tx (likely in the signature)
-		// NOTE: we have to make sure that doing that does not make the signature malleable
-		for _, authenticator := range authenticators {
-			// Consume the authenticator's static gas
-			cacheCtx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
-
-			// Get the authentication data for the transaction
-			neverWriteCacheCtx, _ := cacheCtx.CacheContext() // GetAuthenticationData is not allowed to modify the state
-			authData, err := authenticator.GetAuthenticationData(neverWriteCacheCtx, tx, int8(msgIndex), simulate)
+		if account.Equals(feePayer) {
+			feePayerIndex = msgIndex
+			ctx, err := ad.AuthTx(cacheCtx, tx, msg, msgIndex, simulate)
 			if err != nil {
 				return ctx, err
 			}
+		}
+	}
 
-			authentication := authenticator.Authenticate(cacheCtx, account, msg, authData)
-			if authentication.IsRejected() {
-				return ctx, authentication.Error()
-			}
-
-			if authentication.IsAuthenticated() {
-				msgAuthenticated = true
-				// Once the fee payer is authenticated, we can set the gas limit to its original value
-				if !feePayerAuthenticated && account.Equals(feePayer) {
-					originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
-					// Reset this for both contexts
-					cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
-					ctx = ctx.WithGasMeter(originalGasMeter)
-					feePayerAuthenticated = true
-				}
-				break
-			}
+	// Authenticate the accounts of all messages.
+	for msgIndex, msg := range tx.GetMsgs() {
+		// Skip fee payer authentication as it has already been completed.
+		if feePayerIndex == msgIndex {
+			continue
 		}
 
-		// if authentication failed, return an error
-		if !msgAuthenticated {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("authentication failed for message %d", msgIndex))
+		// After the fee payer has been authenticated, proceed to authenticate the remaining messages.
+		ctx, err := ad.AuthTx(cacheCtx, tx, msg, msgIndex, simulate)
+		if err != nil {
+			return ctx, err
 		}
 	}
 
 	return next(ctx, tx, simulate)
+}
+
+// AuthTx performs the authentication process for a specific message within a transaction.
+func (ad AuthenticatorDecorator) AuthTx(
+	cacheCtx sdk.Context,
+	tx sdk.Tx,
+	msg sdk.Msg,
+	msgIndex int,
+	simulate bool,
+) (ctx sdk.Context, err error) {
+	account, err := GetAccount(msg)
+	if err != nil {
+		return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized,
+			fmt.Sprintf("failed to retrieve the account for message %d", msgIndex))
+	}
+
+	// Retrieve all authenticators for the executing account.
+	// If no authenticators are found, the default authenticator is used.
+	// This ensures backward compatibility by defaulting to a signature verifier
+	// for accounts without authenticators.
+	authenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(cacheCtx, account)
+	if err != nil {
+		return sdk.Context{}, err
+	}
+
+	msgAuthenticated := false
+	// TODO: Consider adding a way for users to specify which authenticator to use as part of the transaction.
+	// NOTE: Care must be taken to ensure that doing so does not make the signature malleable.
+	for _, authenticator := range authenticators {
+		// Consume the authenticator's static gas.
+		cacheCtx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
+
+		// Retrieve authentication data for the transaction.
+		neverWriteCacheCtx, _ := cacheCtx.CacheContext() // GetAuthenticationData should not modify the state.
+		authData, err := authenticator.GetAuthenticationData(neverWriteCacheCtx, tx, int8(msgIndex), simulate)
+		if err != nil {
+			return ctx, err
+		}
+
+		authentication := authenticator.Authenticate(cacheCtx, account, msg, authData)
+		if authentication.IsRejected() {
+			return ctx, authentication.Error()
+		}
+
+		if authentication.IsAuthenticated() {
+			msgAuthenticated = true
+		}
+	}
+
+	// If authentication fails, return an error.
+	if !msgAuthenticated {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("authentication failed for message %d", msgIndex))
+	}
+
+	return cacheCtx, nil
 }
