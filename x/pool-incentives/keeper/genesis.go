@@ -42,6 +42,15 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		if err != nil {
 			panic(err)
 		}
+
+		if pool.GetType() == poolmanagertypes.CosmWasm {
+			// TODO: remove this post-v19. In v19 we did not create a hook for cw pool gauges.
+			// Fix tracked in:
+			// https://github.com/osmosis-labs/osmosis/issues/6122
+			ctx.Logger().Info("Skipping pool ID", "poolId", poolId, "reason", "cosmwasm pool")
+			continue
+		}
+
 		isCLPool := pool.GetType() == poolmanagertypes.Concentrated
 		if isCLPool {
 			incParams := k.incentivesKeeper.GetEpochInfo(ctx)
