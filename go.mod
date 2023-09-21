@@ -9,7 +9,7 @@ require (
 	github.com/CosmWasm/wasmd v0.40.1
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.8.0
-	github.com/cosmos/cosmos-proto v1.0.0-beta.3
+	github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.0.0
@@ -76,6 +76,7 @@ require (
 	github.com/cockroachdb/errors v1.10.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
+	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.4.11 // indirect
 	github.com/cosmos/iavl v0.20.0 // indirect
@@ -170,7 +171,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/chavacava/garif v0.0.0-20230227094218-b8c73b2037b8 // indirect
-	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/cosmos/btcutil v1.0.5
@@ -364,13 +364,15 @@ require (
 
 replace (
 	github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.2.3
-	github.com/cosmos/cosmos-proto => /home/ghost/git/cosmos/cosmos-proto
 	// TODO: remove in favor of github.com/cosmos/cosmos-proto
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
 	github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 )
+
+// exclusion so we use v1.0.0 instead
+exclude github.com/coinbase/rosetta-sdk-go v0.7.9
 
 // dragonberry
 //github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0

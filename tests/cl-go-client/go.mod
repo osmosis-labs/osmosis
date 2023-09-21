@@ -28,7 +28,7 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
-	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
+	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
@@ -142,22 +142,34 @@ require (
 )
 
 replace (
-	// osmosis-patched wasmd
-	// ToDo: replace the commit hash with v0.31.0-osmo-v15 once the version is tagged
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.31.0-osmo-v16
-	// dragonberry
-	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/05346fa12992
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230908065430-05346fa12992
-	// use cosmos-compatible protobufs
+	github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.2.3
+	// TODO: remove in favor of github.com/cosmos/cosmos-proto
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
+	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
+	github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 
 	github.com/ignite/cli => github.com/p0mvn/cli v0.23.1
 
 	github.com/osmosis-labs/osmosis/v15 => ../../
-
-	// Informal Tendermint fork
-	github.com/cometbft/cometbft => github.com/informalsystems/tendermint v0.34.24
-	// use grpc compatible with cosmos protobufs
-	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
+
+// replace (
+// 	// osmosis-patched wasmd
+// 	// ToDo: replace the commit hash with v0.31.0-osmo-v15 once the version is tagged
+// 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.31.0-osmo-v16
+// 	// dragonberry
+// 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+
+// 	// use cosmos-compatible protobufs
+// 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
+// 	github.com/ignite/cli => github.com/p0mvn/cli v0.23.1
+
+// 	github.com/osmosis-labs/osmosis/v15 => ../../
+
+// 	// Informal Tendermint fork
+// 	github.com/cometbft/cometbft => github.com/informalsystems/tendermint v0.34.24
+// 	// use grpc compatible with cosmos protobufs
+// 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
+// )
