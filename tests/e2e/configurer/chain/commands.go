@@ -34,6 +34,8 @@ import (
 	app "github.com/osmosis-labs/osmosis/v19/app"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 // The value is returned as a string, so we have to unmarshal twice
@@ -121,6 +123,12 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 	n.LogActionF("successfully created concentrated position from %s to %s", lowerTick, upperTick)
 
 	return positionID, liquidity
+}
+
+func (n *NodeConfig) CreateFullRangePosition(from, tokens string, token0MinAmt, token1MinAmt int64, poolId uint64) (uint64, osmomath.Dec) {
+	n.LogActionF("creating full range concentrated position")
+
+	return n.CreateConcentratedPosition(from, fmt.Sprintf("[%d]", cltypes.MinInitializedTick), fmt.Sprintf("%d", cltypes.MaxTick), tokens, token0MinAmt, token1MinAmt, poolId)
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) int {
@@ -327,6 +335,12 @@ func (n *NodeConfig) SubmitTextProposal(text string, isExpedited bool) int {
 func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords string, isExpedited bool) int {
 	cmd := []string{"tick-spacing-decrease-proposal", "--title=\"test tick spacing reduction proposal title\"", "--description=\"test tick spacing reduction proposal\"", "--from=val", fmt.Sprintf("--pool-tick-spacing-records=%s", poolTickSpacingRecords)}
 	return n.SubmitProposal(cmd, isExpedited, "tick spacing reduction proposal")
+}
+
+func (n *NodeConfig) SubmitFeeTokenProposal(denomPoolPairs string) int {
+	cmd := []string{"update-fee-token", fmt.Sprintf("--fee-tokens=%s", denomPoolPairs), "--title=\"fee token prop\"", fmt.Sprintf("--description=\"%s fee token\"", denomPoolPairs), "--from=val", "--gas=700000", "--fees=5000uosmo"}
+	// TODO: no expedited flag for some reason
+	return n.SubmitProposal(cmd, false, fmt.Sprintf("fee token proposal for %s", denomPoolPairs))
 }
 
 func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {

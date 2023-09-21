@@ -44,6 +44,10 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.T().Log("resetting the default taker fee to 0.15% on chain B only")
 		s.SetDefaultTakerFeeChainB()
 	})
+	s.T().Run("SetUSDCFeeToken", func(t *testing.T) {
+		s.T().Log("setting USDC as fee token on both chains")
+		s.SetUSDCFeeToken()
+	})
 
 	// Zero Dependent Tests
 	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
@@ -977,4 +981,39 @@ func (s *IntegrationTestSuite) SetDefaultTakerFeeChainB() {
 	chainB, chainBNode := s.getChainBCfgs()
 	err := chainBNode.ParamChangeProposal("poolmanager", string(poolmanagertypes.KeyDefaultTakerFee), json.RawMessage(`"0.001500000000000000"`), chainB)
 	s.Require().NoError(err)
+}
+
+func (s *IntegrationTestSuite) SetUSDCFeeToken() {
+	chainA, chainANode := s.getChainACfgs()
+	chainB, chainBNode := s.getChainBCfgs()
+
+	feePoolId := config.FeePoolId
+	propNumber := chainANode.SubmitFeeTokenProposal(fmt.Sprintf("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858,%d", feePoolId[0]))
+
+	chainANode.DepositProposal(propNumber, false)
+
+	var wg sync.WaitGroup
+
+	for _, node := range chainA.NodeConfigs {
+		wg.Add(1)
+		go func(nodeConfig *chain.NodeConfig) {
+			defer wg.Done()
+			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+		}(node)
+	}
+
+	wg.Wait()
+
+	propNumber = chainBNode.SubmitFeeTokenProposal(fmt.Sprintf("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858,%d", feePoolId[1]))
+
+	chainBNode.DepositProposal(propNumber, false)
+	for _, node := range chainB.NodeConfigs {
+		wg.Add(1)
+		go func(nodeConfig *chain.NodeConfig) {
+			defer wg.Done()
+			nodeConfig.VoteYesProposal(initialization.ValidatorWalletName, propNumber)
+		}(node)
+	}
+
+	wg.Wait()
 }

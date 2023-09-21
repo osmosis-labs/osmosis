@@ -16,6 +16,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/containers"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 type UpgradeSettings struct {
@@ -143,10 +144,12 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		poolShareDenom             = make([]string, 2)
 		preUpgradePoolId           = make([]uint64, 2)
 		preUpgradeStableSwapPoolId = make([]uint64, 2)
+		feePoolId                  = make([]uint64, 2)
 	)
 
 	// Increment the WaitGroup counter for each goroutine
-	wg.Add(4)
+	wg.Add(6)
+	errCh := make(chan error, 1)
 
 	// Chain A
 
@@ -160,6 +163,18 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	go func() {
 		defer wg.Done()
 		preUpgradeStableSwapPoolId[0] = chainANode.CreateStableswapPool("stablePool.json", initialization.ValidatorWalletName)
+	}()
+
+	go func() {
+		defer wg.Done()
+		err := chainANode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainA)
+		if err != nil {
+			errCh <- err
+			return
+		}
+		feePoolId[0] = chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", "uosmo", 100, "0.001")
+		fullRangeCoins := "30000000000uosmo,10000000000ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
+		chainANode.CreateFullRangePosition(initialization.ValidatorWalletName, fullRangeCoins, 0, 0, feePoolId[0])
 	}()
 
 	// Chain B
@@ -176,11 +191,24 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 		preUpgradeStableSwapPoolId[1] = chainBNode.CreateStableswapPool("stablePool.json", initialization.ValidatorWalletName)
 	}()
 
+	go func() {
+		defer wg.Done()
+		err := chainBNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainB)
+		if err != nil {
+			errCh <- err
+			return
+		}
+		feePoolId[1] = chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", "uosmo", 100, "0.001")
+		fullRangeCoins := "30000000000uosmo,10000000000ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
+		chainBNode.CreateFullRangePosition(initialization.ValidatorWalletName, fullRangeCoins, 0, 0, feePoolId[1])
+	}()
+
 	// Wait for all goroutines to complete
 	wg.Wait()
 
 	config.PreUpgradePoolId = preUpgradePoolId
 	config.PreUpgradeStableSwapPoolId = preUpgradeStableSwapPoolId
+	config.FeePoolId = feePoolId
 
 	var (
 		lockupWallet           = make([]string, 2)
@@ -193,7 +221,6 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	// Chain A
 	go func() {
 		defer wg.Done()
-		// Setup wallets and send tokens to wallets (only chainA)
 		lockupWallet[0] = chainANode.CreateWalletAndFund(config.LockupWallet[0], []string{
 			"10000000000000000000" + poolShareDenom[0],
 		}, chainA)
@@ -216,7 +243,6 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	// Chain B
 	go func() {
 		defer wg.Done()
-		// Setup wallets and send tokens to wallets (only chainA)
 		lockupWallet[1] = chainBNode.CreateWalletAndFund(config.LockupWallet[1], []string{
 			"10000000000000000000" + poolShareDenom[1],
 		}, chainB)
@@ -243,8 +269,6 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	config.StableswapWallet = stableswapWallet
 
 	wg.Add(6)
-
-	var errCh = make(chan error, 2)
 
 	// Chain A
 

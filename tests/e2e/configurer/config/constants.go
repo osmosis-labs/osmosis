@@ -37,6 +37,8 @@ var (
 
 	PreUpgradeStableSwapPoolId = []uint64{}
 
+	FeePoolId = []uint64{}
+
 	StrideMigrateWallet = []string{"stride-migration", "stride-migration"}
 
 	LockupWallet = []string{"lockup-wallet", "lockup-wallet"}
