@@ -44,16 +44,37 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	quoteAsset := concentratedPool.GetToken1()
 	poolManagerParams := k.poolmanagerKeeper.GetParams(ctx)
 
-	if !k.validateTickSpacing(params, tickSpacing) {
-		return types.UnauthorizedTickSpacingError{ProvidedTickSpacing: tickSpacing, AuthorizedTickSpacings: params.AuthorizedTickSpacing}
+	bypassRestrictions := false
+
+	poolmanagerModuleAcc := k.accountKeeper.GetModuleAccount(ctx, poolmanagertypes.ModuleName).GetAddress()
+
+	// allow pool mananger module account to bypass restrictions (i.e. gov prop)
+	if creatorAddress.Equals(poolmanagerModuleAcc) {
+		bypassRestrictions = true
 	}
 
-	if !k.validateSpreadFactor(params, spreadFactor) {
-		return types.UnauthorizedSpreadFactorError{ProvidedSpreadFactor: spreadFactor, AuthorizedSpreadFactors: params.AuthorizedSpreadFactors}
+	// allow whitelisted pool creators to bypass restrictions
+	if !bypassRestrictions {
+		for _, addr := range params.UnrestrictedPoolCreatorWhitelist {
+			// okay to use MustAccAddressFromBech32 because already validated in params
+			if sdk.MustAccAddressFromBech32(addr).Equals(creatorAddress) {
+				bypassRestrictions = true
+			}
+		}
 	}
 
-	if !validateAuthorizedQuoteDenoms(quoteAsset, poolManagerParams.AuthorizedQuoteDenoms) {
-		return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: poolManagerParams.AuthorizedQuoteDenoms}
+	if !bypassRestrictions {
+		if !k.validateTickSpacing(params, tickSpacing) {
+			return types.UnauthorizedTickSpacingError{ProvidedTickSpacing: tickSpacing, AuthorizedTickSpacings: params.AuthorizedTickSpacing}
+		}
+
+		if !k.validateSpreadFactor(params, spreadFactor) {
+			return types.UnauthorizedSpreadFactorError{ProvidedSpreadFactor: spreadFactor, AuthorizedSpreadFactors: params.AuthorizedSpreadFactors}
+		}
+
+		if !validateAuthorizedQuoteDenoms(quoteAsset, poolManagerParams.AuthorizedQuoteDenoms) {
+			return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: poolManagerParams.AuthorizedQuoteDenoms}
+		}
 	}
 
 	if err := k.createSpreadRewardAccumulator(ctx, poolId); err != nil {
