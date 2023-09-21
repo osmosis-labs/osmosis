@@ -89,7 +89,21 @@ func BenchmarkSlowPowCases(b *testing.B) {
 		exp  Dec
 	}{
 		{
-			base: MustNewDecFromStr("1.99999999999999"),
+			// Original worst case disclosed in
+			// https://github.com/osmosis-labs/osmosis/security/advisories/GHSA-38g3-xvpp-h52g
+			// 1.99999999999999
+			// 0.1
+			//
+			// Yielded runtime of ~800ms on cpu: 12th Gen Intel(R) Core(TM) i7-1260P
+			//
+			// To mitigate, a loop iteration bound of 800K was added.
+			// The values below are hand-picked to be close to the worst case
+			// while under the iteration bound.
+			//
+			// To make sure that we don't hit the loop iteration bound too often
+			// under normal conditions, this change was backported to v19.x (mainnet at the time of writing)
+			// and tested for no app-hash over 10000 blocks.
+			base: MustNewDecFromStr("1.99999"),
 			exp:  MustNewDecFromStr("0.1"),
 		},
 	}
