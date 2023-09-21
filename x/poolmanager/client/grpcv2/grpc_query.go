@@ -28,6 +28,6 @@ func (q Querier) SpotPrice(grpcCtx context.Context,
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.SpotPriceV2(ctx, *req)
+	return q.Q.SpotPrice(ctx, *req)
 }
 
