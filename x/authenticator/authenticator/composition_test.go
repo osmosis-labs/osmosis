@@ -130,7 +130,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 			authData, err := initializedAuth.GetAuthenticationData(s.Ctx, tx, -1, false)
 			s.Require().NoError(err)
 
-			success := initializedAuth.Authenticate(s.Ctx, nil, authData)
+			success := initializedAuth.Authenticate(s.Ctx, nil, nil, authData)
 			s.Require().Equal(tc.expectSuccessful, success.IsAuthenticated())
 		})
 	}
@@ -216,7 +216,7 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 			authData, err := initializedAuth.GetAuthenticationData(s.Ctx, tx, -1, false)
 			s.Require().NoError(err)
 
-			success := initializedAuth.Authenticate(s.Ctx, nil, authData)
+			success := initializedAuth.Authenticate(s.Ctx, nil, nil, authData)
 			s.Require().Equal(tc.expectSuccessful, success.IsAuthenticated())
 		})
 	}
@@ -299,7 +299,7 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			authData, err := initializedTop.GetAuthenticationData(s.Ctx, tx, -1, false)
 			s.Require().NoError(err)
 
-			success := initializedTop.Authenticate(s.Ctx, nil, authData)
+			success := initializedTop.Authenticate(s.Ctx, nil, nil, authData)
 			s.Require().Equal(tc.success, success.IsAuthenticated())
 		})
 	}

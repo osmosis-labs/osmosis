@@ -37,7 +37,7 @@ func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx,
 	return StatefulAuthenticatorData{Value: s.GetValue(ctx)}, nil
 }
 
-func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.AuthenticationResult {
+func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.AuthenticationResult {
 	// TODO: the get should probably happen in the method above and here we should just have this:
 	statefulData, ok := authenticationData.(StatefulAuthenticatorData)
 	if !ok {
@@ -64,10 +64,7 @@ func (s StatefulAuthenticator) GetValue(ctx sdk.Context) int {
 	return statefulData.Value
 }
 
-func (s StatefulAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData authenticator.AuthenticatorData, msg sdk.Msg) {
-}
-
-func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.ConfirmationResult {
+func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.ConfirmationResult {
 	s.SetValue(ctx, s.GetValue(ctx)+1)
 	return authenticator.Confirm()
 }

@@ -69,12 +69,7 @@ func (sla SpendLimitAuthenticator) GetAuthenticationData(
 	return nil, nil
 }
 
-func (sla SpendLimitAuthenticator) Authenticate(
-	ctx sdk.Context,
-	msg sdk.Msg,
-	_ AuthenticatorData,
-) AuthenticationResult {
-	account := msg.GetSigners()[0]
+func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) AuthenticationResult {
 	sla.DeleteBlockBalances(ctx, account)
 	sla.DeletePastPeriods(account, ctx.BlockTime()) // TODO: implement this
 
@@ -86,14 +81,7 @@ func (sla SpendLimitAuthenticator) Authenticate(
 	return NotAuthenticated()
 }
 
-func (sla SpendLimitAuthenticator) AuthenticationFailed(ctx sdk.Context, _ AuthenticatorData, msg sdk.Msg) {
-	account := msg.GetSigners()[0]
-	sla.DeleteBlockBalances(ctx, account)
-}
-
-func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, _ AuthenticatorData) ConfirmationResult {
-	account := msg.GetSigners()[0]
-
+func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult {
 	prevBalances := sla.GetBlockBalance(account, ctx.BlockHeight())
 	currentBalances := sla.bankKeeper.GetAllBalances(ctx, account)
 

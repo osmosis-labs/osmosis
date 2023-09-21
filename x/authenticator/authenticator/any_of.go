@@ -86,11 +86,7 @@ func (aoa AnyOfAuthenticator) GetAuthenticationData(
 	return AnyOfAuthenticatorData{Data: authDataList}, nil
 }
 
-func (aoa AnyOfAuthenticator) Authenticate(
-	ctx sdk.Context,
-	msg sdk.Msg,
-	authenticationData AuthenticatorData,
-) AuthenticationResult {
+func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) AuthenticationResult {
 	anyOfData, ok := authenticationData.(AnyOfAuthenticatorData)
 	if !ok {
 		return Rejected("invalid authentication data for AnyOfAuthenticator", nil)
@@ -98,7 +94,7 @@ func (aoa AnyOfAuthenticator) Authenticate(
 
 	aoa.executedAuths = []Authenticator{} // Reset the executed authenticators
 	for idx, auth := range aoa.SubAuthenticators {
-		success := auth.Authenticate(ctx, msg, anyOfData.Data[idx])
+		success := auth.Authenticate(ctx, nil, msg, anyOfData.Data[idx])
 		aoa.executedAuths = append(aoa.executedAuths, auth) // Add to the executed list
 		if success.IsAuthenticated() || success.IsRejected() {
 			// TODO: Do we want to wrap the error in  case or rejection?
@@ -108,17 +104,10 @@ func (aoa AnyOfAuthenticator) Authenticate(
 	return NotAuthenticated()
 }
 
-func (aoa AnyOfAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData AuthenticatorData, msg sdk.Msg) {
-	// Call AuthenticationFailed on executed sub-authenticators
-	for _, auth := range aoa.executedAuths {
-		auth.AuthenticationFailed(ctx, authenticatorData, msg)
-	}
-}
-
-func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult {
+func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult {
 	// Call ConfirmExecution on executed sub-authenticators
 	for _, auth := range aoa.executedAuths {
-		if confirmation := auth.ConfirmExecution(ctx, msg, authenticationData); confirmation.IsBlock() {
+		if confirmation := auth.ConfirmExecution(ctx, nil, msg, authenticationData); confirmation.IsBlock() {
 			return confirmation
 		}
 	}

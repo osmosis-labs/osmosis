@@ -1,9 +1,8 @@
 package ante
 
 import (
-	"fmt"
-
 	errorsmod "cosmossdk.io/errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -94,10 +93,12 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 	}()
 
+	cacheCtx, writeCtx := ctx.CacheContext()
+
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range tx.GetMsgs() {
 		// By default, the first signer is the account
-		account, err := ad.accountGetter.GetAccount(ctx, msg, tx)
+		account, err := ad.accountGetter.GetAccount(cacheCtx, msg, tx)
 		if err != nil {
 			return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
 		}
@@ -105,7 +106,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// Get all authenticators for the executing account
 		// If no authenticators are found, use the default authenticator
 		// This is done to keep backwards compatibility by defaulting to a signature verifier on accounts without authenticators
-		authenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(ctx, account)
+		authenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(cacheCtx, account)
 		if err != nil {
 			return sdk.Context{}, err
 		}
@@ -116,11 +117,11 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// NOTE: we have to make sure that doing that does not make the signature malleable
 		for _, authenticator := range authenticators {
 			// Consume the authenticator's static gas
-			ctx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
+			cacheCtx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
 
 			// Get the authentication data for the transaction
-			cacheCtx, _ := ctx.CacheContext() // GetAuthenticationData is not allowed to modify the state
-			authData, err := authenticator.GetAuthenticationData(cacheCtx, tx, int8(msgIndex), simulate)
+			neverWriteCacheCtx, _ := cacheCtx.CacheContext() // GetAuthenticationData is not allowed to modify the state
+			authData, err := authenticator.GetAuthenticationData(neverWriteCacheCtx, tx, int8(msgIndex), simulate)
 			if err != nil {
 				return ctx, err
 			}
@@ -128,34 +129,32 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			// Authenticate the message
 			calledAuthenticators = append(calledAuthenticators, callData{authenticator: authenticator, authenticatorData: authData, msg: msg})
 
-			cacheCtx, writeContext := ctx.CacheContext() // If there is an error (regardless of whether the tx is authenticated or not), we want to revert the state
-			authentication := authenticator.Authenticate(cacheCtx, msg, authData)
-			if err != nil {
-				// TODO: Check this assumption. We want authenticators to return true/false to authenticate or not,
-				//       but we also want them to be able to return an error and fully block the tx in that case
-				return ctx, err
+			authentication := authenticator.Authenticate(cacheCtx, account, msg, authData)
+			if authentication.IsRejected() {
+				return ctx, authentication.Error()
+
 			}
-			writeContext() // Alternative, Do we want to do this globally (i.e.: revert for the whole tx)? I want to discuss these semantics
 
 			if authentication.IsAuthenticated() {
 				msgAuthenticated = true
 				// Once the fee payer is authenticated, we can set the gas limit to its original value
 				if !feePayerAuthenticated && account.Equals(feePayer) {
 					originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
-					ctx = ctx.WithGasMeter(originalGasMeter)
+					// ToDo: do we need to reset this for both?
+					cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
 					feePayerAuthenticated = true
 				}
 				break
 			}
 		}
 
-		// if authentation failed, allow reverting of state
+		// if authentication failed, return an error
 		if !msgAuthenticated {
-			for _, callData := range calledAuthenticators {
-				callData.authenticator.AuthenticationFailed(ctx, callData.authenticatorData, callData.msg)
-			}
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("authentication failed for message %d", msgIndex))
 		}
 	}
-	return next(ctx, tx, simulate)
+
+	// write any context modified by the authenticators
+	writeCtx()
+	return next(cacheCtx, tx, simulate)
 }

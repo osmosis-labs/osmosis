@@ -93,6 +93,11 @@ func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 		return SignatureData{}, err
 	}
 
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+
 	// We get the signers here for an invariant check
 	signers := sigTx.GetSigners()
 	msgs := sigTx.GetMsgs()
@@ -100,8 +105,7 @@ func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 	msgSigners, msgSignatures, err := GetSignersAndSignatures(
 		msgs,
 		signatures,
-		// TODO: what do we need to pass in here for the fee payer to function?
-		"",
+		feeTx.FeePayer().String(),
 		// TODO: We need to clearly define why the message index is needed here.
 		int(messageIndex),
 	)
@@ -132,12 +136,7 @@ func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 
 // Authenticate takes a SignaturesVerificationData struct and validates
 // each signer and signature using  signature verification
-func (sva SignatureVerificationAuthenticator) Authenticate(
-	ctx sdk.Context,
-	// NOTE: do we use this msg anywhere
-	msg sdk.Msg,
-	authenticationData AuthenticatorData,
-) AuthenticationResult {
+func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) AuthenticationResult {
 	verificationData, ok := authenticationData.(SignatureData)
 	if !ok {
 		return Rejected("invalid signature verification data", sdkerrors.ErrInvalidType)
@@ -173,6 +172,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(
 		}
 
 		// Check account sequence number.
+		fmt.Println(account, acc.GetSequence(), sig.Sequence, acc.GetAddress())
 		if sig.Sequence != acc.GetSequence() {
 			return Rejected(
 				fmt.Sprintf("account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence),
@@ -227,9 +227,6 @@ func (sva SignatureVerificationAuthenticator) Authenticate(
 	return Authenticated()
 }
 
-func (sva SignatureVerificationAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData AuthenticatorData, msg sdk.Msg) {
-}
-
-func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult {
+func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult {
 	return Confirm()
 }

@@ -35,7 +35,7 @@ func (m MaxAmountAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx
 	return MaxAmountAuthenticatorData{}, nil
 }
 
-func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.AuthenticationResult {
+func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.AuthenticationResult {
 	send := msg.(*banktypes.MsgSend)
 	if m.GetAmount(ctx).Add(send.Amount[0].Amount).GTE(sdk.NewInt(3_000)) {
 		return authenticator.NotAuthenticated()
@@ -44,11 +44,8 @@ func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, msg sdk.Msg, authe
 	return authenticator.Authenticated()
 }
 
-func (m MaxAmountAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData authenticator.AuthenticatorData, msg sdk.Msg) {
-}
-
 // TODO: Consider doing something like SetPubKey for determining if this authenticator was the one that authenticated the tx
-func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.ConfirmationResult {
+func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.ConfirmationResult {
 	send := msg.(*banktypes.MsgSend)
 	m.SetAmount(ctx, m.GetAmount(ctx).Add(send.Amount[0].Amount))
 	return authenticator.Confirm()

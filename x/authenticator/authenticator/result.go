@@ -1,10 +1,13 @@
 package authenticator
 
+import sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 type AuthenticationResult interface {
 	isAuthenticationResult()
 	IsAuthenticated() bool
 	IsRejected() bool
 	IsAuthenticationFailed() bool // Named for clarity, as opposed to IsNotAuthenticated which is ambiguous
+	Error() error
 }
 
 type authenticated struct{}
@@ -18,17 +21,19 @@ func (a authenticated) isAuthenticationResult()      {}
 func (a authenticated) IsAuthenticated() bool        { return true }
 func (a authenticated) IsRejected() bool             { return false }
 func (a authenticated) IsAuthenticationFailed() bool { return false }
+func (a authenticated) Error() error                 { return nil }
 
 func (n notAuthenticated) isAuthenticationResult()      {}
 func (n notAuthenticated) IsAuthenticated() bool        { return false }
 func (n notAuthenticated) IsRejected() bool             { return false }
 func (n notAuthenticated) IsAuthenticationFailed() bool { return true } // Represents cases where authentication wasn't attempted or was bypassed
+func (n notAuthenticated) Error() error                 { return nil }
 
 func (r rejected) isAuthenticationResult()      {}
 func (r rejected) IsAuthenticated() bool        { return false }
 func (r rejected) IsRejected() bool             { return true }
 func (r rejected) IsAuthenticationFailed() bool { return false }
-func (r rejected) Wrap(msg string) rejected     { return rejected{msg: msg, err: r.err} }
+func (r rejected) Error() error                 { return sdkerrors.Wrap(r.err, r.msg) }
 
 func Authenticated() AuthenticationResult {
 	return authenticated{}
