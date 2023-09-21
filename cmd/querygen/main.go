@@ -74,16 +74,24 @@ func codegenQueryYml(filepath string) error {
 func codegenGrpcPackage(queryYml templates.QueryYml) error {
 	grpcTemplateData := templates.GrpcTemplateFromQueryYml(queryYml)
 
+	// If proto path contains v2 then add folder and template
+	// suffix to properly package the files.
+	grpcTemplateData.VersionSuffix = ""
+	if strings.Contains(grpcTemplateData.ProtoPath, "v2") {
+		fmt.Println(grpcTemplateData.ProtoPath)
+		grpcTemplateData.VersionSuffix = "v2"
+	}
+
 	// create directory
 	fsClientPath := templates.ParseFilePathFromImportPath(grpcTemplateData.ClientPath)
-	if err := os.MkdirAll(fsClientPath+"/grpc", os.ModePerm); err != nil {
+	if err := os.MkdirAll(fsClientPath+"/grpc"+grpcTemplateData.VersionSuffix, os.ModePerm); err != nil {
 		// ignore directory already exists error
 		if !errors.Is(err, os.ErrExist) {
 			return err
 		}
 	}
 	// generate file
-	f, err := os.Create(fsClientPath + "/grpc/grpc_query.go")
+	f, err := os.Create(fsClientPath + "/grpc" + grpcTemplateData.VersionSuffix + "/grpc_query.go")
 	if err != nil {
 		return err
 	}
