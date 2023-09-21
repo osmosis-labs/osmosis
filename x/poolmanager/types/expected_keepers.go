@@ -48,7 +48,7 @@ type PoolModuleI interface {
 		poolId uint64,
 		quoteAssetDenom string,
 		baseAssetDenom string,
-	) (price osmomath.Dec, err error)
+	) (price osmomath.BigDec, err error)
 
 	SwapExactAmountIn(
 		ctx sdk.Context,

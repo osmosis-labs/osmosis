@@ -383,7 +383,9 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 	}
 
 	return &types.QuerySpotPriceResponse{
-		SpotPrice: sp.String(),
+		// Note: truncation exists here to maintain backwards compatibility.
+		// This query has historically had 18 decimals in response.
+		SpotPrice: sp.Dec().String(),
 	}, nil
 }
 
@@ -412,7 +414,9 @@ func (q QuerierV2) SpotPrice(ctx context.Context, req *v2types.QuerySpotPriceReq
 	// Deeprecated: use alternate in x/poolmanager
 	// nolint: staticcheck
 	return &v2types.QuerySpotPriceResponse{
-		SpotPrice: sp.String(),
+		// Note: truncation exists here to maintain backwards compatibility.
+		// This query has historically had 18 decimals in response.
+		SpotPrice: sp.Dec().String(),
 	}, nil
 }
 
