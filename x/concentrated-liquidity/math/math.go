@@ -88,8 +88,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 	// Each intermediary step is truncated at precision end to get a smaller final amount.
 	// Note that the order of divisions is important here. First, we divide by a larger number (sqrtPriceB) and then by a smaller number (sqrtPriceA).
 	// This leads to a smaller error amplification.
-	// TODO (perf): QuoTruncate with no reallocation.
-	return liq.MulTruncate(diff).QuoTruncate(sqrtPriceB).QuoTruncate(sqrtPriceA)
+	return liq.MulTruncate(diff).QuoTruncateMut(sqrtPriceB).QuoTruncateMut(sqrtPriceA)
 }
 
 // CalcAmount1Delta takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
@@ -140,7 +139,7 @@ func GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidity, amount
 	denominator := product
 	denominator.AddMut(liquidity)
 	// MulRoundUp and QuoRoundUp to make the final result larger by rounding up at precision end.
-	return liquidity.MulRoundUp(sqrtPriceCurrent).QuoRoundUp(denominator)
+	return liquidity.MulRoundUp(sqrtPriceCurrent).QuoRoundUpMut(denominator)
 }
 
 // GetNextSqrtPriceFromAmount0OutRoundingUp utilizes sqrtPriceCurrent, liquidity, and amount of denom0 that still needs
@@ -158,7 +157,7 @@ func GetNextSqrtPriceFromAmount0OutRoundingUp(sqrtPriceCurrent, liquidity, amoun
 	denominator := liquidity.Sub(product)
 	// mul round up numerator to make the final result larger
 	// quo round up to make the final result larger
-	return liquidity.MulRoundUp(sqrtPriceCurrent).QuoRoundUp(denominator)
+	return liquidity.MulRoundUp(sqrtPriceCurrent).QuoRoundUpMut(denominator)
 }
 
 // GetNextSqrtPriceFromAmount1InRoundingDown utilizes the current sqrtPriceCurrent, liquidity, and amount of denom1 that still needs
