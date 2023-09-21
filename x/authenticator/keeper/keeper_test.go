@@ -1,8 +1,10 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
@@ -37,10 +39,17 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 	// Ensure the SigVerificationAuthenticator type is registered
 	s.Require().True(s.am.IsAuthenticatorTypeRegistered(authenticator.SignatureVerificationAuthenticator{}.Type()))
 
+	// Set up account
+	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
+	bz, _ := hex.DecodeString(key)
+	priv := &secp256k1.PrivKey{Key: bz}
+	accAddress := sdk.AccAddress(priv.PubKey().Address())
+
 	// Create a test message
 	msg := &types.MsgAddAuthenticator{
-		Sender: s.TestAccs[0].String(),
+		Sender: accAddress.String(),
 		Type:   authenticator.SignatureVerificationAuthenticator{}.Type(),
+		Data:   priv.PubKey().Bytes(),
 	}
 
 	resp, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
@@ -48,21 +57,62 @@ func (s *KeeperTestSuite) TestMsgServer_AddAuthenticator() {
 	s.Require().True(resp.Success)
 }
 
+func (s *KeeperTestSuite) TestMsgServer_AddAuthenticatorFail() {
+	msgServer := keeper.NewMsgServerImpl(*s.App.AuthenticatorKeeper)
+	ctx := s.Ctx
+
+	// Ensure the SigVerificationAuthenticator type is registered
+	s.Require().True(s.am.IsAuthenticatorTypeRegistered(authenticator.SignatureVerificationAuthenticator{}.Type()))
+
+	// Set up account
+	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
+	bz, _ := hex.DecodeString(key)
+	priv := &secp256k1.PrivKey{Key: bz}
+	accAddress := sdk.AccAddress(priv.PubKey().Address())
+
+	// Create a test message
+	msg := &types.MsgAddAuthenticator{
+		Sender: accAddress.String(),
+		Type:   authenticator.SignatureVerificationAuthenticator{}.Type(),
+		Data:   priv.PubKey().Bytes(),
+	}
+
+	key = "6cf5103c60c939a5b38e383b52239c5296c968579eec1c68a47d70fbf1d19157"
+	bz, _ = hex.DecodeString(key)
+	priv = &secp256k1.PrivKey{Key: bz}
+	accAddress = sdk.AccAddress(priv.PubKey().Address())
+	msg.Data = priv.PubKey().Bytes()
+
+	_, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
+	s.Require().Error(err)
+
+	msg.Type = "PassKeyAuthenticator"
+	_, err = msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), msg)
+	s.Require().Error(err)
+}
+
 func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
 	msgServer := keeper.NewMsgServerImpl(*s.App.AuthenticatorKeeper)
 	ctx := s.Ctx
 
-	// First add an authenticator so that we can attempt to remove it later
+	// Set up account
+	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
+	bz, _ := hex.DecodeString(key)
+	priv := &secp256k1.PrivKey{Key: bz}
+	accAddress := sdk.AccAddress(priv.PubKey().Address())
+
+	// Create a test message
 	addMsg := &types.MsgAddAuthenticator{
-		Sender: s.TestAccs[0].String(),
+		Sender: accAddress.String(),
 		Type:   authenticator.SignatureVerificationAuthenticator{}.Type(),
+		Data:   priv.PubKey().Bytes(),
 	}
 	_, err := msgServer.AddAuthenticator(sdk.WrapSDKContext(ctx), addMsg)
 	s.Require().NoError(err)
 
 	// Now attempt to remove it
 	removeMsg := &types.MsgRemoveAuthenticator{
-		Sender: s.TestAccs[0].String(),
+		Sender: accAddress.String(),
 		Id:     0,
 	}
 

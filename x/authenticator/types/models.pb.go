@@ -22,9 +22,20 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// AccountAuthenticator represents a foundational model for all authenticators.
+// It provides extensibility by allowing concrete types to interpret and validate
+// transactions based on the encapsulated data.
 type AccountAuthenticator struct {
-	Id   uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// ID uniquely identifies the authenticator instance.
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Type specifies the category of the AccountAuthenticator.
+	// This type information is essential for differentiating authenticators
+	// and ensuring precise data retrieval from the storage layer.
 	Type string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	// Data is a versatile field used in conjunction with the specific type of
+	// account authenticator to facilitate complex authentication processes.
+	// The interpretation of this field is overloaded, enabling multiple
+	// authenticators to utilize it for their respective purposes.
 	Data []byte `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
 }
 

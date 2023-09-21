@@ -23,7 +23,10 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-// AddAuthenticator adds any types of authenticator to an account
+// AddAuthenticator allows the addition of various types of authenticators to an account.
+// This method serves as a versatile function for adding diverse authenticator types
+// to an account, making it highly adaptable for different use cases.
+
 func (m msgServer) AddAuthenticator(
 	goCtx context.Context,
 	msg *types.MsgAddAuthenticator,
@@ -35,33 +38,42 @@ func (m msgServer) AddAuthenticator(
 		return nil, err
 	}
 
-	auths, err := m.Keeper.GetAuthenticatorsForAccount(ctx, sender)
+	authenticators, err := m.Keeper.GetAuthenticatorsForAccount(ctx, sender)
 	if err != nil {
 		return nil, err
 	}
 
-	// Validate that the data is correct for the type of authenticator
+	// If there are no other authenticators, ensure that the first authenticator is a SignatureVerificationAuthenticator.
+	if len(authenticators) == 0 && msg.Type != authenticator.SignatureVerificationAuthenticatorType {
+		return nil, fmt.Errorf("the first authenticator must be a SignatureVerificationAuthenticator")
+	}
+
+	// Validate that the data is correct for each type of authenticator.
 	switch msg.Type {
 	case authenticator.SignatureVerificationAuthenticatorType:
-		if len(msg.Data) != secp256k1.PubKeySize {
-			return nil, fmt.Errorf("invalid secp256k1 pub key size expected %d, got %d", secp256k1.PubKeySize, len(msg.Data))
-		}
-		// If there are no other authenticators ensure that the first authenticator is associated
-		// with the original account
-		if len(auths) == 0 {
+		if len(authenticators) == 0 {
+			// We ensure the data for the first public key is correct. If the public key is already in the
+			// auth store, we will not use this data again. This validation is performed only for the first public key.
 			pubKey := secp256k1.PubKey{Key: msg.Data}
-			senderDataAccount := sdk.AccAddress(pubKey.Address())
-			if !senderDataAccount.Equals(sender) {
-				return nil, fmt.Errorf("first authenticator must be associated with account expected %s, got %s", sender, senderDataAccount)
+			newAccountPubKey := sdk.AccAddress(pubKey.Address())
+			if !newAccountPubKey.Equals(sender) {
+				return nil, fmt.Errorf("the first authenticator must be associated with the account, expected %s, got %s", sender, newAccountPubKey)
 			}
 		}
+
+		// We allow users to pass no data or a valid public key for signature verification.
+		// Users can pass no data if the public key is already contained in the auth store.
+		if len(msg.Data) == 0 || len(msg.Data) != secp256k1.PubKeySize {
+			return nil, fmt.Errorf("invalid secp256k1 public key size, expected %d, got %d", secp256k1.PubKeySize, len(msg.Data))
+		}
 	}
 
-	// Limit the number of authenticators to stop over iteration in the ante handler
-	if len(auths) >= 15 {
-		return nil, fmt.Errorf("max authenticators: %d, tried to add more than the max amount of authenticator", 15)
+	// Limit the number of authenticators to prevent excessive iteration in the ante handler.
+	if len(authenticators) >= 15 {
+		return nil, fmt.Errorf("maximum authenticators reached (%d), attempting to add more than the maximum allowed", 15)
 	}
 
+	// Finally, add the authenticator to the store.
 	err = m.Keeper.AddAuthenticator(ctx, sender, msg.Type, msg.Data)
 	if err != nil {
 		return nil, err
@@ -81,6 +93,7 @@ func (m msgServer) AddAuthenticator(
 	}, nil
 }
 
+// RemoveAuthenticator removes an authenticator from the store. The message specifies a sender address and an index.
 func (m msgServer) RemoveAuthenticator(goCtx context.Context, msg *types.MsgRemoveAuthenticator) (*types.MsgRemoveAuthenticatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -89,6 +102,8 @@ func (m msgServer) RemoveAuthenticator(goCtx context.Context, msg *types.MsgRemo
 		return nil, err
 	}
 
+	// At this point, we assume that verification has occurred on the account, and we
+	// proceed to remove the authenticator from the store.
 	err = m.Keeper.RemoveAuthenticator(ctx, sender, msg.Id)
 	if err != nil {
 		return nil, err
