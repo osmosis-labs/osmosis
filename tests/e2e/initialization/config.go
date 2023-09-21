@@ -61,21 +61,24 @@ const (
 	E2EFeeToken         = "e2e-default-feetoken"
 	UstIBCDenom         = "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC"
 	LuncIBCDenom        = "ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0"
+	UsdcAxlDenom        = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
 	MinGasPrice         = "0.000"
 	IbcSendAmount       = 3300000000
 	ValidatorWalletName = "val"
 	// chainA
-	ChainAID      = "osmo-test-a"
-	OsmoBalanceA  = 20000000000000
-	IonBalanceA   = 100000000000
-	StakeBalanceA = 110000000000
-	StakeAmountA  = 100000000000
-	UstBalanceA   = 500000000000000
-	LuncBalanceA  = 500000000000000
-	DaiBalanceA   = "100000000000000000000000"
+	ChainAID        = "osmo-test-a"
+	OsmoBalanceA    = 20000000000000
+	UsdcAxlBalanceA = 20000000000000
+	IonBalanceA     = 100000000000
+	StakeBalanceA   = 110000000000
+	StakeAmountA    = 100000000000
+	UstBalanceA     = 500000000000000
+	LuncBalanceA    = 500000000000000
+	DaiBalanceA     = "100000000000000000000000"
 	// chainB
 	ChainBID          = "osmo-test-b"
 	OsmoBalanceB      = 500000000000
+	UsdcAxlBalanceB   = 500000000000
 	IonBalanceB       = 100000000000
 	StakeBalanceB     = 440000000000
 	StakeAmountB      = 400000000000
@@ -97,8 +100,8 @@ var (
 
 	DaiOsmoPoolBalances = fmt.Sprintf("%s%s", DaiBalanceA, DaiDenom)
 
-	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom)
-	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
+	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom, UsdcAxlBalanceA, UsdcAxlDenom)
+	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom, UsdcAxlBalanceA, UsdcAxlDenom)
 	OsmoToken       = sdk.NewInt64Coin(OsmoDenom, IbcSendAmount)  // 3,300uosmo
 	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
 	tenOsmo         = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 10_000_000)}
