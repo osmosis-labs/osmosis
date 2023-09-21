@@ -172,7 +172,6 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, acco
 		}
 
 		// Check account sequence number.
-		fmt.Println(account, acc.GetSequence(), sig.Sequence, acc.GetAddress())
 		if sig.Sequence != acc.GetSequence() {
 			return Rejected(
 				fmt.Sprintf("account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence),

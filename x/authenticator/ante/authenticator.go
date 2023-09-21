@@ -140,8 +140,9 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				// Once the fee payer is authenticated, we can set the gas limit to its original value
 				if !feePayerAuthenticated && account.Equals(feePayer) {
 					originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
-					// ToDo: do we need to reset this for both?
+					// Reset this for both contexts
 					cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
+					ctx = ctx.WithGasMeter(originalGasMeter)
 					feePayerAuthenticated = true
 				}
 				break
@@ -156,5 +157,5 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	// write any context modified by the authenticators
 	writeCtx()
-	return next(cacheCtx, tx, simulate)
+	return next(ctx, tx, simulate)
 }
