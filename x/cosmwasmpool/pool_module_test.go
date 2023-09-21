@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/coins"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/model"
@@ -468,6 +469,62 @@ func (s *PoolModuleSuite) TestGetTotalPoolLiquidity() {
 
 			s.Require().NoError(err)
 			s.Require().Equal(tc.initialCoins, actualLiquidity)
+		})
+	}
+}
+
+// Tests happy path of incentives being distributed and pool balance updated.
+// Also tests error cases when pool with given ID does not exist or sender does not have enough funds.
+func (s *PoolModuleSuite) TestHanldeIncentive() {
+
+	tests := map[string]struct {
+		fundCoins   sdk.Coins
+		poolId      uint64
+		incentive   sdk.Coins
+		expectError bool
+	}{
+		"happy path": {
+			fundCoins: initalDefaultSupply,
+			poolId:    defaultPoolId,
+			incentive: initalDefaultSupply,
+		},
+		"sender does not have enough": {
+			fundCoins: coins.QuoRaw(initalDefaultSupply, 2),
+			poolId:    defaultPoolId,
+			incentive: initalDefaultSupply,
+
+			expectError: true,
+		},
+		"pool with given ID does not exist": {
+			fundCoins: initalDefaultSupply,
+			poolId:    defaultPoolId + 1,
+			incentive: initalDefaultSupply,
+
+			expectError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.Setup()
+			cwPoolKeeper := s.App.CosmwasmPoolKeeper
+
+			// create pool
+			pool := s.PrepareCustomTransmuterPool(s.TestAccs[0], defaultDenoms)
+
+			s.FundAcc(s.TestAccs[0], tc.fundCoins)
+
+			err := cwPoolKeeper.HanldeIncentive(s.Ctx, s.TestAccs[0], tc.poolId, tc.incentive)
+
+			if tc.expectError {
+				s.Require().Error(err, "test: %s", name)
+				return
+			}
+			s.Require().NoError(err, "test: %s", name)
+
+			// Check pool's balance increased
+			poolBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
+			s.Require().Equal(tc.incentive.String(), poolBalance.String())
 		})
 	}
 }

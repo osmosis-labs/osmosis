@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/coins"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
@@ -385,39 +386,48 @@ func (k Keeper) distributeInternal(
 		// Get distribution epoch duration. This is used to calculate the emission rate.
 		currentEpoch := k.GetEpochInfo(ctx)
 
-		// For every coin in the gauge, calculate the remaining reward per epoch
-		// and create a concentrated liquidity incentive record for it that
-		// is supposed to distribute over that epoch.
-		for _, remainCoin := range remainCoins {
-			// remaining coin amount per epoch.
-			remainAmountPerEpoch := remainCoin.Amount.Quo(osmomath.NewIntFromUint64(remainEpochs))
-			remainCoinPerEpoch := sdk.NewCoin(remainCoin.Denom, remainAmountPerEpoch)
+		// Compute remainig coins to distribute per epoch.
+		coins.QuoRawMut(remainCoins, int64(remainEpochs))
 
-			// emissionRate calculates amount of tokens to emit per second
-			// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
-			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
-			emissionRate := osmomath.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(osmomath.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(osmomath.NewInt(1000)))
+		incentivesModuleAccount := k.ak.GetModuleAddress(types.ModuleName)
 
-			ctx.Logger().Info("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
-			_, err := k.clk.CreateIncentive(ctx,
-				pool.GetId(),
-				k.ak.GetModuleAddress(types.ModuleName),
-				remainCoinPerEpoch,
-				emissionRate,
-				// Use current block time as start time, NOT the gauge start time.
-				// Gauge start time should be checked whenever moving between active
-				// and inactive gauges. By the time we get here, the gauge should be active.
-				ctx.BlockTime(),
-				// Only default uptime is supported at launch.
-				types.DefaultConcentratedUptime,
-			)
-
-			ctx.Logger().Info(fmt.Sprintf("distributeInternal CL for pool id %d finished", pool.GetId()))
-			if err != nil {
+		if poolType == poolmanagertypes.CosmWasm {
+			// For CW pool, simply distribute all per-epoch coins to to the pool.
+			if err := k.cwpk.HanldeIncentive(ctx, incentivesModuleAccount, pool.GetId(), remainCoins); err != nil {
 				return nil, err
 			}
-			totalDistrCoins = totalDistrCoins.Add(remainCoinPerEpoch)
+		} else {
+			// For every coin in the gauge, calculate the remaining reward per epoch
+			// and create a concentrated liquidity incentive record for it that
+			// is supposed to distribute over that epoch.
+			for _, remainCoinPerEpoch := range remainCoins {
+				// emissionRate calculates amount of tokens to emit per second
+				// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
+				// Note: reason why we do millisecond conversion is because floats are non-deterministic.
+				emissionRate := osmomath.NewDecFromInt(remainCoinPerEpoch.Amount).QuoTruncate(osmomath.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(osmomath.NewInt(1000)))
+
+				ctx.Logger().Info("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
+				_, err := k.clk.CreateIncentive(ctx,
+					pool.GetId(),
+					k.ak.GetModuleAddress(types.ModuleName),
+					remainCoinPerEpoch,
+					emissionRate,
+					// Use current block time as start time, NOT the gauge start time.
+					// Gauge start time should be checked whenever moving between active
+					// and inactive gauges. By the time we get here, the gauge should be active.
+					ctx.BlockTime(),
+					// Only default uptime is supported at launch.
+					types.DefaultConcentratedUptime,
+				)
+
+				ctx.Logger().Info(fmt.Sprintf("distributeInternal CL for pool id %d finished", pool.GetId()))
+				if err != nil {
+					return nil, err
+				}
+				totalDistrCoins = totalDistrCoins.Add(remainCoinPerEpoch)
+			}
 		}
+
 	} else {
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
 		if len(locks) == 0 {

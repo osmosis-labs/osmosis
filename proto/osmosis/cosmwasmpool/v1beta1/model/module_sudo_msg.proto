@@ -85,3 +85,15 @@ message SwapExactAmountOutSudoMsgResponse {
     (gogoproto.nullable) = false
   ];
 }
+
+// ===================== HandleIncentive
+message HandleIncentive {
+  repeated cosmos.base.v1beta1.Coin incentive = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+message HandleIncentiveSudoMsg {
+  HandleIncentive handle_incentive = 1 [ (gogoproto.nullable) = false ];
+}
+
+message HandleIncentiveResponse {}

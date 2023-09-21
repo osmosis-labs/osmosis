@@ -52,6 +52,10 @@ type ConcentratedLiquidityKeeper interface {
 	GetConcentratedPoolById(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
 }
 
+type CowmWasmPoolKeeper interface {
+	HanldeIncentive(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, incentive sdk.Coins) error
+}
+
 type AccountKeeper interface {
 	GetModuleAddress(moduleName string) sdk.AccAddress
 }

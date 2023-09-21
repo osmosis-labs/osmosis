@@ -81,3 +81,11 @@ func (h Hooks) AfterLastPoolPositionRemoved(ctx sdk.Context, sender sdk.AccAddre
 // AfterConcentratedPoolSwap is a noop.
 func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 }
+
+// AfterConcentratedPoolCreated creates a single gauge for the cosmwasm pool.
+func (h Hooks) AfterCosmWasmPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+	err := h.k.CreateConcentratedLiquidityPoolGauge(ctx, poolId)
+	if err != nil {
+		panic(err)
+	}
+}

@@ -405,3 +405,42 @@ func (k Keeper) GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	}
 	return totalLiquidity, nil
 }
+
+// HandleIncentive handles incentive distribution for a cw pool.
+// It performs a bank transfer from a given sender to the cw pool pool ID contract address.
+// It executes a relevant sudo message to notify the contract about the distribution in case the contract
+// would like to handle it.
+// If the contract does not implement or fails to be notified, any error is ignored.
+// Returns error if:
+// - fails to retrieve the pool with the given ID.
+// - fails to transfer tokens to the contract.
+// Returns nil otherwise.
+func (k Keeper) HanldeIncentive(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, incentive sdk.Coins) error {
+	cosmwasmPool, err := k.GetPool(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	contractAddress := cosmwasmPool.GetAddress()
+
+	// Transfer tokens to the contract
+	if err := k.bankKeeper.SendCoins(ctx, sender, contractAddress, incentive); err != nil {
+		return err
+	}
+
+	request := msg.HandleIncentiveSudoMsg{
+		HandleIncentive: msg.HandleIncentive{
+			Incentive: incentive,
+		},
+	}
+
+	// Note: this is an optional incentive handler to implement. We do not fail if this fails.
+	// The bank send above happens regardless of this. CW Pool contract implementors must
+	// be aware of these incentive distribution behavior.
+	_, err = cosmwasm.Sudo[msg.HandleIncentiveSudoMsg, msg.HandleIncentiveResponse](ctx, k.contractKeeper, contractAddress.String(), request)
+	if err != nil {
+		ctx.Logger().Debug("failed to handle incentive for cw pool, handler is likely not implemented, skipped silently", "pool id", poolId, "error", err)
+	}
+
+	return nil
+}
