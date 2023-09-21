@@ -95,7 +95,7 @@ func (aoa AnyOfAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddre
 
 	for idx, auth := range aoa.SubAuthenticators {
 		result := auth.Authenticate(ctx, nil, msg, anyOfData.Data[idx])
-		if result.IsAuthenticated() || success.IsRejected() {
+		if result.IsAuthenticated() || result.IsRejected() {
 			// TODO: Do we want to wrap the error in  case or rejection?
 			return result
 		}
