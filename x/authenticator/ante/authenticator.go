@@ -46,9 +46,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
-	// keep track of called authenticators so that they can be notified of failed txs
-	calledAuthenticators := make([]callData, 0)
-
 	// Authenticating the fee payer needs to be done with very little gas
 	// This is a spam-prevention strategy. This protects from a user adding multiple
 	// authenticators that overuse compute.
@@ -125,9 +122,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			if err != nil {
 				return ctx, err
 			}
-
-			// Keep track of all called authenticators
-			calledAuthenticators = append(calledAuthenticators, callData{authenticator: authenticator, authenticatorData: authData, msg: msg})
 
 			authentication := authenticator.Authenticate(cacheCtx, account, msg, authData)
 			if authentication.IsRejected() {

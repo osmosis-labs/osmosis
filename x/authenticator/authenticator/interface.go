@@ -49,8 +49,8 @@ type Authenticator interface {
 	// the returns true is authenticated or false if not authenticated. This is used in an ante handler.
 	// NOTE: Consume gas happens in this function.
 	Authenticate(
-		ctx sdk.Context,  // sdk Context is used to get data for use in authentication and to consume gas
-		account sdk.AccAddress,  // The account being authenticated for (usually msg.GetSigners()[0])
+		ctx sdk.Context, // sdk Context is used to get data for use in authentication and to consume gas
+		account sdk.AccAddress, // The account being authenticated for (usually msg.GetSigners()[0])
 		msg sdk.Msg, // a msg is passed into the authenticate function to allow the authenticators to use its information
 		authenticationData AuthenticatorData, // The authentication data is used to authenticate a message
 	) AuthenticationResult
