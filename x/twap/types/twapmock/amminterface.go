@@ -77,7 +77,6 @@ func (p *ProgrammedPoolManagerInterface) RouteCalculateSpotPrice(ctx sdk.Context
 ) (price osmomath.BigDec, err error) {
 	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	if res, ok := p.programmedSpotPrice[input]; ok {
-
 		if (res.Sp == osmomath.Dec{}) {
 			return osmomath.BigDec{}, res.Err
 		}
