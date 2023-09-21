@@ -43,17 +43,14 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			}
 
 			// Authenticate the message
-			// TODO: We probably want this method to return an error instead of a bool
 			success := authenticator.ConfirmExecution(ctx, account, msg, authData)
-			// TODO: Is the authenticated boolean needed? The idea was to check if the tx was authenticated or not, but
-			//   IIUC post handlers only get called if the tx is authenticated.
-			//   Another thing we may want to know there is which aithenticator authenticated the tx.
-			//   Maybe we can keep that information with something like the SetPubKeyDecorator
 
 			if success.IsBlock() {
 				return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution")
 			}
 		}
 	}
+
+	ad.authenticatorKeeper.TransientStore.Write(ctx)
 	return next(ctx, tx, simulate)
 }

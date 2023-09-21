@@ -91,7 +91,9 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 	}()
 
-	cacheCtx, writeCtx := ctx.CacheContext()
+	// This is a transient context stored globally throughout the execution of the tx
+	// Any changes will to authenticator storage will be written to the store at the end of the tx
+	cacheCtx := ad.authenticatorKeeper.TransientStore.GetTransientContext(ctx)
 
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range tx.GetMsgs() {
@@ -115,7 +117,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// NOTE: we have to make sure that doing that does not make the signature malleable
 		for _, authenticator := range authenticators {
 			// Consume the authenticator's static gas
-			ctx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
+			cacheCtx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
 
 			// Get the authentication data for the transaction
 			neverWriteCacheCtx, _ := cacheCtx.CacheContext() // GetAuthenticationData is not allowed to modify the state
@@ -153,7 +155,5 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 	}
 
-	// write any context modified by the authenticators
-	writeCtx()
 	return next(ctx, tx, simulate)
 }
