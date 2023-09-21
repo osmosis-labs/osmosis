@@ -4,8 +4,8 @@ package osmosis.authenticator;
 option go_package = "github.com/osmosis-labs/osmosis/v19/x/authenticator/types";
 
 // AccountAuthenticator represents a foundational model for all authenticators.
-// It provides extensibility by allowing concrete types to interpret and validate
-// transactions based on the encapsulated data.
+// It provides extensibility by allowing concrete types to interpret and
+// validate transactions based on the encapsulated data.
 message AccountAuthenticator {
   // ID uniquely identifies the authenticator instance.
   uint64 id = 1;
