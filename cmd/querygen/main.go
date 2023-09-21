@@ -12,6 +12,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/cmd/querygen/templates"
 )
 
+const V2 = "v2"
+
 var grpcTemplate template.Template
 
 func main() {
@@ -77,9 +79,9 @@ func codegenGrpcPackage(queryYml templates.QueryYml) error {
 	// If proto path contains v2 then add folder and template
 	// suffix to properly package the files.
 	grpcTemplateData.VersionSuffix = ""
-	if strings.Contains(grpcTemplateData.ProtoPath, "v2") {
+	if strings.Contains(grpcTemplateData.ProtoPath, V2) {
 		fmt.Println(grpcTemplateData.ProtoPath)
-		grpcTemplateData.VersionSuffix = "v2"
+		grpcTemplateData.VersionSuffix = V2
 	}
 
 	// create directory
