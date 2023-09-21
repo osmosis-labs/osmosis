@@ -229,7 +229,7 @@
       {
         "name": "v19",
         "tag": "v19.1.0",
-        "height": "11317300",
+        "height": 11317300,
         "recommended_version": "v19.1.0",
         "compatible_versions": [
           "v19.1.0",

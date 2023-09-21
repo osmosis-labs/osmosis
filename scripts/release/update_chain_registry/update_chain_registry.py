@@ -96,7 +96,7 @@ def create_version_info(version, height):
     version_info = {
         "name": version.split('.')[0],
         "tag" : version,
-        "height": str(height),
+        "height": int(height),
         "recommended_version": version,
         "compatible_versions": [
             version
@@ -201,7 +201,7 @@ def main():
     parser = argparse.ArgumentParser(description="Create binaries json")
     parser.add_argument('--upgrade_version', required=True, type=str, help='The upgrade tag to use (e.g v19.0.0)')
     # TODO: Upgrade height is required only with new major release
-    parser.add_argument('--upgrade_height', required=True, type=str, help='The height of the upgrade (e.g. 10000000)')
+    parser.add_argument('--upgrade_height', required=True, type=int, help='The height of the upgrade (e.g. 10000000)')
     parser.add_argument('--debug', action='store_true', default=False)
 
     args = parser.parse_args()
