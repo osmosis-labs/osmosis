@@ -3,6 +3,7 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/testutils"

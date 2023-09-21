@@ -88,8 +88,8 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 	prevBalances := sla.GetBlockBalance(account, ctx.BlockHeight())
 	currentBalances := sla.bankKeeper.GetAllBalances(ctx, account)
 
-	totalPrevValue := sdk.NewInt(0)
-	totalCurrentValue := sdk.NewInt(0)
+	totalPrevValue := osmomath.NewInt(0)
+	totalCurrentValue := osmomath.NewInt(0)
 
 	for _, coin := range prevBalances {
 		price := sla.getPriceInQuoteDenom(coin)

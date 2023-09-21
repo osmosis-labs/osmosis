@@ -102,7 +102,6 @@ func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 	}
 
 	// We get the signers here for an invariant check
-	signers := sigTx.GetSigners()
 	msgs := sigTx.GetMsgs()
 
 	msgSigners, msgSignatures, err := GetSignersAndSignatures(
@@ -114,18 +113,6 @@ func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 	)
 	if err != nil {
 		return SignatureData{}, err
-	}
-
-	// NOTE: added signer invariant check to ensure our code is working as before
-	if len(signers) != len(msgSigners) {
-		return SignatureData{},
-			sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invariant check failed, old signers don't match new signers")
-	}
-
-	// NOTE: added signature invariant check to ensure our code is working as before
-	if len(signatures) != len(msgSignatures) {
-		return SignatureData{},
-			sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invariant check failed, old signatures don't match new signatures")
 	}
 
 	// Get the signature for the message at msgIndex
