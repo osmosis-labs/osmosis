@@ -19,9 +19,8 @@ Each version is identified by a specific id, name, tag, block height and softwar
 | `v16` | Magnesium | `v16.1.1` | 10517000       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v16.1.1/) | [556](https://www.mintscan.io/osmosis/proposals/556) |
 | `v17` | Aluminium | `v17.0.0` | 11126100       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v17.0.0/) | [586](https://www.mintscan.io/osmosis/proposals/586) |
 | `v18` |   | `v18.0.0` | 11155350       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v18.0.0/) | [588](https://www.mintscan.io/osmosis/proposals/588) |
-| `v19` |   | `v19.0.0` | 11317300       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v19.0.0/) | [606](https://www.mintscan.io/osmosis/proposals/606) |
-
-## Upgrade Binaries
+| `v19` |   | `v19.1.0` | 11317300       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v19.0.0/) | [606](https://www.mintscan.io/osmosis/proposals/606) |
+## Upgrade binaries
 
 ### v3.1.0
 
@@ -140,10 +139,10 @@ Each version is identified by a specific id, name, tag, block height and softwar
 ```json
 {
   "binaries": {
-    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/osmosisd-16.1.1-linux-arm64?checksum=sha256:b96ff1f4c9b4abecb1b38998b1a1f891cfed2cc8078ab64914b151183c0c199b",
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/osmosisd-16.1.1-linux-amd64?checksum=sha256:0ec66e32584fff24b6d62fc9938c69ff1a1bbdd8641d2ec9e0fd084aaa767ed3",
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/osmosisd-16.1.1-linux-arm64?checksum=sha256:e2ccc743dd66da91d1df1ae4ecf92b36d658575f4ff507d5056eb640804e0401",
     "darwin/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/osmosisd-16.1.1-darwin-arm64?checksum=sha256:c743da4d3632a2bc3ea0ce784bbd13383492a4a34d53295eb2c96987bacf8e8c",
-    "darwin/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/osmosisd-16.1.1-darwin-amd64?checksum=sha256:d856ebda9c31f052d10a78443967a93374f2033292f0afdb6434b82b4ed79790",
-    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/osmosisd-16.1.1-linux-amd64?checksum=sha256:f838618633c1d42f593dc33d26b25842f5900961e987fc08570bb81a062e311d"
+    "darwin/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/osmosisd-16.1.1-darwin-amd64?checksum=sha256:d856ebda9c31f052d10a78443967a93374f2033292f0afdb6434b82b4ed79790"
   }
 }
 ```
@@ -166,20 +165,22 @@ Each version is identified by a specific id, name, tag, block height and softwar
 ```json
 {
   "binaries": {
+    "darwin/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v18.0.0/osmosisd-18.0.0-darwin-amd64?checksum=sha256:218f230a2418faab7b980a312a59e7b38a28eab8e3a857c46d78ab7ce10a7aaa",
+    "darwin/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v18.0.0/osmosisd-18.0.0-darwin-arm64?checksum=sha256:31280f32538e4e353d1a68adff6219c197ab63166faaca6eced9114c90a5a5f9",
     "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v18.0.0/osmosisd-18.0.0-linux-arm64?checksum=sha256:6d02ac17c720c2b7e01d364a3303b8a04c81b9e52038e0f81e1806d0d254d96e",
     "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v18.0.0/osmosisd-18.0.0-linux-amd64?checksum=sha256:d83b4122e3ff9c428c8d6dcfe89718f5229f80e9976dbab2deefeb68dceb0f38"
   }
 }
 ```
 
-### v19.0.0
+### v19.1.0
 
 ```json
 {
-    "binaries": {
-        "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.0.0/osmosisd-19.0.0-linux-arm64?checksum=sha256:39fb492914ef45f81e91e4472ddfdd83a56d3db820e48ed430df4c59aab90736",
-        "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.0.0/osmosisd-19.0.0-linux-amd64?checksum=sha256:e2a105e6bbbc2efa7681aadcf286f8f646f1ab3a8552261aa5bb914f497ad77d"
-    }
+  "binaries": {
+    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.1.0/osmosisd-19.1.0-linux-arm64?checksum=sha256:b08fda8bcb6f3b46ffce15b1022b38bc4d01ebb7f7c4d39061d4c084ffbc576c",
+    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.1.0/osmosisd-19.1.0-linux-amd64?checksum=sha256:c170e0c4caf2a5170bcdc34689a0eabb99b1e7d6544b6f3ee3e0753bf96de0ef"
+  }
 }
 ```
 
@@ -269,7 +270,7 @@ versions_info=(
     "v16:https://github.com/osmosis-labs/osmosis/releases/download/v16.1.1/osmosisd-16.1.1-linux-amd64?checksum=sha256:f838618633c1d42f593dc33d26b25842f5900961e987fc08570bb81a062e311d"
     "v17:https://github.com/osmosis-labs/osmosis/releases/download/v17.0.0/osmosisd-17.0.0-linux-amd64?checksum=sha256:d7fe62ae33cf2f0b48a17eb8b02644dadd9924f15861ed622cd90cb1a038135b"
     "v18:https://github.com/osmosis-labs/osmosis/releases/download/v18.0.0/osmosisd-18.0.0-linux-amd64?checksum=sha256:d83b4122e3ff9c428c8d6dcfe89718f5229f80e9976dbab2deefeb68dceb0f38"
-    "v19:https://github.com/osmosis-labs/osmosis/releases/download/v19.0.0/osmosisd-19.0.0-linux-amd64?checksum=sha256:e2a105e6bbbc2efa7681aadcf286f8f646f1ab3a8552261aa5bb914f497ad77d"
+    "v19:https://github.com/osmosis-labs/osmosis/releases/download/v19.1.0/osmosisd-19.1.0-linux-amd64?checksum=sha256:c170e0c4caf2a5170bcdc34689a0eabb99b1e7d6544b6f3ee3e0753bf96de0ef"
 )
 
 # Create the cosmovisor directory
