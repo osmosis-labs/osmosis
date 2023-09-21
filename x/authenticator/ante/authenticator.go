@@ -1,13 +1,13 @@
 package ante
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 )
 
@@ -31,12 +31,6 @@ func NewAuthenticatorDecorator(
 		authenticatorKeeper: authenticatorKeeper,
 		maxFeePayerGas:      maxFeePayerGas,
 	}
-}
-
-type callData struct {
-	authenticator     authenticatortypes.Authenticator
-	authenticatorData authenticatortypes.AuthenticatorData
-	msg               sdk.Msg
 }
 
 // AnteHandle is the authenticator ante handler
@@ -90,7 +84,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	// This is a transient context stored globally throughout the execution of the tx
 	// Any changes will to authenticator storage will be written to the store at the end of the tx
-	cacheCtx := ad.authenticatorKeeper.TransientStore.GetTransientContext(ctx)
+	cacheCtx := ad.authenticatorKeeper.TransientStore.ResetTransientContext(ctx)
 
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range tx.GetMsgs() {
@@ -126,7 +120,6 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			authentication := authenticator.Authenticate(cacheCtx, account, msg, authData)
 			if authentication.IsRejected() {
 				return ctx, authentication.Error()
-
 			}
 
 			if authentication.IsAuthenticated() {

@@ -1,6 +1,7 @@
 package authenticator
 
 import (
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -89,10 +90,13 @@ func NewTransientStore(storeKey sdk.StoreKey, ctx sdk.Context) *TransientStore {
 	}
 }
 
-func (as *TransientStore) GetTransientContext(ctx sdk.Context) sdk.Context {
+func (as *TransientStore) ResetTransientContext(ctx sdk.Context) sdk.Context {
 	as.transientCtx, _ = ctx.CacheContext()
 	return as.transientCtx
+}
 
+func (as *TransientStore) GetKvStore() store.KVStore {
+	return as.transientCtx.KVStore(as.storeKey)
 }
 
 func (as *TransientStore) Write(ctx sdk.Context) {

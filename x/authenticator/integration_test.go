@@ -325,15 +325,15 @@ func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
 	fmt.Println("err: ", err)
 	s.Require().Error(err, "Succeeded sending tx that should fail")
 
-	// Incremented by one. Only on the ante.
-	s.Require().Equal(1, stateful.GetValue(s.chainA.GetContext()))
+	// Auth failed, so no increment
+	s.Require().Equal(0, stateful.GetValue(s.chainA.GetContext()))
 
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, successSendMsg)
 	fmt.Println("err: ", err)
 	s.Require().NoError(err, "Failed to send bank tx with enough funds")
 
 	// Incremented by 2. Ante and Post
-	s.Require().Equal(3, stateful.GetValue(s.chainA.GetContext()))
+	s.Require().Equal(2, stateful.GetValue(s.chainA.GetContext()))
 }
 
 // TODO: Cleanup experiment tests

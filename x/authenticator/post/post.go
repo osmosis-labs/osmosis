@@ -18,13 +18,18 @@ func NewAuthenticatorDecorator(
 	}
 }
 
-// AnteHandle is the authenticator ante handler
+// AnteHandle is the authenticator post handler
 func (ad AuthenticatorDecorator) AnteHandle(
 	ctx sdk.Context,
 	tx sdk.Tx,
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
+	// If this is getting called, all messages succeeded. We can now update the
+	// state of the authenticators. If a post handler returns an error, then
+	// all state changes are reverted anyway
+	ad.authenticatorKeeper.TransientStore.Write(ctx)
+
 	for msgIndex, msg := range tx.GetMsgs() {
 		account := msg.GetSigners()[0]
 		authenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccount(ctx, account)
@@ -51,6 +56,5 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 	}
 
-	ad.authenticatorKeeper.TransientStore.Write(ctx)
 	return next(ctx, tx, simulate)
 }
