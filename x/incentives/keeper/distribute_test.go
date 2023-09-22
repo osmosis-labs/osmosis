@@ -24,12 +24,12 @@ const (
 )
 
 var (
-	defaultGaugeRecordOne = types.InternalGaugeRecord{
+	defaultGaugeRecordOneRecord = types.InternalGaugeRecord{
 		GaugeId:          1,
 		CurrentWeight:    osmomath.NewInt(100),
 		CumulativeWeight: osmomath.NewInt(200),
 	}
-	defaultGaugeRecordTwo = types.InternalGaugeRecord{
+	defaultGaugeRecordTwoRecords = types.InternalGaugeRecord{
 		// Note that this is 4 and not 2 because we assume the second pool is a balancer pool
 		// that creates three gauges (one for each lockable duration), only the last of which
 		// we use.
@@ -40,21 +40,22 @@ var (
 	defaultGroup = types.Group{
 		GroupGaugeId: defaultGroupGaugeId,
 		InternalGaugeInfo: types.InternalGaugeInfo{
-			TotalWeight:  defaultGaugeRecordOne.CurrentWeight.Add(defaultGaugeRecordTwo.CurrentWeight),
-			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOne, defaultGaugeRecordTwo},
+			TotalWeight:  defaultGaugeRecordOneRecord.CurrentWeight.Add(defaultGaugeRecordTwoRecords.CurrentWeight),
+			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOneRecord, defaultGaugeRecordTwoRecords},
 		},
 		SplittingPolicy: types.Volume,
 	}
 	singleRecordGroup = types.Group{
 		GroupGaugeId: defaultGroupGaugeId,
 		InternalGaugeInfo: types.InternalGaugeInfo{
-			TotalWeight:  defaultGaugeRecordOne.CurrentWeight,
-			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOne},
+			TotalWeight:  defaultGaugeRecordOneRecord.CurrentWeight,
+			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOneRecord},
 		},
 		SplittingPolicy: types.Volume,
 	}
 
-	emptyCoins = sdk.Coins{}
+	emptyCoins          = sdk.Coins{}
+	defaultVolumeAmount = osmomath.NewInt(300)
 )
 
 type GroupCreationFields struct {
@@ -1372,14 +1373,14 @@ func deepCopyGauge(src types.Gauge) types.Gauge {
 	return gauge
 }
 
-// withUpdatedVolumes takes in a group gauge and a list of updated cumulative volumes (ordered) and updates the contents of the gauge to
+// withUpdatedVolumes takes in a group and a list of updated cumulative volumes (ordered) and updates the contents of the gauge to
 // reflect these new volumes.
 // It is only intended to be used to set expected values for test cases.
 func (s *KeeperTestSuite) withUpdatedVolumes(group types.Group, updatedCumulativeVolumes []osmomath.Int) types.Group {
-	// Ensure there aren't more volumes to update than records in group gauge
+	// Ensure there aren't more volumes to update than records in group
 	s.Require().True(len(updatedCumulativeVolumes) <= len(group.InternalGaugeInfo.GaugeRecords))
 
-	// We make a deep copy of the group gauge to ensure we don't modify the original input/defaults
+	// We make a deep copy of the group to ensure we don't modify the original input/defaults
 	updatedGroup := deepCopyGroup(group)
 
 	newTotalWeight := osmomath.ZeroInt()
@@ -1400,7 +1401,7 @@ func (s *KeeperTestSuite) withUpdatedVolumes(group types.Group, updatedCumulativ
 
 // withSplittingPolicy returns a deep copy of the passed in group with the splitting policy set to the passed in value.
 func withSplittingPolicy(group types.Group, splittingPolicy types.SplittingPolicy) types.Group {
-	// We make a deep copy of the group gauge to ensure we don't modify the original input/defaults
+	// We make a deep copy of the group to ensure we don't modify the original input/defaults
 	updatedGroup := deepCopyGroup(group)
 	updatedGroup.SplittingPolicy = splittingPolicy
 
@@ -1409,7 +1410,7 @@ func withSplittingPolicy(group types.Group, splittingPolicy types.SplittingPolic
 
 // withGroupGaugeId returns a deep copy of the passed in group with the group id to the passed in value.
 func withGroupGaugeId(group types.Group, groupGaugeId uint64) types.Group {
-	// We make a deep copy of the group gauge to ensure we don't modify the original input/defaults
+	// We make a deep copy of the group to ensure we don't modify the original input/defaults
 	updatedGroup := deepCopyGroup(group)
 	updatedGroup.GroupGaugeId = groupGaugeId
 	return updatedGroup
@@ -1447,9 +1448,12 @@ func withGaugeId(gauge types.Gauge, id uint64) types.Gauge {
 	return gauge
 }
 
-func (s *KeeperTestSuite) TestSyncGroupWeights() {
+func (s *KeeperTestSuite) TestSyncVolumeSplitGauge() {
 	tests := map[string]struct {
-		groupToSync        types.Group
+		groupToSync types.Group
+
+		// Each element updates either a CL or a balancer pool volume.
+		// These pools are created at the beginning of each test.
 		updatedPoolVolumes []osmomath.Int
 
 		expectedSyncedGroup types.Group
@@ -1505,15 +1509,6 @@ func (s *KeeperTestSuite) TestSyncGroupWeights() {
 
 			expectedError: types.CumulativeVolumeDecreasedError{PoolId: uint64(2), PreviousVolume: osmomath.NewInt(200), NewVolume: osmomath.NewInt(100)},
 		},
-		"unsupported splitting policy": {
-			groupToSync: withSplittingPolicy(defaultGroup, types.SplittingPolicy(100)),
-			updatedPoolVolumes: []osmomath.Int{
-				osmomath.NewInt(300),
-				osmomath.NewInt(300),
-			},
-
-			expectedError: types.UnsupportedSplittingPolicyError{GroupGaugeId: uint64(5), SplittingPolicy: types.SplittingPolicy(100)},
-		},
 	}
 
 	for name, tc := range tests {
@@ -1530,6 +1525,86 @@ func (s *KeeperTestSuite) TestSyncGroupWeights() {
 			// Update cumulative volumes for pools
 			s.setupVolumes(poolIds, tc.updatedPoolVolumes)
 
+			// Save original input to help with mutation-related assertions
+			originalGroup := deepCopyGroup(tc.groupToSync)
+
+			// Set group in state to make stronger assertions later
+			ik.SetGroup(s.Ctx, tc.groupToSync)
+
+			// --- System under test ---
+
+			err := ik.SyncVolumeSplitGauge(s.Ctx, tc.groupToSync)
+
+			// --- Assertions ---
+
+			if tc.expectedError != nil {
+				s.Require().ErrorContains(tc.expectedError, err.Error())
+
+				// Ensure original group is not mutated
+				s.Require().Equal(originalGroup, tc.groupToSync)
+
+				// Ensure group is unchanged in state
+				groupInState, err := ik.GetGroupByGaugeID(s.Ctx, tc.groupToSync.GroupGaugeId)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.groupToSync, groupInState)
+
+				return
+			}
+
+			s.Require().NoError(err)
+
+			updatedGauge, err := ik.GetGroupByGaugeID(s.Ctx, tc.groupToSync.GroupGaugeId)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedSyncedGroup, updatedGauge)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSyncGroupWeights() {
+	tests := map[string]struct {
+		groupToSync types.Group
+
+		expectedSyncedGroup types.Group
+		expectedError       error
+	}{
+		"happy path: valid volume splitting group": {
+			groupToSync: withSplittingPolicy(defaultGroup, types.Volume),
+
+			// Note: setup logic runs default setup based on groupToSync's splitting policy.
+			// More involved tests related to syncing logic for specific splitting policies are in their respective tests.
+			expectedSyncedGroup: s.withUpdatedVolumes(defaultGroup, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount}),
+			expectedError:       nil,
+		},
+
+		// Error catching
+		"unsupported splitting policy": {
+			groupToSync: withSplittingPolicy(defaultGroup, types.SplittingPolicy(100)),
+
+			expectedError: types.UnsupportedSplittingPolicyError{GroupGaugeId: uint64(5), SplittingPolicy: types.SplittingPolicy(100)},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			ik := s.App.IncentivesKeeper
+
+			// Prepare pools so gauges and pool ids are set in state
+			clPool := s.PrepareConcentratedPool()
+			balPoolId := s.PrepareBalancerPool()
+
+			poolIds := []uint64{clPool.GetId(), balPoolId}
+
+			// Currently the only supported splitting policy is volume splitting.
+			// When more are added in the future, setup logic should route to the appropriate setup function here.
+			switch tc.groupToSync.SplittingPolicy {
+			case types.Volume:
+				s.setupVolumes(poolIds, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount})
+			}
+
+			// Save original input to help with mutation-related assertions
+			originalGroup := deepCopyGroup(tc.groupToSync)
+
 			// Set group in state to make stronger assertions later
 			ik.SetGroup(s.Ctx, tc.groupToSync)
 
@@ -1541,6 +1616,9 @@ func (s *KeeperTestSuite) TestSyncGroupWeights() {
 
 			if tc.expectedError != nil {
 				s.Require().ErrorContains(tc.expectedError, err.Error())
+
+				// Ensure original group is not mutated
+				s.Require().Equal(originalGroup, tc.groupToSync)
 
 				// Ensure group is unchanged in state
 				groupInState, err := ik.GetGroupByGaugeID(s.Ctx, tc.groupToSync.GroupGaugeId)

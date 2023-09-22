@@ -685,7 +685,7 @@ github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJ
 github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
-github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230829222007-529c69c19915 h1:1VDV+B0rHSrbHjZz7P1tEjZTb2nro/GAhbOT8RAoQcw=
+github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230908065430-05346fa12992 h1:oe/bPcmVAEYebe8zstvtCdLipiDLduJFLUnACTWByC0=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230901175805-bab180bc078b h1:Sw0WZKfZrUz+ozJhcjZ64TQFOtOHwqSLKrNOLonhXUU=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230901175805-bab180bc078b h1:UFJcRrnM4q+kgvVvH35+Au5Mzj6Www4SYIF3LG0AvgM=
 github.com/otiai10/copy v1.7.0 h1:hVoPiN+t+7d2nzzwMiDHPSOogsWAStewq3TwU05+clE=

@@ -105,8 +105,14 @@ func (m *InternalGaugeInfo) GetGaugeRecords() []InternalGaugeRecord {
 }
 
 type InternalGaugeRecord struct {
-	GaugeId          uint64                `protobuf:"varint,1,opt,name=gauge_id,json=gaugeId,proto3" json:"gauge_id,omitempty" yaml:"gauge_id"`
-	CurrentWeight    cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=current_weight,json=currentWeight,proto3,customtype=cosmossdk.io/math.Int" json:"current_weight"`
+	GaugeId uint64 `protobuf:"varint,1,opt,name=gauge_id,json=gaugeId,proto3" json:"gauge_id,omitempty" yaml:"gauge_id"`
+	// CurrentWeight is the current weight of this gauge being distributed to for
+	// this epoch. For instance, for volume splitting policy, this stores the
+	// volume generated in the last epoch of the linked pool.
+	CurrentWeight cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=current_weight,json=currentWeight,proto3,customtype=cosmossdk.io/math.Int" json:"current_weight"`
+	// CumulativeWeight serves as a snapshot of the accumulator being tracked
+	// based on splitting policy. For instance, for volume splitting policy, this
+	// stores the cumulative volume for the linked pool at time of last update.
 	CumulativeWeight cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=cumulative_weight,json=cumulativeWeight,proto3,customtype=cosmossdk.io/math.Int" json:"cumulative_weight"`
 }
 

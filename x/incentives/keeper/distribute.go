@@ -398,7 +398,6 @@ func (k Keeper) syncGroupWeights(ctx sdk.Context, group types.Group) error {
 // If there is an error, the passed in object is not mutated.
 //
 // It returns an error if:
-// - the splitting policy is not supported
 // - the volume for any linked pool is zero or cannot be found
 // - the cumulative volume for any linked pool has decreased (should never happen)
 func (k Keeper) syncVolumeSplitGauge(ctx sdk.Context, groupGauge types.Group) error {

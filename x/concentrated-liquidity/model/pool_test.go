@@ -216,7 +216,9 @@ func (s *ConcentratedPoolTestSuite) TestSpotPrice() {
 
 				// We use elipson due to sqrt approximation
 				elipson := osmomath.MustNewDecFromStr("0.0000000000000001")
-				s.Require().True(spotPriceFromMethod.Sub(tc.expectedSpotPrice).Abs().LT(elipson))
+				// TODO: truncation is acceptable temporary
+				// remove before https://github.com/osmosis-labs/osmosis/issues/5726 is complete
+				s.Require().True(spotPriceFromMethod.Dec().Sub(tc.expectedSpotPrice).Abs().LT(elipson))
 			}
 		})
 	}

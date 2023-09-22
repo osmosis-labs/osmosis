@@ -29,6 +29,10 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalPoolLiquidity)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdAllPools)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdPool)
+	cmd.AddCommand(
+		osmocli.GetParams[*queryproto.ParamsRequest](
+			types.ModuleName, queryproto.NewQueryClient),
+	)
 
 	return cmd
 }

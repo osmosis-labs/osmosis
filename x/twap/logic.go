@@ -47,28 +47,32 @@ func getSpotPrices(
 ) (sp0 osmomath.Dec, sp1 osmomath.Dec, latestErrTime time.Time) {
 	latestErrTime = previousErrorTime
 	// sp0 = denom0 quote, denom1 base.
-	sp0, err0 := k.RouteCalculateSpotPrice(ctx, poolId, denom0, denom1)
+	sp0BigDec, err0 := k.RouteCalculateSpotPrice(ctx, poolId, denom0, denom1)
 	// sp1 = denom0 base, denom1 quote.
-	sp1, err1 := k.RouteCalculateSpotPrice(ctx, poolId, denom1, denom0)
+	sp1BigDec, err1 := k.RouteCalculateSpotPrice(ctx, poolId, denom1, denom0)
+
 	if err0 != nil || err1 != nil {
 		latestErrTime = ctx.BlockTime()
 		// In the event of an error, we just sanity replace empty values with zero values
 		// so that the numbers can be still be calculated within TWAPs over error values
 		// TODO: Should we be using the last spot price?
-		if (sp0 == osmomath.Dec{}) {
-			sp0 = osmomath.ZeroDec()
+		if (sp0BigDec == osmomath.BigDec{}) {
+			sp0BigDec = osmomath.ZeroBigDec()
 		}
-		if (sp1 == osmomath.Dec{}) {
-			sp1 = osmomath.ZeroDec()
+		if (sp1BigDec == osmomath.BigDec{}) {
+			sp1BigDec = osmomath.ZeroBigDec()
 		}
 	}
-	if sp0.GT(types.MaxSpotPrice) {
-		sp0, latestErrTime = types.MaxSpotPrice, ctx.BlockTime()
+	if sp0BigDec.GT(types.MaxSpotPriceBigDec) {
+		sp0BigDec, latestErrTime = types.MaxSpotPriceBigDec, ctx.BlockTime()
 	}
-	if sp1.GT(types.MaxSpotPrice) {
-		sp1, latestErrTime = types.MaxSpotPrice, ctx.BlockTime()
+	if sp1BigDec.GT(types.MaxSpotPriceBigDec) {
+		sp1BigDec, latestErrTime = types.MaxSpotPriceBigDec, ctx.BlockTime()
 	}
-	return sp0, sp1, latestErrTime
+
+	// Note: truncation is appropriate since we don not support greater precision by design.
+	// If support for pools with outlier spot prices is needed in the future, then this should be revisited.
+	return sp0BigDec.Dec(), sp1BigDec.Dec(), latestErrTime
 }
 
 // mustTrackCreatedPool is a wrapper around afterCreatePool that panics on error.
@@ -233,6 +237,13 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 		newRecord.LastErrorTime = newTime
 		return newRecord
 	}
+
+	// NOTE: An edge case exists here. If a pool is drained of all it's liquidity, and then the pool's
+	// spot price is set to exactly one and the GeometricTWAP is queried, the the result will be zero.
+	// This is because the P0LastSpotPrice is one, which makes log_{2}{P_0} = 0, and thus the geometric
+	// accumulator is the same as the time of pool drain.
+
+	// This is a edge case almost certainly to never be hit in prod, but its good to be aware of.
 
 	// logP0SpotPrice = log_{2}{P_0}
 	logP0SpotPrice := twapLog(record.P0LastSpotPrice)
