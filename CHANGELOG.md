@@ -59,6 +59,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6279](https://github.com/osmosis-labs/osmosis/pull/6279) fix prop-597 introduced issue
 * [#6282](https://github.com/osmosis-labs/osmosis/pull/6282) Fix CreateCanonicalConcentratedLiquidityPoolAndMigrationLink overriding migration records
 
+### API Breaks
+
+* [#6487](https://github.com/osmosis-labs/osmosis/pull/6487) make PoolModuleI CalculateSpotPrice API return BigDec
+
 ## v19.1.0
 
 ### Features

@@ -165,36 +165,34 @@ func (k Keeper) CalculateSpotPrice(
 	poolId uint64,
 	quoteAssetDenom string,
 	baseAssetDenom string,
-) (spotPrice osmomath.Dec, err error) {
+) (spotPrice osmomath.BigDec, err error) {
 	concentratedPool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	hasPositions, err := k.HasAnyPositionForPool(ctx, poolId)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	if !hasPositions {
-		return osmomath.Dec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
+		return osmomath.BigDec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
 	}
 
 	price, err := concentratedPool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	if price.IsZero() {
-		return osmomath.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
+		return osmomath.BigDec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
 	}
 	if price.GT(types.MaxSpotPriceBigDec) || price.LT(types.MinSpotPriceBigDec) {
-		return osmomath.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceBigDec, MaxSpotPrice: types.MaxSpotPrice}
+		return osmomath.BigDec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPriceBigDec, MaxSpotPrice: types.MaxSpotPrice}
 	}
 
-	// TODO: remove before https://github.com/osmosis-labs/osmosis/issues/5726 is complete.
-	// Acceptable for backwards compatibility with v19.x.
-	return price.Dec(), nil
+	return price, nil
 }
 
 // GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
