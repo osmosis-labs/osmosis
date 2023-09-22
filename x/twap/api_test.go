@@ -899,7 +899,7 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 			osmomath.ErrTolerance{
 				MultiplicativeTolerance: osmomath.SmallestDec(),
 			}.CompareBigDec(
-				osmomath.BigDecFromDec(spotPrice),
+				spotPrice,
 				osmomath.BigDecFromDec(twap),
 			)
 		})

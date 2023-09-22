@@ -26,39 +26,41 @@ func (k Keeper) CalculateSpotPrice(
 	poolID uint64,
 	quoteAssetDenom string,
 	baseAssetDenom string,
-) (spotPrice osmomath.Dec, err error) {
+) (spotPrice osmomath.BigDec, err error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	// defer to catch panics, in case something internal overflows.
 	defer func() {
 		if r := recover(); r != nil {
-			spotPrice = osmomath.Dec{}
+			spotPrice = osmomath.BigDec{}
 			err = types.ErrSpotPriceInternal
 		}
 	}()
 
-	spotPriceBigDec, err := pool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
+	spotPrice, err = pool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
-	// Truncation is acceptable here because both stableswap and balancer
-	// only support 18 decimal places and wrap around the 36 BigDec for
-	// compatibility with the `PoolI.SpotPrice` API
-	spotPrice = spotPriceBigDec.Dec()
+	// TODO: this is done to maintain state-compatibility with v19.x
+	// Remove after https://github.com/osmosis-labs/osmosis/issues/6064 is complete.
+	spotPrice.ChopPrecisionMut(osmomath.PrecisionDec)
 
 	// if spotPrice greater than max spot price, return an error
-	if spotPrice.GT(types.MaxSpotPrice) {
-		return types.MaxSpotPrice, types.ErrSpotPriceOverflow
+	if spotPrice.GT(types.MaxSpotPriceBigDec) {
+		return types.MaxSpotPriceBigDec, types.ErrSpotPriceOverflow
 	} else if !spotPrice.IsPositive() {
-		return osmomath.Dec{}, types.ErrSpotPriceInternal
+		return osmomath.BigDec{}, types.ErrSpotPriceInternal
 	}
 
 	// we want to round this to `SpotPriceSigFigs` of precision
-	spotPrice = osmomath.SigFigRound(spotPrice, types.SpotPriceSigFigs)
+	// Truncation is acceptable here because both stableswap and balancer
+	// only support 18 decimal places and wrap around the 36 BigDec for
+	// compatibility with the `PoolI.SpotPrice` API
+	spotPrice = osmomath.BigDecFromDec(osmomath.SigFigRound(spotPrice.Dec(), types.SpotPriceSigFigs))
 	return spotPrice, err
 }
 

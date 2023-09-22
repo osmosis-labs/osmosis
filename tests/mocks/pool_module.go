@@ -260,10 +260,10 @@ func (mr *MockPoolModuleIMockRecorder) CalcOutAmtGivenIn(ctx, poolI, tokenIn, to
 }
 
 // CalculateSpotPrice mocks base method.
-func (m *MockPoolModuleI) CalculateSpotPrice(ctx types.Context, poolId uint64, quoteAssetDenom, baseAssetDenom string) (osmomath.Dec, error) {
+func (m *MockPoolModuleI) CalculateSpotPrice(ctx types.Context, poolId uint64, quoteAssetDenom, baseAssetDenom string) (osmomath.BigDec, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalculateSpotPrice", ctx, poolId, quoteAssetDenom, baseAssetDenom)
-	ret0, _ := ret[0].(osmomath.Dec)
+	ret0, _ := ret[0].(osmomath.BigDec)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
