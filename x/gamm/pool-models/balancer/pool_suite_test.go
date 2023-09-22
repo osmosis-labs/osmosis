@@ -638,49 +638,49 @@ func (s *KeeperTestSuite) TestBalancerSpotPrice() {
 		baseDenomPoolInput  sdk.Coin
 		quoteDenomPoolInput sdk.Coin
 		expectError         bool
-		expectedOutput      osmomath.Dec
+		expectedOutput      osmomath.BigDec
 	}{
 		{
 			name:                "equal value",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
 			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 100),
 			expectError:         false,
-			expectedOutput:      osmomath.MustNewDecFromStr("1"),
+			expectedOutput:      osmomath.MustNewBigDecFromStr("1"),
 		},
 		{
 			name:                "1:2 ratio",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
 			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 200),
 			expectError:         false,
-			expectedOutput:      osmomath.MustNewDecFromStr("0.500000000000000000"),
+			expectedOutput:      osmomath.MustNewBigDecFromStr("0.500000000000000000"),
 		},
 		{
 			name:                "2:1 ratio",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 200),
 			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 100),
 			expectError:         false,
-			expectedOutput:      osmomath.MustNewDecFromStr("2.000000000000000000"),
+			expectedOutput:      osmomath.MustNewBigDecFromStr("2.000000000000000000"),
 		},
 		{
 			name:                "rounding after sigfig ratio",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 220),
 			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 115),
 			expectError:         false,
-			expectedOutput:      osmomath.MustNewDecFromStr("1.913043480000000000"), // ans is 1.913043478260869565, rounded is 1.91304348
+			expectedOutput:      osmomath.MustNewBigDecFromStr("1.913043480000000000"), // ans is 1.913043478260869565, rounded is 1.91304348
 		},
 		{
 			name:                "check number of sig figs",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
 			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 300),
 			expectError:         false,
-			expectedOutput:      osmomath.MustNewDecFromStr("0.333333330000000000"),
+			expectedOutput:      osmomath.MustNewBigDecFromStr("0.333333330000000000"),
 		},
 		{
 			name:                "check number of sig figs high sizes",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 343569192534),
 			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, osmomath.MustNewDecFromStr("186633424395479094888742").TruncateInt()),
 			expectError:         false,
-			expectedOutput:      osmomath.MustNewDecFromStr("0.000000000001840877"),
+			expectedOutput:      osmomath.MustNewBigDecFromStr("0.000000000001840877"),
 		},
 	}
 
@@ -819,7 +819,7 @@ func (s *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 					s.Require().Error(err, "test: %s", tc.name)
 				} else {
 					s.Require().NoError(err, "test: %s", tc.name)
-					s.Require().True(spotPrice.Equal(tc.expectedOutput),
+					s.Require().True(spotPrice.Equal(osmomath.BigDecFromDec(tc.expectedOutput)),
 						"test: %s\nSpot price wrong, got %s, expected %s\n", tc.name,
 						spotPrice, tc.expectedOutput)
 				}
