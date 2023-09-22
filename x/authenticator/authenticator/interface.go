@@ -4,12 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	// SignatureVerificationAuthenticatorType represents a type of authenticator specifically designed for
-	// secp256k1 signature verification.
-	SignatureVerificationAuthenticatorType = "SignatureVerificationAuthenticator"
-)
-
 // AuthenticatorData represents the data required for verifying a signer's address and message signature.
 type AuthenticatorData interface{}
 
