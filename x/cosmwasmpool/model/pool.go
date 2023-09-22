@@ -13,6 +13,18 @@ import (
 	cosmwasmutils "github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 )
 
+// Pool encapsulates all data and behavior for interacting with a CW pool.
+//
+// Note: CW Pool has 2 pool models:
+// - CosmWasmPool which is a proto-generated store model used for serialization into state.
+// - Pool struct that encapsulates the CosmWasmPool and wasmKeeper for calling the contract.
+//
+// CosmWasmPool implements the poolmanager.PoolI interface but it panics on all methods.
+// The reason is that access to wasmKeeper is required to call the contract.
+//
+// Instead, all interactions and poolmanager.PoolI methods are to be performed
+// on the Pool struct. The reason why we cannot have a Pool struct only is
+// because it cannot be serialized into state due to having a non-serializable wasmKeeper field.
 type Pool struct {
 	CosmWasmPool
 	WasmKeeper types.WasmKeeper
@@ -72,7 +84,7 @@ func (p Pool) IsActive(ctx sdk.Context) bool {
 }
 
 // SpotPrice returns the spot price of the pool.
-func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (osmomath.Dec, error) {
+func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (osmomath.BigDec, error) {
 	request := msg.SpotPriceQueryMsg{
 		SpotPrice: msg.SpotPrice{
 			QuoteAssetDenom: quoteAssetDenom,
@@ -81,9 +93,9 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom 
 	}
 	response, err := cosmwasmutils.Query[msg.SpotPriceQueryMsg, msg.SpotPriceQueryMsgResponse](ctx, p.WasmKeeper, p.ContractAddress, request)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
-	return osmomath.MustNewDecFromStr(response.SpotPrice), nil
+	return osmomath.MustNewBigDecFromStr(response.SpotPrice), nil
 }
 
 // GetType returns the type of the pool.

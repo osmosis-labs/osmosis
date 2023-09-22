@@ -41,6 +41,7 @@ var (
 	MinSqrtPrice       = osmomath.MustMonotonicSqrt(MinSpotPrice)
 	MaxSqrtPriceBigDec = osmomath.BigDecFromDec(MaxSqrtPrice)
 	MinSqrtPriceBigDec = osmomath.BigDecFromDec(MinSqrtPrice)
+
 	// Supported uptimes preset to 1 ns, 1 min, 1 hr, 1D, 1W, 2W
 	SupportedUptimes        = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24, time.Hour * 24 * 7, time.Hour * 24 * 7 * 2}
 	AuthorizedTickSpacing   = []uint64{1, 10, 100, 1000}
@@ -55,5 +56,6 @@ var (
 	}
 	DefaultBalancerSharesDiscount = osmomath.MustNewDecFromStr("0.05")
 	// By default, we only authorize one nanosecond (one block) uptime as an option
-	DefaultAuthorizedUptimes = []time.Duration{time.Nanosecond}
+	DefaultAuthorizedUptimes                = []time.Duration{time.Nanosecond}
+	DefaultUnrestrictedPoolCreatorWhitelist = []string{}
 )

@@ -274,26 +274,6 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	return nextGaugeId, nil
 }
 
-// nolint: unused
-// getWeightBySplittingPolicy takes in a pool ID, splitting policy, and current weight, and returns the updated weight (should be positive)
-func (k Keeper) getWeightBySplittingPolicy(ctx sdk.Context, poolId uint64, splittingPolicy types.SplittingPolicy, currentWeight osmomath.Int) (osmomath.Int, error) {
-	switch splittingPolicy {
-	case types.Evenly:
-		return osmomath.OneInt(), nil
-	case types.Volume:
-		// Set the weight to diff between the current volume of the pool
-		totalVolume := k.pmk.GetOsmoVolumeForPool(ctx, poolId)
-
-		if totalVolume.LT(currentWeight) {
-			return osmomath.ZeroInt(), types.CumulativeVolumeDecreasedError{PoolId: poolId, PreviousVolume: currentWeight, NewVolume: totalVolume}
-		}
-
-		return totalVolume.Sub(currentWeight), nil
-	default:
-		return osmomath.ZeroInt(), types.UnsupportedSplittingPolicyError{SplittingPolicy: splittingPolicy}
-	}
-}
-
 // GetGaugeByID returns gauge from gauge ID.
 func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, error) {
 	gauge := types.Gauge{}

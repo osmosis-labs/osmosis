@@ -11,6 +11,19 @@ import (
 )
 
 var (
+	// NOTE:
+	// CosmWasmPool represents the data serialized into state for each CW pool.
+	//
+	// CW Pool has 2 pool models:
+	// - CosmWasmPool which is a proto-generated store model used for serialization into state.
+	// - Pool struct that encapsulates the CosmWasmPool and wasmKeeper for calling the contract.
+	//
+	// CosmWasmPool implements the poolmanager.PoolI interface but it panics on all methods.
+	// The reason is that access to wasmKeeper is required to call the contract.
+	//
+	// Instead, all interactions and poolmanager.PoolI methods are to be performed
+	// on the Pool struct. The reason why we cannot have a Pool struct only is
+	// because it cannot be serialized into state due to having a non-serializable wasmKeeper field.
 	_ poolmanagertypes.PoolI  = &CosmWasmPool{}
 	_ types.CosmWasmExtension = &CosmWasmPool{}
 )
@@ -46,7 +59,7 @@ func (p CosmWasmPool) IsActive(ctx sdk.Context) bool {
 	panic("CosmWasmPool.IsActive not implemented")
 }
 
-func (p CosmWasmPool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (osmomath.Dec, error) {
+func (p CosmWasmPool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (osmomath.BigDec, error) {
 	panic("CosmWasmPool.SpotPrice not implemented")
 }
 

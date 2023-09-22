@@ -38,6 +38,7 @@ var (
 	three                   = osmomath.NewDec(3)
 	four                    = osmomath.NewDec(4)
 	five                    = osmomath.NewDec(5)
+	zeroBigDec              = osmomath.ZeroBigDec()
 	sqrt5000                = osmomath.MustNewDecFromStr("70.710678118654752440") // 5000
 	defaultSqrtPriceLower   = osmomath.MustNewDecFromStr("70.688664163408836321") // approx 4996.89
 	defaultSqrtPriceUpper   = sqrt5000
@@ -50,7 +51,7 @@ var (
 	defaultAmountReserves   = osmomath.NewInt(1_000_000_000)
 	DefaultCoins            = sdk.NewCoins(sdk.NewCoin(ETH, defaultAmountReserves), sdk.NewCoin(USDC, defaultAmountReserves))
 	oneULPDec               = osmomath.SmallestDec()
-	oneULPBigDec            = osmomath.SmallestDec()
+	oneULPBigDec            = osmomath.SmallestBigDec()
 )
 
 func TestStrategyTestSuite(t *testing.T) {
@@ -252,21 +253,112 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 func (suite *StrategyTestSuite) TestGetPriceLimit() {
 	tests := map[string]struct {
 		zeroForOne bool
-		expected   osmomath.Dec
+		expected   osmomath.BigDec
 	}{
 		"zero for one -> min": {
 			zeroForOne: true,
-			expected:   types.MinSpotPrice,
+			expected:   types.MinSpotPriceBigDec,
 		},
 		"one for zero -> max": {
 			zeroForOne: false,
-			expected:   types.MaxSpotPrice,
+			expected:   types.MaxSpotPriceBigDec,
 		},
 	}
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			priceLimit := swapstrategy.GetPriceLimit(tc.zeroForOne)
+			suite.Require().Equal(tc.expected, priceLimit)
+		})
+	}
+}
+
+// validates that the correct sqrt price limits are returned
+// as dictated by the GetSqrtPriceLimit spec.
+// Tests that the correct sqrt function is used depending
+// on the value of the priceLimit input. Below min, the big dec sqrt is used.
+// Above min, the dec sqrt is used.
+func (suite *StrategyTestSuite) TestGetSqrtPriceLimit() {
+	var (
+		// The ULP difference between the values is made for testing
+		// the execution flow of `GetSqrtPriceLimit`. This is unrelated
+		// to testing monotonicity of tick-to-sqrt price conversions
+		// that can be found in the rest of the test suite.
+		oneULPUnderThreshold = types.MinSpotPriceBigDec.Sub(oneULPBigDec)
+		atThreshold          = types.MinSpotPriceBigDec
+		oneULPAboveThreshold = types.MinSpotPriceBigDec.Add(oneULPBigDec)
+	)
+
+	tests := map[string]struct {
+		zeroForOne bool
+		priceLimit osmomath.BigDec
+		expected   osmomath.BigDec
+
+		expectedError error
+	}{
+		"zero for one -> min": {
+			zeroForOne: true,
+			priceLimit: types.MinSpotPriceBigDec,
+			expected:   types.MinSqrtPriceBigDec,
+		},
+		"one for zero -> max": {
+			zeroForOne: false,
+			priceLimit: types.MaxSpotPriceBigDec,
+			expected:   types.MaxSqrtPriceBigDec,
+		},
+		"zero and zero for one -> min": {
+			zeroForOne: true,
+			priceLimit: zeroBigDec,
+			expected:   types.MinSqrtPriceBigDec,
+		},
+		"zero and one for zero -> max": {
+			zeroForOne: false,
+			priceLimit: zeroBigDec,
+			expected:   types.MaxSqrtPriceBigDec,
+		},
+		"higher than max and zero for one -> overflow error": {
+			zeroForOne: false,
+			priceLimit: types.MaxSpotPriceBigDec.Add(oneULPBigDec),
+
+			expectedError: types.PriceBoundError{ProvidedPrice: types.MaxSpotPriceBigDec.Add(oneULPBigDec), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice},
+		},
+		"higher than max and one for zero -> overflow error": {
+			zeroForOne: true,
+			priceLimit: types.MaxSpotPriceBigDec.Add(oneULPBigDec),
+
+			expectedError: types.PriceBoundError{ProvidedPrice: types.MaxSpotPriceBigDec.Add(oneULPBigDec), MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice},
+		},
+		"under 10^-12, big dec sqrt is used": {
+			zeroForOne: true,
+			priceLimit: oneULPUnderThreshold,
+
+			expected: osmomath.MustMonotonicSqrtBigDec(oneULPUnderThreshold),
+		},
+		"at 10^-12 price threshold, dec sqrt is used": {
+			zeroForOne: true,
+			priceLimit: atThreshold,
+
+			expected: osmomath.BigDecFromDec(osmomath.MustMonotonicSqrt(atThreshold.Dec())),
+		},
+		"above 10^-12, dec sqrt is used": {
+			zeroForOne: true,
+			priceLimit: oneULPAboveThreshold,
+
+			expected: osmomath.BigDecFromDec(osmomath.MustMonotonicSqrt(oneULPAboveThreshold.Dec())),
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			priceLimit, err := swapstrategy.GetSqrtPriceLimit(tc.priceLimit, tc.zeroForOne)
+
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError.Error(), err.Error())
+				return
+			}
+
+			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expected, priceLimit)
 		})
 	}

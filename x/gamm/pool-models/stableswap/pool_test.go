@@ -1339,7 +1339,14 @@ func TestStableswapSpotPrice(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
-			spotPrice, err := p.SpotPrice(ctx, tc.quoteDenom, tc.baseDenom)
+			spotPriceBigDec, err := p.SpotPrice(ctx, tc.quoteDenom, tc.baseDenom)
+
+			// Note that while the PoolI.SpotPrice API returns a BigDec, stableswap
+			// pool only supports spot price up to precision of 18 and simply converts
+			// the Dec result to BigDec before returning.
+			// For implementation simplicity, we simply convert the BigDec back to Dec
+			// here since invariants have unchanged.
+			spotPrice := spotPriceBigDec.Dec()
 
 			if tc.expectPass {
 				require.NoError(t, err)

@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/math v1.1.2
-	github.com/cosmos/cosmos-sdk v0.47.4
+	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/iavl v0.19.5
 	github.com/cosmos/ibc-go/v4 v4.3.1
 	github.com/gogo/protobuf v1.3.3
