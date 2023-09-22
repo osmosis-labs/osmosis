@@ -2,6 +2,8 @@ package authenticator_test
 
 import (
 	"encoding/hex"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"math/rand"
 	"testing"
 	"time"
@@ -458,7 +460,12 @@ func GenTx(
 		}
 	}
 
-	tx := gen.NewTxBuilder()
+	baseTx := gen.NewTxBuilder()
+	tx, _ := baseTx.(authtx.ExtensionOptionsTxBuilder)
+
+	value, _ := types.NewAnyWithValue(msgs[0])
+	tx.SetExtensionOptions(value)
+
 	err := tx.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
