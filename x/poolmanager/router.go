@@ -949,7 +949,7 @@ func (k Keeper) GetOsmoVolumeForPool(ctx sdk.Context, poolId uint64) osmomath.In
 func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 	ctx sdk.Context,
 	req queryproto.EstimateTradeBasedOnPriceImpactRequest,
-	spotPrice, adjustedMaxPriceImpact sdk.Dec,
+	spotPrice, adjustedMaxPriceImpact osmomath.Dec,
 	swapModule types.PoolModuleI,
 	poolI types.PoolI,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
@@ -1060,7 +1060,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 func (k Keeper) EstimateTradeBasedOnPriceImpactStableSwapPool(
 	ctx sdk.Context,
 	req queryproto.EstimateTradeBasedOnPriceImpactRequest,
-	spotPrice, adjustedMaxPriceImpact sdk.Dec,
+	spotPrice, adjustedMaxPriceImpact osmomath.Dec,
 	swapModule types.PoolModuleI,
 	poolI types.PoolI,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
@@ -1182,7 +1182,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactStableSwapPool(
 func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
 	ctx sdk.Context,
 	req queryproto.EstimateTradeBasedOnPriceImpactRequest,
-	spotPrice, adjustedMaxPriceImpact sdk.Dec,
+	spotPrice, adjustedMaxPriceImpact osmomath.Dec,
 	swapModule types.PoolModuleI,
 	poolI types.PoolI,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
@@ -1285,7 +1285,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
 // calculatePriceDeviation calculates the price deviation between the current trade price and the spot price.
 // We have an `Abs()` at the end of the priceDeviation equation as we cannot be sure if any pool types based on their
 // configurations trade out more tokens than given for a trade, it is added just in-case.
-func calculatePriceDeviation(currFromCoin, tokenOut sdk.Coin, spotPrice sdk.Dec) sdk.Dec {
+func calculatePriceDeviation(currFromCoin, tokenOut sdk.Coin, spotPrice osmomath.Dec) osmomath.Dec {
 	currTradePrice := sdk.NewDec(currFromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
 	priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
 	return priceDeviation

@@ -1194,8 +1194,9 @@ func (m *EstimateTradeBasedOnPriceImpactRequest) GetPoolId() uint64 {
 }
 
 // EstimateTradeBasedOnPriceImpactResponse represents the response data
-// for an estimated trade based on price impact. If a trade fails to be estimated the response would be 0,0 for
-// input_coin and output_coin and will not error.
+// for an estimated trade based on price impact. If a trade fails to be
+// estimated the response would be 0,0 for input_coin and output_coin and will
+// not error.
 type EstimateTradeBasedOnPriceImpactResponse struct {
 	// input_coin is the actual input amount that would be tradeable
 	// under the specified price impact.
@@ -1446,7 +1447,8 @@ type QueryClient interface {
 	// TotalLiquidity returns the total liquidity across all pools.
 	TotalLiquidity(ctx context.Context, in *TotalLiquidityRequest, opts ...grpc.CallOption) (*TotalLiquidityResponse, error)
 	// EstimateTradeBasedOnPriceImpact returns an estimated trade based on price
-	// impact, if a trade cannot be estimated a 0 input and 0 output would be returned.
+	// impact, if a trade cannot be estimated a 0 input and 0 output would be
+	// returned.
 	EstimateTradeBasedOnPriceImpact(ctx context.Context, in *EstimateTradeBasedOnPriceImpactRequest, opts ...grpc.CallOption) (*EstimateTradeBasedOnPriceImpactResponse, error)
 }
 
@@ -1620,7 +1622,8 @@ type QueryServer interface {
 	// TotalLiquidity returns the total liquidity across all pools.
 	TotalLiquidity(context.Context, *TotalLiquidityRequest) (*TotalLiquidityResponse, error)
 	// EstimateTradeBasedOnPriceImpact returns an estimated trade based on price
-	// impact, if a trade cannot be estimated a 0 input and 0 output would be returned.
+	// impact, if a trade cannot be estimated a 0 input and 0 output would be
+	// returned.
 	EstimateTradeBasedOnPriceImpact(context.Context, *EstimateTradeBasedOnPriceImpactRequest) (*EstimateTradeBasedOnPriceImpactResponse, error)
 }
 
