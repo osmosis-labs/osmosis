@@ -1,3 +1,5 @@
+import re
+
 def parse_version(version):
 
     major, minor, patch = map(int, version[1:].split('.'))
@@ -36,3 +38,7 @@ def compare_versions(version_1, version_2):
 
     # If all parts are equal, the versions are the same
     return 0
+
+def validate_tag(tag):
+    pattern = '^v[0-9]+.[0-9]+.[0-9]+$'
+    return bool(re.match(pattern, tag))

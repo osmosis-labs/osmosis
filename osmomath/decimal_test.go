@@ -1639,3 +1639,62 @@ func (s *decimalTestSuite) TestQuoRoundUp_MutativeAndNonMutative() {
 		}
 	}
 }
+
+func (s *decimalTestSuite) TestQuoTruncate_MutativeAndNonMutative() {
+	tests := []struct {
+		d1, d2, expQuoTruncateMut osmomath.BigDec
+	}{
+		{osmomath.NewBigDec(0), osmomath.NewBigDec(0), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(1), osmomath.NewBigDec(0), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(0), osmomath.NewBigDec(1), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(0), osmomath.NewBigDec(-1), osmomath.NewBigDec(0)},
+		{osmomath.NewBigDec(-1), osmomath.NewBigDec(0), osmomath.NewBigDec(0)},
+
+		{osmomath.NewBigDec(1), osmomath.NewBigDec(1), osmomath.NewBigDec(1)},
+		{osmomath.NewBigDec(-1), osmomath.NewBigDec(-1), osmomath.NewBigDec(1)},
+		{osmomath.NewBigDec(1), osmomath.NewBigDec(-1), osmomath.NewBigDec(-1)},
+		{osmomath.NewBigDec(-1), osmomath.NewBigDec(1), osmomath.NewBigDec(-1)},
+
+		{
+			osmomath.NewBigDec(3), osmomath.NewBigDec(7), osmomath.MustNewBigDecFromStr("0.428571428571428571428571428571428571"),
+		},
+		{
+			osmomath.NewBigDec(2), osmomath.NewBigDec(4), osmomath.NewBigDecWithPrec(5, 1),
+		},
+
+		{osmomath.NewBigDec(100), osmomath.NewBigDec(100), osmomath.NewBigDec(1)},
+
+		{
+			osmomath.NewBigDecWithPrec(15, 1), osmomath.NewBigDecWithPrec(15, 1), osmomath.NewBigDec(1),
+		},
+		{
+			osmomath.NewBigDecWithPrec(3333, 4), osmomath.NewBigDecWithPrec(333, 4), osmomath.MustNewBigDecFromStr("10.009009009009009009009009009009009009"),
+		},
+	}
+
+	for tcIndex, tc := range tests {
+		tc := tc
+
+		if tc.d2.IsZero() { // panic for divide by zero
+			s.Require().Panics(func() { tc.d1.QuoTruncateMut(tc.d2) })
+		} else {
+
+			copy := tc.d1.Clone()
+
+			nonMutResult := copy.QuoTruncate(tc.d2)
+
+			// Return is as expected
+			s.Require().Equal(tc.expQuoTruncateMut, nonMutResult, "exp %v, res %v, tc %d", tc.expQuoTruncateMut.String(), tc.d1.String(), tcIndex)
+
+			// Receiver is not mutated
+			s.Require().Equal(tc.d1, copy, "exp %v, res %v, tc %d", tc.expQuoTruncateMut.String(), tc.d1.String(), tcIndex)
+
+			// Receiver is mutated.
+			tc.d1.QuoTruncateMut(tc.d2)
+
+			// Make sure d1 equals to expected
+			s.Require().True(tc.expQuoTruncateMut.Equal(tc.d1), "exp %v, res %v, tc %d", tc.expQuoTruncateMut.String(), tc.d1.String(), tcIndex)
+		}
+	}
+}
+
