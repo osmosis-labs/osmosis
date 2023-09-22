@@ -434,11 +434,11 @@ func (s *KeeperTestSuite) TestSpotPriceOverflow() {
 				s.Require().NoError(poolErr)
 				s.Require().ErrorIs(keeperErr, types.ErrSpotPriceOverflow)
 				s.Require().Error(keeperErr)
-				s.Require().Equal(types.MaxSpotPrice, keeperSpotPrice)
+				s.Require().Equal(types.MaxSpotPriceBigDec, keeperSpotPrice)
 			} else if tc.panics {
 				s.Require().ErrorIs(keeperErr, types.ErrSpotPriceInternal)
 				s.Require().Error(keeperErr)
-				s.Require().Equal(osmomath.Dec{}, keeperSpotPrice)
+				s.Require().Equal(osmomath.BigDec{}, keeperSpotPrice)
 			} else {
 				s.Require().NoError(poolErr)
 				s.Require().NoError(keeperErr)

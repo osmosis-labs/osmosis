@@ -82,7 +82,7 @@ source ~/.profile
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v19/bin
 cd $HOME/osmosis
 git pull
-git checkout v19.0.0
+git checkout v19.1.0
 make build
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v19/bin
 ```
@@ -102,7 +102,7 @@ Follow these steps if you opt for a manual upgrade:
 ```sh
 cd $HOME/osmosis
 git pull
-git checkout v19.0.0
+git checkout v19.1.0
 make install
 ```
 

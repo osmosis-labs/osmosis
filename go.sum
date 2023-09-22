@@ -1065,8 +1065,8 @@ github.com/ory/dockertest/v3 v3.10.0 h1:4K3z2VMe8Woe++invjaTB7VRyQXQy5UY+loujO4a
 github.com/ory/dockertest/v3 v3.10.0/go.mod h1:nr57ZbRWMqfsdGdFNLHz5jjNdDb7VVFnzAeW1n5N1Lg=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
-github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230911120014-b14342e08daf h1:sXSC/RG9sxQCB5QJ5JB+M9Bok7Xbpv2zx9ee6287glw=
-github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230911120014-b14342e08daf/go.mod h1:pIItelRYvonB+H8A6KqucOi7xFnJxzDHaWJqOdFNLI4=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230920194803-25ef84411155 h1:/oHIhbkOkYIL2mhIEaF2Z0EquQQEfy7NyF/Vo6Kf6Jo=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230920194803-25ef84411155/go.mod h1:pIItelRYvonB+H8A6KqucOi7xFnJxzDHaWJqOdFNLI4=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230911120014-b14342e08daf h1:8lkIsAj3L7zxvOZbqVLNJRpSdDxaYhYfAIG7XjPaJiU=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230911120014-b14342e08daf/go.mod h1:C0Uqe6X4N5ASA+1xZ6guaaJyUVKLcaVJIQa4Q4LG9Vk=
 github.com/otiai10/copy v1.2.0 h1:HvG945u96iNadPoG2/Ja2+AUJeW5YuFQMixq9yirC+k=

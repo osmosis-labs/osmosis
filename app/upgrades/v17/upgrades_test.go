@@ -295,7 +295,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 					s.Require().Equal(assetPair.QuoteAsset, concentratedTypePool.GetToken1())
 
 					// Validate that the spot price of the CL pool is what we expect
-					osmoassert.Equal(s.T(), multiplicativeTolerance, concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromDec(balancerSpotPrice))
+					osmoassert.Equal(s.T(), multiplicativeTolerance, concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), balancerSpotPrice)
 
 					// Validate that the link is correct.
 					migrationInfo, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
@@ -461,7 +461,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 					s.Require().Equal(quoteAsset, concentratedTypePool.GetToken1())
 
 					// Validate that the spot price of the CL pool is what we expect
-					osmoassert.Equal(s.T(), multiplicativeTolerance, concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), osmomath.BigDecFromDec(balancerSpotPrice))
+					osmoassert.Equal(s.T(), multiplicativeTolerance, concentratedTypePool.GetCurrentSqrtPrice().PowerInteger(2), balancerSpotPrice)
 
 					// Validate that the link is correct.
 					migrationInfo, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)

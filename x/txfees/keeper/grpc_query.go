@@ -51,7 +51,8 @@ func (q Querier) DenomSpotPrice(ctx context.Context, req *types.QueryDenomSpotPr
 		return nil, err
 	}
 
-	return &types.QueryDenomSpotPriceResponse{PoolID: feeToken.PoolID, SpotPrice: spotPrice}, nil
+	// TODO: remove truncation before https://github.com/osmosis-labs/osmosis/issues/6064 is fully complete.
+	return &types.QueryDenomSpotPriceResponse{PoolID: feeToken.PoolID, SpotPrice: spotPrice.Dec()}, nil
 }
 
 func (q Querier) DenomPoolId(ctx context.Context, req *types.QueryDenomPoolIdRequest) (*types.QueryDenomPoolIdResponse, error) {

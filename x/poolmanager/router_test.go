@@ -320,7 +320,7 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 		setPositionForCLPool bool
 
 		routesOverwrite   map[types.PoolType]types.PoolModuleI
-		expectedSpotPrice osmomath.Dec
+		expectedSpotPrice osmomath.BigDec
 
 		expectError error
 	}{
@@ -329,14 +329,14 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			poolId:            1,
 			quoteAssetDenom:   "bar",
 			baseAssetDenom:    "baz",
-			expectedSpotPrice: osmomath.MustNewDecFromStr("1.5"),
+			expectedSpotPrice: osmomath.MustNewBigDecFromStr("1.5"),
 		},
 		"valid stableswap pool": {
 			preCreatePoolType: types.Stableswap,
 			poolId:            1,
 			quoteAssetDenom:   "bar",
 			baseAssetDenom:    "baz",
-			expectedSpotPrice: osmomath.MustNewDecFromStr("0.99999998"),
+			expectedSpotPrice: osmomath.MustNewBigDecFromStr("0.99999998"),
 		},
 		"valid concentrated liquidity pool with position": {
 			preCreatePoolType:    types.Concentrated,
@@ -347,7 +347,7 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			// We generate this value using the scripts in x/concentrated-liquidity/python
 			// Exact output: 5000.000000000000000129480272834995458481
 			// SDK Bankers rounded output: 5000.000000000000000129
-			expectedSpotPrice: osmomath.MustNewDecFromStr("5000.000000000000000129"),
+			expectedSpotPrice: osmomath.MustNewBigDecFromStr("5000.000000000000000129"),
 		},
 		"valid concentrated liquidity pool without position": {
 			preCreatePoolType: types.Concentrated,
@@ -365,7 +365,7 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			quoteAssetDenom:   apptesting.DefaultTransmuterDenomA,
 			baseAssetDenom:    apptesting.DefaultTransmuterDenomB,
 			// For transmuter, the spot price is always 1. (hard-coded even if no liquidity)
-			expectedSpotPrice: osmomath.OneDec(),
+			expectedSpotPrice: osmomath.OneBigDec(),
 		},
 		"non-existent pool": {
 			preCreatePoolType: types.Balancer,

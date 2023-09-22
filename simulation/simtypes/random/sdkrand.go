@@ -84,7 +84,7 @@ func RandomDecAmount(r *rand.Rand, max osmomath.Dec) osmomath.Dec {
 		randInt = big.NewInt(0).Rand(r, max.BigInt())
 	}
 
-	return osmomath.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
+	return osmomath.NewDecFromBigIntWithPrec(randInt, osmomath.PrecisionDec)
 }
 
 // RandTimestamp generates a random timestamp
