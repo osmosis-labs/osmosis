@@ -548,15 +548,15 @@ func (k Keeper) RouteCalculateSpotPrice(
 	poolId uint64,
 	quoteAssetDenom string,
 	baseAssetDenom string,
-) (price osmomath.Dec, err error) {
+) (price osmomath.BigDec, err error) {
 	swapModule, err := k.GetPoolModule(ctx, poolId)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	price, err = swapModule.CalculateSpotPrice(ctx, poolId, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	return price, nil
