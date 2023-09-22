@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -302,6 +301,7 @@ func GenTx(
 	txBuilder.SetMemo(memo)
 	txBuilder.SetFeeAmount(feeAmt)
 	txBuilder.SetGasLimit(gas)
+	// TODO: set fee payer
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range signatures {
