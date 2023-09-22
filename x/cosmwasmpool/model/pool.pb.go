@@ -39,7 +39,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 //
 // Instead, all interactions and poolmanager.PoolI methods are to be performed
 // on the Pool struct. The reason why we cannot have a Pool struct only is
-// because it cannot be serialized into state.
+// because it cannot be serialized into state due to having a non-serializable
+// wasmKeeper field.
 type CosmWasmPool struct {
 	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty" yaml:"contract_address"`
 	PoolId          uint64 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`

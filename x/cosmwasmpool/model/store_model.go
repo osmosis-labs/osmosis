@@ -21,8 +21,9 @@ var (
 	// CosmWasmPool implements the poolmanager.PoolI interface but it panics on all methods.
 	// The reason is that access to wasmKeeper is required to call the contract.
 	//
-	// Instead, all interactions and poolmanager.PoolI methods are to be performed on the Pool struct.
-	// The reason why we cannot have a Pool struct only is because it cannot be serialized into state.
+	// Instead, all interactions and poolmanager.PoolI methods are to be performed
+	// on the Pool struct. The reason why we cannot have a Pool struct only is
+	// because it cannot be serialized into state due to having a non-serializable wasmKeeper field.
 	_ poolmanagertypes.PoolI  = &CosmWasmPool{}
 	_ types.CosmWasmExtension = &CosmWasmPool{}
 )
