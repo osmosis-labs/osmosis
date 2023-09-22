@@ -249,6 +249,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	fmt.Println(s.Ctx.GasMeter().GasConsumed())
 
 	s.Require().Error(err)
+	s.Require().ErrorContains(err, "gas")
 }
 
 // GenTx generates a signed mock transaction.
