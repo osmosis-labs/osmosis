@@ -321,6 +321,10 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 }
 
 // syncGroupGaugeWeights updates the individual and total weights of the gauge records based on the splitting policy.
+//
+// It returns an error if:
+// - the splitting policy is not supported
+// - a lower level issue arises when syncing weights (e.g. the volume for a linked pool cannot be found under volume-splitting policy)
 func (k Keeper) syncGroupGaugeWeights(ctx sdk.Context, groupGauge types.GroupGauge) error {
 	if groupGauge.SplittingPolicy == types.Volume {
 		err := k.syncVolumeSplitGauge(ctx, groupGauge)
@@ -339,7 +343,6 @@ func (k Keeper) syncGroupGaugeWeights(ctx sdk.Context, groupGauge types.GroupGau
 // If there is an error, the passed in object is not mutated.
 //
 // It returns an error if:
-// - the splitting policy is not supported
 // - the volume for any linked pool is zero or cannot be found
 // - the cumulative volume for any linked pool has decreased (should never happen)
 func (k Keeper) syncVolumeSplitGauge(ctx sdk.Context, groupGauge types.GroupGauge) error {

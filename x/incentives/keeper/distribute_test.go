@@ -19,12 +19,12 @@ import (
 var _ = suite.TestingSuite(nil)
 
 var (
-	defaultGaugeRecordOne = types.InternalGaugeRecord{
+	defaultGaugeRecordOneRecord = types.InternalGaugeRecord{
 		GaugeId:          1,
 		CurrentWeight:    osmomath.NewInt(100),
 		CumulativeWeight: osmomath.NewInt(200),
 	}
-	defaultGaugeRecordTwo = types.InternalGaugeRecord{
+	defaultGaugeRecordTwoRecords = types.InternalGaugeRecord{
 		// Note that this is 4 and not 2 because we assume the second pool is a balancer pool
 		// that creates three gauges (one for each lockable duration), only the last of which
 		// we use.
@@ -35,16 +35,16 @@ var (
 	defaultGroupGauge = types.GroupGauge{
 		GroupGaugeId: 5,
 		InternalGaugeInfo: types.InternalGaugeInfo{
-			TotalWeight:  defaultGaugeRecordOne.CurrentWeight.Add(defaultGaugeRecordTwo.CurrentWeight),
-			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOne, defaultGaugeRecordTwo},
+			TotalWeight:  defaultGaugeRecordOneRecord.CurrentWeight.Add(defaultGaugeRecordTwoRecords.CurrentWeight),
+			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOneRecord, defaultGaugeRecordTwoRecords},
 		},
 		SplittingPolicy: types.Volume,
 	}
 	singleRecordGroupGauge = types.GroupGauge{
 		GroupGaugeId: 5,
 		InternalGaugeInfo: types.InternalGaugeInfo{
-			TotalWeight:  defaultGaugeRecordOne.CurrentWeight.Add(defaultGaugeRecordTwo.CurrentWeight),
-			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOne},
+			TotalWeight:  defaultGaugeRecordOneRecord.CurrentWeight.Add(defaultGaugeRecordTwoRecords.CurrentWeight),
+			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOneRecord},
 		},
 		SplittingPolicy: types.Volume,
 	}
