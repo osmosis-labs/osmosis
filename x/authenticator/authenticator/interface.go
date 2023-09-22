@@ -21,7 +21,7 @@ type Authenticator interface {
 	// and these types are used to link the data structure with the authenticator's logic.
 	Type() string
 
-	// StaticGas() specifies the gas consumption per signature verification by the authenticator.
+	// StaticGas() specifies the gas consumption enforced on each call to the authenticator.
 	StaticGas() uint64
 
 	// Initialize is used when an authenticator associated with an account is retrieved
