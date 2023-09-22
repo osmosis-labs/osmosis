@@ -21,7 +21,7 @@ type Querier struct {
 
 var _ queryprotov2.QueryServer = Querier{}
 
-func (q Querier) SpotPrice(grpcCtx context.Context,
+func (q Querier) SpotPriceV2(grpcCtx context.Context,
 	req *queryprotov2.SpotPriceRequest,
 ) (*queryprotov2.SpotPriceResponse, error) {
 	if req == nil {

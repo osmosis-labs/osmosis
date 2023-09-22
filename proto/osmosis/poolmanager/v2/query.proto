@@ -11,12 +11,12 @@ import "google/protobuf/timestamp.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryprotov2";
 
 service Query {
-  // SpotPrice defines a gRPC query handler that returns the spot price given
+  // SpotPriceV2 defines a gRPC query handler that returns the spot price given
   // a base denomination and a quote denomination.
   // The returned spot price has 36 decimal places. However, some of
   // modules perform sig fig rounding so most of the rightmost decimals can be
   // zeroes.
-  rpc SpotPrice(SpotPriceRequest) returns (SpotPriceResponse) {
+  rpc SpotPriceV2(SpotPriceRequest) returns (SpotPriceResponse) {
     option (google.api.http).get =
         "/osmosis/poolmanager/v2/pools/{pool_id}/prices";
   }

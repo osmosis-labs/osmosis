@@ -23,7 +23,7 @@ var _ queryproto{{$version}}.QueryServer = Querier{}
 
 {{range .Queries -}} 
 
-func (q Querier) {{.QueryName}}(grpcCtx context.Context,
+func (q Querier) {{.QueryName}}{{ $version | ToUpper }}(grpcCtx context.Context,
 	req *queryproto{{$version}}.{{.QueryName}}Request,
 ) ({{ if .Response }}{{.Response}}{{else}}*queryproto{{$version}}.{{.QueryName}}Response{{end}}, error) {
 	if req == nil {
