@@ -63,9 +63,10 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 				Weight:  osmomath.NewDecWithPrec(217, 3),
 			},
 		}
-		maxArithmeticTolerance   = osmomath.NewDec(5)
-		expectedSupplyWithOffset = osmomath.NewDec(0)
-		expectedSupply           = osmomath.NewDec(keeper.DeveloperVestingAmount)
+		maxArithmeticTolerance = osmomath.NewDec(5)
+		// UNFORKTODO: Uncomment when supply offset is re-implemented
+		// expectedSupplyWithOffset = osmomath.NewDec(0)
+		expectedSupply = osmomath.NewDec(keeper.DeveloperVestingAmount)
 	)
 
 	s.assertAddressWeightsAddUpToOne(testWeightedAddresses)
@@ -413,7 +414,8 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 			osmoassert.DecApproxEq(s.T(), expectedSupply.Add(tc.expectedDistribution).Sub(expectedDevRewards), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.ToLegacyDec(), maxArithmeticTolerance)
 
 			// Validate supply with offset.
-			osmoassert.DecApproxEq(s.T(), expectedSupplyWithOffset.Add(tc.expectedDistribution), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToLegacyDec(), maxArithmeticTolerance)
+			// UNFORKTODO: Uncomment when supply offset is re-implemented
+			//osmoassert.DecApproxEq(s.T(), expectedSupplyWithOffset.Add(tc.expectedDistribution), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToLegacyDec(), maxArithmeticTolerance)
 
 			// Validate epoch provisions.
 			s.Require().Equal(tc.expectedLastReductionEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
@@ -527,17 +529,20 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters()
 		EpochProvisions: genesisEpochProvisionsDec,
 	})
 
-	expectedSupplyWithOffset := osmomath.NewDec(0)
+	// UNFORKTODO: Uncomment when supply offset is re-implemented
+	// expectedSupplyWithOffset := osmomath.NewDec(0)
 	expectedSupply := osmomath.NewDec(keeper.DeveloperVestingAmount)
 
-	supplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
-	s.Require().Equal(expectedSupplyWithOffset.TruncateInt64(), supplyWithOffset.Amount.Int64())
+	// UNFORKTODO: Uncomment when supply offset is re-implemented
+	// supplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
+	// s.Require().Equal(expectedSupplyWithOffset.TruncateInt64(), supplyWithOffset.Amount.Int64())
 
 	supply := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom)
 	s.Require().Equal(expectedSupply.TruncateInt64(), supply.Amount.Int64())
 
 	devRewardsDelta := osmomath.ZeroDec()
-	epochProvisionsDelta := genesisEpochProvisionsDec.Sub(genesisEpochProvisionsDec.TruncateInt().ToLegacyDec()).Mul(osmomath.NewDec(defaultReductionPeriodInEpochs))
+	// UNFORKTODO: Uncomment when supply offset is re-implemented
+	// epochProvisionsDelta := genesisEpochProvisionsDec.Sub(genesisEpochProvisionsDec.TruncateInt().ToLegacyDec()).Mul(osmomath.NewDec(defaultReductionPeriodInEpochs))
 
 	// Actual test for running AfterEpochEnd hook thirdeningEpoch times.
 	for i := int64(1); i <= defaultReductionPeriodInEpochs; i++ {
@@ -581,8 +586,9 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters()
 		expectedSupply = expectedSupply.Add(truncatedEpochProvisions).Sub(devRewards)
 		s.Require().Equal(expectedSupply.RoundInt(), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount)
 
-		expectedSupplyWithOffset = expectedSupply.Sub(developerAccountBalance.Amount.ToLegacyDec())
-		s.Require().Equal(expectedSupplyWithOffset.RoundInt(), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
+		// UNFORKTODO: Uncomment when supply offset is re-implemented
+		// expectedSupplyWithOffset = expectedSupply.Sub(developerAccountBalance.Amount.ToLegacyDec())
+		// s.Require().Equal(expectedSupplyWithOffset.RoundInt(), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
 
 		// Validate that the epoch provisions have not been reduced.
 		s.Require().Equal(defaultMintingRewardsDistributionStartEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
@@ -595,14 +601,17 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters()
 	// Here, we add the deltas to the actual supply and compare against expected.
 	//
 	// expectedTotalProvisionedSupply = 365 * 821917808219.178082191780821917 = 299_999_999_999_999.999999999999999705
-	expectedTotalProvisionedSupply := osmomath.NewDec(defaultReductionPeriodInEpochs).Mul(genesisEpochProvisionsDec)
+	// UNFORKTODO: Uncomment when supply offset is re-implemented
+	// expectedTotalProvisionedSupply := osmomath.NewDec(defaultReductionPeriodInEpochs).Mul(genesisEpochProvisionsDec)
 	// actualTotalProvisionedSupply = 299_999_999_997_380 (off by 2619.999999999999999705)
 	// devRewardsDelta = 2555 (hard to estimate but the source is from truncating dev rewards )
 	// epochProvisionsDelta = 0.178082191780821917 * 365 = 64.999999999999999705
-	actualTotalProvisionedSupply := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToLegacyDec()
+	// UNFORKTODO: Uncomment when supply offset is re-implemented
+	// actualTotalProvisionedSupply := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToLegacyDec()
 
 	// 299_999_999_999_999.999999999999999705 == 299_999_999_997_380 + 2555 + 64.999999999999999705
-	s.Require().Equal(expectedTotalProvisionedSupply, actualTotalProvisionedSupply.Add(devRewardsDelta).Add(epochProvisionsDelta))
+	// UNFORKTODO: Uncomment when supply offset is re-implemented
+	// s.Require().Equal(expectedTotalProvisionedSupply, actualTotalProvisionedSupply.Add(devRewardsDelta).Add(epochProvisionsDelta))
 
 	// This end of epoch should trigger thirdening. It will utilize the updated
 	// (reduced) provisions.

@@ -9,10 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 type Keeper struct {
-	storeKey sdk.StoreKey
+	storeKey storetypes.StoreKey
 
 	accountKeeper       types.AccountKeeper
 	bankKeeper          types.BankKeeper
@@ -27,7 +29,7 @@ var _ types.TxFeesKeeper = (*Keeper)(nil)
 func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	storeKey sdk.StoreKey,
+	storeKey storetypes.StoreKey,
 	poolManager types.PoolManager,
 	spotPriceCalculator types.SpotPriceCalculator,
 	protorevKeeper types.ProtorevKeeper,

@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
@@ -284,7 +285,7 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom_SimpleCases() {
 				name:               "same denom in balance as denomToSwapTo - no-op",
 				denomToSwapTo:      defaultTxFeesDenom,
 				poolCoins:          defaultPoolCoins,
-				preFundCoins:       defaultPoolCoins.FilterDenoms([]string{defaultTxFeesDenom}),
+				preFundCoins:       osmoutils.FilterDenoms(defaultPoolCoins, []string{defaultTxFeesDenom}),
 				protoRevLinkDenoms: defaultProtorevLinkDenoms,
 
 				// Swap did not happen but denomToSwapTo was already in balance.
@@ -441,7 +442,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	validateEndCollectorBalance(communityPoolCollectorAddress)
 
 	communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
-	communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore)
+	communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore...)
 
 	// Confirm that that all tokens that are of the configured denom parameter are sent to the community pool.
 	s.Require().Len(communityPoolBalanceDelta, 1)

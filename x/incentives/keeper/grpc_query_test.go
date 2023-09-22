@@ -471,7 +471,7 @@ func (s *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	// check that the to distribute coins is equal to the initial gauge coin balance minus what has been distributed already (10-4=6)
 	res, err = s.querier.ModuleToDistributeCoins(sdk.WrapSDKContext(s.Ctx), &types.ModuleToDistributeCoinsRequest{})
 	s.Require().NoError(err)
-	s.Require().Equal(res.Coins, coins.Sub(distrCoins))
+	s.Require().Equal(res.Coins, coins.Sub(distrCoins...))
 
 	// distribute second round to stakers
 	distrCoins, err = s.querier.Distribute(s.Ctx, gauges)

@@ -74,7 +74,7 @@ func (s *KeeperTestSuite) TestCreateModuleAccount() {
 	app := s.App
 
 	// setup new next account number
-	nextAccountNumber := app.AccountKeeper.GetNextAccountNumber(s.Ctx)
+	nextAccountNumber := app.AccountKeeper.NextAccountNumber(s.Ctx)
 
 	// remove module account
 	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))

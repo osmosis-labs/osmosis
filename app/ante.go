@@ -14,6 +14,8 @@ import (
 	osmoante "github.com/osmosis-labs/osmosis/v19/ante"
 	v9 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v9"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v19/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 )
@@ -23,7 +25,7 @@ import (
 func NewAnteHandler(
 	appOpts servertypes.AppOptions,
 	wasmConfig wasm.Config,
-	txCounterStoreKey sdk.StoreKey,
+	txCounterStoreKey storetypes.StoreKey,
 	ak ante.AccountKeeper,
 	bankKeeper txfeestypes.BankKeeper,
 	txFeesKeeper *txfeeskeeper.Keeper,

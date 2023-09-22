@@ -16,7 +16,6 @@ import (
 	poolmanagertestutil "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/testutil"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -33,13 +32,6 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
-func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := []string{from.String(), to.String(), amount.String()}
-	args = append(args, extraArgs...)
-
-	return clitestutil.ExecTestCLICmd(clientCtx, bankcli.NewSendTxCmd(), args)
-}
-
 var testAddresses = osmoutils.CreateRandomAccounts(3)
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -48,9 +40,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.cfg = app.DefaultConfig()
 	s.cfg.GenesisState = poolmanagertestutil.UpdateTxFeeDenom(s.cfg.Codec, s.cfg.BondDenom)
 
-	s.network = network.New(s.T(), s.cfg)
+	net, err := network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
+	s.network = net
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
@@ -269,14 +263,15 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	pubkey, err := info.GetPubKey()
+	newAddr := sdk.AccAddress(pubkey.Address())
 
-	_, err = MsgSendExec(
+	_, err = clitestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		newAddr,
 		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 200000000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		osmoutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
@@ -524,7 +519,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				osmoutils.DefaultFeeString(s.cfg),
 				fmt.Sprintf("--%s=%s", flags.FlagGas, fmt.Sprint(400000)),
 			}

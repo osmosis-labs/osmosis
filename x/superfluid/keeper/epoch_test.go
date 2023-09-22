@@ -325,7 +325,7 @@ func (s *KeeperTestSuite) TestDistributeSuperfluidGauges() {
 					if gaugeCheck.rewarded {
 						s.Require().Equal(gauge.FilledEpochs, uint64(1))
 						s.Require().Equal(gaugeCheck.expectedDistributedCoins, gauge.DistributedCoins)
-						s.Require().Equal(gauge.Coins.Sub(gauge.DistributedCoins).AmountOf(bondDenom), moduleBalanceAfter.Amount)
+						s.Require().Equal(gauge.Coins.Sub(gauge.DistributedCoins...).AmountOf(bondDenom), moduleBalanceAfter.Amount)
 
 						// iterate over delegator index that received incentive from this gauge and check balance
 						for _, lockIndex := range gaugeCheck.lockIndexes {

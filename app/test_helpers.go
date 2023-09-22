@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"os"
 
+	cometbftdb "github.com/cometbft/cometbft-db"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
 
 	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var defaultGenesisBz []byte
@@ -57,7 +57,7 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 	if err != nil {
 		panic(err)
 	}
-	db, err := sdk.NewLevelDB("osmosis_leveldb_testing", dir)
+	db, err := cometbftdb.NewGoLevelDB("osmosis_leveldb_testing", dir)
 	if err != nil {
 		panic(err)
 	}

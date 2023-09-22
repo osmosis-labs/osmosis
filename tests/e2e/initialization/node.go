@@ -39,7 +39,7 @@ type internalNode struct {
 	chain        *internalChain
 	moniker      string
 	mnemonic     string
-	keyInfo      keyring.Info
+	keyInfo      keyring.LegacyInfo
 	privateKey   cryptotypes.PrivKey
 	consensusKey privval.FilePVKey
 	nodeKey      p2p.NodeKey
@@ -162,7 +162,7 @@ func (n *internalNode) createConsensusKey() error {
 }
 
 func (n *internalNode) createKeyFromMnemonic(name, mnemonic string) error {
-	kb, err := keyring.New(keyringAppName, keyring.BackendTest, n.configDir(), nil)
+	kb, err := keyring.New(keyringAppName, keyring.BackendTest, n.configDir(), nil, nil)
 	if err != nil {
 		return err
 	}

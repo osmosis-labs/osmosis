@@ -997,7 +997,7 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	balanceAfterJoin := bankKeeper.GetAllBalances(ctx, poolJoinAcc)
 
 	// The balancer join pool amount is the difference between the account balance before and after joining the pool.
-	joinPoolAmt, _ = balanceBeforeJoin.SafeSub(balanceAfterJoin)
+	joinPoolAmt, _ = balanceBeforeJoin.SafeSub(balanceAfterJoin...)
 
 	// Determine the balancer pool's LP token denomination.
 	balancerPoolDenom := gammtypes.GetPoolShareDenom(balancerPooId)

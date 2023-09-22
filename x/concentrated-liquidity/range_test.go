@@ -235,7 +235,7 @@ func (s *KeeperTestSuite) setupRangesAndAssertInvariants(pool types.Concentrated
 			actualAddedCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), positionData.Amount0), sdk.NewCoin(pool.GetToken1(), positionData.Amount1))
 			totalAssets = totalAssets.Add(actualAddedCoins...)
 			if testParams.baseSwapAmount != (osmomath.Int{}) {
-				totalAssets = totalAssets.Add(swappedIn).Sub(sdk.NewCoins(swappedOut))
+				totalAssets = totalAssets.Add(swappedIn).Sub(sdk.NewCoins(swappedOut)...)
 			}
 			totalLiquidity = totalLiquidity.Add(positionData.Liquidity)
 			totalTimeElapsed = totalTimeElapsed + timeElapsed

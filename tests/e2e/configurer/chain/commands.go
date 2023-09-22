@@ -752,8 +752,9 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 				Value:    value,
 			},
 		},
-		IsExpedited: true,
-		Deposit:     strconv.Itoa(int(config.InitialMinExpeditedDeposit)) + appparams.BaseCoinUnit,
+		// UNFORKTODO: When expedited props are implemented, uncomment this
+		// IsExpedited: true,
+		Deposit: strconv.Itoa(int(config.InitialMinExpeditedDeposit)) + appparams.BaseCoinUnit,
 	}
 	proposalJson, err := json.Marshal(proposal)
 	if err != nil {

@@ -318,7 +318,7 @@ func (k Keeper) AddToGaugeRewardsFromGauge(ctx sdk.Context, groupGaugeId uint64,
 	}
 
 	// check if there is sufficient funds in groupGauge to make the transfer
-	remainingCoins := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
+	remainingCoins := groupGauge.Coins.Sub(groupGauge.DistributedCoins...)
 	if remainingCoins.IsAllLT(coins) {
 		return fmt.Errorf("group gauge id: %d doesnot have enough tokens to transfer", groupGaugeId)
 	}

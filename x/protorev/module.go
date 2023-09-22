@@ -121,17 +121,15 @@ func NewAppModule(
 }
 
 // Deprecated: use RegisterServices
-func (am AppModule) Route() sdk.Route { return sdk.Route{} }
-
-// Deprecated: use RegisterServices
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-// Deprecated: use RegisterServices
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
-}
+// UNFORKTODO: Ensure this is no longer needed
+// // Deprecated: use RegisterServices
+// func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
+// 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
+// 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
+// 	}
+// }
 
 // RegisterServices registers a gRPC query service to respond to the module-specific gRPC queries
 func (am AppModule) RegisterServices(cfg module.Configurator) {

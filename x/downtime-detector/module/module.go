@@ -85,17 +85,14 @@ func NewAppModule(k downtimedetector.Keeper) AppModule {
 
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
-}
+// UNFORKTODO: Ensure this is no longer needed
+// func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+// 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
+// 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
+// 	}
+// }
 
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState

@@ -3,6 +3,7 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -104,20 +105,18 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the ibc-hooks module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the ibc-hooks module.
-func (AppModule) Route() sdk.Route { return sdk.Route{} }
-
 // QuerierRoute returns the module's querier route name.
 func (AppModule) QuerierRoute() string {
 	return ""
 }
 
-// LegacyQuerierHandler returns the x/ibc-hooks module's sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
-}
+// UNFORKTODO: Ensure this is no longer needed
+// // LegacyQuerierHandler returns the x/ibc-hooks module's sdk.Querier.
+// func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+// 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
+// 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
+// 	}
+// }
 
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.

@@ -24,7 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -219,7 +219,7 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypesv1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -235,7 +235,8 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	// UNFORKTODO: Uncomment when merge expedited feat
+	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
 	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
 
@@ -275,7 +276,7 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypesv1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -291,7 +292,8 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	// UNFORKTODO: Uncomment when merge expedited feat
+	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
 	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
 
@@ -326,7 +328,7 @@ func NewCmdSubmitCreateCLPoolAndLinkToCFMMProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypesv1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -342,7 +344,8 @@ func NewCmdSubmitCreateCLPoolAndLinkToCFMMProposal() *cobra.Command {
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	// UNFORKTODO: Uncomment when merge expedited feat
+	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
 	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	cmd.Flags().String(FlagPoolRecords, "", "The pool records array")
 
@@ -397,7 +400,7 @@ Sample proposal with flags
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypesv1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -415,7 +418,8 @@ Sample proposal with flags
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().Uint64(FlagPoolId, 0, "stableswap pool-id")
 	cmd.Flags().String(FlagScalingFactorControllerAddress, "", "target scaling factor controller address")
-	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	// UNFORKTODO: Uncomment when merge expedited feat
+	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
 	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 
 	return cmd
@@ -793,7 +797,7 @@ func parseMigrationRecords(cmd *cobra.Command) ([]gammmigration.BalancerToConcen
 	return replaceMigrations, nil
 }
 
-func parseReplaceMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+func parseReplaceMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypesv1.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
@@ -817,7 +821,7 @@ func parseReplaceMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypes.Con
 	return content, nil
 }
 
-func parseUpdateMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+func parseUpdateMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypesv1.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
@@ -841,7 +845,7 @@ func parseUpdateMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypes.Cont
 	return content, nil
 }
 
-func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govtypesv1.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
@@ -922,7 +926,7 @@ func parsePoolRecordsWithCFMMLink(cmd *cobra.Command) ([]types.PoolRecordWithCFM
 	return finalPoolRecords, nil
 }
 
-func parseSetScalingFactorControllerArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+func parseSetScalingFactorControllerArgsToContent(cmd *cobra.Command) (govtypesv1.Content, error) {
 	proposalFile, err := cmd.Flags().GetString(govcli.FlagProposal)
 	if err != nil {
 		return nil, err

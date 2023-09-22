@@ -210,7 +210,7 @@ func (p Pool) reorderReservesAndScalingFactors(first string, second string) ([]s
 func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coins) {
 	numTokens := p.PoolLiquidity.Len()
 	// update liquidity
-	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...).Sub(tokensOut)
+	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...).Sub(tokensOut...)
 	// sanity check that no new denoms were added
 	if len(p.PoolLiquidity) != numTokens {
 		panic("updatePoolLiquidityForSwap changed number of tokens in pool")
@@ -351,7 +351,7 @@ func (p Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, spre
 	}
 
 	// ensure that no more tokens have been joined than is possible with the given `tokensIn`
-	tokensJoined = tokensIn.Sub(remainingTokensIn)
+	tokensJoined = tokensIn.Sub(remainingTokensIn...)
 	if tokensJoined.IsAnyGT(tokensIn) {
 		return osmomath.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than token In")
 	}
@@ -381,7 +381,7 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares osmomath.Int, exitFee osm
 		return sdk.Coins{}, err
 	}
 
-	postExitLiquidity := p.PoolLiquidity.Sub(exitingCoins)
+	postExitLiquidity := p.PoolLiquidity.Sub(exitingCoins...)
 	if err := validatePoolLiquidity(postExitLiquidity, p.ScalingFactors); err != nil {
 		return sdk.Coins{}, err
 	}

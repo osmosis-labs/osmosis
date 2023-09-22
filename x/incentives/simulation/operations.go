@@ -18,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -41,13 +42,13 @@ func WeightedOperations(
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateGauge, &weightMsgCreateGauge, nil,
 		func(_ *rand.Rand) {
-			weightMsgCreateGauge = simappparams.DefaultWeightMsgCreateValidator
+			weightMsgCreateGauge = stakingsim.DefaultWeightMsgCreateValidator
 		},
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgAddToGauge, &weightMsgAddToGauge, nil,
 		func(_ *rand.Rand) {
-			weightMsgAddToGauge = simappparams.DefaultWeightMsgCreateValidator
+			weightMsgAddToGauge = stakingsim.DefaultWeightMsgCreateValidator
 		},
 	)
 

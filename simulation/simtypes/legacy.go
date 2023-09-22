@@ -30,7 +30,7 @@ func GenAndDeliverTxWithRandFees(
 	var fees sdk.Coins
 	var err error
 
-	coins, hasNeg := spendable.SafeSub(coinsSpentInMsg)
+	coins, hasNeg := spendable.SafeSub(coinsSpentInMsg...)
 	if hasNeg {
 		return simulation.NoOpMsg(moduleName, msg.Type(), "message doesn't leave room for fees"), nil, err
 	}

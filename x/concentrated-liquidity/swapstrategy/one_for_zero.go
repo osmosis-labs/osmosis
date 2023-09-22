@@ -10,6 +10,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // oneForZeroStrategy implements the swapStrategy interface.
@@ -20,7 +22,7 @@ import (
 // tick index and square root price.
 type oneForZeroStrategy struct {
 	sqrtPriceLimit osmomath.BigDec
-	storeKey       sdk.StoreKey
+	storeKey       storetypes.StoreKey
 	spreadFactor   osmomath.Dec
 }
 

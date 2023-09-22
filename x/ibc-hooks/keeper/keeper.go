@@ -19,11 +19,13 @@ import (
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 type (
 	Keeper struct {
-		storeKey   sdk.StoreKey
+		storeKey   storetypes.StoreKey
 		paramSpace paramtypes.Subspace
 
 		channelKeeper  types.ChannelKeeper
@@ -33,7 +35,7 @@ type (
 
 // NewKeeper returns a new instance of the x/ibchooks keeper
 func NewKeeper(
-	storeKey sdk.StoreKey,
+	storeKey storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
 	channelKeeper types.ChannelKeeper,
 	contractKeeper *wasmkeeper.PermissionedKeeper,

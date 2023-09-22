@@ -11,17 +11,19 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/valset-pref/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 type Keeper struct {
-	storeKey           sdk.StoreKey
+	storeKey           storetypes.StoreKey
 	paramSpace         paramtypes.Subspace
 	stakingKeeper      types.StakingInterface
 	distirbutionKeeper types.DistributionKeeper
 	lockupKeeper       types.LockupKeeper
 }
 
-func NewKeeper(storeKey sdk.StoreKey,
+func NewKeeper(storeKey storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
 	stakingKeeper types.StakingInterface,
 	distirbutionKeeper types.DistributionKeeper,

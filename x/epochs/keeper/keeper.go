@@ -8,17 +8,19 @@ import (
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 type (
 	Keeper struct {
-		storeKey sdk.StoreKey
+		storeKey storetypes.StoreKey
 		hooks    types.EpochHooks
 	}
 )
 
 // NewKeeper returns a new keeper by codec and storeKey inputs.
-func NewKeeper(storeKey sdk.StoreKey) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey) *Keeper {
 	return &Keeper{
 		storeKey: storeKey,
 	}

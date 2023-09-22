@@ -1158,7 +1158,7 @@ func (s *KeeperTestSuite) TestMintSharesAndLock() {
 			lockupModuleAccountBalancePost := s.App.LockupKeeper.GetModuleBalance(s.Ctx)
 
 			// Check that the lockup module account balance increased by the amount expected to be locked
-			s.Require().Equal(underlyingLiquidityTokenized[0].String(), lockupModuleAccountBalancePost.Sub(lockupModuleAccountBalancePre).String())
+			s.Require().Equal(underlyingLiquidityTokenized[0].String(), lockupModuleAccountBalancePost.Sub(lockupModuleAccountBalancePre...).String())
 
 			// Check that the positionId is mapped to the lockId
 			positionLockId, err := s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionId)

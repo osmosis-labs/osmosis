@@ -1,6 +1,8 @@
 package config
 
-import govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+import (
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+)
 
 const (
 	// if not skipping upgrade, how many blocks we allow for fork to run pre upgrade state creation
@@ -19,9 +21,10 @@ const (
 
 var (
 	// Minimum deposit value for a proposal to enter a voting period.
-	MinDepositValue = govtypes.DefaultMinDepositTokens.Int64()
+	MinDepositValue = govtypesv1.DefaultMinDepositTokens.Int64()
 	// Minimum expedited deposit value for a proposal to enter a voting period.
-	MinExpeditedDepositValue = govtypes.DefaultMinExpeditedDepositTokens.Int64()
+	// UNFORKTODO: Change this to DefaultMinExpeditedDepositTokens when implemented
+	MinExpeditedDepositValue = govtypesv1.DefaultMinDepositTokens.Int64()
 	// Minimum deposit value for proposal to be submitted.
 	InitialMinDeposit = MinDepositValue / 4
 	// Minimum expedited deposit value for proposal to be submitted.

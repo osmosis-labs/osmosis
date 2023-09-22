@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -12,16 +12,15 @@ const (
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeDenomPairTakerFee)
-	govtypes.RegisterProposalTypeCodec(&DenomPairTakerFeeProposal{}, "osmosis/DenomPairTakerFeeProposal")
+	govtypesv1.RegisterProposalType(ProposalTypeDenomPairTakerFee)
 }
 
 var (
-	_ govtypes.Content = &DenomPairTakerFeeProposal{}
+	_ govtypesv1.Content = &DenomPairTakerFeeProposal{}
 )
 
 // NewDenomPairTakerFeeProposal returns a new instance of a denom pair taker fee proposal struct.
-func NewDenomPairTakerFeeProposal(title, description string, records []DenomPairTakerFee) govtypes.Content {
+func NewDenomPairTakerFeeProposal(title, description string, records []DenomPairTakerFee) govtypesv1.Content {
 	return &DenomPairTakerFeeProposal{
 		Title:             title,
 		Description:       description,
@@ -44,7 +43,7 @@ func (p *DenomPairTakerFeeProposal) ProposalType() string {
 
 // ValidateBasic validates a governance proposal's abstract and basic contents
 func (p *DenomPairTakerFeeProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}

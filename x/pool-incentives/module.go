@@ -112,20 +112,16 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
-// Route returns the message routing key for the pool-incentives module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, nil)
-}
-
 // QuerierRoute returns the pool-incentives module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-// LegacyQuerierHandler returns the x/pool-incentives's module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
-}
+// UNFORKTODO: Ensure this is no longer needed
+// // LegacyQuerierHandler returns the x/pool-incentives's module sdk.Querier.
+// func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+// 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
+// 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
+// 	}
+// }
 
 // InitGenesis performs genesis initialization for the pool-incentives module.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
@@ -168,8 +164,8 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 }
 
 // RandomizedParams creates randomized pool-incentives param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
+func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.LegacyParamChange {
+	return []simtypes.LegacyParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types.

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -14,19 +14,17 @@ const (
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeSetProtoRevEnabled)
-	govtypes.RegisterProposalTypeCodec(&SetProtoRevEnabledProposal{}, "osmosis/SetProtoRevEnabledProposal")
-	govtypes.RegisterProposalType(ProposalTypeSetProtoRevAdminAccount)
-	govtypes.RegisterProposalTypeCodec(&SetProtoRevAdminAccountProposal{}, "osmosis/SetProtoRevAdminAccountProposal")
+	govtypesv1.RegisterProposalType(ProposalTypeSetProtoRevEnabled)
+	govtypesv1.RegisterProposalType(ProposalTypeSetProtoRevAdminAccount)
 }
 
 var (
-	_ govtypes.Content = &SetProtoRevEnabledProposal{}
-	_ govtypes.Content = &SetProtoRevAdminAccountProposal{}
+	_ govtypesv1.Content = &SetProtoRevEnabledProposal{}
+	_ govtypesv1.Content = &SetProtoRevAdminAccountProposal{}
 )
 
 // ---------------- Interface for SetProtoRevEnabledProposal ---------------- //
-func NewSetProtoRevEnabledProposal(title, description string, enabled bool) govtypes.Content {
+func NewSetProtoRevEnabledProposal(title, description string, enabled bool) govtypesv1.Content {
 	return &SetProtoRevEnabledProposal{title, description, enabled}
 }
 
@@ -41,7 +39,7 @@ func (p *SetProtoRevEnabledProposal) ProposalType() string {
 }
 
 func (p *SetProtoRevEnabledProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}
@@ -58,7 +56,7 @@ func (p SetProtoRevEnabledProposal) String() string {
 }
 
 // ---------------- Interface for SetProtoRevAdminAccountProposal ---------------- //
-func NewSetProtoRevAdminAccountProposal(title, description string, account string) govtypes.Content {
+func NewSetProtoRevAdminAccountProposal(title, description string, account string) govtypesv1.Content {
 	return &SetProtoRevAdminAccountProposal{title, description, account}
 }
 
@@ -73,7 +71,7 @@ func (p *SetProtoRevAdminAccountProposal) ProposalType() string {
 }
 
 func (p *SetProtoRevAdminAccountProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(p)
+	err := govtypesv1.ValidateAbstract(p)
 	if err != nil {
 		return err
 	}

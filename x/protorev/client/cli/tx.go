@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
@@ -209,7 +209,7 @@ func CmdSetProtoRevAdminAccountProposal() *cobra.Command {
 		Short:   "submit a set protorev admin account proposal to set the admin account for x/protorev",
 		Example: fmt.Sprintf(`$ %s tx protorev set-protorev-admin-account osmo123... --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			createContent := func(title string, description string, args ...string) (govtypes.Content, error) {
+			createContent := func(title string, description string, args ...string) (govtypesv1.Content, error) {
 				return types.NewSetProtoRevAdminAccountProposal(title, description, args[0]), nil
 			}
 
@@ -235,7 +235,7 @@ func CmdSetProtoRevEnabledProposal() *cobra.Command {
 		Short:   "submit a set protorev enabled proposal to enable or disable the protocol",
 		Example: fmt.Sprintf(`$ %s tx protorev set-protorev-enabled true --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			createContent := func(title string, description string, args ...string) (govtypes.Content, error) {
+			createContent := func(title string, description string, args ...string) (govtypesv1.Content, error) {
 				res, err := strconv.ParseBool(args[0])
 				if err != nil {
 					return nil, err
@@ -260,7 +260,7 @@ func CmdSetProtoRevEnabledProposal() *cobra.Command {
 }
 
 // ProposalExecute is a helper function to execute a proposal command. It takes in a function to create the proposal content.
-func ProposalExecute(cmd *cobra.Command, args []string, createContent func(title string, description string, args ...string) (govtypes.Content, error)) error {
+func ProposalExecute(cmd *cobra.Command, args []string, createContent func(title string, description string, args ...string) (govtypesv1.Content, error)) error {
 	clientCtx, err := client.GetClientTxContext(cmd)
 	if err != nil {
 		return err
@@ -293,7 +293,7 @@ func ProposalExecute(cmd *cobra.Command, args []string, createContent func(title
 		return err
 	}
 
-	msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+	msg, err := govtypesv1.NewMsgSubmitProposal(content, deposit, from)
 	if err != nil {
 		return err
 	}

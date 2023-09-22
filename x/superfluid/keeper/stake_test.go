@@ -6,6 +6,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
@@ -78,14 +79,16 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 
 			// get pre-superfluid delgations osmo supply and supplyWithOffset
 			presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-			presupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
+			// UNFORKTODO: change this back to GetSupplyWithOffset once it is re-implemented
+			presupplyWithOffset := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 
 			// setup superfluid delegations
 			_, intermediaryAccs, locks := s.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
 
 			// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
 			postsupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-			postsupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
+			// UNFORKTODO: change this back to GetSupplyWithOffset once it is re-implemented
+			postsupplyWithOffset := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 			s.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
 			s.Require().Equal(postsupplyWithOffset.String(), presupplyWithOffset.String())
 
@@ -366,7 +369,8 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 
 				// get pre-superfluid delgations osmo supply and supplyWithOffset
 				presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				presupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
+				// UNFORKTODO: change this back to GetSupplyWithOffset once it is re-implemented
+				presupplyWithOffset := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 
 				// superfluid undelegate
 				err = s.App.SuperfluidKeeper.SuperfluidUndelegate(s.Ctx, lock.Owner, lockId)
@@ -378,7 +382,8 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 
 				// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
 				postsupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				postsupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
+				// UNFORKTODO: change this back to GetSupplyWithOffset once it is re-implemented
+				postsupplyWithOffset := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 				s.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
 				s.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset))
 
@@ -530,7 +535,8 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 
 				// get pre-superfluid delgations osmo supply and supplyWithOffset
 				presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				presupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
+				// UNFORKTODO: change this back to GetSupplyWithOffset once it is re-implemented
+				presupplyWithOffset := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 
 				// superfluid undelegate
 				_, err = s.App.SuperfluidKeeper.SuperfluidUndelegateToConcentratedPosition(s.Ctx, lock.Owner, lockId)
@@ -542,7 +548,8 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 
 				// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
 				postsupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				postsupplyWithOffset := s.App.BankKeeper.GetSupplyWithOffset(s.Ctx, bondDenom)
+				// UNFORKTODO: change this back to GetSupplyWithOffset once it is re-implemented
+				postsupplyWithOffset := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 				s.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
 				s.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset))
 
@@ -1101,7 +1108,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			}
 
 			// only test with test related denoms
-			balanceBeforeConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender).FilterDenoms([]string{"foo", "stake", "uosmo"})
+			balanceBeforeConvertLockToStake := osmoutils.FilterDenoms(s.App.BankKeeper.GetAllBalances(s.Ctx, sender), []string{"foo", "stake", "uosmo"})
 
 			// system under test
 			totalAmtConverted, err := s.App.SuperfluidKeeper.UnbondConvertAndStake(s.Ctx, lockId, sender.String(), valAddr.String(), minAmountToStake, sharesToConvert)
@@ -1116,7 +1123,7 @@ func (s *KeeperTestSuite) TestUnbondConvertAndStake() {
 			s.delegationCheck(sender, originalValAddr, valAddr, totalAmtConverted)
 
 			// Bank check
-			balanceAfterConvertLockToStake := s.App.BankKeeper.GetAllBalances(s.Ctx, sender).FilterDenoms([]string{"foo", "stake", "uosmo"})
+			balanceAfterConvertLockToStake := osmoutils.FilterDenoms(s.App.BankKeeper.GetAllBalances(s.Ctx, sender), []string{"foo", "stake", "uosmo"})
 			s.Require().True(balanceBeforeConvertLockToStake.IsEqual(balanceAfterConvertLockToStake))
 
 			// if unlocked, no need to check locks since there is no lock existing
@@ -1416,7 +1423,7 @@ func (s *KeeperTestSuite) TestConvertGammSharesToOsmoAndStake() {
 			}
 
 			// mark expected shares before swap
-			nonStakeDenomCoin := exitCoins.FilterDenoms([]string{"foo"})[0]
+			nonStakeDenomCoin := osmoutils.FilterDenoms(exitCoins, []string{"foo"})[0]
 			stakeDenomCoin := exitCoins.AmountOf(bondDenom)
 			// use cache context to get expected amount after swap without changing test state
 			cc, _ := s.Ctx.CacheContext()
@@ -1618,7 +1625,7 @@ func (s *KeeperTestSuite) SetupUnbondConvertAndStakeTest(ctx sdk.Context, superf
 	balanceAfterJoin := bankKeeper.GetAllBalances(ctx, poolJoinAcc)
 
 	// The balancer join pool amount is the difference between the account balance before and after joining the pool.
-	joinPoolAmt, _ = balanceBeforeJoin.SafeSub(balanceAfterJoin)
+	joinPoolAmt, _ = balanceBeforeJoin.SafeSub(balanceAfterJoin...)
 
 	// Determine the balancer pool's LP token denomination.
 	balancerPoolDenom := gammtypes.GetPoolShareDenom(balancerPooId)

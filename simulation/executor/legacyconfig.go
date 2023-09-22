@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	cometbftdb "github.com/cometbft/cometbft-db"
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v19/simulation/executor/internal/stats"
 	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes/simlogger"
@@ -136,7 +136,7 @@ func SetupSimulation(dirPrefix, dbName string) (cfg Config, db dbm.DB, logger lo
 		return Config{}, nil, nil, func() {}, err
 	}
 
-	db, err = sdk.NewLevelDB(dbName, dir)
+	db, err = cometbftdb.NewGoLevelDB(dbName, dir)
 	if err != nil {
 		return Config{}, nil, nil, func() {}, err
 	}

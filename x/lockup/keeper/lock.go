@@ -810,7 +810,7 @@ func (k Keeper) accumulationStore(ctx sdk.Context, denom string) sumtree.Tree {
 // Called by the superfluid module ONLY.
 func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
 	// TODO: Handle 100% slash eventually, not needed for osmosis codebase atm.
-	lock.Coins = lock.Coins.Sub(coins)
+	lock.Coins = lock.Coins.Sub(coins...)
 
 	err := k.setLock(ctx, *lock)
 	if err != nil {
@@ -881,7 +881,7 @@ func (k Keeper) SplitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coin
 		return types.PeriodLock{}, fmt.Errorf("cannot split unlocking lock")
 	}
 
-	lock.Coins = lock.Coins.Sub(coins)
+	lock.Coins = lock.Coins.Sub(coins...)
 	err := k.setLock(ctx, lock)
 	if err != nil {
 		return types.PeriodLock{}, err

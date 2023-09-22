@@ -484,7 +484,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			}
 
 			// Check account balances
-			s.Require().Equal(userBalancePrePositionCreation.Sub(sdk.NewCoins(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1)))).String(), userBalancePostPositionCreation.String())
+			s.Require().Equal(userBalancePrePositionCreation.Sub(sdk.NewCoins(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1)))...).String(), userBalancePostPositionCreation.String())
 			s.Require().Equal(poolBalancePrePositionCreation.Add(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1))).String(), poolBalancePostPositionCreation.String())
 
 			hasPosition := clKeeper.HasPosition(s.Ctx, tc.positionId)
@@ -808,12 +808,12 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// owner should only have tokens equivilent to the delta balance of the pool
 			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...).Add(expectedSpreadRewardsClaimed...)
-			actualOwnerBalancerDelta := ownerBalancerAfterWithdraw.Sub(ownerBalancerBeforeWithdraw)
+			actualOwnerBalancerDelta := ownerBalancerAfterWithdraw.Sub(ownerBalancerBeforeWithdraw...)
 
-			communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore)
-			actualIncentivesClaimed := incentivesBalanceBeforeWithdraw.Sub(incentivesBalanceAfterWithdraw).Sub(communityPoolBalanceDelta)
+			communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore...)
+			actualIncentivesClaimed := incentivesBalanceBeforeWithdraw.Sub(incentivesBalanceAfterWithdraw...).Sub(communityPoolBalanceDelta...)
 
-			s.Require().Equal(expectedPoolBalanceDelta.String(), poolBalanceBeforeWithdraw.Sub(poolBalanceAfterWithdraw).String())
+			s.Require().Equal(expectedPoolBalanceDelta.String(), poolBalanceBeforeWithdraw.Sub(poolBalanceAfterWithdraw...).String())
 			s.Require().NotEmpty(expectedOwnerBalanceDelta)
 			for _, coin := range expectedOwnerBalanceDelta {
 				expected := expectedOwnerBalanceDelta.AmountOf(coin.Denom)
@@ -830,7 +830,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().True(expected.Equal(actual))
 			}
 
-			s.Require().Equal(poolSpreadRewardBalanceBeforeWithdraw.Sub(poolSpreadRewardBalanceAfterWithdraw).String(), expectedSpreadRewardsClaimed.String())
+			s.Require().Equal(poolSpreadRewardBalanceBeforeWithdraw.Sub(poolSpreadRewardBalanceAfterWithdraw...).String(), expectedSpreadRewardsClaimed.String())
 
 			// if the position's expected remaining liquidity is equal to zero, we check if all state
 			// have been correctly deleted.
@@ -1687,7 +1687,7 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			}
 
 			// otherwise, ensure balances are added/deducted appropriately
-			expectedPostSendBalanceSender := preSendBalanceSender.Sub(sdk.NewCoins(tc.coin0, tc.coin1))
+			expectedPostSendBalanceSender := preSendBalanceSender.Sub(sdk.NewCoins(tc.coin0, tc.coin1)...)
 			expectedPostSendBalanceReceiver := preSendBalanceReceiver.Add(tc.coin0, tc.coin1)
 
 			s.Require().NoError(err)

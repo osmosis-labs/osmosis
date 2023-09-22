@@ -1,13 +1,13 @@
 package downtimedetector
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 type Keeper struct {
-	storeKey sdk.StoreKey
+	storeKey storetypes.StoreKey
 }
 
-func NewKeeper(storeKey sdk.StoreKey) *Keeper {
+func NewKeeper(storeKey storetypes.StoreKey) *Keeper {
 	return &Keeper{storeKey: storeKey}
 }

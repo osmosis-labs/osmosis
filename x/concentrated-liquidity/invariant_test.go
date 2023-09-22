@@ -140,12 +140,12 @@ func (s *KeeperTestSuite) assertTotalRewardsInvariant(expectedGlobalRewardValues
 
 	// Ensure total remaining spread rewards and incentives are exactly equal to loss due to rounding
 	if expectedGlobalRewardValues.TotalSpreadRewards == nil {
-		roundingLossSpread := expectedTotalSpreadRewards.Sub(totalCollectedSpread)
+		roundingLossSpread := expectedTotalSpreadRewards.Sub(totalCollectedSpread...)
 		s.Require().Equal(roundingLossSpread, remainingTotalSpreadRewards)
 	}
 
 	if expectedGlobalRewardValues.TotalIncentives == nil {
-		roundingLossIncentives := expectedTotalIncentives.Sub(totalCollectedIncentives)
+		roundingLossIncentives := expectedTotalIncentives.Sub(totalCollectedIncentives...)
 		s.Require().Equal(roundingLossIncentives, remainingTotalIncentives)
 	}
 
@@ -201,7 +201,7 @@ func (s *KeeperTestSuite) assertWithdrawAllInvariant() {
 	s.Require().Equal(0, len(remainingPositions))
 
 	// Ensure pool liquidity only has rounding error left in it
-	roundingLossAssets := expectedTotalWithdrawn.Sub(totalWithdrawn)
+	roundingLossAssets := expectedTotalWithdrawn.Sub(totalWithdrawn...)
 	s.Require().Equal(roundingLossAssets, finalTotalPoolAssets)
 
 	// Ensure spread rewards and incentives are all claimed except for rounding error

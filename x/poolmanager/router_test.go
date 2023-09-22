@@ -2348,7 +2348,7 @@ func (s *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 
 			// We expect all taker fees collected in quote assets to be sent directly to the community pool address.
 			newCommunityPoolBalances := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
-			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(newCommunityPoolBalances.Sub(initCommunityPoolBalances)...))
+			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(newCommunityPoolBalances.Sub(initCommunityPoolBalances...)...))
 
 			// We expect all taker fees collected in non-quote assets to be sent to the non-quote asset address
 			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolNonQuoteAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))...))
@@ -3608,7 +3608,7 @@ func (s *KeeperTestSuite) TestTakerFee() {
 
 			// We expect all taker fees collected in quote assets to be sent directly to the community pool address.
 			communityPoolBalancesAfterSwap := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(communityPoolAddrName))
-			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(communityPoolBalancesAfterSwap.Sub(communityPoolBalancesPreHook)...))
+			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolQuoteAssets...), sdk.NewCoins(communityPoolBalancesAfterSwap.Sub(communityPoolBalancesPreHook...)...))
 
 			// We expect all taker fees collected in non-quote assets to be sent to the non-quote asset address txfees community pool address
 			s.Require().Equal(sdk.NewCoins(tc.expectedTakerFees.communityPoolNonQuoteAssets...), sdk.NewCoins(bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))...))
@@ -3626,10 +3626,10 @@ func (s *KeeperTestSuite) TestTakerFee() {
 			stakingRewardFeeCollectorTxfeesBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(stakingAddrName))
 			commPoolFeeCollectorBalancePostHook := bk.GetAllBalances(s.Ctx, ak.GetModuleAddress(nonQuoteCommAddrName))
 
-			communityPoolBalancesDelta := communityPoolBalancesPostHook.Sub(communityPoolBalancesPreHook)
-			commPoolFeeCollectorBalanceDelta := commPoolFeeCollectorBalancePostHook.Sub(commPoolFeeCollectorBalancePreHook)
-			stakingRewardFeeCollectorMainBalanceDelta := stakingRewardFeeCollectorMainBalancePostHook.Sub(stakingRewardFeeCollectorMainBalancePreHook)
-			stakingRewardFeeCollectorTxfeesBalanceDelta := stakingRewardFeeCollectorTxfeesBalancePostHook.Sub(stakingRewardFeeCollectorTxfeesBalancePreHook)
+			communityPoolBalancesDelta := communityPoolBalancesPostHook.Sub(communityPoolBalancesPreHook...)
+			commPoolFeeCollectorBalanceDelta := commPoolFeeCollectorBalancePostHook.Sub(commPoolFeeCollectorBalancePreHook...)
+			stakingRewardFeeCollectorMainBalanceDelta := stakingRewardFeeCollectorMainBalancePostHook.Sub(stakingRewardFeeCollectorMainBalancePreHook...)
+			stakingRewardFeeCollectorTxfeesBalanceDelta := stakingRewardFeeCollectorTxfeesBalancePostHook.Sub(stakingRewardFeeCollectorTxfeesBalancePreHook...)
 
 			// Ensure balances are as expected
 			s.Require().Equal(tc.expectedCommunityPoolBalancesDelta, communityPoolBalancesDelta)

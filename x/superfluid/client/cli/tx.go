@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
@@ -56,7 +56,10 @@ func NewSuperfluidDelegateCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			lockId, err := strconv.Atoi(args[0])
 			if err != nil {
@@ -131,7 +134,7 @@ func NewCmdSubmitSetSuperfluidAssetsProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypesv1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -180,7 +183,7 @@ func NewCmdSubmitRemoveSuperfluidAssetsProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypesv1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -201,7 +204,7 @@ func NewCmdSubmitRemoveSuperfluidAssetsProposal() *cobra.Command {
 	return cmd
 }
 
-func parseSetSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+func parseSetSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypesv1.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
@@ -244,7 +247,7 @@ func parseSetSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypes.Content
 	return content, nil
 }
 
-func parseRemoveSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+func parseRemoveSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypesv1.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
@@ -282,7 +285,10 @@ func NewCmdLockAndSuperfluidDelegate() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			sender := clientCtx.GetFromAddress()
 
@@ -345,7 +351,7 @@ func NewCmdUpdateUnpoolWhitelistProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypesv1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -375,7 +381,7 @@ func NewCreateFullRangePositionAndSuperfluidDelegateCmd() (*osmocli.TxCliDesc, *
 	}, &types.MsgCreateFullRangePositionAndSuperfluidDelegate{}
 }
 
-func parseUpdateUnpoolWhitelistArgsToContent(flags *flag.FlagSet) (govtypes.Content, error) {
+func parseUpdateUnpoolWhitelistArgsToContent(flags *flag.FlagSet) (govtypesv1.Content, error) {
 	title, err := flags.GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
@@ -438,7 +444,10 @@ func NewUnbondConvertAndStake() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			sender := clientCtx.GetFromAddress()
 			lockId, err := strconv.Atoi(args[0])

@@ -32,7 +32,7 @@ func (k Keeper) getToDistributeCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 		coins = coins.Add(gauge.Coins...)
 		distributed = distributed.Add(gauge.DistributedCoins...)
 	}
-	return coins.Sub(distributed)
+	return coins.Sub(distributed...)
 }
 
 // getToDistributeCoinsFromIterator utilizes iterator to return a list of gauges.
@@ -109,7 +109,7 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 		return types.Gauge{}, nil, true, nil
 	}
 
-	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins...)
 	// remainEpochs is the number of remaining epochs that the gauge will pay out its rewards.
 	// for a perpetual gauge, it will pay out everything in the next epoch, and we don't make
 	// an assumption of the rate at which it will get refilled at.
@@ -313,7 +313,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 // nolint: unused
 func (k Keeper) calcSplitPolicyCoins(policy types.SplittingPolicy, groupGauge *types.Gauge, groupGaugeObj types.GroupGauge) (sdk.Coins, sdk.Coins, error) {
 	if policy == types.Evenly {
-		remainCoins := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
+		remainCoins := groupGauge.Coins.Sub(groupGauge.DistributedCoins...)
 
 		var coinsDistPerInternalGauge, coinsDistThisEpoch sdk.Coins
 		for _, coin := range remainCoins {
@@ -351,7 +351,7 @@ func (k Keeper) distributeInternal(
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 
-	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins...)
 
 	// if its a perpetual gauge, we set remaining epochs to 1.
 	// otherwise is is a non perpetual gauge and we determine how many epoch payouts are left

@@ -93,6 +93,7 @@ func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount osmomath.
 		accountTo,
 		timeoutHeight,
 		0,
+		"",
 	)
 }
 
@@ -111,11 +112,13 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount osmomath.
 		accountTo,
 		timeoutHeight,
 		0,
+		"",
 	)
 }
 
 func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.Keeper) osmomath.Int {
-	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+	// UNFORKTODO: Change back to GetSupplyWithOffset
+	return bankKeeper.GetSupply(ctx, denom).Amount
 
 	// ToDo: The commented-out code bellow is what we want to happen, but we're temporarily
 	//  using the whole supply for efficiency until there's a solution for
@@ -147,6 +150,7 @@ func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
 		strings.Repeat("x", 4097),
 		clienttypes.NewHeight(0, 100),
 		0,
+		"",
 	)
 	_, ack, _ := suite.FullSendBToA(msg)
 	suite.Require().Contains(ack, "error",
@@ -267,7 +271,8 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 
 func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed osmomath.Int) {
 	osmosisApp := suite.chainA.GetOsmosisApp()
-	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	// UNFORKTODO: Change back to GetSupplyWithOffset
+	supply := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 
 	// Move some funds from chainA to chainB so that there is something in escrow
 	// Each user has 10% of the supply, so we send most of the funds from one user to chainA
@@ -467,7 +472,8 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	// ToDo: This is what we eventually want here, but using the full supply temporarily for performance reasons. See CalculateChannelValue
 	// escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
 	// escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
-	escrowed := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	// UNFORKTODO: Change back to GetSupplyWithOffset
+	escrowed := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := escrowed.Amount.QuoRaw(100) // 1% of the escrowed amount
 
 	// Use the whole quota
@@ -476,7 +482,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	channel := suite.path.EndpointA.ChannelID
 	accountFrom := suite.chainA.SenderAccount.GetAddress().String()
 	timeoutHeight := clienttypes.NewHeight(0, 100)
-	msg := transfertypes.NewMsgTransfer(port, channel, coins, accountFrom, "INVALID", timeoutHeight, 0)
+	msg := transfertypes.NewMsgTransfer(port, channel, coins, accountFrom, "INVALID", timeoutHeight, 0, "")
 
 	// Sending the message manually because AssertSend updates both clients. We need to update the clients manually
 	// for this test so that the failure to receive on chain B happens after the second packet is sent from chain A.

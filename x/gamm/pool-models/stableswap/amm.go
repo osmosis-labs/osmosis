@@ -305,7 +305,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, sprea
 			return osmomath.ZeroInt(), sdk.NewCoins(), err
 		}
 
-		tokensJoined = tokensIn.Sub(remCoins)
+		tokensJoined = tokensIn.Sub(remCoins...)
 	}
 
 	p.updatePoolForJoin(tokensJoined, numShares)

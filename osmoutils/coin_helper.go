@@ -94,3 +94,14 @@ func ConvertCoinsToDecCoins(coins sdk.Coins) sdk.DecCoins {
 	}
 	return decCoins
 }
+
+// FilterDenoms returns the coins with only the passed in denoms
+func FilterDenoms(coins sdk.Coins, denoms []string) sdk.Coins {
+	filteredCoins := sdk.NewCoins()
+
+	for _, denom := range denoms {
+		filteredCoins = filteredCoins.Add(sdk.NewCoin(denom, coins.AmountOf(denom)))
+	}
+
+	return filteredCoins
+}

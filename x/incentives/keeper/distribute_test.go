@@ -661,7 +661,7 @@ func (s *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 
 	// check gauge changes after distribution
 	coins = s.App.IncentivesKeeper.GetModuleToDistributeCoins(s.Ctx)
-	s.Require().Equal(coins, gaugeCoins.Add(addCoins...).Add(gaugeCoins2...).Sub(distrCoins))
+	s.Require().Equal(coins, gaugeCoins.Add(addCoins...).Add(gaugeCoins2...).Sub(distrCoins...))
 }
 
 // TestGetModuleDistributedCoins tests that the sum of coins that have been distributed so far for all of the module is correct.

@@ -101,8 +101,9 @@ func (s *KeeperTestSuite) TestMintInitGenesis() {
 
 			developerAccount := accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
 
-			originalSupplyOffset := bankKeeper.GetSupplyOffset(ctx, tc.mintDenom)
-			originalSupplyWithOffset := bankKeeper.GetSupplyWithOffset(ctx, tc.mintDenom)
+			// UNFORKTODO: Uncomment when supply offset is re-implemented
+			// originalSupplyOffset := bankKeeper.GetSupplyOffset(ctx, tc.mintDenom)
+			// originalSupplyWithOffset := bankKeeper.GetSupplyWithOffset(ctx, tc.mintDenom)
 			originalVestingCoins := bankKeeper.GetBalance(ctx, developerAccount, tc.mintDenom)
 
 			// Test.
@@ -121,15 +122,16 @@ func (s *KeeperTestSuite) TestMintInitGenesis() {
 			actualEpochProvisions := mintKeeper.GetMinter(ctx).EpochProvisions
 			s.Require().Equal(tc.expectedEpochProvisions, actualEpochProvisions)
 
-			// Supply offset is applied to genesis supply.
-			actualSupplyOffset := bankKeeper.GetSupplyOffset(ctx, tc.mintDenom)
-			expectedSupplyOffset := tc.expectedSupplyOffsetDelta.Add(originalSupplyOffset)
-			s.Require().Equal(expectedSupplyOffset, actualSupplyOffset)
+			// UNFORKTODO: Uncomment when supply offset is re-implemented
+			// // Supply offset is applied to genesis supply.
+			// actualSupplyOffset := bankKeeper.GetSupplyOffset(ctx, tc.mintDenom)
+			// expectedSupplyOffset := tc.expectedSupplyOffsetDelta.Add(originalSupplyOffset)
+			// s.Require().Equal(expectedSupplyOffset, actualSupplyOffset)
 
-			// Supply with offset is as expected.
-			actualSupplyWithOffset := bankKeeper.GetSupplyWithOffset(ctx, tc.mintDenom).Amount
-			expectedSupplyWithOffset := tc.expectedSupplyWithOffsetDelta.Add(originalSupplyWithOffset.Amount)
-			s.Require().Equal(expectedSupplyWithOffset.Int64(), actualSupplyWithOffset.Int64())
+			// // Supply with offset is as expected.
+			// actualSupplyWithOffset := bankKeeper.GetSupplyWithOffset(ctx, tc.mintDenom).Amount
+			// expectedSupplyWithOffset := tc.expectedSupplyWithOffsetDelta.Add(originalSupplyWithOffset.Amount)
+			// s.Require().Equal(expectedSupplyWithOffset.Int64(), actualSupplyWithOffset.Int64())
 
 			// Developer vesting account has the desired amount of tokens.
 			actualVestingCoins := bankKeeper.GetBalance(ctx, developerAccount, tc.mintDenom)

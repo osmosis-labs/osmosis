@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
 
@@ -289,7 +290,7 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
-	err = updateModuleGenesis(appGenState, govtypes.ModuleName, &govtypes.GenesisState{}, updateGovGenesis(votingPeriod, expeditedVotingPeriod))
+	err = updateModuleGenesis(appGenState, govtypes.ModuleName, &govtypesv1.GenesisState{}, updateGovGenesis(votingPeriod, expeditedVotingPeriod))
 	if err != nil {
 		return err
 	}
@@ -504,12 +505,14 @@ func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 	crisisGenState.ConstantFee.Denom = OsmoDenom
 }
 
-func updateGovGenesis(votingPeriod, expeditedVotingPeriod time.Duration) func(*govtypes.GenesisState) {
-	return func(govGenState *govtypes.GenesisState) {
+func updateGovGenesis(votingPeriod, expeditedVotingPeriod time.Duration) func(*govtypesv1.GenesisState) {
+	return func(govGenState *govtypesv1.GenesisState) {
 		govGenState.VotingParams.VotingPeriod = votingPeriod
-		govGenState.VotingParams.ExpeditedVotingPeriod = expeditedVotingPeriod
+		// UNFORKTODO: Uncomment when expedited prop is implemented
+		//govGenState.VotingParams.ExpeditedVotingPeriod = expeditedVotingPeriod
 		govGenState.DepositParams.MinDeposit = tenOsmo
-		govGenState.DepositParams.MinExpeditedDeposit = fiftyOsmo
+		// UNFORKTODO: Uncomment when expedited prop is implemented
+		//govGenState.DepositParams.MinExpeditedDeposit = fiftyOsmo
 	}
 }
 

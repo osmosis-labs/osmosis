@@ -15,7 +15,7 @@ import (
 	tmabcitypes "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 
@@ -457,7 +457,7 @@ func (n *NodeConfig) QueryPropTally(proposalNumber int) (PropTallyResult, error)
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var balancesResp govtypes.QueryTallyResultResponse
+	var balancesResp govtypesv1.QueryTallyResultResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
 		return PropTallyResult{
 			Yes:        osmomath.ZeroInt(),
@@ -484,7 +484,7 @@ func (n *NodeConfig) QueryPropStatus(proposalNumber int) (string, error) {
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var propResp govtypes.QueryProposalResponse
+	var propResp govtypesv1.QueryProposalResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &propResp); err != nil {
 		return "", err
 	}

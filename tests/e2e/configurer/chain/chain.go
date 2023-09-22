@@ -12,6 +12,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/containers"
 	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
 )
@@ -180,8 +181,8 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 				filteredCoinDenoms = append(filteredCoinDenoms, coin.Denom)
 			}
 		}
-		feeRewardTokenBalance := balance.FilterDenoms(filteredCoinDenoms)
-		return balance.Sub(feeRewardTokenBalance)
+		feeRewardTokenBalance := osmoutils.FilterDenoms(balance, filteredCoinDenoms)
+		return balance.Sub(feeRewardTokenBalance...)
 	}
 
 	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
@@ -206,7 +207,7 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 			require.NoError(c.t, err)
 			balancesDstPost := removeFeeTokenFromBalance(balancesDstPostWithTxFeeBalance)
 
-			ibcCoin := balancesDstPost.Sub(balancesDstPre)
+			ibcCoin := balancesDstPost.Sub(balancesDstPre...)
 			if ibcCoin.Len() == 1 {
 				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
 				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
