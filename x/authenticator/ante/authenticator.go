@@ -2,7 +2,6 @@ package ante
 
 import (
 	"fmt"
-	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -42,6 +41,22 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
+	// Authenticating the fee payer needs to be done with very little gas
+	// This is a spam-prevention strategy. This protects from a user adding multiple
+	// authenticators that overuse compute.
+
+	// If the fee payer is not authenticated, there will be no one to pay
+	// for the cost of the tx, which would allow an attacker to force a
+	// validator to spend resources by running authenticators on a tx
+	// that will never be executed
+
+	originalGasMeter := ctx.GasMeter()
+	// Ideally we would want to use min(gasRemaining, maxFeePayerGas) here, but this leads to problems because
+	// of the implementation of the InfiniteGasMeter. I think it's ok to allow potentially going over
+	// the original limit as long as it's bellow the fee payer gas limit
+	payerGasMeter := sdk.NewGasMeter(ad.maxFeePayerGas)
+	ctx = ctx.WithGasMeter(payerGasMeter)
+
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "transaction must be a FeeTx")
@@ -56,7 +71,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	// Always authenticate the fee payer first to enable gas to be paid.
 	// The maximum number of authenticators is limited to 15 in the msg_server.
-	feePayerIndex := 0
+	feePayerIndex := -1
 	for msgIndex, msg := range tx.GetMsgs() {
 		account, err := GetAccount(msg)
 		if err != nil {
@@ -65,11 +80,24 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 		if account.Equals(feePayer) {
 			feePayerIndex = msgIndex
-			ctx, err := ad.AuthTx(cacheCtx, tx, msg, msgIndex, simulate)
+			cacheCtx, err = ad.AuthTx(cacheCtx, tx, msg, msgIndex, simulate)
 			if err != nil {
 				return ctx, err
 			}
+
+			// consume
+			originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas consumed, continue")
+
+			// Reset this for both contexts
+			cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
+			ctx = ctx.WithGasMeter(originalGasMeter)
 		}
+	}
+
+	// this is unlikely to ever happen
+	if feePayerIndex == -1 {
+		return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized,
+			fmt.Sprintf("failed to retrieve the account for feePayer %d", feePayer))
 	}
 
 	// Authenticate the accounts of all messages.
@@ -80,11 +108,13 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 
 		// After the fee payer has been authenticated, proceed to authenticate the remaining messages.
-		ctx, err := ad.AuthTx(cacheCtx, tx, msg, msgIndex, simulate)
+		_, err := ad.AuthTx(cacheCtx, tx, msg, msgIndex, simulate)
 		if err != nil {
 			return ctx, err
 		}
 	}
+
+	// TODO: test originalGasMeter works as expected
 
 	return next(ctx, tx, simulate)
 }
