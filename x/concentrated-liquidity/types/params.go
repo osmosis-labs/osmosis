@@ -18,6 +18,7 @@ var (
 	KeyAuthorizedQuoteDenoms              = []byte("AuthorizedQuoteDenoms")
 	KeyAuthorizedUptimes                  = []byte("AuthorizedUptimes")
 	KeyIsPermisionlessPoolCreationEnabled = []byte("IsPermisionlessPoolCreationEnabled")
+	KeyUnrestrictedPoolCreatorWhitelist   = []byte("UnrestrictedPoolCreatorWhitelist")
 
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -27,7 +28,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomath.Dec, discountRate osmomath.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool) Params {
+func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomath.Dec, discountRate osmomath.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool, unrestrictedPoolCreatorWhitelist []string) Params {
 	return Params{
 		AuthorizedTickSpacing:               authorizedTickSpacing,
 		AuthorizedSpreadFactors:             authorizedSpreadFactors,
@@ -35,6 +36,7 @@ func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomat
 		BalancerSharesRewardDiscount:        discountRate,
 		AuthorizedUptimes:                   authorizedUptimes,
 		IsPermissionlessPoolCreationEnabled: isPermissionlessPoolCreationEnabled,
+		UnrestrictedPoolCreatorWhitelist:    unrestrictedPoolCreatorWhitelist,
 	}
 }
 
@@ -52,6 +54,7 @@ func DefaultParams() Params {
 		BalancerSharesRewardDiscount:        DefaultBalancerSharesDiscount,
 		AuthorizedUptimes:                   DefaultAuthorizedUptimes,
 		IsPermissionlessPoolCreationEnabled: false,
+		UnrestrictedPoolCreatorWhitelist:    DefaultUnrestrictedPoolCreatorWhitelist,
 	}
 }
 
@@ -75,6 +78,9 @@ func (p Params) Validate() error {
 	if err := validateAuthorizedUptimes(p.AuthorizedUptimes); err != nil {
 		return err
 	}
+	if err := validateUnrestrictedPoolCreatorWhitelist(p.UnrestrictedPoolCreatorWhitelist); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -87,6 +93,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyIsPermisionlessPoolCreationEnabled, &p.IsPermissionlessPoolCreationEnabled, validateIsPermissionLessPoolCreationEnabled),
 		paramtypes.NewParamSetPair(KeyDiscountRate, &p.BalancerSharesRewardDiscount, validateBalancerSharesDiscount),
 		paramtypes.NewParamSetPair(KeyAuthorizedUptimes, &p.AuthorizedUptimes, validateAuthorizedUptimes),
+		paramtypes.NewParamSetPair(KeyUnrestrictedPoolCreatorWhitelist, &p.UnrestrictedPoolCreatorWhitelist, validateUnrestrictedPoolCreatorWhitelist),
 	}
 }
 
@@ -230,6 +237,30 @@ func validateAuthorizedUptimes(i interface{}) error {
 
 		if !supported {
 			return UptimeNotSupportedError{Uptime: uptime}
+		}
+	}
+
+	return nil
+}
+
+// validateUnrestrictedPoolCreatorWhitelist validates a slice of addresses
+// that are allowed to bypass the restrictions on permissionless pool creation
+//
+// Parameters:
+// - i: The parameter to validate.
+//
+// Returns:
+// - An error if any of the strings are not addresses
+func validateUnrestrictedPoolCreatorWhitelist(i interface{}) error {
+	whitelist, ok := i.([]string)
+
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	for _, a := range whitelist {
+		if _, err := sdk.AccAddressFromBech32(a); err != nil {
+			return fmt.Errorf("invalid address")
 		}
 	}
 

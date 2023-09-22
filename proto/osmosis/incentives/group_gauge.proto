@@ -37,10 +37,16 @@ message InternalGaugeRecord {
   option (gogoproto.equal) = true;
 
   uint64 gauge_id = 1 [ (gogoproto.moretags) = "yaml:\"gauge_id\"" ];
+  // CurrentWeight is the current weight of this gauge being distributed to for
+  // this epoch. For instance, for volume splitting policy, this stores the
+  // volume generated in the last epoch of the linked pool.
   string current_weight = 2 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
+  // CumulativeWeight serves as a snapshot of the accumulator being tracked
+  // based on splitting policy. For instance, for volume splitting policy, this
+  // stores the cumulative volume for the linked pool at time of last update.
   string cumulative_weight = 3 [
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false

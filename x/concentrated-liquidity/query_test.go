@@ -590,3 +590,284 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestGetNumNextInitializedTicks() {
+	defaultTick := withPoolId(defaultTick, defaultPoolId)
+
+	tests := []struct {
+		name        string
+		presetTicks []genesis.FullTick
+
+		// testing params
+		poolId                       uint64
+		tokenInDenom                 string
+		currentPoolTick              int64
+		numberOfNextInitializedTicks uint64
+
+		// expected values
+		expectedLiquidityDepths []queryproto.TickLiquidityNet
+		expectedError           bool
+	}{
+		{
+			name: "one full range position, zero for one true",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+			},
+
+			poolId:                       defaultPoolId,
+			tokenInDenom:                 ETH,
+			numberOfNextInitializedTicks: 1,
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: osmomath.NewDec(10),
+					TickIndex:    DefaultMinTick,
+				},
+			},
+		},
+		{
+			name: "one full range position, zero for one false",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+			},
+
+			poolId:                       defaultPoolId,
+			tokenInDenom:                 USDC,
+			numberOfNextInitializedTicks: 1,
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: osmomath.NewDec(-10),
+					TickIndex:    DefaultMaxTick,
+				},
+			},
+		},
+		{
+			name: "one full range position, one range position above current tick, zero for one true",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
+			},
+
+			poolId:                       defaultPoolId,
+			tokenInDenom:                 ETH,
+			numberOfNextInitializedTicks: 1,
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: osmomath.NewDec(10),
+					TickIndex:    DefaultMinTick,
+				},
+			},
+		},
+		{
+			name: "one full range position, one range position above current tick, zero for one false",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
+			},
+
+			poolId:                       defaultPoolId,
+			tokenInDenom:                 USDC,
+			numberOfNextInitializedTicks: 3,
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: osmomath.NewDec(20),
+					TickIndex:    5,
+				},
+				{
+					LiquidityNet: osmomath.NewDec(-20),
+					TickIndex:    10,
+				},
+				{
+					LiquidityNet: osmomath.NewDec(-10),
+					TickIndex:    DefaultMaxTick,
+				},
+			},
+		},
+		{
+			name: "one full range position, one range position above current tick, zero for one false, bound num ticks below with non-empty ticks",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
+			},
+
+			poolId:                       defaultPoolId,
+			tokenInDenom:                 ETH,
+			numberOfNextInitializedTicks: 1,
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: osmomath.NewDec(20),
+					TickIndex:    -10,
+				},
+			},
+		},
+		{
+			name: "one ranged position, returned empty array",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
+			},
+
+			poolId:                       defaultPoolId,
+			tokenInDenom:                 ETH,
+			numberOfNextInitializedTicks: 0,
+			expectedLiquidityDepths:      []queryproto.TickLiquidityNet{},
+		},
+		{
+			name: "one full range position, one range position above current tick, zero for one false, bound num ticks below with non-empty ticks",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -10, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-20)),
+			},
+
+			poolId:                       defaultPoolId,
+			tokenInDenom:                 USDC,
+			numberOfNextInitializedTicks: 1,
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: osmomath.NewDec(-20),
+					TickIndex:    10,
+				},
+			},
+		},
+		{
+			name: "one full range position, two ranged positions, zero for one true",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -5, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 5, osmomath.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, 2, osmomath.NewDec(40)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-40)),
+			},
+
+			poolId:                       defaultPoolId,
+			tokenInDenom:                 ETH,
+			numberOfNextInitializedTicks: 2,
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: osmomath.NewDec(20),
+					TickIndex:    -5,
+				},
+				{
+					LiquidityNet: osmomath.NewDec(10),
+					TickIndex:    DefaultMinTick,
+				},
+			},
+		},
+		{
+			name: "one full range position, two ranged positions, zero for one false",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -5, osmomath.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 5, osmomath.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, 2, osmomath.NewDec(40)),
+				withLiquidityNetandTickIndex(defaultTick, 10, osmomath.NewDec(-40)),
+			},
+
+			poolId:                       defaultPoolId,
+			tokenInDenom:                 USDC,
+			numberOfNextInitializedTicks: 4,
+			expectedLiquidityDepths: []queryproto.TickLiquidityNet{
+				{
+					LiquidityNet: osmomath.NewDec(40),
+					TickIndex:    2,
+				},
+				{
+					LiquidityNet: osmomath.NewDec(-20),
+					TickIndex:    5,
+				},
+				{
+					LiquidityNet: osmomath.NewDec(-40),
+					TickIndex:    10,
+				},
+				{
+					LiquidityNet: osmomath.NewDec(-10),
+					TickIndex:    DefaultMaxTick,
+				},
+			},
+		},
+
+		// error cases
+		{
+			name: "error: invalid pool id",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+			},
+
+			poolId:                       5,
+			tokenInDenom:                 "invalid_token",
+			numberOfNextInitializedTicks: 1,
+			expectedError:                true,
+		},
+		{
+			name: "error: invalid token in",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, osmomath.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, osmomath.NewDec(-10)),
+			},
+
+			poolId:                       defaultPoolId,
+			tokenInDenom:                 "invalid_token",
+			numberOfNextInitializedTicks: 1,
+			expectedError:                true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		if test.poolId == 0 {
+			test.poolId = defaultPoolId
+		}
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.SetupTest()
+
+			// Create a default CL pool
+			pool := s.PrepareConcentratedPool()
+			for _, tick := range test.presetTicks {
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, &tick.Info)
+			}
+
+			// Force initialize current sqrt price to 1.
+			// Normally, initialized during position creation.
+			// We only initialize ticks in this test for simplicity.
+			curPrice := osmomath.OneDec()
+			curTick, err := math.CalculateSqrtPriceToTick(osmomath.BigDecFromDec(osmomath.MustMonotonicSqrt(curPrice)))
+			s.Require().NoError(err)
+			var curSqrtPrice osmomath.BigDec = osmomath.OneBigDec()
+			if test.currentPoolTick > 0 {
+				sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
+				s.Require().NoError(err)
+
+				curTick = test.currentPoolTick
+				curSqrtPrice = sqrtPrice
+			}
+			pool.SetCurrentSqrtPrice(curSqrtPrice)
+			pool.SetCurrentTick(curTick)
+
+			err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			s.Require().NoError(err)
+
+			// system under test
+			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetNumNextInitializedTicks(s.Ctx, test.poolId, test.numberOfNextInitializedTicks, test.tokenInDenom)
+			if test.expectedError {
+				s.Require().Error(err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(test.expectedLiquidityDepths, liquidityForRange)
+		})
+	}
+}

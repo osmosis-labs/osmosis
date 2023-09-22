@@ -275,26 +275,6 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	return nextGaugeId, nil
 }
 
-// nolint: unused
-// getWeightBySplittingPolicy takes in a pool ID, splitting policy, and current weight, and returns the updated weight (should be positive)
-func (k Keeper) getWeightBySplittingPolicy(ctx sdk.Context, poolId uint64, splittingPolicy types.SplittingPolicy, currentWeight osmomath.Int) (osmomath.Int, error) {
-	switch splittingPolicy {
-	case types.Evenly:
-		return osmomath.OneInt(), nil
-	case types.Volume:
-		// Set the weight to diff between the current volume of the pool
-		totalVolume := k.pmk.GetOsmoVolumeForPool(ctx, poolId)
-
-		if totalVolume.LT(currentWeight) {
-			return osmomath.ZeroInt(), types.CumulativeVolumeDecreasedError{PoolId: poolId, PreviousVolume: currentWeight, NewVolume: totalVolume}
-		}
-
-		return totalVolume.Sub(currentWeight), nil
-	default:
-		return osmomath.ZeroInt(), types.UnsupportedSplittingPolicyError{SplittingPolicy: splittingPolicy}
-	}
-}
-
 // AddToGaugeRewardsFromGauge transfer coins from a group gauge to its internal gauges.
 // Prior to calling this function, we make sure that the internalGaugeId is linked with the associated groupGaugeId.
 // Note: we donot have to bankSend for this gauge transfer because all the available incentive has already been bank sent

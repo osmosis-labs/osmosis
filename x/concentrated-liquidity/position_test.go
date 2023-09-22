@@ -1796,7 +1796,7 @@ func (s *KeeperTestSuite) TestTickRoundingEdgeCase() {
 	swapAddr := testAccs[2]
 	desiredTokenOut := sdk.NewCoin(USDC, osmomath.NewInt(10000))
 	s.FundAcc(swapAddr, sdk.NewCoins(sdk.NewCoin(ETH, osmomath.NewInt(1000000000000000000))))
-	_, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, osmomath.ZeroDec(), osmomath.ZeroDec())
+	_, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, osmomath.ZeroDec(), osmomath.ZeroBigDec())
 	s.Require().NoError(err)
 
 	// Both positions should be able to withdraw successfully

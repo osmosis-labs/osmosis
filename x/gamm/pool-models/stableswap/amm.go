@@ -223,7 +223,7 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, spreadF
 	// We invert that negative here.
 	cfmmIn = cfmmIn.Neg()
 	// divide by (1 - spread factor) to force a corresponding increase in input asset
-	inAmt := cfmmIn.QuoRoundUp(oneMinus(spreadFactor))
+	inAmt := cfmmIn.QuoRoundUpMut(oneMinus(spreadFactor))
 	inCoinAmt := p.getDescaledPoolAmt(tokenInDenom, inAmt)
 	return inCoinAmt, nil
 }
