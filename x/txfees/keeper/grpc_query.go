@@ -51,7 +51,8 @@ func (q Querier) DenomSpotPrice(ctx context.Context, req *types.QueryDenomSpotPr
 		return nil, err
 	}
 
-	// TODO: remove truncation before https://github.com/osmosis-labs/osmosis/issues/6064 is fully complete.
+	// Truncation exists here to maintain backwards compatibility. If there is a future need,
+	// seprate API should be exposed to get the 36 decimal precision spot price.
 	return &types.QueryDenomSpotPriceResponse{PoolID: feeToken.PoolID, SpotPrice: spotPrice.Dec()}, nil
 }
 

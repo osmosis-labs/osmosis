@@ -1,8 +1,8 @@
-package grpc 
+
+package grpcv2
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `proto/osmosis/poolmanager/v2/query.yml`
-
 
 import (
 	context "context"
@@ -16,7 +16,7 @@ import (
 )
 
 type Querier struct {
-	Q client.Querier
+	Q client.QuerierV2
 }
 
 var _ queryprotov2.QueryServer = Querier{}

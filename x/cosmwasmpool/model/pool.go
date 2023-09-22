@@ -83,7 +83,13 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom 
 	if err != nil {
 		return osmomath.BigDec{}, err
 	}
-	return osmomath.MustNewBigDecFromStr(response.SpotPrice), nil
+
+	result, err := osmomath.NewBigDecFromStr(response.SpotPrice)
+	if err != nil {
+		return osmomath.BigDec{}, err
+	}
+
+	return result, nil
 }
 
 // GetType returns the type of the pool.

@@ -23,6 +23,16 @@ func NewQuerier(k poolmanager.Keeper) Querier {
 	return Querier{k}
 }
 
+// QuerierV2 defines a wrapper around the x/poolmanager keeper providing gRPC method
+// handlers for v2 queries.
+type QuerierV2 struct {
+	K poolmanager.Keeper
+}
+
+func NewV2Querier(k poolmanager.Keeper) QuerierV2 {
+	return QuerierV2{K: k}
+}
+
 func (q Querier) Params(ctx sdk.Context,
 	req queryproto.ParamsRequest,
 ) (*queryproto.ParamsResponse, error) {
@@ -227,7 +237,7 @@ func (q Querier) SpotPrice(ctx sdk.Context, req queryproto.SpotPriceRequest) (*q
 }
 
 // SpotPriceV2 returns the spot price of the pool with the given quote and base asset denoms. 36 decimals.
-func (q Querier) SpotPriceV2(ctx sdk.Context, req queryprotov2.SpotPriceRequest) (*queryprotov2.SpotPriceResponse, error) {
+func (q QuerierV2) SpotPriceV2(ctx sdk.Context, req queryprotov2.SpotPriceRequest) (*queryprotov2.SpotPriceResponse, error) {
 	if req.BaseAssetDenom == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid base asset denom")
 	}

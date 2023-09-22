@@ -279,16 +279,12 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 	// ETH is token0 so its price will be the DefaultCurrSqrtPrice squared
 	spotPriceBaseETH, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, USDC, ETH)
 	s.Require().NoError(err)
-	// TODO: remove Dec truncation before https://github.com/osmosis-labs/osmosis/issues/5726 is complete
-	// Currently exists for state-compatibility with v19.x
-	s.Require().Equal(spotPriceBaseETH.Dec(), DefaultCurrSqrtPrice.PowerInteger(2).Dec())
+	s.Require().Equal(spotPriceBaseETH, DefaultCurrSqrtPrice.PowerInteger(2))
 
 	// test that we have correct values for reversed quote asset and base asset
 	spotPriceBaseUSDC, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, ETH, USDC)
 	s.Require().NoError(err)
-	// TODO: remove Dec truncation before https://github.com/osmosis-labs/osmosis/issues/5726 is complete
-	// Currently exists for state-compatibility with v19.x
-	s.Require().Equal(spotPriceBaseUSDC.Dec(), osmomath.OneBigDec().Quo(DefaultCurrSqrtPrice.PowerInteger(2)).Dec())
+	s.Require().Equal(spotPriceBaseUSDC, osmomath.OneBigDec().Quo(DefaultCurrSqrtPrice.PowerInteger(2)))
 
 	// try getting spot price from a non-existent pool
 	spotPrice, err = s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId+1, USDC, ETH)

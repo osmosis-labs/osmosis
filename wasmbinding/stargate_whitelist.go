@@ -25,6 +25,7 @@ import (
 	minttypes "github.com/osmosis-labs/osmosis/v19/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
+	poolmanagerqueryprotov2 "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryprotov2"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v19/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v19/x/twap/client/queryproto"
@@ -143,6 +144,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/Pool", &poolmanagerqueryproto.PoolResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/SpotPrice", &poolmanagerqueryproto.SpotPriceResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/TotalPoolLiquidity", &poolmanagerqueryproto.TotalPoolLiquidityResponse{})
+	setWhitelistedQuery("/osmosis.poolmanager.v2.Query/SpotPrice", &poolmanagerqueryprotov2.SpotPriceResponse{})
 
 	// txfees
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/FeeTokens", &txfeestypes.QueryFeeTokensResponse{})

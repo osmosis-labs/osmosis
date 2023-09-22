@@ -32,10 +32,10 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 		return sdk.Coin{}, err
 	}
 
-	// Note: spotPrice truncation is done here for maintaining state-compatibility with v19.x
-	// It should be changed to support full spot price precision before
-	// https://github.com/osmosis-labs/osmosis/issues/6064 is complete
-	return sdk.NewCoin(baseDenom, spotPrice.Dec().MulInt(inputFee.Amount).RoundInt()), nil
+	// TODO:
+	// Apply BigDec RoundSDKInt helper once implemented:
+	// https://github.com/osmosis-labs/osmosis/issues/6485
+	return sdk.NewCoin(baseDenom, spotPrice.Mul(osmomath.BigDecFromSDKInt(inputFee.Amount)).Dec().RoundInt()), nil
 }
 
 // CalcFeeSpotPrice converts the provided tx fees into their equivalent value in the base denomination.

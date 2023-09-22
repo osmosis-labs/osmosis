@@ -347,7 +347,7 @@ func (s *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			// We generate this value using the scripts in x/concentrated-liquidity/python
 			// Exact output: 5000.000000000000000129480272834995458481
 			// SDK Bankers rounded output: 5000.000000000000000129
-			expectedSpotPrice: osmomath.MustNewBigDecFromStr("5000.000000000000000129"),
+			expectedSpotPrice: osmomath.MustNewBigDecFromStr("5000.000000000000000129480272834995458481"),
 		},
 		"valid concentrated liquidity pool without position": {
 			preCreatePoolType: types.Concentrated,
