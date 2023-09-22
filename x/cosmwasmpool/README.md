@@ -471,3 +471,15 @@ should be careful to include all code ids that should be whitelisted.
 Additionally, the maximum number of pools that can be migrated at once is also implemented
 as a parameter. It is initialized to 20 in the v16 upgrade handler. However, governance
 can tweak it by changing the `PoolMigrationLimit` parameter.
+
+## Pool Model
+
+Note: CW Pool has 2 pool models:
+- CosmWasmPool which is a proto-generated store model used for serialization into state.
+- Pool struct that encapsulates the CosmWasmPool and wasmKeeper for calling the contract.
+
+CosmWasmPool implements the poolmanager.PoolI interface but it panics on all methods.
+The reason is that access to wasmKeeper is required to call the contract.
+
+Instead, all interactions and poolmanager.PoolI methods are to be performed on the Pool struct.
+The reason why we cannot have a Pool struct only is because it cannot be serialized into state.
