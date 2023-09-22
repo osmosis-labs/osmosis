@@ -11,8 +11,6 @@ type AuthenticatorTxOptions interface {
 }
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	//cdc.RegisterConcrete(&TxExtension{}, "osmosis.authenticator.TxExtension", nil)
-
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
