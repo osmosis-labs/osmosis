@@ -10,13 +10,13 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
 
-	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	osmosim "github.com/osmosis-labs/osmosis/v19/simulation/executor"
 	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes/simlogger"
 	txfeetypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 )
+
+const SimAppChainID = "simulation-app"
 
 // Profile with:
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/osmosis-labs/osmosis/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
@@ -93,7 +93,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.BlockSize = 5
 	config.OnOperation = false
 	config.AllInvariants = false
-	config.InitializationConfig.ChainID = sims.SimAppChainID
+	config.InitializationConfig.ChainID = SimAppChainID
 
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.

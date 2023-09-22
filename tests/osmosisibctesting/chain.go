@@ -15,6 +15,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/app"
 )
 
+const SimAppChainID = "simulation-app"
+
 type TestChain struct {
 	*ibctesting.TestChain
 }
@@ -67,7 +69,7 @@ func SignAndDeliver(
 		txCfg,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 2500)},
-		sims.SimAppChainID,
+		SimAppChainID,
 		chainID,
 		accNums,
 		accSeqs,
