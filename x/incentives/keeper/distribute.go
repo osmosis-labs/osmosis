@@ -321,6 +321,8 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 }
 
 // syncGroupGaugeWeights updates the individual and total weights of the gauge records based on the splitting policy.
+// It mutates the passed in object and sets the updated value in state.
+// If there is an error, the passed in object is not mutated.
 //
 // It returns an error if:
 // - the splitting policy is not supported

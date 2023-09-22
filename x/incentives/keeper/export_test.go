@@ -46,3 +46,8 @@ func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sd
 func (k Keeper) SyncGroupGaugeWeights(ctx sdk.Context, groupGauge types.GroupGauge) error {
 	return k.syncGroupGaugeWeights(ctx, groupGauge)
 }
+
+// SyncVolumeSplitGauge updates the individual and total weights of the gauge records based on the volume splitting policy.
+func (k Keeper) SyncVolumeSplitGauge(ctx sdk.Context, volumeSplitGauge types.GroupGauge) error {
+	return k.syncVolumeSplitGauge(ctx, volumeSplitGauge)
+}
