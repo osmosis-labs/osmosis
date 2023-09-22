@@ -28,7 +28,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // CosmWasmPool represents the data serialized into state for each CW pool.
 //
 // Note: CW Pool has 2 pool models:
-// - CosmWasmPool which is a proto-generates store model used for serialization
+// - CosmWasmPool which is a proto-generated store model used for serialization
 // into state.
 // - Pool struct that encapsulates the CosmWasmPool and wasmKeeper for calling
 // the contract.

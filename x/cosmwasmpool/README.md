@@ -475,7 +475,7 @@ can tweak it by changing the `PoolMigrationLimit` parameter.
 ## Pool Model
 
 Note: CW Pool has 2 pool models:
-- CosmWasmPool which is a proto-generates store model used for serialization into state.
+- CosmWasmPool which is a proto-generated store model used for serialization into state.
 - Pool struct that encapsulates the CosmWasmPool and wasmKeeper for calling the contract.
 
 CosmWasmPool implements the poolmanager.PoolI interface but it panics on all methods.
