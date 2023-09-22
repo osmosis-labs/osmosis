@@ -56,5 +56,6 @@ var (
 	}
 	DefaultBalancerSharesDiscount = osmomath.MustNewDecFromStr("0.05")
 	// By default, we only authorize one nanosecond (one block) uptime as an option
-	DefaultAuthorizedUptimes = []time.Duration{time.Nanosecond}
+	DefaultAuthorizedUptimes                = []time.Duration{time.Nanosecond}
+	DefaultUnrestrictedPoolCreatorWhitelist = []string{}
 )

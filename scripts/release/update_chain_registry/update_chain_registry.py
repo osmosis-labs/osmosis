@@ -21,7 +21,7 @@ import json
 import argparse
 import sys
 
-from utils.versions import compare_versions, same_major
+from utils.versions import compare_versions, same_major, validate_tag
 from utils.go_mod import fetch_go_mod_from_tag, get_package_version
 
 chain_json_url = "https://raw.githubusercontent.com/osmosis-labs/osmosis/main/chain.schema.json"
@@ -96,7 +96,7 @@ def create_version_info(version, height):
     version_info = {
         "name": version.split('.')[0],
         "tag" : version,
-        "height": str(height),
+        "height": int(height),
         "recommended_version": version,
         "compatible_versions": [
             version
@@ -125,6 +125,8 @@ def create_version_info(version, height):
 
 def update_codebase(codebase, version, height):
 
+    global DEBUG
+
     curr_recommended_version = codebase["recommended_version"]
     curr_compatible_versions = codebase["compatible_versions"]
 
@@ -135,6 +137,8 @@ def update_codebase(codebase, version, height):
 
     if compare_versions(version, curr_recommended_version) < 0:
         if DEBUG:
+            # I should still handle this case as it could be
+            # a minor release for a previous major verson
             print("New version is older than recommended version")
             print("Skipping update")
         return
@@ -148,9 +152,25 @@ def update_codebase(codebase, version, height):
         if same_major(version, curr_recommended_version):
             if DEBUG:
                 print(f"Minor release from {version} to {curr_recommended_version}")
-                print("Logic not yet implemented...")
-                print("Skipping update.")
-            return
+
+            version_info = create_version_info(version, height)
+            version_info["compatible_versions"].extend(codebase["compatible_versions"])
+
+            # Replace minor version
+            for idx, codebase_version in enumerate(codebase["versions"]):
+                if codebase_version['name'] == version.split('.')[0]: # same major version
+                    codebase["versions"][idx] = version_info
+                    break
+
+            # Since it's a latest release, I have also to update the top info
+            codebase["recommended_version"] = version_info["recommended_version"]
+            codebase["compatible_versions"] = version_info["compatible_versions"]
+            codebase["binaries"] = version_info["binaries"]
+            codebase["cosmos_sdk_version"] = version_info["cosmos_sdk_version"]
+            codebase["consensus"] = version_info["consensus"]
+            codebase["cosmwasm_version"] = version_info["cosmwasm_version"]
+            codebase["ibc_go_version"] = version_info["ibc_go_version"]
+
         else:
             if DEBUG:
                 print(f"Major release from {version} to {curr_recommended_version}")
@@ -176,12 +196,21 @@ def update_codebase(codebase, version, height):
 
 def main():
 
+    global DEBUG
+
     parser = argparse.ArgumentParser(description="Create binaries json")
     parser.add_argument('--upgrade_version', required=True, type=str, help='The upgrade tag to use (e.g v19.0.0)')
-    parser.add_argument('--upgrade_height', required=True, type=str, help='The height of the upgrade (e.g. 10000000)')
+    # TODO: Upgrade height is required only with new major release
+    parser.add_argument('--upgrade_height', required=True, type=int, help='The height of the upgrade (e.g. 10000000)')
     parser.add_argument('--debug', action='store_true', default=False)
 
     args = parser.parse_args()
+
+    # Validate the tag format
+    if args.upgrade_version and not validate_tag(args.upgrade_version):
+        print("Error: The provided version does not follow the 'vX.Y.Z' format.")
+        sys.exit(1)
+
     DEBUG = args.debug
 
     try:
@@ -190,8 +219,12 @@ def main():
         chain_json = fetch_data(chain_json_url, "json")
 
         updated_codebase = update_codebase(chain_json["codebase"], args.upgrade_version, args.upgrade_height)
-        chain_json["codebase"] = updated_codebase
-        print(json.dumps(chain_json, indent=2))
+
+        if updated_codebase:
+            chain_json["codebase"] = updated_codebase
+            print(json.dumps(chain_json, indent=2))
+        else:
+            print("Couldn't update codebase")
 
     except Exception as e:
         print(f"An error occurred: {e}")

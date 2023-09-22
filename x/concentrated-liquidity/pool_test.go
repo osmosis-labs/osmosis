@@ -40,12 +40,15 @@ func (s *KeeperTestSuite) TestInitializePool() {
 
 	validCreatorAddress := s.TestAccs[0]
 
+	poolmanagerModuleAccount := s.App.AccountKeeper.GetModuleAccount(s.Ctx, poolmanagertypes.ModuleName).GetAddress()
+
 	tests := []struct {
-		name                      string
-		poolI                     poolmanagertypes.PoolI
-		authorizedDenomsOverwrite []string
-		creatorAddress            sdk.AccAddress
-		expectedErr               error
+		name                             string
+		poolI                            poolmanagertypes.PoolI
+		authorizedDenomsOverwrite        []string
+		unrestrictedPoolCreatorWhitelist []string
+		creatorAddress                   sdk.AccAddress
+		expectedErr                      error
 	}{
 		{
 			name:           "Happy path",
@@ -79,6 +82,23 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			creatorAddress:            validCreatorAddress,
 			expectedErr:               types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: USDC, AuthorizedQuoteDenoms: []string{"otherDenom"}},
 		},
+		{
+			name:                      "bypass check because poolmanager module account",
+			poolI:                     validPoolI,
+			authorizedDenomsOverwrite: []string{"otherDenom"},
+			// despite the quote denom not being authorized, will still
+			// pass because its coming from the poolmanager module account
+			creatorAddress: poolmanagerModuleAccount,
+		},
+		{
+			name:                      "bypass check because of whitelisted bypass",
+			poolI:                     validPoolI,
+			authorizedDenomsOverwrite: []string{"otherDenom"},
+			// despite the quote denom not being authorized, will still
+			// pass because its coming from a whitelisted pool creator
+			unrestrictedPoolCreatorWhitelist: []string{validCreatorAddress.String()},
+			creatorAddress:                   validCreatorAddress,
+		},
 	}
 
 	for _, test := range tests {
@@ -89,6 +109,12 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
 				params.AuthorizedQuoteDenoms = test.authorizedDenomsOverwrite
 				s.App.PoolManagerKeeper.SetParams(s.Ctx, params)
+			}
+
+			if len(test.unrestrictedPoolCreatorWhitelist) > 0 {
+				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+				params.UnrestrictedPoolCreatorWhitelist = test.unrestrictedPoolCreatorWhitelist
+				s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
 			}
 
 			s.setListenerMockOnConcentratedLiquidityKeeper()
