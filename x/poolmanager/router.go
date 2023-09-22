@@ -3,6 +3,7 @@ package poolmanager
 import (
 	"errors"
 	"fmt"
+
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -1081,7 +1082,6 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactStableSwapPool(
 			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
 		}, nil
 	} else if err == nil {
-
 		// Validate if the trade as is respects the price impact, if it does re-estimate it with a swap fee and return
 		// the result.
 		priceDeviation := calculatePriceDeviation(req.FromCoin, tokenOut, spotPrice)
@@ -1142,7 +1142,6 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactStableSwapPool(
 			// and we should continue halving.
 			highAmount = midAmount.Sub(sdk.OneInt())
 		} else {
-
 			priceDeviation := calculatePriceDeviation(currFromCoin, tokenOut, spotPrice)
 			if priceDeviation.LTE(adjustedMaxPriceImpact) {
 				lowAmount = midAmount.Add(sdk.OneInt())
