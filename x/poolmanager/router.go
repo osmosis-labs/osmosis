@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 
+	"math/big"
+	"strings"
+
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"math/big"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
