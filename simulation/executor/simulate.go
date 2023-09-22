@@ -178,7 +178,7 @@ func initChain(
 	// TODO: Cleanup the whole config dependency with appStateFn
 	accounts, req := initChainFn(simManager, r, accounts, config.InitializationConfig)
 	// Valid app version can only be zero on app initialization.
-	req.ConsensusParams.Version.AppVersion = 0
+	req.ConsensusParams.Version.App = 0
 	res := app.GetBaseApp().InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
 

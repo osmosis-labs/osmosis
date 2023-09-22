@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -217,7 +216,7 @@ type GenesisParams struct {
 
 	StrategicReserveAccounts []banktypes.Balance
 
-	ConsensusParams *tmproto.ConsensusParams
+	ConsensusParams *tmtypes.ConsensusParams
 
 	GenesisTime         time.Time
 	NativeCoinMetadatas []banktypes.Metadata
@@ -497,7 +496,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.ConsensusParams.Block.MaxGas = 6_000_000
 	genParams.ConsensusParams.Evidence.MaxAgeDuration = genParams.StakingParams.UnbondingTime
 	genParams.ConsensusParams.Evidence.MaxAgeNumBlocks = int64(genParams.StakingParams.UnbondingTime.Seconds()) / 3
-	genParams.ConsensusParams.Version.AppVersion = 1
+	genParams.ConsensusParams.Version.App = 1
 
 	genParams.PoolIncentivesGenesis = *poolincentivestypes.DefaultGenesisState()
 	genParams.PoolIncentivesGenesis.Params.MintedDenom = genParams.NativeCoinMetadatas[0].Base

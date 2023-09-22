@@ -87,7 +87,7 @@ func RunQueryTestCase[Q proto.Message](t *testing.T, desc *QueryDescriptor, tc *
 func newClientContextWithFrom(t *testing.T, fs *pflag.FlagSet) client.Context {
 	clientCtx := client.Context{}
 	from, _ := fs.GetString(flags.FlagFrom)
-	fromAddr, fromName, _, err := client.GetFromFields(nil, from, true)
+	fromAddr, fromName, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, from)
 	require.NoError(t, err)
 
 	clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(fromName)

@@ -201,12 +201,16 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 	// initialize a genesis file
 	configDir := chain.nodes[0].configDir()
 	for _, val := range chain.nodes {
+		addr, err := val.keyInfo.GetAddress()
+		if err != nil {
+			return err
+		}
 		if chain.chainMeta.Id == ChainAID {
-			if err := addAccount(configDir, "", InitBalanceStrA+","+DaiOsmoPoolBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrA+","+DaiOsmoPoolBalances, addr, forkHeight); err != nil {
 				return err
 			}
 		} else if chain.chainMeta.Id == ChainBID {
-			if err := addAccount(configDir, "", InitBalanceStrB+","+DaiOsmoPoolBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrB+","+DaiOsmoPoolBalances, addr, forkHeight); err != nil {
 				return err
 			}
 		}

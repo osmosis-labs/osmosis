@@ -17,6 +17,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
+
 	"github.com/CosmWasm/wasmd/x/wasm"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -430,6 +432,11 @@ func (app *OsmosisApp) RegisterTxService(clientCtx client.Context) {
 // method.
 func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
+}
+
+// RegisterNodeService registers the node gRPC Query service.
+func (app *OsmosisApp) RegisterNodeService(clientCtx client.Context) {
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
 }
 
 // configure store loader that checks if version == upgradeHeight and applies store upgrades

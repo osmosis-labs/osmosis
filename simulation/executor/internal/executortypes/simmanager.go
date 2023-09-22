@@ -92,18 +92,18 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []simtypes.Actio
 	// hardcode this one filepath for wasm.
 	// TODO: Clean this up / make a better plan
 	simState := module.SimulationState{
-		AppParams:    loadAppParamsForWasm("params.json"),
-		ParamChanges: []simulation.ParamChange{},
-		Contents:     []simulation.WeightedProposalContent{},
-		Cdc:          cdc,
+		AppParams:              loadAppParamsForWasm("params.json"),
+		LegacyParamChange:      []simulation.LegacyParamChange{},
+		LegacyProposalContents: []simulation.WeightedProposalContent{},
+		Cdc:                    cdc,
 	}
 
 	r := rand.New(rand.NewSource(seed))
 	// first pass generate randomized params + proposal contents
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.legacyModules[moduleName]; ok {
-			simState.ParamChanges = append(simState.ParamChanges, simModule.RandomizedParams(r)...)
-			simState.Contents = append(simState.Contents, simModule.ProposalContents(simState)...)
+			simState.LegacyParamChange = append(simState.LegacyParamChange, simModule.RandomizedParams(r)...)
+			simState.LegacyProposalContents = append(simState.LegacyProposalContents, simModule.ProposalContents(simState)...)
 		}
 	}
 	// second pass generate actions

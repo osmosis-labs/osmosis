@@ -10,11 +10,12 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store"
-	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	"github.com/osmosis-labs/osmosis/v19/simulation/executor/internal/stats"
 	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes/simlogger"
 )
+
+const SimAppChainID = "simulation-app"
 
 // List of available flags for the simulator
 var (
@@ -122,7 +123,7 @@ func SetupSimulation(dirPrefix, dbName string) (cfg Config, db dbm.DB, logger lo
 	}
 
 	config := NewConfigFromFlags()
-	config.InitializationConfig.ChainID = sims.SimAppChainID
+	config.InitializationConfig.ChainID = SimAppChainID
 
 	if FlagVerboseValue {
 		logger = log.TestingLogger()
