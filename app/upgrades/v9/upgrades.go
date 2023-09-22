@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
@@ -34,9 +34,8 @@ func CreateUpgradeHandler(
 
 		// We set the app version to pre-upgrade because it will be incremented by one
 		// after the upgrade is applied by the handler.
-		if err := keepers.UpgradeKeeper.SetAppVersion(ctx, preUpgradeAppVersion); err != nil {
-			return nil, err
-		}
+		versionSetter := keepers.UpgradeKeeper.GetVersionSetter()
+		versionSetter.SetProtocolVersion(preUpgradeAppVersion)
 
 		// save oldIcaVersion, so we can skip icahost.InitModule in longer term tests.
 		oldIcaVersion := fromVM[icatypes.ModuleName]
@@ -61,7 +60,7 @@ func CreateUpgradeHandler(
 				sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
 				sdk.MsgTypeURL(&distrtypes.MsgWithdrawValidatorCommission{}),
 				sdk.MsgTypeURL(&distrtypes.MsgFundCommunityPool{}),
-				sdk.MsgTypeURL(&govtypes.MsgVote{}),
+				sdk.MsgTypeURL(&govtypesv1.MsgVote{}),
 				sdk.MsgTypeURL(&authz.MsgExec{}),
 				sdk.MsgTypeURL(&authz.MsgGrant{}),
 				sdk.MsgTypeURL(&authz.MsgRevoke{}),

@@ -212,7 +212,7 @@ func createCLPoolWithCommunityPoolPosition(ctx sdk.Context, keepers *keepers.App
 	// While we can be fairly certain the diff between these two is 0.2 OSMO, if for whatever reason
 	// some baseAsset dust remains in the community pool and we don't account for it, when updating the
 	// fee pool balance later, we will be off by that amount and will cause a panic.
-	coinsUsed := commPoolBalancePre.Sub(commPoolBalancePost)
+	coinsUsed := commPoolBalancePre.Sub(commPoolBalancePost...)
 
 	return clPoolCreationInfo{
 		id:            clPoolId,

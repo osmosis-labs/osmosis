@@ -48,12 +48,15 @@ func DefaultConfig() network.Config {
 
 // NewAppConstructor returns a new Osmosis app given encoding type configs.
 func NewAppConstructor() network.AppConstructor {
-	return func(val network.Validator) servertypes.Application {
+	return func(val network.ValidatorI) servertypes.Application {
+		valCtx := val.GetCtx()
+		appConfig := val.GetAppConfig()
+
 		return NewOsmosisApp(
-			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
+			valCtx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), valCtx.Config.RootDir, 0,
 			sims.EmptyAppOptions{},
 			EmptyWasmOpts,
-			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+			baseapp.SetMinGasPrices(appConfig.MinGasPrices),
 		)
 	}
 }

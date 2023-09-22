@@ -1,12 +1,12 @@
 package client
 
 import (
-	"net/http"
+	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/client/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 )
 
-func emptyHandler(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-	}
-}
+var (
+	UploadCodeIdAndWhitelistProposalHandler = govclient.NewProposalHandler(cli.NewCmdUploadCodeIdAndWhitelistProposal)
+	MigratePoolContractsProposalHandler     = govclient.NewProposalHandler(cli.NewCmdMigratePoolContractsProposal)
+)
