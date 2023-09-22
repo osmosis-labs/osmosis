@@ -293,3 +293,28 @@ func (q Querier) GetTotalLiquidity(ctx sdk.Context, req clquery.GetTotalLiquidit
 		TotalLiquidity: totalLiquidity,
 	}, nil
 }
+
+// NumNextInitializedTicks returns an array of LiquidityDepthWithRange, which contains the user defined number of next initialized ticks in the direction
+// of swapping in the given tokenInDenom.
+func (q Querier) NumNextInitializedTicks(ctx sdk.Context, req clquery.NumNextInitializedTicksRequest) (*clquery.NumNextInitializedTicksResponse, error) {
+	if req.TokenInDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "tokenIn is empty")
+	}
+
+	liquidityDepths, err := q.Keeper.GetNumNextInitializedTicks(
+		ctx,
+		req.PoolId,
+		req.NumNextInitializedTicks,
+		req.TokenInDenom,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	pool, err := q.Keeper.GetConcentratedPoolById(ctx, req.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clquery.NumNextInitializedTicksResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity(), CurrentTick: pool.GetCurrentTick()}, nil
+}

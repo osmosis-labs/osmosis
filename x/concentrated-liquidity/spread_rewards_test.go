@@ -1371,16 +1371,16 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_Swaps() {
 	}
 
 	// Swap multiple times USDC for ETH, therefore increasing the spot price
-	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPriceBigDec, positions.numSwaps)
 	s.CollectAndAssertSpreadRewards(s.Ctx, clPool.GetId(), totalSpreadRewardsExpected, positionIds, [][]int64{ticksActivatedAfterEachSwap}, onlyUSDC, positions)
 
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
-	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPriceBigDec, positions.numSwaps)
 	s.CollectAndAssertSpreadRewards(s.Ctx, clPool.GetId(), totalSpreadRewardsExpected, positionIds, [][]int64{ticksActivatedAfterEachSwap}, onlyETH, positions)
 
 	// Do the same swaps as before, however this time we collect spread rewards after both swap directions are complete.
-	ticksActivatedAfterEachSwapUp, totalSpreadRewardsExpectedUp, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, positions.numSwaps)
-	ticksActivatedAfterEachSwapDown, totalSpreadRewardsExpectedDown, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwapUp, totalSpreadRewardsExpectedUp, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, types.MaxSpotPriceBigDec, positions.numSwaps)
+	ticksActivatedAfterEachSwapDown, totalSpreadRewardsExpectedDown, _, _ := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, types.MinSpotPriceBigDec, positions.numSwaps)
 	totalSpreadRewardsExpected = totalSpreadRewardsExpectedUp.Add(totalSpreadRewardsExpectedDown...)
 
 	// We expect all positions to have both denoms in their spread reward accumulators except USDC for the overlapping range position since
@@ -1414,7 +1414,7 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	s.FundAcc(owner, fundCoins)
 
 	// Errors since no position.
-	_, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, owner, pool, sdk.NewCoin(ETH, osmomath.OneInt()), USDC, pool.GetSpreadFactor(s.Ctx), types.MaxSpotPrice)
+	_, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, owner, pool, sdk.NewCoin(ETH, osmomath.OneInt()), USDC, pool.GetSpreadFactor(s.Ctx), types.MaxSpotPriceBigDec)
 	s.Require().Error(err)
 
 	// Create position in the default range 1.
@@ -1422,7 +1422,7 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	s.Require().NoError(err)
 
 	// Swap once.
-	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ := s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin1, ETH, types.MaxSpotPrice, 1)
+	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ := s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin1, ETH, types.MaxSpotPriceBigDec, 1)
 
 	// Withdraw half.
 	halfLiquidity := positionDataOne.Liquidity.Mul(osmomath.NewDecWithPrec(5, 1))
@@ -1447,7 +1447,7 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	fullLiquidity := positionDataTwo.Liquidity
 
 	// Swap once in the other direction.
-	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin0, USDC, types.MinSpotPrice, 1)
+	ticksActivatedAfterEachSwap, totalSpreadRewardsExpected, _, _ = s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin0, USDC, types.MinSpotPriceBigDec, 1)
 
 	// This should claim under the hood for position 2 since full liquidity is removed.
 	balanceBeforeWithdraw := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
@@ -1583,7 +1583,7 @@ func (s *KeeperTestSuite) tickStatusInvariance(ticksActivatedAfterEachSwap [][]i
 
 // swapAndTrackXTimesInARow performs `numSwaps` swaps and tracks the tick activated after each swap.
 // It also returns the total spread rewards collected, the total token in, and the total token out.
-func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coin, coinOutDenom string, priceLimit osmomath.Dec, numSwaps int) (ticksActivatedAfterEachSwap []int64, totalSpreadRewards sdk.Coins, totalTokenIn sdk.Coin, totalTokenOut sdk.Coin) {
+func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coin, coinOutDenom string, priceLimit osmomath.BigDec, numSwaps int) (ticksActivatedAfterEachSwap []int64, totalSpreadRewards sdk.Coins, totalTokenIn sdk.Coin, totalTokenOut sdk.Coin) {
 	// Retrieve pool
 	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
 	s.Require().NoError(err)

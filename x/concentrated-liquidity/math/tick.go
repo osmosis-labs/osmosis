@@ -199,10 +199,9 @@ func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 	// N.B. this exists to maintain backwards compatibility with
 	// the old version of the function that operated on decimal with precision of 18.
 	if price.GTE(types.MinSpotPriceBigDec) {
-		// TODO: implement efficient big decimal truncation.
 		// It is acceptable to truncate price as the minimum we support is
 		// 10**-12 which is above the smallest value of sdk.Dec.
-		price = osmomath.BigDecFromDec(price.Dec())
+		price.ChopPrecisionMut(osmomath.PrecisionDec)
 	}
 
 	// The approach here is to try determine which "geometric spacing" are we in.
