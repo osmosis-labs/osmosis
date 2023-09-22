@@ -1,12 +1,12 @@
 package ante
 
 import (
-	"fmt"
-
 	errorsmod "cosmossdk.io/errors"
-
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 )
@@ -57,6 +57,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
+		// This should never happen
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
@@ -86,8 +87,20 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// Any changes will to authenticator storage will be written to the store at the end of the tx
 	cacheCtx := ad.authenticatorKeeper.TransientStore.ResetTransientContext(ctx)
 
+	extTx, ok := tx.(authante.HasExtensionOptionsTx)
+	if !ok {
+		// This should never happen
+		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a HasExtensionOptionsTx")
+	}
+
+	msgs := tx.GetMsgs()
+	selectedAuthenticators, err := ad.GetSelectedAuthenticators(extTx, len(msgs))
+	if err != nil {
+		return ctx, err
+	}
+
 	// Authenticate the accounts of all messages
-	for msgIndex, msg := range tx.GetMsgs() {
+	for msgIndex, msg := range msgs {
 		// By default, the first signer is the account
 		account, err := GetAccount(msg)
 		if err != nil {
@@ -97,15 +110,22 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		// Get all authenticators for the executing account
 		// If no authenticators are found, use the default authenticator
 		// This is done to keep backwards compatibility by defaulting to a signature verifier on accounts without authenticators
-		authenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(cacheCtx, account)
+		allAuthenticators, err := ad.authenticatorKeeper.GetAuthenticatorsForAccountOrDefault(cacheCtx, account)
 		if err != nil {
 			return sdk.Context{}, err
 		}
 
 		msgAuthenticated := false
-		// TODO: We should consider adding a way for the user to specify which authenticator to
-		// use as part of the tx (likely in the signature)
-		// NOTE: we have to make sure that doing that does not make the signature malleable
+		var authenticators []authenticator.Authenticator
+		if selectedAuthenticators[msgIndex] == -1 {
+			authenticators = allAuthenticators
+		} else {
+			if int(selectedAuthenticators[msgIndex]) >= len(allAuthenticators) {
+				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("invalid authenticator index for message %d", msgIndex))
+			}
+			authenticators = []authenticator.Authenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
+		}
+
 		for _, authenticator := range authenticators {
 			// Consume the authenticator's static gas
 			cacheCtx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
@@ -143,4 +163,21 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	}
 
 	return next(ctx, tx, simulate)
+}
+
+func (ad AuthenticatorDecorator) GetSelectedAuthenticators(extTx authante.HasExtensionOptionsTx, msgCount int) ([]int32, error) {
+	selectedAuthenticators := make([]int32, msgCount)
+	for i := range selectedAuthenticators {
+		selectedAuthenticators[i] = -1
+	}
+
+	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
+	if txOptions != nil {
+		selectedAuthenticatorsFromExtension := txOptions.GetSelectedAuthenticators()
+		if len(selectedAuthenticatorsFromExtension) != msgCount {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Mismatch between the number of selected authenticators and messages")
+		}
+		selectedAuthenticators = selectedAuthenticatorsFromExtension
+	}
+	return selectedAuthenticators, nil
 }

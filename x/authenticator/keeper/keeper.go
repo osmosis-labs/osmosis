@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	gogotypes "github.com/gogo/protobuf/types"
@@ -159,5 +159,13 @@ func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, aut
 	return nil
 }
 
-// ToDo: Open questions:
-//  * Do we care about authenticator ordering?
+func (k Keeper) GetAuthenticatorExtension(exts []*codectypes.Any) types.AuthenticatorTxOptions {
+	var authExtension types.AuthenticatorTxOptions
+	for _, ext := range exts {
+		err := k.cdc.UnpackAny(ext, &authExtension)
+		if err == nil {
+			return authExtension
+		}
+	}
+	return nil
+}

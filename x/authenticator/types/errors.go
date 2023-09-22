@@ -8,5 +8,5 @@ import (
 
 // x/authenticator module sentinel errors
 var (
-	ErrSample = sdkerrors.Register(ModuleName, 1100, "error")
+	ErrExtensionNotFound = sdkerrors.Register(ModuleName, 2, "authenticator tx extension not found")
 )
