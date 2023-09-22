@@ -23,8 +23,8 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // AccountAuthenticator represents a foundational model for all authenticators.
-// It provides extensibility by allowing concrete types to interpret and validate
-// transactions based on the encapsulated data.
+// It provides extensibility by allowing concrete types to interpret and
+// validate transactions based on the encapsulated data.
 type AccountAuthenticator struct {
 	// ID uniquely identifies the authenticator instance.
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`

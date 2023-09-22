@@ -21,6 +21,12 @@ import (
 var _ Authenticator = &SignatureVerificationAuthenticator{}
 var _ AuthenticatorData = &SignatureData{}
 
+const (
+	// SignatureVerificationAuthenticatorType represents a type of authenticator specifically designed for
+	// secp256k1 signature verification.
+	SignatureVerificationAuthenticatorType = "SignatureVerificationAuthenticator"
+)
+
 // signature authenticator
 type SignatureVerificationAuthenticator struct {
 	ak      *authkeeper.AccountKeeper

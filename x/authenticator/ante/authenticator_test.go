@@ -19,10 +19,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/ante"
-	"github.com/stretchr/testify/suite"
 )
 
 type AutherticatorAnteSuite struct {
@@ -252,8 +253,8 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	fmt.Println("Gas Consumed: after txn gas over 20000")
 	fmt.Println(s.Ctx.GasMeter().GasConsumed())
 
-	// No error here now as fee payer is alway auth'd first
-	s.Require().NoError(err)
+	s.Require().Error(err)
+	s.Require().ErrorContains(err, "gas")
 }
 
 // GenTx generates a signed mock transaction.
