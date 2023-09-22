@@ -1,8 +1,8 @@
-package grpc 
+
+package grpcv2
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `proto/osmosis/poolmanager/v2/query.yml`
-
 
 import (
 	context "context"
@@ -16,18 +16,18 @@ import (
 )
 
 type Querier struct {
-	Q client.Querier
+	Q client.QuerierV2
 }
 
 var _ queryprotov2.QueryServer = Querier{}
 
-func (q Querier) SpotPrice(grpcCtx context.Context,
+func (q Querier) SpotPriceV2(grpcCtx context.Context,
 	req *queryprotov2.SpotPriceRequest,
 ) (*queryprotov2.SpotPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.SpotPrice(ctx, *req)
+	return q.Q.SpotPriceV2(ctx, *req)
 }
 

@@ -21,7 +21,7 @@ import (
 	pmclient "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/cli"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/grpc"
-	grpcv2 "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/grpcv2"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/grpcv2"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryprotov2"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
@@ -90,7 +90,7 @@ type AppModule struct {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), poolmanager.NewMsgServerImpl(&am.k))
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: pmclient.NewQuerier(am.k)})
-	queryprotov2.RegisterQueryServer(cfg.QueryServer(), grpcv2.Querier{Q: pmclient.NewQuerier(am.k)})
+	queryprotov2.RegisterQueryServer(cfg.QueryServer(), grpcv2.Querier{Q: pmclient.NewV2Querier(am.k)})
 }
 
 func NewAppModule(poolmanagerKeeper poolmanager.Keeper, gammKeeper types.PoolModuleI) AppModule {

@@ -33,7 +33,11 @@ func main() {
 }
 
 func parseTemplates() error {
-	grpcTemplatePtr, err := template.ParseFiles("cmd/querygen/templates/grpc_template.tmpl")
+	// Create a function to upper vase the version suffix if it exists.
+	funcMap := template.FuncMap{
+		"ToUpper": strings.ToUpper,
+	}
+	grpcTemplatePtr, err := template.New("grpc_template.tmpl").Funcs(funcMap).ParseFiles("cmd/querygen/templates/grpc_template.tmpl")
 	if err != nil {
 		return err
 	}
@@ -80,7 +84,6 @@ func codegenGrpcPackage(queryYml templates.QueryYml) error {
 	// suffix to properly package the files.
 	grpcTemplateData.VersionSuffix = ""
 	if strings.Contains(grpcTemplateData.ProtoPath, V2) {
-		fmt.Println(grpcTemplateData.ProtoPath)
 		grpcTemplateData.VersionSuffix = V2
 	}
 
