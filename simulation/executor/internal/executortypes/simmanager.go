@@ -38,7 +38,7 @@ func CreateSimulationManager(
 		panic("account keeper typecast fail")
 	}
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(appCodec, *ak, authsims.RandomGenesisAccounts),
+		authtypes.ModuleName: auth.NewAppModule(appCodec, *ak, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 	}
 	simulationManager := newSimulationManager(app.ModuleManager(), overrideModules)
 	return simulationManager

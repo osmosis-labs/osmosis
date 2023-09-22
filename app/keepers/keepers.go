@@ -22,6 +22,7 @@ import (
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -506,8 +507,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
 
 	// register the proposal types
-	govRouter := govtypes.NewRouter()
-	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
+	govRouter := govtypesv1.NewRouter()
+	govRouter.AddRoute(govtypes.RouterKey, govtypesv1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*appKeepers.ParamsKeeper)).
 		AddRoute(distrtypes.RouterKey, distribution.NewCommunityPoolSpendProposalHandler(*appKeepers.DistrKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
@@ -531,7 +532,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appCodec, appKeepers.keys[govtypes.StoreKey],
 		appKeepers.GetSubspace(govtypes.ModuleName), appKeepers.AccountKeeper, appKeepers.BankKeeper,
 		appKeepers.SuperfluidKeeper, govRouter)
-	appKeepers.GovKeeper = &govKeeper
+	appKeepers.GovKeeper = govKeeper
 }
 
 // WireICS20PreWasmKeeper Create the IBC Transfer Stack from bottom to top:
@@ -648,7 +649,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 	crisisKeeper := crisiskeeper.NewKeeper(
 		appKeepers.GetSubspace(crisistypes.ModuleName), invCheckPeriod, appKeepers.BankKeeper, authtypes.FeeCollectorName,
 	)
-	appKeepers.CrisisKeeper = &crisisKeeper
+	appKeepers.CrisisKeeper = crisisKeeper
 
 	upgradeKeeper := upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
@@ -657,7 +658,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 		homePath,
 		bApp,
 	)
-	appKeepers.UpgradeKeeper = &upgradeKeeper
+	appKeepers.UpgradeKeeper = upgradeKeeper
 }
 
 // initParamsKeeper init params keeper and its subspaces.
