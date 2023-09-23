@@ -316,7 +316,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000_000)),
 	}
 
-	stateful := testutils.StatefulAuthenticator{KvStoreKey: s.app.GetKVStoreKey()[authenticatortypes.ManagerStoreKey]}
+	stateful := testutils.StatefulAuthenticator{KvStoreKey: s.app.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]}
 	s.app.AuthenticatorManager.RegisterAuthenticator(stateful)
 	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "Stateful", []byte{})
 	s.Require().NoError(err, "Failed to add authenticator")
@@ -333,8 +333,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorStateExperiment() {
 	s.Require().NoError(err, "Failed to send bank tx with enough funds")
 
 	// Incremented by 2. Ante and Post
-	// TODO: not working in post
-	// s.Require().Equal(2, stateful.GetValue(s.chainA.GetContext()))
+	s.Require().Equal(2, stateful.GetValue(s.chainA.GetContext()))
 }
 
 // TODO: Cleanup experiment tests
@@ -347,7 +346,7 @@ func (s *AuthenticatorSuite) TestAuthenticatorMultiMsgExperiment() {
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000)),
 	}
 
-	storeKey := s.app.GetKVStoreKey()[authenticatortypes.ManagerStoreKey]
+	storeKey := s.app.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]
 	maxAmount := testutils.MaxAmountAuthenticator{KvStoreKey: storeKey}
 	stateful := testutils.StatefulAuthenticator{KvStoreKey: storeKey}
 
@@ -513,7 +512,7 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorIntegration() {
 }
 
 func (s *AuthenticatorSuite) TestSpendWithinLimit() {
-	spendLimitStoreKey := s.app.GetKVStoreKey()[authenticatortypes.ManagerStoreKey]
+	spendLimitStoreKey := s.app.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]
 	spendLimitStore := prefix.NewStore(s.chainA.GetContext().KVStore(spendLimitStoreKey), []byte("spendLimitAuthenticator"))
 
 	spendLimit := authenticator.NewSpendLimitAuthenticator(spendLimitStore, "allUSD", s.app.BankKeeper)

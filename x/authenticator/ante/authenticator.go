@@ -11,6 +11,8 @@ import (
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 )
 
+// GetAccount retrieves the account associated with the first signer of a transaction message.
+// It returns the account's address or an error if no signers are present.
 func GetAccount(msg sdk.Msg) (sdk.AccAddress, error) {
 	if len(msg.GetSigners()) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "no signers")
@@ -18,11 +20,14 @@ func GetAccount(msg sdk.Msg) (sdk.AccAddress, error) {
 	return msg.GetSigners()[0], nil
 }
 
+// AuthenticatorDecorator is responsible for processing authentication logic
+// before transaction execution.
 type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
 	maxFeePayerGas      uint64
 }
 
+// NewAuthenticatorDecorator creates a new instance of AuthenticatorDecorator with the provided parameters.
 func NewAuthenticatorDecorator(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
 	maxFeePayerGas uint64,
@@ -41,28 +46,47 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
-	// Authenticating the fee payer needs to be done with very little gas
-	// This is a spam-prevention strategy. This protects from a user adding multiple
-	// authenticators that overuse compute.
+	// Performing fee payer authentication with minimal gas allocation
+	// serves as a spam-prevention strategy to prevent users from adding multiple
+	// authenticators that may excessively consume computational resources.
+	// If the fee payer is not authenticated, there would be no entity responsible
+	// for covering the transaction's costs. This safeguard ensures that validators
+	// are not compelled to expend resources on executing authenticators for transactions
+	// that will never be executed.
 
-	// If the fee payer is not authenticated, there will be no one to pay
-	// for the cost of the tx, which would allow an attacker to force a
-	// validator to spend resources by running authenticators on a tx
-	// that will never be executed
-
+	// Ideally, we would prefer to use min(gasRemaining, maxFeePayerGas) here, but
+	// this approach presents challenges due to the implementation of the InfiniteGasMeter.
+	// As long as the gas consumption remains below the fee payer gas limit, exceeding
+	// the original limit should be acceptable.
 	originalGasMeter := ctx.GasMeter()
-	// Ideally we would want to use min(gasRemaining, maxFeePayerGas) here, but this leads to problems because
-	// of the implementation of the InfiniteGasMeter. I think it's ok to allow potentially going over
-	// the original limit as long as it's bellow the fee payer gas limit
 	payerGasMeter := sdk.NewGasMeter(ad.maxFeePayerGas)
 	ctx = ctx.WithGasMeter(payerGasMeter)
+
+	// Recover from any OutOfGas panic to return an error with information on the reduced gas limit
+	defer func() {
+		if r := recover(); r != nil {
+			// Ensure that the maximum fee payer gas exceeds the gas consumed by the fee payer
+			if ad.maxFeePayerGas > payerGasMeter.GasConsumed() {
+				panic(r)
+			}
+			switch r.(type) {
+			case sdk.ErrorOutOfGas:
+				log := fmt.Sprintf(
+					"FeePayer authentication pending. Gas limit reduced to %d. Gas Consumed: %d",
+					ad.maxFeePayerGas, payerGasMeter.GasConsumed())
+				err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
+			default:
+				panic(r)
+			}
+		}
+	}()
 
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "transaction must be a FeeTx")
 	}
 
-	// Determine the fee payer, which defaults to the first signer of the transaction.
+	// Determine the fee payer, with the first signer of the transaction as the default.
 	feePayer := feeTx.FeePayer()
 
 	// Create a transient context that is globally available during transaction execution.
@@ -85,19 +109,19 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				return ctx, err
 			}
 
-			// consume
-			originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas consumed, continue")
+			// Consume gas for fee payer authentication
+			originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas consumed, continuing")
 
-			// Reset this for both contexts
+			// Reset gas meters for both contexts
 			cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
 			ctx = ctx.WithGasMeter(originalGasMeter)
 		}
 	}
 
-	// this is unlikely to ever happen
+	// This scenario is unlikely but accounted for to optimize computation
 	if feePayerIndex == -1 {
 		return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized,
-			fmt.Sprintf("failed to retrieve the account for feePayer %d", feePayer))
+			fmt.Sprintf("failed to retrieve the account for fee payer %d", feePayer))
 	}
 
 	// Authenticate the accounts of all messages.
@@ -107,14 +131,12 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			continue
 		}
 
-		// After the fee payer has been authenticated, proceed to authenticate the remaining messages.
+		// After fee payer authentication, proceed to authenticate the remaining messages.
 		_, err := ad.AuthTx(cacheCtx, tx, msg, msgIndex, simulate)
 		if err != nil {
 			return ctx, err
 		}
 	}
-
-	// TODO: test originalGasMeter works as expected
 
 	return next(ctx, tx, simulate)
 }
@@ -163,6 +185,8 @@ func (ad AuthenticatorDecorator) AuthTx(
 
 		if authentication.IsAuthenticated() {
 			msgAuthenticated = true
+			// We break out of the authenticator loop if one of the authenticators have authenticated the transaction
+			break
 		}
 	}
 

@@ -223,7 +223,7 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 	)
 	s.Require().NoError(err)
 
-	_, _ = GenTx(
+	tx, _ := GenTx(
 		s.EncodingConfig.TxConfig,
 		[]sdk.Msg{
 			testMsg1,
@@ -245,15 +245,14 @@ func (s *AutherticatorAnteSuite) TestSignatureVerificationOutOfGas() {
 		s.TestAccAddress[0],
 	)
 
-	//	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
-	//	_, err = anteHandler(s.Ctx, tx, false)
+	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
+	_, err = anteHandler(s.Ctx, tx, false)
 
-	// TODO: improve this test for gas consumption
 	fmt.Println("Gas Consumed: after txn gas over 20000")
 	fmt.Println(s.Ctx.GasMeter().GasConsumed())
 
-	s.Require().NoError(err)
-	// s.Require().ErrorContains(err, "gas")
+	s.Require().Error(err)
+	s.Require().ErrorContains(err, "gas")
 }
 
 // GenTx generates a signed mock transaction.
