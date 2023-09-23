@@ -1448,6 +1448,17 @@ func withGaugeId(gauge types.Gauge, id uint64) types.Gauge {
 	return gauge
 }
 
+// setPoolVolumes takes in an array of pool IDs and volumes and sets each pool's volume to the corresponding volume amount.
+// If there are more pool IDs than volumes, the extra pool IDs are ignored. This is to more simply accommodate cases where only the first k
+// of n pools are updated without needing to pad the volumes array during test setup.
+func (s *KeeperTestSuite) setPoolVolumes(poolIds []uint64, volumes []osmomath.Int) {
+	s.Require().True(len(poolIds) >= len(volumes))
+
+	for i, curVolume := range volumes {
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolIds[i], sdk.NewCoins(sdk.NewCoin(s.App.StakingKeeper.BondDenom(s.Ctx), curVolume)))
+	}
+}
+
 // TODO: rename this to syncVolumeSplitGroup as part of https://github.com/osmosis-labs/osmosis/pull/6446
 func (s *KeeperTestSuite) TestSyncVolumeSplitGauge() {
 	tests := map[string]struct {
@@ -1524,7 +1535,7 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGauge() {
 			poolIds := []uint64{clPool.GetId(), balPoolId}
 
 			// Update cumulative volumes for pools
-			s.setupVolumes(poolIds, tc.updatedPoolVolumes)
+			s.setPoolVolumes(poolIds, tc.updatedPoolVolumes)
 
 			// Save original input to help with mutation-related assertions
 			originalGroupGauge := deepCopyGroupGauge(tc.groupGaugeToSync)
@@ -1601,7 +1612,7 @@ func (s *KeeperTestSuite) TestSyncGroupGaugeWeights() {
 			// When more are added in the future, setup logic should route to the appropriate setup function here.
 			switch tc.groupGaugeToSync.SplittingPolicy {
 			case types.Volume:
-				s.setupVolumes(poolIds, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount})
+				s.setPoolVolumes(poolIds, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount})
 			}
 
 			// Save original input to help with mutation-related assertions

@@ -24,7 +24,7 @@ import (
 // - fails to add gauge rewards to any of the underlying gauges in the group.
 //
 // Silently skips the following errors:
-// - synching group gauge weights fails - this is acceptable. We don't want to fail all distributions
+// - syncing group gauge weights fails - this is acceptable. We don't want to fail all distributions
 // due to an oddity with one group. The rewards should stay in the group gauge until the next distribution.
 // Any issues can be fixed with a major upgrade without any loss of funds.
 // - group gauge is inactive - similar reason, don't want to fail all distributions due to non-fatal issue.
