@@ -7,8 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmoutils "github.com/osmosis-labs/osmosis/osmoutils/coins"
+	"github.com/osmosis-labs/osmosis/osmoutils/coins"
 	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
@@ -56,6 +58,20 @@ var (
 
 	emptyCoins          = sdk.Coins{}
 	defaultVolumeAmount = osmomath.NewInt(300)
+
+	defaultCoins = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))
+
+	baseTime = time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	// Remaining coins: 1 x defaultCoins (2x Coins - 1x DistributedCoins)
+	defaultPerpetualGauge = types.Gauge{
+		Id:               defaultGroupGaugeId,
+		IsPerpetual:      true,
+		Coins:            defaultCoins.Add(defaultCoins...),
+		StartTime:        baseTime,
+		FilledEpochs:     1,
+		DistributedCoins: defaultCoins,
+	}
 )
 
 type GroupCreationFields struct {
@@ -1448,6 +1464,12 @@ func withGaugeId(gauge types.Gauge, id uint64) types.Gauge {
 	return gauge
 }
 
+// withGaugeDistrType sets the distribution type of the gauge to given and returns it.
+func withGaugeDistrType(gauge types.Gauge, gaugeType lockuptypes.LockQueryType) types.Gauge {
+	gauge.DistributeTo.LockQueryType = gaugeType
+	return gauge
+}
+
 func (s *KeeperTestSuite) TestSyncVolumeSplitGauge() {
 	tests := map[string]struct {
 		groupToSync types.Group
@@ -1683,27 +1705,13 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		defaultGroup      = deepCopyGroup(defaultGroup)
 		singleRecordGroup = deepCopyGroup(singleRecordGroup)
 
-		baseTime = time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
-
-		defaultCoins = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))
-
 		// Volume pre-set configurations.
 		balancerOnlyVolumeConfig  = []osmomath.Int{singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, osmomath.ZeroInt()}
 		balancerAndCLVolumeConfig = []osmomath.Int{defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight}
-
-		// Remaining coins: 1 x defaultCoins (2x Coins - 1x DistributedCoins)
-		perpetualGauge = types.Gauge{
-			Id:               defaultGroupGaugeId,
-			IsPerpetual:      true,
-			Coins:            defaultCoins.Add(defaultCoins...),
-			StartTime:        baseTime,
-			FilledEpochs:     1,
-			DistributedCoins: defaultCoins,
-		}
 	)
 
 	// 2 changes: flip the isPerpetual flag and set the number of epochs paid over.
-	nonPerpetualGauge := withIsPerpetual(deepCopyGauge(perpetualGauge), false)
+	nonPerpetualGauge := withIsPerpetual(deepCopyGauge(defaultPerpetualGauge), false)
 	nonPerpetualGauge.NumEpochsPaidOver = 2
 
 	// Configure to distribute to the invalid underlying gauge that is non-perpetual and finished.
@@ -1747,7 +1755,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			}
 
 			// Divide all coins by remainingEpochs.
-			osmoutils.QuoRawMut(expecteDistributedCoins, int64(remainingEpochs))
+			coins.QuoRawMut(expecteDistributedCoins, int64(remainingEpochs))
 		}
 		return expecteDistributedCoins
 	}
@@ -1760,7 +1768,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			for _, underlyingGauge := range group.InternalGaugeInfo.GaugeRecords {
 
 				// calculate expected amount distributed to this gauge
-				expectedDistributedPerGauge := osmoutils.MulDec(expectedAmountDistributedForGroup, underlyingGauge.CurrentWeight.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
+				expectedDistributedPerGauge := coins.MulDec(expectedAmountDistributedForGroup, underlyingGauge.CurrentWeight.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
 
 				if oldValue, ok := expectedGaugeDistributionsMap[underlyingGauge.GaugeId]; ok {
 					expectedGaugeDistributionsMap[underlyingGauge.GaugeId] = oldValue.Add(expectedDistributedPerGauge...)
@@ -1822,7 +1830,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			groups: []groupConfig{
 				{
 					group:      singleRecordGroup,
-					groupGauge: perpetualGauge,
+					groupGauge: defaultPerpetualGauge,
 				},
 			},
 
@@ -1832,7 +1840,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			groups: []groupConfig{
 				{
 					group:      singleRecordGroup,
-					groupGauge: perpetualGauge,
+					groupGauge: defaultPerpetualGauge,
 				},
 			},
 
@@ -1909,7 +1917,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			groups: []groupConfig{
 				{
 					group:      groupToInvalidUnderlying,
-					groupGauge: perpetualGauge,
+					groupGauge: defaultPerpetualGauge,
 
 					expectedSkipped: true,
 				},
@@ -1925,7 +1933,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			groups: []groupConfig{
 				{
 					group:      singleRecordGroup,
-					groupGauge: perpetualGauge,
+					groupGauge: defaultPerpetualGauge,
 				},
 				{
 					group:      withGroupGaugeId(defaultGroup, 6),
@@ -1961,7 +1969,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			groups: []groupConfig{
 				{
 					group:      singleRecordGroup,
-					groupGauge: perpetualGauge,
+					groupGauge: defaultPerpetualGauge,
 				},
 			},
 
@@ -2038,11 +2046,13 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 			for _, groupConfig := range tc.groups {
 
+				isGroupAndGroupGaugePruningExpected := groupConfig.groupGauge.IsLastNonPerpetualDistribution()
+
 				// Get group gauge id
 				groupGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, groupConfig.group.GroupGaugeId)
-				s.Require().NoError(err)
 
 				if groupConfig.expectedSkipped {
+					s.Require().NoError(err)
 					// Check that the group gauge was not filled
 					s.Require().Equal(groupConfig.groupGauge.FilledEpochs, groupGauge.FilledEpochs)
 
@@ -2051,14 +2061,23 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 					continue
 				}
 
-				// check that the group gauge distributed epoch updated
-				s.Require().Equal(groupConfig.groupGauge.FilledEpochs+1, groupGauge.FilledEpochs)
+				if isGroupAndGroupGaugePruningExpected {
+					// Check that the group gauge was deleted
+					s.Require().Error(err)
+					s.Require().ErrorIs(err, types.GaugeNotFoundError{GaugeID: groupConfig.group.GroupGaugeId})
 
-				// check that the amounts distributed have updated
-				actualDistributed := groupGauge.DistributedCoins.Sub(groupConfig.groupGauge.DistributedCoins)
-				s.Require().Equal(groupConfig.expectedTotalDistribution, actualDistributed)
+					// Check that the group was deleted
+					_, err = s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, groupConfig.group.GroupGaugeId)
+					s.Require().Error(err)
+					s.Require().ErrorIs(err, types.GroupNotFoundError{GroupGaugeId: groupConfig.group.GroupGaugeId})
+				} else {
+					// check that the group gauge distributed epoch updated
+					s.Require().Equal(groupConfig.groupGauge.FilledEpochs+1, groupGauge.FilledEpochs)
 
-				// TODO: check that group gauge was moved to finished if applicable
+					// check that the amounts distributed have updated
+					actualDistributed := groupGauge.DistributedCoins.Sub(groupConfig.groupGauge.DistributedCoins)
+					s.Require().Equal(groupConfig.expectedTotalDistribution, actualDistributed)
+				}
 			}
 
 			// Validate that gauges received the expected amounts from all groups.
@@ -2078,5 +2097,123 @@ func (s *KeeperTestSuite) setupVolumes(poolIds []uint64, updatedPoolVolumes []os
 	for i, updatedVolume := range updatedPoolVolumes {
 		// Note that even though we deal with volumes as ints, they are tracked as coins to allow for tracking of more denoms in the future.
 		s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolIds[i], sdk.NewCoins(sdk.NewCoin(s.App.StakingKeeper.BondDenom(s.Ctx), updatedVolume)))
+	}
+}
+
+func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
+	tests := map[string]struct {
+		groupGauge       types.Gauge
+		coinsDistributed sdk.Coins
+		amountToPrefund  sdk.Coins
+		// boolean because there is only one error that we can setup in tests.
+		expectError bool
+	}{
+		"1: perpetual gauge - updated": {
+			groupGauge:       defaultPerpetualGauge,
+			coinsDistributed: defaultCoins,
+		},
+		"2: non-perpetual gauge - updated": {
+			groupGauge:       withNonPerpetualEpochs(withIsPerpetual(deepCopyGauge(defaultPerpetualGauge), false), 0, 2),
+			coinsDistributed: defaultCoins,
+		},
+		"3: non-perpetual gauge - deleted": {
+			groupGauge:       withNonPerpetualEpochs(withIsPerpetual(deepCopyGauge(defaultPerpetualGauge), false), 0, 1),
+			coinsDistributed: defaultCoins,
+		},
+
+		"4: non-perpetual gauge - deleted (non-zero community pool update)": {
+			// Note that total coins in gauge = 2x defaultCoins
+			// Already distributed coins = none
+			// Coins to distribute = defaultCoins
+			// Therefore, the community pool should receive 2x defaultCoins - defaultCoins = defaultCoins
+			groupGauge:       withCoinsToDistribute(withNonPerpetualEpochs(withIsPerpetual(deepCopyGauge(defaultPerpetualGauge), false), 0, 1), defaultCoins.Add(defaultCoins...), sdk.NewCoins()),
+			coinsDistributed: defaultCoins,
+			amountToPrefund:  defaultCoins,
+		},
+
+		// // edge cases
+
+		"5: incentives module does not have enough balance to transfer dust to community pool": {
+			// Note that total coins in gauge = 2x defaultCoins
+			// Already distributed coins = none
+			// Coins to distribute = defaultCoins
+			// Therefore, the community pool should receive 2x defaultCoins - defaultCoins = defaultCoins
+			// However, there is no balance in the incentives module, leading to error.
+			groupGauge:       withCoinsToDistribute(withNonPerpetualEpochs(withIsPerpetual(deepCopyGauge(defaultPerpetualGauge), false), 0, 1), defaultCoins.Add(defaultCoins...), sdk.NewCoins()),
+			coinsDistributed: defaultCoins,
+			amountToPrefund:  emptyCoins,
+
+			expectError: true,
+		},
+		"6: perpetual gauge with a 2x coinsDistributed value - updated": {
+			groupGauge:       defaultPerpetualGauge,
+			coinsDistributed: defaultCoins.Add(defaultCoins...),
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			incentivesKeeper := s.App.IncentivesKeeper
+
+			// Setup group gauge to confirm that it is deleted if it is non-perpetual and finished.
+			incentivesKeeper.SetGroup(s.Ctx, withGroupGaugeId(defaultGroup, tc.groupGauge.Id))
+
+			// Note: to avoid chances of mutations that could affect the final assertions.
+			inputCopy := deepCopyGauge(tc.groupGauge)
+
+			// Prefund the incentives module account with the coins needed for the test to succeed.
+			if tc.amountToPrefund.IsValid() {
+				s.FundModuleAcc(types.ModuleName, tc.amountToPrefund)
+			}
+
+			originalIncentivesModuleBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+
+			// System under test
+			err := incentivesKeeper.HandleGroupPostDistribute(s.Ctx, inputCopy, tc.coinsDistributed)
+
+			if tc.expectError {
+				s.Require().Error(err, "test: %s", name)
+				return
+			}
+			s.Require().NoError(err, "test: %s", name)
+
+			finalIncentivesModuleBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+
+			if !tc.groupGauge.IsPerpetual && tc.groupGauge.IsLastNonPerpetualDistribution() {
+				// Check that pre-existing group was deleted
+				_, err = incentivesKeeper.GetGroupByGaugeID(s.Ctx, tc.groupGauge.Id)
+				s.Require().Error(err, "test: %s", name)
+				s.Require().ErrorIs(err, types.GroupNotFoundError{GroupGaugeId: tc.groupGauge.Id}, "test: %s", name)
+
+				// Check that group gauge was deleted
+				_, err = incentivesKeeper.GetGaugeByID(s.Ctx, tc.groupGauge.Id)
+				s.Require().Error(err, "test: %s", name)
+				s.Require().ErrorIs(err, types.GaugeNotFoundError{GaugeID: tc.groupGauge.Id}, "test: %s", name)
+
+				// Check remaining coins transfer to community pool.
+				expectedTransfer := tc.coinsDistributed.Sub(tc.groupGauge.DistributedCoins)
+				s.Require().Equal(emptyCoins.String(), finalIncentivesModuleBalance.String(), "test: %s", name)
+
+				// Check that the community pool balance was updated if applicable
+				communityPoolBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName))
+				s.Require().Equal(expectedTransfer.String(), communityPoolBalance.String(), "test: %s", name)
+			} else {
+
+				// check that the group gauge was updated
+				actualGauge, err := incentivesKeeper.GetGaugeByID(s.Ctx, tc.groupGauge.Id)
+				s.Require().NoError(err, "test: %s", name)
+
+				// check that the group still exists
+				_, err = incentivesKeeper.GetGroupByGaugeID(s.Ctx, tc.groupGauge.Id)
+				s.Require().NoError(err, "test: %s", name)
+
+				s.Require().Equal(inputCopy.FilledEpochs+1, actualGauge.FilledEpochs, "test: %s", name)
+				s.Require().Equal(inputCopy.DistributedCoins.Add(tc.coinsDistributed...), actualGauge.DistributedCoins, "test: %s", name)
+
+				// Check that the incentive module balance was not updated
+				s.Require().Equal(originalIncentivesModuleBalance, finalIncentivesModuleBalance, "test: %s", name)
+			}
+		})
 	}
 }

@@ -40,3 +40,19 @@ type UnexpectedFinishedGaugeError struct {
 func (e UnexpectedFinishedGaugeError) Error() string {
 	return fmt.Sprintf("gauge with ID (%d) is already finished", e.GaugeId)
 }
+
+type GroupNotFoundError struct {
+	GroupGaugeId uint64
+}
+
+func (e GroupNotFoundError) Error() string {
+	return fmt.Sprintf("group with gauge ID (%d) not found", e.GroupGaugeId)
+}
+
+type GaugeNotFoundError struct {
+	GaugeID uint64
+}
+
+func (e GaugeNotFoundError) Error() string {
+	return fmt.Sprintf("gauge with ID (%d) not found", e.GaugeID)
+}
