@@ -46,9 +46,7 @@ var (
 	KeyIndexSeparator = []byte{0x07}
 
 	// KeyPrefixGroup defines prefix key for storing groups.
-	KeyPrefixGroup = []byte{0x08, 0x01}
-	// KeyPrefixGroup defines prefix key for storing group gauges
-	KeyPrefixGroupGauge = []byte{0x08, 0x02}
+	KeyPrefixGroup = []byte{0x08}
 
 	// LockableDurationsKey defines key for storing valid durations for giving incentives.
 	LockableDurationsKey = []byte("lockable_durations")
