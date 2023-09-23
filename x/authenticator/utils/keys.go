@@ -13,5 +13,5 @@ func BuildKey(elements ...interface{}) []byte {
 	for i, element := range elements {
 		strElements[i] = fmt.Sprint(element)
 	}
-	return []byte(strings.Join(strElements, KeySeparator))
+	return []byte(strings.Join(strElements, KeySeparator) + KeySeparator)
 }

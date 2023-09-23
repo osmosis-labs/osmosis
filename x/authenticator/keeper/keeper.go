@@ -85,6 +85,9 @@ func (k Keeper) GetAuthenticatorsForAccount(
 	authenticators := make([]authenticator.Authenticator, len(authenticatorData))
 	for i, authenticator := range authenticatorData {
 		authenticators[i] = authenticator.AsAuthenticator(k.AuthenticatorManager)
+		if authenticators[i] == nil {
+			return nil, fmt.Errorf("authenticator %d failed to initialize", authenticator.Id)
+		}
 	}
 	return authenticators, nil
 }

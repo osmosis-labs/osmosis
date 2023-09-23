@@ -514,13 +514,13 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorIntegration() {
 }
 
 func (s *AuthenticatorSuite) TestSpendWithinLimit() {
-	spendLimitStoreKey := s.app.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]
-	spendLimitStore := prefix.NewStore(s.chainA.GetContext().KVStore(spendLimitStoreKey), []byte("spendLimitAuthenticator"))
+	authenticatorsStoreKey := s.app.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]
+	spendLimitStore := prefix.NewStore(s.chainA.GetContext().KVStore(authenticatorsStoreKey), []byte("spendLimitAuthenticator"))
 
-	spendLimit := authenticator.NewSpendLimitAuthenticator(spendLimitStore, "allUSD", s.app.BankKeeper)
+	spendLimit := authenticator.NewSpendLimitAuthenticator(spendLimitStore, "allUSD", authenticator.AbsoluteValue, s.app.BankKeeper, s.app.PoolManagerKeeper, s.app.TwapKeeper)
 	s.app.AuthenticatorManager.RegisterAuthenticator(spendLimit)
 
-	initData := []byte(`{"allowed_delta": 1000, "period": "day"}`)
+	initData := []byte(`{"allowed": 1000, "period": "day"}`)
 	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), spendLimit.Type(), initData)
 	s.Require().NoError(err, "Failed to add authenticator")
 
