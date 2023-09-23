@@ -280,7 +280,7 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 	return nextGaugeId, nil
 }
 
-// GetGaugeByID returns gauge from gauge ID. Note that this function does not return group gauges.
+// GetGaugeByID returns gauge from gauge ID.
 func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, error) {
 	gauge := types.Gauge{}
 	store := ctx.KVStore(k.storeKey)
