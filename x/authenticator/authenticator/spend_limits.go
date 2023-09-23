@@ -3,10 +3,11 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v19/x/twap"
 	"math/big"
 	"time"
+
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v19/x/twap"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -31,7 +32,7 @@ type PriceStrategy string
 const (
 	Twap          PriceStrategy = "twap"
 	AbsoluteValue PriceStrategy = "absolute_value"
-	//Spot          PriceStrategy = "spot"
+	// Spot          PriceStrategy = "spot"
 )
 
 type SpendLimitAuthenticator struct {
