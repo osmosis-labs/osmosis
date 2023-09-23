@@ -28,7 +28,7 @@ type SpendLimitAuthenticator struct {
 	store        sdk.KVStore
 	quoteDenom   string
 	bankKeeper   bankkeeper.Keeper
-	allowedDelta osmomath.Int
+	allowedDelta osmomath.Uint
 	periodType   PeriodType
 }
 
@@ -55,7 +55,7 @@ func (sla SpendLimitAuthenticator) StaticGas() uint64 {
 
 func (sla SpendLimitAuthenticator) Initialize(data []byte) (Authenticator, error) {
 	var initData struct {
-		AllowedDelta int64      `json:"allowed"`
+		AllowedDelta uint64     `json:"allowed"`
 		PeriodType   PeriodType `json:"period"`
 	}
 
@@ -63,7 +63,7 @@ func (sla SpendLimitAuthenticator) Initialize(data []byte) (Authenticator, error
 		return nil, sdkerrors.Wrap(err, "failed to unmarshal initialization data")
 	}
 
-	sla.allowedDelta = sdk.NewInt(initData.AllowedDelta)
+	sla.allowedDelta = sdk.NewUint(initData.AllowedDelta)
 	if sla.allowedDelta.IsZero() {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "allowed delta must be positive")
 	}
@@ -126,7 +126,7 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 	// Get the total spent so far in the current period
 	spentSoFar := sla.GetSpentInPeriod(account, ctx.BlockTime())
 
-	if delta.Add(spentSoFar).GT(sla.allowedDelta) {
+	if delta.Add(spentSoFar).Int64() > int64(sla.allowedDelta.Uint64()) {
 		return Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "spend limit exceeded"))
 	}
 

@@ -43,7 +43,7 @@ func (s *SpendLimitAuthenticatorTest) TestInitialize() {
 	}{
 		{"Valid day", []byte(`{"allowed": 100, "period": "day"}`), true},
 		{"Valid month", []byte(`{"allowed": 100, "period": "week"}`), true},
-		{"Neg allowed", []byte(`{"allowed": -100, "period": "year"}`), true},
+		{"Neg allowed", []byte(`{"allowed": -100, "period": "year"}`), false},
 		{"Invalid period", []byte(`{"allowed": 100, "period": "decade"}`), false},
 		{"Missing allowed", []byte(`{"period": "day"}`), false},
 		{"Missing period", []byte(`{"allowed": 100}`), false},
