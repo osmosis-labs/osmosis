@@ -25,8 +25,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			return err
 		}
 
-		// TODO: temporary allocate to all groups. Must be active only.
-		// Temporary until we decide on a better way to deal with Active/Upcoming/Finished groups.
 		err = k.AllocateAcrossGauges(ctx, groups)
 		if err != nil {
 			return err
