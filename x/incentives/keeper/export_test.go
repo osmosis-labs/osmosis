@@ -41,3 +41,13 @@ func (k Keeper) MoveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee osmomath.Int, gaugeCoins sdk.Coins) error {
 	return k.chargeFeeIfSufficientFeeDenomBalance(ctx, address, fee, gaugeCoins)
 }
+
+// SyncGroupGaugeWeights updates the individual and total weights of the gauge records based on the splitting policy.
+func (k Keeper) SyncGroupGaugeWeights(ctx sdk.Context, groupGauge types.GroupGauge) error {
+	return k.syncGroupGaugeWeights(ctx, groupGauge)
+}
+
+// SyncVolumeSplitGauge updates the individual and total weights of the gauge records based on the volume splitting policy.
+func (k Keeper) SyncVolumeSplitGauge(ctx sdk.Context, volumeSplitGauge types.GroupGauge) error {
+	return k.syncVolumeSplitGauge(ctx, volumeSplitGauge)
+}

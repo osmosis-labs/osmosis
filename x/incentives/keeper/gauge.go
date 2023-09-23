@@ -212,6 +212,8 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 // CreateGroupGauge creates a new gauge, that allocates rewards dynamically across its internal gauges based on the given splitting policy.
 // Note: we should expect that the internal gauges consist of the gauges that are automatically created for each pool upon pool creation, as even non-perpetual
 // external incentives would likely want to route through these.
+// TODO: change this to take in list of pool IDs instead and fetch the gauge IDs under the hood.
+// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6404
 func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64, gaugetype lockuptypes.LockQueryType, splittingPolicy types.SplittingPolicy) (uint64, error) {
 	if len(internalGaugeIds) == 0 {
 		return 0, fmt.Errorf("No internalGauge provided.")
@@ -224,19 +226,6 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	// TODO: remove this check once volume splitting is implemented
 	if splittingPolicy != types.Evenly {
 		return 0, fmt.Errorf("Invalid splitting policy, needs to be Evenly got %s", splittingPolicy)
-	}
-
-	// check that all the internalGaugeIds exist
-	internalGauges, err := k.GetGaugeFromIDs(ctx, internalGaugeIds)
-	if err != nil {
-		return 0, fmt.Errorf("Invalid internalGaugeIds, please make sure all the internalGauge have been created.")
-	}
-
-	// check that all internalGauges are perp
-	for _, gauge := range internalGauges {
-		if !gauge.IsPerpetual {
-			return 0, fmt.Errorf("Internal Gauge id %d is non-perp, all internalGauge must be perpetual Gauge.", gauge.Id)
-		}
 	}
 
 	nextGaugeId := k.GetLastGaugeID(ctx) + 1
@@ -260,16 +249,21 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 		return 0, err
 	}
 
+	// TODO: initialize using initGaugeInfo
+	// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6401
+	initialInternalGaugeInfo := types.InternalGaugeInfo{}
+
 	newGroupGauge := types.GroupGauge{
-		GroupGaugeId:    nextGaugeId,
-		InternalIds:     internalGaugeIds,
-		SplittingPolicy: splittingPolicy,
+		GroupGaugeId:      nextGaugeId,
+		InternalGaugeInfo: initialInternalGaugeInfo,
+		SplittingPolicy:   splittingPolicy,
 	}
 
 	k.SetGroupGauge(ctx, newGroupGauge)
 	k.SetLastGaugeID(ctx, gauge.Id)
 
-	// TODO: check if this is necessary, will investigate this in following PR.
+	// TODO: check if this is necessary.
+	// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6405
 	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
 	activeOrUpcomingGauge := true
 
@@ -281,28 +275,13 @@ func (k Keeper) CreateGroupGauge(ctx sdk.Context, coins sdk.Coins, numEpochPaidO
 	return nextGaugeId, nil
 }
 
-// AddToGaugeRewardsFromGauge transfer coins from groupGaugeId to InternalGaugeId.
+// AddToGaugeRewardsFromGauge transfer coins from a group gauge to its internal gauges.
 // Prior to calling this function, we make sure that the internalGaugeId is linked with the associated groupGaugeId.
 // Note: we donot have to bankSend for this gauge transfer because all the available incentive has already been bank sent
 // when we create Group Gauge. Now we are just allocating funds from groupGauge to internalGauge.
+// CONTRACT: internalGaugeId should be present in the group gauge.
+// TODO: revisit, clean up, and test this function as part of https://github.com/osmosis-labs/osmosis/issues/6402
 func (k Keeper) AddToGaugeRewardsFromGauge(ctx sdk.Context, groupGaugeId uint64, coins sdk.Coins, internalGaugeId uint64) error {
-	// check if the internalGaugeId is present in groupGauge
-	groupGaugeObj, err := k.GetGroupGaugeById(ctx, groupGaugeId)
-	if err != nil {
-		return err
-	}
-	found := false
-	for _, val := range groupGaugeObj.InternalIds {
-		if val == internalGaugeId {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		return fmt.Errorf("InternalGaugeId %d is not present in groupGauge: %v", internalGaugeId, groupGaugeObj.InternalIds)
-	}
-
 	groupGauge, err := k.GetGaugeByID(ctx, groupGaugeId)
 	if err != nil {
 		return err

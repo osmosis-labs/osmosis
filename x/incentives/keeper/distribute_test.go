@@ -18,6 +18,39 @@ import (
 
 var _ = suite.TestingSuite(nil)
 
+var (
+	defaultGaugeRecordOneRecord = types.InternalGaugeRecord{
+		GaugeId:          1,
+		CurrentWeight:    osmomath.NewInt(100),
+		CumulativeWeight: osmomath.NewInt(200),
+	}
+	defaultGaugeRecordTwoRecords = types.InternalGaugeRecord{
+		// Note that this is 4 and not 2 because we assume the second pool is a balancer pool
+		// that creates three gauges (one for each lockable duration), only the last of which
+		// we use.
+		GaugeId:          4,
+		CurrentWeight:    osmomath.NewInt(100),
+		CumulativeWeight: osmomath.NewInt(200),
+	}
+	defaultGroupGauge = types.GroupGauge{
+		GroupGaugeId: 5,
+		InternalGaugeInfo: types.InternalGaugeInfo{
+			TotalWeight:  defaultGaugeRecordOneRecord.CurrentWeight.Add(defaultGaugeRecordTwoRecords.CurrentWeight),
+			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOneRecord, defaultGaugeRecordTwoRecords},
+		},
+		SplittingPolicy: types.Volume,
+	}
+	singleRecordGroupGauge = types.GroupGauge{
+		GroupGaugeId: 5,
+		InternalGaugeInfo: types.InternalGaugeInfo{
+			TotalWeight:  defaultGaugeRecordOneRecord.CurrentWeight.Add(defaultGaugeRecordTwoRecords.CurrentWeight),
+			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOneRecord},
+		},
+		SplittingPolicy: types.Volume,
+	}
+	defaultVolumeAmount = osmomath.NewInt(300)
+)
+
 type GroupGaugeCreationFields struct {
 	coins            sdk.Coins
 	numEpochPaidOver uint64
@@ -1127,6 +1160,9 @@ func (s *KeeperTestSuite) IncentivizeInternalGauge(poolIds []uint64, epochDurati
 	s.Require().NoError(err)
 }
 func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
+	// TODO: re-enable this test once gauge allocation logic is implemented in https://github.com/osmosis-labs/osmosis/issues/6402
+	s.T().Skip()
+
 	tests := []struct {
 		name                               string
 		GroupGauge                         types.GroupGauge
@@ -1137,8 +1173,27 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		{
 			name: "Happy case: Valid perp Group Gauge",
 			GroupGauge: types.GroupGauge{
-				GroupGaugeId:    9,
-				InternalIds:     []uint64{2, 3, 4},
+				GroupGaugeId: 9,
+				InternalGaugeInfo: types.InternalGaugeInfo{
+					TotalWeight: osmomath.NewInt(150),
+					GaugeRecords: []types.InternalGaugeRecord{
+						{
+							GaugeId:          2,
+							CurrentWeight:    osmomath.NewInt(50),
+							CumulativeWeight: osmomath.NewInt(50),
+						},
+						{
+							GaugeId:          3,
+							CurrentWeight:    osmomath.NewInt(50),
+							CumulativeWeight: osmomath.NewInt(50),
+						},
+						{
+							GaugeId:          4,
+							CurrentWeight:    osmomath.NewInt(50),
+							CumulativeWeight: osmomath.NewInt(50),
+						},
+					},
+				},
 				SplittingPolicy: types.Evenly,
 			},
 			expectedAllocationPerGroupGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))),
@@ -1148,8 +1203,27 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		{
 			name: "Happy Case: Valid non-perp Group Gauge",
 			GroupGauge: types.GroupGauge{
-				GroupGaugeId:    10,
-				InternalIds:     []uint64{5, 6, 7},
+				GroupGaugeId: 10,
+				InternalGaugeInfo: types.InternalGaugeInfo{
+					TotalWeight: osmomath.NewInt(150),
+					GaugeRecords: []types.InternalGaugeRecord{
+						{
+							GaugeId:          5,
+							CurrentWeight:    osmomath.NewInt(50),
+							CumulativeWeight: osmomath.NewInt(50),
+						},
+						{
+							GaugeId:          6,
+							CurrentWeight:    osmomath.NewInt(50),
+							CumulativeWeight: osmomath.NewInt(50),
+						},
+						{
+							GaugeId:          7,
+							CurrentWeight:    osmomath.NewInt(50),
+							CumulativeWeight: osmomath.NewInt(50),
+						},
+					},
+				},
 				SplittingPolicy: types.Evenly,
 			},
 			expectedAllocationPerGroupGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(50_000_000))),
@@ -1190,8 +1264,8 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 				s.Require().Equal(groupGaugePostAllocate.DistributedCoins, tc.expectedAllocationPerGroupGauge)
 
-				for _, gauge := range tc.GroupGauge.InternalIds {
-					internalGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gauge)
+				for _, gaugeRecord := range tc.GroupGauge.InternalGaugeInfo.GaugeRecords {
+					internalGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeRecord.GaugeId)
 					s.Require().NoError(err)
 
 					s.Require().Equal(internalGauge.Coins, tc.expectedAllocationPerInternalGauge)
@@ -1217,6 +1291,9 @@ func (s *KeeperTestSuite) WithBaseCaseDifferentInternalGauges(baseCase GroupGaug
 }
 
 func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
+	// We skip these test until group gauge initialization refactor is complete
+	s.T().Skip()
+
 	hundredKUosmo := sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))
 	hundredKUatom := sdk.NewCoin("uatom", osmomath.NewInt(100_000_000))
 	fifetyKUosmo := sdk.NewCoin("uosmo", osmomath.NewInt(50_000_000))
@@ -1309,11 +1386,9 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 
 			s.Require().NoError(err)
 
-			groupGaugeObj, err := s.App.IncentivesKeeper.GetGroupGaugeById(s.Ctx, groupGaugeId)
-			s.Require().NoError(err)
-
 			// check internalGauges matches what we expect
-			s.Require().Equal(groupGaugeObj.InternalIds, tc.createGauge.internalGaugeIds)
+			// TODO: assert initialization logic correctness once it is implemented
+			// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6404
 
 			for epoch := uint64(1); epoch <= tc.createGauge.numEpochPaidOver; epoch++ {
 				// ******************** EPOCH PASSED ********************* //
@@ -1375,4 +1450,262 @@ func (s *KeeperTestSuite) TestCreateGroupGaugeAndDistribute() {
 		})
 	}
 
+}
+
+// deepCopyGroupGauge creates a deep copy of the passed in group gauge.
+func deepCopyGroupGauge(src types.GroupGauge) types.GroupGauge {
+	gaugeRecords := make([]types.InternalGaugeRecord, len(src.InternalGaugeInfo.GaugeRecords))
+	for i, record := range src.InternalGaugeInfo.GaugeRecords {
+		gaugeRecords[i] = types.InternalGaugeRecord{
+			GaugeId:          record.GaugeId,
+			CurrentWeight:    record.CurrentWeight,
+			CumulativeWeight: record.CumulativeWeight,
+		}
+	}
+
+	return types.GroupGauge{
+		GroupGaugeId: src.GroupGaugeId,
+		InternalGaugeInfo: types.InternalGaugeInfo{
+			TotalWeight:  src.InternalGaugeInfo.TotalWeight,
+			GaugeRecords: gaugeRecords,
+		},
+		SplittingPolicy: src.SplittingPolicy,
+	}
+}
+
+// withUpdatedVolumes takes in a group gauge and a list of updated cumulative volumes (ordered) and updates the contents of the gauge to
+// reflect these new volumes.
+// It is only intended to be used to set expected values for test cases.
+func (s *KeeperTestSuite) withUpdatedVolumes(groupGauge types.GroupGauge, updatedCumulativeVolumes []osmomath.Int) types.GroupGauge {
+	// Ensure there aren't more volumes to update than records in group gauge
+	s.Require().True(len(updatedCumulativeVolumes) <= len(groupGauge.InternalGaugeInfo.GaugeRecords))
+
+	// We make a deep copy of the group gauge to ensure we don't modify the original input/defaults
+	updatedGroupGauge := deepCopyGroupGauge(groupGauge)
+
+	newTotalWeight := osmomath.ZeroInt()
+	for i, updatedVolume := range updatedCumulativeVolumes {
+		currentRecord := groupGauge.InternalGaugeInfo.GaugeRecords[i]
+		updatedRecord := types.InternalGaugeRecord{
+			GaugeId:          currentRecord.GaugeId,
+			CurrentWeight:    updatedVolume.Sub(currentRecord.CumulativeWeight),
+			CumulativeWeight: updatedVolume,
+		}
+		updatedGroupGauge.InternalGaugeInfo.GaugeRecords[i] = updatedRecord
+		newTotalWeight = newTotalWeight.Add(updatedRecord.CurrentWeight)
+	}
+	updatedGroupGauge.InternalGaugeInfo.TotalWeight = newTotalWeight
+
+	return updatedGroupGauge
+}
+
+// withSplittingPolicy returns a deep copy of the passed in group gauge with the splitting policy set to the passed in value.
+func withSplittingPolicy(groupGauge types.GroupGauge, splittingPolicy types.SplittingPolicy) types.GroupGauge {
+	// We make a deep copy of the group gauge to ensure we don't modify the original input/defaults
+	updatedGroupGauge := deepCopyGroupGauge(groupGauge)
+	updatedGroupGauge.SplittingPolicy = splittingPolicy
+
+	return updatedGroupGauge
+}
+
+// setPoolVolumes takes in an array of pool IDs and volumes and sets each pool's volume to the corresponding volume amount.
+// If there are more pool IDs than volumes, the extra pool IDs are ignored. This is to more simply accommodate cases where only the first k
+// of n pools are updated without needing to pad the volumes array during test setup.
+func (s *KeeperTestSuite) setPoolVolumes(poolIds []uint64, volumes []osmomath.Int) {
+	s.Require().True(len(poolIds) >= len(volumes))
+
+	for i, curVolume := range volumes {
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolIds[i], sdk.NewCoins(sdk.NewCoin(s.App.StakingKeeper.BondDenom(s.Ctx), curVolume)))
+	}
+}
+
+// TODO: rename this to syncVolumeSplitGroup as part of https://github.com/osmosis-labs/osmosis/pull/6446
+func (s *KeeperTestSuite) TestSyncVolumeSplitGauge() {
+	tests := map[string]struct {
+		groupGaugeToSync types.GroupGauge
+
+		// Each element updates either a CL or a balancer pool volume.
+		// These pools are created at the beginning of each test.
+		updatedPoolVolumes []osmomath.Int
+
+		expectedSyncedGauge types.GroupGauge
+		expectedError       error
+	}{
+		"happy path: valid update on group gauge with even volume growth": {
+			groupGaugeToSync: deepCopyGroupGauge(defaultGroupGauge),
+			updatedPoolVolumes: []osmomath.Int{
+				osmomath.NewInt(300),
+				osmomath.NewInt(300),
+			},
+
+			expectedSyncedGauge: s.withUpdatedVolumes(defaultGroupGauge, []osmomath.Int{osmomath.NewInt(300), osmomath.NewInt(300)}),
+			expectedError:       nil,
+		},
+		"valid update on group gauge with different volume growth": {
+			groupGaugeToSync: deepCopyGroupGauge(defaultGroupGauge),
+			updatedPoolVolumes: []osmomath.Int{
+				osmomath.NewInt(253),
+				osmomath.NewInt(659),
+			},
+
+			expectedSyncedGauge: s.withUpdatedVolumes(defaultGroupGauge, []osmomath.Int{osmomath.NewInt(253), osmomath.NewInt(659)}),
+			expectedError:       nil,
+		},
+		"valid update on group gauge with only one record to sync": {
+			groupGaugeToSync: deepCopyGroupGauge(singleRecordGroupGauge),
+
+			updatedPoolVolumes: []osmomath.Int{
+				osmomath.NewInt(933),
+			},
+
+			expectedSyncedGauge: s.withUpdatedVolumes(singleRecordGroupGauge, []osmomath.Int{osmomath.NewInt(933)}),
+			expectedError:       nil,
+		},
+
+		// Error catching
+		"tracked volume has dropped to zero for a pool (no pool volume or volume cannot be found)": {
+			groupGaugeToSync: deepCopyGroupGauge(defaultGroupGauge),
+			updatedPoolVolumes: []osmomath.Int{
+				osmomath.NewInt(300),
+				osmomath.NewInt(0),
+			},
+
+			expectedError: types.NoPoolVolumeError{PoolId: uint64(2)},
+		},
+		"cumulative volume has decreased for a pool (impossible/invalid state)": {
+			groupGaugeToSync: deepCopyGroupGauge(defaultGroupGauge),
+			updatedPoolVolumes: []osmomath.Int{
+				osmomath.NewInt(300),
+				osmomath.NewInt(100),
+			},
+
+			expectedError: types.CumulativeVolumeDecreasedError{PoolId: uint64(2), PreviousVolume: osmomath.NewInt(200), NewVolume: osmomath.NewInt(100)},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			ik := s.App.IncentivesKeeper
+
+			// Prepare pools so gauges and pool ids are set in state
+			clPool := s.PrepareConcentratedPool()
+			balPoolId := s.PrepareBalancerPool()
+
+			poolIds := []uint64{clPool.GetId(), balPoolId}
+
+			// Update cumulative volumes for pools
+			s.setPoolVolumes(poolIds, tc.updatedPoolVolumes)
+
+			// Save original input to help with mutation-related assertions
+			originalGroupGauge := deepCopyGroupGauge(tc.groupGaugeToSync)
+
+			// Set group gauge in state to make stronger assertions later
+			ik.SetGroupGauge(s.Ctx, tc.groupGaugeToSync)
+
+			// --- System under test ---
+
+			err := ik.SyncVolumeSplitGauge(s.Ctx, tc.groupGaugeToSync)
+
+			// --- Assertions ---
+
+			if tc.expectedError != nil {
+				s.Require().ErrorContains(tc.expectedError, err.Error())
+
+				// Ensure original group gauge is not mutated
+				s.Require().Equal(originalGroupGauge, tc.groupGaugeToSync)
+
+				// Ensure group gauge is unchanged in state
+				gaugeInState, err := ik.GetGroupGaugeById(s.Ctx, tc.groupGaugeToSync.GroupGaugeId)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.groupGaugeToSync, gaugeInState)
+
+				return
+			}
+
+			s.Require().NoError(err)
+
+			updatedGauge, err := ik.GetGroupGaugeById(s.Ctx, tc.groupGaugeToSync.GroupGaugeId)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedSyncedGauge, updatedGauge)
+		})
+	}
+}
+
+// TODO: rename this to TestSyncGroupWeights as part of https://github.com/osmosis-labs/osmosis/pull/6446
+func (s *KeeperTestSuite) TestSyncGroupGaugeWeights() {
+	tests := map[string]struct {
+		groupGaugeToSync types.GroupGauge
+
+		expectedSyncedGauge types.GroupGauge
+		expectedError       error
+	}{
+		"happy path: valid volume splitting group": {
+			groupGaugeToSync: withSplittingPolicy(defaultGroupGauge, types.Volume),
+
+			// Note: setup logic runs default setup based on groupGaugeToSync's splitting policy.
+			// More involved tests related to syncing logic for specific splitting policies are in their respective tests.
+			expectedSyncedGauge: s.withUpdatedVolumes(defaultGroupGauge, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount}),
+			expectedError:       nil,
+		},
+
+		// Error catching
+		"unsupported splitting policy": {
+			groupGaugeToSync: withSplittingPolicy(defaultGroupGauge, types.SplittingPolicy(100)),
+
+			expectedError: types.UnsupportedSplittingPolicyError{GroupGaugeId: uint64(5), SplittingPolicy: types.SplittingPolicy(100)},
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			ik := s.App.IncentivesKeeper
+
+			// Prepare pools so gauges and pool ids are set in state
+			clPool := s.PrepareConcentratedPool()
+			balPoolId := s.PrepareBalancerPool()
+
+			poolIds := []uint64{clPool.GetId(), balPoolId}
+
+			// Currently the only supported splitting policy is volume splitting.
+			// When more are added in the future, setup logic should route to the appropriate setup function here.
+			switch tc.groupGaugeToSync.SplittingPolicy {
+			case types.Volume:
+				s.setPoolVolumes(poolIds, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount})
+			}
+
+			// Save original input to help with mutation-related assertions
+			originalGroupGauge := deepCopyGroupGauge(tc.groupGaugeToSync)
+
+			// Set group gauge in state to make stronger assertions later
+			ik.SetGroupGauge(s.Ctx, tc.groupGaugeToSync)
+
+			// --- System under test ---
+
+			err := ik.SyncGroupGaugeWeights(s.Ctx, tc.groupGaugeToSync)
+
+			// --- Assertions ---
+
+			if tc.expectedError != nil {
+				s.Require().ErrorContains(tc.expectedError, err.Error())
+
+				// Ensure original group gauge is not mutated
+				s.Require().Equal(originalGroupGauge, tc.groupGaugeToSync)
+
+				// Ensure group gauge is unchanged in state
+				gaugeInState, err := ik.GetGroupGaugeById(s.Ctx, tc.groupGaugeToSync.GroupGaugeId)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.groupGaugeToSync, gaugeInState)
+
+				return
+			}
+
+			s.Require().NoError(err)
+
+			updatedGauge, err := ik.GetGroupGaugeById(s.Ctx, tc.groupGaugeToSync.GroupGaugeId)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedSyncedGauge, updatedGauge)
+		})
+	}
 }

@@ -267,8 +267,8 @@ func (k Keeper) distributeSyntheticInternal(
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
 }
 
-// AllocateAcrossGauges gets all the active groupGauges and distributes tokens evenly based on the internalGauges set for that
-// groupGauge. After each iteration we update the groupGauge by modifying filledEpoch and distributed coins.
+// AllocateAcrossGauges gets all the active groupGauges and distributes tokens based on the splitting policy of each gauge.
+// After each iteration we update the groupGauge by modifying filledEpoch and distributed coins.
 func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 	currTime := ctx.BlockTime()
 
@@ -283,15 +283,27 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 			return err
 		}
 
+		// TODO: handle this error quietly
+		err = k.syncGroupGaugeWeights(ctx, groupGauge)
+		if err != nil {
+			return err
+		}
+
+		// TODO: Get amount to distribute in coins (based on perpetual or non perpetual)
+		coinsToDistribute := sdk.Coins{}
+
 		// only allow distribution if the GroupGauge is Active
 		if gauge.IsActiveGauge(currTime) {
-			coinsToDistributePerInternalGauge, coinsToDistributeThisEpoch, err := k.calcSplitPolicyCoins(groupGauge.SplittingPolicy, gauge, groupGauge)
-			if err != nil {
-				return err
-			}
+			for _, distrRecord := range groupGauge.InternalGaugeInfo.GaugeRecords {
+				moduleAccount := k.ak.GetModuleAddress(types.ModuleName)
 
-			for _, internalGaugeId := range groupGauge.InternalIds {
-				err = k.AddToGaugeRewardsFromGauge(ctx, groupGauge.GroupGaugeId, coinsToDistributePerInternalGauge, internalGaugeId)
+				// TODO: calculate pro-rata share based on record's weight and total weight
+				// shareOfDistribution := sdk.ZeroDec()
+
+				// TODO: loop through `coinsToDistribute` and add pro-rata share to `amountToAdd`
+				amountToAdd := coinsToDistribute
+
+				err = k.AddToGaugeRewards(ctx, moduleAccount, amountToAdd, distrRecord.GaugeId)
 				if err != nil {
 					return err
 				}
@@ -299,7 +311,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 
 			// we distribute tokens from groupGauge to internal gauge therefore update groupGauge fields
 			// updates filledEpoch and distributedCoins
-			if err := k.updateGaugePostDistribute(ctx, *gauge, coinsToDistributeThisEpoch); err != nil {
+			if err = k.updateGaugePostDistribute(ctx, *gauge, coinsToDistribute); err != nil {
 				return err
 			}
 		}
@@ -308,29 +320,110 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
 	return nil
 }
 
-// calcSplitPolicyCoins calculates tokens to split given a policy and groupGauge.
-// TODO: add volume split policy
-// nolint: unused
-func (k Keeper) calcSplitPolicyCoins(policy types.SplittingPolicy, groupGauge *types.Gauge, groupGaugeObj types.GroupGauge) (sdk.Coins, sdk.Coins, error) {
-	if policy == types.Evenly {
-		remainCoins := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
+// syncGroupGaugeWeights updates the individual and total weights of the gauge records based on the splitting policy.
+// It mutates the passed in object and sets the updated value in state.
+// If there is an error, the passed in object is not mutated.
+//
+// It returns an error if:
+// - the splitting policy is not supported
+// - a lower level issue arises when syncing weights (e.g. the volume for a linked pool cannot be found under volume-splitting policy)
+func (k Keeper) syncGroupGaugeWeights(ctx sdk.Context, groupGauge types.GroupGauge) error {
+	if groupGauge.SplittingPolicy == types.Volume {
+		err := k.syncVolumeSplitGauge(ctx, groupGauge)
+		if err != nil {
+			return err
+		}
+	} else {
+		return types.UnsupportedSplittingPolicyError{GroupGaugeId: groupGauge.GroupGaugeId, SplittingPolicy: groupGauge.SplittingPolicy}
+	}
 
-		var coinsDistPerInternalGauge, coinsDistThisEpoch sdk.Coins
-		for _, coin := range remainCoins {
-			epochDiff := groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs
-			internalGaugeLen := len(groupGaugeObj.InternalIds)
+	return nil
+}
 
-			distPerEpoch := coin.Amount.Quo(osmomath.NewIntFromUint64(epochDiff))
-			distPerGauge := distPerEpoch.Quo(osmomath.NewInt(int64(internalGaugeLen)))
+// syncVolumeSplitGauge syncs a group gauge according to volume splitting policy.
+// It mutates the passed in object and sets the updated value in state.
+// If there is an error, the passed in object is not mutated.
+//
+// It returns an error if:
+// - the volume for any linked pool is zero or cannot be found
+// - the cumulative volume for any linked pool has decreased (should never happen)
+func (k Keeper) syncVolumeSplitGauge(ctx sdk.Context, groupGauge types.GroupGauge) error {
+	totalWeight := sdk.ZeroInt()
 
-			coinsDistThisEpoch = coinsDistThisEpoch.Add(sdk.NewCoin(coin.Denom, distPerEpoch))
-			coinsDistPerInternalGauge = coinsDistPerInternalGauge.Add(sdk.NewCoin(coin.Denom, distPerGauge))
+	// We operate on a deep copy of the given group gauge because we expect to handle specific errors quietly
+	// and want to avoid the scenario where the original group gauge is partially mutated in such cases.
+	updatedGroupGauge := types.GroupGauge{
+		GroupGaugeId: groupGauge.GroupGaugeId,
+		InternalGaugeInfo: types.InternalGaugeInfo{
+			TotalWeight:  groupGauge.InternalGaugeInfo.TotalWeight,
+			GaugeRecords: make([]types.InternalGaugeRecord, len(groupGauge.InternalGaugeInfo.GaugeRecords)),
+		},
+		SplittingPolicy: groupGauge.SplittingPolicy,
+	}
+
+	// Loop through gauge records and update their state to reflect new pool volumes
+	for i, gaugeRecord := range groupGauge.InternalGaugeInfo.GaugeRecords {
+		gauge, err := k.GetGaugeByID(ctx, gaugeRecord.GaugeId)
+		if err != nil {
+			return err
 		}
 
-		return coinsDistPerInternalGauge, coinsDistThisEpoch, nil
-	} else {
-		return nil, nil, fmt.Errorf("GroupGauge id %d doesnot have enought coins to distribute.", &groupGauge.Id)
+		gaugeType := gauge.DistributeTo.LockQueryType
+		gaugeDuration := time.Duration(0)
+
+		if gaugeType == lockuptypes.NoLock {
+			// If NoLock, it's a CL pool, so we set the "lockableDuration" to epoch duration
+			gaugeDuration = k.GetEpochInfo(ctx).Duration
+		} else {
+			// Otherwise, it's a balancer pool so we set it to longest lockable duration
+			// TODO: add support for CW pools once there's clarity around default gauge type.
+			// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6403
+			gaugeDuration, err = k.pik.GetLongestLockableDuration(ctx)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Retrieve pool ID using GetPoolIdFromGaugeId(gaugeId, lockableDuration)
+		poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeRecord.GaugeId, gaugeDuration)
+		if err != nil {
+			return err
+		}
+
+		// Get new volume for pool. Assert GTE gauge's weight
+		cumulativePoolVolume := k.pmk.GetOsmoVolumeForPool(ctx, poolId)
+
+		// If new volume is 0, there was an issue with volume tracking. Return error.
+		// We expect this to be handled quietly in update logic but not in init logic.
+		// By returning an error, we let the caller decide whether to handle it quietly or not.
+		if !cumulativePoolVolume.IsPositive() {
+			return types.NoPoolVolumeError{PoolId: poolId}
+		}
+
+		// Update gauge record's weight to new volume - last volume snapshot
+		volumeDelta := cumulativePoolVolume.Sub(gaugeRecord.CumulativeWeight)
+		if volumeDelta.IsNegative() {
+			return types.CumulativeVolumeDecreasedError{PoolId: poolId, PreviousVolume: gaugeRecord.CumulativeWeight, NewVolume: cumulativePoolVolume}
+		}
+
+		gaugeRecord.CurrentWeight = volumeDelta
+
+		// Snapshot cumulative volume
+		gaugeRecord.CumulativeWeight = cumulativePoolVolume
+
+		// Add new this diff to total weight
+		totalWeight = totalWeight.Add(volumeDelta)
+
+		// Mutate original group gauge to ensure changes are tracked
+		updatedGroupGauge.InternalGaugeInfo.GaugeRecords[i] = gaugeRecord
 	}
+
+	// Update group gauge total weight
+	updatedGroupGauge.InternalGaugeInfo.TotalWeight = totalWeight
+
+	k.SetGroupGauge(ctx, updatedGroupGauge)
+
+	return nil
 }
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to

@@ -900,12 +900,14 @@ func (k Keeper) addVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Co
 
 	// Add newly generated volume to existing volume and set updated volume in state
 	newTotalVolume := currentTotalVolume.Add(volumeGenerated)
-	k.setVolume(ctx, poolId, newTotalVolume)
+	k.SetVolume(ctx, poolId, newTotalVolume)
 }
 
 // nolint: unused
-// setVolume sets the given volume to the global tracked volume for the given pool ID.
-func (k Keeper) setVolume(ctx sdk.Context, poolId uint64, totalVolume sdk.Coins) {
+// SetVolume sets the given volume to the global tracked volume for the given pool ID.
+// Note that this function is exported for cross-module testing purposes and should not be
+// called directly from other modules.
+func (k Keeper) SetVolume(ctx sdk.Context, poolId uint64, totalVolume sdk.Coins) {
 	storedVolume := types.TrackedVolume{Amount: totalVolume}
 	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyPoolVolume(poolId), &storedVolume)
 }
