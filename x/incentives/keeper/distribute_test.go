@@ -1270,7 +1270,7 @@ func (s *KeeperTestSuite) TestCreateGroupAndDistribute() {
 			//create 1 non-perp internal Gauge
 			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gauge id = 6
 
-			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, tc.createGauge.coins, tc.createGauge.numEpochPaidOver, tc.createGauge.owner, tc.createGauge.internalGaugeIds, lockuptypes.ByGroup, types.Evenly) // gauge id = 6
+			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, tc.createGauge.coins, tc.createGauge.numEpochPaidOver, tc.createGauge.owner, tc.createGauge.internalGaugeIds, lockuptypes.ByGroup) // gauge id = 6
 			if tc.expectCreateGroupError {
 				s.Require().Error(err)
 				return
@@ -1448,7 +1448,7 @@ func withGaugeId(gauge types.Gauge, id uint64) types.Gauge {
 	return gauge
 }
 
-func (s *KeeperTestSuite) TestSyncVolumeSplitGauge() {
+func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 	tests := map[string]struct {
 		groupToSync types.Group
 
@@ -1533,7 +1533,7 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGauge() {
 
 			// --- System under test ---
 
-			err := ik.SyncVolumeSplitGauge(s.Ctx, tc.groupToSync)
+			err := ik.SyncVolumeSplitGroup(s.Ctx, tc.groupToSync)
 
 			// --- Assertions ---
 

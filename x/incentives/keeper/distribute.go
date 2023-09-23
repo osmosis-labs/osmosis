@@ -388,7 +388,7 @@ func (k Keeper) distributeSyntheticInternal(
 // - a lower level issue arises when syncing weights (e.g. the volume for a linked pool cannot be found under volume-splitting policy)
 func (k Keeper) syncGroupWeights(ctx sdk.Context, group types.Group) error {
 	if group.SplittingPolicy == types.Volume {
-		err := k.syncVolumeSplitGauge(ctx, group)
+		err := k.syncVolumeSplitGroup(ctx, group)
 		if err != nil {
 			return err
 		}
@@ -399,14 +399,14 @@ func (k Keeper) syncGroupWeights(ctx sdk.Context, group types.Group) error {
 	return nil
 }
 
-// syncVolumeSplitGauge syncs a group according to volume splitting policy.
+// syncVolumeSplitGroup syncs a group according to volume splitting policy.
 // It mutates the passed in object and sets the updated value in state.
 // If there is an error, the passed in object is not mutated.
 //
 // It returns an error if:
 // - the volume for any linked pool is zero or cannot be found
 // - the cumulative volume for any linked pool has decreased (should never happen)
-func (k Keeper) syncVolumeSplitGauge(ctx sdk.Context, group types.Group) error {
+func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 	totalWeight := sdk.ZeroInt()
 
 	// We operate on a deep copy of the given group because we expect to handle specific errors quietly
