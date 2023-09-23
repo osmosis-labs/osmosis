@@ -87,14 +87,11 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 			// based on the distribution ratio.
 			currentGaugeCoins := osmoutils.MulDec(coinsToDistribute, gaugeDistributionRatio)
 
-			moduleAccount := k.ak.GetModuleAddress(types.ModuleName)
-
 			// For the last gauge, distribute all remaining amounts.
 			// Special case the last gauge to avoid leaving truncation dust in the group gauge
 			// and consume the amounts in-full.
 			if gaugeIndex == gaugeCount-1 {
-				// TODO: module account sends funds to itself. Should we expose API that does not require this?
-				err = k.AddToGaugeRewards(ctx, moduleAccount, coinsToDistribute.Sub(amountDistributed), distrRecord.GaugeId)
+				err = k.addToGaugeRewards(ctx, coinsToDistribute.Sub(amountDistributed), distrRecord.GaugeId)
 				if err != nil {
 					// We error in this case instead of silently skipping because AddToGaugeRewards should never fail
 					// unless something fundamental has gone wrong.
@@ -105,8 +102,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 				break
 			}
 
-			// TODO: module account sends funds to itself. Should we expose API that does not require this?
-			err = k.AddToGaugeRewards(ctx, moduleAccount, currentGaugeCoins, distrRecord.GaugeId)
+			err = k.addToGaugeRewards(ctx, currentGaugeCoins, distrRecord.GaugeId)
 			if err != nil {
 				// We error in this case instead of silently skipping because AddToGaugeRewards should never fail
 				// unless something fundamental has gone wrong.

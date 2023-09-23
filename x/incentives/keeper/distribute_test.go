@@ -1436,6 +1436,12 @@ func withNonPerpetualEpochs(gauge types.Gauge, filledEpochs uint64, numEpochsPai
 	return gauge
 }
 
+// withStartTime sets start time on the gauge
+func withStartTime(gauge types.Gauge, startTime time.Time) types.Gauge {
+	gauge.StartTime = startTime
+	return gauge
+}
+
 // withGaugeId sets the id of the gauge to given and returns the gauge.
 func withGaugeId(gauge types.Gauge, id uint64) types.Gauge {
 	gauge.Id = id
@@ -1723,7 +1729,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 	// Returns:
 	// - inputGroups: the groups to pass into the AllocateAcrossGauges function
 	// - preFundCoinsNeededForSuccess: the coins needed to be pre-funded to the module account for the test to succeed
-	configureGroups := func(groups []groupConfig) (inputGroups []types.GroupGauge, preFundCoinsNeededForSuccess sdk.Coins) {
+	configureGroups := func(groups []groupConfig) (inputGroups []types.GroupGauge) {
 		// Set group gauges
 		inputGroups = make([]types.GroupGauge, 0, len(groups))
 		for _, groupConfig := range groups {
@@ -1735,11 +1741,9 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 			// Create associated gauge for the group
 			s.App.IncentivesKeeper.SetGauge(s.Ctx, &groupGauge)
-
-			preFundCoinsNeededForSuccess = preFundCoinsNeededForSuccess.Add(groupGauge.Coins.Sub(groupGauge.DistributedCoins)...)
 		}
 
-		return inputGroups, preFundCoinsNeededForSuccess
+		return inputGroups
 	}
 
 	// returns the expected coins that group is expected to distributed based on the gauge that it
@@ -1749,6 +1753,11 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		expecteDistributedCoins = groupGauge.Coins.Sub(groupGauge.DistributedCoins)
 		if !groupGauge.IsPerpetual {
 			remainingEpochs := groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs
+
+			// For testing edge case with finished non-perpetual gauge.
+			if remainingEpochs == 0 {
+				return emptyCoins
+			}
 
 			// Divide all coins by remainingEpochs.
 			osmoutils.QuoRawMut(expecteDistributedCoins, int64(remainingEpochs))
@@ -1811,7 +1820,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		// index 0 for clPool, index 1 for balancer pool
 		volumeToSet []osmomath.Int
 
-		shouldSkipFunding bool
+		expectedError error
 	}{
 
 		"no groups": {
@@ -1961,17 +1970,17 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 		///////////////// error cases
 
-		"11: not enough funds in the module account causing error in AddToGaugeRewards": {
+		"11: invalid underlying group gauge (cannot add to finished pool gauge)": {
 			groups: []groupConfig{
 				{
 					group:      singleRecordGroupGauge,
-					groupGauge: deepCopyGauge(perpetualGauge),
+					groupGauge: perpetualGauge,
 				},
 			},
 
-			shouldSkipFunding: true,
-
 			volumeToSet: balancerOnlyVolumeConfig,
+
+			expectedError: types.UnexpectedFinishedGaugeError{GaugeId: singleRecordGroupGauge.InternalGaugeInfo.GaugeRecords[0].GaugeId},
 		},
 
 		// TODO: even splitting policy test cases once supported.
@@ -1991,13 +2000,31 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			clPool := s.PrepareConcentratedPool()
 			balPoolId := s.PrepareBalancerPool()
 
-			preFundCoinsNeededForSuccess := sdk.NewCoins()
+			// The only error is when the underlying pool gauge is finished.
+			if tc.expectedError != nil {
+				s.Ctx = s.Ctx.WithBlockTime(baseTime.Add(1 * time.Hour))
+
+				poolGaugeID := tc.groups[0].group.InternalGaugeInfo.GaugeRecords[0].GaugeId
+				poolGauge, err := incentivesKeeper.GetGaugeByID(s.Ctx, poolGaugeID)
+				s.Require().NoError(err)
+
+				// Force pool gauge to be finished
+				poolGauge.IsPerpetual = false
+				poolGauge.FilledEpochs = 1
+				poolGauge.NumEpochsPaidOver = 1
+
+				isFinished := poolGauge.IsFinishedGauge(s.Ctx.BlockTime())
+				s.Require().True(isFinished)
+
+				err = incentivesKeeper.SetGauge(s.Ctx, poolGauge)
+				s.Require().NoError(err)
+			}
 
 			// Setup the environment from the test configuration
 			// Returns:
 			// - inputGroups: the groups to pass into the AllocateAcrossGauges function
 			// - preFundCoinsNeededForSuccess: the coins needed to be pre-funded to the module account for the test to succeed
-			inputGroups, preFundCoinsNeededForSuccess := configureGroups(tc.groups)
+			inputGroups := configureGroups(tc.groups)
 
 			// Setup a gauge for testing the "invalid underlying gauge" case.
 			nonPerpetualGaugeCopy := deepCopyGauge(nonPerpetualGauge)
@@ -2008,11 +2035,6 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			// Setup volumes
 			s.setupVolumes([]uint64{clPool.GetId(), balPoolId}, tc.volumeToSet)
 
-			// Fund the right amounts depending on the test configuration.
-			if !tc.shouldSkipFunding {
-				s.FundModuleAcc(types.ModuleName, preFundCoinsNeededForSuccess)
-			}
-
 			// Compute expected distributions based on test configuration
 			// See function definition for details.
 			expectedGaugeDistributions := computeAndSetExpectedDistributions(tc.groups)
@@ -2020,8 +2042,9 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			// --- System under test ---
 			err = incentivesKeeper.AllocateAcrossGauges(s.Ctx, inputGroups)
 
-			if tc.shouldSkipFunding {
+			if tc.expectedError != nil {
 				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectedError)
 				return
 			}
 			s.Require().NoError(err)
