@@ -31,3 +31,11 @@ message MsgRemoveAuthenticator {
 // MsgRemoveAuthenticatorResponse defines the Msg/RemoveAuthenticator response
 // type.
 message MsgRemoveAuthenticatorResponse { bool success = 1; }
+
+// TxExtension allows for additional authenticator-specific data in
+// transactions.
+message TxExtension {
+  // selected_authenticators holds indices for the chosen authenticators per
+  // message.
+  repeated int32 selected_authenticators = 1;
+}
