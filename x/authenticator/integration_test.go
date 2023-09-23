@@ -517,7 +517,7 @@ func (s *AuthenticatorSuite) TestSpendWithinLimit() {
 	authenticatorsStoreKey := s.app.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]
 	spendLimitStore := prefix.NewStore(s.chainA.GetContext().KVStore(authenticatorsStoreKey), []byte("spendLimitAuthenticator"))
 
-	spendLimit := authenticator.NewSpendLimitAuthenticator(spendLimitStore, "allUSD", s.app.BankKeeper)
+	spendLimit := authenticator.NewSpendLimitAuthenticator(spendLimitStore, "allUSD", authenticator.AbsoluteValue, s.app.BankKeeper, s.app.PoolManagerKeeper, s.app.TwapKeeper)
 	s.app.AuthenticatorManager.RegisterAuthenticator(spendLimit)
 
 	initData := []byte(`{"allowed": 1000, "period": "day"}`)

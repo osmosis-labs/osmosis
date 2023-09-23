@@ -32,7 +32,7 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 
 	authenticatorsStoreKey := s.OsmosisApp.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]
 	s.Store = prefix.NewStore(s.Ctx.KVStore(authenticatorsStoreKey), []byte("spendLimitAuthenticator"))
-	s.SpendLimit = authenticator.NewSpendLimitAuthenticator(s.Store, "uosmo", s.OsmosisApp.BankKeeper)
+	s.SpendLimit = authenticator.NewSpendLimitAuthenticator(s.Store, "uosmo", authenticator.AbsoluteValue, s.OsmosisApp.BankKeeper, s.OsmosisApp.PoolManagerKeeper, s.OsmosisApp.TwapKeeper)
 }
 
 func (s *SpendLimitAuthenticatorTest) TestInitialize() {
@@ -82,7 +82,7 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransition() {
 	}{
 		{"Day Dec31 to Jan1", []byte(`{"allowed": 100, "period": "day"}`),
 			time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC),
-			time.Date(2024, 1, 1, 0, 0, 1, 0, time.UTC), 50, false},
+			time.Date(2024, 1, 1, 0, 0, 1, 0, time.UTC), 50, true},
 
 		{"Week Dec to Jan", []byte(`{"allowed": 100, "period": "week"}`),
 			time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC),
@@ -90,7 +90,7 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransition() {
 
 		{"Year Dec31 to Jan1", []byte(`{"allowed": 100, "period": "year"}`),
 			time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC),
-			time.Date(2024, 1, 1, 0, 0, 1, 0, time.UTC), 50, false},
+			time.Date(2024, 1, 1, 0, 0, 1, 0, time.UTC), 50, true},
 	}
 
 	for _, tt := range tests {
@@ -112,11 +112,7 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransition() {
 
 			// Execute ConfirmExecution and check if it's confirmed or blocked
 			result := spendLimit.ConfirmExecution(s.Ctx, account, nil, nil)
-			if tt.pass {
-				s.Require().True(result.IsConfirm(), "Should be confirmed")
-			} else {
-				s.Require().False(result.IsBlock(), "Should be blocked")
-			}
+			s.Require().Equal(tt.pass, result.IsConfirm())
 		})
 	}
 }

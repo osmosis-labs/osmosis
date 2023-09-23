@@ -3,6 +3,8 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v19/x/twap"
 	"math/big"
 	"time"
 
@@ -24,10 +26,22 @@ const (
 	Year  PeriodType = "year"
 )
 
+type PriceStrategy string
+
+const (
+	Twap          PriceStrategy = "twap"
+	AbsoluteValue PriceStrategy = "absolute_value"
+	//Spot          PriceStrategy = "spot"
+)
+
 type SpendLimitAuthenticator struct {
-	store        sdk.KVStore
-	quoteDenom   string
-	bankKeeper   bankkeeper.Keeper
+	store             sdk.KVStore
+	quoteDenom        string
+	bankKeeper        bankkeeper.Keeper
+	poolManagerKeeper *poolmanager.Keeper
+	twapKeeper        *twap.Keeper
+	priceStrategy     PriceStrategy
+
 	allowedDelta osmomath.Uint
 	periodType   PeriodType
 }
@@ -36,12 +50,21 @@ var _ Authenticator = &SpendLimitAuthenticator{}
 
 // NewSpendLimitAuthenticator creates a new SpendLimitAuthenticator. Creators must make sure to use a properly prefixed
 // store with this authenticator. That is, prefix.NewStore(authenticatorsStoreKey, []byte("spendLimitAuthenticator"))
-func NewSpendLimitAuthenticator(store sdk.KVStore, quoteDenom string, bankKeeper bankkeeper.Keeper) SpendLimitAuthenticator {
+func NewSpendLimitAuthenticator(store sdk.KVStore, quoteDenom string, priceStrategy PriceStrategy, bankKeeper bankkeeper.Keeper, poolManagerKeeper *poolmanager.Keeper, twapKeeper *twap.Keeper) SpendLimitAuthenticator {
 	// Ideally we'd validate that the store has been properly prefixed here, but the prefix store doesn't expose its prefix
+	if !(priceStrategy == AbsoluteValue || priceStrategy == Twap) {
+		panic("invalid price strategy")
+	}
+	if priceStrategy == Twap && twapKeeper == nil {
+		panic("twap keeper must be provided when using twap price strategy")
+	}
 	return SpendLimitAuthenticator{
-		store:      store,
-		quoteDenom: quoteDenom,
-		bankKeeper: bankKeeper,
+		store:             store,
+		quoteDenom:        quoteDenom,
+		bankKeeper:        bankKeeper,
+		poolManagerKeeper: poolManagerKeeper,
+		twapKeeper:        twapKeeper,
+		priceStrategy:     priceStrategy,
 	}
 }
 
@@ -112,13 +135,21 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 	totalCurrentValue := osmomath.NewInt(0)
 
 	for _, coin := range prevBalances {
-		price := sla.getPriceInQuoteDenom(coin)
-		totalPrevValue = totalPrevValue.Add(price.Mul(coin.Amount))
+		price, err := sla.getPriceInQuoteDenom(ctx, coin)
+		if err != nil {
+			// ToDO: what do we want to do if we can't determine the price of an asset?
+			return Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom))
+		}
+		totalPrevValue = totalPrevValue.Add(price.MulInt(coin.Amount).RoundInt())
 	}
 
 	for _, coin := range currentBalances {
-		price := sla.getPriceInQuoteDenom(coin)
-		totalCurrentValue = totalCurrentValue.Add(price.Mul(coin.Amount))
+		price, err := sla.getPriceInQuoteDenom(ctx, coin)
+		if err != nil {
+			// ToDO: what do we want to do if we can't determine the price of an asset?
+			return Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom))
+		}
+		totalCurrentValue = totalCurrentValue.Add(price.MulInt(coin.Amount).RoundInt())
 	}
 
 	delta := totalPrevValue.Sub(totalCurrentValue)
@@ -137,13 +168,27 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 	return Confirm()
 }
 
-func (sla SpendLimitAuthenticator) getPriceInQuoteDenom(_ sdk.Coin) osmomath.Int {
-	// ToDo: Get current price (which pool do we base this on?)
-	return osmomath.NewInt(1)
+func (sla SpendLimitAuthenticator) getPriceInQuoteDenom(ctx sdk.Context, coin sdk.Coin) (osmomath.Dec, error) {
+	switch sla.priceStrategy {
+	case Twap:
+		// This is a very bad and inefficient implementation that should be improved
+		oneWeekAgo := ctx.BlockTime().Add(-time.Hour * 24 * 7)
+		numPools := sla.poolManagerKeeper.GetNextPoolId(ctx)
+		for i := uint64(1); i < numPools; i++ {
+			price, err := sla.twapKeeper.GetArithmeticTwapToNow(ctx, i, coin.Denom, sla.quoteDenom, oneWeekAgo)
+			if err != nil {
+				return price, nil
+			}
+		}
+		return osmomath.Dec{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "no price found for %s", coin.Denom)
+	case AbsoluteValue:
+		return osmomath.NewDec(1), nil
+	default:
+		return osmomath.Dec{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid price strategy %s", sla.priceStrategy)
+	}
 }
 
 // STATE
-
 func (sla SpendLimitAuthenticator) GetBalance(account sdk.AccAddress) []sdk.Coin {
 	var coins []sdk.Coin
 	_ = json.Unmarshal(sla.store.Get(getBalanceKey(account)), &coins)
