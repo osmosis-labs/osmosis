@@ -9,10 +9,126 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	osmoutils "github.com/osmosis-labs/osmosis/osmoutils/coins"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
+
+// AllocateAcrossGauges for every gauge in the input, it updates the weights according to the splitting
+// policy and allocates the coins to the underlying gauges per the updated weights.
+// Note, every group is associated with a group gauge. The distribution to regular gauges
+// happens from the group gauge.
+// Returns error if:
+// - fails to retrieve a group gauge
+// - fails to add gauge rewards to any of the underlying gauges in the group.
+//
+// Silently skips the following errors:
+// - syncing group gauge weights fails - this is acceptable. We don't want to fail all distributions
+// due to an oddity with one group. The rewards should stay in the group gauge until the next distribution.
+// Any issues can be fixed with a major upgrade without any loss of funds.
+// - group gauge is inactive - similar reason, don't want to fail all distributions due to non-fatal issue.
+//
+// ASSUMPTIONS:
+// - group cannot outlive the gauges associated with it.
+// CONTRACT:
+// - every group in the input is active. If inactive group is passed in, it will be skipped.
+func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.GroupGauge) error {
+	for _, group := range activeGroups {
+		err := k.syncGroupGaugeWeights(ctx, group)
+		if err != nil {
+			ctx.Logger().Error("error syncing group gauge weights, skipping", "group gauge id", group.GroupGaugeId, "error", err.Error())
+			continue
+		}
+
+		// Get the groupGauge corresponding to the group.
+		groupGauge, err := k.GetGaugeByID(ctx, group.GroupGaugeId)
+		if err != nil {
+			return err
+		}
+
+		// If upcoming, skip.
+		if !groupGauge.IsActiveGauge(ctx.BlockTime()) {
+			continue
+		}
+
+		// Get amount to distribute in coins (based on perpetual or non perpetual group gauge)
+		coinsToDistribute := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
+		if !groupGauge.IsPerpetual {
+			remainingEpochs := int64(groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs)
+
+			// Divide each coin by remainingEpochs
+			osmoutils.QuoRawMut(coinsToDistribute, remainingEpochs)
+		}
+
+		// Exit early if nothing to distribute.
+		if coinsToDistribute.IsZero() {
+			// Update the group gauge despite zero coins distributed to ensure the filled epochs are updated.
+			if err = k.updateGaugePostDistribute(ctx, *groupGauge, coinsToDistribute); err != nil {
+				return err
+			}
+			continue
+		}
+
+		// We track this for distributing all the remaining amount in the last
+		// gauge without leaving truncation dust.
+		amountDistributed := sdk.NewCoins()
+
+		// Define variables for brevity
+		totalGroupWeight := group.InternalGaugeInfo.TotalWeight
+		gaugeCount := len(group.InternalGaugeInfo.GaugeRecords)
+
+		// Iterate over underlying gauge records in the group.
+		for gaugeIndex, distrRecord := range group.InternalGaugeInfo.GaugeRecords {
+			// Between 0 and 1. to determine the pro-rata share of the total amount to distribute
+			gaugeDistributionRatio := distrRecord.CurrentWeight.ToLegacyDec().Quo(totalGroupWeight.ToLegacyDec())
+
+			// Loop through `coinsToDistribute` and get the amount to distribute to the current gauge
+			// based on the distribution ratio.
+			currentGaugeCoins := osmoutils.MulDec(coinsToDistribute, gaugeDistributionRatio)
+
+			moduleAccount := k.ak.GetModuleAddress(types.ModuleName)
+
+			// For the last gauge, distribute all remaining amounts.
+			// Special case the last gauge to avoid leaving truncation dust in the group gauge
+			// and consume the amounts in-full.
+			if gaugeIndex == gaugeCount-1 {
+				// TODO: module account sends funds to itself. Should we expose API that does not require this?
+				err = k.AddToGaugeRewards(ctx, moduleAccount, coinsToDistribute.Sub(amountDistributed), distrRecord.GaugeId)
+				if err != nil {
+					// We error in this case instead of silently skipping because AddToGaugeRewards should never fail
+					// unless something fundamental has gone wrong.
+					//
+					// Assumption we are making: no gauge in the group outlives the group.
+					return err
+				}
+				break
+			}
+
+			// TODO: module account sends funds to itself. Should we expose API that does not require this?
+			err = k.AddToGaugeRewards(ctx, moduleAccount, currentGaugeCoins, distrRecord.GaugeId)
+			if err != nil {
+				// We error in this case instead of silently skipping because AddToGaugeRewards should never fail
+				// unless something fundamental has gone wrong.
+				//
+				// Assumption we are making: no gauge in the group outlives the group.
+				return err
+			}
+
+			// Update total distribute amount.
+			amountDistributed = amountDistributed.Add(currentGaugeCoins...)
+		}
+
+		// Update total coins distributed and filled epoch of the group gauge.
+		if err = k.updateGaugePostDistribute(ctx, *groupGauge, coinsToDistribute); err != nil {
+			return err
+		}
+
+		// TODO: move group from active to finished if applicable.
+	}
+
+	return nil
+}
 
 // getDistributedCoinsFromGauges returns coins that have been distributed already from the provided gauges
 func (k Keeper) getDistributedCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
@@ -265,59 +381,6 @@ func (k Keeper) distributeSyntheticInternal(
 	}
 
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
-}
-
-// AllocateAcrossGauges gets all the active groupGauges and distributes tokens based on the splitting policy of each gauge.
-// After each iteration we update the groupGauge by modifying filledEpoch and distributed coins.
-func (k Keeper) AllocateAcrossGauges(ctx sdk.Context) error {
-	currTime := ctx.BlockTime()
-
-	groupGauges, err := k.GetAllGroupGauges(ctx)
-	if err != nil {
-		return err
-	}
-
-	for _, groupGauge := range groupGauges {
-		gauge, err := k.GetGaugeByID(ctx, groupGauge.GroupGaugeId)
-		if err != nil {
-			return err
-		}
-
-		// TODO: handle this error quietly
-		err = k.syncGroupGaugeWeights(ctx, groupGauge)
-		if err != nil {
-			return err
-		}
-
-		// TODO: Get amount to distribute in coins (based on perpetual or non perpetual)
-		coinsToDistribute := sdk.Coins{}
-
-		// only allow distribution if the GroupGauge is Active
-		if gauge.IsActiveGauge(currTime) {
-			for _, distrRecord := range groupGauge.InternalGaugeInfo.GaugeRecords {
-				moduleAccount := k.ak.GetModuleAddress(types.ModuleName)
-
-				// TODO: calculate pro-rata share based on record's weight and total weight
-				// shareOfDistribution := sdk.ZeroDec()
-
-				// TODO: loop through `coinsToDistribute` and add pro-rata share to `amountToAdd`
-				amountToAdd := coinsToDistribute
-
-				err = k.AddToGaugeRewards(ctx, moduleAccount, amountToAdd, distrRecord.GaugeId)
-				if err != nil {
-					return err
-				}
-			}
-
-			// we distribute tokens from groupGauge to internal gauge therefore update groupGauge fields
-			// updates filledEpoch and distributedCoins
-			if err = k.updateGaugePostDistribute(ctx, *gauge, coinsToDistribute); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
 }
 
 // syncGroupGaugeWeights updates the individual and total weights of the gauge records based on the splitting policy.

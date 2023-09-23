@@ -20,6 +20,18 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	params := k.GetParams(ctx)
 
 	if epochIdentifier == params.DistrEpochIdentifier {
+		groupGauges, err := k.GetAllGroupGauges(ctx)
+		if err != nil {
+			return err
+		}
+
+		// TODO: temporary allocate to all group gauges. Must be active only.
+		// Temporary until we decide on a better way to deal with Active/Upcoming/Finished groups.
+		err = k.AllocateAcrossGauges(ctx, groupGauges)
+		if err != nil {
+			return err
+		}
+
 		// begin distribution if it's start time
 		gauges := k.GetUpcomingGauges(ctx)
 		ctx.Logger().Info(fmt.Sprintf("x/incentives AfterEpochEnd, num upcoming gauges %d, %d", len(gauges), ctx.BlockHeight()))
@@ -33,11 +45,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 		if len(gauges) > 10 {
 			ctx.EventManager().IncreaseCapacity(2e6)
-		}
-
-		err := k.AllocateAcrossGauges(ctx)
-		if err != nil {
-			return err
 		}
 
 		// distribute due to epoch event

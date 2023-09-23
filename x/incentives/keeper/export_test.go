@@ -47,6 +47,11 @@ func (k Keeper) SyncGroupGaugeWeights(ctx sdk.Context, groupGauge types.GroupGau
 	return k.syncGroupGaugeWeights(ctx, groupGauge)
 }
 
+// SetGauge sets the regular gauge to state.
+func (k Keeper) SetGauge(ctx sdk.Context, gauge *types.Gauge) error {
+	return k.setGauge(ctx, gauge)
+}
+
 // SyncVolumeSplitGauge updates the individual and total weights of the gauge records based on the volume splitting policy.
 func (k Keeper) SyncVolumeSplitGauge(ctx sdk.Context, volumeSplitGauge types.GroupGauge) error {
 	return k.syncVolumeSplitGauge(ctx, volumeSplitGauge)
