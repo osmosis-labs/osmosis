@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -17,9 +18,10 @@ import (
 type PeriodType string
 
 const (
-	Day  PeriodType = "day"
-	Week PeriodType = "week"
-	Year PeriodType = "year"
+	Day   PeriodType = "day"
+	Week  PeriodType = "week"
+	Month PeriodType = "month"
+	Year  PeriodType = "year"
 )
 
 type SpendLimitAuthenticator struct {
@@ -62,8 +64,11 @@ func (sla SpendLimitAuthenticator) Initialize(data []byte) (Authenticator, error
 	}
 
 	sla.allowedDelta = sdk.NewInt(initData.AllowedDelta)
+	if sla.allowedDelta.IsZero() {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "allowed delta must be positive")
+	}
 	sla.periodType = initData.PeriodType
-	if !(sla.periodType == Day || sla.periodType == Week || sla.periodType == Year) {
+	if !(sla.periodType == Day || sla.periodType == Week || sla.periodType == Month || sla.periodType == Year) {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period type %s", sla.periodType)
 	}
 	return sla, nil
@@ -80,7 +85,7 @@ func (sla SpendLimitAuthenticator) GetAuthenticationData(
 
 func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) AuthenticationResult {
 	// Get the current period based on block time
-	currentPeriod := ctx.BlockTime().Format(getPeriodFormat(sla.periodType))
+	currentPeriod := formatPeriodTime(ctx.BlockTime(), sla.periodType)
 
 	// Check if the period has changed
 	activePeriod := sla.GetActivePeriod(account)
@@ -155,11 +160,13 @@ func (sla SpendLimitAuthenticator) DeleteBalances(account sdk.AccAddress) {
 }
 
 func (sla SpendLimitAuthenticator) GetSpentInPeriod(account sdk.AccAddress, t time.Time) osmomath.Int {
-	return sdk.NewIntFromBigInt(new(big.Int).SetBytes(sla.store.Get(getPeriodKey(account, sla.periodType, t))))
+	key := getPeriodKey(account, sla.periodType, t)
+	return sdk.NewIntFromBigInt(new(big.Int).SetBytes(sla.store.Get(key)))
 }
 
 func (sla SpendLimitAuthenticator) SetSpentInPeriod(account sdk.AccAddress, t time.Time, spent osmomath.Int) {
-	sla.store.Set(getPeriodKey(account, sla.periodType, t), spent.BigInt().Bytes())
+	key := getPeriodKey(account, sla.periodType, t)
+	sla.store.Set(key, spent.BigInt().Bytes())
 }
 
 func (sla SpendLimitAuthenticator) DeletePastPeriods(account sdk.AccAddress, t time.Time) {
@@ -177,20 +184,22 @@ func (sla SpendLimitAuthenticator) DeletePastPeriods(account sdk.AccAddress, t t
 
 // GetActivePeriod gets the current period for the given account (i.e "currentPeriod|osmo1.. => day|2021-01-01")
 func (sla SpendLimitAuthenticator) GetActivePeriod(account sdk.AccAddress) string {
-	return string(sla.store.Get(getActivePeriodKey(account, sla.periodType)))
+	key := getActivePeriodKey(account, sla.periodType)
+	return string(sla.store.Get(key))
 }
 
 // SetActivePeriod sets the current period for the given account (i.e "activePeriod|osmo1.. => day|2021-01-01")
 func (sla SpendLimitAuthenticator) SetActivePeriod(account sdk.AccAddress, current string) {
-	sla.store.Set(getActivePeriodKey(account, sla.periodType), []byte(current))
+	key := getActivePeriodKey(account, sla.periodType)
+	sla.store.Set(key, []byte(current))
 }
 
 // KEYS
 func getPeriodKey(account sdk.AccAddress, period PeriodType, t time.Time) []byte {
-	if !(period == Day || period == Week || period == Year) {
+	if !(period == Day || period == Week || period == Month || period == Year) {
 		panic("invalid period type")
 	}
-	return utils.BuildKey(account, period, t.Format(getPeriodFormat(period)))
+	return utils.BuildKey(account, period, formatPeriodTime(t, period))
 }
 
 func getBalanceKey(account sdk.AccAddress) []byte {
@@ -201,15 +210,17 @@ func getActivePeriodKey(account sdk.AccAddress, period PeriodType) []byte {
 	return utils.BuildKey("activePeriod", account.String(), string(period))
 }
 
-// Returns the time format string based on the period type
-func getPeriodFormat(periodType PeriodType) string {
+func formatPeriodTime(t time.Time, periodType PeriodType) string {
 	switch periodType {
 	case Day:
-		return "2006-01-02"
+		return t.Format("2006-01-02")
 	case Week:
-		return "2006-01"
+		year, week := t.ISOWeek()
+		return fmt.Sprintf("%d-v%02d", year, week)
+	case Month:
+		return t.Format("2006-01")
 	case Year:
-		return "2006"
+		return t.Format("2006")
 	}
 	return ""
 }
