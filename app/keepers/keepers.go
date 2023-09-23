@@ -124,7 +124,7 @@ type AppKeepers struct {
 	// "Normal" keepers
 	AccountKeeper                *authkeeper.AccountKeeper
 	BankKeeper                   *bankkeeper.BaseKeeper
-	AuthzKeeper                  *authzkeeper.Keeper
+	AuthzKeeper                  AuthzKeeperInterface
 	StakingKeeper                *stakingkeeper.Keeper
 	DistrKeeper                  *distrkeeper.Keeper
 	DowntimeKeeper               *downtimedetector.Keeper
@@ -201,12 +201,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.BankKeeper = &bankKeeper
 
-	authzKeeper := authzkeeper.NewKeeper(
+	authzKeeper := NewKeeperWrapper(authzkeeper.NewKeeper(
 		appKeepers.keys[authzkeeper.StoreKey],
 		appCodec,
 		bApp.MsgServiceRouter(),
-	)
-	appKeepers.AuthzKeeper = &authzKeeper
+	))
+	appKeepers.AuthzKeeper = authzKeeper
 
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
