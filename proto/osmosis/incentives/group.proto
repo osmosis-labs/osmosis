@@ -53,11 +53,11 @@ message InternalGaugeRecord {
   ];
 }
 
-// GroupGauge is an object that stores GroupGaugeId, a list of gauge info, and a
-// splitting policy. These are grouped into a single abstraction to allow for
-// distribution of group incentives to internal gauges according to the
-// specified splitting policy.
-message GroupGauge {
+// Group is an object that stores a 1:1 mapped gauge ID, a list of pool gauge
+// info, and a splitting policy. These are grouped into a single abstraction to
+// allow for distribution of group incentives to internal gauges according to
+// the specified splitting policy.
+message Group {
   uint64 group_gauge_id = 1;
   InternalGaugeInfo internal_gauge_info = 2 [ (gogoproto.nullable) = false ];
   SplittingPolicy splitting_policy = 3;

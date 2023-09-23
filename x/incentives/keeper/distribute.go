@@ -33,9 +33,9 @@ import (
 // - group cannot outlive the gauges associated with it.
 // CONTRACT:
 // - every group in the input is active. If inactive group is passed in, it will be skipped.
-func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.GroupGauge) error {
+func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group) error {
 	for _, group := range activeGroups {
-		err := k.syncGroupGaugeWeights(ctx, group)
+		err := k.syncGroupWeights(ctx, group)
 		if err != nil {
 			ctx.Logger().Error("error syncing group gauge weights, skipping", "group gauge id", group.GroupGaugeId, "error", err.Error())
 			continue
@@ -379,49 +379,49 @@ func (k Keeper) distributeSyntheticInternal(
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
 }
 
-// syncGroupGaugeWeights updates the individual and total weights of the gauge records based on the splitting policy.
+// syncGroupWeights updates the individual and total weights of the group records based on the splitting policy.
 // It mutates the passed in object and sets the updated value in state.
 // If there is an error, the passed in object is not mutated.
 //
 // It returns an error if:
 // - the splitting policy is not supported
 // - a lower level issue arises when syncing weights (e.g. the volume for a linked pool cannot be found under volume-splitting policy)
-func (k Keeper) syncGroupGaugeWeights(ctx sdk.Context, groupGauge types.GroupGauge) error {
-	if groupGauge.SplittingPolicy == types.Volume {
-		err := k.syncVolumeSplitGauge(ctx, groupGauge)
+func (k Keeper) syncGroupWeights(ctx sdk.Context, group types.Group) error {
+	if group.SplittingPolicy == types.Volume {
+		err := k.syncVolumeSplitGauge(ctx, group)
 		if err != nil {
 			return err
 		}
 	} else {
-		return types.UnsupportedSplittingPolicyError{GroupGaugeId: groupGauge.GroupGaugeId, SplittingPolicy: groupGauge.SplittingPolicy}
+		return types.UnsupportedSplittingPolicyError{GroupGaugeId: group.GroupGaugeId, SplittingPolicy: group.SplittingPolicy}
 	}
 
 	return nil
 }
 
-// syncVolumeSplitGauge syncs a group gauge according to volume splitting policy.
+// syncVolumeSplitGauge syncs a group according to volume splitting policy.
 // It mutates the passed in object and sets the updated value in state.
 // If there is an error, the passed in object is not mutated.
 //
 // It returns an error if:
 // - the volume for any linked pool is zero or cannot be found
 // - the cumulative volume for any linked pool has decreased (should never happen)
-func (k Keeper) syncVolumeSplitGauge(ctx sdk.Context, groupGauge types.GroupGauge) error {
+func (k Keeper) syncVolumeSplitGauge(ctx sdk.Context, group types.Group) error {
 	totalWeight := sdk.ZeroInt()
 
-	// We operate on a deep copy of the given group gauge because we expect to handle specific errors quietly
+	// We operate on a deep copy of the given group because we expect to handle specific errors quietly
 	// and want to avoid the scenario where the original group gauge is partially mutated in such cases.
-	updatedGroupGauge := types.GroupGauge{
-		GroupGaugeId: groupGauge.GroupGaugeId,
+	updatedGroup := types.Group{
+		GroupGaugeId: group.GroupGaugeId,
 		InternalGaugeInfo: types.InternalGaugeInfo{
-			TotalWeight:  groupGauge.InternalGaugeInfo.TotalWeight,
-			GaugeRecords: make([]types.InternalGaugeRecord, len(groupGauge.InternalGaugeInfo.GaugeRecords)),
+			TotalWeight:  group.InternalGaugeInfo.TotalWeight,
+			GaugeRecords: make([]types.InternalGaugeRecord, len(group.InternalGaugeInfo.GaugeRecords)),
 		},
-		SplittingPolicy: groupGauge.SplittingPolicy,
+		SplittingPolicy: group.SplittingPolicy,
 	}
 
 	// Loop through gauge records and update their state to reflect new pool volumes
-	for i, gaugeRecord := range groupGauge.InternalGaugeInfo.GaugeRecords {
+	for i, gaugeRecord := range group.InternalGaugeInfo.GaugeRecords {
 		gauge, err := k.GetGaugeByID(ctx, gaugeRecord.GaugeId)
 		if err != nil {
 			return err
@@ -473,14 +473,14 @@ func (k Keeper) syncVolumeSplitGauge(ctx sdk.Context, groupGauge types.GroupGaug
 		// Add new this diff to total weight
 		totalWeight = totalWeight.Add(volumeDelta)
 
-		// Mutate original group gauge to ensure changes are tracked
-		updatedGroupGauge.InternalGaugeInfo.GaugeRecords[i] = gaugeRecord
+		// Mutate original group to ensure changes are tracked
+		updatedGroup.InternalGaugeInfo.GaugeRecords[i] = gaugeRecord
 	}
 
-	// Update group gauge total weight
-	updatedGroupGauge.InternalGaugeInfo.TotalWeight = totalWeight
+	// Update group's total weight
+	updatedGroup.InternalGaugeInfo.TotalWeight = totalWeight
 
-	k.SetGroupGauge(ctx, updatedGroupGauge)
+	k.SetGroup(ctx, updatedGroup)
 
 	return nil
 }

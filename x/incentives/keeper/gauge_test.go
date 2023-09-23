@@ -602,7 +602,7 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 	}
 }
 
-func (s *KeeperTestSuite) TestCreateGroupGauge() {
+func (s *KeeperTestSuite) TestCreateGroup() {
 	// TODO: Re-enable this once gauge creation refactor is complete in https://github.com/osmosis-labs/osmosis/issues/6404
 	s.T().Skip()
 
@@ -696,7 +696,7 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 			//create 1 non-perp internal Gauge
 			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gauge id = 5
 
-			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[1], tc.internalGaugeIds, tc.gaugeType, tc.splittiingPolicy) // gauge id = 6
+			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[1], tc.internalGaugeIds, tc.gaugeType, tc.splittiingPolicy) // gauge id = 6
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -711,11 +711,11 @@ func (s *KeeperTestSuite) TestCreateGroupGauge() {
 				s.Require().Equal(groupGauge.IsPerpetual, true)
 				s.Require().Equal(groupGauge.DistributeTo.LockQueryType, lockuptypes.ByGroup)
 
-				// check that GroupGauge has been added to state
-				groupGaugeObj, err := s.App.IncentivesKeeper.GetGroupGaugeById(s.Ctx, groupGaugeId)
+				// check that Group has been added to state
+				group, err := s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, groupGaugeId)
 				s.Require().NoError(err)
 
-				s.Require().Equal(groupGaugeObj.InternalGaugeInfo.GaugeRecords, tc.internalGaugeIds)
+				s.Require().Equal(group.InternalGaugeInfo.GaugeRecords, tc.internalGaugeIds)
 			}
 
 		})
