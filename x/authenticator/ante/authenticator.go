@@ -1,8 +1,9 @@
 package ante
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -11,6 +12,8 @@ import (
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 )
 
+// GetAccount retrieves the account associated with the first signer of a transaction message.
+// It returns the account's address or an error if no signers are present.
 func GetAccount(msg sdk.Msg) (sdk.AccAddress, error) {
 	if len(msg.GetSigners()) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "no signers")
@@ -18,11 +21,14 @@ func GetAccount(msg sdk.Msg) (sdk.AccAddress, error) {
 	return msg.GetSigners()[0], nil
 }
 
+// AuthenticatorDecorator is responsible for processing authentication logic
+// before transaction execution.
 type AuthenticatorDecorator struct {
 	authenticatorKeeper *authenticatorkeeper.Keeper
 	maxFeePayerGas      uint64
 }
 
+// NewAuthenticatorDecorator creates a new instance of AuthenticatorDecorator with the provided parameters.
 func NewAuthenticatorDecorator(
 	authenticatorKeeper *authenticatorkeeper.Keeper,
 	maxFeePayerGas uint64,
@@ -33,25 +39,27 @@ func NewAuthenticatorDecorator(
 	}
 }
 
-// AnteHandle is the authenticator ante handler
+// AnteHandle is the authenticator ante handler responsible for processing authentication
+// logic before transaction execution.
 func (ad AuthenticatorDecorator) AnteHandle(
 	ctx sdk.Context,
 	tx sdk.Tx,
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
-	// Authenticating the fee payer needs to be done with very little gas
-	// This is a spam-prevention strategy. This protects from a user adding multiple
-	// authenticators that overuse compute.
-	//
-	// If the fee payer is not authenticated, there will be no one to pay
-	// for the cost of the tx, which would allow an attacker to force a
-	// validator to spend resources by running authenticators on a tx
-	// that will never be executed
+	// Performing fee payer authentication with minimal gas allocation
+	// serves as a spam-prevention strategy to prevent users from adding multiple
+	// authenticators that may excessively consume computational resources.
+	// If the fee payer is not authenticated, there would be no entity responsible
+	// for covering the transaction's costs. This safeguard ensures that validators
+	// are not compelled to expend resources on executing authenticators for transactions
+	// that will never be executed.
 	originalGasMeter := ctx.GasMeter()
-	// Ideally we would want to use min(gasRemaining, maxFeePayerGas) here, but this leads to problems because
-	// of the implementation of the InfiniteGasMeter. I think it's ok to allow potentially going over
-	// the original limit as long as it's bellow the fee payer gas limit
+
+	// Ideally, we would prefer to use min(gasRemaining, maxFeePayerGas) here, but
+	// this approach presents challenges due to the implementation of the InfiniteGasMeter.
+	// As long as the gas consumption remains below the fee payer gas limit, exceeding
+	// the original limit should be acceptable.
 	payerGasMeter := sdk.NewGasMeter(ad.maxFeePayerGas)
 	ctx = ctx.WithGasMeter(payerGasMeter)
 

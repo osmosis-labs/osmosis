@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,7 +31,8 @@ type Keeper struct {
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeKey sdk.StoreKey,
+	managerStoreKey sdk.StoreKey,
+	authenticatorStoreKey sdk.StoreKey,
 	ps paramtypes.Subspace,
 	authenticatorManager *authenticator.AuthenticatorManager,
 ) Keeper {
@@ -40,11 +42,11 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		storeKey:             storeKey,
+		storeKey:             managerStoreKey,
 		cdc:                  cdc,
 		paramSpace:           ps,
 		AuthenticatorManager: authenticatorManager,
-		TransientStore:       authenticator.NewTransientStore(storeKey, sdk.Context{}),
+		TransientStore:       authenticator.NewTransientStore(authenticatorStoreKey, sdk.Context{}),
 	}
 }
 

@@ -10,7 +10,8 @@ const (
 	ModuleName = "authenticator"
 
 	// StoreKey defines the primary module store key
-	StoreKey = ModuleName
+	ManagerStoreKey       = ModuleName + "manager"
+	AuthenticatorStoreKey = ModuleName + "authenticator"
 
 	// RouterKey defines the module's message routing key
 	RouterKey = ModuleName

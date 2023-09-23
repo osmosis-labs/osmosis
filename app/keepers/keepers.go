@@ -461,7 +461,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	authenticatorKeeper := authenticatorkeeper.NewKeeper(
 		appCodec,
-		appKeepers.keys[authenticatortypes.StoreKey],
+		appKeepers.keys[authenticatortypes.ManagerStoreKey],
+		appKeepers.keys[authenticatortypes.AuthenticatorStoreKey],
 		appKeepers.GetSubspace(authenticatortypes.ModuleName),
 		appKeepers.AuthenticatorManager,
 	)
@@ -824,6 +825,7 @@ func KVStoreKeys() []string {
 		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		cosmwasmpooltypes.StoreKey,
-		authenticatortypes.StoreKey,
+		authenticatortypes.ManagerStoreKey,
+		authenticatortypes.AuthenticatorStoreKey,
 	}
 }

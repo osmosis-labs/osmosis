@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/errors v1.0.0
-	cosmossdk.io/math v1.1.2
+	cosmossdk.io/math v1.1.3-rc.0
 	github.com/CosmWasm/wasmd v0.31.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.47.5
@@ -24,7 +24,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230920194803-25ef84411155
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230911120014-b14342e08daf
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230911120014-b14342e08daf
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20230911120014-b14342e08daf
 	github.com/pkg/errors v0.9.1
@@ -58,7 +58,7 @@ require (
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/butuzov/mirror v1.1.0 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.1 // indirect
-	github.com/chenzhuoyu/iasm v0.9.0 // indirect
+	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/cosmos/iavl v0.19.5 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
@@ -83,7 +83,6 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/timonwong/loggercheck v0.9.4 // indirect
-	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/xen0n/gosmopolitan v1.2.1 // indirect
 	github.com/ykadowak/zerologlint v0.1.3 // indirect
 	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00 // indirect
