@@ -66,6 +66,10 @@ func (k Keeper) HandleGroupPostDistribute(ctx sdk.Context, groupGauge types.Gaug
 	return k.handleGroupPostDistribute(ctx, groupGauge, coinsDistributed)
 }
 
+func (k Keeper) InitGaugeInfo(ctx sdk.Context, poolIds []uint64) (types.InternalGaugeInfo, error) {
+	return k.initGaugeInfo(ctx, poolIds)
+}
+
 func RegularGaugeStoreKey(ID uint64) []byte {
 	return gaugeStoreKey(ID)
 }
