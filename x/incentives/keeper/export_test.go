@@ -61,3 +61,11 @@ func (k Keeper) AddToGaugeRewardsInternal(ctx sdk.Context, coins sdk.Coins, gaug
 func (k Keeper) SyncVolumeSplitGroup(ctx sdk.Context, volumeSplitGauge types.Group) error {
 	return k.syncVolumeSplitGroup(ctx, volumeSplitGauge)
 }
+
+func (k Keeper) HandleGroupPostDistribute(ctx sdk.Context, groupGauge types.Gauge, coinsDistributed sdk.Coins) error {
+	return k.handleGroupPostDistribute(ctx, groupGauge, coinsDistributed)
+}
+
+func RegularGaugeStoreKey(ID uint64) []byte {
+	return gaugeStoreKey(ID)
+}

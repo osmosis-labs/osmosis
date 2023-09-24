@@ -50,6 +50,9 @@ func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 	if err != nil {
 		return err
 	}
+
+	gauge.IsLastNonPerpetualDistribution()
+
 	store.Set(gaugeStoreKey(gauge.Id), bz)
 	return nil
 }
@@ -223,6 +226,9 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 		return 0, fmt.Errorf("Invalid gauge type needs to be ByGroup, got %s.", gaugetype)
 	}
 
+	// TODO: remove gauge creation logic from here.
+	// Instead, call `CreateGauge` directly
+	// Update `CreateGauge` to be able to handle the group type.
 	nextGaugeId := k.GetLastGaugeID(ctx) + 1
 
 	gauge := types.Gauge{
@@ -278,7 +284,7 @@ func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, err
 	store := ctx.KVStore(k.storeKey)
 	gaugeKey := gaugeStoreKey(gaugeID)
 	if !store.Has(gaugeKey) {
-		return nil, fmt.Errorf("gauge with ID %d does not exist", gaugeID)
+		return nil, types.GaugeNotFoundError{GaugeID: gaugeID}
 	}
 	bz := store.Get(gaugeKey)
 	if err := proto.Unmarshal(bz, &gauge); err != nil {

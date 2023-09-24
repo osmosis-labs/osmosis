@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmoutils "github.com/osmosis-labs/osmosis/osmoutils/coins"
+	"github.com/osmosis-labs/osmosis/osmoutils/coins"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
@@ -58,13 +58,14 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 			remainingEpochs := int64(groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs)
 
 			// Divide each coin by remainingEpochs
-			osmoutils.QuoRawMut(coinsToDistribute, remainingEpochs)
+			coins.QuoRawMut(coinsToDistribute, remainingEpochs)
 		}
 
 		// Exit early if nothing to distribute.
 		if coinsToDistribute.IsZero() {
 			// Update the group gauge despite zero coins distributed to ensure the filled epochs are updated.
-			if err = k.updateGaugePostDistribute(ctx, *groupGauge, coinsToDistribute); err != nil {
+			// Either updates the group or deletes it from state if it is finished.
+			if err = k.handleGroupPostDistribute(ctx, *groupGauge, coinsToDistribute); err != nil {
 				return err
 			}
 			continue
@@ -85,7 +86,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 
 			// Loop through `coinsToDistribute` and get the amount to distribute to the current gauge
 			// based on the distribution ratio.
-			currentGaugeCoins := osmoutils.MulDec(coinsToDistribute, gaugeDistributionRatio)
+			currentGaugeCoins := coins.MulDec(coinsToDistribute, gaugeDistributionRatio)
 
 			// For the last gauge, distribute all remaining amounts.
 			// Special case the last gauge to avoid leaving truncation dust in the group gauge
@@ -115,12 +116,10 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 			amountDistributed = amountDistributed.Add(currentGaugeCoins...)
 		}
 
-		// Update total coins distributed and filled epoch of the group gauge.
-		if err = k.updateGaugePostDistribute(ctx, *groupGauge, coinsToDistribute); err != nil {
+		// Either updates the group or deletes it from state if it is finished.
+		if err = k.handleGroupPostDistribute(ctx, *groupGauge, coinsToDistribute); err != nil {
 			return err
 		}
-
-		// TODO: move group from active to finished if applicable.
 	}
 
 	return nil
@@ -647,6 +646,39 @@ func (k Keeper) updateGaugePostDistribute(ctx sdk.Context, gauge types.Gauge, ne
 	return nil
 }
 
+// handleGroupPostDistribute handles the post distribution logic for groups and group gauges.
+// If group gauge is perpetual or non-perpetual at the last distribution epoch, it will update the gauge in state by increasing filled epochs 1 and updating
+// the distributed coins field to add the coins distributed.
+// If group gauge is non-perpetual and at the last distribution epoch, it will delete the group and group gauge from state.
+// Before deleting the non-perpetual gauge, any difference between distributed coins and gauge's coins is sent to
+// community pool.
+// CONTRACT: non-perpetual gauge at the last distribution epoch must have distributed all of its coins already
+func (k Keeper) handleGroupPostDistribute(ctx sdk.Context, groupGauge types.Gauge, coinsDistributed sdk.Coins) error {
+	// Prune expired non-perpetual gauges.
+	if groupGauge.IsLastNonPerpetualDistribution() {
+		// Send truncation dust to community pool.
+		truncationDust, anyNegative := groupGauge.Coins.SafeSub(groupGauge.DistributedCoins.Add(coinsDistributed...))
+		if !anyNegative && !truncationDust.IsZero() {
+			err := k.ck.FundCommunityPool(ctx, truncationDust, k.ak.GetModuleAddress(types.ModuleName))
+			if err != nil {
+				return err
+			}
+		}
+
+		// Delete the group.
+		store := ctx.KVStore(k.storeKey)
+		store.Delete(types.KeyGroupByGaugeID(groupGauge.Id))
+		// Delete the group gauge.
+		store.Delete(gaugeStoreKey(groupGauge.Id))
+	} else {
+		// Update total coins distributed and filled epoch of the group gauge.
+		if err := k.updateGaugePostDistribute(ctx, groupGauge, coinsDistributed); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // getDistributeToBaseLocks takes a gauge along with cached period locks by denom and returns locks that must be distributed to
 func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cache map[string][]lockuptypes.PeriodLock) []lockuptypes.PeriodLock {
 	// if gauge is empty, don't get the locks
@@ -667,6 +699,7 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 }
 
 // Distribute distributes coins from an array of gauges to all eligible locks and pools in the case of "NoLock" gauges.
+// Skips any group gauges as they are handled separately in AllocateAcrossGauges()
 // CONTRACT: gauges must be active.
 func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
 	distrInfo := newDistributionInfo()
