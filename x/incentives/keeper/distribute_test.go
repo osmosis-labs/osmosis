@@ -2100,6 +2100,11 @@ func (s *KeeperTestSuite) setupVolumes(poolIds []uint64, updatedPoolVolumes []os
 	}
 }
 
+// Validates that the group is updated correctly after a distribution.
+// Tests that:
+// - If the group is perpetual OR non-perpetual that has more than 1 distributions remaining, the group gauge is updated by bumping up filled epochs and increasing
+// distributed coins.
+// - Otherwise, the group and group gauge are pruned from state.
 func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 	tests := map[string]struct {
 		groupGauge       types.Gauge
@@ -2131,7 +2136,7 @@ func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 			amountToPrefund:  defaultCoins,
 		},
 
-		// // edge cases
+		// edge cases
 
 		"5: incentives module does not have enough balance to transfer dust to community pool": {
 			// Note that total coins in gauge = 2x defaultCoins
