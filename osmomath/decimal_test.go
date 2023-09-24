@@ -1663,7 +1663,7 @@ func (s *decimalTestSuite) TestQuoTruncate_MutativeAndNonMutative() {
 			osmomath.NewBigDec(3), osmomath.NewBigDec(7), osmomath.MustNewBigDecFromStr("0.428571428571428571428571428571428571"),
 		},
 		{
-			osmomath.NewBigDec(2), osmomath.NewBigDec(4), osmomath.NewBigDecWithPrec(5, 1),
+			osmomath.NewBigDec(2) osmomath.NewBigDec(4), osmomath.NewBigDecWithPrec(5, 1),
 		},
 
 		{osmomath.NewBigDec(100), osmomath.NewBigDec(100), osmomath.NewBigDec(1)},
