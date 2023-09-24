@@ -88,8 +88,8 @@ func init() {
 		powersOfTen[i] = sdkTenDec.Power(uint64(i))
 	}
 
-	bigNegPowersOfTen = make([]osmomath.BigDec, osmomath.PrecisionBigDec+1)
-	for i := 0; i <= osmomath.PrecisionBigDec; i++ {
+	bigNegPowersOfTen = make([]osmomath.BigDec, osmomath.BigDecPrecision+1)
+	for i := 0; i <= osmomath.BigDecPrecision; i++ {
 		bigNegPowersOfTen[i] = osmomathBigOneDec.Quo(osmomathBigTenDec.PowerInteger(uint64(i)))
 	}
 	// 10^308 < osmomath.MaxInt < 10^309
