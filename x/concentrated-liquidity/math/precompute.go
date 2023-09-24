@@ -78,8 +78,8 @@ func buildTickExpCache() {
 
 // Set precision multipliers
 func init() {
-	negPowersOfTen = make([]osmomath.Dec, osmomath.PrecisionDec+1)
-	for i := 0; i <= osmomath.PrecisionDec; i++ {
+	negPowersOfTen = make([]osmomath.Dec, osmomath.DecPrecision+1)
+	for i := 0; i <= osmomath.DecPrecision; i++ {
 		negPowersOfTen[i] = sdkOneDec.Quo(sdkTenDec.Power(uint64(i)))
 	}
 	// 10^77 < osmomath.MaxInt < 10^78
