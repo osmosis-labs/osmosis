@@ -963,6 +963,7 @@ github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230913192254-a2075590d5a3 h1:
 github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230913192254-a2075590d5a3/go.mod h1:mFGH2RJhuZa6vBuFMNe4JN85fGtIhROtdeQIyIw9isA=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
+<<<<<<< HEAD
 github.com/osmosis-labs/osmosis/osmomath v0.0.7 h1:UTCGs9KF2HfmqJU9Y5u7rLqFE3of+S7FfomnH6UMRQU=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7/go.mod h1:oBmsOov8oxuWoI/yMQwyKGA6QfP0cBxylLt75gFbT8s=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7 h1:HnOgJiOo3XH2MQ2bsUTL7b0Xj29fObN4tVacza8M13g=
@@ -971,6 +972,16 @@ github.com/osmosis-labs/osmosis/x/epochs v0.0.2 h1:aEeXHGCSJMgMtAvCucsD2RSaWZ8lI
 github.com/osmosis-labs/osmosis/x/epochs v0.0.2/go.mod h1:8dvJFHTpu6SIxmOaSaEw0tHnQ/Z9blf5qsF/ZJnMVHo=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.8 h1:BUGowctYQT0vdPgULrvwraEsW+sS6DnbzndTLKLmWVY=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.8/go.mod h1:sR0lpev9mcm9/9RY50T1og3UC3WpZAsINh/OmgrmFlg=
+=======
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230920194803-25ef84411155 h1:/oHIhbkOkYIL2mhIEaF2Z0EquQQEfy7NyF/Vo6Kf6Jo=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230920194803-25ef84411155/go.mod h1:pIItelRYvonB+H8A6KqucOi7xFnJxzDHaWJqOdFNLI4=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230923195756-82c9af6e1dea h1:YyseJ5rWEraasbJIQMkwhAU0J982wtmmHrIblQifbOg=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230923195756-82c9af6e1dea/go.mod h1:zoyTl8Jns0JbAHc8xZeFR9hlFMKLRyLcu3lTkZynzTk=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230911120014-b14342e08daf h1:8lkIsAj3L7zxvOZbqVLNJRpSdDxaYhYfAIG7XjPaJiU=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230911120014-b14342e08daf/go.mod h1:C0Uqe6X4N5ASA+1xZ6guaaJyUVKLcaVJIQa4Q4LG9Vk=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20230911120014-b14342e08daf h1:ZEi+yJJPgpYtmNwZ1bMiP5cMBDQ83FK/YGgmTnWmoAI=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20230911120014-b14342e08daf/go.mod h1:pqkAsS04Er1kFM41gg3aWTSaYHyLe8C9Dw3Sj8KMXk8=
+>>>>>>> 1985c871 (osmomath: ChopPrecision exceeds limit test (#6519))
 github.com/osmosis-labs/wasmd v0.31.0-osmo-v16 h1:X747cZYdnqc/+RV48iPVeGprpVb/fUWSaKGsZUWrdbg=
 github.com/osmosis-labs/wasmd v0.31.0-osmo-v16/go.mod h1:Rf8zW/GgBQyFRRB4s62VQHWA6sTlMFSjoDQQpoq64iI=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
@@ -1334,7 +1345,6 @@ go.uber.org/zap v1.24.0 h1:FiJd5l1UOLj0wCgbSE0rwwXHzEdAZS6hiiSnxJN/D60=
 go.uber.org/zap v1.24.0/go.mod h1:2kMP+WWQ8aoFoedH3T2sq6iJ2yDWpHbP0f6MQbS9Gkg=
 golang.org/x/arch v0.0.0-20210923205945-b76863e36670/go.mod h1:5om86z9Hs0C8fWVUuoMHwpExlXzs5Tkyp9hOrfG7pp8=
 golang.org/x/arch v0.5.0 h1:jpGode6huXQxcskEIpOCvrU+tzo81b6+oFLUYXWtH/Y=
-golang.org/x/arch v0.5.0/go.mod h1:5om86z9Hs0C8fWVUuoMHwpExlXzs5Tkyp9hOrfG7pp8=
 golang.org/x/crypto v0.0.0-20170930174604-9419663f5a44/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
 golang.org/x/crypto v0.0.0-20180904163835-0709b304e793/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
 golang.org/x/crypto v0.0.0-20181029021203-45a5f77698d3/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
