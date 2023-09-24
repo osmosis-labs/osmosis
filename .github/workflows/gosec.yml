@@ -1,5 +1,12 @@
 name: Run Gosec
 on:
+  # TODO: potentially revisit in the future
+  # push:
+  #   branches:
+  #     - master
+  # pull_request:
+  #   branches:
+  #     - master
   workflow_dispatch:
 jobs:
   tests:
