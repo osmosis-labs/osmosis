@@ -8,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
+	cosmossdk_io_math "cosmossdk.io/math"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
@@ -335,4 +337,64 @@ func (k Keeper) GetNumNextInitializedTicks(ctx sdk.Context, poolId, numberOfNext
 	}
 
 	return liquidityDepths, nil
+}
+
+// GetNumNextInitializedTicks is a method that returns underlying assets of a tick range
+func (k Keeper) TickRangeUnderlyingAssets(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (queryproto.TickRangeUnderlyingAssetsResponse, error) {
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+	}
+
+	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
+	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
+		return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+	}
+
+	// Check lowerTick and upperTick is valid
+	_, err = k.getTickByTickIndex(ctx, poolId, lowerTick)
+	if err != nil {
+		return queryproto.TickRangeUnderlyingAssetsResponse{}, fmt.Errorf("lower tick (%d) not found, error: %w", lowerTick, err)
+	}
+
+	_, err = k.getTickByTickIndex(ctx, poolId, upperTick)
+	if err != nil {
+		return queryproto.TickRangeUnderlyingAssetsResponse{}, fmt.Errorf("upper tick (%d) not found, error: %w", upperTick, err)
+	}
+
+	// Calculate liquidity of tick range
+	store := ctx.KVStore(k.storeKey)
+	prefixBz := types.KeyTickPrefixByPoolId(poolId)
+	prefixStore := prefix.NewStore(store, prefixBz)
+
+	startTickKey := types.TickIndexToBytes(lowerTick)
+	boundTickKey := types.TickIndexToBytes(upperTick)
+
+	totalLiquidity := cosmossdk_io_math.LegacyZeroDec()
+
+	iterator := prefixStore.Iterator(startTickKey, storetypes.InclusiveEndBytes(boundTickKey))
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		_, err := types.TickIndexFromBytes(iterator.Key())
+		if err != nil {
+			return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+		}
+
+		tickStruct, err := ParseTickFromBz(iterator.Value())
+		if err != nil {
+			return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+		}
+		totalLiquidity = totalLiquidity.Add(tickStruct.LiquidityNet)
+	}
+
+	actualAmountDenom0, actualAmountDenom1, err := pool.CalcActualAmounts(ctx, lowerTick, upperTick, totalLiquidity)
+	if err != nil {
+		return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+	}
+
+	return queryproto.TickRangeUnderlyingAssetsResponse{
+		Token0: sdk.NewCoin(pool.GetToken0(), actualAmountDenom0.TruncateInt()),
+		Token1: sdk.NewCoin(pool.GetToken1(), actualAmountDenom1.TruncateInt()),
+	}, nil
 }

@@ -132,6 +132,13 @@ service Query {
     option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
                                    "num_next_initialized_ticks";
   }
+
+  // TickRangeUnderlyingAssets returns uderlying asset of a tick range
+  rpc TickRangeUnderlyingAssets(TickRangeUnderlyingAssetsRequest)
+      returns (TickRangeUnderlyingAssetsResponse) {
+    option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
+                                   "tick_range_underlying_assets";
+  }
 }
 
 //=============================== UserPositions
@@ -344,5 +351,22 @@ message NumNextInitializedTicksResponse {
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"current_liquidity\"",
     (gogoproto.nullable) = false
+  ];
+}
+
+////=============================== TickRangeUnderlyingAssets
+message TickRangeUnderlyingAssetsRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  int64 lower_tick = 2 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 3 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
+}
+message TickRangeUnderlyingAssetsResponse {
+  cosmos.base.v1beta1.Coin token0 = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+  cosmos.base.v1beta1.Coin token1 = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
 }
