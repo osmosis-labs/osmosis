@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 
 	"github.com/cosmos/cosmos-sdk/codec"

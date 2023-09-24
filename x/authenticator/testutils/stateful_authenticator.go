@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"encoding/json"
+
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -9,8 +10,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ iface.Authenticator = &StatefulAuthenticator{}
-var _ iface.AuthenticatorData = &StatefulAuthenticatorData{}
+var (
+	_ iface.Authenticator     = &StatefulAuthenticator{}
+	_ iface.AuthenticatorData = &StatefulAuthenticatorData{}
+)
 
 type StatefulAuthenticatorData struct {
 	Value int

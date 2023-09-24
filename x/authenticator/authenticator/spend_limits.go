@@ -3,9 +3,10 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 	"math/big"
 	"time"
+
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v19/x/twap"

@@ -2,6 +2,7 @@ package authenticator
 
 import (
 	"encoding/json"
+
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,8 +20,10 @@ type AnyOfAuthenticatorData struct {
 	Data []iface.AuthenticatorData
 }
 
-var _ iface.Authenticator = &AnyOfAuthenticator{}
-var _ iface.AuthenticatorData = &AnyOfAuthenticatorData{}
+var (
+	_ iface.Authenticator     = &AnyOfAuthenticator{}
+	_ iface.AuthenticatorData = &AnyOfAuthenticatorData{}
+)
 
 func NewAnyOfAuthenticator(am *AuthenticatorManager) AnyOfAuthenticator {
 	return AnyOfAuthenticator{

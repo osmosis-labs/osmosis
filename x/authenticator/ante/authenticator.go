@@ -2,6 +2,7 @@ package ante
 
 import (
 	"fmt"
+
 	types "github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/utils"
 

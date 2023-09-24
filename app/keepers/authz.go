@@ -3,6 +3,9 @@ package keepers
 import (
 	"context"
 	"encoding/json"
+	"math/rand"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -13,8 +16,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/utils"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	"math/rand"
-	"time"
 )
 
 type AuthzKeeperInterface interface {

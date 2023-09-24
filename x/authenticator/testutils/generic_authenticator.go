@@ -2,13 +2,16 @@ package testutils
 
 import (
 	"fmt"
+
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ iface.Authenticator = &TestingAuthenticator{}
-var _ iface.AuthenticatorData = &TestingAuthenticatorData{}
+var (
+	_ iface.Authenticator     = &TestingAuthenticator{}
+	_ iface.AuthenticatorData = &TestingAuthenticatorData{}
+)
 
 type ApproveOn int
 
@@ -17,11 +20,13 @@ const (
 	Never
 )
 
-type TestingAuthenticatorData struct{}
-type TestingAuthenticator struct {
-	Approve        ApproveOn
-	GasConsumption int
-}
+type (
+	TestingAuthenticatorData struct{}
+	TestingAuthenticator     struct {
+		Approve        ApproveOn
+		GasConsumption int
+	}
+)
 
 func (t TestingAuthenticator) Type() string {
 	var when string
