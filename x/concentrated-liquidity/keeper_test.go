@@ -431,8 +431,7 @@ func (s *KeeperTestSuite) AddBlockTime(timeToAdd time.Duration) {
 }
 
 func (s *KeeperTestSuite) TestIsPermissionlessPoolCreationEnabled() {
-	// Normally, by default, permissionless pool creation is disabled.
-	// SetupTest, however, calls SetupConcentratedLiquidityDenomsAndPoolCreation which enables permissionless pool creation.
+	// Permissionless pool creation is enabled in tests by default
 	s.Require().True(s.App.ConcentratedLiquidityKeeper.IsPermissionlessPoolCreationEnabled(s.Ctx))
 
 	// Disable permissionless pool creation.
