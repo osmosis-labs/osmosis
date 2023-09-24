@@ -251,7 +251,7 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 		return 0, err
 	}
 
-	// TODO: change method to take in pool IDs
+	// TODO: change CreateGroup method to take in pool IDs
 	// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6404
 	poolIDs := []uint64{}
 	initialInternalGaugeInfo, err := k.initGaugeInfo(ctx, poolIDs)
@@ -463,6 +463,7 @@ func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sd
 }
 
 // initGaugeInfo takes in a list of pool IDs and a splitting policy and returns a InternalGaugeInfo struct with weights initialized to zero.
+// Returns error if fails to retrieve gauge ID for a pool.
 func (k Keeper) initGaugeInfo(ctx sdk.Context, poolIds []uint64) (types.InternalGaugeInfo, error) {
 	gaugeRecords := make([]types.InternalGaugeRecord, 0, len(poolIds))
 	for _, poolID := range poolIds {
