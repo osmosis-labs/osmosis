@@ -2,24 +2,15 @@ package ante
 
 import (
 	"fmt"
+	types "github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/utils"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
-
 	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
 )
-
-// GetAccount retrieves the account associated with the first signer of a transaction message.
-// It returns the account's address or an error if no signers are present.
-func GetAccount(msg sdk.Msg) (sdk.AccAddress, error) {
-	if len(msg.GetSigners()) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "no signers")
-	}
-	return msg.GetSigners()[0], nil
-}
 
 // AuthenticatorDecorator is responsible for processing authentication logic
 // before transaction execution.
@@ -110,7 +101,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// Authenticate the accounts of all messages
 	for msgIndex, msg := range msgs {
 		// By default, the first signer is the account
-		account, err := GetAccount(msg)
+		account, err := utils.GetAccount(msg)
 		if err != nil {
 			return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("failed to get account for message %d", msgIndex))
 		}
@@ -124,14 +115,14 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 
 		msgAuthenticated := false
-		var authenticators []authenticator.Authenticator
+		var authenticators []types.Authenticator
 		if selectedAuthenticators[msgIndex] == -1 {
 			authenticators = allAuthenticators
 		} else {
 			if int(selectedAuthenticators[msgIndex]) >= len(allAuthenticators) {
 				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("invalid authenticator index for message %d", msgIndex))
 			}
-			authenticators = []authenticator.Authenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
+			authenticators = []types.Authenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
 		}
 
 		for _, authenticator := range authenticators {
@@ -168,6 +159,14 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		if !msgAuthenticated {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("authentication failed for message %d", msgIndex))
 		}
+	}
+
+	// If the transaction has been authenticated, we call TrackMessages(...) to
+	// notify every authenticator so that they can handle any storage updates
+	// that need to happen regardless of how the message was authorized.
+	err = utils.TrackMessages(cacheCtx, ad.authenticatorKeeper, msgs)
+	if err != nil {
+		return sdk.Context{}, err
 	}
 
 	return next(ctx, tx, simulate)

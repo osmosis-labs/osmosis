@@ -2,16 +2,15 @@ package testutils
 
 import (
 	"encoding/json"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 )
 
-var _ authenticator.Authenticator = &StatefulAuthenticator{}
-var _ authenticator.AuthenticatorData = &StatefulAuthenticatorData{}
+var _ iface.Authenticator = &StatefulAuthenticator{}
+var _ iface.AuthenticatorData = &StatefulAuthenticatorData{}
 
 type StatefulAuthenticatorData struct {
 	Value int
@@ -30,24 +29,28 @@ func (s StatefulAuthenticator) StaticGas() uint64 {
 	return 1000
 }
 
-func (s StatefulAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
+func (s StatefulAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
 	return s, nil
 }
 
-func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (authenticator.AuthenticatorData, error) {
-	// TODO: We probably want the context here. Specifically a read-only cachecontext
+func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (iface.AuthenticatorData, error) {
 	return StatefulAuthenticatorData{Value: s.GetValue(ctx)}, nil
 }
 
-func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.AuthenticationResult {
-	// TODO: the get should probably happen in the method above and here we should just have this:
+func (s StatefulAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
 	statefulData, ok := authenticationData.(StatefulAuthenticatorData)
 	if !ok {
-		return authenticator.Rejected("", sdkerrors.Wrap(sdkerrors.ErrInvalidType, "authenticationData is not StatefulAuthenticatorData"))
+		return iface.Rejected("", sdkerrors.Wrap(sdkerrors.ErrInvalidType, "authenticationData is not StatefulAuthenticatorData"))
 	}
-	//ctx.GasMeter().ConsumeGas(100_000_000, "loads of gas")
+	if statefulData.Value > 10 {
+		return iface.Rejected("value is too high", nil)
+	}
 	s.SetValue(ctx, statefulData.Value+1)
-	return authenticator.Authenticated()
+	return iface.Authenticated()
+}
+
+func (s StatefulAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
+	return nil
 }
 
 func (s StatefulAuthenticator) SetValue(ctx sdk.Context, value int) {
@@ -65,7 +68,7 @@ func (s StatefulAuthenticator) GetValue(ctx sdk.Context) int {
 	return statefulData.Value
 }
 
-func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.ConfirmationResult {
+func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
 	s.SetValue(ctx, s.GetValue(ctx)+1)
-	return authenticator.Confirm()
+	return iface.Confirm()
 }

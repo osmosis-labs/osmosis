@@ -2,29 +2,30 @@ package authenticator
 
 import (
 	"encoding/json"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type AllOfAuthenticator struct {
-	SubAuthenticators []Authenticator
-	executedAuths     []Authenticator
+	SubAuthenticators []iface.Authenticator
+	executedAuths     []iface.Authenticator
 	am                *AuthenticatorManager
 }
 
 type AllOfAuthenticatorData struct {
-	Data []AuthenticatorData
+	Data []iface.AuthenticatorData
 }
 
-var _ Authenticator = &AllOfAuthenticator{}
-var _ AuthenticatorData = &AllOfAuthenticatorData{}
+var _ iface.Authenticator = &AllOfAuthenticator{}
+var _ iface.AuthenticatorData = &AllOfAuthenticatorData{}
 
 func NewAllOfAuthenticator(am *AuthenticatorManager) AllOfAuthenticator {
 	return AllOfAuthenticator{
 		am:                am,
-		SubAuthenticators: []Authenticator{},
-		executedAuths:     []Authenticator{},
+		SubAuthenticators: []iface.Authenticator{},
+		executedAuths:     []iface.Authenticator{},
 	}
 }
 
@@ -40,7 +41,7 @@ func (aoa AllOfAuthenticator) StaticGas() uint64 {
 	return totalGas
 }
 
-func (aoa AllOfAuthenticator) Initialize(data []byte) (Authenticator, error) {
+func (aoa AllOfAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
 	var initDatas []InitializationData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
 		return nil, err
@@ -66,8 +67,8 @@ func (aoa AllOfAuthenticator) GetAuthenticationData(
 	tx sdk.Tx,
 	messageIndex int8,
 	simulate bool,
-) (AuthenticatorData, error) {
-	var authDataList []AuthenticatorData
+) (iface.AuthenticatorData, error) {
+	var authDataList []iface.AuthenticatorData
 	for _, auth := range aoa.SubAuthenticators {
 		data, err := auth.GetAuthenticationData(ctx, tx, messageIndex, simulate)
 		if err != nil {
@@ -79,10 +80,10 @@ func (aoa AllOfAuthenticator) GetAuthenticationData(
 	return AllOfAuthenticatorData{Data: authDataList}, nil
 }
 
-func (aoa AllOfAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) AuthenticationResult {
+func (aoa AllOfAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
 	allOfData, ok := authenticationData.(AllOfAuthenticatorData)
 	if !ok {
-		return Rejected("invalid authentication data for AllOfAuthenticator", nil)
+		return iface.Rejected("invalid authentication data for AllOfAuthenticator", nil)
 	}
 
 	for idx, auth := range aoa.SubAuthenticators {
@@ -91,14 +92,24 @@ func (aoa AllOfAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddre
 			return result
 		}
 	}
-	return Authenticated()
+	return iface.Authenticated()
 }
 
-func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult {
+func (aoa AllOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
+	for _, auth := range aoa.SubAuthenticators {
+		err := auth.Track(ctx, account, msg)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
 	for _, auth := range aoa.executedAuths {
 		if confirmation := auth.ConfirmExecution(ctx, nil, msg, authenticationData); confirmation.IsBlock() {
 			return confirmation
 		}
 	}
-	return Confirm()
+	return iface.Confirm()
 }

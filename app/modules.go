@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/client"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
@@ -25,6 +26,7 @@ import (
 	downtimemodule "github.com/osmosis-labs/osmosis/v19/x/downtime-detector/module"
 	downtimetypes "github.com/osmosis-labs/osmosis/v19/x/downtime-detector/types"
 
+	authzwrapper "github.com/osmosis-labs/osmosis/v19/app/keepers"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -33,7 +35,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
@@ -157,7 +158,7 @@ func appModules(
 		upgrade.NewAppModule(*app.UpgradeKeeper),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
-		authzmodule.NewAppModule(appCodec, app.AuthzKeeper.Keeper(), app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		authzwrapper.NewAppModuleWrapper(authzmodule.NewAppModule(appCodec, app.AuthzKeeper.Keeper(), app.AccountKeeper, app.BankKeeper, app.interfaceRegistry), app.AuthzKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),

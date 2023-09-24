@@ -35,8 +35,8 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
-
 	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
 	downtimedetector "github.com/osmosis-labs/osmosis/v19/x/downtime-detector"
@@ -201,11 +201,30 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.BankKeeper = &bankKeeper
 
-	authzKeeper := NewKeeperWrapper(authzkeeper.NewKeeper(
-		appKeepers.keys[authzkeeper.StoreKey],
+	// Initialize authenticators
+	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()
+	appKeepers.AuthenticatorManager.InitializeAuthenticators([]iface.Authenticator{
+		authenticator.NewSignatureVerificationAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()), // default
+	})
+	appKeepers.AuthenticatorManager.SetDefaultAuthenticatorIndex(0)
+
+	authenticatorKeeper := authenticatorkeeper.NewKeeper(
 		appCodec,
-		bApp.MsgServiceRouter(),
-	))
+		appKeepers.keys[authenticatortypes.ManagerStoreKey],
+		appKeepers.keys[authenticatortypes.AuthenticatorStoreKey],
+		appKeepers.GetSubspace(authenticatortypes.ModuleName),
+		appKeepers.AuthenticatorManager,
+	)
+	appKeepers.AuthenticatorKeeper = &authenticatorKeeper
+
+	authzKeeper := NewKeeperWrapper(
+		authzkeeper.NewKeeper(
+			appKeepers.keys[authzkeeper.StoreKey],
+			appCodec,
+			bApp.MsgServiceRouter(),
+		),
+		appKeepers.AuthenticatorKeeper,
+	)
 	appKeepers.AuthzKeeper = authzKeeper
 
 	stakingKeeper := stakingkeeper.NewKeeper(
@@ -451,22 +470,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 		appKeepers.LockupKeeper,
 	)
-
-	// Initialize authenticators
-	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()
-	appKeepers.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
-		authenticator.NewSignatureVerificationAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()), // default
-	})
-	appKeepers.AuthenticatorManager.SetDefaultAuthenticatorIndex(0)
-
-	authenticatorKeeper := authenticatorkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[authenticatortypes.ManagerStoreKey],
-		appKeepers.keys[authenticatortypes.AuthenticatorStoreKey],
-		appKeepers.GetSubspace(authenticatortypes.ModuleName),
-		appKeepers.AuthenticatorManager,
-	)
-	appKeepers.AuthenticatorKeeper = &authenticatorKeeper
 
 	appKeepers.ValidatorSetPreferenceKeeper = &validatorSetPreferenceKeeper
 

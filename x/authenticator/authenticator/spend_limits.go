@@ -3,6 +3,7 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 	"math/big"
 	"time"
 
@@ -47,7 +48,7 @@ type SpendLimitAuthenticator struct {
 	periodType   PeriodType
 }
 
-var _ Authenticator = &SpendLimitAuthenticator{}
+var _ iface.Authenticator = &SpendLimitAuthenticator{}
 
 // NewSpendLimitAuthenticator creates a new SpendLimitAuthenticator. Creators must make sure to use a properly prefixed
 // store with this authenticator. That is, prefix.NewStore(authenticatorsStoreKey, []byte("spendLimitAuthenticator"))
@@ -77,7 +78,7 @@ func (sla SpendLimitAuthenticator) StaticGas() uint64 {
 	return 5000
 }
 
-func (sla SpendLimitAuthenticator) Initialize(data []byte) (Authenticator, error) {
+func (sla SpendLimitAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
 	var initData struct {
 		AllowedDelta uint64     `json:"allowed"`
 		PeriodType   PeriodType `json:"period"`
@@ -103,11 +104,16 @@ func (sla SpendLimitAuthenticator) GetAuthenticationData(
 	tx sdk.Tx,
 	messageIndex int8,
 	simulate bool,
-) (AuthenticatorData, error) {
+) (iface.AuthenticatorData, error) {
 	return SignatureData{}, nil // No data needed for this authenticator
 }
 
-func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) AuthenticationResult {
+func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
+	// We never authenticate ourselves. We just  authentication after the fact if the balances changed too much
+	return iface.NotAuthenticated()
+}
+
+func (sla SpendLimitAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
 	// Get the current period based on block time
 	currentPeriod := formatPeriodTime(ctx.BlockTime(), sla.periodType)
 
@@ -123,12 +129,10 @@ func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, account sdk.Acc
 	// Store the balances
 	balances := sla.bankKeeper.GetAllBalances(ctx, account)
 	sla.SetBalance(account, balances)
-
-	// We never authenticate ourselves. We just  authentication after the fact if the balances changed too much
-	return NotAuthenticated()
+	return nil
 }
 
-func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult {
+func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
 	prevBalances := sla.GetBalance(account)
 	currentBalances := sla.bankKeeper.GetAllBalances(ctx, account)
 
@@ -139,7 +143,7 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 		price, err := sla.getPriceInQuoteDenom(ctx, coin)
 		if err != nil {
 			// ToDO: what do we want to do if we can't determine the price of an asset?
-			return Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom))
+			return iface.Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom))
 		}
 		totalPrevValue = totalPrevValue.Add(price.MulInt(coin.Amount).RoundInt())
 	}
@@ -148,7 +152,7 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 		price, err := sla.getPriceInQuoteDenom(ctx, coin)
 		if err != nil {
 			// ToDO: what do we want to do if we can't determine the price of an asset?
-			return Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom))
+			return iface.Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "can't find price for %s", coin.Denom))
 		}
 		totalCurrentValue = totalCurrentValue.Add(price.MulInt(coin.Amount).RoundInt())
 	}
@@ -159,14 +163,14 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 	spentSoFar := sla.GetSpentInPeriod(account, ctx.BlockTime())
 
 	if delta.Add(spentSoFar).Int64() > int64(sla.allowedDelta.Uint64()) {
-		return Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "spend limit exceeded"))
+		return iface.Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "spend limit exceeded"))
 	}
 
 	// Update the total spent so far in the current period
 	sla.SetSpentInPeriod(account, ctx.BlockTime(), delta.Add(spentSoFar))
 	sla.DeleteBalances(account) // This is not 100% necessary, but it's nice to clean up after ourselves
 
-	return Confirm()
+	return iface.Confirm()
 }
 
 func (sla SpendLimitAuthenticator) getPriceInQuoteDenom(ctx sdk.Context, coin sdk.Coin) (osmomath.Dec, error) {
@@ -249,11 +253,11 @@ func getPeriodKey(account sdk.AccAddress, period PeriodType, t time.Time) []byte
 }
 
 func getBalanceKey(account sdk.AccAddress) []byte {
-	return utils.BuildKey("balance", account.String())
+	return utils.BuildKey("balance", account)
 }
 
 func getActivePeriodKey(account sdk.AccAddress, period PeriodType) []byte {
-	return utils.BuildKey("activePeriod", account.String(), string(period))
+	return utils.BuildKey("activePeriod", account, string(period))
 }
 
 func formatPeriodTime(t time.Time, periodType PeriodType) string {

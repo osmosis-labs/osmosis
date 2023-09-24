@@ -1,4 +1,4 @@
-package authenticator
+package iface
 
 import sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
