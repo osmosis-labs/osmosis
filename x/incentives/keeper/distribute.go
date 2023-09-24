@@ -658,7 +658,7 @@ func (k Keeper) handleGroupPostDistribute(ctx sdk.Context, groupGauge types.Gaug
 	if groupGauge.IsLastNonPerpetualDistribution() {
 		// Send truncation dust to community pool.
 		truncationDust, anyNegative := groupGauge.Coins.SafeSub(groupGauge.DistributedCoins.Add(coinsDistributed...))
-		if !anyNegative {
+		if !anyNegative && !truncationDust.IsZero() {
 			err := k.ck.FundCommunityPool(ctx, truncationDust, k.ak.GetModuleAddress(types.ModuleName))
 			if err != nil {
 				return err
