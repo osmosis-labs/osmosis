@@ -73,7 +73,7 @@ func (s *KeeperTestSuite) TestGetGroupByGaugeID() {
 						},
 					},
 				},
-				SplittingPolicy: types.Evenly,
+				SplittingPolicy: types.ByVolume,
 			},
 		},
 
@@ -95,7 +95,7 @@ func (s *KeeperTestSuite) TestGetGroupByGaugeID() {
 				internalGauges = append(internalGauges, internalGauge)
 			}
 
-			_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))), 1, s.TestAccs[1], internalGauges, lockuptypes.ByGroup, types.Evenly) // gauge id = 5
+			_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))), 1, s.TestAccs[1], internalGauges, lockuptypes.ByGroup) // gauge id = 5
 			s.Require().NoError(err)
 
 			record, err := s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, test.groupGaugeId)

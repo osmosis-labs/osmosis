@@ -613,7 +613,6 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 		numEpochPaidOver uint64
 		internalGaugeIds []uint64
 		gaugeType        lockuptypes.LockQueryType
-		splittiingPolicy types.SplittingPolicy
 		expectErr        bool
 	}{
 		{
@@ -622,7 +621,6 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			numEpochPaidOver: 1,
 			internalGaugeIds: []uint64{2, 3, 4},
 			gaugeType:        lockuptypes.ByGroup,
-			splittiingPolicy: types.Evenly,
 			expectErr:        false,
 		},
 
@@ -632,7 +630,6 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			numEpochPaidOver: 1,
 			internalGaugeIds: []uint64{2, 3, 4, 5},
 			gaugeType:        lockuptypes.ByGroup,
-			splittiingPolicy: types.Evenly,
 			expectErr:        true,
 		},
 		{
@@ -641,7 +638,6 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			numEpochPaidOver: 1,
 			internalGaugeIds: []uint64{2, 3, 4},
 			gaugeType:        lockuptypes.ByGroup,
-			splittiingPolicy: types.Evenly,
 			expectErr:        true,
 		},
 		{
@@ -650,7 +646,6 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			numEpochPaidOver: 1,
 			internalGaugeIds: []uint64{2, 3, 4, 5},
 			gaugeType:        lockuptypes.ByGroup,
-			splittiingPolicy: types.Evenly,
 			expectErr:        true,
 		},
 		{
@@ -658,7 +653,6 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
 			numEpochPaidOver: 1,
 			internalGaugeIds: []uint64{},
-			splittiingPolicy: types.Evenly,
 			gaugeType:        lockuptypes.ByGroup,
 			expectErr:        true,
 		},
@@ -668,7 +662,6 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			numEpochPaidOver: 1,
 			internalGaugeIds: []uint64{},
 			gaugeType:        lockuptypes.ByGroup,
-			splittiingPolicy: types.Volume,
 			expectErr:        true,
 		},
 		{
@@ -677,7 +670,6 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			numEpochPaidOver: 1,
 			internalGaugeIds: []uint64{},
 			gaugeType:        lockuptypes.NoLock,
-			splittiingPolicy: types.Evenly,
 			expectErr:        true,
 		},
 	}
@@ -696,7 +688,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			//create 1 non-perp internal Gauge
 			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gauge id = 5
 
-			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[1], tc.internalGaugeIds, tc.gaugeType, tc.splittiingPolicy) // gauge id = 6
+			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[1], tc.internalGaugeIds, tc.gaugeType) // gauge id = 6
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -716,6 +708,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 				s.Require().NoError(err)
 
 				s.Require().Equal(group.InternalGaugeInfo.GaugeRecords, tc.internalGaugeIds)
+				s.Require().Equal(group.SplittingPolicy, types.ByVolume)
 			}
 
 		})
