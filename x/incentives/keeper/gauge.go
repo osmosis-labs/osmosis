@@ -57,10 +57,13 @@ func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 // CreateGaugeRefKeys takes combinedKey (the keyPrefix for upcoming, active, or finished gauges combined with gauge start time) and adds a reference to the respective gauge ID.
 // If gauge is active or upcoming, creates reference between the denom and gauge ID.
 // Used to consolidate codepaths for InitGenesis and CreateGauge.
-func (k Keeper) CreateGaugeRefKeys(ctx sdk.Context, gauge *types.Gauge, combinedKeys []byte, activeOrUpcomingGauge bool) error {
+func (k Keeper) CreateGaugeRefKeys(ctx sdk.Context, gauge *types.Gauge, combinedKeys []byte) error {
 	if err := k.addGaugeRefByKey(ctx, combinedKeys, gauge.Id); err != nil {
 		return err
 	}
+
+	activeOrUpcomingGauge := gauge.IsActiveGauge(ctx.BlockTime()) || gauge.IsUpcomingGauge(ctx.BlockTime())
+
 	if activeOrUpcomingGauge {
 		if err := k.addGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
 			return err
@@ -80,17 +83,16 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 
 	curTime := ctx.BlockTime()
 	timeKey := getTimeKey(gauge.StartTime)
-	activeOrUpcomingGauge := gauge.IsActiveGauge(curTime) || gauge.IsUpcomingGauge(curTime)
 
 	if gauge.IsUpcomingGauge(curTime) {
 		combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, timeKey)
-		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
+		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys)
 	} else if gauge.IsActiveGauge(curTime) {
 		combinedKeys := combineKeys(types.KeyPrefixActiveGauges, timeKey)
-		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
+		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys)
 	} else {
 		combinedKeys := combineKeys(types.KeyPrefixFinishedGauges, timeKey)
-		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
+		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys)
 	}
 }
 
@@ -198,9 +200,8 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	k.SetLastGaugeID(ctx, gauge.Id)
 
 	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
-	activeOrUpcomingGauge := true
 
-	err = k.CreateGaugeRefKeys(ctx, &gauge, combinedKeys, activeOrUpcomingGauge)
+	err = k.CreateGaugeRefKeys(ctx, &gauge, combinedKeys)
 	if err != nil {
 		return 0, err
 	}
@@ -213,18 +214,13 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 // external incentives would likely want to route through these.
 // TODO: change this to take in list of pool IDs instead and fetch the gauge IDs under the hood.
 // Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6404
-func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64, gaugetype lockuptypes.LockQueryType, splittingPolicy types.SplittingPolicy) (uint64, error) {
+func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64, gaugetype lockuptypes.LockQueryType) (uint64, error) {
 	if len(internalGaugeIds) == 0 {
 		return 0, fmt.Errorf("No internalGauge provided.")
 	}
 
 	if gaugetype != lockuptypes.ByGroup {
 		return 0, fmt.Errorf("Invalid gauge type needs to be ByGroup, got %s.", gaugetype)
-	}
-
-	// TODO: remove this check once volume splitting is implemented
-	if splittingPolicy != types.Evenly {
-		return 0, fmt.Errorf("Invalid splitting policy, needs to be Evenly got %s", splittingPolicy)
 	}
 
 	nextGaugeId := k.GetLastGaugeID(ctx) + 1
@@ -255,7 +251,10 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 	newGroup := types.Group{
 		GroupGaugeId:      nextGaugeId,
 		InternalGaugeInfo: initialInternalGaugeInfo,
-		SplittingPolicy:   splittingPolicy,
+		// Note: only Volume splitting exists today.
+		// We allow for other splitting policies to be added in the future
+		// by extending the enum.
+		SplittingPolicy: types.ByVolume,
 	}
 
 	k.SetGroup(ctx, newGroup)
@@ -264,9 +263,8 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 	// TODO: check if this is necessary.
 	// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6405
 	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
-	activeOrUpcomingGauge := true
 
-	if err := k.CreateGaugeRefKeys(ctx, &gauge, combinedKeys, activeOrUpcomingGauge); err != nil {
+	if err := k.CreateGaugeRefKeys(ctx, &gauge, combinedKeys); err != nil {
 		return 0, err
 	}
 	k.hooks.AfterCreateGauge(ctx, gauge.Id)

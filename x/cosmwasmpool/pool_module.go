@@ -362,12 +362,6 @@ func (k Keeper) CalcInAmtGivenOut(
 	return response.TokenIn, nil
 }
 
-// ValidatePermissionlessPoolCreationEnabled returns nil if permissionless pool creation in the module is enabled.
-// Otherwise, returns an error.
-func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error {
-	return nil
-}
-
 // GetTotalPoolLiquidity retrieves the total liquidity of a specific pool identified by poolId.
 //
 // Parameters:
