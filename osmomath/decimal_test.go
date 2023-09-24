@@ -1553,32 +1553,37 @@ func (s *decimalTestSuite) TestChopPrecision_Mutative() {
 		startValue        osmomath.BigDec
 		expectedMutResult osmomath.BigDec
 		precision         uint64
+		expPanic          bool
 	}{
-		{osmomath.NewBigDec(0), osmomath.MustNewBigDecFromStr("0"), 0},
-		{osmomath.NewBigDec(1), osmomath.MustNewBigDecFromStr("1"), 0},
-		{osmomath.NewBigDec(10), osmomath.MustNewBigDecFromStr("10"), 2},
+		{osmomath.NewBigDec(0), osmomath.MustNewBigDecFromStr("0"), 0, false},
+		{osmomath.NewBigDec(1), osmomath.MustNewBigDecFromStr("1"), 0, false},
+		{osmomath.NewBigDec(10), osmomath.MustNewBigDecFromStr("10"), 2, false},
 		// how to read these comments: ab.cde(fgh) -> ab.cdefgh = initial BigDec; (fgh) = decimal places that will be truncated
 		// 5.1()
-		{osmomath.NewBigDecWithPrec(51, 1), osmomath.MustNewBigDecFromStr("5.1"), 1},
+		{osmomath.NewBigDecWithPrec(51, 1), osmomath.MustNewBigDecFromStr("5.1"), 1, false},
 		// 1.(0010)
-		{osmomath.NewBigDecWithPrec(10010, 4), osmomath.MustNewBigDecFromStr("1"), 0},
+		{osmomath.NewBigDecWithPrec(10010, 4), osmomath.MustNewBigDecFromStr("1"), 0, false},
 		// 1009.31254(83952)
-		{osmomath.NewBigDecWithPrec(10093125483952, 10), osmomath.MustNewBigDecFromStr("1009.31254"), 5},
+		{osmomath.NewBigDecWithPrec(10093125483952, 10), osmomath.MustNewBigDecFromStr("1009.31254"), 5, false},
 		// 0.1009312548(3952)
-		{osmomath.NewBigDecWithPrec(10093125483952, 14), osmomath.MustNewBigDecFromStr("0.1009312548"), 10},
+		{osmomath.NewBigDecWithPrec(10093125483952, 14), osmomath.MustNewBigDecFromStr("0.1009312548"), 10, false},
 		// Edge case: max precision. Should remain unchanged
-		{osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.PrecisionBigDec},
+		{osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.PrecisionBigDec, false},
+		// Precision exceeds max precision - panic
+		{osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.PrecisionBigDec + 1, true},
 	}
 	for id, tc := range tests {
 		name := "testcase_" + fmt.Sprint(id)
 		s.Run(name, func() {
-			startMut := tc.startValue.Clone()
-			startNonMut := tc.startValue.Clone()
+			osmomath.ConditionalPanic(s.T(), tc.expPanic, func() {
+				startMut := tc.startValue.Clone()
+				startNonMut := tc.startValue.Clone()
 
-			resultMut := startMut.ChopPrecisionMut(tc.precision)
-			resultNonMut := startNonMut.ChopPrecision(tc.precision)
+				resultMut := startMut.ChopPrecisionMut(tc.precision)
+				resultNonMut := startNonMut.ChopPrecision(tc.precision)
 
-			s.assertMutResult(tc.expectedMutResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+				s.assertMutResult(tc.expectedMutResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+			})
 		})
 	}
 }
@@ -1697,4 +1702,3 @@ func (s *decimalTestSuite) TestQuoTruncate_MutativeAndNonMutative() {
 		}
 	}
 }
-
