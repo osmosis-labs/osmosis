@@ -13,8 +13,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v19/x/incentives/types";
 enum SplittingPolicy {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  Volume = 0;
-  Evenly = 1;
+  ByVolume = 0;
 }
 
 // Note that while both InternalGaugeInfo and InternalGaugeRecord could

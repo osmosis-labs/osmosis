@@ -57,7 +57,7 @@ func (k Keeper) AddToGaugeRewardsInternal(ctx sdk.Context, coins sdk.Coins, gaug
 	return k.addToGaugeRewards(ctx, coins, gaugeID)
 }
 
-// SyncVolumeSplitGauge updates the individual and total weights of the gauge records based on the volume splitting policy.
-func (k Keeper) SyncVolumeSplitGauge(ctx sdk.Context, volumeSplitGauge types.Group) error {
-	return k.syncVolumeSplitGauge(ctx, volumeSplitGauge)
+// SyncVolumeSplitGroup updates the individual and total weights of the gauge records based on the volume splitting policy.
+func (k Keeper) SyncVolumeSplitGroup(ctx sdk.Context, volumeSplitGauge types.Group) error {
+	return k.syncVolumeSplitGroup(ctx, volumeSplitGauge)
 }

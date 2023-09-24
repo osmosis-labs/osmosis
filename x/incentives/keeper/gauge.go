@@ -214,18 +214,13 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 // external incentives would likely want to route through these.
 // TODO: change this to take in list of pool IDs instead and fetch the gauge IDs under the hood.
 // Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6404
-func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64, gaugetype lockuptypes.LockQueryType, splittingPolicy types.SplittingPolicy) (uint64, error) {
+func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64, gaugetype lockuptypes.LockQueryType) (uint64, error) {
 	if len(internalGaugeIds) == 0 {
 		return 0, fmt.Errorf("No internalGauge provided.")
 	}
 
 	if gaugetype != lockuptypes.ByGroup {
 		return 0, fmt.Errorf("Invalid gauge type needs to be ByGroup, got %s.", gaugetype)
-	}
-
-	// TODO: remove this check once volume splitting is implemented
-	if splittingPolicy != types.Evenly {
-		return 0, fmt.Errorf("Invalid splitting policy, needs to be Evenly got %s", splittingPolicy)
 	}
 
 	nextGaugeId := k.GetLastGaugeID(ctx) + 1
@@ -256,7 +251,10 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 	newGroup := types.Group{
 		GroupGaugeId:      nextGaugeId,
 		InternalGaugeInfo: initialInternalGaugeInfo,
-		SplittingPolicy:   splittingPolicy,
+		// Note: only Volume splitting exists today.
+		// We allow for other splitting policies to be added in the future
+		// by extending the enum.
+		SplittingPolicy: types.ByVolume,
 	}
 
 	k.SetGroup(ctx, newGroup)
