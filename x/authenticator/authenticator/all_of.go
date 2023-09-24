@@ -124,3 +124,7 @@ func (aoa AllOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.
 	}
 	return nil
 }
+
+func (aoa AllOfAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
+}

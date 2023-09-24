@@ -68,6 +68,10 @@ func (m MaxAmountAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sd
 	return nil
 }
 
+func (m MaxAmountAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
+}
+
 // The following methods for MaxAmountAuthenticator are similar to the set and get value methods for StatefulAuthenticator but set and get an int
 func (m MaxAmountAuthenticator) SetAmount(ctx sdk.Context, amount osmomath.Int) {
 	kvStore := prefix.NewStore(ctx.KVStore(m.KvStoreKey), []byte(m.Type()))

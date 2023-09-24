@@ -164,10 +164,26 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorId uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyAccountId(account, authenticatorId)
-	// check that the key exists
-	if !store.Has(key) {
+
+	var existing types.AccountAuthenticator
+	found, err := osmoutils.Get(store, key, &existing)
+	if err != nil {
+		return err
+	}
+	if !found {
 		return fmt.Errorf("authenticator with id %d does not exist for account %s", authenticatorId, account)
 	}
+	impl := k.AuthenticatorManager.GetAuthenticatorByType(existing.Type)
+	if impl == nil {
+		return fmt.Errorf("authenticator type %s is not registered", existing.Type)
+	}
+
+	// Authenticators can prevent removal. This should be used sparingly
+	err = impl.OnAuthenticatorRemoved(ctx, account, existing.Data)
+	if err != nil {
+		return err
+	}
+
 	store.Delete(key)
 	return nil
 }

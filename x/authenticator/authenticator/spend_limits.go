@@ -188,6 +188,10 @@ func (sla SpendLimitAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account
 	return nil
 }
 
+func (sla SpendLimitAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
+}
+
 func (sla SpendLimitAuthenticator) getPriceInQuoteDenom(ctx sdk.Context, coin sdk.Coin) (osmomath.Dec, error) {
 	switch sla.priceStrategy {
 	case Twap:

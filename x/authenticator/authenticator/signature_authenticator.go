@@ -240,3 +240,7 @@ func (sva SignatureVerificationAuthenticator) OnAuthenticatorAdded(ctx sdk.Conte
 	}
 	return nil
 }
+
+func (sva SignatureVerificationAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
+}

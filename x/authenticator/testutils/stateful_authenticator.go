@@ -79,3 +79,7 @@ func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.Acc
 func (s StatefulAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
 	return nil
 }
+
+func (s StatefulAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
+}

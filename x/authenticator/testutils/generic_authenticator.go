@@ -69,3 +69,7 @@ func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccA
 func (t TestingAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
 	return nil
 }
+
+func (t TestingAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
+}
