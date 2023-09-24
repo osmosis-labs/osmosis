@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -27,7 +28,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.Reset()
 	s.am = authenticator.NewAuthenticatorManager()
 	// Register the SigVerificationAuthenticator
-	s.am.InitializeAuthenticators([]authenticator.Authenticator{authenticator.SignatureVerificationAuthenticator{}})
+	s.am.InitializeAuthenticators([]iface.Authenticator{authenticator.SignatureVerificationAuthenticator{}})
 }
 
 // ToDo: more and better tests

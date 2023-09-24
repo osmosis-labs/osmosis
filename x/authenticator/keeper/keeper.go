@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,12 +79,12 @@ func (k Keeper) GetAuthenticatorDataForAccount(
 func (k Keeper) GetAuthenticatorsForAccount(
 	ctx sdk.Context,
 	account sdk.AccAddress,
-) ([]authenticator.Authenticator, error) {
+) ([]iface.Authenticator, error) {
 	authenticatorData, err := k.GetAuthenticatorDataForAccount(ctx, account)
 	if err != nil {
 		return nil, err
 	}
-	authenticators := make([]authenticator.Authenticator, len(authenticatorData))
+	authenticators := make([]iface.Authenticator, len(authenticatorData))
 	for i, authenticator := range authenticatorData {
 		authenticators[i] = authenticator.AsAuthenticator(k.AuthenticatorManager)
 		if authenticators[i] == nil {
@@ -95,7 +97,7 @@ func (k Keeper) GetAuthenticatorsForAccount(
 func (k Keeper) GetAuthenticatorsForAccountOrDefault(
 	ctx sdk.Context,
 	account sdk.AccAddress,
-) ([]authenticator.Authenticator, error) {
+) ([]iface.Authenticator, error) {
 	authenticators, err := k.GetAuthenticatorsForAccount(ctx, account)
 	if err != nil {
 		return nil, err

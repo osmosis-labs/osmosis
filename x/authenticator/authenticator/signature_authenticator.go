@@ -3,6 +3,8 @@ package authenticator
 import (
 	"fmt"
 
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -18,8 +20,8 @@ import (
 
 // Compile time type assertion for the SignatureData using the
 // SignatureVerificationAuthenticator struct
-var _ Authenticator = &SignatureVerificationAuthenticator{}
-var _ AuthenticatorData = &SignatureData{}
+var _ iface.Authenticator = &SignatureVerificationAuthenticator{}
+var _ iface.AuthenticatorData = &SignatureData{}
 
 const (
 	// SignatureVerificationAuthenticatorType represents a type of authenticator specifically designed for
@@ -62,7 +64,7 @@ func NewSignatureVerificationAuthenticator(
 // which should have a public key in the data field.
 func (sva SignatureVerificationAuthenticator) Initialize(
 	data []byte,
-) (Authenticator, error) {
+) (iface.Authenticator, error) {
 	if len(data) != secp256k1.PubKeySize {
 		sva.PubKey = nil
 	}
@@ -88,7 +90,7 @@ func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 	// TODO: revisit msg index functionality
 	messageIndex int8,
 	simulate bool,
-) (AuthenticatorData, error) {
+) (iface.AuthenticatorData, error) {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
 		return SignatureData{},
@@ -132,10 +134,10 @@ func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 
 // Authenticate takes a SignaturesVerificationData struct and validates
 // each signer and signature using  signature verification
-func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) AuthenticationResult {
+func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
 	verificationData, ok := authenticationData.(SignatureData)
 	if !ok {
-		return Rejected("invalid signature verification data", sdkerrors.ErrInvalidType)
+		return iface.Rejected("invalid signature verification data", sdkerrors.ErrInvalidType)
 	}
 
 	// First consume gas for verifing the signature
@@ -143,7 +145,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, acco
 	for _, sig := range verificationData.Signatures {
 		err := authante.DefaultSigVerificationGasConsumer(ctx.GasMeter(), sig, params)
 		if err != nil {
-			return Rejected("couldn't get gas consumer", err)
+			return iface.Rejected("couldn't get gas consumer", err)
 		}
 	}
 
@@ -151,7 +153,7 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, acco
 	for i, sig := range verificationData.Signatures {
 		acc, err := authante.GetSignerAcc(ctx, sva.ak, verificationData.Signers[i])
 		if err != nil {
-			return Rejected("couldn't get signer account", err)
+			return iface.Rejected("couldn't get signer account", err)
 		}
 
 		// Retrieve pubkey we use either the public key from the authenticator store
@@ -164,12 +166,12 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, acco
 			pubKey = acc.GetPubKey()
 		}
 		if !verificationData.Simulate && pubKey == nil {
-			return Rejected("pubkey on not set on account or authenticator", sdkerrors.ErrInvalidPubKey)
+			return iface.Rejected("pubkey on not set on account or authenticator", sdkerrors.ErrInvalidPubKey)
 		}
 
 		// Check account sequence number.
 		if sig.Sequence != acc.GetSequence() {
-			return Rejected(
+			return iface.Rejected(
 				fmt.Sprintf("account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence),
 				sdkerrors.ErrInvalidPubKey,
 			)
@@ -215,13 +217,17 @@ func (sva SignatureVerificationAuthenticator) Authenticate(ctx sdk.Context, acco
 				}
 				// Errors are reserved for when something unexpected happened. Here authentication just failed, so we
 				// return NotAuthenticated()
-				return NotAuthenticated()
+				return iface.NotAuthenticated()
 			}
 		}
 	}
-	return Authenticated()
+	return iface.Authenticated()
 }
 
-func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult {
-	return Confirm()
+func (sva SignatureVerificationAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
+	return nil
+}
+
+func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
+	return iface.Confirm()
 }

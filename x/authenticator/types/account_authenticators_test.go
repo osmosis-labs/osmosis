@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,7 +16,11 @@ type MockAuthenticator struct {
 	authType string
 }
 
-func (m MockAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
+func (m MockAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
+	return nil
+}
+
+func (m MockAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
 	return m, nil
 }
 
@@ -23,33 +28,33 @@ func (m MockAuthenticator) StaticGas() uint64 {
 	return 1000
 }
 
-func (m MockAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (authenticator.AuthenticatorData, error) {
+func (m MockAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (iface.AuthenticatorData, error) {
 	return "mock", nil
 }
 
-func (m MockAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.AuthenticationResult {
-	return authenticator.Authenticated()
+func (m MockAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
+	return iface.Authenticated()
 }
 
-func (m MockAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData authenticator.AuthenticatorData, msg sdk.Msg) {
+func (m MockAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorData iface.AuthenticatorData, msg sdk.Msg) {
 }
 
-func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.ConfirmationResult {
-	return authenticator.Confirm()
+func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
+	return iface.Confirm()
 }
 
 func (m MockAuthenticator) Type() string {
 	return m.authType
 }
 
-var _ authenticator.Authenticator = MockAuthenticator{}
+var _ iface.Authenticator = MockAuthenticator{}
 
 func TestInitializeAuthenticators(t *testing.T) {
 	am := authenticator.NewAuthenticatorManager()
 	auth1 := MockAuthenticator{"type1"}
 	auth2 := MockAuthenticator{"type2"}
 
-	am.InitializeAuthenticators([]authenticator.Authenticator{auth1, auth2})
+	am.InitializeAuthenticators([]iface.Authenticator{auth1, auth2})
 
 	authenticators := am.GetRegisteredAuthenticators()
 	require.Equal(t, 2, len(authenticators))
@@ -109,7 +114,11 @@ type MockAuthenticatorFail struct {
 	authType string
 }
 
-func (m MockAuthenticatorFail) Initialize(data []byte) (authenticator.Authenticator, error) {
+func (m MockAuthenticatorFail) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
+	return nil
+}
+
+func (m MockAuthenticatorFail) Initialize(data []byte) (iface.Authenticator, error) {
 	return m, nil
 }
 
@@ -117,19 +126,19 @@ func (m MockAuthenticatorFail) StaticGas() uint64 {
 	return 1000
 }
 
-func (m MockAuthenticatorFail) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (authenticator.AuthenticatorData, error) {
+func (m MockAuthenticatorFail) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (iface.AuthenticatorData, error) {
 	return "mock-fail", nil
 }
 
-func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.AuthenticationResult {
-	return authenticator.NotAuthenticated()
+func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
+	return iface.NotAuthenticated()
 }
 
-func (m MockAuthenticatorFail) AuthenticationFailed(ctx sdk.Context, authenticatorData authenticator.AuthenticatorData, msg sdk.Msg) {
+func (m MockAuthenticatorFail) AuthenticationFailed(ctx sdk.Context, authenticatorData iface.AuthenticatorData, msg sdk.Msg) {
 }
 
-func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.ConfirmationResult {
-	return authenticator.Confirm()
+func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
+	return iface.Confirm()
 }
 
 func (m MockAuthenticatorFail) Type() string {
@@ -137,8 +146,8 @@ func (m MockAuthenticatorFail) Type() string {
 }
 
 // Ensure our mocks implement the Authenticator interface
-var _ authenticator.Authenticator = MockAuthenticator{}
-var _ authenticator.Authenticator = MockAuthenticatorFail{}
+var _ iface.Authenticator = MockAuthenticator{}
+var _ iface.Authenticator = MockAuthenticatorFail{}
 
 // Tests for the mocks behavior
 func TestMockAuthenticators(t *testing.T) {

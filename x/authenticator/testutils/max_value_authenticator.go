@@ -3,17 +3,18 @@ package testutils
 import (
 	"encoding/json"
 
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 )
 
 // This is a very naive implementation of an authenticator that tracks sends and blocks if the total amount sent is greater than 3_000
-var _ authenticator.Authenticator = &MaxAmountAuthenticator{}
-var _ authenticator.AuthenticatorData = &MaxAmountAuthenticatorData{}
+var _ iface.Authenticator = &MaxAmountAuthenticator{}
+var _ iface.AuthenticatorData = &MaxAmountAuthenticatorData{}
 
 type MaxAmountAuthenticatorData struct {
 	Amount osmomath.Int
@@ -30,33 +31,37 @@ func (m MaxAmountAuthenticator) Type() string {
 	return "MaxAmountAuthenticator"
 }
 
-func (m MaxAmountAuthenticator) Initialize(data []byte) (authenticator.Authenticator, error) {
+func (m MaxAmountAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
 	return m, nil
 }
 
-func (m MaxAmountAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (authenticator.AuthenticatorData, error) {
+func (m MaxAmountAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (iface.AuthenticatorData, error) {
 	return MaxAmountAuthenticatorData{}, nil
 }
 
-func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.AuthenticationResult {
+func (m MaxAmountAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
 	send, ok := msg.(*banktypes.MsgSend)
 	if !ok {
-		return authenticator.NotAuthenticated()
+		return iface.NotAuthenticated()
 	}
 	if m.GetAmount(ctx).Add(send.Amount[0].Amount).GTE(sdk.NewInt(3_000)) {
-		return authenticator.NotAuthenticated()
+		return iface.NotAuthenticated()
 	}
 
-	return authenticator.Authenticated()
+	return iface.Authenticated()
 }
 
-func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData authenticator.AuthenticatorData) authenticator.ConfirmationResult {
+func (m MaxAmountAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
+	return nil
+}
+
+func (m MaxAmountAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
 	send, ok := msg.(*banktypes.MsgSend)
 	if !ok {
-		return authenticator.Confirm()
+		return iface.Confirm()
 	}
 	m.SetAmount(ctx, m.GetAmount(ctx).Add(send.Amount[0].Amount))
-	return authenticator.Confirm()
+	return iface.Confirm()
 }
 
 // The following methods for MaxAmountAuthenticator are similar to the set and get value methods for StatefulAuthenticator but set and get an int

@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/testutils"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -57,54 +58,54 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfAuthenticator() {
 	// Define test cases
 	type testCase struct {
 		name             string
-		authenticators   []authenticator.Authenticator
+		authenticators   []iface.Authenticator
 		expectSuccessful bool
 	}
 
 	testCases := []testCase{
 		{
 			name:             "alwaysApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.neverApprove},
+			authenticators:   []iface.Authenticator{s.alwaysApprove, s.neverApprove},
 			expectSuccessful: true,
 		},
 		{
 			name:             "neverApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove},
+			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove},
 			expectSuccessful: false,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove},
+			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove},
 			expectSuccessful: true,
 		},
 		{
 			name:             "neverApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.alwaysApprove},
+			authenticators:   []iface.Authenticator{s.neverApprove, s.alwaysApprove},
 			expectSuccessful: true,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove, s.alwaysApprove},
+			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove, s.alwaysApprove},
 			expectSuccessful: true,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
+			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
 			expectSuccessful: true,
 		},
 		{
 			name:             "alwaysApprove + neverApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
+			authenticators:   []iface.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
 			expectSuccessful: true,
 		},
 		{
 			name:             "neverApprove + neverApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
+			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
 			expectSuccessful: true,
 		},
 		{
 			name:             "neverApprove + neverApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove, s.neverApprove},
+			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove, s.neverApprove},
 			expectSuccessful: false,
 		},
 	}
@@ -143,54 +144,54 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 	// Define test cases
 	type testCase struct {
 		name             string
-		authenticators   []authenticator.Authenticator
+		authenticators   []iface.Authenticator
 		expectSuccessful bool
 	}
 
 	testCases := []testCase{
 		{
 			name:             "alwaysApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.neverApprove},
+			authenticators:   []iface.Authenticator{s.alwaysApprove, s.neverApprove},
 			expectSuccessful: false,
 		},
 		{
 			name:             "neverApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove},
+			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove},
 			expectSuccessful: false,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove},
+			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove},
 			expectSuccessful: true,
 		},
 		{
 			name:             "neverApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.alwaysApprove},
+			authenticators:   []iface.Authenticator{s.neverApprove, s.alwaysApprove},
 			expectSuccessful: false,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove, s.alwaysApprove},
+			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove, s.alwaysApprove},
 			expectSuccessful: true,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
+			authenticators:   []iface.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
 			expectSuccessful: false,
 		},
 		{
 			name:             "alwaysApprove + neverApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
+			authenticators:   []iface.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
 			expectSuccessful: false,
 		},
 		{
 			name:             "neverApprove + neverApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
+			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
 			expectSuccessful: false,
 		},
 		{
 			name:             "neverApprove + neverApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove, s.neverApprove},
+			authenticators:   []iface.Authenticator{s.neverApprove, s.neverApprove, s.neverApprove},
 			expectSuccessful: false,
 		},
 	}
@@ -224,7 +225,7 @@ func (s *AggregatedAuthenticatorsTest) TestAllOfAuthenticator() {
 
 type testAuth struct {
 	name          string
-	authenticator authenticator.Authenticator
+	authenticator iface.Authenticator
 	subAuths      []testAuth
 }
 
@@ -238,7 +239,7 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			names = append(names, s.name)
 		}
 		name := prefix + "(" + strings.Join(names, ", ") + ")"
-		var auth authenticator.Authenticator
+		var auth iface.Authenticator
 		if prefix == "AnyOf" {
 			auth = s.AnyOfAuth
 		} else {

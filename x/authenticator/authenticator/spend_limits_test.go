@@ -222,6 +222,8 @@ func (s *SpendLimitAuthenticatorTest) TestPeriodTransitionWithAccumulatedSpends(
 				s.Ctx = s.Ctx.WithBlockTime(pair.timePoint)
 
 				spendLimit.Authenticate(s.Ctx, account, nil, nil)
+				err := spendLimit.Track(s.Ctx, account, nil)
+				s.Require().NoError(err)
 
 				// Simulate spending
 				err = s.OsmosisApp.BankKeeper.SendCoins(s.Ctx, account, sdk.AccAddress([]byte("receiver")), sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(pair.spendingAmt))))

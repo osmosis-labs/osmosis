@@ -3,6 +3,9 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
@@ -65,15 +68,16 @@ func (s *AuthenticatorSuite) SetupTest() {
 	}
 
 	// Initialize a test account with the first private key
-	accountAddr := sdk.AccAddress(s.PrivKeys[0].PubKey().Address())
+	s.Account = s.CreateAccount(s.PrivKeys[0], 100_000)
+}
 
+func (s *AuthenticatorSuite) CreateAccount(privKey cryptotypes.PrivKey, amount int) authtypes.AccountI {
+	accountAddr := sdk.AccAddress(privKey.PubKey().Address())
 	// fund the account
-	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000))
+	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(amount)))
 	err := s.app.BankKeeper.SendCoins(s.chainA.GetContext(), s.chainA.SenderAccount.GetAddress(), accountAddr, coins)
-	s.Require().NoError(err, "Failed to send bank tx using the first private key")
-
-	// get the account
-	s.Account = s.app.AccountKeeper.GetAccount(s.chainA.GetContext(), accountAddr)
+	s.Require().NoError(err, "Failed to send bank tx to account")
+	return s.app.AccountKeeper.GetAccount(s.chainA.GetContext(), accountAddr)
 }
 
 func (s *AuthenticatorSuite) TestKeyRotationStory() {
@@ -552,4 +556,101 @@ func (s *AuthenticatorSuite) TestSpendWithinLimit() {
 	// sending again fails
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
 	s.Require().Error(err)
+
+	// Simulate the passage of a day
+	s.coordinator.IncrementTimeBy(time.Hour * 24)
+	s.coordinator.CommitBlock()
+
+	// sending 500 ok after a day
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
+	s.Require().NoError(err)
+}
+
+func (s *AuthenticatorSuite) TestSpendWithinLimitWithAuthz() {
+	authenticatorsStoreKey := s.app.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]
+	spendLimitStore := prefix.NewStore(s.chainA.GetContext().KVStore(authenticatorsStoreKey), []byte("spendLimitAuthenticator"))
+
+	spendLimit := authenticator.NewSpendLimitAuthenticator(spendLimitStore, "allUSD", authenticator.AbsoluteValue, s.app.BankKeeper, s.app.PoolManagerKeeper, s.app.TwapKeeper)
+	s.app.AuthenticatorManager.RegisterAuthenticator(spendLimit)
+
+	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), "SignatureVerificationAuthenticator", s.PrivKeys[0].PubKey().Bytes())
+	s.Require().NoError(err, "Failed to add authenticator")
+	initData := []byte(`{"allowed": 1000, "period": "day"}`)
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), s.Account.GetAddress(), spendLimit.Type(), initData)
+	s.Require().NoError(err, "Failed to add authenticator")
+
+	// Create SendAuthorization
+	sendAuth := &banktypes.SendAuthorization{
+		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000)),
+	}
+
+	// Pack the SendAuthorization into an Any type
+	sendAuthAny, err := types.NewAnyWithValue(sendAuth)
+	s.Require().NoError(err)
+
+	// Create Grant
+	grant := authz.Grant{
+		Authorization: sendAuthAny,
+		Expiration:    time.Now().Add(time.Hour * 24 * 10),
+	}
+
+	// Grant Send Authorization from s.PrivKeys[0] to s.PrivKeys[1]
+	grantMsg := &authz.MsgGrant{
+		Granter: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		Grantee: sdk.MustBech32ifyAddressBytes("osmo", s.PrivKeys[1].PubKey().Address()),
+		Grant:   grant,
+	}
+
+	// Create account for the second private key. This is needed for executing the grant
+	s.CreateAccount(s.PrivKeys[1], 50_000)
+
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, grantMsg)
+	s.Require().NoError(err)
+
+	amountToSend := int64(500)
+	coins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, amountToSend))
+	sendMsg := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes("osmo", s.Account.GetAddress()),
+		ToAddress:   sdk.MustBech32ifyAddressBytes("osmo", s.PrivKeys[1].PubKey().Address()),
+		Amount:      coins,
+	}
+
+	// Pack the MsgSend into an Any type
+	sendMsgAny, err := types.NewAnyWithValue(sendMsg)
+	s.Require().NoError(err)
+
+	// Create a MsgExec to send coins from s.PrivKeys[1] using the granted authz
+	execMsg := &authz.MsgExec{
+		Grantee: sdk.MustBech32ifyAddressBytes("osmo", s.PrivKeys[1].PubKey().Address()),
+		Msgs:    []*types.Any{sendMsgAny},
+	}
+
+	// sending 500 ok
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[1]}, execMsg)
+	s.Require().NoError(err)
+
+	// sending 500 ok (1000 limit reached). This send is without authz; both are tracked
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
+	s.Require().NoError(err)
+
+	// sending again fails
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[1]}, execMsg)
+	s.Require().Error(err)
+
+	// Sending without authz also fails
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
+	s.Require().Error(err)
+
+	// Simulate the passage of a day
+	s.coordinator.IncrementTimeBy(time.Hour * 24)
+	s.coordinator.CommitBlock()
+
+	// sending 500 ok after a day
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
+	s.Require().NoError(err)
+
+	// and sending 500 with authz also ok after a day
+	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[1]}, execMsg)
+	s.Require().NoError(err)
+
 }
