@@ -63,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### API Breaks
 
 * [#6487](https://github.com/osmosis-labs/osmosis/pull/6487) make PoolModuleI CalculateSpotPrice API return BigDec
+* [#6511](https://github.com/osmosis-labs/osmosis/pull/6511) remove redundant param from CreateGaugeRefKeys in incentives
 * [#6510](https://github.com/osmosis-labs/osmosis/pull/6510) remove redundant ctx param from DeleteAllKeysFromPrefix in osmoutils
 
 ## v19.1.0
