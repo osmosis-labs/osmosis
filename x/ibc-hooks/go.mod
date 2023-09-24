@@ -11,13 +11,8 @@ require (
 	github.com/gogo/protobuf v1.3.3
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-<<<<<<< HEAD
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230907220438-2f6dd779bc6d
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230510161551-8bf252f26bae
-=======
-	github.com/osmosis-labs/osmosis/osmomath v0.0.6
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230901175805-bab180bc078b
->>>>>>> 80b2fa05 (osmoutils: error tolerance helpers (#6336))
 	github.com/spf13/cobra v1.7.0
 	github.com/tendermint/tendermint v0.37.0-rc1
 	google.golang.org/grpc v1.56.2
