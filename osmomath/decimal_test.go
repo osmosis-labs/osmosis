@@ -66,13 +66,14 @@ type mutResultToAssert struct {
 // to the mutative versions. Also, asserts that both results match the expected value.
 func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue BigIntDecorator) {
 	var r mutResultToAssert
+	// if provided types are not the same, scale them
 	if reflect.TypeOf(expectedResult) != reflect.TypeOf(startValue) ||
 		reflect.TypeOf(expectedResult) != reflect.TypeOf(mutativeResult) ||
 		reflect.TypeOf(expectedResult) != reflect.TypeOf(nonMutativeResult) ||
 		reflect.TypeOf(expectedResult) != reflect.TypeOf(mutativeStartValue) ||
 		reflect.TypeOf(expectedResult) != reflect.TypeOf(nonMutativeStartValue) {
 		r = scale(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue)
-	} else {
+	} else { // types are the same
 		r = mutResultToAssert{
 			*expectedResult.BigInt(),
 			*startValue.BigInt(),
