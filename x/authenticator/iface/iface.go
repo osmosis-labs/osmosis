@@ -62,7 +62,7 @@ type Authenticator interface {
 	ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult
 
 	// Optional Hooks
-	//OnAuthenticatorAdded(...) bool
+	OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error
 	//OnAuthenticatorRemoved(...) bool
 }
 

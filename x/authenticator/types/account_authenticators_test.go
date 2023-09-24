@@ -43,6 +43,10 @@ func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddr
 	return iface.Confirm()
 }
 
+func (m MockAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
+}
+
 func (m MockAuthenticator) Type() string {
 	return m.authType
 }
@@ -112,6 +116,10 @@ func TestAsAuthenticator(t *testing.T) {
 // Second mock that always fails authentication
 type MockAuthenticatorFail struct {
 	authType string
+}
+
+func (m MockAuthenticatorFail) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
 }
 
 func (m MockAuthenticatorFail) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {

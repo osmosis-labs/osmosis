@@ -75,3 +75,7 @@ func (s StatefulAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.Acc
 	s.SetValue(ctx, s.GetValue(ctx)+1)
 	return iface.Confirm()
 }
+
+func (s StatefulAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
+}
