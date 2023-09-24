@@ -1630,11 +1630,7 @@ func (s *decimalTestSuite) TestDecWithPrecision_Mutative() {
 	for id, tc := range tests {
 		name := "testcase_" + fmt.Sprint(id)
 		s.Run(name, func() {
-			if tc.expPanic {
-				s.Require().Panics(func() {
-					tc.startValue.DecWithPrecision(tc.precision)
-				})
-			} else {
+			osmomath.ConditionalPanic(s.T(), tc.expPanic, func() {
 				startMut := tc.startValue.Clone()
 				startNonMut := tc.startValue.Clone()
 
@@ -1642,7 +1638,7 @@ func (s *decimalTestSuite) TestDecWithPrecision_Mutative() {
 				resultNonMut := startNonMut.DecWithPrecision(tc.precision)
 
 				s.assertMutResult(tc.expectedMutResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
-			}
+			})
 		})
 	}
 }
