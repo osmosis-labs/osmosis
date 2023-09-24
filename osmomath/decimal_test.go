@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"reflect"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,8 +64,24 @@ type mutResultToAssert struct {
 // assertMutResult given expected value after applying a math operation, a start value,
 // mutative and non mutative results with start values, asserts that mutation are only applied
 // to the mutative versions. Also, asserts that both results match the expected value.
-func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue interface{}) {
-	r := scale(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue)
+func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue BigIntDecorator) {
+	var r mutResultToAssert
+	if reflect.TypeOf(expectedResult) != reflect.TypeOf(startValue) ||
+		reflect.TypeOf(expectedResult) != reflect.TypeOf(mutativeResult) ||
+		reflect.TypeOf(expectedResult) != reflect.TypeOf(nonMutativeResult) ||
+		reflect.TypeOf(expectedResult) != reflect.TypeOf(mutativeStartValue) ||
+		reflect.TypeOf(expectedResult) != reflect.TypeOf(nonMutativeStartValue) {
+		r = scale(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue)
+	} else {
+		r = mutResultToAssert{
+			*expectedResult.BigInt(),
+			*startValue.BigInt(),
+			*mutativeResult.BigInt(),
+			*nonMutativeResult.BigInt(),
+			*mutativeStartValue.BigInt(),
+			*nonMutativeStartValue.BigInt(),
+		}
+	}
 
 	// assert both results are as expected.
 	s.Require().Equal(r.expectedResult, r.mutativeResult)
@@ -91,36 +108,30 @@ func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeR
 // Dec internally does not hold decimal values, it holds big.Int scaled with 18 precision numbers
 // To compare the two above, we need to "scale" them to a common precision.
 // To do that, we need to divide underlying big.Int of Dec by 10^PrecisionDec and then compare it with Int's underlying big.Int
-func scale(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue interface{}) mutResultToAssert {
+func scale(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue BigIntDecorator) mutResultToAssert {
 	// scale expectedResult
-	expectedResultT := expectedResult.(BigIntDecorator)
 	expectedResultScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(expectedResult)), nil)
-	expectedResultBig := new(big.Int).Quo(expectedResultT.BigInt(), expectedResultScaler)
+	expectedResultBig := new(big.Int).Quo(expectedResult.BigInt(), expectedResultScaler)
 
 	// scale startValue
-	startValueT := startValue.(BigIntDecorator)
 	startValueScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(startValue)), nil)
-	startValueBig := new(big.Int).Quo(startValueT.BigInt(), startValueScaler)
+	startValueBig := new(big.Int).Quo(startValue.BigInt(), startValueScaler)
 
 	// scale mutativeResult
-	mutativeResultT := mutativeResult.(BigIntDecorator)
 	mutativeResultScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(mutativeResult)), nil)
-	mutativeResultBig := new(big.Int).Quo(mutativeResultT.BigInt(), mutativeResultScaler)
+	mutativeResultBig := new(big.Int).Quo(mutativeResult.BigInt(), mutativeResultScaler)
 
 	// scale nonMutativeResult
-	nonMutativeResultT := nonMutativeResult.(BigIntDecorator)
 	nonMutativeResultScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(nonMutativeResult)), nil)
-	nonMutativeResultBig := new(big.Int).Quo(nonMutativeResultT.BigInt(), nonMutativeResultScaler)
+	nonMutativeResultBig := new(big.Int).Quo(nonMutativeResult.BigInt(), nonMutativeResultScaler)
 
 	// scale mutativeStartValue
-	mutativeStartValueT := mutativeStartValue.(BigIntDecorator)
 	mutativeStartValueScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(mutativeStartValue)), nil)
-	mutativeStartValueBig := new(big.Int).Quo(mutativeStartValueT.BigInt(), mutativeStartValueScaler)
+	mutativeStartValueBig := new(big.Int).Quo(mutativeStartValue.BigInt(), mutativeStartValueScaler)
 
 	// scale nonMutativeStartValue
-	nonMutativeStartValueT := nonMutativeStartValue.(BigIntDecorator)
 	nonMutativeStartValueScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(nonMutativeStartValue)), nil)
-	nonMutativeStartValueBig := new(big.Int).Quo(nonMutativeStartValueT.BigInt(), nonMutativeStartValueScaler)
+	nonMutativeStartValueBig := new(big.Int).Quo(nonMutativeStartValue.BigInt(), nonMutativeStartValueScaler)
 
 	return mutResultToAssert{
 		*expectedResultBig,
@@ -1593,10 +1604,10 @@ func (s *decimalTestSuite) TestPower() {
 
 func (s *decimalTestSuite) TestDecWithPrecision_Mutative() {
 	tests := []struct {
-		d         osmomath.BigDec
-		want      osmomath.Dec
-		precision uint64
-		expPanic  bool
+		startValue        osmomath.BigDec
+		expectedMutResult osmomath.Dec
+		precision         uint64
+		expPanic          bool
 	}{
 		// basic Dec conversion, since precision is osmomath.PrecisionDec
 		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), osmomath.PrecisionDec, false},
