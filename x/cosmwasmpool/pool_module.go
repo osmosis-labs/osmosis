@@ -168,19 +168,19 @@ func (k Keeper) CalculateSpotPrice(
 	poolId uint64,
 	quoteAssetDenom string,
 	baseAssetDenom string,
-) (price osmomath.Dec, err error) {
+) (price osmomath.BigDec, err error) {
 	cosmwasmPool, err := k.GetPoolById(ctx, poolId)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	spotPriceBigDec, err := cosmwasmPool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 	// Truncation is acceptable here since the only reason cosmwasmPool returns a BigDec
 	// is to maintain compatibility with the `PoolI.SpotPrice` API.
-	return spotPriceBigDec.Dec(), nil
+	return spotPriceBigDec, nil
 }
 
 // SwapExactAmountIn performs a swap operation with a specified input amount in a CosmWasm-based liquidity pool.

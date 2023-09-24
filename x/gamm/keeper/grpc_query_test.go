@@ -897,12 +897,12 @@ func (s *KeeperTestSuite) TestQueryStableswapPoolSpotPrice() {
 			} else {
 				s.Require().NoError(err, "unexpected error")
 				// We allow for a small geometric error due to our spot price being an approximation
-				expectedSpotPrice := osmomath.MustNewDecFromStr(tc.result)
-				actualSpotPrice := osmomath.MustNewDecFromStr(result.SpotPrice)
+				expectedSpotPrice := osmomath.MustNewBigDecFromStr(tc.result)
+				actualSpotPrice := osmomath.MustNewBigDecFromStr(result.SpotPrice)
 				diff := (expectedSpotPrice.Sub(actualSpotPrice)).Abs()
-				errTerm := diff.Quo(osmomath.MinDec(expectedSpotPrice, actualSpotPrice))
+				errTerm := diff.Quo(osmomath.MinBigDec(expectedSpotPrice, actualSpotPrice))
 
-				s.Require().True(errTerm.LT(osmomath.NewDecWithPrec(1, 3)), "Expected: %d, Actual: %d", expectedSpotPrice, actualSpotPrice)
+				s.Require().True(errTerm.LT(osmomath.NewBigDecWithPrec(1, 3)), "Expected: %d, Actual: %d", expectedSpotPrice, actualSpotPrice)
 			}
 		})
 	}
@@ -980,12 +980,12 @@ func (s *KeeperTestSuite) TestV2QueryStableswapPoolSpotPrice() {
 				s.Require().NoError(err, "unexpected error")
 
 				// We allow for a small geometric error due to our spot price being an approximation
-				expectedSpotPrice := osmomath.MustNewDecFromStr(tc.result)
-				actualSpotPrice := osmomath.MustNewDecFromStr(result.SpotPrice)
+				expectedSpotPrice := osmomath.MustNewBigDecFromStr(tc.result)
+				actualSpotPrice := osmomath.MustNewBigDecFromStr(result.SpotPrice)
 				diff := (expectedSpotPrice.Sub(actualSpotPrice)).Abs()
-				errTerm := diff.Quo(osmomath.MinDec(expectedSpotPrice, actualSpotPrice))
+				errTerm := diff.Quo(osmomath.MinBigDec(expectedSpotPrice, actualSpotPrice))
 
-				s.Require().True(errTerm.LT(osmomath.NewDecWithPrec(1, 3)), "Expected: %d, Actual: %d", expectedSpotPrice, actualSpotPrice)
+				s.Require().True(errTerm.LT(osmomath.NewBigDecWithPrec(1, 3)), "Expected: %d, Actual: %d", expectedSpotPrice, actualSpotPrice)
 			}
 		})
 	}

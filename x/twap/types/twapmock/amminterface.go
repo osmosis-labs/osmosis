@@ -74,10 +74,14 @@ func (p *ProgrammedPoolManagerInterface) RouteCalculateSpotPrice(ctx sdk.Context
 	poolId uint64,
 	quoteDenom,
 	baseDenom string,
-) (price osmomath.Dec, err error) {
+) (price osmomath.BigDec, err error) {
 	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	if res, ok := p.programmedSpotPrice[input]; ok {
-		return res.Sp, res.Err
+		if (res.Sp == osmomath.Dec{}) {
+			return osmomath.BigDec{}, res.Err
+		}
+
+		return osmomath.BigDecFromDec(res.Sp), res.Err
 	}
 	return p.underlyingKeeper.RouteCalculateSpotPrice(ctx, poolId, quoteDenom, baseDenom)
 }

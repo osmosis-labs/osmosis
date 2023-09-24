@@ -106,39 +106,40 @@ func (k Keeper) addGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) err
 	return k.addGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), ID)
 }
 
-// SetGroupGauge sets groupGroup for a specific key.
+// SetGroup sets groupGroup for a specific key.
 // TODO: explore if we can store this better, this has GroupGaugeId in key and value
-func (k Keeper) SetGroupGauge(ctx sdk.Context, groupGauge types.GroupGauge) {
+func (k Keeper) SetGroup(ctx sdk.Context, group types.Group) {
 	store := ctx.KVStore(k.storeKey)
-	osmoutils.MustSet(store, types.KeyGroupGaugeForId(groupGauge.GroupGaugeId), &groupGauge)
+	osmoutils.MustSet(store, types.KeyGroupByGaugeID(group.GroupGaugeId), &group)
 }
 
 // GetAllGroupGauges gets all the groupGauges that is in state.
-func (k Keeper) GetAllGroupGauges(ctx sdk.Context) ([]types.GroupGauge, error) {
-	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GroupGaugePrefix), k.ParseGroupGaugeFromBz)
+func (k Keeper) GetAllGroups(ctx sdk.Context) ([]types.Group, error) {
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GroupPrefix), k.ParseGroupFromBz)
 }
 
-func (k Keeper) ParseGroupGaugeFromBz(bz []byte) (groupGauge types.GroupGauge, err error) {
+func (k Keeper) ParseGroupFromBz(bz []byte) (group types.Group, err error) {
 	if len(bz) == 0 {
-		return types.GroupGauge{}, errors.New("group gauge not found")
+		return types.Group{}, errors.New("group gauge not found")
 	}
-	err = proto.Unmarshal(bz, &groupGauge)
+	err = proto.Unmarshal(bz, &group)
 
-	return groupGauge, err
+	return group, err
 }
 
-// GetGroupGaugeById gets groupGauge struct for a given groupGaugeId.
-func (k Keeper) GetGroupGaugeById(ctx sdk.Context, groupGaugeId uint64) (types.GroupGauge, error) {
+// GetGroupByGaugeID gets group struct for a given gauge ID. Note that Group and group's associated gauge
+// are 1:1 mapped. As a result, they share the same ID.
+func (k Keeper) GetGroupByGaugeID(ctx sdk.Context, gaugeID uint64) (types.Group, error) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyGroupGaugeForId(groupGaugeId)
+	key := types.KeyGroupByGaugeID(gaugeID)
 	bz := store.Get(key)
 	if bz == nil {
-		return types.GroupGauge{}, nil
+		return types.Group{}, nil
 	}
 
-	var getGroupGauge types.GroupGauge
+	var getGroupGauge types.Group
 	if err := proto.Unmarshal(bz, &getGroupGauge); err != nil {
-		return types.GroupGauge{}, nil
+		return types.Group{}, nil
 	}
 
 	return getGroupGauge, nil

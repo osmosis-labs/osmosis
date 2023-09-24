@@ -47,7 +47,9 @@ Conceptually, we can split the e2e setup into 2 parts:
     If with the upgrade, the same `chain.Init(...)` function is run inside a Docker container
     of the previous Osmosis version, inside `configurer/upgrade.go`. This is
     needed to initialize chain configs and the genesis of the previous version that
-    we are upgrading from.
+    we are upgrading from. Note, we use the alpine image of the previous version,
+    as functionality such as copying mnemonics across containers in unavailable in the
+    stripped down images.
 
     The decision of what configuration type to use is decided by the `Configurer`.
     This is an interface that has `CurrentBranchConfigurer` and `UpgradeConfigurer` implementations.
