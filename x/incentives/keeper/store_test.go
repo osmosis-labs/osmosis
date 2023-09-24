@@ -73,7 +73,7 @@ func (s *KeeperTestSuite) TestGetGroupByGaugeID() {
 						},
 					},
 				},
-				SplittingPolicy: types.Volume,
+				SplittingPolicy: types.ByVolume,
 			},
 		},
 

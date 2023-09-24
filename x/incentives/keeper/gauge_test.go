@@ -708,7 +708,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 				s.Require().NoError(err)
 
 				s.Require().Equal(group.InternalGaugeInfo.GaugeRecords, tc.internalGaugeIds)
-				s.Require().Equal(group.SplittingPolicy, types.Volume)
+				s.Require().Equal(group.SplittingPolicy, types.ByVolume)
 			}
 
 		})

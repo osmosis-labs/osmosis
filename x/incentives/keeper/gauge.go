@@ -253,7 +253,7 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 		// Note: only Volume splitting exists today.
 		// We allow for other splitting policies to be added in the future
 		// by extending the enum.
-		SplittingPolicy: types.Volume,
+		SplittingPolicy: types.ByVolume,
 	}
 
 	k.SetGroup(ctx, newGroup)

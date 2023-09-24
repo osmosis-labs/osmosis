@@ -43,7 +43,7 @@ var (
 			TotalWeight:  defaultGaugeRecordOneRecord.CurrentWeight.Add(defaultGaugeRecordTwoRecords.CurrentWeight),
 			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOneRecord, defaultGaugeRecordTwoRecords},
 		},
-		SplittingPolicy: types.Volume,
+		SplittingPolicy: types.ByVolume,
 	}
 	singleRecordGroup = types.Group{
 		GroupGaugeId: defaultGroupGaugeId,
@@ -51,7 +51,7 @@ var (
 			TotalWeight:  defaultGaugeRecordOneRecord.CurrentWeight,
 			GaugeRecords: []types.InternalGaugeRecord{defaultGaugeRecordOneRecord},
 		},
-		SplittingPolicy: types.Volume,
+		SplittingPolicy: types.ByVolume,
 	}
 
 	emptyCoins          = sdk.Coins{}
@@ -1568,7 +1568,7 @@ func (s *KeeperTestSuite) TestSyncGroupWeights() {
 		expectedError       error
 	}{
 		"happy path: valid volume splitting group": {
-			groupToSync: withSplittingPolicy(defaultGroup, types.Volume),
+			groupToSync: withSplittingPolicy(defaultGroup, types.ByVolume),
 
 			// Note: setup logic runs default setup based on groupToSync's splitting policy.
 			// More involved tests related to syncing logic for specific splitting policies are in their respective tests.
@@ -1598,7 +1598,7 @@ func (s *KeeperTestSuite) TestSyncGroupWeights() {
 			// Currently the only supported splitting policy is volume splitting.
 			// When more are added in the future, setup logic should route to the appropriate setup function here.
 			switch tc.groupToSync.SplittingPolicy {
-			case types.Volume:
+			case types.ByVolume:
 				s.setupVolumes(poolIds, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount})
 			}
 
@@ -1756,7 +1756,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 	// is expected to allocate.
 	updateExpectedGaugeDistributionsMap := func(expectedGaugeDistributionsMap map[uint64]sdk.Coins, group types.Group, expectedAmountDistributedForGroup sdk.Coins) {
 		totalWeight := group.InternalGaugeInfo.TotalWeight
-		if group.SplittingPolicy == types.Volume {
+		if group.SplittingPolicy == types.ByVolume {
 			for _, underlyingGauge := range group.InternalGaugeInfo.GaugeRecords {
 
 				// calculate expected amount distributed to this gauge

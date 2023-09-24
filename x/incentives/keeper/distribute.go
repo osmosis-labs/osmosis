@@ -387,7 +387,7 @@ func (k Keeper) distributeSyntheticInternal(
 // - the splitting policy is not supported
 // - a lower level issue arises when syncing weights (e.g. the volume for a linked pool cannot be found under volume-splitting policy)
 func (k Keeper) syncGroupWeights(ctx sdk.Context, group types.Group) error {
-	if group.SplittingPolicy == types.Volume {
+	if group.SplittingPolicy == types.ByVolume {
 		err := k.syncVolumeSplitGroup(ctx, group)
 		if err != nil {
 			return err
