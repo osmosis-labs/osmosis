@@ -61,9 +61,9 @@ type Authenticator interface {
 	// and verify these values.
 	ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult
 
-	// Optional Hooks (TODO: Revisit this section)
-	// OnAuthenticatorAdded(...) bool
-	// OnAuthenticatorRemoved(...) bool
+	// Optional Hooks
+	//OnAuthenticatorAdded(...) bool
+	//OnAuthenticatorRemoved(...) bool
 }
 
 // EmptyAuthenticationData is a generic implementation used when no custom authentication data is needed or available
