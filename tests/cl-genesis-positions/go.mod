@@ -5,8 +5,8 @@ go 1.20
 require (
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/ignite/cli v0.23.0
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230907220438-2f6dd779bc6d
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230907220438-2f6dd779bc6d
+	github.com/osmosis-labs/osmosis/osmomath v0.0.8-0.20230925210820-8ee397e4d289
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.8-0.20230925210820-8ee397e4d289
 	github.com/osmosis-labs/osmosis/v19 v19.0.0
 	github.com/tendermint/tendermint v0.37.0-rc1
 )

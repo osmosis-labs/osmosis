@@ -8,7 +8,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230907220438-2f6dd779bc6d
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.8-0.20230925210820-8ee397e4d289
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tendermint/tendermint v0.37.0-rc1
@@ -28,10 +28,10 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/btcsuite/btcd v0.22.3 // indirect
-	github.com/bytedance/sonic v1.10.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
@@ -88,7 +88,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
-	github.com/osmosis-labs/osmosis/osmomath v0.0.6 // indirect
+	github.com/osmosis-labs/osmosis/osmomath v0.0.8-0.20230925210820-8ee397e4d289 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
