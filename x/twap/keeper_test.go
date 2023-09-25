@@ -8,10 +8,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v17/x/twap"
-	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/twap"
+	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
 )
 
 // TODO: Consider switching this everywhere
@@ -43,9 +44,9 @@ func (s *TestSuite) SetupTest() {
 	s.twapkeeper = s.App.TwapKeeper
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 	// add x/twap test specific denoms
-	concentratedLiquidityParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-	concentratedLiquidityParams.AuthorizedQuoteDenoms = append(concentratedLiquidityParams.AuthorizedQuoteDenoms, denom0, denom1, denom2)
-	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, concentratedLiquidityParams)
+	poolManagerParams := s.App.PoolManagerKeeper.GetParams(s.Ctx)
+	poolManagerParams.AuthorizedQuoteDenoms = append(poolManagerParams.AuthorizedQuoteDenoms, denom0, denom1, denom2)
+	s.App.PoolManagerKeeper.SetParams(s.Ctx, poolManagerParams)
 }
 
 var (
@@ -57,11 +58,11 @@ var (
 		Asset1Denom:                 denom1,
 		Height:                      3,
 		Time:                        tPlusOne.Add(time.Second),
-		P0LastSpotPrice:             sdk.OneDec(),
-		P1LastSpotPrice:             sdk.OneDec(),
-		P0ArithmeticTwapAccumulator: sdk.OneDec(),
-		P1ArithmeticTwapAccumulator: sdk.OneDec(),
-		GeometricTwapAccumulator:    sdk.OneDec(),
+		P0LastSpotPrice:             osmomath.OneDec(),
+		P1LastSpotPrice:             osmomath.OneDec(),
+		P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+		P1ArithmeticTwapAccumulator: osmomath.OneDec(),
+		GeometricTwapAccumulator:    osmomath.OneDec(),
 	}
 
 	basicCustomGenesis = types.NewGenesisState(
@@ -79,11 +80,11 @@ var (
 				Asset1Denom:                 denom1,
 				Height:                      1,
 				Time:                        baseTime,
-				P0LastSpotPrice:             sdk.OneDec(),
-				P1LastSpotPrice:             sdk.OneDec(),
-				P0ArithmeticTwapAccumulator: sdk.OneDec(),
-				P1ArithmeticTwapAccumulator: sdk.OneDec(),
-				GeometricTwapAccumulator:    sdk.OneDec(),
+				P0LastSpotPrice:             osmomath.OneDec(),
+				P1LastSpotPrice:             osmomath.OneDec(),
+				P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+				P1ArithmeticTwapAccumulator: osmomath.OneDec(),
+				GeometricTwapAccumulator:    osmomath.OneDec(),
 			},
 			{
 				PoolId:                      basePoolId,
@@ -91,11 +92,11 @@ var (
 				Asset1Denom:                 denom1,
 				Height:                      2,
 				Time:                        tPlusOne,
-				P0LastSpotPrice:             sdk.OneDec(),
-				P1LastSpotPrice:             sdk.OneDec(),
-				P0ArithmeticTwapAccumulator: sdk.OneDec(),
-				P1ArithmeticTwapAccumulator: sdk.OneDec(),
-				GeometricTwapAccumulator:    sdk.OneDec(),
+				P0LastSpotPrice:             osmomath.OneDec(),
+				P1LastSpotPrice:             osmomath.OneDec(),
+				P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+				P1ArithmeticTwapAccumulator: osmomath.OneDec(),
+				GeometricTwapAccumulator:    osmomath.OneDec(),
 			},
 			mostRecentRecordPoolOne,
 		})
@@ -106,11 +107,11 @@ var (
 		Asset1Denom:                 denom2,
 		Height:                      1,
 		Time:                        tPlusOne.Add(time.Second),
-		P0LastSpotPrice:             sdk.OneDec(),
-		P1LastSpotPrice:             sdk.OneDec(),
-		P0ArithmeticTwapAccumulator: sdk.OneDec(),
-		P1ArithmeticTwapAccumulator: sdk.OneDec(),
-		GeometricTwapAccumulator:    sdk.OneDec(),
+		P0LastSpotPrice:             osmomath.OneDec(),
+		P1LastSpotPrice:             osmomath.OneDec(),
+		P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+		P1ArithmeticTwapAccumulator: osmomath.OneDec(),
+		GeometricTwapAccumulator:    osmomath.OneDec(),
 	}
 
 	decreasingOrderByTimeRecordsPoolTwo = types.NewGenesisState(
@@ -123,11 +124,11 @@ var (
 				Asset1Denom:                 denom2,
 				Height:                      2,
 				Time:                        tPlusOne,
-				P0LastSpotPrice:             sdk.OneDec(),
-				P1LastSpotPrice:             sdk.OneDec(),
-				P0ArithmeticTwapAccumulator: sdk.OneDec(),
-				P1ArithmeticTwapAccumulator: sdk.OneDec(),
-				GeometricTwapAccumulator:    sdk.OneDec(),
+				P0LastSpotPrice:             osmomath.OneDec(),
+				P1LastSpotPrice:             osmomath.OneDec(),
+				P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+				P1ArithmeticTwapAccumulator: osmomath.OneDec(),
+				GeometricTwapAccumulator:    osmomath.OneDec(),
 			},
 			{
 				PoolId:                      basePoolId,
@@ -135,11 +136,11 @@ var (
 				Asset1Denom:                 denom2,
 				Height:                      3,
 				Time:                        baseTime,
-				P0LastSpotPrice:             sdk.OneDec(),
-				P1LastSpotPrice:             sdk.OneDec(),
-				P0ArithmeticTwapAccumulator: sdk.OneDec(),
-				P1ArithmeticTwapAccumulator: sdk.OneDec(),
-				GeometricTwapAccumulator:    sdk.OneDec(),
+				P0LastSpotPrice:             osmomath.OneDec(),
+				P1LastSpotPrice:             osmomath.OneDec(),
+				P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+				P1ArithmeticTwapAccumulator: osmomath.OneDec(),
+				GeometricTwapAccumulator:    osmomath.OneDec(),
 			},
 		})
 
@@ -159,12 +160,12 @@ func withLastErrTime(twap types.TwapRecord, lastErrorTime time.Time) types.TwapR
 	return twap
 }
 
-func withSp0(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
+func withSp0(twap types.TwapRecord, sp osmomath.Dec) types.TwapRecord {
 	twap.P0LastSpotPrice = sp
 	return twap
 }
 
-func withSp1(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
+func withSp1(twap types.TwapRecord, sp osmomath.Dec) types.TwapRecord {
 	twap.P1LastSpotPrice = sp
 	return twap
 }
@@ -172,7 +173,7 @@ func withSp1(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
 // TestTWAPInitGenesis tests that genesis is initialized correctly
 // with different parameters and state.
 // Asserts that the most recent records are set correctly.
-func (suite *TestSuite) TestTwapInitGenesis() {
+func (s *TestSuite) TestTwapInitGenesis() {
 	testCases := map[string]struct {
 		twapGenesis *types.GenesisState
 
@@ -221,11 +222,11 @@ func (suite *TestSuite) TestTwapInitGenesis() {
 						Asset1Denom:                 "test2",
 						Height:                      1,
 						Time:                        baseTime,
-						P0LastSpotPrice:             sdk.OneDec(),
-						P1LastSpotPrice:             sdk.OneDec(),
-						P0ArithmeticTwapAccumulator: sdk.OneDec(),
-						P1ArithmeticTwapAccumulator: sdk.OneDec(),
-						GeometricTwapAccumulator:    sdk.OneDec(),
+						P0LastSpotPrice:             osmomath.OneDec(),
+						P1LastSpotPrice:             osmomath.OneDec(),
+						P0ArithmeticTwapAccumulator: osmomath.OneDec(),
+						P1ArithmeticTwapAccumulator: osmomath.OneDec(),
+						GeometricTwapAccumulator:    osmomath.OneDec(),
 					},
 				}),
 
@@ -234,14 +235,14 @@ func (suite *TestSuite) TestTwapInitGenesis() {
 	}
 
 	for name, tc := range testCases {
-		suite.Run(name, func() {
-			suite.Setup()
+		s.Run(name, func() {
+			s.Setup()
 			// Setup.
-			ctx := suite.Ctx
-			twapKeeper := suite.App.TwapKeeper
+			ctx := s.Ctx
+			twapKeeper := s.App.TwapKeeper
 
 			// Test.
-			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() { twapKeeper.InitGenesis(ctx, tc.twapGenesis) })
+			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() { twapKeeper.InitGenesis(ctx, tc.twapGenesis) })
 			if tc.expectPanic {
 				return
 			}
@@ -249,12 +250,12 @@ func (suite *TestSuite) TestTwapInitGenesis() {
 			// Assertions.
 
 			// Parameters were set.
-			suite.Require().Equal(tc.twapGenesis.Params, twapKeeper.GetParams(ctx))
+			s.Require().Equal(tc.twapGenesis.Params, twapKeeper.GetParams(ctx))
 
 			for _, expectedMostRecentRecord := range tc.expectedMostRecentRecord {
 				record, err := twapKeeper.GetMostRecentRecordStoreRepresentation(ctx, expectedMostRecentRecord.PoolId, expectedMostRecentRecord.Asset0Denom, expectedMostRecentRecord.Asset1Denom)
-				suite.Require().NoError(err)
-				suite.Require().Equal(expectedMostRecentRecord, record)
+				s.Require().NoError(err)
+				s.Require().Equal(expectedMostRecentRecord, record)
 			}
 		})
 	}
@@ -263,7 +264,7 @@ func (suite *TestSuite) TestTwapInitGenesis() {
 // TestTWAPExportGenesis tests that genesis is exported correctly.
 // It first initializes genesis to the expected value. Then, attempts
 // to export it. Lastly, compares exported to the expected.
-func (suite *TestSuite) TestTWAPExportGenesis() {
+func (s *TestSuite) TestTWAPExportGenesis() {
 	testCases := map[string]struct {
 		expectedGenesis *types.GenesisState
 	}{
@@ -282,11 +283,11 @@ func (suite *TestSuite) TestTWAPExportGenesis() {
 	}
 
 	for name, tc := range testCases {
-		suite.Run(name, func() {
-			suite.Setup()
+		s.Run(name, func() {
+			s.Setup()
 			// Setup.
-			app := suite.App
-			ctx := suite.Ctx
+			app := s.App
+			ctx := s.Ctx
 			twapKeeper := app.TwapKeeper
 
 			twapKeeper.InitGenesis(ctx, tc.expectedGenesis)
@@ -295,7 +296,7 @@ func (suite *TestSuite) TestTWAPExportGenesis() {
 			actualGenesis := twapKeeper.ExportGenesis(ctx)
 
 			// Assertions.
-			suite.Require().Equal(tc.expectedGenesis.Params, actualGenesis.Params)
+			s.Require().Equal(tc.expectedGenesis.Params, actualGenesis.Params)
 
 			// Sort expected by time. This is done because the exported genesis returns
 			// recors in ascending order by time.
@@ -303,7 +304,7 @@ func (suite *TestSuite) TestTWAPExportGenesis() {
 				return tc.expectedGenesis.Twaps[i].Time.Before(tc.expectedGenesis.Twaps[j].Time)
 			})
 
-			suite.Require().Equal(tc.expectedGenesis.Twaps, actualGenesis.Twaps)
+			s.Require().Equal(tc.expectedGenesis.Twaps, actualGenesis.Twaps)
 		})
 	}
 }
@@ -360,7 +361,7 @@ func (s *TestSuite) validateExpectedRecords(expectedRecords []types.TwapRecord) 
 // - 3 records at time t - 1 seconds, with pool id 2 (3 asset pool)
 // - 1 record at time t, with pool id 3
 // - 1 record at time t + 1 seconds, with pool id 3
-func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord) {
+func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord) { //nolint:revive // this function breaks the function result limit of 4 return results.  TODO: fixme
 	baseRecord := newEmptyPriceRecord(basePoolId, t, denom0, denom1)
 
 	tMin1 := t.Add(-time.Second)
@@ -383,7 +384,7 @@ func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, ty
 // - 3 records at time t
 // - 3 records t time t + 1 seconds
 // all returned records belong to the same pool with poolId
-func (s *TestSuite) CreateTestRecordsFromTimeInPool(t time.Time, poolId uint64) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord,
+func (s *TestSuite) CreateTestRecordsFromTimeInPool(t time.Time, poolId uint64) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, //nolint:revive // this function breaks the function result limit of 4 return results.  TODO: fixme
 	types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord,
 ) {
 	baseRecordAB := newEmptyPriceRecord(poolId, t, denom0, denom1)
@@ -410,8 +411,8 @@ func (s *TestSuite) CreateTestRecordsFromTimeInPool(t time.Time, poolId uint64) 
 
 // newTwoAssetPoolTwapRecordWithDefaults creates a single twap records, mimicking what one would expect from a two asset pool.
 // given a spot price 0 (sp0), this spot price is assigned to denomA and sp0 is then created and assigned to denomB by
-// calculating (1 / spA).
-func newTwoAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1, geomAccum sdk.Dec) types.TwapRecord {
+// calculating (1 / spA).osmomath.Dec
+func newTwoAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1, geomAccum osmomath.Dec) types.TwapRecord {
 	return types.TwapRecord{
 		PoolId:      1,
 		Time:        t,
@@ -419,7 +420,7 @@ func newTwoAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1, geo
 		Asset1Denom: denom1,
 
 		P0LastSpotPrice:             sp0,
-		P1LastSpotPrice:             sdk.OneDec().Quo(sp0),
+		P1LastSpotPrice:             osmomath.OneDec().Quo(sp0),
 		P0ArithmeticTwapAccumulator: accum0,
 		P1ArithmeticTwapAccumulator: accum1,
 		GeometricTwapAccumulator:    geomAccum,
@@ -428,11 +429,11 @@ func newTwoAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1, geo
 
 // newThreeAssetPoolTwapRecordWithDefaults creates three twap records, mimicking what one would expect from a three asset pool.
 // given a spot price 0 (sp0), this spot price is assigned to denomA and referred to as spA. spB is then created and assigned by
-// calculating (1 / spA). Finally spC is created and assigned by calculating (2 * spA).
-func newThreeAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC sdk.Dec) (types.TwapRecord, types.TwapRecord, types.TwapRecord) {
+// calculating (1 / spA). Finally spC is created and assigned by calculating (2 * spA).osmomath.Dec
+func newThreeAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC osmomath.Dec) (types.TwapRecord, types.TwapRecord, types.TwapRecord) {
 	spA := sp0
-	spB := sdk.OneDec().Quo(sp0)
-	spC := sp0.Mul(sdk.NewDec(2))
+	spB := osmomath.OneDec().Quo(sp0)
+	spC := sp0.Mul(osmomath.NewDec(2))
 	twapAB := types.TwapRecord{
 		PoolId:      2,
 		Time:        t,
@@ -466,20 +467,20 @@ func newEmptyPriceRecord(poolId uint64, t time.Time, asset0 string, asset1 strin
 		Asset0Denom: asset0,
 		Asset1Denom: asset1,
 
-		P0LastSpotPrice:             sdk.ZeroDec(),
-		P1LastSpotPrice:             sdk.ZeroDec(),
-		P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
-		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
-		GeometricTwapAccumulator:    sdk.ZeroDec(),
+		P0LastSpotPrice:             osmomath.ZeroDec(),
+		P1LastSpotPrice:             osmomath.ZeroDec(),
+		P0ArithmeticTwapAccumulator: osmomath.ZeroDec(),
+		P1ArithmeticTwapAccumulator: osmomath.ZeroDec(),
+		GeometricTwapAccumulator:    osmomath.ZeroDec(),
 	}
 }
 
-func withPrice0Set(twapRecord types.TwapRecord, price0ToSet sdk.Dec) types.TwapRecord {
+func withPrice0Set(twapRecord types.TwapRecord, price0ToSet osmomath.Dec) types.TwapRecord {
 	twapRecord.P0LastSpotPrice = price0ToSet
 	return twapRecord
 }
 
-func withPrice1Set(twapRecord types.TwapRecord, price1ToSet sdk.Dec) types.TwapRecord {
+func withPrice1Set(twapRecord types.TwapRecord, price1ToSet osmomath.Dec) types.TwapRecord {
 	twapRecord.P1LastSpotPrice = price1ToSet
 	return twapRecord
 }
@@ -489,37 +490,37 @@ func withTime(twapRecord types.TwapRecord, time time.Time) types.TwapRecord {
 	return twapRecord
 }
 
-func newRecord(poolId uint64, t time.Time, sp0, accum0, accum1, geomAccum sdk.Dec) types.TwapRecord {
+func newRecord(poolId uint64, t time.Time, sp0, accum0, accum1, geomAccum osmomath.Dec) types.TwapRecord {
 	return types.TwapRecord{
 		PoolId:          poolId,
 		Asset0Denom:     defaultTwoAssetCoins[0].Denom,
 		Asset1Denom:     defaultTwoAssetCoins[1].Denom,
 		Time:            t,
 		P0LastSpotPrice: sp0,
-		P1LastSpotPrice: sdk.OneDec().Quo(sp0),
+		P1LastSpotPrice: osmomath.OneDec().Quo(sp0),
 		// make new copies
-		P0ArithmeticTwapAccumulator: accum0.Add(sdk.ZeroDec()),
-		P1ArithmeticTwapAccumulator: accum1.Add(sdk.ZeroDec()),
-		GeometricTwapAccumulator:    geomAccum.Add(sdk.ZeroDec()),
+		P0ArithmeticTwapAccumulator: accum0.Add(osmomath.ZeroDec()),
+		P1ArithmeticTwapAccumulator: accum1.Add(osmomath.ZeroDec()),
+		GeometricTwapAccumulator:    geomAccum.Add(osmomath.ZeroDec()),
 	}
 }
 
-// make an expected record for math tests, we adjust other values in the test runner.
-func newExpRecord(accum0, accum1, geomAccum sdk.Dec) types.TwapRecord {
+// make an expected record for math tests, wosmomath.Dect other values in the test runner.
+func newExpRecord(accum0, accum1, geomAccum osmomath.Dec) types.TwapRecord {
 	return types.TwapRecord{
 		Asset0Denom: defaultTwoAssetCoins[0].Denom,
 		Asset1Denom: defaultTwoAssetCoins[1].Denom,
 		// make new copies
-		P0ArithmeticTwapAccumulator: accum0.Add(sdk.ZeroDec()),
-		P1ArithmeticTwapAccumulator: accum1.Add(sdk.ZeroDec()),
-		GeometricTwapAccumulator:    geomAccum.Add(sdk.ZeroDec()),
+		P0ArithmeticTwapAccumulator: accum0.Add(osmomath.ZeroDec()),
+		P1ArithmeticTwapAccumulator: accum1.Add(osmomath.ZeroDec()),
+		GeometricTwapAccumulator:    geomAccum.Add(osmomath.ZeroDec()),
 	}
 }
 
-func newThreeAssetRecord(poolId uint64, t time.Time, sp0, accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC sdk.Dec) []types.TwapRecord {
+func newThreeAssetRecord(poolId uint64, t time.Time, sp0, accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC osmomath.Dec) []types.TwapRecord { //nolint:unparam // poolID always receives 2 but this could change later
 	spA := sp0
-	spB := sdk.OneDec().Quo(sp0)
-	spC := sp0.Mul(sdk.NewDec(2))
+	spB := osmomath.OneDec().Quo(sp0)
+	spC := sp0.Mul(osmomath.NewDec(2))
 	twapAB := types.TwapRecord{
 		PoolId:          poolId,
 		Asset0Denom:     defaultThreeAssetCoins[0].Denom,
@@ -528,65 +529,65 @@ func newThreeAssetRecord(poolId uint64, t time.Time, sp0, accumA, accumB, accumC
 		P0LastSpotPrice: spA,
 		P1LastSpotPrice: spB,
 		// make new copies
-		P0ArithmeticTwapAccumulator: accumA.Add(sdk.ZeroDec()),
-		P1ArithmeticTwapAccumulator: accumB.Add(sdk.ZeroDec()),
-		GeometricTwapAccumulator:    geomAccumAB.Add(sdk.ZeroDec()),
+		P0ArithmeticTwapAccumulator: accumA.Add(osmomath.ZeroDec()),
+		P1ArithmeticTwapAccumulator: accumB.Add(osmomath.ZeroDec()),
+		GeometricTwapAccumulator:    geomAccumAB.Add(osmomath.ZeroDec()),
 	}
 	twapAC := twapAB
 	twapAC.Asset1Denom = denom2
 	twapAC.P1LastSpotPrice = spC
 	twapAC.P1ArithmeticTwapAccumulator = accumC
-	twapAC.GeometricTwapAccumulator = geomAccumAC.Add(sdk.ZeroDec())
+	twapAC.GeometricTwapAccumulator = geomAccumAC.Add(osmomath.ZeroDec())
 	twapBC := twapAC
 	twapBC.Asset0Denom = denom1
 	twapBC.P0LastSpotPrice = spB
 	twapBC.P0ArithmeticTwapAccumulator = accumB
-	twapBC.GeometricTwapAccumulator = geomAccumBC.Add(sdk.ZeroDec())
+	twapBC.GeometricTwapAccumulator = geomAccumBC.Add(osmomath.ZeroDec())
 	return []types.TwapRecord{twapAB, twapAC, twapBC}
 }
 
-// make an expected record for math tests, we adjust other values in the test runner.
-func newThreeAssetExpRecord(poolId uint64, accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC sdk.Dec) []types.TwapRecord {
+// make an expected record for math tests, we adjust other values in the test runner.osmomath.Dec
+func newThreeAssetExpRecord(poolId uint64, accumA, accumB, accumC, geomAccumAB, geomAccumAC, geomAccumBC osmomath.Dec) []types.TwapRecord {
 	twapAB := types.TwapRecord{
 		PoolId:      poolId,
 		Asset0Denom: defaultThreeAssetCoins[0].Denom,
 		Asset1Denom: defaultThreeAssetCoins[1].Denom,
 		// make new copies
-		P0ArithmeticTwapAccumulator: accumA.Add(sdk.ZeroDec()),
-		P1ArithmeticTwapAccumulator: accumB.Add(sdk.ZeroDec()),
-		GeometricTwapAccumulator:    geomAccumAB.Add(sdk.ZeroDec()),
+		P0ArithmeticTwapAccumulator: accumA.Add(osmomath.ZeroDec()),
+		P1ArithmeticTwapAccumulator: accumB.Add(osmomath.ZeroDec()),
+		GeometricTwapAccumulator:    geomAccumAB.Add(osmomath.ZeroDec()),
 	}
 	twapAC := twapAB
 	twapAC.Asset1Denom = denom2
 	twapAC.P1ArithmeticTwapAccumulator = accumC
-	twapAC.GeometricTwapAccumulator = geomAccumAC.Add(sdk.ZeroDec())
+	twapAC.GeometricTwapAccumulator = geomAccumAC.Add(osmomath.ZeroDec())
 	twapBC := twapAC
 	twapBC.Asset0Denom = denom1
 	twapBC.P0ArithmeticTwapAccumulator = accumB
-	twapBC.GeometricTwapAccumulator = geomAccumBC.Add(sdk.ZeroDec())
+	twapBC.GeometricTwapAccumulator = geomAccumBC.Add(osmomath.ZeroDec())
 	return []types.TwapRecord{twapAB, twapAC, twapBC}
 }
 
-func newOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) types.TwapRecord {
+func newOneSidedRecord(time time.Time, accum osmomath.Dec, useP0 bool) types.TwapRecord {
 	record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
 	if useP0 {
 		record.P0ArithmeticTwapAccumulator = accum
 	} else {
 		record.P1ArithmeticTwapAccumulator = accum
 	}
-	record.P0LastSpotPrice = sdk.ZeroDec()
-	record.P1LastSpotPrice = sdk.OneDec()
+	record.P0LastSpotPrice = osmomath.ZeroDec()
+	record.P1LastSpotPrice = osmomath.OneDec()
 	return record
 }
 
-func newOneSidedGeometricRecord(time time.Time, accum sdk.Dec) types.TwapRecord {
+func newOneSidedGeometricRecord(time time.Time, accum osmomath.Dec) types.TwapRecord {
 	record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
 	record.GeometricTwapAccumulator = accum
-	record.P0LastSpotPrice = sdk.NewDec(10)
+	record.P0LastSpotPrice = osmomath.NewDec(10)
 	return record
 }
 
-func newThreeAssetOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) []types.TwapRecord {
+func newThreeAssetOneSidedRecord(time time.Time, accum osmomath.Dec, useP0 bool) []types.TwapRecord { //nolint:unparam // useP0 always true, but this could change later.
 	record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
 	if useP0 {
 		record.P0ArithmeticTwapAccumulator = accum
@@ -594,8 +595,8 @@ func newThreeAssetOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) []ty
 		record.P1ArithmeticTwapAccumulator = accum
 	}
 	record.GeometricTwapAccumulator = accum
-	record.P0LastSpotPrice = sdk.ZeroDec()
-	record.P1LastSpotPrice = sdk.OneDec()
+	record.P0LastSpotPrice = osmomath.ZeroDec()
+	record.P1LastSpotPrice = osmomath.OneDec()
 	records := []types.TwapRecord{record, record, record}
 	records[1].Asset1Denom = denom2
 	records[2].Asset0Denom = denom1
@@ -603,14 +604,14 @@ func newThreeAssetOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) []ty
 	return records
 }
 
-func recordWithUpdatedAccum(record types.TwapRecord, accum0 sdk.Dec, accum1, geomAccum sdk.Dec) types.TwapRecord {
+func recordWithUpdatedAccum(record types.TwapRecord, accum0 osmomath.Dec, accum1, geomAccum osmomath.Dec) types.TwapRecord {
 	record.P0ArithmeticTwapAccumulator = accum0
 	record.P1ArithmeticTwapAccumulator = accum1
 	record.GeometricTwapAccumulator = geomAccum
 	return record
 }
 
-func recordWithUpdatedSpotPrice(record types.TwapRecord, sp0 sdk.Dec, sp1 sdk.Dec) types.TwapRecord {
+func recordWithUpdatedSpotPrice(record types.TwapRecord, sp0 osmomath.Dec, sp1 osmomath.Dec) types.TwapRecord {
 	record.P0LastSpotPrice = sp0
 	record.P1LastSpotPrice = sp1
 	return record

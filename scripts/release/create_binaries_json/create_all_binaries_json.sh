@@ -13,13 +13,15 @@ tags=(
     "v15.2.0" 
     "v16.1.1"
     "v17.0.0"
+    "v18.0.0"
+    "v19.1.0"
 )
 
-echo "# Cosmovisor binaries"
+echo "## Upgrade binaries"
 
 for tag in ${tags[@]}; do
     echo
-    echo "## ${tag}"
+    echo "### ${tag}"
     echo
     echo '```json'
     python create_binaries_json.py --tag $tag

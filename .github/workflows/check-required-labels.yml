@@ -18,24 +18,32 @@ on:
       - unlabeled
       - synchronize
     branches:
-      - 'main'
+      - "main"
 
 jobs:
   check-required-labels:
     runs-on: ubuntu-latest
     name: check-required-labels
     steps:
+<<<<<<< HEAD:.github/workflows/check-required-labels.yml
       -
         name: Check out repository
         uses: actions/checkout@v3
       - 
         name: Get changed files
+=======
+      - uses: actions/checkout@v4
+
+      - name: Get changed files
+>>>>>>> main:.github/workflows/required_labels.yml
         id: changed-files
-        uses: tj-actions/changed-files@v37.6.1
+        uses: tj-actions/changed-files@v39.2.0
         with:
           files_ignore: |
             **/*.md
             **/*_test.go
+            tests/**
+            **/*.py
             .github/workflows/*.yml
       - 
         name: Check required labels

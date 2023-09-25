@@ -5,7 +5,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 // swapStrategy defines the interface for computing a swap.
@@ -16,7 +16,7 @@ type SwapStrategy interface {
 	// GetSqrtTargetPrice returns the target square root price given the next tick square root price
 	// upon comparing it to sqrt price limit.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.Dec
+	GetSqrtTargetPrice(nextTickSqrtPrice osmomath.BigDec) osmomath.BigDec
 	// ComputeSwapWithinBucketOutGivenIn calculates the next sqrt price, the amount of token in consumed, the amount out to return to the user, and total spread reward charge on token in.
 	// This assumes swapping over a single bucket where the liqudiity stays constant until we cross the next initialized tick of the next bucket.
 	// Parameters:
@@ -34,7 +34,7 @@ type SwapStrategy interface {
 	//   * amountOutComputed is the amount of token out computed. It is the amount of token out to return to the user.
 	//   * spreadRewardChargeTotal is the total spread reward charge. The spread reward is charged on the amount of token in.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent osmomath.BigDec, sqrtPriceTarget, liquidity, amountRemainingIn sdk.Dec) (sqrtPriceNext osmomath.BigDec, amountInConsumed, amountOutComputed, spreadRewardChargeTotal sdk.Dec)
+	ComputeSwapWithinBucketOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget osmomath.BigDec, liquidity, amountRemainingIn osmomath.Dec) (sqrtPriceNext osmomath.BigDec, amountInConsumed, amountOutComputed, spreadRewardChargeTotal osmomath.Dec)
 	// ComputeSwapWithinBucketInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total spread reward charge on token in.
 	// This assumes swapping over a single bucket where the liqudiity stays constant until we cross the next initialized tick of the next bucket.
 	// Parameters:
@@ -52,7 +52,7 @@ type SwapStrategy interface {
 	//   * amountInComputed is the amount of token in computed. It is the amount of token in to charge to the user for the desired amount out.
 	//   * spreadRewardChargeTotal is the total spread reward charge. The spread reward is charged on the amount of token in.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent osmomath.BigDec, sqrtPriceTarget, liquidity, amountRemainingOut sdk.Dec) (sqrtPriceNext osmomath.BigDec, amountOutConsumed, amountInComputed, spreadRewardChargeTotal sdk.Dec)
+	ComputeSwapWithinBucketInGivenOut(sqrtPriceCurrent, sqrtPriceTarget osmomath.BigDec, liquidity, amountRemainingOut osmomath.Dec) (sqrtPriceNext osmomath.BigDec, amountOutConsumed, amountInComputed, spreadRewardChargeTotal osmomath.Dec)
 	// InitializeNextTickIterator returns iterator that seeks to the next tick from the given tickIndex.
 	// If nex tick relative to tickINdex does not exist in the store, it will return an invalid iterator.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
@@ -65,7 +65,7 @@ type SwapStrategy interface {
 	// going up, and subtracted when the price crosses the upper tick
 	// going up. As a result, the sign depends on the direction we are moving.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	SetLiquidityDeltaSign(liquidityDelta sdk.Dec) sdk.Dec
+	SetLiquidityDeltaSign(liquidityDelta osmomath.Dec) osmomath.Dec
 	// UpdateTickAfterCrossing updates the next tick after crossing
 	// to satisfy our "position in-range" invariant which is:
 	// lower tick <= current tick < upper tick
@@ -82,19 +82,19 @@ type SwapStrategy interface {
 	// relative to the current square root price on one side of the bound
 	// and the min/max sqrt price on the other side.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	ValidateSqrtPrice(sqrtPriceLimit sdk.Dec, currentSqrtPrice osmomath.BigDec) error
+	ValidateSqrtPrice(sqrtPriceLimit osmomath.BigDec, currentSqrtPrice osmomath.BigDec) error
 
 	ZeroForOne() bool
 }
 
 var (
-	oneBigDec = osmomath.OneDec()
+	oneBigDec = osmomath.OneBigDec()
 )
 
 // New returns a swap strategy based on the provided zeroForOne parameter
 // with sqrtPriceLimit for the maximum square root price until which to perform
 // the swap and the stor key of the module that stores swap data.
-func New(zeroForOne bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, spreadFactor sdk.Dec) SwapStrategy {
+func New(zeroForOne bool, sqrtPriceLimit osmomath.BigDec, storeKey sdk.StoreKey, spreadFactor osmomath.Dec) SwapStrategy {
 	if zeroForOne {
 		return &zeroForOneStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, spreadFactor: spreadFactor}
 	}
@@ -104,20 +104,55 @@ func New(zeroForOne bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, spreadF
 // GetPriceLimit returns the price limit based on which token is being swapped in.
 // If zero in for one out, the price is decreasing. Therefore, min spot price is the limit.
 // If one in for zero out, the price is increasing. Therefore, max spot price is the limit.
-func GetPriceLimit(zeroForOne bool) sdk.Dec {
+func GetPriceLimit(zeroForOne bool) osmomath.BigDec {
 	if zeroForOne {
-		return types.MinSpotPrice
+		return types.MinSpotPriceBigDec
 	}
-	return types.MaxSpotPrice
+	return types.MaxSpotPriceBigDec
 }
 
-func GetSqrtPriceLimit(priceLimit sdk.Dec, zeroForOne bool) (sdk.Dec, error) {
+// GetSqrtPriceLimit returns sqrt price limit from price limit and swap strategy.
+// If price limit is zero and strategy is zero for one, min sqrt price is returned.
+// If price limit is zero and strategy is one for zero, max sqrt price is returned.
+// If price limit is greater than MaxSpotPrice, an error is returned.
+// Otherwise, if price limit is less that MinSpotPrice, a big decimal sqrt function
+// is used to get the sqrt price limit. Otherwise, a decimal sqrt function is used.
+// The sqrt function choice strategy applies to both zero for one and one for zero.
+// Such a choice is made to keep state-compatibility with the original at-launch
+// price range.
+func GetSqrtPriceLimit(priceLimit osmomath.BigDec, zeroForOne bool) (osmomath.BigDec, error) {
 	if priceLimit.IsZero() {
 		if zeroForOne {
-			return types.MinSqrtPrice, nil
+			return types.MinSqrtPriceBigDec, nil
 		}
-		return types.MaxSqrtPrice, nil
+		return types.MaxSqrtPriceBigDec, nil
 	}
 
-	return osmomath.MonotonicSqrt(priceLimit)
+	if priceLimit.LT(types.MinSpotPriceV2) || priceLimit.GT(types.MaxSpotPriceBigDec) {
+		return osmomath.BigDec{}, types.PriceBoundError{ProvidedPrice: priceLimit, MinSpotPrice: types.MinSpotPriceV2, MaxSpotPrice: types.MaxSpotPrice}
+	}
+
+	// To keep state-compatibility with the original at-launch price range
+	// we utilize the same sqrt price function.
+	if priceLimit.GTE(types.MinSpotPriceBigDec) {
+		// Truncation is fine since previous Osmosis version only supported
+		// 18 decimal price ranges.
+		sqrtPriceLimit, err := osmomath.MonotonicSqrt(priceLimit.Dec())
+		if err != nil {
+			return osmomath.BigDec{}, err
+		}
+		if err != nil {
+			return osmomath.BigDec{}, err
+		}
+		return osmomath.BigDecFromDec(sqrtPriceLimit), nil
+	}
+
+	// On the newly extended lower price range, utilize the 36 decimal
+	// sqrt.
+	sqrtPriceLimit, err := osmomath.MonotonicSqrtBigDec(priceLimit)
+	if err != nil {
+		return osmomath.BigDec{}, err
+	}
+
+	return sqrtPriceLimit, nil
 }

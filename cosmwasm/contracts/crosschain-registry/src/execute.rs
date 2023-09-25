@@ -1,11 +1,12 @@
 use crate::helpers::*;
 use crate::state::{
-    ChainPFM, CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_PFM_MAP, CHAIN_TO_BECH32_PREFIX_MAP,
-    CHAIN_TO_BECH32_PREFIX_REVERSE_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
-    CONTRACT_ALIAS_MAP, DENOM_ALIAS_MAP, DENOM_ALIAS_REVERSE_MAP, GLOBAL_ADMIN_MAP,
+    ChainPFM, Config, CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_PFM_MAP,
+    CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_BECH32_PREFIX_REVERSE_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP,
+    CHANNEL_ON_CHAIN_CHAIN_MAP, CONFIG, CONTRACT_ALIAS_MAP, DENOM_ALIAS_MAP,
+    DENOM_ALIAS_REVERSE_MAP, GLOBAL_ADMIN_MAP,
 };
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{Addr, BankMsg, DepsMut, Env, MessageInfo, Response};
 use cw_storage_plus::Map;
 use registry::msg::Callback;
 use registry::{Registry, RegistryError};
@@ -49,6 +50,30 @@ pub struct DenomAliasInput {
     pub full_denom_path: String,
 }
 
+// Transfer ownership of this contract
+pub fn transfer_ownership(
+    deps: DepsMut,
+    sender: Addr,
+    new_owner: String,
+) -> Result<Response, ContractError> {
+    // only owner can transfer
+    if !is_owner(deps.as_ref(), &sender) {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let new_owner = deps.api.addr_validate(&new_owner)?;
+
+    CONFIG.update(
+        deps.storage,
+        |mut config| -> Result<Config, ContractError> {
+            config.owner = new_owner;
+            Ok(config)
+        },
+    )?;
+
+    Ok(Response::new().add_attribute("action", "transfer_ownership"))
+}
+
 pub fn propose_pfm(
     ctx: (DepsMut, Env, MessageInfo),
     chain: String,
@@ -58,8 +83,10 @@ pub fn propose_pfm(
     // enforce lowercase
     let chain = chain.to_lowercase();
 
+    let own_addr = env.contract.address;
+
     // validation
-    let registry = Registry::default(deps.as_ref());
+    let registry = Registry::new(deps.as_ref(), own_addr.to_string())?;
     let coin = cw_utils::one_coin(&info)?;
     let native_chain = registry.get_native_chain(&coin.denom)?;
 
@@ -83,7 +110,7 @@ pub fn propose_pfm(
             // If sender is the contract governor, then they are authorized to do do this to any chain
             // Otherwise, they must be authorized to do manage the chain they are attempting to modify
             let user_permission =
-                check_is_authorized(deps.as_ref(), info.sender, Some(chain.clone()))?;
+                check_is_authorized(deps.as_ref(), info.sender.clone(), Some(chain.clone()))?;
             check_action_permission(FullOperation::Change, user_permission)?;
         } else {
             return Err(ContractError::PFMValidationAlreadyInProgress {
@@ -93,12 +120,10 @@ pub fn propose_pfm(
     };
 
     // Store the chain to validate
-    CHAIN_PFM_MAP.save(deps.storage, &chain, &ChainPFM::default())?;
-
-    let own_addr = env.contract.address;
+    CHAIN_PFM_MAP.save(deps.storage, &chain, &ChainPFM::new(info.sender))?;
 
     // redeclaring (shadowing) registry to avoid issues with the borrow checker
-    let registry = Registry::default(deps.as_ref());
+    let registry = Registry::new(deps.as_ref(), own_addr.to_string())?;
     let ibc_transfer = registry.unwrap_coin_into(
         coin,
         own_addr.to_string(),
@@ -120,7 +145,7 @@ pub fn validate_pfm(
     ctx: (DepsMut, Env, MessageInfo),
     chain: String,
 ) -> Result<Response, ContractError> {
-    let (deps, _env, _info) = ctx;
+    let (deps, _env, info) = ctx;
 
     let chain = chain.to_lowercase();
 
@@ -146,11 +171,23 @@ pub fn validate_pfm(
         }
     })?;
 
+    let initiator = match chain_pfm.initiator {
+        Some(initiator) => initiator,
+        None => return Err(ContractError::PFMNoInitiator {}),
+    };
+
+    let coin = cw_utils::one_coin(&info)?;
+    let bank_msg = BankMsg::Send {
+        to_address: initiator.to_string(),
+        amount: vec![coin],
+    };
+
     chain_pfm.validated = true;
+    chain_pfm.initiator = None;
 
     CHAIN_PFM_MAP.save(deps.storage, &chain, &chain_pfm)?;
 
-    Ok(Response::default())
+    Ok(Response::default().add_message(bank_msg))
 }
 
 // Set, change, or remove a contract alias to an address
@@ -1845,5 +1882,41 @@ mod tests {
 
         query_denom_path_for_alias(deps.as_ref(), "newalias1").unwrap_err();
         query_alias_for_denom_path(deps.as_ref(), path1).unwrap_err();
+    }
+
+    #[test]
+    fn transfer_ownership() {
+        let mut deps = mock_dependencies();
+
+        let owner = initialize_contract(deps.as_mut());
+        let owner_info = mock_info(owner.as_str(), &vec![] as &Vec<cosmwasm_std::Coin>);
+
+        let new_owner = "new_owner".to_string();
+        // The owner can transfer ownership
+        let msg = ExecuteMsg::TransferOwnership {
+            new_owner: new_owner.clone(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), owner_info, msg).unwrap();
+
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(new_owner, config.owner);
+    }
+
+    #[test]
+    fn transfer_ownership_unauthorized() {
+        let mut deps = mock_dependencies();
+
+        let owner = initialize_contract(deps.as_mut());
+
+        let other_info = mock_info("other_sender", &vec![] as &Vec<cosmwasm_std::Coin>);
+
+        // An unauthorized user cannot transfer ownership
+        let msg = ExecuteMsg::TransferOwnership {
+            new_owner: "new_owner".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), other_info, msg).unwrap_err();
+
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(owner, config.owner);
     }
 }

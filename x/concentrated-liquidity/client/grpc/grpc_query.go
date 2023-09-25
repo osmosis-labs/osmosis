@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
 )
 
 type Querier struct {
@@ -88,6 +88,16 @@ func (q Querier) Params(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.Params(ctx, *req)
+}
+
+func (q Querier) NumNextInitializedTicks(grpcCtx context.Context,
+	req *queryproto.NumNextInitializedTicksRequest,
+) (*queryproto.NumNextInitializedTicksResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.NumNextInitializedTicks(ctx, *req)
 }
 
 func (q Querier) LiquidityPerTickRange(grpcCtx context.Context,

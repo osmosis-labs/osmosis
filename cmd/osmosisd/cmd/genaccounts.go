@@ -255,7 +255,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 // 			}
 
 // 			for _, acc := range snapshot.Accounts {
-// 				if !acc.OsmoBalance.Equal(sdk.ZeroInt()) {
+// 				if !acc.OsmoBalance.Equal(osmomath.ZeroInt()) {
 // 					osmoAddr, err := CosmosToOsmoAddress(acc.AtomAddress)
 // 					if err != nil {
 // 						return err
@@ -362,21 +362,21 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 // 				}
 
 // 				if val, ok := nonAirdropAccs[address]; ok {
-// 					nonAirdropAccs[address] = val.Add(sdk.NewCoin("uion", sdk.NewInt(amt).MulRaw(1_000_000)))
+// 					nonAirdropAccs[address] = val.Add(sdk.NewCoin("uion", osmomath.NewInt(amt).MulRaw(1_000_000)))
 // 				} else {
-// 					nonAirdropAccs[address] = sdk.NewCoins(sdk.NewCoin("uion", sdk.NewInt(amt).MulRaw(1_000_000)))
+// 					nonAirdropAccs[address] = sdk.NewCoins(sdk.NewCoin("uion", osmomath.NewInt(amt).MulRaw(1_000_000)))
 // 				}
 // 			}
 
 // 			// figure out normalizationFactor to normalize snapshot balances to desired airdrop supply
-// 			normalizationFactor := genesisParams.AirdropSupply.ToDec().QuoInt(snapshot.TotalOsmosAirdropAmount)
+// 			normalizationFactor := genesisParams.AirdropSupply.ToLegacyDec().QuoInt(snapshot.TotalOsmosAirdropAmount)
 // 			fmt.Printf("normalization factor: %s\n", normalizationFactor)
 
 // 			bankGenState := banktypes.GetGenesisStateFromAppState(cdc, appState)
 
 // 			liquidBalances := bankGenState.Balances
 // 			claimRecords := []claimtypes.ClaimRecord{}
-// 			claimModuleAccountBalance := sdk.NewInt(0)
+// 			claimModuleAccountBalance := osmomath.NewInt(0)
 
 // 			// for each account in the snapshot
 // 			for _, acc := range snapshot.Accounts {
@@ -392,11 +392,11 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 // 				}
 
 // 				// get normalized osmo balance for account
-// 				normalizedOsmoBalance := acc.OsmoBalance.ToDec().Mul(normalizationFactor)
+// 				normalizedOsmoBalance := acc.OsmoBalance.ToLegacyDec().Mul(normalizationFactor)
 
 // 				// initial liquid amounts
 // 				// We consistently round down to the nearest uosmo
-// 				liquidAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
+// 				liquidAmount := normalizedOsmoBalance.Mul(osmomath.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
 // 				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, liquidAmount))
 
 // 				if coins, ok := nonAirdropAccs[address]; ok {
@@ -410,7 +410,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 // 				})
 
 // 				// claimable balances
-// 				claimableAmount := normalizedOsmoBalance.Mul(sdk.MustNewDecFromStr("0.8")).TruncateInt()
+// 				claimableAmount := normalizedOsmoBalance.Mul(osmomath.MustNewDecFromStr("0.8")).TruncateInt()
 
 // 				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
 // 					Address:                address,

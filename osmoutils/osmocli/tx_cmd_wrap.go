@@ -36,6 +36,18 @@ type TxCliDesc struct {
 	CustomFieldParsers map[string]CustomFieldParserFn
 }
 
+var _ Descriptor = &TxCliDesc{}
+
+// Implement Descriptor interface
+func (desc TxCliDesc) GetCustomFlagOverrides() map[string]string {
+	return desc.CustomFlagOverrides
+}
+
+// Implement Descriptor interface
+func (desc *TxCliDesc) AttachToUse(str string) {
+	desc.Use += str
+}
+
 func AddTxCmd[M sdk.Msg](cmd *cobra.Command, f func() (*TxCliDesc, M)) {
 	desc, _ := f()
 	subCmd := BuildTxCli[M](desc)
@@ -60,6 +72,8 @@ func BuildTxCli[M sdk.Msg](desc *TxCliDesc) *cobra.Command {
 			return ParseFieldsFromFlagsAndArgs[M](flagAdvice, flags, args)
 		}
 	}
+
+	attachFieldsToUse[M](desc)
 	return desc.BuildCommandCustomFn()
 }
 

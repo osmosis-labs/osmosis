@@ -12,8 +12,8 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v17/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v17/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
 )
 
 type NodeConfig struct {
@@ -120,6 +120,24 @@ func (n *NodeConfig) Stop() error {
 	}
 	n.t.Logf("stopped node container: %s", n.Name)
 	return nil
+}
+
+func (n *NodeConfig) WaitForNumHeights(numBlocks int) {
+	targetHeight, err := n.QueryCurrentHeight()
+	require.NoError(n.t, err)
+	targetHeight += int64(numBlocks)
+	// Ensure the nodes are making progress.
+	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
+		curHeight := syncInfo.LatestBlockHeight
+
+		if curHeight < targetHeight {
+			n.t.Logf("current block height is %d, waiting to reach: %d", curHeight, targetHeight)
+			return false
+		}
+
+		return !syncInfo.CatchingUp
+	}
+	n.WaitUntil(doneCondition)
 }
 
 // WaitUntil waits until node reaches doneCondition. Return nil

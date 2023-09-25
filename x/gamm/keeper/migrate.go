@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v17/x/gamm/types/migration"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
+	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -124,8 +125,8 @@ func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context
 	// delete all existing migration records
 	// this is done for both replace and update migration calls because, regardless of whether we are replacing all or updating a few,
 	// the resulting migrationInfo that gets passed into this function is the complete set of migration records.
-	osmoutils.DeleteAllKeysFromPrefix(ctx, store, types.KeyPrefixMigrationInfoBalancerPool)
-	osmoutils.DeleteAllKeysFromPrefix(ctx, store, types.KeyPrefixMigrationInfoCLPool)
+	osmoutils.DeleteAllKeysFromPrefix(store, types.KeyPrefixMigrationInfoBalancerPool)
+	osmoutils.DeleteAllKeysFromPrefix(store, types.KeyPrefixMigrationInfoCLPool)
 
 	for _, balancerToCLPoolLink := range migrationInfo.BalancerToConcentratedPoolLinks {
 		balancerToClPoolKey := types.GetKeyPrefixMigrationInfoBalancerPool(balancerToCLPoolLink.BalancerPoolId)
@@ -367,7 +368,7 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []gammmigration.
 // Returns error if desired denom 0 is not in associated with the CFMM pool.
 // Returns error if CFMM pool does not have exactly 2 denoms.
 // Returns error if pool creation fails.
-func (k Keeper) CreateConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64, desiredDenom0 string, spreadFactor sdk.Dec, tickSpacing uint64) (poolmanagertypes.PoolI, error) {
+func (k Keeper) CreateConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64, desiredDenom0 string, spreadFactor osmomath.Dec, tickSpacing uint64) (poolmanagertypes.PoolI, error) {
 	cfmmPool, err := k.GetCFMMPool(ctx, cfmmPoolIdToLinkWith)
 	if err != nil {
 		return nil, err
@@ -409,22 +410,18 @@ func (k Keeper) CreateConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLink
 // This method calls OverwriteMigrationRecords, which creates a migration link between the CFMM/CL pool as well as migrates the
 // gauges and distribution records from the CFMM pool to the new CL pool.
 // Returns error if fails to create concentrated liquidity pool from CFMM pool.
-func (k Keeper) CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, cfmmPoolId uint64, desiredDenom0 string, spreadFactor sdk.Dec, tickSpacing uint64) (poolmanagertypes.PoolI, error) {
+func (k Keeper) CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, cfmmPoolId uint64, desiredDenom0 string, spreadFactor osmomath.Dec, tickSpacing uint64) (poolmanagertypes.PoolI, error) {
 	concentratedPool, err := k.CreateConcentratedPoolFromCFMM(ctx, cfmmPoolId, desiredDenom0, spreadFactor, tickSpacing)
 	if err != nil {
 		return nil, err
 	}
-
 	// Set the migration link in x/gamm.
 	// This will also migrate the CFMM distribution records to point to the new CL pool.
-	err = k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, gammmigration.MigrationRecords{
-		BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
-			{
-				BalancerPoolId: cfmmPoolId,
-				ClPoolId:       concentratedPool.GetId(),
-			},
-		},
-	})
+	err = k.UpdateMigrationRecords(ctx, []gammmigration.BalancerToConcentratedPoolLink{
+		{
+			BalancerPoolId: cfmmPoolId,
+			ClPoolId:       concentratedPool.GetId(),
+		}})
 	if err != nil {
 		return nil, err
 	}

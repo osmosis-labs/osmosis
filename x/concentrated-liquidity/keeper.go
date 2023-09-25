@@ -8,7 +8,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 type Keeper struct {
@@ -57,6 +57,11 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams sets the concentrated-liquidity module's parameters with the provided parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
+}
+
+// SetParam sets a specific concentrated-liquidity module's parameter with the provided parameter.
+func (k Keeper) SetParam(ctx sdk.Context, key []byte, value interface{}) {
+	k.paramSpace.Set(ctx, key, value)
 }
 
 // Set the poolmanager keeper.
@@ -118,11 +123,24 @@ func (k *Keeper) SetListeners(listeners types.ConcentratedLiquidityListeners) *K
 	return k
 }
 
-// ValidatePermissionlessPoolCreationEnabled returns nil if permissionless pool creation in the module is enabled.
-// Otherwise, returns an error.
-func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error {
-	if !k.GetParams(ctx).IsPermissionlessPoolCreationEnabled {
-		return types.ErrPermissionlessPoolCreationDisabled
-	}
-	return nil
+// IsPermissionlessPoolCreationEnabled returns true if permissionless pool creation in the module is enabled.
+// Otherwise, returns false
+func (k Keeper) IsPermissionlessPoolCreationEnabled(ctx sdk.Context) bool {
+	return k.GetParams(ctx).IsPermissionlessPoolCreationEnabled
+}
+
+// GetAuthorizedQuoteDenoms gets the authorized quote denoms from the poolmanager keeper.
+// This method is meant to be used for getting access to x/poolmanager params
+// for use in sim_msgs.go for the CL module.
+func (k Keeper) GetAuthorizedQuoteDenoms(ctx sdk.Context) []string {
+	return k.poolmanagerKeeper.GetParams(ctx).AuthorizedQuoteDenoms
+}
+
+// SetAuthorizedQuoteDenoms sets the authorized quote denoms in the poolmanager keeper.
+// This method is meant to be used for getting access to x/poolmanager params
+// for use in sim_msgs.go for the CL module.
+func (k Keeper) SetAuthorizedQuoteDenoms(ctx sdk.Context, authorizedQuoteDenoms []string) {
+	params := k.poolmanagerKeeper.GetParams(ctx)
+	params.AuthorizedQuoteDenoms = authorizedQuoteDenoms
+	k.poolmanagerKeeper.SetParams(ctx, params)
 }

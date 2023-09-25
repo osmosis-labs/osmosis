@@ -6,11 +6,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v17/x/twap"
-	"github.com/osmosis-labs/osmosis/v17/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v19/x/twap"
+	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 var defaultPoolId uint64 = 1
@@ -197,14 +198,15 @@ func (s *TestSuite) TestEndBlock() {
 					s.Require().Equal(twapAfterPoolCreation.Time, baseTime)
 
 					// accumulators should not have increased, as they are going through the first epoch
-					s.Require().Equal(sdk.ZeroDec(), twapAfterBlock1.P0ArithmeticTwapAccumulator)
-					s.Require().Equal(sdk.ZeroDec(), twapAfterBlock1.P1ArithmeticTwapAccumulator)
+					s.Require().Equal(osmomath.ZeroDec(), twapAfterBlock1.P0ArithmeticTwapAccumulator)
+					s.Require().Equal(osmomath.ZeroDec(), twapAfterBlock1.P1ArithmeticTwapAccumulator)
 				}
 
 				// check if spot price has been correctly updated in twap record
 				asset0sp, err := s.App.PoolManagerKeeper.RouteCalculateSpotPrice(s.Ctx, poolId, twapAfterBlock1.Asset0Denom, twapAfterBlock1.Asset1Denom)
 				s.Require().NoError(err)
-				s.Require().Equal(asset0sp, twapAfterBlock1.P0LastSpotPrice)
+				// Note: twap only supports decimal precision of 18. Thus, truncation.
+				s.Require().Equal(asset0sp.Dec(), twapAfterBlock1.P0LastSpotPrice)
 
 				// run basic swap on block two for price change
 				if tc.block2Swap {
@@ -232,7 +234,8 @@ func (s *TestSuite) TestEndBlock() {
 				// check if spot price has been correctly updated in twap record
 				asset0sp, err = s.App.PoolManagerKeeper.RouteCalculateSpotPrice(s.Ctx, poolId, twapAfterBlock1.Asset0Denom, twapAfterBlock2.Asset1Denom)
 				s.Require().NoError(err)
-				s.Require().Equal(asset0sp, twapAfterBlock2.P0LastSpotPrice)
+				// Note: twap only supports decimal precision of 18. Thus, truncation.
+				s.Require().Equal(asset0sp.Dec(), twapAfterBlock2.P0LastSpotPrice)
 			})
 		}
 	}

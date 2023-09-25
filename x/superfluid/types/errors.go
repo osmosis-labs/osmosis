@@ -6,9 +6,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	cltypes "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 // x/superfluid module errors.
@@ -119,8 +118,8 @@ func (e UnexpectedDenomError) Error() string {
 }
 
 type TokenConvertedLessThenDesiredStakeError struct {
-	ActualTotalAmtToStake   sdk.Int
-	ExpectedTotalAmtToStake sdk.Int
+	ActualTotalAmtToStake   osmomath.Int
+	ExpectedTotalAmtToStake osmomath.Int
 }
 
 func (e TokenConvertedLessThenDesiredStakeError) Error() string {

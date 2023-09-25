@@ -7,10 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	db "github.com/tendermint/tm-db"
 
-	simexec "github.com/osmosis-labs/osmosis/v17/simulation/executor"
+	simexec "github.com/osmosis-labs/osmosis/v19/simulation/executor"
 
-	"github.com/osmosis-labs/osmosis/v17/app"
-	"github.com/osmosis-labs/osmosis/v17/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v19/app"
+	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
 )
 
 func OsmosisAppCreator(logger log.Logger, db db.DB) simtypes.AppCreator {

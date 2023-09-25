@@ -55,4 +55,4 @@ serde = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
-osmosis-testing = { workspace = true }
+osmosis-test-tube = { workspace = true }

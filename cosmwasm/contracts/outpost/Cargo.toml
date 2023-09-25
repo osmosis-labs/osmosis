@@ -50,6 +50,7 @@ thiserror = { workspace = true }
 serde-json-wasm = { workspace = true }
 bech32 = { workspace = true }
 cw-utils = { workspace = true }
+osmosis-std = { workspace = true }
 
 swaprouter = { path = "../swaprouter", features = ["imported"]}
 crosschain-swaps = { path = "../crosschain-swaps", features = ["imported"]}

@@ -9,9 +9,9 @@ import (
 
 	ibcchanneltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 
-	"github.com/osmosis-labs/osmosis/v17/app"
-	v8 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v9"
+	"github.com/osmosis-labs/osmosis/v19/app"
+	v8 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v9"
 )
 
 func noOpAnteDecorator() sdk.AnteHandler {

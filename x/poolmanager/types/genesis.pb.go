@@ -4,6 +4,7 @@
 package types
 
 import (
+	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/codec/types"
@@ -31,6 +32,17 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Params holds parameters for the poolmanager module
 type Params struct {
 	PoolCreationFee github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=pool_creation_fee,json=poolCreationFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"pool_creation_fee" yaml:"pool_creation_fee"`
+	// taker_fee_params is the container of taker fee parameters.
+	TakerFeeParams TakerFeeParams `protobuf:"bytes,2,opt,name=taker_fee_params,json=takerFeeParams,proto3" json:"taker_fee_params" yaml:"taker_fee_params"`
+	// authorized_quote_denoms is a list of quote denoms that can be used as
+	// token1 when creating a concentrated pool. We limit the quote assets to a
+	// small set for the purposes of having convinient price increments stemming
+	// from tick to price conversion. These increments are in a human readable
+	// magnitude only for token1 as a quote. For limit orders in the future, this
+	// will be a desirable property in terms of UX as to allow users to set limit
+	// orders at prices in terms of token1 (quote asset) that are easy to reason
+	// about.
+	AuthorizedQuoteDenoms []string `protobuf:"bytes,3,rep,name=authorized_quote_denoms,json=authorizedQuoteDenoms,proto3" json:"authorized_quote_denoms,omitempty" yaml:"authorized_quote_denoms"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }
@@ -69,6 +81,20 @@ var xxx_messageInfo_Params proto.InternalMessageInfo
 func (m *Params) GetPoolCreationFee() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.PoolCreationFee
+	}
+	return nil
+}
+
+func (m *Params) GetTakerFeeParams() TakerFeeParams {
+	if m != nil {
+		return m.TakerFeeParams
+	}
+	return TakerFeeParams{}
+}
+
+func (m *Params) GetAuthorizedQuoteDenoms() []string {
+	if m != nil {
+		return m.AuthorizedQuoteDenoms
 	}
 	return nil
 }
@@ -137,9 +163,145 @@ func (m *GenesisState) GetPoolRoutes() []ModuleRoute {
 	return nil
 }
 
+// TakerFeeParams consolidates the taker fee parameters for the poolmanager.
+type TakerFeeParams struct {
+	// default_taker_fee is the fee used when creating a new pool that doesn't
+	// fall under a custom pool taker fee or stableswap taker fee category.
+	DefaultTakerFee cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=default_taker_fee,json=defaultTakerFee,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"default_taker_fee"`
+	// osmo_taker_fee_distribution defines the distribution of taker fees
+	// generated in OSMO. As of this writing, it has two catagories:
+	//   - staking_rewards: the percent of the taker fee that gets distributed to
+	//     stakers.
+	//   - community_pool: the percent of the taker fee that gets sent to the
+	//     community pool.
+	OsmoTakerFeeDistribution TakerFeeDistributionPercentage `protobuf:"bytes,2,opt,name=osmo_taker_fee_distribution,json=osmoTakerFeeDistribution,proto3" json:"osmo_taker_fee_distribution"`
+	// non_osmo_taker_fee_distribution defines the distribution of taker fees
+	// generated in non-OSMO. As of this writing, it has two categories:
+	//   - staking_rewards: the percent of the taker fee that gets swapped to OSMO
+	//     and then distirbuted to stakers.
+	//   - community_pool: the percent of the taker fee that gets sent to the
+	//     community pool. Note: If the non-OSMO asset is an authorized_quote_denom,
+	//     that denom is sent directly to the community pool. Otherwise, it is
+	//     swapped to the community_pool_denom_to_swap_non_whitelisted_assets_to and
+	//     then sent to the community pool as that denom.
+	NonOsmoTakerFeeDistribution TakerFeeDistributionPercentage `protobuf:"bytes,3,opt,name=non_osmo_taker_fee_distribution,json=nonOsmoTakerFeeDistribution,proto3" json:"non_osmo_taker_fee_distribution"`
+	// admin_addresses is a list of addresses that are allowed to set and remove
+	// custom taker fees for denom pairs. Governance also has the ability to set
+	// and remove custom taker fees for denom pairs, but with the normal
+	// governance delay.
+	AdminAddresses []string `protobuf:"bytes,4,rep,name=admin_addresses,json=adminAddresses,proto3" json:"admin_addresses,omitempty" yaml:"admin_addresses"`
+	// community_pool_denom_to_swap_non_whitelisted_assets_to is the denom that
+	// non-whitelisted taker fees will be swapped to before being sent to
+	// the community pool.
+	CommunityPoolDenomToSwapNonWhitelistedAssetsTo string `protobuf:"bytes,5,opt,name=community_pool_denom_to_swap_non_whitelisted_assets_to,json=communityPoolDenomToSwapNonWhitelistedAssetsTo,proto3" json:"community_pool_denom_to_swap_non_whitelisted_assets_to,omitempty" yaml:"community_pool_denom_to_swap_non_whitelisted_assets_to"`
+}
+
+func (m *TakerFeeParams) Reset()         { *m = TakerFeeParams{} }
+func (m *TakerFeeParams) String() string { return proto.CompactTextString(m) }
+func (*TakerFeeParams) ProtoMessage()    {}
+func (*TakerFeeParams) Descriptor() ([]byte, []int) {
+	return fileDescriptor_aa099d9fbdf68b35, []int{2}
+}
+func (m *TakerFeeParams) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TakerFeeParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TakerFeeParams.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TakerFeeParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TakerFeeParams.Merge(m, src)
+}
+func (m *TakerFeeParams) XXX_Size() int {
+	return m.Size()
+}
+func (m *TakerFeeParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_TakerFeeParams.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TakerFeeParams proto.InternalMessageInfo
+
+func (m *TakerFeeParams) GetOsmoTakerFeeDistribution() TakerFeeDistributionPercentage {
+	if m != nil {
+		return m.OsmoTakerFeeDistribution
+	}
+	return TakerFeeDistributionPercentage{}
+}
+
+func (m *TakerFeeParams) GetNonOsmoTakerFeeDistribution() TakerFeeDistributionPercentage {
+	if m != nil {
+		return m.NonOsmoTakerFeeDistribution
+	}
+	return TakerFeeDistributionPercentage{}
+}
+
+func (m *TakerFeeParams) GetAdminAddresses() []string {
+	if m != nil {
+		return m.AdminAddresses
+	}
+	return nil
+}
+
+func (m *TakerFeeParams) GetCommunityPoolDenomToSwapNonWhitelistedAssetsTo() string {
+	if m != nil {
+		return m.CommunityPoolDenomToSwapNonWhitelistedAssetsTo
+	}
+	return ""
+}
+
+// TakerFeeDistributionPercentage defines what percent of the taker fee category
+// gets distributed to the available categories.
+type TakerFeeDistributionPercentage struct {
+	StakingRewards cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=staking_rewards,json=stakingRewards,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"staking_rewards" yaml:"staking_rewards"`
+	CommunityPool  cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=community_pool,json=communityPool,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"community_pool" yaml:"community_pool"`
+}
+
+func (m *TakerFeeDistributionPercentage) Reset()         { *m = TakerFeeDistributionPercentage{} }
+func (m *TakerFeeDistributionPercentage) String() string { return proto.CompactTextString(m) }
+func (*TakerFeeDistributionPercentage) ProtoMessage()    {}
+func (*TakerFeeDistributionPercentage) Descriptor() ([]byte, []int) {
+	return fileDescriptor_aa099d9fbdf68b35, []int{3}
+}
+func (m *TakerFeeDistributionPercentage) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TakerFeeDistributionPercentage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TakerFeeDistributionPercentage.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TakerFeeDistributionPercentage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TakerFeeDistributionPercentage.Merge(m, src)
+}
+func (m *TakerFeeDistributionPercentage) XXX_Size() int {
+	return m.Size()
+}
+func (m *TakerFeeDistributionPercentage) XXX_DiscardUnknown() {
+	xxx_messageInfo_TakerFeeDistributionPercentage.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TakerFeeDistributionPercentage proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*Params)(nil), "osmosis.poolmanager.v1beta1.Params")
 	proto.RegisterType((*GenesisState)(nil), "osmosis.poolmanager.v1beta1.GenesisState")
+	proto.RegisterType((*TakerFeeParams)(nil), "osmosis.poolmanager.v1beta1.TakerFeeParams")
+	proto.RegisterType((*TakerFeeDistributionPercentage)(nil), "osmosis.poolmanager.v1beta1.TakerFeeDistributionPercentage")
 }
 
 func init() {
@@ -147,34 +309,59 @@ func init() {
 }
 
 var fileDescriptor_aa099d9fbdf68b35 = []byte{
-	// 421 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x51, 0xb1, 0x6e, 0xd4, 0x40,
-	0x10, 0xf5, 0x92, 0xe8, 0x8a, 0xbd, 0x48, 0x08, 0x8b, 0xc2, 0x09, 0x92, 0xcf, 0x32, 0x8d, 0x29,
-	0xb2, 0xab, 0x0b, 0x45, 0x24, 0x3a, 0x2e, 0x12, 0x08, 0x09, 0x44, 0x30, 0x1d, 0x8d, 0xb5, 0xb6,
-	0x27, 0xc6, 0xc2, 0xf6, 0x58, 0xde, 0x75, 0x94, 0xfb, 0x0b, 0x24, 0x7a, 0x3e, 0x80, 0xef, 0xa0,
-	0x48, 0x79, 0x25, 0xd5, 0x81, 0xee, 0xfe, 0x80, 0x2f, 0x40, 0xbb, 0x5e, 0xa3, 0x83, 0x48, 0x57,
-	0xd9, 0xb3, 0xf3, 0xde, 0x9b, 0x79, 0x6f, 0xe8, 0x13, 0x94, 0x35, 0xca, 0x52, 0xf2, 0x16, 0xb1,
-	0xaa, 0x45, 0x23, 0x0a, 0xe8, 0xf8, 0xf5, 0x3c, 0x05, 0x25, 0xe6, 0xbc, 0x80, 0x06, 0x64, 0x29,
-	0x59, 0xdb, 0xa1, 0x42, 0xf7, 0x91, 0x85, 0xb2, 0x1d, 0x28, 0xb3, 0xd0, 0x93, 0x87, 0x05, 0x16,
-	0x68, 0x70, 0x5c, 0xff, 0x0d, 0x94, 0x93, 0xe3, 0x02, 0xb1, 0xa8, 0x80, 0x9b, 0x2a, 0xed, 0xaf,
-	0xb8, 0x68, 0x96, 0x63, 0x2b, 0x33, 0x72, 0xc9, 0xc0, 0x19, 0x0a, 0xdb, 0xf2, 0xff, 0x67, 0xe5,
-	0x7d, 0x27, 0x54, 0x89, 0xcd, 0xd8, 0x1f, 0xd0, 0x3c, 0x15, 0x12, 0xfe, 0xee, 0x9a, 0x61, 0x39,
-	0xf6, 0xd9, 0x3e, 0x4f, 0x35, 0xe6, 0x7d, 0x05, 0x49, 0x87, 0xbd, 0x82, 0x01, 0x1f, 0x7e, 0x25,
-	0x74, 0x72, 0x29, 0x3a, 0x51, 0x4b, 0xf7, 0x0b, 0xa1, 0x0f, 0x34, 0x2b, 0xc9, 0x3a, 0x30, 0x23,
-	0x93, 0x2b, 0x00, 0x8f, 0x04, 0x07, 0xd1, 0xf4, 0xec, 0x98, 0xd9, 0x2d, 0xf5, 0xdc, 0xd1, 0x38,
-	0xbb, 0xc0, 0xb2, 0x59, 0xbc, 0xbe, 0x5d, 0xcf, 0x9c, 0xdf, 0xeb, 0x99, 0xb7, 0x14, 0x75, 0xf5,
-	0x2c, 0xbc, 0xa3, 0x10, 0x7e, 0xfb, 0x39, 0x8b, 0x8a, 0x52, 0x7d, 0xec, 0x53, 0x96, 0x61, 0x6d,
-	0xed, 0xda, 0xcf, 0xa9, 0xcc, 0x3f, 0x71, 0xb5, 0x6c, 0x41, 0x1a, 0x31, 0x19, 0xdf, 0xd7, 0xfc,
-	0x0b, 0x4b, 0x7f, 0x01, 0x10, 0x7e, 0x27, 0xf4, 0xe8, 0xe5, 0x70, 0x8b, 0xf7, 0x4a, 0x28, 0x70,
-	0x03, 0x7a, 0xd4, 0xc0, 0x8d, 0x4a, 0xcc, 0xa0, 0x32, 0xf7, 0x48, 0x40, 0xa2, 0xc3, 0x98, 0xea,
-	0xb7, 0x4b, 0xc4, 0xea, 0x55, 0xee, 0x3e, 0xa7, 0x93, 0xd6, 0x58, 0xf2, 0xee, 0x05, 0x24, 0x9a,
-	0x9e, 0x3d, 0x66, 0x7b, 0xae, 0xc7, 0x06, 0xf7, 0x8b, 0x43, 0x6d, 0x23, 0xb6, 0x44, 0xf7, 0x2d,
-	0x9d, 0x1a, 0x7d, 0x13, 0x95, 0xf4, 0x0e, 0x4c, 0x08, 0xd1, 0x5e, 0x9d, 0x37, 0x26, 0xdc, 0x58,
-	0x13, 0xac, 0x18, 0xd5, 0x30, 0xf3, 0x20, 0x17, 0xef, 0x6e, 0x37, 0x3e, 0x59, 0x6d, 0x7c, 0xf2,
-	0x6b, 0xe3, 0x93, 0xcf, 0x5b, 0xdf, 0x59, 0x6d, 0x7d, 0xe7, 0xc7, 0xd6, 0x77, 0x3e, 0x9c, 0xef,
-	0x64, 0x63, 0xf5, 0x4f, 0x2b, 0x91, 0xca, 0xb1, 0xe0, 0xd7, 0xf3, 0x73, 0x7e, 0xf3, 0xcf, 0x3d,
-	0x4d, 0x60, 0xe9, 0xc4, 0x5c, 0xf0, 0xe9, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x2d, 0x2d, 0xaa,
-	0x10, 0xc7, 0x02, 0x00, 0x00,
+	// 823 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0x4d, 0x6f, 0xdb, 0x46,
+	0x10, 0x35, 0x63, 0xc7, 0x80, 0xd7, 0xa9, 0xd4, 0x10, 0x4d, 0xc3, 0xd8, 0x00, 0x29, 0x30, 0x17,
+	0x15, 0x45, 0x48, 0xd8, 0x05, 0x52, 0xf4, 0x23, 0x07, 0xcb, 0x46, 0x8a, 0x02, 0x69, 0xe2, 0x30,
+	0x06, 0x0a, 0xe4, 0xb2, 0x58, 0x91, 0x63, 0x9a, 0xb0, 0xb8, 0xa3, 0x72, 0x97, 0x76, 0xd4, 0x5f,
+	0x51, 0xa0, 0xd7, 0x9e, 0x7b, 0xe8, 0xad, 0x87, 0xfe, 0x83, 0x1e, 0x72, 0xcc, 0xb1, 0xe8, 0x41,
+	0x2d, 0xe4, 0x73, 0x2f, 0xfa, 0x05, 0xc5, 0x7e, 0xc8, 0x36, 0xdd, 0x48, 0x30, 0x9a, 0x93, 0xc4,
+	0x99, 0x79, 0x6f, 0xe6, 0xcd, 0xbe, 0x25, 0xc9, 0x47, 0x28, 0x4a, 0x14, 0x85, 0x88, 0x87, 0x88,
+	0x83, 0x92, 0x71, 0x96, 0x43, 0x15, 0x9f, 0x6c, 0xf5, 0x41, 0xb2, 0xad, 0x38, 0x07, 0x0e, 0xa2,
+	0x10, 0xd1, 0xb0, 0x42, 0x89, 0xee, 0xa6, 0x2d, 0x8d, 0x2e, 0x95, 0x46, 0xb6, 0x74, 0xe3, 0x83,
+	0x1c, 0x73, 0xd4, 0x75, 0xb1, 0xfa, 0x67, 0x20, 0x1b, 0xf7, 0x72, 0xc4, 0x7c, 0x00, 0xb1, 0x7e,
+	0xea, 0xd7, 0x87, 0x31, 0xe3, 0xa3, 0x59, 0x2a, 0xd5, 0x74, 0xd4, 0x60, 0xcc, 0x83, 0x4d, 0xf9,
+	0x57, 0x51, 0x59, 0x5d, 0x31, 0x59, 0x20, 0x9f, 0xe5, 0x4d, 0x75, 0xdc, 0x67, 0x02, 0xce, 0x67,
+	0x4d, 0xb1, 0x98, 0xe5, 0xa3, 0x45, 0x9a, 0x4a, 0xcc, 0xea, 0x01, 0xd0, 0x0a, 0x6b, 0x09, 0xa6,
+	0x3e, 0x9c, 0xde, 0x20, 0xab, 0xfb, 0xac, 0x62, 0xa5, 0x70, 0x7f, 0x74, 0xc8, 0x6d, 0x85, 0xa2,
+	0x69, 0x05, 0xba, 0x25, 0x3d, 0x04, 0xf0, 0x9c, 0xce, 0x72, 0x77, 0x7d, 0xfb, 0x5e, 0x64, 0xa7,
+	0x54, 0x7d, 0x67, 0xc2, 0xa3, 0x5d, 0x2c, 0x78, 0xef, 0xc9, 0xeb, 0x71, 0xb0, 0x34, 0x1d, 0x07,
+	0xde, 0x88, 0x95, 0x83, 0xcf, 0xc3, 0xff, 0x30, 0x84, 0xbf, 0xfc, 0x15, 0x74, 0xf3, 0x42, 0x1e,
+	0xd5, 0xfd, 0x28, 0xc5, 0xd2, 0xca, 0xb5, 0x3f, 0x0f, 0x44, 0x76, 0x1c, 0xcb, 0xd1, 0x10, 0x84,
+	0x26, 0x13, 0x49, 0x5b, 0xe1, 0x77, 0x2d, 0xfc, 0x31, 0x80, 0x7b, 0x42, 0xde, 0x97, 0xec, 0x18,
+	0x2a, 0x45, 0x45, 0x87, 0x7a, 0x52, 0xef, 0x46, 0xc7, 0xe9, 0xae, 0x6f, 0x7f, 0x1c, 0x2d, 0x38,
+	0x94, 0xe8, 0x40, 0x81, 0x1e, 0x03, 0x18, 0x71, 0xbd, 0xc0, 0x4e, 0x79, 0xd7, 0x4c, 0x79, 0x95,
+	0x32, 0x4c, 0x5a, 0xb2, 0x01, 0x70, 0x5f, 0x92, 0xbb, 0xac, 0x96, 0x47, 0x58, 0x15, 0xdf, 0x43,
+	0x46, 0xbf, 0xab, 0x51, 0x02, 0xcd, 0x80, 0x63, 0x29, 0xbc, 0xe5, 0xce, 0x72, 0x77, 0xad, 0x17,
+	0x4e, 0xc7, 0x81, 0x6f, 0xd8, 0xe6, 0x14, 0x86, 0xc9, 0x9d, 0x8b, 0xcc, 0x73, 0x95, 0xd8, 0x33,
+	0xf1, 0xdf, 0x1d, 0x72, 0xeb, 0x2b, 0xe3, 0xaf, 0x17, 0x92, 0x49, 0x70, 0x3b, 0xe4, 0x16, 0x87,
+	0x57, 0x92, 0xea, 0xe5, 0x15, 0x99, 0xe7, 0x74, 0x9c, 0xee, 0x4a, 0x42, 0x54, 0x6c, 0x1f, 0x71,
+	0xf0, 0x75, 0xe6, 0xee, 0x90, 0xd5, 0x86, 0xf8, 0xfb, 0x0b, 0xc5, 0x5b, 0xd1, 0x2b, 0x4a, 0x74,
+	0x62, 0x81, 0xee, 0x33, 0xb2, 0xae, 0xf9, 0xf5, 0xf1, 0x1b, 0x15, 0xeb, 0xdb, 0xdd, 0x85, 0x3c,
+	0xdf, 0x68, 0xc3, 0x24, 0x0a, 0x60, 0xc9, 0x88, 0x2a, 0xd3, 0x01, 0x11, 0xfe, 0x76, 0x93, 0xb4,
+	0x9a, 0x6b, 0x76, 0xfb, 0xe4, 0x76, 0x06, 0x87, 0xac, 0x1e, 0x48, 0x7a, 0xbe, 0x62, 0xad, 0x66,
+	0xad, 0xf7, 0x50, 0xe1, 0xff, 0x1c, 0x07, 0x9b, 0xe6, 0xe4, 0x45, 0x76, 0x1c, 0x15, 0x18, 0x97,
+	0x4c, 0x1e, 0x45, 0x4f, 0x20, 0x67, 0xe9, 0x68, 0x0f, 0xd2, 0xc9, 0x38, 0x68, 0xef, 0x19, 0xfc,
+	0x8c, 0x38, 0x69, 0x67, 0xcd, 0x80, 0xfb, 0x93, 0x43, 0xf4, 0x75, 0xbc, 0xe8, 0x40, 0xb3, 0x42,
+	0xc8, 0xaa, 0xe8, 0xd7, 0xca, 0x34, 0x76, 0x41, 0x5f, 0x5c, 0xcb, 0x1d, 0x7b, 0x97, 0x80, 0xfb,
+	0x50, 0xa5, 0xc0, 0x25, 0xcb, 0xa1, 0xd7, 0x51, 0xb3, 0x4e, 0xc6, 0x81, 0xf7, 0x4c, 0x94, 0xf8,
+	0xb6, 0xda, 0xc4, 0xc3, 0x39, 0x19, 0xf7, 0x67, 0x87, 0x04, 0x1c, 0x39, 0x5d, 0x34, 0xe2, 0xf2,
+	0xbb, 0x8f, 0x78, 0xdf, 0x8e, 0xb8, 0xf9, 0x14, 0xf9, 0xdc, 0x29, 0x37, 0xf9, 0xfc, 0xa4, 0xbb,
+	0x4b, 0xda, 0x2c, 0x2b, 0x0b, 0x4e, 0x59, 0x96, 0x55, 0x20, 0x04, 0x08, 0x6f, 0x45, 0x3b, 0x7b,
+	0x63, 0x3a, 0x0e, 0x3e, 0xb4, 0xce, 0x6e, 0x16, 0x84, 0x49, 0x4b, 0x47, 0x76, 0x66, 0x01, 0xf7,
+	0x57, 0x87, 0x3c, 0x4c, 0xb1, 0x2c, 0x6b, 0x5e, 0xc8, 0x91, 0xf1, 0xaf, 0x36, 0x3f, 0x95, 0x48,
+	0xc5, 0x29, 0x1b, 0x52, 0xb5, 0x8a, 0xd3, 0xa3, 0x42, 0xc2, 0xa0, 0x10, 0x12, 0x32, 0xca, 0x84,
+	0x00, 0x29, 0xa8, 0x44, 0xef, 0xa6, 0xb6, 0xc5, 0xce, 0x74, 0x1c, 0x3c, 0x32, 0xcd, 0xfe, 0x1f,
+	0x4f, 0x98, 0x44, 0xe7, 0x40, 0x75, 0x59, 0xf4, 0x1d, 0x3b, 0xc0, 0x17, 0xa7, 0x6c, 0xf8, 0x14,
+	0xf9, 0xb7, 0x17, 0x90, 0x1d, 0x8d, 0x38, 0xc0, 0xf0, 0x1f, 0x87, 0xf8, 0x8b, 0xb7, 0xeb, 0x1e,
+	0x92, 0xb6, 0x90, 0xec, 0xb8, 0xe0, 0x39, 0xad, 0xe0, 0x94, 0x55, 0x99, 0xb0, 0x2e, 0x7e, 0x74,
+	0x0d, 0x17, 0x5f, 0xac, 0xef, 0x0a, 0x47, 0x98, 0xb4, 0x6c, 0x24, 0x31, 0x01, 0x37, 0x25, 0xad,
+	0xa6, 0x6a, 0xed, 0xde, 0xb5, 0xde, 0x97, 0xd7, 0x6b, 0x73, 0xe7, 0x6d, 0x8b, 0x0b, 0x93, 0xf7,
+	0x1a, 0x0b, 0xe9, 0x3d, 0x7f, 0x3d, 0xf1, 0x9d, 0x37, 0x13, 0xdf, 0xf9, 0x7b, 0xe2, 0x3b, 0x3f,
+	0x9c, 0xf9, 0x4b, 0x6f, 0xce, 0xfc, 0xa5, 0x3f, 0xce, 0xfc, 0xa5, 0x97, 0x9f, 0x5e, 0x7a, 0x2f,
+	0x5b, 0x2f, 0x3e, 0x18, 0xb0, 0xbe, 0x98, 0x3d, 0xc4, 0x27, 0x5b, 0x9f, 0xc5, 0xaf, 0x1a, 0xdf,
+	0x12, 0xfd, 0xb2, 0xee, 0xaf, 0xea, 0xaf, 0xc7, 0x27, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0xa7,
+	0x24, 0x16, 0xe1, 0x43, 0x07, 0x00, 0x00,
 }
 
 func (m *Params) Marshal() (dAtA []byte, err error) {
@@ -197,6 +384,25 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.AuthorizedQuoteDenoms) > 0 {
+		for iNdEx := len(m.AuthorizedQuoteDenoms) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.AuthorizedQuoteDenoms[iNdEx])
+			copy(dAtA[i:], m.AuthorizedQuoteDenoms[iNdEx])
+			i = encodeVarintGenesis(dAtA, i, uint64(len(m.AuthorizedQuoteDenoms[iNdEx])))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	{
+		size, err := m.TakerFeeParams.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
 	if len(m.PoolCreationFee) > 0 {
 		for iNdEx := len(m.PoolCreationFee) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -266,6 +472,118 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *TakerFeeParams) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TakerFeeParams) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TakerFeeParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.CommunityPoolDenomToSwapNonWhitelistedAssetsTo) > 0 {
+		i -= len(m.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
+		copy(dAtA[i:], m.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.AdminAddresses) > 0 {
+		for iNdEx := len(m.AdminAddresses) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.AdminAddresses[iNdEx])
+			copy(dAtA[i:], m.AdminAddresses[iNdEx])
+			i = encodeVarintGenesis(dAtA, i, uint64(len(m.AdminAddresses[iNdEx])))
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	{
+		size, err := m.NonOsmoTakerFeeDistribution.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size, err := m.OsmoTakerFeeDistribution.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size := m.DefaultTakerFee.Size()
+		i -= size
+		if _, err := m.DefaultTakerFee.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *TakerFeeDistributionPercentage) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TakerFeeDistributionPercentage) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TakerFeeDistributionPercentage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.CommunityPool.Size()
+		i -= size
+		if _, err := m.CommunityPool.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size := m.StakingRewards.Size()
+		i -= size
+		if _, err := m.StakingRewards.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintGenesis(dAtA []byte, offset int, v uint64) int {
 	offset -= sovGenesis(v)
 	base := offset
@@ -289,6 +607,14 @@ func (m *Params) Size() (n int) {
 			n += 1 + l + sovGenesis(uint64(l))
 		}
 	}
+	l = m.TakerFeeParams.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	if len(m.AuthorizedQuoteDenoms) > 0 {
+		for _, s := range m.AuthorizedQuoteDenoms {
+			l = len(s)
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -309,6 +635,44 @@ func (m *GenesisState) Size() (n int) {
 			n += 1 + l + sovGenesis(uint64(l))
 		}
 	}
+	return n
+}
+
+func (m *TakerFeeParams) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.DefaultTakerFee.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	l = m.OsmoTakerFeeDistribution.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	l = m.NonOsmoTakerFeeDistribution.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	if len(m.AdminAddresses) > 0 {
+		for _, s := range m.AdminAddresses {
+			l = len(s)
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	l = len(m.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	return n
+}
+
+func (m *TakerFeeDistributionPercentage) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.StakingRewards.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	l = m.CommunityPool.Size()
+	n += 1 + l + sovGenesis(uint64(l))
 	return n
 }
 
@@ -380,6 +744,71 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if err := m.PoolCreationFee[len(m.PoolCreationFee)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakerFeeParams", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TakerFeeParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AuthorizedQuoteDenoms", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AuthorizedQuoteDenoms = append(m.AuthorizedQuoteDenoms, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -514,6 +943,338 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			}
 			m.PoolRoutes = append(m.PoolRoutes, ModuleRoute{})
 			if err := m.PoolRoutes[len(m.PoolRoutes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TakerFeeParams) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TakerFeeParams: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TakerFeeParams: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DefaultTakerFee", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.DefaultTakerFee.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OsmoTakerFeeDistribution", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.OsmoTakerFeeDistribution.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NonOsmoTakerFeeDistribution", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.NonOsmoTakerFeeDistribution.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AdminAddresses", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AdminAddresses = append(m.AdminAddresses, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CommunityPoolDenomToSwapNonWhitelistedAssetsTo", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CommunityPoolDenomToSwapNonWhitelistedAssetsTo = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TakerFeeDistributionPercentage) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TakerFeeDistributionPercentage: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TakerFeeDistributionPercentage: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StakingRewards", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.StakingRewards.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CommunityPool", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.CommunityPool.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

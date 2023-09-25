@@ -1,4 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
+use osmosis_std::types::osmosis::poolmanager::v1beta1::SwapAmountInRoute;
 
 /// Message type for `instantiate` entry_point
 #[cw_serde]
@@ -40,6 +41,9 @@ pub enum ExecuteMsg {
         /// This is only avaibale on chains that support wasm hooks
         #[cfg(feature = "callbacks")]
         callback: Option<crosschain_swaps::msg::Callback>,
+
+        // Optional Route specification
+        route: Option<Vec<SwapAmountInRoute>>,
     },
 }
 

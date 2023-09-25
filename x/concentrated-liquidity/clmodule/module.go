@@ -16,17 +16,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v17/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/cli"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
-	clmodel "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/simulation"
+	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/cli"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
+	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/simulation"
 
-	clkeeper "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	clclient "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/grpc"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types/genesis"
+	clkeeper "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	clclient "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/grpc"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types/genesis"
 )
 
 var (

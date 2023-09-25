@@ -52,7 +52,7 @@ The [`Minter`](https://github.com/osmosis-labs/osmosis/blob/cbb683e8395655042b44
 
 ```go
 type Minter struct {
-    EpochProvisions sdk.Dec   // Rewards for the current epoch
+    EpochProvisions osmomath.Dec   // Rewards for the current epoch
 }
 ```
 

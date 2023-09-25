@@ -22,12 +22,12 @@ const (
 	PoolFileTargetPoolWeights        = "target-pool-weights"
 
 	FlagPoolId = "pool-id"
-	// Will be parsed to sdk.Int.
+	// Will be parsed to osmomath.Int.
 	FlagShareAmountOut = "share-amount-out"
 	// Will be parsed to []sdk.Coin.
 	FlagMaxAmountsIn = "max-amounts-in"
 
-	// Will be parsed to sdk.Int.
+	// Will be parsed to osmomath.Int.
 	FlagShareAmountIn = "share-amount-in"
 	// Will be parsed to []sdk.Coin.
 	FlagMinAmountsOut = "min-amounts-out"

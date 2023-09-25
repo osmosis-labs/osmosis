@@ -3,7 +3,7 @@ package osmosis.ibchooks;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/ibc-hooks/types";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/ibc-hooks/types";
 
 // Msg defines the Msg service.
 service Msg {

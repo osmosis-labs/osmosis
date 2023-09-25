@@ -8,10 +8,122 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/coins"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
+
+// AllocateAcrossGauges for every gauge in the input, it updates the weights according to the splitting
+// policy and allocates the coins to the underlying gauges per the updated weights.
+// Note, every group is associated with a group gauge. The distribution to regular gauges
+// happens from the group gauge.
+// Returns error if:
+// - fails to retrieve a group gauge
+// - fails to add gauge rewards to any of the underlying gauges in the group.
+//
+// Silently skips the following errors:
+// - syncing group gauge weights fails - this is acceptable. We don't want to fail all distributions
+// due to an oddity with one group. The rewards should stay in the group gauge until the next distribution.
+// Any issues can be fixed with a major upgrade without any loss of funds.
+// - group gauge is inactive - similar reason, don't want to fail all distributions due to non-fatal issue.
+//
+// ASSUMPTIONS:
+// - group cannot outlive the gauges associated with it.
+// CONTRACT:
+// - every group in the input is active. If inactive group is passed in, it will be skipped.
+func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group) error {
+	for _, group := range activeGroups {
+		err := k.syncGroupWeights(ctx, group)
+		if err != nil {
+			ctx.Logger().Error("error syncing group gauge weights, skipping", "group gauge id", group.GroupGaugeId, "error", err.Error())
+			continue
+		}
+
+		// Get the groupGauge corresponding to the group.
+		groupGauge, err := k.GetGaugeByID(ctx, group.GroupGaugeId)
+		if err != nil {
+			return err
+		}
+
+		// If upcoming, skip.
+		if !groupGauge.IsActiveGauge(ctx.BlockTime()) {
+			continue
+		}
+
+		// Get amount to distribute in coins (based on perpetual or non perpetual group gauge)
+		coinsToDistribute := groupGauge.Coins.Sub(groupGauge.DistributedCoins)
+		if !groupGauge.IsPerpetual {
+			remainingEpochs := int64(groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs)
+
+			// Divide each coin by remainingEpochs
+			coins.QuoRawMut(coinsToDistribute, remainingEpochs)
+		}
+
+		// Exit early if nothing to distribute.
+		if coinsToDistribute.IsZero() {
+			// Update the group gauge despite zero coins distributed to ensure the filled epochs are updated.
+			// Either updates the group or deletes it from state if it is finished.
+			if err = k.handleGroupPostDistribute(ctx, *groupGauge, coinsToDistribute); err != nil {
+				return err
+			}
+			continue
+		}
+
+		// We track this for distributing all the remaining amount in the last
+		// gauge without leaving truncation dust.
+		amountDistributed := sdk.NewCoins()
+
+		// Define variables for brevity
+		totalGroupWeight := group.InternalGaugeInfo.TotalWeight
+		gaugeCount := len(group.InternalGaugeInfo.GaugeRecords)
+
+		// Iterate over underlying gauge records in the group.
+		for gaugeIndex, distrRecord := range group.InternalGaugeInfo.GaugeRecords {
+			// Between 0 and 1. to determine the pro-rata share of the total amount to distribute
+			gaugeDistributionRatio := distrRecord.CurrentWeight.ToLegacyDec().Quo(totalGroupWeight.ToLegacyDec())
+
+			// Loop through `coinsToDistribute` and get the amount to distribute to the current gauge
+			// based on the distribution ratio.
+			currentGaugeCoins := coins.MulDec(coinsToDistribute, gaugeDistributionRatio)
+
+			// For the last gauge, distribute all remaining amounts.
+			// Special case the last gauge to avoid leaving truncation dust in the group gauge
+			// and consume the amounts in-full.
+			if gaugeIndex == gaugeCount-1 {
+				err = k.addToGaugeRewards(ctx, coinsToDistribute.Sub(amountDistributed), distrRecord.GaugeId)
+				if err != nil {
+					// We error in this case instead of silently skipping because AddToGaugeRewards should never fail
+					// unless something fundamental has gone wrong.
+					//
+					// Assumption we are making: no gauge in the group outlives the group.
+					return err
+				}
+				break
+			}
+
+			err = k.addToGaugeRewards(ctx, currentGaugeCoins, distrRecord.GaugeId)
+			if err != nil {
+				// We error in this case instead of silently skipping because AddToGaugeRewards should never fail
+				// unless something fundamental has gone wrong.
+				//
+				// Assumption we are making: no gauge in the group outlives the group.
+				return err
+			}
+
+			// Update total distribute amount.
+			amountDistributed = amountDistributed.Add(currentGaugeCoins...)
+		}
+
+		// Either updates the group or deletes it from state if it is finished.
+		if err = k.handleGroupPostDistribute(ctx, *groupGauge, coinsToDistribute); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 // getDistributedCoinsFromGauges returns coins that have been distributed already from the provided gauges
 func (k Keeper) getDistributedCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
@@ -266,6 +378,112 @@ func (k Keeper) distributeSyntheticInternal(
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
 }
 
+// syncGroupWeights updates the individual and total weights of the group records based on the splitting policy.
+// It mutates the passed in object and sets the updated value in state.
+// If there is an error, the passed in object is not mutated.
+//
+// It returns an error if:
+// - the splitting policy is not supported
+// - a lower level issue arises when syncing weights (e.g. the volume for a linked pool cannot be found under volume-splitting policy)
+func (k Keeper) syncGroupWeights(ctx sdk.Context, group types.Group) error {
+	if group.SplittingPolicy == types.ByVolume {
+		err := k.syncVolumeSplitGroup(ctx, group)
+		if err != nil {
+			return err
+		}
+	} else {
+		return types.UnsupportedSplittingPolicyError{GroupGaugeId: group.GroupGaugeId, SplittingPolicy: group.SplittingPolicy}
+	}
+
+	return nil
+}
+
+// syncVolumeSplitGroup syncs a group according to volume splitting policy.
+// It mutates the passed in object and sets the updated value in state.
+// If there is an error, the passed in object is not mutated.
+//
+// It returns an error if:
+// - the volume for any linked pool is zero or cannot be found
+// - the cumulative volume for any linked pool has decreased (should never happen)
+func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
+	totalWeight := sdk.ZeroInt()
+
+	// We operate on a deep copy of the given group because we expect to handle specific errors quietly
+	// and want to avoid the scenario where the original group gauge is partially mutated in such cases.
+	updatedGroup := types.Group{
+		GroupGaugeId: group.GroupGaugeId,
+		InternalGaugeInfo: types.InternalGaugeInfo{
+			TotalWeight:  group.InternalGaugeInfo.TotalWeight,
+			GaugeRecords: make([]types.InternalGaugeRecord, len(group.InternalGaugeInfo.GaugeRecords)),
+		},
+		SplittingPolicy: group.SplittingPolicy,
+	}
+
+	// Loop through gauge records and update their state to reflect new pool volumes
+	for i, gaugeRecord := range group.InternalGaugeInfo.GaugeRecords {
+		gauge, err := k.GetGaugeByID(ctx, gaugeRecord.GaugeId)
+		if err != nil {
+			return err
+		}
+
+		gaugeType := gauge.DistributeTo.LockQueryType
+		gaugeDuration := time.Duration(0)
+
+		if gaugeType == lockuptypes.NoLock {
+			// If NoLock, it's a CL pool, so we set the "lockableDuration" to epoch duration
+			gaugeDuration = k.GetEpochInfo(ctx).Duration
+		} else {
+			// Otherwise, it's a balancer pool so we set it to longest lockable duration
+			// TODO: add support for CW pools once there's clarity around default gauge type.
+			// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6403
+			gaugeDuration, err = k.pik.GetLongestLockableDuration(ctx)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Retrieve pool ID using GetPoolIdFromGaugeId(gaugeId, lockableDuration)
+		poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeRecord.GaugeId, gaugeDuration)
+		if err != nil {
+			return err
+		}
+
+		// Get new volume for pool. Assert GTE gauge's weight
+		cumulativePoolVolume := k.pmk.GetOsmoVolumeForPool(ctx, poolId)
+
+		// If new volume is 0, there was an issue with volume tracking. Return error.
+		// We expect this to be handled quietly in update logic but not in init logic.
+		// By returning an error, we let the caller decide whether to handle it quietly or not.
+		if !cumulativePoolVolume.IsPositive() {
+			return types.NoPoolVolumeError{PoolId: poolId}
+		}
+
+		// Update gauge record's weight to new volume - last volume snapshot
+		volumeDelta := cumulativePoolVolume.Sub(gaugeRecord.CumulativeWeight)
+		if volumeDelta.IsNegative() {
+			return types.CumulativeVolumeDecreasedError{PoolId: poolId, PreviousVolume: gaugeRecord.CumulativeWeight, NewVolume: cumulativePoolVolume}
+		}
+
+		gaugeRecord.CurrentWeight = volumeDelta
+
+		// Snapshot cumulative volume
+		gaugeRecord.CumulativeWeight = cumulativePoolVolume
+
+		// Add new this diff to total weight
+		totalWeight = totalWeight.Add(volumeDelta)
+
+		// Mutate original group to ensure changes are tracked
+		updatedGroup.InternalGaugeInfo.GaugeRecords[i] = gaugeRecord
+	}
+
+	// Update group's total weight
+	updatedGroup.InternalGaugeInfo.TotalWeight = totalWeight
+
+	k.SetGroup(ctx, updatedGroup)
+
+	return nil
+}
+
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
 // It handles any kind of gauges:
@@ -285,6 +503,7 @@ func (k Keeper) distributeInternal(
 	totalDistrCoins := sdk.NewCoins()
 
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+
 	// if its a perpetual gauge, we set remaining epochs to 1.
 	// otherwise is is a non perpetual gauge and we determine how many epoch payouts are left
 	remainEpochs := uint64(1)
@@ -322,15 +541,15 @@ func (k Keeper) distributeInternal(
 		// is supposed to distribute over that epoch.
 		for _, remainCoin := range remainCoins {
 			// remaining coin amount per epoch.
-			remainAmountPerEpoch := remainCoin.Amount.Quo(sdk.NewIntFromUint64(remainEpochs))
+			remainAmountPerEpoch := remainCoin.Amount.Quo(osmomath.NewIntFromUint64(remainEpochs))
 			remainCoinPerEpoch := sdk.NewCoin(remainCoin.Denom, remainAmountPerEpoch)
 
 			// emissionRate calculates amount of tokens to emit per second
 			// for ex: 10000uosmo to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
 			// Note: reason why we do millisecond conversion is because floats are non-deterministic.
-			emissionRate := sdk.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
+			emissionRate := osmomath.NewDecFromInt(remainAmountPerEpoch).QuoTruncate(osmomath.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(osmomath.NewInt(1000)))
 
-			ctx.Logger().Debug("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
+			ctx.Logger().Info("distributeInternal, CreateIncentiveRecord NoLock gauge", "module", types.ModuleName, "gaugeId", gauge.Id, "poolId", pool.GetId(), "remainCoinPerEpoch", remainCoinPerEpoch, "height", ctx.BlockHeight())
 			_, err := k.clk.CreateIncentive(ctx,
 				pool.GetId(),
 				k.ak.GetModuleAddress(types.ModuleName),
@@ -343,13 +562,35 @@ func (k Keeper) distributeInternal(
 				// Only default uptime is supported at launch.
 				types.DefaultConcentratedUptime,
 			)
+
+			ctx.Logger().Info(fmt.Sprintf("distributeInternal CL for pool id %d finished", pool.GetId()))
 			if err != nil {
 				return nil, err
 			}
-
 			totalDistrCoins = totalDistrCoins.Add(remainCoinPerEpoch)
 		}
 	} else {
+		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
+		if len(locks) == 0 {
+			return nil, nil
+		}
+
+		// In this case, remove redundant cases.
+		// Namely: gauge empty OR gauge coins undistributable.
+		if remainCoins.Empty() {
+			ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is empty, why is it being ran %d. Balancer code", gauge.Id))
+			err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+			return totalDistrCoins, err
+		}
+
+		// Remove some spam gauges, is state compatible.
+		// If they're to pool 1 they can't distr at this small of a quantity.
+		if remainCoins.Len() == 1 && remainCoins[0].Amount.LTE(osmomath.NewInt(10)) && gauge.DistributeTo.Denom == "gamm/pool/1" && remainCoins[0].Denom != "uosmo" {
+			ctx.Logger().Debug(fmt.Sprintf("gauge debug, this gauge is perceived spam, skipping %d", gauge.Id))
+			err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+			return totalDistrCoins, err
+		}
+
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
 		denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
 		lockSum := lockuptypes.SumLocksByDenom(locks, denom)
@@ -364,7 +605,7 @@ func (k Keeper) distributeInternal(
 			for _, coin := range remainCoins {
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 				denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
-				amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
+				amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(osmomath.NewInt(int64(remainEpochs))))
 				if amt.IsPositive() {
 					newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
 					distrCoins = distrCoins.Add(newlyDistributedCoin)
@@ -405,6 +646,39 @@ func (k Keeper) updateGaugePostDistribute(ctx sdk.Context, gauge types.Gauge, ne
 	return nil
 }
 
+// handleGroupPostDistribute handles the post distribution logic for groups and group gauges.
+// If group gauge is perpetual or non-perpetual at the last distribution epoch, it will update the gauge in state by increasing filled epochs 1 and updating
+// the distributed coins field to add the coins distributed.
+// If group gauge is non-perpetual and at the last distribution epoch, it will delete the group and group gauge from state.
+// Before deleting the non-perpetual gauge, any difference between distributed coins and gauge's coins is sent to
+// community pool.
+// CONTRACT: non-perpetual gauge at the last distribution epoch must have distributed all of its coins already
+func (k Keeper) handleGroupPostDistribute(ctx sdk.Context, groupGauge types.Gauge, coinsDistributed sdk.Coins) error {
+	// Prune expired non-perpetual gauges.
+	if groupGauge.IsLastNonPerpetualDistribution() {
+		// Send truncation dust to community pool.
+		truncationDust, anyNegative := groupGauge.Coins.SafeSub(groupGauge.DistributedCoins.Add(coinsDistributed...))
+		if !anyNegative && !truncationDust.IsZero() {
+			err := k.ck.FundCommunityPool(ctx, truncationDust, k.ak.GetModuleAddress(types.ModuleName))
+			if err != nil {
+				return err
+			}
+		}
+
+		// Delete the group.
+		store := ctx.KVStore(k.storeKey)
+		store.Delete(types.KeyGroupByGaugeID(groupGauge.Id))
+		// Delete the group gauge.
+		store.Delete(gaugeStoreKey(groupGauge.Id))
+	} else {
+		// Update total coins distributed and filled epoch of the group gauge.
+		if err := k.updateGaugePostDistribute(ctx, groupGauge, coinsDistributed); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // getDistributeToBaseLocks takes a gauge along with cached period locks by denom and returns locks that must be distributed to
 func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cache map[string][]lockuptypes.PeriodLock) []lockuptypes.PeriodLock {
 	// if gauge is empty, don't get the locks
@@ -425,6 +699,7 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 }
 
 // Distribute distributes coins from an array of gauges to all eligible locks and pools in the case of "NoLock" gauges.
+// Skips any group gauges as they are handled separately in AllocateAcrossGauges()
 // CONTRACT: gauges must be active.
 func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
 	distrInfo := newDistributionInfo()
@@ -441,6 +716,11 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 			ctx.Logger().Debug("distributeSyntheticInternal, gauge id %d, %d", "module", types.ModuleName, "gaugeId", gauge.Id, "height", ctx.BlockHeight())
 			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
 		} else {
+			// Do not distribute if LockQueryType = Group, because if we distribute here we will be double distributing.
+			if gauge.DistributeTo.LockQueryType == lockuptypes.ByGroup {
+				continue
+			}
+
 			gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
 		}
 		if err != nil {

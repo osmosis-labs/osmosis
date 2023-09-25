@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -16,9 +15,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v17/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -50,6 +50,9 @@ func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 	if err != nil {
 		return err
 	}
+
+	gauge.IsLastNonPerpetualDistribution()
+
 	store.Set(gaugeStoreKey(gauge.Id), bz)
 	return nil
 }
@@ -57,10 +60,13 @@ func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 // CreateGaugeRefKeys takes combinedKey (the keyPrefix for upcoming, active, or finished gauges combined with gauge start time) and adds a reference to the respective gauge ID.
 // If gauge is active or upcoming, creates reference between the denom and gauge ID.
 // Used to consolidate codepaths for InitGenesis and CreateGauge.
-func (k Keeper) CreateGaugeRefKeys(ctx sdk.Context, gauge *types.Gauge, combinedKeys []byte, activeOrUpcomingGauge bool) error {
+func (k Keeper) CreateGaugeRefKeys(ctx sdk.Context, gauge *types.Gauge, combinedKeys []byte) error {
 	if err := k.addGaugeRefByKey(ctx, combinedKeys, gauge.Id); err != nil {
 		return err
 	}
+
+	activeOrUpcomingGauge := gauge.IsActiveGauge(ctx.BlockTime()) || gauge.IsUpcomingGauge(ctx.BlockTime())
+
 	if activeOrUpcomingGauge {
 		if err := k.addGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
 			return err
@@ -80,17 +86,16 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 
 	curTime := ctx.BlockTime()
 	timeKey := getTimeKey(gauge.StartTime)
-	activeOrUpcomingGauge := gauge.IsActiveGauge(curTime) || gauge.IsUpcomingGauge(curTime)
 
 	if gauge.IsUpcomingGauge(curTime) {
 		combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, timeKey)
-		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
+		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys)
 	} else if gauge.IsActiveGauge(curTime) {
 		combinedKeys := combineKeys(types.KeyPrefixActiveGauges, timeKey)
-		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
+		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys)
 	} else {
 		combinedKeys := combineKeys(types.KeyPrefixFinishedGauges, timeKey)
-		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys, activeOrUpcomingGauge)
+		return k.CreateGaugeRefKeys(ctx, gauge, combinedKeys)
 	}
 }
 
@@ -198,9 +203,8 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	k.SetLastGaugeID(ctx, gauge.Id)
 
 	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
-	activeOrUpcomingGauge := true
 
-	err = k.CreateGaugeRefKeys(ctx, &gauge, combinedKeys, activeOrUpcomingGauge)
+	err = k.CreateGaugeRefKeys(ctx, &gauge, combinedKeys)
 	if err != nil {
 		return 0, err
 	}
@@ -208,30 +212,70 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	return gauge.Id, nil
 }
 
-// AddToGaugeRewards adds coins to gauge.
-func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error {
-	gauge, err := k.GetGaugeByID(ctx, gaugeID)
-	if err != nil {
-		return err
-	}
-	if gauge.IsFinishedGauge(ctx.BlockTime()) {
-		return errors.New("gauge is already completed")
-	}
-
-	// Fixed gas consumption adding reward to gauges based on the number of coins to add
-	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForAddRewardToGauge*(len(coins)+len(gauge.Coins))), "scaling gas cost for adding to gauge rewards")
-
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, coins); err != nil {
-		return err
+// CreateGroup creates a new group. The group is 1:1 mapped to a group gauage that allocates rewards dynamically across its internal pool gauges based on the given splitting policy.
+// Note: we should expect that the internal gauges consist of the gauges that are automatically created for each pool upon pool creation, as even non-perpetual
+// external incentives would likely want to route through these.
+// TODO: change this to take in list of pool IDs instead and fetch the gauge IDs under the hood.
+// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6404
+func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64, gaugetype lockuptypes.LockQueryType) (uint64, error) {
+	if len(internalGaugeIds) == 0 {
+		return 0, fmt.Errorf("No internalGauge provided.")
 	}
 
-	gauge.Coins = gauge.Coins.Add(coins...)
-	err = k.setGauge(ctx, gauge)
-	if err != nil {
-		return err
+	if gaugetype != lockuptypes.ByGroup {
+		return 0, fmt.Errorf("Invalid gauge type needs to be ByGroup, got %s.", gaugetype)
 	}
-	k.hooks.AfterAddToGauge(ctx, gauge.Id)
-	return nil
+
+	// TODO: remove gauge creation logic from here.
+	// Instead, call `CreateGauge` directly
+	// Update `CreateGauge` to be able to handle the group type.
+	nextGaugeId := k.GetLastGaugeID(ctx) + 1
+
+	gauge := types.Gauge{
+		Id:          nextGaugeId,
+		IsPerpetual: numEpochPaidOver == 1,
+		DistributeTo: lockuptypes.QueryCondition{
+			LockQueryType: gaugetype,
+		},
+		Coins:             coins,
+		StartTime:         ctx.BlockTime(),
+		NumEpochsPaidOver: numEpochPaidOver,
+	}
+
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, gauge.Coins); err != nil {
+		return 0, err
+	}
+
+	if err := k.setGauge(ctx, &gauge); err != nil {
+		return 0, err
+	}
+
+	// TODO: initialize using initGaugeInfo
+	// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6401
+	initialInternalGaugeInfo := types.InternalGaugeInfo{}
+
+	newGroup := types.Group{
+		GroupGaugeId:      nextGaugeId,
+		InternalGaugeInfo: initialInternalGaugeInfo,
+		// Note: only Volume splitting exists today.
+		// We allow for other splitting policies to be added in the future
+		// by extending the enum.
+		SplittingPolicy: types.ByVolume,
+	}
+
+	k.SetGroup(ctx, newGroup)
+	k.SetLastGaugeID(ctx, gauge.Id)
+
+	// TODO: check if this is necessary.
+	// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6405
+	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
+
+	if err := k.CreateGaugeRefKeys(ctx, &gauge, combinedKeys); err != nil {
+		return 0, err
+	}
+	k.hooks.AfterCreateGauge(ctx, gauge.Id)
+
+	return nextGaugeId, nil
 }
 
 // GetGaugeByID returns gauge from gauge ID.
@@ -240,7 +284,7 @@ func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, err
 	store := ctx.KVStore(k.storeKey)
 	gaugeKey := gaugeStoreKey(gaugeID)
 	if !store.Has(gaugeKey) {
-		return nil, fmt.Errorf("gauge with ID %d does not exist", gaugeID)
+		return nil, types.GaugeNotFoundError{GaugeID: gaugeID}
 	}
 	bz := store.Get(gaugeKey)
 	if err := proto.Unmarshal(bz, &gauge); err != nil {
@@ -353,12 +397,55 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 	return k.ek.GetEpochInfo(ctx, params.DistrEpochIdentifier)
 }
 
+// AddToGaugeRewards adds coins to gauge.
+func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error {
+	if err := k.addToGaugeRewards(ctx, coins, gaugeID); err != nil {
+		return err
+	}
+
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, coins); err != nil {
+		return err
+	}
+	return nil
+}
+
+// addToGaugeRewards adds coins to gauge with the given ID.
+//
+// Returns error if:
+// - fails to retrieve gauge from state
+// - gauge is finished.
+// - fails to store an updated gauge to state
+//
+// Notes: does not do token transfers since it is used internally for token transferring value within the
+// incentives module or by higher level functions that do transfer.
+func (k Keeper) addToGaugeRewards(ctx sdk.Context, coins sdk.Coins, gaugeID uint64) error {
+	gauge, err := k.GetGaugeByID(ctx, gaugeID)
+	if err != nil {
+		return err
+	}
+	if gauge.IsFinishedGauge(ctx.BlockTime()) {
+		return types.UnexpectedFinishedGaugeError{GaugeId: gaugeID}
+	}
+
+	gauge.Coins = gauge.Coins.Add(coins...)
+	err = k.setGauge(ctx, gauge)
+	if err != nil {
+		return err
+	}
+
+	// Fixed gas consumption adding reward to gauges based on the number of coins to add
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForAddRewardToGauge*(len(coins)+len(gauge.Coins))), "scaling gas cost for adding to gauge rewards")
+
+	k.hooks.AfterAddToGauge(ctx, gauge.Id)
+	return nil
+}
+
 // chargeFeeIfSufficientFeeDenomBalance charges fee in the base denom on the address if the address has
 // balance that is less than fee + amount of the coin from gaugeCoins that is of base denom.
 // gaugeCoins might not have a coin of tx base denom. In that case, fee is only compared to balance.
 // The fee is sent to the community pool.
 // Returns nil on success, error otherwise.
-func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) (err error) {
+func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee osmomath.Int, gaugeCoins sdk.Coins) (err error) {
 	feeDenom, err := k.tk.GetBaseDenom(ctx)
 	if err != nil {
 		return err
