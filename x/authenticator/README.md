@@ -105,6 +105,10 @@ RemoveAuthenticator(account, authenticatorGlobalId)
 
 The signature verification authenticator is the default authenticator for all accounts. It verifies that the signer of a message is the same as the account associated with the message.
 
+### PassKey Authenticator
+
+The passkey authenticator is the authenticator for Passkeys. It verifies that the signer of a message is in the authentication store and also a secp256r1 key.
+
 ### Spend Limit Authenticator
 
 The spend limit authenticator enforces a spend limit for each account. 
