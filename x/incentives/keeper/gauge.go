@@ -246,6 +246,12 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 		return 0, err
 	}
 
+	// Charge group creation fee.
+	groupCreationFee := k.GetParams(ctx).GroupCreationFee
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, groupCreationFee); err != nil {
+		return 0, err
+	}
+
 	// TODO: charge fixed fee. Make sure to update method spec and tests.
 	// https://github.com/osmosis-labs/osmosis/issues/6506
 
