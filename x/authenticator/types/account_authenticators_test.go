@@ -16,6 +16,10 @@ type MockAuthenticator struct {
 	authType string
 }
 
+func (m MockAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
+}
+
 func (m MockAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
 	return nil
 }
@@ -41,6 +45,10 @@ func (m MockAuthenticator) AuthenticationFailed(ctx sdk.Context, authenticatorDa
 
 func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
 	return iface.Confirm()
+}
+
+func (m MockAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
 }
 
 func (m MockAuthenticator) Type() string {
@@ -112,6 +120,14 @@ func TestAsAuthenticator(t *testing.T) {
 // Second mock that always fails authentication
 type MockAuthenticatorFail struct {
 	authType string
+}
+
+func (m MockAuthenticatorFail) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
+}
+
+func (m MockAuthenticatorFail) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
 }
 
 func (m MockAuthenticatorFail) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {

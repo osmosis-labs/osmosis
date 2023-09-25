@@ -71,6 +71,11 @@ func NewSpendLimitAuthenticator(store sdk.KVStore, quoteDenom string, priceStrat
 	}
 }
 
+type InitData struct {
+	AllowedDelta uint64     `json:"allowed"`
+	PeriodType   PeriodType `json:"period"`
+}
+
 func (sla SpendLimitAuthenticator) Type() string {
 	return "SpendLimitAuthenticator"
 }
@@ -80,15 +85,10 @@ func (sla SpendLimitAuthenticator) StaticGas() uint64 {
 }
 
 func (sla SpendLimitAuthenticator) Initialize(data []byte) (iface.Authenticator, error) {
-	var initData struct {
-		AllowedDelta uint64     `json:"allowed"`
-		PeriodType   PeriodType `json:"period"`
-	}
-
+	var initData InitData
 	if err := json.Unmarshal(data, &initData); err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to unmarshal initialization data")
 	}
-
 	sla.allowedDelta = sdk.NewUint(initData.AllowedDelta)
 	if sla.allowedDelta.IsZero() {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "allowed delta must be positive")
@@ -174,6 +174,24 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 	return iface.Confirm()
 }
 
+func (sla SpendLimitAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	var initData InitData
+	if err := json.Unmarshal(data, &initData); err != nil {
+		return sdkerrors.Wrap(err, "failed to unmarshal initialization data")
+	}
+	if sdk.NewUint(initData.AllowedDelta).IsZero() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "allowed delta must be positive")
+	}
+	if !(initData.PeriodType == Day || initData.PeriodType == Week || initData.PeriodType == Month || initData.PeriodType == Year) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period type %s", initData.PeriodType)
+	}
+	return nil
+}
+
+func (sla SpendLimitAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
+}
+
 func (sla SpendLimitAuthenticator) getPriceInQuoteDenom(ctx sdk.Context, coin sdk.Coin) (osmomath.Dec, error) {
 	switch sla.priceStrategy {
 	case Twap:
@@ -207,7 +225,7 @@ func (sla SpendLimitAuthenticator) SetBalance(account sdk.AccAddress, coins []sd
 }
 
 func (sla SpendLimitAuthenticator) DeleteBalances(account sdk.AccAddress) {
-	osmoutils.DeleteAllKeysFromPrefix(sdk.Context{}, sla.store, getBalanceKey(account))
+	osmoutils.DeleteAllKeysFromPrefix(sla.store, getBalanceKey(account))
 }
 
 func (sla SpendLimitAuthenticator) GetSpentInPeriod(account sdk.AccAddress, t time.Time) osmomath.Int {

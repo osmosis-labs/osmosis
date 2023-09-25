@@ -654,3 +654,43 @@ func (s *AuthenticatorSuite) TestSpendWithinLimitWithAuthz() {
 	s.Require().NoError(err)
 
 }
+
+func (s *AuthenticatorSuite) TestAuthenticatorAddRemove() {
+	// Register the authenticators
+	blockAdd := testutils.TestingAuthenticator{BlockAddition: true}
+	allowAdd := testutils.TestingAuthenticator{}
+	blockRemove := testutils.TestingAuthenticator{BlockRemoval: true}
+	allowRemove := testutils.TestingAuthenticator{}
+
+	s.app.AuthenticatorManager.RegisterAuthenticator(blockAdd)
+	s.app.AuthenticatorManager.RegisterAuthenticator(allowAdd)
+	s.app.AuthenticatorManager.RegisterAuthenticator(blockRemove)
+	s.app.AuthenticatorManager.RegisterAuthenticator(allowRemove)
+
+	// Initialize an account
+	accountAddr := sdk.AccAddress(s.PrivKeys[0].PubKey().Address())
+
+	// Test authenticator that blocks addition
+	err := s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), accountAddr, blockAdd.Type(), []byte{})
+	s.Require().Error(err, "Authenticator should not be added")
+	s.Require().ErrorContains(err, "authenticator could not be added")
+
+	// Test authenticator that allows addition
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), accountAddr, allowAdd.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+
+	// Test authenticator that blocks removal
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), accountAddr, blockRemove.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+
+	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), accountAddr, 1)
+	s.Require().Error(err, "Authenticator should not be removed")
+	s.Require().ErrorContains(err, "authenticator could not be removed")
+
+	// Test authenticator that allows removal
+	err = s.app.AuthenticatorKeeper.AddAuthenticator(s.chainA.GetContext(), accountAddr, allowRemove.Type(), []byte{})
+	s.Require().NoError(err, "Failed to add authenticator")
+
+	err = s.app.AuthenticatorKeeper.RemoveAuthenticator(s.chainA.GetContext(), accountAddr, 2)
+	s.Require().NoError(err, "Failed to remove authenticator")
+}

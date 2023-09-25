@@ -85,10 +85,10 @@ func (k Keeper) GetAuthenticatorsForAccount(
 		return nil, err
 	}
 	authenticators := make([]iface.Authenticator, len(authenticatorData))
-	for i, authenticator := range authenticatorData {
-		authenticators[i] = authenticator.AsAuthenticator(k.AuthenticatorManager)
+	for i, accountAuthenticator := range authenticatorData {
+		authenticators[i] = accountAuthenticator.AsAuthenticator(k.AuthenticatorManager)
 		if authenticators[i] == nil {
-			return nil, fmt.Errorf("authenticator %d failed to initialize", authenticator.Id)
+			return nil, fmt.Errorf("authenticator %d failed to initialize", accountAuthenticator.Id)
 		}
 	}
 	return authenticators, nil
@@ -140,8 +140,14 @@ func (k Keeper) GetNextAuthenticatorIdAndIncrement(ctx sdk.Context) uint64 {
 
 // AddAuthenticator adds an authenticator to an account
 func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorType string, data []byte) error {
-	if !k.AuthenticatorManager.IsAuthenticatorTypeRegistered(authenticatorType) {
+	impl := k.AuthenticatorManager.GetAuthenticatorByType(authenticatorType)
+	if impl == nil {
 		return fmt.Errorf("authenticator type %s is not registered", authenticatorType)
+	}
+	cacheCtx, _ := ctx.CacheContext()
+	err := impl.OnAuthenticatorAdded(cacheCtx, account, data)
+	if err != nil {
+		return err
 	}
 	nextId := k.GetNextAuthenticatorIdAndIncrement(ctx)
 	osmoutils.MustSet(ctx.KVStore(k.storeKey),
@@ -158,10 +164,26 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 func (k Keeper) RemoveAuthenticator(ctx sdk.Context, account sdk.AccAddress, authenticatorId uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyAccountId(account, authenticatorId)
-	// check that the key exists
-	if !store.Has(key) {
+
+	var existing types.AccountAuthenticator
+	found, err := osmoutils.Get(store, key, &existing)
+	if err != nil {
+		return err
+	}
+	if !found {
 		return fmt.Errorf("authenticator with id %d does not exist for account %s", authenticatorId, account)
 	}
+	impl := k.AuthenticatorManager.GetAuthenticatorByType(existing.Type)
+	if impl == nil {
+		return fmt.Errorf("authenticator type %s is not registered", existing.Type)
+	}
+
+	// Authenticators can prevent removal. This should be used sparingly
+	err = impl.OnAuthenticatorRemoved(ctx, account, existing.Data)
+	if err != nil {
+		return err
+	}
+
 	store.Delete(key)
 	return nil
 }

@@ -231,3 +231,16 @@ func (sva SignatureVerificationAuthenticator) Track(ctx sdk.Context, account sdk
 func (sva SignatureVerificationAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
 	return iface.Confirm()
 }
+
+func (sva SignatureVerificationAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	// We allow users to pass no data or a valid public key for signature verification.
+	// Users can pass no data if the public key is already contained in the auth store.
+	if len(data) == 0 || len(data) != secp256k1.PubKeySize {
+		return fmt.Errorf("invalid secp256k1 public key size, expected %d, got %d", secp256k1.PubKeySize, len(data))
+	}
+	return nil
+}
+
+func (sva SignatureVerificationAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	return nil
+}

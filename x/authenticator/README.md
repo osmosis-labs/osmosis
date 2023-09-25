@@ -97,7 +97,7 @@ RemoveAuthenticator(account, authenticatorGlobalId)
 
 6. **Execute Messages**: The transaction is executed.
 
-7**Confirm Execution**: After all messages are authenticated, the `ConfirmExecution` function is called for each authenticator. This allows authenticators to enforce transaction rules like spending and transaction limits.
+7. **Confirm Execution**: After all messages are authenticated, the `ConfirmExecution` function is called for each authenticator. This allows authenticators to enforce transaction rules like spending and transaction limits.
 
 ## Available Authenticator Types
 

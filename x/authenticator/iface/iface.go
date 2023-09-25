@@ -10,12 +10,12 @@ type AuthenticatorData interface{}
 // Authenticator is an interface employed to encapsulate all authentication functionalities essential for
 // verifying transactions, paying transaction fees, and managing gas consumption during verification.
 type Authenticator interface {
-	// Type() defines the various types of authenticators, such as SignatureVerificationAuthenticator
+	// Type defines the various types of authenticators, such as SignatureVerificationAuthenticator
 	// or CosmWasmAuthenticator. Each authenticator type must be registered within the AuthenticatorManager,
 	// and these types are used to link the data structure with the authenticator's logic.
 	Type() string
 
-	// StaticGas() specifies the gas consumption enforced on each call to the authenticator.
+	// StaticGas specifies the gas consumption enforced on each call to the authenticator.
 	StaticGas() uint64
 
 	// Initialize is used when an authenticator associated with an account is retrieved
@@ -61,9 +61,15 @@ type Authenticator interface {
 	// and verify these values.
 	ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData AuthenticatorData) ConfirmationResult
 
-	// Optional Hooks (TODO: Revisit this section)
-	// OnAuthenticatorAdded(...) bool
-	// OnAuthenticatorRemoved(...) bool
+	// OnAuthenticatorAdded is called when an authenticator is added to an account. If the data is not properly formatted
+	// or the authenticator is not compatible with the account, an error should be returned.
+	OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error
+
+	// OnAuthenticatorRemoved is called when an authenticator is removed from an account.
+	// This can be used to update any global data that the authenticator is tracking or to prevent removal
+	// by returning an error.
+	// Removal prevention should be used sparingly and only when absolutely necessary.
+	OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error
 }
 
 // EmptyAuthenticationData is a generic implementation used when no custom authentication data is needed or available

@@ -62,6 +62,16 @@ func (am *AuthenticatorManager) IsAuthenticatorTypeRegistered(authenticatorType 
 	return false
 }
 
+// GetAuthenticatorByType returns the base implementation of the authenticator type
+func (am *AuthenticatorManager) GetAuthenticatorByType(authenticatorType string) iface.Authenticator {
+	for _, authenticator := range am.GetRegisteredAuthenticators() {
+		if authenticator.Type() == authenticatorType {
+			return authenticator
+		}
+	}
+	return nil
+}
+
 // SetDefaultAuthenticatorIndex sets the default authenticator index.
 func (am *AuthenticatorManager) SetDefaultAuthenticatorIndex(index int) {
 	am.defaultAuthenticatorIndex = index

@@ -5,9 +5,10 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
+	impl "github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 )
 
@@ -43,27 +44,17 @@ func (m msgServer) AddAuthenticator(
 	}
 
 	// If there are no other authenticators, ensure that the first authenticator is a SignatureVerificationAuthenticator.
-	if len(authenticators) == 0 && msg.Type != authenticator.SignatureVerificationAuthenticatorType {
+	if len(authenticators) == 0 && msg.Type != impl.SignatureVerificationAuthenticatorType {
 		return nil, fmt.Errorf("the first authenticator must be a SignatureVerificationAuthenticator")
 	}
 
-	// Validate that the data is correct for each type of authenticator.
-	switch msg.Type {
-	case authenticator.SignatureVerificationAuthenticatorType:
-		if len(authenticators) == 0 {
-			// We ensure the data for the first public key is correct. If the public key is already in the
-			// auth store, we will not use this data again. This validation is performed only for the first public key.
-			pubKey := secp256k1.PubKey{Key: msg.Data}
-			newAccountPubKey := sdk.AccAddress(pubKey.Address())
-			if !newAccountPubKey.Equals(sender) {
-				return nil, fmt.Errorf("the first authenticator must be associated with the account, expected %s, got %s", sender, newAccountPubKey)
-			}
-		}
-
-		// We allow users to pass no data or a valid public key for signature verification.
-		// Users can pass no data if the public key is already contained in the auth store.
-		if len(msg.Data) == 0 || len(msg.Data) != secp256k1.PubKeySize {
-			return nil, fmt.Errorf("invalid secp256k1 public key size, expected %d, got %d", secp256k1.PubKeySize, len(msg.Data))
+	if len(authenticators) == 0 {
+		// We ensure the data for the first public key is correct. If the public key is already in the
+		// auth store, we will not use this data again. This validation is performed only for the first public key.
+		pubKey := secp256k1.PubKey{Key: msg.Data}
+		newAccountPubKey := sdk.AccAddress(pubKey.Address())
+		if !newAccountPubKey.Equals(sender) {
+			return nil, fmt.Errorf("the first authenticator must be associated with the account, expected %s, got %s", sender, newAccountPubKey)
 		}
 	}
 
