@@ -554,15 +554,15 @@ func (k Keeper) RouteCalculateSpotPrice(
 	poolId uint64,
 	quoteAssetDenom string,
 	baseAssetDenom string,
-) (price osmomath.Dec, err error) {
+) (price osmomath.BigDec, err error) {
 	swapModule, err := k.GetPoolModule(ctx, poolId)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	price, err = swapModule.CalculateSpotPrice(ctx, poolId, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	return price, nil
@@ -886,7 +886,7 @@ func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 
 	// Multiply `volumeGenerated.Amount.ToDec()` by this spot price.
 	// While rounding does not particularly matter here, we round down to ensure that we do not overcount volume.
-	volumeInOsmo := volumeGenerated.Amount.ToLegacyDec().Mul(osmoPerInputToken).TruncateInt()
+	volumeInOsmo := osmomath.BigDecFromSDKInt(volumeGenerated.Amount).Mul(osmoPerInputToken).Dec().TruncateInt()
 
 	// Add this new volume to the global tracked volume for the pool ID
 	k.addVolume(ctx, poolId, sdk.NewCoin(OSMO, volumeInOsmo))
@@ -900,12 +900,14 @@ func (k Keeper) addVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Co
 
 	// Add newly generated volume to existing volume and set updated volume in state
 	newTotalVolume := currentTotalVolume.Add(volumeGenerated)
-	k.setVolume(ctx, poolId, newTotalVolume)
+	k.SetVolume(ctx, poolId, newTotalVolume)
 }
 
 // nolint: unused
-// setVolume sets the given volume to the global tracked volume for the given pool ID.
-func (k Keeper) setVolume(ctx sdk.Context, poolId uint64, totalVolume sdk.Coins) {
+// SetVolume sets the given volume to the global tracked volume for the given pool ID.
+// Note that this function is exported for cross-module testing purposes and should not be
+// called directly from other modules.
+func (k Keeper) SetVolume(ctx sdk.Context, poolId uint64, totalVolume sdk.Coins) {
 	storedVolume := types.TrackedVolume{Amount: totalVolume}
 	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.KeyPoolVolume(poolId), &storedVolume)
 }

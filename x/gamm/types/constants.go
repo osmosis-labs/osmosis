@@ -33,7 +33,8 @@ var (
 	// Internal note: Ctrl+F for MaxSpotPrice in code if ever changed.
 	// Other tests depend on being equal to MaxSpotPrice,
 	// but don't directly import it due to import issues.
-	MaxSpotPrice = osmomath.NewDec(2).Power(128).Sub(osmomath.OneDec())
+	MaxSpotPrice       = osmomath.NewDec(2).Power(128).Sub(osmomath.OneDec())
+	MaxSpotPriceBigDec = osmomath.BigDecFromDec(MaxSpotPrice)
 	// MinSpotPrice is the minimum supported spot price. Anything less than this will error.
 	// It is limited by osmomath.Dec's precision.
 	MinSpotPrice = osmomath.SmallestDec()

@@ -41,3 +41,31 @@ func (k Keeper) MoveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee osmomath.Int, gaugeCoins sdk.Coins) error {
 	return k.chargeFeeIfSufficientFeeDenomBalance(ctx, address, fee, gaugeCoins)
 }
+
+// SyncGroupWeights updates the individual and total weights of the gauge records based on the splitting policy.
+func (k Keeper) SyncGroupWeights(ctx sdk.Context, group types.Group) error {
+	return k.syncGroupWeights(ctx, group)
+}
+
+// SetGauge sets the regular gauge to state.
+func (k Keeper) SetGauge(ctx sdk.Context, gauge *types.Gauge) error {
+	return k.setGauge(ctx, gauge)
+}
+
+// exporting an internal helper for testing
+func (k Keeper) AddToGaugeRewardsInternal(ctx sdk.Context, coins sdk.Coins, gaugeID uint64) error {
+	return k.addToGaugeRewards(ctx, coins, gaugeID)
+}
+
+// SyncVolumeSplitGroup updates the individual and total weights of the gauge records based on the volume splitting policy.
+func (k Keeper) SyncVolumeSplitGroup(ctx sdk.Context, volumeSplitGauge types.Group) error {
+	return k.syncVolumeSplitGroup(ctx, volumeSplitGauge)
+}
+
+func (k Keeper) HandleGroupPostDistribute(ctx sdk.Context, groupGauge types.Gauge, coinsDistributed sdk.Coins) error {
+	return k.handleGroupPostDistribute(ctx, groupGauge, coinsDistributed)
+}
+
+func RegularGaugeStoreKey(ID uint64) []byte {
+	return gaugeStoreKey(ID)
+}

@@ -260,10 +260,10 @@ func (mr *MockPoolModuleIMockRecorder) CalcOutAmtGivenIn(ctx, poolI, tokenIn, to
 }
 
 // CalculateSpotPrice mocks base method.
-func (m *MockPoolModuleI) CalculateSpotPrice(ctx types.Context, poolId uint64, quoteAssetDenom, baseAssetDenom string) (osmomath.Dec, error) {
+func (m *MockPoolModuleI) CalculateSpotPrice(ctx types.Context, poolId uint64, quoteAssetDenom, baseAssetDenom string) (osmomath.BigDec, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CalculateSpotPrice", ctx, poolId, quoteAssetDenom, baseAssetDenom)
-	ret0, _ := ret[0].(osmomath.Dec)
+	ret0, _ := ret[0].(osmomath.BigDec)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -391,20 +391,6 @@ func (m *MockPoolModuleI) SwapExactAmountOut(ctx types.Context, sender types.Acc
 func (mr *MockPoolModuleIMockRecorder) SwapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, spreadFactor interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapExactAmountOut", reflect.TypeOf((*MockPoolModuleI)(nil).SwapExactAmountOut), ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, spreadFactor)
-}
-
-// ValidatePermissionlessPoolCreationEnabled mocks base method.
-func (m *MockPoolModuleI) ValidatePermissionlessPoolCreationEnabled(ctx types.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidatePermissionlessPoolCreationEnabled", ctx)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ValidatePermissionlessPoolCreationEnabled indicates an expected call of ValidatePermissionlessPoolCreationEnabled.
-func (mr *MockPoolModuleIMockRecorder) ValidatePermissionlessPoolCreationEnabled(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePermissionlessPoolCreationEnabled", reflect.TypeOf((*MockPoolModuleI)(nil).ValidatePermissionlessPoolCreationEnabled), ctx)
 }
 
 // MockPoolIncentivesKeeperI is a mock of PoolIncentivesKeeperI interface.
