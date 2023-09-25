@@ -161,7 +161,7 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				}
 
 				// Ratio of the token out should be between the before spot price and after spot price.
-				tradeAvgPrice := test.param.tokenIn.Amount.ToLegacyDec().Quo(tokenOutAmount.ToLegacyDec())
+				tradeAvgPrice := osmomath.BigDecFromDec(test.param.tokenIn.Amount.ToLegacyDec().Quo(tokenOutAmount.ToLegacyDec()))
 				s.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
 				_, err := keeper.SwapExactAmountIn(ctx, s.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, spreadFactor)
@@ -413,7 +413,7 @@ func (s *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				s.NoError(err, "test: %v", test.name)
 
 				// Ratio of the token out should be between the before spot price and after spot price.
-				tradeAvgPrice := tokenInAmount.ToLegacyDec().Quo(test.param.tokenOut.Amount.ToLegacyDec())
+				tradeAvgPrice := osmomath.BigDecFromDec(tokenInAmount.ToLegacyDec().Quo(test.param.tokenOut.Amount.ToLegacyDec()))
 				s.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
 				_, err := keeper.SwapExactAmountOut(s.Ctx, s.TestAccs[0], pool, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, spreadFactor)

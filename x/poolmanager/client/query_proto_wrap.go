@@ -219,7 +219,9 @@ func (q Querier) SpotPrice(ctx sdk.Context, req queryproto.SpotPriceRequest) (*q
 	}
 
 	return &queryproto.SpotPriceResponse{
-		SpotPrice: sp.String(),
+		// Note: truncation exists here to maintain backwards compatibility.
+		// This query has historically had 18 decimals in response.
+		SpotPrice: sp.Dec().String(),
 	}, err
 }
 
