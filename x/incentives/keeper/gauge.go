@@ -231,13 +231,13 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 // - fails to set the Group's Gauge to state
 func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, poolIDs []uint64) (uint64, error) {
 	if len(poolIDs) == 0 {
-		return 0, types.NoPoolIDsGivenError
+		return 0, types.ErrNoPoolIDsGiven
 	}
 	if len(poolIDs) == 1 {
 		return 0, types.OnePoolIDGroupError{PoolID: poolIDs[0]}
 	}
 	if numEpochPaidOver == 0 {
-		return 0, types.ZeroNumEpochsPaidOverError
+		return 0, types.ErrZeroNumEpochsPaidOver
 	}
 
 	// Initialize gauge information for every pool ID.
