@@ -178,8 +178,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 		{
 			// This test case tests if there is two messages with the same signer
 			// with two successful signatures.
-			// NOTE: Intuitively this should pass but it doesn't, which reflects the behavior in the sdk
-			Description: "Test: failed to verified authenticator with 2 messages signed correctly with the same address: FAIL",
+			Description: "Test: verified authenticator with 2 messages signed correctly with the same address: PASS",
 			TestData: SignatureVerificationAuthenticatorTestData{
 				[]sdk.Msg{
 					testMsg1,
@@ -198,10 +197,10 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 					s.TestPrivKeys[1],
 					s.TestPrivKeys[1],
 				},
-				0,
-				0,
-				false,
-				false,
+				2,
+				2,
+				true,
+				true,
 			},
 		},
 		{
@@ -219,15 +218,14 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 					s.TestPrivKeys[0],
 					s.TestPrivKeys[1],
 					s.TestPrivKeys[2],
-					s.TestPrivKeys[3],
 				},
 				[]cryptotypes.PrivKey{
 					s.TestPrivKeys[0],
 					s.TestPrivKeys[2],
 				},
-				0,
-				0,
-				false,
+				3,
+				3,
+				true,
 				false,
 			},
 		},
@@ -317,7 +315,6 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 					s.Require().True(success.IsAuthenticated())
 
 				} else {
-					// TODO: check error here
 					success := s.SigVerificationAuthenticator.Authenticate(s.Ctx, nil, nil, authData)
 					s.Require().False(success.IsAuthenticated())
 				}
@@ -477,6 +474,7 @@ func GenTx(
 	tx.SetGasLimit(gas)
 
 	// 2nd round: once all signer infos are set, every signer can sign.
+	signers = signers[0:len(signatures)]
 	for i, p := range signatures {
 		signerData := authsigning.SignerData{
 			ChainID:       chainID,

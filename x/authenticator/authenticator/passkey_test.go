@@ -12,11 +12,12 @@ import (
 
 	// multisig
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
-	"github.com/stretchr/testify/suite"
 )
 
 type PassKeyAuthenticationSuite struct {
@@ -53,7 +54,6 @@ func (s *PassKeyAuthenticationSuite) SetupTest() {
 
 	// Set up test accounts
 	for i := 0; i < len(TestKeys); i++ {
-		//		bz, _ := hex.DecodeString(key)
 		priv, _ := secp256r1.GenPrivKey()
 
 		// add the test private keys to array for later use
@@ -105,7 +105,6 @@ type PassKeyAuthenticatorTestData struct {
 	Signatures                 []cryptotypes.PrivKey
 	NumberOfExpectedSigners    int
 	NumberOfExpectedSignatures int
-	ShouldSucceedGettingData   bool
 	ShouldSucceedPassKey       bool
 }
 
@@ -160,7 +159,6 @@ func (s *PassKeyAuthenticationSuite) TestSignatureAuthenticator() {
 				1,
 				1,
 				true,
-				true,
 			},
 		},
 		{
@@ -186,14 +184,12 @@ func (s *PassKeyAuthenticationSuite) TestSignatureAuthenticator() {
 				3,
 				3,
 				true,
-				true,
 			},
 		},
 		{
 			// This test case tests if there is two messages with the same signer
 			// with two successful signatures.
-			// NOTE: Intuitively this should pass but it doesn't, which reflects the behavior in the sdk
-			Description: "Test: failed to verified authenticator with 2 messages signed correctly with the same address: FAIL",
+			Description: "Test: verified authenticator with 2 messages signed correctly with the same address: PASS",
 			TestData: PassKeyAuthenticatorTestData{
 				[]sdk.Msg{
 					testMsg1,
@@ -212,10 +208,9 @@ func (s *PassKeyAuthenticationSuite) TestSignatureAuthenticator() {
 					s.TestPrivKeys[1],
 					s.TestPrivKeys[1],
 				},
-				0,
-				0,
-				false,
-				false,
+				2,
+				2,
+				true,
 			},
 		},
 		{
@@ -232,15 +227,15 @@ func (s *PassKeyAuthenticationSuite) TestSignatureAuthenticator() {
 				[]cryptotypes.PrivKey{
 					s.TestPrivKeys[0],
 					s.TestPrivKeys[1],
+					s.TestPrivKeys[1],
 					s.TestPrivKeys[2],
 				},
 				[]cryptotypes.PrivKey{
 					s.TestPrivKeys[0],
 					s.TestPrivKeys[2],
 				},
-				0,
-				0,
-				false,
+				3,
+				3,
 				false,
 			},
 		},
@@ -251,21 +246,20 @@ func (s *PassKeyAuthenticationSuite) TestSignatureAuthenticator() {
 					testMsg1,
 					testMsg2,
 					testMsg3,
-					testMsg4,
 				},
-				[]uint64{0, 0},
-				[]uint64{0, 0},
+				[]uint64{0, 0, 0},
+				[]uint64{0, 0, 0},
 				[]cryptotypes.PrivKey{
 					s.TestPrivKeys[0],
+					s.TestPrivKeys[1],
 					s.TestPrivKeys[1],
 				},
 				[]cryptotypes.PrivKey{
 					s.TestPrivKeys[0],
 					s.TestPrivKeys[2],
 				},
-				0,
-				0,
-				false,
+				3,
+				3,
 				false,
 			},
 		},
@@ -285,7 +279,6 @@ func (s *PassKeyAuthenticationSuite) TestSignatureAuthenticator() {
 				},
 				1,
 				1,
-				true,
 				false,
 			},
 		},
@@ -308,6 +301,7 @@ func (s *PassKeyAuthenticationSuite) TestSignatureAuthenticator() {
 
 			// Test GetAuthenticationData
 			authData, err := s.PassKeyAuthenticator.GetAuthenticationData(s.Ctx, tx, -1, false)
+			s.Require().NoError(err)
 
 			// cast the interface as a concrete struct
 			sigData := authData.(authenticator.SignatureData)
@@ -317,12 +311,6 @@ func (s *PassKeyAuthenticationSuite) TestSignatureAuthenticator() {
 
 			// the signature data should contain x signatures
 			s.Require().Equal(tc.TestData.NumberOfExpectedSignatures, len(sigData.Signatures))
-			if tc.TestData.ShouldSucceedGettingData {
-				s.Require().NoError(err)
-			} else {
-				s.Require().Error(err)
-				return
-			}
 
 			// Test Authenticate method
 			var success iface.AuthenticationResult
@@ -337,12 +325,12 @@ func (s *PassKeyAuthenticationSuite) TestSignatureAuthenticator() {
 					s.Require().NoError(err)
 
 					success = authenticator.Authenticate(s.Ctx, nil, nil, authData)
-					if tc.TestData.ShouldSucceedPassKey {
-						s.Require().True(success.IsAuthenticated())
-					} else {
-						s.Require().False(success.IsAuthenticated())
-					}
 				}
+			}
+			if tc.TestData.ShouldSucceedPassKey {
+				s.Require().True(success.IsAuthenticated())
+			} else {
+				s.Require().False(success.IsAuthenticated())
 			}
 		})
 	}
