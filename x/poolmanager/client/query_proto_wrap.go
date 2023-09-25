@@ -285,10 +285,13 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	spotPrice, err := swapModule.CalculateSpotPrice(ctx, req.PoolId, req.FromCoin.Denom, req.ToCoinDenom)
+	spotPriceBigDec, err := swapModule.CalculateSpotPrice(ctx, req.PoolId, req.FromCoin.Denom, req.ToCoinDenom)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
+	// Convert to normal Dec
+	spotPrice := spotPriceBigDec.Dec()
 
 	// If ExternalPrice is specified we need to adjust the maxPriceImpact based on the deviation between spot and
 	// external price.
