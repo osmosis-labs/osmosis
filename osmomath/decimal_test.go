@@ -1533,19 +1533,6 @@ func (s *decimalTestSuite) TestDec_WithPrecision() {
 	}
 
 	for tcIndex, tc := range tests {
-<<<<<<< HEAD
-		if tc.expPanic {
-			s.Require().Panics(func() { tc.d.DecWithPrecision(tc.precision) })
-		} else {
-			var got osmomath.Dec
-			if tc.precision == osmomath.PrecisionDec {
-				got = tc.d.Dec()
-			} else {
-				got = tc.d.DecWithPrecision(tc.precision)
-			}
-			s.Require().Equal(tc.want, got, "bad Dec conversion, index: %v", tcIndex)
-		}
-=======
 		name := "testcase_" + fmt.Sprint(tcIndex)
 		s.Run(name, func() {
 			osmomath.ConditionalPanic(s.T(), tc.expPanic, func() {
@@ -1558,7 +1545,6 @@ func (s *decimalTestSuite) TestDec_WithPrecision() {
 				s.Require().Equal(tc.want, got, "bad Dec conversion, index: %v", tcIndex)
 			})
 		})
->>>>>>> 6f033c5a (osmomath: rename `Precision(Big)Dec` to `(Big)DecPrecision` (#6521))
 	}
 }
 
@@ -1567,38 +1553,35 @@ func (s *decimalTestSuite) TestChopPrecision_Mutative() {
 		startValue        osmomath.BigDec
 		expectedMutResult osmomath.BigDec
 		precision         uint64
+		expPanic          bool
 	}{
-		{osmomath.NewBigDec(0), osmomath.MustNewBigDecFromStr("0"), 0},
-		{osmomath.NewBigDec(1), osmomath.MustNewBigDecFromStr("1"), 0},
-		{osmomath.NewBigDec(10), osmomath.MustNewBigDecFromStr("10"), 2},
+		{osmomath.NewBigDec(0), osmomath.MustNewBigDecFromStr("0"), 0, false},
+		{osmomath.NewBigDec(1), osmomath.MustNewBigDecFromStr("1"), 0, false},
+		{osmomath.NewBigDec(10), osmomath.MustNewBigDecFromStr("10"), 2, false},
 		// how to read these comments: ab.cde(fgh) -> ab.cdefgh = initial BigDec; (fgh) = decimal places that will be truncated
 		// 5.1()
-		{osmomath.NewBigDecWithPrec(51, 1), osmomath.MustNewBigDecFromStr("5.1"), 1},
+		{osmomath.NewBigDecWithPrec(51, 1), osmomath.MustNewBigDecFromStr("5.1"), 1, false},
 		// 1.(0010)
-		{osmomath.NewBigDecWithPrec(10010, 4), osmomath.MustNewBigDecFromStr("1"), 0},
+		{osmomath.NewBigDecWithPrec(10010, 4), osmomath.MustNewBigDecFromStr("1"), 0, false},
 		// 1009.31254(83952)
-		{osmomath.NewBigDecWithPrec(10093125483952, 10), osmomath.MustNewBigDecFromStr("1009.31254"), 5},
+		{osmomath.NewBigDecWithPrec(10093125483952, 10), osmomath.MustNewBigDecFromStr("1009.31254"), 5, false},
 		// 0.1009312548(3952)
-		{osmomath.NewBigDecWithPrec(10093125483952, 14), osmomath.MustNewBigDecFromStr("0.1009312548"), 10},
+		{osmomath.NewBigDecWithPrec(10093125483952, 14), osmomath.MustNewBigDecFromStr("0.1009312548"), 10, false},
 		// Edge case: max precision. Should remain unchanged
-<<<<<<< HEAD
-		{osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.PrecisionBigDec},
-=======
 		{osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.BigDecPrecision, false},
 		// Precision exceeds max precision - panic
 		{osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.BigDecPrecision + 1, true},
->>>>>>> 6f033c5a (osmomath: rename `Precision(Big)Dec` to `(Big)DecPrecision` (#6521))
 	}
 	for id, tc := range tests {
 		name := "testcase_" + fmt.Sprint(id)
 		s.Run(name, func() {
-			startMut := tc.startValue.Clone()
-			startNonMut := tc.startValue.Clone()
-
-			resultMut := startMut.ChopPrecisionMut(tc.precision)
-			resultNonMut := startNonMut.ChopPrecision(tc.precision)
-
-			s.assertMutResult(tc.expectedMutResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+			osmomath.ConditionalPanic(s.T(), tc.expPanic, func() {
+				startMut := tc.startValue.Clone()
+				startNonMut := tc.startValue.Clone()
+				resultMut := startMut.ChopPrecisionMut(tc.precision)
+				resultNonMut := startNonMut.ChopPrecision(tc.precision)
+				s.assertMutResult(tc.expectedMutResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+			})
 		})
 	}
 }
@@ -1717,4 +1700,3 @@ func (s *decimalTestSuite) TestQuoTruncate_MutativeAndNonMutative() {
 		}
 	}
 }
-
