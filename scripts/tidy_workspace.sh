@@ -4,7 +4,6 @@
 awk '/^use / {print substr($0, 5)}' go.work | while read -r submodule; do
   # Change directory to the submodule
   if cd "$submodule"; then
-    echo "Entering $submodule"
     # Run go mod tidy
     go mod tidy
     if [ $? -eq 0 ]; then
