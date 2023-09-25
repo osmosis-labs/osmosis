@@ -3,6 +3,7 @@ package authenticator
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -48,7 +49,6 @@ func GetSignersAndSignatures(
 	msgIndex int,
 ) ([]sdk.AccAddress, []signing.SignatureV2, error) {
 	// Map to associate each signer with its signature.
-	// TODO: is this deterministic?
 	signerToSignature := make(map[string]signing.SignatureV2)
 	sigIndex := 0
 	specificMsg := msgIndex != -1
@@ -116,4 +116,62 @@ func GetSignersAndSignatures(
 	}
 
 	return resultSigners, resultSignatures, nil
+}
+
+// GetCommonAuthenticationData retrieves common authentication data from a transaction for Cosmos SDK.
+// It extracts signers, signatures, and other necessary information from the provided transaction.
+// It is used in both the PassKeyAuthenticator and the SignatureVerificationAuthenticator
+//
+// Parameters:
+// - ctx: The context of the current operation.
+// - tx: The transaction to extract authentication data from.
+// - messageIndex: The index of the message within the transaction.
+// - simulate: A boolean indicating whether to simulate the transaction.
+//
+// Returns:
+// - signers: A list of account addresses that signed the transaction.
+// - signatures: A list of signature objects.
+// - sigTx: The transaction with signature information.
+// - err: An error if any issues are encountered during the extraction.
+func GetCommonAuthenticationData(
+	ctx sdk.Context,
+	tx sdk.Tx,
+	messageIndex int8,
+	simulate bool,
+) (signers []sdk.AccAddress, signatures []signing.SignatureV2, sigTx authsigning.Tx, err error) {
+	// Attempt to cast the provided transaction to an authsigning.Tx.
+	sigTx, ok := tx.(authsigning.Tx)
+	if !ok {
+		return nil, nil, nil,
+			sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+	}
+
+	// Retrieve signatures from the transaction.
+	signatures, err = sigTx.GetSignaturesV2()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	// Retrieve messages from the transaction.
+	msgs := sigTx.GetMsgs()
+
+	// Ensure the transaction is of type sdk.FeeTx.
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return nil, nil, nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+
+	// Parse signers and signatures from the transaction.
+	signers, signatures, err = GetSignersAndSignatures(
+		msgs,
+		signatures,
+		feeTx.FeePayer().String(),
+		int(messageIndex),
+	)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	// Return the extracted data.
+	return signers, signatures, sigTx, nil
 }
