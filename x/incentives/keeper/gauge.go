@@ -252,9 +252,6 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 		return 0, err
 	}
 
-	// TODO: charge fixed fee. Make sure to update method spec and tests.
-	// https://github.com/osmosis-labs/osmosis/issues/6506
-
 	// TODO: subdao to bypass
 	// TODO: governance to bypass
 	// Make sure to update method spec and tests.
