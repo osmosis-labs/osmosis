@@ -1376,7 +1376,6 @@ func (s *decimalTestSuite) TestPowerInteger_Mutation() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-
 			startMut := tc.startValue.Clone()
 			startNonMut := tc.startValue.Clone()
 
@@ -1578,9 +1577,11 @@ func (s *decimalTestSuite) TestChopPrecision_Mutative() {
 			osmomath.ConditionalPanic(s.T(), tc.expPanic, func() {
 				startMut := tc.startValue.Clone()
 				startNonMut := tc.startValue.Clone()
+        
 				resultMut := startMut.ChopPrecisionMut(tc.precision)
 				resultNonMut := startNonMut.ChopPrecision(tc.precision)
-				s.assertMutResult(tc.expectedMutResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+
+        s.assertMutResult(tc.expectedMutResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
 			})
 		})
 	}
@@ -1619,27 +1620,26 @@ func (s *decimalTestSuite) TestQuoRoundUp_MutativeAndNonMutative() {
 
 	for tcIndex, tc := range tests {
 		tc := tc
+		name := "testcase_" + fmt.Sprint(tcIndex)
+		s.Run(name, func() {
+			osmomath.ConditionalPanic(s.T(), tc.d2.IsZero(), func() {
+				copy := tc.d1.Clone()
 
-		if tc.d2.IsZero() { // panic for divide by zero
-			s.Require().Panics(func() { tc.d1.QuoRoundUpMut(tc.d2) })
-		} else {
+				nonMutResult := copy.QuoRoundUp(tc.d2)
 
-			copy := tc.d1.Clone()
+				// Return is as expected
+				s.Require().Equal(tc.expQuoRoundUpMut, nonMutResult, "exp %v, res %v, tc %d", tc.expQuoRoundUpMut.String(), tc.d1.String(), tcIndex)
 
-			nonMutResult := copy.QuoRoundUp(tc.d2)
+				// Receiver is not mutated
+				s.Require().Equal(tc.d1, copy, "exp %v, res %v, tc %d", tc.expQuoRoundUpMut.String(), tc.d1.String(), tcIndex)
 
-			// Return is as expected
-			s.Require().Equal(tc.expQuoRoundUpMut, nonMutResult, "exp %v, res %v, tc %d", tc.expQuoRoundUpMut.String(), tc.d1.String(), tcIndex)
+				// Receiver is mutated.
+				tc.d1.QuoRoundUpMut(tc.d2)
 
-			// Receiver is not mutated
-			s.Require().Equal(tc.d1, copy, "exp %v, res %v, tc %d", tc.expQuoRoundUpMut.String(), tc.d1.String(), tcIndex)
-
-			// Receiver is mutated.
-			tc.d1.QuoRoundUpMut(tc.d2)
-
-			// Make sure d1 equals to expected
-			s.Require().True(tc.expQuoRoundUpMut.Equal(tc.d1), "exp %v, res %v, tc %d", tc.expQuoRoundUpMut.String(), tc.d1.String(), tcIndex)
-		}
+				// Make sure d1 equals to expected
+				s.Require().True(tc.expQuoRoundUpMut.Equal(tc.d1), "exp %v, res %v, tc %d", tc.expQuoRoundUpMut.String(), tc.d1.String(), tcIndex)
+			})
+		})
 	}
 }
 
@@ -1678,25 +1678,25 @@ func (s *decimalTestSuite) TestQuoTruncate_MutativeAndNonMutative() {
 	for tcIndex, tc := range tests {
 		tc := tc
 
-		if tc.d2.IsZero() { // panic for divide by zero
-			s.Require().Panics(func() { tc.d1.QuoTruncateMut(tc.d2) })
-		} else {
+		name := "testcase_" + fmt.Sprint(tcIndex)
+		s.Run(name, func() {
+			osmomath.ConditionalPanic(s.T(), tc.d2.IsZero(), func() {
+				copy := tc.d1.Clone()
 
-			copy := tc.d1.Clone()
+				nonMutResult := copy.QuoTruncate(tc.d2)
 
-			nonMutResult := copy.QuoTruncate(tc.d2)
+				// Return is as expected
+				s.Require().Equal(tc.expQuoTruncateMut, nonMutResult, "exp %v, res %v, tc %d", tc.expQuoTruncateMut.String(), tc.d1.String(), tcIndex)
 
-			// Return is as expected
-			s.Require().Equal(tc.expQuoTruncateMut, nonMutResult, "exp %v, res %v, tc %d", tc.expQuoTruncateMut.String(), tc.d1.String(), tcIndex)
+				// Receiver is not mutated
+				s.Require().Equal(tc.d1, copy, "exp %v, res %v, tc %d", tc.expQuoTruncateMut.String(), tc.d1.String(), tcIndex)
 
-			// Receiver is not mutated
-			s.Require().Equal(tc.d1, copy, "exp %v, res %v, tc %d", tc.expQuoTruncateMut.String(), tc.d1.String(), tcIndex)
+				// Receiver is mutated.
+				tc.d1.QuoTruncateMut(tc.d2)
 
-			// Receiver is mutated.
-			tc.d1.QuoTruncateMut(tc.d2)
-
-			// Make sure d1 equals to expected
-			s.Require().True(tc.expQuoTruncateMut.Equal(tc.d1), "exp %v, res %v, tc %d", tc.expQuoTruncateMut.String(), tc.d1.String(), tcIndex)
-		}
+				// Make sure d1 equals to expected
+				s.Require().True(tc.expQuoTruncateMut.Equal(tc.d1), "exp %v, res %v, tc %d", tc.expQuoTruncateMut.String(), tc.d1.String(), tcIndex)
+			})
+		})
 	}
 }
