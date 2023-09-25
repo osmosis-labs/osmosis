@@ -28,8 +28,9 @@ func CreateUpgradeHandler(
 		// Initialize the newly created param
 		keepers.ConcentratedLiquidityKeeper.SetParam(ctx, cltypes.KeyUnrestrictedPoolCreatorWhitelist, []string{})
 
-		// Initialize the new param in incentives for group creation.
+		// Initialize the new params in incentives for group creation.
 		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyGroupCreationFee, incentivestypes.DefaultGroupCreationFee)
+		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyCreatorWhitelist, []string{})
 
 		return migrations, nil
 	}

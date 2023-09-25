@@ -15,8 +15,9 @@ const DefaultIndex uint64 = 1
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Params: Params{
-			DistrEpochIdentifier: "week",
-			GroupCreationFee:     DefaultGroupCreationFee,
+			DistrEpochIdentifier:         "week",
+			GroupCreationFee:             DefaultGroupCreationFee,
+			UnrestrictedCreatorWhitelist: []string{},
 		},
 		Gauges: []Gauge{},
 		LockableDurations: []time.Duration{

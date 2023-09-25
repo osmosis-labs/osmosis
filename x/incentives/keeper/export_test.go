@@ -87,3 +87,7 @@ func CombineKeys(keys ...[]byte) []byte {
 func GetTimeKeys(timestamp time.Time) []byte {
 	return getTimeKey(timestamp)
 }
+
+func (k Keeper) ChargeGroupCreationFeeIfNotWhitelisted(ctx sdk.Context, sender sdk.AccAddress) (chargedFee bool, err error) {
+	return k.chargeGroupCreationFeeIfNotWhitelisted(ctx, sender)
+}
