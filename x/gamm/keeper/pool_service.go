@@ -47,7 +47,7 @@ func (k Keeper) CalculateSpotPrice(
 
 	// TODO: this is done to maintain state-compatibility with v19.x
 	// Remove after https://github.com/osmosis-labs/osmosis/issues/6064 is complete.
-	spotPrice.ChopPrecisionMut(osmomath.PrecisionDec)
+	spotPrice.ChopPrecisionMut(osmomath.DecPrecision)
 
 	// if spotPrice greater than max spot price, return an error
 	if spotPrice.GT(types.MaxSpotPriceBigDec) {

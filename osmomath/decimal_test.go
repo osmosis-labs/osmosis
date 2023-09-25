@@ -1511,14 +1511,14 @@ func (s *decimalTestSuite) TestDec_WithPrecision() {
 		expPanic  bool
 	}{
 		// test cases for basic SDKDec() conversion
-		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000000000"), osmomath.PrecisionDec, false},
-		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000000000"), osmomath.PrecisionDec, false},
-		{osmomath.NewBigDec(10), sdk.MustNewDecFromStr("10.000000000000000000"), osmomath.PrecisionDec, false},
-		{osmomath.NewBigDec(12340), sdk.MustNewDecFromStr("12340.000000000000000000"), osmomath.PrecisionDec, false},
-		{osmomath.NewBigDecWithPrec(12340, 4), sdk.MustNewDecFromStr("1.234000000000000000"), osmomath.PrecisionDec, false},
-		{osmomath.NewBigDecWithPrec(12340, 5), sdk.MustNewDecFromStr("0.123400000000000000"), osmomath.PrecisionDec, false},
-		{osmomath.NewBigDecWithPrec(12340, 8), sdk.MustNewDecFromStr("0.000123400000000000"), osmomath.PrecisionDec, false},
-		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), osmomath.PrecisionDec, false},
+		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000000000"), osmomath.DecPrecision, false},
+		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000000000"), osmomath.DecPrecision, false},
+		{osmomath.NewBigDec(10), sdk.MustNewDecFromStr("10.000000000000000000"), osmomath.DecPrecision, false},
+		{osmomath.NewBigDec(12340), sdk.MustNewDecFromStr("12340.000000000000000000"), osmomath.DecPrecision, false},
+		{osmomath.NewBigDecWithPrec(12340, 4), sdk.MustNewDecFromStr("1.234000000000000000"), osmomath.DecPrecision, false},
+		{osmomath.NewBigDecWithPrec(12340, 5), sdk.MustNewDecFromStr("0.123400000000000000"), osmomath.DecPrecision, false},
+		{osmomath.NewBigDecWithPrec(12340, 8), sdk.MustNewDecFromStr("0.000123400000000000"), osmomath.DecPrecision, false},
+		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), osmomath.DecPrecision, false},
 		// test cases with custom precision:
 		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000"), 12, false},
 		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000"), 12, false},
@@ -1529,7 +1529,7 @@ func (s *decimalTestSuite) TestDec_WithPrecision() {
 		// no decimal point: 18012004 -> 18012004
 		{osmomath.NewBigDecWithPrec(18012004, 0), sdk.MustNewDecFromStr("18012004"), 13, false},
 		// if we try to convert to osmomath.Dec while specifying bigger precision than sdk.Dec has, panics
-		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), osmomath.PrecisionDec + 2, true},
+		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), osmomath.DecPrecision + 2, true},
 	}
 
 	for tcIndex, tc := range tests {
@@ -1537,7 +1537,7 @@ func (s *decimalTestSuite) TestDec_WithPrecision() {
 		s.Run(name, func() {
 			osmomath.ConditionalPanic(s.T(), tc.expPanic, func() {
 				var got osmomath.Dec
-				if tc.precision == osmomath.PrecisionDec {
+				if tc.precision == osmomath.DecPrecision {
 					got = tc.d.Dec()
 				} else {
 					got = tc.d.DecWithPrecision(tc.precision)
@@ -1568,9 +1568,9 @@ func (s *decimalTestSuite) TestChopPrecision_Mutative() {
 		// 0.1009312548(3952)
 		{osmomath.NewBigDecWithPrec(10093125483952, 14), osmomath.MustNewBigDecFromStr("0.1009312548"), 10, false},
 		// Edge case: max precision. Should remain unchanged
-		{osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.PrecisionBigDec, false},
+		{osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.BigDecPrecision, false},
 		// Precision exceeds max precision - panic
-		{osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.PrecisionBigDec + 1, true},
+		{osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.MustNewBigDecFromStr("1.000000000000000000000000000000000001"), osmomath.BigDecPrecision + 1, true},
 	}
 	for id, tc := range tests {
 		name := "testcase_" + fmt.Sprint(id)
