@@ -25,6 +25,8 @@ type (
 	TestingAuthenticator     struct {
 		Approve        ApproveOn
 		GasConsumption int
+		BlockAddition  bool
+		BlockRemoval   bool
 	}
 )
 
@@ -35,7 +37,7 @@ func (t TestingAuthenticator) Type() string {
 	} else {
 		when = "Never"
 	}
-	return "TestingAuthenticator" + when + fmt.Sprintf("GasConsumption%d", t.GasConsumption)
+	return "TestingAuthenticator" + when + fmt.Sprintf("GasConsumption%d", t.GasConsumption) + fmt.Sprintf("BlockAddition%t", t.BlockAddition) + fmt.Sprintf("BlockRemoval%t", t.BlockRemoval)
 }
 
 func (t TestingAuthenticator) StaticGas() uint64 {
@@ -67,9 +69,15 @@ func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccA
 }
 
 func (t TestingAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	if t.BlockAddition {
+		return fmt.Errorf("authenticator could not be added")
+	}
 	return nil
 }
 
 func (t TestingAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
+	if t.BlockRemoval {
+		return fmt.Errorf("authenticator could not be removed")
+	}
 	return nil
 }
