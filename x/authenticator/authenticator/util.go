@@ -66,11 +66,6 @@ func GetSignersAndSignatures(
 				}
 				signerToSignature[signerStr] = suppliedSignatures[sigIndex]
 				sigIndex++
-			} else {
-				// ensure that number of signers and signatures are the same
-				// this also ensures that each message has a signer
-				// NOTE: This is the same behavior that currently exists in the node
-				return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signers")
 			}
 
 			// If dealing with a specific message, capture its signers.
