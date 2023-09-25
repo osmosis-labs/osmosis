@@ -205,6 +205,14 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()
 	appKeepers.AuthenticatorManager.InitializeAuthenticators([]iface.Authenticator{
 		authenticator.NewSignatureVerificationAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()), // default
+		authenticator.NewAllOfAuthenticator(appKeepers.AuthenticatorManager),
+		authenticator.NewAnyOfAuthenticator(appKeepers.AuthenticatorManager),
+		authenticator.NewPassKeyAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()),
+		authenticator.NewSpendLimitAuthenticator(
+			appKeepers.keys[authenticatortypes.AuthenticatorStoreKey],
+			"uosmo",
+			authenticator.AbsoluteValue,
+			appKeepers.BankKeeper, appKeepers.PoolManagerKeeper, appKeepers.TwapKeeper),
 	})
 	appKeepers.AuthenticatorManager.SetDefaultAuthenticatorIndex(0)
 
