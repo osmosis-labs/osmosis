@@ -14,7 +14,7 @@ message Params {
       [ (gogoproto.moretags) = "yaml:\"distr_epoch_identifier\"" ];
 
   // group_creation_fee is the fee required to create a new group
-  repeated cosmos.base.v1beta1.Coin group_creation_fee = 6 [
+  repeated cosmos.base.v1beta1.Coin group_creation_fee = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];

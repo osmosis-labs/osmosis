@@ -15,6 +15,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -248,7 +249,7 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 
 	// Charge group creation fee.
 	groupCreationFee := k.GetParams(ctx).GroupCreationFee
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, groupCreationFee); err != nil {
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, distrtypes.ModuleName, groupCreationFee); err != nil {
 		return 0, err
 	}
 
