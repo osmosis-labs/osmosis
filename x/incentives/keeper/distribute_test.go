@@ -464,7 +464,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 	withGaugeCoins := func(tc test, gaugeCoins sdk.Coins) test {
 		tc.gaugeCoins = gaugeCoins
 		tc.expectedDistributions = gaugeCoins
-		tc.expectedRemainingAmountIncentiveRecord = make([]sdk.Dec, len(gaugeCoins))
+		tc.expectedRemainingAmountIncentiveRecord = make([]osmomath.Dec, len(gaugeCoins))
 		for i := range tc.expectedRemainingAmountIncentiveRecord {
 			tc.expectedRemainingAmountIncentiveRecord[i] = osmomath.NewDec(gaugeCoins[i].Amount.Int64())
 		}
@@ -539,25 +539,20 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 			// can function properly.
 			s.Ctx = s.Ctx.WithBlockTime(oneHourAfterDefault)
 
-			s.FundAcc(s.TestAccs[0], tc.gaugeCoins)
-
 			// Create gauge and get it from state
-			externalGaugeid, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, tc.isPerpertual, s.TestAccs[0], tc.gaugeCoins, tc.distrTo, tc.startTime, tc.numEpochsPaidOver, defaultCLPool)
-			s.Require().NoError(err)
-			externalGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, externalGaugeid)
-			s.Require().NoError(err)
+			externalGauge := s.createGaugeNoRestrictions(tc.isPerpertual, tc.gaugeCoins, tc.distrTo, tc.startTime, tc.numEpochsPaidOver, defaultCLPool)
 
 			// Force gauge's pool id to balancer to trigger error
 			if tc.poolId == defaultBalancerPool {
-				err := s.App.PoolIncentivesKeeper.SetPoolGaugeIdInternalIncentive(s.Ctx, defaultBalancerPool, tc.distrTo.Duration, externalGaugeid)
+				err := s.App.PoolIncentivesKeeper.SetPoolGaugeIdInternalIncentive(s.Ctx, defaultBalancerPool, tc.distrTo.Duration, externalGauge.Id)
 				s.Require().NoError(err)
 			}
 
 			// Activate the gauge.
-			err = s.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(s.Ctx, *externalGauge)
+			err := s.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(s.Ctx, externalGauge)
 			s.Require().NoError(err)
 
-			gauges := []types.Gauge{*externalGauge}
+			gauges := []types.Gauge{externalGauge}
 
 			// System under test.
 			totalDistributedCoins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, gauges)
@@ -568,7 +563,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 				s.Require().NoError(err)
 
 				// check the totalAmount of tokens distributed, for both lock gauges and CL pool gauges
-				s.Require().Equal(tc.expectedDistributions, totalDistributedCoins)
+				s.Require().Equal(tc.expectedDistributions.String(), totalDistributedCoins.String())
 
 				incentivesEpochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
 				incentivesEpochDurationSeconds := osmomath.NewDec(incentivesEpochDuration.Milliseconds()).QuoInt(osmomath.NewInt(1000))
@@ -588,7 +583,7 @@ func (s *KeeperTestSuite) TestDistribute_ExternalIncentives_NoLock() {
 				}
 
 				// Check that the gauge's distribution state was updated
-				s.ValidateDistributedGauge(externalGaugeid, 1, tc.expectedDistributions)
+				s.ValidateDistributedGauge(externalGauge.Id, 1, tc.expectedDistributions)
 			}
 		})
 	}
