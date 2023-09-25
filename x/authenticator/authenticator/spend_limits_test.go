@@ -31,8 +31,8 @@ func (s *SpendLimitAuthenticatorTest) SetupTest() {
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
 
 	authenticatorsStoreKey := s.OsmosisApp.GetKVStoreKey()[authenticatortypes.AuthenticatorStoreKey]
-	s.Store = prefix.NewStore(s.Ctx.KVStore(authenticatorsStoreKey), []byte("spendLimitAuthenticator"))
-	s.SpendLimit = authenticator.NewSpendLimitAuthenticator(s.Store, "uosmo", authenticator.AbsoluteValue, s.OsmosisApp.BankKeeper, s.OsmosisApp.PoolManagerKeeper, s.OsmosisApp.TwapKeeper)
+	//s.Store = prefix.NewStore(s.Ctx.KVStore(authenticatorsStoreKey), []byte("spendLimitAuthenticator"))
+	s.SpendLimit = authenticator.NewSpendLimitAuthenticator(authenticatorsStoreKey, "uosmo", authenticator.AbsoluteValue, s.OsmosisApp.BankKeeper, s.OsmosisApp.PoolManagerKeeper, s.OsmosisApp.TwapKeeper)
 }
 
 func (s *SpendLimitAuthenticatorTest) TestInitialize() {

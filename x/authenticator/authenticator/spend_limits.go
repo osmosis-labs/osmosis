@@ -3,6 +3,7 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"math/big"
 	"time"
 
@@ -39,6 +40,7 @@ const (
 
 type SpendLimitAuthenticator struct {
 	store             sdk.KVStore
+	storeKey          sdk.StoreKey
 	quoteDenom        string
 	bankKeeper        bankkeeper.Keeper
 	poolManagerKeeper *poolmanager.Keeper
@@ -53,7 +55,7 @@ var _ iface.Authenticator = &SpendLimitAuthenticator{}
 
 // NewSpendLimitAuthenticator creates a new SpendLimitAuthenticator. Creators must make sure to use a properly prefixed
 // store with this authenticator. That is, prefix.NewStore(authenticatorsStoreKey, []byte("spendLimitAuthenticator"))
-func NewSpendLimitAuthenticator(store sdk.KVStore, quoteDenom string, priceStrategy PriceStrategy, bankKeeper bankkeeper.Keeper, poolManagerKeeper *poolmanager.Keeper, twapKeeper *twap.Keeper) SpendLimitAuthenticator {
+func NewSpendLimitAuthenticator(storeKey sdk.StoreKey, quoteDenom string, priceStrategy PriceStrategy, bankKeeper bankkeeper.Keeper, poolManagerKeeper *poolmanager.Keeper, twapKeeper *twap.Keeper) SpendLimitAuthenticator {
 	// Ideally we'd validate that the store has been properly prefixed here, but the prefix store doesn't expose its prefix
 	if !(priceStrategy == AbsoluteValue || priceStrategy == Twap) {
 		panic("invalid price strategy")
@@ -62,7 +64,7 @@ func NewSpendLimitAuthenticator(store sdk.KVStore, quoteDenom string, priceStrat
 		panic("twap keeper must be provided when using twap price strategy")
 	}
 	return SpendLimitAuthenticator{
-		store:             store,
+		storeKey:          storeKey,
 		quoteDenom:        quoteDenom,
 		bankKeeper:        bankKeeper,
 		poolManagerKeeper: poolManagerKeeper,
@@ -115,6 +117,7 @@ func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, account sdk.Acc
 }
 
 func (sla SpendLimitAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg) error {
+	sla.store = prefix.NewStore(ctx.KVStore(sla.storeKey), []byte(sla.Type()))
 	// Get the current period based on block time
 	currentPeriod := formatPeriodTime(ctx.BlockTime(), sla.periodType)
 
@@ -134,6 +137,7 @@ func (sla SpendLimitAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress
 }
 
 func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
+	sla.store = prefix.NewStore(ctx.KVStore(sla.storeKey), []byte(sla.Type()))
 	prevBalances := sla.GetBalance(account)
 	currentBalances := sla.bankKeeper.GetAllBalances(ctx, account)
 
