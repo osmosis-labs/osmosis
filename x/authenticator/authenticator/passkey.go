@@ -53,7 +53,10 @@ func NewPassKeyAuthenticator(
 ) PassKeyAuthenticator {
 	// NOTE: We generate a private key here that is not used
 	// we do this to allow the Initialize function access to the PubKey struct
-	priv, _ := secp256r1.GenPrivKey()
+	priv, err := secp256r1.GenPrivKey()
+	if err != nil {
+		panic(err)
+	}
 	pk := priv.PubKey()
 
 	return PassKeyAuthenticator{
