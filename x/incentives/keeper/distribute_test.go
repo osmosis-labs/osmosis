@@ -72,6 +72,8 @@ var (
 		FilledEpochs:     1,
 		DistributedCoins: defaultCoins,
 	}
+
+	defaultZeroWeightGaugeRecord = types.InternalGaugeRecord{GaugeId: 1, CurrentWeight: osmomath.ZeroInt(), CumulativeWeight: osmomath.ZeroInt()}
 )
 
 type GroupCreationFields struct {
@@ -1198,168 +1200,6 @@ func (s *KeeperTestSuite) WithBaseCaseDifferentInternalGauges(baseCase GroupCrea
 	return baseCase
 }
 
-func (s *KeeperTestSuite) TestCreateGroupAndDistribute() {
-	// We skip these test until group initialization refactor is complete
-	s.T().Skip()
-
-	hundredKUosmo := sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))
-	hundredKUatom := sdk.NewCoin("uatom", osmomath.NewInt(100_000_000))
-	fifetyKUosmo := sdk.NewCoin("uosmo", osmomath.NewInt(50_000_000))
-	fifetyKUatom := sdk.NewCoin("uatom", osmomath.NewInt(50_000_000))
-	twentyfiveKUosmo := sdk.NewCoin("uosmo", osmomath.NewInt(25_000_000))
-	twentyfiveKUatom := sdk.NewCoin("uatom", osmomath.NewInt(25_000_000))
-
-	baseCase := &GroupCreationFields{
-		coins:            sdk.NewCoins(hundredKUosmo),
-		numEpochPaidOver: 1,
-		owner:            s.TestAccs[1],
-		internalGaugeIds: []uint64{2, 3, 4, 5},
-	}
-
-	tests := []struct {
-		name                                 string
-		createGauge                          GroupCreationFields
-		expectedCoinsPerInternalGauge        sdk.Coins
-		expectedCoinsDistributedPerEpoch     sdk.Coins
-		expectCreateGroupError               bool
-		expectDistributeToInternalGaugeError bool
-	}{
-		{
-			name:                             "Valid case: Valid perp-Group Creation and Distribution",
-			createGauge:                      *baseCase,
-			expectedCoinsPerInternalGauge:    sdk.NewCoins(twentyfiveKUosmo), // 100osmo / 4 = 25osmo
-			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo),
-		},
-		{
-			name:                             "Valid case: Valid perp-Group Creation with only CL internal gauges and Distribution",
-			createGauge:                      s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{2, 3, 4}),
-			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(33_333_333))),
-			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo),
-		},
-		{
-			name:                             "Valid case: Valid perp-Group Creation with only GAMM internal gauge and Distribution",
-			createGauge:                      s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{5}),
-			expectedCoinsPerInternalGauge:    sdk.NewCoins(hundredKUosmo),
-			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo),
-		},
-		{
-			name:                             "Valid case: Valid non-perpGroup Creation with and Distribution",
-			createGauge:                      s.WithBaseCaseDifferentEpochPaidOver(*baseCase, uint64(4)),
-			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(6_250_000))),
-			expectedCoinsDistributedPerEpoch: sdk.NewCoins(twentyfiveKUosmo),
-		},
-		{
-			name:                             "Valid case: Valid perp-Group Creation with 2 coins and Distribution",
-			createGauge:                      s.WithBaseCaseDifferentCoins(*baseCase, sdk.NewCoins(hundredKUosmo, hundredKUatom)),
-			expectedCoinsPerInternalGauge:    sdk.NewCoins(twentyfiveKUosmo, twentyfiveKUatom),
-			expectedCoinsDistributedPerEpoch: sdk.NewCoins(hundredKUosmo, hundredKUatom),
-		},
-		{
-			name:                             "Valid case: Valid non-perp Group Creation with 2 coins and Distribution",
-			createGauge:                      s.WithBaseCaseDifferentEpochPaidOver(s.WithBaseCaseDifferentCoins(*baseCase, sdk.NewCoins(hundredKUosmo, hundredKUatom)), uint64(2)),
-			expectedCoinsPerInternalGauge:    sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(12_500_000)), sdk.NewCoin("uatom", osmomath.NewInt(12_500_000))),
-			expectedCoinsDistributedPerEpoch: sdk.NewCoins(fifetyKUosmo, fifetyKUatom),
-		},
-		{
-			name:                   "InValid case: Creating a Group with invalid internalIds",
-			createGauge:            s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{100, 101}),
-			expectCreateGroupError: true,
-		},
-		{
-			name:                   "InValid case: Creating a Group with non-perpetual internalId",
-			createGauge:            s.WithBaseCaseDifferentInternalGauges(*baseCase, []uint64{2, 3, 4, 6}),
-			expectCreateGroupError: true,
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(hundredKUosmo, hundredKUatom)) // 100osmo, 100atom
-
-			// Setup
-			clPool := s.PrepareConcentratedPool()
-			lockOwner := sdk.AccAddress([]byte("addr1---------------"))
-			epochInfo := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx)
-			s.SetupGroupGauge(clPool.GetId(), lockOwner, uint64(3), uint64(1))
-
-			//create 1 non-perp internal Gauge
-			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gauge id = 6
-
-			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, tc.createGauge.coins, tc.createGauge.numEpochPaidOver, tc.createGauge.owner, tc.createGauge.internalGaugeIds, lockuptypes.ByGroup) // gauge id = 6
-			if tc.expectCreateGroupError {
-				s.Require().Error(err)
-				return
-			}
-
-			s.Require().NoError(err)
-
-			// check internalGauges matches what we expect
-			// TODO: assert initialization logic correctness once it is implemented
-			// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6404
-
-			for epoch := uint64(1); epoch <= tc.createGauge.numEpochPaidOver; epoch++ {
-				// ******************** EPOCH PASSED ********************* //
-				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(epochInfo.Duration))
-				s.App.EpochsKeeper.AfterEpochEnd(s.Ctx, epochInfo.GetIdentifier(), int64(epoch))
-
-				// Validate GroupGauge
-				groupGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, groupGaugeId)
-				s.Require().NoError(err)
-
-				var expectedDistributedCoins []sdk.Coin
-				for _, coin := range tc.expectedCoinsDistributedPerEpoch {
-					expectedDistributedCoins = append(expectedDistributedCoins, sdk.NewCoin(coin.Denom, coin.Amount.Mul(osmomath.NewIntFromUint64(epoch))))
-				}
-
-				s.ValidateDistributedGauge(groupGauge.Id, epoch, expectedDistributedCoins)
-
-				// Validate Internal Gauges
-				internalGauges, err := s.App.IncentivesKeeper.GetGaugeFromIDs(s.Ctx, tc.createGauge.internalGaugeIds)
-				s.Require().NoError(err)
-
-				for _, internalGauge := range internalGauges {
-					var expectedDistributedCoinsPerInternalGauge []sdk.Coin
-					for _, coin := range tc.expectedCoinsPerInternalGauge {
-						expectedDistributedCoinsPerInternalGauge = append(expectedDistributedCoinsPerInternalGauge, (sdk.NewCoin(coin.Denom, coin.Amount.Mul(osmomath.NewIntFromUint64(epoch)))))
-					}
-					s.ValidateDistributedGauge(internalGauge.Id, epoch, expectedDistributedCoinsPerInternalGauge)
-				}
-
-				// Validate CL Incentive distribution
-				poolIncentives, err := s.App.ConcentratedLiquidityKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPool.GetId())
-				s.Require().NoError(err)
-
-				for i := 0; i < len(poolIncentives); i++ {
-					idx := 0
-					// the logic below is for indexing incentiveRecord, flips idx from 0,1,0,1 or 1,0,1,0 etc.
-					if len(tc.expectedCoinsPerInternalGauge) > 1 {
-						if epoch == 2 {
-							idx = 1 - (i % 2)
-						} else {
-							idx = i % 2
-						}
-					}
-					s.ValidateIncentiveRecord(clPool.GetId(), tc.expectedCoinsPerInternalGauge[idx], poolIncentives[i])
-				}
-
-				// Validate GAMM incentive distribution
-				balances := s.App.BankKeeper.GetAllBalances(s.Ctx, lockOwner)
-				if len(balances) != 0 {
-					var coins sdk.Coins
-					for _, bal := range tc.expectedCoinsPerInternalGauge {
-						coin := sdk.NewCoin(bal.Denom, bal.Amount.Mul(osmomath.NewIntFromUint64(epoch)))
-						coins = append(coins, coin)
-					}
-
-					s.Require().Equal(balances, coins)
-				}
-			}
-		})
-	}
-
-}
-
 // deepCopyGroup creates a deep copy of the passed in group.
 func deepCopyGroup(src types.Group) types.Group {
 	gaugeRecords := make([]types.InternalGaugeRecord, len(src.InternalGaugeInfo.GaugeRecords))
@@ -1411,9 +1251,24 @@ func addGaugeRecords(gaugeInfo types.InternalGaugeInfo, gaugeRecords []types.Int
 	copy := deepCopyGaugeInfo(gaugeInfo)
 
 	for _, gaugeRecord := range gaugeRecords {
-		copy.GaugeRecords = append(copy.GaugeRecords, gaugeRecord)
+		copy.GaugeRecords = append(copy.GaugeRecords, deepCopyGaugeRecords(gaugeRecord))
 		copy.TotalWeight = copy.TotalWeight.Add(gaugeRecord.CurrentWeight)
 	}
+	return copy
+}
+
+// deepCopyGaugeRecords returns a deep copy of the passed in gauge record.
+func deepCopyGaugeRecords(gaugeRecord types.InternalGaugeRecord) types.InternalGaugeRecord {
+	copy := gaugeRecord
+	copy.CurrentWeight = osmomath.NewIntFromBigInt(gaugeRecord.CurrentWeight.BigInt())
+	copy.CumulativeWeight = osmomath.NewIntFromBigInt(gaugeRecord.CumulativeWeight.BigInt())
+	return copy
+}
+
+// withRecordGaugeId returns a deep copy of the passed in gauge record with the gauge id set to the passed in value.
+func withRecordGaugeId(gaugeRecord types.InternalGaugeRecord, GaugeID uint64) types.InternalGaugeRecord {
+	copy := deepCopyGaugeRecords(gaugeRecord)
+	copy.GaugeId = GaugeID
 	return copy
 }
 
