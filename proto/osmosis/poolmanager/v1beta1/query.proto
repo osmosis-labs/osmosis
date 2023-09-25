@@ -121,7 +121,7 @@ message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }
 message EstimateSwapExactAmountInRequest {
   reserved 1;
   reserved "sender";
-  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"", deprecated = true ];
   string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
   repeated SwapAmountInRoute routes = 4 [
     (gogoproto.moretags) = "yaml:\"routes\"",
@@ -129,7 +129,7 @@ message EstimateSwapExactAmountInRequest {
   ];
 }
 message EstimateSwapExactAmountInWithPrimitiveTypesRequest {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"", deprecated = true ];
   string token_in = 2 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
   repeated uint64 routes_pool_id = 3
       [ (gogoproto.moretags) = "yaml:\"routes_pool_id\"" ];
@@ -138,7 +138,7 @@ message EstimateSwapExactAmountInWithPrimitiveTypesRequest {
 }
 
 message EstimateSinglePoolSwapExactAmountInRequest {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"", deprecated = true ];
   string token_in = 2 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
   string token_out_denom = 3
       [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
@@ -157,7 +157,7 @@ message EstimateSwapExactAmountInResponse {
 message EstimateSwapExactAmountOutRequest {
   reserved 1;
   reserved "sender";
-  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"", deprecated = true ];
   repeated SwapAmountOutRoute routes = 3 [
     (gogoproto.moretags) = "yaml:\"routes\"",
     (gogoproto.nullable) = false
@@ -166,7 +166,7 @@ message EstimateSwapExactAmountOutRequest {
 }
 
 message EstimateSwapExactAmountOutWithPrimitiveTypesRequest {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"", deprecated = true ];
   repeated uint64 routes_pool_id = 2
       [ (gogoproto.moretags) = "yaml:\"routes_pool_id\"" ];
   repeated string routes_token_in_denom = 3
@@ -175,7 +175,7 @@ message EstimateSwapExactAmountOutWithPrimitiveTypesRequest {
 }
 
 message EstimateSinglePoolSwapExactAmountOutRequest {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" , deprecated = true];
   string token_in_denom = 2
       [ (gogoproto.moretags) = "yaml:\"token_in_denom\"" ];
   string token_out = 3 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
