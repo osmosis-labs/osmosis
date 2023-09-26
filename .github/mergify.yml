@@ -38,8 +38,6 @@ pull_request_rules:
       - check-success=lint-contract-cosmwasm
       - check-success=lint-golangci
       - check-success=lint-documentation-linter
-      - check-success=push-docker-images
-      - check-success=push-dev-docker-images
       - check-success=check-required-labels
       - check-success=run-simulation-tests
       - check-success=tests-e2e
