@@ -20,26 +20,10 @@ on:
   pull_request:
     branches:
       - "**"
-    paths:
-      - "**/**/*.wasm"
-      - "**/**.rs"
-      - "**/**Cargo.toml"
-      - "**/**Cargo.lock"
-      - "**/cosmwasm/**"
-      - "**/wasmbinding/**"
-      - ".github/workflows/contracts.yml"
   push:
     branches:
       - "main"
       - "v[0-9]**"
-    paths:
-      - "**/**/*.wasm"
-      - "**/**.rs"
-      - "**/**Cargo.toml"
-      - "**/**Cargo.lock"
-      - "**/cosmwasm/**"
-      - "**/wasmbinding/**"
-      - ".github/workflows/contracts.yml"
   workflow_dispatch:
 
 concurrency:
@@ -48,28 +32,55 @@ concurrency:
 
 jobs:
 
+  get_diff:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Check out repository code
+        uses: actions/checkout@v4
+      -
+        name: Get git diff
+        uses: technote-space/get-diff-action@v6.1.2
+        with:
+          PATTERNS: |
+            "**/**/*.wasm"
+            "**/**.rs"
+            "**/**Cargo.toml"
+            "**/**Cargo.lock"
+            "**/cosmwasm/**"
+            "**/wasmbinding/**"
+            ".github/workflows/contracts.yml"
+      -
+        name: Set output
+        id: vars
+        run: echo "::set-output name=git_diff::$GIT_DIFF"
+    outputs:
+      git_diff: ${{ steps.vars.outputs.git_diff }}
+
   optimize-contracts:
     name: optimize-contract-${{ matrix.contract.name }}
+    needs: get_diff
+    if: needs.get_diff.outputs.git_diff
     runs-on: ubuntu-latest
     strategy:
       matrix:
         contract: 
-          - 
+          -
             name: rate-limiter
             workdir: ./x/ibc-rate-limit/
             bytecode: x/ibc-rate-limit/bytecode/rate_limiter.wasm
             build: artifacts/rate_limiter.wasm
-          - 
+          -
             name: crosschain-swaps
             workdir: ./cosmwasm/
             bytecode: tests/ibc-hooks/bytecode/crosschain_swaps.wasm
             build: artifacts/crosschain_swaps.wasm
-          - 
+          -
             name: swaprouter
             workdir: ./cosmwasm/
             bytecode: tests/ibc-hooks/bytecode/swaprouter.wasm
             build: artifacts/swaprouter.wasm
-          - 
+          -
             name: outpost
             workdir: ./cosmwasm/
             bytecode: tests/ibc-hooks/bytecode/outpost.wasm
@@ -110,6 +121,8 @@ jobs:
 
   test-contracts:
     name: optimize-contract-${{ matrix.contract.name }}
+    needs: get_diff
+    if: needs.get_diff.outputs.git_diff
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -157,6 +170,8 @@ jobs:
   lint-contracts:
     runs-on: ubuntu-latest
     name: lint-contract-${{ matrix.folder.name }}
+    needs: get_diff
+    if: needs.get_diff.outputs.git_diff
     strategy:
       matrix:
         folder:
