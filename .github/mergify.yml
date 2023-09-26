@@ -15,7 +15,7 @@ pull_request_rules:
       # Pull requests targeting `main` branch that have `A:automerge` label
       - base=main
       - label=A:automerge
-      # with 2 reviews and 0 changes requested left
+      # with 1 reviews and 0 changes requested left
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"
       # with the following workflows successful: 
@@ -40,11 +40,11 @@ pull_request_rules:
       - check-success=lint-documentation-linter
       - check-success=check-required-labels
       - check-success=run-simulation-tests
-      - check-success=tests-e2e
-      - check-success=tests-go-00
-      - check-success=tests-go-01
-      - check-success=tests-go-02
-      - check-success=tests-go-03
+      - check-success=e2e
+      - check-success=go-00
+      - check-success=go-01
+      - check-success=go-02
+      - check-success=go-03
     actions:
       queue:
         name: default
