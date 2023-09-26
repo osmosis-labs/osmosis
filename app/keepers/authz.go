@@ -3,9 +3,10 @@ package keepers
 import (
 	"context"
 	"encoding/json"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	"math/rand"
 	"time"
+
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
