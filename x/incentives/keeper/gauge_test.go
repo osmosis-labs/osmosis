@@ -682,13 +682,31 @@ func (s *KeeperTestSuite) TestInitGaugeInfo() {
 // Validates that the Group is created as defined by the CreateGroup spec with the
 // associated 1:1 group Gauge and the correct gauge records relating to the given pools'
 // internal perpetual gauge IDs.
+//
+// The test structure is that a general shared state setup is performed once at the top.
+// For every test case, we fund the same account with appropriate amounts, ensuring
+// that this account has a sufficient balance to pay for the group creation fee and transfer the
+// gauge tokens.
+//
+// For testing low balance error cases, we operate on other accounts that may or may not have
+// enough funds to pay for the group creation fee.
 func (s *KeeperTestSuite) TestCreateGroup() {
 
 	// We setup test state once and reuse it for all test cases
 	s.SetupTest()
 
 	// index of s.TestAccs that gets funded
-	const fundedAddressIndex = 0
+	const (
+		// for every test case, receives the group creation fee and gauge tokens
+		// ensuring it always has enough funds.
+		fullyFundedAddressIndex = 0
+		// has enough funds to pay group creation fee once and nothing else
+		oneTimeFeeFundedIndex = 1
+		// does not get funded with anything
+		noFundingIndex = 2
+
+		feeDenom = "groupfee"
+	)
 
 	// Create 4 pools of each possible type
 	poolInfo := s.PrepareAllSupportedPools()
@@ -701,6 +719,14 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 		balancerGaugeRecord     = withRecordGaugeId(defaultZeroWeightGaugeRecord, poolInfo.BalancerGaugeID)
 		stableSwapGaugeRecord   = withRecordGaugeId(defaultZeroWeightGaugeRecord, poolInfo.StableSwapGaugeID)
 	)
+
+	// Set a custom creation fee to avoid test balances having false positives
+	// due to having OSMO added during test setup
+	customGroupCreationFee := sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 1000000))
+	s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyGroupCreationFee, customGroupCreationFee)
+
+	// Fund fee once to a specific test account
+	s.FundAcc(s.TestAccs[oneTimeFeeFundedIndex], customGroupCreationFee)
 
 	tests := []struct {
 		name             string
@@ -778,20 +804,28 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 		},
 
 		{
-			name:                "error: owner does not have enough funds",
+			name:                "error: owner does not have enough funds to create gauge but has the fee",
 			coins:               defaultCoins,
-			creatorAddressIndex: fundedAddressIndex + 1,
+			creatorAddressIndex: oneTimeFeeFundedIndex,
 			numEpochPaidOver:    incentiveskeeper.PerpetualNumEpochsPaidOver,
 			poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
 			expectErr:           fmt.Errorf("0uosmo is smaller than %s: insufficient funds", defaultCoins),
+		},
+		{
+			name:                "error: owner does not have enough funds to pay creation fee",
+			coins:               defaultCoins,
+			creatorAddressIndex: noFundingIndex,
+			numEpochPaidOver:    incentiveskeeper.PerpetualNumEpochsPaidOver,
+			poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
+			expectErr:           fmt.Errorf("0%s is smaller than %s: insufficient funds", feeDenom, customGroupCreationFee),
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 
-			// Always fund the first account
-			s.FundAcc(s.TestAccs[fundedAddressIndex], tc.coins)
+			// Always fund the account with fullyFundedAddressIndex
+			s.FundAcc(s.TestAccs[fullyFundedAddressIndex], tc.coins.Add(customGroupCreationFee...))
 
 			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[tc.creatorAddressIndex], tc.poolIDs)
 			if tc.expectErr != nil {

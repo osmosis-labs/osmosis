@@ -15,6 +15,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -246,8 +247,11 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 		return 0, err
 	}
 
-	// TODO: charge fixed fee. Make sure to update method spec and tests.
-	// https://github.com/osmosis-labs/osmosis/issues/6506
+	// Charge group creation fee.
+	groupCreationFee := k.GetParams(ctx).GroupCreationFee
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, distrtypes.ModuleName, groupCreationFee); err != nil {
+		return 0, err
+	}
 
 	// TODO: subdao to bypass
 	// TODO: governance to bypass
