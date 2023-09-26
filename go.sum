@@ -267,8 +267,8 @@ github.com/cosmos/gogoproto v1.4.11 h1:LZcMHrx4FjUgrqQSWeaGC1v/TeuVFqSLa43CC6aWR
 github.com/cosmos/gogoproto v1.4.11/go.mod h1:/g39Mh8m17X8Q/GDEs5zYTSNaNnInBSohtaxzQnYq1Y=
 github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4Y=
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
-github.com/cosmos/iavl v0.19.4 h1:t82sN+Y0WeqxDLJRSpNd8YFX5URIrT+p8n6oJbJ2Dok=
-github.com/cosmos/iavl v0.19.4/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
+github.com/cosmos/iavl v0.19.7 h1:ij32FaEnwxfEurtK0QKDNhTWFnz6NUmrI5gky/WnoY0=
+github.com/cosmos/iavl v0.19.7/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.1.0 h1:96fDMIUSlSQ6dBcwhdYwTT+uTwFP+EWbSyLORcKSJZ8=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.1.0/go.mod h1:Mn/jr9pIYr1ofFuptLEi9N6MjcshTT0cpoOY4ln1DeA=
 github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.1.0 h1:1iQ8/rJwkeGJe81fKyZC/ASSajoJP0jEi6IJFiKIr7Y=
@@ -965,8 +965,6 @@ github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:Ylmch
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.8-0.20230926014346-27a13ec134bd h1:Op+svYjumlLTHIupuXrTh8OWOhjP0vKWQR3LLZv24Dg=
 github.com/osmosis-labs/osmosis/osmomath v0.0.8-0.20230926014346-27a13ec134bd/go.mod h1:8VWhMEgMVTavPs8ttIJdG5VE0xiJXhnFazQdIBhKzH0=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.8-0.20230926014346-27a13ec134bd h1:oi2HhLQqBsOG4iBDj9MkKY1KsDE2JeDz+A2L0cQ8og4=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.8-0.20230926014346-27a13ec134bd/go.mod h1:wYNqZbQ6Woo2gOQJDv6l2dFGI74uABNPvz1dCOGW6qo=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.8-0.20230926154241-a9f2936565f4 h1:w/1YTjPZ5qf9iKzBJgUqVnNWhrJyC1gsfqrdX0/6vcI=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.8-0.20230926154241-a9f2936565f4/go.mod h1:ukjFgxfR9obDrMd8ZsxKcp3HWL7+boYORVL7Bt7YOZM=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.2 h1:aEeXHGCSJMgMtAvCucsD2RSaWZ8lISFLD5u4MyF9KPc=
