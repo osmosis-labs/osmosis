@@ -3,7 +3,6 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -230,12 +229,21 @@ func (sla SpendLimitAuthenticator) DeleteBalances(account sdk.AccAddress) {
 
 func (sla SpendLimitAuthenticator) GetSpentInPeriod(account sdk.AccAddress, t time.Time) osmomath.Int {
 	key := getPeriodKey(account, sla.periodType, t)
-	return sdk.NewIntFromBigInt(new(big.Int).SetBytes(sla.store.Get(key)))
+	var spent osmomath.Int
+	err := json.Unmarshal(sla.store.Get(key), &spent)
+	if err != nil {
+		return osmomath.ZeroInt()
+	}
+	return spent
 }
 
 func (sla SpendLimitAuthenticator) SetSpentInPeriod(account sdk.AccAddress, t time.Time, spent osmomath.Int) {
 	key := getPeriodKey(account, sla.periodType, t)
-	sla.store.Set(key, spent.BigInt().Bytes())
+	bz, err := json.Marshal(spent)
+	if err != nil {
+		panic("couldn't marshal spent") // TODO: deal with this
+	}
+	sla.store.Set(key, bz)
 }
 
 func (sla SpendLimitAuthenticator) DeletePastPeriods(account sdk.AccAddress, t time.Time) {
