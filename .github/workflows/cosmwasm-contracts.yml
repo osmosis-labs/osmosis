@@ -124,7 +124,7 @@ jobs:
           diff "${GITHUB_WORKSPACE}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
 
   test-contracts:
-    name: optimize-contract-${{ matrix.contract.name }}
+    name: test-contract-${{ matrix.contract.name }}
     needs: get_diff
     runs-on: ubuntu-latest
     strategy:
