@@ -61,3 +61,19 @@ message Group {
   InternalGaugeInfo internal_gauge_info = 2 [ (gogoproto.nullable) = false ];
   SplittingPolicy splitting_policy = 3;
 }
+
+message CreateGroup {
+  // coins is the total amount of coins that have been in the gauge
+  // Can distribute multiple coin denoms
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  // num_epochs_paid_over is the number of total epochs distribution will be
+  // completed over
+  uint64 num_epochs_paid_over = 2;
+  // filled_epochs is the number of epochs distribution has been completed on
+  // already
+  uint64 filled_epochs = 3;
+  repeated uint64 pool_ids = 4;
+}

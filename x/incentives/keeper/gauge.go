@@ -215,7 +215,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	return gauge.Id, nil
 }
 
-// CreateGroup creates a new group. The group is 1:1 mapped to a group gauage that allocates rewards dynamically across its internal pool gauges based on
+// CreateGroup creates a new group. The group is 1:1 mapped to a group gauge that allocates rewards dynamically across its internal pool gauges based on
 // the volume splitting policy.
 // For each pool ID in the given slice, its main internal gauge is used to create gauge records to be associated with the Group.
 // Note, that implies that only perpetual pool gauges can be associated with the Group.
