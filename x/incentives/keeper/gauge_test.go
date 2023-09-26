@@ -790,7 +790,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 
-			// Alwats fund the first account
+			// Always fund the first account
 			s.FundAcc(s.TestAccs[fundedAddressIndex], tc.coins)
 
 			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[tc.creatorAddressIndex], tc.poolIDs)
