@@ -1,0 +1,21 @@
+syntax = "proto3";
+package osmosis.incentives.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/incentives/group.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/incentives/types";
+
+// CreateGaugeGroupsProposal is a type for creating one or more gauge groups via
+// governance. This is useful for creating gauge groups without having to pay
+// creation fees.
+message CreateGaugeGroupsProposal {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+
+  repeated osmosis.incentives.CreateGroup create_groups = 3
+      [ (gogoproto.nullable) = false ];
+}

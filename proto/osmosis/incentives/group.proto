@@ -61,3 +61,8 @@ message Group {
   InternalGaugeInfo internal_gauge_info = 2 [ (gogoproto.nullable) = false ];
   SplittingPolicy splitting_policy = 3;
 }
+
+// CreateGroup is called via governance to create a new group gauge. Currently,
+// this only takes an array of pool IDs, but if we extend this to external
+// gauges, this will expand to add coins and numEpochsPaidOver fields.
+message CreateGroup { repeated uint64 pool_ids = 1; }
