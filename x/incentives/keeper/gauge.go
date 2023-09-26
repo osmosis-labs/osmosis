@@ -252,6 +252,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 // - given pool IDs slice is empty or has 1 pool only
 // - fails to initialize gauge information for every pool ID
 // - fails to send coins from owner to the incentives module for the Group's Gauge
+// - fails to charge group creation fee
 // - fails to set the Group's Gauge to state
 func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, poolIDs []uint64) (uint64, error) {
 	if len(poolIDs) == 0 {
@@ -268,15 +269,10 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 	}
 
 	// Charge group creation fee.
-	groupCreationFee := k.GetParams(ctx).GroupCreationFee
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, distrtypes.ModuleName, groupCreationFee); err != nil {
+	_, err = k.chargeGroupCreationFeeIfNotWhitelisted(ctx, owner)
+	if err != nil {
 		return 0, err
 	}
-
-	// TODO: subdao to bypass
-	// TODO: governance to bypass
-	// Make sure to update method spec and tests.
-	// https://github.com/osmosis-labs/osmosis/issues/6507
 
 	groupGaugeID, err := k.CreateGauge(ctx, numEpochPaidOver == perpetualNumEpochsPaidOver, owner, coins, byGroupQueryCondition, ctx.BlockTime(), numEpochPaidOver, 0)
 	if err != nil {
@@ -295,6 +291,35 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 	k.SetGroup(ctx, newGroup)
 
 	return groupGaugeID, nil
+}
+
+// chargeGroupCreationFeeIfNotWhitelisted charges fee as defined in the params if the sender is not whitelisted.
+// Does not charge fee if sender is the incentives module account or if sender is whitelisted.
+// Returns true if charged fee, false otherwise.
+// Returns error if:
+// - One if the addresses in params is invalid
+// - fails to send coins from sender to the community pool
+func (k Keeper) chargeGroupCreationFeeIfNotWhitelisted(ctx sdk.Context, sender sdk.AccAddress) (chargedFee bool, err error) {
+	params := k.GetParams(ctx)
+	incentivesModuleAddress := k.ak.GetModuleAddress(types.ModuleName)
+	for _, unrestrictedAddressStr := range params.UnrestrictedCreatorWhitelist {
+		unrestrictedAddress, err := sdk.AccAddressFromBech32(unrestrictedAddressStr)
+		if err != nil {
+			return false, err
+		}
+
+		// sender is either unrestrictedAddress or the module account
+		if unrestrictedAddress.Equals(sender) || sender.Equals(incentivesModuleAddress) {
+			return false, nil
+		}
+	}
+
+	// Charge fee
+	groupCreationFee := params.GroupCreationFee
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, sender, distrtypes.ModuleName, groupCreationFee); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // GetGaugeByID returns gauge from gauge ID.

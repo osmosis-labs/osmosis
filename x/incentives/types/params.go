@@ -14,6 +14,7 @@ import (
 var (
 	KeyDistrEpochIdentifier = []byte("DistrEpochIdentifier")
 	KeyGroupCreationFee     = []byte("GroupCreationFee")
+	KeyCreatorWhitelist     = []byte("CreatorWhitelist")
 
 	// 100 OSMO
 	DefaultGroupCreationFee = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100_000_000)))
@@ -27,16 +28,18 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewParams takes an epoch distribution identifier and group creation fee, then returns an incentives Params struct.
 func NewParams(distrEpochIdentifier string, groupCreationFee sdk.Coins) Params {
 	return Params{
-		DistrEpochIdentifier: distrEpochIdentifier,
-		GroupCreationFee:     groupCreationFee,
+		DistrEpochIdentifier:         distrEpochIdentifier,
+		GroupCreationFee:             groupCreationFee,
+		UnrestrictedCreatorWhitelist: []string{},
 	}
 }
 
 // DefaultParams returns the default incentives module parameters.
 func DefaultParams() Params {
 	return Params{
-		DistrEpochIdentifier: "week",
-		GroupCreationFee:     DefaultGroupCreationFee,
+		DistrEpochIdentifier:         "week",
+		GroupCreationFee:             DefaultGroupCreationFee,
+		UnrestrictedCreatorWhitelist: []string{},
 	}
 }
 
@@ -60,10 +63,35 @@ func ValidateGroupCreaionFee(i interface{}) error {
 	return v.Validate()
 }
 
+func ValidateCreatorWhitelist(i interface{}) error {
+	v, ok := i.([]string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	// Validate that addresses are set correctly
+	for _, creator := range v {
+		if _, err := sdk.AccAddressFromBech32(creator); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func ValidateGroupCreationFee(i interface{}) error {
+	v, ok := i.(sdk.Coins)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return v.Validate()
+}
+
 // ParamSetPairs takes the parameter struct and associates the paramsubspace key and field of the parameters as a KVStore.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyDistrEpochIdentifier, &p.DistrEpochIdentifier, epochtypes.ValidateEpochIdentifierInterface),
 		paramtypes.NewParamSetPair(KeyGroupCreationFee, &p.GroupCreationFee, ValidateGroupCreaionFee),
+		paramtypes.NewParamSetPair(KeyCreatorWhitelist, &p.UnrestrictedCreatorWhitelist, ValidateCreatorWhitelist),
 	}
 }

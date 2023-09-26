@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -30,6 +31,8 @@ const (
 	defaultIsPerpetualParam = false
 
 	defaultNumEpochPaidOver = uint64(10)
+
+	feeDenom = "groupfee"
 )
 
 var (
@@ -44,6 +47,10 @@ var (
 		sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
 		sdk.NewCoin("atom", osmomath.NewInt(99999)),
 	)
+
+	customGroupCreationFee = sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 1000000))
+
+	errorNoCustomFeeInBalance = fmt.Errorf("0%s is smaller than %s: insufficient funds", feeDenom, customGroupCreationFee)
 )
 
 // TestInvalidDurationGaugeCreationValidation tests error handling for creating a gauge with an invalid duration.
@@ -817,8 +824,6 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 		oneTimeFeeFundedIndex = 1
 		// does not get funded with anything
 		noFundingIndex = 2
-
-		feeDenom = "groupfee"
 	)
 
 	// Create 4 pools of each possible type
@@ -835,11 +840,14 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 
 	// Set a custom creation fee to avoid test balances having false positives
 	// due to having OSMO added during test setup
-	customGroupCreationFee := sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 1000000))
 	s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyGroupCreationFee, customGroupCreationFee)
 
 	// Fund fee once to a specific test account
 	s.FundAcc(s.TestAccs[oneTimeFeeFundedIndex], customGroupCreationFee)
+
+	communityPoolAddress := s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName)
+	originalCommunityPoolBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
+	expectedCommunityPoolFeeBalance := sdk.NewCoins()
 
 	tests := []struct {
 		name             string
@@ -930,7 +938,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			creatorAddressIndex: noFundingIndex,
 			numEpochPaidOver:    incentiveskeeper.PerpetualNumEpochsPaidOver,
 			poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
-			expectErr:           fmt.Errorf("0%s is smaller than %s: insufficient funds", feeDenom, customGroupCreationFee),
+			expectErr:           errorNoCustomFeeInBalance,
 		},
 	}
 
@@ -945,6 +953,9 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectErr.Error())
 			} else {
+				// For every no error case, increase expected community pool fee balance
+				expectedCommunityPoolFeeBalance = expectedCommunityPoolFeeBalance.Add(customGroupCreationFee...)
+
 				s.Require().NoError(err)
 
 				s.Require().Equal(expectedGroupGaugeId, groupGaugeId)
@@ -968,8 +979,89 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 				actualGaugeInfo := group.InternalGaugeInfo
 				s.validateGaugeInfo(tc.expectedGaugeInfo, actualGaugeInfo)
 
+				// Validate that community pool was funded with the group creation fee
+				communityPoolBalance := s.App.BankKeeper.GetAllBalances(s.Ctx, communityPoolAddress)
+				s.Require().Equal(expectedCommunityPoolFeeBalance.String(), communityPoolBalance.Sub(originalCommunityPoolBalance).String())
+
 				// Bump up expected gauge ID since we are reusing the same test state
 				expectedGroupGaugeId++
+			}
+		})
+	}
+}
+
+// Tests that group creation fee is charged correctly or bypassed when applicable.
+// It can be bypassed if the sender is whitelisted or the sender is the incentives module account.
+// Otherwise, the sender must have enough funds to pay the fee.
+func (s *KeeperTestSuite) TestChargeGroupCreationFeeIfNotWhitelisted() {
+	// Setup test state once at the top and reuse across tests.
+	s.SetupTest()
+
+	// Configure group creation fee
+	s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyGroupCreationFee, customGroupCreationFee)
+
+	// Define accounts
+	var (
+		regularFundedAccount    = s.TestAccs[0]
+		regularNotFundedAccount = s.TestAccs[1]
+		whitelistedAccount      = s.TestAccs[2]
+		incentivesModuleAccount = s.App.AccountKeeper.GetModuleAddress(types.ModuleName)
+	)
+	// Only fund the regular funded account
+	s.FundAcc(regularFundedAccount, customGroupCreationFee)
+
+	// Set up whitelist
+	whitelist := []string{whitelistedAccount.String()}
+	s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyCreatorWhitelist, whitelist)
+
+	tests := map[string]struct {
+		sender           sdk.AccAddress
+		expectFeeCharged bool
+		expectError      error
+	}{
+		"regular funded account - charged": {
+			sender:           regularFundedAccount,
+			expectFeeCharged: true,
+		},
+		"regular non funded account - error returned": {
+			sender:      regularNotFundedAccount,
+			expectError: errorNoCustomFeeInBalance,
+		},
+		"unrestricted whitelisted - not charged": {
+			sender: whitelistedAccount,
+		},
+		"incentive module account - not charged": {
+			sender: incentivesModuleAccount,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			incentivesKeeper := s.App.IncentivesKeeper
+
+			// Keep original balances for final balance assertions
+			senderBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, tc.sender)
+			communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName))
+
+			didChargeFee, err := incentivesKeeper.ChargeGroupCreationFeeIfNotWhitelisted(s.Ctx, tc.sender)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectFeeCharged, didChargeFee)
+
+			senderBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, tc.sender)
+			communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(s.Ctx, s.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName))
+
+			// Validate balance updates.
+			if didChargeFee {
+				s.Require().Equal(senderBalanceBefore.Sub(customGroupCreationFee).String(), senderBalanceAfter.String())
+				s.Require().Equal(communityPoolBalanceBefore.Add(customGroupCreationFee...).String(), communityPoolBalanceAfter.String())
+			} else {
+				s.Require().Equal(senderBalanceBefore.String(), senderBalanceAfter.String())
+				s.Require().Equal(communityPoolBalanceBefore.String(), communityPoolBalanceAfter.String())
 			}
 		})
 	}
@@ -1003,7 +1095,7 @@ func (s *KeeperTestSuite) validateGauge(expectedGauge types.Gauge) {
 }
 
 // test helper to create a gauge bypassing all checks and restrictions
-// It is useful in edge case tests that rely on invalid gauges written to store (e.g. in Distribute())
+// It is useful in edge case tests that rely on invalid gagues written to store (e.g. in Distribute())
 func (s *KeeperTestSuite) createGaugeNoRestrictions(isPerpetual bool, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolID uint64) types.Gauge {
 	// Fund incentives module account to simulate transfer from owner to module account
 	s.FundModuleAcc(types.ModuleName, coins)
@@ -1033,12 +1125,11 @@ func (s *KeeperTestSuite) createGaugeNoRestrictions(isPerpetual bool, coins sdk.
 	return *gaugeFromState
 }
 
-// validates that there is no gauge with the given ID in the slice
+// validates that there is not gauge with the given ID in the slice
 func (s KeeperTestSuite) validateNoGaugeIDInSlice(slice []types.Gauge, gaugeID uint64) {
 	gaugeMatch := osmoutils.Filter(func(gauge types.Gauge) bool {
 		return gauge.Id == gaugeID
 	}, slice)
 	// No gauge matched ID.
 	s.Require().Empty(gaugeMatch)
-
 }
