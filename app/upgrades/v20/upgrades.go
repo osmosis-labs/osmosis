@@ -8,6 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 )
 
 func CreateUpgradeHandler(
@@ -26,6 +27,9 @@ func CreateUpgradeHandler(
 
 		// Initialize the newly created param
 		keepers.ConcentratedLiquidityKeeper.SetParam(ctx, cltypes.KeyUnrestrictedPoolCreatorWhitelist, []string{})
+
+		// Initialize the new param in incentives for group creation.
+		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyGroupCreationFee, incentivestypes.DefaultGroupCreationFee)
 
 		return migrations, nil
 	}

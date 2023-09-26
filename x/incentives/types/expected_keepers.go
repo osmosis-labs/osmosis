@@ -58,6 +58,7 @@ type AccountKeeper interface {
 
 type PoolIncentiveKeeper interface {
 	GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDuration time.Duration) (uint64, error)
+	GetInternalGaugeIDForPool(ctx sdk.Context, poolID uint64) (uint64, error)
 	SetPoolGaugeIdNoLock(ctx sdk.Context, poolId uint64, gaugeId uint64)
 	GetLongestLockableDuration(ctx sdk.Context) (time.Duration, error)
 }

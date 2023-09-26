@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.incentives;
 
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v19/x/incentives/types";
 
@@ -11,4 +12,10 @@ message Params {
   // (day, week, etc.)
   string distr_epoch_identifier = 1
       [ (gogoproto.moretags) = "yaml:\"distr_epoch_identifier\"" ];
+
+  // group_creation_fee is the fee required to create a new group
+  repeated cosmos.base.v1beta1.Coin group_creation_fee = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }

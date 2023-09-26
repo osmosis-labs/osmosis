@@ -1,11 +1,17 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 )
+
+const PerpetualNumEpochsPaidOver = perpetualNumEpochsPaidOver
+
+var ByGroupQueryCondition = byGroupQueryCondition
 
 // AddGaugeRefByKey appends the provided gauge ID into an array associated with the provided key.
 func (k Keeper) AddGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
@@ -66,6 +72,18 @@ func (k Keeper) HandleGroupPostDistribute(ctx sdk.Context, groupGauge types.Gaug
 	return k.handleGroupPostDistribute(ctx, groupGauge, coinsDistributed)
 }
 
+func (k Keeper) InitGaugeInfo(ctx sdk.Context, poolIds []uint64) (types.InternalGaugeInfo, error) {
+	return k.initGaugeInfo(ctx, poolIds)
+}
+
 func RegularGaugeStoreKey(ID uint64) []byte {
 	return gaugeStoreKey(ID)
+}
+
+func CombineKeys(keys ...[]byte) []byte {
+	return combineKeys(keys...)
+}
+
+func GetTimeKeys(timestamp time.Time) []byte {
+	return getTimeKey(timestamp)
 }
