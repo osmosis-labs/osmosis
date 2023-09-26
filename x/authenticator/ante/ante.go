@@ -132,7 +132,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 			// Get the authentication data for the transaction
 			neverWriteCacheCtx, _ := cacheCtx.CacheContext() // GetAuthenticationData is not allowed to modify the state
-			authData, err := authenticator.GetAuthenticationData(neverWriteCacheCtx, tx, int8(msgIndex), simulate)
+			authData, err := authenticator.GetAuthenticationData(neverWriteCacheCtx, tx, msgIndex, simulate)
 			if err != nil {
 				return ctx, err
 			}

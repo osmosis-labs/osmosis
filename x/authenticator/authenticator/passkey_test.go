@@ -321,7 +321,7 @@ func (s *PassKeyAuthenticationSuite) TestSignatureAuthenticator() {
 
 				for _, authenticator := range allAuthenticators {
 					// Get the authentication data for the transaction
-					authData, err := authenticator.GetAuthenticationData(s.Ctx, tx, int8(i), false)
+					authData, err := authenticator.GetAuthenticationData(s.Ctx, tx, i, false)
 					s.Require().NoError(err)
 
 					success = authenticator.Authenticate(s.Ctx, nil, nil, authData)

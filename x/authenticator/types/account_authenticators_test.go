@@ -32,7 +32,7 @@ func (m MockAuthenticator) StaticGas() uint64 {
 	return 1000
 }
 
-func (m MockAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (iface.AuthenticatorData, error) {
+func (m MockAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
 	return "mock", nil
 }
 
@@ -142,7 +142,7 @@ func (m MockAuthenticatorFail) StaticGas() uint64 {
 	return 1000
 }
 
-func (m MockAuthenticatorFail) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (iface.AuthenticatorData, error) {
+func (m MockAuthenticatorFail) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
 	return "mock-fail", nil
 }
 

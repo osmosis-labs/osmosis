@@ -48,7 +48,7 @@ func (t TestingAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 	return t, nil
 }
 
-func (t TestingAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (iface.AuthenticatorData, error) {
+func (t TestingAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
 	return TestingAuthenticatorData{}, nil
 }
 

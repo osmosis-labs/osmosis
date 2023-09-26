@@ -35,7 +35,7 @@ func (m MaxAmountAuthenticator) Initialize(data []byte) (iface.Authenticator, er
 	return m, nil
 }
 
-func (m MaxAmountAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (iface.AuthenticatorData, error) {
+func (m MaxAmountAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
 	return MaxAmountAuthenticatorData{}, nil
 }
 

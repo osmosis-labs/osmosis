@@ -91,12 +91,7 @@ type PassKeySignatureData = SignatureData
 // GetAuthenticationData parses the signers and signatures from a transactiom
 // then returns a indexed list of both signers and signatures
 // NOTE: position in the array is used to associate the signer and signature
-func (sva PassKeyAuthenticator) GetAuthenticationData(
-	ctx sdk.Context,
-	tx sdk.Tx,
-	messageIndex int8,
-	simulate bool,
-) (iface.AuthenticatorData, error) {
+func (sva PassKeyAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
 	signers, signatures, signingTx, err := GetCommonAuthenticationData(ctx, tx, messageIndex, simulate)
 	if err != nil {
 		return SignatureData{}, err

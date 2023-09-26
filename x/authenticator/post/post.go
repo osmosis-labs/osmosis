@@ -43,7 +43,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 
 		for _, authenticator := range authenticators { // This should execute on *all* authenticators so they can update their state
 			// Get the authentication data for the transaction
-			authData, err := authenticator.GetAuthenticationData(ctx, tx, int8(msgIndex), simulate)
+			authData, err := authenticator.GetAuthenticationData(ctx, tx, msgIndex, simulate)
 			if err != nil {
 				return ctx, err
 			}
