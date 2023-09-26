@@ -679,7 +679,7 @@ func (s *KeeperTestSuite) TestInitGaugeInfo() {
 	}
 }
 
-// Validates that the Group is created as defined bu the CreateGroup spec with the
+// Validates that the Group is created as defined by the CreateGroup spec with the
 // associated 1:1 group Gauge and the correct gauge records relating to the given pools'
 // internal perpetual gauge IDs.
 func (s *KeeperTestSuite) TestCreateGroup() {
