@@ -84,8 +84,8 @@ jobs:
           path: ./pkgs.txt.part.03
 
   go:
+    name: go-${{ matrix.part }}
     needs: [go-split-test-files, get_diff]
-    if: needs.get_diff.outputs.git_diff
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -95,20 +95,25 @@ jobs:
       - 
         name: Check out repository code
         uses: actions/checkout@v4
+        if: needs.get_diff.outputs.git_diff
       - 
         name: 🐿 Setup Golang
         uses: actions/setup-go@v4
+        if: needs.get_diff.outputs.git_diff
         with:
           go-version: ${{env.GO_VERSION}}
       - 
         name: Display go version
         run: go version
+        if: needs.get_diff.outputs.git_diff
       - 
         uses: actions/download-artifact@v3
+        if: needs.get_diff.outputs.git_diff
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"
       - 
         name: Test & coverage report creation
+        if: needs.get_diff.outputs.git_diff
         run: |
           VERSION=$(echo $(git describe --tags) | sed 's/^v//') || VERSION=${GITHUB_SHA}
           TESTS=$(cat pkgs.txt.part.${{ matrix.part }})

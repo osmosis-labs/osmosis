@@ -4,9 +4,9 @@
 # It includes steps for optimizing contracts, running tests, and checking lints.
 #
 # Jobs:
-# - contract-optimizes: Optimizes the Cosmwasm contracts and uploads optimized artifacts.
-# - contract-tests: Tests the Cosmwasm contracts and checks for any differences in bytecode.
-# - contract-lints: Runs formatting and linting checks on the Cosmwasm contracts.
+# - optimize-contracts: Optimizes the Cosmwasm contracts and uploads optimized artifacts.
+# - test-contracts: Tests the Cosmwasm contracts and checks for any differences in bytecode.
+# - lint-contracts: Runs formatting and linting checks on the Cosmwasm contracts.
 #
 # Triggers:
 # - pull_request: Triggered on pull requests to any branch.
@@ -57,10 +57,9 @@ jobs:
     outputs:
       git_diff: ${{ steps.vars.outputs.git_diff }}
 
-  contract-optimizes:
-    name: contract-optimize-${{ matrix.contract.name }}
+  optimize-contracts:
+    name: optimize-contract-${{ matrix.contract.name }}
     needs: get_diff
-    if: needs.get_diff.outputs.git_diff
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -89,9 +88,11 @@ jobs:
       -
         name: Check out repository
         uses: actions/checkout@v4
+        if: needs.get_diff.outputs.git_diff
       - 
         name: Optimize
         working-directory: ${{ matrix.contract.workdir }}
+        if: needs.get_diff.outputs.git_diff
         run: >
           docker run --rm -v "$(pwd)":/code \
             --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
@@ -100,6 +101,7 @@ jobs:
       - 
         name: 'Upload optimized contract artifact'
         uses: actions/upload-artifact@v3
+        if: needs.get_diff.outputs.git_diff
         with:
           name: ${{ matrix.contract.name }}
           path: ${{ matrix.contract.workdir }}${{ matrix.contract.build }}
@@ -107,6 +109,7 @@ jobs:
       - 
         name: 'Upload Cargo.lock artifact'
         uses: actions/upload-artifact@v3
+        if: needs.get_diff.outputs.git_diff
         with:
           name: Cargo.lock
           path: ${{ matrix.contract.workdir }}Cargo.lock
@@ -116,13 +119,13 @@ jobs:
       - 
         name: Check Test Data
         working-directory: ${{ matrix.contract.workdir }}
+        if: needs.get_diff.outputs.git_diff
         run: >
           diff "${GITHUB_WORKSPACE}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
 
-  contract-tests:
-    name: contract-optimize-${{ matrix.contract.name }}
+  test-contracts:
+    name: optimize-contract-${{ matrix.contract.name }}
     needs: get_diff
-    if: needs.get_diff.outputs.git_diff
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -151,27 +154,30 @@ jobs:
       -
         name: Check out repository
         uses: actions/checkout@v4
+        if: needs.get_diff.outputs.git_diff
       - 
         name: Install toolchain
         uses: dtolnay/rust-toolchain@1.69.0
+        if: needs.get_diff.outputs.git_diff
         with:
           target: wasm32-unknown-unknown
       - 
         name: Add the wasm target
         working-directory: ${{ matrix.contract.workdir }}
+        if: needs.get_diff.outputs.git_diff
         run: >
           rustup target add wasm32-unknown-unknown;
       - 
         name: Test
         working-directory: ${{ matrix.contract.workdir }}
+        if: needs.get_diff.outputs.git_diff
         run: >
           cargo test
 
-  contract-lints:
+  lint-contracts:
     runs-on: ubuntu-latest
-    name: contract-lint-${{ matrix.folder.name }}
+    name: lint-contract-${{ matrix.folder.name }}
     needs: get_diff
-    if: needs.get_diff.outputs.git_diff
     strategy:
       matrix:
         folder:
@@ -183,18 +189,22 @@ jobs:
       -
         name: Check out repository
         uses: actions/checkout@v4
+        if: needs.get_diff.outputs.git_diff
       - 
         name: Install toolchain
         uses: dtolnay/rust-toolchain@1.69.0
+        if: needs.get_diff.outputs.git_diff
         with:
           components: rustfmt, clippy
       - 
         name: Format
         working-directory: ${{ matrix.folder.workdir }}
+        if: needs.get_diff.outputs.git_diff
         run: >
           cargo fmt --all -- --check
       -
         name: run cargo clippy
         working-directory: ${{ matrix.folder.workdir }}
+        if: needs.get_diff.outputs.git_diff
         run: >
           cargo clippy -- -D warnings
