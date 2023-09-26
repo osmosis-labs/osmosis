@@ -31,6 +31,8 @@ type Params struct {
 	// (day, week, etc.)
 	DistrEpochIdentifier string `protobuf:"bytes,1,opt,name=distr_epoch_identifier,json=distrEpochIdentifier,proto3" json:"distr_epoch_identifier,omitempty" yaml:"distr_epoch_identifier"`
 	// group_creation_fee is the fee required to create a new group
+	// It is only charged to all addresses other than incentive module account
+	// or addresses in the unrestricted_creator_whitelist
 	GroupCreationFee github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=group_creation_fee,json=groupCreationFee,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"group_creation_fee"`
 	// unrestricted_creator_whitelist is a list of addresses that are
 	// allowed to bypass restrictions on permissionless Group

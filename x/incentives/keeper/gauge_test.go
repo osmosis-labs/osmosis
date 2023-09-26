@@ -799,11 +799,11 @@ func (s *KeeperTestSuite) TestInitGaugeInfo() {
 	}
 }
 
-// Validates that the Group is created as defined bu the CreateGroup spec with the
+// Validates that the Group is created as defined by the CreateGroup spec with the
 // associated 1:1 group Gauge and the correct gauge records relating to the given pools'
 // internal perpetual gauge IDs.
 //
-// The tes structure is that a general shared state setup is performed once at the top.
+// The test structure is that a general shared state setup is performed once at the top.
 // For every test case, we fund the same account with appropriate amounts, ensuring
 // that this account has a sufficient balance to pay for the group creation fee and transfer the
 // gauge tokens.

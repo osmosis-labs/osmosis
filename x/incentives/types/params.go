@@ -79,6 +79,14 @@ func ValidateCreatorWhitelist(i interface{}) error {
 	return nil
 }
 
+func ValidateGroupCreationFee(i interface{}) error {
+	v, ok := i.(sdk.Coins)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	return v.Validate()
+}
+
 // ParamSetPairs takes the parameter struct and associates the paramsubspace key and field of the parameters as a KVStore.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
