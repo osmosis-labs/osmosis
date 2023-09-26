@@ -49,7 +49,7 @@ jobs:
             "**/**Cargo.lock"
             "**/cosmwasm/**"
             "**/wasmbinding/**"
-            ".github/workflows/contracts.yml"
+            ".github/workflows/cosmwasm-contracts.yml"
       -
         name: Set output
         id: vars
