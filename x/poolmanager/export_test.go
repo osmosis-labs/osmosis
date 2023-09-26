@@ -13,12 +13,6 @@ func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 	return k.getNextPoolIdAndIncrement(ctx)
 }
 
-func (k Keeper) GetOsmoRoutedMultihopTotalSpreadFactor(ctx sdk.Context, route types.MultihopRoute) (
-	totalPathSpreadFactor osmomath.Dec, sumOfSpreadFactors osmomath.Dec, err error,
-) {
-	return k.getOsmoRoutedMultihopTotalSpreadFactor(ctx, route)
-}
-
 // SetPoolRoutesUnsafe sets the given routes to the poolmanager keeper
 // to allow routing from a pool type to a certain swap module.
 // For example, balancer -> gamm.
@@ -43,25 +37,12 @@ func (k Keeper) ValidateCreatedPool(ctx sdk.Context, poolId uint64, pool types.P
 	return k.validateCreatedPool(poolId, pool)
 }
 
-func (k Keeper) IsOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute, inDenom, outDenom string) (isRouted bool) {
-	return k.isOsmoRoutedMultihop(ctx, route, inDenom, outDenom)
-}
-
 func (k Keeper) CreateMultihopExpectedSwapOuts(
 	ctx sdk.Context,
 	route []types.SwapAmountOutRoute,
 	tokenOut sdk.Coin,
 ) ([]osmomath.Int, error) {
 	return k.createMultihopExpectedSwapOuts(ctx, route, tokenOut)
-}
-
-func (k Keeper) CreateOsmoMultihopExpectedSwapOuts(
-	ctx sdk.Context,
-	route []types.SwapAmountOutRoute,
-	tokenOut sdk.Coin,
-	cumulativeRouteSwapFee, sumOfSwapFees osmomath.Dec,
-) ([]osmomath.Int, error) {
-	return k.createOsmoMultihopExpectedSwapOuts(ctx, route, tokenOut, cumulativeRouteSwapFee, sumOfSwapFees)
 }
 
 func (k Keeper) CalcTakerFeeExactIn(tokenIn sdk.Coin, takerFee osmomath.Dec) (sdk.Coin, sdk.Coin) {

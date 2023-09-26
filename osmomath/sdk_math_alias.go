@@ -16,7 +16,7 @@ type (
 )
 
 const (
-	PrecisionDec         = sdkmath.LegacyPrecision
+	DecPrecision         = sdkmath.LegacyPrecision
 	DecimalPrecisionBits = sdkmath.LegacyDecimalPrecisionBits
 )
 
