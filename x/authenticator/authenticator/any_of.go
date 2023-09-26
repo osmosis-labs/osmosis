@@ -76,7 +76,7 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 func (aoa AnyOfAuthenticator) GetAuthenticationData(
 	ctx sdk.Context,
 	tx sdk.Tx,
-	messageIndex int8,
+	messageIndex int,
 	simulate bool,
 ) (iface.AuthenticatorData, error) {
 	var authDataList []iface.AuthenticatorData

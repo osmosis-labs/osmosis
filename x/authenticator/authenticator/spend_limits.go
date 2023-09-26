@@ -3,9 +3,10 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"math/big"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 
@@ -102,12 +103,7 @@ func (sla SpendLimitAuthenticator) Initialize(data []byte) (iface.Authenticator,
 	return sla, nil
 }
 
-func (sla SpendLimitAuthenticator) GetAuthenticationData(
-	ctx sdk.Context,
-	tx sdk.Tx,
-	messageIndex int8,
-	simulate bool,
-) (iface.AuthenticatorData, error) {
+func (sla SpendLimitAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
 	return SignatureData{}, nil // No data needed for this authenticator
 }
 

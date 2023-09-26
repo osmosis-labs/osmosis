@@ -82,12 +82,12 @@ type SignatureData struct {
 }
 
 // GetAuthenticationData parses the signers and signatures from a transactiom
-// then returns a indexed list of both signers and signatures
+// then returns an indexed list of both signers and signatures
 // NOTE: position in the array is used to associate the signer and signature
 func (sva SignatureVerificationAuthenticator) GetAuthenticationData(
 	ctx sdk.Context,
 	tx sdk.Tx,
-	messageIndex int8,
+	messageIndex int,
 	simulate bool,
 ) (iface.AuthenticatorData, error) {
 	signers, signatures, signingTx, err := GetCommonAuthenticationData(ctx, tx, messageIndex, simulate)

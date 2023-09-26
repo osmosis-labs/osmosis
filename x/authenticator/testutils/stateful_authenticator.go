@@ -36,7 +36,7 @@ func (s StatefulAuthenticator) Initialize(data []byte) (iface.Authenticator, err
 	return s, nil
 }
 
-func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int8, simulate bool) (iface.AuthenticatorData, error) {
+func (s StatefulAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
 	return StatefulAuthenticatorData{Value: s.GetValue(ctx)}, nil
 }
 

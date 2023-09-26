@@ -33,7 +33,7 @@ type Authenticator interface {
 	GetAuthenticationData(
 		ctx sdk.Context, // The SDK Context is utilized to access data associated with authentication data.
 		tx sdk.Tx, // The transaction is passed to the getter function to parse signatures and signers.
-		messageIndex int8, // The message index is used to extract specific signers and signatures from the authentication data.
+		messageIndex int, // The message index is used to extract specific signers and signatures from the authentication data.
 		simulate bool, // Simulate is used to perform transaction simulation.
 	) (AuthenticatorData, error)
 

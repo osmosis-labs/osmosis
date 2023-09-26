@@ -94,7 +94,7 @@ type PassKeySignatureData = SignatureData
 func (sva PassKeyAuthenticator) GetAuthenticationData(
 	ctx sdk.Context,
 	tx sdk.Tx,
-	messageIndex int8,
+	messageIndex int,
 	simulate bool,
 ) (iface.AuthenticatorData, error) {
 	signers, signatures, signingTx, err := GetCommonAuthenticationData(ctx, tx, messageIndex, simulate)

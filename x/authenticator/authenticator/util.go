@@ -131,7 +131,7 @@ func GetSignersAndSignatures(
 func GetCommonAuthenticationData(
 	ctx sdk.Context,
 	tx sdk.Tx,
-	messageIndex int8,
+	messageIndex int,
 	simulate bool,
 ) (signers []sdk.AccAddress, signatures []signing.SignatureV2, sigTx authsigning.Tx, err error) {
 	// Attempt to cast the provided transaction to an authsigning.Tx.
