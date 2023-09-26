@@ -10,7 +10,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 
@@ -110,19 +109,13 @@ func (s *KeeperTestSuite) TestCreateGauge_Fee() {
 			Duration:      defaultLockDuration,
 		}
 
-		// TODO: consider removing isPerpetual param
-		numEpochsPaidOver := incentiveskeeper.PerpetualNumEpochsPaidOver
-		if !tc.isPerpetual {
-			numEpochsPaidOver++
-		}
-
 		msg := &types.MsgCreateGauge{
 			IsPerpetual:       tc.isPerpetual,
 			Owner:             testAccountAddress.String(),
 			DistributeTo:      distrTo,
 			Coins:             tc.gaugeAddition,
 			StartTime:         time.Now(),
-			NumEpochsPaidOver: uint64(numEpochsPaidOver),
+			NumEpochsPaidOver: 1,
 		}
 		// System under test.
 		_, err := msgServer.CreateGauge(sdk.WrapSDKContext(ctx), msg)
