@@ -65,7 +65,12 @@ func (aoa AllOfAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 	return aoa, nil
 }
 
-func (aoa AllOfAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
+func (aoa AllOfAuthenticator) GetAuthenticationData(
+	ctx sdk.Context,
+	tx sdk.Tx,
+	messageIndex int,
+	simulate bool,
+) (iface.AuthenticatorData, error) {
 	var authDataList []iface.AuthenticatorData
 	for _, auth := range aoa.SubAuthenticators {
 		data, err := auth.GetAuthenticationData(ctx, tx, messageIndex, simulate)
