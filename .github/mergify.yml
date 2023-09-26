@@ -19,7 +19,6 @@ pull_request_rules:
       - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"
       # with the following workflows successful: 
-      - check-success=add-issue-to-project
       - check-success=build-darwin-amd64
       - check-success=build-darwin-arm64
       - check-success=build-linux-amd64
