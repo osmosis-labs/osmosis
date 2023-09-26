@@ -35,6 +35,7 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewSwapExactAmountOutCmd)
 	osmocli.AddTxCmd(txCmd, NewSplitRouteSwapExactAmountIn)
 	osmocli.AddTxCmd(txCmd, NewSplitRouteSwapExactAmountOut)
+	txCmd.AddCommand(NewSetDenomPairTakerFeeCmd())
 
 	txCmd.AddCommand(
 		NewCreatePoolCmd(),
@@ -544,8 +545,6 @@ Ex) set-denom-pair-taker-fee uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosmo,0.0
 
 	cmd.Flags().AddFlagSet(FlagSetCreatePool())
 	flags.AddTxFlagsToCmd(cmd)
-
-	_ = cmd.MarkFlagRequired(FlagPoolFile)
 
 	return cmd
 }

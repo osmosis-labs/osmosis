@@ -8,6 +8,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v19/x/superfluid/keeper"
@@ -173,13 +174,12 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			// Check that bond denom supply changed by the amount of bond denom added (taking into consideration risk adjusted osmo value and err tolerance)
 			diffInBondDenomSupply := postAddToPositionStakeSupply.Amount.Sub(preAddToPositionStakeSupply.Amount)
 			expectedBondDenomSupplyDiff := superfluidKeeper.GetRiskAdjustedOsmoValue(ctx, tc.amount0Added)
-			s.Require().Equal(0, errTolerance.Compare(expectedBondDenomSupplyDiff, diffInBondDenomSupply), fmt.Sprintf("expected (%s), actual (%s)", expectedBondDenomSupplyDiff, diffInBondDenomSupply))
-
+			osmoassert.Equal(s.T(), errTolerance, expectedBondDenomSupplyDiff, diffInBondDenomSupply)
 			// Check that the pool funds changed by the amount of tokens added (taking into consideration err tolerance)
 			diffInPoolFundsToken0 := postAddToPositionPoolFunds.AmountOf(clPool.GetToken0()).Sub(preAddToPositionPoolFunds.AmountOf(clPool.GetToken0()))
-			s.Require().Equal(0, errTolerance.Compare(tc.amount0Added, diffInPoolFundsToken0), fmt.Sprintf("expected (%s), actual (%s)", tc.amount0Added, diffInPoolFundsToken0))
+			osmoassert.Equal(s.T(), errTolerance, tc.amount0Added, diffInPoolFundsToken0)
 			diffInPoolFundsToken1 := postAddToPositionPoolFunds.AmountOf(clPool.GetToken1()).Sub(preAddToPositionPoolFunds.AmountOf(clPool.GetToken1()))
-			s.Require().Equal(0, errTolerance.Compare(tc.amount1Added, diffInPoolFundsToken1), fmt.Sprintf("expected (%s), actual (%s)", tc.amount1Added, diffInPoolFundsToken1))
+			osmoassert.Equal(s.T(), errTolerance, tc.amount1Added, diffInPoolFundsToken1)
 
 			expectedNewCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), amount0.Add(tc.amount0Added)), sdk.NewCoin(clPool.GetToken1(), amount1.Add(tc.amount1Added)))
 
@@ -187,8 +187,8 @@ func (s *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 			expectedLockCoins := sdk.NewCoins(sdk.NewCoin(clPoolDenom, positionData.Liquidity.TruncateInt()))
 
 			// Resulting position should have the expected amount of coins within one unit (rounding down).
-			s.Require().Equal(0, errTolerance.Compare(expectedNewCoins[0].Amount, positionData.Amount0), fmt.Sprintf("expected (%s), actual (%s)", expectedNewCoins[0].Amount, positionData.Amount0))
-			s.Require().Equal(0, errTolerance.Compare(expectedNewCoins[1].Amount, positionData.Amount1), fmt.Sprintf("expected (%s), actual (%s)", expectedNewCoins[1].Amount, positionData.Amount1))
+			osmoassert.Equal(s.T(), errTolerance, expectedNewCoins[0].Amount, positionData.Amount0)
+			osmoassert.Equal(s.T(), errTolerance, expectedNewCoins[1].Amount, positionData.Amount1)
 
 			// Check the new lock.
 			newLock, err := s.App.LockupKeeper.GetLockByID(ctx, newLockId)

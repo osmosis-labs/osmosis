@@ -8,7 +8,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
-var MaxSpotPrice = osmomath.NewDec(2).Power(128).Sub(osmomath.OneDec())
+var (
+	MaxSpotPrice       = osmomath.NewDec(2).Power(128).Sub(osmomath.OneDec())
+	MaxSpotPriceBigDec = osmomath.BigDecFromDec(MaxSpotPrice)
+)
 
 // GetAllUniqueDenomPairs returns all unique pairs of denoms, where for every pair
 // (X, Y), X < Y.

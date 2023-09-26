@@ -175,7 +175,10 @@ func (s *KeeperTestSuite) TestCreateDenom() {
 						Denom:    res.GetNewTokenDenom(),
 						Exponent: 0,
 					}},
-					Base: res.GetNewTokenDenom(),
+					Base:    res.GetNewTokenDenom(),
+					Display: res.GetNewTokenDenom(),
+					Name:    res.GetNewTokenDenom(),
+					Symbol:  res.GetNewTokenDenom(),
 				}, metadata)
 			} else {
 				s.Require().Error(err)

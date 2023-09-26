@@ -87,8 +87,8 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coin
 }
 
 var zeroDec = osmomath.ZeroDec()
-var oneThirdSpotPriceUnits = osmomath.NewDec(1).Quo(osmomath.NewDec(3)).
-	MulIntMut(gammtypes.SpotPriceSigFigs).RoundInt().ToLegacyDec().QuoInt(gammtypes.SpotPriceSigFigs)
+var oneThirdSpotPriceUnits = osmomath.BigDecFromDec(osmomath.NewDec(1).Quo(osmomath.NewDec(3)).
+	MulIntMut(gammtypes.SpotPriceSigFigs).RoundInt().ToLegacyDec().QuoInt(gammtypes.SpotPriceSigFigs))
 
 // PrepareBalancerPool returns a Balancer pool's pool-ID with pool params set in PrepareBalancerPoolWithPoolParams.
 func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
@@ -99,10 +99,10 @@ func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 
 	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, FOO, BAR)
 	s.NoError(err)
-	s.Equal(osmomath.NewDec(2), spotPrice)
+	s.Equal(osmomath.NewBigDec(2), spotPrice)
 	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, BAR, BAZ)
 	s.NoError(err)
-	s.Equal(osmomath.NewDecWithPrec(15, 1), spotPrice)
+	s.Equal(osmomath.NewBigDecWithPrec(15, 1), spotPrice)
 	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, BAZ, FOO)
 	s.NoError(err)
 	s.Equal(oneThirdSpotPriceUnits, spotPrice)
@@ -294,7 +294,7 @@ func (s *KeeperTestHelper) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, poo
 	// Amount of quote token need to trade to get target spot price
 	// AmoutQuoteTokenNeedToTrade = AmoutQuoTokenNow * ((targetSpotPrice/spotPriceNow)^((weight_base/(weight_base + weight_quote))) -1 )
 
-	ratioPrice := targetSpotPrice.Quo(spotPriceNow)
+	ratioPrice := targetSpotPrice.Quo(spotPriceNow.Dec())
 	ratioWeight := (baseAsset.Weight.ToLegacyDec()).Quo(baseAsset.Weight.ToLegacyDec().Add(quoteAsset.Weight.ToLegacyDec()))
 
 	amountTrade = quoteAsset.Token.Amount.ToLegacyDec().Mul(osmomath.Pow(ratioPrice, ratioWeight).Sub(osmomath.OneDec()))

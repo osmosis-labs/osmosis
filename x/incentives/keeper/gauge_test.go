@@ -4,16 +4,25 @@ import (
 	"fmt"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	poolincentivetypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
+
+var (
+	defaultEmptyGaugeInfo = types.InternalGaugeInfo{
+		TotalWeight:  osmomath.ZeroInt(),
+		GaugeRecords: []types.InternalGaugeRecord{},
+	}
+)
 
 // TestInvalidDurationGaugeCreationValidation tests error handling for creating a gauge with an invalid duration.
 func (s *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
@@ -334,6 +343,27 @@ func (s *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 }
 
 func (s *KeeperTestSuite) TestAddToGaugeRewards() {
+
+	defaultCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 12))
+
+	// since most of the same functionality and edge cases are tested by a higher level
+	// AddToGaugeRewards down below, we only include a happy path test for the internal helper.
+	s.Run("internal helper basic happy path test", func() {
+		s.SetupTest()
+		const defaultGaugeId = uint64(1)
+
+		_, _, _, _ = s.SetupNewGauge(true, defaultCoins)
+
+		err := s.App.IncentivesKeeper.AddToGaugeRewardsInternal(s.Ctx, defaultCoins, defaultGaugeId)
+		s.Require().NoError(err)
+
+		gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, defaultGaugeId)
+		s.Require().NoError(err)
+
+		// validate final coins were updated
+		s.Require().Equal(defaultCoins.Add(defaultCoins...), gauge.Coins)
+	})
+
 	testCases := []struct {
 		name               string
 		owner              sdk.AccAddress
@@ -390,7 +420,7 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			_, _, existingGaugeCoins, _ := s.SetupNewGauge(true, sdk.Coins{sdk.NewInt64Coin("stake", 12)})
+			_, _, existingGaugeCoins, _ := s.SetupNewGauge(true, defaultCoins)
 
 			s.FundAcc(tc.owner, tc.coinsToAdd)
 
@@ -408,7 +438,6 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 
 				// Ensure that at least the minimum amount of gas was charged (based on number of additional gauge coins)
 				gasConsumed := s.Ctx.GasMeter().GasConsumed() - existingGasConsumed
-				fmt.Println(gasConsumed, tc.minimumGasConsumed)
 				s.Require().True(gasConsumed >= tc.minimumGasConsumed)
 
 				// existing coins gets added to the module when we create gauge and add to gauge
@@ -584,189 +613,228 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 	}
 }
 
-func (s *KeeperTestSuite) TestCreateGroupGauge() {
-	coinsToAdd := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))
-	tests := []struct {
-		name             string
-		coins            sdk.Coins
-		numEpochPaidOver uint64
-		internalGaugeIds []uint64
-		gaugeType        lockuptypes.LockQueryType
-		splittiingPolicy types.SplittingPolicy
-		expectErr        bool
+// Validates that the initial gauge info is initialized with the appropriate gauge IDs given pool IDs.
+// All weights are set to zero in all cases.
+func (s *KeeperTestSuite) TestInitGaugeInfo() {
+
+	// We setup state once for all tests since there are no state mutations
+	// in system under test.
+	s.SetupTest()
+	k := s.App.IncentivesKeeper
+
+	// Prepare pools, their IDs and associated gauge IDs.
+	poolInfo := s.PrepareAllSupportedPools()
+
+	// Initialize expected gauge records
+	var (
+		concentratedGaugeRecord = withRecordGaugeId(defaultZeroWeightGaugeRecord, poolInfo.ConcentratedGaugeID)
+		balancerGaugeRecord     = withRecordGaugeId(defaultZeroWeightGaugeRecord, poolInfo.BalancerGaugeID)
+		stableSwapGaugeRecord   = withRecordGaugeId(defaultZeroWeightGaugeRecord, poolInfo.StableSwapGaugeID)
+	)
+
+	tests := map[string]struct {
+		poolIds           []uint64
+		expectedGaugeInfo types.InternalGaugeInfo
+		expectError       error
 	}{
-		{
-			name:             "Happy case: created valid gauge",
-			coins:            coinsToAdd,
-			numEpochPaidOver: 1,
-			internalGaugeIds: []uint64{2, 3, 4},
-			gaugeType:        lockuptypes.ByGroup,
-			splittiingPolicy: types.Evenly,
-			expectErr:        false,
+		"one gauge record": {
+			poolIds:           []uint64{poolInfo.ConcentratedPoolID},
+			expectedGaugeInfo: addGaugeRecords(defaultEmptyGaugeInfo, []types.InternalGaugeRecord{concentratedGaugeRecord}),
 		},
 
-		{
-			name:             "Error: Invalid InternalGauge Id",
-			coins:            coinsToAdd,
-			numEpochPaidOver: 1,
-			internalGaugeIds: []uint64{2, 3, 4, 5},
-			gaugeType:        lockuptypes.ByGroup,
-			splittiingPolicy: types.Evenly,
-			expectErr:        true,
+		"multiple gauge records": {
+			poolIds: []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID, poolInfo.StableSwapPoolID},
+			expectedGaugeInfo: addGaugeRecords(defaultEmptyGaugeInfo,
+				[]types.InternalGaugeRecord{
+					concentratedGaugeRecord,
+					balancerGaugeRecord,
+					stableSwapGaugeRecord,
+				}),
 		},
-		{
-			name:             "Error: owner doesnot have enough funds",
-			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
-			numEpochPaidOver: 1,
-			internalGaugeIds: []uint64{2, 3, 4},
-			gaugeType:        lockuptypes.ByGroup,
-			splittiingPolicy: types.Evenly,
-			expectErr:        true,
-		},
-		{
-			name:             "Error: One of the internal Gauge is non-perp",
-			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
-			numEpochPaidOver: 1,
-			internalGaugeIds: []uint64{2, 3, 4, 5},
-			gaugeType:        lockuptypes.ByGroup,
-			splittiingPolicy: types.Evenly,
-			expectErr:        true,
-		},
-		{
-			name:             "Error: No InternalGaugeIds provided",
-			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
-			numEpochPaidOver: 1,
-			internalGaugeIds: []uint64{},
-			splittiingPolicy: types.Evenly,
-			gaugeType:        lockuptypes.ByGroup,
-			expectErr:        true,
-		},
-		{
-			name:             "Error: Invalid Splitting Policy",
-			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
-			numEpochPaidOver: 1,
-			internalGaugeIds: []uint64{},
-			gaugeType:        lockuptypes.ByGroup,
-			splittiingPolicy: types.Volume,
-			expectErr:        true,
-		},
-		{
-			name:             "Error: Invalid gauge type",
-			coins:            sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
-			numEpochPaidOver: 1,
-			internalGaugeIds: []uint64{},
-			gaugeType:        lockuptypes.NoLock,
-			splittiingPolicy: types.Evenly,
-			expectErr:        true,
+
+		// error cases
+
+		"error when getting gauge for pool ID (cw pool does not support incentives)": {
+			poolIds: []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID, poolInfo.CosmWasmPoolID, poolInfo.StableSwapPoolID},
+
+			expectError: poolincentivetypes.UnsupportedPoolTypeError{PoolID: poolInfo.CosmWasmPoolID, PoolType: poolmanagertypes.CosmWasm},
 		},
 	}
 
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))) // 1,000 osmo
-			clPool := s.PrepareConcentratedPool()                                                      // gaugeid = 1
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
 
-			// create 3 perp-internal Gauge
-			for i := 0; i <= 2; i++ {
-				s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(1)) // gauge id = 2,3,4
-			}
+			actualGaugeInfo, err := k.InitGaugeInfo(s.Ctx, tc.poolIds)
 
-			//create 1 non-perp internal Gauge
-			s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(2)) // gauge id = 5
-
-			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[1], tc.internalGaugeIds, tc.gaugeType, tc.splittiingPolicy) // gauge id = 6
-			if tc.expectErr {
+			if tc.expectError != nil {
 				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-
-				// check that the gauge has been create with right value
-				groupGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, groupGaugeId)
-				s.Require().NoError(err)
-
-				s.Require().Equal(groupGauge.Coins, tc.coins)
-				s.Require().Equal(groupGauge.NumEpochsPaidOver, tc.numEpochPaidOver)
-				s.Require().Equal(groupGauge.IsPerpetual, true)
-				s.Require().Equal(groupGauge.DistributeTo.LockQueryType, lockuptypes.ByGroup)
-
-				// check that GroupGauge has been added to state
-				groupGaugeObj, err := s.App.IncentivesKeeper.GetGroupGaugeById(s.Ctx, groupGaugeId)
-				s.Require().NoError(err)
-
-				s.Require().Equal(groupGaugeObj.InternalIds, tc.internalGaugeIds)
+				return
 			}
+			s.Require().NoError(err)
 
+			// Validate InternalGaugeInfo
+			s.validateGaugeInfo(tc.expectedGaugeInfo, actualGaugeInfo)
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestAddToGaugeRewardsFromGauge() {
-	coinsToTransfer := sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))
+// Validates that the Group is created as defined by the CreateGroup spec with the
+// associated 1:1 group Gauge and the correct gauge records relating to the given pools'
+// internal perpetual gauge IDs.
+func (s *KeeperTestSuite) TestCreateGroup() {
+
+	// We setup test state once and reuse it for all test cases
+	s.SetupTest()
+
+	// index of s.TestAccs that gets funded
+	const fundedAddressIndex = 0
+
+	// Create 4 pools of each possible type
+	poolInfo := s.PrepareAllSupportedPools()
+
+	expectedGroupGaugeId := s.App.IncentivesKeeper.GetLastGaugeID(s.Ctx) + 1
+
+	// Initialize expected gauge records
+	var (
+		concentratedGaugeRecord = withRecordGaugeId(defaultZeroWeightGaugeRecord, poolInfo.ConcentratedGaugeID)
+		balancerGaugeRecord     = withRecordGaugeId(defaultZeroWeightGaugeRecord, poolInfo.BalancerGaugeID)
+		stableSwapGaugeRecord   = withRecordGaugeId(defaultZeroWeightGaugeRecord, poolInfo.StableSwapGaugeID)
+	)
+
 	tests := []struct {
-		name            string
-		groupGaugeId    uint64
-		internalGaugeId uint64
-		coinsToTransfer sdk.Coins
-		expectErr       bool
+		name             string
+		coins            sdk.Coins
+		numEpochPaidOver uint64
+		// 0 by default unless overwritten
+		creatorAddressIndex int
+		poolIDs             []uint64
+
+		expectedGaugeInfo           types.InternalGaugeInfo
+		expectedPerpeutalGroupGauge bool
+		expectErr                   error
 	}{
 		{
-			name:            "Happy case: Valid gaugeId with valid Internal GaugeId",
-			groupGaugeId:    3,
-			internalGaugeId: 2,
-			coinsToTransfer: coinsToTransfer,
-			expectErr:       false,
+			name:             "two pools - created perpetual group gauge",
+			coins:            defaultCoins,
+			numEpochPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver,
+			poolIDs:          []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID},
+
+			expectedPerpeutalGroupGauge: true,
+			expectedGaugeInfo: addGaugeRecords(defaultEmptyGaugeInfo, []types.InternalGaugeRecord{
+				concentratedGaugeRecord,
+				balancerGaugeRecord,
+			}),
 		},
 		{
-			name:            "Error: InternalGauge is not present in groupGauge",
-			groupGaugeId:    3,
-			internalGaugeId: 1,
-			coinsToTransfer: coinsToTransfer,
-			expectErr:       true,
+			name:             "all incentive supported pools - created perpetual group gauge",
+			coins:            defaultCoins,
+			numEpochPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver,
+			poolIDs:          []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID, poolInfo.StableSwapPoolID},
+
+			expectedPerpeutalGroupGauge: true,
+			expectedGaugeInfo: addGaugeRecords(defaultEmptyGaugeInfo, []types.InternalGaugeRecord{
+				concentratedGaugeRecord,
+				balancerGaugeRecord,
+				stableSwapGaugeRecord,
+			}),
 		},
 		{
-			name:            "Error: Not enough tokens to transfer",
-			groupGaugeId:    3,
-			internalGaugeId: 2,
-			coinsToTransfer: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(200_000_000))),
-			expectErr:       true,
+			name:             "two pools - created non-perpetual group gauge",
+			coins:            defaultCoins,
+			numEpochPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver + 1,
+			poolIDs:          []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID},
+
+			expectedPerpeutalGroupGauge: false, // explicit for clarity
+			expectedGaugeInfo: addGaugeRecords(defaultEmptyGaugeInfo, []types.InternalGaugeRecord{
+				concentratedGaugeRecord,
+				balancerGaugeRecord,
+			}),
 		},
+
 		{
-			name:            "Error: GroupGaugeId doesnot exist",
-			groupGaugeId:    5,
-			internalGaugeId: 2,
-			coinsToTransfer: coinsToTransfer,
-			expectErr:       true,
+			name:             "all incentive supported pools with custom amount - created non-perpetual group gauge",
+			coins:            defaultCoins.Add(defaultCoins...).Add(defaultCoins...),
+			numEpochPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver + 4,
+			poolIDs:          []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID, poolInfo.StableSwapPoolID},
+
+			expectedPerpeutalGroupGauge: false, // explicit for clarity
+			expectedGaugeInfo: addGaugeRecords(defaultEmptyGaugeInfo, []types.InternalGaugeRecord{
+				concentratedGaugeRecord,
+				balancerGaugeRecord,
+				stableSwapGaugeRecord,
+			}),
+		},
+
+		// error cases
+
+		{
+			name:             "error: fails to initialize group gauge due to cosmwasm pool that does not support incentives",
+			coins:            defaultCoins,
+			numEpochPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver,
+			poolIDs:          []uint64{poolInfo.BalancerPoolID, poolInfo.CosmWasmPoolID},
+
+			expectErr: poolincentivetypes.UnsupportedPoolTypeError{PoolID: poolInfo.CosmWasmPoolID, PoolType: poolmanagertypes.CosmWasm},
+		},
+
+		{
+			name:                "error: owner does not have enough funds",
+			coins:               defaultCoins,
+			creatorAddressIndex: fundedAddressIndex + 1,
+			numEpochPaidOver:    incentiveskeeper.PerpetualNumEpochsPaidOver,
+			poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
+			expectErr:           fmt.Errorf("0uosmo is smaller than %s: insufficient funds", defaultCoins),
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.SetupTest()
-			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))) // 1,000 osmo
-			clPool := s.PrepareConcentratedPool()                                                      // gaugeid = 1
 
-			// create internal Gauge
-			internalGauge1 := s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(1)) // gauge id = 2
+			// Always fund the first account
+			s.FundAcc(s.TestAccs[fundedAddressIndex], tc.coins)
 
-			// create group gauge
-			_, err := s.App.IncentivesKeeper.CreateGroupGauge(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))), uint64(1), s.TestAccs[1], []uint64{internalGauge1}, lockuptypes.ByGroup, types.Evenly) // gauge id = 3
-			s.Require().NoError(err)
-
-			err = s.App.IncentivesKeeper.AddToGaugeRewardsFromGauge(s.Ctx, tc.groupGaugeId, tc.coinsToTransfer, tc.internalGaugeId)
-			if tc.expectErr {
+			groupGaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, tc.coins, tc.numEpochPaidOver, s.TestAccs[tc.creatorAddressIndex], tc.poolIDs)
+			if tc.expectErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectErr.Error())
 			} else {
 				s.Require().NoError(err)
 
-				// check that the coins have been transferred
-				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, tc.groupGaugeId)
+				s.Require().Equal(expectedGroupGaugeId, groupGaugeId)
+
+				// Validate group's Gauge
+				groupGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, groupGaugeId)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.coins, groupGauge.Coins)
+				s.Require().Equal(tc.numEpochPaidOver, groupGauge.NumEpochsPaidOver)
+				s.Require().Equal(tc.expectedPerpeutalGroupGauge, groupGauge.IsPerpetual)
+				s.Require().Equal(lockuptypes.ByGroup, groupGauge.DistributeTo.LockQueryType)
+
+				// Validate Group
+				group, err := s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, groupGaugeId)
 				s.Require().NoError(err)
 
-				s.Require().Equal(gauge.Coins, tc.coinsToTransfer)
+				s.Require().Equal(expectedGroupGaugeId, group.GroupGaugeId)
+				s.Require().Equal(types.ByVolume, group.SplittingPolicy)
 
+				// Validate InternalGaugeInfo
+				actualGaugeInfo := group.InternalGaugeInfo
+				s.validateGaugeInfo(tc.expectedGaugeInfo, actualGaugeInfo)
+
+				// Bump up expected gauge ID since we are reusing the same test state
+				expectedGroupGaugeId++
 			}
 		})
 	}
+}
 
+// validates that the expected gauge info equals the actual gauge info
+func (s *KeeperTestSuite) validateGaugeInfo(expected types.InternalGaugeInfo, actual types.InternalGaugeInfo) {
+	s.Require().Equal(expected.TotalWeight.String(), actual.TotalWeight.String())
+	s.Require().Equal(len(expected.GaugeRecords), len(actual.GaugeRecords))
+	for i := range expected.GaugeRecords {
+		s.Require().Equal(expected.GaugeRecords[i].GaugeId, actual.GaugeRecords[i].GaugeId)
+		s.Require().Equal(expected.GaugeRecords[i].CurrentWeight.String(), actual.GaugeRecords[i].CurrentWeight.String())
+		s.Require().Equal(expected.GaugeRecords[i].CumulativeWeight.String(), actual.GaugeRecords[i].CumulativeWeight.String())
+	}
 }

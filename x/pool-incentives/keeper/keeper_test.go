@@ -380,3 +380,62 @@ func (s *KeeperTestSuite) TestIsPoolIncentivized() {
 		})
 	}
 }
+
+// Tests that for every supported internally incentivized pool,
+// the appropriate gauge ID is returned.
+// For balancer and stableswap, returns the longest duration gauge ID.
+// For CL, returns the gauge ID for the current epoch incentive duration.
+// For cosmwasm pool, returns an error.
+// For non-existent pool ID, returns an error.
+func (suite *KeeperTestSuite) TestGetInternalGaugeIDForPool() {
+
+	// Note that we initialize the same state for all pools.
+	suite.SetupTest()
+
+	// Prepare pools and their IDs
+	poolInfo := suite.PrepareAllSupportedPools()
+
+	tests := map[string]struct {
+		poolID          uint64
+		expectedGaugeID uint64
+		expectError     error
+	}{
+		"concentrated pool": {
+			poolID:          poolInfo.ConcentratedPoolID,
+			expectedGaugeID: poolInfo.ConcentratedGaugeID,
+		},
+		"balancer pool": {
+			poolID:          poolInfo.BalancerPoolID,
+			expectedGaugeID: poolInfo.BalancerGaugeID,
+		},
+		"stableswap pool": {
+			poolID:          poolInfo.StableSwapPoolID,
+			expectedGaugeID: poolInfo.StableSwapGaugeID,
+		},
+		"cosmwasm pool": {
+			poolID:      poolInfo.CosmWasmPoolID,
+			expectError: types.UnsupportedPoolTypeError{PoolID: poolInfo.CosmWasmPoolID, PoolType: poolmanagertypes.CosmWasm},
+		},
+		"pool with given ID does not exist": {
+			poolID:      poolInfo.CosmWasmPoolID + 1,
+			expectError: poolmanagertypes.FailedToFindRouteError{PoolId: poolInfo.CosmWasmPoolID + 1},
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+
+			poolIncentivesKeeper := suite.App.PoolIncentivesKeeper
+
+			gaugeID, err := poolIncentivesKeeper.GetInternalGaugeIDForPool(suite.Ctx, tc.poolID)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(tc.expectError, err)
+				return
+			}
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedGaugeID, gaugeID)
+		})
+	}
+}

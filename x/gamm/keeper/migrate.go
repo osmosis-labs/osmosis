@@ -125,8 +125,8 @@ func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context
 	// delete all existing migration records
 	// this is done for both replace and update migration calls because, regardless of whether we are replacing all or updating a few,
 	// the resulting migrationInfo that gets passed into this function is the complete set of migration records.
-	osmoutils.DeleteAllKeysFromPrefix(ctx, store, types.KeyPrefixMigrationInfoBalancerPool)
-	osmoutils.DeleteAllKeysFromPrefix(ctx, store, types.KeyPrefixMigrationInfoCLPool)
+	osmoutils.DeleteAllKeysFromPrefix(store, types.KeyPrefixMigrationInfoBalancerPool)
+	osmoutils.DeleteAllKeysFromPrefix(store, types.KeyPrefixMigrationInfoCLPool)
 
 	for _, balancerToCLPoolLink := range migrationInfo.BalancerToConcentratedPoolLinks {
 		balancerToClPoolKey := types.GetKeyPrefixMigrationInfoBalancerPool(balancerToCLPoolLink.BalancerPoolId)
@@ -415,17 +415,13 @@ func (k Keeper) CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk
 	if err != nil {
 		return nil, err
 	}
-
 	// Set the migration link in x/gamm.
 	// This will also migrate the CFMM distribution records to point to the new CL pool.
-	err = k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, gammmigration.MigrationRecords{
-		BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
-			{
-				BalancerPoolId: cfmmPoolId,
-				ClPoolId:       concentratedPool.GetId(),
-			},
-		},
-	})
+	err = k.UpdateMigrationRecords(ctx, []gammmigration.BalancerToConcentratedPoolLink{
+		{
+			BalancerPoolId: cfmmPoolId,
+			ClPoolId:       concentratedPool.GetId(),
+		}})
 	if err != nil {
 		return nil, err
 	}

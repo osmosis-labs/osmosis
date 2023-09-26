@@ -47,3 +47,14 @@ func (gauge Gauge) IsActiveGauge(curTime time.Time) bool {
 func (gauge Gauge) IsFinishedGauge(curTime time.Time) bool {
 	return !gauge.IsUpcomingGauge(curTime) && !gauge.IsActiveGauge(curTime)
 }
+
+// IsLastNonPerpetualDistribution returns true if the this is the last distribution of the gauge.
+// The last distribution is defined for non-perpetual gauges where FilledEpochs+1 >= NumEpochsPaidOver.
+// Assumes that this is called before updating the gauge's state at the end of the epoch.
+// If called after update, it still safe because of >= comparison.
+func (gauge Gauge) IsLastNonPerpetualDistribution() bool {
+	// Note, it is impossible to create a gauge with NumEpochsPaidOver == 0 due to a check
+	// in MsgCreateGauge.ValidateBasic. Additionally, FilledEpoch is always initialized to 0
+	// at gauge creation time.
+	return !gauge.IsPerpetual && gauge.FilledEpochs+1 >= gauge.NumEpochsPaidOver
+}

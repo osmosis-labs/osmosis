@@ -18,7 +18,8 @@ func Liquidity0(amount osmomath.Int, sqrtPriceA, sqrtPriceB osmomath.BigDec) osm
 
 	// We convert to BigDec to avoid precision loss when calculating liquidity. Without doing this,
 	// our liquidity calculations will be off from our theoretical calculations within our tests.
-	amountBigDec := osmomath.BigDecFromDec(amount.ToLegacyDec())
+	// TODO (perf): consider better conversion helpers to minimize reallocations.
+	amountBigDec := osmomath.BigDecFromSDKInt(amount)
 
 	product := sqrtPriceA.Mul(sqrtPriceB)
 	diff := sqrtPriceB.Sub(sqrtPriceA)
@@ -26,6 +27,7 @@ func Liquidity0(amount osmomath.Int, sqrtPriceA, sqrtPriceB osmomath.BigDec) osm
 		panic(fmt.Sprintf("liquidity0 diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
 	}
 
+	// TODO (perf): consider Dec() function that does not reallocate
 	return amountBigDec.MulMut(product).QuoMut(diff).Dec()
 }
 
@@ -40,12 +42,14 @@ func Liquidity1(amount osmomath.Int, sqrtPriceA, sqrtPriceB osmomath.BigDec) osm
 
 	// We convert to BigDec to avoid precision loss when calculating liquidity. Without doing this,
 	// our liquidity calculations will be off from our theoretical calculations within our tests.
-	amountBigDec := osmomath.BigDecFromDec(amount.ToLegacyDec())
+	// TODO (perf): consider better conversion helpers to minimize reallocations.
+	amountBigDec := osmomath.BigDecFromSDKInt(amount)
 	diff := sqrtPriceB.Sub(sqrtPriceA)
 	if diff.IsZero() {
 		panic(fmt.Sprintf("liquidity1 diff is zero: sqrtPriceA %s sqrtPriceB %s", sqrtPriceA, sqrtPriceB))
 	}
 
+	// TODO (perf): consider Dec() function that does not reallocate
 	return amountBigDec.QuoMut(diff).Dec()
 }
 
@@ -66,22 +70,25 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB osmomath.BigDec, roundUp bool)
 	// additionally, without rounding, there exists cases where the swapState.amountSpecifiedRemaining.IsPositive() for loop within
 	// the CalcOut/In functions never actually reach zero due to dust that would have never gotten counted towards the amount (numbers after the 10^6 place)
 	if roundUp {
-		// Note that we do MulTruncate so that the denominator is smaller as this is
+		// Note that we do MulRoundUp so that the numerator is larger as this is
 		// the case where we want to round up to favor the pool.
+		// For the same reasons, QuoRoundUp to round up at precision end after division.
 		// Examples include:
 		// - calculating amountIn during swap
 		// - adding liquidity (request user to provide more tokens in in favor of the pool)
 		// The denominator is truncated to get a higher final amount.
-		denom := sqrtPriceA.MulTruncate(sqrtPriceB)
-		return liq.Mul(diff).QuoMut(denom).Ceil()
+		// Note that the order of divisions is important here. First, we divide by a larger number (sqrtPriceB) and then by a smaller number (sqrtPriceA).
+		// This leads to a smaller error amplification. This only matters in cases where at least one of the sqrt prices is below 1.
+		// TODO (perf): QuoRoundUpMut with no reallocation.
+		return liq.MulRoundUp(diff).QuoRoundUpMut(sqrtPriceB).QuoRoundUpMut(sqrtPriceA).Ceil()
 	}
 	// These are truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
 	// - withdrawing liquidity
-	// The denominator is rounded up to get a smaller final amount.
-	denom := sqrtPriceA.MulRoundUp(sqrtPriceB)
-
-	return liq.MulTruncate(diff).QuoTruncate(denom)
+	// Each intermediary step is truncated at precision end to get a smaller final amount.
+	// Note that the order of divisions is important here. First, we divide by a larger number (sqrtPriceB) and then by a smaller number (sqrtPriceA).
+	// This leads to a smaller error amplification.
+	return liq.MulTruncate(diff).QuoTruncateMut(sqrtPriceB).QuoTruncateMut(sqrtPriceA)
 }
 
 // CalcAmount1Delta takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1
@@ -126,11 +133,13 @@ func GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidity, amount
 		return sqrtPriceCurrent
 	}
 
-	product := amountZeroRemainingIn.Mul(sqrtPriceCurrent)
+	// Truncate at precision end to make denominator smaller so that the final result is larger.
+	product := amountZeroRemainingIn.MulTruncate(sqrtPriceCurrent)
 	// denominator = product + liquidity
 	denominator := product
 	denominator.AddMut(liquidity)
-	return liquidity.Mul(sqrtPriceCurrent).QuoRoundUp(denominator)
+	// MulRoundUp and QuoRoundUp to make the final result larger by rounding up at precision end.
+	return liquidity.MulRoundUp(sqrtPriceCurrent).QuoRoundUpMut(denominator)
 }
 
 // GetNextSqrtPriceFromAmount0OutRoundingUp utilizes sqrtPriceCurrent, liquidity, and amount of denom0 that still needs
@@ -148,7 +157,7 @@ func GetNextSqrtPriceFromAmount0OutRoundingUp(sqrtPriceCurrent, liquidity, amoun
 	denominator := liquidity.Sub(product)
 	// mul round up numerator to make the final result larger
 	// quo round up to make the final result larger
-	return liquidity.MulRoundUp(sqrtPriceCurrent).QuoRoundUp(denominator)
+	return liquidity.MulRoundUp(sqrtPriceCurrent).QuoRoundUpMut(denominator)
 }
 
 // GetNextSqrtPriceFromAmount1InRoundingDown utilizes the current sqrtPriceCurrent, liquidity, and amount of denom1 that still needs

@@ -42,7 +42,7 @@ func (s *CosmWasmPoolSuite) TestGetSpreadFactor() {
 // TestSpotPrice validates that spot price is returned as one.
 func (s *CosmWasmPoolSuite) TestSpotPrice() {
 	var (
-		expectedSpotPrice = osmomath.OneDec()
+		expectedSpotPrice = osmomath.OneBigDec()
 	)
 
 	pool := s.PrepareCosmWasmPool()

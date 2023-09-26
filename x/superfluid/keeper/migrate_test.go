@@ -13,6 +13,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
@@ -949,7 +950,7 @@ func (s *KeeperTestSuite) TestForceUnlockAndExitBalancerPool() {
 			if tc.exitCoinsLengthIsTwo {
 				for _, coin := range exitCoins {
 					// Check that the exit coin is the same amount that we joined with (with one unit rounding down)
-					s.Require().Equal(0, defaultErrorTolerance.Compare(tokensIn.AmountOf(coin.Denom).ToLegacyDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), coin.Amount))
+					osmoassert.Equal(s.T(), defaultErrorTolerance, tokensIn.AmountOf(coin.Denom).ToLegacyDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), coin.Amount)
 				}
 			}
 		})
@@ -1159,8 +1160,8 @@ func (s *KeeperTestSuite) ValidateMigrateResult(
 		AdditiveTolerance: osmomath.NewDec(2),
 		RoundingDir:       osmomath.RoundDown,
 	}
-	s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[0].Token.Denom).ToLegacyDec().Mul(percentOfSharesToMigrate).RoundInt(), amount0))
-	s.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[1].Token.Denom).ToLegacyDec().Mul(percentOfSharesToMigrate).RoundInt(), amount1))
+	osmoassert.Equal(s.T(), defaultErrorTolerance, joinPoolAmt.AmountOf(defaultPoolAssets[0].Token.Denom).ToLegacyDec().Mul(percentOfSharesToMigrate).RoundInt(), amount0)
+	osmoassert.Equal(s.T(), defaultErrorTolerance, joinPoolAmt.AmountOf(defaultPoolAssets[1].Token.Denom).ToLegacyDec().Mul(percentOfSharesToMigrate).RoundInt(), amount1)
 }
 
 type Positions struct {
@@ -1314,7 +1315,9 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		s.Require().NoError(err)
 		balancerSpotPrice, err := balancerPool.SpotPrice(s.Ctx, DefaultCoin1.Denom, DefaultCoin0.Denom)
 		s.Require().NoError(err)
-		s.CreateFullRangePosition(clPool, sdk.NewCoins(sdk.NewCoin(DefaultCoin0.Denom, osmomath.NewInt(100000000)), sdk.NewCoin(DefaultCoin1.Denom, osmomath.NewDec(100000000).Mul(balancerSpotPrice).TruncateInt())))
+		// balancerSpotPrice truncation is acceptable because all CFMM pools only allow 18 decimals.
+		// The reason why BigDec is returned is to maintain compatibility with the generalized `PoolI.SpotPrice`API.
+		s.CreateFullRangePosition(clPool, sdk.NewCoins(sdk.NewCoin(DefaultCoin0.Denom, osmomath.NewInt(100000000)), sdk.NewCoin(DefaultCoin1.Denom, osmomath.NewDec(100000000).Mul(balancerSpotPrice.Dec()).TruncateInt())))
 
 		// Add a gov sanctioned link between the balancer and concentrated liquidity pool.
 		migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{

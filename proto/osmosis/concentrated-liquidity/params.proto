@@ -56,4 +56,11 @@ message Params {
   bool is_permissionless_pool_creation_enabled = 6
       [ (gogoproto.moretags) =
             "yaml:\"is_permissionless_pool_creation_enabled\"" ];
+
+  // unrestricted_pool_creator_whitelist is a list of addresses that are
+  // allowed to bypass restrictions on permissionless supercharged pool
+  // creation, like pool_creation_enabled, restricted quote assets, no
+  // double creation of pools, etc.
+  repeated string unrestricted_pool_creator_whitelist = 7
+      [ (gogoproto.moretags) = "yaml:\"unrestricted_pool_creator_whitelist\"" ];
 }
