@@ -9,6 +9,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolincentivetypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -711,6 +713,76 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 				s.Require().Equal(group.SplittingPolicy, types.ByVolume)
 			}
 
+		})
+	}
+}
+
+// Validates that the initial gauge info is initialized with the appropriate gauge IDs given pool IDs.
+// All weights are set to zero in all cases.
+func (s *KeeperTestSuite) TestInitGaugeInfo() {
+
+	// We setup state once for all tests since there are no state mutations
+	// in system under test.
+	s.SetupTest()
+	k := s.App.IncentivesKeeper
+
+	// Prepare pools, their IDs and associated gauge IDs.
+	poolInfo := s.PrepareAllSupportedPools()
+
+	defaultEmptyGaugeInfo := types.InternalGaugeInfo{
+		TotalWeight:  osmomath.ZeroInt(),
+		GaugeRecords: []types.InternalGaugeRecord{},
+	}
+
+	tests := map[string]struct {
+		poolIds           []uint64
+		expectedGaugeInfo types.InternalGaugeInfo
+		expectError       error
+	}{
+		"one gauge record": {
+			poolIds:           []uint64{poolInfo.ConcentratedPoolID},
+			expectedGaugeInfo: addGaugeRecords(defaultEmptyGaugeInfo, []types.InternalGaugeRecord{{GaugeId: poolInfo.ConcentratedGaugeID, CurrentWeight: osmomath.ZeroInt(), CumulativeWeight: osmomath.ZeroInt()}}),
+		},
+
+		"multiple gauge records": {
+			poolIds: []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID, poolInfo.StableSwapPoolID},
+			expectedGaugeInfo: addGaugeRecords(defaultEmptyGaugeInfo,
+				[]types.InternalGaugeRecord{
+					{GaugeId: poolInfo.ConcentratedGaugeID, CurrentWeight: osmomath.ZeroInt(), CumulativeWeight: osmomath.ZeroInt()},
+					{GaugeId: poolInfo.BalancerGaugeID, CurrentWeight: osmomath.ZeroInt(), CumulativeWeight: osmomath.ZeroInt()},
+					{GaugeId: poolInfo.StableSwapGaugeID, CurrentWeight: osmomath.ZeroInt(), CumulativeWeight: osmomath.ZeroInt()},
+				}),
+		},
+
+		// error cases
+
+		"error when getting gauge for pool ID (cw pool does not support incentives)": {
+			poolIds: []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID, poolInfo.CosmWasmPoolID, poolInfo.StableSwapPoolID},
+
+			expectError: poolincentivetypes.UnsupportedPoolTypeError{PoolID: poolInfo.CosmWasmPoolID, PoolType: poolmanagertypes.CosmWasm},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+
+			actualGaugeInfo, err := k.InitGaugeInfo(s.Ctx, tc.poolIds)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Validate gauge info
+			s.Require().Equal(tc.expectedGaugeInfo.TotalWeight.String(), actualGaugeInfo.TotalWeight.String())
+			s.Require().Equal(len(tc.expectedGaugeInfo.GaugeRecords), len(actualGaugeInfo.GaugeRecords))
+			for i := range tc.expectedGaugeInfo.GaugeRecords {
+				s.Require().Equal(tc.expectedGaugeInfo.GaugeRecords[i].GaugeId, actualGaugeInfo.GaugeRecords[i].GaugeId)
+				s.Require().Equal(tc.expectedGaugeInfo.GaugeRecords[i].CurrentWeight.String(), actualGaugeInfo.GaugeRecords[i].CurrentWeight.String())
+				s.Require().Equal(tc.expectedGaugeInfo.GaugeRecords[i].CumulativeWeight.String(), actualGaugeInfo.GaugeRecords[i].CumulativeWeight.String())
+			}
 		})
 	}
 }

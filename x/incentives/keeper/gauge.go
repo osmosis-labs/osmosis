@@ -229,6 +229,7 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 	// TODO: remove gauge creation logic from here.
 	// Instead, call `CreateGauge` directly
 	// Update `CreateGauge` to be able to handle the group type.
+	// https://github.com/osmosis-labs/osmosis/issues/6513
 	nextGaugeId := k.GetLastGaugeID(ctx) + 1
 
 	gauge := types.Gauge{
@@ -250,9 +251,13 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 		return 0, err
 	}
 
-	// TODO: initialize using initGaugeInfo
-	// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6401
-	initialInternalGaugeInfo := types.InternalGaugeInfo{}
+	// TODO: change CreateGroup method to take in pool IDs
+	// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6404
+	poolIDs := []uint64{}
+	initialInternalGaugeInfo, err := k.initGaugeInfo(ctx, poolIDs)
+	if err != nil {
+		return 0, err
+	}
 
 	newGroup := types.Group{
 		GroupGaugeId:      nextGaugeId,
@@ -266,13 +271,6 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 	k.SetGroup(ctx, newGroup)
 	k.SetLastGaugeID(ctx, gauge.Id)
 
-	// TODO: check if this is necessary.
-	// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6405
-	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
-
-	if err := k.CreateGaugeRefKeys(ctx, &gauge, combinedKeys); err != nil {
-		return 0, err
-	}
 	k.hooks.AfterCreateGauge(ctx, gauge.Id)
 
 	return nextGaugeId, nil
@@ -462,4 +460,27 @@ func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sd
 		return err
 	}
 	return nil
+}
+
+// initGaugeInfo takes in a list of pool IDs and a splitting policy and returns a InternalGaugeInfo struct with weights initialized to zero.
+// Returns error if fails to retrieve gauge ID for a pool.
+func (k Keeper) initGaugeInfo(ctx sdk.Context, poolIds []uint64) (types.InternalGaugeInfo, error) {
+	gaugeRecords := make([]types.InternalGaugeRecord, 0, len(poolIds))
+	for _, poolID := range poolIds {
+		gaugeID, err := k.pik.GetInternalGaugeIDForPool(ctx, poolID)
+		if err != nil {
+			return types.InternalGaugeInfo{}, err
+		}
+
+		gaugeRecords = append(gaugeRecords, types.InternalGaugeRecord{
+			GaugeId:          gaugeID,
+			CurrentWeight:    osmomath.ZeroInt(),
+			CumulativeWeight: osmomath.ZeroInt(),
+		})
+	}
+
+	return types.InternalGaugeInfo{
+		TotalWeight:  osmomath.ZeroInt(),
+		GaugeRecords: gaugeRecords,
+	}, nil
 }

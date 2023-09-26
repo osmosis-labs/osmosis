@@ -1389,6 +1389,34 @@ func deepCopyGauge(src types.Gauge) types.Gauge {
 	return gauge
 }
 
+// deepCopyGaugeInfo creates a deep copy of the passed in gauge info.
+func deepCopyGaugeInfo(gaugeInfo types.InternalGaugeInfo) types.InternalGaugeInfo {
+	copy := gaugeInfo
+
+	copy.TotalWeight = osmomath.NewIntFromBigInt(gaugeInfo.TotalWeight.BigInt())
+	copy.GaugeRecords = make([]types.InternalGaugeRecord, 0, len(gaugeInfo.GaugeRecords))
+	for _, gaugeRecord := range gaugeInfo.GaugeRecords {
+		copy.GaugeRecords = append(copy.GaugeRecords, types.InternalGaugeRecord{
+			GaugeId:          gaugeRecord.GaugeId,
+			CurrentWeight:    osmomath.NewIntFromBigInt(gaugeRecord.CurrentWeight.BigInt()),
+			CumulativeWeight: osmomath.NewIntFromBigInt(gaugeRecord.CumulativeWeight.BigInt()),
+		})
+	}
+	return copy
+}
+
+// addGaugeRecords takes in a gauge and a list of gauge records and adds them to the gauge.
+// Returns a deep copy and does not mutate the original gauge info.
+func addGaugeRecords(gaugeInfo types.InternalGaugeInfo, gaugeRecords []types.InternalGaugeRecord) types.InternalGaugeInfo {
+	copy := deepCopyGaugeInfo(gaugeInfo)
+
+	for _, gaugeRecord := range gaugeRecords {
+		copy.GaugeRecords = append(copy.GaugeRecords, gaugeRecord)
+		copy.TotalWeight = copy.TotalWeight.Add(gaugeRecord.CurrentWeight)
+	}
+	return copy
+}
+
 // withUpdatedVolumes takes in a group and a list of updated cumulative volumes (ordered) and updates the contents of the gauge to
 // reflect these new volumes.
 // It is only intended to be used to set expected values for test cases.
