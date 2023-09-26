@@ -487,7 +487,7 @@ func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sd
 	return nil
 }
 
-// initGaugeInfo takes in a list of pool IDs and a splitting policy and returns a InternalGaugeInfo struct with weights initialized to zero.
+// initGaugeInfo takes in a list of pool IDs and returns a InternalGaugeInfo struct with weights initialized to zero.
 // Returns error if fails to retrieve gauge ID for a pool.
 func (k Keeper) initGaugeInfo(ctx sdk.Context, poolIds []uint64) (types.InternalGaugeInfo, error) {
 	gaugeRecords := make([]types.InternalGaugeRecord, 0, len(poolIds))
