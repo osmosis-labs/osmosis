@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -8,6 +10,8 @@ import (
 )
 
 const PerpetualNumEpochsPaidOver = perpetualNumEpochsPaidOver
+
+var ByGroupQueryCondition = byGroupQueryCondition
 
 // AddGaugeRefByKey appends the provided gauge ID into an array associated with the provided key.
 func (k Keeper) AddGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
@@ -74,4 +78,12 @@ func (k Keeper) InitGaugeInfo(ctx sdk.Context, poolIds []uint64) (types.Internal
 
 func RegularGaugeStoreKey(ID uint64) []byte {
 	return gaugeStoreKey(ID)
+}
+
+func CombineKeys(keys ...[]byte) []byte {
+	return combineKeys(keys...)
+}
+
+func GetTimeKeys(timestamp time.Time) []byte {
+	return getTimeKey(timestamp)
 }

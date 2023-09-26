@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -17,11 +18,32 @@ import (
 
 var _ = suite.TestingSuite(nil)
 
+const (
+	zeroPoolId         = uint64(0)
+	balancerPoolId     = uint64(1)
+	concentratedPoolId = uint64(2)
+	invalidPool        = uint64(3)
+	// 3 are created for balancer pool and 1 for CL.
+	// As a result, the next gauge id should be 5.
+	defaultExpectedGaugeId = uint64(5)
+
+	defaultIsPerpetualParam = false
+
+	defaultNumEpochPaidOver = uint64(10)
+)
+
 var (
 	defaultEmptyGaugeInfo = types.InternalGaugeInfo{
 		TotalWeight:  osmomath.ZeroInt(),
 		GaugeRecords: []types.InternalGaugeRecord{},
 	}
+
+	defaultTime = time.Unix(0, 0)
+
+	defaultGaugeCreationCoins = sdk.NewCoins(
+		sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
+		sdk.NewCoin("atom", osmomath.NewInt(99999)),
+	)
 )
 
 // TestInvalidDurationGaugeCreationValidation tests error handling for creating a gauge with an invalid duration.
@@ -467,28 +489,6 @@ func (s *KeeperTestSuite) TestAddToGaugeRewards() {
 // with NoLockExternalGaugeDenom(<pool id>)
 // - Otherwise, the given pool id must be zero. Errors if not.
 func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
-	const (
-		zeroPoolId         = uint64(0)
-		balancerPoolId     = uint64(1)
-		concentratedPoolId = uint64(2)
-		invalidPool        = uint64(3)
-		// 3 are created for balancer pool and 1 for CL.
-		// As a result, the next gauge id should be 5.
-		defaultExpectedGaugeId = uint64(5)
-
-		defaultIsPerpetualParam = false
-
-		defaultNumEpochPaidOver = uint64(10)
-	)
-
-	var (
-		defaultCoins = sdk.NewCoins(
-			sdk.NewCoin("uosmo", osmomath.NewInt(100000)),
-			sdk.NewCoin("atom", osmomath.NewInt(99999)),
-		)
-
-		defaultTime = time.Unix(0, 0)
-	)
 	testCases := []struct {
 		name    string
 		distrTo lockuptypes.QueryCondition
@@ -572,11 +572,11 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 			s.PrepareBalancerPool()
 			s.PrepareConcentratedPool()
 
-			s.FundAcc(s.TestAccs[0], defaultCoins)
+			s.FundAcc(s.TestAccs[0], defaultGaugeCreationCoins)
 
 			// System under test
 			// Note that the default params are used for some inputs since they are not relevant to the test case.
-			gaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, defaultIsPerpetualParam, s.TestAccs[0], defaultCoins, tc.distrTo, defaultTime, defaultNumEpochPaidOver, tc.poolId)
+			gaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, defaultIsPerpetualParam, s.TestAccs[0], defaultGaugeCreationCoins, tc.distrTo, defaultTime, defaultNumEpochPaidOver, tc.poolId)
 
 			if tc.expectErr {
 				s.Require().Error(err)
@@ -598,16 +598,129 @@ func (s *KeeperTestSuite) TestCreateGauge_NoLockGauges() {
 
 				s.Require().Equal(tc.expectedGaugeId, gaugeId)
 
-				// Get gauge and check that the denom is set correctly
-				gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, tc.expectedGaugeId)
+				// Validate gauge
+				tc.distrTo.Denom = tc.expectedDenomSet
+				s.validateGauge(types.Gauge{
+					Id:                tc.expectedGaugeId,
+					DistributeTo:      tc.distrTo,
+					IsPerpetual:       defaultIsPerpetualParam,
+					StartTime:         defaultTime.UTC(),
+					Coins:             defaultGaugeCreationCoins,
+					NumEpochsPaidOver: defaultNumEpochPaidOver,
+				})
+			}
+		})
+	}
+}
+
+// Tests that CreateGauge can create ByGroup gauges correctly.
+// Additionally, validates that no ref keys are created for the group gauge.
+func (s *KeeperTestSuite) TestCreateGauge_Group() {
+	testCases := []struct {
+		name              string
+		distrTo           lockuptypes.QueryCondition
+		poolId            uint64
+		isPerpetual       bool
+		numEpochsPaidOver uint64
+
+		expectedGaugeId  uint64
+		expectedDenomSet string
+		expectErr        error
+	}{
+		{
+			name:              "create valid non-perpetual group gauge",
+			distrTo:           incentiveskeeper.ByGroupQueryCondition,
+			poolId:            zeroPoolId,
+			isPerpetual:       false,
+			numEpochsPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver + 1,
+
+			expectedGaugeId: defaultExpectedGaugeId,
+		},
+		{
+			name:              "create valid perpetual group gauge",
+			distrTo:           incentiveskeeper.ByGroupQueryCondition,
+			poolId:            zeroPoolId,
+			isPerpetual:       true,
+			numEpochsPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver,
+
+			expectedGaugeId: defaultExpectedGaugeId,
+		},
+
+		// error cases
+
+		{
+			name:              "fail to create group gauge due to zero epochs paid over and non-perpetual",
+			distrTo:           incentiveskeeper.ByGroupQueryCondition,
+			poolId:            zeroPoolId,
+			isPerpetual:       false,
+			numEpochsPaidOver: 0,
+
+			expectErr: types.ErrZeroNumEpochsPaidOver,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			s.PrepareBalancerPool()
+			s.PrepareConcentratedPool()
+
+			s.FundAcc(s.TestAccs[0], defaultGaugeCreationCoins)
+
+			// System under test
+			// Note that the default params are used for some inputs since they are not relevant to the test case.
+			gaugeId, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, tc.isPerpetual, s.TestAccs[0], defaultGaugeCreationCoins, tc.distrTo, defaultTime, tc.numEpochsPaidOver, tc.poolId)
+
+			if tc.expectErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectErr)
+			} else {
 				s.Require().NoError(err)
 
-				s.Require().Equal(tc.expectedDenomSet, gauge.DistributeTo.Denom)
-				s.Require().Equal(tc.distrTo.LockQueryType, gauge.DistributeTo.LockQueryType)
-				s.Require().Equal(defaultIsPerpetualParam, gauge.IsPerpetual)
-				s.Require().Equal(defaultCoins, gauge.Coins)
-				s.Require().Equal(defaultTime.UTC(), gauge.StartTime.UTC())
-				s.Require().Equal(defaultNumEpochPaidOver, gauge.NumEpochsPaidOver)
+				s.Require().Equal(tc.expectedGaugeId, gaugeId)
+
+				// Assert that pool id and gauge id link meant for internally incentivized gauges is unset.
+				_, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, tc.poolId, tc.distrTo.Duration)
+				s.Require().Error(err)
+
+				// Confirm that for every lockable duration, there is not gauge ID and pool ID link.
+				lockableDurations := s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)
+				s.Require().NotEqual(0, len(lockableDurations))
+				for _, duration := range lockableDurations {
+					_, err = s.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, gaugeId, duration)
+					s.Require().Error(err)
+				}
+
+				// Confirm that for incentives epoch duration, there is no gauge ID and pool ID link.
+				incentivesEpochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
+				_, err = s.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, gaugeId, incentivesEpochDuration)
+				s.Require().Error(err)
+
+				// Validate gauge
+				s.validateGauge(types.Gauge{
+					Id:                tc.expectedGaugeId,
+					DistributeTo:      incentiveskeeper.ByGroupQueryCondition,
+					IsPerpetual:       tc.isPerpetual,
+					StartTime:         defaultTime.UTC(),
+					Coins:             defaultGaugeCreationCoins,
+					NumEpochsPaidOver: tc.numEpochsPaidOver,
+				})
+
+				// Validate that ref keys are not created for the group gauge
+
+				// No upcoming ref keys
+				upcomingGauges := s.App.IncentivesKeeper.GetUpcomingGauges(s.Ctx)
+				s.validateNoGaugeIDInSlice(upcomingGauges, tc.expectedGaugeId)
+
+				// No active ref keys
+				activeGauges := s.App.IncentivesKeeper.GetActiveGauges(s.Ctx)
+				s.validateNoGaugeIDInSlice(activeGauges, tc.expectedGaugeId)
+
+				// No finished ref keys
+				finishedGauges := s.App.IncentivesKeeper.GetActiveGauges(s.Ctx)
+				s.validateNoGaugeIDInSlice(finishedGauges, tc.expectedGaugeId)
 			}
 		})
 	}
@@ -871,4 +984,61 @@ func (s *KeeperTestSuite) validateGaugeInfo(expected types.InternalGaugeInfo, ac
 		s.Require().Equal(expected.GaugeRecords[i].CurrentWeight.String(), actual.GaugeRecords[i].CurrentWeight.String())
 		s.Require().Equal(expected.GaugeRecords[i].CumulativeWeight.String(), actual.GaugeRecords[i].CumulativeWeight.String())
 	}
+}
+
+// retrieves the gauge of expectedGauge.ID from state and validates that it matches expectedGauge
+func (s *KeeperTestSuite) validateGauge(expectedGauge types.Gauge) {
+	// Get gauge and check that the denom is set correctly
+	gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, expectedGauge.Id)
+	s.Require().NoError(err)
+
+	// No denom set for group gauges.
+	s.Require().Equal(expectedGauge.DistributeTo.Denom, gauge.DistributeTo.Denom)
+	// ByGroup type set
+	s.Require().Equal(expectedGauge.DistributeTo.LockQueryType, gauge.DistributeTo.LockQueryType)
+	s.Require().Equal(expectedGauge.IsPerpetual, gauge.IsPerpetual)
+	s.Require().Equal(expectedGauge.Coins, gauge.Coins)
+	s.Require().Equal(expectedGauge.StartTime, gauge.StartTime.UTC())
+	s.Require().Equal(expectedGauge.NumEpochsPaidOver, gauge.NumEpochsPaidOver)
+}
+
+// test helper to create a gauge bypassing all checks and restrictions
+// It is useful in edge case tests that rely on invalid gauges written to store (e.g. in Distribute())
+func (s *KeeperTestSuite) createGaugeNoRestrictions(isPerpetual bool, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolID uint64) types.Gauge {
+	// Fund incentives module account to simulate transfer from owner to module account
+	s.FundModuleAcc(types.ModuleName, coins)
+	lastGaugeID := s.App.IncentivesKeeper.GetLastGaugeID(s.Ctx)
+	nextGaugeID := lastGaugeID + 1
+	gauge := types.Gauge{
+		Id:                nextGaugeID,
+		IsPerpetual:       isPerpetual,
+		Coins:             coins,
+		DistributeTo:      distrTo,
+		StartTime:         startTime,
+		NumEpochsPaidOver: numEpochsPaidOver,
+	}
+
+	if poolID != 0 {
+		s.App.PoolIncentivesKeeper.SetPoolGaugeIdNoLock(s.Ctx, poolID, nextGaugeID)
+	}
+
+	err := s.App.IncentivesKeeper.SetGauge(s.Ctx, &gauge)
+	s.Require().NoError(err)
+	s.App.IncentivesKeeper.CreateGaugeRefKeys(s.Ctx, &gauge, incentiveskeeper.CombineKeys(types.KeyPrefixUpcomingGauges, incentiveskeeper.GetTimeKeys(startTime)))
+	s.Require().NoError(err)
+
+	// Retrieve from state and return
+	gaugeFromState, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, nextGaugeID)
+	s.Require().NoError(err)
+	return *gaugeFromState
+}
+
+// validates that there is no gauge with the given ID in the slice
+func (s KeeperTestSuite) validateNoGaugeIDInSlice(slice []types.Gauge, gaugeID uint64) {
+	gaugeMatch := osmoutils.Filter(func(gauge types.Gauge) bool {
+		return gauge.Id == gaugeID
+	}, slice)
+	// No gauge matched ID.
+	s.Require().Empty(gaugeMatch)
+
 }

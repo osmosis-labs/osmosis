@@ -8,7 +8,7 @@ import (
 
 var (
 	ErrNoPoolIDsGiven        = fmt.Errorf("no pool IDs given")
-	ErrZeroNumEpochsPaidOver = fmt.Errorf("num epochs paid over must be greater than zero")
+	ErrZeroNumEpochsPaidOver = fmt.Errorf("num epochs paid over must be greater than zero for non-perpetual gauges")
 )
 
 type UnsupportedSplittingPolicyError struct {
