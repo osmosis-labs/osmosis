@@ -1,7 +1,7 @@
 package osmocli
 
 import (
-	"testing"
+	"testing" //a
 
 	"github.com/stretchr/testify/require"
 
