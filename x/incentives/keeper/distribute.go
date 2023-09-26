@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -39,6 +40,14 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 		if err != nil {
 			ctx.Logger().Error("error syncing group gauge weights, skipping", "group gauge id", group.GroupGaugeId, "error", err.Error())
 			continue
+		}
+
+		// Refetch group
+		// TODO: consider mutating receiver of syncGroupWeights instead of refetching.
+		// TODO: cover AllocateAcrossGauges with unit tests. to make sure that the bug is caught.
+		group, err := k.GetGroupByGaugeID(ctx, group.GroupGaugeId)
+		if err != nil {
+			return err
 		}
 
 		// Get the groupGauge corresponding to the group.
@@ -82,6 +91,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 		// Iterate over underlying gauge records in the group.
 		for gaugeIndex, distrRecord := range group.InternalGaugeInfo.GaugeRecords {
 			// Between 0 and 1. to determine the pro-rata share of the total amount to distribute
+			// TODO: handle division by zero gracefully and update test
 			gaugeDistributionRatio := distrRecord.CurrentWeight.ToLegacyDec().Quo(totalGroupWeight.ToLegacyDec())
 
 			// Loop through `coinsToDistribute` and get the amount to distribute to the current gauge
@@ -462,6 +472,11 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 		volumeDelta := cumulativePoolVolume.Sub(gaugeRecord.CumulativeWeight)
 		if volumeDelta.IsNegative() {
 			return types.CumulativeVolumeDecreasedError{PoolId: poolId, PreviousVolume: gaugeRecord.CumulativeWeight, NewVolume: cumulativePoolVolume}
+		}
+
+		// TODO: update this, otherwise getting panic due to division by zero in the caller
+		if volumeDelta.IsZero() {
+			return errors.New("volume delta is zero")
 		}
 
 		gaugeRecord.CurrentWeight = volumeDelta

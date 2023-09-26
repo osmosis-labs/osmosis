@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
@@ -11,7 +13,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coins"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -672,6 +676,228 @@ func (s *KeeperTestSuite) TestSyntheticDistribute() {
 		}
 	}
 }
+
+// This is a holistic test covering distirbution to group gauges.
+// This test ensures that the expected happy path functions as expected across all possible
+// pool and gauge types.
+//
+// Create a perpetual set of pools that only perpetual group gauge incentivizes
+// Create a non-perpetual set of pools that only non-perpetual group gauge incentivizes
+//
+// Create 2 groups and associate pools with them per description above.
+//
+// For the first group set the volume so that 1st gets 50%, second 25%, third 12.5 etc.
+//
+// For the second group set the volume so that the spread is even.
+//
+// Distribute()
+//
+// Ensure that the correct amount of rewards are distributed to the correct pool gauges. No panics occur
+func (s *KeeperTestSuite) TestDistribute_Group() {
+	s.SetupTest()
+
+	// Create a perpetual set of pools that only perpetual group gauge incentivizes
+	perpetualPoolAndGaugeInfo := s.PrepareAllSupportedPools()
+
+	// Create a non-perpetual set of pools that only non-perpetual group gauge incentivizes
+	nonpPerpetualPoolAndGaugeInfo := s.PrepareAllSupportedPools()
+
+	groupOnePoolIDs := []uint64{
+		// perpetual pools
+		perpetualPoolAndGaugeInfo.BalancerPoolID, perpetualPoolAndGaugeInfo.ConcentratedPoolID, perpetualPoolAndGaugeInfo.StableSwapPoolID,
+	}
+
+	perpetualGroupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, incentiveskeeper.PerpetualNumEpochsPaidOver, s.TestAccs[0], groupOnePoolIDs)
+	s.Require().NoError(err)
+
+	groupTwoPoolIDs := []uint64{
+		// non-perpetual pools
+		nonpPerpetualPoolAndGaugeInfo.ConcentratedPoolID, nonpPerpetualPoolAndGaugeInfo.StableSwapPoolID, nonpPerpetualPoolAndGaugeInfo.BalancerPoolID,
+	}
+
+	_, err = s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...).Add(defaultCoins...), incentiveskeeper.PerpetualNumEpochsPaidOver+3, s.TestAccs[0], groupTwoPoolIDs)
+	s.Require().NoError(err)
+
+	// Set the volume for the first group
+	// Weights for each pool index are a_i = i / (n(n+1)/2)
+	// where i is the pool index and n is the number of pools
+
+	totalVolumeOne := osmomath.NewDec(1_000_000_000_000)
+
+	// Below is the formula that prduces sequence that adds up to 1 and where
+	// each element is not equal to each other
+	// a_i = i / (n(n+1)/2)
+	volumeWeightsGroupOne := make([]osmomath.Dec, 0, len(groupOnePoolIDs))
+	n := osmomath.NewDec(int64(len(groupOnePoolIDs)))
+	for index := range groupOnePoolIDs {
+		denominator := n.Mul(n.Add(osmomath.OneDec())).Quo(osmomath.NewDec(2))
+		volumeWeightsGroupOne = append(volumeWeightsGroupOne, osmomath.NewDec(int64(index+1)).Quo(denominator).Mul(totalVolumeOne))
+	}
+
+	poolIDToVolumeMapOne := s.setupVolumeForPools(groupOnePoolIDs, volumeWeightsGroupOne)
+
+	// Calculate the expected distribution
+	poolIDToExpectedDistributionMapOne := s.computeExpectedDistributonAmountsFromVolume(poolIDToVolumeMapOne, totalVolumeOne)
+
+	// Set the volume for the second group
+	// Weights are:
+	// 1/n + 1/n + 1/n...
+
+	totalVolumeTwo := osmomath.NewDec(9_876_543_21)
+
+	// Below is the formula that prduces sequence that adds up to 1 and where
+	// each element is equal to each other.
+	volumeWeightsGroupTwo := make([]osmomath.Dec, 0, len(groupTwoPoolIDs))
+	for _ = range groupTwoPoolIDs {
+		currentVolume := osmomath.OneDec().Quo(osmomath.NewDec(int64(len(groupTwoPoolIDs)))).Mul(totalVolumeTwo)
+		volumeWeightsGroupTwo = append(volumeWeightsGroupTwo, currentVolume)
+	}
+
+	poolIDToVolumeMapTwo := s.setupVolumeForPools(groupTwoPoolIDs, volumeWeightsGroupTwo)
+
+	// Calculate the expected distribution
+	poolIDToExpectedDistributionMapTwo := s.computeExpectedDistributonAmountsFromVolume(poolIDToVolumeMapTwo, totalVolumeTwo)
+
+	distrEpochIdentifier := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	// System under test - Epoch 1 - Both groups distribute
+	err = s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, distrEpochIdentifier, 1)
+	s.Require().NoError(err)
+
+	// Validate distribution
+	s.validateDistributionForGroup(groupOnePoolIDs, poolIDToExpectedDistributionMapOne, defaultCoins)
+
+	s.validateDistributionForGroup(groupTwoPoolIDs, poolIDToExpectedDistributionMapTwo, defaultCoins)
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+	// System under test - Epoch 2 - Perpetual was not refunded, only non-perpetual distributes
+	err = s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, distrEpochIdentifier, 2)
+	s.Require().NoError(err)
+
+	// Validate distribution
+
+	// Note that the perpetual gauge was not refunded. As a result, it is not distributing anymore.
+	s.validateDistributionForGroup(groupOnePoolIDs, poolIDToExpectedDistributionMapOne, emptyCoins)
+
+	s.validateDistributionForGroup(groupTwoPoolIDs, poolIDToExpectedDistributionMapTwo, defaultCoins)
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+
+	// Refund the perpetual gauge
+	err = s.App.IncentivesKeeper.AddToGaugeRewardsInternal(s.Ctx, defaultCoins, perpetualGroupGaugeID)
+	s.Require().NoError(err)
+
+	// System under test - Epoch 3 - Perpetual was refunded - both groups distribute
+	err = s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, distrEpochIdentifier, 3)
+	s.Require().NoError(err)
+
+	// Validate distribution
+
+	// Note that the perpetual gauge was not refunded. As a result, it is not distributing anymore.
+	s.validateDistributionForGroup(groupOnePoolIDs, poolIDToExpectedDistributionMapOne, emptyCoins)
+
+	s.validateDistributionForGroup(groupTwoPoolIDs, poolIDToExpectedDistributionMapTwo, defaultCoins)
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+	// System under test - Epoch 4 - Perpetual was not refunded, non-perpetual finished - none distribute.
+	err = s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, distrEpochIdentifier, 3)
+	s.Require().NoError(err)
+
+	// Validate distribution
+
+	// Note that the perpetual gauge was not refunded. As a result, it is not distributing anymore.
+	s.validateDistributionForGroup(groupOnePoolIDs, poolIDToExpectedDistributionMapOne, emptyCoins)
+
+	// Note that this was the last distribution for non-perpetual gauges. As a result they do not distribute anymore.
+	s.validateDistributionForGroup(groupTwoPoolIDs, poolIDToExpectedDistributionMapTwo, emptyCoins)
+}
+
+func (s *KeeperTestSuite) validateDistributionForGroup(groupPoolIDs []uint64, poolIDToExpectedDistributionMapOne map[uint64]sdk.Coins, expectedTotalDistribution sdk.Coins) {
+	s.Require().NotEmpty(poolIDToExpectedDistributionMapOne)
+
+	for i, poolID := range groupPoolIDs {
+		gaugeID, err := s.App.PoolIncentivesKeeper.GetInternalGaugeIDForPool(s.Ctx, poolID)
+		s.Require().NoError(err)
+
+		gauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID)
+		s.Require().NoError(err)
+
+		fmt.Printf("poolID %d gauge %d %s\n", poolID, gaugeID, gauge.Coins)
+
+		// Note that to avoid leaving dust in the gauge, we distribute
+		// all remaning coins to the last gauge.
+		// As a result, we allow error tolerance of 1.
+		if i == len(groupPoolIDs)-1 {
+			tolerance := osmomath.ErrTolerance{AdditiveTolerance: osmomath.OneDec(), RoundingDir: osmomath.RoundUp}
+			osmoassert.Equal(s.T(), tolerance, poolIDToExpectedDistributionMapOne[poolID], gauge.Coins)
+			break
+		}
+
+		s.Require().Equal(poolIDToExpectedDistributionMapOne[poolID].String(), gauge.Coins.String())
+	}
+}
+
+func (*KeeperTestSuite) computeExpectedDistributonAmountsFromVolume(poolIDToVolumeMap map[uint64]math.Int, totalVolume math.LegacyDec) map[uint64]sdk.Coins {
+	poolIDToExpectedDistributionMapOne := map[uint64]sdk.Coins{}
+	for poolID, volume := range poolIDToVolumeMap {
+		currentDistribution := coins.MulDec(defaultCoins, volume.ToLegacyDec().Quo(totalVolume))
+
+		fmt.Printf("poolId %d, currentDistribution %s\n", poolID, currentDistribution)
+
+		if existingDistribution, ok := poolIDToExpectedDistributionMapOne[poolID]; ok {
+			poolIDToExpectedDistributionMapOne[poolID] = existingDistribution.Add(currentDistribution...)
+		} else {
+			poolIDToExpectedDistributionMapOne[poolID] = currentDistribution
+		}
+	}
+	return poolIDToExpectedDistributionMapOne
+}
+
+func (s *KeeperTestSuite) setupVolumeForPools(group []uint64, volumesGroupOne []osmomath.Dec) map[uint64]math.Int {
+	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+
+	poolIDToVolumeMap := map[uint64]osmomath.Int{}
+	totalVolumeOne := osmomath.NewInt(0)
+	s.Require().Equal(len(group), len(volumesGroupOne))
+	for i := 0; i < len(group); i++ {
+		currentGroupOnePoolId := group[i]
+
+		currentVolume := volumesGroupOne[i]
+		currentVolumeInt := currentVolume.TruncateInt()
+
+		fmt.Printf("currentVolume %d %s\n", i, currentVolume)
+
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, currentGroupOnePoolId, sdk.NewCoins(sdk.NewCoin(bondDenom, currentVolumeInt)))
+
+		if existingVolume, ok := poolIDToVolumeMap[currentGroupOnePoolId]; ok {
+			poolIDToVolumeMap[currentGroupOnePoolId] = existingVolume.Add(currentVolumeInt)
+		} else {
+			poolIDToVolumeMap[currentGroupOnePoolId] = currentVolumeInt
+		}
+
+		totalVolumeOne = totalVolumeOne.Add(currentVolumeInt)
+	}
+	return poolIDToVolumeMap
+}
+
+// TODO: create test
+// Test_Distribute_Group_OverlappingPoolsInGroups
+
+// TODO: create test
+// Test_Distribute_Group_NoVolumeOnePool_SkipSilent
+
+// TODO: create test
+// Test_Distribute_Group_ChangeVolumeBetween
+
+// TODO: create test
+// Test_Distribute_Group_CreateGroupsBetween
+
+// TODO: create test
+// Test_Distribute_Group_SwapAndDistribute
+
+// TODO: create test
+// Test_Distribute_Group_ToggleVolumeAcrossEpochs
 
 // TestGetModuleToDistributeCoins tests the sum of coins yet to be distributed for all of the module is correct.
 func (s *KeeperTestSuite) TestGetModuleToDistributeCoins() {
