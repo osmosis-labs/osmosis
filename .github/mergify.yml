@@ -16,10 +16,10 @@ pull_request_rules:
       - base=main
       - label=A:automerge
       # with 2 reviews and 0 changes requested left
-      - "#approved-reviews-by>=2"
+      - "#approved-reviews-by>=1"
       - "#changes-requested-reviews-by=0"
       # with the following workflows successful: 
-      - check-success=add-to-project
+      - check-success=add-issue-to-project
       - check-success=build-darwin-amd64
       - check-success=build-darwin-arm64
       - check-success=build-linux-amd64
