@@ -4,9 +4,9 @@
 # It includes steps for optimizing contracts, running tests, and checking lints.
 #
 # Jobs:
-# - optimize-contracts: Optimizes the Cosmwasm contracts and uploads optimized artifacts.
-# - test-contracts: Tests the Cosmwasm contracts and checks for any differences in bytecode.
-# - lint-contracts: Runs formatting and linting checks on the Cosmwasm contracts.
+# - contract-optimize: Optimizes the Cosmwasm contracts and uploads optimized artifacts.
+# - contract-test: Tests the Cosmwasm contracts and checks for any differences in bytecode.
+# - contract-lint: Runs formatting and linting checks on the Cosmwasm contracts.
 #
 # Triggers:
 # - pull_request: Triggered on pull requests to any branch.
@@ -57,8 +57,8 @@ jobs:
     outputs:
       git_diff: ${{ steps.vars.outputs.git_diff }}
 
-  optimize-contracts:
-    name: optimize-contract-${{ matrix.contract.name }}
+  contract-optimize:
+    name: contract-optimize-${{ matrix.contract.name }}
     needs: get_diff
     runs-on: ubuntu-latest
     strategy:
@@ -123,8 +123,8 @@ jobs:
         run: >
           diff "${GITHUB_WORKSPACE}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
 
-  test-contracts:
-    name: test-contract-${{ matrix.contract.name }}
+  contract-test:
+    name: contract-test-${{ matrix.contract.name }}
     needs: get_diff
     runs-on: ubuntu-latest
     strategy:
@@ -174,9 +174,9 @@ jobs:
         run: >
           cargo test
 
-  lint-contracts:
+  contract-lint:
     runs-on: ubuntu-latest
-    name: lint-contract-${{ matrix.folder.name }}
+    name: contract-lint-${{ matrix.folder.name }}
     needs: get_diff
     strategy:
       matrix:
