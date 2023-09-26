@@ -161,7 +161,7 @@ func GetCommonAuthenticationData(
 		msgs,
 		signatures,
 		feeTx.FeePayer().String(),
-		int(messageIndex),
+		messageIndex,
 	)
 	if err != nil {
 		return nil, nil, nil, err
