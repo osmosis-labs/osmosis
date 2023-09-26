@@ -29,7 +29,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// If this is getting called, all messages succeeded. We can now update the
 	// state of the authenticators. If a post handler returns an error, then
 	// all state changes are reverted anyway
-	ad.authenticatorKeeper.TransientStore.Write(ctx)
+	ad.authenticatorKeeper.TransientStore.WriteInto(ctx)
 
 	for msgIndex, msg := range tx.GetMsgs() {
 		account, err := utils.GetAccount(msg)

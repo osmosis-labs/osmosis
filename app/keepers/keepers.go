@@ -232,6 +232,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 			bApp.MsgServiceRouter(),
 		),
 		appKeepers.AuthenticatorKeeper,
+		appKeepers.AuthenticatorKeeper.TransientStore,
 	)
 	appKeepers.AuthzKeeper = authzKeeper
 

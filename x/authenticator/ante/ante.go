@@ -148,7 +148,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				if !feePayerAuthenticated && account.Equals(feePayer) {
 					originalGasMeter.ConsumeGas(payerGasMeter.GasConsumed(), "fee payer gas")
 					// Reset this for both contexts
-					cacheCtx = cacheCtx.WithGasMeter(originalGasMeter)
+					cacheCtx = ad.authenticatorKeeper.TransientStore.GetTransientContextWithGasMeter(originalGasMeter)
 					ctx = ctx.WithGasMeter(originalGasMeter)
 					feePayerAuthenticated = true
 				}

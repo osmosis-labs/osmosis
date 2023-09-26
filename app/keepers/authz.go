@@ -3,6 +3,7 @@ package keepers
 import (
 	"context"
 	"encoding/json"
+	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	"math/rand"
 	"time"
 
@@ -43,10 +44,11 @@ var _ AuthzKeeperInterface = &KeeperWrapper{}
 type KeeperWrapper struct {
 	K                    authzkeeper.Keeper
 	authenticatorStorage utils.AuthenticatorStorage
+	transientStore       *authenticator.TransientStore
 }
 
-func NewKeeperWrapper(k authzkeeper.Keeper, authenticatorKeeper utils.AuthenticatorStorage) *KeeperWrapper {
-	return &KeeperWrapper{K: k, authenticatorStorage: authenticatorKeeper}
+func NewKeeperWrapper(k authzkeeper.Keeper, authenticatorKeeper utils.AuthenticatorStorage, transientStore *authenticator.TransientStore) *KeeperWrapper {
+	return &KeeperWrapper{K: k, authenticatorStorage: authenticatorKeeper, transientStore: transientStore}
 }
 
 // Implementing KeeperInterface
@@ -60,10 +62,14 @@ func (kw *KeeperWrapper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (kw *KeeperWrapper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
-	err := utils.TrackMessages(ctx, kw.authenticatorStorage, msgs)
+	// This means track messages gets called twice. Authenticator authors need to be aware that this is a possibility
+	err := utils.TrackMessages(kw.transientStore.GetTransientContext(), kw.authenticatorStorage, msgs)
 	if err != nil {
 		return nil, err
 	}
+
+	kw.transientStore.WriteInto(ctx)
+
 	results, err := kw.K.DispatchActions(ctx, grantee, msgs)
 	if err != nil {
 		return nil, err
@@ -72,6 +78,8 @@ func (kw *KeeperWrapper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress
 	if err != nil {
 		return nil, err
 	}
+
+	kw.transientStore.UpdateFrom(ctx)
 	return results, err
 }
 

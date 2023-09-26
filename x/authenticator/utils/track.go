@@ -59,7 +59,7 @@ func ConfirmExecutionWithoutTx(ctx sdk.Context, authStorage AuthenticatorStorage
 			success := authenticator.ConfirmExecution(ctx, account, msg, types.EmptyAuthenticationData{})
 
 			if success.IsBlock() {
-				return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authenticator failed to confirm execution without AuthenticationData")
+				return sdkerrors.Wrap(success.Error(), "authenticator failed to confirm execution without AuthenticationData")
 			}
 		}
 	}

@@ -13,7 +13,7 @@ func NewPostHandler(
 	authenticatorKeeper *authenticators.Keeper,
 ) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
-		authpost.NewAuthenticatorDecorator(authenticatorKeeper),
 		protorevkeeper.NewProtoRevDecorator(*protoRevKeeper),
+		authpost.NewAuthenticatorDecorator(authenticatorKeeper),
 	)
 }
