@@ -6,6 +6,11 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
+var (
+	ErrNoPoolIDsGiven        = fmt.Errorf("no pool IDs given")
+	ErrZeroNumEpochsPaidOver = fmt.Errorf("num epochs paid over must be greater than zero")
+)
+
 type UnsupportedSplittingPolicyError struct {
 	GroupGaugeId    uint64
 	SplittingPolicy SplittingPolicy
@@ -55,4 +60,12 @@ type GaugeNotFoundError struct {
 
 func (e GaugeNotFoundError) Error() string {
 	return fmt.Sprintf("gauge with ID (%d) not found", e.GaugeID)
+}
+
+type OnePoolIDGroupError struct {
+	PoolID uint64
+}
+
+func (e OnePoolIDGroupError) Error() string {
+	return fmt.Sprintf("one pool ID %d given. Need at least two to create valid Group", e.PoolID)
 }

@@ -7,6 +7,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 )
 
+const PerpetualNumEpochsPaidOver = perpetualNumEpochsPaidOver
+
 // AddGaugeRefByKey appends the provided gauge ID into an array associated with the provided key.
 func (k Keeper) AddGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
 	return k.addGaugeRefByKey(ctx, key, gaugeID)

@@ -22,6 +22,11 @@ import (
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
+// numEpochPaidOver is the number of epochs that must be given
+// for a gauge to be perpetual. For any other number of epochs
+// other than zero, the gauge is non-perpetual. Zero is invalid.
+const perpetualNumEpochsPaidOver = 1
+
 // getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
 func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []types.Gauge {
 	gauges := []types.Gauge{}
@@ -50,8 +55,6 @@ func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 	if err != nil {
 		return err
 	}
-
-	gauge.IsLastNonPerpetualDistribution()
 
 	store.Set(gaugeStoreKey(gauge.Id), bz)
 	return nil
@@ -212,31 +215,57 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	return gauge.Id, nil
 }
 
-// CreateGroup creates a new group. The group is 1:1 mapped to a group gauage that allocates rewards dynamically across its internal pool gauges based on the given splitting policy.
-// Note: we should expect that the internal gauges consist of the gauges that are automatically created for each pool upon pool creation, as even non-perpetual
-// external incentives would likely want to route through these.
-// TODO: change this to take in list of pool IDs instead and fetch the gauge IDs under the hood.
-// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6404
-func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, internalGaugeIds []uint64, gaugetype lockuptypes.LockQueryType) (uint64, error) {
-	if len(internalGaugeIds) == 0 {
-		return 0, fmt.Errorf("No internalGauge provided.")
+// CreateGroup creates a new group. The group is 1:1 mapped to a group gauage that allocates rewards dynamically across its internal pool gauges based on
+// the volume splitting policy.
+// For each pool ID in the given slice, its main internal gauge is used to create gauge records to be associated with the Group.
+// Note, that implies that only perpetual pool gauges can be associated with the Group.
+// For Group's own distribution policy, a 1:1 group Gauge is created. This is the Gauge that receives incentives at the end of an epoch
+// in the pool incentives as defined by the DistrRecord. The Group's Gauge can either be perpetual or non-perpetual.
+// If numEpochPaidOver is 1, then the Group's Gauge is perpetual. Otherwise, it is non-perpetual.
+// Returns nil on success.
+// Returns error if:
+// - given pool IDs slice is empty or has 1 pool only
+// - numEpochPaidOver is 0
+// - fails to initialize gauge information for every pool ID
+// - fails to send coins from owner to the incentives module for the Group's Gauge
+// - fails to set the Group's Gauge to state
+func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, poolIDs []uint64) (uint64, error) {
+	if len(poolIDs) == 0 {
+		return 0, types.ErrNoPoolIDsGiven
+	}
+	if len(poolIDs) == 1 {
+		return 0, types.OnePoolIDGroupError{PoolID: poolIDs[0]}
+	}
+	if numEpochPaidOver == 0 {
+		return 0, types.ErrZeroNumEpochsPaidOver
 	}
 
-	if gaugetype != lockuptypes.ByGroup {
-		return 0, fmt.Errorf("Invalid gauge type needs to be ByGroup, got %s.", gaugetype)
+	// Initialize gauge information for every pool ID.
+	initialInternalGaugeInfo, err := k.initGaugeInfo(ctx, poolIDs)
+	if err != nil {
+		return 0, err
 	}
+
+	// TODO: charge fixed fee. Make sure to update method spec and tests.
+	// https://github.com/osmosis-labs/osmosis/issues/6506
+
+	// TODO: subdao to bypass
+	// TODO: governance to bypass
+	// Make sure to update method spec and tests.
+	// https://github.com/osmosis-labs/osmosis/issues/6507
 
 	// TODO: remove gauge creation logic from here.
 	// Instead, call `CreateGauge` directly
 	// Update `CreateGauge` to be able to handle the group type.
+	// Make sure to update method spec and tests.
 	// https://github.com/osmosis-labs/osmosis/issues/6513
 	nextGaugeId := k.GetLastGaugeID(ctx) + 1
 
 	gauge := types.Gauge{
 		Id:          nextGaugeId,
-		IsPerpetual: numEpochPaidOver == 1,
+		IsPerpetual: numEpochPaidOver == perpetualNumEpochsPaidOver,
 		DistributeTo: lockuptypes.QueryCondition{
-			LockQueryType: gaugetype,
+			LockQueryType: lockuptypes.ByGroup,
 		},
 		Coins:             coins,
 		StartTime:         ctx.BlockTime(),
@@ -248,14 +277,6 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 	}
 
 	if err := k.setGauge(ctx, &gauge); err != nil {
-		return 0, err
-	}
-
-	// TODO: change CreateGroup method to take in pool IDs
-	// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6404
-	poolIDs := []uint64{}
-	initialInternalGaugeInfo, err := k.initGaugeInfo(ctx, poolIDs)
-	if err != nil {
 		return 0, err
 	}
 
@@ -462,7 +483,7 @@ func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sd
 	return nil
 }
 
-// initGaugeInfo takes in a list of pool IDs and a splitting policy and returns a InternalGaugeInfo struct with weights initialized to zero.
+// initGaugeInfo takes in a list of pool IDs and returns a InternalGaugeInfo struct with weights initialized to zero.
 // Returns error if fails to retrieve gauge ID for a pool.
 func (k Keeper) initGaugeInfo(ctx sdk.Context, poolIds []uint64) (types.InternalGaugeInfo, error) {
 	gaugeRecords := make([]types.InternalGaugeRecord, 0, len(poolIds))
