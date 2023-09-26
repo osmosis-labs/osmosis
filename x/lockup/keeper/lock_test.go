@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 
