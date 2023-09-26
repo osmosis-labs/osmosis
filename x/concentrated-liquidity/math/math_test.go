@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
@@ -180,9 +181,7 @@ func TestCalcAmount0Delta(t *testing.T) {
 				RoundingDir:             roundingDir,
 			}
 
-			res := tolerance.CompareBigDec(tc.amount0Expected, amount0)
-
-			require.Equal(t, 0, res, "amount0: %s, expected: %s", amount0, tc.amount0Expected)
+			osmoassert.Equal(t, tolerance, tc.amount0Expected, amount0)
 		})
 	}
 }
