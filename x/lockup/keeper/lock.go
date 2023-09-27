@@ -926,7 +926,7 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 	if coins != nil && !coins.IsEqual(lock.Coins) {
 		// This branch implies we will end up with two locks:
 		// - The first lock will be the original lock with the coins removed, in unlocking state
-		// - The second lock will be the new rebonded lock with the coins added, in not unlocking state
+		// - The second lock will be the new rebonded lock with the coins added, in locked state
 
 		// remove rebonded lock's coins from original lock
 		lock.Coins = lock.Coins.Sub(coins)
