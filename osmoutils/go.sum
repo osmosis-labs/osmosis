@@ -206,8 +206,7 @@ github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4x
 github.com/cosmos/gogoproto v1.4.11 h1:LZcMHrx4FjUgrqQSWeaGC1v/TeuVFqSLa43CC6aWR2g=
 github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4Y=
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
-github.com/cosmos/iavl v0.19.5 h1:rGA3hOrgNxgRM5wYcSCxgQBap7fW82WZgY78V9po/iY=
-github.com/cosmos/iavl v0.19.5/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
+github.com/cosmos/iavl v0.19.7 h1:ij32FaEnwxfEurtK0QKDNhTWFnz6NUmrI5gky/WnoY0=
 github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.1.0 h1:96fDMIUSlSQ6dBcwhdYwTT+uTwFP+EWbSyLORcKSJZ8=
 github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.1.0 h1:1iQ8/rJwkeGJe81fKyZC/ASSajoJP0jEi6IJFiKIr7Y=
 github.com/cosmos/ibc-go/v4 v4.3.1 h1:xbg0CaCdxK3lvgGvSaI91ROOLd7s30UqEcexH6Ba4Ys=
@@ -707,8 +706,7 @@ github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJ
 github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
-github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230913192254-a2075590d5a3 h1:kRNCIZn9NU8BBObAsFj0Zp05QQo/4iLDfRiXgtXF//I=
-github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230913192254-a2075590d5a3/go.mod h1:mFGH2RJhuZa6vBuFMNe4JN85fGtIhROtdeQIyIw9isA=
+github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230927020814-2854ac001f06 h1:bUqcTTtIKCvDEW/UpbRTZU+QslJ+sgVv0tnFzl1dsH0=
 github.com/osmosis-labs/osmosis/osmomath v0.0.8-0.20230926014346-27a13ec134bd h1:Op+svYjumlLTHIupuXrTh8OWOhjP0vKWQR3LLZv24Dg=
 github.com/osmosis-labs/osmosis/osmomath v0.0.8-0.20230926014346-27a13ec134bd/go.mod h1:8VWhMEgMVTavPs8ttIJdG5VE0xiJXhnFazQdIBhKzH0=
 github.com/osmosis-labs/osmosis/v19 v19.1.0 h1:UjtvMa/aQJmPElJ6Dgw/JCOn/jK9inrokWLLuvyWiOs=

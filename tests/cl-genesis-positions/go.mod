@@ -38,7 +38,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogoproto v1.4.11 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
-	github.com/cosmos/iavl v0.19.5 // indirect
+	github.com/cosmos/iavl v0.19.7 // indirect
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.1.0 // indirect
 	github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.1.0 // indirect
 	github.com/cosmos/ibc-go/v4 v4.3.1 // indirect
@@ -161,10 +161,10 @@ replace (
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/c92a56002bede63d4a3d5d0af94443c8bcdc1095
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230913192254-a2075590d5a3
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230927020814-2854ac001f06
 
 	// N.B. v0.19.5 contains a breaking change to the IAVL API
-	github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.4
+	github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.7
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 

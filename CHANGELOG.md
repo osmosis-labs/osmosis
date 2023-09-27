@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Misc Improvements
 
 * [#6476](https://github.com/osmosis-labs/osmosis/pull/6476) band-aid state export fix for cwpool gauges
+* [#6492](https://github.com/osmosis-labs/osmosis/pull/6492) bump IAVL version to v0.19.7
 
 ## Unreleased
 

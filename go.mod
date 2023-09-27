@@ -58,18 +58,17 @@ require (
 	github.com/butuzov/mirror v1.1.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/cosmos/gogoproto v1.4.11 // indirect
-	github.com/cosmos/iavl v0.19.5 // indirect
+	github.com/cosmos/iavl v0.19.7 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
-	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/go-playground/validator/v10 v10.14.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
-	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
 	github.com/nunnatsa/ginkgolinter v0.13.3 // indirect
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
@@ -80,6 +79,7 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/timonwong/loggercheck v0.9.4 // indirect
+	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/xen0n/gosmopolitan v1.2.1 // indirect
 	github.com/ykadowak/zerologlint v0.1.3 // indirect
 	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00 // indirect
@@ -88,7 +88,7 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/goleak v1.1.12 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
+	golang.org/x/arch v0.5.0 // indirect
 	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230815205213-6bfd019c3878 // indirect
 )
@@ -331,11 +331,11 @@ replace (
 	github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.2.3
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/c92a56002bede63d4a3d5d0af94443c8bcdc1095
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230913192254-a2075590d5a3
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/2854ac001f0675ef7e3844b4ad94778de745703f
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230927020814-2854ac001f06
 
 	// N.B. v0.19.5 contains a breaking change to the IAVL API
-	github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.4
+	github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.7
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
