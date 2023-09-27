@@ -13,7 +13,7 @@ import (
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
 )
 
-// This is a holistic test covering distribution to group gauges.
+// This is a general test covering distribution to group gauges.
 // This test ensures that the expected happy path functions as expected across all possible
 // pool and gauge types.
 //
@@ -35,7 +35,7 @@ import (
 // - perpetual distribution behavior
 // - non-perpetual distribution behavior
 // - non-perpetual gauge pruning
-func (s *KeeperTestSuite) TestDistribute_Group() {
+func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 	s.SetupTest()
 
 	// Create a perpetual set of pools that only perpetual group gauge incentivizes
@@ -187,11 +187,11 @@ func (s *KeeperTestSuite) TestDistribute_Group() {
 // TODO: create the following tests:
 // https://github.com/osmosis-labs/osmosis/issues/6559
 //
-// Test_Distribute_Group_OverlappingPoolsInGroups
-// Test_Distribute_Group_NoVolumeOnePool_SkipSilent
-// Test_Distribute_Group_ChangeVolumeBetween
-// Test_Distribute_Group_CreateGroupsBetween
-// Test_Distribute_Group_SwapAndDistribute
+// Test_AfterEpochEnd_Group_OverlappingPoolsInGroups
+// Test_AfterEpochEnd_Group_NoVolumeOnePool_SkipSilent
+// Test_AfterEpochEnd_Group_ChangeVolumeBetween
+// Test_AfterEpochEnd_Group_CreateGroupsBetween
+// Test_AfterEpochEnd_Group_SwapAndDistribute
 
 // for each pool ID, retrieves its internal gauge and asserts that the gauge has coins according to the
 // poolIDToExpectedDistributionMapOne.
