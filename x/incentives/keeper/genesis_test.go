@@ -58,13 +58,15 @@ var (
 		CumulativeWeight: osmomath.ZeroInt(),
 	}
 
-	expectedGroup = types.Group{
-		GroupGaugeId: 5,
-		InternalGaugeInfo: types.InternalGaugeInfo{
-			TotalWeight:  gaugeOneRecord.CurrentWeight.Add(gaugeTwoRecord.CurrentWeight),
-			GaugeRecords: []types.InternalGaugeRecord{gaugeOneRecord, gaugeTwoRecord},
+	expectedGroups = []types.Group{
+		{
+			GroupGaugeId: 5,
+			InternalGaugeInfo: types.InternalGaugeInfo{
+				TotalWeight:  gaugeOneRecord.CurrentWeight.Add(gaugeTwoRecord.CurrentWeight),
+				GaugeRecords: []types.InternalGaugeRecord{gaugeOneRecord, gaugeTwoRecord},
+			},
+			SplittingPolicy: types.ByVolume,
 		},
-		SplittingPolicy: types.ByVolume,
 	}
 )
 
@@ -89,7 +91,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	clParams.IsPermissionlessPoolCreationEnabled = true
 	app.ConcentratedLiquidityKeeper.SetParams(ctx, clParams)
 
-	// create two pools to be used for byGroup gauge creation
+	// create two pools to be used for group creation
 	msgCreatePool := model.MsgCreateConcentratedPool{
 		Sender:       addr.String(),
 		Denom0:       "uion",
@@ -108,7 +110,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	err = simapp.FundAccount(app.BankKeeper, ctx, addr, mintLPtokens)
 	require.NoError(t, err)
 
-	// create a gauge that distributes coins to earlier created LP token and duration
+	// create a gauge of every type (byDuration, noLock, byGroup)
 	startTime := time.Now()
 	gaugeCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
 	createAllGaugeTypes(t, app, ctx, addr, gaugeCoins, startTime)
@@ -117,9 +119,10 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	// ensure resulting genesis params match default params
 	genesis = app.IncentivesKeeper.ExportGenesis(ctx)
 	require.Equal(t, genesis.Params.DistrEpochIdentifier, "week")
-	require.Len(t, genesis.Gauges, 5)
 
+	// check that the gauges created earlier were exported through exportGenesis and still exists on chain
 	expectedGauges := expectedGauges(startTime)
+	require.Len(t, genesis.Gauges, len(expectedGauges))
 
 	// group gauge
 	require.Equal(t, expectedGauges[4], genesis.Gauges[0])
@@ -133,15 +136,14 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	// duration gauge
 	require.Equal(t, expectedGauges[2], genesis.Gauges[3])
 
+	// no lock gauge
 	// distrToNoLock denom gets added post creation
 	expectedGauges[3].DistributeTo.Denom = "no-lock/e/1"
-
-	// no lock gauge
 	require.Equal(t, expectedGauges[3], genesis.Gauges[4])
 
 	// check group
 	require.Len(t, genesis.Groups, 1)
-	require.Equal(t, expectedGroup.String(), genesis.Groups[0].String())
+	require.Equal(t, expectedGroups, genesis.Groups)
 }
 
 // TestIncentivesInitGenesis takes a genesis state and tests initializing that genesis for the incentives module.
@@ -158,8 +160,6 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	// distrToNoLock denom gets added post creation when being called via createGauge, but
 	// we are manually creating the gauges here so we need to add it manually
 	expectedGauges[3].DistributeTo.Denom = "no-lock/e/1"
-
-	expectedGroups := []types.Group{expectedGroup}
 
 	// initialize genesis with specified parameter, the gauge created earlier, and lockable durations
 	app.IncentivesKeeper.InitGenesis(ctx, types.GenesisState{
@@ -198,7 +198,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	// check group
 	groups := app.IncentivesKeeper.GetAllGroups(ctx)
 	require.Len(t, groups, 1)
-	require.Equal(t, expectedGroups[0], groups[0])
+	require.Equal(t, expectedGroups, groups)
 }
 
 func createAllGaugeTypes(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins, startTime time.Time) {
