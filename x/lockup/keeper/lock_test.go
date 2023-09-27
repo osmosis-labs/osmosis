@@ -29,10 +29,11 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 	nonExistingLockID := uint64(2)
 
 	testCases := []struct {
-		name          string
-		unlock        bool
-		rebondLockID  uint64
-		coinsToRebond sdk.Coins
+		name                string
+		unlock              bool
+		rebondLockID        uint64
+		coinsToRebond       sdk.Coins
+		createSyntheticLock bool
 
 		expectedError error
 	}{
@@ -67,6 +68,13 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			coinsToRebond: notFullRebondCoins,
 			expectedError: sdkerrors.Wrap(types.ErrLockNotUnlocking, fmt.Sprintf("lock %d is not unlocking, rebonding only possible in unlocking stage", defaultLockID)),
 		},
+		{
+			name:                "Invalid: Trying to rebond a synthetic's underlying lock",
+			createSyntheticLock: true,
+			rebondLockID:        defaultLockID,
+			coinsToRebond:       lockedCoins,
+			expectedError:       fmt.Errorf("cannot edit lockup with synthetic lock %d", defaultLockID),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -84,6 +92,12 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 
 			initialLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 			suite.Require().NoError(err)
+
+			// underlying synthetic locks' period locks cannot be rebonded
+			if tc.createSyntheticLock {
+				err := suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, lockID, "synthetic", initialLock.Duration, false)
+				suite.Require().NoError(err)
+			}
 
 			// rebond coins
 			err = suite.App.LockupKeeper.RebondTokens(suite.Ctx, tc.rebondLockID, addr1, tc.coinsToRebond)
@@ -117,19 +131,19 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 				suite.Require().Equal(rebondedLock.Owner, initialLock.Owner)
 				suite.Require().Equal(rebondedLock.Duration, initialLock.Duration)
 
-				// Check lock refs
-				// Rebonded lock should have "locked" refs, and original lock should have "unlocked" refs
+				// Check rebonded lock refs
+				// Rebonded lock should have "locked" refs
 				suite.assertLockRefs(*rebondedLock)
-				suite.assertLockRefs(*lock)
 			} else { // means lock was completely replaced
 				// check original lock: should be replaced with rebonding lock
 				suite.Require().Equal(lock.Coins, lockedCoins)
 				suite.Require().False(lock.IsUnlocking())
-
-				// Check lock refs
-				// Original lock should have "locked" refs
-				suite.assertLockRefs(*lock)
 			}
+
+			// Check lock refs
+			// Original lock should have "locked" refs, if complete rebonding occured
+			// Original lock should have "unlocked" refs, if partial rebonding occured
+			suite.assertLockRefs(*lock)
 		})
 	}
 }
@@ -1697,6 +1711,8 @@ func (s *KeeperTestSuite) TestPartialForceUnlock() {
 	}
 }
 
+// assertLockRefs checks that a lock has required refs in store based on the current state of the lock
+// Ex: if lock is unlocking, it should have unlocking refs
 func (suite *KeeperTestSuite) assertLockRefs(lock types.PeriodLock) {
 	refKeys, err := keeper.DurationLockRefKeys(lock)
 	suite.Require().NoError(err)
