@@ -33,7 +33,7 @@ func main() {
 }
 
 func parseTemplates() error {
-	// Create a function to upper vase the version suffix if it exists.
+	// Create a function to upper case the version suffix if it exists.
 	funcMap := template.FuncMap{
 		"ToUpper": strings.ToUpper,
 	}
