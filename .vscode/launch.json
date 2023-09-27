@@ -134,7 +134,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestKeeperTestSuite",
+                "TestKeeperTestSuite/TestYourName",
                 "-test.v"
             ],
         },
