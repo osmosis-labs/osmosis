@@ -20,12 +20,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	params := k.GetParams(ctx)
 
 	if epochIdentifier == params.DistrEpochIdentifier {
-		groups, err := k.GetAllGroups(ctx)
-		if err != nil {
-			return err
-		}
+		groups := k.GetAllGroups(ctx)
 
-		err = k.AllocateAcrossGauges(ctx, groups)
+		err := k.AllocateAcrossGauges(ctx, groups)
 		if err != nil {
 			return err
 		}

@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -352,7 +353,9 @@ func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, gaugeIDs []uint64) ([]types.Gau
 
 // GetGauges returns upcoming, active, and finished gauges.
 func (k Keeper) GetGauges(ctx sdk.Context) []types.Gauge {
-	return k.getGaugesFromIterator(ctx, k.GaugesIterator(ctx))
+	allGauges := k.GetAllGroupsGauges(ctx)
+	allGauges = append(allGauges, k.getGaugesFromIterator(ctx, k.GaugesIterator(ctx))...)
+	return allGauges
 }
 
 // GetNotFinishedGauges returns both upcoming and active gauges.
@@ -362,7 +365,9 @@ func (k Keeper) GetNotFinishedGauges(ctx sdk.Context) []types.Gauge {
 
 // GetActiveGauges returns active gauges.
 func (k Keeper) GetActiveGauges(ctx sdk.Context) []types.Gauge {
-	return k.getGaugesFromIterator(ctx, k.ActiveGaugesIterator(ctx))
+	activeGauges := k.GetAllGroupsGauges(ctx)
+	activeGauges = append(activeGauges, k.getGaugesFromIterator(ctx, k.ActiveGaugesIterator(ctx))...)
+	return activeGauges
 }
 
 // GetUpcomingGauges returns upcoming gauges.
