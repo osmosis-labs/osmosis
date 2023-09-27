@@ -1,0 +1,66 @@
+# This workflow is used in order to automatically update go.mod in case one of:
+# * osmoutils
+# * osmomath
+# * x/ibc-hooks
+# * x/epochs
+# is updated.
+# It is triggerred by a manual workflow:
+# https://github.com/osmosis-labs/osmosis/actions/workflows/go-mod-auto-bump.yml
+
+name: Go Mod Auto Version Update
+on:
+  workflow_dispatch:
+    inputs:
+      target-branch:
+        description: 'Target Branch'
+        default: ''
+        required: true
+permissions:
+    contents: write
+
+jobs:
+  update_go_mod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: 
+          fetch-depth: 0
+
+      - name: Set GH config
+        run: |
+          git config user.email "github-actions@github.com"
+          git config user.name "github-actions"
+
+      # Setup Go
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '>=1.19.0'
+      - name: Fetch branches and checkout target
+        run: |
+         git fetch origin ${{ inputs.target-branch }}
+         git checkout ${{ inputs.target-branch }}
+         git fetch origin main
+
+      - name: Get latest commit on main branch
+        id: main_commit
+        run: |
+          echo "LATEST_MAIN_COMMIT=$(git rev-parse main)" >> $GITHUB_OUTPUT
+      
+      - name: Run script
+        run: |
+          LATEST_TARGET_COMMIT=$(git rev-parse ${{ inputs.target-branch }})
+          bash ./scripts/update-go-mod.sh ${{ steps.main_commit.outputs.LATEST_MAIN_COMMIT }} $LATEST_TARGET_COMMIT
+
+      - name: Add Changes 
+        id: add_changes
+        run: |
+          git add .
+          echo ANY_CHANGES_ADDED=$(git diff --name-only --cached) >> $GITHUB_OUTPUT
+
+      - name: Commit and Push Changes
+        if: ${{ steps.add_changes.outputs.ANY_CHANGES_ADDED != '' }}
+        run: |
+          git commit -m "Auto: update go.mod after push to ${{ inputs.target-branch }} that modified dependencies locally"
+          git push origin ${{ inputs.target-branch }}
