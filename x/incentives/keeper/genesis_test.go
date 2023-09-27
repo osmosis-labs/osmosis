@@ -48,14 +48,14 @@ var (
 
 	gaugeOneRecord = types.InternalGaugeRecord{
 		GaugeId:          1,
-		CurrentWeight:    osmomath.ZeroInt(),
-		CumulativeWeight: osmomath.ZeroInt(),
+		CurrentWeight:    osmomath.NewInt(100),
+		CumulativeWeight: osmomath.NewInt(200),
 	}
 
 	gaugeTwoRecord = types.InternalGaugeRecord{
 		GaugeId:          2,
-		CurrentWeight:    osmomath.ZeroInt(),
-		CumulativeWeight: osmomath.ZeroInt(),
+		CurrentWeight:    osmomath.NewInt(100),
+		CumulativeWeight: osmomath.NewInt(200),
 	}
 
 	expectedGroups = []types.Group{
@@ -114,6 +114,11 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	startTime := time.Now()
 	gaugeCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
 	createAllGaugeTypes(t, app, ctx, addr, gaugeCoins, startTime)
+
+	// directly modify the weights of the groups so we want to see if non zero values persist
+	groups := app.IncentivesKeeper.GetAllGroups(ctx)
+	groups[0].InternalGaugeInfo = expectedGroups[0].InternalGaugeInfo
+	app.IncentivesKeeper.SetGroup(ctx, groups[0])
 
 	// export genesis using default configurations
 	// ensure resulting genesis params match default params
