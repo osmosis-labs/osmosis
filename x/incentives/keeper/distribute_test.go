@@ -1583,9 +1583,11 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		defaultGroup      = deepCopyGroup(defaultGroup)
 		singleRecordGroup = deepCopyGroup(singleRecordGroup)
 
+		two = sdk.NewInt(2)
+
 		// Volume pre-set configurations.
-		balancerOnlyVolumeConfig  = []osmomath.Int{singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, osmomath.ZeroInt()}
-		balancerAndCLVolumeConfig = []osmomath.Int{defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight}
+		balancerOnlyVolumeConfig  = []osmomath.Int{singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight.Mul(two), osmomath.ZeroInt()}
+		balancerAndCLVolumeConfig = []osmomath.Int{defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight.Mul(two), defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight.Mul(two)}
 	)
 
 	// 2 changes: flip the isPerpetual flag and set the number of epochs paid over.
@@ -1819,7 +1821,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 				},
 			},
 
-			volumeToSet: []osmomath.Int{defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight},
+			volumeToSet: balancerAndCLVolumeConfig,
 		},
 
 		"10: skipping one does not fail the other": {
@@ -1941,13 +1943,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 				if isGroupAndGroupGaugePruningExpected {
 					// Check that the group gauge was deleted
-					s.Require().Error(err)
-					s.Require().ErrorIs(err, types.GaugeNotFoundError{GaugeID: groupConfig.group.GroupGaugeId})
-
-					// Check that the group was deleted
-					_, err = s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, groupConfig.group.GroupGaugeId)
-					s.Require().Error(err)
-					s.Require().ErrorIs(err, types.GroupNotFoundError{GroupGaugeId: groupConfig.group.GroupGaugeId})
+					s.validateGroupNotExists(groupConfig.group.GroupGaugeId)
 				} else {
 					// check that the group gauge distributed epoch updated
 					s.Require().Equal(groupConfig.groupGauge.FilledEpochs+1, groupGauge.FilledEpochs)

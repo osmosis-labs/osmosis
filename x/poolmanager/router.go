@@ -702,7 +702,6 @@ func (k Keeper) trackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.
 	k.addVolume(ctx, poolId, sdk.NewCoin(OSMO, volumeInOsmo))
 }
 
-// nolint: unused
 // addVolume adds the given volume to the global tracked volume for the given pool ID.
 func (k Keeper) addVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
 	// Get the current volume for the pool ID
@@ -713,7 +712,6 @@ func (k Keeper) addVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Co
 	k.SetVolume(ctx, poolId, newTotalVolume)
 }
 
-// nolint: unused
 // SetVolume sets the given volume to the global tracked volume for the given pool ID.
 // Note that this function is exported for cross-module testing purposes and should not be
 // called directly from other modules.
