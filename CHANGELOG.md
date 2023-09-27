@@ -44,37 +44,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
-* [#6427](https://github.com/osmosis-labs/osmosis/pull/6427) sdk.Coins Mul and Quo helpers in osmoutils
-* [#6437](https://github.com/osmosis-labs/osmosis/pull/6437) mutative version for QuoRoundUp
 * [#6468](https://github.com/osmosis-labs/osmosis/pull/6468) feat: remove osmo multihop discount
-* [#6261](https://github.com/osmosis-labs/osmosis/pull/6261) mutative and efficient BigDec truncations with arbitrary decimals
-
-### Misc Improvements
-
-* [#6309](https://github.com/osmosis-labs/osmosis/pull/6309) Add  Cosmwasm Pool Queries to Stargate Query
-* [#6476](https://github.com/osmosis-labs/osmosis/pull/6476) band-aid state export fix for cwpool gauges
-* [#6492](https://github.com/osmosis-labs/osmosis/pull/6492) bump IAVL version to v0.19.7
-* [#6493](https://github.com/osmosis-labs/osmosis/pull/6493) Add PoolManager Params query to Stargate Whitelist
-* [#6421](https://github.com/osmosis-labs/osmosis/pull/6421) Moves ValidatePermissionlessPoolCreationEnabled out of poolmanager module
-
-### Features
-
-* [#6416](https://github.com/osmosis-labs/osmosis/pull/6416) feat[CL]: add num initialized ticks query
 * [#6420](https://github.com/osmosis-labs/osmosis/pull/6420) feat[CL]: Creates a governance set whitelist of addresses that can bypass the normal pool creation restrictions on concentrated liquidity pools
-* [#6488](https://github.com/osmosis-labs/osmosis/pull/6488) v2 SpotPrice CLI and GRPC query with 36 decimals in poolmanager
-* [#6535](https://github.com/osmosis-labs/osmosis/pull/6535) makefile: add target that tidies all submodules at once
 
 ### State Breaking
 
 * [#6344](https://github.com/osmosis-labs/osmosis/pull/6344) fix: set name, display and symbol of denom metadata in tokenfactory's CreateDenom
 * [#6279](https://github.com/osmosis-labs/osmosis/pull/6279) fix prop-597 introduced issue
 * [#6282](https://github.com/osmosis-labs/osmosis/pull/6282) Fix CreateCanonicalConcentratedLiquidityPoolAndMigrationLink overriding migration records
+* [#6309](https://github.com/osmosis-labs/osmosis/pull/6309) Add  Cosmwasm Pool Queries to Stargate Query
+* [#6493](https://github.com/osmosis-labs/osmosis/pull/6493) Add PoolManager Params query to Stargate Whitelist
+* [#6421](https://github.com/osmosis-labs/osmosis/pull/6421) Moves ValidatePermissionlessPoolCreationEnabled out of poolmanager module
+
+
+## v19.2.0
+
+### Misc Improvements
+
+* [#6476](https://github.com/osmosis-labs/osmosis/pull/6476) band-aid state export fix for cwpool gauges
+* [#6492](https://github.com/osmosis-labs/osmosis/pull/6492) bump IAVL version to v0.19.7
+
+
+### Features
+
+* [#6427](https://github.com/osmosis-labs/osmosis/pull/6427) sdk.Coins Mul and Quo helpers in osmoutils
+* [#6437](https://github.com/osmosis-labs/osmosis/pull/6437) mutative version for QuoRoundUp
+* [#6261](https://github.com/osmosis-labs/osmosis/pull/6261) mutative and efficient BigDec truncations with arbitrary decimals
+* [#6416](https://github.com/osmosis-labs/osmosis/pull/6416) feat[CL]: add num initialized ticks query
+* [#6488](https://github.com/osmosis-labs/osmosis/pull/6488) v2 SpotPrice CLI and GRPC query with 36 decimals in poolmanager
 
 ### API Breaks
 
 * [#6487](https://github.com/osmosis-labs/osmosis/pull/6487) make PoolModuleI CalculateSpotPrice API return BigDec
 * [#6511](https://github.com/osmosis-labs/osmosis/pull/6511) remove redundant param from CreateGaugeRefKeys in incentives
 * [#6510](https://github.com/osmosis-labs/osmosis/pull/6510) remove redundant ctx param from DeleteAllKeysFromPrefix in osmoutils
+
 
 ## v19.1.0
 
