@@ -44,7 +44,9 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 
 		// Refetch group
 		// TODO: consider mutating receiver of syncGroupWeights instead of refetching.
+		// https://github.com/osmosis-labs/osmosis/issues/6556
 		// TODO: cover AllocateAcrossGauges with unit tests. to make sure that the bug is caught.
+		// https://github.com/osmosis-labs/osmosis/issues/6557
 		group, err := k.GetGroupByGaugeID(ctx, group.GroupGaugeId)
 		if err != nil {
 			return err
