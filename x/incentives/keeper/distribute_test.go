@@ -39,7 +39,7 @@ var (
 		CurrentWeight:    osmomath.NewInt(100),
 		CumulativeWeight: osmomath.NewInt(200),
 	}
-	DefaultGroup = types.Group{
+	defaultGroup = types.Group{
 		GroupGaugeId: defaultGroupGaugeId,
 		InternalGaugeInfo: types.InternalGaugeInfo{
 			TotalWeight:  defaultGaugeRecordOneRecord.CurrentWeight.Add(defaultGaugeRecordTwoRecords.CurrentWeight),
@@ -1360,23 +1360,23 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 		expectedError       error
 	}{
 		"happy path: valid update on group with even volume growth": {
-			groupToSync: deepCopyGroup(DefaultGroup),
+			groupToSync: deepCopyGroup(defaultGroup),
 			updatedPoolVolumes: []osmomath.Int{
 				osmomath.NewInt(300),
 				osmomath.NewInt(300),
 			},
 
-			expectedSyncedGroup: s.withUpdatedVolumes(DefaultGroup, []osmomath.Int{osmomath.NewInt(300), osmomath.NewInt(300)}),
+			expectedSyncedGroup: s.withUpdatedVolumes(defaultGroup, []osmomath.Int{osmomath.NewInt(300), osmomath.NewInt(300)}),
 			expectedError:       nil,
 		},
 		"valid update on group with different volume growth": {
-			groupToSync: deepCopyGroup(DefaultGroup),
+			groupToSync: deepCopyGroup(defaultGroup),
 			updatedPoolVolumes: []osmomath.Int{
 				osmomath.NewInt(253),
 				osmomath.NewInt(659),
 			},
 
-			expectedSyncedGroup: s.withUpdatedVolumes(DefaultGroup, []osmomath.Int{osmomath.NewInt(253), osmomath.NewInt(659)}),
+			expectedSyncedGroup: s.withUpdatedVolumes(defaultGroup, []osmomath.Int{osmomath.NewInt(253), osmomath.NewInt(659)}),
 			expectedError:       nil,
 		},
 		"valid update on group with only one record to sync": {
@@ -1392,7 +1392,7 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 
 		// Error catching
 		"tracked volume has dropped to zero for a pool (no pool volume or volume cannot be found)": {
-			groupToSync: deepCopyGroup(DefaultGroup),
+			groupToSync: deepCopyGroup(defaultGroup),
 			updatedPoolVolumes: []osmomath.Int{
 				osmomath.NewInt(300),
 				osmomath.NewInt(0),
@@ -1401,7 +1401,7 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 			expectedError: types.NoPoolVolumeError{PoolId: uint64(2)},
 		},
 		"cumulative volume has decreased for a pool (impossible/invalid state)": {
-			groupToSync: deepCopyGroup(DefaultGroup),
+			groupToSync: deepCopyGroup(defaultGroup),
 			updatedPoolVolumes: []osmomath.Int{
 				osmomath.NewInt(300),
 				osmomath.NewInt(100),
@@ -1468,17 +1468,17 @@ func (s *KeeperTestSuite) TestSyncGroupWeights() {
 		expectedError       error
 	}{
 		"happy path: valid volume splitting group": {
-			groupToSync: withSplittingPolicy(DefaultGroup, types.ByVolume),
+			groupToSync: withSplittingPolicy(defaultGroup, types.ByVolume),
 
 			// Note: setup logic runs default setup based on groupToSync's splitting policy.
 			// More involved tests related to syncing logic for specific splitting policies are in their respective tests.
-			expectedSyncedGroup: s.withUpdatedVolumes(DefaultGroup, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount}),
+			expectedSyncedGroup: s.withUpdatedVolumes(defaultGroup, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount}),
 			expectedError:       nil,
 		},
 
 		// Error catching
 		"unsupported splitting policy": {
-			groupToSync: withSplittingPolicy(DefaultGroup, types.SplittingPolicy(100)),
+			groupToSync: withSplittingPolicy(defaultGroup, types.SplittingPolicy(100)),
 
 			expectedError: types.UnsupportedSplittingPolicyError{GroupGaugeId: uint64(5), SplittingPolicy: types.SplittingPolicy(100)},
 		},
@@ -1580,7 +1580,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 	var (
 		// local copies for this test to isolate failures if unexpected
 		// mutations do occur.
-		defaultGroup      = deepCopyGroup(DefaultGroup)
+		defaultGroup      = deepCopyGroup(defaultGroup)
 		singleRecordGroup = deepCopyGroup(singleRecordGroup)
 
 		// Volume pre-set configurations.
@@ -2085,7 +2085,7 @@ func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 			incentivesKeeper := s.App.IncentivesKeeper
 
 			// Setup group gauge to confirm that it is deleted if it is non-perpetual and finished.
-			incentivesKeeper.SetGroup(s.Ctx, withGroupGaugeId(DefaultGroup, tc.groupGauge.Id))
+			incentivesKeeper.SetGroup(s.Ctx, withGroupGaugeId(defaultGroup, tc.groupGauge.Id))
 
 			// Note: to avoid chances of mutations that could affect the final assertions.
 			inputCopy := deepCopyGauge(tc.groupGauge)
@@ -2142,7 +2142,7 @@ func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 		incentivesKeeper := s.App.IncentivesKeeper
 
 		// Setup group gauge to confirm that it is deleted if it is non-perpetual and finished.
-		incentivesKeeper.SetGroup(s.Ctx, withGroupGaugeId(DefaultGroup, nonPerpetualGauge.Id))
+		incentivesKeeper.SetGroup(s.Ctx, withGroupGaugeId(defaultGroup, nonPerpetualGauge.Id))
 
 		expectedDistributed := defaultCoins.Add(defaultCoins...)
 		expectedFilledEpochs := uint64(1)

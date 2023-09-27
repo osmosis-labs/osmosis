@@ -45,6 +45,27 @@ var (
 	distrToByGroup = lockuptypes.QueryCondition{LockQueryType: lockuptypes.ByGroup}
 
 	gaugeCoins = sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
+
+	gaugeOneRecord = types.InternalGaugeRecord{
+		GaugeId:          1,
+		CurrentWeight:    osmomath.ZeroInt(),
+		CumulativeWeight: osmomath.ZeroInt(),
+	}
+
+	gaugeTwoRecord = types.InternalGaugeRecord{
+		GaugeId:          2,
+		CurrentWeight:    osmomath.ZeroInt(),
+		CumulativeWeight: osmomath.ZeroInt(),
+	}
+
+	expectedGroup = types.Group{
+		GroupGaugeId: 5,
+		InternalGaugeInfo: types.InternalGaugeInfo{
+			TotalWeight:  gaugeOneRecord.CurrentWeight.Add(gaugeTwoRecord.CurrentWeight),
+			GaugeRecords: []types.InternalGaugeRecord{gaugeOneRecord, gaugeTwoRecord},
+		},
+		SplittingPolicy: types.ByVolume,
+	}
 )
 
 // TestIncentivesExportGenesis tests export genesis command for the incentives module.
@@ -117,6 +138,10 @@ func TestIncentivesExportGenesis(t *testing.T) {
 
 	// no lock gauge
 	require.Equal(t, expectedGauges[3], genesis.Gauges[4])
+
+	// check group
+	require.Len(t, genesis.Groups, 1)
+	require.Equal(t, expectedGroup.String(), genesis.Groups[0].String())
 }
 
 // TestIncentivesInitGenesis takes a genesis state and tests initializing that genesis for the incentives module.
@@ -134,7 +159,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	// we are manually creating the gauges here so we need to add it manually
 	expectedGauges[3].DistributeTo.Denom = "no-lock/e/1"
 
-	expectedGroups := []types.Group{DefaultGroup}
+	expectedGroups := []types.Group{expectedGroup}
 
 	// initialize genesis with specified parameter, the gauge created earlier, and lockable durations
 	app.IncentivesKeeper.InitGenesis(ctx, types.GenesisState{
@@ -170,6 +195,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	// no lock gauge
 	require.Equal(t, expectedGauges[1], gauges[4])
 
+	// check group
 	groups := app.IncentivesKeeper.GetAllGroups(ctx)
 	require.Len(t, groups, 1)
 	require.Equal(t, expectedGroups[0], groups[0])
