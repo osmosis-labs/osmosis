@@ -15,7 +15,9 @@ const DefaultIndex uint64 = 1
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Params: Params{
-			DistrEpochIdentifier: "week",
+			DistrEpochIdentifier:         "week",
+			GroupCreationFee:             DefaultGroupCreationFee,
+			UnrestrictedCreatorWhitelist: []string{},
 		},
 		Gauges: []Gauge{},
 		LockableDurations: []time.Duration{
@@ -42,6 +44,10 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 func (gs GenesisState) Validate() error {
 	if gs.Params.DistrEpochIdentifier == "" {
 		return errors.New("epoch identifier should NOT be empty")
+	}
+
+	if err := gs.Params.Validate(); err != nil {
+		return err
 	}
 	return nil
 }

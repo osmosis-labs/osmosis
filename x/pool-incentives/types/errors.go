@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+
 	errorsmod "cosmossdk.io/errors"
 )
 
@@ -35,4 +37,13 @@ type NoPoolAssociatedWithGaugeError struct {
 
 func (e NoPoolAssociatedWithGaugeError) Error() string {
 	return fmt.Sprintf("no pool associated with gauge id (%d) and duration (%d)", e.GaugeId, e.Duration)
+}
+
+type UnsupportedPoolTypeError struct {
+	PoolID   uint64
+	PoolType poolmanagertypes.PoolType
+}
+
+func (e UnsupportedPoolTypeError) Error() string {
+	return fmt.Sprintf("unsupported pool type for incentives (%d), pool id (%d)", e.PoolType, e.PoolID)
 }
