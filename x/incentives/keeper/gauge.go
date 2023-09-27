@@ -15,6 +15,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -25,7 +26,9 @@ import (
 // numEpochPaidOver is the number of epochs that must be given
 // for a gauge to be perpetual. For any other number of epochs
 // other than zero, the gauge is non-perpetual. Zero is invalid.
-const perpetualNumEpochsPaidOver = 1
+const perpetualNumEpochsPaidOver = 0
+
+var byGroupQueryCondition = lockuptypes.QueryCondition{LockQueryType: lockuptypes.ByGroup}
 
 // getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
 func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []types.Gauge {
@@ -103,7 +106,7 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 }
 
 // CreateGauge creates a gauge with the given parameters and sends coins to the gauge.
-// There can be 2 kinds of gauges for a given set of parameters:
+// There can be 3 kinds of gauges for a given set of parameters:
 // * lockuptypes.ByDuration - a gauge that incentivizes one of the lockable durations.
 // For this gauge, the pool id must be 0. Fails if not.
 //
@@ -115,7 +118,21 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 // this is an external gauge, or be equal to types.NoLockInternalGaugeDenom(poolId).
 // If the denom is empty, it will get overwritten to types.NoLockExternalGaugeDenom(poolId).
 // This denom formatting is useful for querying internal vs external gauges associated with a pool.
+// * lockuptypes.Group - a gauge that incentivizes a group of internal pool gauges based on the splitting
+// policy created by a group data structure. It is expected to be created via CreateGroup keeper method.
+// This gauge is the only gauge type that does not have ref keys (active/upcoming/finished) created and
+// associated with it.
+// For this gauge, the pool id must be 0. Fails if not.
+//
+// Returns error if:
+// - attempts to create non-perpetual gauge with numEpochsPaidOver of 0
+//
+// On success, returns the gauge ID.
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
+	if numEpochsPaidOver == perpetualNumEpochsPaidOver && !isPerpetual {
+		return 0, types.ErrZeroNumEpochsPaidOver
+	}
+
 	// Ensure that this gauge's duration is one of the allowed durations on chain
 	durations := k.GetLockableDurations(ctx)
 	if distrTo.LockQueryType == lockuptypes.ByDuration {
@@ -173,13 +190,16 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 			return 0, fmt.Errorf("pool id must be 0 for gauges with lock")
 		}
 
-		// check if denom this gauge pays out to exists on-chain
-		// N.B.: The reason we check for osmovaloper is to account for gauges that pay out to
-		// superfluid synthetic locks. These locks have the following format:
-		// "cl/pool/1/superbonding/osmovaloper1wcfyglfgjs2xtsyqu7pl60d0mpw5g7f4wh7pnm"
-		// See x/superfluid module README for details.
-		if !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "osmovaloper") {
-			return 0, fmt.Errorf("denom does not exist: %s", distrTo.Denom)
+		// Group gauges do not distribute to a denom. skip this check for group gauges.
+		if distrTo.LockQueryType != lockuptypes.ByGroup {
+			// check if denom this gauge pays out to exists on-chain
+			// N.B.: The reason we check for osmovaloper is to account for gauges that pay out to
+			// superfluid synthetic locks. These locks have the following format:
+			// "cl/pool/1/superbonding/osmovaloper1wcfyglfgjs2xtsyqu7pl60d0mpw5g7f4wh7pnm"
+			// See x/superfluid module README for details.
+			if !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "osmovaloper") {
+				return 0, fmt.Errorf("denom does not exist: %s", distrTo.Denom)
+			}
 		}
 	}
 
@@ -207,10 +227,15 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 
 	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
 
-	err = k.CreateGaugeRefKeys(ctx, &gauge, combinedKeys)
-	if err != nil {
-		return 0, err
+	// Only create ref keys (upcoming/active/finished) if gauge is not a group gauge
+	// Group gauges do not follow a similar lifecycle as other gauges.
+	if gauge.DistributeTo.LockQueryType != lockuptypes.ByGroup {
+		err = k.CreateGaugeRefKeys(ctx, &gauge, combinedKeys)
+		if err != nil {
+			return 0, err
+		}
 	}
+
 	k.hooks.AfterCreateGauge(ctx, gauge.Id)
 	return gauge.Id, nil
 }
@@ -221,13 +246,13 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 // Note, that implies that only perpetual pool gauges can be associated with the Group.
 // For Group's own distribution policy, a 1:1 group Gauge is created. This is the Gauge that receives incentives at the end of an epoch
 // in the pool incentives as defined by the DistrRecord. The Group's Gauge can either be perpetual or non-perpetual.
-// If numEpochPaidOver is 1, then the Group's Gauge is perpetual. Otherwise, it is non-perpetual.
+// If numEpochPaidOver is 0, then the Group's Gauge is perpetual. Otherwise, it is non-perpetual.
 // Returns nil on success.
 // Returns error if:
 // - given pool IDs slice is empty or has 1 pool only
-// - numEpochPaidOver is 0
 // - fails to initialize gauge information for every pool ID
 // - fails to send coins from owner to the incentives module for the Group's Gauge
+// - fails to charge group creation fee
 // - fails to set the Group's Gauge to state
 func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, poolIDs []uint64) (uint64, error) {
 	if len(poolIDs) == 0 {
@@ -236,9 +261,6 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 	if len(poolIDs) == 1 {
 		return 0, types.OnePoolIDGroupError{PoolID: poolIDs[0]}
 	}
-	if numEpochPaidOver == 0 {
-		return 0, types.ErrZeroNumEpochsPaidOver
-	}
 
 	// Initialize gauge information for every pool ID.
 	initialInternalGaugeInfo, err := k.initGaugeInfo(ctx, poolIDs)
@@ -246,42 +268,19 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 		return 0, err
 	}
 
-	// TODO: charge fixed fee. Make sure to update method spec and tests.
-	// https://github.com/osmosis-labs/osmosis/issues/6506
-
-	// TODO: subdao to bypass
-	// TODO: governance to bypass
-	// Make sure to update method spec and tests.
-	// https://github.com/osmosis-labs/osmosis/issues/6507
-
-	// TODO: remove gauge creation logic from here.
-	// Instead, call `CreateGauge` directly
-	// Update `CreateGauge` to be able to handle the group type.
-	// Make sure to update method spec and tests.
-	// https://github.com/osmosis-labs/osmosis/issues/6513
-	nextGaugeId := k.GetLastGaugeID(ctx) + 1
-
-	gauge := types.Gauge{
-		Id:          nextGaugeId,
-		IsPerpetual: numEpochPaidOver == perpetualNumEpochsPaidOver,
-		DistributeTo: lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.ByGroup,
-		},
-		Coins:             coins,
-		StartTime:         ctx.BlockTime(),
-		NumEpochsPaidOver: numEpochPaidOver,
-	}
-
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, gauge.Coins); err != nil {
+	// Charge group creation fee.
+	_, err = k.chargeGroupCreationFeeIfNotWhitelisted(ctx, owner)
+	if err != nil {
 		return 0, err
 	}
 
-	if err := k.setGauge(ctx, &gauge); err != nil {
+	groupGaugeID, err := k.CreateGauge(ctx, numEpochPaidOver == perpetualNumEpochsPaidOver, owner, coins, byGroupQueryCondition, ctx.BlockTime(), numEpochPaidOver, 0)
+	if err != nil {
 		return 0, err
 	}
 
 	newGroup := types.Group{
-		GroupGaugeId:      nextGaugeId,
+		GroupGaugeId:      groupGaugeID,
 		InternalGaugeInfo: initialInternalGaugeInfo,
 		// Note: only Volume splitting exists today.
 		// We allow for other splitting policies to be added in the future
@@ -290,11 +289,37 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 	}
 
 	k.SetGroup(ctx, newGroup)
-	k.SetLastGaugeID(ctx, gauge.Id)
 
-	k.hooks.AfterCreateGauge(ctx, gauge.Id)
+	return groupGaugeID, nil
+}
 
-	return nextGaugeId, nil
+// chargeGroupCreationFeeIfNotWhitelisted charges fee as defined in the params if the sender is not whitelisted.
+// Does not charge fee if sender is the incentives module account or if sender is whitelisted.
+// Returns true if charged fee, false otherwise.
+// Returns error if:
+// - One if the addresses in params is invalid
+// - fails to send coins from sender to the community pool
+func (k Keeper) chargeGroupCreationFeeIfNotWhitelisted(ctx sdk.Context, sender sdk.AccAddress) (chargedFee bool, err error) {
+	params := k.GetParams(ctx)
+	incentivesModuleAddress := k.ak.GetModuleAddress(types.ModuleName)
+	for _, unrestrictedAddressStr := range params.UnrestrictedCreatorWhitelist {
+		unrestrictedAddress, err := sdk.AccAddressFromBech32(unrestrictedAddressStr)
+		if err != nil {
+			return false, err
+		}
+
+		// sender is either unrestrictedAddress or the module account
+		if unrestrictedAddress.Equals(sender) || sender.Equals(incentivesModuleAddress) {
+			return false, nil
+		}
+	}
+
+	// Charge fee
+	groupCreationFee := params.GroupCreationFee
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, sender, distrtypes.ModuleName, groupCreationFee); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // GetGaugeByID returns gauge from gauge ID.
