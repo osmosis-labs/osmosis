@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,10 +27,6 @@ func getSender(sender string) []sdk.AccAddress {
 var _ sdk.Msg = &MsgAddAuthenticator{}
 
 func (msg *MsgAddAuthenticator) ValidateBasic() error {
-	if len(msg.Data) != secp256k1.PubKeySize {
-		return fmt.Errorf("invalid secp256k1 pub key size")
-	}
-
 	return validateSender(msg.Sender)
 }
 
