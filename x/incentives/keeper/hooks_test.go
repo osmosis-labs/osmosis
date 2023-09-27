@@ -193,6 +193,8 @@ func (s *KeeperTestSuite) TestDistribute_Group() {
 // Test_Distribute_Group_CreateGroupsBetween
 // Test_Distribute_Group_SwapAndDistribute
 
+// for each pool ID, retrieves its internal gauge and asserts that the gauge has coins according to the
+// poolIDToExpectedDistributionMapOne.
 func (s *KeeperTestSuite) validateDistributionForGroup(groupPoolIDs []uint64, poolIDToExpectedDistributionMapOne map[uint64]sdk.Coins) {
 	s.Require().NotEmpty(poolIDToExpectedDistributionMapOne)
 
