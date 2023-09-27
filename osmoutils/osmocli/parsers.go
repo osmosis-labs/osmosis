@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/pflag"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
@@ -252,11 +253,11 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 		var err error
 		if typeStr == "types.Coin" {
 			v, err = ParseCoin(arg, fType.Name)
-		} else if typeStr == "types.Int" {
+		} else if typeStr == "math.Int" {
 			v, err = ParseSdkInt(arg, fType.Name)
 		} else if typeStr == "time.Time" {
 			v, err = ParseUnixTime(arg, fType.Name)
-		} else if typeStr == "types.Dec" {
+		} else if typeStr == "math.LegacyDec" {
 			v, err = ParseSdkDec(arg, fType.Name)
 		} else {
 			return fmt.Errorf("struct field type not recognized. Got type %v", fType)
@@ -333,18 +334,18 @@ func ParseCoins(arg string, fieldName string) (sdk.Coins, error) {
 }
 
 // TODO: This really shouldn't be getting used in the CLI, its misdesign on the CLI ux
-func ParseSdkInt(arg string, fieldName string) (sdk.Int, error) {
-	i, ok := sdk.NewIntFromString(arg)
+func ParseSdkInt(arg string, fieldName string) (osmomath.Int, error) {
+	i, ok := osmomath.NewIntFromString(arg)
 	if !ok {
-		return sdk.Int{}, fmt.Errorf("could not parse %s as sdk.Int for field %s", arg, fieldName)
+		return osmomath.Int{}, fmt.Errorf("could not parse %s as osmomath.Int for field %s", arg, fieldName)
 	}
 	return i, nil
 }
 
-func ParseSdkDec(arg, fieldName string) (sdk.Dec, error) {
-	i, err := sdk.NewDecFromStr(arg)
+func ParseSdkDec(arg, fieldName string) (osmomath.Dec, error) {
+	i, err := osmomath.NewDecFromStr(arg)
 	if err != nil {
-		return sdk.Dec{}, fmt.Errorf("could not parse %s as sdk.Dec for field %s: %w", arg, fieldName, err)
+		return osmomath.Dec{}, fmt.Errorf("could not parse %s as osmomath.Dec for field %s: %w", arg, fieldName, err)
 	}
 	return i, nil
 }

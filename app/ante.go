@@ -11,11 +11,11 @@ import (
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	osmoante "github.com/osmosis-labs/osmosis/v17/ante"
-	v9 "github.com/osmosis-labs/osmosis/v17/app/upgrades/v9"
+	osmoante "github.com/osmosis-labs/osmosis/v19/ante"
+	v9 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v9"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v17/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v19/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 )
 
 // Link to default ante handler used by cosmos sdk:

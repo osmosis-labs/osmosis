@@ -6,7 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	types "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	types "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 // event is the interface all event types should be implementing
@@ -34,9 +35,9 @@ type liquidityChangeEvent struct {
 	lowerTick      int64
 	upperTick      int64
 	joinTime       time.Time
-	liquidityDelta sdk.Dec
-	actualAmount0  sdk.Int
-	actualAmount1  sdk.Int
+	liquidityDelta osmomath.Dec
+	actualAmount0  osmomath.Int
+	actualAmount1  osmomath.Int
 }
 
 // emit emits an event for a liquidity change when creating or withdrawing a position based its field.

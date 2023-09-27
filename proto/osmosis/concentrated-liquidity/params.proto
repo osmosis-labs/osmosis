@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/types";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types";
 
 message Params {
   // authorized_tick_spacing is an array of uint64s that represents the tick
@@ -15,7 +15,8 @@ message Params {
   repeated uint64 authorized_tick_spacing = 1
       [ (gogoproto.moretags) = "yaml:\"authorized_tick_spacing\"" ];
   repeated string authorized_spread_factors = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"authorized_spread_factors\"",
     (gogoproto.nullable) = false
   ];
@@ -26,7 +27,8 @@ message Params {
   // This field can range from (0,1]. If set to 1, it indicates that all
   // incentives stay at cl pool.
   string balancer_shares_reward_discount = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"balancer_shares_reward_discount\"",
     (gogoproto.nullable) = false
   ];
@@ -54,4 +56,11 @@ message Params {
   bool is_permissionless_pool_creation_enabled = 6
       [ (gogoproto.moretags) =
             "yaml:\"is_permissionless_pool_creation_enabled\"" ];
+
+  // unrestricted_pool_creator_whitelist is a list of addresses that are
+  // allowed to bypass restrictions on permissionless supercharged pool
+  // creation, like pool_creation_enabled, restricted quote assets, no
+  // double creation of pools, etc.
+  repeated string unrestricted_pool_creator_whitelist = 7
+      [ (gogoproto.moretags) = "yaml:\"unrestricted_pool_creator_whitelist\"" ];
 }

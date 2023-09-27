@@ -6,9 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity"
-	clquery "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	clquery "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 )
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method
@@ -129,14 +130,14 @@ func (q Querier) LiquidityNetInDirection(ctx sdk.Context, req clquery.LiquidityN
 		return nil, status.Error(codes.InvalidArgument, "tokenIn is empty")
 	}
 
-	var startTick sdk.Int
+	var startTick osmomath.Int
 	if !req.UseCurTick {
-		startTick = sdk.NewInt(req.StartTick)
+		startTick = osmomath.NewInt(req.StartTick)
 	}
 
-	var boundTick sdk.Int
+	var boundTick osmomath.Int
 	if !req.UseNoBound {
-		boundTick = sdk.NewInt(req.BoundTick)
+		boundTick = osmomath.NewInt(req.BoundTick)
 	}
 
 	liquidityDepths, err := q.Keeper.GetTickLiquidityNetInDirection(
@@ -291,4 +292,29 @@ func (q Querier) GetTotalLiquidity(ctx sdk.Context, req clquery.GetTotalLiquidit
 	return &clquery.GetTotalLiquidityResponse{
 		TotalLiquidity: totalLiquidity,
 	}, nil
+}
+
+// NumNextInitializedTicks returns an array of LiquidityDepthWithRange, which contains the user defined number of next initialized ticks in the direction
+// of swapping in the given tokenInDenom.
+func (q Querier) NumNextInitializedTicks(ctx sdk.Context, req clquery.NumNextInitializedTicksRequest) (*clquery.NumNextInitializedTicksResponse, error) {
+	if req.TokenInDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "tokenIn is empty")
+	}
+
+	liquidityDepths, err := q.Keeper.GetNumNextInitializedTicks(
+		ctx,
+		req.PoolId,
+		req.NumNextInitializedTicks,
+		req.TokenInDenom,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	pool, err := q.Keeper.GetConcentratedPoolById(ctx, req.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clquery.NumNextInitializedTicksResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity(), CurrentTick: pool.GetCurrentTick()}, nil
 }

@@ -11,7 +11,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap";
 
 // PoolParams defined the parameters that will be managed by the pool
 // governance in the future. This params are not managed by the chain
@@ -21,7 +21,8 @@ message PoolParams {
   option (amino.name) = "osmosis/gamm/StableswapPoolParams";
 
   string swap_fee = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
   ];
@@ -29,7 +30,8 @@ message PoolParams {
   // pools can maintain a non-zero fee. No new pool can be created with non-zero
   // fee anymore
   string exit_fee = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"exit_fee\"",
     (gogoproto.nullable) = false
   ];

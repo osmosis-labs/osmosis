@@ -8,10 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v17/app"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	osmosisapp "github.com/osmosis-labs/osmosis/v19/app"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	protorevtypes "github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 )
 
 type KeeperTestSuite struct {
@@ -36,17 +38,32 @@ func (s *KeeperTestSuite) SetupTest(isCheckTx bool) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithCodec(encodingConfig.Marshaler)
 
+	// We set the base denom here in order for highest liquidity routes to get generated.
+	// This is used in the tx fees epoch hook to swap the non OSMO to other tokens.
+	baseDenom, err := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
+	s.Require().NoError(err)
+
+	// Configure protorev base denoms
+	baseDenomPriorities := []protorevtypes.BaseDenom{
+		{
+			Denom:    baseDenom,
+			StepSize: osmomath.NewInt(1_000_000),
+		},
+	}
+	err = s.App.ProtoRevKeeper.SetBaseDenoms(s.Ctx, baseDenomPriorities)
+	s.Require().NoError(err)
+
 	// Mint some assets to the accounts.
 	for _, acc := range s.TestAccs {
 		s.FundAcc(acc,
 			sdk.NewCoins(
-				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000000)),
-				sdk.NewCoin("uosmo", sdk.NewInt(100000000000000000)), // Needed for pool creation fee
-				sdk.NewCoin("uion", sdk.NewInt(10000000)),
-				sdk.NewCoin("atom", sdk.NewInt(10000000)),
-				sdk.NewCoin("ust", sdk.NewInt(10000000)),
-				sdk.NewCoin("foo", sdk.NewInt(10000000)),
-				sdk.NewCoin("bar", sdk.NewInt(10000000)),
+				sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000000)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(100000000000000000)), // Needed for pool creation fee
+				sdk.NewCoin("uion", osmomath.NewInt(10000000)),
+				sdk.NewCoin("atom", osmomath.NewInt(10000000)),
+				sdk.NewCoin("ust", osmomath.NewInt(10000000)),
+				sdk.NewCoin("foo", osmomath.NewInt(10000000)),
+				sdk.NewCoin("bar", osmomath.NewInt(10000000)),
 			))
 	}
 }

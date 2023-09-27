@@ -42,10 +42,126 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Features
+
+* [#6468](https://github.com/osmosis-labs/osmosis/pull/6468) feat: remove osmo multihop discount
+* [#6420](https://github.com/osmosis-labs/osmosis/pull/6420) feat[CL]: Creates a governance set whitelist of addresses that can bypass the normal pool creation restrictions on concentrated liquidity pools
+
+### State Breaking
+
+* [#6344](https://github.com/osmosis-labs/osmosis/pull/6344) fix: set name, display and symbol of denom metadata in tokenfactory's CreateDenom
+* [#6279](https://github.com/osmosis-labs/osmosis/pull/6279) fix prop-597 introduced issue
+* [#6282](https://github.com/osmosis-labs/osmosis/pull/6282) Fix CreateCanonicalConcentratedLiquidityPoolAndMigrationLink overriding migration records
+* [#6309](https://github.com/osmosis-labs/osmosis/pull/6309) Add  Cosmwasm Pool Queries to Stargate Query
+* [#6493](https://github.com/osmosis-labs/osmosis/pull/6493) Add PoolManager Params query to Stargate Whitelist
+* [#6421](https://github.com/osmosis-labs/osmosis/pull/6421) Moves ValidatePermissionlessPoolCreationEnabled out of poolmanager module
+* [#5967](https://github.com/osmosis-labs/osmosis/pull/5967) fix ValSet undelegate API out of sync with existing staking
+
+
+## v19.2.0
+
+### Misc Improvements
+
+* [#6476](https://github.com/osmosis-labs/osmosis/pull/6476) band-aid state export fix for cwpool gauges
+* [#6492](https://github.com/osmosis-labs/osmosis/pull/6492) bump IAVL version to v0.19.7
+
+
+### Features
+
+* [#6427](https://github.com/osmosis-labs/osmosis/pull/6427) sdk.Coins Mul and Quo helpers in osmoutils
+* [#6437](https://github.com/osmosis-labs/osmosis/pull/6437) mutative version for QuoRoundUp
+* [#6261](https://github.com/osmosis-labs/osmosis/pull/6261) mutative and efficient BigDec truncations with arbitrary decimals
+* [#6416](https://github.com/osmosis-labs/osmosis/pull/6416) feat[CL]: add num initialized ticks query
+* [#6488](https://github.com/osmosis-labs/osmosis/pull/6488) v2 SpotPrice CLI and GRPC query with 36 decimals in poolmanager
+
+### API Breaks
+
+* [#6487](https://github.com/osmosis-labs/osmosis/pull/6487) make PoolModuleI CalculateSpotPrice API return BigDec
+* [#6511](https://github.com/osmosis-labs/osmosis/pull/6511) remove redundant param from CreateGaugeRefKeys in incentives
+* [#6510](https://github.com/osmosis-labs/osmosis/pull/6510) remove redundant ctx param from DeleteAllKeysFromPrefix in osmoutils
+
+
+## v19.1.0
+
+### Features
+
+* [#6427](https://github.com/osmosis-labs/osmosis/pull/6427) sdk.Coins Mul and Quo helpers in osmoutils
+* [#6428](https://github.com/osmosis-labs/osmosis/pull/6428) osmomath: QuoTruncateMut
+* [#6437](https://github.com/osmosis-labs/osmosis/pull/6437) mutative version for QuoRoundUp
+* [#6261](https://github.com/osmosis-labs/osmosis/pull/6261) mutative and efficient BigDec truncations with arbitrary decimals
+* [#6416](https://github.com/osmosis-labs/osmosis/pull/6416) feat[CL]: add num initialized ticks query
+
+### Misc Improvements
+
+* [#6392](https://github.com/osmosis-labs/osmosis/pull/6392) Speedup fractional exponentiation
+
+### Bug Fixes
+
+* [#6334](https://github.com/osmosis-labs/osmosis/pull/6334) fix: enable taker fee cli
+* [#6352](https://github.com/osmosis-labs/osmosis/pull/6352) Reduce error blow-up in CalcAmount0Delta by changing the order of math operations.
+* [#6368](https://github.com/osmosis-labs/osmosis/pull/6368) Stricter rounding behavior in CL math's CalcAmount0Delta and GetNextSqrtPriceFromAmount0InRoundingUp
+* [#6409](https://github.com/osmosis-labs/osmosis/pull/6409) CL math: Convert Int to BigDec
+
+### API Breaks
+
+* [#6256](https://github.com/osmosis-labs/osmosis/pull/6256) Refactor CalcPriceToTick to operate on BigDec price to support new price range.
+* [#6317](https://github.com/osmosis-labs/osmosis/pull/6317) Remove price return from CL `math.TickToSqrtPrice`
+* [#6368](https://github.com/osmosis-labs/osmosis/pull/6368) Convert priceLimit API in CL swaps to BigDec 
+* [#6371](https://github.com/osmosis-labs/osmosis/pull/6371) Change PoolI.SpotPrice API from Dec (18 decimals) to BigDec (36 decimals), maintain state-compatibility. 
+* [#6388](https://github.com/osmosis-labs/osmosis/pull/6388) Make cosmwasmpool's create pool cli generic
+* [#6238] switch osmomath to sdkmath types and rename BigDec constructors to contain "Big" in the name.
+
+Note: with the update, the Dec and Int do not get initialized to zero values by default in proto marhaling/unmarshaling. Instead, they get set to nil values.
+maxDecBitLen has changed by one bit so overflow panic can be triggerred sooner.
+
+## v19.0.0
+
+### Features
+
+* [#6034](https://github.com/osmosis-labs/osmosis/pull/6034) Taker fee
+
+### Bug Fixes
+* [#6190](https://github.com/osmosis-labs/osmosis/pull/6190) v19 upgrade handler superfluid fix
+* [#6195](https://github.com/osmosis-labs/osmosis/pull/6195) (x/tokenfactory) Fix events for `mintTo` and `burnFrom`
+* [#6195](https://github.com/osmosis-labs/osmosis/pull/6195) Fix panic edge case in superfluid AfterEpochEnd hook by surrounding CL multipler update with ApplyFuncIfNoError
+
+### Misc Improvements
+
+### Minor improvements & Bug Fixes
+
+### Security
+
+## v18.0.0
+
+### Misc Improvements
+
+* [#6161](https://github.com/osmosis-labs/osmosis/pull/6161) Reduce CPU time of epochs
+
+### Bug Fixes
+
+* [#6162](https://github.com/osmosis-labs/osmosis/pull/6162) allow zero qualifying balancer shares in CL incentives
+
+### Features
+
+* [#6034](https://github.com/osmosis-labs/osmosis/pull/6034) feat(spike): taker fee
+## v18.0.0
+
+Fixes mainnet bugs w/ incorrect accumulation sumtrees, and CL handling for a balancer pool with 0 bonded shares.
+
+### Improvements
+
+* [#6144](https://github.com/osmosis-labs/osmosis/pull/6144) perf: Speedup compute time of Epoch
+* [#6144](https://github.com/osmosis-labs/osmosis/pull/6144) misc: Move many Superfluid info logs to debug logs
+
 ### API breaks
 
+* [#6238](https://github.com/osmosis-labs/osmosis/pull/6238) switch osmomath to sdkmath types and rename BigDec constructors to contain "Big" in the name.
+   * Note: with the update, the Dec and Int do not get initialized to zero values
+   by default in proto marhaling/unmarshaling. Instead, they get set to nil values.
+   * maxDecBitLen has changed by one bit so overflow panic can be triggerred sooner.
 * [#6071](https://github.com/osmosis-labs/osmosis/pull/6071) reduce number of returns for UpdatePosition and TicksToSqrtPrice functions
 * [#5906](https://github.com/osmosis-labs/osmosis/pull/5906) Add `AccountLockedCoins` query in lockup module to stargate whitelist.
+* [#6053](https://github.com/osmosis-labs/osmosis/pull/6053) monotonic sqrt with 36 decimals
 
 ## v17.0.0
 
@@ -55,6 +171,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5983](https://github.com/osmosis-labs/osmosis/pull/5983) refactor(CL): 6 return values in CL CreatePosition with a struct
 * [#6004](https://github.com/osmosis-labs/osmosis/pull/6004) reduce number of returns for creating full range position
 * [#6018](https://github.com/osmosis-labs/osmosis/pull/6018) golangci: add unused parameters linter
+* [#6033](https://github.com/osmosis-labs/osmosis/pull/6033) change tick API from osmomath.Dec to osmomath.BigDec
 
 ### Features
 
@@ -96,12 +213,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#5890](https://github.com/osmosis-labs/osmosis/pull/5890) feat: CreateCLPool & LinkCFMMtoCL pool into one gov-prop
 * [#5959](https://github.com/osmosis-labs/osmosis/pull/5959) allow testing with different chain-id's in E2E testing
 * [#5964](https://github.com/osmosis-labs/osmosis/pull/5964) fix e2e test concurrency bugs
-* [#5967](https://github.com/osmosis-labs/osmosis/pull/5967) fix ValSet undelegate API out of sync with existing staking
+* [#5948](https://github.com/osmosis-labs/osmosis/pull/5948) Parameterizing Pool Type Information in Protorev
 * [#6001](https://github.com/osmosis-labs/osmosis/pull/6001) feat: improve set-env CLI cmd
-* [#5948] (https://github.com/osmosis-labs/osmosis/pull/5948) Parameterizing Pool Type Information in Protorev
+* [#6005](https://github.com/osmosis-labs/osmosis/pull/6005) osmocli: parse Use field's arguments dynamically
 * [#5953] (https://github.com/osmosis-labs/osmosis/pull/5953) Supporting two pool routes in ProtoRev
 * [#6012](https://github.com/osmosis-labs/osmosis/pull/6012) chore: add autocomplete to makefile
-* [#5967](https://github.com/osmosis-labs/osmosis/pull/5967) fix ValSet undelegate API out of sync with existing staking
+* [#6085](https://github.com/osmosis-labs/osmosis/pull/6085) (v18: feat) Volume-Split, setup gauges to split evenly
 
 ### Minor improvements & Bug Fixes
 
@@ -695,8 +812,8 @@ Every node should upgrade their software version to v8.0.0 before the upgrade bl
 
 ### SDK fork updates
 
-* [sdk-#136](https://github.com/osmosis-labs/iavl/pull/136) add after validator slash hook
-* [sdk-#137](https://github.com/osmosis-labs/iavl/pull/137) backport feat: Modify grpc gateway to be concurrent
+* [sdk-#136](https://github.com/osmosis-labs/cosmos-sdk/pull/136) add after validator slash hook
+* [sdk-#137](https://github.com/osmosis-labs/cosmos-sdk/pull/137) backport feat: Modify grpc gateway to be concurrent
 * [sdk-#146](https://github.com/osmosis-labs/cosmos-sdk/pull/146) extra logs during commit
 * [sdk-#151](https://github.com/osmosis-labs/cosmos-sdk/pull/151) fix logs related to store keys and commit hash
 * [sdk-#140](https://github.com/osmosis-labs/cosmos-sdk/pull/140) refactor: snapshot and pruning functionality
@@ -894,7 +1011,7 @@ The Osmosis Boron release is made!
 Notable features include:
 
 * Upgrading from SDK v0.42 to [SDK v0.44](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/RELEASE_NOTES.md), bringing efficiency improvements, integrations and Rosetta support.
-* Bringing in the new modules [Bech32IBC](https://github.com/osmosis-labs/bech32-ibc/), [Authz](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec), [TxFees](https://github.com/osmosis-labs/osmosis/tree/main/x/txfees)
+* Bringing in the new modules [Bech32IBC](https://github.com/osmosis-labs/bech32-ibc/), [Authz](https://github.com/cosmos/cosmos-sdk/tree/main/x/authz), [TxFees](https://github.com/osmosis-labs/osmosis/tree/main/x/txfees)
 * Upgrading to IBC v2, allowing for improved Ethereum Bridge and CosmWasm support
 * Implementing Osmosis chain governance's [Proposal 32](https://www.mintscan.io/osmosis/proposals/32)
 * Large suite of gas bugs fixed. (Including several that we have not seen on chain)
@@ -949,14 +1066,14 @@ Upgrade instructions for node operators can be found [here](https://github.com/o
 * Added changelog and info about changelog format.
 * Fix accumulation store only counting bonded tokens, not unbonding tokens, that prevented the front-end from using more correct APY estimates. (Previously, the front-end could only underestimate rewards)
 
-## [v3.2.0](https://github.com/osmosis/osmosis-labs/releases/tag/v2.0.0) - 2021-06-28
+## [v3.1.0](https://github.com/osmosis-labs/osmosis/releases/tag/v3.1.0) - 2021-06-28
 
 * Update the cosmos-sdk version we modify to v0.42.9
 * Fix a bug in the min commission rate code that allows validators to be created with commission rates less than the minimum.
 * Automatically upgrade any validator with less than the minimum comission rate to the minimum at upgrade time.
 * Unbrick on-chain governance, by fixing the deposit parameter to use `uosmo` instead of `osmo`.
 
-## [v1.0.2](https://github.com/osmosis/osmosis-labs/releases/tag/v1.0.2) - 2021-06-18
+## [v1.0.2](https://github.com/osmosis-labs/osmosis/releases/tag/v1.0.2) - 2021-06-18
 
 This release improves the CLI UX of creating and querying gauges.
 
@@ -964,6 +1081,6 @@ This release improves the CLI UX of creating and querying gauges.
 
 This release fixes a bug in `osmosisd version` always displaying 0.0.1.
 
-## [v1.0.0](https://github.com/osmosis/osmosis-labs/releases/tag/v1.0.0) - 2021-06-16
+## [v1.0.0](https://github.com/osmosis-labs/osmosis/releases/tag/v1.0.0-rc0) - 2021-06-16
 
 Initial Release!

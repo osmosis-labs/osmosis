@@ -14,8 +14,8 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
 )
 
@@ -73,7 +73,7 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 	suite.SetupTest()
 
 	pairs := pairs{pair{[]byte("hello"), 100}}
-	suite.tree.Set([]byte("hello"), sdk.NewIntFromUint64(100))
+	suite.tree.Set([]byte("hello"), osmomath.NewIntFromUint64(100))
 
 	seed := rand.Int63()
 	fmt.Printf("running seed %d: \n", seed)
@@ -97,7 +97,7 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 			pairs = append(pairs, pair{key, value})
 		}
 
-		suite.tree.Set(key, sdk.NewIntFromUint64(value))
+		suite.tree.Set(key, osmomath.NewIntFromUint64(value))
 
 		// check all is right
 		for _, pair := range pairs {

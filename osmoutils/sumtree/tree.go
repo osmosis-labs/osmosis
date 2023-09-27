@@ -9,9 +9,10 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+
 	store "github.com/cosmos/cosmos-sdk/store"
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Tree is an augmented B+ tree implementation.
@@ -28,7 +29,7 @@ type Tree struct {
 func NewTree(store store.KVStore, m uint8) Tree {
 	tree := Tree{store, m}
 	if tree.IsEmpty() {
-		tree.Set(nil, sdk.ZeroInt())
+		tree.Set(nil, osmomath.ZeroInt())
 	}
 	return tree
 }
@@ -37,7 +38,7 @@ func (t Tree) IsEmpty() bool {
 	return !t.store.Has(t.leafKey(nil))
 }
 
-func (t Tree) Set(key []byte, acc sdk.Int) {
+func (t Tree) Set(key []byte, acc osmomath.Int) {
 	ptr := t.ptrGet(0, key)
 	leaf := NewLeaf(key, acc)
 	ptr.setLeaf(leaf)
@@ -55,12 +56,12 @@ func (t Tree) Remove(key []byte) {
 	parent.pull(key)
 }
 
-func (t Tree) Increase(key []byte, amt sdk.Int) {
+func (t Tree) Increase(key []byte, amt osmomath.Int) {
 	value := t.Get(key)
 	t.Set(key, value.Add(amt))
 }
 
-func (t Tree) Decrease(key []byte, amt sdk.Int) {
+func (t Tree) Decrease(key []byte, amt osmomath.Int) {
 	t.Increase(key, amt.Neg())
 }
 
@@ -135,12 +136,12 @@ func (t Tree) root() *ptr {
 	}
 }
 
-// Get returns the (sdk.Int) accumulation value at a given leaf.
-func (t Tree) Get(key []byte) sdk.Int {
+// Get returns the (osmomath.Int) accumulation value at a given leaf.
+func (t Tree) Get(key []byte) osmomath.Int {
 	res := new(Leaf)
 	keybz := t.leafKey(key)
 	if !t.store.Has(keybz) {
-		return sdk.ZeroInt()
+		return osmomath.ZeroInt()
 	}
 	bz := t.store.Get(keybz)
 	err := proto.Unmarshal(bz, res)
@@ -208,8 +209,8 @@ func (t Tree) ReverseIterator(begin, end []byte) store.Iterator {
 // exact: leaf with key = provided key
 // right: all leaves under nodePointer with key > provided key
 // Note that the equalities here are _exclusive_.
-func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Int, exact sdk.Int, right sdk.Int) {
-	left, exact, right = sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt()
+func (ptr *ptr) accumulationSplit(key []byte) (left osmomath.Int, exact osmomath.Int, right osmomath.Int) {
+	left, exact, right = osmomath.ZeroInt(), osmomath.ZeroInt(), osmomath.ZeroInt()
 	if ptr.isLeaf() {
 		var leaf Leaf
 		bz := ptr.tree.store.Get(ptr.tree.leafKey(ptr.key))
@@ -243,12 +244,12 @@ func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Int, exact sdk.Int, righ
 }
 
 // TotalAccumulatedValue returns the sum of the weights for all leaves.
-func (t Tree) TotalAccumulatedValue() sdk.Int {
+func (t Tree) TotalAccumulatedValue() osmomath.Int {
 	return t.SubsetAccumulation(nil, nil)
 }
 
 // Prefix sum returns the total weight of all leaves with keys <= to the provided key.
-func (t Tree) PrefixSum(key []byte) sdk.Int {
+func (t Tree) PrefixSum(key []byte) osmomath.Int {
 	return t.SubsetAccumulation(nil, key)
 }
 
@@ -256,7 +257,7 @@ func (t Tree) PrefixSum(key []byte) sdk.Int {
 // between start and end (inclusive of both ends)
 // if start is nil, it is the beginning of the tree.
 // if end is nil, it is the end of the tree.
-func (t Tree) SubsetAccumulation(start []byte, end []byte) sdk.Int {
+func (t Tree) SubsetAccumulation(start []byte, end []byte) osmomath.Int {
 	if start == nil {
 		left, exact, _ := t.root().accumulationSplit(end)
 		return left.Add(exact)
@@ -270,11 +271,11 @@ func (t Tree) SubsetAccumulation(start []byte, end []byte) sdk.Int {
 	return leftexact.Add(leftrest).Sub(rightest)
 }
 
-func (t Tree) SplitAcc(key []byte) (sdk.Int, sdk.Int, sdk.Int) {
+func (t Tree) SplitAcc(key []byte) (osmomath.Int, osmomath.Int, osmomath.Int) {
 	return t.root().accumulationSplit(key)
 }
 
-func (ptr *ptr) visualize(depth int, acc sdk.Int) {
+func (ptr *ptr) visualize(depth int, acc osmomath.Int) {
 	if !ptr.exists() {
 		return
 	}
@@ -291,5 +292,5 @@ func (ptr *ptr) visualize(depth int, acc sdk.Int) {
 
 // DebugVisualize prints the entire tree to stdout.
 func (t Tree) DebugVisualize() {
-	t.root().visualize(0, sdk.Int{})
+	t.root().visualize(0, osmomath.Int{})
 }

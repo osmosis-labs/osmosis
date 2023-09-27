@@ -1,10 +1,8 @@
 package accum
 
-import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
+import "github.com/osmosis-labs/osmosis/osmomath"
 
-var one = sdk.OneDec()
+var one = osmomath.OneDec()
 
 // validate returns nil if Options are valid.
 // Error otherwise. Note, that, currently,

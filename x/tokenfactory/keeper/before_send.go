@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v19/x/tokenfactory/types"
 
 	errorsmod "cosmossdk.io/errors"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -91,7 +91,7 @@ func (h Hooks) BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount 
 func (k Keeper) callBeforeSendListener(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = types.ErrTrackBeforeSendOutOfGas
+			err = errorsmod.Wrapf(types.ErrTrackBeforeSendOutOfGas, "%v", r)
 		}
 	}()
 

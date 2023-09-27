@@ -7,10 +7,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v17/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
 type KeeperTestSuite struct {
@@ -20,8 +21,8 @@ type KeeperTestSuite struct {
 }
 
 var (
-	defaultSpreadFactor = sdk.MustNewDecFromStr("0.025")
-	defaultZeroExitFee  = sdk.ZeroDec()
+	defaultSpreadFactor = osmomath.MustNewDecFromStr("0.025")
+	defaultZeroExitFee  = osmomath.ZeroDec()
 )
 
 func TestKeeperTestSuite(t *testing.T) {

@@ -1,9 +1,10 @@
 use std::path::PathBuf;
 
 use cosmwasm_std::Coin;
+use crosschain_registry::msg::InstantiateMsg as RegistryInstantiate;
 use crosschain_swaps::msg::InstantiateMsg as CrosschainInstantiate;
-use osmosis_testing::{Account, OsmosisTestApp, SigningAccount};
-use osmosis_testing::{Gamm, Module, Wasm};
+use osmosis_test_tube::{Account, OsmosisTestApp, SigningAccount};
+use osmosis_test_tube::{Gamm, Module, Wasm};
 use serde::Serialize;
 use swaprouter::msg::InstantiateMsg as SwapRouterInstantiate;
 
@@ -64,6 +65,16 @@ impl TestEnv {
             },
         );
 
+        // Deploy the registry
+        let (_, registry_address) = deploy_contract(
+            &wasm,
+            &owner,
+            get_registry_wasm(),
+            &RegistryInstantiate {
+                owner: owner.address(),
+            },
+        );
+
         println!("Deploying the crosschain swaps contract");
         let (_, crosschain_address) = deploy_contract(
             &wasm,
@@ -72,6 +83,7 @@ impl TestEnv {
             &CrosschainInstantiate {
                 swap_contract: swaprouter_address.clone(),
                 governor: owner.address(),
+                registry_contract: registry_address,
             },
         );
 
@@ -133,5 +145,18 @@ fn get_crosschain_swaps_wasm() -> Vec<u8> {
         .join("bytecode")
         .join("crosschain_swaps.wasm");
     println!("reading crosschain swaps wasm: {wasm_path:?}");
+    std::fs::read(wasm_path).unwrap()
+}
+
+fn get_registry_wasm() -> Vec<u8> {
+    let wasm_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("..")
+        .join("..")
+        .join("tests")
+        .join("ibc-hooks")
+        .join("bytecode")
+        .join("crosschain_registry.wasm");
+    println!("reading crosschain registry wasm: {wasm_path:?}");
     std::fs::read(wasm_path).unwrap()
 }

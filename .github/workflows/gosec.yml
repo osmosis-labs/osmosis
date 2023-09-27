@@ -1,11 +1,13 @@
 name: Run Gosec
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  # TODO: potentially revisit in the future
+  # push:
+  #   branches:
+  #     - master
+  # pull_request:
+  #   branches:
+  #     - master
+  workflow_dispatch:
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -13,7 +15,7 @@ jobs:
       GO111MODULE: on
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Run Gosec Security Scanner
         uses: informalsystems/gosec@master
         with:

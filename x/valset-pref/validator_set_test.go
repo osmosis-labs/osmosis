@@ -5,10 +5,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	valPref "github.com/osmosis-labs/osmosis/v17/x/valset-pref"
-	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
+	valPref "github.com/osmosis-labs/osmosis/v19/x/valset-pref"
+	"github.com/osmosis-labs/osmosis/v19/x/valset-pref/types"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 func (s *KeeperTestSuite) TestValidateLockForForceUnlock() {
@@ -75,33 +77,33 @@ func (s *KeeperTestSuite) TestIsValidatorSetEqual() {
 	valSetOne := []types.ValidatorPreference{
 		{
 			ValOperAddress: valAddrs[0],
-			Weight:         sdk.NewDecWithPrec(5, 1),
+			Weight:         osmomath.NewDecWithPrec(5, 1),
 		},
 		{
 			ValOperAddress: valAddrs[1],
-			Weight:         sdk.NewDecWithPrec(5, 1),
+			Weight:         osmomath.NewDecWithPrec(5, 1),
 		},
 	}
 
 	valSetTwo := []types.ValidatorPreference{
 		{
 			ValOperAddress: valAddrs[0],
-			Weight:         sdk.NewDecWithPrec(5, 1),
+			Weight:         osmomath.NewDecWithPrec(5, 1),
 		},
 		{
 			ValOperAddress: valAddrs[2],
-			Weight:         sdk.NewDecWithPrec(5, 1),
+			Weight:         osmomath.NewDecWithPrec(5, 1),
 		},
 	}
 
 	valSetThree := []types.ValidatorPreference{
 		{
 			ValOperAddress: valAddrs[0],
-			Weight:         sdk.NewDecWithPrec(2, 1),
+			Weight:         osmomath.NewDecWithPrec(2, 1),
 		},
 		{
 			ValOperAddress: valAddrs[1],
-			Weight:         sdk.NewDecWithPrec(8, 1),
+			Weight:         osmomath.NewDecWithPrec(8, 1),
 		},
 	}
 
@@ -151,7 +153,7 @@ func (s *KeeperTestSuite) TestIsPreferenceValid() {
 	tests := []struct {
 		name             string
 		valSetPreference []types.ValidatorPreference
-		expectedWeights  []sdk.Dec
+		expectedWeights  []osmomath.Dec
 		expectPass       bool
 	}{
 		{
@@ -159,22 +161,22 @@ func (s *KeeperTestSuite) TestIsPreferenceValid() {
 			valSetPreference: []types.ValidatorPreference{
 				{
 					ValOperAddress: valAddrs[0],
-					Weight:         sdk.MustNewDecFromStr("0.3315"), // rounds to = 0.33
+					Weight:         osmomath.MustNewDecFromStr("0.3315"), // rounds to = 0.33
 				},
 				{
 					ValOperAddress: valAddrs[1],
-					Weight:         sdk.MustNewDecFromStr("0.000"), // rounds to = 0
+					Weight:         osmomath.MustNewDecFromStr("0.000"), // rounds to = 0
 				},
 				{
 					ValOperAddress: valAddrs[2],
-					Weight:         sdk.MustNewDecFromStr("0.536"), // rounds to = 0.54
+					Weight:         osmomath.MustNewDecFromStr("0.536"), // rounds to = 0.54
 				},
 				{
 					ValOperAddress: valAddrs[3],
-					Weight:         sdk.MustNewDecFromStr("0.119"), // rounds to = 0.12
+					Weight:         osmomath.MustNewDecFromStr("0.119"), // rounds to = 0.12
 				},
 			},
-			expectedWeights: []sdk.Dec{sdk.NewDecWithPrec(33, 2), sdk.ZeroDec(), sdk.NewDecWithPrec(54, 2), sdk.NewDecWithPrec(12, 2)},
+			expectedWeights: []osmomath.Dec{osmomath.NewDecWithPrec(33, 2), osmomath.ZeroDec(), osmomath.NewDecWithPrec(54, 2), osmomath.NewDecWithPrec(12, 2)},
 			expectPass:      true,
 		},
 		{
@@ -182,11 +184,11 @@ func (s *KeeperTestSuite) TestIsPreferenceValid() {
 			valSetPreference: []types.ValidatorPreference{
 				{
 					ValOperAddress: "addr1---------------",
-					Weight:         sdk.MustNewDecFromStr("0.3415"),
+					Weight:         osmomath.MustNewDecFromStr("0.3415"),
 				},
 				{
 					ValOperAddress: valAddrs[0],
-					Weight:         sdk.MustNewDecFromStr("0.000"),
+					Weight:         osmomath.MustNewDecFromStr("0.000"),
 				},
 			},
 			expectPass: false,

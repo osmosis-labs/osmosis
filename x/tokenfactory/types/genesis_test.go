@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v19/x/tokenfactory/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

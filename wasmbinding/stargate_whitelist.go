@@ -14,25 +14,28 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 
-	gammv2types "github.com/osmosis-labs/osmosis/v17/x/gamm/v2types"
+	gammv2types "github.com/osmosis-labs/osmosis/v19/x/gamm/v2types"
 
-	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v17/x/concentrated-liquidity/client/queryproto"
-	downtimequerytypes "github.com/osmosis-labs/osmosis/v17/x/downtime-detector/client/queryproto"
-	gammtypes "github.com/osmosis-labs/osmosis/v17/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v17/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v17/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v17/x/pool-incentives/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v17/x/poolmanager/client/queryproto"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v17/x/tokenfactory/types"
-	twapquerytypes "github.com/osmosis-labs/osmosis/v17/x/twap/client/queryproto"
-	txfeestypes "github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/client/queryproto"
+	downtimequerytypes "github.com/osmosis-labs/osmosis/v19/x/downtime-detector/client/queryproto"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v19/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v19/x/tokenfactory/types"
+	twapquerytypes "github.com/osmosis-labs/osmosis/v19/x/twap/client/queryproto"
+	txfeestypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // stargateWhitelist keeps whitelist and its deterministic
 // response binding for stargate queries.
+// CONTRACT: since results of queries go into blocks, queries being added here should always be
+// deterministic or can cause non-determinism in the state machine.
 //
 // The query can be multi-thread, so we have to use
 // thread safe sync.Map.
@@ -78,6 +81,10 @@ func init() {
 	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Validator", &stakingtypes.QueryValidatorResponse{})
 
 	// osmosis queries
+	// cosmwasm pool
+	setWhitelistedQuery("/osmosis.cosmwasmpool.v1beta1.Query/Pools", &cosmwasmpooltypes.PoolsResponse{})
+	setWhitelistedQuery("/osmosis.cosmwasmpool.v1beta1.Query/Params", &cosmwasmpooltypes.ParamsResponse{})
+	setWhitelistedQuery("/osmosis.cosmwasmpool.v1beta1.Query/ContractInfoByPoolId", &cosmwasmpooltypes.ContractInfoByPoolIdResponse{})
 
 	// epochs
 	setWhitelistedQuery("/osmosis.epochs.v1beta1.Query/EpochInfos", &epochtypes.QueryEpochsInfoResponse{})
@@ -136,6 +143,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/Pool", &poolmanagerqueryproto.PoolResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/SpotPrice", &poolmanagerqueryproto.SpotPriceResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/TotalPoolLiquidity", &poolmanagerqueryproto.TotalPoolLiquidityResponse{})
+	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/Params", &poolmanagerqueryproto.ParamsResponse{})
 
 	// txfees
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/FeeTokens", &txfeestypes.QueryFeeTokensResponse{})

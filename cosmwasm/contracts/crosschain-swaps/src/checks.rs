@@ -5,6 +5,12 @@ use registry::Registry;
 use crate::state::CONFIG;
 use crate::ContractError;
 
+pub fn get_registry(deps: Deps) -> Result<Registry, ContractError> {
+    let registry_addr = CONFIG.load(deps.storage)?.registry_contract.to_string();
+    deps.api.debug(&format!("get_registry {registry_addr:?}"));
+    Ok(Registry::new(deps, registry_addr)?)
+}
+
 pub fn check_is_contract_governor(deps: Deps, sender: Addr) -> Result<(), ContractError> {
     let config = CONFIG.load(deps.storage).unwrap();
     if config.governor != sender {
@@ -36,7 +42,7 @@ fn validate_explicit_receiver(deps: Deps, receiver: &str) -> Result<(String, Add
         return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
     };
 
-    let registry = Registry::default(deps);
+    let registry = get_registry(deps)?;
     let chain = registry.get_connected_chain("osmosis", &channel)?;
     // TODO: validate that the prefix of the receiver matches the chain
 
@@ -51,7 +57,7 @@ fn validate_bech32_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr)
         return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
     };
 
-    let registry = Registry::default(deps);
+    let registry = get_registry(deps)?;
     let chain = registry.get_chain_for_bech32_prefix(&prefix)?;
 
     Ok((chain, Addr::unchecked(receiver)))
@@ -63,7 +69,7 @@ fn validate_chain_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr),
     };
 
     // TODO: validate that the prefix of the receiver matches the chain
-    let _registry = Registry::default(deps);
+    let _registry = get_registry(deps)?;
 
     let Ok(_) = bech32::decode(addr) else {
         return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
@@ -134,6 +140,7 @@ mod tests {
         let config = Config {
             governor: Addr::unchecked("governor"),
             swap_contract: Addr::unchecked("governor"),
+            registry_contract: Addr::unchecked("registry"),
         };
         CONFIG.save(deps.as_mut().storage, &config).unwrap();
         let sender = Addr::unchecked("governor");

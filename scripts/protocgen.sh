@@ -24,7 +24,7 @@ cd ..
 # move proto files to the right places
 #
 # Note: Proto files are suffixed with the current binary version.
-cp -r github.com/osmosis-labs/osmosis/v17/* ./
+cp -r github.com/osmosis-labs/osmosis/v19/* ./
 cp -r github.com/osmosis-labs/osmosis/osmoutils ./
 rm -rf github.com
 

@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Get git diff
         uses: technote-space/get-diff-action@v6.1.2
         with:
@@ -35,8 +35,11 @@ jobs:
             Makefile
             Dockerfile
             .github/workflows/test.yml
+      - name: Set output
+        id: vars
+        run: echo "::set-output name=git_diff::$GIT_DIFF"
     outputs:
-      git_diff: ${{ env.GIT_DIFF }}
+      git_diff: ${{ steps.vars.outputs.git_diff }}
 
   go-split-test-files:
     needs: get_diff
@@ -44,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 🐿 Setup Golang
         uses: actions/setup-go@v4
         with:
@@ -80,7 +83,7 @@ jobs:
         part: ["00", "01", "02", "03"]
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: 🐿 Setup Golang
         uses: actions/setup-go@v4
         with:
@@ -101,7 +104,7 @@ jobs:
     needs: get_diff
     if: needs.get_diff.outputs.git_diff
     runs-on: self-hosted
-    timeout-minutes: 25
+    timeout-minutes: 20
     steps:
       - name: Clean up Pre-Existing E2E Docker containers
         run: |
@@ -110,20 +113,27 @@ jobs:
 
           # Remove containers with names starting with "hermes-relayer"
           docker ps -aqf "name=hermes-relayer*" | xargs -r docker rm -f
+
+          # Get a list of all networks
+          NETWORKS=$(docker network ls --filter "name=osmosis-testnet" --format "{{.ID}}")
+
+          # Remove all the disconnected networks
+          for NETWORK in $NETWORKS; do
+              echo "Pruning $NETWORK..."
+              docker network rm $NETWORK
+          done
+
+          echo "Done pruning osmosis-testnet networks."
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: 🐿 Setup Golang
-        uses: actions/setup-go@v4
-        with:
-          go-version: ${{env.GO_VERSION}}
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Build e2e image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           load: true
           context: .
@@ -160,3 +170,14 @@ jobs:
 
           # Remove containers with names starting with "hermes-relayer"
           docker ps -aqf "name=hermes-relayer*" | xargs -r docker rm -f
+
+          # Get a list of all networks
+          NETWORKS=$(docker network ls --filter "name=osmosis-testnet" --format "{{.ID}}")
+
+          # Remove all the disconnected networks
+          for NETWORK in $NETWORKS; do
+              echo "Pruning $NETWORK..."
+              docker network rm $NETWORK
+          done
+
+          echo "Done pruning osmosis-testnet networks."

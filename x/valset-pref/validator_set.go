@@ -11,14 +11,14 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appParams "github.com/osmosis-labs/osmosis/v17/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v17/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v17/x/valset-pref/types"
+	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v19/x/valset-pref/types"
 )
 
 type valSet struct {
 	ValAddr string
-	Amount  sdk.Dec
+	Amount  osmomath.Dec
 }
 
 type ValRatio struct {
@@ -93,8 +93,8 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 	}
 
 	// totalDelAmt is the amount that keeps running track of the amount of tokens delegated
-	totalDelAmt := sdk.NewInt(0)
-	tokenAmt := sdk.NewInt(0)
+	totalDelAmt := osmomath.NewInt(0)
+	tokenAmt := osmomath.NewInt(0)
 
 	// loop through the validatorSetPreference and delegate the proportion of the tokens based on weights
 	for i, val := range existingSet.Preferences {
@@ -106,7 +106,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 		// in the last valset iteration we dont calculate it from shares using decimals and trucation,
 		// we use whats remaining to get more accurate value
 		if len(existingSet.Preferences)-1 == i {
-			tokenAmt = coin.Amount.Sub(totalDelAmt).ToDec().TruncateInt()
+			tokenAmt = coin.Amount.Sub(totalDelAmt).ToLegacyDec().TruncateInt()
 		} else {
 			// tokenAmt takes the amount to delegate, calculated by {val_distribution_weight * tokenAmt}
 			tokenAmt = val.Weight.MulInt(coin.Amount).TruncateInt()
@@ -145,7 +145,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 		return err
 	}
 
-	if undelegation.Amount.ToDec().GT(totalDelegatedAmt) {
+	if undelegation.Amount.ToLegacyDec().GT(totalDelegatedAmt) {
 		return fmt.Errorf("Total tokenAmountToUndelegate more than delegated amount have %s got %s\n", totalDelegatedAmt, undelegation.Amount)
 	}
 
@@ -164,7 +164,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 			// in the last valset iteration we dont calculate it from shares using decimals and trucation,
 			// we use whats remaining to get more accurate value
 			if len(existingSet.Preferences)-1 == index {
-				amountToUnDelegate = undelegation.Amount.Sub(totalUnDelAmt).ToDec().TruncateInt()
+				amountToUnDelegate = undelegation.Amount.Sub(totalUnDelAmt).ToLegacyDec().TruncateInt()
 			} else {
 				// Calculate the amount to undelegate based on the existing weightxs
 				amountToUnDelegate = val.UndelegateAmt
@@ -195,7 +195,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	// Step 6
 	for len(valSetRatio) > 0 && valSetRatio[0].VRatio.GT(targetRatio) {
 		fmt.Printf("Undelegating fully from validator %s %s\n", valSetRatio[0].ValAddr.String(), valSetRatio[0].DelegatedAmt)
-		_, err = k.stakingKeeper.Undelegate(ctx, delegator, valSetRatio[0].ValAddr, valSetRatio[0].DelegatedAmt.ToDec()) // this has to be shares amount
+		_, err = k.stakingKeeper.Undelegate(ctx, delegator, valSetRatio[0].ValAddr, valSetRatio[0].DelegatedAmt.ToLegacyDec()) // this has to be shares amount
 		if err != nil {
 			return err
 		}
@@ -229,9 +229,9 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 }
 
 func (k Keeper) getValsetRatios(ctx sdk.Context, delegator sdk.AccAddress,
-	prefs []types.ValidatorPreference, undelegateAmt sdk.Int) ([]ValRatio, map[string]stakingtypes.Validator, sdk.Dec, error) {
+	prefs []types.ValidatorPreference, undelegateAmt osmomath.Int) ([]ValRatio, map[string]stakingtypes.Validator, osmomath.Dec, error) {
 	// total amount user has delegated
-	totalDelegatedAmt := sdk.ZeroDec()
+	totalDelegatedAmt := osmomath.ZeroDec()
 	var valSetRatio []ValRatio
 	validators := map[string]stakingtypes.Validator{}
 
@@ -285,7 +285,7 @@ func (k Keeper) getValsetRatios(ctx sdk.Context, delegator sdk.AccAddress,
 func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet []types.ValidatorPreference, newSet []types.ValidatorPreference) error {
 	var existingValSet []valSet
 	var newValSet []valSet
-	totalTokenAmount := sdk.NewDec(0)
+	totalTokenAmount := osmomath.NewDec(0)
 
 	// Rearranging the exisingValSet and newValSet to to add extra validator padding
 	for _, existingVals := range existingSet {
@@ -337,7 +337,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 						return err
 					}
 
-					transferAmount := sdk.MinDec(diffVal.Amount, targetDiffVal.Amount.Abs()).TruncateDec()
+					transferAmount := osmomath.MinDec(diffVal.Amount, targetDiffVal.Amount.Abs()).TruncateDec()
 					if transferAmount.IsZero() {
 						break
 					}
@@ -471,7 +471,7 @@ func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.Validator
 	var weightsRoundedValPrefList []types.ValidatorPreference
 	for _, val := range preferences {
 		// round up weights
-		valWeightStr := osmomath.SigFigRound(val.Weight, sdk.NewDec(10).Power(2).TruncateInt())
+		valWeightStr := osmomath.SigFigRound(val.Weight, osmomath.NewDec(10).Power(2).TruncateInt())
 
 		_, _, err := k.GetValidatorInfo(ctx, val.ValOperAddress)
 		if err != nil {
@@ -531,7 +531,7 @@ func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr string) (sdk.V
 // GetValSetStruct initializes valSet struct with valAddr, weight and amount.
 // It also creates an extra struct with zero amount, that can be appended to newValSet that will be created.
 // We do this to make sure the struct array length is the same to calculate their difference.
-func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares sdk.Dec) (valStruct valSet, valStructZeroAmt valSet) {
+func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares osmomath.Dec) (valStruct valSet, valStructZeroAmt valSet) {
 	val_struct := valSet{
 		ValAddr: validator.ValOperAddress,
 		Amount:  amountFromShares,
@@ -539,29 +539,29 @@ func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromS
 
 	val_struct_zero_amount := valSet{
 		ValAddr: validator.ValOperAddress,
-		Amount:  sdk.NewDec(0),
+		Amount:  osmomath.NewDec(0),
 	}
 
 	return val_struct, val_struct_zero_amount
 }
 
 // check if lock owner matches the delegator, contains only uosmo and is bonded for <= 2weeks
-func (k Keeper) validateLockForForceUnlock(ctx sdk.Context, lockID uint64, delegatorAddr string) (*lockuptypes.PeriodLock, sdk.Int, error) {
+func (k Keeper) validateLockForForceUnlock(ctx sdk.Context, lockID uint64, delegatorAddr string) (*lockuptypes.PeriodLock, osmomath.Int, error) {
 	// Checks if sender is lock ID owner
 	lock, err := k.lockupKeeper.GetLockByID(ctx, lockID)
 	if err != nil {
-		return nil, sdk.Int{}, err
+		return nil, osmomath.Int{}, err
 	}
 	if lock.GetOwner() != delegatorAddr {
-		return nil, sdk.Int{}, fmt.Errorf("delegator (%s) and lock owner (%s) does not match", delegatorAddr, lock.Owner)
+		return nil, osmomath.Int{}, fmt.Errorf("delegator (%s) and lock owner (%s) does not match", delegatorAddr, lock.Owner)
 	}
 
-	lockedOsmoAmount := sdk.NewInt(0)
+	lockedOsmoAmount := osmomath.NewInt(0)
 
 	// check that lock contains only 1 token
 	coin, err := lock.SingleCoin()
 	if err != nil {
-		return nil, sdk.Int{}, fmt.Errorf("lock fails to meet expected invariant, it contains multiple coins")
+		return nil, osmomath.Int{}, fmt.Errorf("lock fails to meet expected invariant, it contains multiple coins")
 	}
 
 	// check that the lock denom is uosmo
@@ -570,13 +570,13 @@ func (k Keeper) validateLockForForceUnlock(ctx sdk.Context, lockID uint64, deleg
 	}
 
 	// check if there is enough uosmo token in the lock
-	if lockedOsmoAmount.LTE(sdk.NewInt(0)) {
-		return nil, sdk.Int{}, fmt.Errorf("lock does not contain osmo denom, or there isn't enough osmo to unbond")
+	if lockedOsmoAmount.LTE(osmomath.NewInt(0)) {
+		return nil, osmomath.Int{}, fmt.Errorf("lock does not contain osmo denom, or there isn't enough osmo to unbond")
 	}
 
 	// Checks if lock ID is bonded and ensure that the duration is <= 2 weeks
 	if lock.IsUnlocking() || lock.Duration > time.Hour*24*7*2 {
-		return nil, sdk.Int{}, fmt.Errorf("the tokens have to bonded and the duration has to be <= 2weeks")
+		return nil, osmomath.Int{}, fmt.Errorf("the tokens have to bonded and the duration has to be <= 2weeks")
 	}
 
 	return lock, lockedOsmoAmount, nil

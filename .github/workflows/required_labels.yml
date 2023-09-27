@@ -4,21 +4,23 @@ on:
   pull_request:
     types: [opened, labeled, unlabeled, synchronize]
     branches:
-      - 'main'
+      - "main"
 
 jobs:
   state_compatability_labels:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v37.6.1
+        uses: tj-actions/changed-files@v39.2.0
         with:
           files_ignore: |
             **/*.md
             **/*_test.go
+            tests/**
+            **/*.py
             .github/workflows/*.yml
 
       - name: Check required labels

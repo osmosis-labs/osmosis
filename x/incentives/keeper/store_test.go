@@ -1,6 +1,12 @@
 package keeper_test
 
-import "github.com/stretchr/testify/suite"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+)
 
 var _ = suite.TestingSuite(nil)
 
@@ -32,4 +38,69 @@ func (s *KeeperTestSuite) TestGaugeReferencesManagement() {
 	// ensure key2 now only has 2 entires
 	gaugeRefs3 := s.App.IncentivesKeeper.GetGaugeRefs(s.Ctx, key2)
 	s.Require().Equal(len(gaugeRefs3), 2)
+}
+
+func (s *KeeperTestSuite) TestGetGroupByGaugeID() {
+	// TODO: Re-enable this once gauge creation refactor is complete in https://github.com/osmosis-labs/osmosis/issues/6404
+	s.T().Skip()
+
+	tests := map[string]struct {
+		groupGaugeId   uint64
+		expectedRecord types.Group
+	}{
+		"Valid record": {
+			groupGaugeId: uint64(5),
+			expectedRecord: types.Group{
+				GroupGaugeId: uint64(5),
+				InternalGaugeInfo: types.InternalGaugeInfo{
+					TotalWeight: osmomath.NewInt(150),
+					GaugeRecords: []types.InternalGaugeRecord{
+						{
+							GaugeId:          2,
+							CurrentWeight:    osmomath.NewInt(50),
+							CumulativeWeight: osmomath.NewInt(50),
+						},
+						{
+							GaugeId:          3,
+							CurrentWeight:    osmomath.NewInt(50),
+							CumulativeWeight: osmomath.NewInt(50),
+						},
+						{
+							GaugeId:          4,
+							CurrentWeight:    osmomath.NewInt(50),
+							CumulativeWeight: osmomath.NewInt(50),
+						},
+					},
+				},
+				SplittingPolicy: types.ByVolume,
+			},
+		},
+
+		"InValid record": {
+			groupGaugeId:   uint64(6),
+			expectedRecord: types.Group{},
+		},
+	}
+
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000)))) // 1,000 osmo
+			clPool := s.PrepareConcentratedPool()                                                      // gaugeid = 1
+
+			// create 3 internal Gauge
+			var internalGauges []uint64
+			for i := 0; i <= 2; i++ {
+				internalGauge := s.CreateNoLockExternalGauges(clPool.GetId(), sdk.NewCoins(), s.TestAccs[1], uint64(1)) // gauge id = 2,3,4
+				internalGauges = append(internalGauges, internalGauge)
+			}
+
+			_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))), 1, s.TestAccs[1], internalGauges) // gauge id = 5
+			s.Require().NoError(err)
+
+			record, err := s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, test.groupGaugeId)
+			s.Require().NoError(err)
+
+			s.Require().Equal(test.expectedRecord, record)
+		})
+	}
 }

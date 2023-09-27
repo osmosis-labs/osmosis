@@ -208,7 +208,7 @@ func (k Keeper) RouteExactAmountIn(
 	sender sdk.AccAddress,
 	routes []types.SwapAmountInRoute,
 	tokenIn sdk.Coin,
-	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
+	tokenOutMinAmount osmomath.Int) (tokenOutAmount osmomath.Int, err error) {
 }
 ```
 
@@ -246,9 +246,9 @@ type SwapI interface {
 		poolId gammtypes.PoolI,
 		tokenIn sdk.Coin,
 		tokenOutDenom string,
-		tokenOutMinAmount sdk.Int,
-		spreadFactor sdk.Dec,
-	) (sdk.Int, error)
+		tokenOutMinAmount osmomath.Int,
+		spreadFactor osmomath.Dec,
+	) (osmomath.Int, error)
 }
 ```
 
@@ -268,6 +268,12 @@ provides `tokenOut`. The calculation for the amount of tokens that the
 user should be putting in is done through the following formula:
 
 `tokenBalanceIn * [{tokenBalanceOut / (tokenBalanceOut - tokenAmountOut)} ^ (tokenWeightOut / tokenWeightIn) -1] / tokenAmountIn`
+
+With the introduction of a `takerFee`, the actual amount of `tokenIn` that is used to calculate the amount of `tokenOut` is reduced by the `takerFee` amount. If governance or a governance approved DAO adds a specified trading pair to the `takerFee` module store, the fee associated with that pair is used. Otherwise, the `defaultTakerFee` defined in the poolmanger's parameters is used.
+
+The poolmanager only concerns itself with proportionally distributing the takerFee to the respective staking rewards and community pool txfees module accounts. For swaps originating in OSMO, the poolmanger distributes these fees based on the `OsmoTakerFeeDistribution` parameter. For swaps originating in non-OSMO assets, the poolmanager distributes these fees based on the `NonOsmoTakerFeeDistribution` parameter. For taker fees generated in non whitelisted quote denoms assets, the amount that goes to the community pool (defined by the `NonOsmoTakerFeeDistribution` above) is swapped to the `community_pool_denom_to_swap_non_whitelisted_assets_to` parameter defined in poolmanager. For instance, if a taker fee is generated in BTC, the respective community pool percent is sent directly to the community pool since it is a whitelisted quote denom. If it is generated in FOO, which is not a whitelisted quote denom, the respective community pool percent is swapped to the `community_pool_denom_to_swap_non_whitelisted_assets_to` parameter defined in poolmanager and send to the community pool as that denom at epoch.
+
+For more information on how the final distribution of these fees and how they are swapped, see the txfees module README.
 
 Existing Swap types:
 - SwapExactAmountIn
@@ -291,6 +297,10 @@ Existing Swap types:
 
 [MsgSplitRouteSwapExactAmountOut](https://github.com/osmosis-labs/osmosis/blob/46e6a0c2051a3a5ef8cdd4ecebfff7305b13ab98/proto/osmosis/poolmanager/v1beta1/tx.proto#L85)
 
+## MsgSetDenomPairTakerFee
+
+[MsgSplitRouteSwapExactAmountOut](https://github.com/osmosis-labs/osmosis/blob/d129ea37f5490d8a212932a78cd35cb864c799c7/proto/osmosis/poolmanager/v1beta1/tx.proto#L121)
+
 ## Multi-Hop
 
 All tokens are swapped using a multi-hop mechanism. That is, all swaps
@@ -298,11 +308,6 @@ are routed via the most cost-efficient way, swapping in and out from
 multiple pools in the process.
 The most cost-efficient route is determined offline and the list of the pools is provided externally, by user, during the broadcasting of the swapping transaction.
 At the moment of execution, the provided route may not be the most cost-efficient one anymore.
-
-When a trade consists of just two OSMO-included routes during a single transaction,
-the spread factors on each hop would be automatically halved.
-Example: for converting `ATOM -> OSMO -> LUNA` using two pools with spread factors `0.3% + 0.2%`,
-instead `0.15% + 0.1%` spread factors will be applied.
 
 [Multi-Hop](https://github.com/osmosis-labs/osmosis/blob/f26ceb958adaaf31510e17ed88f5eab47e2bac03/x/poolmanager/router.go#L16)
 

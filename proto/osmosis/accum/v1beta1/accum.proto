@@ -15,7 +15,8 @@ message AccumulatorContent {
     (gogoproto.nullable) = false
   ];
   string total_shares = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }
@@ -28,7 +29,8 @@ message Record {
   // num_shares is the number of shares belonging to the position associated
   // with this record.
   string num_shares = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
   // accum_value_per_share is the subset of coins per shar of the global

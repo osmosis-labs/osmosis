@@ -11,20 +11,21 @@ import (
 
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/osmosis-labs/osmosis/v17/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/v17/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 )
 
 func (s *KeeperTestSuite) TestFeeDecorator() {
 	s.SetupTest(false)
 
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
-	mempoolFeeOpts.MinGasPriceForHighGasTx = sdk.MustNewDecFromStr("0.0025")
+	mempoolFeeOpts.MinGasPriceForHighGasTx = osmomath.MustNewDecFromStr("0.0025")
 	baseDenom, _ := s.App.TxFeesKeeper.GetBaseDenom(s.Ctx)
 	baseGas := uint64(10000)
 	consensusMinFeeAmt := int64(25)
 	point1BaseDenomMinGasPrices := sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
-		sdk.MustNewDecFromStr("0.1")))
+		osmomath.MustNewDecFromStr("0.1")))
 
 	// uion is setup with a relative price of 1:1
 	uion := "uion"
@@ -208,7 +209,7 @@ func (s *KeeperTestSuite) TestFeeDecorator() {
 				if !tc.txFee.IsZero() {
 					moduleName := types.FeeCollectorName
 					if tc.txFee[0].Denom != baseDenom {
-						moduleName = types.NonNativeFeeCollectorName
+						moduleName = types.FeeCollectorForStakingRewardsName
 					}
 					moduleAddr := s.App.AccountKeeper.GetModuleAddress(moduleName)
 					s.Require().Equal(tc.txFee[0], s.App.BankKeeper.GetBalance(s.Ctx, moduleAddr, tc.txFee[0].Denom), tc.name)

@@ -5,11 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v17/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO: move this into types and have it exported
 func stakingSyntheticDenom(denom, valAddr string) string {
 	return fmt.Sprintf("%s/superbonding/%s", denom, valAddr)
 }

@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v17/app/apptesting"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 
 	"github.com/stretchr/testify/require"
 
@@ -13,8 +14,8 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v17/app"
-	"github.com/osmosis-labs/osmosis/v17/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v19/app"
+	"github.com/osmosis-labs/osmosis/v19/wasmbinding/bindings"
 )
 
 func TestCreateDenomMsg(t *testing.T) {
@@ -66,7 +67,7 @@ func TestMintMsg(t *testing.T) {
 	require.NoError(t, err)
 	sunDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
-	amount, ok := sdk.NewIntFromString("808010808")
+	amount, ok := osmomath.NewIntFromString("808010808")
 	require.True(t, ok)
 	msg = bindings.OsmosisMsg{MintTokens: &bindings.MintTokens{
 		Denom:         sunDenom,
@@ -191,7 +192,7 @@ func TestBurnMsg(t *testing.T) {
 	require.NoError(t, err)
 	sunDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
-	amount, ok := sdk.NewIntFromString("808010808")
+	amount, ok := osmomath.NewIntFromString("808010808")
 	require.True(t, ok)
 
 	msg = bindings.OsmosisMsg{MintTokens: &bindings.MintTokens{

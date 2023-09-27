@@ -17,9 +17,8 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v17/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -30,9 +29,9 @@ func NewTxCmd() *cobra.Command {
 
 func NewCreateCWPoolCmd() (*osmocli.TxCliDesc, *model.MsgCreateCosmWasmPool) {
 	return &osmocli.TxCliDesc{
-		Use:              "create-pool [code-id] [instantiate-msg] [sender]",
+		Use:              "create-pool",
 		Short:            "create a cosmwasm pool",
-		Example:          "osmosisd tx cosmwasmpool create-pool 1 uion,uosmo --from lo-test1 --keyring-backend test --chain-id localosmosis --fees 875uosmo -b=block",
+		Example:          "osmosisd tx cosmwasmpool create-pool 1 '{\"pool_assets_denom\":[\"uion\",\"uosmo\"]}' --from lo-test1 --keyring-backend test --chain-id localosmosis --fees 875uosmo -b=block",
 		NumArgs:          2,
 		ParseAndBuildMsg: BuildCreatePoolMsg,
 	}, &model.MsgCreateCosmWasmPool{}
@@ -44,16 +43,17 @@ func BuildCreatePoolMsg(clientCtx client.Context, args []string, flags *pflag.Fl
 		return nil, err
 	}
 
-	denoms := strings.Split(args[1], ",")
+	instantiateMsg := args[1]
 
-	// Construct instantiate msg
-	instantiateMsg := &msg.InstantiateMsg{
-		PoolAssetDenoms: denoms,
-	}
-	msgBz, err := json.Marshal(instantiateMsg)
+	// Check JSON format for instantiateMsg
+	var jsonCheck map[string]interface{}
+	err = json.Unmarshal([]byte(instantiateMsg), &jsonCheck)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid JSON format for instantiateMsg: %v", err)
 	}
+
+	// Turn instantiateMsg to bytes
+	msgBz := []byte(instantiateMsg)
 
 	return &model.MsgCreateCosmWasmPool{
 		CodeId:         codeId,
