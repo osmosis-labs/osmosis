@@ -13,7 +13,7 @@ import (
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
 )
 
-// This is a holistic test covering distirbution to group gauges.
+// This is a holistic test covering distribution to group gauges.
 // This test ensures that the expected happy path functions as expected across all possible
 // pool and gauge types.
 //
@@ -22,13 +22,19 @@ import (
 //
 // Create 2 groups and associate pools with them per description above.
 //
-// For the first group set the volume so that 1st gets 50%, second 25%, third 12.5 etc.
+// For the first group set the volume so that it is not equal across pools.
 //
 // For the second group set the volume so that the spread is even.
 //
-// Distribute()
+// Call AfterEpochEnd for muliple epochs.
 //
-// Ensure that the correct amount of rewards are distributed to the correct pool gauges. No panics occur
+// Ensure that the correct amount of rewards are distributed to the correct pool gauges. No panics occur.
+//
+// This test covers:
+// - Changing volume on pools in-between distributions
+// - perpetual distribution behavior
+// - non-perpetual distribution behavior
+// - non-perpetual gauge pruning
 func (s *KeeperTestSuite) TestDistribute_Group() {
 	s.SetupTest()
 
@@ -186,7 +192,6 @@ func (s *KeeperTestSuite) TestDistribute_Group() {
 // Test_Distribute_Group_ChangeVolumeBetween
 // Test_Distribute_Group_CreateGroupsBetween
 // Test_Distribute_Group_SwapAndDistribute
-// Test_Distribute_Group_ToggleVolumeAcrossEpochs
 
 func (s *KeeperTestSuite) validateDistributionForGroup(groupPoolIDs []uint64, poolIDToExpectedDistributionMapOne map[uint64]sdk.Coins) {
 	s.Require().NotEmpty(poolIDToExpectedDistributionMapOne)
