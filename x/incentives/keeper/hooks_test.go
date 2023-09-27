@@ -219,6 +219,8 @@ func (s *KeeperTestSuite) validateDistributionForGroup(groupPoolIDs []uint64, po
 	}
 }
 
+// computes the expected distribution values for each pool in the map based on the volume each one has and the total volume.
+// The expected distribution is calculated pro-rata based on the volume of each pool.
 func (*KeeperTestSuite) computeExpectedDistributonAmountsFromVolume(poolIDToVolumeMap map[uint64]math.Int, totalVolume math.LegacyDec) map[uint64]sdk.Coins {
 	poolIDToExpectedDistributionMapOne := map[uint64]sdk.Coins{}
 	for poolID, volume := range poolIDToVolumeMap {
@@ -226,11 +228,7 @@ func (*KeeperTestSuite) computeExpectedDistributonAmountsFromVolume(poolIDToVolu
 
 		fmt.Printf("poolId %d, currentDistribution %s\n", poolID, currentDistribution)
 
-		if existingDistribution, ok := poolIDToExpectedDistributionMapOne[poolID]; ok {
-			poolIDToExpectedDistributionMapOne[poolID] = existingDistribution.Add(currentDistribution...)
-		} else {
-			poolIDToExpectedDistributionMapOne[poolID] = currentDistribution
-		}
+		poolIDToExpectedDistributionMapOne[poolID] = currentDistribution
 	}
 	return poolIDToExpectedDistributionMapOne
 }
