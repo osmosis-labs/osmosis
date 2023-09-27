@@ -46,7 +46,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6476](https://github.com/osmosis-labs/osmosis/pull/6476) band-aid state export fix for cwpool gauges
 * [#6492](https://github.com/osmosis-labs/osmosis/pull/6492) bump IAVL version to v0.19.7
 
+<<<<<<< HEAD
 ## Unreleased
+=======
+### Features
+
+* [#6416](https://github.com/osmosis-labs/osmosis/pull/6416) feat[CL]: add num initialized ticks query
+* [#6420](https://github.com/osmosis-labs/osmosis/pull/6420) feat[CL]: Creates a governance set whitelist of addresses that can bypass the normal pool creation restrictions on concentrated liquidity pools
+* [#6535](https://github.com/osmosis-labs/osmosis/pull/6535) makefile: add target that tidies all submodules at once
+
+### State Breaking
+
+* [#6344](https://github.com/osmosis-labs/osmosis/pull/6344) fix: set name, display and symbol of denom metadata in tokenfactory's CreateDenom
+* [#6279](https://github.com/osmosis-labs/osmosis/pull/6279) fix prop-597 introduced issue
+* [#6282](https://github.com/osmosis-labs/osmosis/pull/6282) Fix CreateCanonicalConcentratedLiquidityPoolAndMigrationLink overriding migration records
+>>>>>>> 3db3efdb (makefile: add target to run `go mod tidy` in all submodules (#6535))
 
 ### API Breaks
 
