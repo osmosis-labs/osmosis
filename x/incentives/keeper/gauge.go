@@ -303,14 +303,24 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 func (k Keeper) chargeGroupCreationFeeIfNotWhitelisted(ctx sdk.Context, sender sdk.AccAddress) (chargedFee bool, err error) {
 	params := k.GetParams(ctx)
 	incentivesModuleAddress := k.ak.GetModuleAddress(types.ModuleName)
+
+	// don't charge fee if sender is the incentives module account
+	if sender.Equals(incentivesModuleAddress) {
+		return false, nil
+	}
+
 	for _, unrestrictedAddressStr := range params.UnrestrictedCreatorWhitelist {
 		unrestrictedAddress, err := sdk.AccAddressFromBech32(unrestrictedAddressStr)
 		if err != nil {
 			return false, err
 		}
 
-		// sender is either unrestrictedAddress or the module account
-		if unrestrictedAddress.Equals(sender) || sender.Equals(incentivesModuleAddress) {
+		fmt.Println("unrestrictedAddress", unrestrictedAddress)
+		fmt.Println("sender", sender)
+		fmt.Println("incentivesModuleAddress", incentivesModuleAddress)
+
+		// don't charge fee if sender is in the whitelist
+		if unrestrictedAddress.Equals(sender) {
 			return false, nil
 		}
 	}

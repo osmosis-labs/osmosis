@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosis.incentives.v1beta1;
+package osmosis.incentives;
 
 import "gogoproto/gogo.proto";
 import "osmosis/incentives/group.proto";

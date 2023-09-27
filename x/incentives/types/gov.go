@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	ProposalTypeCreateGaugeGroups = "CreateGaugeGroupsProposal"
+	ProposalTypeCreateGaugeGroups = "CreateGaugeGroups"
 )
 
 func init() {

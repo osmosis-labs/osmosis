@@ -136,16 +136,17 @@ func NewAddToGaugeCmd() *cobra.Command {
 // NewCmdHandleCreateGaugeGroupsProposal implements a command handler for the gauge group proposal transaction.
 func NewCmdHandleCreateGaugeGroupsProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-gauge-groups-proposal [create-group-msgs] [flags]",
+		Use:   "create-gauge-groups-proposal [pool-id-pairs] [flags]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a create gauge groups proposal",
 		Long: strings.TrimSpace(`Submit a create gauge groups proposal.
 
-Passing in denom-pairs-with-taker-fee separated by commas would be parsed automatically to pairs of denomPairTakerFee records.
-Ex) denom-pair-taker-fee-proposal uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosmo,0.0015 ->
-[uion<>uosmo, takerFee 0.16%]
-[stake<>uosmo, takerFee 0.5%]
-[uatom<>uosmo, removes from state since its being set to the default takerFee value]
+Passing in pool-id-pairs separated by commas would be parsed automatically to a single set for a single gauge group.
+If a semicolon is presented, that would be parsed as pool IDs for separate gauge group.
+Ex) denom-pair-taker-fee-proposal 1,2;3,4,5;6,7 ->
+Group 1: Pool IDs 1, 2
+Group 2: Pool IDs 3, 4, 5
+Group 3: Pool IDs 6, 7
 
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
