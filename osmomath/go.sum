@@ -296,6 +296,7 @@ github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1y
 github.com/onsi/gomega v1.27.6 h1:ENqfyGeS5AX/rlXDd/ETokDz93u0YufY1Pgxuy/PvWE=
 github.com/onsi/gomega v1.27.6/go.mod h1:PIQNjfQwkP3aQAH7lf7j87O/5FiNr+ZR8+ipb+qQlhg=
 github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230927020814-2854ac001f06 h1:bUqcTTtIKCvDEW/UpbRTZU+QslJ+sgVv0tnFzl1dsH0=
+github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230927020814-2854ac001f06/go.mod h1:nZwthKhHt2cvngoDGFR1kSFsAz+MxCJWAg1hTDiwp8E=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.8-0.20230926014346-27a13ec134bd h1:oi2HhLQqBsOG4iBDj9MkKY1KsDE2JeDz+A2L0cQ8og4=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.8-0.20230926014346-27a13ec134bd/go.mod h1:wYNqZbQ6Woo2gOQJDv6l2dFGI74uABNPvz1dCOGW6qo=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=
