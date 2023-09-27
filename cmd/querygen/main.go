@@ -12,6 +12,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/cmd/querygen/templates"
 )
 
+const V2 = "v2"
+
 var grpcTemplate template.Template
 
 func main() {
@@ -31,7 +33,11 @@ func main() {
 }
 
 func parseTemplates() error {
-	grpcTemplatePtr, err := template.ParseFiles("cmd/querygen/templates/grpc_template.tmpl")
+	// Create a function to upper case the version suffix if it exists.
+	funcMap := template.FuncMap{
+		"ToUpper": strings.ToUpper,
+	}
+	grpcTemplatePtr, err := template.New("grpc_template.tmpl").Funcs(funcMap).ParseFiles("cmd/querygen/templates/grpc_template.tmpl")
 	if err != nil {
 		return err
 	}
@@ -74,16 +80,23 @@ func codegenQueryYml(filepath string) error {
 func codegenGrpcPackage(queryYml templates.QueryYml) error {
 	grpcTemplateData := templates.GrpcTemplateFromQueryYml(queryYml)
 
+	// If proto path contains v2 then add folder and template
+	// suffix to properly package the files.
+	grpcTemplateData.VersionSuffix = ""
+	if strings.Contains(grpcTemplateData.ProtoPath, V2) {
+		grpcTemplateData.VersionSuffix = V2
+	}
+
 	// create directory
 	fsClientPath := templates.ParseFilePathFromImportPath(grpcTemplateData.ClientPath)
-	if err := os.MkdirAll(fsClientPath+"/grpc", os.ModePerm); err != nil {
+	if err := os.MkdirAll(fsClientPath+"/grpc"+grpcTemplateData.VersionSuffix, os.ModePerm); err != nil {
 		// ignore directory already exists error
 		if !errors.Is(err, os.ErrExist) {
 			return err
 		}
 	}
 	// generate file
-	f, err := os.Create(fsClientPath + "/grpc/grpc_query.go")
+	f, err := os.Create(fsClientPath + "/grpc" + grpcTemplateData.VersionSuffix + "/grpc_query.go")
 	if err != nil {
 		return err
 	}

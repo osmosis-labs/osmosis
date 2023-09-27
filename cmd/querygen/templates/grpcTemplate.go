@@ -3,9 +3,10 @@ package templates
 import "sort"
 
 type GrpcTemplate struct {
-	ProtoPath  string
-	ClientPath string
-	Queries    []GrpcQuery
+	ProtoPath     string
+	ClientPath    string
+	Queries       []GrpcQuery
+	VersionSuffix string
 }
 
 type GrpcQuery struct {
