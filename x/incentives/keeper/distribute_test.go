@@ -1857,8 +1857,6 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 			expectedError: types.UnexpectedFinishedGaugeError{GaugeId: singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].GaugeId},
 		},
-
-		// TODO: even splitting policy test cases once supported.
 	}
 
 	for name, tc := range tests {

@@ -178,25 +178,14 @@ func (s *KeeperTestSuite) TestDistribute_Group() {
 	s.validateGroupExists(perpetualGroupGaugeID)
 }
 
-// TODO: create test
+// TODO: create the following tests:
+// https://github.com/osmosis-labs/osmosis/issues/6559
+//
 // Test_Distribute_Group_OverlappingPoolsInGroups
-
-// TODO: create test
 // Test_Distribute_Group_NoVolumeOnePool_SkipSilent
-
-// TODO: create test
 // Test_Distribute_Group_ChangeVolumeBetween
-
-// TODO: create test
 // Test_Distribute_Group_CreateGroupsBetween
-
-// TODO: create test
 // Test_Distribute_Group_SwapAndDistribute
-
-// TODO: create test
-// Test_Distribute_Group_ToggleVolumeAcrossEpochs
-
-// TODO: create test
 // Test_Distribute_Group_ToggleVolumeAcrossEpochs
 
 func (s *KeeperTestSuite) validateDistributionForGroup(groupPoolIDs []uint64, poolIDToExpectedDistributionMapOne map[uint64]sdk.Coins) {
