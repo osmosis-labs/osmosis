@@ -477,7 +477,10 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 			return types.CumulativeVolumeDecreasedError{PoolId: poolId, PreviousVolume: gaugeRecord.CumulativeWeight, NewVolume: cumulativePoolVolume}
 		}
 
-		// TODO: update this, otherwise getting panic due to division by zero in the caller
+		// TODO: update this error and cover by tests
+		// If this is not present, getting a division by zero panic
+		// See:
+		// https://github.com/osmosis-labs/osmosis/issues/6558
 		if volumeDelta.IsZero() {
 			return errors.New("volume delta is zero")
 		}
