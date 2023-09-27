@@ -98,8 +98,19 @@ func ConvertCoinsToDecCoins(coins sdk.Coins) sdk.DecCoins {
 // MergeCoinMaps takes two maps of type map[T]sdk.Coins and merges them together, adding the values of the second map to the first.
 func MergeCoinMaps[T comparable](currentEpochExpectedDistributionsOne map[T]sdk.Coins, poolIDToExpectedDistributionMapOne map[T]sdk.Coins) map[T]sdk.Coins {
 	newMap := map[T]sdk.Coins{}
+
+	// Iterate over the first map and add all the values to the new map
 	for poolID, expectedDistribution := range currentEpochExpectedDistributionsOne {
-		newMap[poolID] = poolIDToExpectedDistributionMapOne[poolID].Add(expectedDistribution...)
+		newMap[poolID] = expectedDistribution
+	}
+
+	// Iterate over the second map and add all the values to the new map
+	for poolID, expectedDistribution := range poolIDToExpectedDistributionMapOne {
+		if _, ok := newMap[poolID]; ok {
+			newMap[poolID] = newMap[poolID].Add(expectedDistribution...)
+		} else {
+			newMap[poolID] = expectedDistribution
+		}
 	}
 	return newMap
 }
