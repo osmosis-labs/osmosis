@@ -1560,6 +1560,7 @@ func (s *KeeperTestSuite) TestSyncGroupWeights() {
 // - checking that groups are skipped in acceptable cases without failing other group distributions
 // - checking that the group gauge is correctly updated - filled epochs increased and distributed coins increased
 // - checking that the internal gauges are correctly updated - coins increased
+// TODO: add test where group does not have weights synched (empty)
 func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 	// consists of 1:1 mapped group and group gauge.
 	type groupConfig struct {
