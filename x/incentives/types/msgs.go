@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -171,13 +172,8 @@ func (m MsgCreateGroup) ValidateBasic() error {
 		return errors.New("pool ids should be composed of at most 30 pool IDs")
 	}
 
-	// Check for uniqueness
-	poolIdsMap := make(map[uint64]bool)
-	for _, id := range m.PoolIds {
-		if _, exists := poolIdsMap[id]; exists {
-			return errors.New("pool ids should be unique")
-		}
-		poolIdsMap[id] = true
+	if !osmoassert.Uint64ArrayValuesAreUnique(m.PoolIds) {
+		return errors.New("pool ids should be unique")
 	}
 
 	return nil
