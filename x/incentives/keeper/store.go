@@ -114,9 +114,6 @@ func (k Keeper) SetGroup(ctx sdk.Context, group types.Group) {
 }
 
 // GetAllGroupGauges gets all the groupGauges that is in state.
-// ADAM
-// Get all groups then iterate over each and pull the gauge from it.
-// Could create an iterator, as iterate, pull ID, then get gauge from ID.
 func (k Keeper) GetAllGroups(ctx sdk.Context) []types.Group {
 	groups, err := osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPrefixGroup, k.ParseGroupFromBz)
 	if err != nil {
