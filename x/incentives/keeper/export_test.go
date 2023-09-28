@@ -9,8 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 )
 
-const PerpetualNumEpochsPaidOver = perpetualNumEpochsPaidOver
-
 var ByGroupQueryCondition = byGroupQueryCondition
 
 // AddGaugeRefByKey appends the provided gauge ID into an array associated with the provided key.

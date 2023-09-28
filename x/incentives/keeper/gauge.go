@@ -24,11 +24,6 @@ import (
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
-// numEpochPaidOver is the number of epochs that must be given
-// for a gauge to be perpetual. For any other number of epochs
-// other than zero, the gauge is non-perpetual. Zero is invalid.
-const perpetualNumEpochsPaidOver = 0
-
 var byGroupQueryCondition = lockuptypes.QueryCondition{LockQueryType: lockuptypes.ByGroup}
 
 // getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
@@ -130,7 +125,7 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 //
 // On success, returns the gauge ID.
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
-	if numEpochsPaidOver == perpetualNumEpochsPaidOver && !isPerpetual {
+	if numEpochsPaidOver == types.PerpetualNumEpochsPaidOver && !isPerpetual {
 		return 0, types.ErrZeroNumEpochsPaidOver
 	}
 
@@ -237,11 +232,16 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		}
 	}
 
-	k.hooks.AfterCreateGauge(ctx, gauge.Id)
+	// TODO: We comment out AfterCreateGauge hook for two reasons:
+	// 1. It is not used anywhere in the codebase.
+	// 2. There is a bug where we initHooks after we init gov routes. Therefore,
+	// if we attempt to call a method that calls a hook via a gov prop, it will panic.
+	// https://github.com/osmosis-labs/osmosis/issues/6580
+	// k.hooks.AfterCreateGauge(ctx, gauge.Id)
 	return gauge.Id, nil
 }
 
-// CreateGroup creates a new group. The group is 1:1 mapped to a group gauage that allocates rewards dynamically across its internal pool gauges based on
+// CreateGroup creates a new group. The group is 1:1 mapped to a group gauge that allocates rewards dynamically across its internal pool gauges based on
 // the volume splitting policy.
 // For each pool ID in the given slice, its main internal gauge is used to create gauge records to be associated with the Group.
 // Note, that implies that only perpetual pool gauges can be associated with the Group.
@@ -275,7 +275,7 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 		return 0, err
 	}
 
-	groupGaugeID, err := k.CreateGauge(ctx, numEpochPaidOver == perpetualNumEpochsPaidOver, owner, coins, byGroupQueryCondition, ctx.BlockTime(), numEpochPaidOver, 0)
+	groupGaugeID, err := k.CreateGauge(ctx, numEpochPaidOver == types.PerpetualNumEpochsPaidOver, owner, coins, byGroupQueryCondition, ctx.BlockTime(), numEpochPaidOver, 0)
 	if err != nil {
 		return 0, err
 	}
@@ -303,14 +303,20 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 func (k Keeper) chargeGroupCreationFeeIfNotWhitelisted(ctx sdk.Context, sender sdk.AccAddress) (chargedFee bool, err error) {
 	params := k.GetParams(ctx)
 	incentivesModuleAddress := k.ak.GetModuleAddress(types.ModuleName)
+
+	// don't charge fee if sender is the incentives module account
+	if sender.Equals(incentivesModuleAddress) {
+		return false, nil
+	}
+
 	for _, unrestrictedAddressStr := range params.UnrestrictedCreatorWhitelist {
 		unrestrictedAddress, err := sdk.AccAddressFromBech32(unrestrictedAddressStr)
 		if err != nil {
 			return false, err
 		}
 
-		// sender is either unrestrictedAddress or the module account
-		if unrestrictedAddress.Equals(sender) || sender.Equals(incentivesModuleAddress) {
+		// don't charge fee if sender is in the whitelist
+		if unrestrictedAddress.Equals(sender) {
 			return false, nil
 		}
 	}

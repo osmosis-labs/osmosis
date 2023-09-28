@@ -241,6 +241,12 @@ func NewOsmosisApp(
 		app.BlockedAddrs(),
 	)
 
+	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
+	// call setupHooks afterwards. Therefore, if a gov proposal needs to call a method and that method calls a
+	// hook, we will get a nil pointer dereference error due to the hooks in the keeper not being
+	// setup yet. I will refrain from creating an issue in the sdk for now until after we unfork to 0.47,
+	// because I believe the concept of Routes is going away.
+	// https://github.com/osmosis-labs/osmosis/issues/6580
 	app.SetupHooks()
 
 	/****  Module Options ****/

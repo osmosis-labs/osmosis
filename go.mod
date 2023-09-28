@@ -23,7 +23,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230924192433-36cf2950dca4
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230923195756-82c9af6e1dea
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230928181649-a48496d2db0e
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230911120014-b14342e08daf
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20230911120014-b14342e08daf
 	github.com/pkg/errors v0.9.1

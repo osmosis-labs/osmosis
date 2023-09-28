@@ -12,7 +12,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coins"
 	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -2000,7 +1999,7 @@ func (s *KeeperTestSuite) TestCreateGroupsAndAllocate_GroupRefetchingInAllocate(
 
 	poolInfo := s.PrepareAllSupportedPools()
 
-	groupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, incentiveskeeper.PerpetualNumEpochsPaidOver, s.TestAccs[0], []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID})
+	groupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, incentivetypes.PerpetualNumEpochsPaidOver, s.TestAccs[0], []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID})
 	s.Require().NoError(err)
 
 	// Fetch the group

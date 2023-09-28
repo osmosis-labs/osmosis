@@ -10,7 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/coins"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 )
 
 // This is a general test covering distribution to group gauges.
@@ -49,7 +49,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 		perpetualPoolAndGaugeInfo.BalancerPoolID, perpetualPoolAndGaugeInfo.ConcentratedPoolID, perpetualPoolAndGaugeInfo.StableSwapPoolID,
 	}
 
-	perpetualGroupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, incentiveskeeper.PerpetualNumEpochsPaidOver, s.TestAccs[0], perpetualGroupPoolIDs)
+	perpetualGroupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], perpetualGroupPoolIDs)
 	s.Require().NoError(err)
 
 	nonPerpetualGroupPoolIDs := []uint64{
@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 		nonPerpetualPoolAndGaugeInfo.ConcentratedPoolID, nonPerpetualPoolAndGaugeInfo.StableSwapPoolID, nonPerpetualPoolAndGaugeInfo.BalancerPoolID,
 	}
 
-	nonPerpetualGroupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...).Add(defaultCoins...), incentiveskeeper.PerpetualNumEpochsPaidOver+3, s.TestAccs[0], nonPerpetualGroupPoolIDs)
+	nonPerpetualGroupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...).Add(defaultCoins...), types.PerpetualNumEpochsPaidOver+3, s.TestAccs[0], nonPerpetualGroupPoolIDs)
 	s.Require().NoError(err)
 
 	// Define test volume amounts

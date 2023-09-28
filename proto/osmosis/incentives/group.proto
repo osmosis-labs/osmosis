@@ -61,3 +61,7 @@ message Group {
   InternalGaugeInfo internal_gauge_info = 2 [ (gogoproto.nullable) = false ];
   SplittingPolicy splitting_policy = 3;
 }
+
+// CreateGroup is called via governance to create a new group.
+// It takes an array of pool IDs to split the incentives across.
+message CreateGroup { repeated uint64 pool_ids = 1; }
