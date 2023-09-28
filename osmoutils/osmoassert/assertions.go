@@ -96,6 +96,10 @@ func Equal[T Stringer](t *testing.T, tolerance osmomath.ErrTolerance, A, B T) {
 		b, ok := any(B).(sdk.Coins)
 		failNowIfNot(t, ok)
 
+		if len(a) != len(b) {
+			require.FailNow(t, errMsg)
+		}
+
 		for i, coinA := range a {
 			Equal(t, tolerance, coinA, b[i])
 		}
