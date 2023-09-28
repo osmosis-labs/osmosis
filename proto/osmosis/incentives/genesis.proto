@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "osmosis/incentives/params.proto";
 import "osmosis/incentives/gauge.proto";
+import "osmosis/incentives/group.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v19/x/incentives/types";
 
@@ -13,7 +14,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v19/x/incentives/types";
 message GenesisState {
   // params are all the parameters of the module
   Params params = 1 [ (gogoproto.nullable) = false ];
-  // gauges are all gauges that should exist at genesis
+  // gauges are all gauges (not including group gauges) that should exist at
+  // genesis
   repeated Gauge gauges = 2 [ (gogoproto.nullable) = false ];
   // lockable_durations are all lockup durations that gauges can be locked for
   // in order to recieve incentives
@@ -25,4 +27,8 @@ message GenesisState {
   // last_gauge_id is what the gauge number will increment from when creating
   // the next gauge after genesis
   uint64 last_gauge_id = 4;
+  // gauges are all group gauges that should exist at genesis
+  repeated Gauge group_gauges = 5 [ (gogoproto.nullable) = false ];
+  // groups are all the groups that should exist at genesis
+  repeated Group groups = 6 [ (gogoproto.nullable) = false ];
 }

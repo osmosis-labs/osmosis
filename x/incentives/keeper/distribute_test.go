@@ -1598,6 +1598,9 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		defaultGroup      = deepCopyGroup(defaultGroup)
 		singleRecordGroup = deepCopyGroup(singleRecordGroup)
 
+		// Double the volume configuration in poolmanager because we want the current volume to be
+		// updated relative to the existing values in gauge record state.
+		// The current volume is computed = poolmanager cumulative volume - gauge record cumulative volume.
 		two = sdk.NewInt(2)
 
 		// Volume pre-set configurations.
