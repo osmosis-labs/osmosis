@@ -1009,35 +1009,44 @@ func (s *KeeperTestSuite) TestChargeGroupCreationFeeIfNotWhitelisted() {
 	)
 	// Only fund the regular funded account
 	s.FundAcc(regularFundedAccount, customGroupCreationFee)
-
-	// Set up whitelist
-	whitelist := []string{whitelistedAccount.String()}
-	s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyCreatorWhitelist, whitelist)
+	defaultWhitelist := []string{whitelistedAccount.String()}
 
 	tests := map[string]struct {
 		sender           sdk.AccAddress
 		expectFeeCharged bool
+		whitelist        []string
 		expectError      error
 	}{
 		"regular funded account - charged": {
 			sender:           regularFundedAccount,
 			expectFeeCharged: true,
+			whitelist:        defaultWhitelist,
 		},
 		"regular non funded account - error returned": {
 			sender:      regularNotFundedAccount,
+			whitelist:   defaultWhitelist,
 			expectError: errorNoCustomFeeInBalance,
 		},
 		"unrestricted whitelisted - not charged": {
-			sender: whitelistedAccount,
+			sender:    whitelistedAccount,
+			whitelist: defaultWhitelist,
 		},
 		"incentive module account - not charged": {
-			sender: incentivesModuleAccount,
+			sender:    incentivesModuleAccount,
+			whitelist: defaultWhitelist,
+		},
+		"incentive module account with no whitelist - not charged": {
+			sender:    incentivesModuleAccount,
+			whitelist: []string{},
 		},
 	}
 
 	for name, tc := range tests {
 		s.Run(name, func() {
 			incentivesKeeper := s.App.IncentivesKeeper
+
+			// Set up whitelist
+			s.App.IncentivesKeeper.SetParam(s.Ctx, types.KeyCreatorWhitelist, tc.whitelist)
 
 			// Keep original balances for final balance assertions
 			senderBalanceBefore := s.App.BankKeeper.GetAllBalances(s.Ctx, tc.sender)
