@@ -162,6 +162,12 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 	}
 
+	// Ensure that the fee payer has been authenticated. For this to be true, the fee payer must be
+	// the signer of at least one message
+	if !feePayerAuthenticated {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "fee payer not authenticated")
+	}
+
 	// If the transaction has been authenticated, we call TrackMessages(...) to
 	// notify every authenticator so that they can handle any storage updates
 	// that need to happen regardless of how the message was authorized.
