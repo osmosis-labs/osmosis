@@ -24,11 +24,6 @@ import (
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
-// numEpochPaidOver is the number of epochs that must be given
-// for a gauge to be perpetual. For any other number of epochs
-// other than zero, the gauge is non-perpetual. Zero is invalid.
-const perpetualNumEpochsPaidOver = 0
-
 var byGroupQueryCondition = lockuptypes.QueryCondition{LockQueryType: lockuptypes.ByGroup}
 
 // getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
@@ -130,7 +125,7 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 //
 // On success, returns the gauge ID.
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error) {
-	if numEpochsPaidOver == perpetualNumEpochsPaidOver && !isPerpetual {
+	if numEpochsPaidOver == types.PerpetualNumEpochsPaidOver && !isPerpetual {
 		return 0, types.ErrZeroNumEpochsPaidOver
 	}
 
@@ -280,7 +275,7 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 		return 0, err
 	}
 
-	groupGaugeID, err := k.CreateGauge(ctx, numEpochPaidOver == perpetualNumEpochsPaidOver, owner, coins, byGroupQueryCondition, ctx.BlockTime(), numEpochPaidOver, 0)
+	groupGaugeID, err := k.CreateGauge(ctx, numEpochPaidOver == types.PerpetualNumEpochsPaidOver, owner, coins, byGroupQueryCondition, ctx.BlockTime(), numEpochPaidOver, 0)
 	if err != nil {
 		return 0, err
 	}

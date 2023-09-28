@@ -639,7 +639,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Group() {
 			distrTo:           incentiveskeeper.ByGroupQueryCondition,
 			poolId:            zeroPoolId,
 			isPerpetual:       false,
-			numEpochsPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver + 1,
+			numEpochsPaidOver: types.PerpetualNumEpochsPaidOver + 1,
 
 			expectedGaugeId: defaultExpectedGaugeId,
 		},
@@ -648,7 +648,7 @@ func (s *KeeperTestSuite) TestCreateGauge_Group() {
 			distrTo:           incentiveskeeper.ByGroupQueryCondition,
 			poolId:            zeroPoolId,
 			isPerpetual:       true,
-			numEpochsPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver,
+			numEpochsPaidOver: types.PerpetualNumEpochsPaidOver,
 
 			expectedGaugeId: defaultExpectedGaugeId,
 		},
@@ -864,7 +864,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 		{
 			name:             "two pools - created perpetual group gauge",
 			coins:            defaultCoins,
-			numEpochPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver,
+			numEpochPaidOver: types.PerpetualNumEpochsPaidOver,
 			poolIDs:          []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID},
 
 			expectedPerpeutalGroupGauge: true,
@@ -876,7 +876,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 		{
 			name:             "all incentive supported pools - created perpetual group gauge",
 			coins:            defaultCoins,
-			numEpochPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver,
+			numEpochPaidOver: types.PerpetualNumEpochsPaidOver,
 			poolIDs:          []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID, poolInfo.StableSwapPoolID},
 
 			expectedPerpeutalGroupGauge: true,
@@ -889,7 +889,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 		{
 			name:             "two pools - created non-perpetual group gauge",
 			coins:            defaultCoins,
-			numEpochPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver + 1,
+			numEpochPaidOver: types.PerpetualNumEpochsPaidOver + 1,
 			poolIDs:          []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID},
 
 			expectedPerpeutalGroupGauge: false, // explicit for clarity
@@ -902,7 +902,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 		{
 			name:             "all incentive supported pools with custom amount - created non-perpetual group gauge",
 			coins:            defaultCoins.Add(defaultCoins...).Add(defaultCoins...),
-			numEpochPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver + 4,
+			numEpochPaidOver: types.PerpetualNumEpochsPaidOver + 4,
 			poolIDs:          []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID, poolInfo.StableSwapPoolID},
 
 			expectedPerpeutalGroupGauge: false, // explicit for clarity
@@ -918,7 +918,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 		{
 			name:             "error: fails to initialize group gauge due to cosmwasm pool that does not support incentives",
 			coins:            defaultCoins,
-			numEpochPaidOver: incentiveskeeper.PerpetualNumEpochsPaidOver,
+			numEpochPaidOver: types.PerpetualNumEpochsPaidOver,
 			poolIDs:          []uint64{poolInfo.BalancerPoolID, poolInfo.CosmWasmPoolID},
 
 			expectErr: poolincentivetypes.UnsupportedPoolTypeError{PoolID: poolInfo.CosmWasmPoolID, PoolType: poolmanagertypes.CosmWasm},
@@ -928,7 +928,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			name:                "error: owner does not have enough funds to create gauge but has the fee",
 			coins:               defaultCoins,
 			creatorAddressIndex: oneTimeFeeFundedIndex,
-			numEpochPaidOver:    incentiveskeeper.PerpetualNumEpochsPaidOver,
+			numEpochPaidOver:    types.PerpetualNumEpochsPaidOver,
 			poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
 			expectErr:           fmt.Errorf("0uosmo is smaller than %s: insufficient funds", defaultCoins),
 		},
@@ -936,7 +936,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			name:                "error: owner does not have enough funds to pay creation fee",
 			coins:               defaultCoins,
 			creatorAddressIndex: noFundingIndex,
-			numEpochPaidOver:    incentiveskeeper.PerpetualNumEpochsPaidOver,
+			numEpochPaidOver:    types.PerpetualNumEpochsPaidOver,
 			poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
 			expectErr:           errorNoCustomFeeInBalance,
 		},
