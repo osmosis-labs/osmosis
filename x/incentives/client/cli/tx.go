@@ -219,7 +219,7 @@ func parseCreateGroupArgToContent(cmd *cobra.Command, arg string) (govtypes.Cont
 }
 
 func ParseCreateGroupRecords(arg string) ([]types.CreateGroup, error) {
-	poolIds2DArray, err := parseStringTo2DArray(arg)
+	poolIds2DArray, err := osmocli.ParseStringTo2DArray(arg)
 	if err != nil {
 		return nil, err
 	}
@@ -233,35 +233,4 @@ func ParseCreateGroupRecords(arg string) ([]types.CreateGroup, error) {
 	}
 
 	return createGroupRecords, nil
-}
-
-func parseStringTo2DArray(input string) ([][]uint64, error) {
-	// Split the input string into sub-arrays
-	subArrays := strings.Split(input, ";")
-
-	// Initialize the 2D array
-	result := make([][]uint64, len(subArrays))
-
-	// Iterate over each sub-array
-	for i, subArray := range subArrays {
-		// Split the sub-array into elements
-		elements := strings.Split(subArray, ",")
-
-		// Initialize the sub-array in the 2D array
-		result[i] = make([]uint64, len(elements))
-
-		// Iterate over each element
-		for j, element := range elements {
-			// Parse the element into a uint64
-			value, err := strconv.ParseUint(element, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-
-			// Store the value in the 2D array
-			result[i][j] = value
-		}
-	}
-
-	return result, nil
 }
