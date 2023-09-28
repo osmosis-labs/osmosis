@@ -43,37 +43,10 @@ func (k Keeper) RouteExactAmountIn(
 			_outMinAmount = tokenOutMinAmount
 		}
 
-		// Get underlying pool type corresponding to the pool ID at the current routeStep.
-		swapModule, err := k.GetPoolModule(ctx, routeStep.PoolId)
+		tokenOutAmount, err = k.SwapExactAmountIn(ctx, sender, routeStep.PoolId, tokenIn, routeStep.TokenOutDenom, _outMinAmount)
 		if err != nil {
 			return osmomath.Int{}, err
 		}
-
-		// Execute the expected swap on the current routed pool
-		pool, poolErr := swapModule.GetPool(ctx, routeStep.PoolId)
-		if poolErr != nil {
-			return osmomath.Int{}, poolErr
-		}
-
-		// Check if pool has swaps enabled.
-		if !pool.IsActive(ctx) {
-			return osmomath.Int{}, types.InactivePoolError{PoolId: pool.GetId()}
-		}
-
-		spreadFactor := pool.GetSpreadFactor(ctx)
-
-		tokenInAfterSubTakerFee, err := k.chargeTakerFee(ctx, tokenIn, routeStep.TokenOutDenom, sender, true)
-		if err != nil {
-			return osmomath.Int{}, err
-		}
-
-		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterSubTakerFee, routeStep.TokenOutDenom, _outMinAmount, spreadFactor)
-		if err != nil {
-			return osmomath.Int{}, err
-		}
-
-		// Track volume for volume-splitting incentives
-		k.trackVolume(ctx, pool.GetId(), tokenIn)
 
 		// Chain output of current pool as the input for the next routed pool
 		tokenIn = sdk.NewCoin(routeStep.TokenOutDenom, tokenOutAmount)
@@ -192,6 +165,9 @@ func (k Keeper) SwapExactAmountIn(
 		return osmomath.Int{}, err
 	}
 
+	// Track volume for volume-splitting incentives
+	k.trackVolume(ctx, pool.GetId(), tokenIn)
+
 	return tokenOutAmount, nil
 }
 
@@ -232,6 +208,9 @@ func (k Keeper) SwapExactAmountInNoTakerFee(
 	if err != nil {
 		return osmomath.Int{}, err
 	}
+
+	// Track volume for volume-splitting incentives
+	k.trackVolume(ctx, pool.GetId(), tokenIn)
 
 	return tokenOutAmount, nil
 }
