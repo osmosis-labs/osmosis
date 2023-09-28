@@ -23,10 +23,10 @@ type valSet struct {
 
 type ValRatio struct {
 	ValAddr       sdk.ValAddress
-	Weight        sdk.Dec
-	DelegatedAmt  sdk.Int
-	UndelegateAmt sdk.Int
-	VRatio        sdk.Dec
+	Weight        osmomath.Dec
+	DelegatedAmt  osmomath.Int
+	UndelegateAmt osmomath.Int
+	VRatio        osmomath.Dec
 }
 
 // SetValidatorSetPreferences sets a new valset position for a delegator in modules state.
@@ -155,7 +155,8 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	})
 
 	// Step 4
-	totalUnDelAmt, amountToUnDelegate := sdk.NewInt(0), sdk.NewInt(0)
+	totalUnDelAmt := sdk.NewInt(0)
+	var amountToUnDelegate osmomath.Int
 	if valSetRatio[0].VRatio.LTE(sdk.OneDec()) {
 		fmt.Println("All validators can undelegate normally, falling to happy path exit early")
 		for index, val := range valSetRatio {
