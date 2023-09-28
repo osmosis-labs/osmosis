@@ -172,48 +172,23 @@ install-with-autocomplete: check_version go.sum
 		echo "Shell or OS not recognized. Skipping autocomplete setup."; \
 	fi
 
+build-reproducible:
+	@echo "Target deprecated. Run 'make gorelease-build' to build osmosisd binary for the current architecture"
+	@echo "Use gorelease-build-{linux,darwin}-{amd64,arm64} to target a specific os/architecture."
+	@echo "This target will be removed in the next releases"
+	@$(MAKE) goreleaser-build
 
-# Cross-building for arm64 from amd64 (or viceversa) takes
-# a lot of time due to QEMU virtualization but it's the only way (afaik)
-# to get a statically linked binary with CosmWasm
+build-reproducible-amd64:
+	@echo "Target deprecated. Run 'make gorelease-build' to build osmosisd binary for the current architecture"
+	@echo "Use gorelease-build-{linux,darwin}-{amd64,arm64} to target a specific os/architecture."
+	@echo "This target will be removed in the next releases"
+	@$(MAKE) goreleaser-build-linux-amd64
 
-build-reproducible: build-reproducible-amd64 build-reproducible-arm64
-
-build-reproducible-amd64: go.sum
-	mkdir -p $(BUILDDIR)
-	$(DOCKER) buildx create --name osmobuilder || true
-	$(DOCKER) buildx use osmobuilder
-	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(GO_VERSION) \
-		--build-arg GIT_VERSION=$(VERSION) \
-		--build-arg GIT_COMMIT=$(COMMIT) \
-		--build-arg RUNNER_IMAGE=alpine:3.17 \
-		--platform linux/amd64 \
-		-t osmosis:local-amd64 \
-		--load \
-		-f Dockerfile .
-	$(DOCKER) rm -f osmobinary || true
-	$(DOCKER) create -ti --name osmobinary osmosis:local-amd64
-	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-amd64
-	$(DOCKER) rm -f osmobinary
-
-build-reproducible-arm64: go.sum
-	mkdir -p $(BUILDDIR)
-	$(DOCKER) buildx create --name osmobuilder || true
-	$(DOCKER) buildx use osmobuilder
-	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(GO_VERSION) \
-		--build-arg GIT_VERSION=$(VERSION) \
-		--build-arg GIT_COMMIT=$(COMMIT) \
-		--build-arg RUNNER_IMAGE=alpine:3.17 \
-		--platform linux/arm64 \
-		-t osmosis:local-arm64 \
-		--load \
-		-f Dockerfile .
-	$(DOCKER) rm -f osmobinary || true
-	$(DOCKER) create -ti --name osmobinary osmosis:local-arm64
-	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-arm64
-	$(DOCKER) rm -f osmobinary
+build-reproducible-arm64:
+	@echo "Target deprecated. Run 'make gorelease-build' to build osmosisd binary for the current architecture"
+	@echo "Use gorelease-build-{linux,darwin}-{amd64,arm64} to target a specific os/architecture."
+	@echo "This target will be removed in the next releases"
+	@$(MAKE) goreleaser-build-linux-arm64
 
 build-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
@@ -613,15 +588,16 @@ go-mock-update:
 	mockgen -source=x/concentrated-liquidity/types/cl_pool_extensionI.go -destination=tests/mocks/cl_pool.go -package=mocks
 
 ###############################################################################
-###                                Release                                  ###
+###                                Goreleaser                               ###
 ###############################################################################
 
 GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v$(GO_VERSION)
 COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm | sed 's/.* //')
 
+# Create release 
 ifdef GITHUB_TOKEN
 release:
-	docker run \
+	$(DOCKER) run \
 		--rm \
 		-e GITHUB_TOKEN=$(GITHUB_TOKEN) \
 		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
@@ -637,7 +613,7 @@ release:
 endif
 
 release-dry-run:
-	docker run \
+	$(DOCKER) run \
 		--rm \
 		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -649,7 +625,7 @@ release-dry-run:
 		--skip-publish
 
 release-snapshot:
-	docker run \
+	$(DOCKER) run \
 		--rm \
 		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
@@ -662,7 +638,47 @@ release-snapshot:
 		--skip-validate \
 		--skip-publish
 
+# Build single targets
+define goreleaser_build_cmd
+	$(DOCKER) run \
+	-e GOOS=$(1) \
+	-e GOARCH=$(2) \
+	-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
+	-v /var/run/docker.sock:/var/run/docker.sock \
+	-v $(CURDIR):/go/src/osmosisd \
+	-w /go/src/osmosisd \
+	$(GORELEASER_IMAGE) \
+	build \
+	--single-target \
+	--id=osmosisd-$(1)-$(2) \
+	--snapshot \
+	--clean \
+	-o build/osmosisd
+endef
+
+goreleaser-build-darwin-amd64: go.sum
+	mkdir -p $(BUILDDIR)
+	$(call goreleaser_build_cmd,darwin,amd64)
+
+goreleaser-build-darwin-arm64: go.sum
+	mkdir -p $(BUILDDIR)
+	$(call goreleaser_build_cmd,darwin,arm64)
+
+goreleaser-build-linux-amd64: go.sum
+	mkdir -p $(BUILDDIR)
+	$(call goreleaser_build_cmd,linux,amd64)
+
+goreleaser-build-linux-arm64: go.sum
+	mkdir -p $(BUILDDIR)
+	$(call goreleaser_build_cmd,linux,arm64)
+
+goreleaser-build: go.sum
+	mkdir -p $(BUILDDIR)
+	$(call goreleaser_build_cmd,$(shell go env GOOS),$(shell go env GOARCH))
+
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
 	test test-all test-build test-cover test-unit test-race benchmark \
-	release release-dry-run release-snapshot
+	release release-dry-run release-snapshot \
+	goreleaser-build goreleaser-build-linux-arm64 goreleaser-build-linux-amd64 \
+	goreleaser-build-linux-arm64 goreleaser-build-linux-arm64
