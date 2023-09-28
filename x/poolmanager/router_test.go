@@ -36,7 +36,7 @@ type expectedTakerFees struct {
 }
 
 const (
-	FOO   = apptesting.UOSMO
+	FOO   = apptesting.FOO
 	BAR   = apptesting.BAR
 	BAZ   = apptesting.BAZ
 	UOSMO = apptesting.UOSMO
