@@ -66,6 +66,7 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 					return nil, err // Handling the error by returning it
 				}
 				aoa.SubAuthenticators = append(aoa.SubAuthenticators, instance)
+				continue
 			}
 		}
 	}

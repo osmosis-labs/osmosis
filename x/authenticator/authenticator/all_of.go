@@ -62,6 +62,7 @@ func (aoa AllOfAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 					return nil, err
 				}
 				aoa.SubAuthenticators = append(aoa.SubAuthenticators, instance)
+				continue
 			}
 		}
 	}
@@ -155,6 +156,7 @@ func validateSubAuthenticatorData(initDatas []InitializationData, am *Authentica
 		for _, authenticatorCode := range am.GetRegisteredAuthenticators() {
 			if authenticatorCode.Type() == initData.AuthenticatorType {
 				subAuthenticatorCount++
+				continue
 			}
 		}
 	}
