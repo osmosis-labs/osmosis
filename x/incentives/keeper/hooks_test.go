@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/osmoutils/coins"
+	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 )
