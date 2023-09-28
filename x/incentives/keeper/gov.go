@@ -17,7 +17,7 @@ func (k Keeper) HandleCreateGaugeProposal(ctx sdk.Context, p *types.CreateGroups
 		// way to escrow the funds from the prop creator to be used at time of prop execution (or returned if the prop fails).
 		// Once we have a way to do this, we can change the CreateGroups proto to allow for coins and numEpochsPaidOver and
 		// then modify it here as well.
-		_, err := k.CreateGroup(ctx, sdk.Coins{}, 0, incentivesModuleAddress, group.PoolIds)
+		_, err := k.CreateGroup(ctx, sdk.Coins{}, types.PerpetualNumEpochsPaidOver, incentivesModuleAddress, group.PoolIds)
 		if err != nil {
 			return err
 		}
