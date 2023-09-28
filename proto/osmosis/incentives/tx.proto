@@ -84,7 +84,7 @@ message MsgCreateGroup {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   // num_epochs_paid_over is the number of epochs distribution will be completed
-  // in 0 means it's perpetual
+  // in. 0 means it's perpetual
   uint64 num_epochs_paid_over = 2;
   // owner is the group owner's address
   string owner = 3 [ (gogoproto.moretags) = "yaml:\"owner\"" ];

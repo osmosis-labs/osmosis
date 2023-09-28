@@ -289,7 +289,7 @@ type MsgCreateGroup struct {
 	// coins are the provided coins that the group will distribute
 	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 	// num_epochs_paid_over is the number of epochs distribution will be completed
-	// in 0 means it's perpetual
+	// in. 0 means it's perpetual
 	NumEpochsPaidOver uint64 `protobuf:"varint,2,opt,name=num_epochs_paid_over,json=numEpochsPaidOver,proto3" json:"num_epochs_paid_over,omitempty"`
 	// owner is the group owner's address
 	Owner string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
