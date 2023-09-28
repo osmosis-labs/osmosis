@@ -126,15 +126,12 @@ func (k Keeper) GetAllGroups(ctx sdk.Context) []types.Group {
 func (k Keeper) GetAllGroupsGauges(ctx sdk.Context) []types.Gauge {
 	groups := k.GetAllGroups(ctx)
 
-	fmt.Println("groups: ", groups)
-
 	var gauges []types.Gauge
 	for _, group := range groups {
 		gauge, err := k.GetGaugeByID(ctx, group.GroupGaugeId)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println("gauge: ", gauge)
 		gauges = append(gauges, *gauge)
 	}
 
