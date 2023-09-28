@@ -1990,7 +1990,7 @@ func (s *KeeperTestSuite) TestCreateGroupsAndAllocate_GroupRefetchingInAllocate(
 
 	var (
 		defaultVolume = osmomath.NewInt(100)
-		// Note that we expect each pool gauge to have halg the coins
+		// Note that we expect each pool gauge to have half the coins
 		// since they have equal volume.
 		halfDefaultCoins = coins.QuoRaw(defaultCoins, 2)
 	)
