@@ -111,8 +111,8 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 			// However the idea of the txfees FeeToken gating is that the pool is sufficiently liquid for that base token.
 			minAmountOut := osmomath.ZeroInt()
 
-			// Note that we swap without charging a taker fee / sending to the non native fee collector, since these are funds that
-			// are accruing from the taker fee itself. Poolmanager does not apply the taker fee for the fee collector.
+			// We swap without charging a taker fee / sending to the non native fee collector, since these are funds that
+			// are accruing from the taker fee itself.
 			_, err := k.poolManager.SwapExactAmountIn(cacheCtx, feeCollectorAddress, poolId, coin, denomToSwapTo, minAmountOut)
 			return err
 		})
