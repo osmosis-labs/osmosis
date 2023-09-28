@@ -38,6 +38,10 @@ import (
 func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 	s.SetupTest()
 
+	// Define test volume amounts
+	oneMillionVolumeAmt := osmomath.NewDec(1_000_000_000_000)
+	sub10KVolumeAmount := osmomath.NewDec(9_876_543_21)
+
 	// Create a perpetual set of pools that only perpetual group gauge incentivizes
 	perpetualPoolAndGaugeInfo := s.PrepareAllSupportedPools()
 
@@ -48,37 +52,37 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 		// perpetual pools
 		perpetualPoolAndGaugeInfo.BalancerPoolID, perpetualPoolAndGaugeInfo.ConcentratedPoolID, perpetualPoolAndGaugeInfo.StableSwapPoolID,
 	}
+	// Compute uneven volumes
+	unevenPoolVolumes := setupUnequalVolumeWeights(len(perpetualGroupPoolIDs), oneMillionVolumeAmt)
+	// Setup volumes to let group creation pass.
+	s.setupVolumeForPools(perpetualGroupPoolIDs, unevenPoolVolumes, map[uint64]osmomath.Int{})
 
 	perpetualGroupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], perpetualGroupPoolIDs)
 	s.Require().NoError(err)
+
+	// Update volumes post-group creation
+	perpetualPoolIDToVolumeMap := map[uint64]osmomath.Int{}
+	s.setupVolumeForPools(perpetualGroupPoolIDs, unevenPoolVolumes, perpetualPoolIDToVolumeMap)
 
 	nonPerpetualGroupPoolIDs := []uint64{
 		// non-perpetual pools
 		nonPerpetualPoolAndGaugeInfo.ConcentratedPoolID, nonPerpetualPoolAndGaugeInfo.StableSwapPoolID, nonPerpetualPoolAndGaugeInfo.BalancerPoolID,
 	}
 
+	// Compute even volumes
+	equalPoolVolumes := setupEqualVolumeWeights(len(nonPerpetualGroupPoolIDs), sub10KVolumeAmount)
+	// Setup volumes to let group creation pass.
+	s.setupVolumeForPools(nonPerpetualGroupPoolIDs, equalPoolVolumes, map[uint64]osmomath.Int{})
+
 	nonPerpetualGroupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...).Add(defaultCoins...), types.PerpetualNumEpochsPaidOver+3, s.TestAccs[0], nonPerpetualGroupPoolIDs)
 	s.Require().NoError(err)
 
-	// Define test volume amounts
-	oneMillionVolumeAmt := osmomath.NewDec(1_000_000_000_000)
-	sub10KVolumeAmount := osmomath.NewDec(9_876_543_21)
-
-	// Setup uneven volumes
-	unevenPoolVolumes := setupUnequalVolumeWeights(len(perpetualGroupPoolIDs), oneMillionVolumeAmt)
-
-	perpetualPoolIDToVolumeMap := map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(perpetualGroupPoolIDs, unevenPoolVolumes, perpetualPoolIDToVolumeMap)
+	// Update volumes post-group creation
+	nonPerpetualPoolIDToVolumeMap := map[uint64]osmomath.Int{}
+	s.setupVolumeForPools(nonPerpetualGroupPoolIDs, equalPoolVolumes, nonPerpetualPoolIDToVolumeMap)
 
 	// Calculate the expected distribution
 	perpetualPoolIDToExpectedDistributionMap := s.computeExpectedDistributonAmountsFromVolume(perpetualPoolIDToVolumeMap, oneMillionVolumeAmt)
-
-	// Setup even volumes
-	equalPoolVolumes := setupEqualVolumeWeights(len(nonPerpetualGroupPoolIDs), sub10KVolumeAmount)
-
-	nonPerpetualPoolIDToVolumeMap := map[uint64]osmomath.Int{}
-
-	s.setupVolumeForPools(nonPerpetualGroupPoolIDs, equalPoolVolumes, nonPerpetualPoolIDToVolumeMap)
 
 	// Calculate the expected distribution
 	nonPerpetualPoolIDToExpectedDistributionMap := s.computeExpectedDistributonAmountsFromVolume(nonPerpetualPoolIDToVolumeMap, sub10KVolumeAmount)

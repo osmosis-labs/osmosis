@@ -289,7 +289,16 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 		SplittingPolicy: types.ByVolume,
 	}
 
-	k.SetGroup(ctx, newGroup)
+	// Note: we rely on the synching logic to persist the group to state
+	// if updated successfully.
+	// The reason we sync is to make sure that all pools in the group are valid
+	// and have the associated volume at group creation time. This prevents
+	// creating groups of pools that are invalid.
+	// Contrary to distribution logic that silently skips the error, we bubble it up here
+	// to fail the creation message.
+	if err := k.syncGroupWeights(ctx, newGroup); err != nil {
+		return 0, err
+	}
 
 	return groupGaugeID, nil
 }
