@@ -27,6 +27,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewCreateGaugeCmd(),
 		NewAddToGaugeCmd(),
+		NewCreateGroupCmd(),
 	)
 
 	return cmd
@@ -130,6 +131,13 @@ func NewAddToGaugeCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgAddToGauge](&osmocli.TxCliDesc{
 		Use:   "add-to-gauge",
 		Short: "add coins to gauge to distribute more rewards to users",
+	})
+}
+
+func NewCreateGroupCmd() *cobra.Command {
+	return osmocli.BuildTxCli[*types.MsgCreateGroup](&osmocli.TxCliDesc{
+		Use:   "create-group",
+		Short: "create a group in order to split incentives between pools",
 	})
 }
 
