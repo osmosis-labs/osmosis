@@ -152,7 +152,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 
 	// Validate distribution
 
-	// Note that the perpetual gauge was not refunded. As a result, it is not distributing anymore.
+	// Perpetual gauge was refunded, so we validate an updated value.
 	s.validateDistributionForGroup(perpetualGroupPoolIDs, perpetualPoolIDToExpectedDistributionMap)
 
 	s.validateDistributionForGroup(nonPerpetualGroupPoolIDs, nonPerpetualPoolIDToExpectedDistributionMap)
