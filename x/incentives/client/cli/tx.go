@@ -143,7 +143,8 @@ func NewCmdHandleCreateGaugeGroupsProposal() *cobra.Command {
 
 Passing in pool-id-pairs separated by commas would be parsed automatically to a single set for a single gauge group.
 If a semicolon is presented, that would be parsed as pool IDs for separate gauge group.
-Ex) denom-pair-taker-fee-proposal 1,2;3,4,5;6,7 ->
+Don't forget the single quotes around the pool IDs!
+Ex) denom-pair-taker-fee-proposal '1,2;3,4,5;6,7' ->
 Group 1: Pool IDs 1, 2
 Group 2: Pool IDs 3, 4, 5
 Group 3: Pool IDs 6, 7
