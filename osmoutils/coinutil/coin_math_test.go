@@ -1,4 +1,4 @@
-package coins_test
+package coinutil_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/coins"
+	coins "github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 )
 
 var (

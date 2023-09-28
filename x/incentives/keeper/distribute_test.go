@@ -10,7 +10,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/coins"
+	coins "github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
