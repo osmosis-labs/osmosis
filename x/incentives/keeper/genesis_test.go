@@ -129,7 +129,8 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	createAllGaugeTypes(t, app, ctx, addr, gaugeCoins, startTime)
 
 	// directly modify the weights of the groups so we can see if non zero values persist
-	groups := app.IncentivesKeeper.GetAllGroups(ctx)
+	groups, err := app.IncentivesKeeper.GetAllGroups(ctx)
+	require.NoError(t, err)
 	groups[0].InternalGaugeInfo = expectedGroups[0].InternalGaugeInfo
 	app.IncentivesKeeper.SetGroup(ctx, groups[0])
 
@@ -213,12 +214,14 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	require.Equal(t, expectedGauges[1], gauges[3])
 
 	// group gauge
-	groupGauges := app.IncentivesKeeper.GetAllGroupsGauges(ctx)
+	groupGauges, err := app.IncentivesKeeper.GetAllGroupsGauges(ctx)
+	require.NoError(t, err)
 	require.Len(t, groupGauges, len(expectedGroupGauges))
 	require.Equal(t, expectedGroupGauges, groupGauges)
 
 	// check group
-	groups := app.IncentivesKeeper.GetAllGroups(ctx)
+	groups, err := app.IncentivesKeeper.GetAllGroups(ctx)
+	require.NoError(t, err)
 	require.Len(t, groups, 1)
 	require.Equal(t, expectedGroups, groups)
 }

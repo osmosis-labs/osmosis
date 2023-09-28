@@ -37,12 +37,22 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 // ExportGenesis returns the x/incentives module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	groupGauges, err := k.GetAllGroupsGauges(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	groups, err := k.GetAllGroups(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	return &types.GenesisState{
 		Params:            k.GetParams(ctx),
 		LockableDurations: k.GetLockableDurations(ctx),
 		Gauges:            k.GetNotFinishedGauges(ctx),
 		LastGaugeId:       k.GetLastGaugeID(ctx),
-		GroupGauges:       k.GetAllGroupsGauges(ctx),
-		Groups:            k.GetAllGroups(ctx),
+		GroupGauges:       groupGauges,
+		Groups:            groups,
 	}
 }
