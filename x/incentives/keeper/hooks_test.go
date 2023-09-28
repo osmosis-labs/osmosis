@@ -238,7 +238,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_OverlappingPoolsInGroups() {
 // Set up two groups. One distributes to pools that have no volume set.
 // Set up volume for appropriate pools.
 // Call AfterEpochEnd hook.
-// Validate that the distribution is correct to only the pool that had volume updated.
+// Validate that the distribution is correct to only the pools that had volume updated.
 func (s *KeeperTestSuite) TestAfterEpochEnd_Group_NoVolumeOnePool_SkipSilent() {
 	s.SetupTest()
 
