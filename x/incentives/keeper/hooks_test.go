@@ -194,10 +194,10 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 func (s *KeeperTestSuite) TestAfterEpochEnd_Group_OverlappingPoolsInGroups() {
 	s.SetupTest()
 
-	// Create a perpetual set of pools that only perpetual group gauge incentivizes
-	perpetualPoolAndGaugeInfo := s.PrepareAllSupportedPools()
+	// Create a set of pools with their internal gauges.
+	poolAndGaugeInfo := s.PrepareAllSupportedPools()
 
-	overlappingPoolIDs := []uint64{perpetualPoolAndGaugeInfo.ConcentratedPoolID, perpetualPoolAndGaugeInfo.StableSwapPoolID, perpetualPoolAndGaugeInfo.BalancerPoolID}
+	overlappingPoolIDs := []uint64{poolAndGaugeInfo.ConcentratedPoolID, poolAndGaugeInfo.StableSwapPoolID, poolAndGaugeInfo.BalancerPoolID}
 
 	// Create first group
 	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], overlappingPoolIDs)
@@ -230,10 +230,56 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_OverlappingPoolsInGroups() {
 	s.validateDistributionForGroup(overlappingPoolIDs, poolIDToExpectedDistributionMap)
 }
 
+// This test focuses on validating group distributing when another group in the active set
+// fails to sync due to distributing to pool , and, as a result, is skipped silently.
+// The group with pools that had volume updated should still distribute.
+// The structure is:
+// Set up two groups. One distributes to pool that has no volume set.
+// Set up volume for appropriate pools.
+// Call AfterEpochEnd hook.
+// Validate that the distribution is correct to only the pool that had volume updated.
+func (s *KeeperTestSuite) TestAfterEpochEnd_Group_NoVolumeOnePool_SkipSilent() {
+	s.SetupTest()
+
+	// Create the first set of pools with internal gauges and a group for them.
+	poolAndGaugeInfoOne := s.PrepareAllSupportedPools()
+	poolIDsGroupOne := []uint64{poolAndGaugeInfoOne.ConcentratedPoolID, poolAndGaugeInfoOne.StableSwapPoolID}
+	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], poolIDsGroupOne)
+	s.Require().NoError(err)
+
+	// Create the second set of pools with internal gauges and a group for them.
+	poolAndGaugeInfoTwo := s.PrepareAllSupportedPools()
+	poolIDsGroupTwo := []uint64{poolAndGaugeInfoTwo.ConcentratedPoolID, poolAndGaugeInfoTwo.StableSwapPoolID}
+	_, err = s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], poolIDsGroupTwo)
+	s.Require().NoError(err)
+
+	// Configure the volume only for the pools in the first group.
+	// Setup uneven volumes
+	unevenPoolVolumes := setupUnequalVolumeWeights(len(poolIDsGroupOne), oneMillionVolumeAmt)
+	poolIDToVolumeMap := map[uint64]osmomath.Int{}
+	s.setupVolumeForPools(poolIDsGroupOne, unevenPoolVolumes, poolIDToVolumeMap)
+
+	distrEpochIdentifier := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
+
+	// System under test
+	err = s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, distrEpochIdentifier, 1)
+	s.Require().NoError(err)
+
+	// First group should distribute because it has volume.
+	poolIDToExpectedDistributionMap := s.computeExpectedDistributonAmountsFromVolume(defaultCoins, poolIDToVolumeMap, oneMillionVolumeAmt)
+	s.validateDistributionForGroup(poolIDsGroupOne, poolIDToExpectedDistributionMap)
+
+	// Second group should not distribute because it has no volume.
+	poolIDToExpectedDistributionMap = s.computeExpectedDistributonAmountsFromVolume(defaultCoins, map[uint64]osmomath.Int{
+		poolAndGaugeInfoTwo.ConcentratedPoolID: osmomath.ZeroInt(),
+		poolAndGaugeInfoTwo.StableSwapPoolID:   osmomath.ZeroInt(),
+	}, oneMillionVolumeAmt)
+	s.validateDistributionForGroup(poolIDsGroupTwo, poolIDToExpectedDistributionMap)
+}
+
 // TODO: create the following tests:
 // https://github.com/osmosis-labs/osmosis/issues/6559
 //
-// Test_AfterEpochEnd_Group_NoVolumeOnePool_SkipSilent
 // Test_AfterEpochEnd_Group_ChangeVolumeBetween
 // Test_AfterEpochEnd_Group_CreateGroupsBetween
 // Test_AfterEpochEnd_Group_SwapAndDistribute
@@ -272,6 +318,13 @@ func (*KeeperTestSuite) computeExpectedDistributonAmountsFromVolume(coinsDistrib
 	poolIDToExpectedDistributionMapOne := map[uint64]sdk.Coins{}
 	for poolID, volume := range poolIDToVolumeMap {
 		currentDistribution := coins.MulDec(defaultCoins, volume.ToLegacyDec().Quo(totalVolume))
+
+		// Note, the reason we do this is because otherwise
+		// the validation fails with 0uosmo expected vs "" actual
+		// Since these are the same things, we equate the expected to an empty coins.
+		if currentDistribution.IsZero() {
+			currentDistribution = sdk.NewCoins()
+		}
 
 		fmt.Printf("poolId %d, currentDistribution %s\n", poolID, currentDistribution)
 
