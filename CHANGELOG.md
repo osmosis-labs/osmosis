@@ -39,24 +39,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## Unreleased
+
+## v19.2.0
 
 ### Misc Improvements
 
 * [#6476](https://github.com/osmosis-labs/osmosis/pull/6476) band-aid state export fix for cwpool gauges
 * [#6492](https://github.com/osmosis-labs/osmosis/pull/6492) bump IAVL version to v0.19.7
 
+
 ### Features
 
+* [#6427](https://github.com/osmosis-labs/osmosis/pull/6427) sdk.Coins Mul and Quo helpers in osmoutils
+* [#6437](https://github.com/osmosis-labs/osmosis/pull/6437) mutative version for QuoRoundUp
+* [#6261](https://github.com/osmosis-labs/osmosis/pull/6261) mutative and efficient BigDec truncations with arbitrary decimals
 * [#6416](https://github.com/osmosis-labs/osmosis/pull/6416) feat[CL]: add num initialized ticks query
 * [#6488](https://github.com/osmosis-labs/osmosis/pull/6488) v2 SpotPrice CLI and GRPC query with 36 decimals in poolmanager
-* [#6535](https://github.com/osmosis-labs/osmosis/pull/6535) makefile: add target that tidies all submodules at once
 
 ### API Breaks
 
 * [#6487](https://github.com/osmosis-labs/osmosis/pull/6487) make PoolModuleI CalculateSpotPrice API return BigDec
 * [#6510](https://github.com/osmosis-labs/osmosis/pull/6510) remove redundant ctx param from DeleteAllKeysFromPrefix in osmoutils
 * [#6511](https://github.com/osmosis-labs/osmosis/pull/6511) remove redundant param from CreateGaugeRefKeys in incentives
+
 
 ## v19.1.0
 
