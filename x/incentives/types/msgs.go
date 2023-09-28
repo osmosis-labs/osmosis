@@ -167,6 +167,10 @@ func (m MsgCreateGroup) ValidateBasic() error {
 		return errors.New("pool ids should be composed of at least 2 pool IDs")
 	}
 
+	if len(m.PoolIds) > 30 {
+		return errors.New("pool ids should be composed of at most 30 pool IDs")
+	}
+
 	// Check for uniqueness
 	poolIdsMap := make(map[uint64]bool)
 	for _, id := range m.PoolIds {
