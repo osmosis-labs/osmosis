@@ -246,6 +246,7 @@ func NewOsmosisApp(
 	// hook, we will get a nil pointer dereference error due to the hooks in the keeper not being
 	// setup yet. I will refrain from creating an issue in the sdk for now until after we unfork to 0.47,
 	// because I believe the concept of Routes is going away.
+	// https://github.com/osmosis-labs/osmosis/issues/6580
 	app.SetupHooks()
 
 	/****  Module Options ****/
