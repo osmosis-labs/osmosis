@@ -45,8 +45,6 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 		// Refetch group
 		// TODO: consider mutating receiver of syncGroupWeights instead of refetching.
 		// https://github.com/osmosis-labs/osmosis/issues/6556
-		// TODO: cover AllocateAcrossGauges with unit tests. to make sure that the bug is caught.
-		// https://github.com/osmosis-labs/osmosis/issues/6557
 		group, err := k.GetGroupByGaugeID(ctx, group.GroupGaugeId)
 		if err != nil {
 			return err
@@ -89,6 +87,14 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 		// Define variables for brevity
 		totalGroupWeight := group.InternalGaugeInfo.TotalWeight
 		gaugeCount := len(group.InternalGaugeInfo.GaugeRecords)
+
+		// Note that if total weight is zero, we expect an error to be returned
+		// during syncing and the group silently skipped.
+		// However, we return the error here to be safe and to avoid
+		// panicking due to dividing by zero below.
+		if totalGroupWeight.IsZero() {
+			return types.GroupTotalWeightZeroError{GroupID: group.GroupGaugeId}
+		}
 
 		// Iterate over underlying gauge records in the group.
 		for gaugeIndex, distrRecord := range group.InternalGaugeInfo.GaugeRecords {
@@ -501,6 +507,12 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 	updatedGroup.InternalGaugeInfo.TotalWeight = totalWeight
 
 	k.SetGroup(ctx, updatedGroup)
+
+	// We return zero here so that the Group with zero total weight is silently skipped in the
+	// caller distribution logic.
+	if totalWeight.IsZero() {
+		return types.GroupTotalWeightZeroError{GroupID: group.GroupGaugeId}
+	}
 
 	return nil
 }

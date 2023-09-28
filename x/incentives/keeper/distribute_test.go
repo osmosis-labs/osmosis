@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coins"
 	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -1409,6 +1410,20 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 
 			expectedError: types.CumulativeVolumeDecreasedError{PoolId: uint64(2), PreviousVolume: osmomath.NewInt(200), NewVolume: osmomath.NewInt(100)},
 		},
+
+		"total weight is zero due to no records": {
+			groupToSync: types.Group{
+				GroupGaugeId:      defaultGroupGaugeId,
+				InternalGaugeInfo: types.InternalGaugeInfo{},
+				SplittingPolicy:   types.ByVolume,
+			},
+			updatedPoolVolumes: []osmomath.Int{
+				osmomath.ZeroInt(),
+				osmomath.ZeroInt(),
+			},
+
+			expectedError: types.GroupTotalWeightZeroError{GroupID: defaultGroupGaugeId},
+		},
 	}
 
 	for name, tc := range tests {
@@ -1441,12 +1456,12 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 				s.Require().ErrorContains(tc.expectedError, err.Error())
 
 				// Ensure original group is not mutated
-				s.Require().Equal(originalGroup, tc.groupToSync)
+				s.Require().Equal(originalGroup.String(), tc.groupToSync.String())
 
 				// Ensure group is unchanged in state
 				groupInState, err := ik.GetGroupByGaugeID(s.Ctx, tc.groupToSync.GroupGaugeId)
 				s.Require().NoError(err)
-				s.Require().Equal(tc.groupToSync, groupInState)
+				s.Require().Equal(tc.groupToSync.String(), groupInState.String())
 
 				return
 			}
@@ -1964,6 +1979,56 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			}
 		})
 	}
+}
+
+// This test validates two things:
+// - Allocating to a newly created group without any volume does not panic
+// - Once volume exists, the group allocated correctly.
+//
+// Additionally, this test catches a bug where if we didn't refetch groups after
+// synching in AllocateAcrossGauges, the group would not be updated with the correct
+// total volume and panic when allocating due to division by zero.
+func (s *KeeperTestSuite) TestCreateGroupsAndAllocate_GroupRefetchingInAllocate() {
+	s.SetupTest()
+
+	var (
+		defaultVolume = osmomath.NewInt(100)
+		// Note that we expect each pool gauge to have half the coins
+		// since they have equal volume.
+		halfDefaultCoins = coins.QuoRaw(defaultCoins, 2)
+	)
+
+	poolInfo := s.PrepareAllSupportedPools()
+
+	groupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, incentiveskeeper.PerpetualNumEpochsPaidOver, s.TestAccs[0], []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID})
+	s.Require().NoError(err)
+
+	// Fetch the group
+	group, err := s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, groupGaugeID)
+
+	// Allocate right after creating the group
+	err = s.App.IncentivesKeeper.AllocateAcrossGauges(s.Ctx, []types.Group{group})
+	s.Require().NoError(err)
+
+	// Set Volume
+	// Note that it is equal between pools.
+	s.setupVolumes([]uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID}, []osmomath.Int{defaultVolume, defaultVolume})
+
+	// This triggers a panic if group inside the loop is not refetched with updated weights
+	// Ensure that fetch happens correctly
+	// The group given is outdated without volume being synched and reflected yet.
+	err = s.App.IncentivesKeeper.AllocateAcrossGauges(s.Ctx, []types.Group{group})
+	s.Require().NoError(err)
+
+	// Validate that the concentrated pool gauge was updated correctly
+	concentratedGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, poolInfo.ConcentratedGaugeID)
+	s.Require().NoError(err)
+	s.Require().Equal(halfDefaultCoins.String(), concentratedGauge.Coins.String())
+
+	// Validate that the balancer pool gauge was updated correctly
+	balancerGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, poolInfo.BalancerGaugeID)
+	s.Require().NoError(err)
+	s.Require().Equal(halfDefaultCoins.String(), balancerGauge.Coins.String())
 }
 
 // setupVolumes sets the volume for each pool in the passed in list of pool ids to the corresponding value in the passed in list of volumes.
