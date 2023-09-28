@@ -239,9 +239,14 @@ func (*KeeperTestSuite) computeExpectedDistributonAmountsFromVolume(poolIDToVolu
 	return poolIDToExpectedDistributionMapOne
 }
 
+// initializes or increases the volumes for the given pools
+func (s *KeeperTestSuite) increaseVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int) {
+	s.setupVolumeForPools(poolIDs, volumesForEachPool, map[uint64]osmomath.Int{})
+}
+
 // sets up the volume for the pools in the group
 // mutates poolIDToVolumeMap
-func (s *KeeperTestSuite) setupVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Dec, poolIDToVolumeMap map[uint64]math.Int) {
+func (s *KeeperTestSuite) setupVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int, poolIDToVolumeMap map[uint64]math.Int) {
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 
 	s.Require().Equal(len(poolIDs), len(volumesForEachPool))
@@ -249,19 +254,18 @@ func (s *KeeperTestSuite) setupVolumeForPools(poolIDs []uint64, volumesForEachPo
 		currentPoolID := poolIDs[i]
 
 		currentVolume := volumesForEachPool[i]
-		currentVolumeInt := currentVolume.TruncateInt()
 
 		fmt.Printf("currentVolume %d %s\n", i, currentVolume)
 
 		// Retrieve the existing volume to add to it.
 		existingVolume := s.App.PoolManagerKeeper.GetOsmoVolumeForPool(s.Ctx, currentPoolID)
 
-		s.App.PoolManagerKeeper.SetVolume(s.Ctx, currentPoolID, sdk.NewCoins(sdk.NewCoin(bondDenom, existingVolume.Add(currentVolumeInt))))
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, currentPoolID, sdk.NewCoins(sdk.NewCoin(bondDenom, existingVolume.Add(currentVolume))))
 
 		if existingVolume, ok := poolIDToVolumeMap[currentPoolID]; ok {
-			poolIDToVolumeMap[currentPoolID] = existingVolume.Add(currentVolumeInt)
+			poolIDToVolumeMap[currentPoolID] = existingVolume.Add(currentVolume)
 		} else {
-			poolIDToVolumeMap[currentPoolID] = currentVolumeInt
+			poolIDToVolumeMap[currentPoolID] = currentVolume
 		}
 	}
 }
@@ -272,12 +276,12 @@ func (s *KeeperTestSuite) setupVolumeForPools(poolIDs []uint64, volumesForEachPo
 // The formula to determine the weight ratio is:
 // a_i = i / (n(n+1)/2)
 // It is chosen so that the sum of all weights is 1 and each weight is unique.
-func setupUnequalVolumeWeights(numVolumeWeightsToCreate int, totalVolumeAmount math.LegacyDec) []math.LegacyDec {
-	unequalVolumeRatios := make([]osmomath.Dec, 0, numVolumeWeightsToCreate)
+func setupUnequalVolumeWeights(numVolumeWeightsToCreate int, totalVolumeAmount math.LegacyDec) []osmomath.Int {
+	unequalVolumeRatios := make([]osmomath.Int, 0, numVolumeWeightsToCreate)
 	n := osmomath.NewDec(int64(numVolumeWeightsToCreate))
 	for i := 0; i < numVolumeWeightsToCreate; i++ {
 		denominator := n.Mul(n.Add(osmomath.OneDec())).Quo(osmomath.NewDec(2))
-		unequalVolumeRatios = append(unequalVolumeRatios, osmomath.NewDec(int64(i+1)).Quo(denominator).Mul(totalVolumeAmount))
+		unequalVolumeRatios = append(unequalVolumeRatios, osmomath.NewDec(int64(i+1)).Quo(denominator).Mul(totalVolumeAmount).TruncateInt())
 	}
 	return unequalVolumeRatios
 }
@@ -286,11 +290,11 @@ func setupUnequalVolumeWeights(numVolumeWeightsToCreate int, totalVolumeAmount m
 // and are equal.
 //
 // The distribution of weights is chosen so that the sum of all them is 1 and each weight is equal.
-func setupEqualVolumeWeights(numVolumeWeightsToCreate int, totalVolumeAmount math.LegacyDec) []math.LegacyDec {
-	equalVolumeRatios := make([]osmomath.Dec, 0, numVolumeWeightsToCreate)
+func setupEqualVolumeWeights(numVolumeWeightsToCreate int, totalVolumeAmount math.LegacyDec) []osmomath.Int {
+	equalVolumeRatios := make([]osmomath.Int, 0, numVolumeWeightsToCreate)
 	for i := 0; i < numVolumeWeightsToCreate; i++ {
 		currentVolume := osmomath.OneDec().Quo(osmomath.NewDec(int64(numVolumeWeightsToCreate))).Mul(totalVolumeAmount)
-		equalVolumeRatios = append(equalVolumeRatios, currentVolume)
+		equalVolumeRatios = append(equalVolumeRatios, currentVolume.TruncateInt())
 	}
 	return equalVolumeRatios
 }
