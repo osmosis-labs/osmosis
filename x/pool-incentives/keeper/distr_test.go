@@ -2,10 +2,13 @@ package keeper_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/coins"
 	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+var defaultCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000)))
 
 func (s *KeeperTestSuite) TestAllocateAsset() {
 	tests := []struct {
@@ -123,6 +126,64 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 			s.Require().Equal(feePoolOrigin.CommunityPool.Add(test.expectedCommunityPool), feePoolNew.CommunityPool)
 		})
 	}
+}
+
+// Validates that group gauges can be allocated minted tokens from pool incentives as expected
+// The test creates 2 groups, creates distribuion records for them, calls AllocateAsset and then
+// checks that the group gauges have the expected amount of tokens.
+func (s *KeeperTestSuite) TestAllocateAsset_GroupGauge() {
+	var (
+		weightGroupOne = osmomath.NewInt(100)
+		weightGroupTwo = osmomath.NewInt(200)
+		totalWeight    = weightGroupTwo.Add(weightGroupOne)
+
+		poolIncentiveDistribution = defaultCoins.Add(defaultCoins...)
+	)
+
+	s.Setup()
+	poolInfo := s.PrepareAllSupportedPools()
+
+	// Fund fee and initial coins for each group.
+	groupCreationFee := s.App.IncentivesKeeper.GetParams(s.Ctx).GroupCreationFee
+	s.FundAcc(s.TestAccs[1], groupCreationFee.Add(groupCreationFee...).Add(defaultCoins...).Add(defaultCoins...))
+
+	groupGaugeIDOne, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, 0, s.TestAccs[1], []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID, poolInfo.StableSwapPoolID})
+	s.Require().NoError(err)
+
+	groupGaugeIDTwo, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, 0, s.TestAccs[1], []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID, poolInfo.StableSwapPoolID})
+	s.Require().NoError(err)
+
+	err = s.App.PoolIncentivesKeeper.ReplaceDistrRecords(s.Ctx, types.DistrRecord{
+		GaugeId: groupGaugeIDOne,
+		Weight:  weightGroupOne,
+	}, types.DistrRecord{
+		GaugeId: groupGaugeIDTwo,
+		Weight:  weightGroupTwo,
+	})
+	s.Require().NoError(err)
+
+	// Fund pool incentives module account
+	s.FundModuleAcc(types.ModuleName, poolIncentiveDistribution)
+
+	// Allocate pool incentive distribution
+	err = s.App.PoolIncentivesKeeper.AllocateAsset(s.Ctx)
+	s.Require().NoError(err)
+
+	// Get first Group Gauge and ensure that full amount is received.
+	groupGaugeOne, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, groupGaugeIDOne)
+	s.Require().NoError(err)
+
+	// expected to contain initial default coins + 100 / 300 of the distribution
+	expectedDistributionGroupGaugeOne := coins.MulDec(poolIncentiveDistribution, weightGroupOne.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
+	s.Require().Equal(defaultCoins.Add(expectedDistributionGroupGaugeOne...), groupGaugeOne.Coins)
+
+	// Get second Group Gauge and ensure that full amount is received.
+	groupGaugeTwo, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, groupGaugeIDTwo)
+	s.Require().NoError(err)
+
+	// expected to contain initial default coins + 200 / 300 of the distribution
+	expectedDistributionGroupGaugeTwo := coins.MulDec(poolIncentiveDistribution, weightGroupTwo.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
+	s.Require().Equal(defaultCoins.Add(expectedDistributionGroupGaugeTwo...), groupGaugeTwo.Coins)
 }
 
 func (s *KeeperTestSuite) TestReplaceDistrRecords() {
