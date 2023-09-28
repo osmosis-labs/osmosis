@@ -319,10 +319,6 @@ func (k Keeper) chargeGroupCreationFeeIfNotWhitelisted(ctx sdk.Context, sender s
 			return false, err
 		}
 
-		fmt.Println("unrestrictedAddress", unrestrictedAddress)
-		fmt.Println("sender", sender)
-		fmt.Println("incentivesModuleAddress", incentivesModuleAddress)
-
 		// don't charge fee if sender is in the whitelist
 		if unrestrictedAddress.Equals(sender) {
 			return false, nil
