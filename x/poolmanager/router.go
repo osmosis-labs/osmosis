@@ -158,9 +158,6 @@ func (k Keeper) SwapExactAmountIn(
 	if err != nil {
 		return osmomath.Int{}, err
 	}
-	if err != nil {
-		return osmomath.Int{}, err
-	}
 
 	// routeStep to the pool-specific SwapExactAmountIn implementation.
 	tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenInAfterSubTakerFee, tokenOutDenom, tokenOutMinAmount, pool.GetSpreadFactor(ctx))
