@@ -681,4 +681,4 @@ goreleaser-build: go.sum
 	test test-all test-build test-cover test-unit test-race benchmark \
 	release release-dry-run release-snapshot \
 	goreleaser-build goreleaser-build-linux-arm64 goreleaser-build-linux-amd64 \
-	goreleaser-build-linux-arm64 goreleaser-build-linux-arm64
+	goreleaser-build-darwin-arm64 goreleaser-build-darwin-arm64
