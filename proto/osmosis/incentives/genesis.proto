@@ -26,5 +26,6 @@ message GenesisState {
   // last_gauge_id is what the gauge number will increment from when creating
   // the next gauge after genesis
   uint64 last_gauge_id = 4;
+  // groups are all the groups that should exist at genesis
   repeated Group groups = 5 [ (gogoproto.nullable) = false ];
 }

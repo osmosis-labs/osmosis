@@ -39,8 +39,9 @@ type GenesisState struct {
 	LockableDurations []time.Duration `protobuf:"bytes,3,rep,name=lockable_durations,json=lockableDurations,proto3,stdduration" json:"lockable_durations" yaml:"lockable_durations"`
 	// last_gauge_id is what the gauge number will increment from when creating
 	// the next gauge after genesis
-	LastGaugeId uint64  `protobuf:"varint,4,opt,name=last_gauge_id,json=lastGaugeId,proto3" json:"last_gauge_id,omitempty"`
-	Groups      []Group `protobuf:"bytes,5,rep,name=groups,proto3" json:"groups"`
+	LastGaugeId uint64 `protobuf:"varint,4,opt,name=last_gauge_id,json=lastGaugeId,proto3" json:"last_gauge_id,omitempty"`
+	// groups are all the groups that should exist at genesis
+	Groups []Group `protobuf:"bytes,5,rep,name=groups,proto3" json:"groups"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }

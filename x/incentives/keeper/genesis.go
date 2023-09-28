@@ -11,22 +11,26 @@ import (
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 	k.SetLockableDurations(ctx, genState.LockableDurations)
-	// set gauge refs for all non-byGroup gauges
+
 	for _, gauge := range genState.Gauges {
 		gauge := gauge
 		if gauge.DistributeTo.LockQueryType == lockuptypes.ByGroup {
+			// set gauge directly for byGroup gauges
 			err := k.setGauge(ctx, &gauge)
 			if err != nil {
 				panic(err)
 			}
 		} else {
+			// set gauge refs for all non-byGroup gauges
 			err := k.SetGaugeWithRefKey(ctx, &gauge)
 			if err != nil {
 				panic(err)
 			}
 		}
 	}
+
 	k.SetLastGaugeID(ctx, genState.LastGaugeId)
+
 	for _, group := range genState.Groups {
 		k.SetGroup(ctx, group)
 	}

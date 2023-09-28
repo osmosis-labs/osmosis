@@ -115,7 +115,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	gaugeCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
 	createAllGaugeTypes(t, app, ctx, addr, gaugeCoins, startTime)
 
-	// directly modify the weights of the groups so we want to see if non zero values persist
+	// directly modify the weights of the groups so we can see if non zero values persist
 	groups := app.IncentivesKeeper.GetAllGroups(ctx)
 	groups[0].InternalGaugeInfo = expectedGroups[0].InternalGaugeInfo
 	app.IncentivesKeeper.SetGroup(ctx, groups[0])
@@ -129,22 +129,22 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	expectedGauges := expectedGauges(startTime)
 	require.Len(t, genesis.Gauges, len(expectedGauges))
 
-	// group gauge
-	require.Equal(t, expectedGauges[4], genesis.Gauges[0])
-
 	// pool 1 gauge
-	require.Equal(t, expectedGauges[0], genesis.Gauges[1])
+	require.Equal(t, expectedGauges[0], genesis.Gauges[0])
 
 	// pool 2 gauge
-	require.Equal(t, expectedGauges[1], genesis.Gauges[2])
+	require.Equal(t, expectedGauges[1], genesis.Gauges[1])
 
 	// duration gauge
-	require.Equal(t, expectedGauges[2], genesis.Gauges[3])
+	require.Equal(t, expectedGauges[2], genesis.Gauges[2])
 
 	// no lock gauge
 	// distrToNoLock denom gets added post creation
 	expectedGauges[3].DistributeTo.Denom = "no-lock/e/1"
-	require.Equal(t, expectedGauges[3], genesis.Gauges[4])
+	require.Equal(t, expectedGauges[3], genesis.Gauges[3])
+
+	// group gauge
+	require.Equal(t, expectedGauges[4], genesis.Gauges[4])
 
 	// check group
 	require.Len(t, genesis.Groups, 1)
@@ -185,20 +185,20 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	gauges := app.IncentivesKeeper.GetGauges(ctx)
 	require.Len(t, gauges, 5)
 
-	// group gauge
-	require.Equal(t, expectedGauges[4], gauges[0])
-
 	// pool 1 gauge
-	require.Equal(t, expectedGauges[2], gauges[1])
+	require.Equal(t, expectedGauges[0], gauges[0])
 
 	// pool 2 gauge
-	require.Equal(t, expectedGauges[3], gauges[2])
+	require.Equal(t, expectedGauges[1], gauges[1])
 
 	// duration gauge
-	require.Equal(t, expectedGauges[0], gauges[3])
+	require.Equal(t, expectedGauges[2], gauges[2])
 
 	// no lock gauge
-	require.Equal(t, expectedGauges[1], gauges[4])
+	require.Equal(t, expectedGauges[3], gauges[3])
+
+	// group gauge
+	require.Equal(t, expectedGauges[4], gauges[4])
 
 	// check group
 	groups := app.IncentivesKeeper.GetAllGroups(ctx)
