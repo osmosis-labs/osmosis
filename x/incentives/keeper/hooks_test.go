@@ -230,11 +230,12 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_OverlappingPoolsInGroups() {
 	s.validateDistributionForGroup(overlappingPoolIDs, poolIDToExpectedDistributionMap)
 }
 
-// This test focuses on validating group distributing when another group in the active set
-// fails to sync due to distributing to pool , and, as a result, is skipped silently.
+// This test focuses on validating group distributing when another existing group
+// fails to sync due to distributing to a pool with no volume updated. Such group is expected
+// to be skipped silently.
 // The group with pools that had volume updated should still distribute.
 // The structure is:
-// Set up two groups. One distributes to pool that has no volume set.
+// Set up two groups. One distributes to pools that have no volume set.
 // Set up volume for appropriate pools.
 // Call AfterEpochEnd hook.
 // Validate that the distribution is correct to only the pool that had volume updated.
