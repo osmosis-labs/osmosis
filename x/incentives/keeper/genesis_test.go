@@ -227,15 +227,15 @@ func TestIncentivesInitGenesis(t *testing.T) {
 }
 
 func createAllGaugeTypes(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins, startTime time.Time) {
-	// create a gauge that distributes coins to earlier created LP token and duration
+	// create a byDuration gauge
 	_, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrToByDuration, startTime, 1, 0)
 	require.NoError(t, err)
 
-	// create a gauge that distributes coins to earlier created LP token and duration
+	// create a noLock gauge
 	_, err = app.IncentivesKeeper.CreateGauge(ctx, false, addr, coins, distrToNoLock, startTime, 1, 1)
 	require.NoError(t, err)
 
-	// create a gauge that distributes coins to earlier created LP token and duration
+	// create a group which in turn creates a byGroup gauge
 	_, err = app.IncentivesKeeper.CreateGroup(ctx, sdk.Coins{}, 0, addr, []uint64{1, 2})
 	require.NoError(t, err)
 }
