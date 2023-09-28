@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
@@ -85,6 +87,19 @@ func Equal[T Stringer](t *testing.T, tolerance osmomath.ErrTolerance, A, B T) {
 		failNowIfNot(t, ok)
 
 		require.True(t, tolerance.CompareDec(a, b) == 0, errMsg)
+	case sdk.Coin:
+		b, ok := any(B).(sdk.Coin)
+		failNowIfNot(t, ok)
+		Equal(t, tolerance, a.Amount, b.Amount)
+
+	case sdk.Coins:
+		b, ok := any(B).(sdk.Coins)
+		failNowIfNot(t, ok)
+
+		for i, coinA := range a {
+			Equal(t, tolerance, coinA, b[i])
+		}
+
 	default:
 		require.FailNow(t, "unsupported types")
 	}

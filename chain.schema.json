@@ -2,16 +2,17 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "codebase": {
     "git_repo": "https://github.com/osmosis-labs/osmosis",
-    "recommended_version": "v19.1.0",
+    "recommended_version": "v19.2.0",
     "compatible_versions": [
+      "v19.2.0",
       "v19.1.0",
       "v19.0.0"
     ],
     "binaries": {
-      "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.1.0/osmosisd-19.1.0-linux-arm64?checksum=sha256:b08fda8bcb6f3b46ffce15b1022b38bc4d01ebb7f7c4d39061d4c084ffbc576c",
-      "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.1.0/osmosisd-19.1.0-linux-amd64?checksum=sha256:c170e0c4caf2a5170bcdc34689a0eabb99b1e7d6544b6f3ee3e0753bf96de0ef"
+      "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.2.0/osmosisd-19.2.0-linux-amd64?checksum=sha256:723ff1c5349eb3c039c3dc5f55895bbde2e1499fe7c0a96960cc6fadeec814c4",
+      "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.2.0/osmosisd-19.2.0-linux-arm64?checksum=sha256:d933b893d537422164a25bf161d7f269a59ea26d37f398cdb7dd575a9ec33ed2"
     },
-    "cosmos_sdk_version": "osmosis-labs/cosmos-sdk@0.45.0-rc1.0.20230913192254-a2075590d5a3",
+    "cosmos_sdk_version": "osmosis-labs/cosmos-sdk@0.45.0-rc1.0.20230927020814-2854ac001f06",
     "consensus": {
       "type": "tendermint",
       "version": "informalsystems/tendermint@0.34.24"
@@ -228,14 +229,15 @@
       },
       {
         "name": "v19",
-        "tag": "v19.1.0",
+        "tag": "v19.2.0",
         "height": 11317300,
-        "recommended_version": "v19.1.0",
+        "recommended_version": "v19.2.0",
         "compatible_versions": [
+          "v19.2.0",
           "v19.1.0",
           "v19.0.0"
         ],
-        "cosmos_sdk_version": "osmosis-labs/cosmos-sdk@0.45.0-rc1.0.20230913192254-a2075590d5a3",
+        "cosmos_sdk_version": "osmosis-labs/cosmos-sdk@0.45.0-rc1.0.20230927020814-2854ac001f06",
         "consensus": {
           "type": "tendermint",
           "version": "informalsystems/tendermint@0.34.24"
@@ -247,8 +249,8 @@
           "ics20-1"
         ],
         "binaries": {
-          "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.1.0/osmosisd-19.1.0-linux-arm64?checksum=sha256:b08fda8bcb6f3b46ffce15b1022b38bc4d01ebb7f7c4d39061d4c084ffbc576c",
-          "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.1.0/osmosisd-19.1.0-linux-amd64?checksum=sha256:c170e0c4caf2a5170bcdc34689a0eabb99b1e7d6544b6f3ee3e0753bf96de0ef"
+          "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.2.0/osmosisd-19.2.0-linux-amd64?checksum=sha256:723ff1c5349eb3c039c3dc5f55895bbde2e1499fe7c0a96960cc6fadeec814c4",
+          "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v19.2.0/osmosisd-19.2.0-linux-arm64?checksum=sha256:d933b893d537422164a25bf161d7f269a59ea26d37f398cdb7dd575a9ec33ed2"
         }
       }
     ]

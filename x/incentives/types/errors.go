@@ -69,3 +69,11 @@ type OnePoolIDGroupError struct {
 func (e OnePoolIDGroupError) Error() string {
 	return fmt.Sprintf("one pool ID %d given. Need at least two to create valid Group", e.PoolID)
 }
+
+type GroupTotalWeightZeroError struct {
+	GroupID uint64
+}
+
+func (e GroupTotalWeightZeroError) Error() string {
+	return fmt.Sprintf("Group with ID %d has total weight of zero", e.GroupID)
+}

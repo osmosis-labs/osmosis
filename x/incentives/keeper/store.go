@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -116,6 +117,30 @@ func (k Keeper) SetGroup(ctx sdk.Context, group types.Group) {
 // GetAllGroupGauges gets all the groupGauges that is in state.
 func (k Keeper) GetAllGroups(ctx sdk.Context) ([]types.Group, error) {
 	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPrefixGroup, k.ParseGroupFromBz)
+}
+
+// GetAllGroupsGauges first gets all groups, iterates through them, and pulls the gauge from each.
+func (k Keeper) GetAllGroupsGauges(ctx sdk.Context) ([]types.Gauge, error) {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixGroup)
+	iter := prefixStore.Iterator(nil, nil)
+
+	var gauges []types.Gauge
+	for ; iter.Valid(); iter.Next() {
+		group, err := k.ParseGroupFromBz(iter.Value())
+		if err != nil {
+			iter.Close()
+			panic(fmt.Errorf("invalid group key (%s): %v", string(iter.Key()), err))
+		}
+
+		gauge, err := k.GetGaugeByID(ctx, group.GroupGaugeId)
+		if err != nil {
+			iter.Close()
+			return nil, err
+		}
+		gauges = append(gauges, *gauge)
+	}
+	return gauges, nil
 }
 
 func (k Keeper) ParseGroupFromBz(bz []byte) (group types.Group, err error) {
