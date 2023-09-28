@@ -1133,3 +1133,23 @@ func (s *KeeperTestSuite) validateNoGaugeIDInSlice(slice []types.Gauge, gaugeID 
 	// No gauge matched ID.
 	s.Require().Empty(gaugeMatch)
 }
+
+// validates that Group and group Gauge exist
+func (s *KeeperTestSuite) validateGroupExists(gaugeID uint64) {
+	_, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID)
+	s.Require().NoError(err)
+
+	_, err = s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, gaugeID)
+	s.Require().NoError(err)
+}
+
+// validates that Group and group Gauge do not exist
+func (s *KeeperTestSuite) validateGroupNotExists(nonPerpetualGroupGaugeID uint64) {
+	_, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, nonPerpetualGroupGaugeID)
+	s.Require().Error(err)
+	s.Require().ErrorIs(err, types.GaugeNotFoundError{GaugeID: nonPerpetualGroupGaugeID})
+
+	_, err = s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, nonPerpetualGroupGaugeID)
+	s.Require().Error(err)
+	s.Require().ErrorIs(err, types.GroupNotFoundError{GroupGaugeId: nonPerpetualGroupGaugeID})
+}

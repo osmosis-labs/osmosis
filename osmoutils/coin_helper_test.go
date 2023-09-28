@@ -1,6 +1,7 @@
 package osmoutils_test
 
 import (
+	"reflect"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -251,4 +252,42 @@ func TestConvertCoinsToDecCoins(t *testing.T) {
 
 		})
 	}
+}
+
+func TestMergeCoinMaps(t *testing.T) {
+	// Test case 1: Merging two empty maps should result in an empty map.
+	t.Run("Merge Empty Maps", func(t *testing.T) {
+		currentMap := map[string]sdk.Coins{}
+		poolMap := map[string]sdk.Coins{}
+		mergedMap := osmoutils.MergeCoinMaps(currentMap, poolMap)
+
+		if len(mergedMap) != 0 {
+			t.Errorf("Expected an empty map, but got a map with %d elements", len(mergedMap))
+		}
+	})
+
+	// Test case 2: Merging maps with overlapping keys.
+	t.Run("Merge Maps with Overlapping Keys", func(t *testing.T) {
+		currentMap := map[string]sdk.Coins{
+			"pool1": sdk.NewCoins(sdk.NewCoin("token1", sdk.NewInt(100))),
+			"pool2": sdk.NewCoins(sdk.NewCoin("token2", sdk.NewInt(200))),
+		}
+
+		poolMap := map[string]sdk.Coins{
+			"pool2": sdk.NewCoins(sdk.NewCoin("token2", sdk.NewInt(300))),
+			"pool3": sdk.NewCoins(sdk.NewCoin("token3", sdk.NewInt(400))),
+		}
+
+		expectedMergedMap := map[string]sdk.Coins{
+			"pool1": sdk.NewCoins(sdk.NewCoin("token1", sdk.NewInt(100))),
+			"pool2": sdk.NewCoins(sdk.NewCoin("token2", sdk.NewInt(500))), // 200 + 300
+			"pool3": sdk.NewCoins(sdk.NewCoin("token3", sdk.NewInt(400))),
+		}
+
+		mergedMap := osmoutils.MergeCoinMaps(currentMap, poolMap)
+
+		if !reflect.DeepEqual(mergedMap, expectedMergedMap) {
+			t.Errorf("MergeCoinMaps result is not as expected.\nExpected: %+v\nActual:   %+v", expectedMergedMap, mergedMap)
+		}
+	})
 }
