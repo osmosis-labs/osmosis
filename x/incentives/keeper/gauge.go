@@ -237,7 +237,11 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		}
 	}
 
-	k.hooks.AfterCreateGauge(ctx, gauge.Id)
+	// TODO: We comment out AfterCreateGauge hook for two reasons:
+	// 1. It is not used anywhere in the codebase.
+	// 2. There is a bug where we initHooks after we init gov routes. Therefore,
+	// if we attempt to call a method that calls a hook via a gov prop, it will panic.
+	// k.hooks.AfterCreateGauge(ctx, gauge.Id)
 	return gauge.Id, nil
 }
 
