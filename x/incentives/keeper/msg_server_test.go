@@ -343,16 +343,12 @@ func (s *KeeperTestSuite) TestCreateGroup_Fee() {
 			s.Require().NoError(err)
 			balanceAmount := bankKeeper.GetAllBalances(ctx, testAccountAddress)
 
-			if tc.expectErr {
-				s.Require().Equal(tc.accountBalanceToFund.String(), balanceAmount.String(), "test: %v", tc.name)
-			} else {
-				accountBalance := tc.accountBalanceToFund.Sub(tc.groupFunds)
-				finalAccountBalance := accountBalance
-				if !tc.isModuleAccount {
-					finalAccountBalance = accountBalance.Sub(groupCreationFee)
-				}
-				s.Require().Equal(finalAccountBalance.String(), balanceAmount.String(), "test: %v", tc.name)
+			accountBalance := tc.accountBalanceToFund.Sub(tc.groupFunds)
+			finalAccountBalance := accountBalance
+			if !tc.isModuleAccount {
+				finalAccountBalance = accountBalance.Sub(groupCreationFee)
 			}
+			s.Require().Equal(finalAccountBalance.String(), balanceAmount.String(), "test: %v", tc.name)
 		}
 	}
 }
