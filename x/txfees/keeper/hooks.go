@@ -113,7 +113,7 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 
 			// We swap without charging a taker fee / sending to the non native fee collector, since these are funds that
 			// are accruing from the taker fee itself.
-			_, err := k.poolManager.SwapExactAmountIn(cacheCtx, feeCollectorAddress, poolId, coin, denomToSwapTo, minAmountOut)
+			_, err := k.poolManager.SwapExactAmountInNoTakerFee(cacheCtx, feeCollectorAddress, poolId, coin, denomToSwapTo, minAmountOut)
 			return err
 		})
 	}
