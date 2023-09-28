@@ -68,6 +68,19 @@ var (
 			SplittingPolicy: types.ByVolume,
 		},
 	}
+
+	expectedGroupGauges = []types.Gauge{
+		{
+			Id:                5,
+			IsPerpetual:       true,
+			DistributeTo:      distrToByGroup,
+			Coins:             sdk.Coins(nil),
+			NumEpochsPaidOver: 0,
+			FilledEpochs:      0,
+			DistributedCoins:  sdk.Coins(nil),
+			StartTime:         time.Time{}.UTC(),
+		},
+	}
 )
 
 // TestIncentivesExportGenesis tests export genesis command for the incentives module.
@@ -143,8 +156,9 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	expectedGauges[3].DistributeTo.Denom = "no-lock/e/1"
 	require.Equal(t, expectedGauges[3], genesis.Gauges[3])
 
-	// group gauge
-	require.Equal(t, expectedGauges[4], genesis.Gauges[4])
+	// check that the group gauges created earlier were exported through exportGenesis and still exists on chain
+	require.Len(t, genesis.GroupGauges, len(expectedGroupGauges))
+	require.Equal(t, expectedGroupGauges, genesis.GroupGauges)
 
 	// check group
 	require.Len(t, genesis.Groups, 1)
@@ -178,27 +192,30 @@ func TestIncentivesInitGenesis(t *testing.T) {
 			time.Hour * 3,
 			time.Hour * 7,
 		},
-		Groups: expectedGroups,
+		GroupGauges: expectedGroupGauges,
+		Groups:      expectedGroups,
 	})
 
 	// check that the gauge created earlier was initialized through initGenesis and still exists on chain
 	gauges := app.IncentivesKeeper.GetGauges(ctx)
-	require.Len(t, gauges, 5)
-
-	// pool 1 gauge
-	require.Equal(t, expectedGauges[0], gauges[0])
-
-	// pool 2 gauge
-	require.Equal(t, expectedGauges[1], gauges[1])
+	require.Len(t, gauges, len(expectedGauges))
 
 	// duration gauge
-	require.Equal(t, expectedGauges[2], gauges[2])
+	require.Equal(t, expectedGauges[2], gauges[0])
 
 	// no lock gauge
-	require.Equal(t, expectedGauges[3], gauges[3])
+	require.Equal(t, expectedGauges[3], gauges[1])
+
+	// pool 1 gauge
+	require.Equal(t, expectedGauges[0], gauges[2])
+
+	// pool 2 gauge
+	require.Equal(t, expectedGauges[1], gauges[3])
 
 	// group gauge
-	require.Equal(t, expectedGauges[4], gauges[4])
+	groupGauges := app.IncentivesKeeper.GetAllGroupsGauges(ctx)
+	require.Len(t, groupGauges, len(expectedGroupGauges))
+	require.Equal(t, expectedGroupGauges, groupGauges)
 
 	// check group
 	groups := app.IncentivesKeeper.GetAllGroups(ctx)
@@ -261,16 +278,6 @@ func expectedGauges(startTime time.Time) []types.Gauge {
 			FilledEpochs:      0,
 			DistributedCoins:  sdk.Coins(nil),
 			StartTime:         startTime.UTC(),
-		},
-		{
-			Id:                5,
-			IsPerpetual:       true,
-			DistributeTo:      distrToByGroup,
-			Coins:             sdk.Coins(nil),
-			NumEpochsPaidOver: 0,
-			FilledEpochs:      0,
-			DistributedCoins:  sdk.Coins(nil),
-			StartTime:         time.Time{}.UTC(),
 		},
 	}
 }

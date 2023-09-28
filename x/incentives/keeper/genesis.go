@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 )
 
 // InitGenesis initializes the incentives module's state from a provided genesis state.
@@ -14,18 +13,18 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 	for _, gauge := range genState.Gauges {
 		gauge := gauge
-		if gauge.DistributeTo.LockQueryType == lockuptypes.ByGroup {
-			// set gauge directly for byGroup gauges
-			err := k.setGauge(ctx, &gauge)
-			if err != nil {
-				panic(err)
-			}
-		} else {
-			// set gauge refs for all non-byGroup gauges
-			err := k.SetGaugeWithRefKey(ctx, &gauge)
-			if err != nil {
-				panic(err)
-			}
+		// set gauge refs for all non-byGroup gauges
+		err := k.SetGaugeWithRefKey(ctx, &gauge)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	for _, groupGauges := range genState.GroupGauges {
+		groupGauges := groupGauges
+		err := k.setGauge(ctx, &groupGauges)
+		if err != nil {
+			panic(err)
 		}
 	}
 
@@ -43,6 +42,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		LockableDurations: k.GetLockableDurations(ctx),
 		Gauges:            k.GetNotFinishedGauges(ctx),
 		LastGaugeId:       k.GetLastGaugeID(ctx),
+		GroupGauges:       k.GetAllGroupsGauges(ctx),
 		Groups:            k.GetAllGroups(ctx),
 	}
 }

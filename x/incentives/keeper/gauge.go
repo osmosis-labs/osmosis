@@ -3,7 +3,6 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -352,41 +351,29 @@ func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, gaugeIDs []uint64) ([]types.Gau
 	return gauges, nil
 }
 
-// GetGauges returns upcoming, active, finished, and group gauges.
+// GetGauges returns upcoming, active, and finished gauges.
 func (k Keeper) GetGauges(ctx sdk.Context) []types.Gauge {
-	allGauges := k.GetAllGroupsGauges(ctx)
-	allGauges = append(allGauges, k.getGaugesFromIterator(ctx, k.GaugesIterator(ctx))...)
-	sortGaugesByGaugeID(allGauges)
-	return allGauges
+	return k.getGaugesFromIterator(ctx, k.GaugesIterator(ctx))
 }
 
-// GetNotFinishedGauges returns upcoming, active, and group gauges.
+// GetNotFinishedGauges returns both upcoming and active gauges.
 func (k Keeper) GetNotFinishedGauges(ctx sdk.Context) []types.Gauge {
-	notFinishedGauges := append(k.GetActiveGauges(ctx), k.GetUpcomingGauges(ctx)...)
-	sortGaugesByGaugeID(notFinishedGauges)
-	return notFinishedGauges
+	return append(k.GetActiveGauges(ctx), k.GetUpcomingGauges(ctx)...)
 }
 
-// GetActiveGauges returns active and group gauges.
+// GetActiveGauges returns active gauges.
 func (k Keeper) GetActiveGauges(ctx sdk.Context) []types.Gauge {
-	activeGauges := k.GetAllGroupsGauges(ctx)
-	activeGauges = append(activeGauges, k.getGaugesFromIterator(ctx, k.ActiveGaugesIterator(ctx))...)
-	sortGaugesByGaugeID(activeGauges)
-	return activeGauges
+	return k.getGaugesFromIterator(ctx, k.ActiveGaugesIterator(ctx))
 }
 
 // GetUpcomingGauges returns upcoming gauges.
 func (k Keeper) GetUpcomingGauges(ctx sdk.Context) []types.Gauge {
-	upcomingGauges := k.getGaugesFromIterator(ctx, k.UpcomingGaugesIterator(ctx))
-	sortGaugesByGaugeID(upcomingGauges)
-	return upcomingGauges
+	return k.getGaugesFromIterator(ctx, k.UpcomingGaugesIterator(ctx))
 }
 
 // GetFinishedGauges returns finished gauges.
 func (k Keeper) GetFinishedGauges(ctx sdk.Context) []types.Gauge {
-	finishedGauges := k.getGaugesFromIterator(ctx, k.FinishedGaugesIterator(ctx))
-	sortGaugesByGaugeID(finishedGauges)
-	return finishedGauges
+	return k.getGaugesFromIterator(ctx, k.FinishedGaugesIterator(ctx))
 }
 
 // GetRewardsEst returns rewards estimation at a future specific time (by epoch)
@@ -543,10 +530,4 @@ func (k Keeper) initGaugeInfo(ctx sdk.Context, poolIds []uint64) (types.Internal
 		TotalWeight:  osmomath.ZeroInt(),
 		GaugeRecords: gaugeRecords,
 	}, nil
-}
-
-func sortGaugesByGaugeID(gauges []types.Gauge) {
-	sort.Slice(gauges, func(i, j int) bool {
-		return gauges[i].Id < gauges[j].Id
-	})
 }
