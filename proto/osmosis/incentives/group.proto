@@ -62,7 +62,6 @@ message Group {
   SplittingPolicy splitting_policy = 3;
 }
 
-// CreateGroup is called via governance to create a new group gauge. Currently,
-// this only takes an array of pool IDs, but if we extend this to external
-// gauges, this will expand to add coins and numEpochsPaidOver fields.
+// CreateGroup is called via governance to create a new group.
+// It takes an array of pool IDs to split the incentives across.
 message CreateGroup { repeated uint64 pool_ids = 1; }

@@ -7,9 +7,9 @@ import (
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 )
 
-func ProposalCreateGaugeGroupsRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
+func ProposalCreateGroupsRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
-		SubRoute: "create-gauge-groups",
+		SubRoute: "create-groups",
 		Handler:  emptyHandler(clientCtx),
 	}
 }

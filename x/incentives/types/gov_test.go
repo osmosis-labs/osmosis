@@ -16,26 +16,26 @@ var (
 	}
 )
 
-func TestCreateGaugeGroupsProposal_MarshalUnmarshal(t *testing.T) {
+func TestCreateGroupsProposal_MarshalUnmarshal(t *testing.T) {
 	tests := []struct {
-		proposal *types.CreateGaugeGroupsProposal
+		proposal *types.CreateGroupsProposal
 	}{
 		{ // empty title
-			proposal: &types.CreateGaugeGroupsProposal{
+			proposal: &types.CreateGroupsProposal{
 				Title:       "",
-				Description: "proposal to add gauge groups",
+				Description: "proposal to add groups",
 			},
 		},
 		{ // empty description
-			proposal: &types.CreateGaugeGroupsProposal{
+			proposal: &types.CreateGroupsProposal{
 				Title:       "title",
 				Description: "",
 			},
 		},
 		{ // happy path
-			proposal: &types.CreateGaugeGroupsProposal{
+			proposal: &types.CreateGroupsProposal{
 				Title:        "title",
-				Description:  "proposal to add gauge groups",
+				Description:  "proposal to add groups",
 				CreateGroups: defaultGroups,
 			},
 		},
@@ -44,14 +44,14 @@ func TestCreateGaugeGroupsProposal_MarshalUnmarshal(t *testing.T) {
 	for _, test := range tests {
 		bz, err := proto.Marshal(test.proposal)
 		require.NoError(t, err)
-		decoded := types.CreateGaugeGroupsProposal{}
+		decoded := types.CreateGroupsProposal{}
 		err = proto.Unmarshal(bz, &decoded)
 		require.NoError(t, err)
 		require.Equal(t, *test.proposal, decoded)
 	}
 }
 
-func TestCreateGaugeGroupsProposal_ValidateBasic(t *testing.T) {
+func TestCreateGroupsProposal_ValidateBasic(t *testing.T) {
 	notEnoughPoolIdsInGroup := []types.CreateGroup{
 		{PoolIds: []uint64{1, 2, 3}},
 		{PoolIds: []uint64{4}},
@@ -82,7 +82,7 @@ func TestCreateGaugeGroupsProposal_ValidateBasic(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		denomPairTakerFeeProposal := types.NewCreateGaugeGroupsProposal("title", "description", test.createGroup)
+		denomPairTakerFeeProposal := types.NewCreateGroupsProposal("title", "description", test.createGroup)
 
 		if test.expectPass {
 			require.NoError(t, denomPairTakerFeeProposal.ValidateBasic(), "test: %v", test.name)

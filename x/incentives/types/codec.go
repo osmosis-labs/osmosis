@@ -21,7 +21,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAddToGauge{}, "osmosis/incentives/add-to-gauge", nil)
 
 	// gov proposals
-	cdc.RegisterConcrete(&CreateGaugeGroupsProposal{}, "osmosis/create-gauge-groups-proposal", nil)
+	cdc.RegisterConcrete(&CreateGroupsProposal{}, "osmosis/create-groups-proposal", nil)
 }
 
 // RegisterInterfaces registers interfaces and implementations of the incentives module.
@@ -34,7 +34,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),
-		&CreateGaugeGroupsProposal{},
+		&CreateGroupsProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

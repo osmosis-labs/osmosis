@@ -10,7 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 )
 
-func (k Keeper) HandleCreateGaugeGroupsProposal(ctx sdk.Context, p *types.CreateGaugeGroupsProposal) error {
+func (k Keeper) HandleCreateGaugeProposal(ctx sdk.Context, p *types.CreateGroupsProposal) error {
 	for _, group := range p.CreateGroups {
 		incentivesModuleAddress := k.ak.GetModuleAddress(types.ModuleName)
 		// N.B: We force internal gauge creation here only because we don't have a straightforward
@@ -28,8 +28,8 @@ func (k Keeper) HandleCreateGaugeGroupsProposal(ctx sdk.Context, p *types.Create
 func NewIncentivesProposalHandler(k Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
-		case *types.CreateGaugeGroupsProposal:
-			return k.HandleCreateGaugeGroupsProposal(ctx, c)
+		case *types.CreateGroupsProposal:
+			return k.HandleCreateGaugeProposal(ctx, c)
 
 		default:
 			return fmt.Errorf("unrecognized incentives proposal content type: %T", c)

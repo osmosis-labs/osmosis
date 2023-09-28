@@ -133,18 +133,18 @@ func NewAddToGaugeCmd() *cobra.Command {
 	})
 }
 
-// NewCmdHandleCreateGaugeGroupsProposal implements a command handler for the gauge group proposal transaction.
-func NewCmdHandleCreateGaugeGroupsProposal() *cobra.Command {
+// NewCmdHandleCreateGroupsProposal implements a command handler for the group creation proposal transaction.
+func NewCmdHandleCreateGroupsProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-gauge-groups-proposal [pool-id-pairs] [flags]",
+		Use:   "create-groups-proposal [pool-id-pairs] [flags]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Submit a create gauge groups proposal",
-		Long: strings.TrimSpace(`Submit a create gauge groups proposal.
+		Short: "Submit a create groups proposal",
+		Long: strings.TrimSpace(`Submit a create groups proposal.
 
-Passing in pool-id-pairs separated by commas would be parsed automatically to a single set for a single gauge group.
-If a semicolon is presented, that would be parsed as pool IDs for separate gauge group.
+Passing in pool-id-pairs separated by commas would be parsed automatically to a single set for a single group.
+If a semicolon is presented, that would be parsed as pool IDs for separate group.
 Don't forget the single quotes around the pool IDs!
-Ex) denom-pair-taker-fee-proposal '1,2;3,4,5;6,7' ->
+Ex) create-groups-proposal '1,2;3,4,5;6,7' ->
 Group 1: Pool IDs 1, 2
 Group 2: Pool IDs 3, 4, 5
 Group 3: Pool IDs 6, 7
@@ -209,7 +209,7 @@ func parseCreateGroupArgToContent(cmd *cobra.Command, arg string) (govtypes.Cont
 		return nil, err
 	}
 
-	content := &types.CreateGaugeGroupsProposal{
+	content := &types.CreateGroupsProposal{
 		Title:        title,
 		Description:  description,
 		CreateGroups: createGroupRecords,

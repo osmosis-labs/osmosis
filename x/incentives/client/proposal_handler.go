@@ -8,5 +8,5 @@ import (
 )
 
 var (
-	HandleCreateGaugeGroupsProposal = govclient.NewProposalHandler(cli.NewCmdHandleCreateGaugeGroupsProposal, rest.ProposalCreateGaugeGroupsRESTHandler)
+	HandleCreateGroupsProposal = govclient.NewProposalHandler(cli.NewCmdHandleCreateGroupsProposal, rest.ProposalCreateGroupsRESTHandler)
 )

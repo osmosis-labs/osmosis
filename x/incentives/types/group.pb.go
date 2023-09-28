@@ -217,9 +217,8 @@ func (m *Group) GetSplittingPolicy() SplittingPolicy {
 	return ByVolume
 }
 
-// CreateGroup is called via governance to create a new group gauge. Currently,
-// this only takes an array of pool IDs, but if we extend this to external
-// gauges, this will expand to add coins and numEpochsPaidOver fields.
+// CreateGroup is called via governance to create a new group.
+// It takes an array of pool IDs to split the incentives across.
 type CreateGroup struct {
 	PoolIds []uint64 `protobuf:"varint,1,rep,packed,name=pool_ids,json=poolIds,proto3" json:"pool_ids,omitempty"`
 }

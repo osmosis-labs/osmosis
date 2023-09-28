@@ -92,7 +92,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 			cwpoolclient.MigratePoolContractsProposalHandler,
 			txfeesclient.SubmitUpdateFeeTokenProposalHandler,
 			poolmanagerclient.DenomPairTakerFeeProposalHandler,
-			incentivesclient.HandleCreateGaugeGroupsProposal,
+			incentivesclient.HandleCreateGroupsProposal,
 		)...,
 	),
 	params.AppModuleBasic{},

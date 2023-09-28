@@ -8,44 +8,44 @@ import (
 )
 
 const (
-	ProposalTypeCreateGaugeGroups = "CreateGaugeGroups"
+	ProposalTypeCreateGroups = "CreateGroups"
 )
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeCreateGaugeGroups)
-	govtypes.RegisterProposalTypeCodec(&CreateGaugeGroupsProposal{}, "osmosis/CreateGaugeGroupsProposal")
+	govtypes.RegisterProposalType(ProposalTypeCreateGroups)
+	govtypes.RegisterProposalTypeCodec(&CreateGroupsProposal{}, "osmosis/CreateGroupsProposal")
 }
 
 var (
-	_ govtypes.Content = &CreateGaugeGroupsProposal{}
+	_ govtypes.Content = &CreateGroupsProposal{}
 )
 
-// NewCreateGaugeGroupsProposal returns a new instance of a gauge group creation proposal struct.
-func NewCreateGaugeGroupsProposal(title, description string, groups []CreateGroup) govtypes.Content {
-	return &CreateGaugeGroupsProposal{
+// NewCreateGroupsProposal returns a new instance of a group creation proposal struct.
+func NewCreateGroupsProposal(title, description string, groups []CreateGroup) govtypes.Content {
+	return &CreateGroupsProposal{
 		Title:        title,
 		Description:  description,
 		CreateGroups: groups,
 	}
 }
 
-func (p *CreateGaugeGroupsProposal) GetTitle() string { return p.Title }
+func (p *CreateGroupsProposal) GetTitle() string { return p.Title }
 
 // GetDescription gets the description of the proposal
-func (p *CreateGaugeGroupsProposal) GetDescription() string { return p.Description }
+func (p *CreateGroupsProposal) GetDescription() string { return p.Description }
 
 // ProposalRoute returns the router key for the proposal
-func (p *CreateGaugeGroupsProposal) ProposalRoute() string { return RouterKey }
+func (p *CreateGroupsProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType returns the type of the proposal
-func (p *CreateGaugeGroupsProposal) ProposalType() string {
-	return ProposalTypeCreateGaugeGroups
+func (p *CreateGroupsProposal) ProposalType() string {
+	return ProposalTypeCreateGroups
 }
 
 // ValidateBasic validates a governance proposal's abstract and basic contents
-func (p *CreateGaugeGroupsProposal) ValidateBasic() error {
+func (p *CreateGroupsProposal) ValidateBasic() error {
 	if len(p.CreateGroups) == 0 {
-		return fmt.Errorf("must provide at least one gauge group")
+		return fmt.Errorf("must provide at least one group")
 	}
 
 	for _, group := range p.CreateGroups {
@@ -57,14 +57,14 @@ func (p *CreateGaugeGroupsProposal) ValidateBasic() error {
 }
 
 // String returns a string to display the proposal.
-func (p CreateGaugeGroupsProposal) String() string {
+func (p CreateGroupsProposal) String() string {
 	recordsStr := ""
 	for _, group := range p.CreateGroups {
 		recordsStr = recordsStr + fmt.Sprintf("(PoolIDs: %d) ", group.PoolIds)
 	}
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Create Gauge Groups Proposal:
+	b.WriteString(fmt.Sprintf(`Create Groups Proposal:
 Title:       %s
 Description: %s
 Groups:     %s
