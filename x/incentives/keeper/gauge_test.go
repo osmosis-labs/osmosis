@@ -1126,7 +1126,7 @@ func (s *KeeperTestSuite) createGaugeNoRestrictions(isPerpetual bool, coins sdk.
 }
 
 // validates that there is not gauge with the given ID in the slice
-func (s KeeperTestSuite) validateNoGaugeIDInSlice(slice []types.Gauge, gaugeID uint64) {
+func (s *KeeperTestSuite) validateNoGaugeIDInSlice(slice []types.Gauge, gaugeID uint64) {
 	gaugeMatch := osmoutils.Filter(func(gauge types.Gauge) bool {
 		return gauge.Id == gaugeID
 	}, slice)
