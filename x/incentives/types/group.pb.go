@@ -263,7 +263,7 @@ func (m *CreateGroup) GetPoolIds() []uint64 {
 	return nil
 }
 
-// GroupsWithGauge is a helper struct that stores a single group and its
+// GroupsWithGauge is a helper struct that stores a group and its
 // associated gauge.
 type GroupsWithGauge struct {
 	Group Group `protobuf:"bytes,1,opt,name=group,proto3" json:"group"`

@@ -67,7 +67,7 @@ message Group {
 // It takes an array of pool IDs to split the incentives across.
 message CreateGroup { repeated uint64 pool_ids = 1; }
 
-// GroupsWithGauge is a helper struct that stores a single group and its
+// GroupsWithGauge is a helper struct that stores a group and its
 // associated gauge.
 message GroupsWithGauge {
   Group group = 1 [ (gogoproto.nullable) = false ];

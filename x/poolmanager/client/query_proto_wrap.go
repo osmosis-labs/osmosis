@@ -304,6 +304,10 @@ func (q Querier) EstimateTradeBasedOnPriceImpact(
 	ctx sdk.Context,
 	req queryproto.EstimateTradeBasedOnPriceImpactRequest,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Invalid Pool Id")
+	}
+
 	if req.FromCoin.Denom == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid from coin denom")
 	}
