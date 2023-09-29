@@ -440,29 +440,7 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 
 	// Loop through gauge records and update their state to reflect new pool volumes
 	for i, gaugeRecord := range group.InternalGaugeInfo.GaugeRecords {
-		gauge, err := k.GetGaugeByID(ctx, gaugeRecord.GaugeId)
-		if err != nil {
-			return err
-		}
-
-		gaugeType := gauge.DistributeTo.LockQueryType
-		gaugeDuration := time.Duration(0)
-
-		if gaugeType == lockuptypes.NoLock {
-			// If NoLock, it's a CL pool, so we set the "lockableDuration" to epoch duration
-			gaugeDuration = k.GetEpochInfo(ctx).Duration
-		} else {
-			// Otherwise, it's a balancer pool so we set it to longest lockable duration
-			// TODO: add support for CW pools once there's clarity around default gauge type.
-			// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6403
-			gaugeDuration, err = k.pik.GetLongestLockableDuration(ctx)
-			if err != nil {
-				return err
-			}
-		}
-
-		// Retrieve pool ID using GetPoolIdFromGaugeId(gaugeId, lockableDuration)
-		poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeRecord.GaugeId, gaugeDuration)
+		poolId, _, err := k.GetPoolIdAndDurationFromGaugeRecord(ctx, gaugeRecord)
 		if err != nil {
 			return err
 		}

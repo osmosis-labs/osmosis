@@ -44,6 +44,8 @@ type IncentivesKeeper interface {
 	GetEpochInfo(ctx sdk.Context) epochstypes.EpochInfo
 
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
+	GetGroupByGaugeID(ctx sdk.Context, gaugeID uint64) (incentivestypes.Group, error)
+	GetPoolIdsAndDurationsFromGroup(ctx sdk.Context, group incentivestypes.Group) ([]uint64, []time.Duration, error)
 }
 
 // DistrKeeper handles pool-fees functionality - setting / getting fees and funding the community pool.

@@ -546,3 +546,46 @@ func (k Keeper) initGaugeInfo(ctx sdk.Context, poolIds []uint64) (types.Internal
 		GaugeRecords: gaugeRecords,
 	}, nil
 }
+
+func (k Keeper) GetPoolIdsAndDurationsFromGroup(ctx sdk.Context, group types.Group) ([]uint64, []time.Duration, error) {
+	poolIds := make([]uint64, 0, len(group.InternalGaugeInfo.GaugeRecords))
+	durations := make([]time.Duration, 0, len(group.InternalGaugeInfo.GaugeRecords))
+	for _, gaugeRecord := range group.InternalGaugeInfo.GaugeRecords {
+		poolId, gaugeDuration, err := k.GetPoolIdAndDurationFromGaugeRecord(ctx, gaugeRecord)
+		if err != nil {
+			return nil, nil, err
+		}
+		poolIds = append(poolIds, poolId)
+		durations = append(durations, gaugeDuration)
+	}
+	return poolIds, durations, nil
+}
+
+func (k Keeper) GetPoolIdAndDurationFromGaugeRecord(ctx sdk.Context, gaugeRecord types.InternalGaugeRecord) (uint64, time.Duration, error) {
+	gauge, err := k.GetGaugeByID(ctx, gaugeRecord.GaugeId)
+	if err != nil {
+		return 0, 0, err
+	}
+	gaugeType := gauge.DistributeTo.LockQueryType
+	gaugeDuration := time.Duration(0)
+
+	if gaugeType == lockuptypes.NoLock {
+		// If NoLock, it's a CL pool, so we set the "lockableDuration" to epoch duration
+		gaugeDuration = k.GetEpochInfo(ctx).Duration
+	} else {
+		// Otherwise, it's a balancer pool so we set it to longest lockable duration
+		// TODO: add support for CW pools once there's clarity around default gauge type.
+		// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6403
+		gaugeDuration, err = k.pik.GetLongestLockableDuration(ctx)
+		if err != nil {
+			return 0, 0, err
+		}
+	}
+
+	// Retrieve pool ID using GetPoolIdFromGaugeId(gaugeId, lockableDuration)
+	poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeRecord.GaugeId, gaugeDuration)
+	if err != nil {
+		return 0, 0, err
+	}
+	return poolId, gaugeDuration, nil
+}
