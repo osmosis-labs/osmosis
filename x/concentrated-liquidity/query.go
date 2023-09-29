@@ -338,6 +338,11 @@ func (k Keeper) GetNumNextInitializedTicks(ctx sdk.Context, poolId, numberOfNext
 }
 
 // GetNumNextInitializedTicks is a method that returns underlying assets of a tick range
+// Errors:
+// * ticks given not found
+// * There exists at least 1 tick inside the given range
+// TODO: Currently, we can only get the assets of 2 consecutive ticks
+// need to think of a way to get assets between any 2 ticks
 func (k Keeper) TickRangeUnderlyingAssets(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (queryproto.TickRangeUnderlyingAssetsResponse, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
