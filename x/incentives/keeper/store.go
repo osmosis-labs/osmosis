@@ -119,7 +119,7 @@ func (k Keeper) GetAllGroups(ctx sdk.Context) ([]types.Group, error) {
 	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPrefixGroup, k.ParseGroupFromBz)
 }
 
-// GetAllGroupsGauges first gets all groups, iterates through them, and pulls the gauge from each.
+// GetAllGroupsGauges iterates through all groups, sequentially pulls the gauges from each, and returns just the gauges.
 func (k Keeper) GetAllGroupsGauges(ctx sdk.Context) ([]types.Gauge, error) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixGroup)
@@ -141,6 +141,33 @@ func (k Keeper) GetAllGroupsGauges(ctx sdk.Context) ([]types.Gauge, error) {
 		gauges = append(gauges, *gauge)
 	}
 	return gauges, nil
+}
+
+// GetAllGroupsWithGauge iterates through all groups, sequentially pulls the gauges from each, and returns the groups with their associated gauge.
+func (k Keeper) GetAllGroupsWithGauge(ctx sdk.Context) ([]types.GroupsWithGauge, error) {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixGroup)
+	iter := prefixStore.Iterator(nil, nil)
+
+	var groupsWithGauge []types.GroupsWithGauge
+	for ; iter.Valid(); iter.Next() {
+		group, err := k.ParseGroupFromBz(iter.Value())
+		if err != nil {
+			iter.Close()
+			panic(fmt.Errorf("invalid group key (%s): %v", string(iter.Key()), err))
+		}
+
+		gauge, err := k.GetGaugeByID(ctx, group.GroupGaugeId)
+		if err != nil {
+			iter.Close()
+			return nil, err
+		}
+		groupsWithGauge = append(groupsWithGauge, types.GroupsWithGauge{
+			Group: group,
+			Gauge: *gauge,
+		})
+	}
+	return groupsWithGauge, nil
 }
 
 func (k Keeper) ParseGroupFromBz(bz []byte) (group types.Group, err error) {

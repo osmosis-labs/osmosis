@@ -288,3 +288,16 @@ func (q Querier) TotalLiquidity(ctx sdk.Context, req queryproto.TotalLiquidityRe
 		Liquidity: totalLiquidity,
 	}, nil
 }
+
+// TotalVolumeForPool returns the total volume of the pool.
+func (q Querier) TotalVolumeForPool(ctx sdk.Context, req queryproto.TotalVolumeForPoolRequest) (*queryproto.TotalVolumeForPoolResponse, error) {
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Invalid Pool Id")
+	}
+
+	totalVolume := q.K.GetTotalVolumeForPool(ctx, req.PoolId)
+
+	return &queryproto.TotalVolumeForPoolResponse{
+		Volume: totalVolume,
+	}, nil
+}

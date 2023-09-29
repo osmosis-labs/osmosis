@@ -30,6 +30,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalPoolLiquidity)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdAllPools)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdPool)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalVolumeForPool)
 	osmocli.AddQueryCmd(cmd, queryprotov2.NewQueryClient, GetCmdSpotPriceV2)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
@@ -177,7 +178,16 @@ func GetCmdTotalPoolLiquidity() (*osmocli.QueryDescriptor, *queryproto.TotalPool
 	return &osmocli.QueryDescriptor{
 		Use:   "total-pool-liquidity",
 		Short: "Query total-pool-liquidity",
-		Long: `{{.Short}} 
+		Long: `{{.Short}}
 		{{.CommandPrefix}} total-pool-liquidity 1`,
 	}, &queryproto.TotalPoolLiquidityRequest{}
+}
+
+func GetCmdTotalVolumeForPool() (*osmocli.QueryDescriptor, *queryproto.TotalVolumeForPoolRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "total-volume-for-pool",
+		Short: "Query total-volume-for-pool",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} total-volume-for-pool 1`,
+	}, &queryproto.TotalVolumeForPoolRequest{}
 }
