@@ -1,9 +1,12 @@
 package concentrated_liquidity_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types/genesis"
 )
 
@@ -868,6 +871,156 @@ func (s *KeeperTestSuite) TestGetNumNextInitializedTicks() {
 
 			s.Require().NoError(err)
 			s.Require().Equal(test.expectedLiquidityDepths, liquidityForRange)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetTickRangeUnderlyingAssets() {
+	// Init suite
+	s.SetupTest()
+
+	// Fund Account
+	fundCoins := sdk.NewCoins(sdk.NewCoin("atom", osmomath.NewInt(1000000000000000000)), sdk.NewCoin("uosmo", osmomath.NewInt(1000000000000000000)))
+	s.FundAcc(s.TestAccs[0], fundCoins)
+
+	// Create a default CL pool
+	s.PrepareCustomConcentratedPool(s.TestAccs[0], "atom", "uosmo", DefaultTickSpacing, osmomath.ZeroDec())
+
+	// Create a full-range position
+	data0, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(
+		s.Ctx,
+		1,
+		s.TestAccs[0],
+		sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000)), sdk.NewCoin("atom", sdk.NewInt(1000000))),
+		sdk.ZeroInt(),
+		sdk.ZeroInt(),
+		types.MinInitializedTick,
+		100,
+	)
+	s.Require().NoError(err)
+
+	// Create position at range [-100, 100]
+	data1, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(
+		s.Ctx,
+		1,
+		s.TestAccs[0],
+		sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000)), sdk.NewCoin("atom", sdk.NewInt(1000000))),
+		sdk.ZeroInt(),
+		sdk.ZeroInt(),
+		-100,
+		100,
+	)
+	s.Require().NoError(err)
+
+	// Create position at range [100, MAX]
+	data2, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(
+		s.Ctx,
+		1,
+		s.TestAccs[0],
+		sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000)), sdk.NewCoin("atom", sdk.NewInt(1000000))),
+		sdk.ZeroInt(),
+		sdk.ZeroInt(),
+		100,
+		types.MaxTick,
+	)
+	s.Require().NoError(err)
+
+	clPool, err := s.App.ConcentratedLiquidityKeeper.GetConcentratedPoolById(s.Ctx, 1)
+
+	minTickSqrtPrice, _ := math.TickToSqrtPrice(types.MinInitializedTick)
+	negative100TickSqrtPrice, _ := math.TickToSqrtPrice(-100)
+	positive100TickSqrtPrice, _ := math.TickToSqrtPrice(100)
+	maxTickSqrtPrice, _ := math.TickToSqrtPrice(types.MaxTick)
+
+	// For now we have range of tick [Min, -100, 100, Max]
+	tests := []struct {
+		name            string
+		req             queryproto.TickRangeUnderlyingAssetsRequest
+		expectedAmount0 sdk.Int
+		expectedAmount1 sdk.Int
+		expectedError   bool
+	}{
+		{
+			name: "Pool not found",
+			req: queryproto.TickRangeUnderlyingAssetsRequest{
+				PoolId:    2,
+				LowerTick: -100,
+				UpperTick: 100,
+			},
+			expectedError: true,
+		},
+		{
+			name: "Tick not found",
+			req: queryproto.TickRangeUnderlyingAssetsRequest{
+				PoolId:    1,
+				LowerTick: 0,
+				UpperTick: 100,
+			},
+			expectedError: true,
+		},
+		{
+			name: "Wrong tick spacing",
+			req: queryproto.TickRangeUnderlyingAssetsRequest{
+				PoolId:    1,
+				LowerTick: 1,
+				UpperTick: 2,
+			},
+			expectedError: true,
+		},
+		{
+			name: "Query long range",
+			req: queryproto.TickRangeUnderlyingAssetsRequest{
+				PoolId:    1,
+				LowerTick: types.MinInitializedTick,
+				UpperTick: types.MaxTick,
+			},
+			expectedError: true,
+		},
+		{
+			name: "Query first range",
+			req: queryproto.TickRangeUnderlyingAssetsRequest{
+				PoolId:    1,
+				LowerTick: types.MinInitializedTick,
+				UpperTick: -100,
+			},
+			expectedAmount0: sdk.ZeroInt(),
+			expectedAmount1: math.CalcAmount1Delta(osmomath.BigDecFromDec(data0.Liquidity), minTickSqrtPrice, negative100TickSqrtPrice, true).Dec().TruncateInt(),
+			expectedError:   false,
+		},
+		{
+			name: "Query second range",
+			req: queryproto.TickRangeUnderlyingAssetsRequest{
+				PoolId:    1,
+				LowerTick: -100,
+				UpperTick: 100,
+			},
+			expectedAmount0: math.CalcAmount0Delta(osmomath.BigDecFromDec(data0.Liquidity.Add(data1.Liquidity)), clPool.GetCurrentSqrtPrice(), positive100TickSqrtPrice, true).Dec().TruncateInt(),
+			expectedAmount1: math.CalcAmount1Delta(osmomath.BigDecFromDec(data0.Liquidity.Add(data1.Liquidity)), clPool.GetCurrentSqrtPrice(), negative100TickSqrtPrice, true).Dec().TruncateInt(),
+			expectedError:   false,
+		},
+		{
+			name: "Query last range",
+			req: queryproto.TickRangeUnderlyingAssetsRequest{
+				PoolId:    1,
+				LowerTick: 100,
+				UpperTick: types.MaxTick,
+			},
+			expectedAmount0: math.CalcAmount0Delta(osmomath.BigDecFromDec(data2.Liquidity), positive100TickSqrtPrice, maxTickSqrtPrice, true).Dec().TruncateInt(),
+			expectedAmount1: sdk.ZeroInt(),
+			expectedError:   false,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			res, err := s.App.ConcentratedLiquidityKeeper.TickRangeUnderlyingAssets(s.Ctx, test.req.PoolId, test.req.LowerTick, test.req.UpperTick)
+			if test.expectedError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(test.expectedAmount0, res.Token0.Amount)
+				s.Require().Equal(test.expectedAmount1, res.Token1.Amount)
+			}
 		})
 	}
 }
