@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
@@ -111,7 +109,6 @@ func (s *KeeperTestSuite) TestGetGroupByGaugeID() {
 func (s *KeeperTestSuite) TestGetAllGroupsWithGauge() {
 	groupPools := s.PrepareAllSupportedPools()
 	groupPoolIds := []uint64{groupPools.ConcentratedPoolID, groupPools.BalancerPoolID, groupPools.StableSwapPoolID}
-	fmt.Println(groupPoolIds)
 
 	s.overwriteVolumes(groupPoolIds, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount, defaultVolumeAmount})
 	expectedStartTime := s.Ctx.BlockTime().UTC()
