@@ -717,6 +717,7 @@ github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJ
 github.com/openzipkin/zipkin-go v0.2.1/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
+<<<<<<< HEAD
 github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230927020814-2854ac001f06 h1:bUqcTTtIKCvDEW/UpbRTZU+QslJ+sgVv0tnFzl1dsH0=
 github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230927020814-2854ac001f06/go.mod h1:nZwthKhHt2cvngoDGFR1kSFsAz+MxCJWAg1hTDiwp8E=
 github.com/osmosis-labs/osmosis/osmomath v0.0.8-0.20230926014346-27a13ec134bd h1:Op+svYjumlLTHIupuXrTh8OWOhjP0vKWQR3LLZv24Dg=
@@ -724,6 +725,15 @@ github.com/osmosis-labs/osmosis/osmomath v0.0.8-0.20230926014346-27a13ec134bd/go
 github.com/osmosis-labs/osmosis/osmoutils v0.0.8-0.20230926014346-27a13ec134bd h1:oi2HhLQqBsOG4iBDj9MkKY1KsDE2JeDz+A2L0cQ8og4=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.8-0.20230926014346-27a13ec134bd/go.mod h1:wYNqZbQ6Woo2gOQJDv6l2dFGI74uABNPvz1dCOGW6qo=
 github.com/osmosis-labs/osmosis/v19 v19.1.0 h1:UjtvMa/aQJmPElJ6Dgw/JCOn/jK9inrokWLLuvyWiOs=
+=======
+github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230922030206-734f99fba785 h1:noyO/2kXPRafPfuOQQW3z1SYIvX5R+HogBH8t+ncwZQ=
+github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230922030206-734f99fba785/go.mod h1:toI9Pf+e5C4TuWAFpXfkxnkpr1RVFMK2qr7QMdkFrY8=
+github.com/osmosis-labs/osmosis/osmomath v0.0.6 h1:WNkVmeeudAqRFk5a4CChWsdxfiY/XLClT1i845L78ss=
+github.com/osmosis-labs/osmosis/osmomath v0.0.6/go.mod h1:UlftwozB+QObT3o0YfkuuyL9fsVdgoWt0dm6J7MLYnU=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230929193736-aae32321cac7 h1:E5rwhxKEt6XOIfLkoLNiqCCFNCymJjiwMYIP+0ABMKM=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230929193736-aae32321cac7/go.mod h1:YT53hlXr54D4MVKp3eoBxigiiYvy3F+h+xTZuGPW5R8=
+github.com/osmosis-labs/osmosis/v19 v19.0.0 h1:gqcas/XfxtEuZXsWGTO9vNMHiY78Qs09FBQw73djIVM=
+>>>>>>> 1ead3dc0 (rename(osmoutils/coins): rename `coins` package to `coinutil` (#6584))
 github.com/otiai10/copy v1.7.0 h1:hVoPiN+t+7d2nzzwMiDHPSOogsWAStewq3TwU05+clE=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
