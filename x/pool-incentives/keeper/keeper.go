@@ -175,6 +175,42 @@ func (k Keeper) SetPoolGaugeIdNoLock(ctx sdk.Context, poolId uint64, gaugeId uin
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
 }
 
+// GetInternalGaugeIdForPool returns the internally incentivized gauge ID associated with the pool ID.
+// Contrary to GetPoolGaugeId, it determines the appropriate lockable duration based on the pool type.
+// For balancer or stableswap pools that have 3 gauges, it assumes the longest lockable duration gauge.
+// For CL pools, it assumes the gauge with the incentive module epoch duration.
+// Returns gauge ID on succcess, returns error if:
+// - fails to get pool
+// - given pool type does not support incentives (e.g. CW pools at the time of writing)
+// - fails to get the gauge ID for the given poolID and inferred lockable duration
+func (k Keeper) GetInternalGaugeIDForPool(ctx sdk.Context, poolID uint64) (uint64, error) {
+	pool, err := k.poolmanagerKeeper.GetPool(ctx, poolID)
+	if err != nil {
+		return 0, err
+	}
+
+	poolType := pool.GetType()
+	var gaugeDuration time.Duration
+	switch poolType {
+	case poolmanagertypes.Concentrated:
+		gaugeDuration = k.incentivesKeeper.GetEpochInfo(ctx).Duration
+	case poolmanagertypes.Balancer, poolmanagertypes.Stableswap:
+		gaugeDuration, err = k.GetLongestLockableDuration(ctx)
+		if err != nil {
+			return 0, err
+		}
+	default:
+		return 0, types.UnsupportedPoolTypeError{PoolID: poolID, PoolType: poolType}
+	}
+
+	gaugeId, err := k.GetPoolGaugeId(ctx, poolID, gaugeDuration)
+	if err != nil {
+		return 0, err
+	}
+
+	return gaugeId, nil
+}
+
 // GetPoolGaugeId returns the gauge id associated with the pool id and lockable duration.
 // This can only be used for the internally incentivized gauges.
 // Externally incentivized gauges do not have such link created.

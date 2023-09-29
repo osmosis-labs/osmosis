@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryprotov2"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
@@ -20,6 +21,16 @@ type Querier struct {
 
 func NewQuerier(k poolmanager.Keeper) Querier {
 	return Querier{k}
+}
+
+// QuerierV2 defines a wrapper around the x/poolmanager keeper providing gRPC method
+// handlers for v2 queries.
+type QuerierV2 struct {
+	K poolmanager.Keeper
+}
+
+func NewV2Querier(k poolmanager.Keeper) QuerierV2 {
+	return QuerierV2{K: k}
 }
 
 func (q Querier) Params(ctx sdk.Context,
@@ -203,7 +214,7 @@ func (q Querier) AllPools(ctx sdk.Context, req queryproto.AllPoolsRequest) (*que
 	}, nil
 }
 
-// SpotPrice returns the spot price of the pool with the given quote and base asset denoms.
+// SpotPrice returns the spot price of the pool with the given quote and base asset denoms. 18 decimals.
 func (q Querier) SpotPrice(ctx sdk.Context, req queryproto.SpotPriceRequest) (*queryproto.SpotPriceResponse, error) {
 	if req.BaseAssetDenom == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid base asset denom")
@@ -222,6 +233,27 @@ func (q Querier) SpotPrice(ctx sdk.Context, req queryproto.SpotPriceRequest) (*q
 		// Note: truncation exists here to maintain backwards compatibility.
 		// This query has historically had 18 decimals in response.
 		SpotPrice: sp.Dec().String(),
+	}, err
+}
+
+// SpotPriceV2 returns the spot price of the pool with the given quote and base asset denoms. 36 decimals.
+func (q QuerierV2) SpotPriceV2(ctx sdk.Context, req queryprotov2.SpotPriceRequest) (*queryprotov2.SpotPriceResponse, error) {
+	if req.BaseAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid base asset denom")
+	}
+
+	if req.QuoteAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid quote asset denom")
+	}
+
+	sp, err := q.K.RouteCalculateSpotPrice(ctx, req.PoolId, req.QuoteAssetDenom, req.BaseAssetDenom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryprotov2.SpotPriceResponse{
+		// Note: that this is a BigDec yielding 36 decimals.
+		SpotPrice: sp,
 	}, err
 }
 

@@ -132,22 +132,22 @@ universal_binaries:
 archives:
   - id: zipped
     builds:
-      - osmosisd-darwin-universal
+      # - osmosisd-darwin-universal
       - osmosisd-linux-amd64
       - osmosisd-linux-arm64
-      - osmosisd-darwin-amd64
-      - osmosisd-darwin-arm64
+      # - osmosisd-darwin-amd64
+      # - osmosisd-darwin-arm64
     name_template: "{{.ProjectName}}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format: tar.gz
     files:
       - none*
   - id: binaries
     builds:
-      - osmosisd-darwin-universal
+      # - osmosisd-darwin-universal
       - osmosisd-linux-amd64
       - osmosisd-linux-arm64
-      - osmosisd-darwin-amd64
-      - osmosisd-darwin-arm64
+      # - osmosisd-darwin-amd64
+      # - osmosisd-darwin-arm64
     name_template: "{{.ProjectName}}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
     format: binary
     files:
@@ -176,8 +176,7 @@ release:
 
     ## ⚡️ Binaries
 
-    Binaries for Linux and Darwin (amd64 and arm64) are available below.
-    Darwin users can also use the same universal binary `osmosisd-{{ .Version }}-darwin-all` for both amd64 and arm64.
+    Binaries for Linux (amd64 and arm64) are available below.
 
     #### 🔨 Build from source
 

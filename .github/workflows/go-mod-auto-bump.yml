@@ -50,8 +50,8 @@ jobs:
       
       - name: Run script
         run: |
-          COMMIT_AFTER_PUSH=${{ github.event.after }}
-          bash ./scripts/update-go-mod.sh ${{ steps.main_commit.outputs.LATEST_MAIN_COMMIT }} $COMMIT_AFTER_PUSH
+          LATEST_TARGET_COMMIT=$(git rev-parse ${{ inputs.target-branch }})
+          bash ./scripts/update-go-mod.sh ${{ steps.main_commit.outputs.LATEST_MAIN_COMMIT }} $LATEST_TARGET_COMMIT
 
       - name: Add Changes 
         id: add_changes
