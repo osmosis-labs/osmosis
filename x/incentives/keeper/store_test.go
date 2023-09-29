@@ -6,6 +6,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -103,4 +104,60 @@ func (s *KeeperTestSuite) TestGetGroupByGaugeID() {
 			s.Require().Equal(test.expectedRecord, record)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestGetAllGroupsWithGauge() {
+	groupPools := s.PrepareAllSupportedPools()
+	groupPoolIds := []uint64{groupPools.ConcentratedPoolID, groupPools.BalancerPoolID, groupPools.StableSwapPoolID}
+
+	s.overwriteVolumes(groupPoolIds, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount, defaultVolumeAmount})
+	expectedStartTime := s.Ctx.BlockTime().UTC()
+	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))), 1, s.TestAccs[0], groupPoolIds)
+	s.Require().NoError(err)
+
+	// Call GetAllGroupsWithGauge
+	groupsWithGauge, err := s.App.IncentivesKeeper.GetAllGroupsWithGauge(s.Ctx)
+	s.Require().NoError(err)
+
+	// Check the length of the returned slice
+	s.Require().Equal(1, len(groupsWithGauge))
+
+	// Check the content of the returned slice
+	expectedGroupsWithGauge := types.GroupsWithGauge{
+		Group: types.Group{
+			GroupGaugeId: uint64(8),
+			InternalGaugeInfo: types.InternalGaugeInfo{
+				TotalWeight: osmomath.NewInt(900),
+				GaugeRecords: []types.InternalGaugeRecord{
+					// Concentrated Pool (1)
+					{
+						GaugeId:          1,
+						CurrentWeight:    osmomath.NewInt(300),
+						CumulativeWeight: osmomath.NewInt(300),
+					},
+					// Balancer Pool (2-4)
+					{
+						GaugeId:          4,
+						CurrentWeight:    osmomath.NewInt(300),
+						CumulativeWeight: osmomath.NewInt(300),
+					},
+					// Stable Pool (5-7)
+					{
+						GaugeId:          7,
+						CurrentWeight:    osmomath.NewInt(300),
+						CumulativeWeight: osmomath.NewInt(300),
+					},
+				},
+			},
+			SplittingPolicy: types.ByVolume,
+		},
+		Gauge: types.Gauge{
+			Id:                uint64(8),
+			DistributeTo:      lockuptypes.QueryCondition{LockQueryType: lockuptypes.ByGroup},
+			Coins:             sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100_000_000))),
+			StartTime:         expectedStartTime,
+			NumEpochsPaidOver: 1,
+		},
+	}
+	s.Require().Equal(expectedGroupsWithGauge.String(), groupsWithGauge[0].String())
 }

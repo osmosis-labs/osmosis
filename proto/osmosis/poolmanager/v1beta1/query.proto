@@ -112,6 +112,13 @@ service Query {
         "/osmosis/poolmanager/v1beta1/pools/total_liquidity";
   }
 
+  // TotalVolumeForPool returns the total volume of the specified pool.
+  rpc TotalVolumeForPool(TotalVolumeForPoolRequest)
+      returns (TotalVolumeForPoolResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/pools/{pool_id}/total_volume";
+  }
+
   // EstimateTradeBasedOnPriceImpact returns an estimated trade based on price
   // impact, if a trade cannot be estimated a 0 input and 0 output would be
   // returned.
@@ -257,6 +264,19 @@ message TotalLiquidityResponse {
   repeated cosmos.base.v1beta1.Coin liquidity = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== TotalVolumeForPool
+message TotalVolumeForPoolRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+
+message TotalVolumeForPoolResponse {
+  repeated cosmos.base.v1beta1.Coin volume = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"volume\"",
     (gogoproto.nullable) = false
   ];
 }

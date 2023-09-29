@@ -289,6 +289,15 @@ func (q Querier) TotalLiquidity(ctx sdk.Context, req queryproto.TotalLiquidityRe
 	}, nil
 }
 
+// TotalVolumeForPool returns the total volume of the pool.
+func (q Querier) TotalVolumeForPool(ctx sdk.Context, req queryproto.TotalVolumeForPoolRequest) (*queryproto.TotalVolumeForPoolResponse, error) {
+	totalVolume := q.K.GetTotalVolumeForPool(ctx, req.PoolId)
+
+	return &queryproto.TotalVolumeForPoolResponse{
+		Volume: totalVolume,
+	}, nil
+}
+
 // EstimateTradeBasedOnPriceImpact returns the input and output amount of coins for a pool trade
 // based on external price and maximum price impact.
 func (q Querier) EstimateTradeBasedOnPriceImpact(
