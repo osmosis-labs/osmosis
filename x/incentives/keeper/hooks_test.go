@@ -392,7 +392,7 @@ func (*KeeperTestSuite) computeExpectedDistributonAmountsFromVolume(coinsDistrib
 	totalVolumeDec := totalVolume.ToLegacyDec()
 	poolIDToExpectedDistributionMapOne := map[uint64]sdk.Coins{}
 	for poolID, volume := range poolIDToVolumeMap {
-		currentDistribution := coins.MulDec(defaultCoins, volume.ToLegacyDec().Quo(totalVolumeDec))
+		currentDistribution := coinutil.MulDec(defaultCoins, volume.ToLegacyDec().Quo(totalVolumeDec))
 
 		// Note, the reason we do this is because otherwise
 		// the validation fails with 0uosmo expected vs "" actual
