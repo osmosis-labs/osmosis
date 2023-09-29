@@ -11,6 +11,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
@@ -144,40 +145,42 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 	incentivizedPools := make([]types.IncentivizedPool, 0, len(distrInfo.Records)/len(lockableDurations))
 
 	// Loop over the distribution records and fill in the incentivized pools struct.
-recordsLoop:
 	for _, record := range distrInfo.Records {
-		for _, lockableDuration := range lockableDurations {
-			poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, lockableDuration)
-			// If we cannot find the pool id, it's possible this gauge Id is a group gauge.
+		gauge, err := q.incentivesKeeper.GetGaugeByID(sdkCtx, record.GaugeId)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		if gauge.DistributeTo.LockQueryType == lockuptypes.ByGroup {
+			group, err := q.Keeper.incentivesKeeper.GetGroupByGaugeID(sdkCtx, record.GaugeId)
 			if err != nil {
-				group, err := q.Keeper.incentivesKeeper.GetGroupByGaugeID(sdkCtx, record.GaugeId)
-				if err != nil {
-					continue
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			poolIds, durations, err := q.Keeper.incentivesKeeper.GetPoolIdsAndDurationsFromGroup(sdkCtx, group)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			for i, poolId := range poolIds {
+				incentivizedPool := types.IncentivizedPool{
+					PoolId:           poolId,
+					LockableDuration: durations[i],
+					GaugeId:          record.GaugeId,
 				}
-				poolIds, durations, err := q.Keeper.incentivesKeeper.GetPoolIdsAndDurationsFromGroup(sdkCtx, group)
-				if err != nil {
-					continue
-				}
-				for i, poolId := range poolIds {
+
+				incentivizedPools = append(incentivizedPools, incentivizedPool)
+			}
+		} else {
+			for _, lockableDuration := range lockableDurations {
+				poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, lockableDuration)
+				if err == nil {
 					incentivizedPool := types.IncentivizedPool{
 						PoolId:           poolId,
-						LockableDuration: durations[i],
+						LockableDuration: lockableDuration,
 						GaugeId:          record.GaugeId,
 					}
 
 					incentivizedPools = append(incentivizedPools, incentivizedPool)
 				}
-				// no need to loop over the remaining lockableDurations so we move
-				// on to the next record.
-				continue recordsLoop
-			} else {
-				incentivizedPool := types.IncentivizedPool{
-					PoolId:           poolId,
-					LockableDuration: lockableDuration,
-					GaugeId:          record.GaugeId,
-				}
-
-				incentivizedPools = append(incentivizedPools, incentivizedPool)
 			}
 		}
 	}
