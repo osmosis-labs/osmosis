@@ -8,8 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
-	cosmossdk_io_math "cosmossdk.io/math"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
@@ -362,30 +360,56 @@ func (k Keeper) TickRangeUnderlyingAssets(ctx sdk.Context, poolId uint64, lowerT
 		return queryproto.TickRangeUnderlyingAssetsResponse{}, fmt.Errorf("upper tick (%d) not found, error: %w", upperTick, err)
 	}
 
-	// Calculate liquidity of tick range
-	store := ctx.KVStore(k.storeKey)
-	prefixBz := types.KeyTickPrefixByPoolId(poolId)
-	prefixStore := prefix.NewStore(store, prefixBz)
+	//--------- Calculate liquidity of tick range -----------
 
-	startTickKey := types.TickIndexToBytes(lowerTick)
-	boundTickKey := types.TickIndexToBytes(upperTick)
+	// Find first tick initialized
+	// use false for zeroForOne since we're going from lower tick -> upper tick
+	zeroForOne := false
+	swapStrategy := swapstrategy.New(zeroForOne, osmomath.ZeroBigDec(), k.storeKey, osmomath.ZeroDec())
 
-	totalLiquidity := cosmossdk_io_math.LegacyZeroDec()
+	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, types.MinCurrentTick)
+	defer nextTickIter.Close()
 
-	iterator := prefixStore.Iterator(startTickKey, storetypes.InclusiveEndBytes(boundTickKey))
-	defer iterator.Close()
+	if !nextTickIter.Valid() {
+		return queryproto.TickRangeUnderlyingAssetsResponse{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
+	}
 
-	for ; iterator.Valid(); iterator.Next() {
-		_, err := types.TickIndexFromBytes(iterator.Key())
+	nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
+	if err != nil {
+		return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+	}
+
+	tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
+	if err != nil {
+		return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+	}
+
+	// use the smallest tick initialized as the starting point for calculating liquidity.
+	totalLiquidity := tick.LiquidityNet
+	previousTickIndex := nextTick
+	nextTickIter.Next()
+
+	// Loop from first tick unit to unit that input range represent
+	for ; nextTickIter.Valid(); nextTickIter.Next() {
+		tickIndex, err := types.TickIndexFromBytes(nextTickIter.Key())
 		if err != nil {
 			return queryproto.TickRangeUnderlyingAssetsResponse{}, err
 		}
 
-		tickStruct, err := ParseTickFromBz(iterator.Value())
+		tickStruct, err := ParseTickFromBz(nextTickIter.Value())
 		if err != nil {
 			return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+		}
+
+		if previousTickIndex == lowerTick && tickIndex == upperTick {
+			break
+		}
+		if previousTickIndex == lowerTick && tickIndex != upperTick {
+			return queryproto.TickRangeUnderlyingAssetsResponse{}, fmt.Errorf("Can not get liquidity of range [%d, %d]", lowerTick, upperTick)
 		}
 		totalLiquidity = totalLiquidity.Add(tickStruct.LiquidityNet)
+		previousTickIndex = tickIndex
+
 	}
 
 	actualAmountDenom0, actualAmountDenom1, err := pool.CalcActualAmounts(ctx, lowerTick, upperTick, totalLiquidity)
