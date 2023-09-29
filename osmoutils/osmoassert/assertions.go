@@ -107,5 +107,15 @@ func Equal[T Stringer](t *testing.T, tolerance osmomath.ErrTolerance, A, B T) {
 	default:
 		require.FailNow(t, "unsupported types")
 	}
+}
 
+func Uint64ArrayValuesAreUnique(values []uint64) bool {
+	valueMap := make(map[uint64]bool)
+	for _, val := range values {
+		if _, exists := valueMap[val]; exists {
+			return false
+		}
+		valueMap[val] = true
+	}
+	return true
 }
