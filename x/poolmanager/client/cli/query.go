@@ -9,7 +9,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryprotov2"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
@@ -31,7 +30,6 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdAllPools)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalVolumeForPool)
-	osmocli.AddQueryCmd(cmd, queryprotov2.NewQueryClient, GetCmdSpotPriceV2)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateTradeBasedOnPriceImpact)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
@@ -189,7 +187,7 @@ func GetCmdEstimateTradeBasedOnPriceImpact() (
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-trade-based-on-price-impact  <fromCoin> <toCoinDenom> <poolId> <maxPriceImpact> <externalPrice>",
 		Short: "Query estimate-trade-based-on-price-impact",
-		Long: `{{.Short}} 
+		Long: `{{.Short}}
 		{{.CommandPrefix}} estimate-trade-based-on-price-impact 100uosmo stosmo  833 0.001 1.00`,
 		QueryFnName: "EstimateTradeBasedOnPriceImpact",
 	}, &queryproto.EstimateTradeBasedOnPriceImpactRequest{}
