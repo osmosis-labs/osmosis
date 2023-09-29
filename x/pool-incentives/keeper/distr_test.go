@@ -143,14 +143,21 @@ func (s *KeeperTestSuite) TestAllocateAsset_GroupGauge() {
 	s.Setup()
 	poolInfo := s.PrepareAllSupportedPools()
 
+	poolIDs := []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID, poolInfo.StableSwapPoolID}
+
 	// Fund fee and initial coins for each group.
 	groupCreationFee := s.App.IncentivesKeeper.GetParams(s.Ctx).GroupCreationFee
 	s.FundAcc(s.TestAccs[1], groupCreationFee.Add(groupCreationFee...).Add(defaultCoins...).Add(defaultCoins...))
 
-	groupGaugeIDOne, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, 0, s.TestAccs[1], []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID, poolInfo.StableSwapPoolID})
+	// Setup initial volume for each pool.
+	for _, poolID := range poolIDs {
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolID, defaultCoins)
+	}
+
+	groupGaugeIDOne, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, 0, s.TestAccs[1], poolIDs)
 	s.Require().NoError(err)
 
-	groupGaugeIDTwo, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, 0, s.TestAccs[1], []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID, poolInfo.StableSwapPoolID})
+	groupGaugeIDTwo, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, 0, s.TestAccs[1], poolIDs)
 	s.Require().NoError(err)
 
 	err = s.App.PoolIncentivesKeeper.ReplaceDistrRecords(s.Ctx, types.DistrRecord{
