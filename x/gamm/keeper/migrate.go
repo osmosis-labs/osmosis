@@ -118,7 +118,6 @@ func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint
 
 // OverwriteMigrationRecordsAndRedirectDistrRecords sets the balancer to gamm pool migration info to the store and deletes all existing records
 // migrationInfo in state is completely overwitten by the given migrationInfo.
-// Additionally, the distribution record for the balancer pool is modified to redirect incentives to the new concentrated pool.
 func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context, migrationInfo gammmigration.MigrationRecords) error {
 	store := ctx.KVStore(k.storeKey)
 
@@ -134,11 +133,6 @@ func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context
 
 		clToBalancerPoolKey := types.GetKeyPrefixMigrationInfoPoolCLPool(balancerToCLPoolLink.ClPoolId)
 		store.Set(clToBalancerPoolKey, sdk.Uint64ToBigEndian(balancerToCLPoolLink.BalancerPoolId))
-
-		err := k.redirectDistributionRecord(ctx, balancerToCLPoolLink.BalancerPoolId, balancerToCLPoolLink.ClPoolId)
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -154,49 +148,6 @@ func (k Keeper) SetMigrationRecords(ctx sdk.Context, migrationInfo gammmigration
 		clToBalancerPoolKey := types.GetKeyPrefixMigrationInfoPoolCLPool(balancerToCLPoolLink.ClPoolId)
 		store.Set(clToBalancerPoolKey, sdk.Uint64ToBigEndian(balancerToCLPoolLink.BalancerPoolId))
 	}
-}
-
-// redirectDistributionRecord redirects the distribution record for the given balancer pool to the given concentrated pool.
-func (k Keeper) redirectDistributionRecord(ctx sdk.Context, cfmmPoolId, clPoolId uint64) error {
-	// Get CFMM gauges
-	cfmmGauges, err := k.poolIncentivesKeeper.GetGaugesForCFMMPool(ctx, cfmmPoolId)
-	if err != nil {
-		return err
-	}
-
-	if len(cfmmGauges) == 0 {
-		return fmt.Errorf("no gauges found for cfmm pool %d", cfmmPoolId)
-	}
-
-	// Get longest gauge duration from CFMM pool.
-	longestDurationGauge := cfmmGauges[0]
-	for i := 1; i < len(cfmmGauges); i++ {
-		if cfmmGauges[i].DistributeTo.Duration > longestDurationGauge.DistributeTo.Duration {
-			longestDurationGauge = cfmmGauges[i]
-		}
-	}
-
-	// Get concentrated liquidity gauge duration.
-	distributionEpochDuration := k.incentivesKeeper.GetEpochInfo(ctx).Duration
-
-	// Get concentrated gauge corresponding to the distribution epoch duration.
-	concentratedGaugeId, err := k.poolIncentivesKeeper.GetPoolGaugeId(ctx, clPoolId, distributionEpochDuration)
-	if err != nil {
-		return err
-	}
-
-	// Iterate through all the distr records, and redirect the old balancer gauge to the new concentrated gauge.
-	distrInfo := k.poolIncentivesKeeper.GetDistrInfo(ctx)
-	for i, distrRecord := range distrInfo.Records {
-		if distrRecord.GaugeId == longestDurationGauge.Id {
-			distrInfo.Records[i].GaugeId = concentratedGaugeId
-		}
-	}
-
-	// Set the new distr info.
-	k.poolIncentivesKeeper.SetDistrInfo(ctx, distrInfo)
-
-	return nil
 }
 
 // validateRecords validates a list of BalancerToConcentratedPoolLink records to ensure that:

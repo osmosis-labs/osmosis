@@ -341,18 +341,32 @@ func (k Keeper) IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool {
 
 	distrInfo := k.GetDistrInfo(ctx)
 
-	candidateGaugeIds := []uint64{}
-	for _, gaugeDuration := range lockableDurations {
-		gaugeId, err := k.GetPoolGaugeId(ctx, poolId, gaugeDuration)
-		if err == nil {
-			candidateGaugeIds = append(candidateGaugeIds, gaugeId)
-		}
-	}
-
+recordsLoop:
 	for _, record := range distrInfo.Records {
-		for _, gaugeId := range candidateGaugeIds {
-			if record.GaugeId == gaugeId {
-				return true
+		for _, lockableDuration := range lockableDurations {
+			poolIdFromGauge, err := k.GetPoolIdFromGaugeId(ctx, record.GaugeId, lockableDuration)
+			// If we cannot find the pool id, it's possible this gauge Id is a group gauge.
+			if err != nil {
+				group, err := k.incentivesKeeper.GetGroupByGaugeID(ctx, record.GaugeId)
+				if err != nil {
+					continue
+				}
+				poolIdsFromGroup, _, err := k.incentivesKeeper.GetPoolIdsAndDurationsFromGroup(ctx, group)
+				if err != nil {
+					continue
+				}
+				for _, poolIdFromGroup := range poolIdsFromGroup {
+					if poolIdFromGroup == poolId {
+						return true
+					}
+				}
+				// no need to loop over the remaining lockableDurations so we move
+				// on to the next record.
+				continue recordsLoop
+			} else {
+				if poolIdFromGauge == poolId {
+					return true
+				}
 			}
 		}
 	}
