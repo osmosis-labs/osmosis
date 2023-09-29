@@ -733,8 +733,8 @@ github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230922030206-734f99fba785 h1:
 github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230922030206-734f99fba785/go.mod h1:toI9Pf+e5C4TuWAFpXfkxnkpr1RVFMK2qr7QMdkFrY8=
 github.com/osmosis-labs/osmosis/osmomath v0.0.6 h1:WNkVmeeudAqRFk5a4CChWsdxfiY/XLClT1i845L78ss=
 github.com/osmosis-labs/osmosis/osmomath v0.0.6/go.mod h1:UlftwozB+QObT3o0YfkuuyL9fsVdgoWt0dm6J7MLYnU=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230928181649-a48496d2db0e h1:GBPTL5ZymZjR3IY6rSMWHs5Pp1q7d5OSvdtL9gLlxBc=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230928181649-a48496d2db0e/go.mod h1:YT53hlXr54D4MVKp3eoBxigiiYvy3F+h+xTZuGPW5R8=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230928235940-c622e9b7b171 h1:MVsLVaJELrzs6lx0F7nOqAymbXTiVkYGYLYe8ijDnds=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230928235940-c622e9b7b171/go.mod h1:YT53hlXr54D4MVKp3eoBxigiiYvy3F+h+xTZuGPW5R8=
 github.com/osmosis-labs/wasmd v0.31.0-osmo-v16 h1:X747cZYdnqc/+RV48iPVeGprpVb/fUWSaKGsZUWrdbg=
 github.com/osmosis-labs/wasmd v0.31.0-osmo-v16/go.mod h1:Rf8zW/GgBQyFRRB4s62VQHWA6sTlMFSjoDQQpoq64iI=
 github.com/otiai10/copy v1.7.0 h1:hVoPiN+t+7d2nzzwMiDHPSOogsWAStewq3TwU05+clE=

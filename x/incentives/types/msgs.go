@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,6 +14,7 @@ import (
 const (
 	TypeMsgCreateGauge = "create_gauge"
 	TypeMsgAddToGauge  = "add_to_gauge"
+	TypeMsgCreateGroup = "create_group"
 )
 
 var _ sdk.Msg = &MsgCreateGauge{}
@@ -135,6 +137,55 @@ func (m MsgAddToGauge) GetSignBytes() []byte {
 
 // GetSigners takes an add to gauge message and returns the owner in a byte array.
 func (m MsgAddToGauge) GetSigners() []sdk.AccAddress {
+	owner, _ := sdk.AccAddressFromBech32(m.Owner)
+	return []sdk.AccAddress{owner}
+}
+
+var _ sdk.Msg = &MsgCreateGroup{}
+
+// NewMsgCreateGroup creates a message to create a group with the provided parameters.
+func NewMsgCreateGroup(rewards sdk.Coins, numEpochsPaidOver uint64, owner sdk.AccAddress, poolIds []uint64) *MsgCreateGroup {
+	return &MsgCreateGroup{
+		Coins:             rewards,
+		NumEpochsPaidOver: numEpochsPaidOver,
+		Owner:             owner.String(),
+		PoolIds:           poolIds,
+	}
+}
+
+// Route takes a create group message, then returns the RouterKey.
+func (m MsgCreateGroup) Route() string { return RouterKey }
+
+// Type takes a create group message, then returns the message type.
+func (m MsgCreateGroup) Type() string { return TypeMsgCreateGroup }
+
+// ValidateBasic checks that the create group message is valid.
+func (m MsgCreateGroup) ValidateBasic() error {
+	if m.Owner == "" {
+		return errors.New("owner should be set")
+	}
+	if len(m.PoolIds) < 2 {
+		return errors.New("pool ids should be composed of at least 2 pool IDs")
+	}
+
+	if len(m.PoolIds) > 30 {
+		return errors.New("pool ids should be composed of at most 30 pool IDs")
+	}
+
+	if !osmoassert.Uint64ArrayValuesAreUnique(m.PoolIds) {
+		return errors.New("pool ids should be unique")
+	}
+
+	return nil
+}
+
+// GetSignBytes takes a create group message and turns it into a byte array.
+func (m MsgCreateGroup) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+// GetSigners takes a create group message and returns the owner in a byte array.
+func (m MsgCreateGroup) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
 }
