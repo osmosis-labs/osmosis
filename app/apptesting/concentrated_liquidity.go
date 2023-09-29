@@ -85,7 +85,7 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndLockedFullRangePos
 // PrepareCustomConcentratedPool sets up a concentrated liquidity pool with the custom parameters.
 func (s *KeeperTestHelper) PrepareCustomConcentratedPool(owner sdk.AccAddress, denom0, denom1 string, tickSpacing uint64, spreadFactor osmomath.Dec) types.ConcentratedPoolExtension {
 	// Mint some assets to the account.
-	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
+	s.FundAcc(s.TestAccs[0], s.App.PoolManagerKeeper.GetParams(s.Ctx).PoolCreationFee)
 
 	// Create a concentrated pool via the poolmanager
 	poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(owner, denom0, denom1, tickSpacing, spreadFactor))
@@ -101,6 +101,27 @@ func (s *KeeperTestHelper) PrepareCustomConcentratedPool(owner sdk.AccAddress, d
 
 	return pool
 }
+
+// // PrepareCustomConcentratedPool sets up a concentrated liquidity pool with the custom parameters.
+// func (s *KeeperTestHelper) PrepareCustomConcentratedPoolWithCoins(owner sdk.AccAddress, coins sdk.Coins, tickSpacing uint64, spreadFactor osmomath.Dec) types.ConcentratedPoolExtension {
+// 	// Mint some assets to the account.
+// 	s.FundAcc(s.TestAccs[0], s.App.PoolManagerKeeper.GetParams(s.Ctx).PoolCreationFee)
+// 	s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(denom0, DefaultCoinAmount), sdk.NewCoin(denom1, DefaultCoinAmount)))
+
+// 	// Create a concentrated pool via the poolmanager
+// 	poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(owner, denom0, denom1, tickSpacing, spreadFactor))
+// 	s.Require().NoError(err)
+
+// 	// Retrieve the poolInterface via the poolID
+// 	poolI, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)
+// 	s.Require().NoError(err)
+
+// 	// Type cast the PoolInterface to a ConcentratedPoolExtension
+// 	pool, ok := poolI.(types.ConcentratedPoolExtension)
+// 	s.Require().True(ok)
+
+// 	return pool
+// }
 
 // PrepareMultipleConcentratedPools returns X cl pool's with X being provided by the user.
 func (s *KeeperTestHelper) PrepareMultipleConcentratedPools(poolsToCreate uint16) []uint64 {
