@@ -209,6 +209,8 @@ func (q Querier) AllGroupsWithGauge(goCtx context.Context, req *types.QueryAllGr
 	return &types.QueryAllGroupsWithGaugeResponse{GroupsWithGauge: groupsWithGauge}, nil
 }
 
+// GroupByGroupGaugeID retrieves a group by its associated gauge ID.
+// If the group cannot be found or an error occurs during the operation, it returns an error.
 func (q Querier) GroupByGroupGaugeID(goCtx context.Context, req *types.QueryGroupByGroupGaugeIDRequest) (*types.QueryGroupByGroupGaugeIDResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	group, err := q.Keeper.GetGroupByGaugeID(ctx, req.Id)

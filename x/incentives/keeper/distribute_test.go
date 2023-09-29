@@ -10,7 +10,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/coins"
+	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
@@ -1652,7 +1652,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			}
 
 			// Divide all coins by remainingEpochs.
-			coins.QuoRawMut(expecteDistributedCoins, int64(remainingEpochs))
+			coinutil.QuoRawMut(expecteDistributedCoins, int64(remainingEpochs))
 		}
 		return expecteDistributedCoins
 	}
@@ -1665,7 +1665,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			for _, underlyingGauge := range group.InternalGaugeInfo.GaugeRecords {
 
 				// calculate expected amount distributed to this gauge
-				expectedDistributedPerGauge := coins.MulDec(expectedAmountDistributedForGroup, underlyingGauge.CurrentWeight.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
+				expectedDistributedPerGauge := coinutil.MulDec(expectedAmountDistributedForGroup, underlyingGauge.CurrentWeight.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
 
 				if oldValue, ok := expectedGaugeDistributionsMap[underlyingGauge.GaugeId]; ok {
 					expectedGaugeDistributionsMap[underlyingGauge.GaugeId] = oldValue.Add(expectedDistributedPerGauge...)
@@ -2202,7 +2202,7 @@ func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 	s.Run("7: non-perpetual gauge - updated: multiple distributions", func() {
 		const numDistributions = 10
 
-		initialDistributionCoins := coins.MulRaw(defaultCoins, int64(numDistributions+1))
+		initialDistributionCoins := coinutil.MulRaw(defaultCoins, int64(numDistributions+1))
 
 		// Non-perpetual gauge with 10 epochs paid over
 		// For every iteration,

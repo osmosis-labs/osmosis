@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/coins"
+	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
@@ -67,7 +67,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 			remainingEpochs := int64(groupGauge.NumEpochsPaidOver - groupGauge.FilledEpochs)
 
 			// Divide each coin by remainingEpochs
-			coins.QuoRawMut(coinsToDistribute, remainingEpochs)
+			coinutil.QuoRawMut(coinsToDistribute, remainingEpochs)
 		}
 
 		// Exit early if nothing to distribute.
@@ -105,7 +105,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 
 			// Loop through `coinsToDistribute` and get the amount to distribute to the current gauge
 			// based on the distribution ratio.
-			currentGaugeCoins := coins.MulDec(coinsToDistribute, gaugeDistributionRatio)
+			currentGaugeCoins := coinutil.MulDec(coinsToDistribute, gaugeDistributionRatio)
 
 			// For the last gauge, distribute all remaining amounts.
 			// Special case the last gauge to avoid leaving truncation dust in the group gauge

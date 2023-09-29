@@ -2,7 +2,7 @@ package keeper_test
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/coins"
+	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -181,7 +181,7 @@ func (s *KeeperTestSuite) TestAllocateAsset_GroupGauge() {
 	s.Require().NoError(err)
 
 	// expected to contain initial default coins + 100 / 300 of the distribution
-	expectedDistributionGroupGaugeOne := coins.MulDec(poolIncentiveDistribution, weightGroupOne.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
+	expectedDistributionGroupGaugeOne := coinutil.MulDec(poolIncentiveDistribution, weightGroupOne.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
 	s.Require().Equal(defaultCoins.Add(expectedDistributionGroupGaugeOne...), groupGaugeOne.Coins)
 
 	// Get second Group Gauge and ensure that full amount is received.
@@ -189,7 +189,7 @@ func (s *KeeperTestSuite) TestAllocateAsset_GroupGauge() {
 	s.Require().NoError(err)
 
 	// expected to contain initial default coins + 200 / 300 of the distribution
-	expectedDistributionGroupGaugeTwo := coins.MulDec(poolIncentiveDistribution, weightGroupTwo.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
+	expectedDistributionGroupGaugeTwo := coinutil.MulDec(poolIncentiveDistribution, weightGroupTwo.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
 	s.Require().Equal(defaultCoins.Add(expectedDistributionGroupGaugeTwo...), groupGaugeTwo.Coins)
 }
 
