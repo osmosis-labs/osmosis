@@ -31,7 +31,7 @@ var (
 // For the first group set the volume so that it is not equal across pools.
 //
 // For the second group set the volume so that the spread is even.
-//
+// un
 // Call AfterEpochEnd for muliple epochs.
 //
 // Ensure that the correct amount of rewards are distributed to the correct pool gauges. No panics occur.
