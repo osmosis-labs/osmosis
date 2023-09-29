@@ -856,6 +856,8 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 		// 0 by default unless overwritten
 		creatorAddressIndex int
 		poolIDs             []uint64
+		// corresponds to the pool IDs above
+		poolVolumesToSet []osmomath.Int
 
 		expectedGaugeInfo           types.InternalGaugeInfo
 		expectedPerpeutalGroupGauge bool
@@ -866,6 +868,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			coins:            defaultCoins,
 			numEpochPaidOver: types.PerpetualNumEpochsPaidOver,
 			poolIDs:          []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID},
+			poolVolumesToSet: []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount.Add(defaultVolumeAmount)},
 
 			expectedPerpeutalGroupGauge: true,
 			expectedGaugeInfo: addGaugeRecords(defaultEmptyGaugeInfo, []types.InternalGaugeRecord{
@@ -878,6 +881,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			coins:            defaultCoins,
 			numEpochPaidOver: types.PerpetualNumEpochsPaidOver,
 			poolIDs:          []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID, poolInfo.StableSwapPoolID},
+			poolVolumesToSet: []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount, defaultVolumeAmount},
 
 			expectedPerpeutalGroupGauge: true,
 			expectedGaugeInfo: addGaugeRecords(defaultEmptyGaugeInfo, []types.InternalGaugeRecord{
@@ -891,6 +895,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			coins:            defaultCoins,
 			numEpochPaidOver: types.PerpetualNumEpochsPaidOver + 1,
 			poolIDs:          []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID},
+			poolVolumesToSet: []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount},
 
 			expectedPerpeutalGroupGauge: false, // explicit for clarity
 			expectedGaugeInfo: addGaugeRecords(defaultEmptyGaugeInfo, []types.InternalGaugeRecord{
@@ -904,6 +909,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			coins:            defaultCoins.Add(defaultCoins...).Add(defaultCoins...),
 			numEpochPaidOver: types.PerpetualNumEpochsPaidOver + 4,
 			poolIDs:          []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID, poolInfo.StableSwapPoolID},
+			poolVolumesToSet: []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount, defaultVolumeAmount},
 
 			expectedPerpeutalGroupGauge: false, // explicit for clarity
 			expectedGaugeInfo: addGaugeRecords(defaultEmptyGaugeInfo, []types.InternalGaugeRecord{
@@ -920,6 +926,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			coins:            defaultCoins,
 			numEpochPaidOver: types.PerpetualNumEpochsPaidOver,
 			poolIDs:          []uint64{poolInfo.BalancerPoolID, poolInfo.CosmWasmPoolID},
+			poolVolumesToSet: []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount},
 
 			expectErr: poolincentivetypes.UnsupportedPoolTypeError{PoolID: poolInfo.CosmWasmPoolID, PoolType: poolmanagertypes.CosmWasm},
 		},
@@ -930,6 +937,7 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			creatorAddressIndex: oneTimeFeeFundedIndex,
 			numEpochPaidOver:    types.PerpetualNumEpochsPaidOver,
 			poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
+			poolVolumesToSet:    []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount},
 			expectErr:           fmt.Errorf("0uosmo is smaller than %s: insufficient funds", defaultCoins),
 		},
 		{
@@ -938,12 +946,42 @@ func (s *KeeperTestSuite) TestCreateGroup() {
 			creatorAddressIndex: noFundingIndex,
 			numEpochPaidOver:    types.PerpetualNumEpochsPaidOver,
 			poolIDs:             []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
+			poolVolumesToSet:    []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount},
 			expectErr:           errorNoCustomFeeInBalance,
+		},
+		{
+			name:             "error: no volume in one of the pools",
+			coins:            defaultCoins,
+			numEpochPaidOver: types.PerpetualNumEpochsPaidOver,
+			poolIDs:          []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
+			// Note that second pool has zero volume
+			poolVolumesToSet: []osmomath.Int{defaultVolumeAmount, osmomath.ZeroInt()},
+
+			expectErr: types.NoPoolVolumeError{PoolId: poolInfo.ConcentratedPoolID},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+
+			// Ensure we configured volumes and pools correctly
+			bondDenom := s.App.StakingKeeper.GetParams(s.Ctx).BondDenom
+			s.Require().Len(tc.poolIDs, len(tc.poolVolumesToSet))
+			expectedTotalVolume := osmomath.ZeroInt()
+			for i, poolID := range tc.poolIDs {
+				s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolID, sdk.NewCoins(sdk.NewCoin(bondDenom, tc.poolVolumesToSet[i])))
+
+				if tc.expectedGaugeInfo.GaugeRecords == nil {
+					continue
+				}
+
+				// Set the weights on the expected gauge records per volume
+				tc.expectedGaugeInfo.GaugeRecords[i].CumulativeWeight = tc.poolVolumesToSet[i]
+				tc.expectedGaugeInfo.GaugeRecords[i].CurrentWeight = tc.poolVolumesToSet[i]
+
+				expectedTotalVolume = expectedTotalVolume.Add(tc.poolVolumesToSet[i])
+			}
+			tc.expectedGaugeInfo.TotalWeight = expectedTotalVolume
 
 			// Always fund the account with fullyFundedAddressIndex
 			s.FundAcc(s.TestAccs[fullyFundedAddressIndex], tc.coins.Add(customGroupCreationFee...))

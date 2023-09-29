@@ -44,6 +44,10 @@ var (
 func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 	s.SetupTest()
 
+	// Define test volume amounts
+	oneMillionVolumeAmt := osmomath.NewDec(1_000_000_000_000)
+	sub10KVolumeAmount := osmomath.NewDec(9_876_543_21)
+
 	// Create a perpetual set of pools that only perpetual group gauge incentivizes
 	perpetualPoolAndGaugeInfo := s.PrepareAllSupportedPools()
 
@@ -54,33 +58,37 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 		// perpetual pools
 		perpetualPoolAndGaugeInfo.BalancerPoolID, perpetualPoolAndGaugeInfo.ConcentratedPoolID, perpetualPoolAndGaugeInfo.StableSwapPoolID,
 	}
+	// Compute uneven volumes
+	unevenPoolVolumes := setupUnequalVolumeWeights(len(perpetualGroupPoolIDs), oneMillionVolumeAmt)
+	// Setup volumes to let group creation pass.
+	s.setupVolumeForPools(perpetualGroupPoolIDs, unevenPoolVolumes, map[uint64]osmomath.Int{})
 
 	perpetualGroupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], perpetualGroupPoolIDs)
 	s.Require().NoError(err)
+
+	// Update volumes post-group creation
+	perpetualPoolIDToVolumeMap := map[uint64]osmomath.Int{}
+	s.setupVolumeForPools(perpetualGroupPoolIDs, unevenPoolVolumes, perpetualPoolIDToVolumeMap)
 
 	nonPerpetualGroupPoolIDs := []uint64{
 		// non-perpetual pools
 		nonPerpetualPoolAndGaugeInfo.ConcentratedPoolID, nonPerpetualPoolAndGaugeInfo.StableSwapPoolID, nonPerpetualPoolAndGaugeInfo.BalancerPoolID,
 	}
 
+	// Compute even volumes
+	equalPoolVolumes := setupEqualVolumeWeights(len(nonPerpetualGroupPoolIDs), sub10KVolumeAmount)
+	// Setup volumes to let group creation pass.
+	s.setupVolumeForPools(nonPerpetualGroupPoolIDs, equalPoolVolumes, map[uint64]osmomath.Int{})
+
 	nonPerpetualGroupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...).Add(defaultCoins...), types.PerpetualNumEpochsPaidOver+3, s.TestAccs[0], nonPerpetualGroupPoolIDs)
 	s.Require().NoError(err)
 
-	// Setup uneven volumes
-	unevenPoolVolumes := setupUnequalVolumeWeights(len(perpetualGroupPoolIDs), oneMillionVolumeAmt)
-
-	perpetualPoolIDToVolumeMap := map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(perpetualGroupPoolIDs, unevenPoolVolumes, perpetualPoolIDToVolumeMap)
+	// Update volumes post-group creation
+	nonPerpetualPoolIDToVolumeMap := map[uint64]osmomath.Int{}
+	s.setupVolumeForPools(nonPerpetualGroupPoolIDs, equalPoolVolumes, nonPerpetualPoolIDToVolumeMap)
 
 	// Calculate the expected distribution
 	perpetualPoolIDToExpectedDistributionMap := s.computeExpectedDistributonAmountsFromVolume(defaultCoins, perpetualPoolIDToVolumeMap, oneMillionVolumeAmt)
-
-	// Setup even volumes
-	equalPoolVolumes := setupEqualVolumeWeights(len(nonPerpetualGroupPoolIDs), sub10KVolumeAmount)
-
-	nonPerpetualPoolIDToVolumeMap := map[uint64]osmomath.Int{}
-
-	s.setupVolumeForPools(nonPerpetualGroupPoolIDs, equalPoolVolumes, nonPerpetualPoolIDToVolumeMap)
 
 	// Calculate the expected distribution
 	nonPerpetualPoolIDToExpectedDistributionMap := s.computeExpectedDistributonAmountsFromVolume(defaultCoins, nonPerpetualPoolIDToVolumeMap, sub10KVolumeAmount)
@@ -199,6 +207,8 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_OverlappingPoolsInGroups() {
 
 	overlappingPoolIDs := []uint64{poolAndGaugeInfo.ConcentratedPoolID, poolAndGaugeInfo.StableSwapPoolID, poolAndGaugeInfo.BalancerPoolID}
 
+	// setup inital volumes so that a Group can be created.
+	s.overwriteVolumes(overlappingPoolIDs, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount, defaultVolumeAmount})
 	// Create first group
 	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], overlappingPoolIDs)
 	s.Require().NoError(err)
@@ -245,12 +255,16 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_NoVolumeOnePool_SkipSilent() {
 	// Create the first set of pools with internal gauges and a group for them.
 	poolAndGaugeInfoOne := s.PrepareAllSupportedPools()
 	poolIDsGroupOne := []uint64{poolAndGaugeInfoOne.ConcentratedPoolID, poolAndGaugeInfoOne.StableSwapPoolID}
+	// setup initial volumes so that a Group can be created.
+	s.overwriteVolumes(poolIDsGroupOne, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount})
 	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], poolIDsGroupOne)
 	s.Require().NoError(err)
 
 	// Create the second set of pools with internal gauges and a group for them.
 	poolAndGaugeInfoTwo := s.PrepareAllSupportedPools()
 	poolIDsGroupTwo := []uint64{poolAndGaugeInfoTwo.ConcentratedPoolID, poolAndGaugeInfoTwo.StableSwapPoolID}
+	// setup initial volumes so that a Group can be created.
+	s.overwriteVolumes(poolIDsGroupTwo, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount})
 	_, err = s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], poolIDsGroupTwo)
 	s.Require().NoError(err)
 
@@ -334,9 +348,14 @@ func (*KeeperTestSuite) computeExpectedDistributonAmountsFromVolume(coinsDistrib
 	return poolIDToExpectedDistributionMapOne
 }
 
+// initializes or increases the volumes for the given pools
+func (s *KeeperTestSuite) increaseVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int) {
+	s.setupVolumeForPools(poolIDs, volumesForEachPool, map[uint64]osmomath.Int{})
+}
+
 // sets up the volume for the pools in the group
 // mutates poolIDToVolumeMap
-func (s *KeeperTestSuite) setupVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Dec, poolIDToVolumeMap map[uint64]math.Int) {
+func (s *KeeperTestSuite) setupVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int, poolIDToVolumeMap map[uint64]math.Int) {
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 
 	s.Require().Equal(len(poolIDs), len(volumesForEachPool))
@@ -344,19 +363,18 @@ func (s *KeeperTestSuite) setupVolumeForPools(poolIDs []uint64, volumesForEachPo
 		currentPoolID := poolIDs[i]
 
 		currentVolume := volumesForEachPool[i]
-		currentVolumeInt := currentVolume.TruncateInt()
 
 		fmt.Printf("currentVolume %d %s\n", i, currentVolume)
 
 		// Retrieve the existing volume to add to it.
 		existingVolume := s.App.PoolManagerKeeper.GetOsmoVolumeForPool(s.Ctx, currentPoolID)
 
-		s.App.PoolManagerKeeper.SetVolume(s.Ctx, currentPoolID, sdk.NewCoins(sdk.NewCoin(bondDenom, existingVolume.Add(currentVolumeInt))))
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, currentPoolID, sdk.NewCoins(sdk.NewCoin(bondDenom, existingVolume.Add(currentVolume))))
 
 		if existingVolume, ok := poolIDToVolumeMap[currentPoolID]; ok {
-			poolIDToVolumeMap[currentPoolID] = existingVolume.Add(currentVolumeInt)
+			poolIDToVolumeMap[currentPoolID] = existingVolume.Add(currentVolume)
 		} else {
-			poolIDToVolumeMap[currentPoolID] = currentVolumeInt
+			poolIDToVolumeMap[currentPoolID] = currentVolume
 		}
 	}
 }
@@ -367,12 +385,12 @@ func (s *KeeperTestSuite) setupVolumeForPools(poolIDs []uint64, volumesForEachPo
 // The formula to determine the weight ratio is:
 // a_i = i / (n(n+1)/2)
 // It is chosen so that the sum of all weights is 1 and each weight is unique.
-func setupUnequalVolumeWeights(numVolumeWeightsToCreate int, totalVolumeAmount math.LegacyDec) []math.LegacyDec {
-	unequalVolumeRatios := make([]osmomath.Dec, 0, numVolumeWeightsToCreate)
+func setupUnequalVolumeWeights(numVolumeWeightsToCreate int, totalVolumeAmount math.LegacyDec) []osmomath.Int {
+	unequalVolumeRatios := make([]osmomath.Int, 0, numVolumeWeightsToCreate)
 	n := osmomath.NewDec(int64(numVolumeWeightsToCreate))
 	for i := 0; i < numVolumeWeightsToCreate; i++ {
 		denominator := n.Mul(n.Add(osmomath.OneDec())).Quo(osmomath.NewDec(2))
-		unequalVolumeRatios = append(unequalVolumeRatios, osmomath.NewDec(int64(i+1)).Quo(denominator).Mul(totalVolumeAmount))
+		unequalVolumeRatios = append(unequalVolumeRatios, osmomath.NewDec(int64(i+1)).Quo(denominator).Mul(totalVolumeAmount).TruncateInt())
 	}
 	return unequalVolumeRatios
 }
@@ -381,11 +399,11 @@ func setupUnequalVolumeWeights(numVolumeWeightsToCreate int, totalVolumeAmount m
 // and are equal.
 //
 // The distribution of weights is chosen so that the sum of all them is 1 and each weight is equal.
-func setupEqualVolumeWeights(numVolumeWeightsToCreate int, totalVolumeAmount math.LegacyDec) []math.LegacyDec {
-	equalVolumeRatios := make([]osmomath.Dec, 0, numVolumeWeightsToCreate)
+func setupEqualVolumeWeights(numVolumeWeightsToCreate int, totalVolumeAmount math.LegacyDec) []osmomath.Int {
+	equalVolumeRatios := make([]osmomath.Int, 0, numVolumeWeightsToCreate)
 	for i := 0; i < numVolumeWeightsToCreate; i++ {
 		currentVolume := osmomath.OneDec().Quo(osmomath.NewDec(int64(numVolumeWeightsToCreate))).Mul(totalVolumeAmount)
-		equalVolumeRatios = append(equalVolumeRatios, currentVolume)
+		equalVolumeRatios = append(equalVolumeRatios, currentVolume.TruncateInt())
 	}
 	return equalVolumeRatios
 }
