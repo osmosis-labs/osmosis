@@ -210,7 +210,7 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 			clGaugeWeight:          osmomath.NewInt(400),
 			weights:                []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
 			setupPoolMigrationLink: true,
-			expectedRecordLength:   4,
+			expectedRecordLength:   3, // used to be 4, but is now still 3 because we don't indirectly incentivize the balancer pool anymore.
 		},
 	} {
 		tc := tc
