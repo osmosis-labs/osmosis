@@ -152,11 +152,11 @@ recordsLoop:
 			if err != nil {
 				group, err := q.Keeper.incentivesKeeper.GetGroupByGaugeID(sdkCtx, record.GaugeId)
 				if err != nil {
-					continue recordsLoop
+					continue
 				}
 				poolIds, durations, err := q.Keeper.incentivesKeeper.GetPoolIdsAndDurationsFromGroup(sdkCtx, group)
 				if err != nil {
-					continue recordsLoop
+					continue
 				}
 				for i, poolId := range poolIds {
 					incentivizedPool := types.IncentivizedPool{
