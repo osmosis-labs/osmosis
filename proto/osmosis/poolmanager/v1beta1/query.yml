@@ -77,3 +77,9 @@ queries:
       query_func: "k.GetTotalVolumeForPool"
     cli:
       cmd: "TotalVolumeForPool"
+  EstimateTradeBasedOnPriceImpact:
+    proto_wrapper:
+      query_func: "k.EstimateTradeBasedOnPriceImpact"
+      response: "*queryproto.EstimateTradeBasedOnPriceImpactResponse"
+    cli:
+      cmd: "EstimateTradeBasedOnPriceImpact"

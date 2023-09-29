@@ -1437,7 +1437,7 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 			poolIds := []uint64{clPool.GetId(), balPoolId}
 
 			// Update cumulative volumes for pools
-			s.setupVolumes(poolIds, tc.updatedPoolVolumes)
+			s.overwriteVolumes(poolIds, tc.updatedPoolVolumes)
 
 			// Save original input to help with mutation-related assertions
 			originalGroup := deepCopyGroup(tc.groupToSync)
@@ -1513,7 +1513,7 @@ func (s *KeeperTestSuite) TestSyncGroupWeights() {
 			// When more are added in the future, setup logic should route to the appropriate setup function here.
 			switch tc.groupToSync.SplittingPolicy {
 			case types.ByVolume:
-				s.setupVolumes(poolIds, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount})
+				s.overwriteVolumes(poolIds, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount})
 			}
 
 			// Save original input to help with mutation-related assertions
@@ -1923,7 +1923,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			s.Require().NoError(err)
 
 			// Setup volumes
-			s.setupVolumes([]uint64{clPool.GetId(), balPoolId}, tc.volumeToSet)
+			s.overwriteVolumes([]uint64{clPool.GetId(), balPoolId}, tc.volumeToSet)
 
 			// Compute expected distributions based on test configuration
 			// See function definition for details.
@@ -1981,10 +1981,11 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 }
 
 // This test validates two things:
-// - Allocating to a newly created group without any volume does not panic
-// - Once volume exists, the group allocated correctly.
+// - Allocating to a newly created group does not panic
+// - If groups is modified with invalid values (for testing its refetching), the failure does not occur
+// and the updated group is refetched by AllocateAcrossGauges.
 //
-// Additionally, this test catches a bug where if we didn't refetch groups after
+// This test catches a bug where if we didn't refetch groups after
 // synching in AllocateAcrossGauges, the group would not be updated with the correct
 // total volume and panic when allocating due to division by zero.
 func (s *KeeperTestSuite) TestCreateGroupsAndAllocate_GroupRefetchingInAllocate() {
@@ -1994,13 +1995,24 @@ func (s *KeeperTestSuite) TestCreateGroupsAndAllocate_GroupRefetchingInAllocate(
 		defaultVolume = osmomath.NewInt(100)
 		// Note that we expect each pool gauge to have half the coins
 		// since they have equal volume.
-		halfDefaultCoins = coins.QuoRaw(defaultCoins, 2)
+		// We create a non-perpetual group with 2x the defaultCoins.
+		// Therefeore, the total is 1x the defaultCoins.
+		halfInitialCoinsInGroup = defaultCoins
 	)
 
 	poolInfo := s.PrepareAllSupportedPools()
 
-	groupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, incentivetypes.PerpetualNumEpochsPaidOver, s.TestAccs[0], []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID})
+	// Initialized volume.
+	// Note that it is equal between pools.
+	// We must set it prior to group being created. Otherwise, creation fails.
+	s.overwriteVolumes([]uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID}, []osmomath.Int{defaultVolume, defaultVolume})
+
+	// Non-perpetual group over 2 epochs
+	groupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...), incentivetypes.PerpetualNumEpochsPaidOver+2, s.TestAccs[0], []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID})
 	s.Require().NoError(err)
+
+	// Increase the volume from creation time. Otherwise, the group will not be allocated and allocation would be a no-op.
+	s.increaseVolumeForPools([]uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID}, []osmomath.Int{defaultVolume, defaultVolume})
 
 	// Fetch the group
 	group, err := s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, groupGaugeID)
@@ -2009,9 +2021,12 @@ func (s *KeeperTestSuite) TestCreateGroupsAndAllocate_GroupRefetchingInAllocate(
 	err = s.App.IncentivesKeeper.AllocateAcrossGauges(s.Ctx, []types.Group{group})
 	s.Require().NoError(err)
 
-	// Set Volume
-	// Note that it is equal between pools.
-	s.setupVolumes([]uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID}, []osmomath.Int{defaultVolume, defaultVolume})
+	// Increase the volume.
+	// Note that the increase is equal between pools.
+	s.increaseVolumeForPools([]uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID}, []osmomath.Int{defaultVolume, defaultVolume})
+
+	// Now, force set the total weight of the input group to zero to make sure that is is refetched after synching
+	group.InternalGaugeInfo.TotalWeight = osmomath.ZeroInt()
 
 	// This triggers a panic if group inside the loop is not refetched with updated weights
 	// Ensure that fetch happens correctly
@@ -2022,16 +2037,16 @@ func (s *KeeperTestSuite) TestCreateGroupsAndAllocate_GroupRefetchingInAllocate(
 	// Validate that the concentrated pool gauge was updated correctly
 	concentratedGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, poolInfo.ConcentratedGaugeID)
 	s.Require().NoError(err)
-	s.Require().Equal(halfDefaultCoins.String(), concentratedGauge.Coins.String())
+	s.Require().Equal(halfInitialCoinsInGroup.String(), concentratedGauge.Coins.String())
 
 	// Validate that the balancer pool gauge was updated correctly
 	balancerGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, poolInfo.BalancerGaugeID)
 	s.Require().NoError(err)
-	s.Require().Equal(halfDefaultCoins.String(), balancerGauge.Coins.String())
+	s.Require().Equal(halfInitialCoinsInGroup.String(), balancerGauge.Coins.String())
 }
 
-// setupVolumes sets the volume for each pool in the passed in list of pool ids to the corresponding value in the passed in list of volumes.
-func (s *KeeperTestSuite) setupVolumes(poolIds []uint64, updatedPoolVolumes []osmomath.Int) {
+// overwriteVolumes sets the volume for each pool in the passed in list of pool ids to the corresponding value in the passed in list of volumes.
+func (s *KeeperTestSuite) overwriteVolumes(poolIds []uint64, updatedPoolVolumes []osmomath.Int) {
 	// Update cumulative volumes for pools
 	for i, updatedVolume := range updatedPoolVolumes {
 		// Note that even though we deal with volumes as ints, they are tracked as coins to allow for tracking of more denoms in the future.

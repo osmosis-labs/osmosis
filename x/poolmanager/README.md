@@ -335,3 +335,131 @@ higher slippage.
 
 Note, that the actual split happens off-chain. The router is only responsible for executing the swaps in the order and quantities of token in provided
 by the routes.
+
+## EstimateTradeBasedOnPriceImpact Query
+
+The `EstimateTradeBasedOnPriceImpact` query allows users to estimate a trade for all pool types given the following parameters are provided for this request `EstimateTradeBasedOnPriceImpactRequest`:
+
+
+- **FromCoin**: (`sdk.Coin`): the total amount of tokens one wants to sell.
+- **ToCoinDenom**: (`string`): is the denom they want to buy with the tokens being sold.
+- **PoolId**: (`uint64`): is the identifier of the pool that the trade will happen on.
+- **MaxPriceImpact**: (`sdk.Dec`): is the maximum percentage that the user is willing to affect the price of the pool.
+- **ExternalPrice**: (`sdk.Dec`) is an external price that the user can optionally enter to have the `MaxPriceImpact` adjusted as the `SpotPrice` of a pool could be changed at any time.
+
+The response would be `EstimateTradeBasedOnPriceImpactResponse` which contains the following data:
+
+- **InputCoin**: (`sdk.Coin`): the actual input amount that would be tradeable under that price impact (might be the full amount).
+- **OutputCoin**: (`sdk.Coin`): the amount of the `ToCoinDenom` tokens being received for the actual `InputCoin` trade.
+
+With that data it is easier for any entity to fill in the `MsgSwapExactAmountIn` details. The response could be filled with a valid trade or an empty one(InputCoin = 0, OutputCoin = 0), an empty one indicates that no trade could be estimated.
+It will not error if a trade cannot be estimated.
+
+### Process
+
+The following is the process in which the query finds a trade that will stay below the `MaxPriceImpact` value.
+
+1. Verify `PoolId`, `FromCoin`, `ToCoinDenom` are not empty.
+2. Return the specific `swapModule` based on the `PoolId`.
+3. Return the specific `PoolI` interface from the `swapModule` based on the `PoolId`.
+4. Calculate the `SpotPrice` in terms of the token being bought, therefore if it's an `OSMO/ATOM` pool and `OSMO` is being sold we need to calculate the `SpotPrice` in terms of `ATOM` being the base asset and `OSMO` being the quote asset.
+5. If we have a `ExternalPrice` specified in the request we need to adjust the `MaxPriceImpact` into a new variable `adjustedMaxPriceImpact` which would either increase if the `SpotPrice` is cheaper than the `ExternalPrice` or decrease if the `SpotPrice` is more expensive leaving less room to estimate a trade.
+   1. If the `adjustedMaxPriceImpact` was calculated to be `0` or negative it means that the `SpotPrice` is more expensive than the `ExternalPrice` and has already exceeded the possible `MaxPriceImpact`. We return a `sdk.ZeroInt()` input and output for the input and output coins indicating that no trade is viable.
+6. Then according to the pool type we attempt to find a viable trade, we must process each pool type differently as they return different results for different scenarios. The sections below explain the different pool types and how they each handle input.
+
+
+#### Balancer Pool Type Process
+
+The following is the example input/output when executing `CalcOutAmtGivenIn` on balancer pools:
+
+- If the input is greater than the total liquidity of the pool, the output will be the total liquidity of the target token.
+- If the input is an amount that is reasonably within the range of liquidity of the pool, the output will be a tolerable slippage amount based on pool data.
+- If the input is a small amount for which the pool cannot calculate a viable swap output e.g `1`, the output will be `1`, regardless of slippage.
+
+Here is the following process for the `estimateTradeBasedOnPriceImpactBalancerPool` function:
+
+1. The function initially calculates the output amount (`tokenOut`) using the input amount (`FromCoin`) without including a swap fee using the `CalcOutAmtGivenIn` function.
+
+   1. If `tokenOut` is zero, the function returns zero for both the input and output coin, signifying that trading a negligible amount yields no output. It is not likely that this pool type returns a zero but it is still catered for.
+
+2. The function calculates the current trade price (`currTradePrice`) using the initially estimated `tokenOut`. Following that, it calculates the deviation of this price from the spot price (`priceDeviation`).
+
+   1. If the `priceDeviation` is within the acceptable range (`adjustedMaxPriceImpact`), the function recalculates `tokenOut` but this time includes the swap fee. The estimated trade is then returned.
+
+3. In case the initial `priceDeviation` was not within the acceptable range, the function starts a binary search loop. It initializes `lowAmount`, `highAmount`, and `currFromCoin` to perform this search.
+
+4. Within the binary search loop, the function recalculates the middle amount (`midAmount`) to try estimate `CalcOutAmtGivenIn` again. It performs new trade estimations until it either finds an acceptable `priceDeviation` or exhausts the search range.
+
+5. If the loop exhausts the search range without finding a viable trade, it returns zero for both the input and output coin.
+
+6. If a viable trade is found that respects the `adjustedMaxPriceImpact`, the function performs a final recalculation, this time including the swap fee, and returns the estimated trade.
+
+#### StableSwap Pool Type Process
+
+The following is the example input/output when executing `CalcOutAmtGivenIn` on stableswap pools:
+
+- If the input is greater than the total liquidity of the pool, the function will `panic`.
+- If the input is an amount that is reasonably within the range of liquidity of the pool, the output will be a tolerable slippage amount based on pool data.
+- If the input is a small amount for which the pool cannot calculate a viable swap output e.g `1`, the function will throw an error.
+
+Here is the following process for the `estimateTradeBasedOnPriceImpactStableSwapPool` function:
+
+1. The function begins by attempting to estimate the output amount (`tokenOut`) for a given input amount (`req.FromCoin`). This calculation is done without accounting for the swap fee.
+
+   1. If an error occurs, and it's not a panic, the function returns zero coins for both the input and output, signifying an error due to an amount that's too small for the trade to proceed.
+
+   2. If a panic occurs during the calculation, the function sets the output coin (`tokenOut`) to zero and proceeds to find a smaller acceptable trade amount.
+
+2. When there is no error or panic, the function calculates the current trade price (`currTradePrice`) and checks if the price deviation (`priceDeviation`) from the spot price is within acceptable limits (`adjustedMaxPriceImpact`).
+
+   1. If the `priceDeviation` is acceptable, the function re-estimates the output amount (`tokenOut`) considering the swap fee. If successful, this trade estimate is returned.
+
+3. The function initializes variables `lowAmount` and `highAmount` to search for an acceptable trade amount if the initial amount is too large or too small.
+
+4. Within a loop, the function performs a binary search to find an acceptable trade amount. It attempts a new trade with the middle amount (`midAmount`) between `lowAmount` and `highAmount`.
+
+5. If the new trade amount leads to an error without a panic, the function returns zero coins, indicating the amount has become too small.
+
+6. If the new trade amount leads to a panic, the function adjusts the `highAmount` downwards to continue the search.
+
+7. If the new trade amount does not cause an error or panic, and its `priceDeviation` is within limits, the function adjusts the `lowAmount` upwards to continue the search.
+
+8.  If the loop completes without finding an acceptable trade amount, the function returns zero coins for both the input and the output.
+
+9.  If a viable trade is found, the function performs a final recalculation considering the swap fee and returns the estimated trade.
+
+
+#### Concentrated Liquidity Pool Type Process
+
+The following is the example input/output when executing `CalcOutAmtGivenIn` on concentrated liquidity pools:
+
+- If the input is greater than the total liquidity of the pool, the function will error.
+- If the input is an amount that is reasonably within the range of liquidity of the pool, the output will be a tolerable slippage amount based on pool data.
+- f the input is a small amount for which the pool cannot calculate a viable swap output e.g `1`, the function will return a zero.
+
+Here is the following process for the `estimateTradeBasedOnPriceImpactConcentratedLiquidity` function:
+
+1. The function starts by attempting to estimate the output amount (`tokenOut`) for a given input amount (`req.FromCoin`), using the `CalcOutAmtGivenIn` method of the `swapModule`.
+
+   1. If `tokenOut` is zero, it means the amount being traded is too small. The function returns zero coins for both input and output.
+
+   2. If an error occurs but `tokenOut` is not zero, the function ignores the error. The function assumes the error could mean the input is too large and proceeds to the next steps to find a suitable trade amount.
+
+2. If there is no error in estimating `tokenOut`, the function calculates the current trade price (`currTradePrice`). It then checks if the price deviation (`priceDeviation`) from the spot price is within acceptable limits (`adjustedMaxPriceImpact`).
+
+   1. If the `priceDeviation` is acceptable, the function re-estimates the `tokenOut` considering the swap fee. If successful, this trade estimate is returned.
+
+3. The function initializes `lowAmount` and `highAmount` variables to search for an acceptable trade amount if the initial amount is unsuitable.
+
+4. Within a loop, the function performs a binary search for an acceptable trade amount. It calculates a middle amount (`midAmount`) between `lowAmount` and `highAmount` to attempt a new trade.
+
+5. If the new `tokenOut` is zero, the function returns zero coins for both input and output, indicating the trade amount is too small.
+
+6. If no error occurs with the new trade amount and the `priceDeviation` is within limits, the function adjusts `lowAmount` upwards.
+
+7. If an error occurs with the new trade amount, the function adjusts `highAmount` downwards to continue the search.
+
+8. If the loop completes without finding an acceptable trade amount, the function returns zero coins for both input and output.
+
+9. If a viable trade amount is found, the function performs a final estimation of `tokenOut` considering the swap fee and returns the estimated trade.
+

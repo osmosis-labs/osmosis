@@ -326,14 +326,20 @@ func (s *KeeperTestSuite) TestCreateGroup_Fee() {
 			testAccountAddress = accountKeeper.GetModuleAddress(types.ModuleName)
 		}
 
-		s.PrepareAllSupportedPools()
+		poolInfo := s.PrepareAllSupportedPools()
+
+		poolIDs := []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID, poolInfo.StableSwapPoolID}
 
 		msg := &types.MsgCreateGroup{
 			Coins:             tc.groupFunds,
 			NumEpochsPaidOver: tc.numEpochsPaidOver,
 			Owner:             testAccountAddress.String(),
-			PoolIds:           []uint64{1, 2, 3},
+			PoolIds:           poolIDs,
 		}
+
+		// setup volume so that the pool can be created
+		s.overwriteVolumes(poolIDs, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount, defaultVolumeAmount})
+
 		// System under test.
 		_, err := msgServer.CreateGroup(sdk.WrapSDKContext(ctx), msg)
 

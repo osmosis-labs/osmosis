@@ -154,6 +154,7 @@ Fixes mainnet bugs w/ incorrect accumulation sumtrees, and CL handling for a bal
 
 ### API breaks
 
+* [#6167](https://github.com/osmosis-labs/osmosis/pull/6167) add EstimateTradeBasedOnPriceImpact query to x/poolmanager.
 * [#6238](https://github.com/osmosis-labs/osmosis/pull/6238) switch osmomath to sdkmath types and rename BigDec constructors to contain "Big" in the name.
    * Note: with the update, the Dec and Int do not get initialized to zero values
    by default in proto marhaling/unmarshaling. Instead, they get set to nil values.
