@@ -3,7 +3,13 @@ package poolmanager
 import (
 	"errors"
 	"fmt"
+
 	"math/big"
+	"strings"
+
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -725,4 +731,351 @@ func (k Keeper) GetTotalVolumeForPool(ctx sdk.Context, poolId uint64) sdk.Coins 
 func (k Keeper) GetOsmoVolumeForPool(ctx sdk.Context, poolId uint64) osmomath.Int {
 	totalVolume := k.GetTotalVolumeForPool(ctx, poolId)
 	return totalVolume.AmountOf(k.stakingKeeper.BondDenom(ctx))
+}
+
+// EstimateTradeBasedOnPriceImpactBalancerPool estimates a trade based on price impact for a balancer pool type.
+// For a balancer pool if an amount entered is greater than the total pool liquidity the trade estimated would be
+// the full liquidity of the other token. If the amount is small it would return a close 1:1 trade of the
+// smallest units.
+func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
+	ctx sdk.Context,
+	req queryproto.EstimateTradeBasedOnPriceImpactRequest,
+	spotPrice, adjustedMaxPriceImpact osmomath.Dec,
+	swapModule types.PoolModuleI,
+	poolI types.PoolI,
+) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
+	// There isn't a case where the tokenOut could be zero or an error is received but those possibilities are handled
+	// anyway.
+	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, sdk.ZeroDec())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if tokenOut.IsZero() {
+		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+			InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+		}, nil
+	}
+
+	// Validate if the trade as is respects the price impact, if it does re-estimate it with a swap fee and return
+	// the result.
+	priceDeviation := calculatePriceDeviation(req.FromCoin, tokenOut, spotPrice)
+	if priceDeviation.LTE(adjustedMaxPriceImpact) {
+		tokenOut, err = swapModule.CalcOutAmtGivenIn(
+			ctx, poolI, req.FromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
+		)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+			InputCoin:  req.FromCoin,
+			OutputCoin: tokenOut,
+		}, nil
+	}
+
+	// Define low and high amount to search between. Start from 1 and req.FromCoin.Amount as initial range.
+	lowAmount := sdk.OneInt()
+	highAmount := req.FromCoin.Amount
+	currFromCoin := req.FromCoin
+
+	// Repeat the above process using the binary search algorithm which iteratively narrows down the optimal trade
+	// amount within a given maximum price impact range.
+	//
+	// The algorithm iteratively:
+	// 1) Calculates the middle amount of the current range ('midAmount').
+	// 2) Tries to execute a trade using this middle amount.
+	// 3) Calculates the resulting price deviation between the spot price and the
+	//    price of the tried trade.
+	//
+	// Depending on whether the price deviation is within the allowed 'adjustedMaxPriceImpact',
+	// the algorithm adjusts the 'lowAmount' or 'highAmount' for the next iteration.
+	//
+	// This process continues until 'lowAmount' is greater than 'highAmount', at which
+	// point the optimal amount respecting the max price impact will have been found.
+	for lowAmount.LTE(highAmount) {
+		// Calculate currFromCoin as the new middle amount to try trade.
+		midAmount := lowAmount.Add(highAmount).Quo(sdk.NewInt(2))
+		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
+
+		// There isn't a case where the tokenOut could be zero or an error is received but those possibilities are
+		// handled anyway.
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(
+			ctx, poolI, currFromCoin, req.ToCoinDenom, sdk.ZeroDec(),
+		)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		if tokenOut.IsZero() {
+			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+			}, nil
+		}
+
+		priceDeviation := calculatePriceDeviation(currFromCoin, tokenOut, spotPrice)
+		if priceDeviation.LTE(adjustedMaxPriceImpact) {
+			lowAmount = midAmount.Add(sdk.OneInt())
+		} else {
+			highAmount = midAmount.Sub(sdk.OneInt())
+		}
+	}
+
+	// highAmount is 0 it means the loop has iterated to the end without finding a viable trade that respects
+	// the price impact.
+	if highAmount.IsZero() {
+		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+			InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+		}, nil
+	}
+
+	tokenOut, err = swapModule.CalcOutAmtGivenIn(
+		ctx, poolI, currFromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
+	)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+		InputCoin:  currFromCoin,
+		OutputCoin: tokenOut,
+	}, nil
+}
+
+// EstimateTradeBasedOnPriceImpactStableSwapPool estimates a trade based on price impact for a stableswap pool type.
+// For a stableswap pool if an amount entered is greater than the total pool liquidity the trade estimated would
+// `panic`. If the amount is small it would return an error, in the case of a `panic` we should ignore it
+// and keep attempting lower input amounts while if it's a normal error we should return an empty trade.
+func (k Keeper) EstimateTradeBasedOnPriceImpactStableSwapPool(
+	ctx sdk.Context,
+	req queryproto.EstimateTradeBasedOnPriceImpactRequest,
+	spotPrice, adjustedMaxPriceImpact osmomath.Dec,
+	swapModule types.PoolModuleI,
+	poolI types.PoolI,
+) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
+	var tokenOut sdk.Coin
+	var err error
+	err = osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
+		tokenOut, err = swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, sdk.ZeroDec())
+		return err
+	})
+
+	// Find out if the error is because the amount is too large or too little. The calculation should error
+	// if the amount is too small, and it should panic if the amount is too large. If the amount is too large
+	// we want to continue to iterate to find attempt to find a smaller value. StableSwap panics on amounts that
+	// are too large due to the maths involved, while Balancer pool types do not.
+	if err != nil && !strings.Contains(err.Error(), "panic") {
+		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+			InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+		}, nil
+	} else if err == nil {
+		// Validate if the trade as is respects the price impact, if it does re-estimate it with a swap fee and return
+		// the result.
+		priceDeviation := calculatePriceDeviation(req.FromCoin, tokenOut, spotPrice)
+		if priceDeviation.LTE(adjustedMaxPriceImpact) {
+			tokenOut, err = swapModule.CalcOutAmtGivenIn(
+				ctx, poolI, req.FromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
+			)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+
+			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+				InputCoin:  req.FromCoin,
+				OutputCoin: tokenOut,
+			}, nil
+		}
+	}
+
+	// Define low and high amount to search between. Start from 1 and req.FromCoin.Amount as initial range.
+	lowAmount := sdk.OneInt()
+	highAmount := req.FromCoin.Amount
+	currFromCoin := req.FromCoin
+
+	// Repeat the above process using the binary search algorithm which iteratively narrows down the optimal trade
+	// amount within a given maximum price impact range.
+	//
+	// The algorithm iteratively:
+	// 1) Calculates the middle amount of the current range ('midAmount').
+	// 2) Tries to execute a trade using this middle amount.
+	// 3) Calculates the resulting price deviation between the spot price and the
+	//    price of the tried trade.
+	//
+	// Depending on whether the price deviation is within the allowed 'adjustedMaxPriceImpact',
+	// the algorithm adjusts the 'lowAmount' or 'highAmount' for the next iteration.
+	//
+	// This process continues until 'lowAmount' is greater than 'highAmount', at which
+	// point the optimal amount respecting the max price impact will have been found.
+	for lowAmount.LTE(highAmount) {
+		// Calculate currFromCoin as the new middle amount to try trade.
+		midAmount := lowAmount.Add(highAmount).Quo(sdk.NewInt(2))
+		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
+
+		err = osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
+			tokenOut, err = swapModule.CalcOutAmtGivenIn(ctx, poolI, currFromCoin, req.ToCoinDenom, sdk.ZeroDec())
+			return err
+		})
+
+		// If it returns an error without a panic it means the input has become too small and we should return.
+		// This occurs for the StableSwap pool type due to the maths involved, this does not occur for Balancer
+		// pool types.
+		if err != nil && !strings.Contains(err.Error(), "panic") {
+			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+			}, nil
+		} else if err != nil {
+			// If there is an error that does contain a panic it means the amount is still too large,
+			// and we should continue halving.
+			highAmount = midAmount.Sub(sdk.OneInt())
+		} else {
+			priceDeviation := calculatePriceDeviation(currFromCoin, tokenOut, spotPrice)
+			if priceDeviation.LTE(adjustedMaxPriceImpact) {
+				lowAmount = midAmount.Add(sdk.OneInt())
+			} else {
+				highAmount = midAmount.Sub(sdk.OneInt())
+			}
+		}
+	}
+
+	// highAmount is 0 it means the loop has iterated to the end without finding a viable trade that respects
+	// the price impact.
+	if highAmount.IsZero() {
+		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+			InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+		}, nil
+	}
+
+	tokenOut, err = swapModule.CalcOutAmtGivenIn(
+		ctx, poolI, currFromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
+	)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+		InputCoin:  currFromCoin,
+		OutputCoin: tokenOut,
+	}, nil
+}
+
+// EstimateTradeBasedOnPriceImpactConcentratedLiquidity estimates a trade based on price impact for a concentrated
+// liquidity pool type. For a concentrated liquidity pool if an amount entered is greater than the total pool liquidity
+// the trade estimated would error. If the amount is small it would return tokenOut to be 0 in which case we should
+// return an empty trade. If the estimate returns an error we should ignore it and continue attempting to estimate
+// by halving the input.
+func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
+	ctx sdk.Context,
+	req queryproto.EstimateTradeBasedOnPriceImpactRequest,
+	spotPrice, adjustedMaxPriceImpact osmomath.Dec,
+	swapModule types.PoolModuleI,
+	poolI types.PoolI,
+) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
+	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, sdk.ZeroDec())
+	// If there was no error we attempt to validate if the output is below the adjustedMaxPriceImpact.
+	if err == nil {
+		// If the tokenOut was returned to be zero it means the amount being traded is too small. We ignore the
+		// error output here as it could mean that the input is too large.
+		if tokenOut.IsZero() {
+			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+			}, nil
+		}
+
+		priceDeviation := calculatePriceDeviation(req.FromCoin, tokenOut, spotPrice)
+		if priceDeviation.LTE(adjustedMaxPriceImpact) {
+			tokenOut, err = swapModule.CalcOutAmtGivenIn(
+				ctx, poolI, req.FromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
+			)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+
+			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+				InputCoin:  req.FromCoin,
+				OutputCoin: tokenOut,
+			}, nil
+		}
+	}
+
+	// Define low and high amount to search between. Start from 1 and req.FromCoin.Amount as initial range.
+	lowAmount := sdk.OneInt()
+	highAmount := req.FromCoin.Amount
+	currFromCoin := req.FromCoin
+
+	// Repeat the above process using the binary search algorithm which iteratively narrows down the optimal trade
+	// amount within a given maximum price impact range.
+	//
+	// The algorithm iteratively:
+	// 1) Calculates the middle amount of the current range ('midAmount').
+	// 2) Tries to execute a trade using this middle amount.
+	// 3) Calculates the resulting price deviation between the spot price and the
+	//    price of the tried trade.
+	//
+	// Depending on whether the price deviation is within the allowed 'adjustedMaxPriceImpact',
+	// the algorithm adjusts the 'lowAmount' or 'highAmount' for the next iteration.
+	//
+	// This process continues until 'lowAmount' is greater than 'highAmount', at which
+	// point the optimal amount respecting the max price impact will have been found.
+	for lowAmount.LTE(highAmount) {
+		// Calculate currFromCoin as the new middle amount to try trade.
+		midAmount := lowAmount.Add(highAmount).Quo(sdk.NewInt(2))
+		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
+
+		tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, currFromCoin, req.ToCoinDenom, sdk.ZeroDec())
+		if err == nil {
+			// If the tokenOut was returned to be zero it means the amount being traded is too small. We ignore the
+			// error output here as it could mean that the input is too large.
+			if tokenOut.IsZero() {
+				return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+					InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+					OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+				}, nil
+			}
+
+			priceDeviation := calculatePriceDeviation(currFromCoin, tokenOut, spotPrice)
+			if priceDeviation.LTE(adjustedMaxPriceImpact) {
+				lowAmount = midAmount.Add(sdk.OneInt())
+			} else {
+				highAmount = midAmount.Sub(sdk.OneInt())
+			}
+		} else {
+			highAmount = midAmount.Sub(sdk.OneInt())
+		}
+	}
+
+	// highAmount is 0 it means the loop has iterated to the end without finding a viable trade that respects
+	// the price impact.
+	if highAmount.IsZero() {
+		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+			InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+		}, nil
+	}
+
+	tokenOut, err = swapModule.CalcOutAmtGivenIn(
+		ctx, poolI, currFromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
+	)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+		InputCoin:  currFromCoin,
+		OutputCoin: tokenOut,
+	}, nil
+}
+
+// calculatePriceDeviation calculates the price deviation between the current trade price and the spot price.
+// We have an `Abs()` at the end of the priceDeviation equation as we cannot be sure if any pool types based on their
+// configurations trade out more tokens than given for a trade, it is added just in-case.
+func calculatePriceDeviation(currFromCoin, tokenOut sdk.Coin, spotPrice osmomath.Dec) osmomath.Dec {
+	currTradePrice := sdk.NewDec(currFromCoin.Amount.Int64()).QuoInt(tokenOut.Amount)
+	priceDeviation := currTradePrice.Sub(spotPrice).Quo(spotPrice).Abs()
+	return priceDeviation
 }

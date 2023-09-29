@@ -288,3 +288,75 @@ func (q Querier) TotalLiquidity(ctx sdk.Context, req queryproto.TotalLiquidityRe
 		Liquidity: totalLiquidity,
 	}, nil
 }
+
+// EstimateTradeBasedOnPriceImpact returns the input and output amount of coins for a pool trade
+// based on external price and maximum price impact.
+func (q Querier) EstimateTradeBasedOnPriceImpact(
+	ctx sdk.Context,
+	req queryproto.EstimateTradeBasedOnPriceImpactRequest,
+) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Invalid Pool Id")
+	}
+
+	if req.FromCoin.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid from coin denom")
+	}
+
+	if req.ToCoinDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid to coin denom")
+	}
+
+	swapModule, err := q.K.GetPoolModule(ctx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	poolI, poolErr := swapModule.GetPool(ctx, req.PoolId)
+	if poolErr != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	spotPriceBigDec, err := swapModule.CalculateSpotPrice(ctx, req.PoolId, req.FromCoin.Denom, req.ToCoinDenom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// Convert to normal Dec
+	spotPrice := spotPriceBigDec.Dec()
+
+	// If ExternalPrice is specified we need to adjust the maxPriceImpact based on the deviation between spot and
+	// external price.
+	adjustedMaxPriceImpact := req.MaxPriceImpact
+	if !req.ExternalPrice.IsZero() {
+		priceDeviation := spotPrice.Sub(req.ExternalPrice).Quo(req.ExternalPrice)
+		adjustedMaxPriceImpact = adjustedMaxPriceImpact.Sub(priceDeviation)
+
+		// If the adjusted max price impact is negative or zero it means the difference between spot and external
+		// already exceeds the max price impact.
+		if adjustedMaxPriceImpact.IsZero() || adjustedMaxPriceImpact.IsNegative() {
+			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+			}, nil
+		}
+	}
+
+	// Process the estimates according to the pool type.
+	switch poolI.GetType() {
+	case types.Balancer:
+		return q.K.EstimateTradeBasedOnPriceImpactBalancerPool(
+			ctx, req, spotPrice, adjustedMaxPriceImpact, swapModule, poolI,
+		)
+	case types.Stableswap:
+		return q.K.EstimateTradeBasedOnPriceImpactStableSwapPool(
+			ctx, req, spotPrice, adjustedMaxPriceImpact, swapModule, poolI,
+		)
+	case types.Concentrated:
+		return q.K.EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
+			ctx, req, spotPrice, adjustedMaxPriceImpact, swapModule, poolI,
+		)
+	default:
+		return nil, status.Error(codes.Internal, "pool type not supported")
+	}
+}

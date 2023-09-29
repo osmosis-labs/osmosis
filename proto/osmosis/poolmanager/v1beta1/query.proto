@@ -111,6 +111,15 @@ service Query {
     option (google.api.http).get =
         "/osmosis/poolmanager/v1beta1/pools/total_liquidity";
   }
+
+  // EstimateTradeBasedOnPriceImpact returns an estimated trade based on price
+  // impact, if a trade cannot be estimated a 0 input and 0 output would be
+  // returned.
+  rpc EstimateTradeBasedOnPriceImpact(EstimateTradeBasedOnPriceImpactRequest)
+      returns (EstimateTradeBasedOnPriceImpactResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate_trade";
+  }
 }
 
 //=============================== Params
@@ -250,4 +259,51 @@ message TotalLiquidityResponse {
     (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
+}
+
+//=============================== EstimateTradeBasedOnPriceImpact
+
+// EstimateTradeBasedOnPriceImpactRequest represents a request to estimate a
+// trade for Balancer/StableSwap/Concentrated liquidity pool types based on the
+// given parameters.
+message EstimateTradeBasedOnPriceImpactRequest {
+  // from_coin is the total amount of tokens that the user wants to sell.
+  cosmos.base.v1beta1.Coin from_coin = 1 [ (gogoproto.nullable) = false ];
+
+  // to_coin_denom is the denom identifier of the token that the user wants to
+  // buy.
+  string to_coin_denom = 2;
+
+  // pool_id is the identifier of the liquidity pool that the trade will occur
+  // on.
+  uint64 pool_id = 3;
+
+  // max_price_impact is the maximum percentage that the user is willing
+  // to affect the price of the liquidity pool.
+  string max_price_impact = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+
+  // external_price is an optional external price that the user can enter.
+  // It adjusts the MaxPriceImpact as the SpotPrice of a pool can be changed at
+  // any time.
+  string external_price = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// EstimateTradeBasedOnPriceImpactResponse represents the response data
+// for an estimated trade based on price impact. If a trade fails to be
+// estimated the response would be 0,0 for input_coin and output_coin and will
+// not error.
+message EstimateTradeBasedOnPriceImpactResponse {
+  // input_coin is the actual input amount that would be tradeable
+  // under the specified price impact.
+  cosmos.base.v1beta1.Coin input_coin = 1 [ (gogoproto.nullable) = false ];
+
+  // output_coin is the amount of tokens of the ToCoinDenom type
+  // that will be received for the actual InputCoin trade.
+  cosmos.base.v1beta1.Coin output_coin = 2 [ (gogoproto.nullable) = false ];
 }

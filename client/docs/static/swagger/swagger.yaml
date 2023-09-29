@@ -4557,6 +4557,7 @@ paths:
                             - ByDuration
                             - ByTime
                             - NoLock
+                            - ByGroup
                           default: ByDuration
                           description: >-
                             LockQueryType defines the type of the lock query
@@ -4833,6 +4834,7 @@ paths:
                             - ByDuration
                             - ByTime
                             - NoLock
+                            - ByGroup
                           default: ByDuration
                           description: >-
                             LockQueryType defines the type of the lock query
@@ -5112,6 +5114,7 @@ paths:
                           - ByDuration
                           - ByTime
                           - NoLock
+                          - ByGroup
                         default: ByDuration
                         description: >-
                           LockQueryType defines the type of the lock query that
@@ -5308,6 +5311,7 @@ paths:
                             - ByDuration
                             - ByTime
                             - NoLock
+                            - ByGroup
                           default: ByDuration
                           description: >-
                             LockQueryType defines the type of the lock query
@@ -5766,6 +5770,7 @@ paths:
                             - ByDuration
                             - ByTime
                             - NoLock
+                            - ByGroup
                           default: ByDuration
                           description: >-
                             LockQueryType defines the type of the lock query
@@ -6046,6 +6051,7 @@ paths:
                             - ByDuration
                             - ByTime
                             - NoLock
+                            - ByGroup
                           default: ByDuration
                           description: >-
                             LockQueryType defines the type of the lock query
@@ -8638,6 +8644,7 @@ paths:
                             - ByDuration
                             - ByTime
                             - NoLock
+                            - ByGroup
                           default: ByDuration
                           description: >-
                             LockQueryType defines the type of the lock query
@@ -8966,6 +8973,9 @@ paths:
         - Query
   /osmosis/superfluid/v1beta1/account_delegated_cl_positions/{delegator_address}:
     get:
+      summary: >-
+        Returns all of a user's full range CL positions that are superfluid
+        staked.
       operationId: UserConcentratedSuperfluidPositionsDelegated
       responses:
         '200':
@@ -35434,6 +35444,7 @@ definitions:
                     - ByDuration
                     - ByTime
                     - NoLock
+                    - ByGroup
                   default: ByDuration
                   description: |-
                     LockQueryType defines the type of the lock query that can
@@ -35609,6 +35620,7 @@ definitions:
                     - ByDuration
                     - ByTime
                     - NoLock
+                    - ByGroup
                   default: ByDuration
                   description: |-
                     LockQueryType defines the type of the lock query that can
@@ -35776,6 +35788,7 @@ definitions:
               - ByDuration
               - ByTime
               - NoLock
+              - ByGroup
             default: ByDuration
             description: |-
               LockQueryType defines the type of the lock query that can
@@ -35909,6 +35922,7 @@ definitions:
                   - ByDuration
                   - ByTime
                   - NoLock
+                  - ByGroup
                 default: ByDuration
                 description: |-
                   LockQueryType defines the type of the lock query that can
@@ -36058,6 +36072,7 @@ definitions:
                     - ByDuration
                     - ByTime
                     - NoLock
+                    - ByGroup
                   default: ByDuration
                   description: |-
                     LockQueryType defines the type of the lock query that can
@@ -36281,6 +36296,7 @@ definitions:
                     - ByDuration
                     - ByTime
                     - NoLock
+                    - ByGroup
                   default: ByDuration
                   description: |-
                     LockQueryType defines the type of the lock query that can
@@ -36456,6 +36472,7 @@ definitions:
                     - ByDuration
                     - ByTime
                     - NoLock
+                    - ByGroup
                   default: ByDuration
                   description: |-
                     LockQueryType defines the type of the lock query that can
@@ -36593,6 +36610,7 @@ definitions:
       - ByDuration
       - ByTime
       - NoLock
+      - ByGroup
     default: ByDuration
     description: |-
       LockQueryType defines the type of the lock query that can
@@ -36607,6 +36625,7 @@ definitions:
           - ByDuration
           - ByTime
           - NoLock
+          - ByGroup
         default: ByDuration
         description: |-
           LockQueryType defines the type of the lock query that can
@@ -38079,6 +38098,7 @@ definitions:
                     - ByDuration
                     - ByTime
                     - NoLock
+                    - ByGroup
                   default: ByDuration
                   description: |-
                     LockQueryType defines the type of the lock query that can

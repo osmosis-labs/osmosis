@@ -6,6 +6,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
@@ -57,6 +58,18 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 				Routes:   types.SwapAmountOutRoutes{{PoolId: 1, TokenInDenom: "bar"}},
 			},
 			&poolmanagerqueryproto.EstimateSwapExactAmountOutResponse{},
+		},
+		{
+			"Query estimate trade amount in amount out based on price impact",
+			"/osmosis.poolmanager.v1beta1.Query/EstimateTradeBasedOnPriceImpact",
+			&poolmanagerqueryproto.EstimateTradeBasedOnPriceImpactRequest{
+				PoolId:         1,
+				FromCoin:       sdk.NewCoin("bar", sdk.NewInt(10)),
+				ToCoinDenom:    "baz",
+				MaxPriceImpact: sdk.MustNewDecFromStr("0.001"),
+				ExternalPrice:  sdk.MustNewDecFromStr("1.02"),
+			},
+			&poolmanagerqueryproto.EstimateTradeBasedOnPriceImpactResponse{},
 		},
 	}
 
@@ -112,6 +125,21 @@ func (s *QueryTestSuite) TestSimplifiedQueries() {
 		"/osmosis.poolmanager.v1beta1.Query/EstimateSinglePoolSwapExactAmountOut", simplifiedSwapOut, output4)
 	s.Require().NoError(err)
 	s.Require().Equal(output3, output4)
+
+	tradeImpact := &poolmanagerqueryproto.EstimateTradeBasedOnPriceImpactRequest{
+		FromCoin: sdk.Coin{
+			Denom:  "bar",
+			Amount: sdk.NewInt(100),
+		},
+		ToCoinDenom:    "baz",
+		PoolId:         1,
+		MaxPriceImpact: sdk.MustNewDecFromStr("0.01"),
+		ExternalPrice:  sdk.MustNewDecFromStr("0.02"),
+	}
+	output5 := &poolmanagerqueryproto.EstimateTradeBasedOnPriceImpactResponse{}
+	err = s.QueryHelper.Invoke(gocontext.Background(),
+		"/osmosis.poolmanager.v1beta1.Query/EstimateTradeBasedOnPriceImpact", tradeImpact, output5)
+	s.Require().NoError(err)
 }
 
 func TestQueryTestSuite(t *testing.T) {
