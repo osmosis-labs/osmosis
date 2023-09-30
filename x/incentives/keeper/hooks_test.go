@@ -424,7 +424,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_CreateGroupsBetween() {
 
 // This test focuses on configuring volume by swapping instead of using
 // a direct volume setter helper in poolmanager contrary to all other tests.
-// Since we track volume in bond denom (OSMO), we first setup2 pools that are paired with the bond denom.
+// Since we track volume in bond denom (OSMO), we first setup 2 pools that are paired with the bond denom.
 // Next, we setup two pools that are to be packaged in group. One of the tokens in the pool is a token that is also
 // paired with bond denom in one of the first 2 pools.
 // Increase volume by swapping in the second pair of pools.
