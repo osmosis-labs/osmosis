@@ -256,37 +256,9 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 // - fails to charge group creation fee
 // - fails to set the Group's Gauge to state
 func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, poolIDs []uint64) (uint64, error) {
-	if len(poolIDs) == 0 {
-		return 0, types.ErrNoPoolIDsGiven
-	}
-	if len(poolIDs) == 1 {
-		return 0, types.OnePoolIDGroupError{PoolID: poolIDs[0]}
-	}
-
-	// Initialize gauge information for every pool ID.
-	initialInternalGaugeInfo, err := k.initGaugeInfo(ctx, poolIDs)
+	newGroup, err := k.createGroup(ctx, coins, numEpochPaidOver, owner, poolIDs)
 	if err != nil {
 		return 0, err
-	}
-
-	// Charge group creation fee.
-	_, err = k.chargeGroupCreationFeeIfNotWhitelisted(ctx, owner)
-	if err != nil {
-		return 0, err
-	}
-
-	groupGaugeID, err := k.CreateGauge(ctx, numEpochPaidOver == types.PerpetualNumEpochsPaidOver, owner, coins, byGroupQueryCondition, ctx.BlockTime(), numEpochPaidOver, 0)
-	if err != nil {
-		return 0, err
-	}
-
-	newGroup := types.Group{
-		GroupGaugeId:      groupGaugeID,
-		InternalGaugeInfo: initialInternalGaugeInfo,
-		// Note: only Volume splitting exists today.
-		// We allow for other splitting policies to be added in the future
-		// by extending the enum.
-		SplittingPolicy: types.ByVolume,
 	}
 
 	// Note: we rely on the synching logic to persist the group to state
@@ -300,7 +272,71 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 		return 0, err
 	}
 
-	return groupGaugeID, nil
+	return newGroup.GroupGaugeId, nil
+}
+
+func (k Keeper) CreateGroupNoWeightSync(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, poolIDs []uint64) (uint64, error) {
+
+	// TODO: validate owner is incentives module account
+
+	newGroup, err := k.createGroup(ctx, coins, numEpochPaidOver, owner, poolIDs)
+	if err != nil {
+		return 0, err
+	}
+
+	return newGroup.GroupGaugeId, nil
+}
+
+// CreateGroup creates a new group. The group is 1:1 mapped to a group gauge that allocates rewards dynamically across its internal pool gauges based on
+// the volume splitting policy.
+// For each pool ID in the given slice, its main internal gauge is used to create gauge records to be associated with the Group.
+// Note, that implies that only perpetual pool gauges can be associated with the Group.
+// For Group's own distribution policy, a 1:1 group Gauge is created. This is the Gauge that receives incentives at the end of an epoch
+// in the pool incentives as defined by the DistrRecord. The Group's Gauge can either be perpetual or non-perpetual.
+// If numEpochPaidOver is 0, then the Group's Gauge is perpetual. Otherwise, it is non-perpetual.
+// Returns nil on success.
+// Returns error if:
+// - given pool IDs slice is empty or has 1 pool only
+// - fails to initialize gauge information for every pool ID
+// - fails to send coins from owner to the incentives module for the Group's Gauge
+// - fails to charge group creation fee
+// - fails to set the Group's Gauge to state
+// TODO: update spec that does not sync
+func (k Keeper) createGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, poolIDs []uint64) (types.Group, error) {
+	if len(poolIDs) == 0 {
+		return types.Group{}, types.ErrNoPoolIDsGiven
+	}
+	if len(poolIDs) == 1 {
+		return types.Group{}, types.OnePoolIDGroupError{PoolID: poolIDs[0]}
+	}
+
+	// Initialize gauge information for every pool ID.
+	initialInternalGaugeInfo, err := k.initGaugeInfo(ctx, poolIDs)
+	if err != nil {
+		return types.Group{}, err
+	}
+
+	// Charge group creation fee.
+	_, err = k.chargeGroupCreationFeeIfNotWhitelisted(ctx, owner)
+	if err != nil {
+		return types.Group{}, err
+	}
+
+	groupGaugeID, err := k.CreateGauge(ctx, numEpochPaidOver == types.PerpetualNumEpochsPaidOver, owner, coins, byGroupQueryCondition, ctx.BlockTime(), numEpochPaidOver, 0)
+	if err != nil {
+		return types.Group{}, err
+	}
+
+	newGroup := types.Group{
+		GroupGaugeId:      groupGaugeID,
+		InternalGaugeInfo: initialInternalGaugeInfo,
+		// Note: only Volume splitting exists today.
+		// We allow for other splitting policies to be added in the future
+		// by extending the enum.
+		SplittingPolicy: types.ByVolume,
+	}
+
+	return newGroup, nil
 }
 
 // chargeGroupCreationFeeIfNotWhitelisted charges fee as defined in the params if the sender is not whitelisted.
