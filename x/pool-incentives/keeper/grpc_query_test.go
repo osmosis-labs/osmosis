@@ -174,14 +174,14 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 			desc:                 "Normal case",
 			poolCreated:          true,
 			weights:              []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300), osmomath.NewInt(400)},
-			expectedRecordLength: 4,
+			expectedRecordLength: 4, // three for gamm pool, one for cl pool
 		},
 		{
 			desc:                     "Perpetual Group Gauge",
 			poolCreated:              true,
 			weights:                  []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300), osmomath.NewInt(400), osmomath.NewInt(500)},
 			setupPerpetualGroupGauge: true,
-			expectedRecordLength:     5,
+			expectedRecordLength:     6, // three for gamm pool, one for cl pool, one for group gauge pointing to gamm pool, one for group gauge pointing to cl pool
 		},
 	} {
 		tc := tc
