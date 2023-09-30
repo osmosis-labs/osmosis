@@ -385,7 +385,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_CreateGroupsBetween() {
 	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...), types.PerpetualNumEpochsPaidOver+2, s.TestAccs[0], poolIDsGroup)
 	s.Require().NoError(err)
 
-	// Setup uneven volumes with volumeA total amount
+	// Setup even volumes with volumeA total amount
 	equalPoolVolumes, volumeA := setupEqualVolumeWeights(len(poolIDsGroup), volumeA)
 	poolIDToVolumeMap := map[uint64]osmomath.Int{}
 	s.setupVolumeForPools(poolIDsGroup, equalPoolVolumes, poolIDToVolumeMap)
