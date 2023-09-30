@@ -410,7 +410,7 @@ func (k Keeper) syncGroupWeights(ctx sdk.Context, group types.Group) error {
 		// This error implies that there was volume initialized at some point
 		// but has not been updated since the last epoch.
 		// For this case, we accept to fallback to the previous weights.
-		if err != nil && !errors.As(err, &types.NoVolumeSinceLastSync{}) {
+		if err != nil && !errors.As(err, &types.NoVolumeSinceLastSyncError{}) {
 			return err
 		}
 	} else {
@@ -491,7 +491,7 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 		// We expect to handle this in the caller (syncGroupWeights) and
 		// fallback to the previous weights in that case.
 		if volumeDelta.IsZero() {
-			return types.NoVolumeSinceLastSync{PoolID: poolId}
+			return types.NoVolumeSinceLastSyncError{PoolID: poolId}
 		}
 
 		gaugeRecord.CurrentWeight = volumeDelta

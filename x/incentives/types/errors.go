@@ -78,10 +78,10 @@ func (e GroupTotalWeightZeroError) Error() string {
 	return fmt.Sprintf("Group with ID %d has total weight of zero", e.GroupID)
 }
 
-type NoVolumeSinceLastSync struct {
+type NoVolumeSinceLastSyncError struct {
 	PoolID uint64
 }
 
-func (e NoVolumeSinceLastSync) Error() string {
+func (e NoVolumeSinceLastSyncError) Error() string {
 	return fmt.Sprintf("Pool %d has no volume since last sync", e.PoolID)
 }

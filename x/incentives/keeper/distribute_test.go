@@ -1432,7 +1432,7 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 				defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight,
 			},
 
-			expectedError: types.NoVolumeSinceLastSync{PoolID: clPoolID},
+			expectedError: types.NoVolumeSinceLastSyncError{PoolID: clPoolID},
 		},
 	}
 
