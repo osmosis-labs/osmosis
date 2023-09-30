@@ -488,7 +488,7 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 
 		// This check implies that there was volume initialized at some point
 		// but has not been updated since the last epoch.
-		// We expect to handle this in the caller (AllocateAcrossGauges) and
+		// We expect to handle this in the caller (syncGroupWeights) and
 		// fallback to the previous weights in that case.
 		if volumeDelta.IsZero() {
 			return types.NoVolumeSinceLastSync{PoolID: poolId}
