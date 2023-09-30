@@ -583,7 +583,7 @@ func (k Keeper) GetPoolIdAndDurationFromGaugeRecord(ctx sdk.Context, gaugeRecord
 	if gaugeType == lockuptypes.NoLock {
 		// If NoLock, it's a CL pool, so we set the "lockableDuration" to epoch duration
 		gaugeDuration = k.GetEpochInfo(ctx).Duration
-	} else {
+	} else if gaugeType == lockuptypes.ByDuration {
 		// Otherwise, it's a balancer pool so we set it to longest lockable duration
 		// TODO: add support for CW pools once there's clarity around default gauge type.
 		// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6403
@@ -591,6 +591,8 @@ func (k Keeper) GetPoolIdAndDurationFromGaugeRecord(ctx sdk.Context, gaugeRecord
 		if err != nil {
 			return 0, 0, err
 		}
+	} else {
+		return 0, 0, types.InvalidGaugeTypeError{GaugeType: gaugeType}
 	}
 
 	// Retrieve pool ID using GetPoolIdFromGaugeId(gaugeId, lockableDuration)
