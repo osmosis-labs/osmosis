@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1000,7 +999,6 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 		desiredDenom0              string
 		expectedBalancerDenoms     []string
 		expectedConcentratedDenoms []string
-		setupInvalidDuraitons      bool
 		expectError                error
 	}{
 		"success - denoms reordered relative to balancer": {
@@ -1033,24 +1031,12 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			desiredDenom0:        USDCIBCDenom,
 			expectError:          types.ErrMustHaveTwoDenoms,
 		},
-		"error: invalid denom durations": {
-			poolLiquidity:         sdk.NewCoins(desiredDenom0Coin, daiCoin),
-			cfmmPoolIdToLinkWith:  validPoolId,
-			desiredDenom0:         desiredDenom0,
-			setupInvalidDuraitons: true,
-			expectError:           types.ErrNoGaugeToRedirect,
-		},
 	}
 
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
-
-			if tc.setupInvalidDuraitons {
-				// Overwrite default lockable durations.
-				s.App.PoolIncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{})
-			}
 
 			balancerId := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
 
@@ -1085,6 +1071,10 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			}
 			s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, originalDistrInfo)
 
+			// This method used to change the distribution records and now no longer does.
+			// We take the distribution records before execution to ensure it is not changed.
+			distrInfoPre := s.App.PoolIncentivesKeeper.GetDistrInfo(s.Ctx)
+
 			clPool, err := s.App.GAMMKeeper.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, osmomath.ZeroDec(), defaultTickSpacing)
 
 			if tc.expectError != nil {
@@ -1115,15 +1105,13 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			// Validate order of concentrated pool denoms which might be different from balancer.
 			s.Require().Equal(tc.expectedConcentratedDenoms, concentratedDenoms)
 
-			// Validate that CFMM gauge is linked to the new concentrated pool.
-			concentratedPoolGaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPoolInState.GetId(), s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration)
+			// Validate that the new concentrated pool has a gauge.
+			_, err = s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPoolInState.GetId(), s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration)
 			s.Require().NoError(err)
 
-			distrInfo := s.App.PoolIncentivesKeeper.GetDistrInfo(s.Ctx)
-			s.Require().Equal(distrInfo.Records[0].GaugeId, concentratedPoolGaugeId)
-
-			// Validate that distribution record from another pool is not redirected.
-			s.Require().Equal(distrInfo.Records[1].GaugeId, gaugeToNotRedeirect)
+			// Ensure the distribution records are unchanged.
+			distrInfoPost := s.App.PoolIncentivesKeeper.GetDistrInfo(s.Ctx)
+			s.Require().Equal(distrInfoPre, distrInfoPost)
 
 			// Validate migration record.
 			migrationInfo, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
