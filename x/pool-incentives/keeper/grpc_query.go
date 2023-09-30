@@ -177,19 +177,18 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 
 				incentivizedPools = append(incentivizedPools, incentivizedPool)
 			}
-			// } else if gauge.DistributeTo.LockQueryType == lockuptypes.NoLock {
-			// 	poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, epochDuration)
-			// 	if err == nil {
-			// 		incentivizedPool := types.IncentivizedPool{
-			// 			PoolId:           poolId,
-			// 			LockableDuration: epochDuration,
-			// 			GaugeId:          record.GaugeId,
-			// 		}
+		} else if gauge.DistributeTo.LockQueryType == lockuptypes.NoLock {
+			poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, epochDuration)
+			if err == nil {
+				incentivizedPool := types.IncentivizedPool{
+					PoolId:           poolId,
+					LockableDuration: epochDuration,
+					GaugeId:          record.GaugeId,
+				}
 
-			// 		incentivizedPools = append(incentivizedPools, incentivizedPool)
-			// 	}
-			// } else if gauge.DistributeTo.LockQueryType == lockuptypes.ByDuration {
-		} else {
+				incentivizedPools = append(incentivizedPools, incentivizedPool)
+			}
+		} else if gauge.DistributeTo.LockQueryType == lockuptypes.ByDuration {
 			for _, lockableDuration := range lockableDurations {
 				poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, lockableDuration)
 				if err == nil {
@@ -202,10 +201,8 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 					incentivizedPools = append(incentivizedPools, incentivizedPool)
 				}
 			}
-			// } else {
-			// 	return nil, status.Error(codes.Internal, "unknown lock query type")
-			// }
-
+		} else {
+			return nil, status.Error(codes.Internal, "unknown lock query type")
 		}
 	}
 
