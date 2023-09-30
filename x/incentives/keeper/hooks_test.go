@@ -388,7 +388,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_CreateGroupsBetween() {
 	// Setup even volumes with volumeA total amount
 	equalPoolVolumes, volumeA := setupEqualVolumeWeights(len(poolIDsGroup), volumeA)
 	poolIDToVolumeMap := map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(poolIDsGroup, equalPoolVolumes, poolIDToVolumeMap)
+	s.SetupVolumeForPools(poolIDsGroup, equalPoolVolumes, poolIDToVolumeMap)
 
 	distrEpochIdentifier := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
 
@@ -489,7 +489,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_SwapAndDistribute() {
 
 	// Since volume was equal, we expect equal split of incentives
 	// across pools.
-	halfDefaultCoins := coins.QuoRaw(defaultCoins, 2)
+	halfDefaultCoins := coinutil.QuoRaw(defaultCoins, 2)
 	s.validateDistributionForGroup([]uint64{ethUSDCPoolID, fooBARPoolID}, map[uint64]sdk.Coins{
 		ethUSDCPoolID: halfDefaultCoins,
 		fooBARPoolID:  halfDefaultCoins,
