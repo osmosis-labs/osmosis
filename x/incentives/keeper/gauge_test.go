@@ -1139,7 +1139,7 @@ func (s *KeeperTestSuite) TestGetPoolIdsAndDurationsFromGroup() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			equalPoolVolumes, _ := setupEqualVolumeWeights(len(tc.expectedPoolIds), oneMillionVolumeAmt)
-			s.setupVolumeForPools(tc.expectedPoolIds, equalPoolVolumes, map[uint64]osmomath.Int{})
+			s.SetupVolumeForPools(tc.expectedPoolIds, equalPoolVolumes, map[uint64]osmomath.Int{})
 
 			gaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], tc.expectedPoolIds)
 			s.Require().NoError(err)
@@ -1190,7 +1190,7 @@ func (s *KeeperTestSuite) TestGetPoolIdAndDurationFromGaugeRecord() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			equalPoolVolumes, _ := setupEqualVolumeWeights(len(tc.expectedPoolIds), oneMillionVolumeAmt)
-			s.setupVolumeForPools(tc.expectedPoolIds, equalPoolVolumes, map[uint64]osmomath.Int{})
+			s.SetupVolumeForPools(tc.expectedPoolIds, equalPoolVolumes, map[uint64]osmomath.Int{})
 
 			gaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], tc.expectedPoolIds)
 			s.Require().NoError(err)

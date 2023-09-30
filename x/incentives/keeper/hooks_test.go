@@ -61,14 +61,14 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 	// Compute uneven volumes
 	unevenPoolVolumes := setupUnequalVolumeWeights(len(perpetualGroupPoolIDs), volumeA)
 	// Setup volumes to let group creation pass.
-	s.setupVolumeForPools(perpetualGroupPoolIDs, unevenPoolVolumes, map[uint64]osmomath.Int{})
+	s.SetupVolumeForPools(perpetualGroupPoolIDs, unevenPoolVolumes, map[uint64]osmomath.Int{})
 
 	perpetualGroupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], perpetualGroupPoolIDs)
 	s.Require().NoError(err)
 
 	// Update volumes post-group creation
 	perpetualPoolIDToVolumeMap := map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(perpetualGroupPoolIDs, unevenPoolVolumes, perpetualPoolIDToVolumeMap)
+	s.SetupVolumeForPools(perpetualGroupPoolIDs, unevenPoolVolumes, perpetualPoolIDToVolumeMap)
 
 	nonPerpetualGroupPoolIDs := []uint64{
 		// non-perpetual pools
@@ -78,14 +78,14 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 	// Compute even volumes and update volumeB if rounded
 	equalPoolVolumes, volumeB := setupEqualVolumeWeights(len(nonPerpetualGroupPoolIDs), volumeB)
 	// Setup volumes to let group creation pass.
-	s.setupVolumeForPools(nonPerpetualGroupPoolIDs, equalPoolVolumes, map[uint64]osmomath.Int{})
+	s.SetupVolumeForPools(nonPerpetualGroupPoolIDs, equalPoolVolumes, map[uint64]osmomath.Int{})
 
 	nonPerpetualGroupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...).Add(defaultCoins...), types.PerpetualNumEpochsPaidOver+3, s.TestAccs[0], nonPerpetualGroupPoolIDs)
 	s.Require().NoError(err)
 
 	// Update volumes post-group creation
 	nonPerpetualPoolIDToVolumeMap := map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(nonPerpetualGroupPoolIDs, equalPoolVolumes, nonPerpetualPoolIDToVolumeMap)
+	s.SetupVolumeForPools(nonPerpetualGroupPoolIDs, equalPoolVolumes, nonPerpetualPoolIDToVolumeMap)
 
 	// Calculate the expected distribution
 	perpetualPoolIDToExpectedDistributionMap := s.computeExpectedDistributonAmountsFromVolume(defaultCoins, perpetualPoolIDToVolumeMap, volumeA)
@@ -110,8 +110,8 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 	// Epoch 2 - Perpetual was not refunded, only non-perpetual distributes
 
 	// Note that we provide a dummy poolIdToVolumeMap since we do not expect any distribution.
-	s.setupVolumeForPools(perpetualGroupPoolIDs, unevenPoolVolumes, map[uint64]osmomath.Int{})
-	s.setupVolumeForPools(nonPerpetualGroupPoolIDs, equalPoolVolumes, nonPerpetualPoolIDToVolumeMap)
+	s.SetupVolumeForPools(perpetualGroupPoolIDs, unevenPoolVolumes, map[uint64]osmomath.Int{})
+	s.SetupVolumeForPools(nonPerpetualGroupPoolIDs, equalPoolVolumes, nonPerpetualPoolIDToVolumeMap)
 
 	// Only non-perpetual distributes
 	nonPerpetualPoolIDToExpectedDistributionMap = s.computeExpectedDistributonAmountsFromVolume(defaultCoins, nonPerpetualPoolIDToVolumeMap, volumeB)
@@ -137,9 +137,9 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 	// As a result, volumes and weights are different so we need to recalculate the expected distriution values per-epoch
 	// and then merge with the previous epoch distribution values.
 	currentEpochPerpetualPoolVolumeMap := map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(perpetualGroupPoolIDs, equalPoolVolumes, currentEpochPerpetualPoolVolumeMap)
+	s.SetupVolumeForPools(perpetualGroupPoolIDs, equalPoolVolumes, currentEpochPerpetualPoolVolumeMap)
 	currentEpochNonPerpetualPoolVolumeMap := map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(nonPerpetualGroupPoolIDs, unevenPoolVolumes, currentEpochNonPerpetualPoolVolumeMap)
+	s.SetupVolumeForPools(nonPerpetualGroupPoolIDs, unevenPoolVolumes, currentEpochNonPerpetualPoolVolumeMap)
 
 	// Both groups distribute
 	currentEpochExpectedDistributionsOne := s.computeExpectedDistributonAmountsFromVolume(defaultCoins, currentEpochPerpetualPoolVolumeMap, volumeB)
@@ -175,9 +175,9 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 
 	// We set up the new volumes for pools so that they do not fail silently due to lack of volume.
 	currentEpochPerpetualPoolVolumeMap = map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(perpetualGroupPoolIDs, equalPoolVolumes, currentEpochPerpetualPoolVolumeMap)
+	s.SetupVolumeForPools(perpetualGroupPoolIDs, equalPoolVolumes, currentEpochPerpetualPoolVolumeMap)
 	currentEpochNonPerpetualPoolVolumeMap = map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(nonPerpetualGroupPoolIDs, unevenPoolVolumes, currentEpochNonPerpetualPoolVolumeMap)
+	s.SetupVolumeForPools(nonPerpetualGroupPoolIDs, unevenPoolVolumes, currentEpochNonPerpetualPoolVolumeMap)
 
 	// System under test
 	err = s.App.IncentivesKeeper.AfterEpochEnd(s.Ctx, distrEpochIdentifier, 4)
@@ -222,7 +222,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_OverlappingPoolsInGroups() {
 
 	// Configure the volumes
 	poolIDToVolumeMap := map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(overlappingPoolIDs, unevenPoolVolumes, poolIDToVolumeMap)
+	s.SetupVolumeForPools(overlappingPoolIDs, unevenPoolVolumes, poolIDToVolumeMap)
 
 	// Calculate the expected distribution
 	poolIDToExpectedDistributionMap := s.computeExpectedDistributonAmountsFromVolume(defaultCoins, poolIDToVolumeMap, oneMillionVolumeAmt)
@@ -272,7 +272,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_NoVolumeOnePool_SkipSilent() {
 	// Setup uneven volumes
 	unevenPoolVolumes := setupUnequalVolumeWeights(len(poolIDsGroupOne), oneMillionVolumeAmt)
 	poolIDToVolumeMap := map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(poolIDsGroupOne, unevenPoolVolumes, poolIDToVolumeMap)
+	s.SetupVolumeForPools(poolIDsGroupOne, unevenPoolVolumes, poolIDToVolumeMap)
 
 	distrEpochIdentifier := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
 
@@ -317,7 +317,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_ChangeVolumeBetween() {
 	// Setup uneven volumes with volumeA total amount
 	unevenPoolVolumes := setupUnequalVolumeWeights(len(poolIDsGroup), volumeA)
 	poolIDToVolumeMap := map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(poolIDsGroup, unevenPoolVolumes, poolIDToVolumeMap)
+	s.SetupVolumeForPools(poolIDsGroup, unevenPoolVolumes, poolIDToVolumeMap)
 
 	distrEpochIdentifier := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
 
@@ -334,7 +334,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_ChangeVolumeBetween() {
 	// Update volumeB if rounded
 	equalPoolVolumes, volumeB := setupEqualVolumeWeights(len(poolIDsGroup), volumeB)
 	currentEpochPerpetualPoolVolumeMap := map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(poolIDsGroup, equalPoolVolumes, currentEpochPerpetualPoolVolumeMap)
+	s.SetupVolumeForPools(poolIDsGroup, equalPoolVolumes, currentEpochPerpetualPoolVolumeMap)
 
 	// Estimate the expected distribution
 	currentEpochExpectedDistributionsOne := s.computeExpectedDistributonAmountsFromVolume(defaultCoins, currentEpochPerpetualPoolVolumeMap, volumeB)
@@ -410,33 +410,7 @@ func (*KeeperTestSuite) computeExpectedDistributonAmountsFromVolume(coinsDistrib
 
 // initializes or increases the volumes for the given pools
 func (s *KeeperTestSuite) increaseVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int) {
-	s.setupVolumeForPools(poolIDs, volumesForEachPool, map[uint64]osmomath.Int{})
-}
-
-// sets up the volume for the pools in the group
-// mutates poolIDToVolumeMap
-func (s *KeeperTestSuite) setupVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int, poolIDToVolumeMap map[uint64]math.Int) {
-	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
-
-	s.Require().Equal(len(poolIDs), len(volumesForEachPool))
-	for i := 0; i < len(poolIDs); i++ {
-		currentPoolID := poolIDs[i]
-
-		currentVolume := volumesForEachPool[i]
-
-		fmt.Printf("currentVolume %d %s\n", i, currentVolume)
-
-		// Retrieve the existing volume to add to it.
-		existingVolume := s.App.PoolManagerKeeper.GetOsmoVolumeForPool(s.Ctx, currentPoolID)
-
-		s.App.PoolManagerKeeper.SetVolume(s.Ctx, currentPoolID, sdk.NewCoins(sdk.NewCoin(bondDenom, existingVolume.Add(currentVolume))))
-
-		if existingVolume, ok := poolIDToVolumeMap[currentPoolID]; ok {
-			poolIDToVolumeMap[currentPoolID] = existingVolume.Add(currentVolume)
-		} else {
-			poolIDToVolumeMap[currentPoolID] = currentVolume
-		}
-	}
+	s.SetupVolumeForPools(poolIDs, volumesForEachPool, map[uint64]osmomath.Int{})
 }
 
 // sets up the volume weights that add app to totalVolumeAmount

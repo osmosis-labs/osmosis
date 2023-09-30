@@ -156,6 +156,14 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 			if err != nil {
 				return nil, status.Error(codes.Internal, err.Error())
 			}
+			groupGauge, err := q.Keeper.incentivesKeeper.GetGaugeByID(sdkCtx, group.GroupGaugeId)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			if !groupGauge.IsPerpetual {
+				// if the group is not perpetual, it is an externally incentivized gauge so we skip it
+				continue
+			}
 			poolIds, durations, err := q.Keeper.incentivesKeeper.GetPoolIdsAndDurationsFromGroup(sdkCtx, group)
 			if err != nil {
 				return nil, status.Error(codes.Internal, err.Error())
