@@ -403,7 +403,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_CreateGroupsBetween() {
 	_, err = s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], poolIDsGroup)
 	s.Require().NoError(err)
 
-	s.increaseVolumeForPools(poolIDsGroup, equalPoolVolumes)
+	s.IncreaseVolumeForPools(poolIDsGroup, equalPoolVolumes)
 
 	// Compute the expected
 	// Since we have a non-perpetual gauge with 2x defaultCoins and a perpetual gauge with 1x defaultCoins,
@@ -557,11 +557,6 @@ func (*KeeperTestSuite) computeExpectedDistributonAmountsFromVolume(coinsDistrib
 		poolIDToExpectedDistributionMapOne[poolID] = currentDistribution
 	}
 	return poolIDToExpectedDistributionMapOne
-}
-
-// initializes or increases the volumes for the given pools
-func (s *KeeperTestSuite) increaseVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int) {
-	s.SetupVolumeForPools(poolIDs, volumesForEachPool, map[uint64]osmomath.Int{})
 }
 
 // sets up the volume weights that add app to totalVolumeAmount

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -607,6 +608,101 @@ func (s *KeeperTestSuite) TestChargeGroupCreationFeeIfNotWhitelisted() {
 			} else {
 				s.Require().Equal(senderBalanceBefore.String(), senderBalanceAfter.String())
 				s.Require().Equal(communityPoolBalanceBefore.String(), communityPoolBalanceAfter.String())
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetPoolIdsAndDurationsFromGaugeRecords() {
+	s.SetupTest()
+
+	pools := s.PrepareAllSupportedPools()
+
+	testCases := []struct {
+		name              string
+		expectedPoolIds   []uint64
+		expectedDurations []time.Duration
+	}{
+		{
+			name:              "Two pool IDs of various types",
+			expectedPoolIds:   []uint64{pools.BalancerPoolID, pools.StableSwapPoolID},
+			expectedDurations: []time.Duration{time.Hour * 7, time.Hour * 7},
+		},
+		{
+			name:              "Three pool IDs of various types",
+			expectedPoolIds:   []uint64{pools.ConcentratedPoolID, pools.BalancerPoolID, pools.StableSwapPoolID},
+			expectedDurations: []time.Duration{time.Hour * 24 * 7, time.Hour * 7, time.Hour * 7},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			equalPoolVolumes, _ := setupEqualVolumeWeights(len(tc.expectedPoolIds), oneMillionVolumeAmt)
+			s.SetupVolumeForPools(tc.expectedPoolIds, equalPoolVolumes, map[uint64]osmomath.Int{})
+
+			gaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], tc.expectedPoolIds)
+			s.Require().NoError(err)
+
+			group, err := s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, gaugeId)
+			s.Require().NoError(err)
+
+			// system under test
+			poolIds, durations, err := s.App.IncentivesKeeper.GetPoolIdsAndDurationsFromGaugeRecords(s.Ctx, group.InternalGaugeInfo.GaugeRecords)
+			s.Require().NoError(err)
+
+			s.Require().Equal(tc.expectedPoolIds, poolIds)
+			s.Require().Equal(tc.expectedDurations, durations)
+
+			// checks the underlying helper function as well
+			for i, gaugeRecord := range group.InternalGaugeInfo.GaugeRecords {
+				poolId, duration, err := s.App.IncentivesKeeper.GetPoolIdAndDurationFromGaugeRecord(s.Ctx, gaugeRecord)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedPoolIds[i], poolId)
+				s.Require().Equal(tc.expectedDurations[i], duration)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetPoolIdAndDurationFromGaugeRecord() {
+	s.SetupTest()
+
+	pools := s.PrepareAllSupportedPools()
+
+	testCases := []struct {
+		name              string
+		expectedPoolIds   []uint64
+		expectedDurations []time.Duration
+	}{
+		{
+			name:              "Two pool IDs of various types",
+			expectedPoolIds:   []uint64{pools.BalancerPoolID, pools.StableSwapPoolID},
+			expectedDurations: []time.Duration{time.Hour * 7, time.Hour * 7},
+		},
+		{
+			name:              "Three pool IDs of various types",
+			expectedPoolIds:   []uint64{pools.ConcentratedPoolID, pools.BalancerPoolID, pools.StableSwapPoolID},
+			expectedDurations: []time.Duration{time.Hour * 24 * 7, time.Hour * 7, time.Hour * 7},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			equalPoolVolumes, _ := setupEqualVolumeWeights(len(tc.expectedPoolIds), oneMillionVolumeAmt)
+			s.IncreaseVolumeForPools(tc.expectedPoolIds, equalPoolVolumes)
+
+			gaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], tc.expectedPoolIds)
+			s.Require().NoError(err)
+
+			group, err := s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, gaugeId)
+			s.Require().NoError(err)
+
+			// system under test
+			for i, gaugeRecord := range group.InternalGaugeInfo.GaugeRecords {
+				poolId, duration, err := s.App.IncentivesKeeper.GetPoolIdAndDurationFromGaugeRecord(s.Ctx, gaugeRecord)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedPoolIds[i], poolId)
+				s.Require().Equal(tc.expectedDurations[i], duration)
 			}
 		})
 	}

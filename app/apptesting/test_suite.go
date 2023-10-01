@@ -624,3 +624,8 @@ func (s *KeeperTestHelper) SetupVolumeForPools(poolIDs []uint64, volumesForEachP
 		}
 	}
 }
+
+// initializes or increases the volumes for the given pools
+func (s *KeeperTestHelper) IncreaseVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int) {
+	s.SetupVolumeForPools(poolIDs, volumesForEachPool, map[uint64]osmomath.Int{})
+}
