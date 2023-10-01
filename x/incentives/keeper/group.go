@@ -41,6 +41,7 @@ func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 	// creating groups of pools that are invalid.
 	// Contrary to distribution logic that silently skips the error, we bubble it up here
 	// to fail the creation message.
+	// The group is saved to state upon successful sync.
 	if err := k.syncGroupWeights(ctx, newGroup); err != nil {
 		return 0, err
 	}
