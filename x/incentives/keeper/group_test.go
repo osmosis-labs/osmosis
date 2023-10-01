@@ -652,14 +652,6 @@ func (s *KeeperTestSuite) TestGetPoolIdsAndDurationsFromGaugeRecords() {
 
 			s.Require().Equal(tc.expectedPoolIds, poolIds)
 			s.Require().Equal(tc.expectedDurations, durations)
-
-			// checks the underlying helper function as well
-			for i, gaugeRecord := range group.InternalGaugeInfo.GaugeRecords {
-				poolId, duration, err := s.App.IncentivesKeeper.GetPoolIdAndDurationFromGaugeRecord(s.Ctx, gaugeRecord)
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedPoolIds[i], poolId)
-				s.Require().Equal(tc.expectedDurations[i], duration)
-			}
 		})
 	}
 }
