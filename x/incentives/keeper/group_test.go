@@ -141,7 +141,7 @@ var (
 // - CreateGroupInternal - internal, used by the other two
 // This test validates each of these implementations.
 // While they are similar in functionality, they still differ.
-// As a result, we crate this shared test case to avoid code duplication but
+// As a result, we create this shared test case to avoid code duplication but
 // direct the test cases to the appropriate test function for custom logic.
 func (s *KeeperTestSuite) TestCreateGroup() {
 
