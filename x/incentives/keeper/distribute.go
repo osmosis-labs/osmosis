@@ -407,7 +407,10 @@ func (k Keeper) distributeSyntheticInternal(
 func (k Keeper) syncGroupWeights(ctx sdk.Context, group types.Group) error {
 	if group.SplittingPolicy == types.ByVolume {
 		err := k.syncVolumeSplitGroup(ctx, group)
-		if err != nil {
+		// This error implies that there was volume initialized at some point
+		// but has not been updated since the last epoch.
+		// For this case, we accept to fallback to the previous weights.
+		if err != nil && !errors.As(err, &types.NoVolumeSinceLastSyncError{}) {
 			return err
 		}
 	} else {
@@ -440,7 +443,29 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 
 	// Loop through gauge records and update their state to reflect new pool volumes
 	for i, gaugeRecord := range group.InternalGaugeInfo.GaugeRecords {
-		poolId, _, err := k.GetPoolIdAndDurationFromGaugeRecord(ctx, gaugeRecord)
+		gauge, err := k.GetGaugeByID(ctx, gaugeRecord.GaugeId)
+		if err != nil {
+			return err
+		}
+
+		gaugeType := gauge.DistributeTo.LockQueryType
+		gaugeDuration := time.Duration(0)
+
+		if gaugeType == lockuptypes.NoLock {
+			// If NoLock, it's a CL pool, so we set the "lockableDuration" to epoch duration
+			gaugeDuration = k.GetEpochInfo(ctx).Duration
+		} else {
+			// Otherwise, it's a balancer pool so we set it to longest lockable duration
+			// TODO: add support for CW pools once there's clarity around default gauge type.
+			// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6403
+			gaugeDuration, err = k.pik.GetLongestLockableDuration(ctx)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Retrieve pool ID using GetPoolIdFromGaugeId(gaugeId, lockableDuration)
+		poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeRecord.GaugeId, gaugeDuration)
 		if err != nil {
 			return err
 		}
@@ -461,12 +486,12 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 			return types.CumulativeVolumeDecreasedError{PoolId: poolId, PreviousVolume: gaugeRecord.CumulativeWeight, NewVolume: cumulativePoolVolume}
 		}
 
-		// TODO: update this error and cover by tests
-		// If this is not present, getting a division by zero panic
-		// See:
-		// https://github.com/osmosis-labs/osmosis/issues/6558
+		// This check implies that there was volume initialized at some point
+		// but has not been updated since the last epoch.
+		// We expect to handle this in the caller (syncGroupWeights) and
+		// fallback to the previous weights in that case.
 		if volumeDelta.IsZero() {
-			return errors.New("volume delta is zero")
+			return types.NoVolumeSinceLastSyncError{PoolID: poolId}
 		}
 
 		gaugeRecord.CurrentWeight = volumeDelta

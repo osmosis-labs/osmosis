@@ -10,6 +10,7 @@ import (
 var (
 	ErrNoPoolIDsGiven        = fmt.Errorf("no pool IDs given")
 	ErrZeroNumEpochsPaidOver = fmt.Errorf("num epochs paid over must be greater than zero for non-perpetual gauges")
+	ErrUnauthorized          = fmt.Errorf("unauthorized to perform this action. Must be an incentives module account")
 )
 
 type UnsupportedSplittingPolicyError struct {
@@ -85,4 +86,12 @@ type InvalidGaugeTypeError struct {
 
 func (e InvalidGaugeTypeError) Error() string {
 	return fmt.Sprintf("invalid gauge type: %s", e.GaugeType)
+}
+
+type NoVolumeSinceLastSyncError struct {
+	PoolID uint64
+}
+
+func (e NoVolumeSinceLastSyncError) Error() string {
+	return fmt.Sprintf("Pool %d has no volume since last sync", e.PoolID)
 }

@@ -89,3 +89,7 @@ func GetTimeKeys(timestamp time.Time) []byte {
 func (k Keeper) ChargeGroupCreationFeeIfNotWhitelisted(ctx sdk.Context, sender sdk.AccAddress) (chargedFee bool, err error) {
 	return k.chargeGroupCreationFeeIfNotWhitelisted(ctx, sender)
 }
+
+func (k Keeper) CreateGroupInternal(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, poolIDs []uint64) (types.Group, error) {
+	return k.createGroup(ctx, coins, numEpochPaidOver, owner, poolIDs)
+}
