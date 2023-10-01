@@ -15,8 +15,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -241,103 +239,6 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	return gauge.Id, nil
 }
 
-// CreateGroup creates a new group. The group is 1:1 mapped to a group gauge that allocates rewards dynamically across its internal pool gauges based on
-// the volume splitting policy.
-// For each pool ID in the given slice, its main internal gauge is used to create gauge records to be associated with the Group.
-// Note, that implies that only perpetual pool gauges can be associated with the Group.
-// For Group's own distribution policy, a 1:1 group Gauge is created. This is the Gauge that receives incentives at the end of an epoch
-// in the pool incentives as defined by the DistrRecord. The Group's Gauge can either be perpetual or non-perpetual.
-// If numEpochPaidOver is 0, then the Group's Gauge is perpetual. Otherwise, it is non-perpetual.
-// Returns nil on success.
-// Returns error if:
-// - given pool IDs slice is empty or has 1 pool only
-// - fails to initialize gauge information for every pool ID
-// - fails to send coins from owner to the incentives module for the Group's Gauge
-// - fails to charge group creation fee
-// - fails to set the Group's Gauge to state
-func (k Keeper) CreateGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, poolIDs []uint64) (uint64, error) {
-	if len(poolIDs) == 0 {
-		return 0, types.ErrNoPoolIDsGiven
-	}
-	if len(poolIDs) == 1 {
-		return 0, types.OnePoolIDGroupError{PoolID: poolIDs[0]}
-	}
-
-	// Initialize gauge information for every pool ID.
-	initialInternalGaugeInfo, err := k.initGaugeInfo(ctx, poolIDs)
-	if err != nil {
-		return 0, err
-	}
-
-	// Charge group creation fee.
-	_, err = k.chargeGroupCreationFeeIfNotWhitelisted(ctx, owner)
-	if err != nil {
-		return 0, err
-	}
-
-	groupGaugeID, err := k.CreateGauge(ctx, numEpochPaidOver == types.PerpetualNumEpochsPaidOver, owner, coins, byGroupQueryCondition, ctx.BlockTime(), numEpochPaidOver, 0)
-	if err != nil {
-		return 0, err
-	}
-
-	newGroup := types.Group{
-		GroupGaugeId:      groupGaugeID,
-		InternalGaugeInfo: initialInternalGaugeInfo,
-		// Note: only Volume splitting exists today.
-		// We allow for other splitting policies to be added in the future
-		// by extending the enum.
-		SplittingPolicy: types.ByVolume,
-	}
-
-	// Note: we rely on the synching logic to persist the group to state
-	// if updated successfully.
-	// The reason we sync is to make sure that all pools in the group are valid
-	// and have the associated volume at group creation time. This prevents
-	// creating groups of pools that are invalid.
-	// Contrary to distribution logic that silently skips the error, we bubble it up here
-	// to fail the creation message.
-	if err := k.syncGroupWeights(ctx, newGroup); err != nil {
-		return 0, err
-	}
-
-	return groupGaugeID, nil
-}
-
-// chargeGroupCreationFeeIfNotWhitelisted charges fee as defined in the params if the sender is not whitelisted.
-// Does not charge fee if sender is the incentives module account or if sender is whitelisted.
-// Returns true if charged fee, false otherwise.
-// Returns error if:
-// - One if the addresses in params is invalid
-// - fails to send coins from sender to the community pool
-func (k Keeper) chargeGroupCreationFeeIfNotWhitelisted(ctx sdk.Context, sender sdk.AccAddress) (chargedFee bool, err error) {
-	params := k.GetParams(ctx)
-	incentivesModuleAddress := k.ak.GetModuleAddress(types.ModuleName)
-
-	// don't charge fee if sender is the incentives module account
-	if sender.Equals(incentivesModuleAddress) {
-		return false, nil
-	}
-
-	for _, unrestrictedAddressStr := range params.UnrestrictedCreatorWhitelist {
-		unrestrictedAddress, err := sdk.AccAddressFromBech32(unrestrictedAddressStr)
-		if err != nil {
-			return false, err
-		}
-
-		// don't charge fee if sender is in the whitelist
-		if unrestrictedAddress.Equals(sender) {
-			return false, nil
-		}
-	}
-
-	// Charge fee
-	groupCreationFee := params.GroupCreationFee
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, sender, distrtypes.ModuleName, groupCreationFee); err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
 // GetGaugeByID returns gauge from gauge ID.
 func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, error) {
 	gauge := types.Gauge{}
@@ -522,27 +423,4 @@ func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sd
 		return err
 	}
 	return nil
-}
-
-// initGaugeInfo takes in a list of pool IDs and returns a InternalGaugeInfo struct with weights initialized to zero.
-// Returns error if fails to retrieve gauge ID for a pool.
-func (k Keeper) initGaugeInfo(ctx sdk.Context, poolIds []uint64) (types.InternalGaugeInfo, error) {
-	gaugeRecords := make([]types.InternalGaugeRecord, 0, len(poolIds))
-	for _, poolID := range poolIds {
-		gaugeID, err := k.pik.GetInternalGaugeIDForPool(ctx, poolID)
-		if err != nil {
-			return types.InternalGaugeInfo{}, err
-		}
-
-		gaugeRecords = append(gaugeRecords, types.InternalGaugeRecord{
-			GaugeId:          gaugeID,
-			CurrentWeight:    osmomath.ZeroInt(),
-			CumulativeWeight: osmomath.ZeroInt(),
-		})
-	}
-
-	return types.InternalGaugeInfo{
-		TotalWeight:  osmomath.ZeroInt(),
-		GaugeRecords: gaugeRecords,
-	}, nil
 }
