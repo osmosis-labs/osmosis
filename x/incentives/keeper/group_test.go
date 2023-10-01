@@ -633,15 +633,6 @@ func (s *KeeperTestSuite) validateGroup(expectedGroup types.Group, actualGroup t
 	s.validateGaugeInfo(expectedGroup.InternalGaugeInfo, actualGroup.InternalGaugeInfo)
 }
 
-// validates that Group and group Gauge exist
-func (s *KeeperTestSuite) validateGroupExists(gaugeID uint64) {
-	_, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeID)
-	s.Require().NoError(err)
-
-	_, err = s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, gaugeID)
-	s.Require().NoError(err)
-}
-
 // validates that Group and group Gauge do not exist
 func (s *KeeperTestSuite) validateGroupNotExists(nonPerpetualGroupGaugeID uint64) {
 	_, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, nonPerpetualGroupGaugeID)
