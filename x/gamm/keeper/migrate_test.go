@@ -789,7 +789,7 @@ func (s *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 			s.PrepareMultipleBalancerPools(3)
 			s.PrepareMultipleConcentratedPools(3)
 
-			keeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, DefaultMigrationRecords)
+			keeper.OverwriteMigrationRecords(s.Ctx, DefaultMigrationRecords)
 
 			for i, poolIdLeaving := range test.poolIdLeaving {
 				poolIdEntering, err := keeper.GetLinkedConcentratedPoolID(s.Ctx, poolIdLeaving)
@@ -856,7 +856,7 @@ func (s *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 			s.PrepareMultipleConcentratedPools(3)
 
 			if !test.skipLinking {
-				keeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, DefaultMigrationRecords)
+				keeper.OverwriteMigrationRecords(s.Ctx, DefaultMigrationRecords)
 			}
 
 			s.Require().True(len(test.poolIdEntering) > 0)
@@ -902,7 +902,7 @@ func (s *KeeperTestSuite) TestGetAllMigrationInfo() {
 			s.PrepareMultipleConcentratedPools(3)
 
 			if !test.skipLinking {
-				keeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, DefaultMigrationRecords)
+				keeper.OverwriteMigrationRecords(s.Ctx, DefaultMigrationRecords)
 			}
 
 			migrationRecords, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)

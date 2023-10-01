@@ -116,9 +116,9 @@ func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint
 	return sdk.BigEndianToUint64(balancerPoolIdBigEndian), nil
 }
 
-// OverwriteMigrationRecordsAndRedirectDistrRecords sets the balancer to gamm pool migration info to the store and deletes all existing records
-// migrationInfo in state is completely overwitten by the given migrationInfo.
-func (k Keeper) OverwriteMigrationRecordsAndRedirectDistrRecords(ctx sdk.Context, migrationInfo gammmigration.MigrationRecords) error {
+// OverwriteMigrationRecords sets the balancer to gamm pool migration info to the store and deletes all existing records
+// migrationInfo in state is completely overwritten by the given migrationInfo.
+func (k Keeper) OverwriteMigrationRecords(ctx sdk.Context, migrationInfo gammmigration.MigrationRecords) error {
 	store := ctx.KVStore(k.storeKey)
 
 	// delete all existing migration records
@@ -256,7 +256,7 @@ func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []gammmigration
 	migrationInfo.BalancerToConcentratedPoolLinks = records
 
 	// Remove all records from the distribution module and replace them with the new records
-	err = k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, migrationInfo)
+	err = k.OverwriteMigrationRecords(ctx, migrationInfo)
 	if err != nil {
 		return err
 	}
@@ -304,7 +304,7 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []gammmigration.
 
 	// We now have a list of all previous records, as well as records that have been updated.
 	// We can now remove all previous records and replace them with the new ones.
-	err = k.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, gammmigration.MigrationRecords{
+	err = k.OverwriteMigrationRecords(ctx, gammmigration.MigrationRecords{
 		BalancerToConcentratedPoolLinks: newRecords,
 	})
 	if err != nil {

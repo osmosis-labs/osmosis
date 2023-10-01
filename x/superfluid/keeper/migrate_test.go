@@ -1020,7 +1020,7 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 		{BalancerPoolId: balancerPooId, ClPoolId: clPoolId},
 	}}
-	err = gammKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, migrationRecord)
+	err = gammKeeper.OverwriteMigrationRecords(ctx, migrationRecord)
 	s.Require().NoError(err)
 
 	// The unbonding duration is the same as the staking module's unbonding duration.
@@ -1323,7 +1323,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 			{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},
 		}}
-		err = s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, migrationRecord)
+		err = s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx, migrationRecord)
 		s.Require().NoError(err)
 
 		// Register the CL denom as superfluid.
