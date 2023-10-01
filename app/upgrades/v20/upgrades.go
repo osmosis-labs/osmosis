@@ -83,7 +83,7 @@ func createGroupsForIncentivePairs(ctx sdk.Context, keepers *keepers.AppKeepers)
 	// retrieve the gauge associated with the record
 	// If gauge directs incentives to a concentrated pool AND the concentrated pool
 	// is linked to balancer via migration map, create
-	// a group gauge and replace it in the distirbution record.
+	// a group gauge and replace it in the distribution record.
 	// Note that if there is a concentrated pool that is not
 	// linked to balancer, nothing is done.
 	// Stableswap pools are expected to be silently ignored. We do not
@@ -106,7 +106,6 @@ func createGroupsForIncentivePairs(ctx sdk.Context, keepers *keepers.AppKeepers)
 		// it is not incentivized individually when concentrated pool already retroactively
 		// distributed rewards to it.
 		if gauge.DistributeTo.LockQueryType != lockuptypes.NoLock {
-
 			// Validate that if there is a migration record pair between a concentrated
 			// and a cfmm pool, only concentrated is present in the distribution records.
 			longestLockableDuration, err := keepers.PoolIncentivesKeeper.GetLongestLockableDuration(ctx)
