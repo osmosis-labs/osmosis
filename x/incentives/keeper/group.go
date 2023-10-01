@@ -199,14 +199,14 @@ func (k Keeper) chargeGroupCreationFeeIfNotWhitelisted(ctx sdk.Context, sender s
 	return true, nil
 }
 
-// GetPoolIdsAndDurationsFromGroup retrieves the pool IDs and their associated durations from a given group.
-// It iterates over the gauge records in the group's InternalGaugeInfo, and for each record, it retrieves the pool ID and duration.
+// GetPoolIdsAndDurationsFromGaugeRecords retrieves the pool IDs and their associated durations from a group's gauge records
+// It iterates over each record and retrieves the pool ID and duration.
 // The function returns two slices: one for the pool IDs and one for the durations. The indices in these slices correspond to each other.
 // If there is an error retrieving the pool ID and duration for any gauge record, the function returns an error.
-func (k Keeper) GetPoolIdsAndDurationsFromGroup(ctx sdk.Context, group types.Group) ([]uint64, []time.Duration, error) {
-	poolIds := make([]uint64, 0, len(group.InternalGaugeInfo.GaugeRecords))
-	durations := make([]time.Duration, 0, len(group.InternalGaugeInfo.GaugeRecords))
-	for _, gaugeRecord := range group.InternalGaugeInfo.GaugeRecords {
+func (k Keeper) GetPoolIdsAndDurationsFromGaugeRecords(ctx sdk.Context, gaugeRecords []types.InternalGaugeRecord) ([]uint64, []time.Duration, error) {
+	poolIds := make([]uint64, 0, len(gaugeRecords))
+	durations := make([]time.Duration, 0, len(gaugeRecords))
+	for _, gaugeRecord := range gaugeRecords {
 		poolId, gaugeDuration, err := k.GetPoolIdAndDurationFromGaugeRecord(ctx, gaugeRecord)
 		if err != nil {
 			return nil, nil, err
