@@ -407,7 +407,10 @@ func (k Keeper) distributeSyntheticInternal(
 func (k Keeper) syncGroupWeights(ctx sdk.Context, group types.Group) error {
 	if group.SplittingPolicy == types.ByVolume {
 		err := k.syncVolumeSplitGroup(ctx, group)
-		if err != nil {
+		// This error implies that there was volume initialized at some point
+		// but has not been updated since the last epoch.
+		// For this case, we accept to fallback to the previous weights.
+		if err != nil && !errors.As(err, &types.NoVolumeSinceLastSyncError{}) {
 			return err
 		}
 	} else {
@@ -483,12 +486,12 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 			return types.CumulativeVolumeDecreasedError{PoolId: poolId, PreviousVolume: gaugeRecord.CumulativeWeight, NewVolume: cumulativePoolVolume}
 		}
 
-		// TODO: update this error and cover by tests
-		// If this is not present, getting a division by zero panic
-		// See:
-		// https://github.com/osmosis-labs/osmosis/issues/6558
+		// This check implies that there was volume initialized at some point
+		// but has not been updated since the last epoch.
+		// We expect to handle this in the caller (syncGroupWeights) and
+		// fallback to the previous weights in that case.
 		if volumeDelta.IsZero() {
-			return errors.New("volume delta is zero")
+			return types.NoVolumeSinceLastSyncError{PoolID: poolId}
 		}
 
 		gaugeRecord.CurrentWeight = volumeDelta

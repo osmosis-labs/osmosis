@@ -217,8 +217,12 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_OverlappingPoolsInGroups() {
 
 	overlappingPoolIDs := []uint64{poolAndGaugeInfo.ConcentratedPoolID, poolAndGaugeInfo.StableSwapPoolID, poolAndGaugeInfo.BalancerPoolID}
 
-	// setup inital volumes so that a Group can be created.
-	s.overwriteVolumes(overlappingPoolIDs, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount, defaultVolumeAmount})
+	// Setup uneven volumes
+	unevenPoolVolumes := setupUnequalVolumeWeights(len(overlappingPoolIDs), oneMillionVolumeAmt)
+	// Configure the volumes
+	poolIDToVolumeMap := map[uint64]osmomath.Int{}
+	s.setupVolumeForPools(overlappingPoolIDs, unevenPoolVolumes, poolIDToVolumeMap)
+
 	// Create first group
 	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], overlappingPoolIDs)
 	s.Require().NoError(err)
@@ -226,13 +230,6 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_OverlappingPoolsInGroups() {
 	// Create second group
 	_, err = s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...).Add(defaultCoins...), types.PerpetualNumEpochsPaidOver+3, s.TestAccs[0], overlappingPoolIDs)
 	s.Require().NoError(err)
-
-	// Setup uneven volumes
-	unevenPoolVolumes := setupUnequalVolumeWeights(len(overlappingPoolIDs), oneMillionVolumeAmt)
-
-	// Configure the volumes
-	poolIDToVolumeMap := map[uint64]osmomath.Int{}
-	s.setupVolumeForPools(overlappingPoolIDs, unevenPoolVolumes, poolIDToVolumeMap)
 
 	// Calculate the expected distribution
 	poolIDToExpectedDistributionMap := s.computeExpectedDistributonAmountsFromVolume(defaultCoins, poolIDToVolumeMap, oneMillionVolumeAmt)
@@ -278,6 +275,9 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_NoVolumeOnePool_SkipSilent() {
 	_, err = s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], poolIDsGroupTwo)
 	s.Require().NoError(err)
 
+	// Overwrite the volumes with zero amounts to trigger an error.
+	s.overwriteVolumes(poolIDsGroupTwo, []osmomath.Int{osmomath.ZeroInt(), osmomath.ZeroInt()})
+
 	// Configure the volume only for the pools in the first group.
 	// Setup uneven volumes
 	unevenPoolVolumes := setupUnequalVolumeWeights(len(poolIDsGroupOne), oneMillionVolumeAmt)
@@ -318,16 +318,15 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_ChangeVolumeBetween() {
 	// Create the first set of pools with internal gauges and a group for them.
 	poolAndGaugeInfo := s.PrepareAllSupportedPools()
 	poolIDsGroup := []uint64{poolAndGaugeInfo.ConcentratedPoolID, poolAndGaugeInfo.StableSwapPoolID}
-	// setup initial volumes so that a Group can be created.
-	s.overwriteVolumes(poolIDsGroup, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount})
-	// Create non-perpetual group distribution over 2 epochs.
-	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...), types.PerpetualNumEpochsPaidOver+2, s.TestAccs[0], poolIDsGroup)
-	s.Require().NoError(err)
 
 	// Setup uneven volumes with volumeA total amount
 	unevenPoolVolumes := setupUnequalVolumeWeights(len(poolIDsGroup), volumeA)
 	poolIDToVolumeMap := map[uint64]osmomath.Int{}
 	s.setupVolumeForPools(poolIDsGroup, unevenPoolVolumes, poolIDToVolumeMap)
+
+	// Create non-perpetual group distribution over 2 epochs.
+	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...), types.PerpetualNumEpochsPaidOver+2, s.TestAccs[0], poolIDsGroup)
+	s.Require().NoError(err)
 
 	distrEpochIdentifier := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
 
@@ -379,16 +378,15 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_CreateGroupsBetween() {
 	// Create set of pools with internal gauges and a group for them.
 	poolAndGaugeInfo := s.PrepareAllSupportedPools()
 	poolIDsGroup := []uint64{poolAndGaugeInfo.ConcentratedPoolID, poolAndGaugeInfo.StableSwapPoolID}
-	// setup initial volumes so that a Group can be created.
-	s.overwriteVolumes(poolIDsGroup, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount})
-	// Create non-perpetual group distribution over 2 epochs.
-	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...), types.PerpetualNumEpochsPaidOver+2, s.TestAccs[0], poolIDsGroup)
-	s.Require().NoError(err)
 
 	// Setup even volumes with volumeA total amount
 	equalPoolVolumes, volumeA := setupEqualVolumeWeights(len(poolIDsGroup), volumeA)
 	poolIDToVolumeMap := map[uint64]osmomath.Int{}
 	s.setupVolumeForPools(poolIDsGroup, equalPoolVolumes, poolIDToVolumeMap)
+
+	// Create non-perpetual group distribution over 2 epochs.
+	_, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...), types.PerpetualNumEpochsPaidOver+2, s.TestAccs[0], poolIDsGroup)
+	s.Require().NoError(err)
 
 	distrEpochIdentifier := s.App.IncentivesKeeper.GetParams(s.Ctx).DistrEpochIdentifier
 
@@ -489,7 +487,7 @@ func (s *KeeperTestSuite) Test_AfterEpochEnd_Group_SwapAndDistribute() {
 
 	// Since volume was equal, we expect equal split of incentives
 	// across pools.
-	halfDefaultCoins := coins.QuoRaw(defaultCoins, 2)
+	halfDefaultCoins := coinutil.QuoRaw(defaultCoins, 2)
 	s.validateDistributionForGroup([]uint64{ethUSDCPoolID, fooBARPoolID}, map[uint64]sdk.Coins{
 		ethUSDCPoolID: halfDefaultCoins,
 		fooBARPoolID:  halfDefaultCoins,

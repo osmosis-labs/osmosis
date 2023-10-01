@@ -1349,6 +1349,7 @@ func withGaugeDistrType(gauge types.Gauge, gaugeType lockuptypes.LockQueryType) 
 }
 
 func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
+	const clPoolID uint64 = 1
 	tests := map[string]struct {
 		groupToSync types.Group
 
@@ -1423,6 +1424,16 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 
 			expectedError: types.GroupTotalWeightZeroError{GroupID: defaultGroupGaugeId},
 		},
+
+		"no volume since the last sync": {
+			groupToSync: deepCopyGroup(defaultGroup),
+			updatedPoolVolumes: []osmomath.Int{
+				defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight,
+				defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight,
+			},
+
+			expectedError: types.NoVolumeSinceLastSyncError{PoolID: clPoolID},
+		},
 	}
 
 	for name, tc := range tests {
@@ -1432,6 +1443,7 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 
 			// Prepare pools so gauges and pool ids are set in state
 			clPool := s.PrepareConcentratedPool()
+			s.Require().Equal(clPoolID, clPool.GetId())
 			balPoolId := s.PrepareBalancerPool()
 
 			poolIds := []uint64{clPool.GetId(), balPoolId}
@@ -1475,24 +1487,39 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 }
 
 func (s *KeeperTestSuite) TestSyncGroupWeights() {
+	defaultVolumeOverwrite := []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount}
 	tests := map[string]struct {
-		groupToSync types.Group
+		groupToSync     types.Group
+		volumeOverwrite []osmomath.Int
 
 		expectedSyncedGroup types.Group
 		expectedError       error
 	}{
 		"happy path: valid volume splitting group": {
-			groupToSync: withSplittingPolicy(defaultGroup, types.ByVolume),
+			groupToSync:     withSplittingPolicy(defaultGroup, types.ByVolume),
+			volumeOverwrite: defaultVolumeOverwrite,
 
 			// Note: setup logic runs default setup based on groupToSync's splitting policy.
 			// More involved tests related to syncing logic for specific splitting policies are in their respective tests.
-			expectedSyncedGroup: s.withUpdatedVolumes(defaultGroup, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount}),
+			expectedSyncedGroup: s.withUpdatedVolumes(defaultGroup, defaultVolumeOverwrite),
 			expectedError:       nil,
+		},
+		"no volume since last sync - does not error - fallback to previous weights": {
+			groupToSync: withSplittingPolicy(defaultGroup, types.ByVolume),
+
+			// Note: we set the volume to be equal to the cumulative volume to simulate no volume since last sync.
+			volumeOverwrite: []osmomath.Int{defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight},
+
+			expectedSyncedGroup: withSplittingPolicy(defaultGroup, types.ByVolume),
+
+			// No error occurs, implying that we fall back to the previous weights
+			expectedError: nil,
 		},
 
 		// Error catching
 		"unsupported splitting policy": {
-			groupToSync: withSplittingPolicy(defaultGroup, types.SplittingPolicy(100)),
+			groupToSync:     withSplittingPolicy(defaultGroup, types.SplittingPolicy(100)),
+			volumeOverwrite: defaultVolumeOverwrite,
 
 			expectedError: types.UnsupportedSplittingPolicyError{GroupGaugeId: uint64(5), SplittingPolicy: types.SplittingPolicy(100)},
 		},
@@ -1513,7 +1540,7 @@ func (s *KeeperTestSuite) TestSyncGroupWeights() {
 			// When more are added in the future, setup logic should route to the appropriate setup function here.
 			switch tc.groupToSync.SplittingPolicy {
 			case types.ByVolume:
-				s.overwriteVolumes(poolIds, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount})
+				s.overwriteVolumes(poolIds, tc.volumeOverwrite)
 			}
 
 			// Save original input to help with mutation-related assertions
@@ -1546,7 +1573,7 @@ func (s *KeeperTestSuite) TestSyncGroupWeights() {
 
 			updatedGroup, err := ik.GetGroupByGaugeID(s.Ctx, tc.groupToSync.GroupGaugeId)
 			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedSyncedGroup, updatedGroup)
+			s.Require().Equal(tc.expectedSyncedGroup.String(), updatedGroup.String())
 		})
 	}
 }
@@ -1777,10 +1804,23 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			volumeToSet: balancerAndCLVolumeConfig,
 		},
 
+		"6: fallback to old weights due to no volume update": {
+			groups: []groupConfig{
+				{
+					group:      singleRecordGroup,
+					groupGauge: defaultPerpetualGauge,
+				},
+			},
+
+			volumeToSet: []osmomath.Int{
+				singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight,
+			},
+		},
+
 		//// skipping
 
 		// skipping on sync failure
-		"6: skipped: synching fails due to no volume set": {
+		"7: skipped: synching fails due to no volume set": {
 			groups: []groupConfig{
 				{
 					group:      defaultGroup,
@@ -1794,7 +1834,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		},
 
 		// skipping on gauge being inactive
-		"7: skipping on gauge being inactive": {
+		"8: skipping on gauge being inactive": {
 			groups: []groupConfig{
 				{
 					group: defaultGroup,
@@ -1810,7 +1850,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 		// skipping because this gauge has no pool associated with it.
 		// we only distributed to internal gauges.
-		"8: associated group gauge is non perpetual and finished": {
+		"9: associated group gauge is non perpetual and finished": {
 			groups: []groupConfig{
 				{
 					group:      groupToInvalidUnderlying,
@@ -1826,7 +1866,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		///////////////// multi-gauges
 
 		// Note that groups distribute to overlapping gauges.
-		"9: multiple groups with varying number of underlying gauges": {
+		"10: multiple groups with varying number of underlying gauges": {
 			groups: []groupConfig{
 				{
 					group:      singleRecordGroup,
@@ -1841,7 +1881,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			volumeToSet: balancerAndCLVolumeConfig,
 		},
 
-		"10: skipping one does not fail the other": {
+		"11: skipping one does not fail the other": {
 			groups: []groupConfig{
 				{
 					group: defaultGroup,
@@ -1862,7 +1902,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 		///////////////// error cases
 
-		"11: invalid underlying group gauge (cannot add to finished pool gauge)": {
+		"12: invalid underlying group gauge (cannot add to finished pool gauge)": {
 			groups: []groupConfig{
 				{
 					group:      singleRecordGroup,
