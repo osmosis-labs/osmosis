@@ -132,6 +132,14 @@ var (
 				poolVolumesToSet:    []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount},
 				expectErr:           errorNoCustomFeeInBalance,
 			},
+			{
+				name:             "error: duplicate pool IDs",
+				coins:            defaultCoins,
+				numEpochPaidOver: types.PerpetualNumEpochsPaidOver,
+				poolIDs:          []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID},
+				poolVolumesToSet: []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount.Add(defaultVolumeAmount)},
+				expectErr:        types.DuplicatePoolIDError{PoolIDs: []uint64{poolInfo.ConcentratedPoolID, poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID}},
+			},
 		}
 	}
 )
