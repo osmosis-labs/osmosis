@@ -659,42 +659,57 @@ func (s *KeeperTestSuite) TestGetPoolIdsAndDurationsFromGaugeRecords() {
 func (s *KeeperTestSuite) TestGetPoolIdAndDurationFromGaugeRecord() {
 	s.SetupTest()
 
-	pools := s.PrepareAllSupportedPools()
+	poolInfo := s.PrepareAllSupportedPools()
+
+	longestLockDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
+	s.Require().NoError(err)
+
+	epochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
 
 	testCases := []struct {
-		name              string
-		expectedPoolIds   []uint64
-		expectedDurations []time.Duration
+		name             string
+		gaugeRecord      types.InternalGaugeRecord
+		expectedPoolId   uint64
+		expectedDuration time.Duration
+		expectedErr      error
 	}{
 		{
-			name:              "Two pool IDs of various types",
-			expectedPoolIds:   []uint64{pools.BalancerPoolID, pools.StableSwapPoolID},
-			expectedDurations: []time.Duration{time.Hour * 7, time.Hour * 7},
+			name:             "balancer pool record",
+			gaugeRecord:      withRecordGaugeId(defaultZeroWeightGaugeRecord, poolInfo.BalancerGaugeID),
+			expectedPoolId:   poolInfo.BalancerPoolID,
+			expectedDuration: longestLockDuration,
 		},
 		{
-			name:              "Three pool IDs of various types",
-			expectedPoolIds:   []uint64{pools.ConcentratedPoolID, pools.BalancerPoolID, pools.StableSwapPoolID},
-			expectedDurations: []time.Duration{time.Hour * 24 * 7, time.Hour * 7, time.Hour * 7},
+			name:             "concentrated pool record",
+			gaugeRecord:      withRecordGaugeId(defaultZeroWeightGaugeRecord, poolInfo.ConcentratedGaugeID),
+			expectedPoolId:   poolInfo.ConcentratedPoolID,
+			expectedDuration: epochDuration,
+		},
+		{
+			name:             "stable swap pool record",
+			gaugeRecord:      withRecordGaugeId(defaultZeroWeightGaugeRecord, poolInfo.StableSwapGaugeID),
+			expectedPoolId:   poolInfo.StableSwapPoolID,
+			expectedDuration: longestLockDuration,
+		},
+		{
+			name:             "err: cosmwasm pool record, has no gauge",
+			gaugeRecord:      withRecordGaugeId(defaultZeroWeightGaugeRecord, 0),
+			expectedPoolId:   poolInfo.CosmWasmPoolID,
+			expectedDuration: epochDuration,
+			expectedErr:      types.GaugeNotFoundError{GaugeID: 0},
 		},
 	}
-
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			equalPoolVolumes, _ := setupEqualVolumeWeights(len(tc.expectedPoolIds), oneMillionVolumeAmt)
-			s.IncreaseVolumeForPools(tc.expectedPoolIds, equalPoolVolumes)
-
-			gaugeId, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, types.PerpetualNumEpochsPaidOver, s.TestAccs[0], tc.expectedPoolIds)
-			s.Require().NoError(err)
-
-			group, err := s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, gaugeId)
-			s.Require().NoError(err)
-
 			// system under test
-			for i, gaugeRecord := range group.InternalGaugeInfo.GaugeRecords {
-				poolId, duration, err := s.App.IncentivesKeeper.GetPoolIdAndDurationFromGaugeRecord(s.Ctx, gaugeRecord)
+			poolId, duration, err := s.App.IncentivesKeeper.GetPoolIdAndDurationFromGaugeRecord(s.Ctx, tc.gaugeRecord)
+			if tc.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectedErr)
+			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedPoolIds[i], poolId)
-				s.Require().Equal(tc.expectedDurations[i], duration)
+				s.Require().Equal(tc.expectedPoolId, poolId)
+				s.Require().Equal(tc.expectedDuration, duration)
 			}
 		})
 	}
