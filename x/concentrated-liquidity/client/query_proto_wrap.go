@@ -324,6 +324,10 @@ func (q Querier) TickRangeUnderlyingAssets(ctx sdk.Context, req clquery.TickRang
 	if req.PoolId == 0 {
 		return nil, status.Error(codes.InvalidArgument, "pool id is zero")
 	}
+	res, err := q.Keeper.TickRangeUnderlyingAssets(ctx, req.PoolId, req.LowerTick, req.UpperTick)
+	if err != nil {
+		return nil, err
+	}
 
-	return &clquery.TickRangeUnderlyingAssetsResponse{}, nil
+	return &clquery.TickRangeUnderlyingAssetsResponse{Token0: res.Token0, Token1: res.Token1}, nil
 }
