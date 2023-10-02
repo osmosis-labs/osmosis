@@ -176,6 +176,11 @@ func (m MsgCreateGroup) ValidateBasic() error {
 		return errors.New("pool ids should be unique")
 	}
 
+	// Temporarily disable non perpetual group creation
+	if m.NumEpochsPaidOver != 0 {
+		return errors.New("non-perpetual group creation is disabled")
+	}
+
 	return nil
 }
 
