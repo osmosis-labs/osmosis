@@ -144,7 +144,7 @@ func createGroupsForIncentivePairs(ctx sdk.Context, keepers *keepers.AppKeepers)
 
 		associatedGammPoolID, ok := poolIDMigrationRecordMap[concentratedPoolID]
 		if !ok {
-			// There is no CFMM pool ID for the concentrated pool ID, contniue to the next.
+			// There is no CFMM pool ID for the concentrated pool ID, continue to the next.
 			continue
 		}
 
