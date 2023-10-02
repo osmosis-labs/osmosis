@@ -414,7 +414,6 @@ func (k Keeper) TickRangeUnderlyingAssets(ctx sdk.Context, poolId uint64, lowerT
 		}
 		totalLiquidity = totalLiquidity.Add(tickStruct.LiquidityNet)
 		previousTickIndex = tickIndex
-
 	}
 
 	actualAmountDenom0, actualAmountDenom1, err := pool.CalcActualAmounts(ctx, lowerTick, upperTick, totalLiquidity)
