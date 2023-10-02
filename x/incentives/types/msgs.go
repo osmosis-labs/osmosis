@@ -177,6 +177,7 @@ func (m MsgCreateGroup) ValidateBasic() error {
 	}
 
 	// Temporarily disable non perpetual group creation
+	// https://github.com/osmosis-labs/osmosis/issues/6540
 	if m.NumEpochsPaidOver != PerpetualNumEpochsPaidOver {
 		return errors.New("non-perpetual group creation is disabled")
 	}
