@@ -370,14 +370,28 @@ func (k Keeper) IsPoolIncentivized(ctx sdk.Context, providedPoolId uint64) (bool
 				return true, nil
 			}
 		} else if gauge.DistributeTo.LockQueryType == lockuptypes.ByDuration {
-			for _, lockableDuration := range lockableDurations {
-				poolId, err := k.GetPoolIdFromGaugeId(ctx, record.GaugeId, lockableDuration)
-				if err != nil {
-					return false, err
+			gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
+			if err != nil {
+				return false, err
+			}
+			// Ensure the gauge's duration matches one of the lockable durations.
+			// If it doesn't, skip it.
+			matchFound := false
+			for _, duration := range lockableDurations {
+				if gauge.DistributeTo.Duration == duration {
+					matchFound = true
+					break
 				}
-				if poolId == providedPoolId {
-					return true, nil
-				}
+			}
+			if !matchFound {
+				continue
+			}
+			poolId, err := k.GetPoolIdFromGaugeId(ctx, record.GaugeId, gauge.DistributeTo.Duration)
+			if err != nil {
+				return false, err
+			}
+			if poolId == providedPoolId {
+				return true, nil
 			}
 		} else {
 			return false, fmt.Errorf("unknown lock query type: %s", gauge.DistributeTo.LockQueryType)
