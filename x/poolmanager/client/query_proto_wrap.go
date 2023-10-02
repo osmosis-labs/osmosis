@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryprotov2"
 	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
@@ -20,6 +21,16 @@ type Querier struct {
 
 func NewQuerier(k poolmanager.Keeper) Querier {
 	return Querier{k}
+}
+
+// QuerierV2 defines a wrapper around the x/poolmanager keeper providing gRPC method
+// handlers for v2 queries.
+type QuerierV2 struct {
+	K poolmanager.Keeper
+}
+
+func NewV2Querier(k poolmanager.Keeper) QuerierV2 {
+	return QuerierV2{K: k}
 }
 
 func (q Querier) Params(ctx sdk.Context,
@@ -203,7 +214,7 @@ func (q Querier) AllPools(ctx sdk.Context, req queryproto.AllPoolsRequest) (*que
 	}, nil
 }
 
-// SpotPrice returns the spot price of the pool with the given quote and base asset denoms.
+// SpotPrice returns the spot price of the pool with the given quote and base asset denoms. 18 decimals.
 func (q Querier) SpotPrice(ctx sdk.Context, req queryproto.SpotPriceRequest) (*queryproto.SpotPriceResponse, error) {
 	if req.BaseAssetDenom == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid base asset denom")
@@ -219,7 +230,30 @@ func (q Querier) SpotPrice(ctx sdk.Context, req queryproto.SpotPriceRequest) (*q
 	}
 
 	return &queryproto.SpotPriceResponse{
-		SpotPrice: sp.String(),
+		// Note: truncation exists here to maintain backwards compatibility.
+		// This query has historically had 18 decimals in response.
+		SpotPrice: sp.Dec().String(),
+	}, err
+}
+
+// SpotPriceV2 returns the spot price of the pool with the given quote and base asset denoms. 36 decimals.
+func (q QuerierV2) SpotPriceV2(ctx sdk.Context, req queryprotov2.SpotPriceRequest) (*queryprotov2.SpotPriceResponse, error) {
+	if req.BaseAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid base asset denom")
+	}
+
+	if req.QuoteAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid quote asset denom")
+	}
+
+	sp, err := q.K.RouteCalculateSpotPrice(ctx, req.PoolId, req.QuoteAssetDenom, req.BaseAssetDenom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryprotov2.SpotPriceResponse{
+		// Note: that this is a BigDec yielding 36 decimals.
+		SpotPrice: sp,
 	}, err
 }
 
@@ -253,4 +287,85 @@ func (q Querier) TotalLiquidity(ctx sdk.Context, req queryproto.TotalLiquidityRe
 	return &queryproto.TotalLiquidityResponse{
 		Liquidity: totalLiquidity,
 	}, nil
+}
+
+// TotalVolumeForPool returns the total volume of the pool.
+func (q Querier) TotalVolumeForPool(ctx sdk.Context, req queryproto.TotalVolumeForPoolRequest) (*queryproto.TotalVolumeForPoolResponse, error) {
+	totalVolume := q.K.GetTotalVolumeForPool(ctx, req.PoolId)
+
+	return &queryproto.TotalVolumeForPoolResponse{
+		Volume: totalVolume,
+	}, nil
+}
+
+// EstimateTradeBasedOnPriceImpact returns the input and output amount of coins for a pool trade
+// based on external price and maximum price impact.
+func (q Querier) EstimateTradeBasedOnPriceImpact(
+	ctx sdk.Context,
+	req queryproto.EstimateTradeBasedOnPriceImpactRequest,
+) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
+	if req.PoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Invalid Pool Id")
+	}
+
+	if req.FromCoin.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid from coin denom")
+	}
+
+	if req.ToCoinDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid to coin denom")
+	}
+
+	swapModule, err := q.K.GetPoolModule(ctx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	poolI, poolErr := swapModule.GetPool(ctx, req.PoolId)
+	if poolErr != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	spotPriceBigDec, err := swapModule.CalculateSpotPrice(ctx, req.PoolId, req.FromCoin.Denom, req.ToCoinDenom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// Convert to normal Dec
+	spotPrice := spotPriceBigDec.Dec()
+
+	// If ExternalPrice is specified we need to adjust the maxPriceImpact based on the deviation between spot and
+	// external price.
+	adjustedMaxPriceImpact := req.MaxPriceImpact
+	if !req.ExternalPrice.IsZero() {
+		priceDeviation := spotPrice.Sub(req.ExternalPrice).Quo(req.ExternalPrice)
+		adjustedMaxPriceImpact = adjustedMaxPriceImpact.Sub(priceDeviation)
+
+		// If the adjusted max price impact is negative or zero it means the difference between spot and external
+		// already exceeds the max price impact.
+		if adjustedMaxPriceImpact.IsZero() || adjustedMaxPriceImpact.IsNegative() {
+			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
+				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
+				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
+			}, nil
+		}
+	}
+
+	// Process the estimates according to the pool type.
+	switch poolI.GetType() {
+	case types.Balancer:
+		return q.K.EstimateTradeBasedOnPriceImpactBalancerPool(
+			ctx, req, spotPrice, adjustedMaxPriceImpact, swapModule, poolI,
+		)
+	case types.Stableswap:
+		return q.K.EstimateTradeBasedOnPriceImpactStableSwapPool(
+			ctx, req, spotPrice, adjustedMaxPriceImpact, swapModule, poolI,
+		)
+	case types.Concentrated:
+		return q.K.EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
+			ctx, req, spotPrice, adjustedMaxPriceImpact, swapModule, poolI,
+		)
+	default:
+		return nil, status.Error(codes.Internal, "pool type not supported")
+	}
 }

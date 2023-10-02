@@ -30,16 +30,11 @@ func (k Keeper) validateCreatedPool(poolId uint64, pool types.PoolI) error {
 // - Minting LP shares to pool creator
 // - Setting metadata for the shares
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
-	// Get pool module interface from the pool type.
+	// Check that the pool type exists
 	poolType := msg.GetPoolType()
-	poolModule, ok := k.routes[poolType]
+	_, ok := k.routes[poolType]
 	if !ok {
 		return 0, types.InvalidPoolTypeError{PoolType: poolType}
-	}
-
-	// Confirm that permissionless pool creation is enabled for the module.
-	if err := poolModule.ValidatePermissionlessPoolCreationEnabled(ctx); err != nil {
-		return 0, err
 	}
 
 	// createPoolZeroLiquidityNoCreationFee contains shared pool creation logic between this function (CreatePool) and

@@ -79,3 +79,25 @@ func (server msgServer) AddToGauge(goCtx context.Context, msg *types.MsgAddToGau
 
 	return &types.MsgAddToGaugeResponse{}, nil
 }
+
+func (server msgServer) CreateGroup(goCtx context.Context, msg *types.MsgCreateGroup) (*types.MsgCreateGroupResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	owner, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	groupID, err := server.keeper.CreateGroup(ctx, msg.Coins, msg.NumEpochsPaidOver, owner, msg.PoolIds)
+	if err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtCreateGroup,
+			sdk.NewAttribute(types.AttributeGroupID, osmoutils.Uint64ToString(groupID)),
+		),
+	})
+
+	return &types.MsgCreateGroupResponse{GroupId: groupID}, nil
+}
