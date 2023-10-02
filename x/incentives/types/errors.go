@@ -95,3 +95,11 @@ type NoVolumeSinceLastSyncError struct {
 func (e NoVolumeSinceLastSyncError) Error() string {
 	return fmt.Sprintf("Pool %d has no volume since last sync", e.PoolID)
 }
+
+type DuplicatePoolIDError struct {
+	PoolIDs []uint64
+}
+
+func (e DuplicatePoolIDError) Error() string {
+	return fmt.Sprintf("one or more pool IDs provided in the pool ID array contains a duplicate: %d", e.PoolIDs)
+}

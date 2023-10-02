@@ -8,6 +8,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 )
@@ -110,6 +111,10 @@ func (k Keeper) createGroup(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver u
 	}
 	if len(poolIDs) == 1 {
 		return types.Group{}, types.OnePoolIDGroupError{PoolID: poolIDs[0]}
+	}
+
+	if !osmoassert.Uint64ArrayValuesAreUnique(poolIDs) {
+		return types.Group{}, types.DuplicatePoolIDError{PoolIDs: poolIDs}
 	}
 
 	// Initialize gauge information for every pool ID.
