@@ -407,8 +407,14 @@ func (s *KeeperTestSuite) TestReplaceDistrRecords_GroupGauge() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Set up distribution records prior to replace, to ensure replace deletes them.
-			err := keeper.ReplaceDistrRecords(s.Ctx, initialDistrRecords...)
-			s.Require().NoError(err)
+			distrInfo := keeper.GetDistrInfo(s.Ctx)
+			totalWeight := osmomath.NewInt(0)
+			for _, record := range initialDistrRecords {
+				totalWeight = totalWeight.Add(record.Weight)
+			}
+			distrInfo.Records = initialDistrRecords
+			distrInfo.TotalWeight = totalWeight
+			keeper.SetDistrInfo(s.Ctx, distrInfo)
 
 			// System under test.
 			err = keeper.ReplaceDistrRecords(s.Ctx, test.testingDistrRecord...)
