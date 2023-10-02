@@ -201,7 +201,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd_Group_General() {
 	s.validateDistributionForGroup(nonPerpetualGroupPoolIDs, nonPerpetualPoolIDToExpectedDistributionMap)
 
 	// Validate that perpetual gauge is still present
-	s.validateGroupExists(perpetualGroupGaugeID)
+	s.ValidateGroupExists(perpetualGroupGaugeID)
 }
 
 // This test focuses on validating groups distributing to pools that are in both groups.

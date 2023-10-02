@@ -311,7 +311,7 @@ func TestMsgCreateGroup(t *testing.T) {
 	createMsg := func(after func(msg incentivestypes.MsgCreateGroup) incentivestypes.MsgCreateGroup) incentivestypes.MsgCreateGroup {
 		properMsg := *incentivestypes.NewMsgCreateGroup(
 			sdk.Coins{sdk.NewInt64Coin("stake", 10)},
-			1,
+			0,
 			addr1,
 			[]uint64{1, 2, 3},
 		)
@@ -369,6 +369,14 @@ func TestMsgCreateGroup(t *testing.T) {
 			name: "repeated pool id",
 			msg: createMsg(func(msg incentivestypes.MsgCreateGroup) incentivestypes.MsgCreateGroup {
 				msg.PoolIds = []uint64{1, 2, 1}
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "non-perpetual group creation is disabled",
+			msg: createMsg(func(msg incentivestypes.MsgCreateGroup) incentivestypes.MsgCreateGroup {
+				msg.NumEpochsPaidOver = 2
 				return msg
 			}),
 			expectPass: false,
