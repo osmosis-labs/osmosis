@@ -352,7 +352,7 @@ func (k Keeper) IsPoolIncentivized(ctx sdk.Context, providedPoolId uint64) bool 
 				// if the group is not perpetual, it is an externally incentivized gauge so we skip it
 				continue
 			}
-			poolIds, _, err := k.incentivesKeeper.GetPoolIdsAndDurationsFromGroup(ctx, group)
+			poolIds, _, err := k.incentivesKeeper.GetPoolIdsAndDurationsFromGaugeRecords(ctx, group.InternalGaugeInfo.GaugeRecords)
 			if err != nil {
 				continue
 			}
