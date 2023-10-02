@@ -176,6 +176,12 @@ func (m MsgCreateGroup) ValidateBasic() error {
 		return errors.New("pool ids should be unique")
 	}
 
+	// Temporarily disable non perpetual group creation
+	// https://github.com/osmosis-labs/osmosis/issues/6540
+	if m.NumEpochsPaidOver != PerpetualNumEpochsPaidOver {
+		return errors.New("non-perpetual group creation is disabled")
+	}
+
 	return nil
 }
 
