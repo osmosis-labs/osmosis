@@ -375,7 +375,8 @@ func (s *KeeperTestSuite) TestIsPoolIncentivized() {
 				},
 			})
 
-			actualIsIncentivized := s.App.PoolIncentivesKeeper.IsPoolIncentivized(s.Ctx, tc.poolId)
+			actualIsIncentivized, err := s.App.PoolIncentivesKeeper.IsPoolIncentivized(s.Ctx, tc.poolId)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedIsIncentivized, actualIsIncentivized)
 		})
 	}

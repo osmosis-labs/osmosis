@@ -328,7 +328,7 @@ func (k Keeper) GetAllGauges(ctx sdk.Context) []incentivestypes.Gauge {
 // If the gauge's DistributeTo.LockQueryType is NoLock, it retrieves the pool ID from the gauge and checks if it matches the provided pool ID.
 // If the gauge's DistributeTo.LockQueryType is ByDuration, it iterates over the lockableDurations, retrieves the pool ID for each duration, and checks if it matches the provided pool ID.
 // If none of the checks pass, it returns false, indicating that the pool is not incentivized.
-func (k Keeper) IsPoolIncentivized(ctx sdk.Context, providedPoolId uint64) bool {
+func (k Keeper) IsPoolIncentivized(ctx sdk.Context, providedPoolId uint64) (bool, error) {
 	epochDuration := k.incentivesKeeper.GetEpochInfo(ctx).Duration
 	lockableDurations := k.GetLockableDurations(ctx)
 
@@ -337,16 +337,16 @@ func (k Keeper) IsPoolIncentivized(ctx sdk.Context, providedPoolId uint64) bool 
 	for _, record := range distrInfo.Records {
 		gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
 		if err != nil {
-			continue
+			return false, err
 		}
 		if gauge.DistributeTo.LockQueryType == lockuptypes.ByGroup {
 			group, err := k.incentivesKeeper.GetGroupByGaugeID(ctx, record.GaugeId)
 			if err != nil {
-				continue
+				return false, err
 			}
 			groupGauge, err := k.incentivesKeeper.GetGaugeByID(ctx, group.GroupGaugeId)
 			if err != nil {
-				continue
+				return false, err
 			}
 			if !groupGauge.IsPerpetual {
 				// if the group is not perpetual, it is an externally incentivized gauge so we skip it
@@ -354,34 +354,34 @@ func (k Keeper) IsPoolIncentivized(ctx sdk.Context, providedPoolId uint64) bool 
 			}
 			poolIds, _, err := k.incentivesKeeper.GetPoolIdsAndDurationsFromGaugeRecords(ctx, group.InternalGaugeInfo.GaugeRecords)
 			if err != nil {
-				continue
+				return false, err
 			}
 			for _, poolId := range poolIds {
 				if poolId == providedPoolId {
-					return true
+					return true, nil
 				}
 			}
 		} else if gauge.DistributeTo.LockQueryType == lockuptypes.NoLock {
 			poolId, err := k.GetPoolIdFromGaugeId(ctx, record.GaugeId, epochDuration)
 			if err != nil {
-				continue
+				return false, err
 			}
 			if poolId == providedPoolId {
-				return true
+				return true, nil
 			}
 		} else if gauge.DistributeTo.LockQueryType == lockuptypes.ByDuration {
 			for _, lockableDuration := range lockableDurations {
 				poolId, err := k.GetPoolIdFromGaugeId(ctx, record.GaugeId, lockableDuration)
 				if err != nil {
-					continue
+					return false, err
 				}
 				if poolId == providedPoolId {
-					return true
+					return true, nil
 				}
 			}
 		} else {
-			continue
+			return false, fmt.Errorf("unknown lock query type: %s", gauge.DistributeTo.LockQueryType)
 		}
 	}
-	return false
+	return false, nil
 }
