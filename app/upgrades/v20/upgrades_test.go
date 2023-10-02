@@ -155,9 +155,28 @@ func (s *UpgradeTestSuite) TestCreateGroupsForIncentivePairs() {
 				CFMMGaugeID:        poolInfo.StableSwapGaugeID,
 			},
 		},
+		// expected to create a group for the concentrated pool
+		// however, detect that there is a balancer pool that is incentivized individually
+		// and fail.
+		"error: one distr record with balancer pool and concentrated pool but migration link present": {
+			migrationInfo: []gammmigration.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: poolInfo.BalancerPoolID,
+					ClPoolId:       poolInfo.ConcentratedPoolID,
+				},
+			},
+			distributionRecords: append(concentratedDistRecord, balancerDistrRecord...),
+
+			expectError: v20.IncentivizedCFMMDirectWhenMigrationLinkPresentError{
+				CFMMPoolID:         poolInfo.BalancerPoolID,
+				ConcentratedPoolID: poolInfo.ConcentratedPoolID,
+				CFMMGaugeID:        poolInfo.BalancerGaugeID,
+			},
+		},
 	}
 
 	for name, tc := range tests {
+		tc := tc
 		s.Run(name, func() {
 			s.runCreateGroupsForIncentivePairsTest(tc.migrationInfo, tc.distributionRecords, tc.expectedDistributionRecords, expectedGroupGaugeID, tc.expectError)
 		})
@@ -268,12 +287,17 @@ func (s *UpgradeTestSuite) runCreateGroupsForIncentivePairsTest(migrationInfo []
 	err = s.App.PoolIncentivesKeeper.ReplaceDistrRecords(s.Ctx, distributionRecords...)
 	s.Require().NoError(err)
 
-	err = v20.CreateGroupsForIncentivePairs(s.Ctx, &s.App.AppKeepers)
+	cacheCtx, write := s.Ctx.CacheContext()
+	err = v20.CreateGroupsForIncentivePairs(cacheCtx, &s.App.AppKeepers)
 	if expectedError != nil {
 		s.Require().Error(err)
 		s.Require().ErrorIs(expectedError, err)
 		return
 	}
+
+	// Only write cache context on success since our test cases depend on each other.
+	// Persisting it after errors will cause the next test to fail.
+	write()
 
 	s.Require().NoError(err)
 
