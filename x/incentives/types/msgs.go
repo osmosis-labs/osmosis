@@ -177,7 +177,7 @@ func (m MsgCreateGroup) ValidateBasic() error {
 	}
 
 	// Temporarily disable non perpetual group creation
-	if m.NumEpochsPaidOver != 0 {
+	if m.NumEpochsPaidOver != PerpetualNumEpochsPaidOver {
 		return errors.New("non-perpetual group creation is disabled")
 	}
 
