@@ -58,6 +58,7 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 
 		// If upcoming, skip.
 		if !groupGauge.IsActiveGauge(ctx.BlockTime()) {
+			ctx.Logger().Debug(fmt.Sprintf("Group %d is not active, skipping", group.GroupGaugeId), "height", ctx.BlockHeight())
 			continue
 		}
 
@@ -77,8 +78,11 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 			if err = k.handleGroupPostDistribute(ctx, *groupGauge, coinsToDistribute); err != nil {
 				return err
 			}
+			ctx.Logger().Debug(fmt.Sprintf("Group %d has no coins to distribute, skipping", group.GroupGaugeId), "height", ctx.BlockHeight())
 			continue
 		}
+
+		ctx.Logger().Debug(fmt.Sprintf("Distributing total amount %s from group %d", coinsToDistribute, group.GroupGaugeId), "height", ctx.BlockHeight())
 
 		// We track this for distributing all the remaining amount in the last
 		// gauge without leaving truncation dust.
@@ -119,9 +123,11 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 					// Assumption we are making: no gauge in the group outlives the group.
 					return err
 				}
+				ctx.Logger().Debug(fmt.Sprintf("Distributing %s from group %d to gauge %d", coinsToDistribute, group.GroupGaugeId, distrRecord.GaugeId), "height", ctx.BlockHeight())
 				break
 			}
 
+			ctx.Logger().Debug(fmt.Sprintf("Distributing %s from group %d to gauge %d", coinsToDistribute, group.GroupGaugeId, distrRecord.GaugeId), "height", ctx.BlockHeight())
 			err = k.addToGaugeRewards(ctx, currentGaugeCoins, distrRecord.GaugeId)
 			if err != nil {
 				// We error in this case instead of silently skipping because AddToGaugeRewards should never fail
@@ -139,6 +145,8 @@ func (k Keeper) AllocateAcrossGauges(ctx sdk.Context, activeGroups []types.Group
 		if err = k.handleGroupPostDistribute(ctx, *groupGauge, coinsToDistribute); err != nil {
 			return err
 		}
+
+		ctx.Logger().Debug(fmt.Sprintf("Finished distributing from group %d and updated it", group.GroupGaugeId), "height", ctx.BlockHeight())
 	}
 
 	return nil
