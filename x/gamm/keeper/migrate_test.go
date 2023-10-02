@@ -1071,7 +1071,7 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			}
 			s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, originalDistrInfo)
 
-			// This method used to change the distribution records and now no longer does.
+			// CreateCanonicalConcentratedLiquidityPoolAndMigration is used to change the distribution records and now no longer does.
 			// We take the distribution records before execution to ensure it is not changed.
 			distrInfoPre := s.App.PoolIncentivesKeeper.GetDistrInfo(s.Ctx)
 
