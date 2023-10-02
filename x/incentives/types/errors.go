@@ -4,6 +4,7 @@ import (
 	fmt "fmt"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 )
 
 var (
@@ -77,6 +78,14 @@ type GroupTotalWeightZeroError struct {
 
 func (e GroupTotalWeightZeroError) Error() string {
 	return fmt.Sprintf("Group with ID %d has total weight of zero", e.GroupID)
+}
+
+type InvalidGaugeTypeError struct {
+	GaugeType lockuptypes.LockQueryType
+}
+
+func (e InvalidGaugeTypeError) Error() string {
+	return fmt.Sprintf("invalid gauge type: %s", e.GaugeType)
 }
 
 type NoVolumeSinceLastSyncError struct {

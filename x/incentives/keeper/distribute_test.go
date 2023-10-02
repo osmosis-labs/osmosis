@@ -2052,7 +2052,7 @@ func (s *KeeperTestSuite) TestCreateGroupsAndAllocate_GroupRefetchingInAllocate(
 	s.Require().NoError(err)
 
 	// Increase the volume from creation time. Otherwise, the group will not be allocated and allocation would be a no-op.
-	s.increaseVolumeForPools([]uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID}, []osmomath.Int{defaultVolume, defaultVolume})
+	s.IncreaseVolumeForPools([]uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID}, []osmomath.Int{defaultVolume, defaultVolume})
 
 	// Fetch the group
 	group, err := s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, groupGaugeID)
@@ -2063,7 +2063,7 @@ func (s *KeeperTestSuite) TestCreateGroupsAndAllocate_GroupRefetchingInAllocate(
 
 	// Increase the volume.
 	// Note that the increase is equal between pools.
-	s.increaseVolumeForPools([]uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID}, []osmomath.Int{defaultVolume, defaultVolume})
+	s.IncreaseVolumeForPools([]uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID}, []osmomath.Int{defaultVolume, defaultVolume})
 
 	// Now, force set the total weight of the input group to zero to make sure that is is refetched after synching
 	group.InternalGaugeInfo.TotalWeight = osmomath.ZeroInt()

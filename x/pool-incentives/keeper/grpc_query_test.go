@@ -8,8 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
+	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 )
@@ -159,15 +158,11 @@ func (s *KeeperTestSuite) TestLockableDurations() {
 
 func (s *KeeperTestSuite) TestIncentivizedPools() {
 	for _, tc := range []struct {
-		desc                   string
-		poolCreated            bool
-		weights                []osmomath.Int
-		clPoolWithGauge        bool
-		clGaugeWeight          osmomath.Int
-		perpetual              bool
-		nonPerpetual           bool
-		setupPoolMigrationLink bool
-		expectedRecordLength   int
+		desc                     string
+		poolCreated              bool
+		weights                  []osmomath.Int
+		setupPerpetualGroupGauge bool
+		expectedRecordLength     int
 	}{
 		{
 			desc:                 "No pool exist",
@@ -178,39 +173,15 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 		{
 			desc:                 "Normal case",
 			poolCreated:          true,
-			weights:              []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
-			expectedRecordLength: 3,
+			weights:              []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300), osmomath.NewInt(400)},
+			expectedRecordLength: 4, // three for gamm pool, one for cl pool
 		},
 		{
-			desc:                 "Perpetual",
-			poolCreated:          true,
-			weights:              []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
-			perpetual:            true,
-			expectedRecordLength: 3,
-		},
-		{
-			desc:                 "Non Perpetual",
-			poolCreated:          true,
-			weights:              []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
-			nonPerpetual:         true,
-			expectedRecordLength: 0,
-		},
-		{
-			desc:                 "Concentrated case, no pool migration link",
-			poolCreated:          true,
-			clPoolWithGauge:      true,
-			clGaugeWeight:        osmomath.NewInt(400),
-			weights:              []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
-			expectedRecordLength: 3, // Note we expect 3 instead of 4 here, since the pool migration link is not setup.
-		},
-		{
-			desc:                   "Concentrated case, setup pool migration link",
-			poolCreated:            true,
-			clPoolWithGauge:        true,
-			clGaugeWeight:          osmomath.NewInt(400),
-			weights:                []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300)},
-			setupPoolMigrationLink: true,
-			expectedRecordLength:   4,
+			desc:                     "Perpetual Group Gauge",
+			poolCreated:              true,
+			weights:                  []osmomath.Int{osmomath.NewInt(100), osmomath.NewInt(200), osmomath.NewInt(300), osmomath.NewInt(400), osmomath.NewInt(500)},
+			setupPerpetualGroupGauge: true,
+			expectedRecordLength:     6, // three for gamm pool, one for cl pool, one for group gauge pointing to gamm pool, one for group gauge pointing to cl pool
 		},
 	} {
 		tc := tc
@@ -236,55 +207,46 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 
 				var distRecords []types.DistrRecord
 
-				// Note we set up gauges prior to creating the cl pool, otherwise the cl pool will have no gauge to overwrite, and we cannot verify that it works as expected.
-				for i := 0; i < len(lockableDurations); i++ {
+				var i int
+				for i < len(lockableDurations) {
+					// Add distribution records for balancer pool gauges
 					gaugeId, err := keeper.GetPoolGaugeId(s.Ctx, balancerPoolId, lockableDurations[i])
 					s.Require().NoError(err)
 					distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugeId, Weight: tc.weights[i]})
-
-					if tc.perpetual {
-						gaugePerpetualId, err := s.App.IncentivesKeeper.CreateGauge(
-							s.Ctx, isPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
-								LockQueryType: lockuptypes.ByDuration,
-								Denom:         "stake",
-								Duration:      time.Hour,
-							}, time.Now(), 1, 0)
-						s.Require().NoError(err)
-						distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugePerpetualId, Weight: osmomath.NewInt(300)})
-					}
-					if tc.nonPerpetual {
-						gaugeNonPerpetualId, err := s.App.IncentivesKeeper.CreateGauge(
-							s.Ctx, notPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
-								LockQueryType: lockuptypes.ByDuration,
-								Denom:         "stake",
-								Duration:      time.Hour,
-							}, time.Now(), 1, 0)
-						s.Require().NoError(err)
-						distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugeNonPerpetualId, Weight: osmomath.NewInt(100)})
-					}
-
-					// Sort in ascending order of gaugeId
-					sort.Slice(distRecords[:], func(i, j int) bool {
-						return distRecords[i].GaugeId < distRecords[j].GaugeId
-					})
-
-					// Update records and ensure that non-perpetuals pot cannot get rewards.
-					_ = keeper.UpdateDistrRecords(s.Ctx, distRecords...)
+					i++
 				}
 
-				// Create a concentrated pool with a gauge if required.
-				var clPool cltypes.ConcentratedPoolExtension
-				if tc.clPoolWithGauge {
-					clPool = s.PrepareConcentratedPool()
-				}
+				// Create a concentrated pool
+				clPool := s.PrepareConcentratedPool()
+				epochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
 
-				// Create a link between the balancer pool and the cl pool if required.
-				if tc.setupPoolMigrationLink {
-					record := gammmigration.BalancerToConcentratedPoolLink{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()}
-					err := s.App.GAMMKeeper.ReplaceMigrationRecords(s.Ctx, []gammmigration.BalancerToConcentratedPoolLink{record})
+				// Add distribution records for the single concentrated pool gauge
+				gaugeId, err := keeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), epochDuration)
+				s.Require().NoError(err)
+				distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugeId, Weight: tc.weights[i]})
+				i++
+
+				groupPoolIDs := []uint64{balancerPoolId, clPool.GetId()}
+
+				if tc.setupPerpetualGroupGauge {
+					// If test case requires, create a perpetual group gauge with both balancer and cl pool
+					s.SetupVolumeForPools(groupPoolIDs, []osmomath.Int{osmomath.NewInt(3000000), osmomath.NewInt(3000000)}, map[uint64]osmomath.Int{})
+					groupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, sdk.Coins{}, incentivestypes.PerpetualNumEpochsPaidOver, s.TestAccs[0], groupPoolIDs)
 					s.Require().NoError(err)
+					// Add this group gauge to the distribution records
+					distRecords = append(distRecords, types.DistrRecord{GaugeId: groupGaugeID, Weight: tc.weights[i]})
 				}
+
+				// Sort in distribution records in ascending order of gaugeId
+				sort.Slice(distRecords[:], func(i, j int) bool {
+					return distRecords[i].GaugeId < distRecords[j].GaugeId
+				})
+
+				// Update records (store the records in state)
+				err = keeper.UpdateDistrRecords(s.Ctx, distRecords...)
+				s.Require().NoError(err)
 			}
+
 			// System under test.
 			res, err := queryClient.IncentivizedPools(context.Background(), &types.QueryIncentivizedPoolsRequest{})
 			s.Require().NoError(err)

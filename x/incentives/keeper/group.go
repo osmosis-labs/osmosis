@@ -1,12 +1,15 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 )
 
 var emptyCoins = sdk.NewCoins()
@@ -194,4 +197,60 @@ func (k Keeper) chargeGroupCreationFeeIfNotWhitelisted(ctx sdk.Context, sender s
 		return false, err
 	}
 	return true, nil
+}
+
+// GetPoolIdsAndDurationsFromGaugeRecords retrieves the pool IDs and their associated durations from a group's gauge records
+// It iterates over each record and retrieves the pool ID and duration.
+// The function returns two slices: one for the pool IDs and one for the durations. The indices in these slices correspond to each other.
+// If there is an error retrieving the pool ID and duration for any gauge record, the function returns an error.
+func (k Keeper) GetPoolIdsAndDurationsFromGaugeRecords(ctx sdk.Context, gaugeRecords []types.InternalGaugeRecord) ([]uint64, []time.Duration, error) {
+	poolIds := make([]uint64, 0, len(gaugeRecords))
+	durations := make([]time.Duration, 0, len(gaugeRecords))
+	for _, gaugeRecord := range gaugeRecords {
+		poolId, gaugeDuration, err := k.GetPoolIdAndDurationFromGaugeRecord(ctx, gaugeRecord)
+		if err != nil {
+			return nil, nil, err
+		}
+		poolIds = append(poolIds, poolId)
+		durations = append(durations, gaugeDuration)
+	}
+	return poolIds, durations, nil
+}
+
+// GetPoolIdAndDurationFromGaugeRecord retrieves the pool ID and duration associated with a given gauge record.
+// The function first retrieves the gauge associated with the gauge record.
+// If the gauge's lock query type is NoLock, the function sets the gauge duration to the epoch duration.
+// Otherwise, it sets the gauge duration to the longest lockable duration.
+// The function then retrieves the pool ID associated with the gauge ID and the gauge duration.
+// The function returns the pool ID and the gauge duration.
+// If there is an error retrieving the gauge, the longest lockable duration, or the pool ID, the function returns an error.
+func (k Keeper) GetPoolIdAndDurationFromGaugeRecord(ctx sdk.Context, gaugeRecord types.InternalGaugeRecord) (uint64, time.Duration, error) {
+	gauge, err := k.GetGaugeByID(ctx, gaugeRecord.GaugeId)
+	if err != nil {
+		return 0, 0, err
+	}
+	gaugeType := gauge.DistributeTo.LockQueryType
+	gaugeDuration := time.Duration(0)
+
+	if gaugeType == lockuptypes.NoLock {
+		// If NoLock, it's a CL pool, so we set the "lockableDuration" to epoch duration
+		gaugeDuration = k.GetEpochInfo(ctx).Duration
+	} else if gaugeType == lockuptypes.ByDuration {
+		// Otherwise, it's a balancer pool so we set it to longest lockable duration
+		// TODO: add support for CW pools once there's clarity around default gauge type.
+		// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6403
+		gaugeDuration, err = k.pik.GetLongestLockableDuration(ctx)
+		if err != nil {
+			return 0, 0, err
+		}
+	} else {
+		return 0, 0, types.InvalidGaugeTypeError{GaugeType: gaugeType}
+	}
+
+	// Retrieve pool ID using GetPoolIdFromGaugeId(gaugeId, lockableDuration)
+	poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeRecord.GaugeId, gaugeDuration)
+	if err != nil {
+		return 0, 0, err
+	}
+	return poolId, gaugeDuration, nil
 }
