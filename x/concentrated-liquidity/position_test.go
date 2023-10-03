@@ -2352,7 +2352,9 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 			}
 
 			// For each position that is in range, add spread rewards and incentives to their respective addresses
-			totalExpectedRewards := s.fundIncentiveAndSpreadRewardsAddr(s.Ctx, pool.GetIncentivesAddress(), pool.GetSpreadRewardsAddress(), tc.inRangePositions)
+			totalSpreadRewards := s.fundSpreadRewardsAddr(s.Ctx, pool.GetSpreadRewardsAddress(), tc.inRangePositions)
+			totalIncentives := s.fundIncentiveAddr(s.Ctx, pool.GetIncentivesAddress(), tc.inRangePositions)
+			totalExpectedRewards := totalSpreadRewards.Add(totalIncentives...)
 
 			// Add spread rewards and incentives to the pool
 			s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), oldOwner, apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
@@ -2446,7 +2448,9 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 				}
 
 				// Test that adding incentives/spread rewards and then claiming returns it to the new owner, and the old owner does not get anything
-				totalExpectedRewards = s.fundIncentiveAndSpreadRewardsAddr(s.Ctx, pool.GetIncentivesAddress(), pool.GetSpreadRewardsAddress(), tc.inRangePositions)
+				totalSpreadRewards := s.fundSpreadRewardsAddr(s.Ctx, pool.GetSpreadRewardsAddress(), tc.inRangePositions)
+				totalIncentives := s.fundIncentiveAddr(s.Ctx, pool.GetIncentivesAddress(), tc.inRangePositions)
+				totalExpectedRewards := totalSpreadRewards.Add(totalIncentives...)
 				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), oldOwner, apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
 				s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
 				for _, positionId := range tc.positionsToTransfer {
@@ -2487,16 +2491,44 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 	}
 }
 
-func (s *KeeperTestSuite) fundIncentiveAndSpreadRewardsAddr(ctx sdk.Context, incentivesAddress, spreadRewardsAddress sdk.AccAddress, positionIds []uint64) (totalExpectedRewards sdk.Coins) {
+// fundIncentiveAddr funds the incentive address for each position ID in the provided slice.
+// It calculates the expected incentives based on uptime growth and adds these incentives to the total expected rewards.
+// It also determines how much position will forfeit and funds this amount to the incentive address.
+// The function returns the total expected rewards after funding all the positions.
+//
+// Parameters:
+// - ctx: The context of the operation.
+// - incentivesAddress: The address to which the incentives will be funded.
+// - positionIds: A slice of position IDs for which the incentives will be funded.
+//
+// Returns:
+// - totalExpectedRewards: The total expected rewards after funding all the positions.
+func (s *KeeperTestSuite) fundIncentiveAddr(ctx sdk.Context, incentivesAddress sdk.AccAddress, positionIds []uint64) (totalExpectedRewards sdk.Coins) {
 	expectedUptimes := getExpectedUptimes()
-	for _, positionId := range positionIds {
+	for i := 0; i < len(positionIds); i++ {
 		coinsToFundForIncentivesToUser := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier)
 		totalExpectedRewards = totalExpectedRewards.Add(coinsToFundForIncentivesToUser...)
 		s.FundAcc(incentivesAddress, coinsToFundForIncentivesToUser)
 		// Determine how much position will forfeit and fund
 		coinsToFundForForefeitToPool := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24*14, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier))
 		s.FundAcc(incentivesAddress, coinsToFundForForefeitToPool)
+	}
+	return
+}
 
+// fundSpreadRewardsAddr funds the spread rewards address for each position ID in the provided slice.
+// It calculates the expected amount to claim based on the position's liquidity and adds these rewards to the total expected rewards.
+// The function then funds the spread rewards account with the total expected rewards.
+//
+// Parameters:
+// - ctx: The context of the operation.
+// - spreadRewardsAddress: The address to which the spread rewards will be funded.
+// - positionIds: A slice of position IDs for which the spread rewards will be funded.
+//
+// Returns:
+// - totalExpectedRewards: The total expected rewards after funding all the positions.
+func (s *KeeperTestSuite) fundSpreadRewardsAddr(ctx sdk.Context, spreadRewardsAddress sdk.AccAddress, positionIds []uint64) (totalExpectedRewards sdk.Coins) {
+	for _, positionId := range positionIds {
 		position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(ctx, positionId)
 		s.Require().NoError(err)
 

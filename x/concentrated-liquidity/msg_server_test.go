@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
@@ -565,7 +566,7 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			positionIds:                    []uint64{DefaultPositionId},
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          1, // 1 for transfer, 1 for collect spread rewards
+			expectedMessageEvents:          1, // 1 for transfer
 		},
 		"single position ID with claimable incentives": {
 			positionIds:                    []uint64{DefaultPositionId},
@@ -638,39 +639,17 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			}
 
 			if tc.hasIncentivesToClaim {
-				for _, positionId := range tc.positionIds {
-					// Determine how much position will claim and fund
-					coinsToFundForIncentivesToUser := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier)
-					s.FundAcc(pool.GetIncentivesAddress(), coinsToFundForIncentivesToUser)
-					// Determine how much position will forfeit and fund
-					coinsToFundForForefeitToPool := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24*14, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier))
-					s.FundAcc(pool.GetIncentivesAddress(), coinsToFundForForefeitToPool)
-					// Add uptime growth to the pool that targets the position
-					position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
-					s.Require().NoError(err)
-					// only add to uptime growth once for simplicity
-					if positionId == tc.positionIds[0] {
-						s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), s.TestAccs[0], position.LowerTick+1, position.LowerTick, position.UpperTick, expectedUptimes.hundredTokensMultiDenom)
-					}
-				}
-				// Move block time forward to allow for claiming incentives
-				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
+				s.fundIncentiveAddr(s.Ctx, pool.GetIncentivesAddress(), tc.positionIds)
+				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), s.TestAccs[0], apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
 			}
 
 			if tc.hasSpreadRewardsToClaim {
-				for _, positionId := range tc.positionIds {
-					// Utilize the position liquidity value to determine how much spread rewards the position will claim
-					position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
-					s.Require().NoError(err)
-					expectedAmountToClaim := position.Liquidity.MulInt(osmomath.NewInt(10)).TruncateInt()
-					// Fund the spread rewards account with the expected rewards and add to the pool's accum
-					s.FundAcc(pool.GetSpreadRewardsAddress(), sdk.NewCoins(sdk.NewCoin(ETH, expectedAmountToClaim)))
-					// only add to spread rewards accum once for simplicity
-					if positionId == tc.positionIds[0] {
-						s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
-					}
-				}
+				s.fundSpreadRewardsAddr(s.Ctx, pool.GetSpreadRewardsAddress(), tc.positionIds)
+				s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
 			}
+
+			// Move block time forward one day to claim and forfeit part of the incentives.
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
 
 			if !tc.isLastPositionInPool {
 				// Setup a far out of range position that we do not touch, so when we transfer positions we do not transfer the last position in the pool.
