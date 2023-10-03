@@ -671,78 +671,17 @@ func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 	return nil
 }
 
-// // transferPositions transfers the ownership of a set of positions from one account to another.
-// // It first withdraws all the positions from the sender's account, accumulating the total amount of tokens withdrawn.
-// // Then, it sends the total withdrawn tokens to the recipient's account.
-// // Finally, it recreates the positions under the recipient's account, maintaining the same properties as the original positions.
-// //
-// // Parameters:
-// // - ctx: The context of the operation.
-// // - positionIds: A slice of position IDs to be transferred.
-// // - sender: The account address of the current owner of the positions.
-// // - recipient: The account address of the new owner of the positions.
-// //
-// // Returns:
-// // - A slice of new position IDs created under the recipient's account.
-// // - An error if any operation fails, such as withdrawing a position, sending coins, or creating a new position.
-// func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender sdk.AccAddress, recipient sdk.AccAddress) ([]uint64, error) {
-// 	if !osmoassert.Uint64ArrayValuesAreUnique(positionIds) {
-// 		return nil, types.DuplicatePositionIdsError{PositionIds: positionIds}
-// 	}
-
-// 	withdrawnPositions := []PositionWithWithdrawnAmount{}
-// 	totalCoinsWithdrawn := sdk.NewCoins()
-
-// 	// We first withdraw all the positions, and store the position and withdraw amounts.
-// 	// This allows us to do a single bank send at the end, which is more efficient.
-// 	for _, positionId := range positionIds {
-// 		position, err := k.GetPosition(ctx, positionId)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		// Get the pool from the position so we know what denoms we are dealing with.
-// 		pool, err := k.GetConcentratedPoolById(ctx, position.PoolId)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		// Withdraw the entire position.
-// 		// This also acts as a pseudo owner check, since if the sender does not match the position owner, the withdraw will fail.
-// 		amt0, amt1, err := k.WithdrawPosition(ctx, sender, positionId, position.Liquidity)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		withdrawnCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amt0), sdk.NewCoin(pool.GetToken1(), amt1))
-// 		totalCoinsWithdrawn = totalCoinsWithdrawn.Add(withdrawnCoins...)
-
-// 		withdrawnPositions = append(withdrawnPositions, PositionWithWithdrawnAmount{
-// 			Position:       position,
-// 			CoinsWithdrawn: withdrawnCoins,
-// 		})
-// 	}
-
-// 	// Send the total withdrawn tokens to the recipient.
-// 	err := k.bankKeeper.SendCoins(ctx, sender, recipient, totalCoinsWithdrawn)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	// Recreate the positions with the recipient as the owner.
-// 	newPositionIds := []uint64{}
-// 	for _, wp := range withdrawnPositions {
-// 		newPosition, err := k.CreatePosition(ctx, wp.Position.PoolId, recipient, wp.CoinsWithdrawn, osmomath.ZeroInt(), osmomath.ZeroInt(), wp.Position.LowerTick, wp.Position.UpperTick)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		newPositionIds = append(newPositionIds, newPosition.ID)
-// 	}
-
-// 	return newPositionIds, nil
-// }
-
+// transferPositions transfers ownership of a set of positions from a sender to a recipient.
+// It first checks if the provided position IDs are unique. If not, it returns a DuplicatePositionIdsError.
+// For each position ID, it retrieves the corresponding position and checks if the sender is the owner of the position.
+// If the sender is not the owner, it returns an error.
+// It then checks if the position has an active underlying lock, and if so, returns an error.
+// It then collects any outstanding incentives and rewards for the position, deletes the KVStore entries for the position,
+// and restores the position under the recipient's account.
+// If any of these operations fail, it returns the corresponding error.
+// If all operations succeed, it returns nil.
 func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender sdk.AccAddress, recipient sdk.AccAddress) error {
+	// All position IDs in the array must be unique.
 	if !osmoassert.Uint64ArrayValuesAreUnique(positionIds) {
 		return types.DuplicatePositionIdsError{PositionIds: positionIds}
 	}
