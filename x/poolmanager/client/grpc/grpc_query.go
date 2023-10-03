@@ -21,6 +21,16 @@ type Querier struct {
 
 var _ queryproto.QueryServer = Querier{}
 
+func (q Querier) TotalVolumeForPool(grpcCtx context.Context,
+	req *queryproto.TotalVolumeForPoolRequest,
+) (*queryproto.TotalVolumeForPoolResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.TotalVolumeForPool(ctx, *req)
+}
+
 func (q Querier) TotalPoolLiquidity(grpcCtx context.Context,
 	req *queryproto.TotalPoolLiquidityRequest,
 ) (*queryproto.TotalPoolLiquidityResponse, error) {
@@ -79,6 +89,16 @@ func (q Querier) NumPools(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.NumPools(ctx, *req)
+}
+
+func (q Querier) EstimateTradeBasedOnPriceImpact(grpcCtx context.Context,
+	req *queryproto.EstimateTradeBasedOnPriceImpactRequest,
+) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.EstimateTradeBasedOnPriceImpact(ctx, *req)
 }
 
 func (q Querier) EstimateSwapExactAmountOutWithPrimitiveTypes(grpcCtx context.Context,

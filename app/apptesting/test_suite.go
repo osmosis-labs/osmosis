@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -596,4 +597,35 @@ func GenerateTestAddrs() (string, string) {
 	validAddr := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid").String()
 	return validAddr, invalidAddr
+}
+
+// sets up the volume for the pools in the group
+// mutates poolIDToVolumeMap
+func (s *KeeperTestHelper) SetupVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int, poolIDToVolumeMap map[uint64]math.Int) {
+	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+
+	s.Require().Equal(len(poolIDs), len(volumesForEachPool))
+	for i := 0; i < len(poolIDs); i++ {
+		currentPoolID := poolIDs[i]
+
+		currentVolume := volumesForEachPool[i]
+
+		fmt.Printf("currentVolume %d %s\n", i, currentVolume)
+
+		// Retrieve the existing volume to add to it.
+		existingVolume := s.App.PoolManagerKeeper.GetOsmoVolumeForPool(s.Ctx, currentPoolID)
+
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, currentPoolID, sdk.NewCoins(sdk.NewCoin(bondDenom, existingVolume.Add(currentVolume))))
+
+		if existingVolume, ok := poolIDToVolumeMap[currentPoolID]; ok {
+			poolIDToVolumeMap[currentPoolID] = existingVolume.Add(currentVolume)
+		} else {
+			poolIDToVolumeMap[currentPoolID] = currentVolume
+		}
+	}
+}
+
+// initializes or increases the volumes for the given pools
+func (s *KeeperTestHelper) IncreaseVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int) {
+	s.SetupVolumeForPools(poolIDs, volumesForEachPool, map[uint64]osmomath.Int{})
 }

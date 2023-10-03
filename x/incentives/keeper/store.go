@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -116,6 +117,57 @@ func (k Keeper) SetGroup(ctx sdk.Context, group types.Group) {
 // GetAllGroupGauges gets all the groupGauges that is in state.
 func (k Keeper) GetAllGroups(ctx sdk.Context) ([]types.Group, error) {
 	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPrefixGroup, k.ParseGroupFromBz)
+}
+
+// GetAllGroupsGauges iterates through all groups, sequentially pulls the gauges from each, and returns just the gauges.
+func (k Keeper) GetAllGroupsGauges(ctx sdk.Context) ([]types.Gauge, error) {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixGroup)
+	iter := prefixStore.Iterator(nil, nil)
+
+	var gauges []types.Gauge
+	for ; iter.Valid(); iter.Next() {
+		group, err := k.ParseGroupFromBz(iter.Value())
+		if err != nil {
+			iter.Close()
+			panic(fmt.Errorf("invalid group key (%s): %v", string(iter.Key()), err))
+		}
+
+		gauge, err := k.GetGaugeByID(ctx, group.GroupGaugeId)
+		if err != nil {
+			iter.Close()
+			return nil, err
+		}
+		gauges = append(gauges, *gauge)
+	}
+	return gauges, nil
+}
+
+// GetAllGroupsWithGauge iterates through all groups, sequentially pulls the gauges from each, and returns the groups with their associated gauge.
+func (k Keeper) GetAllGroupsWithGauge(ctx sdk.Context) ([]types.GroupsWithGauge, error) {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixGroup)
+	iter := prefixStore.Iterator(nil, nil)
+
+	var groupsWithGauge []types.GroupsWithGauge
+	for ; iter.Valid(); iter.Next() {
+		group, err := k.ParseGroupFromBz(iter.Value())
+		if err != nil {
+			iter.Close()
+			panic(fmt.Errorf("invalid group key (%s): %v", string(iter.Key()), err))
+		}
+
+		gauge, err := k.GetGaugeByID(ctx, group.GroupGaugeId)
+		if err != nil {
+			iter.Close()
+			return nil, err
+		}
+		groupsWithGauge = append(groupsWithGauge, types.GroupsWithGauge{
+			Group: group,
+			Gauge: *gauge,
+		})
+	}
+	return groupsWithGauge, nil
 }
 
 func (k Keeper) ParseGroupFromBz(bz []byte) (group types.Group, err error) {

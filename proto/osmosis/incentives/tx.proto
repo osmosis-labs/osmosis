@@ -13,6 +13,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v19/x/incentives/types";
 service Msg {
   rpc CreateGauge(MsgCreateGauge) returns (MsgCreateGaugeResponse);
   rpc AddToGauge(MsgAddToGauge) returns (MsgAddToGaugeResponse);
+  rpc CreateGroup(MsgCreateGroup) returns (MsgCreateGroupResponse);
 }
 
 // MsgCreateGauge creates a gague to distribute rewards to users
@@ -72,3 +73,25 @@ message MsgAddToGauge {
   ];
 }
 message MsgAddToGaugeResponse {}
+
+// MsgCreateGroup creates a group to distribute rewards to a group of pools
+message MsgCreateGroup {
+  option (amino.name) = "osmosis/incentives/create-group";
+
+  // coins are the provided coins that the group will distribute
+  repeated cosmos.base.v1beta1.Coin coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  // num_epochs_paid_over is the number of epochs distribution will be completed
+  // in. 0 means it's perpetual
+  uint64 num_epochs_paid_over = 2;
+  // owner is the group owner's address
+  string owner = 3 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  // pool_ids are the IDs of pools that the group is comprised of
+  repeated uint64 pool_ids = 4;
+}
+message MsgCreateGroupResponse {
+  // group_id is the ID of the group that is created from this msg
+  uint64 group_id = 1;
+}

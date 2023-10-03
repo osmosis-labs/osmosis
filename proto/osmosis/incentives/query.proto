@@ -8,6 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
+import "osmosis/incentives/group.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v19/x/incentives/types";
 
@@ -19,7 +20,6 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/module_to_distribute_coins";
   }
-
   // GaugeByID returns gauges by their respective ID
   rpc GaugeByID(GaugeByIDRequest) returns (GaugeByIDResponse) {
     option (google.api.http).get =
@@ -51,7 +51,6 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/upcoming_gauges_per_denom";
   }
-
   // RewardsEst returns an estimate of the rewards from now until a specified
   // time in the future The querier either provides an address or a set of locks
   // for which they want to find the associated rewards
@@ -65,6 +64,28 @@ service Query {
       returns (QueryLockableDurationsResponse) {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/lockable_durations";
+  }
+  // AllGroups returns all groups
+  rpc AllGroups(QueryAllGroupsRequest) returns (QueryAllGroupsResponse) {
+    option (google.api.http).get = "/osmosis/incentives/v1beta1/all_groups";
+  }
+  // AllGroupsGauges returns all group gauges
+  rpc AllGroupsGauges(QueryAllGroupsGaugesRequest)
+      returns (QueryAllGroupsGaugesResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/all_groups_gauges";
+  }
+  // AllGroupsWithGauge returns all groups with their group gauge
+  rpc AllGroupsWithGauge(QueryAllGroupsWithGaugeRequest)
+      returns (QueryAllGroupsWithGaugeResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/all_groups_with_gauge";
+  }
+  // GroupByGroupGaugeID returns a group given its group gauge ID
+  rpc GroupByGroupGaugeID(QueryGroupByGroupGaugeIDRequest)
+      returns (QueryGroupByGroupGaugeIDResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/group_by_group_gauge_id/{id}";
   }
 }
 
@@ -172,4 +193,25 @@ message QueryLockableDurationsResponse {
     (gogoproto.stdduration) = true,
     (gogoproto.moretags) = "yaml:\"lockable_durations\""
   ];
+}
+
+message QueryAllGroupsRequest {}
+message QueryAllGroupsResponse {
+  repeated Group groups = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryAllGroupsGaugesRequest {}
+message QueryAllGroupsGaugesResponse {
+  repeated Gauge gauges = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryAllGroupsWithGaugeRequest {}
+message QueryAllGroupsWithGaugeResponse {
+  repeated GroupsWithGauge groups_with_gauge = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+message QueryGroupByGroupGaugeIDRequest { uint64 id = 1; }
+message QueryGroupByGroupGaugeIDResponse {
+  Group group = 1 [ (gogoproto.nullable) = false ];
 }

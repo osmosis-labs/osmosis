@@ -10,7 +10,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/coins"
+	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
@@ -1349,6 +1349,7 @@ func withGaugeDistrType(gauge types.Gauge, gaugeType lockuptypes.LockQueryType) 
 }
 
 func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
+	const clPoolID uint64 = 1
 	tests := map[string]struct {
 		groupToSync types.Group
 
@@ -1409,6 +1410,30 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 
 			expectedError: types.CumulativeVolumeDecreasedError{PoolId: uint64(2), PreviousVolume: osmomath.NewInt(200), NewVolume: osmomath.NewInt(100)},
 		},
+
+		"total weight is zero due to no records": {
+			groupToSync: types.Group{
+				GroupGaugeId:      defaultGroupGaugeId,
+				InternalGaugeInfo: types.InternalGaugeInfo{},
+				SplittingPolicy:   types.ByVolume,
+			},
+			updatedPoolVolumes: []osmomath.Int{
+				osmomath.ZeroInt(),
+				osmomath.ZeroInt(),
+			},
+
+			expectedError: types.GroupTotalWeightZeroError{GroupID: defaultGroupGaugeId},
+		},
+
+		"no volume since the last sync": {
+			groupToSync: deepCopyGroup(defaultGroup),
+			updatedPoolVolumes: []osmomath.Int{
+				defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight,
+				defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight,
+			},
+
+			expectedError: types.NoVolumeSinceLastSyncError{PoolID: clPoolID},
+		},
 	}
 
 	for name, tc := range tests {
@@ -1418,12 +1443,13 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 
 			// Prepare pools so gauges and pool ids are set in state
 			clPool := s.PrepareConcentratedPool()
+			s.Require().Equal(clPoolID, clPool.GetId())
 			balPoolId := s.PrepareBalancerPool()
 
 			poolIds := []uint64{clPool.GetId(), balPoolId}
 
 			// Update cumulative volumes for pools
-			s.setupVolumes(poolIds, tc.updatedPoolVolumes)
+			s.overwriteVolumes(poolIds, tc.updatedPoolVolumes)
 
 			// Save original input to help with mutation-related assertions
 			originalGroup := deepCopyGroup(tc.groupToSync)
@@ -1441,12 +1467,12 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 				s.Require().ErrorContains(tc.expectedError, err.Error())
 
 				// Ensure original group is not mutated
-				s.Require().Equal(originalGroup, tc.groupToSync)
+				s.Require().Equal(originalGroup.String(), tc.groupToSync.String())
 
 				// Ensure group is unchanged in state
 				groupInState, err := ik.GetGroupByGaugeID(s.Ctx, tc.groupToSync.GroupGaugeId)
 				s.Require().NoError(err)
-				s.Require().Equal(tc.groupToSync, groupInState)
+				s.Require().Equal(tc.groupToSync.String(), groupInState.String())
 
 				return
 			}
@@ -1461,24 +1487,39 @@ func (s *KeeperTestSuite) TestSyncVolumeSplitGroup() {
 }
 
 func (s *KeeperTestSuite) TestSyncGroupWeights() {
+	defaultVolumeOverwrite := []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount}
 	tests := map[string]struct {
-		groupToSync types.Group
+		groupToSync     types.Group
+		volumeOverwrite []osmomath.Int
 
 		expectedSyncedGroup types.Group
 		expectedError       error
 	}{
 		"happy path: valid volume splitting group": {
-			groupToSync: withSplittingPolicy(defaultGroup, types.ByVolume),
+			groupToSync:     withSplittingPolicy(defaultGroup, types.ByVolume),
+			volumeOverwrite: defaultVolumeOverwrite,
 
 			// Note: setup logic runs default setup based on groupToSync's splitting policy.
 			// More involved tests related to syncing logic for specific splitting policies are in their respective tests.
-			expectedSyncedGroup: s.withUpdatedVolumes(defaultGroup, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount}),
+			expectedSyncedGroup: s.withUpdatedVolumes(defaultGroup, defaultVolumeOverwrite),
 			expectedError:       nil,
+		},
+		"no volume since last sync - does not error - fallback to previous weights": {
+			groupToSync: withSplittingPolicy(defaultGroup, types.ByVolume),
+
+			// Note: we set the volume to be equal to the cumulative volume to simulate no volume since last sync.
+			volumeOverwrite: []osmomath.Int{defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight},
+
+			expectedSyncedGroup: withSplittingPolicy(defaultGroup, types.ByVolume),
+
+			// No error occurs, implying that we fall back to the previous weights
+			expectedError: nil,
 		},
 
 		// Error catching
 		"unsupported splitting policy": {
-			groupToSync: withSplittingPolicy(defaultGroup, types.SplittingPolicy(100)),
+			groupToSync:     withSplittingPolicy(defaultGroup, types.SplittingPolicy(100)),
+			volumeOverwrite: defaultVolumeOverwrite,
 
 			expectedError: types.UnsupportedSplittingPolicyError{GroupGaugeId: uint64(5), SplittingPolicy: types.SplittingPolicy(100)},
 		},
@@ -1499,7 +1540,7 @@ func (s *KeeperTestSuite) TestSyncGroupWeights() {
 			// When more are added in the future, setup logic should route to the appropriate setup function here.
 			switch tc.groupToSync.SplittingPolicy {
 			case types.ByVolume:
-				s.setupVolumes(poolIds, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount})
+				s.overwriteVolumes(poolIds, tc.volumeOverwrite)
 			}
 
 			// Save original input to help with mutation-related assertions
@@ -1532,7 +1573,7 @@ func (s *KeeperTestSuite) TestSyncGroupWeights() {
 
 			updatedGroup, err := ik.GetGroupByGaugeID(s.Ctx, tc.groupToSync.GroupGaugeId)
 			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedSyncedGroup, updatedGroup)
+			s.Require().Equal(tc.expectedSyncedGroup.String(), updatedGroup.String())
 		})
 	}
 }
@@ -1583,9 +1624,14 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		defaultGroup      = deepCopyGroup(defaultGroup)
 		singleRecordGroup = deepCopyGroup(singleRecordGroup)
 
+		// Double the volume configuration in poolmanager because we want the current volume to be
+		// updated relative to the existing values in gauge record state.
+		// The current volume is computed = poolmanager cumulative volume - gauge record cumulative volume.
+		two = sdk.NewInt(2)
+
 		// Volume pre-set configurations.
-		balancerOnlyVolumeConfig  = []osmomath.Int{singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, osmomath.ZeroInt()}
-		balancerAndCLVolumeConfig = []osmomath.Int{defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight}
+		balancerOnlyVolumeConfig  = []osmomath.Int{singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight.Mul(two), osmomath.ZeroInt()}
+		balancerAndCLVolumeConfig = []osmomath.Int{defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight.Mul(two), defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight.Mul(two)}
 	)
 
 	// 2 changes: flip the isPerpetual flag and set the number of epochs paid over.
@@ -1633,7 +1679,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			}
 
 			// Divide all coins by remainingEpochs.
-			coins.QuoRawMut(expecteDistributedCoins, int64(remainingEpochs))
+			coinutil.QuoRawMut(expecteDistributedCoins, int64(remainingEpochs))
 		}
 		return expecteDistributedCoins
 	}
@@ -1646,7 +1692,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			for _, underlyingGauge := range group.InternalGaugeInfo.GaugeRecords {
 
 				// calculate expected amount distributed to this gauge
-				expectedDistributedPerGauge := coins.MulDec(expectedAmountDistributedForGroup, underlyingGauge.CurrentWeight.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
+				expectedDistributedPerGauge := coinutil.MulDec(expectedAmountDistributedForGroup, underlyingGauge.CurrentWeight.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
 
 				if oldValue, ok := expectedGaugeDistributionsMap[underlyingGauge.GaugeId]; ok {
 					expectedGaugeDistributionsMap[underlyingGauge.GaugeId] = oldValue.Add(expectedDistributedPerGauge...)
@@ -1758,10 +1804,23 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			volumeToSet: balancerAndCLVolumeConfig,
 		},
 
+		"6: fallback to old weights due to no volume update": {
+			groups: []groupConfig{
+				{
+					group:      singleRecordGroup,
+					groupGauge: defaultPerpetualGauge,
+				},
+			},
+
+			volumeToSet: []osmomath.Int{
+				singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight,
+			},
+		},
+
 		//// skipping
 
 		// skipping on sync failure
-		"6: skipped: synching fails due to no volume set": {
+		"7: skipped: synching fails due to no volume set": {
 			groups: []groupConfig{
 				{
 					group:      defaultGroup,
@@ -1775,7 +1834,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		},
 
 		// skipping on gauge being inactive
-		"7: skipping on gauge being inactive": {
+		"8: skipping on gauge being inactive": {
 			groups: []groupConfig{
 				{
 					group: defaultGroup,
@@ -1791,7 +1850,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 		// skipping because this gauge has no pool associated with it.
 		// we only distributed to internal gauges.
-		"8: associated group gauge is non perpetual and finished": {
+		"9: associated group gauge is non perpetual and finished": {
 			groups: []groupConfig{
 				{
 					group:      groupToInvalidUnderlying,
@@ -1807,7 +1866,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 		///////////////// multi-gauges
 
 		// Note that groups distribute to overlapping gauges.
-		"9: multiple groups with varying number of underlying gauges": {
+		"10: multiple groups with varying number of underlying gauges": {
 			groups: []groupConfig{
 				{
 					group:      singleRecordGroup,
@@ -1819,10 +1878,10 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 				},
 			},
 
-			volumeToSet: []osmomath.Int{defaultGroup.InternalGaugeInfo.GaugeRecords[0].CumulativeWeight, defaultGroup.InternalGaugeInfo.GaugeRecords[1].CumulativeWeight},
+			volumeToSet: balancerAndCLVolumeConfig,
 		},
 
-		"10: skipping one does not fail the other": {
+		"11: skipping one does not fail the other": {
 			groups: []groupConfig{
 				{
 					group: defaultGroup,
@@ -1843,7 +1902,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 		///////////////// error cases
 
-		"11: invalid underlying group gauge (cannot add to finished pool gauge)": {
+		"12: invalid underlying group gauge (cannot add to finished pool gauge)": {
 			groups: []groupConfig{
 				{
 					group:      singleRecordGroup,
@@ -1855,8 +1914,6 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 			expectedError: types.UnexpectedFinishedGaugeError{GaugeId: singleRecordGroup.InternalGaugeInfo.GaugeRecords[0].GaugeId},
 		},
-
-		// TODO: even splitting policy test cases once supported.
 	}
 
 	for name, tc := range tests {
@@ -1906,7 +1963,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 			s.Require().NoError(err)
 
 			// Setup volumes
-			s.setupVolumes([]uint64{clPool.GetId(), balPoolId}, tc.volumeToSet)
+			s.overwriteVolumes([]uint64{clPool.GetId(), balPoolId}, tc.volumeToSet)
 
 			// Compute expected distributions based on test configuration
 			// See function definition for details.
@@ -1941,13 +1998,7 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 
 				if isGroupAndGroupGaugePruningExpected {
 					// Check that the group gauge was deleted
-					s.Require().Error(err)
-					s.Require().ErrorIs(err, types.GaugeNotFoundError{GaugeID: groupConfig.group.GroupGaugeId})
-
-					// Check that the group was deleted
-					_, err = s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, groupConfig.group.GroupGaugeId)
-					s.Require().Error(err)
-					s.Require().ErrorIs(err, types.GroupNotFoundError{GroupGaugeId: groupConfig.group.GroupGaugeId})
+					s.validateGroupNotExists(groupConfig.group.GroupGaugeId)
 				} else {
 					// check that the group gauge distributed epoch updated
 					s.Require().Equal(groupConfig.groupGauge.FilledEpochs+1, groupGauge.FilledEpochs)
@@ -1969,8 +2020,73 @@ func (s *KeeperTestSuite) TestAllocateAcrossGauges() {
 	}
 }
 
-// setupVolumes sets the volume for each pool in the passed in list of pool ids to the corresponding value in the passed in list of volumes.
-func (s *KeeperTestSuite) setupVolumes(poolIds []uint64, updatedPoolVolumes []osmomath.Int) {
+// This test validates two things:
+// - Allocating to a newly created group does not panic
+// - If groups is modified with invalid values (for testing its refetching), the failure does not occur
+// and the updated group is refetched by AllocateAcrossGauges.
+//
+// This test catches a bug where if we didn't refetch groups after
+// synching in AllocateAcrossGauges, the group would not be updated with the correct
+// total volume and panic when allocating due to division by zero.
+func (s *KeeperTestSuite) TestCreateGroupsAndAllocate_GroupRefetchingInAllocate() {
+	s.SetupTest()
+
+	var (
+		defaultVolume = osmomath.NewInt(100)
+		// Note that we expect each pool gauge to have half the coins
+		// since they have equal volume.
+		// We create a non-perpetual group with 2x the defaultCoins.
+		// Therefeore, the total is 1x the defaultCoins.
+		halfInitialCoinsInGroup = defaultCoins
+	)
+
+	poolInfo := s.PrepareAllSupportedPools()
+
+	// Initialized volume.
+	// Note that it is equal between pools.
+	// We must set it prior to group being created. Otherwise, creation fails.
+	s.overwriteVolumes([]uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID}, []osmomath.Int{defaultVolume, defaultVolume})
+
+	// Non-perpetual group over 2 epochs
+	groupGaugeID, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins.Add(defaultCoins...), incentivetypes.PerpetualNumEpochsPaidOver+2, s.TestAccs[0], []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID})
+	s.Require().NoError(err)
+
+	// Increase the volume from creation time. Otherwise, the group will not be allocated and allocation would be a no-op.
+	s.IncreaseVolumeForPools([]uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID}, []osmomath.Int{defaultVolume, defaultVolume})
+
+	// Fetch the group
+	group, err := s.App.IncentivesKeeper.GetGroupByGaugeID(s.Ctx, groupGaugeID)
+
+	// Allocate right after creating the group
+	err = s.App.IncentivesKeeper.AllocateAcrossGauges(s.Ctx, []types.Group{group})
+	s.Require().NoError(err)
+
+	// Increase the volume.
+	// Note that the increase is equal between pools.
+	s.IncreaseVolumeForPools([]uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID}, []osmomath.Int{defaultVolume, defaultVolume})
+
+	// Now, force set the total weight of the input group to zero to make sure that is is refetched after synching
+	group.InternalGaugeInfo.TotalWeight = osmomath.ZeroInt()
+
+	// This triggers a panic if group inside the loop is not refetched with updated weights
+	// Ensure that fetch happens correctly
+	// The group given is outdated without volume being synched and reflected yet.
+	err = s.App.IncentivesKeeper.AllocateAcrossGauges(s.Ctx, []types.Group{group})
+	s.Require().NoError(err)
+
+	// Validate that the concentrated pool gauge was updated correctly
+	concentratedGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, poolInfo.ConcentratedGaugeID)
+	s.Require().NoError(err)
+	s.Require().Equal(halfInitialCoinsInGroup.String(), concentratedGauge.Coins.String())
+
+	// Validate that the balancer pool gauge was updated correctly
+	balancerGauge, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, poolInfo.BalancerGaugeID)
+	s.Require().NoError(err)
+	s.Require().Equal(halfInitialCoinsInGroup.String(), balancerGauge.Coins.String())
+}
+
+// overwriteVolumes sets the volume for each pool in the passed in list of pool ids to the corresponding value in the passed in list of volumes.
+func (s *KeeperTestSuite) overwriteVolumes(poolIds []uint64, updatedPoolVolumes []osmomath.Int) {
 	// Update cumulative volumes for pools
 	for i, updatedVolume := range updatedPoolVolumes {
 		// Note that even though we deal with volumes as ints, they are tracked as coins to allow for tracking of more denoms in the future.
@@ -2126,7 +2242,7 @@ func (s *KeeperTestSuite) TestHandleGroupPostDistribute() {
 	s.Run("7: non-perpetual gauge - updated: multiple distributions", func() {
 		const numDistributions = 10
 
-		initialDistributionCoins := coins.MulRaw(defaultCoins, int64(numDistributions+1))
+		initialDistributionCoins := coinutil.MulRaw(defaultCoins, int64(numDistributions+1))
 
 		// Non-perpetual gauge with 10 epochs paid over
 		// For every iteration,
