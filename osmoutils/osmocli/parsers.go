@@ -380,3 +380,11 @@ func ParseStringTo2DArray(input string) ([][]uint64, error) {
 
 	return result, nil
 }
+
+func ParseUint64SliceToString(values []uint64) string {
+	strs := make([]string, len(values))
+	for i, v := range values {
+		strs[i] = strconv.FormatUint(v, 10)
+	}
+	return strings.Join(strs, ", ")
+}

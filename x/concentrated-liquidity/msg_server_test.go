@@ -545,3 +545,88 @@ func (s *KeeperTestSuite) TestFungify_Events() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestTransferPositions_Events() {
+	testcases := map[string]struct {
+		positionIds                    []uint64
+		numPositionsToCreate           int
+		shouldSetupUnownedPosition     bool
+		expectedTransferPositionsEvent int
+		expectedMessageEvents          int
+		expectedError                  error
+	}{
+		"single position ID": {
+			positionIds:                    []uint64{DefaultPositionId},
+			numPositionsToCreate:           1,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          2, // 1 for transfer, 1 for collect spread rewards (calls event even when no spread rewards)
+		},
+		"two position IDs": {
+			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1},
+			numPositionsToCreate:           2,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          3, // 1 for transfer, 2 for collect spread rewards (calls event even when no spread rewards)
+		},
+		"three position IDs": {
+			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:           3,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          4, // 1 for transfer, 3 for collect spread rewards (calls event even when no spread rewards)
+		},
+		"two position IDs, second ID does not exist": {
+			positionIds:          []uint64{DefaultPositionId, DefaultPositionId + 1},
+			numPositionsToCreate: 1,
+			expectedError:        types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
+		},
+		"three position IDs, not an owner of one of them": {
+			positionIds:                []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:       2,
+			shouldSetupUnownedPosition: true,
+			expectedError:              types.NotPositionOwnerError{},
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.SetupTest()
+			ctx := s.Ctx
+
+			// Create a cl pool with a default position
+			pool := s.PrepareConcentratedPool()
+			for i := 0; i < tc.numPositionsToCreate; i++ {
+				s.SetupDefaultPosition(pool.GetId())
+			}
+
+			if tc.shouldSetupUnownedPosition {
+				// Position from another account.
+				s.SetupDefaultPositionAcc(pool.GetId(), s.TestAccs[1])
+			}
+
+			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
+
+			// Reset event counts to 0 by creating a new manager.
+			ctx = ctx.WithEventManager(sdk.NewEventManager())
+			s.Equal(0, len(ctx.EventManager().Events()))
+
+			msg := &types.MsgTransferPositions{
+				PositionIds: tc.positionIds,
+				Sender:      s.TestAccs[0].String(),
+				NewOwner:    s.TestAccs[1].String(),
+			}
+
+			// System under test
+			response, err := msgServer.TransferPositions(sdk.WrapSDKContext(ctx), msg)
+
+			if tc.expectedError == nil {
+				s.Require().NoError(err)
+				s.Require().NotNil(response)
+				s.AssertEventEmitted(ctx, types.TypeEvtTransferPositions, tc.expectedTransferPositionsEvent)
+				s.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			} else {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectedError)
+				s.Require().Nil(response)
+			}
+		})
+	}
+}

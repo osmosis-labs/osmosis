@@ -14,6 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -22,6 +23,11 @@ import (
 const MinNumPositions = 2
 
 var emptyOptions = &accum.Options{}
+
+type PositionWithWithdrawnAmount struct {
+	Position       model.Position
+	CoinsWithdrawn sdk.Coins
+}
 
 // getOrInitPosition retrieves the position's liquidity for the given tick range.
 // If it doesn't exist, it returns zero.
@@ -662,5 +668,125 @@ func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 	newTotalFullRangeLiquidity := currentTotalFullRangeLiquidity.Add(liquidity)
 
 	osmoutils.MustSetDec(store, poolIdLiquidityKey, newTotalFullRangeLiquidity)
+	return nil
+}
+
+// // transferPositions transfers the ownership of a set of positions from one account to another.
+// // It first withdraws all the positions from the sender's account, accumulating the total amount of tokens withdrawn.
+// // Then, it sends the total withdrawn tokens to the recipient's account.
+// // Finally, it recreates the positions under the recipient's account, maintaining the same properties as the original positions.
+// //
+// // Parameters:
+// // - ctx: The context of the operation.
+// // - positionIds: A slice of position IDs to be transferred.
+// // - sender: The account address of the current owner of the positions.
+// // - recipient: The account address of the new owner of the positions.
+// //
+// // Returns:
+// // - A slice of new position IDs created under the recipient's account.
+// // - An error if any operation fails, such as withdrawing a position, sending coins, or creating a new position.
+// func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender sdk.AccAddress, recipient sdk.AccAddress) ([]uint64, error) {
+// 	if !osmoassert.Uint64ArrayValuesAreUnique(positionIds) {
+// 		return nil, types.DuplicatePositionIdsError{PositionIds: positionIds}
+// 	}
+
+// 	withdrawnPositions := []PositionWithWithdrawnAmount{}
+// 	totalCoinsWithdrawn := sdk.NewCoins()
+
+// 	// We first withdraw all the positions, and store the position and withdraw amounts.
+// 	// This allows us to do a single bank send at the end, which is more efficient.
+// 	for _, positionId := range positionIds {
+// 		position, err := k.GetPosition(ctx, positionId)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+
+// 		// Get the pool from the position so we know what denoms we are dealing with.
+// 		pool, err := k.GetConcentratedPoolById(ctx, position.PoolId)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+
+// 		// Withdraw the entire position.
+// 		// This also acts as a pseudo owner check, since if the sender does not match the position owner, the withdraw will fail.
+// 		amt0, amt1, err := k.WithdrawPosition(ctx, sender, positionId, position.Liquidity)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+
+// 		withdrawnCoins := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amt0), sdk.NewCoin(pool.GetToken1(), amt1))
+// 		totalCoinsWithdrawn = totalCoinsWithdrawn.Add(withdrawnCoins...)
+
+// 		withdrawnPositions = append(withdrawnPositions, PositionWithWithdrawnAmount{
+// 			Position:       position,
+// 			CoinsWithdrawn: withdrawnCoins,
+// 		})
+// 	}
+
+// 	// Send the total withdrawn tokens to the recipient.
+// 	err := k.bankKeeper.SendCoins(ctx, sender, recipient, totalCoinsWithdrawn)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// Recreate the positions with the recipient as the owner.
+// 	newPositionIds := []uint64{}
+// 	for _, wp := range withdrawnPositions {
+// 		newPosition, err := k.CreatePosition(ctx, wp.Position.PoolId, recipient, wp.CoinsWithdrawn, osmomath.ZeroInt(), osmomath.ZeroInt(), wp.Position.LowerTick, wp.Position.UpperTick)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newPositionIds = append(newPositionIds, newPosition.ID)
+// 	}
+
+// 	return newPositionIds, nil
+// }
+
+func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender sdk.AccAddress, recipient sdk.AccAddress) error {
+	if !osmoassert.Uint64ArrayValuesAreUnique(positionIds) {
+		return types.DuplicatePositionIdsError{PositionIds: positionIds}
+	}
+
+	for _, positionId := range positionIds {
+		position, err := k.GetPosition(ctx, positionId)
+		if err != nil {
+			return err
+		}
+
+		// Check that the sender is the owner of the position.
+		if position.Address != sender.String() {
+			return types.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: sender.String()}
+		}
+
+		// If the position has an active underlying lock, we cannot transfer it.
+		positionHasActiveUnderlyingLock, lockId, err := k.positionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
+		if err != nil {
+			return err
+		}
+		if positionHasActiveUnderlyingLock {
+			return types.LockNotMatureError{PositionId: position.PositionId, LockId: lockId}
+		}
+
+		// Collect any outstanding incentives and rewards for the position.
+		if _, err := k.collectSpreadRewards(ctx, sender, positionId); err != nil {
+			return err
+		}
+		if _, _, err := k.collectIncentives(ctx, sender, positionId); err != nil {
+			return err
+		}
+
+		// Delete the KVStore entries for the position.
+		err = k.deletePosition(ctx, positionId, sender, position.PoolId)
+		if err != nil {
+			return err
+		}
+
+		// Restore the position under the recipient's account.
+		err = k.SetPosition(ctx, position.PoolId, recipient, position.LowerTick, position.UpperTick, position.JoinTime, position.Liquidity, position.PositionId, 0)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
