@@ -58,6 +58,17 @@ func Max(values ...interface{}) interface{} {
 	return max
 }
 
+// DifferenceBetweenUint64Arrays takes two slices of uint64, 'a' and 'b', as input.
+// It returns a new slice containing the elements that are in 'a' but not in 'b'.
+// The function uses a map for efficient lookup of elements.
+//
+// Example:
+// a := []uint64{1, 2, 3, 4, 5}
+// b := []uint64{4, 5, 6, 7, 8}
+// result := DifferenceBetweenUint64Arrays(a, b)
+// result will be []uint64{1, 2, 3}
+//
+// Note: This function does not preserve the order of the elements.
 func DifferenceBetweenUint64Arrays(a, b []uint64) []uint64 {
 	m := make(map[uint64]bool)
 

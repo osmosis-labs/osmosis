@@ -39,9 +39,9 @@ type positionAndLiquidity struct {
 	accountIndex int
 }
 
-// func TestFuzz_Many(t *testing.T) {
-// 	fuzz(t, defaultNumSwaps, defaultNumPositions, 10)
-// }
+func TestFuzz_Many(t *testing.T) {
+	fuzz(t, defaultNumSwaps, defaultNumPositions, 10)
+}
 
 func (s *KeeperTestSuite) TestFuzz_GivenSeed() {
 	// Seed 1688572291 - gives mismatch between tokenIn given to "out given in" and token in returned from "in given out"
