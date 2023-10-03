@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis/osmomath
 go 1.20
 
 require (
-	cosmossdk.io/math v1.1.3-rc.0
+	cosmossdk.io/math v1.1.3-rc.1
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230911115719-1d5a34978fe1
 	github.com/stretchr/testify v1.8.4
@@ -53,11 +53,10 @@ require (
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.16.0 // indirect
-	github.com/prometheus/client_model v0.3.0 // indirect
-	github.com/prometheus/common v0.42.0 // indirect
-	github.com/prometheus/procfs v0.10.1 // indirect
-	github.com/rogpeppe/go-internal v1.10.0 // indirect
+	github.com/prometheus/client_golang v1.17.0 // indirect
+	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
+	github.com/prometheus/common v0.44.0 // indirect
+	github.com/prometheus/procfs v0.11.1 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
