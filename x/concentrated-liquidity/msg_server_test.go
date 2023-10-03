@@ -547,10 +547,15 @@ func (s *KeeperTestSuite) TestFungify_Events() {
 }
 
 func (s *KeeperTestSuite) TestTransferPositions_Events() {
+	// expectedUptimes are used for claimable incentives tests
+	expectedUptimes := getExpectedUptimes()
+
 	testcases := map[string]struct {
 		positionIds                    []uint64
 		numPositionsToCreate           int
 		shouldSetupUnownedPosition     bool
+		hasIncentivesToClaim           bool
+		hasSpreadRewardsToClaim        bool
 		expectedTransferPositionsEvent int
 		expectedMessageEvents          int
 		expectedError                  error
@@ -559,19 +564,41 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			positionIds:                    []uint64{DefaultPositionId},
 			numPositionsToCreate:           1,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          2, // 1 for transfer, 1 for collect spread rewards (calls event even when no spread rewards)
+			expectedMessageEvents:          1, // 1 for transfer, 1 for collect spread rewards
+		},
+		"single position ID with claimable incentives": {
+			positionIds:                    []uint64{DefaultPositionId},
+			hasIncentivesToClaim:           true,
+			numPositionsToCreate:           1,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          3, // 1 for transfer, 1 for collect incentives claim send, 1 for collect incentives forfeit send
+		},
+		"single position ID with claimable spread rewards": {
+			positionIds:                    []uint64{DefaultPositionId},
+			hasSpreadRewardsToClaim:        true,
+			numPositionsToCreate:           1,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          2, // 1 for transfer, 1 for collect spread rewards claim send
+		},
+		"single position ID with claimable incentives and spread rewards": {
+			positionIds:                    []uint64{DefaultPositionId},
+			hasIncentivesToClaim:           true,
+			hasSpreadRewardsToClaim:        true,
+			numPositionsToCreate:           1,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          4, // 1 for transfer, 1 for collect incentives claim send, 1 for collect incentives forfeit send, 1 for collect spread rewards claim send
 		},
 		"two position IDs": {
 			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1},
 			numPositionsToCreate:           2,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          3, // 1 for transfer, 2 for collect spread rewards (calls event even when no spread rewards)
+			expectedMessageEvents:          1, // 1 for transfer
 		},
 		"three position IDs": {
 			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
 			numPositionsToCreate:           3,
 			expectedTransferPositionsEvent: 1,
-			expectedMessageEvents:          4, // 1 for transfer, 3 for collect spread rewards (calls event even when no spread rewards)
+			expectedMessageEvents:          1, // 1 for transfer
 		},
 		"two position IDs, second ID does not exist": {
 			positionIds:          []uint64{DefaultPositionId, DefaultPositionId + 1},
@@ -589,7 +616,6 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 	for name, tc := range testcases {
 		s.Run(name, func() {
 			s.SetupTest()
-			ctx := s.Ctx
 
 			// Create a cl pool with a default position
 			pool := s.PrepareConcentratedPool()
@@ -602,11 +628,34 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 				s.SetupDefaultPositionAcc(pool.GetId(), s.TestAccs[1])
 			}
 
+			if tc.hasIncentivesToClaim {
+				// Determine how much position will claim and fund
+				coinsToFundForIncentivesToUser := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier)
+				s.FundAcc(pool.GetIncentivesAddress(), coinsToFundForIncentivesToUser)
+				// Determine how much position will forfeit and fund
+				coinsToFundForForefeitToPool := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24*14, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier))
+				s.FundAcc(pool.GetIncentivesAddress(), coinsToFundForForefeitToPool)
+				// Add uptime growth to the pool that targets the position
+				position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, 1)
+				s.Require().NoError(err)
+				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), s.TestAccs[0], position.LowerTick+1, position.LowerTick, position.UpperTick, expectedUptimes.hundredTokensMultiDenom)
+			}
+
+			if tc.hasSpreadRewardsToClaim {
+				// Utilize the position liquidity value to determine how much spread rewards the position will claim
+				position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, 1)
+				s.Require().NoError(err)
+				expectedAmountToClaim := position.Liquidity.MulInt(osmomath.NewInt(10)).TruncateInt()
+				// Fund the spread rewards account with the expected rewards and add to the pool's accum
+				s.FundAcc(pool.GetSpreadRewardsAddress(), sdk.NewCoins(sdk.NewCoin(ETH, expectedAmountToClaim)))
+				s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
+			}
+
 			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
 
 			// Reset event counts to 0 by creating a new manager.
-			ctx = ctx.WithEventManager(sdk.NewEventManager())
-			s.Equal(0, len(ctx.EventManager().Events()))
+			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+			s.Equal(0, len(s.Ctx.EventManager().Events()))
 
 			msg := &types.MsgTransferPositions{
 				PositionIds: tc.positionIds,
@@ -615,13 +664,13 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			}
 
 			// System under test
-			response, err := msgServer.TransferPositions(sdk.WrapSDKContext(ctx), msg)
+			response, err := msgServer.TransferPositions(sdk.WrapSDKContext(s.Ctx), msg)
 
 			if tc.expectedError == nil {
 				s.Require().NoError(err)
 				s.Require().NotNil(response)
-				s.AssertEventEmitted(ctx, types.TypeEvtTransferPositions, tc.expectedTransferPositionsEvent)
-				s.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtTransferPositions, tc.expectedTransferPositionsEvent)
+				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &tc.expectedError)

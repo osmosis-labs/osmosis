@@ -174,6 +174,11 @@ func (k Keeper) collectSpreadRewards(ctx sdk.Context, sender sdk.AccAddress, pos
 		return sdk.Coins{}, err
 	}
 
+	// Early return, emit no events if there is no spread rewards to claim.
+	if spreadRewardsClaimed.IsZero() {
+		return sdk.Coins{}, nil
+	}
+
 	// Send the claimed spread rewards from the pool's address to the owner's address.
 	pool, err := k.getPoolById(ctx, position.PoolId)
 	if err != nil {
