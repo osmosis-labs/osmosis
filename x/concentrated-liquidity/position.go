@@ -24,11 +24,6 @@ const MinNumPositions = 2
 
 var emptyOptions = &accum.Options{}
 
-type PositionWithWithdrawnAmount struct {
-	Position       model.Position
-	CoinsWithdrawn sdk.Coins
-}
-
 // getOrInitPosition retrieves the position's liquidity for the given tick range.
 // If it doesn't exist, it returns zero.
 func (k Keeper) getOrInitPosition(

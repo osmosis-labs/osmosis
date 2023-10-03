@@ -2347,6 +2347,7 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 			}
 
 			// Setup a far out of range position that we do not touch, so when we transfer positions we do not transfer the last position in the pool.
+			// This is because we special case this logic in the keeper to not allow the last position in the pool to be transferred.
 			if !tc.isLastPositionInPool {
 				s.SetupPosition(pool.GetId(), s.TestAccs[2], sdk.NewCoins(DefaultCoin0), DefaultMaxTick-100, DefaultMaxTick, true)
 			}

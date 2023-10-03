@@ -2,6 +2,7 @@ package osmoutils_test
 
 import (
 	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -40,38 +41,36 @@ func TestMax(t *testing.T) {
 	}
 }
 
-func TestDifferenceUint64(t *testing.T) {
-	testCases := []struct {
-		a        []uint64
-		b        []uint64
-		expected []uint64
+func TestDifferenceBetweenUint64Arrays(t *testing.T) {
+	tests := []struct {
+		name string
+		a    []uint64
+		b    []uint64
+		want []uint64
 	}{
 		{
-			a:        []uint64{1, 2, 3, 4, 5},
-			b:        []uint64{4, 5, 6, 7, 8},
-			expected: []uint64{1, 2, 3},
+			name: "Test 1",
+			a:    []uint64{1, 2, 3, 4, 5},
+			b:    []uint64{4, 5, 6, 7, 8},
+			want: []uint64{1, 2, 3, 6, 7, 8},
 		},
 		{
-			a:        []uint64{10, 20, 30, 40, 50},
-			b:        []uint64{30, 40, 50, 60, 70},
-			expected: []uint64{10, 20},
-		},
-		{
-			a:        []uint64{},
-			b:        []uint64{1, 2, 3},
-			expected: []uint64{},
-		},
-		{
-			a:        []uint64{1, 2, 3},
-			b:        []uint64{},
-			expected: []uint64{1, 2, 3},
+			name: "Test 2",
+			a:    []uint64{10, 20, 30},
+			b:    []uint64{20, 30, 40},
+			want: []uint64{10, 40},
 		},
 	}
 
-	for _, tc := range testCases {
-		result := osmoutils.DifferenceBetweenUint64Arrays(tc.a, tc.b)
-		if !reflect.DeepEqual(result, tc.expected) {
-			t.Errorf("DifferenceUint64(%v, %v) = %v; want %v", tc.a, tc.b, result, tc.expected)
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := osmoutils.DifferenceBetweenUint64Arrays(tt.a, tt.b)
+			sort.Slice(got, func(i, j int) bool { return got[i] < got[j] })
+			sort.Slice(tt.want, func(i, j int) bool { return tt.want[i] < tt.want[j] })
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DifferenceBetweenUint64Arrays() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

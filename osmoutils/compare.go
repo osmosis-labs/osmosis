@@ -59,30 +59,39 @@ func Max(values ...interface{}) interface{} {
 }
 
 // DifferenceBetweenUint64Arrays takes two slices of uint64, 'a' and 'b', as input.
-// It returns a new slice containing the elements that are in 'a' but not in 'b'.
-// The function uses a map for efficient lookup of elements.
+// It returns a new slice containing the elements that are unique to either 'a' or 'b'.
+// The function uses two maps for efficient lookup of elements.
 //
 // Example:
 // a := []uint64{1, 2, 3, 4, 5}
 // b := []uint64{4, 5, 6, 7, 8}
 // result := DifferenceBetweenUint64Arrays(a, b)
-// result will be []uint64{1, 2, 3}
+// result will be []uint64{1, 2, 3, 6, 7, 8}
 //
 // Note: This function does not preserve the order of the elements.
 func DifferenceBetweenUint64Arrays(a, b []uint64) []uint64 {
-	m := make(map[uint64]bool)
+	m1 := make(map[uint64]bool)
+	m2 := make(map[uint64]bool)
 
 	for _, item := range a {
-		m[item] = true
+		m1[item] = true
 	}
 
 	for _, item := range b {
-		delete(m, item)
+		m2[item] = true
 	}
 
 	var result []uint64
-	for item := range m {
-		result = append(result, item)
+	for item := range m1 {
+		if !m2[item] {
+			result = append(result, item)
+		}
+	}
+
+	for item := range m2 {
+		if !m1[item] {
+			result = append(result, item)
+		}
 	}
 
 	return result
