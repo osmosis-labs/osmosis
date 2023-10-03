@@ -600,6 +600,14 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			expectedTransferPositionsEvent: 1,
 			expectedMessageEvents:          1, // 1 for transfer
 		},
+		"three position IDs with claimable incentives and spread rewards": {
+			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			hasIncentivesToClaim:           true,
+			hasSpreadRewardsToClaim:        true,
+			numPositionsToCreate:           3,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          10, // 1 for transfer, 3 for collect incentives claim send, 3 for collect incentives forfeit send, 3 for collect spread rewards claim send
+		},
 		"two position IDs, second ID does not exist": {
 			positionIds:          []uint64{DefaultPositionId, DefaultPositionId + 1},
 			numPositionsToCreate: 1,
@@ -629,26 +637,36 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 			}
 
 			if tc.hasIncentivesToClaim {
-				// Determine how much position will claim and fund
-				coinsToFundForIncentivesToUser := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier)
-				s.FundAcc(pool.GetIncentivesAddress(), coinsToFundForIncentivesToUser)
-				// Determine how much position will forfeit and fund
-				coinsToFundForForefeitToPool := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24*14, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier))
-				s.FundAcc(pool.GetIncentivesAddress(), coinsToFundForForefeitToPool)
-				// Add uptime growth to the pool that targets the position
-				position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, 1)
-				s.Require().NoError(err)
-				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), s.TestAccs[0], position.LowerTick+1, position.LowerTick, position.UpperTick, expectedUptimes.hundredTokensMultiDenom)
+				for _, positionId := range tc.positionIds {
+					// Determine how much position will claim and fund
+					coinsToFundForIncentivesToUser := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier)
+					s.FundAcc(pool.GetIncentivesAddress(), coinsToFundForIncentivesToUser)
+					// Determine how much position will forfeit and fund
+					coinsToFundForForefeitToPool := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24*14, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier))
+					s.FundAcc(pool.GetIncentivesAddress(), coinsToFundForForefeitToPool)
+					// Add uptime growth to the pool that targets the position
+					position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+					s.Require().NoError(err)
+					// only add to uptime growth once for simplicity
+					if positionId == tc.positionIds[0] {
+						s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), s.TestAccs[0], position.LowerTick+1, position.LowerTick, position.UpperTick, expectedUptimes.hundredTokensMultiDenom)
+					}
+				}
 			}
 
 			if tc.hasSpreadRewardsToClaim {
-				// Utilize the position liquidity value to determine how much spread rewards the position will claim
-				position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, 1)
-				s.Require().NoError(err)
-				expectedAmountToClaim := position.Liquidity.MulInt(osmomath.NewInt(10)).TruncateInt()
-				// Fund the spread rewards account with the expected rewards and add to the pool's accum
-				s.FundAcc(pool.GetSpreadRewardsAddress(), sdk.NewCoins(sdk.NewCoin(ETH, expectedAmountToClaim)))
-				s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
+				for _, positionId := range tc.positionIds {
+					// Utilize the position liquidity value to determine how much spread rewards the position will claim
+					position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+					s.Require().NoError(err)
+					expectedAmountToClaim := position.Liquidity.MulInt(osmomath.NewInt(10)).TruncateInt()
+					// Fund the spread rewards account with the expected rewards and add to the pool's accum
+					s.FundAcc(pool.GetSpreadRewardsAddress(), sdk.NewCoins(sdk.NewCoin(ETH, expectedAmountToClaim)))
+					// only add to spread rewards accum once for simplicity
+					if positionId == tc.positionIds[0] {
+						s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
+					}
+				}
 			}
 
 			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
