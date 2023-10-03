@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
@@ -2247,83 +2248,263 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 }
 
 func (s *KeeperTestSuite) TestTransferPositions() {
+	// expectedUptimes are used for claimable incentives tests
+	expectedUptimes := getExpectedUptimes()
+
+	errTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: osmomath.NewDec(1),
+		// Actual should be less than expected, so we round down
+		RoundingDir: osmomath.RoundDown,
+	}
+
+	oldOwner := s.TestAccs[0]
+	newOwner := s.TestAccs[1]
+
 	testcases := map[string]struct {
-		positionIds                []uint64
-		numPositionsToCreate       int
-		shouldSetupUnownedPosition bool
-		expectedError              error
+		inRangePositions     []uint64
+		outOfRangePositions  []uint64
+		positionsToTransfer  []uint64
+		setupUnownedPosition bool
+		isLastPositionInPool bool
+
+		expectedError error
 	}{
-		"single position ID": {
-			positionIds:          []uint64{DefaultPositionId},
-			numPositionsToCreate: 1,
+		"single position ID in range": {
+			inRangePositions:    []uint64{DefaultPositionId},
+			positionsToTransfer: []uint64{DefaultPositionId},
 		},
-		"two position IDs": {
-			positionIds:          []uint64{DefaultPositionId, DefaultPositionId + 1},
-			numPositionsToCreate: 2,
+		"two position IDs, one in range, one out of range": {
+			inRangePositions:    []uint64{DefaultPositionId},
+			outOfRangePositions: []uint64{DefaultPositionId + 1},
+			positionsToTransfer: []uint64{DefaultPositionId, DefaultPositionId + 1},
 		},
-		"three position IDs": {
-			positionIds:          []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
-			numPositionsToCreate: 3,
+		"two position IDs in range": {
+			inRangePositions:    []uint64{DefaultPositionId, DefaultPositionId + 1},
+			positionsToTransfer: []uint64{DefaultPositionId, DefaultPositionId + 1},
 		},
-		"two position IDs, second ID does not exist": {
-			positionIds:          []uint64{DefaultPositionId, DefaultPositionId + 1},
-			numPositionsToCreate: 1,
-			expectedError:        types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
+		"three position IDs in range": {
+			inRangePositions:    []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			positionsToTransfer: []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
 		},
-		"three position IDs, not an owner of one of them": {
-			positionIds:                []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
-			numPositionsToCreate:       2,
-			shouldSetupUnownedPosition: true,
-			expectedError:              types.NotPositionOwnerError{},
+		"three position IDs, two in range, one out of range": {
+			inRangePositions:    []uint64{DefaultPositionId, DefaultPositionId + 1},
+			outOfRangePositions: []uint64{DefaultPositionId + 2},
+			positionsToTransfer: []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+		},
+		"three position IDs, two in range, one out of range, only transfer the two in range": {
+			inRangePositions:    []uint64{DefaultPositionId, DefaultPositionId + 1},
+			outOfRangePositions: []uint64{DefaultPositionId + 2},
+			positionsToTransfer: []uint64{DefaultPositionId, DefaultPositionId + 1},
+		},
+		"three position IDs, one in range, two out of range, transfer one in range and one out of range": {
+			inRangePositions:    []uint64{DefaultPositionId},
+			outOfRangePositions: []uint64{DefaultPositionId + 1, DefaultPositionId + 2},
+			positionsToTransfer: []uint64{DefaultPositionId, DefaultPositionId + 2},
+		},
+		"error: two position IDs, second ID does not exist": {
+			inRangePositions:    []uint64{DefaultPositionId, DefaultPositionId + 1},
+			positionsToTransfer: []uint64{DefaultPositionId, DefaultPositionId + 3},
+			expectedError:       types.PositionIdNotFoundError{PositionId: DefaultPositionId + 3},
+		},
+		"error: three position IDs, not an owner of one of them": {
+			inRangePositions:     []uint64{DefaultPositionId, DefaultPositionId + 1},
+			positionsToTransfer:  []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			setupUnownedPosition: true,
+			expectedError:        types.PositionOwnerMismatchError{PositionOwner: newOwner.String(), Sender: oldOwner.String()},
+		},
+		"error: attempt to transfer last position in pool": {
+			inRangePositions:     []uint64{DefaultPositionId},
+			positionsToTransfer:  []uint64{DefaultPositionId},
+			isLastPositionInPool: true,
+			expectedError:        types.LastPositionTransferError{PositionId: DefaultPositionId, PoolId: 1},
 		},
 	}
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
 			s.SetupTest()
+			pool := s.PrepareConcentratedPool()
 
 			lastPositionId := 0
 
-			// Create a cl pool with a default position
-			pool := s.PrepareConcentratedPool()
-			for i := 0; i < tc.numPositionsToCreate; i++ {
+			// Setup in range positions
+			for i := 0; i < len(tc.inRangePositions); i++ {
 				s.SetupDefaultPosition(pool.GetId())
 				lastPositionId++
 			}
 
-			if tc.shouldSetupUnownedPosition {
-				// Position from another account.
-				s.SetupDefaultPositionAcc(pool.GetId(), s.TestAccs[1])
+			// Setup out of range positions
+			for i := 0; i < len(tc.outOfRangePositions); i++ {
+				// Position with out of range ticks.
+				s.SetupPosition(pool.GetId(), oldOwner, sdk.NewCoins(DefaultCoin1), DefaultMinTick, DefaultMinTick+100, true)
 				lastPositionId++
 			}
 
-			initialUserPositions, err := s.App.ConcentratedLiquidityKeeper.GetUserPositions(s.Ctx, s.TestAccs[0], 1)
+			// Setup unowned position (owned by newOwner)
+			if tc.setupUnownedPosition {
+				s.SetupDefaultPositionAcc(pool.GetId(), newOwner)
+				lastPositionId++
+			}
+
+			// Setup a far out of range position that we do not touch, so when we transfer positions we do not transfer the last position in the pool.
+			if !tc.isLastPositionInPool {
+				s.SetupPosition(pool.GetId(), s.TestAccs[2], sdk.NewCoins(DefaultCoin0), DefaultMaxTick-100, DefaultMaxTick, true)
+			}
+
+			// For each position that is in range, add spread rewards and incentives to their respective addresses
+			totalExpectedRewards := s.fundIncentiveAndSpreadRewardsAddr(s.Ctx, pool.GetIncentivesAddress(), pool.GetSpreadRewardsAddress(), tc.inRangePositions)
+
+			// Add spread rewards and incentives to the pool
+			s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), oldOwner, apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
+			s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
+
+			// Move block time forward. In the event we have positions in range
+			// this allows us to test both collected and forfeited incentives
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
+
+			initialUserPositions, err := s.App.ConcentratedLiquidityKeeper.GetUserPositions(s.Ctx, oldOwner, 1)
 			s.Require().NoError(err)
 
+			// Account funds of original owner
+			preTransferOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, oldOwner)
+
+			// Account funds of new owner
+			preTransferNewOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, newOwner)
+
 			// System under test
-			err = s.App.ConcentratedLiquidityKeeper.TransferPositions(s.Ctx, tc.positionIds, s.TestAccs[0], s.TestAccs[1])
+			err = s.App.ConcentratedLiquidityKeeper.TransferPositions(s.Ctx, tc.positionsToTransfer, oldOwner, newOwner)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
-				s.Require().ErrorAs(err, &tc.expectedError)
+				s.Require().ErrorIs(err, tc.expectedError)
 			} else {
 				s.Require().NoError(err)
 
-				for i := 0; i < lastPositionId; i++ {
-					newPosition, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, uint64(i+1))
+				// Check that the positions we wanted transferred were modified appropriately
+				for _, positionId := range tc.positionsToTransfer {
+					newPosition, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
 					s.Require().NoError(err)
 
+					oldPosition := model.Position{}
+					for _, initialPosition := range initialUserPositions {
+						if initialPosition.PositionId == newPosition.PositionId {
+							oldPosition = initialPosition
+							break
+						}
+					}
+
 					// All position values except the owner should be the same in the new position as it was in the old one.
-					s.Require().Equal(initialUserPositions[i].UpperTick, newPosition.UpperTick)
-					s.Require().Equal(initialUserPositions[i].LowerTick, newPosition.LowerTick)
-					s.Require().Equal(initialUserPositions[i].PoolId, newPosition.PoolId)
-					s.Require().Equal(initialUserPositions[i].JoinTime, newPosition.JoinTime)
-					s.Require().Equal(initialUserPositions[i].Liquidity, newPosition.Liquidity)
+					s.Require().Equal(oldPosition.UpperTick, newPosition.UpperTick)
+					s.Require().Equal(oldPosition.LowerTick, newPosition.LowerTick)
+					s.Require().Equal(oldPosition.PoolId, newPosition.PoolId)
+					s.Require().Equal(oldPosition.JoinTime, newPosition.JoinTime)
+					s.Require().Equal(oldPosition.Liquidity, newPosition.Liquidity)
 
 					// The new position should have the new owner
-					s.Require().Equal(s.TestAccs[1].String(), newPosition.Address)
+					s.Require().Equal(newOwner.String(), newPosition.Address)
+				}
+
+				allPositions := append(tc.inRangePositions, tc.outOfRangePositions...)
+				positionsNotTransfered := osmoutils.DifferenceBetweenUint64Arrays(allPositions, tc.positionsToTransfer)
+
+				// Check that the positions not transferred were not modified
+				for _, positionId := range positionsNotTransfered {
+					oldPosition, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+					s.Require().NoError(err)
+
+					newPosition := model.Position{}
+					for _, initialPosition := range initialUserPositions {
+						if initialPosition.PositionId == oldPosition.PositionId {
+							newPosition = initialPosition
+							break
+						}
+					}
+
+					// All position values should be the same in the new position as it was in the old one.
+					s.Require().Equal(oldPosition, newPosition)
+				}
+
+				// Check that the incentives and spread rewards went to the old owner
+				postTransferOriginalOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, oldOwner)
+				expectedTransferOriginalOwnerFunds := preTransferOwnerFunds.Add(totalExpectedRewards...)
+				s.Require().Equal(expectedTransferOriginalOwnerFunds.String(), postTransferOriginalOwnerFunds.String())
+
+				// Check that the new owner does not have any new funds
+				postTransferNewOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, newOwner)
+				s.Require().Equal(preTransferNewOwnerFunds, postTransferNewOwnerFunds)
+
+				// Test that claiming incentives/spread rewards with the new owner returns nothing
+				for _, positionId := range tc.positionsToTransfer {
+					fundsToClaim, fundsToForefeit, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionId)
+					s.Require().NoError(err)
+					s.Require().Equal(sdk.Coins(nil), fundsToClaim)
+					s.Require().Equal(sdk.Coins(nil), fundsToForefeit)
+
+					spreadRewards, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, positionId)
+					s.Require().NoError(err)
+					s.Require().Equal(sdk.Coins(nil), spreadRewards)
+				}
+
+				// Test that adding incentives/spread rewards and then claiming returns it to the new owner, and the old owner does not get anything
+				totalExpectedRewards = s.fundIncentiveAndSpreadRewardsAddr(s.Ctx, pool.GetIncentivesAddress(), pool.GetSpreadRewardsAddress(), tc.inRangePositions)
+				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), oldOwner, apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
+				s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
+				for _, positionId := range tc.positionsToTransfer {
+					_, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, newOwner, positionId)
+					s.Require().NoError(err)
+					_, err = s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, newOwner, positionId)
+					s.Require().NoError(err)
+				}
+				// New owner balance check
+				postSecondTransferNewOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, newOwner)
+				expectedSecondTransferNewOwnerFunds := postTransferNewOwnerFunds.Add(totalExpectedRewards...)
+				s.Require().Equal(expectedSecondTransferNewOwnerFunds.String(), postSecondTransferNewOwnerFunds.String())
+				// Old owner balance check
+				postSecondTransferOriginalOwnerFunds := s.App.BankKeeper.GetAllBalances(s.Ctx, oldOwner)
+				s.Require().Equal(postTransferOriginalOwnerFunds, postSecondTransferOriginalOwnerFunds)
+
+				// Test that withdrawing the positions returns the correct amount of funds to the new owner
+				for _, positionId := range tc.positionsToTransfer {
+					underlyingPositionsValue, err := s.App.ConcentratedLiquidityKeeper.UnderlyingPositionsValue(s.Ctx, []uint64{positionId})
+					s.Require().NoError(err)
+					position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+					s.Require().NoError(err)
+					amt0, amt1, err := s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, newOwner, positionId, position.Liquidity)
+					s.Require().NoError(err)
+					coinsWithdrawn := sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), amt0), sdk.NewCoin(pool.GetToken1(), amt1))
+					// Amount we withdraw is one less than actual value due to rounding in favor of pool
+					for i, coin := range coinsWithdrawn {
+						osmoassert.Equal(
+							s.T(),
+							errTolerance,
+							underlyingPositionsValue[i].Amount,
+							coin.Amount,
+						)
+					}
 				}
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) fundIncentiveAndSpreadRewardsAddr(ctx sdk.Context, incentivesAddress, spreadRewardsAddress sdk.AccAddress, positionIds []uint64) (totalExpectedRewards sdk.Coins) {
+	expectedUptimes := getExpectedUptimes()
+	for _, positionId := range positionIds {
+		coinsToFundForIncentivesToUser := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier)
+		totalExpectedRewards = totalExpectedRewards.Add(coinsToFundForIncentivesToUser...)
+		s.FundAcc(incentivesAddress, coinsToFundForIncentivesToUser)
+		// Determine how much position will forfeit and fund
+		coinsToFundForForefeitToPool := expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24*14, defaultMultiplier).Sub(expectedIncentivesFromUptimeGrowth(expectedUptimes.hundredTokensMultiDenom, DefaultLiquidityAmt, time.Hour*24, defaultMultiplier))
+		s.FundAcc(incentivesAddress, coinsToFundForForefeitToPool)
+
+		position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(ctx, positionId)
+		s.Require().NoError(err)
+
+		// We fund the account with roundedInt because, there occurs
+		expectedAmountToClaim := position.Liquidity.MulInt(osmomath.NewInt(10)).TruncateInt()
+		totalExpectedRewards = totalExpectedRewards.Add(sdk.NewCoin(ETH, expectedAmountToClaim))
+		// Fund the spread rewards account with the expected rewards and add to the pool's accum
+		s.FundAcc(spreadRewardsAddress, totalExpectedRewards)
+	}
+	return
 }

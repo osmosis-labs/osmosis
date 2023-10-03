@@ -57,3 +57,22 @@ func Max(values ...interface{}) interface{} {
 	}
 	return max
 }
+
+func DifferenceBetweenUint64Arrays(a, b []uint64) []uint64 {
+	m := make(map[uint64]bool)
+
+	for _, item := range a {
+		m[item] = true
+	}
+
+	for _, item := range b {
+		delete(m, item)
+	}
+
+	var result []uint64
+	for item := range m {
+		result = append(result, item)
+	}
+
+	return result
+}

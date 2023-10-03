@@ -720,6 +720,17 @@ func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender 
 			return err
 		}
 
+		// There exists special logic branches we take if a position is the last position in a pool and it is withdrawn.
+		// It makes sense to accept the small annoyance of preventing a position from being transferred if it is the last position in a pool
+		// instead of considering all the edge cases that would arise if we allowed it.
+		anyPositionsRemainingInPool, err := k.HasAnyPositionForPool(ctx, position.PoolId)
+		if err != nil {
+			return err
+		}
+		if !anyPositionsRemainingInPool {
+			return types.LastPositionTransferError{PositionId: positionId, PoolId: position.PoolId}
+		}
+
 		// Restore the position under the recipient's account.
 		err = k.SetPosition(ctx, position.PoolId, recipient, position.LowerTick, position.UpperTick, position.JoinTime, position.Liquidity, position.PositionId, 0)
 		if err != nil {
@@ -728,4 +739,33 @@ func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender 
 	}
 
 	return nil
+}
+
+// underlyingPositionsValue calculates the value of the underlying assets in the given positions.
+func (k Keeper) UnderlyingPositionsValue(ctx sdk.Context, positionIds []uint64) (sdk.Coins, error) {
+	underlyingAssets := sdk.Coins{}
+
+	for _, positionId := range positionIds {
+		position, err := k.GetPosition(ctx, positionId)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+
+		pool, err := k.GetConcentratedPoolById(ctx, position.PoolId)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+
+		asset0, asset1, err := pool.CalcActualAmounts(ctx, position.LowerTick, position.UpperTick, position.Liquidity)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+
+		underlyingAssets = underlyingAssets.Add(
+			sdk.NewCoin(pool.GetToken0(), asset0.TruncateInt()),
+			sdk.NewCoin(pool.GetToken1(), asset1.TruncateInt()),
+		)
+	}
+
+	return underlyingAssets, nil
 }

@@ -558,6 +558,7 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 		hasSpreadRewardsToClaim        bool
 		expectedTransferPositionsEvent int
 		expectedMessageEvents          int
+		isLastPositionInPool           bool
 		expectedError                  error
 	}{
 		"single position ID": {
@@ -652,6 +653,8 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 						s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), s.TestAccs[0], position.LowerTick+1, position.LowerTick, position.UpperTick, expectedUptimes.hundredTokensMultiDenom)
 					}
 				}
+				// Move block time forward to allow for claiming incentives
+				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
 			}
 
 			if tc.hasSpreadRewardsToClaim {
@@ -667,6 +670,11 @@ func (s *KeeperTestSuite) TestTransferPositions_Events() {
 						s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
 					}
 				}
+			}
+
+			if !tc.isLastPositionInPool {
+				// Setup a far out of range position that we do not touch, so when we transfer positions we do not transfer the last position in the pool.
+				s.SetupPosition(pool.GetId(), s.TestAccs[2], sdk.NewCoins(DefaultCoin1), DefaultMinTick, DefaultMinTick+100, true)
 			}
 
 			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)

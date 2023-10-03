@@ -258,7 +258,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 		return nil, err
 	}
 
-	// add foreited dust back to the global accumulator
+	// add forfeited dust back to the global accumulator
 	if !forfeitedDust.IsZero() {
 		// Refetch the spread reward accumulator as the number of shares has changed after claiming.
 		spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, position.PoolId)
