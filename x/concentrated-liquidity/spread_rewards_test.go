@@ -1576,7 +1576,7 @@ func (s *KeeperTestSuite) tickStatusInvariance(ticksActivatedAfterEachSwap [][]i
 			}
 		} else {
 			// If the position was not active, check that the spread rewards collected are zero
-			s.Require().Nil(coins)
+			s.Require().Equal(sdk.Coins{}, coins)
 		}
 	}
 }
