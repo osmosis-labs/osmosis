@@ -918,55 +918,29 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 		return fmt.Errorf("cannot edit lockup with synthetic lock %d", lock.ID)
 	}
 
+	// check that lock's owner is the same as a message sender
 	if lock.Owner != owner.String() {
-		return fmt.Errorf("lock %d is not owned by %s", lockID, owner)
+		return errorsmod.Wrap(types.ErrNotLockOwner, fmt.Sprintf("lock %d is not owned by %s", lockID, owner))
 	}
 
 	if !lock.IsUnlocking() {
 		return errorsmod.Wrap(types.ErrLockNotUnlocking, fmt.Sprintf("lock %d is not unlocking, rebonding only possible in unlocking stage", lockID))
 	}
 
-	// If all checks pass, we can rebond the tokens
-	var rebondedLock types.PeriodLock
-	// partial re-bonding
-	if coins != nil && !coins.IsEqual(lock.Coins) {
-		// This branch implies we will end up with two locks:
-		// - The first lock will be the original lock with the coins removed, in unlocking state
-		// - The second lock will be the new rebonded lock with the coins added, in locked state
+	// Fully re-bonding the lock
 
-		// remove rebonded lock's coins from original lock
-		lock.Coins = lock.Coins.Sub(coins)
-		err = k.setLock(ctx, *lock)
-		if err != nil {
-			return errorsmod.Wrap(types.ErrFailedToSetLock, fmt.Sprintf("failed to set original lock %d: %s", lock.ID, err.Error()))
-		}
+	// Restart lock timer and set back to the store
+	// Rebonded lock is the same lock as the original lock, but with an empty EndTime.
+	rebondedLock := types.NewPeriodLock(lock.ID, owner, lock.RewardReceiverAddress, lock.Duration, time.Time{}, lock.Coins)
+	err = k.setLock(ctx, rebondedLock)
+	if err != nil {
+		return err
+	}
 
-		// create a rebonded lock
-		splitLockID := k.GetLastLockID(ctx) + 1
-		k.SetLastLockID(ctx, splitLockID)
-		rebondedLock = types.NewPeriodLock(splitLockID, owner, owner.String(), lock.Duration, time.Time{}, coins)
-
-		err = k.setLock(ctx, rebondedLock)
-		if err != nil {
-			return errorsmod.Wrap(types.ErrFailedToSetLock, fmt.Sprintf("failed to set rebonding lock %d: %s", rebondedLock.ID, err.Error()))
-		}
-	} else {
-		// Fully re-bonding the lock
-		// This branch implies that we need to completely replace the old lock in state with a new rebonded lock
-
-		// Restart lock timer and set back to the store
-		// Rebonded lock is the same lock as the original lock, but with an empty EndTime.
-		rebondedLock = types.NewPeriodLock(lock.ID, owner, owner.String(), lock.Duration, time.Time{}, lock.Coins)
-		err = k.setLock(ctx, rebondedLock)
-		if err != nil {
-			return err
-		}
-
-		// Remove original lock's refs from state
-		err = k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, *lock)
-		if err != nil {
-			return err
-		}
+	// Remove original lock's refs from state
+	err = k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, *lock)
+	if err != nil {
+		return err
 	}
 
 	// In any case, add refs for a newly created lock
