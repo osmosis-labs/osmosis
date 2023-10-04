@@ -47,3 +47,13 @@ type UnsupportedPoolTypeError struct {
 func (e UnsupportedPoolTypeError) Error() string {
 	return fmt.Sprintf("unsupported pool type for incentives (%d), pool id (%d)", e.PoolType, e.PoolID)
 }
+
+type IncentiveRecordContainsNonLockableDurationError struct {
+	GaugeId           uint64
+	Duration          time.Duration
+	LockableDurations []time.Duration
+}
+
+func (e IncentiveRecordContainsNonLockableDurationError) Error() string {
+	return fmt.Sprintf("gauge %d has duration %s which is not one of the lockable durations %s", e.GaugeId, e.Duration, e.LockableDurations)
+}

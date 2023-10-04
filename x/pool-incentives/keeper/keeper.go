@@ -375,7 +375,6 @@ func (k Keeper) IsPoolIncentivized(ctx sdk.Context, providedPoolId uint64) (bool
 				return false, err
 			}
 			// Ensure the gauge's duration matches one of the lockable durations.
-			// If it doesn't, skip it.
 			matchFound := false
 			for _, duration := range lockableDurations {
 				if gauge.DistributeTo.Duration == duration {
@@ -384,7 +383,7 @@ func (k Keeper) IsPoolIncentivized(ctx sdk.Context, providedPoolId uint64) (bool
 				}
 			}
 			if !matchFound {
-				continue
+				return false, types.IncentiveRecordContainsNonLockableDurationError{GaugeId: gauge.Id, Duration: gauge.DistributeTo.Duration, LockableDurations: lockableDurations}
 			}
 			poolId, err := k.GetPoolIdFromGaugeId(ctx, record.GaugeId, gauge.DistributeTo.Duration)
 			if err != nil {

@@ -182,7 +182,6 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 				return nil, status.Error(codes.Internal, err.Error())
 			}
 			// Ensure the gauge's duration matches one of the lockable durations.
-			// If it doesn't, skip it.
 			matchFound := false
 			for _, duration := range lockableDurations {
 				if gauge.DistributeTo.Duration == duration {
@@ -191,7 +190,7 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 				}
 			}
 			if !matchFound {
-				continue
+				return nil, types.IncentiveRecordContainsNonLockableDurationError{GaugeId: gauge.Id, Duration: gauge.DistributeTo.Duration, LockableDurations: lockableDurations}
 			}
 			poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, gauge.DistributeTo.Duration)
 			if err != nil {
