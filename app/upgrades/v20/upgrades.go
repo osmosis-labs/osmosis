@@ -50,7 +50,7 @@ func CreateUpgradeHandler(
 		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyCreatorWhitelist, emptySlice)
 
 		// Initialize new param in the poolmanager module with a whitelist allowing to bypass taker fees.
-		keepers.IncentivesKeeper.SetParam(ctx, poolmanagertypes.KeyTakerFeeByPassWhitelist, emptySlice)
+		keepers.PoolManagerKeeper.SetParam(ctx, poolmanagertypes.KeyTakerFeeByPassWhitelist, emptySlice)
 
 		// Converts pool incentive distribution records from concentrated gauges to group gauges.
 		err = createGroupsForIncentivePairs(ctx, keepers)
