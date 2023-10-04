@@ -1,0 +1,42 @@
+name: Check for TODOs
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  scan-for-todos:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+    - name: Scan for TODOs
+      id: todos
+      run: |
+        # Get list of changed lines in the merged PR
+        changed_lines=git diff ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.merge_commit_sha }} --unified=0 | grep -iP '^+.*?\bTODO:\s*\K.*$'
+        
+        # Set output
+        echo "::set-output name=todo_list::$changed_lines"
+
+    - name: Create GitHub issue for each TODO
+      if: steps.todos.outputs.todo_list != ''
+      run: |
+        # Read TODOs from the output
+        IFS=$'\n' read -rd '' -a todos <<< "${{ steps.todos.outputs.todo_list }}"
+        
+        # Create an issue for each TODO
+        for todo in "${todos[@]}"; do
+          echo "Creating issue for TODO: $todo"
+          curl -s \
+            -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues \
+            -d '{"title":"'$todo'"}'
+        done
