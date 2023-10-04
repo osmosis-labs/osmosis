@@ -79,11 +79,17 @@ func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (
 
 // chargeTakerFee extracts the taker fee from the given tokenIn and sends it to the appropriate
 // module account. It returns the tokenIn after the taker fee has been extracted.
+// If the sender is taker fee bypass whitelisted, it returns the tokenIn without extracting the taker fee.
 func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
 	feeCollectorForStakingRewardsName := txfeestypes.FeeCollectorForStakingRewardsName
 	feeCollectorForCommunityPoolName := txfeestypes.FeeCollectorForCommunityPoolName
 	defaultTakerFeeDenom := appparams.BaseCoinUnit
 	poolManagerParams := k.GetParams(ctx)
+
+	// Determine if eligible to bypass taker fee.
+	if osmoutils.Contains(poolManagerParams.TakerFeeParams.BypassWhitelist, sender.String()) {
+		return tokenIn, nil
+	}
 
 	takerFee, err := k.GetTradingPairTakerFee(ctx, tokenIn.Denom, tokenOutDenom)
 	if err != nil {
