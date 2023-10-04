@@ -15,4 +15,5 @@ var (
 	ErrRewardReceiverIsSame              = errorsmod.Register(ModuleName, 5, "reward receiver is the same")
 	ErrFailedToSetLock                   = errorsmod.Register(ModuleName, 6, "failed to set lock")
 	ErrLockNotUnlocking                  = errorsmod.Register(ModuleName, 7, "lock is not unlocking")
+	ErrLockHasSyntheticLockup            = errorsmod.Register(ModuleName, 8, "lock has synthetic lockup")
 )
