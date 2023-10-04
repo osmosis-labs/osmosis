@@ -120,6 +120,24 @@ func (s *UpgradeTestSuite) TestCreateGroupsForIncentivePairs() {
 
 			expectedDistributionRecords: []poolincentivestypes.DistrRecord(nil),
 		},
+		"migration link between gamm pool and concentrated pool exists; no distr record with community pool gauge ID (no-op)": {
+			migrationInfo: []gammmigration.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: poolInfo.BalancerPoolID,
+					ClPoolId:       poolInfo.ConcentratedPoolID,
+				},
+			},
+
+			distributionRecords: []poolincentivestypes.DistrRecord{{
+				GaugeId: poolincentivestypes.CommunityPoolDistributionGaugeID,
+				Weight:  defaultWeight,
+			}},
+
+			expectedDistributionRecords: []poolincentivestypes.DistrRecord{{
+				GaugeId: poolincentivestypes.CommunityPoolDistributionGaugeID,
+				Weight:  defaultWeight,
+			}},
+		},
 
 		// error cases
 

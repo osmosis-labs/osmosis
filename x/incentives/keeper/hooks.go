@@ -25,6 +25,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			return err
 		}
 
+		ctx.Logger().Info(fmt.Sprintf("x/incentives AfterEpochEnd, num groups %d, %d", len(groups), ctx.BlockHeight()))
 		err = k.AllocateAcrossGauges(ctx, groups)
 		if err != nil {
 			return err
