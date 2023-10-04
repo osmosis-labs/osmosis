@@ -96,7 +96,7 @@ type PoolModuleI interface {
 }
 
 type PoolIncentivesKeeperI interface {
-	IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool
+	IsPoolIncentivized(ctx sdk.Context, poolId uint64) (bool, error)
 }
 
 type MultihopRoute interface {

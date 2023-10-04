@@ -38,7 +38,3 @@ func (k Keeper) UnmarshalPoolLegacy(bz []byte) (poolmanagertypes.PoolI, error) {
 func GetMaximalNoSwapLPAmount(ctx sdk.Context, pool types.CFMMPoolI, shareOutAmount osmomath.Int) (neededLpLiquidity sdk.Coins, err error) {
 	return getMaximalNoSwapLPAmount(ctx, pool, shareOutAmount)
 }
-
-func (k Keeper) RedirectDistributionRecord(ctx sdk.Context, cfmmPoolId, clPoolId uint64) error {
-	return k.redirectDistributionRecord(ctx, cfmmPoolId, clPoolId)
-}
