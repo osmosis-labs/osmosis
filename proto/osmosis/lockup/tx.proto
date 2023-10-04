@@ -124,4 +124,4 @@ message MsgRebondTokens {
   ];
 }
 
-message MsgRebondTokensResponse { bool success = 1; }
+message MsgRebondTokensResponse {}

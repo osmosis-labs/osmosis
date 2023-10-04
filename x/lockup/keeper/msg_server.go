@@ -256,12 +256,12 @@ func (server msgServer) RebondTokens(goCtx context.Context, msg *types.MsgRebond
 
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
-		return &types.MsgRebondTokensResponse{Success: false}, err
+		return &types.MsgRebondTokensResponse{}, err
 	}
 
 	err = server.keeper.RebondTokens(ctx, msg.ID, owner, msg.Coins)
 	if err != nil {
-		return &types.MsgRebondTokensResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return &types.MsgRebondTokensResponse{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -272,5 +272,5 @@ func (server msgServer) RebondTokens(goCtx context.Context, msg *types.MsgRebond
 		),
 	})
 
-	return &types.MsgRebondTokensResponse{Success: true}, nil
+	return &types.MsgRebondTokensResponse{}, nil
 }
