@@ -899,21 +899,21 @@ $(x + \frac{L}{\sqrt{P_b}})(y + L\sqrt{P_a}) = L^2$
 
 Given the amount of liquidity, the quantity of tokens available in the price range [P<sub>a</sub>, P<sub>b</sub>] can be derived as follows:
 
-- If $P_a \leq P_a$:
+- If $P_0 \leq P_a$:
 $x = L \left(\frac{1}{\sqrt{P_a}} - \frac{1}{\sqrt{P_b}}\right)$
 $y = 0$
 
-- If $P_a \geq P_b$:
+- If $P_0 \geq P_b$:
 $x = 0$
 $y = L \left(\sqrt{P_b} - \sqrt{P_a}\right)$
 
-- If $P_a \in (P_a, P_b)$:
-$x = \left(\frac{1}{{\sqrt{P_a}}} - \frac{1}{{\sqrt{P_b}}}\right)$
-$y = L \left(\sqrt{P_a} - \sqrt{P_b}\right)$
+- If $P_0 \in (P_a, P_b)$:
+$x = L \left(\frac{1}{{\sqrt{P_0}}} - \frac{1}{{\sqrt{P_b}}}\right)$
+$y = L \left(\sqrt{P_0} - \sqrt{P_a}\right)$
 
 This can be written as: 
 
-$x = \left(\frac{1}{\sqrt{z}} - \frac{1}{\sqrt{P_b}}\right)$ 
+$x = L \left(\frac{1}{\sqrt{z}} - \frac{1}{\sqrt{P_b}}\right)$ 
 
 $y = L \left(\sqrt{z} - \sqrt{P_a}\right)$
 
