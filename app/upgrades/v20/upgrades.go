@@ -12,6 +12,7 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolincenitvestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 )
 
 type IncentivizedCFMMDirectWhenMigrationLinkPresentError struct {
@@ -90,6 +91,12 @@ func createGroupsForIncentivePairs(ctx sdk.Context, keepers *keepers.AppKeepers)
 	// expect any stableswap pool to be linked to concentrated.
 	for i, distrRecord := range distrInfo.Records {
 		gaugeID := distrRecord.GaugeId
+
+		// Gauge with ID zero goes to community pool.
+		if gaugeID == poolincenitvestypes.CommunityPoolDistributionGaugeID {
+			continue
+		}
+
 		gauge, err := keepers.IncentivesKeeper.GetGaugeByID(ctx, gaugeID)
 		if err != nil {
 			return err
