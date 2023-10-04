@@ -92,7 +92,7 @@ func (k Keeper) GetValSetPreferencesWithDelegations(ctx sdk.Context, delegator s
 	return types.ValidatorSetPreferences{Preferences: formatToValPrefArr(existingDelegations)}, nil
 }
 
-// formatToValPrefArr iterates over given delegations array, formats it into VaoldatorPreference array.
+// formatToValPrefArr iterates over given delegations array, formats it into ValidatorPreference array.
 // Used to calculate weights for the each delegation towards validator.
 // CONTRACT: This method assumes no duplicated ValOperAddress exists in the given delegation.
 func formatToValPrefArr(delegations []stakingtypes.Delegation) []types.ValidatorPreference {
