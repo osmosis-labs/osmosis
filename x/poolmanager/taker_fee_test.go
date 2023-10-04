@@ -48,6 +48,7 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount),
 		},
 		// TODO: under more test cases
+		// https://github.com/osmosis-labs/osmosis/issues/6633
 		// - exactOut: false
 		// - sender does not have enough coins
 	}
