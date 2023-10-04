@@ -259,7 +259,7 @@ func (server msgServer) RebondTokens(goCtx context.Context, msg *types.MsgRebond
 		return &types.MsgRebondTokensResponse{}, err
 	}
 
-	err = server.keeper.RebondTokens(ctx, msg.ID, owner, msg.Coins)
+	err = server.keeper.RebondTokens(ctx, msg.ID, owner)
 	if err != nil {
 		return &types.MsgRebondTokensResponse{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

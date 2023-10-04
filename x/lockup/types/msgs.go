@@ -245,11 +245,10 @@ func (m MsgSetRewardReceiverAddress) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgRebondTokens creates a message to rebond tokens.
-func NewMsgRebondTokens(owner sdk.AccAddress, ID uint64, coins sdk.Coins) *MsgRebondTokens {
+func NewMsgRebondTokens(owner sdk.AccAddress, ID uint64) *MsgRebondTokens {
 	return &MsgRebondTokens{
 		Owner: owner.String(),
 		ID:    ID,
-		Coins: coins,
 	}
 }
 
@@ -265,9 +264,6 @@ func (m MsgRebondTokens) ValidateBasic() error {
 		return fmt.Errorf("invalid lock ID, got %v", m.ID)
 	}
 
-	if !m.Coins.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Coins.String())
-	}
 	return nil
 }
 

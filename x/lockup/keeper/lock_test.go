@@ -15,65 +15,58 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (suite *KeeperTestSuite) TestRebondTokens() {
 	// coins that will be locked
 	lockedCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
-	// coins, which if rebonded, will split the lock
-	notFullRebondCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 5))
 
 	addr1 := suite.TestAccs[0]
 	defaultLockID := uint64(1)
 	nonExistingLockID := uint64(2)
+	notOwnerAddress := suite.TestAccs[1]
 
 	testCases := []struct {
 		name                string
 		unlock              bool
 		rebondLockID        uint64
-		coinsToRebond       sdk.Coins
 		createSyntheticLock bool
+		owner               sdk.AccAddress
 
 		expectedError error
 	}{
 		{
-			name:          "Valid: rebond some tokens",
-			unlock:        true,
-			rebondLockID:  defaultLockID,
-			coinsToRebond: notFullRebondCoins,
-		},
-		{
-			name:          "Valid: explicitly rebond all tokens",
-			unlock:        true,
-			rebondLockID:  defaultLockID,
-			coinsToRebond: lockedCoins,
-		},
-		{
-			name:         "Valid: implicitly rebond all tokens by setting coinsToRebond as nil",
+			name:         "Valid test case",
 			unlock:       true,
+			owner:        addr1,
 			rebondLockID: defaultLockID,
 		},
 		{
 			name:          "Invalid: Trying to rebond a non existent lock id",
 			unlock:        true,
+			owner:         addr1,
 			rebondLockID:  nonExistingLockID,
-			coinsToRebond: notFullRebondCoins,
-			expectedError: sdkerrors.Wrap(types.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", nonExistingLockID)),
+			expectedError: types.ErrLockupNotFound,
 		},
 		{
 			name:          "Invalid: Trying to rebond a non-unbonding lock",
-			unlock:        false,
+			owner:         addr1,
 			rebondLockID:  defaultLockID,
-			coinsToRebond: notFullRebondCoins,
-			expectedError: sdkerrors.Wrap(types.ErrLockNotUnlocking, fmt.Sprintf("lock %d is not unlocking, rebonding only possible in unlocking stage", defaultLockID)),
+			expectedError: types.ErrLockNotUnlocking,
 		},
 		{
 			name:                "Invalid: Trying to rebond a synthetic's underlying lock",
 			createSyntheticLock: true,
+			owner:               addr1,
 			rebondLockID:        defaultLockID,
-			coinsToRebond:       lockedCoins,
-			expectedError:       fmt.Errorf("cannot edit lockup with synthetic lock %d", defaultLockID),
+			expectedError:       types.ErrLockHasSyntheticLockup,
+		},
+		{
+			name:          "Invalid: Not the owner of a lock",
+			unlock:        true,
+			owner:         notOwnerAddress,
+			rebondLockID:  defaultLockID,
+			expectedError: types.ErrNotLockOwner,
 		},
 	}
 
@@ -93,6 +86,11 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			initialLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 			suite.Require().NoError(err)
 
+			// a sanity check to make sure the lock is in the correct state
+			if tc.unlock {
+				suite.Require().True(initialLock.IsUnlocking())
+			}
+
 			// underlying synthetic locks' period locks cannot be rebonded
 			if tc.createSyntheticLock {
 				err := suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, lockID, "synthetic", initialLock.Duration, false)
@@ -100,49 +98,27 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			}
 
 			// rebond coins
-			err = suite.App.LockupKeeper.RebondTokens(suite.Ctx, tc.rebondLockID, addr1, tc.coinsToRebond)
+			err = suite.App.LockupKeeper.RebondTokens(suite.Ctx, tc.rebondLockID, tc.owner)
 
 			if tc.expectedError != nil {
-				suite.Require().EqualError(err, tc.expectedError.Error())
+				suite.Require().ErrorIs(err, tc.expectedError)
 				return
 			}
 			suite.Require().NoError(err)
 
-			// get original lock
+			// get rebonded lock
 			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 			suite.Require().NoError(err)
 
-			// check values that should be the same no matter if the lock was splitted
+			// Assertions
 			suite.Require().Equal(lock.Owner, initialLock.Owner)
 			suite.Require().Equal(lock.Duration, initialLock.Duration)
 			suite.Require().Equal(lock.ID, initialLock.ID)
-			if tc.coinsToRebond != nil && !lockedCoins.IsEqual(tc.coinsToRebond) { // means lock was splitted
-				// check original lock: should have less coins and be in unlocking state
-				suite.Require().Equal(lock.Coins, lockedCoins.Sub(tc.coinsToRebond))
-				suite.Require().True(lock.IsUnlocking())
-
-				// check newly created lock
-				lastLockID := suite.App.LockupKeeper.GetLastLockID(suite.Ctx)
-				rebondedLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lastLockID)
-				suite.Require().NoError(err)
-				suite.Require().Equal(rebondedLock.Coins, tc.coinsToRebond)
-				suite.Require().False(rebondedLock.IsUnlocking())
-
-				suite.Require().Equal(rebondedLock.Owner, initialLock.Owner)
-				suite.Require().Equal(rebondedLock.Duration, initialLock.Duration)
-
-				// Check rebonded lock refs
-				// Rebonded lock should have "locked" refs
-				suite.assertLockRefs(*rebondedLock)
-			} else { // means lock was completely replaced
-				// check original lock: should be replaced with rebonding lock
-				suite.Require().Equal(lock.Coins, lockedCoins)
-				suite.Require().False(lock.IsUnlocking())
-			}
+			suite.Require().Equal(lock.Coins, initialLock.Coins)
+			suite.Require().Equal(lock.RewardReceiverAddress, initialLock.RewardReceiverAddress)
+			suite.Require().False(lock.IsUnlocking())
 
 			// Check lock refs
-			// Original lock should have "locked" refs, if complete rebonding occured
-			// Original lock should have "unlocked" refs, if partial rebonding occured
 			suite.assertLockRefs(*lock)
 		})
 	}

@@ -277,7 +277,6 @@ func TestMsgRebondTokens(t *testing.T) {
 			msg: types.MsgRebondTokens{
 				Owner: addr1,
 				ID:    1,
-				Coins: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
 			},
 			expectPass: true,
 		},
@@ -286,7 +285,6 @@ func TestMsgRebondTokens(t *testing.T) {
 			msg: types.MsgRebondTokens{
 				Owner: invalidAddr,
 				ID:    1,
-				Coins: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
 			},
 		},
 		{
@@ -294,7 +292,6 @@ func TestMsgRebondTokens(t *testing.T) {
 			msg: types.MsgRebondTokens{
 				Owner: addr1,
 				ID:    0,
-				Coins: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
 			},
 		},
 		{
@@ -302,7 +299,6 @@ func TestMsgRebondTokens(t *testing.T) {
 			msg: types.MsgRebondTokens{
 				Owner: addr1,
 				ID:    1,
-				Coins: sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(0))),
 			},
 			expectPass: true,
 		},
@@ -311,7 +307,6 @@ func TestMsgRebondTokens(t *testing.T) {
 			msg: types.MsgRebondTokens{
 				Owner: addr1,
 				ID:    1,
-				Coins: sdk.NewCoins(),
 			},
 			expectPass: true,
 		},

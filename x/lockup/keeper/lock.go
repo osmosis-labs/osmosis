@@ -906,7 +906,7 @@ func (k Keeper) getCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
 }
 
 // RebondTokens rebonds some amount or all coins of a lock with id lockID only if it is already unbonding
-func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, coins sdk.Coins) error {
+func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddress) error {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
 		return err
@@ -927,11 +927,9 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 		return errorsmod.Wrap(types.ErrLockNotUnlocking, fmt.Sprintf("lock %d is not unlocking, rebonding only possible in unlocking stage", lockID))
 	}
 
-	// Fully re-bonding the lock
-
 	// Restart lock timer and set back to the store
 	// Rebonded lock is the same lock as the original lock, but with an empty EndTime.
-	rebondedLock := types.NewPeriodLock(lock.ID, owner, lock.RewardReceiverAddress, lock.Duration, time.Time{}, lock.Coins)
+	rebondedLock := types.NewPeriodLock(lock.ID, lock.OwnerAddress(), lock.RewardReceiverAddress, lock.Duration, time.Time{}, lock.Coins)
 	err = k.setLock(ctx, rebondedLock)
 	if err != nil {
 		return err
@@ -943,7 +941,7 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 		return err
 	}
 
-	// In any case, add refs for a newly created lock
+	// Add refs for a newly created lock
 	err = k.addLockRefs(ctx, rebondedLock)
 	if err != nil {
 		return err
