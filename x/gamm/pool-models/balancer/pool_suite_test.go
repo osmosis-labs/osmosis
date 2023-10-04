@@ -339,7 +339,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		// Plugging all of this in, we get:
 		// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B++%28499990*%281+-+%281-%28100+%2F+%28100++%2B+1000%29%29%29+*+0%29%2F500000%29%29%5E%28100+%2F+%28100+%2B++1000%29%29+-+1%29
 		// 	Simplified:  P_issued = 6_504_012_121_638_943_579
-		name:         "11single asset - (almost 1 == tokenIn / liquidity ratio), token in weight is smaller than the other token, with zero spread factor",
+		name:         "single asset - (almost 1 == tokenIn / liquidity ratio), token in weight is smaller than the other token, with zero spread factor",
 		spreadFactor: osmomath.MustNewDecFromStr("0"),
 		poolAssets: []balancer.PoolAsset{
 			{
