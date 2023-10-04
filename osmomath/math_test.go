@@ -111,8 +111,22 @@ func TestPowApprox(t *testing.T) {
 			base:         MustNewDecFromStr("1.99999"),
 			exp:          MustNewDecFromStr("0.1"),
 			powPrecision: powPrecision,
+
+			// expectedResult: MustNewDecFromStr("1.071772926648356147"),
+
 			// In Python: 1.071772926648356147102864087
-			expectedResult: MustNewDecFromStr("1.071772926648356147"),
+
+			expectPanic: true,
+		},
+		{
+			// base close to 2 under iteration limit
+
+			base:         MustNewDecFromStr("1.9999"),
+			exp:          MustNewDecFromStr("0.1"),
+			powPrecision: powPrecision,
+
+			// In Python: 1.071768103548402149880477100
+			expectedResult: MustNewDecFromStr("1.071768103548402149"),
 		},
 	}
 
