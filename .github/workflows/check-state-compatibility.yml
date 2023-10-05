@@ -175,3 +175,10 @@ jobs:
       - name: 🧹 Clean up Osmosis Home
         if: always()
         run: rm -rf $HOME/.osmosisd/ || true
+  mark-as-draft: 
+    name: Mark PR as draft
+    needs: [compare_versions, check_state_compatibility]
+    if: ${{failure()}}
+    uses: osmosis-labs/osmosis/.github/workflows/mark-as-draft.yml@main
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}

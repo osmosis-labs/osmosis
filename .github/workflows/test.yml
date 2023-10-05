@@ -181,3 +181,10 @@ jobs:
           done
 
           echo "Done pruning osmosis-testnet networks."
+  mark-as-draft: 
+    name: Mark PR as draft
+    needs: [get_diff, go-split-test-files, go, e2e]
+    if: ${{failure()}}
+    uses: osmosis-labs/osmosis/.github/workflows/mark-as-draft.yml@main
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}

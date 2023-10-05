@@ -77,3 +77,10 @@ jobs:
         with:
           name: osmosisd-${{ matrix.targetos }}-${{ matrix.arch }}
           path: cmd/osmosisd/osmosisd
+  mark-as-draft: 
+    name: Mark PR as draft
+    needs: build
+    if: ${{failure()}}
+    uses: osmosis-labs/osmosis/.github/workflows/mark-as-draft.yml@main
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}

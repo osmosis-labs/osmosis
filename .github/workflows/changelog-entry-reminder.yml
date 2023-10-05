@@ -36,3 +36,10 @@ jobs:
           checkNotification: Simple
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  mark-as-draft: 
+    name: Mark PR as draft
+    needs: build
+    if: ${{failure()}}
+    uses: osmosis-labs/osmosis/.github/workflows/mark-as-draft.yml@main
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}

@@ -36,3 +36,10 @@ jobs:
           mode: exactly
           count: 1
           labels: "V:state/breaking, V:state/compatible/no_backport, V:state/compatible/backport"
+  mark-as-draft: 
+    name: Mark PR as draft
+    needs: [state_compatability_labels]
+    if: ${{failure()}}
+    uses: osmosis-labs/osmosis/.github/workflows/mark-as-draft.yml@main
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}

@@ -130,4 +130,10 @@ jobs:
         working-directory: ${{ matrix.workdir }}
         run: >
           cargo clippy -- -D warnings
-
+  mark-as-draft: 
+    name: Mark PR as draft
+    needs: [test, tests, lints]
+    if: ${{failure()}}
+    uses: osmosis-labs/osmosis/.github/workflows/mark-as-draft.yml@main
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}

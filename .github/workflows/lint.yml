@@ -61,3 +61,10 @@ jobs:
         name: Run documentation linter
         if: env.GIT_DIFF
         run: make mdlint
+  mark-as-draft: 
+    name: Mark PR as draft
+    needs: [golangci, documentation-linter]
+    if: ${{failure()}}
+    uses: osmosis-labs/osmosis/.github/workflows/mark-as-draft.yml@main
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
