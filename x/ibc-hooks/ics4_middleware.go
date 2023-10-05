@@ -27,7 +27,8 @@ func NewICS4Middleware(channel porttypes.ICS4Wrapper, hooks Hooks) ICS4Middlewar
 	}
 }
 
-// . UNFORKINGTODO: The hooks need to get fixed
+// UNFORKINGTODO: The hooks need to get fixed
+// along with the rest of this method
 func (i ICS4Middleware) SendPacket(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
@@ -37,17 +38,17 @@ func (i ICS4Middleware) SendPacket(
 	data []byte,
 ) (sequence uint64, err error) {
 	if hook, ok := i.Hooks.(SendPacketOverrideHooks); ok {
-		return 0, hook.SendPacketOverride(i, ctx, chanCap, packet)
+		return hook.SendPacketOverride(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 
 	if hook, ok := i.Hooks.(SendPacketBeforeHooks); ok {
-		hook.SendPacketBeforeHook(ctx, chanCap, packet)
+		hook.SendPacketBeforeHook(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 
-	seq, err := i.channel.SendPacket(ctx, chanCap, packet)
+	seq, err := i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 
 	if hook, ok := i.Hooks.(SendPacketAfterHooks); ok {
-		hook.SendPacketAfterHook(ctx, chanCap, packet, err)
+		hook.SendPacketAfterHook(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data, err)
 	}
 
 	return seq, err

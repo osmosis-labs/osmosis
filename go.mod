@@ -3,6 +3,7 @@ module github.com/osmosis-labs/osmosis/v19
 go 1.20
 
 require (
+	cosmossdk.io/api v0.3.1
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/math v1.1.2
 	cosmossdk.io/simapp v0.0.0-20230323161446-0af178d721ff
@@ -54,7 +55,6 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.1 // indirect
 	cloud.google.com/go/storage v1.30.1 // indirect
-	cosmossdk.io/api v0.3.1 // indirect
 	cosmossdk.io/core v0.5.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
 	cosmossdk.io/log v1.2.1 // indirect
@@ -363,7 +363,7 @@ require (
 replace (
 	github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.2.3
 
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005000258-cad4b1563b8d
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194
 	// TODO: remove in favor of github.com/cosmos/cosmos-proto
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/osmosis-labs/osmosis/osmomath => ./osmomath
@@ -371,6 +371,8 @@ replace (
 	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
 	github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
 	github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
+
+	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
 
 // exclusion so we use v1.0.0 instead
