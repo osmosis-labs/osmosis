@@ -55,8 +55,8 @@ func CreateUpgradeHandler(
 		}
 
 		// Special logic for testnets
-		// Makes the epoch happen 45 minutes after the upgrade
-		// This allows for us to create volume on the testnet and check if volume splitting works
+		// Makes the "day" epoch happen 45 minutes after the upgrade
+		// This allows for us to create volume on the testnet and check if volume splitting works without waiting an entire 24 hours
 		if ctx.ChainID() != "osmosis-1" {
 			epochs := keepers.EpochsKeeper.AllEpochInfos(ctx)
 			desiredEpochInfo := epochtypes.EpochInfo{}
