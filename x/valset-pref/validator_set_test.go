@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	valPref "github.com/osmosis-labs/osmosis/v19/x/valset-pref"
@@ -147,6 +145,245 @@ func (s *KeeperTestSuite) TestIsValidatorSetEqual() {
 	}
 }
 
+func (s *KeeperTestSuite) TestUndelegateFromValidatorSet() {
+	tests := []struct {
+		name                  string
+		delegateAmt           []osmomath.Int
+		undelegateAmt         osmomath.Int
+		noValset              bool
+		expectedUndelegateAmt []osmomath.Int
+		expectedError         error
+	}{
+		{
+			name:                  "exit at step 4: undelegating amount is under existing delegation amount",
+			delegateAmt:           []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
+			undelegateAmt:         sdk.NewInt(50),
+			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(33), sdk.NewInt(17)},
+		},
+		{
+			name:          "error: attempt to undelegate more than delegated",
+			delegateAmt:   []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
+			undelegateAmt: sdk.NewInt(200),
+			expectedError: types.UndelegateMoreThanDelegatedError{TotalDelegatedAmt: sdk.NewDec(150), UndelegationAmt: sdk.NewInt(200)},
+		},
+		{
+			name:          "error: user does not have val-set preference set",
+			delegateAmt:   []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
+			undelegateAmt: sdk.NewInt(100),
+			noValset:      true,
+			expectedError: types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: s.TestAccs[0].String()},
+		},
+	}
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			valAddrs := s.SetupMultipleValidators(3)
+			defaultDelegator := s.TestAccs[0]
+			bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+
+			// set val-set pref
+			valPreferences := []types.ValidatorPreference{
+				{
+					ValOperAddress: valAddrs[0],
+					Weight:         sdk.NewDecWithPrec(1, 1),
+				},
+				{
+					ValOperAddress: valAddrs[1],
+					Weight:         sdk.NewDecWithPrec(9, 1),
+				},
+			}
+
+			if !test.noValset {
+				s.App.ValidatorSetPreferenceKeeper.SetValidatorSetPreferences(s.Ctx, defaultDelegator.String(), types.ValidatorSetPreferences{
+					Preferences: valPreferences,
+				})
+				// delegate for each of the validators
+				for i, valsetPref := range valPreferences {
+					valAddr, err := sdk.ValAddressFromBech32(valsetPref.ValOperAddress)
+					s.Require().NoError(err)
+					validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+					s.Require().True(found)
+
+					s.FundAcc(defaultDelegator, sdk.NewCoins(sdk.NewCoin(bondDenom, test.delegateAmt[i])))
+					_, err = s.App.StakingKeeper.Delegate(s.Ctx, defaultDelegator, test.delegateAmt[i], stakingtypes.Unbonded, validator, true)
+					s.Require().NoError(err)
+				}
+			}
+
+			// System Under Test
+			err := s.App.ValidatorSetPreferenceKeeper.UndelegateFromValidatorSet(s.Ctx, defaultDelegator.String(), sdk.NewCoin(bondDenom, test.undelegateAmt))
+
+			if test.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedError.Error())
+				return
+			}
+			s.Require().NoError(err)
+
+			for i, valsetPref := range valPreferences {
+				valAddr, err := sdk.ValAddressFromBech32(valsetPref.ValOperAddress)
+				s.Require().NoError(err)
+
+				delegation, found := s.App.StakingKeeper.GetUnbondingDelegation(s.Ctx, defaultDelegator, valAddr)
+				s.Require().True(found)
+				s.Require().Equal(delegation.Entries[0].Balance, test.expectedUndelegateAmt[i])
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetValsetRatios() {
+	defaultDelegationAmt := sdk.NewInt(100)
+	tests := []struct {
+		name              string
+		useSingleValPref  bool
+		undelegateAmt     osmomath.Int
+		expectedError     bool
+		notDelegated      bool
+		expectedValRatios []valPref.ValRatio
+	}{
+		{
+			name:             "single validator, undelegate full amount",
+			useSingleValPref: true,
+			undelegateAmt:    sdk.NewInt(100),
+			expectedValRatios: []valPref.ValRatio{
+				{
+					Weight:        sdk.NewDec(1),
+					DelegatedAmt:  defaultDelegationAmt,
+					UndelegateAmt: defaultDelegationAmt,
+					VRatio:        sdk.NewDec(1),
+				},
+			},
+		},
+		{
+			name:             "single validator, undelegate partial amount",
+			useSingleValPref: true,
+			undelegateAmt:    sdk.NewInt(50),
+			expectedValRatios: []valPref.ValRatio{
+				{
+					Weight:        sdk.NewDec(1),
+					DelegatedAmt:  defaultDelegationAmt,
+					UndelegateAmt: defaultDelegationAmt.Quo(sdk.NewInt(2)),
+					// 0.5 since we are undelegating half amount
+					VRatio: sdk.NewDecWithPrec(5, 1),
+				},
+			},
+		},
+		{
+			name:          "multiple validator, undelegate full amount",
+			undelegateAmt: defaultDelegationAmt,
+			expectedValRatios: []valPref.ValRatio{
+				{
+					Weight:        sdk.MustNewDecFromStr("0.333333333333333333"),
+					DelegatedAmt:  defaultDelegationAmt,
+					UndelegateAmt: sdk.NewInt(33),
+					VRatio:        sdk.MustNewDecFromStr("0.33"),
+				},
+				{
+					Weight:        sdk.MustNewDecFromStr("0.666666666666666667"),
+					DelegatedAmt:  defaultDelegationAmt,
+					UndelegateAmt: sdk.NewInt(66),
+					VRatio:        sdk.MustNewDecFromStr("0.66"),
+				},
+			},
+		},
+		{
+			name:          "multiple validator, undelegate partial amount",
+			undelegateAmt: defaultDelegationAmt.Quo(sdk.NewInt(2)),
+			expectedValRatios: []valPref.ValRatio{
+				{
+					Weight:       sdk.MustNewDecFromStr("0.333333333333333333"),
+					DelegatedAmt: defaultDelegationAmt,
+					// 1/3 of undelegating amount(50)
+					UndelegateAmt: sdk.NewInt(16),
+					VRatio:        sdk.MustNewDecFromStr("0.16"),
+				},
+				{
+					Weight:       sdk.MustNewDecFromStr("0.666666666666666667"),
+					DelegatedAmt: defaultDelegationAmt,
+					// 2/3 of undelegating amount(50)
+					UndelegateAmt: sdk.NewInt(33),
+					VRatio:        sdk.MustNewDecFromStr("0.33"),
+				},
+			},
+		},
+		{
+			name:             "error: not delegated",
+			undelegateAmt:    defaultDelegationAmt,
+			useSingleValPref: true,
+			notDelegated:     true,
+			expectedError:    true,
+		},
+	}
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			valAddrs := s.SetupMultipleValidators(3)
+			defaultDelegator := s.TestAccs[0]
+
+			var valsetPrefs []types.ValidatorPreference
+			if test.useSingleValPref {
+				valsetPrefs = []types.ValidatorPreference{
+					{
+						ValOperAddress: valAddrs[0],
+						Weight:         sdk.OneDec(),
+					},
+				}
+			} else { // other cases, we assume we are using val set pref with mutiple validators
+				valsetPrefs = []types.ValidatorPreference{
+					{
+						ValOperAddress: valAddrs[0],
+						Weight:         sdk.MustNewDecFromStr("0.333333333333333333"),
+					},
+					{
+						ValOperAddress: valAddrs[1],
+						Weight:         sdk.MustNewDecFromStr("0.666666666666666667"),
+					},
+				}
+			}
+
+			// set up delegation for each of the valset prefs
+			expectedTotalDelegatedAmt := sdk.ZeroDec()
+			if !test.notDelegated {
+				for i, valsetPref := range valsetPrefs {
+					valAddr, err := sdk.ValAddressFromBech32(valsetPref.ValOperAddress)
+					s.Require().NoError(err)
+					validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+					s.Require().True(found)
+					bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+
+					s.FundAcc(defaultDelegator, sdk.NewCoins(sdk.NewCoin(bondDenom, defaultDelegationAmt)))
+					_, err = s.App.StakingKeeper.Delegate(s.Ctx, defaultDelegator, defaultDelegationAmt, stakingtypes.Unbonded, validator, true)
+					s.Require().NoError(err)
+
+					expectedTotalDelegatedAmt = expectedTotalDelegatedAmt.Add(defaultDelegationAmt.ToLegacyDec())
+					test.expectedValRatios[i].ValAddr = valAddr
+				}
+			}
+
+			// system under test
+			valRatios, validators, totalDelegatedAmt, err := s.App.ValidatorSetPreferenceKeeper.GetValsetRatios(s.Ctx, defaultDelegator, valsetPrefs, test.undelegateAmt)
+			if test.expectedError {
+				s.Require().Error(err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().True(totalDelegatedAmt.Equal(expectedTotalDelegatedAmt))
+			// iterate over returned validators, make sure correct validators are returned in the map
+			for valAddr, val := range validators {
+				valAddr, err := sdk.ValAddressFromBech32(valAddr)
+				s.Require().NoError(err)
+				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+				s.Require().True(found)
+				validator.Equal(&val)
+			}
+
+			s.Require().Equal(valRatios, test.expectedValRatios)
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestIsPreferenceValid() {
 	valAddrs := s.SetupMultipleValidators(4)
 
@@ -229,13 +466,13 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase() {
 	delegator := sdk.AccAddress([]byte("addr1---------------"))
 	coinToStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000))   // delegate 10osmo using Valset now and 10 osmo using regular staking delegate
 	coinToUnStake := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20_000_000)) // undelegate 20osmo
-	expectedShares := []sdk.Dec{sdk.NewDec(15_000_000), sdk.NewDec(500_000)}
+	expectedShares := []osmomath.Dec{sdk.NewDec(15_000_000), sdk.NewDec(500_000)}
 
 	s.FundAcc(delegator, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)}) // 100 osmo
 
 	// valset test setup
 	// SetValidatorSetPreference sets a new list of val-set
-	_, err := s.App.ValidatorSetPreferenceKeeper.DeriveValidatorSetPreference(s.Ctx, delegator.String(), valPreferences)
+	_, err := s.App.ValidatorSetPreferenceKeeper.ValidateValidatorSetPreference(s.Ctx, delegator.String(), valPreferences)
 	s.Require().NoError(err)
 
 	s.App.ValidatorSetPreferenceKeeper.SetValidatorSetPreferences(s.Ctx, delegator.String(), types.ValidatorSetPreferences{
@@ -255,8 +492,6 @@ func (s *KeeperTestSuite) TestUndelegateFromValSetErrorCase() {
 	// Delegate more token to the validator. This will cause valset and regular staking to go out of sync
 	_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, sdk.NewInt(10_000_000), stakingtypes.Unbonded, validator, true)
 	s.Require().NoError(err)
-
-	fmt.Println("3 validators: ", valAddrs[0], valAddrs[1], valAddrs[2])
 
 	err = s.App.ValidatorSetPreferenceKeeper.UndelegateFromValidatorSet(s.Ctx, delegator.String(), coinToUnStake)
 	s.Require().NoError(err)

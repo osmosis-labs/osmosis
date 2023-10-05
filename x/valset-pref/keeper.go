@@ -55,7 +55,7 @@ func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (typ
 			return types.ValidatorSetPreferences{}, types.ErrNoDelegation
 		}
 
-		return types.ValidatorSetPreferences{Preferences: calculateSharesAndFormat(existingDelegations)}, nil
+		return types.ValidatorSetPreferences{Preferences: formatToValPrefArr(existingDelegations)}, nil
 	}
 
 	return valSet, nil
@@ -65,8 +65,8 @@ func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (typ
 // considering their existing delegations.
 // -If validator set preference does not exist and there are no existing delegations, it returns an error.
 // -If validator set preference exists and there are no existing delegations, it returns the existing preference.
-// -If there is a validator set preference and existing delegations, or existing delegations
-// but no validator set preference, it calculates the delegator's shares in each delegation
+// -If there is any existing delegation:
+// calculates the delegator's shares in each delegation
 // as a ratio of the total shares and returns it as part of ValidatorSetPreferences.
 func (k Keeper) GetValSetPreferencesWithDelegations(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, error) {
 	delAddr, err := sdk.AccAddressFromBech32(delegator)
@@ -87,23 +87,26 @@ func (k Keeper) GetValSetPreferencesWithDelegations(ctx sdk.Context, delegator s
 		return valSet, nil
 	}
 
-	// this can either be valSet doesnot exist and existing delegations exist
-	// or valset exists and existing delegation exists
-	return types.ValidatorSetPreferences{Preferences: calculateSharesAndFormat(existingDelegations)}, nil
+	// when existing delegation exists, have it based upon the existing delegation
+	// regardless of the delegator having valset pref or not
+	return types.ValidatorSetPreferences{Preferences: formatToValPrefArr(existingDelegations)}, nil
 }
 
-func calculateSharesAndFormat(existingDelegations []stakingtypes.Delegation) []types.ValidatorPreference {
-	existingTotalShares := sdk.NewDec(0)
-	for _, existingDelegation := range existingDelegations {
-		existingTotalShares = existingTotalShares.Add(existingDelegation.Shares)
+// formatToValPrefArr iterates over given delegations array, formats it into ValidatorPreference array.
+// Used to calculate weights for the each delegation towards validator.
+// CONTRACT: This method assumes no duplicated ValOperAddress exists in the given delegation.
+func formatToValPrefArr(delegations []stakingtypes.Delegation) []types.ValidatorPreference {
+	totalShares := sdk.NewDec(0)
+	for _, existingDelegation := range delegations {
+		totalShares = totalShares.Add(existingDelegation.Shares)
 	}
 
-	existingDelsValSetFormatted := make([]types.ValidatorPreference, len(existingDelegations))
-	for i, existingDelegation := range existingDelegations {
-		existingDelsValSetFormatted[i] = types.ValidatorPreference{
-			ValOperAddress: existingDelegation.ValidatorAddress,
-			Weight:         existingDelegation.Shares.Quo(existingTotalShares),
+	valPrefs := make([]types.ValidatorPreference, len(delegations))
+	for i, delegation := range delegations {
+		valPrefs[i] = types.ValidatorPreference{
+			ValOperAddress: delegation.ValidatorAddress,
+			Weight:         delegation.Shares.Quo(totalShares),
 		}
 	}
-	return existingDelsValSetFormatted
+	return valPrefs
 }
