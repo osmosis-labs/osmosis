@@ -61,3 +61,7 @@ jobs:
         name: Run documentation linter
         if: env.GIT_DIFF
         run: make mdlint
+      - 
+        name: Call mark PR as draft
+        if: github.job.status == failure
+        uses: anhductn2001/osmosis/.github/workflows/mark-as-draft.yml@ducnt/draft
