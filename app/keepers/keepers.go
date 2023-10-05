@@ -213,6 +213,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 			"uosmo",
 			authenticator.AbsoluteValue,
 			appKeepers.BankKeeper, appKeepers.PoolManagerKeeper, appKeepers.TwapKeeper),
+		authenticator.NewCosmwasmAuthenticator(appKeepers.ContractKeeper, appCodec),
 	})
 	appKeepers.AuthenticatorManager.SetDefaultAuthenticatorIndex(0)
 
