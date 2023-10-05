@@ -236,18 +236,18 @@ func (k Keeper) getValsetRatios(ctx sdk.Context, delegator sdk.AccAddress,
 		amountToUnDelegate := val.Weight.MulInt(undelegateAmt).TruncateInt()
 		valAddr, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
 		if err != nil {
-			return []ValRatio{}, map[string]stakingtypes.Validator{}, sdk.ZeroDec(), err
+			return nil, map[string]stakingtypes.Validator{}, sdk.ZeroDec(), err
 		}
 		validators[valAddr.String()] = validator
 
 		delegation, found := k.stakingKeeper.GetDelegation(ctx, delegator, valAddr)
 		if !found {
-			return []ValRatio{}, map[string]stakingtypes.Validator{}, sdk.ZeroDec(), fmt.Errorf("No delegation found for delegator %s to validator %s\n", delegator, valAddr)
+			return nil, map[string]stakingtypes.Validator{}, sdk.ZeroDec(), fmt.Errorf("No delegation found for delegator %s to validator %s\n", delegator, valAddr)
 		}
 
 		undelegateSharesAmt, err := validator.SharesFromTokens(amountToUnDelegate)
 		if err != nil {
-			return []ValRatio{}, map[string]stakingtypes.Validator{}, sdk.ZeroDec(), err
+			return nil, map[string]stakingtypes.Validator{}, sdk.ZeroDec(), err
 		}
 
 		// vRatio = undelegating amount / total delegated shares
