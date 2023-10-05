@@ -63,5 +63,5 @@ jobs:
         run: make mdlint
       - 
         name: Call mark PR as draft
-        if: github.job.status == failure
+        if: ${{ github.job.status == 'failure' }}
         uses: anhductn2001/osmosis/.github/workflows/mark-as-draft.yml@ducnt/draft
