@@ -2,19 +2,23 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
+	valsettypes "github.com/osmosis-labs/osmosis/v19/x/valset-pref/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GetTotalSyntheticAssetsLocked returns the total amount of the given denom locked.
-func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk.Int {
+func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) osmomath.Int {
 	return k.lk.GetPeriodLocksAccumulation(ctx, lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         denom,
@@ -26,13 +30,16 @@ func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk
 // has delegated using the most recent osmo equivalent multiplier.
 // This is labeled as expected because the way it calculates the amount can
 // lead rounding errors from the true delegated amount.
-func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) sdk.Int {
+func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) (osmomath.Int, error) {
 	// (1) Find how many tokens total T are locked for (denom, validator) pair
 	totalSuperfluidDelegation := k.GetTotalSyntheticAssetsLocked(ctx, stakingSyntheticDenom(acc.Denom, acc.ValAddr))
 	// (2) Multiply the T tokens, by the number of superfluid osmo per token, to get the total amount
 	// of osmo we expect.
-	refreshedAmount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
-	return refreshedAmount
+	refreshedAmount, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+	return refreshedAmount, nil
 }
 
 // RefreshIntermediaryDelegationAmounts refreshes the amount of delegation for all intermediary accounts.
@@ -55,18 +62,22 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			continue
 		}
 
-		currentAmount := sdk.NewInt(0)
+		currentAmount := osmomath.NewInt(0)
 		delegation, found := k.sk.GetDelegation(ctx, mAddr, valAddress)
 		if !found {
 			// continue if current delegation is 0, in case its really a dust delegation
 			// that becomes worth something after refresh.
-			k.Logger(ctx).Info(fmt.Sprintf("Existing delegation not found for %s with %s during superfluid refresh."+
+			// TODO: We have a correct explanation for this in some github issue, lets amend this correctly.
+			k.Logger(ctx).Debug(fmt.Sprintf("Existing delegation not found for %s with %s during superfluid refresh."+
 				" It may have been previously bonded, but now unbonded.", mAddr.String(), acc.ValAddr))
 		} else {
 			currentAmount = validator.TokensFromShares(delegation.Shares).RoundInt()
 		}
 
-		refreshedAmount := k.GetExpectedDelegationAmount(ctx, acc)
+		refreshedAmount, err := k.GetExpectedDelegationAmount(ctx, acc)
+		if err != nil {
+			ctx.Logger().Error("Error in GetExpectedDelegationAmount (likely that underlying LP share is no longer superfluid capable), state update reverted", err)
+		}
 
 		if refreshedAmount.GT(currentAmount) {
 			adjustment := refreshedAmount.Sub(currentAmount)
@@ -86,7 +97,7 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 				ctx.Logger().Error("Error in forceUndelegateAndBurnOsmoTokens, state update reverted", err)
 			}
 		} else {
-			ctx.Logger().Info("Intermediary account already has correct delegation amount?" +
+			ctx.Logger().Debug("Intermediary account already has correct delegation amount?" +
 				" This with high probability implies the exact same spot price as the last epoch," +
 				"and no delegation changes.")
 		}
@@ -103,12 +114,15 @@ func (k Keeper) IncreaseSuperfluidDelegation(ctx sdk.Context, lockID uint64, amo
 
 	// mint OSMO token based on the most recent osmo equivalent multiplier
 	// of locked denom to denom module account
-	osmoAmt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, amount.AmountOf(acc.Denom))
+	osmoAmt, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, amount.AmountOf(acc.Denom))
+	if err != nil {
+		return err
+	}
 	if osmoAmt.IsZero() {
 		return nil
 	}
 
-	err := k.mintOsmoTokensAndDelegate(ctx, osmoAmt, acc)
+	err = k.mintOsmoTokensAndDelegate(ctx, osmoAmt, acc)
 	if err != nil {
 		return err
 	}
@@ -119,7 +133,7 @@ func (k Keeper) IncreaseSuperfluidDelegation(ctx sdk.Context, lockID uint64, amo
 // basic validation for locks to be eligible for superfluid delegation. This includes checking
 // - that the sender is the owner of the lock
 // - that the lock is consisted of single coin
-func (k Keeper) validateLockForSF(ctx sdk.Context, lock *lockuptypes.PeriodLock, sender string) error {
+func (k Keeper) validateLockForSF(lock *lockuptypes.PeriodLock, sender string) error {
 	if lock.Owner != sender {
 		return lockuptypes.ErrNotLockOwner
 	}
@@ -137,29 +151,33 @@ func (k Keeper) validateLockForSF(ctx sdk.Context, lock *lockuptypes.PeriodLock,
 // - lock duration is greater or equal to the unbonding time
 // - lock should not be already superfluid staked
 func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.PeriodLock, sender string) error {
-	err := k.validateLockForSF(ctx, lock, sender)
+	err := k.validateLockForSF(lock, sender)
 	if err != nil {
 		return err
 	}
-	defaultSuperfluidAsset := types.SuperfluidAsset{}
-	if k.GetSuperfluidAsset(ctx, lock.Coins[0].Denom) == defaultSuperfluidAsset {
-		return sdkerrors.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", lock.Coins[0].Denom)
+
+	denom := lock.Coins[0].Denom
+
+	// ensure that the locks underlying denom is for an existing superfluid asset
+	_, err = k.GetSuperfluidAsset(ctx, denom)
+	if err != nil {
+		return err
 	}
 
 	// prevent unbonding lockups to be not able to be used for superfluid staking
 	if lock.IsUnlocking() {
-		return sdkerrors.Wrapf(types.ErrUnbondingLockupNotSupported, "lock id : %d", lock.ID)
+		return errorsmod.Wrapf(types.ErrUnbondingLockupNotSupported, "lock id : %d", lock.ID)
 	}
 
 	// ensure that lock duration >= staking.UnbondingTime
 	unbondingTime := k.sk.GetParams(ctx).UnbondingTime
 	if lock.Duration < unbondingTime {
-		return sdkerrors.Wrapf(types.ErrNotEnoughLockupDuration, "lock duration (%d) must be greater than unbonding time (%d)", lock.Duration, unbondingTime)
+		return errorsmod.Wrapf(types.ErrNotEnoughLockupDuration, "lock duration (%d) must be greater than unbonding time (%d)", lock.Duration, unbondingTime)
 	}
 
 	// Thus when we stake now, this will be the only superfluid position for this lockID.
 	if k.alreadySuperfluidStaking(ctx, lock.ID) {
-		return sdkerrors.Wrapf(types.ErrAlreadyUsedSuperfluidLockup, "lock id : %d", lock.ID)
+		return errorsmod.Wrapf(types.ErrAlreadyUsedSuperfluidLockup, "lock id : %d", lock.ID)
 	}
 
 	return nil
@@ -218,7 +236,10 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 
 	// Find how many new osmo tokens this delegation is worth at superfluids current risk adjustment
 	// and twap of the denom.
-	amount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lockedCoin.Amount)
+	amount, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lockedCoin.Amount)
+	if err != nil {
+		return err
+	}
 	if amount.IsZero() {
 		return types.ErrOsmoEquivalentZeroNotAllowed
 	}
@@ -226,44 +247,70 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 	return k.mintOsmoTokensAndDelegate(ctx, amount, acc)
 }
 
-// SuperfluidUndelegate starts undelegating superfluid delegated position for the given lock.
-// Undelegation is done instantly and the equivalent amount is sent to the module account
-// where it is burnt instantly. Note that this method does not include unbonding the lock
-// itself.
-func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) error {
+// undelegateCommon is a helper function for SuperfluidUndelegate and superfluidUndelegateToConcentratedPosition.
+// It performs the following tasks:
+// - checks that the lock is valid for superfluid staking
+// - gets the intermediary account associated with the lock id
+// - deletes the connection between the lock id and the intermediary account
+// - deletes the synthetic lockup associated with the lock id
+// - undelegates the superfluid staking position associated with the lock id and burns the underlying osmo tokens
+// - returns the intermediary account
+func (k Keeper) undelegateCommon(ctx sdk.Context, sender string, lockID uint64) (types.SuperfluidIntermediaryAccount, error) {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
-		return err
+		return types.SuperfluidIntermediaryAccount{}, err
 	}
-	err = k.validateLockForSF(ctx, lock, sender)
+	err = k.validateLockForSF(lock, sender)
 	if err != nil {
-		return err
+		return types.SuperfluidIntermediaryAccount{}, err
 	}
 	lockedCoin := lock.Coins[0]
 
-	// get the intermediate acct asscd. with lock id, and delete the connection.
+	// get the intermediate account associated with lock id, and delete the connection.
 	intermediaryAcc, found := k.GetIntermediaryAccountFromLockId(ctx, lockID)
 	if !found {
-		return types.ErrNotSuperfluidUsedLockup
+		return types.SuperfluidIntermediaryAccount{}, types.ErrNotSuperfluidUsedLockup
 	}
 	k.DeleteLockIdIntermediaryAccountConnection(ctx, lockID)
 
-	// Delete the old synthetic lockup, and create a new synthetic lockup representing the unstaking
+	// Delete the old synthetic lockup
 	synthdenom := stakingSyntheticDenom(lockedCoin.Denom, intermediaryAcc.ValAddr)
 	err = k.lk.DeleteSyntheticLockup(ctx, lockID, synthdenom)
 	if err != nil {
-		return err
+		return types.SuperfluidIntermediaryAccount{}, err
 	}
 
 	// undelegate this lock's delegation amount, and burn the minted osmo.
-	amount := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, lockedCoin.Amount)
+	amount, err := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, lockedCoin.Amount)
+	if err != nil {
+		return types.SuperfluidIntermediaryAccount{}, err
+	}
 	err = k.forceUndelegateAndBurnOsmoTokens(ctx, amount, intermediaryAcc)
+	if err != nil {
+		return types.SuperfluidIntermediaryAccount{}, err
+	}
+	return intermediaryAcc, nil
+}
+
+// SuperfluidUndelegate starts undelegating superfluid delegated position for the given lock.
+// Undelegation is done instantly and the equivalent amount is sent to the module account
+// where it is burnt. Note that this method does not include unbonding the lock
+// itself.
+func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) error {
+	intermediaryAcc, err := k.undelegateCommon(ctx, sender, lockID)
 	if err != nil {
 		return err
 	}
-
 	// Create a new synthetic lockup representing the unstaking side.
 	return k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
+}
+
+// SuperfluidUndelegateToConcentratedPosition starts undelegating superfluid delegated position for the given lock. It behaves similarly to SuperfluidUndelegate,
+// however it does not create a new synthetic lockup representing the unstaking side. This is because after the time this function is called, we might
+// want to perform more operations prior to creating a lock. Once the actual lock is created, the synthetic lockup representing the unstaking side
+// should eventually be created as well. Use this function with caution to avoid accidentally missing synthetic lock creation.
+func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64) (types.SuperfluidIntermediaryAccount, error) {
+	return k.undelegateCommon(ctx, sender, gammLockID)
 }
 
 // SuperfluidUnbondLock unbonds the lock that has been used for superfluid staking.
@@ -278,7 +325,7 @@ func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, s
 // This method returns the lock id, same lock id if unlock amount is equal to the
 // underlying lock amount. Otherwise it returns the newly created lock id.
 // Note that we can either partially or fully undelegate and unbond lock using this method.
-func (k Keeper) SuperfluidUndelegateAndUnbondLock(ctx sdk.Context, lockID uint64, sender string, amount sdk.Int) (uint64, error) {
+func (k Keeper) SuperfluidUndelegateAndUnbondLock(ctx sdk.Context, lockID uint64, sender string, amount osmomath.Int) (uint64, error) {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
 		return 0, err
@@ -359,15 +406,19 @@ func (k Keeper) unbondLock(ctx sdk.Context, underlyingLockId uint64, sender stri
 	if err != nil {
 		return 0, err
 	}
-	err = k.validateLockForSF(ctx, lock, sender)
+	err = k.validateLockForSF(lock, sender)
 	if err != nil {
 		return 0, err
 	}
-	synthLocks := k.lk.GetAllSyntheticLockupsByLockup(ctx, underlyingLockId)
-	if len(synthLocks) != 1 {
+	synthLock, _, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, underlyingLockId)
+	if err != nil {
+		return 0, err
+	}
+	// TODO: Use !found
+	if synthLock == (lockuptypes.SyntheticLock{}) {
 		return 0, types.ErrNotSuperfluidUsedLockup
 	}
-	if !synthLocks[0].IsUnlocking() {
+	if !synthLock.IsUnlocking() {
 		return 0, types.ErrBondingLockupNotSupported
 	}
 	return k.lk.BeginForceUnlock(ctx, underlyingLockId, coins)
@@ -387,12 +438,16 @@ func (k Keeper) alreadySuperfluidStaking(ctx sdk.Context, lockID uint64) bool {
 		return true
 	}
 
-	synthLocks := k.lk.GetAllSyntheticLockupsByLockup(ctx, lockID)
-	return len(synthLocks) > 0
+	synthLock, _, err := k.lk.GetSyntheticLockupByUnderlyingLockId(ctx, lockID)
+	if err != nil {
+		return false
+	}
+	// TODO: return found
+	return synthLock != (lockuptypes.SyntheticLock{})
 }
 
 // mintOsmoTokensAndDelegate mints osmoAmount of OSMO tokens, and immediately delegate them to validator on behalf of intermediary account.
-func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, intermediaryAccount types.SuperfluidIntermediaryAccount) error {
+func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount osmomath.Int, intermediaryAccount types.SuperfluidIntermediaryAccount) error {
 	validator, err := k.validateValAddrForDelegate(ctx, intermediaryAccount.ValAddr)
 	if err != nil {
 		return err
@@ -426,7 +481,7 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 // from delegations between intermediary account and valAddr.
 // We take the returned tokens, and then immediately burn them.
 func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
-	osmoAmount sdk.Int, intermediaryAcc types.SuperfluidIntermediaryAccount,
+	osmoAmount osmomath.Int, intermediaryAcc types.SuperfluidIntermediaryAccount,
 ) error {
 	valAddr, err := sdk.ValAddressFromBech32(intermediaryAcc.ValAddr)
 	if err != nil {
@@ -479,7 +534,7 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(int64, s
 }
 
 // TotalBondedTokens implements govtypes.StakingKeeper
-func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
+func (k Keeper) TotalBondedTokens(ctx sdk.Context) osmomath.Int {
 	return k.sk.TotalBondedTokens(ctx)
 }
 
@@ -514,7 +569,11 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 		}
 
 		// get osmo-equivalent token amount
-		amount := k.GetSuperfluidOSMOTokens(ctx, interim.Denom, coin.Amount)
+		amount, err := k.GetSuperfluidOSMOTokens(ctx, interim.Denom, coin.Amount)
+		if err != nil {
+			ctx.Logger().Error("failed to get osmo equivalent of token", "Denom", interim.Denom, "Amount", coin.Amount, "Error", err)
+			continue
+		}
 
 		// get validator shares equivalent to the token amount
 		valAddr, err := sdk.ValAddressFromBech32(interim.ValAddr)
@@ -545,4 +604,222 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 		// if valid delegation has been found, increment delegation index
 		fn(index+int64(i), delegation)
 	}
+}
+
+// UnbondConvertAndStake converts given lock to osmo and stakes it to given validator.
+// Supports conversion of 1)superfluid bonded 2)superfluid undelegating 3)vanilla unlocking.
+// Liquid gamm shares will not be supported for conversion.
+// Delegation is done in the following logic:
+// - If valAddr provided, single delegate.
+// - If valAddr not provided and valset exists, valsetpref.Delegate
+// - If valAddr not provided and valset delegation is not possible, refer back to original lock's superfluid validator if it was a superfluid lock
+// - Else: error
+func (k Keeper) UnbondConvertAndStake(ctx sdk.Context, lockID uint64, sender, valAddr string,
+	minAmtToStake osmomath.Int, sharesToConvert sdk.Coin) (totalAmtConverted osmomath.Int, err error) {
+	senderAddr, err := sdk.AccAddressFromBech32(sender)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
+	// use getMigrationType method to check status of lock (either superfluid staked, superfluid unbonding, vanilla locked, unlocked)
+	_, migrationType, err := k.getMigrationType(ctx, int64(lockID))
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
+	// if superfluid bonded, first change it into superfluid undelegate to burn minted osmo and instantly undelegate.
+	if migrationType == SuperfluidBonded {
+		_, err = k.undelegateCommon(ctx, sender, lockID)
+		if err != nil {
+			return osmomath.Int{}, err
+		}
+	}
+
+	if migrationType == SuperfluidBonded || migrationType == SuperfluidUnbonding || migrationType == NonSuperfluid {
+		totalAmtConverted, err = k.convertLockToStake(ctx, senderAddr, valAddr, lockID, minAmtToStake)
+	} else if migrationType == Unlocked { // liquid gamm shares without locks
+		totalAmtConverted, err = k.convertUnlockedToStake(ctx, senderAddr, valAddr, sharesToConvert, minAmtToStake)
+	} else { // any other types of migration should fail
+		return osmomath.Int{}, fmt.Errorf("unsupported staking conversion type")
+	}
+
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
+	return totalAmtConverted, nil
+}
+
+// convertLockToStake handles locks that are superfluid bonded, superfluid unbonding, vanilla locked(unlocking) locks.
+// Deletes all associated state, converts the lock itself to staking delegation by going through exit pool and swap.
+func (k Keeper) convertLockToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, lockId uint64,
+	minAmtToStake osmomath.Int) (totalAmtConverted osmomath.Int, err error) {
+	lock, err := k.lk.GetLockByID(ctx, lockId)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
+	// check lock owner is sender
+	if lock.Owner != sender.String() {
+		return osmomath.ZeroInt(), types.LockOwnerMismatchError{
+			LockId:        lock.ID,
+			LockOwner:     lock.Owner,
+			ProvidedOwner: sender.String(),
+		}
+	}
+
+	lockCoin := lock.Coins[0]
+
+	// Ensuring the sharesToMigrate contains gamm pool share prefix.
+	if !strings.HasPrefix(lockCoin.Denom, gammtypes.GAMMTokenPrefix) {
+		return osmomath.Int{}, types.SharesToMigrateDenomPrefixError{Denom: lockCoin.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
+	}
+
+	poolIdLeaving, err := gammtypes.GetPoolIdFromShareDenom(lockCoin.Denom)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
+	var superfluidValAddr string
+	interAcc, found := k.GetIntermediaryAccountFromLockId(ctx, lockId)
+	if found {
+		superfluidValAddr = interAcc.ValAddr
+	}
+
+	// Force unlock, validate the provided sharesToStake, and exit the balancer pool.
+	// we exit with min token out amount zero since we are checking min amount designated to stake later on anyways.
+	exitCoins, err := k.forceUnlockAndExitBalancerPool(ctx, sender, poolIdLeaving, lock, lockCoin, sdk.NewCoins(), false)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
+	totalAmtConverted, err = k.convertGammSharesToOsmoAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake, superfluidValAddr)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
+	return totalAmtConverted, nil
+}
+
+// convertUnlockedToStake converts liquid gamm shares to staking delegation.
+// minAmtToStake works as slippage bound for the conversion process.
+func (k Keeper) convertUnlockedToStake(ctx sdk.Context, sender sdk.AccAddress, valAddr string, sharesToStake sdk.Coin,
+	minAmtToStake osmomath.Int) (totalAmtConverted osmomath.Int, err error) {
+	if !strings.HasPrefix(sharesToStake.Denom, gammtypes.GAMMTokenPrefix) {
+		return osmomath.Int{}, types.SharesToMigrateDenomPrefixError{Denom: sharesToStake.Denom, ExpectedDenomPrefix: gammtypes.GAMMTokenPrefix}
+	}
+
+	// Get the balancer poolId by parsing the gamm share denom.
+	poolIdLeaving, err := gammtypes.GetPoolIdFromShareDenom(sharesToStake.Denom)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
+	// Exit the balancer pool position.
+	// we exit with min token out amount zero since we are checking min amount designated to stake later on anyways.
+	exitCoins, err := k.gk.ExitPool(ctx, sender, poolIdLeaving, sharesToStake.Amount, sdk.NewCoins())
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
+	totalAmtConverted, err = k.convertGammSharesToOsmoAndStake(ctx, sender, valAddr, poolIdLeaving, exitCoins, minAmtToStake, "")
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
+	return totalAmtConverted, nil
+}
+
+// convertGammSharesToOsmoAndStake converts given gamm shares to osmo by swapping in the given pool
+// then stakes it to the designated validator.
+// minAmtToStake works as slippage bound, and would error if total amount being staked is less than min amount to stake.
+// Depending on user inputs, valAddr and originalSuperfluidValAddr could be an empty string,
+// each leading to a different delegation scenario.
+func (k Keeper) convertGammSharesToOsmoAndStake(
+	ctx sdk.Context,
+	sender sdk.AccAddress, valAddr string,
+	poolIdLeaving uint64, exitCoins sdk.Coins, minAmtToStake osmomath.Int, originalSuperfluidValAddr string,
+) (totalAmtCoverted osmomath.Int, err error) {
+	var nonOsmoCoins sdk.Coins
+	bondDenom := k.sk.BondDenom(ctx)
+
+	// from the exit coins, separate non-bond denom and bond denom.
+	for _, exitCoin := range exitCoins {
+		// if coin is not uosmo, add it to non-osmo Coins
+		if exitCoin.Denom != bondDenom {
+			nonOsmoCoins = append(nonOsmoCoins, exitCoin)
+		}
+	}
+	originalBondDenomAmt := exitCoins.AmountOf(bondDenom)
+
+	// track how much non-uosmo tokens we have converted to uosmo
+	totalAmtCoverted = osmomath.ZeroInt()
+
+	// iterate over non-bond denom coins and swap them into bond denom
+	for _, coinToConvert := range nonOsmoCoins {
+		tokenOutAmt, err := k.pmk.SwapExactAmountIn(ctx, sender, poolIdLeaving, coinToConvert, bondDenom, osmomath.ZeroInt())
+		if err != nil {
+			return osmomath.Int{}, err
+		}
+
+		totalAmtCoverted = totalAmtCoverted.Add(tokenOutAmt)
+	}
+
+	// add the converted amount with the amount of osmo from exit coin to get total amount we would be staking
+	totalAmtToStake := originalBondDenomAmt.Add(totalAmtCoverted)
+
+	// check if the total amount to stake after all conversion is greater than provided min amount to stake
+	if totalAmtToStake.LT(minAmtToStake) {
+		return osmomath.Int{}, types.TokenConvertedLessThenDesiredStakeError{
+			ActualTotalAmtToStake:   totalAmtToStake,
+			ExpectedTotalAmtToStake: minAmtToStake,
+		}
+	}
+
+	err = k.delegateBaseOnValsetPref(ctx, sender, valAddr, originalSuperfluidValAddr, totalAmtToStake)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
+	return totalAmtToStake, nil
+}
+
+// delegateBaseOnValsetPref delegates based on given input parameters.
+// valAddr and originalSuperfluidValAddr can be an empty string depending on user input and original lock's status.
+// Delegation is done in the following logic:
+// - If valAddr provided, single delegate.
+// - If valAddr not provided and valset exists, valsetpref.Delegate
+// - If valAddr not provided and valset delegation is not possible, refer back to original lock's superfluid validator if it was a superfluid lock
+// - Else: error
+func (k Keeper) delegateBaseOnValsetPref(ctx sdk.Context, sender sdk.AccAddress, valAddr, originalSuperfluidValAddr string, totalAmtToStake osmomath.Int) error {
+	bondDenom := k.sk.BondDenom(ctx)
+
+	// if given valAddr is empty, we use delegation preference given from valset-pref module or reference from superfluid staking
+	if valAddr == "" {
+		err := k.vspk.DelegateToValidatorSet(ctx, sender.String(), sdk.NewCoin(bondDenom, totalAmtToStake))
+		// if valset-pref delegation succeeded without error, end method
+		if err == nil {
+			return nil
+		}
+
+		// if valset-pref delegation errored due to no existing delegation existing, fall back and try using superfluid staked validator
+		if err == valsettypes.ErrNoDelegation {
+			valAddr = originalSuperfluidValAddr
+		} else if err != nil { // for other errors, handle error
+			return err
+		}
+	}
+
+	val, err := k.validateValAddrForDelegate(ctx, valAddr)
+	if err != nil {
+		return err
+	}
+
+	// delegate now!
+	_, err = k.sk.Delegate(ctx, sender, totalAmtToStake, stakingtypes.Unbonded, val, true)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

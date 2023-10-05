@@ -3,10 +3,10 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
-	balancer "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 const (
@@ -17,24 +17,24 @@ const (
 
 // TestSwapExactAmountIn_Events tests that events are correctly emitted
 // when calling SwapExactAmountIn.
-func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
+func (s *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 	const (
 		tokenInMinAmount = 1
-		tokenIn          = 5
+		tokenIn          = 10
 	)
 
 	testcases := map[string]struct {
 		routes                []poolmanagertypes.SwapAmountInRoute
 		tokenIn               sdk.Coin
-		tokenOutMinAmount     sdk.Int
+		tokenOutMinAmount     osmomath.Int
 		expectError           bool
 		expectedSwapEvents    int
 		expectedMessageEvents int
 	}{
 		"zero hops": {
 			routes:            []poolmanagertypes.SwapAmountInRoute{},
-			tokenIn:           sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
-			tokenOutMinAmount: sdk.NewInt(tokenInMinAmount),
+			tokenIn:           sdk.NewCoin("foo", osmomath.NewInt(tokenIn)),
+			tokenOutMinAmount: osmomath.NewInt(tokenInMinAmount),
 			expectError:       true,
 		},
 		"one hop": {
@@ -44,10 +44,10 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 					TokenOutDenom: "bar",
 				},
 			},
-			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
-			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
+			tokenIn:               sdk.NewCoin("foo", osmomath.NewInt(tokenIn)),
+			tokenOutMinAmount:     osmomath.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
+			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
 		"two hops": {
 			routes: []poolmanagertypes.SwapAmountInRoute{
@@ -60,10 +60,10 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 					TokenOutDenom: "baz",
 				},
 			},
-			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
-			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
+			tokenIn:               sdk.NewCoin("foo", osmomath.NewInt(tokenIn)),
+			tokenOutMinAmount:     osmomath.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
+			expectedMessageEvents: 9, // 1 gamm + 8 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []poolmanagertypes.SwapAmountInRoute{
@@ -76,64 +76,65 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 					TokenOutDenom: "baz",
 				},
 			},
-			tokenIn:           sdk.NewCoin(doesNotExistDenom, sdk.NewInt(tokenIn)),
-			tokenOutMinAmount: sdk.NewInt(tokenInMinAmount),
-			expectError:       true,
+			tokenIn:               sdk.NewCoin(doesNotExistDenom, osmomath.NewInt(tokenIn)),
+			tokenOutMinAmount:     osmomath.NewInt(tokenInMinAmount),
+			expectedMessageEvents: 2, // 2 event gets triggered prior to failure.
+			expectError:           true,
 		},
 	}
 
 	for name, tc := range testcases {
-		suite.Run(name, func() {
-			suite.Setup()
-			ctx := suite.Ctx
+		s.Run(name, func() {
+			s.Setup()
+			ctx := s.Ctx
 
-			suite.PrepareBalancerPool()
-			suite.PrepareBalancerPool()
+			s.PrepareBalancerPool()
+			s.PrepareBalancerPool()
 
-			msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
+			msgServer := keeper.NewMsgServerImpl(s.App.GAMMKeeper)
 
 			// Reset event counts to 0 by creating a new manager.
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
-			suite.Equal(0, len(ctx.EventManager().Events()))
+			s.Equal(0, len(ctx.EventManager().Events()))
 
 			response, err := msgServer.SwapExactAmountIn(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountIn{
-				Sender:            suite.TestAccs[0].String(),
+				Sender:            s.TestAccs[0].String(),
 				Routes:            tc.routes,
 				TokenIn:           tc.tokenIn,
 				TokenOutMinAmount: tc.tokenOutMinAmount,
 			})
 
 			if !tc.expectError {
-				suite.NoError(err)
-				suite.NotNil(response)
+				s.NoError(err)
+				s.NotNil(response)
 			}
 
-			suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, tc.expectedSwapEvents)
-			suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			s.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, tc.expectedSwapEvents)
+			s.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 		})
 	}
 }
 
 // TestSwapExactAmountOut_Events tests that events are correctly emitted
 // when calling SwapExactAmountOut.
-func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
+func (s *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 	const (
 		tokenInMaxAmount = int64Max
-		tokenOut         = 5
+		tokenOut         = 10
 	)
 
 	testcases := map[string]struct {
 		routes                []poolmanagertypes.SwapAmountOutRoute
 		tokenOut              sdk.Coin
-		tokenInMaxAmount      sdk.Int
+		tokenInMaxAmount      osmomath.Int
 		expectError           bool
 		expectedSwapEvents    int
 		expectedMessageEvents int
 	}{
 		"zero hops": {
 			routes:           []poolmanagertypes.SwapAmountOutRoute{},
-			tokenOut:         sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
-			tokenInMaxAmount: sdk.NewInt(tokenInMaxAmount),
+			tokenOut:         sdk.NewCoin("foo", osmomath.NewInt(tokenOut)),
+			tokenInMaxAmount: osmomath.NewInt(tokenInMaxAmount),
 			expectError:      true,
 		},
 		"one hop": {
@@ -143,10 +144,10 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 					TokenInDenom: "bar",
 				},
 			},
-			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
-			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
+			tokenOut:              sdk.NewCoin("foo", osmomath.NewInt(tokenOut)),
+			tokenInMaxAmount:      osmomath.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
+			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
 		"two hops": {
 			routes: []poolmanagertypes.SwapAmountOutRoute{
@@ -159,10 +160,10 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 					TokenInDenom: "baz",
 				},
 			},
-			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
-			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
+			tokenOut:              sdk.NewCoin("foo", osmomath.NewInt(tokenOut)),
+			tokenInMaxAmount:      osmomath.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
+			expectedMessageEvents: 9, // 1 gamm + 8 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []poolmanagertypes.SwapAmountOutRoute{
@@ -175,47 +176,47 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 					TokenInDenom: "baz",
 				},
 			},
-			tokenOut:         sdk.NewCoin(doesNotExistDenom, sdk.NewInt(tokenOut)),
-			tokenInMaxAmount: sdk.NewInt(tokenInMaxAmount),
+			tokenOut:         sdk.NewCoin(doesNotExistDenom, osmomath.NewInt(tokenOut)),
+			tokenInMaxAmount: osmomath.NewInt(tokenInMaxAmount),
 			expectError:      true,
 		},
 	}
 
 	for name, tc := range testcases {
-		suite.Run(name, func() {
-			suite.Setup()
-			ctx := suite.Ctx
+		s.Run(name, func() {
+			s.Reset()
+			ctx := s.Ctx
 
-			suite.PrepareBalancerPool()
-			suite.PrepareBalancerPool()
+			s.PrepareBalancerPool()
+			s.PrepareBalancerPool()
 
-			msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
+			msgServer := keeper.NewMsgServerImpl(s.App.GAMMKeeper)
 
 			// Reset event counts to 0 by creating a new manager.
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
-			suite.Equal(0, len(ctx.EventManager().Events()))
+			s.Equal(0, len(ctx.EventManager().Events()))
 
 			response, err := msgServer.SwapExactAmountOut(sdk.WrapSDKContext(ctx), &types.MsgSwapExactAmountOut{
-				Sender:           suite.TestAccs[0].String(),
+				Sender:           s.TestAccs[0].String(),
 				Routes:           tc.routes,
 				TokenOut:         tc.tokenOut,
 				TokenInMaxAmount: tc.tokenInMaxAmount,
 			})
 
 			if !tc.expectError {
-				suite.NoError(err)
-				suite.NotNil(response)
+				s.NoError(err)
+				s.NotNil(response)
 			}
 
-			suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, tc.expectedSwapEvents)
-			suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			s.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, tc.expectedSwapEvents)
+			s.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 		})
 	}
 }
 
 // TestJoinPool_Events tests that events are correctly emitted
 // when calling JoinPool.
-func (suite *KeeperTestSuite) TestJoinPool_Events() {
+func (s *KeeperTestSuite) TestJoinPool_Events() {
 	const (
 		tokenInMaxAmount = int64Max
 		shareOut         = 110
@@ -223,7 +224,7 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 
 	testcases := map[string]struct {
 		poolId                     uint64
-		shareOutAmount             sdk.Int
+		shareOutAmount             osmomath.Int
 		tokenInMaxs                sdk.Coins
 		expectError                bool
 		expectedAddLiquidityEvents int
@@ -231,58 +232,58 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 	}{
 		"successful join": {
 			poolId:         1,
-			shareOutAmount: sdk.NewInt(shareOut),
+			shareOutAmount: osmomath.NewInt(shareOut),
 			tokenInMaxs: sdk.NewCoins(
-				sdk.NewCoin("foo", sdk.NewInt(tokenInMaxAmount)),
-				sdk.NewCoin("bar", sdk.NewInt(tokenInMaxAmount)),
-				sdk.NewCoin("baz", sdk.NewInt(tokenInMaxAmount)),
-				sdk.NewCoin("uosmo", sdk.NewInt(tokenInMaxAmount)),
+				sdk.NewCoin("foo", osmomath.NewInt(tokenInMaxAmount)),
+				sdk.NewCoin("bar", osmomath.NewInt(tokenInMaxAmount)),
+				sdk.NewCoin("baz", osmomath.NewInt(tokenInMaxAmount)),
+				sdk.NewCoin("uosmo", osmomath.NewInt(tokenInMaxAmount)),
 			),
 			expectedAddLiquidityEvents: 1,
 			expectedMessageEvents:      3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"tokenInMaxs do not match all tokens in pool - invalid join": {
 			poolId:         1,
-			shareOutAmount: sdk.NewInt(shareOut),
-			tokenInMaxs:    sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenInMaxAmount))),
+			shareOutAmount: osmomath.NewInt(shareOut),
+			tokenInMaxs:    sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(tokenInMaxAmount))),
 			expectError:    true,
 		},
 	}
 
 	for name, tc := range testcases {
-		suite.Run(name, func() {
-			suite.Setup()
-			ctx := suite.Ctx
+		s.Run(name, func() {
+			s.Reset()
+			ctx := s.Ctx
 
-			suite.PrepareBalancerPool()
+			s.PrepareBalancerPool()
 
-			msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
+			msgServer := keeper.NewMsgServerImpl(s.App.GAMMKeeper)
 
 			// Reset event counts to 0 by creating a new manager.
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
-			suite.Require().Equal(0, len(ctx.EventManager().Events()))
+			s.Require().Equal(0, len(ctx.EventManager().Events()))
 
 			response, err := msgServer.JoinPool(sdk.WrapSDKContext(ctx), &types.MsgJoinPool{
-				Sender:         suite.TestAccs[0].String(),
+				Sender:         s.TestAccs[0].String(),
 				PoolId:         tc.poolId,
 				ShareOutAmount: tc.shareOutAmount,
 				TokenInMaxs:    tc.tokenInMaxs,
 			})
 
 			if !tc.expectError {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(response)
+				s.Require().NoError(err)
+				s.Require().NotNil(response)
 			}
 
-			suite.AssertEventEmitted(ctx, types.TypeEvtPoolJoined, tc.expectedAddLiquidityEvents)
-			suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			s.AssertEventEmitted(ctx, types.TypeEvtPoolJoined, tc.expectedAddLiquidityEvents)
+			s.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 		})
 	}
 }
 
 // TestExitPool_Events tests that events are correctly emitted
 // when calling ExitPool.
-func (suite *KeeperTestSuite) TestExitPool_Events() {
+func (s *KeeperTestSuite) TestExitPool_Events() {
 	const (
 		tokenOutMinAmount = 1
 		shareIn           = 110
@@ -290,7 +291,7 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 
 	testcases := map[string]struct {
 		poolId                        uint64
-		shareInAmount                 sdk.Int
+		shareInAmount                 osmomath.Int
 		tokenOutMins                  sdk.Coins
 		expectError                   bool
 		expectedRemoveLiquidityEvents int
@@ -298,46 +299,46 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 	}{
 		"successful exit": {
 			poolId:                        1,
-			shareInAmount:                 sdk.NewInt(shareIn),
+			shareInAmount:                 osmomath.NewInt(shareIn),
 			tokenOutMins:                  sdk.NewCoins(),
 			expectedRemoveLiquidityEvents: 1,
 			expectedMessageEvents:         3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"invalid tokenOutMins": {
 			poolId:        1,
-			shareInAmount: sdk.NewInt(shareIn),
-			tokenOutMins:  sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenOutMinAmount))),
+			shareInAmount: osmomath.NewInt(shareIn),
+			tokenOutMins:  sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(tokenOutMinAmount))),
 			expectError:   true,
 		},
 	}
 
 	for name, tc := range testcases {
-		suite.Run(name, func() {
-			suite.Setup()
-			ctx := suite.Ctx
+		s.Run(name, func() {
+			s.Reset()
+			ctx := s.Ctx
 
-			suite.PrepareBalancerPool()
-			msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
+			s.PrepareBalancerPool()
+			msgServer := keeper.NewMsgServerImpl(s.App.GAMMKeeper)
 
-			sender := suite.TestAccs[0].String()
+			sender := s.TestAccs[0].String()
 
 			// Pre-join pool to be able to ExitPool.
 			joinPoolResponse, err := msgServer.JoinPool(sdk.WrapSDKContext(ctx), &types.MsgJoinPool{
 				Sender:         sender,
 				PoolId:         tc.poolId,
-				ShareOutAmount: sdk.NewInt(shareIn),
+				ShareOutAmount: osmomath.NewInt(shareIn),
 				TokenInMaxs: sdk.NewCoins(
-					sdk.NewCoin("foo", sdk.NewInt(int64Max)),
-					sdk.NewCoin("bar", sdk.NewInt(int64Max)),
-					sdk.NewCoin("baz", sdk.NewInt(int64Max)),
-					sdk.NewCoin("uosmo", sdk.NewInt(int64Max)),
+					sdk.NewCoin("foo", osmomath.NewInt(int64Max)),
+					sdk.NewCoin("bar", osmomath.NewInt(int64Max)),
+					sdk.NewCoin("baz", osmomath.NewInt(int64Max)),
+					sdk.NewCoin("uosmo", osmomath.NewInt(int64Max)),
 				),
 			})
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// Reset event counts to 0 by creating a new manager.
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
-			suite.Require().Equal(0, len(ctx.EventManager().Events()))
+			s.Require().Equal(0, len(ctx.EventManager().Events()))
 
 			// System under test.
 			response, err := msgServer.ExitPool(sdk.WrapSDKContext(ctx), &types.MsgExitPool{
@@ -348,143 +349,12 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 			})
 
 			if !tc.expectError {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(response)
+				s.Require().NoError(err)
+				s.Require().NotNil(response)
 			}
 
-			suite.AssertEventEmitted(ctx, types.TypeEvtPoolExited, tc.expectedRemoveLiquidityEvents)
-			suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			s.AssertEventEmitted(ctx, types.TypeEvtPoolExited, tc.expectedRemoveLiquidityEvents)
+			s.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
-	defaultAccount := suite.TestAccs[0]
-	defaultGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("100000000000000000000").RoundInt())
-	defaultAccountFunds := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200000000000)), sdk.NewCoin("usdc", sdk.NewInt(200000000000)))
-
-	type param struct {
-		sender                sdk.AccAddress
-		sharesToMigrateDenom  string
-		sharesToMigrateAmount sdk.Int
-		poolIdEntering        uint64
-	}
-
-	tests := []struct {
-		name                       string
-		param                      param
-		sharesToCreate             sdk.Int
-		expectedMigrateShareEvents int
-		expectedMessageEvents      int
-		expectError                bool
-	}{
-		{
-			name: "migrate all of the shares",
-			param: param{
-				sender:                defaultAccount,
-				sharesToMigrateDenom:  defaultGammShares.Denom,
-				sharesToMigrateAmount: defaultGammShares.Amount,
-				poolIdEntering:        2,
-			},
-			sharesToCreate:             defaultGammShares.Amount,
-			expectedMigrateShareEvents: 1,
-			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
-		},
-		{
-			name: "migrate half of the shares",
-			param: param{
-				sender:                defaultAccount,
-				sharesToMigrateDenom:  defaultGammShares.Denom,
-				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
-				poolIdEntering:        2,
-			},
-			sharesToCreate:             defaultGammShares.Amount,
-			expectedMigrateShareEvents: 1,
-			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
-		},
-		{
-			name: "double the created shares, migrate 1/4 of the shares",
-			param: param{
-				sender:                defaultAccount,
-				sharesToMigrateDenom:  defaultGammShares.Denom,
-				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
-				poolIdEntering:        2,
-			},
-			sharesToCreate:             defaultGammShares.Amount.Mul(sdk.NewInt(2)),
-			expectedMigrateShareEvents: 1,
-			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
-		},
-		{
-			name: "error: attempt to migrate shares from non-existent pool",
-			param: param{
-				sender:                defaultAccount,
-				sharesToMigrateDenom:  "gamm/pool/1000",
-				sharesToMigrateAmount: defaultGammShares.Amount,
-				poolIdEntering:        2,
-			},
-			sharesToCreate: defaultGammShares.Amount,
-			expectError:    true,
-		},
-		{
-			name: "error: attempt to migrate shares to non-existent pool",
-			param: param{
-				sender:                defaultAccount,
-				sharesToMigrateDenom:  defaultGammShares.Denom,
-				sharesToMigrateAmount: defaultGammShares.Amount,
-				poolIdEntering:        3,
-			},
-			sharesToCreate: defaultGammShares.Amount,
-			expectError:    true,
-		},
-		{
-			name: "error: attempt to migrate more shares than the user has",
-			param: param{
-				sender:                defaultAccount,
-				sharesToMigrateDenom:  defaultGammShares.Denom,
-				sharesToMigrateAmount: defaultGammShares.Amount.Add(sdk.NewInt(1)),
-				poolIdEntering:        2,
-			},
-			sharesToCreate:        defaultGammShares.Amount,
-			expectedMessageEvents: 1, // 1 exitPool.
-			expectError:           true,
-		},
-	}
-
-	for _, test := range tests {
-		suite.SetupTest()
-		msgServer := keeper.NewBalancerMsgServerImpl(suite.App.GAMMKeeper)
-
-		// Prepare both balancer and concentrated pools
-		suite.FundAcc(test.param.sender, defaultAccountFunds)
-		balancerPoolId := suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("eth", sdk.NewInt(100000000000)), sdk.NewCoin("usdc", sdk.NewInt(100000000000)))
-		clPool := suite.PrepareConcentratedPool()
-
-		// Set up migration records
-		record := types.BalancerToConcentratedPoolLink{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()}
-		err := suite.App.GAMMKeeper.ReplaceMigrationRecords(suite.Ctx, []types.BalancerToConcentratedPoolLink{record})
-		suite.Require().NoError(err)
-
-		// Join gamm pool to create gamm shares directed in the test case
-		_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, test.param.sender, balancerPoolId, test.sharesToCreate, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(999999999999999)), sdk.NewCoin("usdc", sdk.NewInt(999999999999999))))
-		suite.Require().NoError(err)
-
-		// Create migrate message
-		sharesToMigrate := sdk.NewCoin(test.param.sharesToMigrateDenom, test.param.sharesToMigrateAmount)
-		msg := &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
-			Sender:          test.param.sender.String(),
-			SharesToMigrate: sharesToMigrate,
-			PoolIdEntering:  test.param.poolIdEntering,
-		}
-
-		// Reset event counts to 0 by creating a new manager.
-		suite.Ctx = suite.Ctx.WithEventManager(sdk.NewEventManager())
-		suite.Require().Equal(0, len(suite.Ctx.EventManager().Events()))
-
-		// Migrate the user's gamm shares to a full range concentrated liquidity position
-		_, err = msgServer.MigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(suite.Ctx), msg)
-
-		// Assert events are emitted
-		suite.AssertEventEmitted(suite.Ctx, types.TypeEvtMigrateShares, test.expectedMigrateShareEvents)
-		suite.AssertEventEmitted(suite.Ctx, sdk.EventTypeMessage, test.expectedMessageEvents)
 	}
 }

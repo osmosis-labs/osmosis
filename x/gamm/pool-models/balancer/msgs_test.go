@@ -8,10 +8,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
-	balancer "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
+	balancer "github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
 func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
@@ -23,18 +24,18 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 	createMsg := func(after func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 		testPoolAsset := []balancer.PoolAsset{
 			{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("test", sdk.NewInt(100)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin("test", osmomath.NewInt(100)),
 			},
 			{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("test2", sdk.NewInt(100)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin("test2", osmomath.NewInt(100)),
 			},
 		}
 
 		poolParams := &balancer.PoolParams{
-			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.NewDecWithPrec(1, 2),
+			SwapFee: osmomath.NewDecWithPrec(1, 2),
+			ExitFee: osmomath.ZeroDec(),
 		}
 
 		msg := &balancer.MsgCreateBalancerPool{
@@ -108,7 +109,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		{
 			name: "has the PoolAsset that includes 0 weight",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
-				msg.PoolAssets[0].Weight = sdk.NewInt(0)
+				msg.PoolAssets[0].Weight = osmomath.NewInt(0)
 				return msg
 			}),
 			expectPass: false,
@@ -116,7 +117,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		{
 			name: "has a PoolAsset that includes a negative weight",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
-				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
+				msg.PoolAssets[0].Weight = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -124,7 +125,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		{
 			name: "has a PoolAsset that includes a negative weight",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
-				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
+				msg.PoolAssets[0].Weight = osmomath.NewInt(-10)
 				return msg
 			}),
 			expectPass: false,
@@ -132,7 +133,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		{
 			name: "has a PoolAsset that includes a zero coin",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
-				msg.PoolAssets[0].Token = sdk.NewCoin("test1", sdk.NewInt(0))
+				msg.PoolAssets[0].Token = sdk.NewCoin("test1", osmomath.NewInt(0))
 				return msg
 			}),
 			expectPass: false,
@@ -142,18 +143,18 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolAssets[0].Token = sdk.Coin{
 					Denom:  "test1",
-					Amount: sdk.NewInt(-10),
+					Amount: osmomath.NewInt(-10),
 				}
 				return msg
 			}),
 			expectPass: false,
 		},
 		{
-			name: "negative swap fee with zero exit fee",
+			name: "negative spread factor with zero exit fee",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolParams = &balancer.PoolParams{
-					SwapFee: sdk.NewDecWithPrec(-1, 2),
-					ExitFee: sdk.NewDecWithPrec(0, 0),
+					SwapFee: osmomath.NewDecWithPrec(-1, 2),
+					ExitFee: osmomath.NewDecWithPrec(0, 0),
 				}
 				return msg
 			}),
@@ -192,11 +193,11 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 			expectPass: true,
 		},
 		{
-			name: "zero swap fee, zero exit fee",
+			name: "zero spread factor, zero exit fee",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolParams = &balancer.PoolParams{
-					ExitFee: sdk.NewDecWithPrec(0, 0),
-					SwapFee: sdk.NewDecWithPrec(0, 0),
+					ExitFee: osmomath.NewDecWithPrec(0, 0),
+					SwapFee: osmomath.NewDecWithPrec(0, 0),
 				}
 				return msg
 			}),
@@ -205,7 +206,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		{
 			name: "too large of a weight",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
-				msg.PoolAssets[0].Weight = sdk.NewInt(1 << 21)
+				msg.PoolAssets[0].Weight = osmomath.NewInt(1 << 21)
 				return msg
 			}),
 			expectPass: false,
@@ -218,12 +219,12 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		// 			Duration:  time.Hour,
 		// 			TargetPoolWeights: []PoolAsset{
 		// 				{
-		// 					Weight: sdk.NewInt(200),
-		// 					Token:  sdk.NewCoin("test", sdk.NewInt(1)),
+		// 					Weight: osmomath.NewInt(200),
+		// 					Token:  sdk.NewCoin("test", osmomath.NewInt(1)),
 		// 				},
 		// 				{
-		// 					Weight: sdk.NewInt(50),
-		// 					Token:  sdk.NewCoin("test2", sdk.NewInt(1)),
+		// 					Weight: osmomath.NewInt(50),
+		// 					Token:  sdk.NewCoin("test2", osmomath.NewInt(1)),
 		// 				},
 		// 			},
 		// 		}
@@ -242,8 +243,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 	}
 }
 
-func (suite *KeeperTestSuite) TestMsgCreateBalancerPool() {
-	suite.SetupTest()
+func (s *KeeperTestSuite) TestMsgCreateBalancerPool() {
 	tests := map[string]struct {
 		msg         balancer.MsgCreateBalancerPool
 		poolId      uint64
@@ -251,17 +251,17 @@ func (suite *KeeperTestSuite) TestMsgCreateBalancerPool() {
 	}{
 		"basic success test": {
 			msg: balancer.MsgCreateBalancerPool{
-				Sender:             suite.TestAccs[0].String(),
-				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.NewDecWithPrec(1, 3)},
+				Sender:             s.TestAccs[0].String(),
+				PoolParams:         &balancer.PoolParams{SwapFee: osmomath.NewDecWithPrec(1, 2), ExitFee: osmomath.ZeroDec()},
 				PoolAssets:         apptesting.DefaultPoolAssets,
 				FuturePoolGovernor: "",
 			},
 			poolId: 1,
 		},
-		"error due to negative swap fee": {
+		"error due to negative spread factor": {
 			msg: balancer.MsgCreateBalancerPool{
-				Sender:             suite.TestAccs[0].String(),
-				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2).Neg(), ExitFee: sdk.NewDecWithPrec(1, 3)},
+				Sender:             s.TestAccs[0].String(),
+				PoolParams:         &balancer.PoolParams{SwapFee: osmomath.NewDecWithPrec(1, 2).Neg(), ExitFee: osmomath.ZeroDec()},
 				PoolAssets:         apptesting.DefaultPoolAssets,
 				FuturePoolGovernor: "",
 			},
@@ -271,81 +271,26 @@ func (suite *KeeperTestSuite) TestMsgCreateBalancerPool() {
 	}
 
 	for name, tc := range tests {
-		suite.Run(name, func() {
-			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
+		s.Run(name, func() {
+			pool, err := tc.msg.CreatePool(s.Ctx, 1)
 
 			if tc.expectError {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				return
 			}
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
-			suite.Require().Equal(tc.poolId, pool.GetId())
+			s.Require().Equal(tc.poolId, pool.GetId())
 			expectedPoolLiquidity := sdk.NewCoins()
 			for _, asset := range tc.msg.PoolAssets {
 				expectedPoolLiquidity = expectedPoolLiquidity.Add(asset.Token)
 			}
-			suite.Require().Equal(expectedPoolLiquidity, pool.GetTotalPoolLiquidity(suite.Ctx))
-			suite.Require().Equal(types.InitPoolSharesSupply, pool.GetTotalShares())
+
+			cfmmPool, ok := pool.(types.CFMMPoolI)
+			s.Require().True(ok)
+
+			s.Require().Equal(expectedPoolLiquidity, cfmmPool.GetTotalPoolLiquidity(s.Ctx))
+			s.Require().Equal(types.InitPoolSharesSupply, cfmmPool.GetTotalShares())
 		})
-	}
-}
-
-func TestMsgMigrateSharesToFullRangeConcentratedPosition(t *testing.T) {
-	appParams.SetAddressPrefixes()
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
-	gammShares := sdk.NewCoin("gamm/pool/1", sdk.NewInt(1000000000000000000))
-	invalidAddr := sdk.AccAddress("invalid")
-
-	createMsg := func(after func(msg balancer.MsgMigrateSharesToFullRangeConcentratedPosition) balancer.MsgMigrateSharesToFullRangeConcentratedPosition) balancer.MsgMigrateSharesToFullRangeConcentratedPosition {
-		properMsg := balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
-			Sender:          addr1,
-			SharesToMigrate: gammShares,
-			PoolIdEntering:  2,
-		}
-		return after(properMsg)
-	}
-
-	msg := createMsg(func(msg balancer.MsgMigrateSharesToFullRangeConcentratedPosition) balancer.MsgMigrateSharesToFullRangeConcentratedPosition {
-		// Do nothing
-		return msg
-	})
-
-	require.Equal(t, msg.Route(), types.RouterKey)
-	require.Equal(t, msg.Type(), "migrate_shares")
-	signers := msg.GetSigners()
-	require.Equal(t, len(signers), 1)
-	require.Equal(t, signers[0].String(), addr1)
-
-	tests := []struct {
-		name       string
-		msg        balancer.MsgMigrateSharesToFullRangeConcentratedPosition
-		expectPass bool
-	}{
-		{
-			name: "proper msg",
-			msg: createMsg(func(msg balancer.MsgMigrateSharesToFullRangeConcentratedPosition) balancer.MsgMigrateSharesToFullRangeConcentratedPosition {
-				// Do nothing
-				return msg
-			}),
-			expectPass: true,
-		},
-		{
-			name: "invalid sender",
-			msg: createMsg(func(msg balancer.MsgMigrateSharesToFullRangeConcentratedPosition) balancer.MsgMigrateSharesToFullRangeConcentratedPosition {
-				msg.Sender = invalidAddr.String()
-				return msg
-			}),
-			expectPass: false,
-		},
-	}
-
-	for _, test := range tests {
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
-		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
-		}
 	}
 }

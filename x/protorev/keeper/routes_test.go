@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
 type TestRoute struct {
@@ -12,138 +13,114 @@ type TestRoute struct {
 }
 
 // TestBuildRoutes tests the BuildRoutes function
-func (suite *KeeperTestSuite) TestBuildRoutes() {
+func (s *KeeperTestSuite) TestBuildRoutes() {
 	cases := []struct {
-		description        string
-		inputDenom         string
-		outputDenom        string
-		poolID             uint64
-		expected           [][]TestRoute
-		expectedPointCount uint64
-		maxPoolPoints      uint64
+		description    string
+		inputDenom     string
+		outputDenom    string
+		poolID         uint64
+		expectedRoutes [][]TestRoute
 	}{
 		{
 			description: "Route exists for swap in Akash and swap out Atom",
 			inputDenom:  "akash",
-			outputDenom: types.AtomDenomination,
+			outputDenom: "Atom",
 			poolID:      1,
-			expected: [][]TestRoute{
+			expectedRoutes: [][]TestRoute{
 				{
-					{PoolId: 1, InputDenom: types.AtomDenomination, OutputDenom: "akash"},
+					{PoolId: 1, InputDenom: "Atom", OutputDenom: "akash"},
 					{PoolId: 14, InputDenom: "akash", OutputDenom: "bitcoin"},
-					{PoolId: 4, InputDenom: "bitcoin", OutputDenom: types.AtomDenomination},
+					{PoolId: 4, InputDenom: "bitcoin", OutputDenom: "Atom"},
 				},
 				{
-					{PoolId: 25, InputDenom: types.OsmosisDenomination, OutputDenom: types.AtomDenomination},
-					{PoolId: 1, InputDenom: types.AtomDenomination, OutputDenom: "akash"},
+					{PoolId: 25, InputDenom: types.OsmosisDenomination, OutputDenom: "Atom"},
+					{PoolId: 1, InputDenom: "Atom", OutputDenom: "akash"},
 					{PoolId: 7, InputDenom: "akash", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedPointCount: 12,
-			maxPoolPoints:      15,
 		},
 		{
 			description: "Route exists for swap in Bitcoin and swap out Atom",
 			inputDenom:  "bitcoin",
-			outputDenom: types.AtomDenomination,
-			poolID:      4,
-			expected: [][]TestRoute{
+			outputDenom: "Atom",
+			poolID:      55,
+			expectedRoutes: [][]TestRoute{
 				{
-					{PoolId: 25, InputDenom: types.OsmosisDenomination, OutputDenom: types.AtomDenomination},
-					{PoolId: 4, InputDenom: types.AtomDenomination, OutputDenom: "bitcoin"},
+					{PoolId: 25, InputDenom: types.OsmosisDenomination, OutputDenom: "Atom"},
+					{PoolId: 55, InputDenom: "Atom", OutputDenom: "bitcoin"},
 					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.OsmosisDenomination},
 				},
+				{
+					{PoolId: 55, InputDenom: "Atom", OutputDenom: "bitcoin"},
+					{PoolId: 4, InputDenom: "bitcoin", OutputDenom: "Atom"},
+				},
 			},
-			expectedPointCount: 6,
-			maxPoolPoints:      15,
 		},
 		{
 			description: "Route exists for swap in Bitcoin and swap out ethereum",
 			inputDenom:  "bitcoin",
 			outputDenom: "ethereum",
 			poolID:      19,
-			expected: [][]TestRoute{
+			expectedRoutes: [][]TestRoute{
 				{
 					{PoolId: 9, InputDenom: types.OsmosisDenomination, OutputDenom: "ethereum"},
 					{PoolId: 19, InputDenom: "ethereum", OutputDenom: "bitcoin"},
 					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.OsmosisDenomination},
 				},
 				{
-					{PoolId: 3, InputDenom: types.AtomDenomination, OutputDenom: "ethereum"},
+					{PoolId: 3, InputDenom: "Atom", OutputDenom: "ethereum"},
 					{PoolId: 19, InputDenom: "ethereum", OutputDenom: "bitcoin"},
-					{PoolId: 4, InputDenom: "bitcoin", OutputDenom: types.AtomDenomination},
+					{PoolId: 4, InputDenom: "bitcoin", OutputDenom: "Atom"},
 				},
 			},
-			expectedPointCount: 12,
-			maxPoolPoints:      15,
 		},
 		{
-			description:        "No route exists for swap in osmo and swap out Atom",
-			inputDenom:         types.OsmosisDenomination,
-			outputDenom:        types.AtomDenomination,
-			poolID:             25,
-			expected:           [][]TestRoute{},
-			expectedPointCount: 0,
-			maxPoolPoints:      15,
+			description:    "No route exists for swap in osmo and swap out Atom",
+			inputDenom:     types.OsmosisDenomination,
+			outputDenom:    "Atom",
+			poolID:         25,
+			expectedRoutes: [][]TestRoute{},
 		},
 		{
 			description: "Route exists for swap on stable pool",
 			inputDenom:  "usdc",
 			outputDenom: types.OsmosisDenomination,
 			poolID:      29,
-			expected: [][]TestRoute{
+			expectedRoutes: [][]TestRoute{
 				{
 					{PoolId: 29, InputDenom: types.OsmosisDenomination, OutputDenom: "usdc"},
-					{PoolId: 34, InputDenom: "usdc", OutputDenom: "busd"},
+					{PoolId: 40, InputDenom: "usdc", OutputDenom: "busd"},
 					{PoolId: 30, InputDenom: "busd", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedPointCount: 7,
-			maxPoolPoints:      15,
 		},
 		{
-			description:        "Route exists for swap on stable pool but not enough routes left to be explored",
-			inputDenom:         "usdc",
-			outputDenom:        types.OsmosisDenomination,
-			poolID:             29,
-			expected:           [][]TestRoute{},
-			expectedPointCount: 0,
-			maxPoolPoints:      3,
-		},
-		{
-			description: "Two routes exist but only 1 route left to be explored (osmo route chosen)",
-			inputDenom:  "bitcoin",
-			outputDenom: "ethereum",
-			poolID:      19,
-			expected: [][]TestRoute{
+			description: "Two Pool Route exists for (osmo, atom)",
+			inputDenom:  "Atom",
+			outputDenom: types.OsmosisDenomination,
+			poolID:      51,
+			expectedRoutes: [][]TestRoute{
 				{
-					{PoolId: 9, InputDenom: types.OsmosisDenomination, OutputDenom: "ethereum"},
-					{PoolId: 19, InputDenom: "ethereum", OutputDenom: "bitcoin"},
-					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.OsmosisDenomination},
+					{PoolId: 51, InputDenom: types.OsmosisDenomination, OutputDenom: "Atom"},
+					{PoolId: 25, InputDenom: "Atom", OutputDenom: types.OsmosisDenomination},
+				},
+				{
+					{PoolId: 25, InputDenom: "Atom", OutputDenom: types.OsmosisDenomination},
+					{PoolId: 51, InputDenom: types.OsmosisDenomination, OutputDenom: "Atom"},
 				},
 			},
-			expectedPointCount: 6,
-			maxPoolPoints:      6,
 		},
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			suite.SetupTest()
-
-			suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 3, BalancerWeight: 2, ConcentratedWeight: 1})
-
-			routes := suite.App.ProtoRevKeeper.BuildRoutes(suite.Ctx, tc.inputDenom, tc.outputDenom, tc.poolID, &tc.maxPoolPoints)
-
-			suite.Require().Equal(len(tc.expected), len(routes))
-			pointCount, err := suite.App.ProtoRevKeeper.GetPointCountForBlock(suite.Ctx)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedPointCount, pointCount)
+		s.Run(tc.description, func() {
+			routes := s.App.ProtoRevKeeper.BuildRoutes(s.Ctx, tc.inputDenom, tc.outputDenom, tc.poolID)
+			s.Require().Equal(len(tc.expectedRoutes), len(routes))
 
 			for routeIndex, route := range routes {
-				for tradeIndex, trade := range route {
-					suite.Require().Equal(tc.expected[routeIndex][tradeIndex].PoolId, trade.PoolId)
-					suite.Require().Equal(tc.expected[routeIndex][tradeIndex].OutputDenom, trade.TokenOutDenom)
+				for tradeIndex, poolID := range route.Route.PoolIds() {
+					s.Require().Equal(tc.expectedRoutes[routeIndex][tradeIndex].PoolId, poolID)
+					s.Require().Equal(tc.expectedRoutes[routeIndex][tradeIndex].OutputDenom, route.Route[tradeIndex].TokenOutDenom)
 				}
 			}
 		})
@@ -151,280 +128,357 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 }
 
 // TestBuildHighestLiquidityRoute tests the BuildHighestLiquidityRoute function
-func (suite *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
+func (s *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 	cases := []struct {
-		description        string
-		swapDenom          string
-		swapIn             string
-		swapOut            string
-		poolId             uint64
-		expectedRoute      []TestRoute
-		hasRoute           bool
-		expectedPointCount uint64
+		description              string
+		swapDenom                string
+		swapIn                   string
+		swapOut                  string
+		poolId                   uint64
+		expectedRoute            []TestRoute
+		hasRoute                 bool
+		expectedRoutePointPoints uint64
 	}{
 		{
-			description:        "Route exists for swap in Atom and swap out Akash",
-			swapDenom:          types.OsmosisDenomination,
-			swapIn:             types.AtomDenomination,
-			swapOut:            "akash",
-			poolId:             1,
-			expectedRoute:      []TestRoute{{7, types.OsmosisDenomination, "akash"}, {1, "akash", types.AtomDenomination}, {25, types.AtomDenomination, types.OsmosisDenomination}},
-			hasRoute:           true,
-			expectedPointCount: 6,
+			description: "Route exists for swap in Atom and swap out Akash",
+			swapDenom:   types.OsmosisDenomination,
+			swapIn:      "Atom",
+			swapOut:     "akash",
+			poolId:      1,
+			expectedRoute: []TestRoute{
+				{7, types.OsmosisDenomination, "akash"},
+				{1, "akash", "Atom"},
+				{25, "Atom", types.OsmosisDenomination},
+			},
+			hasRoute:                 true,
+			expectedRoutePointPoints: 6,
 		},
 		{
-			description:        "Route exists for swap in Akash and swap out Atom",
-			swapDenom:          types.OsmosisDenomination,
-			swapIn:             "akash",
-			swapOut:            types.AtomDenomination,
-			poolId:             1,
-			expectedRoute:      []TestRoute{{25, types.OsmosisDenomination, types.AtomDenomination}, {1, types.AtomDenomination, "akash"}, {7, "akash", types.OsmosisDenomination}},
-			hasRoute:           true,
-			expectedPointCount: 6,
+			description: "Route exists for swap in Akash and swap out Atom",
+			swapDenom:   types.OsmosisDenomination,
+			swapIn:      "akash",
+			swapOut:     "Atom",
+			poolId:      1,
+			expectedRoute: []TestRoute{
+				{25, types.OsmosisDenomination, "Atom"},
+				{1, "Atom", "akash"},
+				{7, "akash", types.OsmosisDenomination},
+			},
+			hasRoute:                 true,
+			expectedRoutePointPoints: 6,
 		},
 		{
-			description:        "Route does not exist for swap in Terra and swap out Atom because the pool does not exist",
-			swapDenom:          types.OsmosisDenomination,
-			swapIn:             "terra",
-			swapOut:            types.AtomDenomination,
-			poolId:             7,
-			expectedRoute:      []TestRoute{},
-			hasRoute:           false,
-			expectedPointCount: 0,
+			description:              "Route does not exist for swap in Terra and swap out Atom because the pool does not exist",
+			swapDenom:                types.OsmosisDenomination,
+			swapIn:                   "terra",
+			swapOut:                  "Atom",
+			poolId:                   7,
+			expectedRoute:            []TestRoute{},
+			hasRoute:                 false,
+			expectedRoutePointPoints: 0,
 		},
 		{
-			description:        "Route exists for swap in Osmo and swap out Akash",
-			swapDenom:          types.AtomDenomination,
-			swapIn:             types.OsmosisDenomination,
-			swapOut:            "akash",
-			poolId:             7,
-			expectedRoute:      []TestRoute{{1, types.AtomDenomination, "akash"}, {7, "akash", types.OsmosisDenomination}, {25, types.OsmosisDenomination, types.AtomDenomination}},
-			hasRoute:           true,
-			expectedPointCount: 6,
+			description: "Route exists for swap in Osmo and swap out Akash",
+			swapDenom:   "Atom",
+			swapIn:      types.OsmosisDenomination,
+			swapOut:     "akash",
+			poolId:      7,
+			expectedRoute: []TestRoute{
+				{1, "Atom", "akash"},
+				{7, "akash", types.OsmosisDenomination},
+				{25, types.OsmosisDenomination, "Atom"},
+			},
+			hasRoute:                 true,
+			expectedRoutePointPoints: 6,
 		},
 		{
-			description:        "Route exists for swap in Akash and swap out Osmo",
-			swapDenom:          types.AtomDenomination,
-			swapIn:             "akash",
-			swapOut:            types.OsmosisDenomination,
-			poolId:             7,
-			expectedRoute:      []TestRoute{{25, types.AtomDenomination, types.OsmosisDenomination}, {7, types.OsmosisDenomination, "akash"}, {1, "akash", types.AtomDenomination}},
-			hasRoute:           true,
-			expectedPointCount: 6,
+			description: "Route exists for swap in Akash and swap out Osmo",
+			swapDenom:   "Atom",
+			swapIn:      "akash",
+			swapOut:     types.OsmosisDenomination,
+			poolId:      7,
+			expectedRoute: []TestRoute{
+				{25, "Atom", types.OsmosisDenomination},
+				{7, types.OsmosisDenomination, "akash"},
+				{1, "akash", "Atom"},
+			},
+			hasRoute:                 true,
+			expectedRoutePointPoints: 6,
 		},
 		{
-			description:        "Route does not exist for swap in Terra and swap out Osmo because the pool does not exist",
-			swapDenom:          types.AtomDenomination,
-			swapIn:             "terra",
-			swapOut:            types.OsmosisDenomination,
-			poolId:             7,
-			expectedRoute:      []TestRoute{},
-			hasRoute:           false,
-			expectedPointCount: 0,
+			description:              "Route does not exist for swap in Terra and swap out Osmo because the pool does not exist",
+			swapDenom:                "Atom",
+			swapIn:                   "terra",
+			swapOut:                  types.OsmosisDenomination,
+			poolId:                   7,
+			expectedRoute:            []TestRoute{},
+			hasRoute:                 false,
+			expectedRoutePointPoints: 0,
 		},
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			suite.SetupTest()
+		s.Run(tc.description, func() {
+			s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, types.DefaultPoolTypeInfo)
 
-			pointCount, err := suite.App.ProtoRevKeeper.RemainingPoolPointsForTx(suite.Ctx)
-			suite.Require().NoError(err)
-			before := *pointCount
-
-			route, buildErr := suite.App.ProtoRevKeeper.BuildHighestLiquidityRoute(suite.Ctx, tc.swapDenom, tc.swapIn, tc.swapOut, tc.poolId, pointCount)
-			pointCountAfter, err := suite.App.ProtoRevKeeper.GetPointCountForBlock(suite.Ctx)
-			suite.Require().NoError(err)
-
-			suite.Require().Equal(tc.expectedPointCount, pointCountAfter)
-			suite.Require().Equal(*pointCount+pointCountAfter, before)
+			baseDenom := types.BaseDenom{
+				Denom:    tc.swapDenom,
+				StepSize: osmomath.NewInt(1_000_000),
+			}
+			routeMetaData, err := s.App.ProtoRevKeeper.BuildHighestLiquidityRoute(s.Ctx, baseDenom, tc.swapIn, tc.swapOut, tc.poolId)
 
 			if tc.hasRoute {
-				suite.Require().NoError(buildErr)
-				suite.Require().Equal(len(tc.expectedRoute), len(route.PoolIds()))
+				s.Require().NoError(err)
+				s.Require().Equal(len(tc.expectedRoute), len(routeMetaData.Route.PoolIds()))
 
 				for index, trade := range tc.expectedRoute {
-					suite.Require().Equal(trade.PoolId, route[index].PoolId)
-					suite.Require().Equal(trade.OutputDenom, route[index].TokenOutDenom)
+					s.Require().Equal(trade.PoolId, routeMetaData.Route.PoolIds()[index])
 				}
 			} else {
-				suite.Require().Error(buildErr)
+				s.Require().Error(err)
+			}
+		})
+	}
+}
+
+// TestBuildTwoPoolRoute tests the BuildTwoPoolRoute function
+func (s *KeeperTestSuite) TestBuildTwoPoolRoute() {
+	cases := []struct {
+		description   string
+		swapDenom     types.BaseDenom
+		tokenIn       string
+		tokenOut      string
+		poolId        uint64
+		expectedRoute []TestRoute
+		hasRoute      bool
+	}{
+		{
+			description: "two pool route can be created with base as token out",
+			swapDenom: types.BaseDenom{
+				Denom:    types.OsmosisDenomination,
+				StepSize: osmomath.NewInt(1_000_000),
+			},
+			tokenIn:  "stake",
+			tokenOut: types.OsmosisDenomination,
+			poolId:   54,
+			expectedRoute: []TestRoute{
+				{PoolId: 54, InputDenom: types.OsmosisDenomination, OutputDenom: "stake"},
+				{PoolId: 55, InputDenom: "stake", OutputDenom: types.OsmosisDenomination},
+			},
+			hasRoute: true,
+		},
+		{
+			description: "two pool route can be created with base as token in",
+			swapDenom: types.BaseDenom{
+				Denom:    types.OsmosisDenomination,
+				StepSize: osmomath.NewInt(1_000_000),
+			},
+			tokenIn:  types.OsmosisDenomination,
+			tokenOut: "stake",
+			poolId:   54,
+			expectedRoute: []TestRoute{
+				{PoolId: 55, InputDenom: types.OsmosisDenomination, OutputDenom: "stake"},
+				{PoolId: 54, InputDenom: "stake", OutputDenom: types.OsmosisDenomination},
+			},
+			hasRoute: true,
+		},
+		{
+			description: "two pool route where swap is on the highest liquidity pool",
+			swapDenom: types.BaseDenom{
+				Denom:    types.OsmosisDenomination,
+				StepSize: osmomath.NewInt(1_000_000),
+			},
+			tokenIn:       "stake",
+			tokenOut:      types.OsmosisDenomination,
+			poolId:        55,
+			expectedRoute: []TestRoute{},
+			hasRoute:      false,
+		},
+		{
+			description: "trade executes on pool not tracked by the module",
+			swapDenom: types.BaseDenom{
+				Denom:    types.OsmosisDenomination,
+				StepSize: osmomath.NewInt(1_000_000),
+			},
+			tokenIn:       "stake",
+			tokenOut:      types.OsmosisDenomination,
+			poolId:        1000000,
+			expectedRoute: []TestRoute{},
+			hasRoute:      false,
+		},
+	}
+
+	for _, tc := range cases {
+		s.Run(tc.description, func() {
+			routeMetaData, err := s.App.ProtoRevKeeper.BuildTwoPoolRoute(
+				s.Ctx,
+				tc.swapDenom,
+				tc.tokenIn,
+				tc.tokenOut,
+				tc.poolId,
+			)
+
+			if tc.hasRoute {
+				s.Require().NoError(err)
+				s.Require().Equal(len(tc.expectedRoute), len(routeMetaData.Route.PoolIds()))
+
+				for index, trade := range tc.expectedRoute {
+					s.Require().Equal(trade.PoolId, routeMetaData.Route[index].PoolId)
+					s.Require().Equal(trade.OutputDenom, routeMetaData.Route[index].TokenOutDenom)
+				}
+			} else {
+				s.Require().Equal(len(tc.expectedRoute), len(routeMetaData.Route.PoolIds()))
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
 // TestBuildHotRoutes tests the BuildHotRoutes function
-func (suite *KeeperTestSuite) TestBuildHotRoutes() {
+func (s *KeeperTestSuite) TestBuildHotRoutes() {
 	cases := []struct {
-		description    string
-		swapIn         string
-		swapOut        string
-		poolId         uint64
-		expectedRoutes [][]TestRoute
-		hasRoutes      bool
+		description             string
+		swapIn                  string
+		swapOut                 string
+		poolId                  uint64
+		expectedRoutes          [][]TestRoute
+		expectedStepSize        []osmomath.Int
+		expectedRoutePoolPoints []uint64
+		hasRoutes               bool
 	}{
 		{
-			description:    "Route exists for swap in Atom and swap out Akash",
-			swapIn:         "akash",
-			swapOut:        types.AtomDenomination,
-			poolId:         1,
-			expectedRoutes: [][]TestRoute{{{1, types.AtomDenomination, "akash"}, {14, "akash", "bitcoin"}, {4, "bitcoin", types.AtomDenomination}}},
-			hasRoutes:      true,
+			description: "Route exists for swap in Atom and swap out Akash",
+			swapIn:      "akash",
+			swapOut:     "Atom",
+			poolId:      1,
+			expectedRoutes: [][]TestRoute{
+				{
+					{1, "Atom", "akash"},
+					{14, "akash", "bitcoin"},
+					{4, "bitcoin", "Atom"},
+				},
+			},
+			expectedStepSize:        []osmomath.Int{osmomath.NewInt(1_000_000)},
+			expectedRoutePoolPoints: []uint64{6},
+			hasRoutes:               true,
+		},
+		{
+			description: "Route exists for a four pool route",
+			swapIn:      "Atom",
+			swapOut:     "test/2",
+			poolId:      10,
+			expectedRoutes: [][]TestRoute{
+				{
+					{34, "Atom", "test/1"},
+					{35, "test/1", types.OsmosisDenomination},
+					{36, types.OsmosisDenomination, "test/2"},
+					{10, "test/2", "Atom"},
+				},
+			},
+			expectedStepSize:        []osmomath.Int{osmomath.NewInt(1_000_000)},
+			expectedRoutePoolPoints: []uint64{8},
+			hasRoutes:               true,
 		},
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			maxPoints, err := suite.App.ProtoRevKeeper.RemainingPoolPointsForTx(suite.Ctx)
-			suite.Require().NoError(err)
+		s.Run(tc.description, func() {
+			s.App.ProtoRevKeeper.SetInfoByPoolType(s.Ctx, types.DefaultPoolTypeInfo)
 
-			routes, err := suite.App.ProtoRevKeeper.BuildHotRoutes(suite.Ctx, tc.swapIn, tc.swapOut, tc.poolId, maxPoints)
+			routes, err := s.App.ProtoRevKeeper.BuildHotRoutes(s.Ctx, tc.swapIn, tc.swapOut, tc.poolId)
 
 			if tc.hasRoutes {
-				suite.Require().NoError(err)
-				suite.Require().Equal(len(tc.expectedRoutes), len(routes))
+				s.Require().NoError(err)
+				s.Require().Equal(len(tc.expectedRoutes), len(routes))
 
-				for index, route := range routes {
+				for routeIndex, routeMetaData := range routes {
+					expectedHops := len(tc.expectedRoutes[routeIndex])
+					s.Require().Equal(expectedHops, len(routeMetaData.Route.PoolIds()))
 
-					suite.Require().Equal(len(tc.expectedRoutes[index]), len(route.PoolIds()))
+					expectedStepSize := tc.expectedStepSize[routeIndex]
+					s.Require().Equal(expectedStepSize, routeMetaData.StepSize)
 
-					for index, trade := range tc.expectedRoutes[index] {
-						suite.Require().Equal(trade.PoolId, route[index].PoolId)
-						suite.Require().Equal(trade.OutputDenom, route[index].TokenOutDenom)
+					expectedPoolPoints := tc.expectedRoutePoolPoints[routeIndex]
+					s.Require().Equal(expectedPoolPoints, routeMetaData.PoolPoints)
+
+					expectedRoutes := tc.expectedRoutes[routeIndex]
+
+					for tradeIndex, trade := range expectedRoutes {
+						s.Require().Equal(trade.PoolId, routeMetaData.Route.PoolIds()[tradeIndex])
 					}
 				}
-
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
 		})
 	}
 }
 
-// TestCheckAndUpdateRouteState tests the CheckAndUpdateRouteState function
-func (suite *KeeperTestSuite) TestCheckAndUpdateRouteState() {
+// TestCalculateRoutePoolPoints tests the CalculateRoutePoolPoints function
+func (s *KeeperTestSuite) TestCalculateRoutePoolPoints() {
 	cases := []struct {
-		description                 string
-		route                       poolmanagertypes.SwapAmountInRoutes
-		maxPoolPoints               uint64
-		expectedRemainingPoolPoints uint64
-		expectedPass                bool
+		description             string
+		route                   poolmanagertypes.SwapAmountInRoutes
+		expectedRoutePoolPoints uint64
+		expectedPass            bool
 	}{
 		{
-			description:                 "Valid route containing only balancer pools",
-			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
-			maxPoolPoints:               10,
-			expectedRemainingPoolPoints: 4,
-			expectedPass:                true,
+			description:             "Valid route containing only balancer pools",
+			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
+			expectedRoutePoolPoints: 6,
+			expectedPass:            true,
 		},
 		{
-			description:                 "Valid route containing only balancer pools but not enough pool points",
-			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
-			maxPoolPoints:               2,
-			expectedRemainingPoolPoints: 2,
-			expectedPass:                false,
+			description:             "Valid route containing only balancer pools and equal number of pool points",
+			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
+			expectedRoutePoolPoints: 6,
+			expectedPass:            true,
 		},
 		{
-			description:                 "Valid route containing only balancer pools and equal number of pool points",
-			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
-			maxPoolPoints:               6,
-			expectedRemainingPoolPoints: 0,
-			expectedPass:                true,
+			description:             "Valid route containing only stable swap pools",
+			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}},
+			expectedRoutePoolPoints: 15,
+			expectedPass:            true,
 		},
 		{
-			description:                 "Valid route containing only stable swap pools",
-			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}},
-			maxPoolPoints:               10,
-			expectedRemainingPoolPoints: 1,
-			expectedPass:                true,
+			description:             "Valid route with more than 3 hops",
+			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}},
+			expectedRoutePoolPoints: 17,
+			expectedPass:            true,
 		},
 		{
-			description:                 "Valid route with more than 3 hops",
-			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}},
-			maxPoolPoints:               12,
-			expectedRemainingPoolPoints: 1,
-			expectedPass:                true,
+			description:             "Invalid route with more than 3 hops",
+			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 4000, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}},
+			expectedRoutePoolPoints: 11,
+			expectedPass:            false,
 		},
 		{
-			description:                 "Valid route with more than 3 hops",
-			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
-			maxPoolPoints:               12,
-			expectedRemainingPoolPoints: 12,
-			expectedPass:                false,
+			description:             "Valid route with a cosmwasm pool",
+			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 51, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}},
+			expectedRoutePoolPoints: 8,
+			expectedPass:            true,
+		},
+		{
+			description:             "Valid route with cw pool, balancer, stable swap and cl pool",
+			route:                   []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 51, TokenOutDenom: ""}, {PoolId: 40, TokenOutDenom: ""}, {PoolId: 50, TokenOutDenom: ""}},
+			expectedRoutePoolPoints: 18,
+			expectedPass:            true,
 		},
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			suite.SetupTest()
+		s.Run(tc.description, func() {
+			s.SetupTest()
+			s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerTx(s.Ctx, 25))
+			s.Require().NoError(s.App.ProtoRevKeeper.SetMaxPointsPerBlock(s.Ctx, 100))
 
-			suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 3, BalancerWeight: 2, ConcentratedWeight: 1})
-
-			var maxPoints *uint64 = &tc.maxPoolPoints
-
-			err := suite.App.ProtoRevKeeper.CheckAndUpdateRouteState(suite.Ctx, tc.route, maxPoints)
+			routePoolPoints, err := s.App.ProtoRevKeeper.CalculateRoutePoolPoints(s.Ctx, tc.route)
 			if tc.expectedPass {
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedRoutePoolPoints, routePoolPoints)
 			} else {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			}
-
-			suite.Require().Equal(tc.expectedRemainingPoolPoints, tc.maxPoolPoints)
-		})
-	}
-}
-
-// TestRemainingPoolPointsForTx tests the RemainingPoolPointsForTx function.
-func (suite *KeeperTestSuite) TestRemainingPoolPointsForTx() {
-	cases := []struct {
-		description        string
-		maxRoutesPerTx     uint64
-		maxRoutesPerBlock  uint64
-		currentRouteCount  uint64
-		expectedPointCount uint64
-	}{
-		{
-			description:        "Max pool points per tx is 10 and max pool points per block is 100",
-			maxRoutesPerTx:     10,
-			maxRoutesPerBlock:  100,
-			currentRouteCount:  0,
-			expectedPointCount: 10,
-		},
-		{
-			description:        "Max pool points per tx is 10, max pool points per block is 100, and current point count is 90",
-			maxRoutesPerTx:     10,
-			maxRoutesPerBlock:  100,
-			currentRouteCount:  90,
-			expectedPointCount: 10,
-		},
-		{
-			description:        "Max pool points per tx is 10, max pool points per block is 100, and current point count is 100",
-			maxRoutesPerTx:     10,
-			maxRoutesPerBlock:  100,
-			currentRouteCount:  100,
-			expectedPointCount: 0,
-		},
-		{
-			description:        "Max pool points per tx is 10, max pool points per block is 100, and current point count is 95",
-			maxRoutesPerTx:     10,
-			maxRoutesPerBlock:  100,
-			currentRouteCount:  95,
-			expectedPointCount: 5,
-		},
-	}
-
-	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			suite.SetupTest()
-
-			suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, tc.maxRoutesPerTx)
-			suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, tc.maxRoutesPerBlock)
-			suite.App.ProtoRevKeeper.SetPointCountForBlock(suite.Ctx, tc.currentRouteCount)
-
-			points, err := suite.App.ProtoRevKeeper.RemainingPoolPointsForTx(suite.Ctx)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedPointCount, *points)
 		})
 	}
 }

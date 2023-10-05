@@ -16,7 +16,7 @@ func (s *KeeperTestHelper) AssertEventEmitted(ctx sdk.Context, eventTypeExpected
 			actualEvents = append(actualEvents, event)
 		}
 	}
-	s.Equal(numEventsExpected, len(actualEvents))
+	s.Require().Equal(numEventsExpected, len(actualEvents))
 }
 
 func (s *KeeperTestHelper) FindEvent(events []sdk.Event, name string) sdk.Event {

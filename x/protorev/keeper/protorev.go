@@ -1,10 +1,10 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
-	"strconv"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
@@ -16,34 +16,34 @@ import (
 // ---------------------- Trading Stores  ---------------------- //
 
 // GetTokenPairArbRoutes returns the token pair arb routes given two denoms
-func (k Keeper) GetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string) (*types.TokenPairArbRoutes, error) {
+func (k Keeper) GetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string) (types.TokenPairArbRoutes, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTokenPairRoutes)
 	key := types.GetKeyPrefixRouteForTokenPair(tokenA, tokenB)
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, fmt.Errorf("no routes found for token pair %s-%s", tokenA, tokenB)
+		return types.TokenPairArbRoutes{}, fmt.Errorf("no routes found for token pair %s-%s", tokenA, tokenB)
 	}
 
-	tokenPairArbRoutes := &types.TokenPairArbRoutes{}
+	tokenPairArbRoutes := types.TokenPairArbRoutes{}
 	err := tokenPairArbRoutes.Unmarshal(bz)
 	if err != nil {
-		return nil, err
+		return types.TokenPairArbRoutes{}, err
 	}
 
 	return tokenPairArbRoutes, nil
 }
 
 // GetAllTokenPairArbRoutes returns all the token pair arb routes
-func (k Keeper) GetAllTokenPairArbRoutes(ctx sdk.Context) ([]*types.TokenPairArbRoutes, error) {
-	routes := make([]*types.TokenPairArbRoutes, 0)
+func (k Keeper) GetAllTokenPairArbRoutes(ctx sdk.Context) ([]types.TokenPairArbRoutes, error) {
+	routes := make([]types.TokenPairArbRoutes, 0)
 
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixTokenPairRoutes)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		tokenPairArbRoutes := &types.TokenPairArbRoutes{}
+		tokenPairArbRoutes := types.TokenPairArbRoutes{}
 		err := tokenPairArbRoutes.Unmarshal(iterator.Value())
 		if err != nil {
 			return nil, err
@@ -56,18 +56,18 @@ func (k Keeper) GetAllTokenPairArbRoutes(ctx sdk.Context) ([]*types.TokenPairArb
 }
 
 // SetTokenPairArbRoutes sets the token pair arb routes given two denoms
-func (k Keeper) SetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string, tokenPair *types.TokenPairArbRoutes) (*types.TokenPairArbRoutes, error) {
+func (k Keeper) SetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string, tokenPair types.TokenPairArbRoutes) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTokenPairRoutes)
 	key := types.GetKeyPrefixRouteForTokenPair(tokenA, tokenB)
 
 	bz, err := tokenPair.Marshal()
 	if err != nil {
-		return tokenPair, err
+		return err
 	}
 
 	store.Set(key, bz)
 
-	return tokenPair, nil
+	return nil
 }
 
 // DeleteAllTokenPairArbRoutes deletes all the token pair arb routes
@@ -76,29 +76,42 @@ func (k Keeper) DeleteAllTokenPairArbRoutes(ctx sdk.Context) {
 }
 
 // GetAllBaseDenoms returns all of the base denoms (sorted by priority in descending order) used to build cyclic arbitrage routes
-func (k Keeper) GetAllBaseDenoms(ctx sdk.Context) []string {
-	baseDenoms := make([]string, 0)
+func (k Keeper) GetAllBaseDenoms(ctx sdk.Context) ([]types.BaseDenom, error) {
+	baseDenoms := make([]types.BaseDenom, 0)
 
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixBaseDenoms)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		baseDenoms = append(baseDenoms, string(iterator.Value()))
+		baseDenom := types.BaseDenom{}
+		err := baseDenom.Unmarshal(iterator.Value())
+		if err != nil {
+			return []types.BaseDenom{}, err
+		}
+
+		baseDenoms = append(baseDenoms, baseDenom)
 	}
 
-	return baseDenoms
+	return baseDenoms, nil
 }
 
 // SetBaseDenoms sets all of the base denoms used to build cyclic arbitrage routes. The base denoms priority
 // order is going to match the order of the base denoms in the slice.
-func (k Keeper) SetBaseDenoms(ctx sdk.Context, baseDenoms []string) {
+func (k Keeper) SetBaseDenoms(ctx sdk.Context, baseDenoms []types.BaseDenom) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixBaseDenoms)
 
 	for i, baseDenom := range baseDenoms {
 		key := types.GetKeyPrefixBaseDenom(uint64(i))
-		store.Set(key, []byte(baseDenom))
+
+		bz, err := baseDenom.Marshal()
+		if err != nil {
+			return err
+		}
+		store.Set(key, bz)
 	}
+
+	return nil
 }
 
 // DeleteBaseDenoms deletes all of the base denoms
@@ -106,17 +119,37 @@ func (k Keeper) DeleteBaseDenoms(ctx sdk.Context) {
 	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixBaseDenoms)
 }
 
-// GetPoolForDenomPair returns the id of the highest liquidty pool between the base denom and the denom to match
+// GetPoolForDenomPair returns the id of the highest liquidity pool between the base denom and the denom to match
 func (k Keeper) GetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDenomPairToPool)
 	key := types.GetKeyPrefixDenomPairToPool(baseDenom, denomToMatch)
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return 0, fmt.Errorf("highest liquidity pool between base %s and match denom %s not found", baseDenom, denomToMatch)
+		return 0, types.NoPoolForDenomPairError{BaseDenom: baseDenom, MatchDenom: denomToMatch}
 	}
 
 	poolId := sdk.BigEndianToUint64(bz)
+	return poolId, nil
+}
+
+// GetPoolForDenomPairNoOrder returns the id of the pool between the two denoms.
+// It is order-independent. That is, tokenA can either be a base or a quote. Both cases are handled.
+// If no pool exists, an error is returned.
+// TODO: unit test
+func (k Keeper) GetPoolForDenomPairNoOrder(ctx sdk.Context, tokenA, tokenB string) (uint64, error) {
+	poolId, err := k.GetPoolForDenomPair(ctx, tokenA, tokenB)
+	if err != nil {
+		if errors.Is(err, types.NoPoolForDenomPairError{BaseDenom: tokenA, MatchDenom: tokenB}) {
+			// Attempt changing base and mathch denoms.
+			poolId, err = k.GetPoolForDenomPair(ctx, tokenB, tokenA)
+			if err != nil {
+				return 0, err
+			}
+		} else {
+			return 0, err
+		}
+	}
 	return poolId, nil
 }
 
@@ -132,6 +165,57 @@ func (k Keeper) SetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch str
 func (k Keeper) DeleteAllPoolsForBaseDenom(ctx sdk.Context, baseDenom string) {
 	key := append(types.KeyPrefixDenomPairToPool, types.GetKeyPrefixDenomPairToPool(baseDenom, "")...)
 	k.DeleteAllEntriesForKeyPrefix(ctx, key)
+}
+
+// SetSwapsToBackrun sets the swaps to backrun, updated via hooks
+func (k Keeper) SetSwapsToBackrun(ctx sdk.Context, swapsToBackrun types.Route) error {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSwapsToBackrun)
+
+	bz, err := swapsToBackrun.Marshal()
+	if err != nil {
+		return err
+	}
+
+	store.Set(types.KeyPrefixSwapsToBackrun, bz)
+
+	return nil
+}
+
+// GetSwapsToBackrun returns the swaps to backrun, updated via hooks
+func (k Keeper) GetSwapsToBackrun(ctx sdk.Context) (types.Route, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSwapsToBackrun)
+	bz := store.Get(types.KeyPrefixSwapsToBackrun)
+
+	swapsToBackrun := types.Route{}
+	err := swapsToBackrun.Unmarshal(bz)
+	if err != nil {
+		return types.Route{}, err
+	}
+
+	return swapsToBackrun, nil
+}
+
+// DeleteSwapsToBackrun deletes the swaps to backrun
+func (k Keeper) DeleteSwapsToBackrun(ctx sdk.Context) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSwapsToBackrun)
+	store.Delete(types.KeyPrefixSwapsToBackrun)
+}
+
+// AddSwapToSwapsToBackrun appends a swap to the swaps to backrun
+func (k Keeper) AddSwapsToSwapsToBackrun(ctx sdk.Context, swaps []types.Trade) error {
+	swapsToBackrun, err := k.GetSwapsToBackrun(ctx)
+	if err != nil {
+		return err
+	}
+
+	swapsToBackrun.Trades = append(swapsToBackrun.Trades, swaps...)
+
+	err = k.SetSwapsToBackrun(ctx, swapsToBackrun)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // DeleteAllEntriesForKeyPrefix deletes all the entries from the store for the given key prefix
@@ -167,6 +251,7 @@ func (k Keeper) SetDaysSinceModuleGenesis(ctx sdk.Context, daysSinceGenesis uint
 	store.Set(types.KeyPrefixDaysSinceGenesis, sdk.Uint64ToBigEndian(daysSinceGenesis))
 }
 
+// Deprecated: Can be removed in v16
 // GetDeveloperFees returns the fees the developers can withdraw from the module account
 func (k Keeper) GetDeveloperFees(ctx sdk.Context, denom string) (sdk.Coin, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)
@@ -186,6 +271,7 @@ func (k Keeper) GetDeveloperFees(ctx sdk.Context, denom string) (sdk.Coin, error
 	return developerFees, nil
 }
 
+// Deprecated: Used in v16 upgrade, can be removed in v17
 // GetAllDeveloperFees returns all the developer fees the developer account can withdraw
 func (k Keeper) GetAllDeveloperFees(ctx sdk.Context) ([]sdk.Coin, error) {
 	fees := make([]sdk.Coin, 0)
@@ -206,6 +292,7 @@ func (k Keeper) GetAllDeveloperFees(ctx sdk.Context) ([]sdk.Coin, error) {
 	return fees, nil
 }
 
+// Deprecated: Can be removed in v16
 // SetDeveloperFees sets the fees the developers can withdraw from the module account
 func (k Keeper) SetDeveloperFees(ctx sdk.Context, developerFees sdk.Coin) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)
@@ -221,6 +308,7 @@ func (k Keeper) SetDeveloperFees(ctx sdk.Context, developerFees sdk.Coin) error 
 	return nil
 }
 
+// Deprecated: Used in v16 upgrade, can be removed in v17
 // DeleteDeveloperFees deletes the developer fees given a denom
 func (k Keeper) DeleteDeveloperFees(ctx sdk.Context, denom string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)
@@ -229,27 +317,16 @@ func (k Keeper) DeleteDeveloperFees(ctx sdk.Context, denom string) {
 }
 
 // GetProtoRevEnabled returns whether protorev is enabled
-func (k Keeper) GetProtoRevEnabled(ctx sdk.Context) (bool, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtoRevEnabled)
-	bz := store.Get(types.KeyPrefixProtoRevEnabled)
-	if bz == nil {
-		// This should never happen as the module is initialized on genesis
-		return false, fmt.Errorf("protorev enabled/disabled configuration has not been set in state")
-	}
-
-	res, err := strconv.ParseBool(string(bz))
-	if err != nil {
-		return false, err
-	}
-
-	return res, nil
+func (k Keeper) GetProtoRevEnabled(ctx sdk.Context) bool {
+	params := k.GetParams(ctx)
+	return params.Enabled
 }
 
 // SetProtoRevEnabled sets whether the protorev post handler is enabled
 func (k Keeper) SetProtoRevEnabled(ctx sdk.Context, enabled bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtoRevEnabled)
-	bz := []byte(strconv.FormatBool(enabled))
-	store.Set(types.KeyPrefixProtoRevEnabled, bz)
+	params := k.GetParams(ctx)
+	params.Enabled = enabled
+	k.SetParams(ctx, params)
 }
 
 // GetPointCountForBlock returns the number of pool points that have been consumed in the current block
@@ -267,9 +344,9 @@ func (k Keeper) GetPointCountForBlock(ctx sdk.Context) (uint64, error) {
 }
 
 // SetPointCountForBlock sets the number of pool points that have been consumed in the current block
-func (k Keeper) SetPointCountForBlock(ctx sdk.Context, txCount uint64) {
+func (k Keeper) SetPointCountForBlock(ctx sdk.Context, pointCount uint64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPointCountForBlock)
-	store.Set(types.KeyPrefixPointCountForBlock, sdk.Uint64ToBigEndian(txCount))
+	store.Set(types.KeyPrefixPointCountForBlock, sdk.Uint64ToBigEndian(pointCount))
 }
 
 // IncrementPointCountForBlock increments the number of pool points that have been consumed in the current block
@@ -307,20 +384,16 @@ func (k Keeper) SetLatestBlockHeight(ctx sdk.Context, blockHeight uint64) {
 // ---------------------- Admin Stores  ---------------------- //
 
 // GetAdminAccount returns the admin account for protorev
-func (k Keeper) GetAdminAccount(ctx sdk.Context) (sdk.AccAddress, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAdminAccount)
-	bz := store.Get(types.KeyPrefixAdminAccount)
-	if bz == nil {
-		return nil, fmt.Errorf("admin account not found, it has not been initialized through governance")
-	}
-
-	return sdk.AccAddress(bz), nil
+func (k Keeper) GetAdminAccount(ctx sdk.Context) sdk.AccAddress {
+	params := k.GetParams(ctx)
+	return sdk.MustAccAddressFromBech32(params.Admin)
 }
 
 // SetAdminAccount sets the admin account for protorev
 func (k Keeper) SetAdminAccount(ctx sdk.Context, adminAccount sdk.AccAddress) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAdminAccount)
-	store.Set(types.KeyPrefixAdminAccount, adminAccount.Bytes())
+	params := k.GetParams(ctx)
+	params.Admin = adminAccount.String()
+	k.SetParams(ctx, params)
 }
 
 // GetDeveloperAccount returns the developer account for protorev
@@ -396,17 +469,17 @@ func (k Keeper) SetMaxPointsPerBlock(ctx sdk.Context, maxPoints uint64) error {
 	return nil
 }
 
-// GetPoolWeights retrieves the weights of different pool types. The weight of a pool type roughly
-// corresponds to the amount of time it will take to simulate and execute a swap on that pool type (in ms).
-func (k Keeper) GetPoolWeights(ctx sdk.Context) *types.PoolWeights {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolWeights)
-	poolWeights := &types.PoolWeights{}
-	osmoutils.MustGet(store, types.KeyPrefixPoolWeights, poolWeights)
-	return poolWeights
+// GetInfoByPoolType retrieves the metadata about the different pool types. This is used to determine the execution costs of
+// different pool types when calculating the optimal route (in terms of time and gas consumption).
+func (k Keeper) GetInfoByPoolType(ctx sdk.Context) types.InfoByPoolType {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixInfoByPoolType)
+	poolWeights := &types.InfoByPoolType{}
+	osmoutils.MustGet(store, types.KeyPrefixInfoByPoolType, poolWeights)
+	return *poolWeights
 }
 
-// SetPoolWeights sets the weights of different pool types.
-func (k Keeper) SetPoolWeights(ctx sdk.Context, poolWeights types.PoolWeights) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolWeights)
-	osmoutils.MustSet(store, types.KeyPrefixPoolWeights, &poolWeights)
+// SetInfoByPoolType sets the pool type information.
+func (k Keeper) SetInfoByPoolType(ctx sdk.Context, poolWeights types.InfoByPoolType) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixInfoByPoolType)
+	osmoutils.MustSet(store, types.KeyPrefixInfoByPoolType, &poolWeights)
 }

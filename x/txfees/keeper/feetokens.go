@@ -3,10 +3,12 @@ package keeper
 import (
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	errorsmod "cosmossdk.io/errors"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount.
@@ -30,27 +32,30 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 		return sdk.Coin{}, err
 	}
 
-	return sdk.NewCoin(baseDenom, spotPrice.MulInt(inputFee.Amount).RoundInt()), nil
+	// Note: spotPrice truncation is done here for maintaining state-compatibility with v19.x
+	// It should be changed to support full spot price precision before
+	// https://github.com/osmosis-labs/osmosis/issues/6064 is complete
+	return sdk.NewCoin(baseDenom, spotPrice.Dec().MulInt(inputFee.Amount).RoundInt()), nil
 }
 
 // CalcFeeSpotPrice converts the provided tx fees into their equivalent value in the base denomination.
-// Spot Price Calculation: spotPrice / (1 - swapFee),
+// Spot Price Calculation: spotPrice / (1 - spreadFactor),
 // where spotPrice is defined as:
 // (tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)
-func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, error) {
+func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (osmomath.BigDec, error) {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	feeToken, err := k.GetFeeToken(ctx, inputDenom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 
 	spotPrice, err := k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
 	if err != nil {
-		return sdk.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 	return spotPrice, nil
 }
@@ -94,7 +99,7 @@ func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error
 		return err
 	}
 	if baseDenom == feeToken.Denom {
-		return sdkerrors.Wrap(types.ErrInvalidFeeToken, "cannot add basedenom as a whitelisted fee token")
+		return errorsmod.Wrap(types.ErrInvalidFeeToken, "cannot add basedenom as a whitelisted fee token")
 	}
 	// This not returning an error implies that:
 	// - feeToken.Denom exists
@@ -110,7 +115,7 @@ func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error
 func (k Keeper) GetFeeToken(ctx sdk.Context, denom string) (types.FeeToken, error) {
 	prefixStore := k.GetFeeTokensStore(ctx)
 	if !prefixStore.Has([]byte(denom)) {
-		return types.FeeToken{}, sdkerrors.Wrapf(types.ErrInvalidFeeToken, "%s", denom)
+		return types.FeeToken{}, errorsmod.Wrapf(types.ErrInvalidFeeToken, "%s", denom)
 	}
 	bz := prefixStore.Get([]byte(denom))
 

@@ -1,0 +1,62 @@
+# This is a manua workflow that does the following when trigerred:
+# - Runs a script to find and replace Go import path major version with given version.
+# - Commits and pushes changes to the source-branch.
+# - Opens a PR from the source branch to the target-branch.
+
+name: Update Go Import Paths
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Current Version that we want to change'
+        default: '10'
+        required: true
+      target-branch:
+        description: 'Target Branch'
+        default: 'main'
+        required: true
+      source-branch:
+        description: 'Source Branch'
+        default: 'update-paths'
+        required: true
+
+env:
+  GO_VERSION: '1.20.5'
+
+jobs:
+  update-import-paths:
+    runs-on: ubuntu-latest
+
+    steps:
+      -
+        name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target-branch }}
+      -
+        name: 🐿 Setup Golang
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{env.GO_VERSION}}
+      -
+        name: Display go version
+        run: go version
+      -
+        name: Run find & replace script
+        run: ./scripts/replace_import_paths.sh ${{ inputs.version }}
+      -
+        name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.COMMIT_TO_BRANCH }}
+          title: "auto: update Go import paths to v${{ inputs.version }} on branch ${{ inputs.target-branch }}"
+          commit-message: "auto: update Go import paths to v${{ inputs.version }}"
+          body: "**Automated pull request**\n\nUpdating Go import paths to v${{ inputs.version }}"
+          base: ${{ inputs.target-branch }}
+          branch-suffix: random
+          branch: ${{ inputs.source-branch }}
+          delete-branch: true
+          assignees: ${{ github.actor }}
+          draft: true
+          labels: T:auto,T:code-hygiene,V:state/compatible/no_backport,A:no-changelog

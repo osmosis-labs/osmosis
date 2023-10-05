@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,14 +29,16 @@ type Keeper struct {
 	hooks      types.GammHooks
 
 	// keepers
-	accountKeeper       types.AccountKeeper
-	bankKeeper          types.BankKeeper
-	communityPoolKeeper types.CommunityPoolKeeper
-	poolManager         types.PoolManager
-	clKeeper            types.CLKeeper
+	accountKeeper               types.AccountKeeper
+	bankKeeper                  types.BankKeeper
+	communityPoolKeeper         types.CommunityPoolKeeper
+	poolManager                 types.PoolManager
+	concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper
+	poolIncentivesKeeper        types.PoolIncentivesKeeper
+	incentivesKeeper            types.IncentivesKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper, clKeeper types.CLKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper, concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper, incentivesKeeper types.IncentivesKeeper) Keeper {
 	// Ensure that the module account are set.
 	moduleAddr, perms := accountKeeper.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
@@ -56,10 +58,12 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 		cdc:        cdc,
 		paramSpace: paramSpace,
 		// keepers
-		accountKeeper:       accountKeeper,
-		bankKeeper:          bankKeeper,
-		communityPoolKeeper: communityPoolKeeper,
-		clKeeper:            clKeeper,
+		accountKeeper:               accountKeeper,
+		bankKeeper:                  bankKeeper,
+		communityPoolKeeper:         communityPoolKeeper,
+		concentratedLiquidityKeeper: concentratedLiquidityKeeper,
+		poolIncentivesKeeper:        poolIncentivesKeeper,
+		incentivesKeeper:            incentivesKeeper,
 	}
 }
 
@@ -87,4 +91,19 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams sets the total set of params.
 func (k Keeper) setParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
+}
+
+// SetParam sets a specific gamm module's parameter with the provided parameter.
+func (k Keeper) SetParam(ctx sdk.Context, key []byte, value interface{}) {
+	k.paramSpace.Set(ctx, key, value)
+}
+
+// Set the pool incentives keeper.
+func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeper) {
+	k.poolIncentivesKeeper = poolIncentivesKeeper
+}
+
+// Set the incentives keeper.
+func (k *Keeper) SetIncentivesKeeper(incentivesKeeper types.IncentivesKeeper) {
+	k.incentivesKeeper = incentivesKeeper
 }

@@ -2,19 +2,19 @@ package keeper
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	gogotypes "github.com/gogo/protobuf/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 func (k Keeper) MarshalPool(pool poolmanagertypes.PoolI) ([]byte, error) {
@@ -29,6 +29,21 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.CFMMPoolI, error) {
 // GetPool returns a pool with a given id.
 func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error) {
 	return k.GetPoolAndPoke(ctx, poolId)
+}
+
+func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPrefixPools, func(bz []byte) (poolmanagertypes.PoolI, error) {
+		pool, err := k.UnmarshalPool(bz)
+		if err != nil {
+			return nil, err
+		}
+
+		if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
+			pokePool.PokePool(ctx.BlockTime())
+		}
+
+		return pool, nil
+	})
 }
 
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. If poolId corresponds
@@ -55,15 +70,17 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.CFMMPoolI,
 	return pool, nil
 }
 
-// Get pool and check if the pool is active, i.e. allowed to be swapped against.
-func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.CFMMPoolI, error) {
+// GetCFMMPool gets CFMMPool and checks if the pool is active, i.e. allowed to be swapped against.
+// The difference from GetPools is that this function returns an error if the pool is inactive.
+// Additionally, it returns x/gamm specific CFMMPool type.
+func (k Keeper) GetCFMMPool(ctx sdk.Context, poolId uint64) (types.CFMMPoolI, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return &balancer.Pool{}, err
 	}
 
 	if !pool.IsActive(ctx) {
-		return &balancer.Pool{}, sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
+		return &balancer.Pool{}, errorsmod.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
 	}
 	return pool, nil
 }
@@ -107,6 +124,12 @@ func (k Keeper) setPool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
 	return nil
 }
 
+// OverwritePoolV15MigrationUnsafe is a temporary method for calling from the v15 upgrade handler
+// for balancer to stableswap pool migration. Do not use for other purposes.
+func (k Keeper) OverwritePoolV15MigrationUnsafe(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
+	return k.setPool(ctx, pool)
+}
+
 func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
@@ -127,7 +150,7 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 // on remaining locks before calling this function.
 // func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64, excludedModules []string) (err error) {
 // 	pools := make(map[string]types.CFMMPoolI)
-// 	totalShares := make(map[string]sdk.Int)
+// 	totalShares := make(map[string]osmomath.Int)
 // 	for _, poolId := range poolIds {
 // 		pool, err := k.GetPool(ctx, poolId)
 // 		if err != nil {
@@ -263,8 +286,27 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.Po
 		return poolmanagertypes.Stableswap, nil
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
-		return -1, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
+		return -1, errorsmod.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
+}
+
+// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
+func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
+	pool, err := k.GetCFMMPool(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+	return pool.GetTotalPoolLiquidity(ctx), nil
+}
+
+// GetTotalPoolShares returns the total number of pool shares for the given pool.
+func (k Keeper) GetTotalPoolShares(ctx sdk.Context, poolId uint64) (osmomath.Int, error) {
+	pool, err := k.GetCFMMPool(ctx, poolId)
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
+	return pool.GetTotalShares(), nil
 }
 
 // setStableSwapScalingFactors sets the stable swap scaling factors.
@@ -286,11 +328,27 @@ func (k Keeper) setStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scal
 	return k.setPool(ctx, stableswapPool)
 }
 
-// convertToCFMMPool converts PoolI to CFMMPoolI by casting the input.
+// setStableSwapScalingFactorController updates the scaling factor controller address for a stable swap pool
+// errors if the pool does not exist or is not a stable swap pool
+func (k Keeper) setStableSwapScalingFactorController(ctx sdk.Context, poolId uint64, controllerAddress string) error {
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return err
+	}
+	stableswapPool, ok := pool.(*stableswap.Pool)
+	if !ok {
+		return fmt.Errorf("pool id %d is not of type stableswap pool", poolId)
+	}
+
+	stableswapPool.ScalingFactorController = controllerAddress
+
+	return k.setPool(ctx, stableswapPool)
+}
+
+// asCFMMPool converts PoolI to CFMMPoolI by casting the input.
 // Returns the pool of the CFMMPoolI or error if the given pool does not implement
 // CFMMPoolI.
-// nolint: unused
-func convertToCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
+func asCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 	cfmmPool, ok := pool.(types.CFMMPoolI)
 	if !ok {
 		return nil, fmt.Errorf("given pool does not implement CFMMPoolI, implements %T", pool)
@@ -298,11 +356,8 @@ func convertToCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 	return cfmmPool, nil
 }
 
-// getPoolIdFromSharesDenom takes in a string representing a pool share denom and extracts the pool ID.
-// It returns the pool ID as a uint64 and an error if the denom is invalid.
-func getPoolIdFromSharesDenom(denom string) (uint64, error) {
-	if !strings.HasPrefix(denom, "gamm/pool/") {
-		return 0, fmt.Errorf("invalid pool share denom %s", denom)
-	}
-	return strconv.ParseUint(denom[len("gamm/pool/"):], 10, 64)
+// GetTradingPairTakerFee is a wrapper for poolmanager's GetTradingPairTakerFee, and is solely used
+// to get access to this method for use in sim_msgs.go for the GAMM module.
+func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (osmomath.Dec, error) {
+	return k.poolManager.GetTradingPairTakerFee(ctx, denom0, denom1)
 }

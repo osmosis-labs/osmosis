@@ -2,12 +2,13 @@ package types
 
 import (
 	"errors"
-	fmt "fmt"
+	"fmt"
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
@@ -45,6 +46,10 @@ var (
 )
 
 // TODO: make utility command to automatically interlace separators
+
+func FormatKeyPoolTwapRecords(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%d", HistoricalTWAPPoolIndexPrefix, poolId))
+}
 
 func FormatMostRecentTWAPKey(poolId uint64, denom1, denom2 string) []byte {
 	poolIdS := osmoutils.FormatFixedLengthU64(poolId)
@@ -88,7 +93,7 @@ func ParseTwapFromBz(bz []byte) (twap TwapRecord, err error) {
 	}
 	err = proto.Unmarshal(bz, &twap)
 	if twap.GeometricTwapAccumulator.IsNil() {
-		twap.GeometricTwapAccumulator = sdk.ZeroDec()
+		twap.GeometricTwapAccumulator = osmomath.ZeroDec()
 	}
 	return twap, err
 }

@@ -1,4 +1,3 @@
-mod checks;
 pub mod contract;
 mod error;
 pub mod execute;

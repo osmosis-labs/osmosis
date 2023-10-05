@@ -7,20 +7,21 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
-	stableswap "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
+	stableswap "github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
 func baseCreatePoolMsgGen(sender sdk.AccAddress) *stableswap.MsgCreateStableswapPool {
 	testPoolAsset := sdk.Coins{
-		sdk.NewCoin("atom", sdk.NewInt(100)),
-		sdk.NewCoin("osmo", sdk.NewInt(100)),
+		sdk.NewCoin("atom", osmomath.NewInt(100)),
+		sdk.NewCoin("osmo", osmomath.NewInt(100)),
 	}
 
 	poolParams := &stableswap.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		SwapFee: osmomath.NewDecWithPrec(1, 2),
+		ExitFee: osmomath.ZeroDec(),
 	}
 
 	msg := &stableswap.MsgCreateStableswapPool{
@@ -93,7 +94,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			name: "has one coin in InitialPoolLiquidity",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
-					sdk.NewCoin("osmo", sdk.NewInt(100)),
+					sdk.NewCoin("osmo", osmomath.NewInt(100)),
 				}
 				return msg
 			}),
@@ -103,26 +104,26 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			name: "have assets in excess of cap",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
-					sdk.NewCoin("akt", sdk.NewInt(100)),
-					sdk.NewCoin("atom", sdk.NewInt(100)),
-					sdk.NewCoin("band", sdk.NewInt(100)),
-					sdk.NewCoin("evmos", sdk.NewInt(100)),
-					sdk.NewCoin("juno", sdk.NewInt(100)),
-					sdk.NewCoin("osmo", sdk.NewInt(100)),
-					sdk.NewCoin("regen", sdk.NewInt(100)),
-					sdk.NewCoin("usdt", sdk.NewInt(100)),
-					sdk.NewCoin("usdc", sdk.NewInt(100)),
+					sdk.NewCoin("akt", osmomath.NewInt(100)),
+					sdk.NewCoin("atom", osmomath.NewInt(100)),
+					sdk.NewCoin("band", osmomath.NewInt(100)),
+					sdk.NewCoin("evmos", osmomath.NewInt(100)),
+					sdk.NewCoin("juno", osmomath.NewInt(100)),
+					sdk.NewCoin("osmo", osmomath.NewInt(100)),
+					sdk.NewCoin("regen", osmomath.NewInt(100)),
+					sdk.NewCoin("usdt", osmomath.NewInt(100)),
+					sdk.NewCoin("usdc", osmomath.NewInt(100)),
 				}
 				return msg
 			}),
 			expectPass: false,
 		},
 		{
-			name: "negative swap fee with zero exit fee",
+			name: "negative spread factor with zero exit fee",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.PoolParams = &stableswap.PoolParams{
-					SwapFee: sdk.NewDecWithPrec(-1, 2),
-					ExitFee: sdk.NewDecWithPrec(0, 0),
+					SwapFee: osmomath.NewDecWithPrec(-1, 2),
+					ExitFee: osmomath.NewDecWithPrec(0, 0),
 				}
 				return msg
 			}),
@@ -193,11 +194,11 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			expectPass: true,
 		},
 		{
-			name: "zero swap fee, zero exit fee",
+			name: "zero spread factor, zero exit fee",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.PoolParams = &stableswap.PoolParams{
-					ExitFee: sdk.NewDecWithPrec(0, 0),
-					SwapFee: sdk.NewDecWithPrec(0, 0),
+					ExitFee: osmomath.NewDecWithPrec(0, 0),
+					SwapFee: osmomath.NewDecWithPrec(0, 0),
 				}
 				return msg
 			}),
@@ -207,10 +208,10 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			name: "multi assets pool",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
-					sdk.NewCoin("atom", sdk.NewInt(100)),
-					sdk.NewCoin("osmo", sdk.NewInt(100)),
-					sdk.NewCoin("usdc", sdk.NewInt(100)),
-					sdk.NewCoin("usdt", sdk.NewInt(100)),
+					sdk.NewCoin("atom", osmomath.NewInt(100)),
+					sdk.NewCoin("osmo", osmomath.NewInt(100)),
+					sdk.NewCoin("usdc", osmomath.NewInt(100)),
+					sdk.NewCoin("usdt", osmomath.NewInt(100)),
 				}
 				msg.ScalingFactors = []uint64{1, 1, 1, 1}
 				return msg
@@ -221,10 +222,10 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			name: "post-scaled asset amount less than 1",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
-					sdk.NewCoin("osmo", sdk.NewInt(100)),
-					sdk.NewCoin("atom", sdk.NewInt(100)),
-					sdk.NewCoin("usdt", sdk.NewInt(100)),
-					sdk.NewCoin("usdc", sdk.NewInt(100)),
+					sdk.NewCoin("osmo", osmomath.NewInt(100)),
+					sdk.NewCoin("atom", osmomath.NewInt(100)),
+					sdk.NewCoin("usdt", osmomath.NewInt(100)),
+					sdk.NewCoin("usdc", osmomath.NewInt(100)),
 				}
 				msg.ScalingFactors = []uint64{1000, 1, 1, 1}
 				return msg
@@ -253,7 +254,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			name: "greater than max post-scaled amount with regular scaling factors",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
-					sdk.NewCoin("osmo", types.StableswapMaxScaledAmtPerAsset.Add(sdk.OneInt())),
+					sdk.NewCoin("osmo", types.StableswapMaxScaledAmtPerAsset.Add(osmomath.OneInt())),
 					sdk.NewCoin("atom", types.StableswapMaxScaledAmtPerAsset),
 					sdk.NewCoin("usdt", types.StableswapMaxScaledAmtPerAsset),
 					sdk.NewCoin("usdc", types.StableswapMaxScaledAmtPerAsset),
@@ -271,14 +272,14 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 			name: "100B token 8-asset pool using large scaling factors (6 decimal precision per asset)",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
-					sdk.NewCoin("akt", sdk.NewInt(100_000_000_000_000_000)),
-					sdk.NewCoin("atom", sdk.NewInt(100_000_000_000_000_000)),
-					sdk.NewCoin("band", sdk.NewInt(100_000_000_000_000_000)),
-					sdk.NewCoin("juno", sdk.NewInt(100_000_000_000_000_000)),
-					sdk.NewCoin("osmo", sdk.NewInt(100_000_000_000_000_000)),
-					sdk.NewCoin("regen", sdk.NewInt(100_000_000_000_000_000)),
-					sdk.NewCoin("usdc", sdk.NewInt(100_000_000_000_000_000)),
-					sdk.NewCoin("usdt", sdk.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("akt", osmomath.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("atom", osmomath.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("band", osmomath.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("juno", osmomath.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("osmo", osmomath.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("regen", osmomath.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("usdc", osmomath.NewInt(100_000_000_000_000_000)),
+					sdk.NewCoin("usdt", osmomath.NewInt(100_000_000_000_000_000)),
 				}
 				msg.ScalingFactors = []uint64{10000000, 10000000, 10000000, 10000000, 10000000, 10000000, 10000000, 10000000}
 				return msg
@@ -300,8 +301,8 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 	suite.SetupTest()
 
 	var (
-		validParams           = &stableswap.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.NewDecWithPrec(1, 3)}
-		validInitialLiquidity = sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(1_000_000)), sdk.NewCoin("usdt", sdk.NewInt(2_000_000)))
+		validParams           = &stableswap.PoolParams{SwapFee: osmomath.NewDecWithPrec(1, 2), ExitFee: osmomath.ZeroDec()}
+		validInitialLiquidity = sdk.NewCoins(sdk.NewCoin("usdc", osmomath.NewInt(1_000_000)), sdk.NewCoin("usdt", osmomath.NewInt(2_000_000)))
 		validScalingFactors   = []uint64{1, 1}
 		invalidScalingFactors = []uint64{1, 1, 1}
 	)
@@ -338,7 +339,6 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-
 			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
 
 			if tc.expectError {
@@ -348,8 +348,12 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tc.poolId, pool.GetId())
-			suite.Require().Equal(tc.msg.InitialPoolLiquidity, pool.GetTotalPoolLiquidity(suite.Ctx))
-			suite.Require().Equal(types.InitPoolSharesSupply, pool.GetTotalShares())
+
+			cfmmPool, ok := pool.(types.CFMMPoolI)
+			suite.Require().True(ok)
+
+			suite.Require().Equal(tc.msg.InitialPoolLiquidity, cfmmPool.GetTotalPoolLiquidity(suite.Ctx))
+			suite.Require().Equal(types.InitPoolSharesSupply, cfmmPool.GetTotalShares())
 		})
 	}
 }

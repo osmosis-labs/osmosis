@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -27,7 +27,7 @@ func GetQueryCmd() *cobra.Command {
 // GetCmdGaugeIds takes the pool id and returns the matching gauge ids and durations.
 func GetCmdGaugeIds() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryGaugeIdsRequest](
-		"gauge-ids [pool-id]",
+		"gauge-ids",
 		"Query the matching gauge ids and durations by pool id",
 		`{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} gauge-ids 1

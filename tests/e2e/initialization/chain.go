@@ -12,14 +12,14 @@ type internalChain struct {
 	nodes     []*internalNode
 }
 
-func new(id, dataDir string) (*internalChain, error) {
+func new(id, dataDir string) *internalChain {
 	chainMeta := ChainMeta{
 		Id:      id,
 		DataDir: dataDir,
 	}
 	return &internalChain{
 		chainMeta: chainMeta,
-	}, nil
+	}
 }
 
 func (c *internalChain) export() *Chain {

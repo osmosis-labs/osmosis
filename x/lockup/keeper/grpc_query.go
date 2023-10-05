@@ -3,12 +3,14 @@ package keeper
 import (
 	"context"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -42,7 +44,7 @@ func (q Querier) AccountUnlockableCoins(goCtx context.Context, req *types.Accoun
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Owner) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -61,7 +63,7 @@ func (q Querier) AccountUnlockingCoins(goCtx context.Context, req *types.Account
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Owner) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -80,7 +82,7 @@ func (q Querier) AccountLockedCoins(goCtx context.Context, req *types.AccountLoc
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Owner) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -99,7 +101,7 @@ func (q Querier) AccountLockedPastTime(goCtx context.Context, req *types.Account
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Owner) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -118,7 +120,7 @@ func (q Querier) AccountUnlockedBeforeTime(goCtx context.Context, req *types.Acc
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Owner) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -138,7 +140,7 @@ func (q Querier) AccountLockedPastTimeDenom(goCtx context.Context, req *types.Ac
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Owner) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -162,15 +164,62 @@ func (q Querier) LockedByID(goCtx context.Context, req *types.LockedRequest) (*t
 	return &types.LockedResponse{Lock: lock}, err
 }
 
+// LockRewardReceiver returns lock reward receiver of the lock.
+func (q Querier) LockRewardReceiver(goCtx context.Context, req *types.LockRewardReceiverRequest) (*types.LockRewardReceiverResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	rewardReceiver, err := q.Keeper.GetLockRewardReceiver(ctx, req.LockId)
+	return &types.LockRewardReceiverResponse{RewardReceiver: rewardReceiver}, err
+}
+
+// NextLockID returns next lock ID to be created.
+func (q Querier) NextLockID(goCtx context.Context, req *types.NextLockIDRequest) (*types.NextLockIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	lastLockID := q.Keeper.GetLastLockID(ctx)
+	nextLockID := lastLockID + 1
+
+	return &types.NextLockIDResponse{LockId: nextLockID}, nil
+}
+
 // SyntheticLockupsByLockupID returns synthetic lockups by native lockup id.
+// Deprecated: use SyntheticLockupByLockupID instead.
+// nolint: staticcheck
 func (q Querier) SyntheticLockupsByLockupID(goCtx context.Context, req *types.SyntheticLockupsByLockupIDRequest) (*types.SyntheticLockupsByLockupIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	synthLocks := q.Keeper.GetAllSyntheticLockupsByLockup(ctx, req.LockId)
-	return &types.SyntheticLockupsByLockupIDResponse{SyntheticLocks: synthLocks}, nil
+	synthLock, found, err := q.Keeper.GetSyntheticLockupByUnderlyingLockId(ctx, req.LockId)
+	if err != nil {
+		return nil, err
+	}
+	synthlocks := []types.SyntheticLock{}
+	if found {
+		synthlocks = append(synthlocks, synthLock)
+	}
+	return &types.SyntheticLockupsByLockupIDResponse{SyntheticLocks: synthlocks}, nil
+}
+
+// SyntheticLockupByLockupID returns synthetic lockup by native lockup id.
+func (q Querier) SyntheticLockupByLockupID(goCtx context.Context, req *types.SyntheticLockupByLockupIDRequest) (*types.SyntheticLockupByLockupIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	synthLock, found, err := q.Keeper.GetSyntheticLockupByUnderlyingLockId(ctx, req.LockId)
+	if err != nil || !found {
+		return &types.SyntheticLockupByLockupIDResponse{}, err
+	}
+	return &types.SyntheticLockupByLockupIDResponse{SyntheticLock: synthLock}, nil
 }
 
 // AccountLockedLongerDuration returns locks of an account with duration longer than specified.
@@ -179,7 +228,7 @@ func (q Querier) AccountLockedLongerDuration(goCtx context.Context, req *types.A
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Owner) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -199,7 +248,7 @@ func (q Querier) AccountLockedLongerDurationDenom(goCtx context.Context, req *ty
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Owner) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -219,7 +268,7 @@ func (q Querier) AccountLockedDuration(goCtx context.Context, req *types.Account
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Owner) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -240,7 +289,7 @@ func (q Querier) AccountLockedPastTimeNotUnlockingOnly(goCtx context.Context, re
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Owner) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -260,7 +309,7 @@ func (q Querier) AccountLockedLongerDurationNotUnlockingOnly(goCtx context.Conte
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Owner) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -279,7 +328,7 @@ func (q Querier) LockedDenom(goCtx context.Context, req *types.LockedDenomReques
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Denom) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

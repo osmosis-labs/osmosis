@@ -6,13 +6,19 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
+	txfeestypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 )
 
 const (
@@ -20,9 +26,21 @@ const (
 	// The maximum number of times debug logs are printed to console
 	// per CLI command.
 	maxDebugLogsPerCommand = 3
+
+	GasLimit = 400000
 )
 
-var defaultErrRegex = regexp.MustCompile(`(E|e)rror`)
+var (
+	// We set consensus min fee = .0025 uosmo / gas * 400000 gas = 1000
+	Fees = txfeestypes.ConsensusMinFee.Mul(osmomath.NewDec(GasLimit)).Ceil().TruncateInt64()
+
+	defaultErrRegex = regexp.MustCompile(`(E|e)rror`)
+
+	txArgs = []string{"-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
+
+	// See ConsensusMinFee in x/txfees/types/constants.go
+	txDefaultGasArgs = []string{fmt.Sprintf("--gas=%d", GasLimit), fmt.Sprintf("--fees=%d", Fees) + initialization.E2EFeeToken}
+)
 
 // Manager is a wrapper around all Docker instances, and the Docker API.
 // It provides utilities to run and interact with all Docker containers used within e2e testing.
@@ -31,6 +49,7 @@ type Manager struct {
 	pool              *dockertest.Pool
 	network           *dockertest.Network
 	resources         map[string]*dockertest.Resource
+	resourcesMutex    sync.RWMutex
 	isDebugLogEnabled bool
 }
 
@@ -55,20 +74,34 @@ func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Ma
 
 // ExecTxCmd Runs ExecTxCmdWithSuccessString searching for `code: 0`
 func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, command []string) (bytes.Buffer, bytes.Buffer, error) {
+	t.Helper()
 	return m.ExecTxCmdWithSuccessString(t, chainId, containerName, command, "code: 0")
 }
 
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
-// namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json"`,
+// namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json" --gas=400000`,
 // and searching for `successStr`
 func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
-	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId), "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
+	t.Helper()
+	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId)}
+	allTxArgs = append(allTxArgs, txArgs...)
+	// parse to see if command has gas flags. If not, add default gas flags.
+	addGasFlags := true
+	for _, cmd := range command {
+		if strings.HasPrefix(cmd, "--gas") || strings.HasPrefix(cmd, "--fees") {
+			addGasFlags = false
+		}
+	}
+	if addGasFlags {
+		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
+	}
 	txCommand := append(command, allTxArgs...)
 	return m.ExecCmd(t, containerName, txCommand, successStr)
 }
 
 // ExecHermesCmd executes command on the hermes relaer container.
 func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
+	t.Helper()
 	return m.ExecCmd(t, hermesContainerName, command, success)
 }
 
@@ -78,6 +111,7 @@ func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) 
 // returns container std out, container std err, and error if any.
 // An error is returned if the command fails to execute or if the success string is not found in the output.
 func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
+	t.Helper()
 	if _, ok := m.resources[containerName]; !ok {
 		return bytes.Buffer{}, bytes.Buffer{}, fmt.Errorf("no resource %s found", containerName)
 	}
@@ -88,7 +122,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 		errBuf bytes.Buffer
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	if m.isDebugLogEnabled {
@@ -96,11 +130,17 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 	}
 	maxDebugLogTriesLeft := maxDebugLogsPerCommand
 
+	expectedSequence := 0
+	var sequenceMismatchRegex = regexp.MustCompile(`account sequence mismatch, expected (\d+),`)
+
 	// We use the `require.Eventually` function because it is only allowed to do one transaction per block without
 	// sequence numbers. For simplicity, we avoid keeping track of the sequence number and just use the `require.Eventually`.
 	require.Eventually(
 		t,
 		func() bool {
+			outBuf.Reset()
+			errBuf.Reset()
+
 			exec, err := m.pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
@@ -122,6 +162,39 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			}
 
 			errBufString := errBuf.String()
+			// When a validator attempts to send multiple transactions in the same block, the expected sequence number
+			// will be thrown off, causing the transaction to fail. It will eventually clear, but what the following code
+			// does is it takes the expected sequence number from the error message, adds a sequence number flag with that
+			// number, and retries the transaction. This allows for multiple txs from the same validator to be committed in the same block.
+			if (errBufString != "" || outBuf.String() != "") && containerName != hermesContainerName {
+				// Check if the error message matches the expected pattern
+				errBufMatches := sequenceMismatchRegex.FindAllStringSubmatch(errBufString, -1)
+				outBufMatches := sequenceMismatchRegex.FindAllStringSubmatch(outBuf.String(), -1)
+				if len(errBufMatches) > 0 {
+					lastArg := command[len(command)-1]
+					if strings.Contains(lastArg, "--sequence") {
+						// Remove the last argument from the command
+						command = command[:len(command)-1]
+					}
+					expectedSequenceStr := errBufMatches[len(errBufMatches)-1][1]
+					expectedSequence, _ = strconv.Atoi(expectedSequenceStr)
+					modifiedCommand := append(command, fmt.Sprintf("--sequence=%d", expectedSequence))
+					// Update the command for the next iteration
+					command = modifiedCommand
+				} else if len(outBufMatches) > 0 {
+					lastArg := command[len(command)-1]
+					if strings.Contains(lastArg, "--sequence") {
+						// Remove the last argument from the command
+						command = command[:len(command)-1]
+					}
+					expectedSequenceStr := outBufMatches[len(outBufMatches)-1][1]
+					expectedSequence, _ = strconv.Atoi(expectedSequenceStr)
+					modifiedCommand := append(command, fmt.Sprintf("--sequence=%d", expectedSequence))
+					// Update the command for the next iteration
+					command = modifiedCommand
+				}
+			}
+
 			// Note that this does not match all errors.
 			// This only works if CLI outpurs "Error" or "error"
 			// to stderr.
@@ -146,7 +219,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			return true
 		},
 		time.Minute,
-		50*time.Millisecond,
+		10*time.Millisecond,
 		fmt.Sprintf("success condition (%s) was not met.\nstdout:\n %s\nstderr:\n %s\n",
 			success, outBuf.String(), errBuf.String()),
 	)
@@ -225,7 +298,9 @@ func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir st
 		return nil, err
 	}
 
+	m.resourcesMutex.Lock()
 	m.resources[containerName] = resource
+	m.resourcesMutex.Unlock()
 
 	return resource, nil
 }

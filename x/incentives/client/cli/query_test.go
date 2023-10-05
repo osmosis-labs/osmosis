@@ -7,8 +7,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -25,7 +26,7 @@ func (s *QueryTestSuite) SetupSuite() {
 	// create a pool
 	s.PrepareBalancerPool()
 	// set up lock with id = 1
-	s.LockTokens(s.TestAccs[0], sdk.Coins{sdk.NewCoin("gamm/pool/1", sdk.NewInt(1000000))}, time.Hour*24)
+	s.LockTokens(s.TestAccs[0], sdk.Coins{sdk.NewCoin("gamm/pool/1", osmomath.NewInt(1000000))}, time.Hour*24)
 
 	s.Commit()
 }

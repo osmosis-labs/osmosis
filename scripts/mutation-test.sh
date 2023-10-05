@@ -1,44 +1,40 @@
 #!/usr/bin/env bash
 
 set -eo pipefail
-oIFS="$IFS"; IFS=, ; set -- $1 ; IFS="$oIFS"
+IFS=' '
+MODULE=$1
+SPECIFIC_FILES=$2
 
 DISABLED_MUTATORS='branch/*'
 
-# Only consider the following:
-# * go files in types, keeper, or module root directories
-# * ignore test and Protobuf files
-go_file_exclusions="-type f ! -path */client/* -name *.go -and -not -name *_test.go -and -not -name *pb* -and -not -name module.go"
-MUTATION_SOURCES=$(find ./x  $go_file_exclusions )
-MUTATION_SOURCES+=$(find ./x -maxdepth 2 $go_file_exclusions )
+# Check if specific files are provided
+if [ -n "$SPECIFIC_FILES" ]; then
+    IFS=','
+    read -ra FILE_ARRAY <<< "$SPECIFIC_FILES"
+    for file in "${FILE_ARRAY[@]}"; do
+        MUTATION_SOURCES+=$(find $file)
+    done
+    echo "Running mutation tests on the following file(s): $SPECIFIC_FILES"
+else
+    # Only consider the following:
+    # * go files in types, keeper, or module root directories
+    # * ignore test and Protobuf files
+    go_file_exclusions="-type f ! -path */client/* -name *.go -and -not -name *_test.go -and -not -name *pb* -and -not -name module.go -and -not -name sim_msgs.go -and -not -name codec.go -and -not -name errors.go"
+    MUTATION_SOURCES=$(find ../x/$MODULE $go_file_exclusions)
+    MUTATION_SOURCES+=$(printf '\n'; find ../x/$MODULE -maxdepth 2 $go_file_exclusions)
+    echo "No specific files provided, running mutation tests on all Go files in the module: $MODULE"
+fi
 
-# Filter on a module-by-module basis as provided by input
-arg_len=$#
+# Collect multiple lines into a single line to be fed into go-mutesting
+MUTATION_SOURCES=$(echo $MUTATION_SOURCES | tr '\n' ' ' | sed 's/^ *//;s/ *$//')
 
-for i in "$@"; do
-  if [ $arg_len -gt 1 ]; then
-    MODULE_FORMAT+="./x/$i\|"
-    MODULE_NAMES+="${i} "
-    let "arg_len--"
-  else
-    MODULE_FORMAT+="./x/$i"
-    MODULE_NAMES+="${i}"
-  fi
-done
-
-MUTATION_SOURCES=$(echo "$MUTATION_SOURCES" | grep "$MODULE_FORMAT")
-
-#Collect multiple lines into a single line to be fed into go-mutesting
-MUTATION_SOURCES=$(echo $MUTATION_SOURCES | tr '\n' ' ')
-
-echo "running mutation tests for the following module(s): $MODULE_NAMES"
 OUTPUT=$(go run github.com/osmosis-labs/go-mutesting/cmd/go-mutesting --disable=$DISABLED_MUTATORS $MUTATION_SOURCES)
 
 # Fetch the final result output and the overall mutation testing score
 RESULT=$(echo "$OUTPUT" | grep 'The mutation score')
 SCORE=$(echo "$RESULT" | grep -Eo '[[:digit:]]\.[[:digit:]]+')
 
-echo "writing mutation test result to mutation_test_result.txt"
+echo "Writing mutation test result to mutation_test_result.txt"
 echo "$OUTPUT" > mutation_test_result.txt
 
 # Print the mutation score breakdown

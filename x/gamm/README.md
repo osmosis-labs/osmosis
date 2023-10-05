@@ -36,7 +36,7 @@ us safe when it comes to the malicious creation of unneeded pools.
 
 #### Joining Pool
 
-When joining a pool without swapping - with `JoinPool`, a user can provide the maximum amount of tokens `TokenInMaxs'
+When joining a pool without swapping - with `JoinPool`, a user can provide the maximum amount of tokens `TokenInMaxs`
 they're willing to deposit. This argument must contain all the denominations from the pool or no tokens at all, 
 otherwise, the tx will be aborted.
 If `TokenInMaxs` contains no tokens, the calculations are done based on the user's balance as the only constraint.
@@ -76,7 +76,7 @@ or positive number of LP shares.
 Otherwise transaction will be aborted and user will not be able to exit a pool.
 Therefore, it is not possible to "drain out" a pool.
 
-When exiting a pool with a swap, both exit and swap fees are paid.
+When exiting a pool with a swap, both exit and spread factors are paid.
 
 Existing Exit types:
 - ExitPool
@@ -98,7 +98,7 @@ after the swap is denoted as `tokenOut` throughout the module.
 Given a `tokenIn`, the following calculations are done to calculate how
 many tokens are to be swapped into and removed from the pool:
 
-`tokenBalanceOut * [1 - { tokenBalanceIn / (tokenBalanceIn + (1 - swapFee) * tokenAmountIn)} ^ (tokenWeightIn / tokenWeightOut)]`
+`tokenBalanceOut * [1 - { tokenBalanceIn / (tokenBalanceIn + (1 - spreadFactor) * tokenAmountIn)} ^ (tokenWeightIn / tokenWeightOut)]`
 
 The calculation is also able to be reversed, the case where user
 provides `tokenOut`. The calculation for the amount of tokens that the
@@ -112,10 +112,10 @@ Existing Swap types:
 
 #### Spot Price
 
-Meanwhile, calculation of the spot price with a swap fee is done using
+Meanwhile, calculation of the spot price with a spread factor is done using
 the following formula:
 
-`spotPrice / (1 - swapFee)`, where `spotPrice` is defined as:
+`spotPrice / (1 - spreadFactor)`, where `spotPrice` is defined as:
 
 `(tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)`
 
@@ -160,15 +160,15 @@ Pools have the following parameters:
 
 |  Key                       | Type                        |
 |  --------------------------| ----------------------------|
-|  SwapFee                   | sdk.Dec                     |
-|  ExitFee                   | sdk.Dec                     |
+|  SpreadFactor                   | osmomath.Dec                     |
+|  ExitFee                   | osmomath.Dec                     |
 |  FutureGovernor            | \*FutureGovernor            |
 |  Weights                   | \*Weights                   |
 |  SmoothWeightChangeParams  | \*SmoothWeightChangeParams  |
 |  PoolCreationFee           | sdk.Coins                   |
 
-1. **SwapFee** -
-    The swap fee is the cut of all swaps that goes to the Liquidity Providers (LPs) for a pool. Suppose a pool has a swap fee `s`. Then if a user wants to swap `T` tokens in the pool, `sT` tokens go to the LP's, and then `(1 - s)T` tokens are swapped according to the AMM swap function.
+1. **SpreadFactor** -
+    The spread factor is the cut of all swaps that goes to the Liquidity Providers (LPs) for a pool. Suppose a pool has a spread factor `s`. Then if a user wants to swap `T` tokens in the pool, `sT` tokens go to the LP's, and then `(1 - s)T` tokens are swapped according to the AMM swap function.
 2. **ExitFee** -
     The exit fee is a fee that is applied to LP's that want to remove their liquidity from the pool. Suppose a pool has an exit fee `e`. If they currently have `S` LP shares, then when they remove their liquidity they get tokens worth `(1 - e)S` shares back. The remaining `eS` shares are then burned, and the tokens corresponding to these shares are kept as liquidity.
 3. **FutureGovernor** -
@@ -256,7 +256,7 @@ The JSON [config-file] must specify the following parameters:
 {
  "weights": [list weighted denoms],
  "initial-deposit": [list of denoms with initial deposit amount],
- "swap-fee": [swap fee in percentage],
+ "swap-fee": [spread factor in percentage],
  "exit-fee": [exit fee in percentage],
  "future-governor": [see options in pool parameters section above]
 }
@@ -274,8 +274,8 @@ The configuration json file contains the following parameters:
 {
  "weights": "5ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4,5uosmo",
  "initial-deposit": "499404ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4,500000uosmo",
- "swap-fee": "0.01",
- "exit-fee": "0.01",
+ "swap-fee": "0.003",
+ "exit-fee": "0.00",
  "future-governor": ""
 }
 ```
@@ -435,6 +435,23 @@ osmosisd tx gamm swap-exact-amount-out 140530uosmo 407239 --swap-route-pool-ids 
 [comment]: <> (Other resources Creating a liquidity bootstrapping pool and Creating a pool with a pool file)
 :::
 
+### Migrate-position
+
+Migrate unlocked gamm shares to corresponding concentrated liquidity pool.
+
+
+```sh
+osmosisd tx gamm migrate-position [unlocked-shares] [flags]
+```
+
+::: details Example
+
+Migrate 10000000000000000000 unlocked gamm shares from pool 2 to the canonical CL pool:
+
+```sh
+ osmosisd tx gamm migrate-position 10000000000000000000gamm/pool/2 --min-amounts-out=100uosmo,100uusdc --from pool -b block --keyring-backend test --chain-id localosmosis --fees 1000000uosmo --gas 700000
+```
+:::
 ## Queries
 
 ## Queries
@@ -595,16 +612,16 @@ osmosisd query gamm total-share 1
 ## Other resources
 
 * [Creating a liquidity bootstrapping pool](./client/docs/create-lbp-pool.md)
-* [Creating a pool with a pool file](./client/docs/create-pool.md)
+* [Creating a pool with a pool file](./client/docs/create-balancer-pool.md)
+* [Creating a stableswap pool](./client/docs/create-stableswap-pool.md)
 
 ## Events
 
-There are 5 types of events that exist in GAMM:
+There are 4 types of events that exist in GAMM:
 
 * `sdk.EventTypeMessage` - "message"
 * `types.TypeEvtPoolJoined` - "pool_joined"
 * `types.TypeEvtPoolExited` - "pool_exited"
-* `types.TypeEvtPoolCreated` - "pool_created"
 * `types.TypeEvtTokenSwapped` - "token_swapped"
 
 ### `sdk.EventTypeMessage`
@@ -642,11 +659,6 @@ It consists of the following attributes:
   * The value is the pool id of the pool where swap occurs.
 * `types.AttributeKeyTokensOut`
   * The value is the string representation of the tokens being swapped out.
-
-### `types.TypeEvtPoolCreated`
-
-This event is emitted after `CreatePool` completes creating
-the requested pool successfully.
 
 ### `types.TypeEvtTokenSwapped`
 

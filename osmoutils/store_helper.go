@@ -4,11 +4,18 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	db "github.com/tendermint/tm-db"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/gogo/protobuf/proto"
+)
+
+var (
+	ErrNoValuesInRange = errors.New("No values in range")
 )
 
 func GatherAllKeysFromStore(storeObj store.KVStore) []string {
@@ -79,6 +86,19 @@ func GetIterValuesWithStop[T any](
 	return gatherValuesFromIterator(iter, parseValue, stopFn)
 }
 
+// HasAnyAtPrefix returns true if there is at least one value in the given prefix.
+func HasAnyAtPrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) (bool, error) {
+	_, err := GetFirstValueInRange(storeObj, prefix, sdk.PrefixEndBytes(prefix), false, parseValue)
+	if err != nil {
+		if err == ErrNoValuesInRange {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}
+
 func GetFirstValueAfterPrefixInclusive[T any](storeObj store.KVStore, keyStart []byte, parseValue func([]byte) (T, error)) (T, error) {
 	// SDK iterator is broken for nil end time, and non-nil start time
 	// https://github.com/cosmos/cosmos-sdk/issues/12661
@@ -92,7 +112,7 @@ func GetFirstValueInRange[T any](storeObj store.KVStore, keyStart []byte, keyEnd
 
 	if !iterator.Valid() {
 		var blankValue T
-		return blankValue, errors.New("No values in range")
+		return blankValue, ErrNoValuesInRange
 	}
 
 	return parseValue(iterator.Value())
@@ -150,21 +170,37 @@ func MustGet(store store.KVStore, key []byte, result proto.Message) {
 }
 
 // MustSetDec sets dec value to store at key. Panics on any error.
-func MustSetDec(store store.KVStore, key []byte, value sdk.Dec) {
+func MustSetDec(store store.KVStore, key []byte, value osmomath.Dec) {
 	MustSet(store, key, &sdk.DecProto{
 		Dec: value,
 	})
 }
 
 // MustGetDec gets dec value from store at key. Panics on any error.
-func MustGetDec(store store.KVStore, key []byte) sdk.Dec {
+func MustGetDec(store store.KVStore, key []byte) osmomath.Dec {
 	result := &sdk.DecProto{}
 	MustGet(store, key, result)
 	return result.Dec
 }
 
+// GetDec gets dec value from store at key. Returns error if:
+// - database error occurs.
+// - no value at given key is found.
+func GetDec(store store.KVStore, key []byte) (osmomath.Dec, error) {
+	result := &sdk.DecProto{}
+	isFound, err := Get(store, key, result)
+	if err != nil {
+		return osmomath.Dec{}, err
+	}
+	if !isFound {
+		return osmomath.Dec{}, DecNotFoundError{Key: string(key)}
+	}
+	return result.Dec, nil
+}
+
 // Get returns a value at key by mutating the result parameter. Returns true if the value was found and the
-// result mutated correctly. If the value is not in the store, returns false. Returns error only when database or serialization errors occur. (And when an error occurs, returns false)
+// result mutated correctly. If the value is not in the store, returns false.
+// Returns error only when database or serialization errors occur. (And when an error occurs, returns false)
 func Get(store store.KVStore, key []byte, result proto.Message) (found bool, err error) {
 	b := store.Get(key)
 	if b == nil {
@@ -174,4 +210,15 @@ func Get(store store.KVStore, key []byte, result proto.Message) (found bool, err
 		return true, err
 	}
 	return true, nil
+}
+
+// DeleteAllKeysFromPrefix deletes all store records that contains the given prefixKey.
+func DeleteAllKeysFromPrefix(store store.KVStore, prefixKey []byte) {
+	prefixStore := prefix.NewStore(store, prefixKey)
+	iter := prefixStore.Iterator(nil, nil)
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		prefixStore.Delete(iter.Key())
+	}
 }

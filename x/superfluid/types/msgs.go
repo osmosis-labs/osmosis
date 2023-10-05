@@ -2,20 +2,28 @@ package types
 
 import (
 	"fmt"
+	"strconv"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 // constants.
 const (
-	TypeMsgSuperfluidDelegate                 = "superfluid_delegate"
-	TypeMsgSuperfluidUndelegate               = "superfluid_undelegate"
-	TypeMsgSuperfluidRedelegate               = "superfluid_redelegate"
-	TypeMsgSuperfluidUnbondLock               = "superfluid_unbond_underlying_lock"
-	TypeMsgSuperfluidUndeledgateAndUnbondLock = "superfluid_undelegate_and_unbond_lock"
-	TypeMsgLockAndSuperfluidDelegate          = "lock_and_superfluid_delegate"
-	TypeMsgUnPoolWhitelistedPool              = "unpool_whitelisted_pool"
+	TypeMsgSuperfluidDelegate                           = "superfluid_delegate"
+	TypeMsgSuperfluidUndelegate                         = "superfluid_undelegate"
+	TypeMsgSuperfluidRedelegate                         = "superfluid_redelegate"
+	TypeMsgSuperfluidUnbondLock                         = "superfluid_unbond_underlying_lock"
+	TypeMsgSuperfluidUndeledgateAndUnbondLock           = "superfluid_undelegate_and_unbond_lock"
+	TypeMsgLockAndSuperfluidDelegate                    = "lock_and_superfluid_delegate"
+	TypeMsgUnPoolWhitelistedPool                        = "unpool_whitelisted_pool"
+	TypeMsgUnlockAndMigrateShares                       = "unlock_and_migrate_shares"
+	TypeMsgCreateFullRangePositionAndSuperfluidDelegate = "create_full_range_position_and_delegate"
+	TypeMsgAddToConcentratedLiquiditySuperfluidPosition = "add_to_concentrated_liquidity_superfluid_position"
+	TypeMsgUnbondConvertAndStake                        = "add_to_concentrated_liquidity_superfluid_position"
 )
 
 var _ sdk.Msg = &MsgSuperfluidDelegate{}
@@ -243,7 +251,7 @@ func (msg MsgUnPoolWhitelistedPool) Type() string  { return TypeMsgUnPoolWhiteli
 func (msg MsgUnPoolWhitelistedPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	return nil
@@ -254,6 +262,174 @@ func (msg MsgUnPoolWhitelistedPool) GetSignBytes() []byte {
 }
 
 func (msg MsgUnPoolWhitelistedPool) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}
+
+func NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender sdk.AccAddress, lockId int64, sharesToMigrate sdk.Coin) *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
+	return &MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{
+		Sender:          sender.String(),
+		LockId:          lockId,
+		SharesToMigrate: sharesToMigrate,
+	}
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Route() string { return RouterKey }
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Type() string {
+	return TypeMsgUnlockAndMigrateShares
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+	if msg.SharesToMigrate.IsNegative() {
+		return fmt.Errorf("Invalid shares to migrate (%s)", msg.SharesToMigrate)
+	}
+	return nil
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgCreateFullRangePositionAndSuperfluidDelegate{}
+
+func NewMsgCreateFullRangePositionAndSuperfluidDelegate(sender sdk.AccAddress, coins sdk.Coins, valAddr string, poolId uint64) *MsgCreateFullRangePositionAndSuperfluidDelegate {
+	return &MsgCreateFullRangePositionAndSuperfluidDelegate{
+		Sender:  sender.String(),
+		Coins:   coins,
+		ValAddr: valAddr,
+		PoolId:  poolId,
+	}
+}
+
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) Route() string { return RouterKey }
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) Type() string {
+	return TypeMsgUnlockAndMigrateShares
+}
+
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	err = msg.Coins.Validate()
+	if err != nil {
+		return err
+	}
+
+	if msg.ValAddr == "" {
+		return fmt.Errorf("ValAddr should not be empty")
+	}
+
+	if msg.PoolId < 1 {
+		return fmt.Errorf("pool id must be positive")
+	}
+	return nil
+}
+
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgAddToConcentratedLiquiditySuperfluidPosition{}
+
+func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) Route() string { return RouterKey }
+func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) Type() string {
+	return TypeMsgAddToConcentratedLiquiditySuperfluidPosition
+}
+
+func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return fmt.Errorf("Invalid sender address (%s)", err)
+	}
+
+	if msg.PositionId <= 0 {
+		return fmt.Errorf("Invalid position id (%s)", strconv.FormatUint(msg.PositionId, 10))
+	}
+
+	if !msg.TokenDesired0.IsValid() || !msg.TokenDesired0.IsPositive() {
+		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired0.String())
+	}
+
+	if !msg.TokenDesired1.IsValid() || !msg.TokenDesired1.IsPositive() {
+		return fmt.Errorf("Invalid coins (%s)", msg.TokenDesired1.String())
+	}
+
+	return nil
+}
+
+func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgAddToConcentratedLiquiditySuperfluidPosition) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgUnbondConvertAndStake{}
+
+func NewMsgUnbondConvertAndStake(sender sdk.AccAddress, lockId uint64, valAddr string, minAmtToStake osmomath.Int, sharesToConvert sdk.Coin) *MsgUnbondConvertAndStake {
+	return &MsgUnbondConvertAndStake{
+		Sender:          sender.String(),
+		LockId:          lockId,
+		ValAddr:         valAddr,
+		MinAmtToStake:   minAmtToStake,
+		SharesToConvert: sharesToConvert,
+	}
+}
+
+func (msg MsgUnbondConvertAndStake) Route() string { return RouterKey }
+func (msg MsgUnbondConvertAndStake) Type() string {
+	return TypeMsgUnbondConvertAndStake
+}
+
+func (msg MsgUnbondConvertAndStake) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return fmt.Errorf("Invalid sender address (%s)", err)
+	}
+
+	if msg.MinAmtToStake.IsNegative() {
+		return fmt.Errorf("Min amount to stake cannot be negative")
+	}
+	return nil
+}
+
+func (msg MsgUnbondConvertAndStake) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgUnbondConvertAndStake) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)

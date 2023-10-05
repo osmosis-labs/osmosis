@@ -55,7 +55,7 @@ pub fn receive_ack(
     success: bool,
 ) -> Result<Response, ContractError> {
     // deps.api.debug(&format!(
-    //     "received ack for packet {channel:?} {sequence:?}: {ack:?}, {success:?}"
+    //     "received ack for packet {source_channel:?} {sequence:?}: {ack:?}, {success:?}"
     // ));
     let response = Response::new()
         .add_attribute("contract", "crosschain_swaps")
@@ -116,5 +116,5 @@ pub fn receive_timeout(
 
     Ok(response
         .add_attribute("msg", "recovery stored")
-        .add_attribute("reecovery_addr", recovery_addr))
+        .add_attribute("recovery_addr", recovery_addr))
 }

@@ -223,16 +223,6 @@ osmo-basepair pool of an asset. The multiplier is set once per epoch, at
 the beginning of the epoch. In the future, we will switch this out to
 use a TWAP instead.
 
-### State changes
-
-The state of superfluid module state modifiers are classified into below
-categories.
-
-- [Proposals](07_proposals.md)
-- [Messages](03_messages.md)
-- [Epoch](04_epoch.md)
-- [Hooks](06_hooks.md)
-
 ### Messages
 
 ### Superfluid Delegate
@@ -348,6 +338,70 @@ lock until after the the unstaking has finished.
 
 - This runs the functionality of `MsgSuperfluidUndelegate`
 - It then triggers a force unbond of the underlying lock id
+
+### Create Full Range Position and Superfluid Delegate
+
+```{.go}
+type MsgCreateFullRangePositionAndSuperfluidDelegate struct {
+ Sender string
+ Coins sdk.Coins
+ ValAddr string
+ PoolId uint64
+}
+```
+
+This is effectively a multi msg tx of concentrated liquidity's `CreateFullRangePositionLocked`, lockup's `MsgLockTokens`, and
+superfluid's `MsgSuperfluidDelegate`, but it is implemented as a single
+msg. Upon completion, the following response is given:
+
+```{.go}
+type MsgCreateFullRangePositionAndSuperfluidDelegateResponse struct {
+ LockID uint64
+ PositionID uint64
+}
+```
+
+The message starts by creating a full range position in the given pool.
+It then mints concentrated liquidity shares and locks them up for the
+staking duration. From there, the normal superfluid delegation logic
+is executed.
+
+## Add To Superfluid Concentrated Position
+
+This message allows a user to add liquidity to a concentrated liquidity superfluid position.
+
+```{.go}
+type MsgAddToConcentratedLiquiditySuperfluidPosition struct {
+	PositionId    uint64
+	Sender        string
+	TokenDesired0 types.Coin
+	TokenDesired1 types.Coin
+}
+```
+
+It does so by performing the following steps:
+- perform validation of the input parameters
+   * make sure that position is locked
+   * belongs to the sender
+   * lock duration is correct and belongs to the sender
+- superfluid undelegate without synthetic lock creation
+- withdraw old position
+- make sure position isn't the last one in pool. Fail if so
+- update tokens for a new position (added + withdrawn)
+- created locked SF position
+- SF delegate (also creates synth lock)
+
+Upon successful execution, the following response is given:
+
+```{.go}
+type MsgAddToConcentratedLiquiditySuperfluidPositionResponse struct {
+	PositionId   uint64
+	Amount0      github_com_cosmos_cosmos_sdk_types.Int
+	Amount1      github_com_cosmos_cosmos_sdk_types.Int
+	NewLiquidity github_com_cosmos_cosmos_sdk_types.Dec
+	LockId       uint64
+}
+```
 
 ## Epochs
 
@@ -604,14 +658,14 @@ message ParamsResponse {
 }
 
 message Params {
-  sdk.Dec minimum_risk_factor = 1; // serialized as string
+  osmomath.Dec minimum_risk_factor = 1; // serialized as string
 }
 ```
 
 The params query returns the params for the superfluid module. This
 currently contains:
 
-- `MinimumRiskFactor` which is an sdk.Dec that represents the discount
+- `MinimumRiskFactor` which is an osmomath.Dec that represents the discount
   to apply to all superfluid staked modules when calcultating their
   staking power. For example, if a specific denom has an OSMO
   equivalent value of 100 OSMO, but the the `MinimumRiskFactor` param
@@ -832,8 +886,8 @@ This query returns the total amount of delegated coins for a validator /
 superfluid denom pair. This query does NOT involve iteration, so should
 be used instead of the above `SuperfluidDelegationsByValidatorDenom`
 whenever possible. It is called an "Estimate" because it can have some
-slight rounding errors, due to conversions between sdk.Dec and
-sdk.Int\", but for the most part it should be very close to the sum of
+slight rounding errors, due to conversions between osmomath.Dec and
+osmomath.Int\", but for the most part it should be very close to the sum of
 the results of the previous query.
 
 ## Parameters
@@ -875,6 +929,13 @@ We do this by:
 - The slash works by calculating the amount of tokens to slash.
 - It removes these from the underlying lock and the synthetic lock.
 - These coins are moved to the community pool.
+
+Slashing a concentrated liquidity superfluid lockup happens in the same way, however
+instead of sending the concentrated full range position shares from the lockup
+module account to the community pool, we determine the underlying assets
+that the slashed shares represent and send those from the respective pool
+account to the community pool. The shares residing in the lockup module
+account that represented the funds that got sent to the community pool are then burned.
 
 ### Nuances
 

@@ -4,28 +4,25 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 type KeeperTestSuite struct {
-	apptesting.KeeperTestHelper
-
-	queryClient types.QueryClient
+	suite.Suite
+	Ctx sdk.Context
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
-
-	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
+func (s *KeeperTestSuite) SetupTest() {
+	s.Ctx = testutil.DefaultContext(sdk.NewKVStoreKey(types.StoreKey), sdk.NewTransientStoreKey("transient_test"))
 }
 
 func dummyAfterEpochEndEvent(epochIdentifier string, epochNumber int64) sdk.Event {
@@ -86,7 +83,7 @@ func (hook *dummyEpochHook) Clone() *dummyEpochHook {
 
 var _ types.EpochHooks = &dummyEpochHook{}
 
-func (suite *KeeperTestSuite) TestHooksPanicRecovery() {
+func (s *KeeperTestSuite) TestHooksPanicRecovery() {
 	panicHook := dummyEpochHook{shouldPanic: true}
 	noPanicHook := dummyEpochHook{shouldPanic: false}
 	errorHook := dummyEpochHook{shouldError: true}
@@ -106,7 +103,7 @@ func (suite *KeeperTestSuite) TestHooksPanicRecovery() {
 
 	for tcIndex, tc := range tests {
 		for epochActionSelector := 0; epochActionSelector < 2; epochActionSelector++ {
-			suite.SetupTest()
+			s.SetupTest()
 			hookRefs := []types.EpochHooks{}
 
 			for _, hook := range tc.hooks {
@@ -123,21 +120,21 @@ func (suite *KeeperTestSuite) TestHooksPanicRecovery() {
 				return evts
 			}
 
-			suite.NotPanics(func() {
+			s.NotPanics(func() {
 				if epochActionSelector == 0 {
-					hooks.BeforeEpochStart(suite.Ctx, "id", 0)
-					suite.Require().Equal(events("id", 0, dummyBeforeEpochStartEvent), suite.Ctx.EventManager().Events(),
+					hooks.BeforeEpochStart(s.Ctx, "id", 0)
+					s.Require().Equal(events("id", 0, dummyBeforeEpochStartEvent), s.Ctx.EventManager().Events(),
 						"test case index %d, before epoch event check", tcIndex)
 				} else if epochActionSelector == 1 {
-					hooks.AfterEpochEnd(suite.Ctx, "id", 0)
-					suite.Require().Equal(events("id", 0, dummyAfterEpochEndEvent), suite.Ctx.EventManager().Events(),
+					hooks.AfterEpochEnd(s.Ctx, "id", 0)
+					s.Require().Equal(events("id", 0, dummyAfterEpochEndEvent), s.Ctx.EventManager().Events(),
 						"test case index %d, after epoch event check", tcIndex)
 				}
 			})
 
 			for i := 0; i < len(hooks); i++ {
 				epochHook := hookRefs[i].(*dummyEpochHook)
-				suite.Require().Equal(tc.expectedCounterValues[i], epochHook.successCounter, "test case index %d", tcIndex)
+				s.Require().Equal(tc.expectedCounterValues[i], epochHook.successCounter, "test case index %d", tcIndex)
 			}
 		}
 	}

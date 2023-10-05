@@ -3,7 +3,6 @@ package types
 const (
 	TypeEvtPoolJoined    = "pool_joined"
 	TypeEvtPoolExited    = "pool_exited"
-	TypeEvtPoolCreated   = "pool_created"
 	TypeEvtTokenSwapped  = "token_swapped"
 	TypeEvtMigrateShares = "migrate_shares"
 
@@ -14,4 +13,9 @@ const (
 	AttributeKeySwapFee        = "swap_fee"
 	AttributeKeyTokensIn       = "tokens_in"
 	AttributeKeyTokensOut      = "tokens_out"
+
+	AttributePositionId = "position_id"
+	AttributeAmount0    = "amount0"
+	AttributeAmount1    = "amount1"
+	AttributeLiquidity  = "liquidity"
 )

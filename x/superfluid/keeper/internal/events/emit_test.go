@@ -8,9 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 )
 
 type SuperfluidEventsTestSuite struct {
@@ -156,6 +157,53 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidDelegateEvent() {
 	}
 }
 
+func (suite *SuperfluidEventsTestSuite) TestEmitCreateFullRangePositionAndSuperfluidDelegateEvent() {
+	testcases := map[string]struct {
+		ctx        sdk.Context
+		lockID     uint64
+		positionID uint64
+		valAddr    string
+	}{
+		"basic valid": {
+			ctx:        suite.CreateTestContext(),
+			lockID:     1,
+			positionID: 1,
+			valAddr:    sdk.AccAddress([]byte(addressString)).String(),
+		},
+		"context with no event manager": {
+			ctx: sdk.Context{},
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			expectedEvents := sdk.Events{
+				sdk.NewEvent(
+					types.TypeEvtCreateFullRangePositionAndSFDelegate,
+					sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", tc.lockID)),
+					sdk.NewAttribute(types.AttributePositionId, fmt.Sprintf("%d", tc.positionID)),
+					sdk.NewAttribute(types.AttributeValidator, tc.valAddr),
+				),
+			}
+
+			hasNoEventManager := tc.ctx.EventManager() == nil
+
+			// System under test.
+			events.EmitCreateFullRangePositionAndSuperfluidDelegateEvent(tc.ctx, tc.lockID, tc.positionID, tc.valAddr)
+
+			// Assertions
+			if hasNoEventManager {
+				// If there is no event manager on context, this is a no-op.
+				return
+			}
+
+			eventManager := tc.ctx.EventManager()
+			actualEvents := eventManager.Events()
+			suite.Equal(expectedEvents, actualEvents)
+		})
+	}
+}
+
 func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidIncreaseDelegationEvent() {
 	testcases := map[string]struct {
 		ctx    sdk.Context
@@ -165,7 +213,7 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidIncreaseDelegationEven
 		"basic valid": {
 			ctx:    suite.CreateTestContext(),
 			lockID: 1,
-			amount: sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(100))),
+			amount: sdk.NewCoins(sdk.NewCoin(testDenomA, osmomath.NewInt(100))),
 		},
 		"context with no event manager": {
 			ctx: sdk.Context{},
@@ -173,7 +221,7 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidIncreaseDelegationEven
 		"valid with multiple tokens in and out": {
 			ctx:    suite.CreateTestContext(),
 			lockID: 1,
-			amount: sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(100)), sdk.NewCoin(testDenomB, sdk.NewInt(10))),
+			amount: sdk.NewCoins(sdk.NewCoin(testDenomA, osmomath.NewInt(100)), sdk.NewCoin(testDenomB, osmomath.NewInt(10))),
 		},
 	}
 

@@ -5,32 +5,32 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	v9 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v9"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	v9 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v9"
 )
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
-func (suite *UpgradeTestSuite) SetupTest() {
-	suite.Setup()
+func (s *UpgradeTestSuite) SetupTest() {
+	s.Setup()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(UpgradeTestSuite))
 }
 
-func (suite *UpgradeTestSuite) TestProp214() {
-	poolId := suite.PrepareBalancerPool()
-	v9.ExecuteProp214(suite.Ctx, suite.App.GAMMKeeper)
+func (s *UpgradeTestSuite) TestProp214() {
+	poolId := s.PrepareBalancerPool()
+	v9.ExecuteProp214(s.Ctx, s.App.GAMMKeeper)
 
-	_, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
-	suite.Require().NoError(err)
+	_, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
+	s.Require().NoError(err)
 
 	// Kept as comments for recordkeeping. Since SetPool is now private, the changes being tested for can no longer be made:
-	// 		swapFee := pool.GetSwapFee(suite.Ctx)
-	//  	expectedSwapFee := sdk.MustNewDecFromStr("0.002")
+	// 		spreadFactor := pool.GetSpreadFactor(s.Ctx)
+	//  	expectedSpreadFactor := osmomath.MustNewDecFromStr("0.002")
 	//
-	//  	suite.Require().Equal(expectedSwapFee, swapFee)
+	//  	s.Require().Equal(expectedSpreadFactor, spreadFactor)
 }

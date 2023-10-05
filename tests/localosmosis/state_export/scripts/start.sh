@@ -33,6 +33,24 @@ edit_config () {
     dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:26657"
 }
 
+enable_cors () {
+
+    # Enable cors on RPC
+    dasel put string -f $CONFIG_FOLDER/config.toml -v "*" '.rpc.cors_allowed_origins.[]'
+    dasel put string -f $CONFIG_FOLDER/config.toml -v "Accept-Encoding" '.rpc.cors_allowed_headers.[]'
+    dasel put string -f $CONFIG_FOLDER/config.toml -v "DELETE" '.rpc.cors_allowed_methods.[]'
+    dasel put string -f $CONFIG_FOLDER/config.toml -v "OPTIONS" '.rpc.cors_allowed_methods.[]'
+    dasel put string -f $CONFIG_FOLDER/config.toml -v "PATCH" '.rpc.cors_allowed_methods.[]'
+    dasel put string -f $CONFIG_FOLDER/config.toml -v "PUT" '.rpc.cors_allowed_methods.[]'
+
+    # Enable unsafe cors and swagger on the api
+    dasel put bool -f $CONFIG_FOLDER/app.toml -v "true" '.api.swagger'
+    dasel put bool -f $CONFIG_FOLDER/app.toml -v "true" '.api.enabled-unsafe-cors'
+
+    # Enable cors on gRPC Web
+    dasel put bool -f $CONFIG_FOLDER/app.toml -v "true" '.grpc-web.enable-unsafe-cors'
+}
+
 if [[ ! -d $CONFIG_FOLDER ]]
 then
 
@@ -67,6 +85,7 @@ then
     --prune-ibc
 
     edit_config
+    enable_cors
 fi
 
 osmosisd start --home $OSMOSIS_HOME --x-crisis-skip-assert-invariants

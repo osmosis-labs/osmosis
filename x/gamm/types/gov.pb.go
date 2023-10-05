@@ -4,9 +4,13 @@
 package types
 
 import (
+	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	migration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -29,9 +33,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Each record specifies a single connection between a single balancer pool and
 // a single concentrated pool.
 type ReplaceMigrationRecordsProposal struct {
-	Title       string                           `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description string                           `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Records     []BalancerToConcentratedPoolLink `protobuf:"bytes,3,rep,name=records,proto3" json:"records"`
+	Title       string                                     `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string                                     `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Records     []migration.BalancerToConcentratedPoolLink `protobuf:"bytes,3,rep,name=records,proto3" json:"records"`
 }
 
 func (m *ReplaceMigrationRecordsProposal) Reset()      { *m = ReplaceMigrationRecordsProposal{} }
@@ -75,9 +79,9 @@ var xxx_messageInfo_ReplaceMigrationRecordsProposal proto.InternalMessageInfo
 // The result MigrationRecords in state would be:
 // [(Balancer 1, CL 5), (Balancer 3, CL 4), (Balancer 4, CL 10)]
 type UpdateMigrationRecordsProposal struct {
-	Title       string                           `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description string                           `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Records     []BalancerToConcentratedPoolLink `protobuf:"bytes,3,rep,name=records,proto3" json:"records"`
+	Title       string                                     `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string                                     `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Records     []migration.BalancerToConcentratedPoolLink `protobuf:"bytes,3,rep,name=records,proto3" json:"records"`
 }
 
 func (m *UpdateMigrationRecordsProposal) Reset()      { *m = UpdateMigrationRecordsProposal{} }
@@ -112,35 +116,222 @@ func (m *UpdateMigrationRecordsProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UpdateMigrationRecordsProposal proto.InternalMessageInfo
 
+type PoolRecordWithCFMMLink struct {
+	Denom0             string                      `protobuf:"bytes,1,opt,name=denom0,proto3" json:"denom0,omitempty" yaml:"denom0"`
+	Denom1             string                      `protobuf:"bytes,2,opt,name=denom1,proto3" json:"denom1,omitempty" yaml:"denom1"`
+	TickSpacing        uint64                      `protobuf:"varint,3,opt,name=tick_spacing,json=tickSpacing,proto3" json:"tick_spacing,omitempty" yaml:"tick_spacing"`
+	ExponentAtPriceOne cosmossdk_io_math.Int       `protobuf:"bytes,4,opt,name=exponent_at_price_one,json=exponentAtPriceOne,proto3,customtype=cosmossdk.io/math.Int" json:"exponent_at_price_one" yaml:"exponent_at_price_one"`
+	SpreadFactor       cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=spread_factor,json=spreadFactor,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"spread_factor" yaml:"spread_factor"`
+	BalancerPoolId     uint64                      `protobuf:"varint,6,opt,name=balancer_pool_id,json=balancerPoolId,proto3" json:"balancer_pool_id,omitempty" yaml:"balancer_pool_id"`
+}
+
+func (m *PoolRecordWithCFMMLink) Reset()         { *m = PoolRecordWithCFMMLink{} }
+func (m *PoolRecordWithCFMMLink) String() string { return proto.CompactTextString(m) }
+func (*PoolRecordWithCFMMLink) ProtoMessage()    {}
+func (*PoolRecordWithCFMMLink) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31b9a6c0dbbdfa3, []int{2}
+}
+func (m *PoolRecordWithCFMMLink) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PoolRecordWithCFMMLink) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PoolRecordWithCFMMLink.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PoolRecordWithCFMMLink) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PoolRecordWithCFMMLink.Merge(m, src)
+}
+func (m *PoolRecordWithCFMMLink) XXX_Size() int {
+	return m.Size()
+}
+func (m *PoolRecordWithCFMMLink) XXX_DiscardUnknown() {
+	xxx_messageInfo_PoolRecordWithCFMMLink.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PoolRecordWithCFMMLink proto.InternalMessageInfo
+
+func (m *PoolRecordWithCFMMLink) GetDenom0() string {
+	if m != nil {
+		return m.Denom0
+	}
+	return ""
+}
+
+func (m *PoolRecordWithCFMMLink) GetDenom1() string {
+	if m != nil {
+		return m.Denom1
+	}
+	return ""
+}
+
+func (m *PoolRecordWithCFMMLink) GetTickSpacing() uint64 {
+	if m != nil {
+		return m.TickSpacing
+	}
+	return 0
+}
+
+func (m *PoolRecordWithCFMMLink) GetBalancerPoolId() uint64 {
+	if m != nil {
+		return m.BalancerPoolId
+	}
+	return 0
+}
+
+// CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal is a gov Content type
+// for creating concentrated liquidity pools and linking it to a CFMM pool.
+type CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal struct {
+	Title                   string                   `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description             string                   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	PoolRecordsWithCfmmLink []PoolRecordWithCFMMLink `protobuf:"bytes,3,rep,name=pool_records_with_cfmm_link,json=poolRecordsWithCfmmLink,proto3" json:"pool_records_with_cfmm_link" yaml:"create_cl_pool_and_link_to_cfmm"`
+}
+
+func (m *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) Reset() {
+	*m = CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal{}
+}
+func (*CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) ProtoMessage() {}
+func (*CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31b9a6c0dbbdfa3, []int{3}
+}
+func (m *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal.Merge(m, src)
+}
+func (m *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal proto.InternalMessageInfo
+
+// SetScalingFactorControllerProposal is a gov Content type for updating the
+// scaling factor controller address of a stableswap pool
+type SetScalingFactorControllerProposal struct {
+	Title             string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description       string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	PoolId            uint64 `protobuf:"varint,3,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	ControllerAddress string `protobuf:"bytes,4,opt,name=controller_address,json=controllerAddress,proto3" json:"controller_address,omitempty"`
+}
+
+func (m *SetScalingFactorControllerProposal) Reset()      { *m = SetScalingFactorControllerProposal{} }
+func (*SetScalingFactorControllerProposal) ProtoMessage() {}
+func (*SetScalingFactorControllerProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f31b9a6c0dbbdfa3, []int{4}
+}
+func (m *SetScalingFactorControllerProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SetScalingFactorControllerProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SetScalingFactorControllerProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SetScalingFactorControllerProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SetScalingFactorControllerProposal.Merge(m, src)
+}
+func (m *SetScalingFactorControllerProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *SetScalingFactorControllerProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_SetScalingFactorControllerProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SetScalingFactorControllerProposal proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*ReplaceMigrationRecordsProposal)(nil), "osmosis.gamm.v1beta1.ReplaceMigrationRecordsProposal")
 	proto.RegisterType((*UpdateMigrationRecordsProposal)(nil), "osmosis.gamm.v1beta1.UpdateMigrationRecordsProposal")
+	proto.RegisterType((*PoolRecordWithCFMMLink)(nil), "osmosis.gamm.v1beta1.PoolRecordWithCFMMLink")
+	proto.RegisterType((*CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal)(nil), "osmosis.gamm.v1beta1.CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal")
+	proto.RegisterType((*SetScalingFactorControllerProposal)(nil), "osmosis.gamm.v1beta1.SetScalingFactorControllerProposal")
 }
 
 func init() { proto.RegisterFile("osmosis/gamm/v1beta1/gov.proto", fileDescriptor_f31b9a6c0dbbdfa3) }
 
 var fileDescriptor_f31b9a6c0dbbdfa3 = []byte{
-	// 314 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x91, 0xbd, 0x4e, 0xf3, 0x30,
-	0x14, 0x86, 0xe3, 0xaf, 0x1f, 0x20, 0x52, 0xa6, 0xa8, 0x43, 0xd5, 0xc1, 0xa9, 0x3a, 0x75, 0x21,
-	0xa6, 0xd0, 0x89, 0xb1, 0x6c, 0x08, 0xa4, 0x2a, 0x2a, 0x0b, 0x9b, 0x93, 0x1c, 0x05, 0x0b, 0xc7,
-	0xc7, 0xb2, 0x4d, 0x05, 0x77, 0xc0, 0xc8, 0xc8, 0xd8, 0x0b, 0x81, 0xbd, 0x63, 0x47, 0x26, 0x84,
-	0xda, 0x85, 0xcb, 0x40, 0xf9, 0xa9, 0xc4, 0xd0, 0x1b, 0x60, 0xf3, 0xf1, 0xf3, 0xfa, 0xf1, 0x91,
-	0x5e, 0x9f, 0xa2, 0x2d, 0xd0, 0x0a, 0xcb, 0x72, 0x5e, 0x14, 0x6c, 0x3e, 0x4a, 0xc0, 0xf1, 0x11,
-	0xcb, 0x71, 0x1e, 0x69, 0x83, 0x0e, 0x83, 0x4e, 0xc3, 0xa3, 0x92, 0x47, 0x0d, 0xef, 0x75, 0x72,
-	0xcc, 0xb1, 0x0a, 0xb0, 0xf2, 0x54, 0x67, 0x7b, 0x83, 0xdd, 0x2e, 0x50, 0x50, 0x0a, 0xaa, 0xcc,
-	0xe0, 0x9d, 0xf8, 0x61, 0x0c, 0x5a, 0xf2, 0x14, 0xae, 0x45, 0x6e, 0xb8, 0x13, 0xa8, 0x62, 0x48,
-	0xd1, 0x64, 0x76, 0x6a, 0x50, 0xa3, 0xe5, 0x32, 0xe8, 0xf8, 0x7b, 0x4e, 0x38, 0x09, 0x5d, 0xd2,
-	0x27, 0xc3, 0xc3, 0xb8, 0x1e, 0x82, 0xbe, 0xdf, 0xce, 0xc0, 0xa6, 0x46, 0xe8, 0xf2, 0x4d, 0xf7,
-	0x5f, 0xc5, 0x7e, 0x5f, 0x05, 0x33, 0xff, 0xc0, 0xd4, 0xaa, 0x6e, 0xab, 0xdf, 0x1a, 0xb6, 0x4f,
-	0xc7, 0xd1, 0xae, 0xed, 0xa3, 0x09, 0x97, 0x5c, 0xa5, 0x60, 0x66, 0x78, 0x81, 0x2a, 0x05, 0xe5,
-	0x0c, 0x77, 0x90, 0x4d, 0x11, 0xe5, 0x95, 0x50, 0xf7, 0x93, 0xff, 0xcb, 0xcf, 0xd0, 0x8b, 0xb7,
-	0xaa, 0xf3, 0xa3, 0xe7, 0x45, 0xe8, 0xbd, 0x2e, 0x42, 0xef, 0x7b, 0x11, 0x92, 0xc1, 0x1b, 0xf1,
-	0xe9, 0x8d, 0xce, 0xb8, 0xfb, 0x93, 0xeb, 0x4f, 0x2e, 0x97, 0x6b, 0x4a, 0x56, 0x6b, 0x4a, 0xbe,
-	0xd6, 0x94, 0xbc, 0x6c, 0xa8, 0xb7, 0xda, 0x50, 0xef, 0x63, 0x43, 0xbd, 0xdb, 0x93, 0x5c, 0xb8,
-	0xbb, 0x87, 0x24, 0x4a, 0xb1, 0x60, 0xcd, 0xb7, 0xc7, 0x92, 0x27, 0x76, 0x3b, 0xb0, 0xf9, 0x68,
-	0xcc, 0x1e, 0xeb, 0x6a, 0xdd, 0x93, 0x06, 0x9b, 0xec, 0x57, 0x8d, 0x9e, 0xfd, 0x04, 0x00, 0x00,
-	0xff, 0xff, 0xc7, 0xb2, 0x70, 0xe7, 0x43, 0x02, 0x00, 0x00,
+	// 805 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x55, 0xcf, 0x6f, 0xe3, 0x44,
+	0x14, 0x8e, 0x93, 0x6c, 0x56, 0x4c, 0x77, 0x11, 0x35, 0x59, 0x12, 0x5a, 0x64, 0x07, 0x1f, 0x96,
+	0xb2, 0xa2, 0xf6, 0x86, 0x1f, 0x07, 0x82, 0xf6, 0xd0, 0x04, 0x56, 0x5a, 0xd4, 0x8a, 0xca, 0xdd,
+	0x05, 0xc1, 0xc5, 0x4c, 0xc6, 0x53, 0x67, 0x14, 0x7b, 0xc6, 0xcc, 0x4c, 0x4b, 0xf3, 0x07, 0x20,
+	0x10, 0x27, 0x8e, 0x88, 0x53, 0xff, 0x04, 0x0e, 0xfc, 0x11, 0x15, 0x5c, 0x7a, 0x44, 0x1c, 0x2c,
+	0xd4, 0x1e, 0xe0, 0x9c, 0x23, 0x17, 0xd0, 0xcc, 0xd8, 0xa5, 0xd0, 0x88, 0xaa, 0xf4, 0xb4, 0x97,
+	0x28, 0xef, 0xbd, 0xcf, 0xdf, 0xe7, 0xf7, 0xbd, 0xf7, 0x64, 0xe0, 0x30, 0x91, 0x31, 0x41, 0x44,
+	0x90, 0xc0, 0x2c, 0x0b, 0xf6, 0xfb, 0x63, 0x2c, 0x61, 0x3f, 0x48, 0xd8, 0xbe, 0x9f, 0x73, 0x26,
+	0x99, 0xdd, 0x2e, 0xeb, 0xbe, 0xaa, 0xfb, 0x65, 0x7d, 0xa5, 0x9d, 0xb0, 0x84, 0x69, 0x40, 0xa0,
+	0xfe, 0x19, 0xec, 0x8a, 0xb7, 0x98, 0x0b, 0x53, 0xac, 0x08, 0x0c, 0xe6, 0xe5, 0x85, 0x18, 0x31,
+	0x81, 0x1c, 0xc7, 0x25, 0xe4, 0x45, 0xa4, 0x31, 0x91, 0xe1, 0x37, 0x41, 0x59, 0x5a, 0x86, 0x19,
+	0xa1, 0x2c, 0xd0, 0xbf, 0x26, 0xe5, 0x7d, 0x59, 0x07, 0x6e, 0x88, 0xf3, 0x14, 0x22, 0xbc, 0x45,
+	0x12, 0x0e, 0x25, 0x61, 0x34, 0xc4, 0x88, 0xf1, 0x58, 0x6c, 0x73, 0x96, 0x33, 0x01, 0x53, 0xbb,
+	0x0d, 0x6e, 0x48, 0x22, 0x53, 0xdc, 0xb5, 0x7a, 0xd6, 0xda, 0x33, 0xa1, 0x09, 0xec, 0x1e, 0x58,
+	0x8a, 0xb1, 0x40, 0x9c, 0xe4, 0xea, 0x99, 0x6e, 0x5d, 0xd7, 0xce, 0xa7, 0xec, 0xc7, 0xe0, 0x26,
+	0x37, 0x54, 0xdd, 0x46, 0xaf, 0xb1, 0xb6, 0xf4, 0xfa, 0x9b, 0xfe, 0x22, 0x3b, 0xfc, 0x21, 0x4c,
+	0x21, 0x45, 0x98, 0x3f, 0x66, 0x23, 0x46, 0x11, 0xa6, 0x92, 0x43, 0x89, 0xe3, 0x6d, 0xc6, 0xd2,
+	0x4d, 0x42, 0xa7, 0xc3, 0xe6, 0x51, 0xe1, 0xd6, 0xc2, 0x8a, 0x6a, 0xf0, 0xe1, 0x57, 0x87, 0x6e,
+	0xed, 0xdb, 0x43, 0xb7, 0xf6, 0xfb, 0xa1, 0x6b, 0xfd, 0xf8, 0xc3, 0xfa, 0x4a, 0xd9, 0xa2, 0x32,
+	0xbd, 0x62, 0x1c, 0x31, 0x2a, 0x31, 0x95, 0x5f, 0xff, 0xf6, 0xfd, 0xbd, 0x57, 0x2a, 0xc7, 0x2e,
+	0xe9, 0xd2, 0xfb, 0xa2, 0x0e, 0x9c, 0x27, 0x79, 0x0c, 0xe5, 0xd3, 0x62, 0xc4, 0x93, 0xab, 0x19,
+	0x71, 0xb7, 0x32, 0xe2, 0xbf, 0x9b, 0xf4, 0x7e, 0x6a, 0x80, 0x17, 0x94, 0xa4, 0xc9, 0x7f, 0x44,
+	0xe4, 0x64, 0xf4, 0x70, 0x6b, 0x4b, 0xbd, 0x80, 0xfd, 0x2a, 0x68, 0xc5, 0x98, 0xb2, 0xec, 0xbe,
+	0x31, 0x60, 0xb8, 0x3c, 0x2f, 0xdc, 0xdb, 0x33, 0x98, 0xa5, 0x03, 0xcf, 0xe4, 0xbd, 0xb0, 0x04,
+	0x9c, 0x41, 0xfb, 0xc6, 0x8f, 0x0b, 0xd0, 0x7e, 0x05, 0xed, 0xdb, 0x03, 0x70, 0x4b, 0x12, 0x34,
+	0x8d, 0x44, 0x0e, 0x11, 0xa1, 0x49, 0xb7, 0xd1, 0xb3, 0xd6, 0x9a, 0xc3, 0xce, 0xbc, 0x70, 0x9f,
+	0x37, 0x0f, 0x9c, 0xaf, 0x7a, 0xe1, 0x92, 0x0a, 0x77, 0x4c, 0x64, 0xe7, 0xe0, 0x0e, 0x3e, 0xc8,
+	0x19, 0xc5, 0x54, 0x46, 0x50, 0x46, 0x39, 0x27, 0x08, 0x47, 0x8c, 0xe2, 0x6e, 0x53, 0xab, 0x3e,
+	0x50, 0x8e, 0xfd, 0x52, 0xb8, 0x77, 0x8c, 0x35, 0x22, 0x9e, 0xfa, 0x84, 0x05, 0x19, 0x94, 0x13,
+	0xff, 0x11, 0x95, 0xf3, 0xc2, 0x7d, 0xc9, 0x28, 0x2c, 0xe4, 0xf0, 0x42, 0xbb, 0xca, 0x6f, 0xc8,
+	0x6d, 0x95, 0xfd, 0x80, 0x62, 0xfb, 0x53, 0x70, 0x5b, 0xe4, 0x1c, 0xc3, 0x38, 0xda, 0x85, 0x48,
+	0x32, 0xde, 0xbd, 0xa1, 0x95, 0xde, 0x29, 0x95, 0x56, 0x2f, 0x2a, 0x6d, 0xe2, 0x04, 0xa2, 0xd9,
+	0xbb, 0x18, 0xcd, 0x0b, 0xb7, 0x6d, 0xf4, 0xfe, 0xc1, 0xe0, 0x85, 0xb7, 0x4c, 0xfc, 0x50, 0x87,
+	0xf6, 0x7b, 0xe0, 0xb9, 0x71, 0xb9, 0x08, 0x51, 0xce, 0x58, 0x1a, 0x91, 0xb8, 0xdb, 0xd2, 0x9e,
+	0xac, 0xce, 0x0b, 0xb7, 0x63, 0x18, 0xfe, 0x8d, 0xf0, 0xc2, 0x67, 0xab, 0x94, 0x1a, 0xde, 0xa3,
+	0x78, 0xd0, 0x54, 0x6b, 0xe1, 0xfd, 0x51, 0x07, 0x6f, 0x8d, 0x38, 0x86, 0x12, 0x9f, 0x5f, 0xa9,
+	0x4d, 0xf2, 0xd9, 0x1e, 0x89, 0x89, 0x9c, 0x29, 0xac, 0xd8, 0xa0, 0xb1, 0x1a, 0xaf, 0x64, 0x6a,
+	0xd0, 0xd7, 0x5e, 0xf6, 0xef, 0x2c, 0xb0, 0xaa, 0x5f, 0xaa, 0xdc, 0xd3, 0xe8, 0x73, 0x22, 0x27,
+	0x11, 0xda, 0xcd, 0xb2, 0x28, 0x25, 0x74, 0x5a, 0x5e, 0xc0, 0x6b, 0x8b, 0x2f, 0x60, 0xf1, 0xe2,
+	0x0d, 0x7d, 0xe5, 0xee, 0xbc, 0x70, 0xef, 0x9a, 0xe6, 0x91, 0x6e, 0x28, 0x42, 0xa9, 0xe9, 0x1e,
+	0xd2, 0x58, 0x53, 0x47, 0x92, 0x69, 0x1d, 0x2f, 0xec, 0xe4, 0x67, 0x3c, 0x42, 0x13, 0xed, 0x66,
+	0x99, 0x22, 0x1a, 0xa4, 0x57, 0xbb, 0x99, 0x07, 0xd5, 0xcd, 0xfc, 0x2f, 0x0b, 0xbd, 0x3f, 0x2d,
+	0xe0, 0xed, 0x60, 0xb9, 0x83, 0x60, 0x4a, 0x68, 0x62, 0xc6, 0xab, 0xd8, 0x39, 0x4b, 0x53, 0xcc,
+	0xaf, 0xed, 0x74, 0x07, 0xdc, 0xac, 0xf6, 0x43, 0xdf, 0x4c, 0xd8, 0xca, 0xf5, 0xe8, 0xed, 0x75,
+	0x60, 0xa3, 0x33, 0x99, 0x08, 0xc6, 0x31, 0xc7, 0x42, 0x98, 0x93, 0x08, 0x97, 0xff, 0xae, 0x6c,
+	0x98, 0xc2, 0xe0, 0xe3, 0xab, 0x99, 0x72, 0xaf, 0x32, 0xe5, 0xf2, 0xd6, 0x86, 0xef, 0x1f, 0x9d,
+	0x38, 0xd6, 0xf1, 0x89, 0x63, 0xfd, 0x7a, 0xe2, 0x58, 0xdf, 0x9c, 0x3a, 0xb5, 0xe3, 0x53, 0xa7,
+	0xf6, 0xf3, 0xa9, 0x53, 0xfb, 0xe4, 0x7e, 0x42, 0xe4, 0x64, 0x6f, 0xec, 0x23, 0x96, 0x05, 0x25,
+	0xe1, 0x7a, 0x0a, 0xc7, 0xa2, 0x0a, 0x82, 0xfd, 0xfe, 0xdb, 0xc1, 0x81, 0xf9, 0xce, 0xc9, 0x59,
+	0x8e, 0xc5, 0xb8, 0xa5, 0xbf, 0x58, 0x6f, 0xfc, 0x15, 0x00, 0x00, 0xff, 0xff, 0x8b, 0x0e, 0x7d,
+	0xe5, 0x74, 0x07, 0x00, 0x00,
 }
 
 func (this *ReplaceMigrationRecordsProposal) Equal(that interface{}) bool {
@@ -210,6 +401,113 @@ func (this *UpdateMigrationRecordsProposal) Equal(that interface{}) bool {
 		if !this.Records[i].Equal(&that1.Records[i]) {
 			return false
 		}
+	}
+	return true
+}
+func (this *PoolRecordWithCFMMLink) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*PoolRecordWithCFMMLink)
+	if !ok {
+		that2, ok := that.(PoolRecordWithCFMMLink)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Denom0 != that1.Denom0 {
+		return false
+	}
+	if this.Denom1 != that1.Denom1 {
+		return false
+	}
+	if this.TickSpacing != that1.TickSpacing {
+		return false
+	}
+	if !this.ExponentAtPriceOne.Equal(that1.ExponentAtPriceOne) {
+		return false
+	}
+	if !this.SpreadFactor.Equal(that1.SpreadFactor) {
+		return false
+	}
+	if this.BalancerPoolId != that1.BalancerPoolId {
+		return false
+	}
+	return true
+}
+func (this *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal)
+	if !ok {
+		that2, ok := that.(CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Title != that1.Title {
+		return false
+	}
+	if this.Description != that1.Description {
+		return false
+	}
+	if len(this.PoolRecordsWithCfmmLink) != len(that1.PoolRecordsWithCfmmLink) {
+		return false
+	}
+	for i := range this.PoolRecordsWithCfmmLink {
+		if !this.PoolRecordsWithCfmmLink[i].Equal(&that1.PoolRecordsWithCfmmLink[i]) {
+			return false
+		}
+	}
+	return true
+}
+func (this *SetScalingFactorControllerProposal) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*SetScalingFactorControllerProposal)
+	if !ok {
+		that2, ok := that.(SetScalingFactorControllerProposal)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Title != that1.Title {
+		return false
+	}
+	if this.Description != that1.Description {
+		return false
+	}
+	if this.PoolId != that1.PoolId {
+		return false
+	}
+	if this.ControllerAddress != that1.ControllerAddress {
+		return false
 	}
 	return true
 }
@@ -315,6 +613,173 @@ func (m *UpdateMigrationRecordsProposal) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
+func (m *PoolRecordWithCFMMLink) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PoolRecordWithCFMMLink) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PoolRecordWithCFMMLink) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.BalancerPoolId != 0 {
+		i = encodeVarintGov(dAtA, i, uint64(m.BalancerPoolId))
+		i--
+		dAtA[i] = 0x30
+	}
+	{
+		size := m.SpreadFactor.Size()
+		i -= size
+		if _, err := m.SpreadFactor.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintGov(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
+	{
+		size := m.ExponentAtPriceOne.Size()
+		i -= size
+		if _, err := m.ExponentAtPriceOne.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintGov(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	if m.TickSpacing != 0 {
+		i = encodeVarintGov(dAtA, i, uint64(m.TickSpacing))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Denom1) > 0 {
+		i -= len(m.Denom1)
+		copy(dAtA[i:], m.Denom1)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.Denom1)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Denom0) > 0 {
+		i -= len(m.Denom0)
+		copy(dAtA[i:], m.Denom0)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.Denom0)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.PoolRecordsWithCfmmLink) > 0 {
+		for iNdEx := len(m.PoolRecordsWithCfmmLink) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PoolRecordsWithCfmmLink[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGov(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SetScalingFactorControllerProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SetScalingFactorControllerProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SetScalingFactorControllerProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ControllerAddress) > 0 {
+		i -= len(m.ControllerAddress)
+		copy(dAtA[i:], m.ControllerAddress)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.ControllerAddress)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.PoolId != 0 {
+		i = encodeVarintGov(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintGov(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintGov(dAtA []byte, offset int, v uint64) int {
 	offset -= sovGov(v)
 	base := offset
@@ -368,6 +833,80 @@ func (m *UpdateMigrationRecordsProposal) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovGov(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *PoolRecordWithCFMMLink) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom0)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
+	l = len(m.Denom1)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
+	if m.TickSpacing != 0 {
+		n += 1 + sovGov(uint64(m.TickSpacing))
+	}
+	l = m.ExponentAtPriceOne.Size()
+	n += 1 + l + sovGov(uint64(l))
+	l = m.SpreadFactor.Size()
+	n += 1 + l + sovGov(uint64(l))
+	if m.BalancerPoolId != 0 {
+		n += 1 + sovGov(uint64(m.BalancerPoolId))
+	}
+	return n
+}
+
+func (m *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
+	if len(m.PoolRecordsWithCfmmLink) > 0 {
+		for _, e := range m.PoolRecordsWithCfmmLink {
+			l = e.Size()
+			n += 1 + l + sovGov(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *SetScalingFactorControllerProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
+	}
+	if m.PoolId != 0 {
+		n += 1 + sovGov(uint64(m.PoolId))
+	}
+	l = len(m.ControllerAddress)
+	if l > 0 {
+		n += 1 + l + sovGov(uint64(l))
 	}
 	return n
 }
@@ -500,7 +1039,7 @@ func (m *ReplaceMigrationRecordsProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Records = append(m.Records, BalancerToConcentratedPoolLink{})
+			m.Records = append(m.Records, migration.BalancerToConcentratedPoolLink{})
 			if err := m.Records[len(m.Records)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -648,10 +1187,543 @@ func (m *UpdateMigrationRecordsProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Records = append(m.Records, BalancerToConcentratedPoolLink{})
+			m.Records = append(m.Records, migration.BalancerToConcentratedPoolLink{})
 			if err := m.Records[len(m.Records)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGov(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGov
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PoolRecordWithCFMMLink) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGov
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PoolRecordWithCFMMLink: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PoolRecordWithCFMMLink: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom0", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom0 = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom1", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom1 = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TickSpacing", wireType)
+			}
+			m.TickSpacing = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TickSpacing |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExponentAtPriceOne", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ExponentAtPriceOne.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpreadFactor", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.SpreadFactor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BalancerPoolId", wireType)
+			}
+			m.BalancerPoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BalancerPoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGov(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGov
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGov
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CreateConcentratedLiquidityPoolsAndLinktoCFMMProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolRecordsWithCfmmLink", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PoolRecordsWithCfmmLink = append(m.PoolRecordsWithCfmmLink, PoolRecordWithCFMMLink{})
+			if err := m.PoolRecordsWithCfmmLink[len(m.PoolRecordsWithCfmmLink)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGov(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGov
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SetScalingFactorControllerProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGov
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SetScalingFactorControllerProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SetScalingFactorControllerProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ControllerAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGov
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGov
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGov
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ControllerAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

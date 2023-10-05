@@ -1,14 +1,20 @@
 use cosmwasm_std::{from_binary, Reply, SubMsgResponse, SubMsgResult};
+use registry::msg::SerializableJson;
 use swaprouter::msg::SwapResponse;
 
-use crate::{consts::CALLBACK_KEY, msg::SerializableJson, ContractError};
+use crate::{consts::CALLBACK_KEY, ContractError};
 
 /// Extract the relevant response from the swaprouter reply
 pub fn parse_swaprouter_reply(msg: Reply) -> Result<SwapResponse, ContractError> {
-    // If the swaprouter swap failed, return an error
+    // If the swaprouter faiuled with a known error, return that
+    if let SubMsgResult::Err(e) = msg.result {
+        return Err(ContractError::FailedSwap { msg: e });
+    };
+
+    // If the swaprouter swap failed otherwise (no data), return an error
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
         return Err(ContractError::FailedSwap {
-            msg: format!("No data"),
+            msg: format!("No data in swaprouter reply"),
         })
     };
 
@@ -48,7 +54,7 @@ pub fn build_memo(
     let mut memo_str =
         serde_json_wasm::to_string(&memo).map_err(|_e| ContractError::InvalidMemo {
             error: "could not serialize".to_string(),
-            memo: format!("{:?}", memo),
+            memo: format!("{memo:?}"),
         })?;
 
     // This is redundant, as the ibc_callback_key will always exist. We leave it

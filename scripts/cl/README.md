@@ -19,3 +19,9 @@ sage -python scripts/cl/main.py
 ```
 
 Note, these scripts can also be run by installing `sympy` without sage.
+
+## Running tests
+
+```bash
+python3 -m unittest scripts.cl.test.test_common 
+```

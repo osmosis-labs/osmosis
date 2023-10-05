@@ -4,7 +4,7 @@ package osmosis.superfluid;
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/superfluid/types";
 
 // Params holds parameters for the superfluid module
 message Params {
@@ -14,7 +14,8 @@ message Params {
   // volatilities, and have base staking be 'resistant' to volatility.
   string minimum_risk_factor = 1 [
     (gogoproto.moretags) = "yaml:\"minimum_risk_factor\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

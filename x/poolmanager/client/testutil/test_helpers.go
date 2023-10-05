@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v14/app"
-	poolmanagercli "github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/cli"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app"
+	poolmanagercli "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/cli"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -21,7 +22,7 @@ import (
 var commonArgs = []string{
 	fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 	fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-	fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+	fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10))).String()),
 }
 
 // MsgCreatePool broadcast a pool creation message.
@@ -31,11 +32,12 @@ func MsgCreatePool(
 	owner fmt.Stringer,
 	tokenWeights string,
 	initialDeposit string,
-	swapFee string,
+	spreadFactor string,
 	exitFee string,
 	futureGovernor string,
 	extraArgs ...string,
 ) (testutil.BufferWriter, error) {
+	t.Helper()
 	args := []string{}
 
 	jsonFile := testutil.WriteToNewTempFile(t,
@@ -52,7 +54,7 @@ func MsgCreatePool(
 			poolmanagercli.PoolFileInitialDeposit,
 			initialDeposit,
 			poolmanagercli.PoolFileSwapFee,
-			swapFee,
+			spreadFactor,
 			poolmanagercli.PoolFileExitFee,
 			exitFee,
 			poolmanagercli.PoolFileExitFee,

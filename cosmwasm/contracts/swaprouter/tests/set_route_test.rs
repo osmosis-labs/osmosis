@@ -1,7 +1,7 @@
 mod test_env;
 use cosmwasm_std::Coin;
-use osmosis_std::types::osmosis::gamm::v1beta1::SwapAmountInRoute;
-use osmosis_testing::{Module, RunnerError, Wasm};
+use osmosis_std::types::osmosis::poolmanager::v1beta1::SwapAmountInRoute;
+use osmosis_test_tube::{Module, RunnerError, Wasm};
 use swaprouter::msg::{ExecuteMsg, GetRouteResponse, QueryMsg};
 use test_env::*;
 
@@ -96,10 +96,7 @@ test_set_route!(
 test_set_route!(
     pool_does_not_have_output_asset
     should failed_with
-    r#"Invalid Pool Route: "denom uosmo is not in pool id 1": execute wasm contract failed"#,
-    // confusing error message from chain, should state that:
-    // > `denom uatom is not in pool id 1": execute wasm contract failed`
-    // instead.
+    r#"Invalid Pool Route: "denom uatom is not in pool id 1": execute wasm contract failed"#,
 
     sender = Owner,
     msg = ExecuteMsg::SetRoute {
@@ -117,10 +114,7 @@ test_set_route!(
 test_set_route!(
     intermediary_pool_does_not_have_output_asset
     should failed_with
-    r#"Invalid Pool Route: "denom uosmo is not in pool id 1": execute wasm contract failed"#,
-    // confusing error message from chain, should state that:
-    // > `denom foocoin is not in pool id 1": execute wasm contract failed`
-    // instead.
+    r#"Invalid Pool Route: "denom foocoin is not in pool id 1": execute wasm contract failed"#,
 
     sender = Owner,
     msg = ExecuteMsg::SetRoute {
@@ -262,12 +256,10 @@ fn test_set_route_failed_case(sender: Sender, msg: ExecuteMsg, expected_error: &
 
     // assert on error message
     if let RunnerError::ExecuteError { msg } = &err {
-        let expected_err = &format!(
-            "failed to execute message; message index: 0: {}",
-            expected_error
-        );
+        let expected_err =
+            &format!("failed to execute message; message index: 0: {expected_error}");
         assert_eq!(msg, expected_err);
     } else {
-        panic!("unexpected error: {:?}", err);
+        panic!("unexpected error: {err:?}");
     }
 }

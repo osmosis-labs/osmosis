@@ -8,8 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
 )
 
 type QueryTestSuite struct {
@@ -32,9 +32,11 @@ func (s *QueryTestSuite) SetupSuite() {
 	upgradeProp := types.NewUpdateFeeTokenProposal(
 		"Test Proposal",
 		"test",
-		types.FeeToken{
-			Denom:  "uosmo",
-			PoolID: 1,
+		[]types.FeeToken{
+			{
+				Denom:  "uosmo",
+				PoolID: 1,
+			},
 		},
 	)
 	err := s.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(s.Ctx, &upgradeProp)

@@ -3,9 +3,11 @@ package apptesting
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -21,6 +23,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -29,19 +32,29 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v14/app"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app"
 
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v14/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v19/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v19/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {
 	suite.Suite
+
+	// defaults to false,
+	// set to true if any method that potentially alters baseapp/abci is used.
+	// this controls whether or not we can re-use the app instance, or have to set a new one.
+	hasUsedAbci bool
+	// defaults to false, set to true if we want to use a new app instance with caching enabled.
+	// then on new setup test call, we just drop the current cache.
+	// this is not always enabled, because some tests may take a painful performance hit due to CacheKv.
+	withCaching bool
 
 	App         *app.OsmosisApp
 	Ctx         sdk.Context
@@ -49,28 +62,138 @@ type KeeperTestHelper struct {
 	TestAccs    []sdk.AccAddress
 }
 
+// Defines IDs for all supported
+// Osmosis pools. Additionally, encapsulates
+// an internal gauge ID for each pool.
+// This struct is initialized and returned by
+// PrepareAllSupportedPools().
+type SupportedPoolAndGaugeInfo struct {
+	ConcentratedPoolID uint64
+	BalancerPoolID     uint64
+	StableSwapPoolID   uint64
+	CosmWasmPoolID     uint64
+
+	ConcentratedGaugeID uint64
+	BalancerGaugeID     uint64
+	StableSwapGaugeID   uint64
+}
+
 var (
-	SecondaryDenom  = "uion"
-	SecondaryAmount = sdk.NewInt(100000000)
+	SecondaryDenom       = "uion"
+	SecondaryAmount      = osmomath.NewInt(100000000)
+	baseTestAccts        = []sdk.AccAddress{}
+	defaultTestStartTime = time.Now().UTC()
 )
 
+func init() {
+	baseTestAccts = CreateRandomAccounts(3)
+}
+
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
+// preserves the caching enabled/disabled state.
 func (s *KeeperTestHelper) Setup() {
-	s.App = app.Setup(false)
-	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	dir, err := os.MkdirTemp("", "osmosisd-test-home")
+	if err != nil {
+		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
+	}
+	s.T().Cleanup(func() { os.RemoveAll(dir); s.withCaching = false })
+	s.App = app.SetupWithCustomHome(false, dir)
+	s.setupGeneral()
+}
+
+// PrepareAllSupportedPools creates all supported pools and returns their IDs.
+// Additionally, attaches an internal gauge ID for each pool.
+func (s *KeeperTestHelper) PrepareAllSupportedPools() SupportedPoolAndGaugeInfo {
+	// This is the ID of the first gauge created next (concentrated).
+	nextGaugeID := s.App.IncentivesKeeper.GetLastGaugeID(s.Ctx) + 1
+
+	numLockableDurations := uint64(len(s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)))
+
+	var (
+		// Prepare pools and their IDs
+		concentratedPool   = s.PrepareConcentratedPool()
+		concentratedPoolID = concentratedPool.GetId()
+		balancerPoolID     = s.PrepareBalancerPool()
+		stableswapPoolID   = s.PrepareBasicStableswapPool()
+		cosmWasmPool       = s.PrepareCosmWasmPool()
+		cosmWasmPoolID     = cosmWasmPool.GetId()
+	)
+	return SupportedPoolAndGaugeInfo{
+		ConcentratedPoolID: concentratedPoolID,
+		BalancerPoolID:     balancerPoolID,
+		StableSwapPoolID:   stableswapPoolID,
+		CosmWasmPoolID:     cosmWasmPoolID,
+
+		// Define expected gauge IDs:
+
+		// CL creates 1 gauge
+		ConcentratedGaugeID: nextGaugeID,
+
+		// Balancer creates 3 gauges and the longest duration ID is returned.
+		BalancerGaugeID: nextGaugeID + numLockableDurations,
+
+		// Stableswap creates 3 gauges and the longest duration ID is returned.
+		StableSwapGaugeID: nextGaugeID + 2*numLockableDurations,
+	}
+}
+
+// resets the test environment
+// requires that all commits go through helpers in s.
+// On first reset, will instantiate a new app, with caching enabled.
+// NOTE: If you are using ABCI methods, usage of Reset vs Setup has not been well tested.
+// It is believed to work, but if you get an odd error, try changing the call to this for setup to sanity check.
+// whats supposed to happen is a new setup call, and reset just does that in such a case.
+func (s *KeeperTestHelper) Reset() {
+	if s.hasUsedAbci || !s.withCaching {
+		s.withCaching = true
+		s.Setup()
+	} else {
+		s.setupGeneral()
+	}
+}
+
+func (s *KeeperTestHelper) SetupWithLevelDb() func() {
+	app, cleanup := app.SetupTestingAppWithLevelDb(false)
+	s.App = app
+	s.setupGeneral()
+	return cleanup
+}
+
+func (s *KeeperTestHelper) setupGeneral() {
+	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: defaultTestStartTime})
+	if s.withCaching {
+		s.Ctx, _ = s.Ctx.CacheContext()
+	}
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: s.App.GRPCQueryRouter(),
 		Ctx:             s.Ctx,
 	}
 
 	s.SetEpochStartTime()
-	s.TestAccs = CreateRandomAccounts(3)
+	s.TestAccs = []sdk.AccAddress{}
+	s.TestAccs = append(s.TestAccs, baseTestAccts...)
+	s.SetupConcentratedLiquidityDenomsAndPoolCreation()
+	s.hasUsedAbci = false
 }
 
 func (s *KeeperTestHelper) SetupTestForInitGenesis() {
 	// Setting to True, leads to init genesis not running
 	s.App = app.Setup(true)
 	s.Ctx = s.App.BaseApp.NewContext(true, tmtypes.Header{})
+	// TODO: not sure
+	s.hasUsedAbci = true
+}
+
+// RunTestCaseWithoutStateUpdates runs the testcase as a callback with the given name.
+// Does not persist any state changes. This is useful when test suite uses common state setup
+// but desures each test case to be run in isolation.
+func (s *KeeperTestHelper) RunTestCaseWithoutStateUpdates(name string, cb func(t *testing.T)) {
+	originalCtx := s.Ctx
+	s.Ctx, _ = s.Ctx.CacheContext()
+
+	s.T().Run(name, cb)
+
+	s.Ctx = originalCtx
 }
 
 func (s *KeeperTestHelper) SetEpochStartTime() {
@@ -110,6 +233,8 @@ func (s *KeeperTestHelper) Commit() {
 	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
 	s.App.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
 	s.Ctx = s.App.GetBaseApp().NewContext(false, newHeader)
+
+	s.hasUsedAbci = true
 }
 
 // FundAcc funds target address with specified amount.
@@ -134,14 +259,14 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	valPub := secp256k1.GenPrivKey().PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
 	bondDenom := s.App.StakingKeeper.GetParams(s.Ctx).BondDenom
-	selfBond := sdk.NewCoins(sdk.Coin{Amount: sdk.NewInt(100), Denom: bondDenom})
+	selfBond := sdk.NewCoins(sdk.Coin{Amount: osmomath.NewInt(100), Denom: bondDenom})
 
 	s.FundAcc(sdk.AccAddress(valAddr), selfBond)
 
 	stakingHandler := staking.NewHandler(*s.App.StakingKeeper)
-	stakingCoin := sdk.NewCoin(sdk.DefaultBondDenom, selfBond[0].Amount)
-	ZeroCommission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, sdk.OneInt())
+	stakingCoin := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: selfBond[0].Amount}
+	ZeroCommission := stakingtypes.NewCommissionRates(zeroDec, zeroDec, zeroDec)
+	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, osmomath.OneInt())
 	s.Require().NoError(err)
 	res, err := stakingHandler(s.Ctx, msg)
 	s.Require().NoError(err)
@@ -229,12 +354,14 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 	fmt.Println("beginning block ", s.Ctx.BlockHeight())
 	s.App.BeginBlocker(s.Ctx, reqBeginBlock)
 	s.Ctx = s.App.NewContext(false, reqBeginBlock.Header)
+	s.hasUsedAbci = true
 }
 
 // EndBlock ends the block, and runs commit
 func (s *KeeperTestHelper) EndBlock() {
 	reqEndBlock := abci.RequestEndBlock{Height: s.Ctx.BlockHeight()}
 	s.App.EndBlocker(s.Ctx, reqEndBlock)
+	s.hasUsedAbci = true
 }
 
 func (s *KeeperTestHelper) RunMsg(msg sdk.Msg) (*sdk.Result, error) {
@@ -245,11 +372,12 @@ func (s *KeeperTestHelper) RunMsg(msg sdk.Msg) (*sdk.Result, error) {
 		return handler(s.Ctx, msg)
 	}
 	s.FailNow("msg %v could not be ran", msg)
+	s.hasUsedAbci = true
 	return nil, fmt.Errorf("msg %v could not be ran", msg)
 }
 
 // AllocateRewardsToValidator allocates reward tokens to a distribution module then allocates rewards to the validator address.
-func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, rewardAmt sdk.Int) {
+func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, rewardAmt osmomath.Int) {
 	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
 	s.Require().True(found)
 
@@ -260,12 +388,12 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 
 	// allocate rewards to validator
 	s.Ctx = s.Ctx.WithBlockHeight(s.Ctx.BlockHeight() + 1)
-	decTokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(20000)}}
+	decTokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: osmomath.NewDec(20000)}}
 	s.App.DistrKeeper.AllocateTokensToValidator(s.Ctx, validator, decTokens)
 }
 
 // SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
-func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.CFMMPoolI {
+func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []osmomath.Dec) []gammtypes.CFMMPoolI {
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
@@ -275,10 +403,10 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 	pools := []gammtypes.CFMMPoolI{}
 	for index, multiplier := range multipliers {
 		token := fmt.Sprintf("token%d", index)
-		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
+		uosmoAmount := gammtypes.InitPoolSharesSupply.ToLegacyDec().Mul(multiplier).RoundInt()
 
 		s.FundAcc(acc1, sdk.NewCoins(
-			sdk.NewCoin(bondDenom, uosmoAmount.Mul(sdk.NewInt(10))),
+			sdk.NewCoin(bondDenom, uosmoAmount.Mul(osmomath.NewInt(10))),
 			sdk.NewInt64Coin(token, 100000),
 		).Add(params.PoolCreationFee...))
 
@@ -287,20 +415,20 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 
 			// pool assets
 			defaultFooAsset = balancer.PoolAsset{
-				Weight: sdk.NewInt(100),
+				Weight: osmomath.NewInt(100),
 				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
 			}
 			defaultBarAsset = balancer.PoolAsset{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin(token, sdk.NewInt(10000)),
+				Weight: osmomath.NewInt(100),
+				Token:  sdk.NewCoin(token, osmomath.NewInt(10000)),
 			}
 
 			poolAssets = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
 		)
 
 		poolParams := balancer.PoolParams{
-			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.NewDecWithPrec(1, 2),
+			SwapFee: osmomath.NewDecWithPrec(1, 2),
+			ExitFee: osmomath.Dec(osmomath.ZeroInt()),
 		}
 		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
 
@@ -318,7 +446,7 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 
 // SwapAndSetSpotPrice runs a swap to set Spot price of a pool using arbitrary values
 // returns spot price after the arbitrary swap.
-func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin, toAsset sdk.Coin) sdk.Dec {
+func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin, toAsset sdk.Coin) osmomath.BigDec {
 	// create a dummy account
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
@@ -338,7 +466,7 @@ func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin
 		route,
 		fromAsset.Amount,
 		sdk.NewCoin(toAsset.Denom,
-			toAsset.Amount.Quo(sdk.NewInt(4))))
+			toAsset.Amount.Quo(osmomath.NewInt(4))))
 	s.Require().NoError(err)
 
 	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, fromAsset.Denom, toAsset.Denom)
@@ -355,6 +483,14 @@ func (s *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins sdk.Coins, dura
 	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(s.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
 	s.Require().NoError(err)
 
+	return msgResponse.ID
+}
+
+// LockTokensNoFund locks tokens and returns a lockID.
+func (s *KeeperTestHelper) LockTokensNoFund(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
+	msgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
+	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(s.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
+	s.Require().NoError(err)
 	return msgResponse.ID
 }
 
@@ -385,6 +521,24 @@ func (s *KeeperTestHelper) StateNotAltered() {
 	s.App.Commit()
 	newState := s.App.ExportState(s.Ctx)
 	s.Require().Equal(oldState, newState)
+	s.hasUsedAbci = true
+}
+
+func (s *KeeperTestHelper) SkipIfWSL() {
+	SkipIfWSL(s.T())
+}
+
+// SkipIfWSL skips tests if running on WSL
+// This is a workaround to enable quickly running full unit test suite locally
+// on WSL without failures. The failures are stemming from trying to upload
+// wasm code. An OS permissioning issue.
+func SkipIfWSL(t *testing.T) {
+	t.Helper()
+	skip := os.Getenv("SKIP_WASM_WSL_TESTS")
+	fmt.Println("SKIP_WASM_WSL_TESTS", skip)
+	if skip == "true" {
+		t.Skip("Skipping Wasm tests")
+	}
 }
 
 // CreateRandomAccounts is a function return a list of randomly generated AccAddresses
@@ -411,29 +565,30 @@ func TestMessageAuthzSerialization(t *testing.T, msg sdk.Msg) {
 		mockMsgExec   authz.MsgExec
 	)
 
+	// mutates mockMsg
+	testSerDeser := func(msg proto.Message, mockMsg proto.Message) {
+		msgGrantBytes := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(msg)))
+		err := authzcodec.ModuleCdc.UnmarshalJSON(msgGrantBytes, mockMsg)
+		require.NoError(t, err)
+	}
+
 	// Authz: Grant Msg
 	typeURL := sdk.MsgTypeURL(msg)
 	grant, err := authz.NewGrant(someDate, authz.NewGenericAuthorization(typeURL), someDate.Add(time.Hour))
 	require.NoError(t, err)
 
 	msgGrant := authz.MsgGrant{Granter: mockGranter, Grantee: mockGrantee, Grant: grant}
-	msgGrantBytes := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgGrant)))
-	err = authzcodec.ModuleCdc.UnmarshalJSON(msgGrantBytes, &mockMsgGrant)
-	require.NoError(t, err)
+	testSerDeser(&msgGrant, &mockMsgGrant)
 
 	// Authz: Revoke Msg
 	msgRevoke := authz.MsgRevoke{Granter: mockGranter, Grantee: mockGrantee, MsgTypeUrl: typeURL}
-	msgRevokeByte := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgRevoke)))
-	err = authzcodec.ModuleCdc.UnmarshalJSON(msgRevokeByte, &mockMsgRevoke)
-	require.NoError(t, err)
+	testSerDeser(&msgRevoke, &mockMsgRevoke)
 
 	// Authz: Exec Msg
 	msgAny, err := cdctypes.NewAnyWithValue(msg)
 	require.NoError(t, err)
 	msgExec := authz.MsgExec{Grantee: mockGrantee, Msgs: []*cdctypes.Any{msgAny}}
-	execMsgByte := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgExec)))
-	err = authzcodec.ModuleCdc.UnmarshalJSON(execMsgByte, &mockMsgExec)
-	require.NoError(t, err)
+	testSerDeser(&msgExec, &mockMsgExec)
 	require.Equal(t, msgExec.Msgs[0].Value, mockMsgExec.Msgs[0].Value)
 }
 
@@ -442,4 +597,35 @@ func GenerateTestAddrs() (string, string) {
 	validAddr := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid").String()
 	return validAddr, invalidAddr
+}
+
+// sets up the volume for the pools in the group
+// mutates poolIDToVolumeMap
+func (s *KeeperTestHelper) SetupVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int, poolIDToVolumeMap map[uint64]math.Int) {
+	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+
+	s.Require().Equal(len(poolIDs), len(volumesForEachPool))
+	for i := 0; i < len(poolIDs); i++ {
+		currentPoolID := poolIDs[i]
+
+		currentVolume := volumesForEachPool[i]
+
+		fmt.Printf("currentVolume %d %s\n", i, currentVolume)
+
+		// Retrieve the existing volume to add to it.
+		existingVolume := s.App.PoolManagerKeeper.GetOsmoVolumeForPool(s.Ctx, currentPoolID)
+
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, currentPoolID, sdk.NewCoins(sdk.NewCoin(bondDenom, existingVolume.Add(currentVolume))))
+
+		if existingVolume, ok := poolIDToVolumeMap[currentPoolID]; ok {
+			poolIDToVolumeMap[currentPoolID] = existingVolume.Add(currentVolume)
+		} else {
+			poolIDToVolumeMap[currentPoolID] = currentVolume
+		}
+	}
+}
+
+// initializes or increases the volumes for the given pools
+func (s *KeeperTestHelper) IncreaseVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int) {
+	s.SetupVolumeForPools(poolIDs, volumesForEachPool, map[uint64]osmomath.Int{})
 }

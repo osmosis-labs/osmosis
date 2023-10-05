@@ -7,24 +7,25 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
 )
 
 // ----------------------- Statistics Stores  ----------------------- //
 
 // GetNumberOfTrades returns the number of trades executed by the ProtoRev module
-func (k Keeper) GetNumberOfTrades(ctx sdk.Context) (sdk.Int, error) {
+func (k Keeper) GetNumberOfTrades(ctx sdk.Context) (osmomath.Int, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixNumberOfTrades)
 
 	bz := store.Get(types.KeyPrefixNumberOfTrades)
 	if len(bz) == 0 {
-		return sdk.ZeroInt(), fmt.Errorf("no trades have been executed by the protorev module")
+		return osmomath.ZeroInt(), fmt.Errorf("no trades have been executed by the protorev module")
 	}
 
-	trades := sdk.Int{}
+	trades := osmomath.Int{}
 	if err := trades.Unmarshal(bz); err != nil {
-		return sdk.ZeroInt(), err
+		return osmomath.ZeroInt(), err
 	}
 
 	return trades, nil
@@ -35,7 +36,7 @@ func (k Keeper) IncrementNumberOfTrades(ctx sdk.Context) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixNumberOfTrades)
 
 	numberOfTrades, _ := k.GetNumberOfTrades(ctx)
-	numberOfTrades = numberOfTrades.Add(sdk.OneInt())
+	numberOfTrades = numberOfTrades.Add(osmomath.OneInt())
 
 	bz, err := numberOfTrades.Marshal()
 	if err != nil {
@@ -52,20 +53,20 @@ func (k Keeper) GetProfitsByDenom(ctx sdk.Context, denom string) (sdk.Coin, erro
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return sdk.NewCoin(denom, sdk.ZeroInt()), fmt.Errorf("no profits for denom %s", denom)
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), fmt.Errorf("no profits for denom %s", denom)
 	}
 
 	profits := sdk.Coin{}
 	if err := profits.Unmarshal(bz); err != nil {
-		return sdk.NewCoin(denom, sdk.ZeroInt()), err
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), err
 	}
 
 	return profits, nil
 }
 
 // GetAllProfits returns all of the profits made by the ProtoRev module.
-func (k Keeper) GetAllProfits(ctx sdk.Context) []*sdk.Coin {
-	profits := make([]*sdk.Coin, 0)
+func (k Keeper) GetAllProfits(ctx sdk.Context) []sdk.Coin {
+	profits := make([]sdk.Coin, 0)
 
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixProfitByDenom)
@@ -75,7 +76,7 @@ func (k Keeper) GetAllProfits(ctx sdk.Context) []*sdk.Coin {
 		bz := iterator.Value()
 		profit := sdk.Coin{}
 		if err := profit.Unmarshal(bz); err == nil {
-			profits = append(profits, &profit)
+			profits = append(profits, profit)
 		}
 	}
 
@@ -83,7 +84,7 @@ func (k Keeper) GetAllProfits(ctx sdk.Context) []*sdk.Coin {
 }
 
 // UpdateProfitsByDenom updates the profits made by the ProtoRev module for the given denom
-func (k Keeper) UpdateProfitsByDenom(ctx sdk.Context, denom string, tradeProfit sdk.Int) error {
+func (k Keeper) UpdateProfitsByDenom(ctx sdk.Context, denom string, tradeProfit osmomath.Int) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProfitByDenom)
 	key := types.GetKeyPrefixProfitByDenom(denom)
 
@@ -123,18 +124,18 @@ func (k Keeper) GetAllRoutes(ctx sdk.Context) ([][]uint64, error) {
 }
 
 // GetTradesByRoute returns the number of trades executed by the ProtoRev module for the given route
-func (k Keeper) GetTradesByRoute(ctx sdk.Context, route []uint64) (sdk.Int, error) {
+func (k Keeper) GetTradesByRoute(ctx sdk.Context, route []uint64) (osmomath.Int, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTradesByRoute)
 	key := types.GetKeyPrefixTradesByRoute(route)
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return sdk.ZeroInt(), fmt.Errorf("no trades for route %d", route)
+		return osmomath.ZeroInt(), fmt.Errorf("no trades for route %d", route)
 	}
 
-	trades := sdk.Int{}
+	trades := osmomath.Int{}
 	if err := trades.Unmarshal(bz); err != nil {
-		return sdk.ZeroInt(), err
+		return osmomath.ZeroInt(), err
 	}
 	return trades, nil
 }
@@ -145,7 +146,7 @@ func (k Keeper) IncrementTradesByRoute(ctx sdk.Context, route []uint64) error {
 	key := types.GetKeyPrefixTradesByRoute(route)
 
 	trades, _ := k.GetTradesByRoute(ctx, route)
-	trades = trades.Add(sdk.OneInt())
+	trades = trades.Add(osmomath.OneInt())
 	bz, err := trades.Marshal()
 	if err != nil {
 		return err
@@ -162,20 +163,20 @@ func (k Keeper) GetProfitsByRoute(ctx sdk.Context, route []uint64, denom string)
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return sdk.NewCoin(denom, sdk.ZeroInt()), fmt.Errorf("no profits for route %d", route)
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), fmt.Errorf("no profits for route %d", route)
 	}
 
 	profits := sdk.Coin{}
 	if err := profits.Unmarshal(bz); err != nil {
-		return sdk.NewCoin(denom, sdk.ZeroInt()), err
+		return sdk.NewCoin(denom, osmomath.ZeroInt()), err
 	}
 
 	return profits, nil
 }
 
 // GetAllProfitsByRoute returns all of the profits made by the ProtoRev module for the given route
-func (k Keeper) GetAllProfitsByRoute(ctx sdk.Context, route []uint64) []*sdk.Coin {
-	profits := make([]*sdk.Coin, 0)
+func (k Keeper) GetAllProfitsByRoute(ctx sdk.Context, route []uint64) []sdk.Coin {
+	profits := make([]sdk.Coin, 0)
 
 	store := ctx.KVStore(k.storeKey)
 	prefix := append(types.KeyPrefixProfitsByRoute, types.GetKeyPrefixProfitsByRoute(route, "")...)
@@ -186,7 +187,7 @@ func (k Keeper) GetAllProfitsByRoute(ctx sdk.Context, route []uint64) []*sdk.Coi
 		bz := iterator.Value()
 		profit := sdk.Coin{}
 		if err := profit.Unmarshal(bz); err == nil {
-			profits = append(profits, &profit)
+			profits = append(profits, profit)
 		}
 	}
 
@@ -194,7 +195,7 @@ func (k Keeper) GetAllProfitsByRoute(ctx sdk.Context, route []uint64) []*sdk.Coi
 }
 
 // UpdateProfitsByRoute updates the profits made by the ProtoRev module for the given route and denom
-func (k Keeper) UpdateProfitsByRoute(ctx sdk.Context, route []uint64, denom string, profit sdk.Int) error {
+func (k Keeper) UpdateProfitsByRoute(ctx sdk.Context, route []uint64, denom string, profit osmomath.Int) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProfitsByRoute)
 	key := types.GetKeyPrefixProfitsByRoute(route, denom)
 
@@ -210,7 +211,7 @@ func (k Keeper) UpdateProfitsByRoute(ctx sdk.Context, route []uint64, denom stri
 }
 
 // UpdateStatistics updates the module statistics after each trade is executed
-func (k Keeper) UpdateStatistics(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes, denom string, profit sdk.Int) error {
+func (k Keeper) UpdateStatistics(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes, denom string, profit osmomath.Int) error {
 	// Increment the number of trades executed by the ProtoRev module
 	if err := k.IncrementNumberOfTrades(ctx); err != nil {
 		return err

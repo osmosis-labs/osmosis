@@ -47,7 +47,9 @@ Conceptually, we can split the e2e setup into 2 parts:
     If with the upgrade, the same `chain.Init(...)` function is run inside a Docker container
     of the previous Osmosis version, inside `configurer/upgrade.go`. This is
     needed to initialize chain configs and the genesis of the previous version that
-    we are upgrading from.
+    we are upgrading from. Note, we use the alpine image of the previous version,
+    as functionality such as copying mnemonics across containers in unavailable in the
+    stripped down images.
 
     The decision of what configuration type to use is decided by the `Configurer`.
     This is an interface that has `CurrentBranchConfigurer` and `UpgradeConfigurer` implementations.
@@ -143,7 +145,7 @@ Please refer to `tests/e2e/initialization/README.md`
 ### To build the debug Osmosis image
 
 ```sh
-    make docker-build-e2e-debug
+    make docker-build-debug
 ```
 
 ### Environment variables
@@ -229,6 +231,40 @@ This section contains common "gotchas" that is sometimes very good to know when 
     broke during the `e2e` setup and because of that, lexicographically first test (currently `TestAddToExistingLock`) fails.
 
     A way to deal with this problem: disable upgrade logic by setting `OSMOSIS_E2E_SKIP_UPGRADE` to `false` and see how test performs.
+
+2. Node update failure before running `e2e_test.go`
+
+    Nodes can completely crash when upgrading for many reasons. 
+    To detect that, we check the node's `Status` as soon as the upgrade is complete.
+    An active node should return a response and no other errors. If not, all test would not be ran.
+
+    To fix that, check the docker container and see if you node is working. Or remove all related container then rerun e2e test
+
+3. Transaction fees.
+
+    Consensus min fee is set to "0.0025". This is how much is charged for 1 unit of gas. By default, we specify the gas limit
+    of `40000`. Therefore, each transaction should take `fee = 0.0025 uosmo / gas * 400000 gas = 1000 fee token.
+    The fee denom is set in `tests/e2e/initialization/config.go` by the value of `E2EFeeToken`.
+    See "Hermes Relayer - Consensus Min Fee" section for the relevant relayer configuration.
+
+## Hermes Relayer
+
+The configuration is built using the script in `tests/e2e/scripts/hermes_bootstrap.sh`
+
+Repository: <https://github.dev/informalsystems/hermes>
+
+### Consensus Min Fee
+
+We set the following parameters Hermes configs to enable the consensus min fee in Osmosis:
+
+    - `gas_price` - Specifies the price per gas used of the fee to submit a transaction and
+    the denomination of the fee. The specified gas price should always be greater or equal to the `min-gas-price`
+    configured on the chain. This is to ensure that at least some minimal price is 
+    paid for each unit of gas per transaction.
+    In Osmosis, we set consensus min fee = .0025 uosmo / gas * 400000 gas = 1000
+    See ConsensusMinFee in x/txfees/types/constants.go
+
+    - `default_gas` - the gas amount to use when simulation fails.
 
 ## Debugging
 

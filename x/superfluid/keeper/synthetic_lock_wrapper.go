@@ -3,12 +3,14 @@ package keeper
 import (
 	"fmt"
 	"strings"
+	"time"
 
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO: move this into types and have it exported
 func stakingSyntheticDenom(denom, valAddr string) string {
 	return fmt.Sprintf("%s/superbonding/%s", denom, valAddr)
 }
@@ -43,13 +45,19 @@ func (k Keeper) createSyntheticLockup(ctx sdk.Context,
 	underlyingLockId uint64, intermediateAcc types.SuperfluidIntermediaryAccount, lockingStat lockingStatus,
 ) error {
 	unbondingDuration := k.sk.GetParams(ctx).UnbondingTime
+	return k.createSyntheticLockupWithDuration(ctx, underlyingLockId, intermediateAcc, unbondingDuration, lockingStat)
+}
+
+func (k Keeper) createSyntheticLockupWithDuration(ctx sdk.Context,
+	underlyingLockId uint64, intermediateAcc types.SuperfluidIntermediaryAccount, unlockingDuration time.Duration, lockingStat lockingStatus,
+) error {
 	if lockingStat == unlockingStatus {
 		isUnlocking := true
 		synthdenom := unstakingSyntheticDenom(intermediateAcc.Denom, intermediateAcc.ValAddr)
-		return k.lk.CreateSyntheticLockup(ctx, underlyingLockId, synthdenom, unbondingDuration, isUnlocking)
+		return k.lk.CreateSyntheticLockup(ctx, underlyingLockId, synthdenom, unlockingDuration, isUnlocking)
 	} else {
 		notUnlocking := false
 		synthdenom := stakingSyntheticDenom(intermediateAcc.Denom, intermediateAcc.ValAddr)
-		return k.lk.CreateSyntheticLockup(ctx, underlyingLockId, synthdenom, unbondingDuration, notUnlocking)
+		return k.lk.CreateSyntheticLockup(ctx, underlyingLockId, synthdenom, unlockingDuration, notUnlocking)
 	}
 }

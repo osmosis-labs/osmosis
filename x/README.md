@@ -9,6 +9,7 @@ Osmosis implements the following custom modules:
 * `mint` - Controls token supply emissions, and what modules they are directed to.
 * `pool-incentives` - Controls how incentives allocated towards "Liquidity Providing" are directed
   * These go towards gauges defined by the `incentives` module
+* `protorev` - Cyclic arbitrage module that redistributes backrunning profits to the protocol
 * `superfluid` - Defines superfluid staking, allowing DeFi assets to have their osmo-backing be staked.
 * `tokenfactory` - Allows minting of new tokens of the form `factory/{creator address}/{subdenom}` for user-defined subdenoms. 
 * `twap` - The TWAP package is responsible for being able to serve TWAPs for every AMM pool.

@@ -9,9 +9,12 @@ import (
 	"reflect"
 	"strings"
 
+	store "github.com/cosmos/cosmos-sdk/store/types"
+
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
@@ -45,22 +48,27 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/keepers"
-	"github.com/osmosis-labs/osmosis/v14/app/upgrades"
-	v10 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v10"
-	v11 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v11"
-	v12 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v12"
-	v13 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v13"
-	v14 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v14"
-	v15 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v15"
-	v3 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v19/app/keepers"
+	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v13"
+	v14 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v15"
+	v16 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v16"
+	v17 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v17"
+	v18 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v18"
+	v19 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v19"
+	v20 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v20"
+	v3 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v19/client/docs/statik"
 )
 
 const appName = "OsmosisApp"
@@ -98,7 +106,7 @@ var (
 
 	// _ sdksimapp.App = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
@@ -138,6 +146,7 @@ type OsmosisApp struct {
 
 	mm           *module.Manager
 	configurator module.Configurator
+	homePath     string
 }
 
 // init sets DefaultNodeHome to default osmosisd install location.
@@ -164,7 +173,7 @@ func initReusablePackageInjections() {
 //   - allow for larger wasm files
 func overrideWasmVariables() {
 	// Override Wasm size limitation from WASMD.
-	wasmtypes.MaxWasmSize = 2 * 1024 * 1024
+	wasmtypes.MaxWasmSize = 3 * 1024 * 1024
 	wasmtypes.MaxProposalWasmSize = wasmtypes.MaxWasmSize
 }
 
@@ -178,7 +187,6 @@ func NewOsmosisApp(
 	homePath string,
 	invCheckPeriod uint,
 	appOpts servertypes.AppOptions,
-	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
@@ -188,6 +196,7 @@ func NewOsmosisApp(
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
+	wasmEnabledProposals := GetWasmEnabledProposals()
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -203,6 +212,7 @@ func NewOsmosisApp(
 		invCheckPeriod:    invCheckPeriod,
 	}
 
+	app.homePath = homePath
 	wasmDir := filepath.Join(homePath, "wasm")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	// Uncomment this for debugging contracts. In the future this could be made into a param passed by the tests
@@ -231,6 +241,12 @@ func NewOsmosisApp(
 		app.BlockedAddrs(),
 	)
 
+	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
+	// call setupHooks afterwards. Therefore, if a gov proposal needs to call a method and that method calls a
+	// hook, we will get a nil pointer dereference error due to the hooks in the keeper not being
+	// setup yet. I will refrain from creating an issue in the sdk for now until after we unfork to 0.47,
+	// because I believe the concept of Routes is going away.
+	// https://github.com/osmosis-labs/osmosis/issues/6580
 	app.SetupHooks()
 
 	/****  Module Options ****/
@@ -437,9 +453,28 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 		return
 	}
 
+	currentHeight := app.CommitMultiStore().LastCommitID().Version
+
+	if upgradeInfo.Height == currentHeight+1 {
+		app.customPreUpgradeHandler(upgradeInfo)
+	}
+
 	for _, upgrade := range Upgrades {
 		if upgradeInfo.Name == upgrade.UpgradeName {
-			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &upgrade.StoreUpgrades))
+			storeUpgrades := upgrade.StoreUpgrades
+			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+		}
+	}
+}
+
+func (app *OsmosisApp) customPreUpgradeHandler(upgradeInfo store.UpgradeInfo) {
+	switch upgradeInfo.Name {
+	case "v16":
+		// v16 upgrade handler
+		// remove the wasm cache for cosmwasm cherry https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md#wasm-module-cache-issue
+		err := os.RemoveAll(app.homePath + "/wasm/wasm/cache")
+		if err != nil {
+			panic(err)
 		}
 	}
 }

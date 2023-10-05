@@ -10,12 +10,13 @@ import (
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
 )
 
 type Child struct {
 	Index []byte
-	Acc   sdk.Int
+	Acc   osmomath.Int
 }
 
 type Children []Child // branch nodes
@@ -35,7 +36,7 @@ func migrateBranchValue(oldValueBz []byte) *sumtree.Node {
 }
 
 func migrateLeafValue(index []byte, oldValueBz []byte) *sumtree.Leaf {
-	oldValue := sdk.ZeroInt()
+	oldValue := osmomath.ZeroInt()
 	err := json.Unmarshal(oldValueBz, &oldValue)
 	if err != nil {
 		panic(err)

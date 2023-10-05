@@ -19,6 +19,10 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&UpdateUnpoolWhiteListProposal{}, "osmosis/update-unpool-whitelist", nil)
 	cdc.RegisterConcrete(&RemoveSuperfluidAssetsProposal{}, "osmosis/del-superfluid-assets-proposal", nil)
 	cdc.RegisterConcrete(&MsgUnPoolWhitelistedPool{}, "osmosis/unpool-whitelisted-pool", nil)
+	cdc.RegisterConcrete(&MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}, "osmosis/unlock-and-migrate", nil)
+	cdc.RegisterConcrete(&MsgCreateFullRangePositionAndSuperfluidDelegate{}, "osmosis/full-range-and-sf-delegate", nil)
+	cdc.RegisterConcrete(&MsgAddToConcentratedLiquiditySuperfluidPosition{}, "osmosis/add-to-cl-superfluid-position", nil)
+	cdc.RegisterConcrete(&MsgUnbondConvertAndStake{}, "osmosis/unbond-convert-and-stake", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -30,6 +34,10 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgSuperfluidUnbondLock{},
 		&MsgSuperfluidUndelegateAndUnbondLock{},
 		&MsgUnPoolWhitelistedPool{},
+		&MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{},
+		&MsgCreateFullRangePositionAndSuperfluidDelegate{},
+		&MsgAddToConcentratedLiquiditySuperfluidPosition{},
+		&MsgUnbondConvertAndStake{},
 	)
 
 	registry.RegisterImplementations(

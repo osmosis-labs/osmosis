@@ -1,15 +1,17 @@
 package cli
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -17,6 +19,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
 // GetTxCmd returns the transaction commands for this module.
@@ -26,10 +31,15 @@ func GetTxCmd() *cobra.Command {
 		NewSuperfluidDelegateCmd(),
 		NewSuperfluidUndelegateCmd(),
 		NewSuperfluidUnbondLockCmd(),
+		NewSuperfluidUndelegateAndUnbondLockCmd(),
 		// NewSuperfluidRedelegateCmd(),
 		NewCmdLockAndSuperfluidDelegate(),
 		NewCmdUnPoolWhitelistedPool(),
+		NewUnbondConvertAndStake(),
 	)
+	osmocli.AddTxCmd(cmd, NewCreateFullRangePositionAndSuperfluidDelegateCmd)
+	osmocli.AddTxCmd(cmd, NewAddToConcentratedLiquiditySuperfluidPositionCmd)
+	osmocli.AddTxCmd(cmd, NewUnlockAndMigrateSharesToFullRangeConcentratedPositionCmd)
 
 	return cmd
 }
@@ -74,15 +84,22 @@ func NewSuperfluidDelegateCmd() *cobra.Command {
 
 func NewSuperfluidUndelegateCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgSuperfluidUndelegate](&osmocli.TxCliDesc{
-		Use:   "undelegate [lock_id] [flags]",
+		Use:   "undelegate",
 		Short: "superfluid undelegate a lock from a validator",
 	})
 }
 
 func NewSuperfluidUnbondLockCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgSuperfluidUnbondLock](&osmocli.TxCliDesc{
-		Use:   "unbond-lock [lock_id] [flags]",
+		Use:   "unbond-lock",
 		Short: "unbond lock that has been superfluid staked",
+	})
+}
+
+func NewSuperfluidUndelegateAndUnbondLockCmd() *cobra.Command {
+	return osmocli.BuildTxCli[*types.MsgSuperfluidUndelegateAndUnbondLock](&osmocli.TxCliDesc{
+		Use:   "undelegate-and-unbond-lock",
+		Short: "superfluid undelegate and unbond lock for the given amount of coin",
 	})
 }
 
@@ -204,9 +221,18 @@ func parseSetSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypes.Content
 
 	superfluidAssets := []types.SuperfluidAsset{}
 	for _, asset := range assets {
+		var assetType types.SuperfluidAssetType
+		if strings.HasPrefix(asset, gammtypes.GAMMTokenPrefix) {
+			assetType = types.SuperfluidAssetTypeLPShare
+		} else if strings.HasPrefix(asset, cltypes.ConcentratedLiquidityTokenPrefix) {
+			assetType = types.SuperfluidAssetTypeConcentratedShare
+		} else {
+			return nil, fmt.Errorf("Invalid asset prefix: %s", asset)
+		}
+
 		superfluidAssets = append(superfluidAssets, types.SuperfluidAsset{
 			Denom:     asset,
-			AssetType: types.SuperfluidAssetTypeLPShare,
+			AssetType: assetType,
 		})
 	}
 
@@ -282,7 +308,7 @@ func NewCmdLockAndSuperfluidDelegate() *cobra.Command {
 
 func NewCmdUnPoolWhitelistedPool() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgUnPoolWhitelistedPool](&osmocli.TxCliDesc{
-		Use:   "unpool-whitelisted-pool [pool_id] [flags]",
+		Use:   "unpool-whitelisted-pool",
 		Short: "unpool whitelisted pool",
 	})
 }
@@ -341,6 +367,14 @@ func NewCmdUpdateUnpoolWhitelistProposal() *cobra.Command {
 	return cmd
 }
 
+func NewCreateFullRangePositionAndSuperfluidDelegateCmd() (*osmocli.TxCliDesc, *types.MsgCreateFullRangePositionAndSuperfluidDelegate) {
+	return &osmocli.TxCliDesc{
+		Use:     "create-full-range-position-and-sf-delegate",
+		Short:   "creates a full range concentrated position and superfluid delegates it to the provided validator",
+		Example: "create-full-range-position-and-sf-delegate 100000000uosmo,10000udai 45 --from val --chain-id osmosis-1",
+	}, &types.MsgCreateFullRangePositionAndSuperfluidDelegate{}
+}
+
 func parseUpdateUnpoolWhitelistArgsToContent(flags *flag.FlagSet) (govtypes.Content, error) {
 	title, err := flags.GetString(govcli.FlagTitle)
 	if err != nil {
@@ -374,4 +408,73 @@ func parseUpdateUnpoolWhitelistArgsToContent(flags *flag.FlagSet) (govtypes.Cont
 		IsOverwrite: isOverwrite,
 	}
 	return content, nil
+}
+
+func NewAddToConcentratedLiquiditySuperfluidPositionCmd() (*osmocli.TxCliDesc, *types.MsgAddToConcentratedLiquiditySuperfluidPosition) {
+	return &osmocli.TxCliDesc{
+		Use:     "add-to-superfluid-cl-position",
+		Short:   "add to an existing superfluid staked concentrated liquidity position",
+		Example: "add-to-superfluid-cl-position 10 1000000000uosmo 10000000uion",
+	}, &types.MsgAddToConcentratedLiquiditySuperfluidPosition{}
+}
+
+func NewUnlockAndMigrateSharesToFullRangeConcentratedPositionCmd() (*osmocli.TxCliDesc, *types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) {
+	return &osmocli.TxCliDesc{
+		Use:     "unlock-and-migrate-to-cl",
+		Short:   "unlock and migrate gamm shares to full range concentrated position",
+		Example: "unlock-and-migrate-cl 10 25000000000gamm/pool/2 1000000000uosmo,10000000uion",
+	}, &types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}
+}
+
+func NewUnbondConvertAndStake() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "unbond-convert-and-stake [lock-id] [valAddr] [min-amount-to-stake](optional) [shares-to-convert](optional)",
+		Short:   "instantly unbond any locked gamm shares convert them into osmo and stake",
+		Example: "unbond-convert-and-stake 10 osmo1xxx 100000uosmo",
+		Args:    cobra.MinimumNArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			sender := clientCtx.GetFromAddress()
+			lockId, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			valAddr := args[1]
+
+			var minAmtToStake osmomath.Int
+			// if user provided args for min amount to stake, use it. If not, use empty coin struct
+			var sharesToConvert sdk.Coin
+			if len(args) >= 3 {
+				convertedInt, ok := osmomath.NewIntFromString(args[2])
+				if !ok {
+					return fmt.Errorf("Conversion for osmomath.Int failed")
+				}
+				minAmtToStake = convertedInt
+				if len(args) == 4 {
+					coins, err := sdk.ParseCoinNormalized(args[3])
+					if err != nil {
+						return err
+					}
+					sharesToConvert = coins
+				}
+			} else {
+				minAmtToStake = osmomath.ZeroInt()
+				sharesToConvert = sdk.Coin{}
+			}
+
+			msg := types.NewMsgUnbondConvertAndStake(sender, uint64(lockId), valAddr, minAmtToStake, sharesToConvert)
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }

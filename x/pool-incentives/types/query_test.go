@@ -5,7 +5,7 @@ import (
 	"time"
 
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 	"github.com/stretchr/testify/require"
 )
 

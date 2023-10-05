@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/pflag"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
@@ -112,7 +113,7 @@ func ParseField(v reflect.Value, t reflect.Type, fieldIndex int, arg string, fla
 func ParseFieldFromFlag(fVal reflect.Value, fType reflect.StructField, flagAdvice FlagAdvice, flags *pflag.FlagSet) (bool, error) {
 	lowercaseFieldNameStr := strings.ToLower(fType.Name)
 	if flagName, ok := flagAdvice.CustomFlagOverrides[lowercaseFieldNameStr]; ok {
-		return true, parseFieldFromDirectlySetFlag(fVal, fType, flagAdvice, flagName, flags)
+		return true, parseFieldFromDirectlySetFlag(fVal, fType, flagName, flags)
 	}
 
 	kind := fType.Type.Kind()
@@ -144,7 +145,7 @@ func ParseFieldFromFlag(fVal reflect.Value, fType reflect.StructField, flagAdvic
 	return false, nil
 }
 
-func parseFieldFromDirectlySetFlag(fVal reflect.Value, fType reflect.StructField, flagAdvice FlagAdvice, flagName string, flags *pflag.FlagSet) error {
+func parseFieldFromDirectlySetFlag(fVal reflect.Value, fType reflect.StructField, flagName string, flags *pflag.FlagSet) error {
 	// get string. If its a string great, run through arg parser. Otherwise try setting directly
 	s, err := flags.GetString(flagName)
 	if err != nil {
@@ -175,6 +176,13 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 	}
 
 	switch fType.Type.Kind() {
+	case reflect.Bool:
+		b, err := strconv.ParseBool(arg)
+		if err != nil {
+			return fmt.Errorf("could not parse %s as bool for field %s: %w", arg, fType.Name, err)
+		}
+		fVal.SetBool(b)
+		return nil
 	// SetUint allows anyof type u8, u16, u32, u64, and uint
 	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
 		u, err := ParseUint(arg, fType.Name)
@@ -217,6 +225,20 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 	case reflect.Ptr:
 	case reflect.Slice:
 		typeStr := fType.Type.String()
+		if typeStr == "[]uint64" {
+			// Parse comma-separated uint64 values into []uint64 slice
+			strValues := strings.Split(arg, ",")
+			values := make([]uint64, len(strValues))
+			for i, strValue := range strValues {
+				u, err := strconv.ParseUint(strValue, 10, 64)
+				if err != nil {
+					return err
+				}
+				values[i] = u
+			}
+			fVal.Set(reflect.ValueOf(values))
+			return nil
+		}
 		if typeStr == "types.Coins" {
 			coins, err := ParseCoins(arg, fType.Name)
 			if err != nil {
@@ -231,11 +253,11 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 		var err error
 		if typeStr == "types.Coin" {
 			v, err = ParseCoin(arg, fType.Name)
-		} else if typeStr == "types.Int" {
+		} else if typeStr == "math.Int" {
 			v, err = ParseSdkInt(arg, fType.Name)
 		} else if typeStr == "time.Time" {
 			v, err = ParseUnixTime(arg, fType.Name)
-		} else if typeStr == "types.Dec" {
+		} else if typeStr == "math.LegacyDec" {
 			v, err = ParseSdkDec(arg, fType.Name)
 		} else {
 			return fmt.Errorf("struct field type not recognized. Got type %v", fType)
@@ -278,7 +300,12 @@ func ParseInt(arg string, fieldName string) (int64, error) {
 func ParseUnixTime(arg string, fieldName string) (time.Time, error) {
 	timeUnix, err := strconv.ParseInt(arg, 10, 64)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("could not parse %s as unix time for field %s: %w", arg, fieldName, err)
+		parsedTime, err := time.Parse(sdk.SortableTimeFormat, arg)
+		if err != nil {
+			return time.Time{}, fmt.Errorf("could not parse %s as time for field %s: %w", arg, fieldName, err)
+		}
+
+		return parsedTime, nil
 	}
 	startTime := time.Unix(timeUnix, 0)
 	return startTime, nil
@@ -307,18 +334,49 @@ func ParseCoins(arg string, fieldName string) (sdk.Coins, error) {
 }
 
 // TODO: This really shouldn't be getting used in the CLI, its misdesign on the CLI ux
-func ParseSdkInt(arg string, fieldName string) (sdk.Int, error) {
-	i, ok := sdk.NewIntFromString(arg)
+func ParseSdkInt(arg string, fieldName string) (osmomath.Int, error) {
+	i, ok := osmomath.NewIntFromString(arg)
 	if !ok {
-		return sdk.Int{}, fmt.Errorf("could not parse %s as sdk.Int for field %s", arg, fieldName)
+		return osmomath.Int{}, fmt.Errorf("could not parse %s as osmomath.Int for field %s", arg, fieldName)
 	}
 	return i, nil
 }
 
-func ParseSdkDec(arg, fieldName string) (sdk.Dec, error) {
-	i, err := sdk.NewDecFromStr(arg)
+func ParseSdkDec(arg, fieldName string) (osmomath.Dec, error) {
+	i, err := osmomath.NewDecFromStr(arg)
 	if err != nil {
-		return sdk.Dec{}, fmt.Errorf("could not parse %s as sdk.Dec for field %s: %w", arg, fieldName, err)
+		return osmomath.Dec{}, fmt.Errorf("could not parse %s as osmomath.Dec for field %s: %w", arg, fieldName, err)
 	}
 	return i, nil
+}
+
+func ParseStringTo2DArray(input string) ([][]uint64, error) {
+	// Split the input string into sub-arrays
+	subArrays := strings.Split(input, ";")
+
+	// Initialize the 2D array
+	result := make([][]uint64, len(subArrays))
+
+	// Iterate over each sub-array
+	for i, subArray := range subArrays {
+		// Split the sub-array into elements
+		elements := strings.Split(subArray, ",")
+
+		// Initialize the sub-array in the 2D array
+		result[i] = make([]uint64, len(elements))
+
+		// Iterate over each element
+		for j, element := range elements {
+			// Parse the element into a uint64
+			value, err := strconv.ParseUint(element, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+
+			// Store the value in the 2D array
+			result[i][j] = value
+		}
+	}
+
+	return result, nil
 }

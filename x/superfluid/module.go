@@ -26,11 +26,12 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/mint/client/rest"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/client/cli"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/simulation"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v19/x/mint/client/rest"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/client/cli"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/simulation"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 )
 
 var (
@@ -106,32 +107,35 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        keeper.Keeper
-	accountKeeper stakingtypes.AccountKeeper
-	bankKeeper    stakingtypes.BankKeeper
-	stakingKeeper types.StakingKeeper
-	lockupKeeper  types.LockupKeeper
-	gammKeeper    types.GammKeeper
-	epochKeeper   types.EpochKeeper
+	keeper             keeper.Keeper
+	accountKeeper      stakingtypes.AccountKeeper
+	bankKeeper         osmosimtypes.BankKeeper
+	stakingKeeper      types.StakingKeeper
+	lockupKeeper       types.LockupKeeper
+	gammKeeper         types.GammKeeper
+	epochKeeper        types.EpochKeeper
+	concentratedKeeper types.ConcentratedKeeper
 }
 
 func NewAppModule(keeper keeper.Keeper,
-	accountKeeper stakingtypes.AccountKeeper, bankKeeper stakingtypes.BankKeeper,
+	accountKeeper stakingtypes.AccountKeeper, bankKeeper osmosimtypes.BankKeeper,
 	stakingKeeper types.StakingKeeper,
 	lockupKeeper types.LockupKeeper,
 	gammKeeper types.GammKeeper,
 	epochKeeper types.EpochKeeper,
+	concentratedKeeper types.ConcentratedKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(),
 		keeper:         keeper,
 
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
-		stakingKeeper: stakingKeeper,
-		lockupKeeper:  lockupKeeper,
-		gammKeeper:    gammKeeper,
-		epochKeeper:   epochKeeper,
+		accountKeeper:      accountKeeper,
+		bankKeeper:         bankKeeper,
+		stakingKeeper:      stakingKeeper,
+		lockupKeeper:       lockupKeeper,
+		gammKeeper:         gammKeeper,
+		epochKeeper:        epochKeeper,
+		concentratedKeeper: concentratedKeeper,
 	}
 }
 

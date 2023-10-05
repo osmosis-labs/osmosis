@@ -6,20 +6,18 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/wasmbinding"
-	"github.com/osmosis-labs/osmosis/v14/wasmbinding/bindings"
-	"github.com/osmosis-labs/osmosis/v14/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v19/wasmbinding/bindings"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestCreateDenom(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
-
-	// Fund actor with 100 base denom creation fees
-	actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, actor, actorAmount)
 
 	specs := map[string]struct {
 		createDenom *bindings.CreateDenom
@@ -62,6 +60,7 @@ func TestCreateDenom(t *testing.T) {
 }
 
 func TestChangeAdmin(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	const validDenom = "validdenom"
 
 	tokenCreator := RandomAccountAddress()
@@ -144,10 +143,6 @@ func TestChangeAdmin(t *testing.T) {
 			// Setup
 			osmosis, ctx := SetupCustomApp(t, tokenCreator)
 
-			// Fund actor with 100 base denom creation fees
-			actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-			fundAccount(t, ctx, osmosis, tokenCreator, actorAmount)
-
 			err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, tokenCreator, &bindings.CreateDenom{
 				Subdenom: validDenom,
 			})
@@ -166,12 +161,9 @@ func TestChangeAdmin(t *testing.T) {
 }
 
 func TestMint(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
-
-	// Fund actor with 100 base denom creation fees
-	tokenCreationFeeAmt := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, creator, tokenCreationFeeAmt)
 
 	// Create denoms for valid mint tests
 	validDenom := bindings.CreateDenom{
@@ -195,7 +187,7 @@ func TestMint(t *testing.T) {
 	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
 	require.Empty(t, balances)
 
-	amount, ok := sdk.NewIntFromString("8080")
+	amount, ok := osmomath.NewIntFromString("8080")
 	require.True(t, ok)
 
 	specs := map[string]struct {
@@ -236,7 +228,7 @@ func TestMint(t *testing.T) {
 		"zero amount": {
 			mint: &bindings.MintTokens{
 				Denom:         validDenomStr,
-				Amount:        sdk.ZeroInt(),
+				Amount:        osmomath.ZeroInt(),
 				MintToAddress: lucky.String(),
 			},
 			expErr: true,
@@ -285,12 +277,9 @@ func TestMint(t *testing.T) {
 }
 
 func TestBurn(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
-
-	// Fund actor with 100 base denom creation fees
-	tokenCreationFeeAmt := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, creator, tokenCreationFeeAmt)
 
 	// Create denoms for valid burn tests
 	validDenom := bindings.CreateDenom{
@@ -313,7 +302,7 @@ func TestBurn(t *testing.T) {
 
 	validDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), validDenom.Subdenom)
 	emptyDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), emptyDenom.Subdenom)
-	mintAmount, ok := sdk.NewIntFromString("8080")
+	mintAmount, ok := osmomath.NewIntFromString("8080")
 	require.True(t, ok)
 
 	specs := map[string]struct {
@@ -334,7 +323,7 @@ func TestBurn(t *testing.T) {
 				Amount:          mintAmount,
 				BurnFromAddress: lucky.String(),
 			},
-			expErr: true,
+			expErr: false,
 		},
 		"empty sub-denom": {
 			burn: &bindings.BurnTokens{
@@ -363,7 +352,7 @@ func TestBurn(t *testing.T) {
 		"zero amount": {
 			burn: &bindings.BurnTokens{
 				Denom:           validDenomStr,
-				Amount:          sdk.ZeroInt(),
+				Amount:          osmomath.ZeroInt(),
 				BurnFromAddress: creator.String(),
 			},
 			expErr: true,

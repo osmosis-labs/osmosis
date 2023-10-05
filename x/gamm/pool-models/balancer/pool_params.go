@@ -3,14 +3,13 @@ package balancer
 import (
 	"errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
-func NewPoolParams(swapFee, exitFee sdk.Dec, params *SmoothWeightChangeParams) PoolParams {
+func NewPoolParams(spreadFactor, exitFee osmomath.Dec, params *SmoothWeightChangeParams) PoolParams {
 	return PoolParams{
-		SwapFee:                  swapFee,
+		SwapFee:                  spreadFactor,
 		ExitFee:                  exitFee,
 		SmoothWeightChangeParams: params,
 	}
@@ -21,16 +20,16 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 		return types.ErrNegativeExitFee
 	}
 
-	if params.ExitFee.GTE(sdk.OneDec()) {
+	if params.ExitFee.GTE(osmomath.OneDec()) {
 		return types.ErrTooMuchExitFee
 	}
 
 	if params.SwapFee.IsNegative() {
-		return types.ErrNegativeSwapFee
+		return types.ErrNegativeSpreadFactor
 	}
 
-	if params.SwapFee.GTE(sdk.OneDec()) {
-		return types.ErrTooMuchSwapFee
+	if params.SwapFee.GTE(osmomath.OneDec()) {
+		return types.ErrTooMuchSpreadFactor
 	}
 
 	if params.SmoothWeightChangeParams != nil {
@@ -69,10 +68,10 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	return nil
 }
 
-func (params PoolParams) GetPoolSwapFee() sdk.Dec {
+func (params PoolParams) GetPoolSpreadFactor() osmomath.Dec {
 	return params.SwapFee
 }
 
-func (params PoolParams) GetPoolExitFee() sdk.Dec {
+func (params PoolParams) GetPoolExitFee() osmomath.Dec {
 	return params.ExitFee
 }

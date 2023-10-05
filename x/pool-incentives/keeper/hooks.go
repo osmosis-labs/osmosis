@@ -3,8 +3,9 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v19/x/mint/types"
 )
 
 type Hooks struct {
@@ -19,24 +20,24 @@ var (
 // Create new pool incentives hooks.
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
-// AfterPoolCreated creates a gauge for each pool’s lockable duration.
-func (h Hooks) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	err := h.k.CreatePoolGauges(ctx, poolId)
+// AfterCFMMPoolCreated creates a gauge for each pool’s lockable duration.
+func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+	err := h.k.CreateLockablePoolGauges(ctx, poolId)
 	if err != nil {
 		panic(err)
 	}
 }
 
 // AfterJoinPool hook is a noop.
-func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
+func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount osmomath.Int) {
 }
 
 // AfterExitPool hook is a noop.
-func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
+func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount osmomath.Int, exitCoins sdk.Coins) {
 }
 
-// AfterSwap hook is a noop.
-func (h Hooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
+// AfterCFMMSwap hook is a noop.
+func (h Hooks) AfterCFMMSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 }
 
 // Distribute coins after minter module allocate assets to pool-incentives module.
@@ -59,4 +60,24 @@ func (h Hooks) AfterDistributeMintedCoin(ctx sdk.Context) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// AfterConcentratedPoolCreated creates a single gauge for the concentrated liquidity pool.
+func (h Hooks) AfterConcentratedPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+	err := h.k.CreateConcentratedLiquidityPoolGauge(ctx, poolId)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// AfterInitialPoolPositionCreated is a noop.
+func (h Hooks) AfterInitialPoolPositionCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+}
+
+// AfterLastPoolPositionRemoved is a noop.
+func (h Hooks) AfterLastPoolPositionRemoved(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+}
+
+// AfterConcentratedPoolSwap is a noop.
+func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 }

@@ -8,7 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
@@ -23,16 +24,20 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&Pool{},
 	)
 
+	registry.RegisterInterface(
+		"osmosis.concentratedliquidity.v1beta1.ConcentratedPoolExtension",
+		(*types.ConcentratedPoolExtension)(nil),
+		&Pool{},
+	)
+
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateConcentratedPool{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registry, &_MsgCreator_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
-// TODO: re-enable this when CL state-breakage PR is merged.
-// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 var (
 	amino     = codec.NewLegacyAmino()
 	ModuleCdc = codec.NewAminoCodec(amino)

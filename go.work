@@ -1,4 +1,4 @@
-go 1.18
+go 1.20
 
 use ./osmomath
 
@@ -6,4 +6,10 @@ use ./osmoutils
 
 use ./x/ibc-hooks
 
+use ./tests/cl-go-client
+
+use ./tests/cl-genesis-positions
+
 use .
+
+use ./x/epochs

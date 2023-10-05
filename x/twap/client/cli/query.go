@@ -11,10 +11,19 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	poolmanager "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
 )
+
+// twapQueryParseArgs represents the outcome
+// of parsing the arguments for twap query command.
+type twapQueryArgs struct {
+	PoolId    uint64
+	BaseDenom string
+	StartTime time.Time
+	EndTime   time.Time
+}
 
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
@@ -40,7 +49,7 @@ Example:
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// boilerplate parse fields
-			poolId, baseDenom, startTime, endTime, err := twapQueryParseArgs(args)
+			twapArgs, err := twapQueryParseArgs(args)
 			if err != nil {
 				return err
 			}
@@ -48,20 +57,19 @@ Example:
 			if err != nil {
 				return err
 			}
-			quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, poolId, baseDenom)
+			quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, twapArgs.PoolId, twapArgs.BaseDenom)
 			if err != nil {
 				return err
 			}
 
 			queryClient := queryproto.NewQueryClient(clientCtx)
 			res, err := queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
-				PoolId:     poolId,
-				BaseAsset:  baseDenom,
+				PoolId:     twapArgs.PoolId,
+				BaseAsset:  twapArgs.BaseDenom,
 				QuoteAsset: quoteDenom,
-				StartTime:  startTime,
-				EndTime:    &endTime,
+				StartTime:  twapArgs.StartTime,
+				EndTime:    &twapArgs.EndTime,
 			})
-
 			if err != nil {
 				return err
 			}
@@ -89,7 +97,7 @@ Example:
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// boilerplate parse fields
-			poolId, baseDenom, startTime, endTime, err := twapQueryParseArgs(args)
+			twapArgs, err := twapQueryParseArgs(args)
 			if err != nil {
 				return err
 			}
@@ -97,7 +105,7 @@ Example:
 			if err != nil {
 				return err
 			}
-			quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, poolId, baseDenom)
+			quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, twapArgs.PoolId, twapArgs.BaseDenom)
 			if err != nil {
 				return err
 			}
@@ -107,13 +115,12 @@ Example:
 			}
 
 			res, err := queryClient.GeometricTwap(cmd.Context(), &queryproto.GeometricTwapRequest{
-				PoolId:     poolId,
-				BaseAsset:  baseDenom,
+				PoolId:     twapArgs.PoolId,
+				BaseAsset:  twapArgs.BaseDenom,
 				QuoteAsset: quoteDenom,
-				StartTime:  startTime,
-				EndTime:    &endTime,
+				StartTime:  twapArgs.StartTime,
+				EndTime:    &twapArgs.EndTime,
 			})
-
 			if err != nil {
 				return err
 			}
@@ -130,8 +137,8 @@ Example:
 // getQuoteDenomFromLiquidity gets the quote liquidity denom from the pool. In addition, validates that base denom
 // exists in the pool. Fails if not.
 func getQuoteDenomFromLiquidity(ctx context.Context, clientCtx client.Context, poolId uint64, baseDenom string) (string, error) {
-	gammClient := gammtypes.NewQueryClient(clientCtx)
-	liquidity, err := gammClient.TotalPoolLiquidity(ctx, &gammtypes.QueryTotalPoolLiquidityRequest{PoolId: poolId})
+	poolmanagerClient := poolmanager.NewQueryClient(clientCtx)
+	liquidity, err := poolmanagerClient.TotalPoolLiquidity(ctx, &poolmanager.TotalPoolLiquidityRequest{PoolId: poolId})
 	if err != nil {
 		return "", err
 	}
@@ -151,35 +158,40 @@ func getQuoteDenomFromLiquidity(ctx context.Context, clientCtx client.Context, p
 	return quoteDenom, nil
 }
 
-func twapQueryParseArgs(args []string) (poolId uint64, baseDenom string, startTime time.Time, endTime time.Time, err error) {
+func twapQueryParseArgs(args []string) (twapQueryArgs, error) {
 	// boilerplate parse fields
 	// <UINT PARSE>
-	poolId, err = osmocli.ParseUint(args[0], "poolId")
+	poolId, err := osmocli.ParseUint(args[0], "poolId")
 	if err != nil {
-		return
+		return twapQueryArgs{}, err
 	}
 
 	// <DENOM PARSE>
-	baseDenom = strings.TrimSpace(args[1])
+	baseDenom := strings.TrimSpace(args[1])
 
 	// <UNIX TIME PARSE>
-	startTime, err = osmocli.ParseUnixTime(args[2], "start time")
+	startTime, err := osmocli.ParseUnixTime(args[2], "start time")
 	if err != nil {
-		return
+		return twapQueryArgs{}, err
 	}
 
 	// END TIME PARSE: ONEOF {<UNIX TIME PARSE>, <DURATION>}
 	// try parsing in unix time, if failed try parsing in duration
-	endTime, err = osmocli.ParseUnixTime(args[3], "end time")
+	endTime, err := osmocli.ParseUnixTime(args[3], "end time")
 	if err != nil {
 		// TODO if we don't use protoreflect:
 		// make better error combiner, rather than just returning last error
 		duration, err2 := time.ParseDuration(args[3])
 		if err2 != nil {
 			err = err2
-			return
+			return twapQueryArgs{}, err
 		}
 		endTime = startTime.Add(duration)
 	}
-	return poolId, baseDenom, startTime, endTime, nil
+	return twapQueryArgs{
+		PoolId:    poolId,
+		BaseDenom: baseDenom,
+		StartTime: startTime,
+		EndTime:   endTime,
+	}, nil
 }

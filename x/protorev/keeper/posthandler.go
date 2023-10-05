@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 type SwapToBackrun struct {
@@ -35,7 +35,14 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// 1. If there is an error, then the cache context is discarded
 	// 2. If there is no error, then the cache context is written to the main context with no gas consumed
 	cacheCtx, write := ctx.CacheContext()
-	cacheCtx = cacheCtx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	// CacheCtx's by default _share_ their gas meter with the parent.
+	// In our case, the cache ctx is given a new gas meter instance entirely,
+	// so gas usage is not counted towards tx gas usage.
+	//
+	// 50M is chosen as a large enough number to ensure that the posthandler will not run out of gas,
+	// but will eventually terminate in event of an accidental infinite loop with some gas usage.
+	upperGasLimitMeter := sdk.NewGasMeter(sdk.Gas(50_000_000))
+	cacheCtx = cacheCtx.WithGasMeter(upperGasLimitMeter)
 
 	// Check if the protorev posthandler can be executed
 	if err := protoRevDec.ProtoRevKeeper.AnteHandleCheck(cacheCtx); err != nil {
@@ -43,7 +50,7 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	}
 
 	// Extract all of the pools that were swapped in the tx
-	swappedPools := ExtractSwappedPools(tx)
+	swappedPools := protoRevDec.ProtoRevKeeper.ExtractSwappedPools(cacheCtx)
 	if len(swappedPools) == 0 {
 		return next(ctx, tx, simulate)
 	}
@@ -53,8 +60,13 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		write()
 		ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 	} else {
-		ctx.Logger().Error("ProtoRevTrade failed with error", err)
+		ctx.Logger().Error("ProtoRevTrade failed with error: " + err.Error())
 	}
+
+	// Delete swaps to backrun for next transaction without consuming gas
+	// from the current transaction's gas meter, but instead from a new gas meter with 50mil gas.
+	// 50 mil gas was chosen as an arbitrary large number to ensure deletion does not run out of gas.
+	protoRevDec.ProtoRevKeeper.DeleteSwapsToBackrun(ctx.WithGasMeter(sdk.NewGasMeter(sdk.Gas(50_000_000))))
 
 	return next(ctx, tx, simulate)
 }
@@ -62,7 +74,7 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 // AnteHandleCheck checks if the module is enabled and if the number of routes to be processed per block has been reached.
 func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
 	// Only execute the posthandler if the module is enabled
-	if enabled, err := k.GetProtoRevEnabled(ctx); err != nil || !enabled {
+	if !k.GetProtoRevEnabled(ctx) {
 		return fmt.Errorf("protorev is not enabled")
 	}
 
@@ -98,24 +110,31 @@ func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
 
 // ProtoRevTrade wraps around the build routes, iterate routes, and execute trade functionality to execute cyclic arbitrage trades
 // if they exist. It returns an error if there was an issue executing any single trade.
-func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) error {
+func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) (err error) {
+	// recover from panic
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Protorev failed due to internal reason: %v", r)
+		}
+	}()
+
 	// Get the total number of pool points that can be consumed in this transaction
-	remainingPoolPoints, err := k.RemainingPoolPointsForTx(ctx)
+	remainingTxPoolPoints, remainingBlockPoolPoints, err := k.GetRemainingPoolPoints(ctx)
 	if err != nil {
 		return err
 	}
 
 	// Iterate and build arbitrage routes for each pool that was swapped on
-	for index := 0; index < len(swappedPools) && *remainingPoolPoints > 0; index++ {
+	for _, pool := range swappedPools {
 		// Build the routes for the pool that was swapped on
-		routes := k.BuildRoutes(ctx, swappedPools[index].TokenInDenom, swappedPools[index].TokenOutDenom, swappedPools[index].PoolId, remainingPoolPoints)
+		routes := k.BuildRoutes(ctx, pool.TokenInDenom, pool.TokenOutDenom, pool.PoolId)
 
-		// Find optimal input amounts for routes
-		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes)
+		// Find optimal route (input coin, profit, route) for the given routes
+		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes, &remainingTxPoolPoints, &remainingBlockPoolPoints)
 
 		// The error that returns here is particularly focused on the minting/burning of coins, and the execution of the MultiHopSwapExactAmountIn.
-		if maxProfitAmount.GT(sdk.ZeroInt()) {
-			if err := k.ExecuteTrade(ctx, optimalRoute, maxProfitInputCoin); err != nil {
+		if maxProfitAmount.GT(osmomath.ZeroInt()) {
+			if err := k.ExecuteTrade(ctx, optimalRoute, maxProfitInputCoin, pool, remainingTxPoolPoints, remainingBlockPoolPoints); err != nil {
 				return err
 			}
 		}
@@ -126,26 +145,20 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) err
 
 // ExtractSwappedPools checks if there were any swaps made on pools and if so returns a list of all the pools that were
 // swapped on and metadata about the swap
-func ExtractSwappedPools(tx sdk.Tx) []SwapToBackrun {
+func (k Keeper) ExtractSwappedPools(ctx sdk.Context) []SwapToBackrun {
 	swappedPools := make([]SwapToBackrun, 0)
 
-	// Extract only swaps types and the swapped pools from the tx
-	for _, msg := range tx.GetMsgs() {
-		if swap, ok := msg.(*poolmanagertypes.MsgSwapExactAmountIn); ok {
-			for _, route := range swap.Routes {
-				swappedPools = append(swappedPools, SwapToBackrun{
-					PoolId:        route.PoolId,
-					TokenOutDenom: route.TokenOutDenom,
-					TokenInDenom:  swap.TokenIn.Denom})
-			}
-		} else if swap, ok := msg.(*poolmanagertypes.MsgSwapExactAmountOut); ok {
-			for _, route := range swap.Routes {
-				swappedPools = append(swappedPools, SwapToBackrun{
-					PoolId:        route.PoolId,
-					TokenOutDenom: swap.TokenOut.Denom,
-					TokenInDenom:  route.TokenInDenom})
-			}
-		}
+	swapsToBackrun, err := k.GetSwapsToBackrun(ctx)
+	if err != nil {
+		return swappedPools
+	}
+
+	for _, swap := range swapsToBackrun.Trades {
+		swappedPools = append(swappedPools, SwapToBackrun{
+			PoolId:        swap.Pool,
+			TokenInDenom:  swap.TokenIn,
+			TokenOutDenom: swap.TokenOut,
+		})
 	}
 
 	return swappedPools

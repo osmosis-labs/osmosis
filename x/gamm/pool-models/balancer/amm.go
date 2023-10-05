@@ -4,10 +4,11 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 )
 
 // subPoolAssetWeights subtracts the weights of two different pool asset slices.
@@ -55,7 +56,7 @@ func addPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
 }
 
 // assumes 0 < d < 1
-func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
+func poolAssetsMulDec(base []PoolAsset, d osmomath.Dec) []PoolAsset {
 	newWeights := make([]PoolAsset, len(base))
 	for i, asset := range base {
 		// TODO: This can adversarially panic at the moment! (as can Pool.TotalWeight)
@@ -70,13 +71,13 @@ func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
 // ValidateUserSpecifiedWeight ensures that a weight that is provided from user-input anywhere
 // for creating a pool obeys the expected guarantees.
 // Namely, that the weight is in the range [1, MaxUserSpecifiedWeight)
-func ValidateUserSpecifiedWeight(weight sdk.Int) error {
+func ValidateUserSpecifiedWeight(weight osmomath.Int) error {
 	if !weight.IsPositive() {
-		return sdkerrors.Wrap(types.ErrNotPositiveWeight, weight.String())
+		return errorsmod.Wrap(types.ErrNotPositiveWeight, weight.String())
 	}
 
 	if weight.GTE(MaxUserSpecifiedWeight) {
-		return sdkerrors.Wrap(types.ErrWeightTooLarge, weight.String())
+		return errorsmod.Wrap(types.ErrWeightTooLarge, weight.String())
 	}
 	return nil
 }
@@ -96,8 +97,8 @@ func solveConstantFunctionInvariant(
 	tokenBalanceFixedAfter,
 	tokenWeightFixed,
 	tokenBalanceUnknownBefore,
-	tokenWeightUnknown sdk.Dec,
-) sdk.Dec {
+	tokenWeightUnknown osmomath.Dec,
+) osmomath.Dec {
 	// weightRatio = (weightX/weightY)
 	weightRatio := tokenWeightFixed.Quo(tokenWeightUnknown)
 
@@ -106,7 +107,7 @@ func solveConstantFunctionInvariant(
 
 	// amountY = balanceY * (1 - (y ^ weightRatio))
 	yToWeightRatio := osmomath.Pow(y, weightRatio)
-	paranthetical := sdk.OneDec().Sub(yToWeightRatio)
+	paranthetical := osmomath.OneDec().Sub(yToWeightRatio)
 	amountY := tokenBalanceUnknownBefore.Mul(paranthetical)
 	return amountY
 }
@@ -118,12 +119,12 @@ func calcPoolSharesOutGivenSingleAssetIn(
 	normalizedTokenWeightIn,
 	poolShares,
 	tokenAmountIn,
-	swapFee sdk.Dec,
-) sdk.Dec {
-	// deduct swapfee on the in asset.
-	// We don't charge swap fee on the token amount that we imagine as unswapped (the normalized weight).
-	// So effective_swapfee = swapfee * (1 - normalized_token_weight)
-	tokenAmountInAfterFee := tokenAmountIn.Mul(feeRatio(normalizedTokenWeightIn, swapFee))
+	spreadFactor osmomath.Dec,
+) osmomath.Dec {
+	// deduct spread factor on the in asset.
+	// We don't charge spread factor on the token amount that we imagine as unswapped (the normalized weight).
+	// So effective_swapfee = spread factor * (1 - normalized_token_weight)
+	tokenAmountInAfterFee := tokenAmountIn.Mul(feeRatio(normalizedTokenWeightIn, spreadFactor))
 	// To figure out the number of shares we add, first notice that in balancer we can treat
 	// the number of shares as linearly related to the `k` value function. This is due to the normalization.
 	// e.g.
@@ -139,7 +140,7 @@ func calcPoolSharesOutGivenSingleAssetIn(
 		tokenBalanceIn,
 		normalizedTokenWeightIn,
 		poolShares,
-		sdk.OneDec()).Neg()
+		osmomath.OneDec()).Neg()
 	return poolAmountOut
 }
 
@@ -184,9 +185,9 @@ func updateIntermediaryPoolAssetsLiquidity(liquidity sdk.Coins, poolAssetsByDeno
 }
 
 // feeRatio returns the fee ratio that is defined as follows:
-// 1 - ((1 - normalizedTokenWeightOut) * swapFee)
-func feeRatio(normalizedWeight, swapFee sdk.Dec) sdk.Dec {
-	return sdk.OneDec().Sub((sdk.OneDec().Sub(normalizedWeight)).Mul(swapFee))
+// 1 - ((1 - normalizedTokenWeightOut) * spreadFactor)
+func feeRatio(normalizedWeight, spreadFactor osmomath.Dec) osmomath.Dec {
+	return osmomath.OneDec().Sub((osmomath.OneDec().Sub(normalizedWeight)).Mul(spreadFactor))
 }
 
 // calcSingleAssetInGivenPoolSharesOut returns token amount in with fee included
@@ -196,13 +197,13 @@ func calcSingleAssetInGivenPoolSharesOut(
 	normalizedTokenWeightIn,
 	totalPoolSharesSupply,
 	sharesAmountOut,
-	swapFee sdk.Dec,
-) sdk.Dec {
+	spreadFactor osmomath.Dec,
+) osmomath.Dec {
 	// delta balanceIn is negative(tokens inside the pool increases)
 	// pool weight is always 1
-	tokenAmountIn := solveConstantFunctionInvariant(totalPoolSharesSupply.Add(sharesAmountOut), totalPoolSharesSupply, sdk.OneDec(), tokenBalanceIn, normalizedTokenWeightIn).Neg()
-	// deduct swapfee on the in asset
-	tokenAmountInFeeIncluded := tokenAmountIn.Quo(feeRatio(normalizedTokenWeightIn, swapFee))
+	tokenAmountIn := solveConstantFunctionInvariant(totalPoolSharesSupply.Add(sharesAmountOut), totalPoolSharesSupply, osmomath.OneDec(), tokenBalanceIn, normalizedTokenWeightIn).Neg()
+	// deduct spread factor on the in asset
+	tokenAmountInFeeIncluded := tokenAmountIn.Quo(feeRatio(normalizedTokenWeightIn, spreadFactor))
 	return tokenAmountInFeeIncluded
 }
 
@@ -214,18 +215,18 @@ func calcPoolSharesInGivenSingleAssetOut(
 	normalizedTokenWeightOut,
 	totalPoolSharesSupply,
 	tokenAmountOut,
-	swapFee,
-	exitFee sdk.Dec,
-) sdk.Dec {
-	tokenAmountOutFeeIncluded := tokenAmountOut.Quo(feeRatio(normalizedTokenWeightOut, swapFee))
+	spreadFactor,
+	exitFee osmomath.Dec,
+) osmomath.Dec {
+	tokenAmountOutFeeIncluded := tokenAmountOut.Quo(feeRatio(normalizedTokenWeightOut, spreadFactor))
 
 	// delta poolSupply is positive(total pool shares decreases)
 	// pool weight is always 1
-	sharesIn := solveConstantFunctionInvariant(tokenBalanceOut.Sub(tokenAmountOutFeeIncluded), tokenBalanceOut, normalizedTokenWeightOut, totalPoolSharesSupply, sdk.OneDec())
+	sharesIn := solveConstantFunctionInvariant(tokenBalanceOut.Sub(tokenAmountOutFeeIncluded), tokenBalanceOut, normalizedTokenWeightOut, totalPoolSharesSupply, osmomath.OneDec())
 
 	// charge exit fee on the pool token side
 	// pAi = pAiAfterExitFee/(1-exitFee)
-	sharesInFeeIncluded := sharesIn.Quo(sdk.OneDec().Sub(exitFee))
+	sharesInFeeIncluded := sharesIn.Quo(osmomath.OneDec().Sub(exitFee))
 	return sharesInFeeIncluded
 }
 
@@ -234,7 +235,7 @@ func ensureDenomInPool(poolAssetsByDenom map[string]PoolAsset, tokensIn sdk.Coin
 	for _, coin := range tokensIn {
 		_, ok := poolAssetsByDenom[coin.Denom]
 		if !ok {
-			return sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, invalidInputDenomsErrFormat, coin.Denom)
+			return errorsmod.Wrapf(types.ErrDenomNotFoundInPool, invalidInputDenomsErrFormat, coin.Denom)
 		}
 	}
 

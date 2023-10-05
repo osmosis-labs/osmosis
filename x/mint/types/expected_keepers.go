@@ -1,7 +1,8 @@
 package types // noalias
 
 import (
-	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -24,7 +25,7 @@ type BankKeeper interface {
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
-	AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdk.Int)
+	AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount osmomath.Int)
 }
 
 // CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.

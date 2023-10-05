@@ -3,13 +3,14 @@ package twapmock
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
 )
 
-var _ types.AmmInterface = &ProgrammedAmmInterface{}
+var _ types.PoolManagerInterface = &ProgrammedPoolManagerInterface{}
 
-type ProgrammedAmmInterface struct {
-	underlyingKeeper     types.AmmInterface
+type ProgrammedPoolManagerInterface struct {
+	underlyingKeeper     types.PoolManagerInterface
 	programmedSpotPrice  map[SpotPriceInput]SpotPriceResult
 	programmedPoolDenoms map[uint64]poolDenomsResult
 }
@@ -21,7 +22,7 @@ type SpotPriceInput struct {
 	quoteDenom string
 }
 type SpotPriceResult struct {
-	Sp  sdk.Dec
+	Sp  osmomath.Dec
 	Err error
 }
 
@@ -30,15 +31,15 @@ type poolDenomsResult struct {
 	err        error
 }
 
-func NewProgrammedAmmInterface(underlyingKeeper types.AmmInterface) *ProgrammedAmmInterface {
-	return &ProgrammedAmmInterface{
+func NewProgrammedAmmInterface(underlyingKeeper types.PoolManagerInterface) *ProgrammedPoolManagerInterface {
+	return &ProgrammedPoolManagerInterface{
 		underlyingKeeper:     underlyingKeeper,
 		programmedSpotPrice:  map[SpotPriceInput]SpotPriceResult{},
 		programmedPoolDenoms: map[uint64]poolDenomsResult{},
 	}
 }
 
-func (p *ProgrammedAmmInterface) ProgramPoolDenomsOverride(poolId uint64, overrideDenoms []string, overrideErr error) {
+func (p *ProgrammedPoolManagerInterface) ProgramPoolDenomsOverride(poolId uint64, overrideDenoms []string, overrideErr error) {
 	var poolDenoms map[string]struct{}
 	if existingForPool, ok := p.programmedPoolDenoms[poolId]; ok {
 		poolDenoms = existingForPool.poolDenoms
@@ -51,14 +52,14 @@ func (p *ProgrammedAmmInterface) ProgramPoolDenomsOverride(poolId uint64, overri
 	p.programmedPoolDenoms[poolId] = poolDenomsResult{poolDenoms, overrideErr}
 }
 
-func (p *ProgrammedAmmInterface) ProgramPoolSpotPriceOverride(poolId uint64,
-	quoteDenom, baseDenom string, overrideSp sdk.Dec, overrideErr error,
+func (p *ProgrammedPoolManagerInterface) ProgramPoolSpotPriceOverride(poolId uint64,
+	quoteDenom, baseDenom string, overrideSp osmomath.Dec, overrideErr error,
 ) {
 	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	p.programmedSpotPrice[input] = SpotPriceResult{overrideSp, overrideErr}
 }
 
-func (p *ProgrammedAmmInterface) GetPoolDenoms(ctx sdk.Context, poolId uint64) (denoms []string, err error) {
+func (p *ProgrammedPoolManagerInterface) RouteGetPoolDenoms(ctx sdk.Context, poolId uint64) (denoms []string, err error) {
 	if res, ok := p.programmedPoolDenoms[poolId]; ok {
 		result := make([]string, 0, len(res.poolDenoms))
 		for denom := range res.poolDenoms {
@@ -66,17 +67,21 @@ func (p *ProgrammedAmmInterface) GetPoolDenoms(ctx sdk.Context, poolId uint64) (
 		}
 		return result, res.err
 	}
-	return p.underlyingKeeper.GetPoolDenoms(ctx, poolId)
+	return p.underlyingKeeper.RouteGetPoolDenoms(ctx, poolId)
 }
 
-func (p *ProgrammedAmmInterface) CalculateSpotPrice(ctx sdk.Context,
+func (p *ProgrammedPoolManagerInterface) RouteCalculateSpotPrice(ctx sdk.Context,
 	poolId uint64,
 	quoteDenom,
 	baseDenom string,
-) (price sdk.Dec, err error) {
+) (price osmomath.BigDec, err error) {
 	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	if res, ok := p.programmedSpotPrice[input]; ok {
-		return res.Sp, res.Err
+		if (res.Sp == osmomath.Dec{}) {
+			return osmomath.BigDec{}, res.Err
+		}
+
+		return osmomath.BigDecFromDec(res.Sp), res.Err
 	}
-	return p.underlyingKeeper.CalculateSpotPrice(ctx, poolId, quoteDenom, baseDenom)
+	return p.underlyingKeeper.RouteCalculateSpotPrice(ctx, poolId, quoteDenom, baseDenom)
 }

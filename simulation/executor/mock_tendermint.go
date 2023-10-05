@@ -14,7 +14,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	"golang.org/x/exp/maps"
 
-	markov "github.com/osmosis-labs/osmosis/v14/simulation/simtypes/transitionmatrix"
+	markov "github.com/osmosis-labs/osmosis/v19/simulation/simtypes/transitionmatrix"
 )
 
 type mockValidator struct {
@@ -119,10 +119,13 @@ func updateValidators(
 	params simulation.Params,
 	current map[string]mockValidator,
 	updates []abci.ValidatorUpdate,
-	// logWriter LogWriter,
 	event func(route, op, evResult string),
 ) (map[string]mockValidator, error) {
 	nextSet := mockValidators(current).Clone()
+
+	// Count the number of validators that are about to be kicked
+	kickedValidators := 0
+
 	for _, update := range updates {
 		str := fmt.Sprintf("%X", update.PubKey.GetEd25519())
 
@@ -131,9 +134,9 @@ func updateValidators(
 				return nil, fmt.Errorf("tried to delete a nonexistent validator: %s", str)
 			}
 
-			// logWriter.AddEntry(NewOperationEntry())("kicked", str)
+			kickedValidators++
+
 			event("end_block", "validator_updates", "kicked")
-			delete(nextSet, str)
 		} else if _, ok := nextSet[str]; ok {
 			// validator already exists, update weight
 			nextSet[str] = mockValidator{update, nextSet[str].livenessState}
@@ -145,6 +148,19 @@ func updateValidators(
 				markov.GetMemberOfInitialState(r, params.InitialLivenessWeightings()),
 			}
 			event("end_block", "validator_updates", "added")
+		}
+	}
+
+	// Check if all the validators are about to be kicked, if so, don't perform the deletions
+	if kickedValidators == len(nextSet) {
+		return nextSet, nil
+	}
+
+	// Perform the deletions for validators that are to be kicked
+	for _, update := range updates {
+		str := fmt.Sprintf("%X", update.PubKey.GetEd25519())
+		if update.Power == 0 {
+			delete(nextSet, str)
 		}
 	}
 
@@ -165,7 +181,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	}
 
 	voteInfos := randomVoteInfos(r, params, validators)
-	evidence := randomDoubleSignEvidence(r, params, validators, pastTimes, pastVoteInfos, event, header, voteInfos)
+	evidence := randomDoubleSignEvidence(r, params, pastTimes, pastVoteInfos, event, header, voteInfos)
 
 	return abci.RequestBeginBlock{
 		Header: header,
@@ -214,8 +230,7 @@ func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators,
 	return voteInfos
 }
 
-func randomDoubleSignEvidence(r *rand.Rand, params Params,
-	validators mockValidators, pastTimes []time.Time,
+func randomDoubleSignEvidence(r *rand.Rand, params Params, pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
 	event func(route, op, evResult string), header tmproto.Header, voteInfos []abci.VoteInfo,
 ) []abci.Evidence {

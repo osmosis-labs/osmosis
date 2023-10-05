@@ -3,165 +3,369 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
+	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/types/address"
+
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	"github.com/iancoleman/orderedmap"
+
+	packetforwardingtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4/router/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
 )
 
-func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
-	chainA := s.configurer.GetChainConfig(0)
-	node, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+var (
+	// minDecTolerance minimum tolerance for osmomath.Dec, given its precision of 18.
+	minDecTolerance = osmomath.MustNewDecFromStr("0.000000000000000001")
+	// TODO: lower
+	govPropTimeout = time.Minute
+)
 
-	var (
-		denom0                    string = "uion"
-		denom1                    string = "uosmo"
-		tickSpacing               uint64 = 1
-		precisionFactorAtPriceOne int64  = -1
-		frozenUntil               int64  = time.Unix(86400, 0).Unix()
-		swapFee                          = "0.01"
-	)
-	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne, swapFee)
+// TODO: Find more scalable way to do this
+func (s *IntegrationTestSuite) TestAllE2E() {
+	// Reset the default taker fee to 0.15%, so we can actually run tests with it activated
+	s.T().Run("SetDefaultTakerFeeChainB", func(t *testing.T) {
+		s.T().Log("resetting the default taker fee to 0.15% on chain B only")
+		s.SetDefaultTakerFeeChainB()
+	})
 
-	concentratedPool, err := node.QueryConcentratedPool(poolID)
-	s.Require().NoError(err)
+	// Zero Dependent Tests
+	s.T().Run("CreateConcentratedLiquidityPoolVoting_And_TWAP", func(t *testing.T) {
+		t.Parallel()
+		s.CreateConcentratedLiquidityPoolVoting_And_TWAP()
+	})
 
-	// assert contents of the pool are valid
-	s.Require().Equal(concentratedPool.GetId(), poolID)
-	s.Require().Equal(concentratedPool.GetToken0(), denom0)
-	s.Require().Equal(concentratedPool.GetToken1(), denom1)
-	s.Require().Equal(concentratedPool.GetTickSpacing(), tickSpacing)
-	s.Require().Equal(concentratedPool.GetPrecisionFactorAtPriceOne(), sdk.NewInt(precisionFactorAtPriceOne))
-	s.Require().Equal(concentratedPool.GetSwapFee(sdk.Context{}), sdk.MustNewDecFromStr(swapFee))
+	s.T().Run("ProtoRev", func(t *testing.T) {
+		t.Parallel()
+		s.ProtoRev()
+	})
 
-	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(sdk.NewInt(precisionFactorAtPriceOne))
+	s.T().Run("ConcentratedLiquidity", func(t *testing.T) {
+		t.Parallel()
+		s.ConcentratedLiquidity()
+	})
 
-	fundTokens := []string{"1000000uosmo", "1000000uion", "1000000stake"}
-	// get 3 addresses to create positions
-	address1 := node.CreateWalletAndFund("addr1", fundTokens)
-	address2 := node.CreateWalletAndFund("addr2", fundTokens)
-	address3 := node.CreateWalletAndFund("addr3", fundTokens)
+	s.T().Run("SuperfluidVoting", func(t *testing.T) {
+		t.Parallel()
+		s.SuperfluidVoting()
+	})
 
-	// Create 2 positions for node1: overlap together, overlap with 2 node3 positions)
-	node.CreateConcentratedPosition(address1, "[-1200]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
-	node.CreateConcentratedPosition(address1, "[-400]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
+	s.T().Run("AddToExistingLock", func(t *testing.T) {
+		t.Parallel()
+		s.AddToExistingLock()
+	})
 
-	// Create 1 position for node2: does not overlap with anything, ends at maximum
-	node.CreateConcentratedPosition(address2, "2200", fmt.Sprintf("%d", maxTick), fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
+	s.T().Run("ExpeditedProposals", func(t *testing.T) {
+		t.Parallel()
+		s.ExpeditedProposals()
+	})
 
-	// Create 2 positions for node3: overlap together, overlap with 2 node1 positions, one position starts from minimum
-	node.CreateConcentratedPosition(address3, "[-1600]", "[-200]", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
-	node.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", minTick), "1400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
+	s.T().Run("GeometricTWAP", func(t *testing.T) {
+		t.Parallel()
+		s.GeometricTWAP()
+	})
 
-	// get newly created positions
-	positionsAddress1 := node.QueryConcentratedPositions(address1)
-	positionsAddress2 := node.QueryConcentratedPositions(address2)
-	positionsAddress3 := node.QueryConcentratedPositions(address3)
+	s.T().Run("LargeWasmUpload", func(t *testing.T) {
+		t.Parallel()
+		s.LargeWasmUpload()
+	})
 
-	// assert number of positions per address
-	s.Require().Equal(len(positionsAddress1), 2)
-	s.Require().Equal(len(positionsAddress2), 1)
-	s.Require().Equal(len(positionsAddress3), 2)
+	s.T().Run("StableSwap", func(t *testing.T) {
+		t.Parallel()
+		s.StableSwap()
+	})
 
-	// Assert returned positions:
-	validateCLPosition := func(position types.FullPositionByOwnerResult, poolId uint64, lowerTick, upperTick int64) {
-		s.Require().Equal(position.PoolId, poolId)
-		s.Require().Equal(position.LowerTick, int64(lowerTick))
-		s.Require().Equal(position.UpperTick, int64(upperTick))
+	// Test currently disabled
+	// s.T().Run("ArithmeticTWAP", func(t *testing.T) {
+	// 	t.Parallel()
+	// 	s.ArithmeticTWAP()
+	// })
+
+	// State Sync Dependent Tests
+
+	if s.skipStateSync || !s.runScheduledTest {
+		s.T().Skip()
+	} else {
+		s.T().Run("StateSync", func(t *testing.T) {
+			t.Parallel()
+			s.StateSync()
+		})
 	}
 
-	// assert positions for address1
-	addr1position1 := positionsAddress1[0]
-	addr1position2 := positionsAddress1[1]
-	// first position first address
-	validateCLPosition(addr1position1, poolID, -1200, 400)
-	// second position second address
-	validateCLPosition(addr1position2, poolID, -400, 400)
+	// Upgrade Dependent Tests
 
-	// assert positions for address2
-	addr2position1 := positionsAddress2[0]
-	// first position second address
-	validateCLPosition(addr2position1, poolID, 2200, maxTick)
+	if s.skipUpgrade {
+		s.T().Skip("Skipping GeometricTwapMigration test")
+	} else {
+		s.T().Run("GeometricTwapMigration", func(t *testing.T) {
+			t.Parallel()
+			s.GeometricTwapMigration()
+		})
+	}
 
-	// assert positions for address3
-	addr3position1 := positionsAddress3[0]
-	addr3position2 := positionsAddress3[1]
-	// first position third address
-	validateCLPosition(addr3position1, poolID, -1600, -200)
-	// second position third address
-	validateCLPosition(addr3position2, poolID, minTick, 1400)
+	if s.skipUpgrade {
+		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
+	} else {
+		s.T().Run("AddToExistingLockPostUpgrade", func(t *testing.T) {
+			t.Parallel()
+			s.AddToExistingLockPostUpgrade()
+		})
+	}
+
+	// IBC Dependent Tests
+
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	} else {
+		s.T().Run("IBCTokenTransferRateLimiting", func(t *testing.T) {
+			t.Parallel()
+			s.IBCTokenTransferRateLimiting()
+		})
+
+		s.T().Run("IBCTokenTransferAndCreatePool", func(t *testing.T) {
+			t.Parallel()
+			s.IBCTokenTransferAndCreatePool()
+		})
+
+		s.T().Run("IBCWasmHooks", func(t *testing.T) {
+			t.Parallel()
+			s.IBCWasmHooks()
+		})
+
+		s.T().Run("PacketForwarding", func(t *testing.T) {
+			t.Parallel()
+			s.PacketForwarding()
+		})
+	}
+}
+
+// TestProtoRev is a test that ensures that the protorev module is working as expected. In particular, this tests and ensures that:
+// 1. The protorev module is correctly configured on init
+// 2. The protorev module can correctly back run a swap
+// 3. the protorev module correctly tracks statistics
+func (s *IntegrationTestSuite) ProtoRev() {
+	const (
+		poolFile1 = "protorevPool1.json"
+		poolFile2 = "protorevPool2.json"
+		poolFile3 = "protorevPool3.json"
+
+		walletName = "swap-that-creates-an-arb"
+
+		denomIn      = initialization.LuncIBCDenom
+		denomOut     = initialization.UstIBCDenom
+		amount       = "10000"
+		minAmountOut = "1"
+
+		epochIdentifier = "day"
+	)
+
+	// NOTE: Uses chainA since IBC denoms are hard coded.
+	chainA, chainANode := s.getChainACfgs()
+
+	sender := chainANode.GetWallet(initialization.ValidatorWalletName)
+
+	// --------------- Module init checks ---------------- //
+	s.T().Logf("running protorev module init checks")
+
+	enabled, err := chainANode.QueryProtoRevEnabled()
+	s.Require().NoError(err)
+	s.Require().True(enabled, "protorev enabled should be true on init")
+
+	hotRoutes, err := chainANode.QueryProtoRevTokenPairArbRoutes()
+	s.Require().NoError(err, "protorev module should have no new hot routes on init")
+	s.Require().Len(hotRoutes, 0, "protorev module should have no new hot routes on init")
+
+	_, err = chainANode.QueryProtoRevNumberOfTrades()
+	s.Require().Error(err, "protorev module should have no trades on init")
+
+	info, err := chainANode.QueryProtoRevInfoByPoolType()
+	s.Require().NoError(err, "protorev module should have pool info on init")
+	s.Require().NotNil(info, "protorev module should have pool info on init")
+
+	_, err = chainANode.QueryProtoRevMaxPoolPointsPerTx()
+	s.Require().NoError(err, "protorev module should have max pool points per tx on init")
+
+	_, err = chainANode.QueryProtoRevMaxPoolPointsPerBlock()
+	s.Require().NoError(err, "protorev module should have max pool points per block on init")
+
+	supportedBaseDenoms, err := chainANode.QueryProtoRevBaseDenoms()
+	s.Require().NoError(err)
+	s.Require().Len(supportedBaseDenoms, 1, "protorev module should only have uosmo as a supported base denom on init")
+	s.Require().Equal(supportedBaseDenoms[0].Denom, "uosmo", "protorev module should only have uosmo as a supported base denom on init")
+
+	s.T().Logf("completed protorev module init checks")
+
+	// --------------- Set up for a calculated backrun ---------------- //
+	// Create all of the pools that will be used in the test.
+	swapPoolId1 := chainANode.CreateBalancerPool(poolFile1, initialization.ValidatorWalletName)
+	swapPoolId2 := chainANode.CreateBalancerPool(poolFile2, initialization.ValidatorWalletName)
+	swapPoolId3 := chainANode.CreateBalancerPool(poolFile3, initialization.ValidatorWalletName)
+
+	// Wait for the creation to be propogated to the other nodes + for the protorev module to
+	// correctly update the highest liquidity pools.
+	s.T().Logf("waiting for the protorev module to update the highest liquidity pools (wait %.f sec) after the week epoch duration", initialization.EpochDayDuration.Seconds())
+	chainA.WaitForNumEpochs(1, epochIdentifier)
+
+	// Create a wallet to use for the swap txs.
+	swapWalletAddr := chainANode.CreateWallet(walletName, chainA)
+	coinIn := fmt.Sprintf("%s%s", amount, denomIn)
+	chainANode.BankSend(coinIn, sender, swapWalletAddr)
+
+	// Check supplies before swap.
+	supplyBefore, err := chainANode.QuerySupply()
+	s.Require().NoError(err)
+	s.Require().NotNil(supplyBefore)
+
+	// Performing the swap that creates a cyclic arbitrage opportunity.
+	s.T().Logf("performing a swap that creates a cyclic arbitrage opportunity")
+	chainANode.SwapExactAmountIn(coinIn, minAmountOut, fmt.Sprintf("%d", swapPoolId2), denomOut, swapWalletAddr)
+
+	// --------------- Module checks after a calculated backrun ---------------- //
+
+	supplyCheck := func() {
+		s.T().Logf("checking that the supplies have not changed")
+		supplyAfter, err := chainANode.QuerySupply()
+		s.Require().NoError(err)
+		s.Require().Equal(supplyBefore, supplyAfter)
+	}
+
+	// Check that the number of trades executed by the protorev module is 1.
+	numTradesCheck := func() {
+		numTrades, err := chainANode.QueryProtoRevNumberOfTrades()
+		s.T().Logf("checking that the protorev module has executed 1 trade")
+		s.Require().NoError(err)
+		s.Require().Equal(uint64(1), numTrades.Uint64())
+	}
+
+	// Check that the profits of the protorev module are not nil.
+	profits := func() {
+		profits, err := chainANode.QueryProtoRevProfits()
+		s.T().Logf("checking that the protorev module has non-nil profits: %s", profits)
+		s.Require().NoError(err)
+		s.Require().Len(profits, 1)
+
+		// Check that the route statistics of the protorev module are not nil.
+		routeStats, err := chainANode.QueryProtoRevAllRouteStatistics()
+		s.T().Logf("checking that the protorev module has non-nil route statistics: %x", routeStats)
+		s.Require().NoError(err)
+		s.Require().Len(routeStats, 1)
+		s.Require().Equal(osmomath.OneInt(), routeStats[0].NumberOfTrades)
+		s.Require().Equal([]uint64{swapPoolId1, swapPoolId2, swapPoolId3}, routeStats[0].Route)
+		s.Require().Equal(profits, routeStats[0].Profits)
+	}
+
+	runFuncsInParallelAndBlock([]func(){supplyCheck, numTradesCheck, profits})
+}
+
+func (s *IntegrationTestSuite) StableSwap() {
+	chainAB, chainABNode := s.getChainCfgs()
+
+	index := s.getChainIndex(chainAB)
+
+	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
+
+	const (
+		denomA = "stake"
+		denomB = "uosmo"
+
+		minAmountOut = "1"
+	)
+
+	coinAIn, coinBIn := fmt.Sprintf("20000%s", denomA), fmt.Sprintf("2%s", denomB)
+
+	chainABNode.BankSend(initialization.WalletFeeTokens.String(), sender, config.StableswapWallet[index])
+	chainABNode.BankSend(coinAIn+","+coinBIn, sender, config.StableswapWallet[index])
+
+	s.T().Log("performing swaps")
+	chainABNode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[index]), denomB, config.StableswapWallet[index])
+	chainABNode.SwapExactAmountIn(coinBIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId[index]), denomA, config.StableswapWallet[index])
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
-// migration runs succesfully. It does so by attempting to execute
+// migration runs successfully. It does so by attempting to execute
 // the swap on the pool created pre-upgrade. When a pool is created
 // pre-upgrade, twap records are initialized for a pool. By runnning
 // a swap post-upgrade, we confirm that the geometric twap was initialized
 // correctly and does not cause a chain halt. This test was created
 // in-response to a testnet incident when performing the geometric twap
 // upgrade. Upon adding the migrations logic, the tests began to pass.
-func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
+func (s *IntegrationTestSuite) GeometricTwapMigration() {
 	if s.skipUpgrade {
 		s.T().Skip("Skipping upgrade tests")
 	}
 
-	const (
+	var (
 		// Configurations for tests/e2e/scripts/pool1A.json
 		// This pool gets initialized pre-upgrade.
-		oldPoolId       = 1
 		minAmountOut    = "1"
-		otherDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+		otherDenom      = []string{"ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518", "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B77878"}
 		migrationWallet = "migration"
 	)
 
-	chainA := s.configurer.GetChainConfig(0)
-	node, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	chainAB, chainABNode := s.getChainCfgs()
+	index := s.getChainIndex(chainAB)
+
+	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
 
 	uosmoIn := fmt.Sprintf("1000000%s", "uosmo")
 
-	swapWalletAddr := node.CreateWallet(migrationWallet)
+	swapWalletAddr := chainABNode.CreateWallet(migrationWallet, chainAB)
 
-	node.BankSend(uosmoIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+	chainABNode.BankSend(uosmoIn, sender, swapWalletAddr)
 
 	// Swap to create new twap records on the pool that was created pre-upgrade.
-	node.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", oldPoolId), otherDenom, swapWalletAddr)
+	chainABNode.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradePoolId[index]), otherDenom[index], swapWalletAddr)
 }
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
-// Additionally, it attempst to create a pool with IBC denoms.
-func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
+// Additionally, it attempts to create a pool with IBC denoms.
+func (s *IntegrationTestSuite) IBCTokenTransferAndCreatePool() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainB := s.configurer.GetChainConfig(1)
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
-	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	chainA, chainANode := s.getChainACfgs()
+	chainB, chainBNode := s.getChainBCfgs()
 
-	chainANode, err := chainA.GetDefaultNode()
-	s.NoError(err)
+	ibcSendConfigs := []struct {
+		srcCfg    *chain.Config
+		destCfg   *chain.Config
+		srcNode   *chain.NodeConfig
+		recipient string
+	}{{chainA, chainB, chainANode, chainBNode.PublicAddress}, {chainB, chainA, chainBNode, chainANode.PublicAddress}}
+	tokens := []sdk.Coin{initialization.OsmoToken, initialization.StakeToken}
+
+	unlockFn := chain.IbcLockAddrs([]string{chainANode.PublicAddress, chainBNode.PublicAddress, initialization.ValidatorWalletName})
+	defer unlockFn()
+	var wg sync.WaitGroup
+	wg.Add(4)
+	for i := range ibcSendConfigs {
+		for j := range tokens {
+			cfg := ibcSendConfigs[i]
+			token := tokens[j]
+			go func() {
+				cfg.srcNode.SendIBCNoMutex(cfg.srcCfg, cfg.destCfg, cfg.recipient, token)
+				wg.Done()
+			}()
+		}
+	}
+	wg.Wait() // Wait for all goroutines to finish
+
 	chainANode.CreateBalancerPool("ibcDenomPool.json", initialization.ValidatorWalletName)
 }
 
@@ -172,56 +376,51 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
 // - voting yes on the proposal from the validator wallet
 // - voting no on the proposal from the delegator wallet
 // - ensuring that delegator's wallet overwrites the validator's vote
-func (s *IntegrationTestSuite) TestSuperfluidVoting() {
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.NoError(err)
+func (s *IntegrationTestSuite) SuperfluidVoting() {
+	chainAB, chainABNode := s.getChainCfgs()
 
-	poolId := chainANode.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
+	poolId := chainABNode.CreateBalancerPool("nativeDenomPool.json", initialization.ValidatorWalletName)
 
 	// enable superfluid assets
-	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
+	chainABNode.EnableSuperfluidAsset(chainAB, fmt.Sprintf("gamm/pool/%d", poolId))
 
 	// setup wallets and send gamm tokens to these wallets (both chains)
-	superfluildVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
-	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, superfluildVotingWallet)
-	chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluildVotingWallet)
-	chainA.LatestLockNumber += 1
-	chainANode.SuperfluidDelegate(chainA.LatestLockNumber, chainA.NodeConfigs[1].OperatorAddress, superfluildVotingWallet)
+	superfluidVotingWallet := chainABNode.CreateWallet("TestSuperfluidVoting", chainAB)
+	chainABNode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), initialization.ValidatorWalletName, superfluidVotingWallet)
+	lockId := chainABNode.LockTokens(fmt.Sprintf("%v%s", osmomath.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
+	chainABNode.SuperfluidDelegate(lockId, chainABNode.OperatorAddress, superfluidVotingWallet)
 
-	// create a text prop, deposit and vote yes
-	chainANode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
-	chainA.LatestProposalNumber += 1
-	chainANode.DepositProposal(chainA.LatestProposalNumber, false)
-	for _, node := range chainA.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
-	}
+	// create a text prop and vote yes
+	propNumber := chainABNode.SubmitTextProposal("superfluid vote overwrite test", true)
+
+	chain.AllValsVoteOnProposal(chainAB, propNumber)
 
 	// set delegator vote to no
-	chainANode.VoteNoProposal(superfluildVotingWallet, chainA.LatestProposalNumber)
+	chainABNode.VoteNoProposal(superfluidVotingWallet, propNumber)
 
 	s.Eventually(
 		func() bool {
-			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := chainANode.QueryPropTally(chainA.LatestProposalNumber)
+			propTally, err := chainABNode.QueryPropTally(propNumber)
 			if err != nil {
 				return false
 			}
-			if abstainTotal.Int64()+noTotal.Int64()+noWithVetoTotal.Int64()+yesTotal.Int64() <= 0 {
+			if propTally.Abstain.Int64()+propTally.No.Int64()+propTally.NoWithVeto.Int64()+propTally.Yes.Int64() <= 0 {
 				return false
 			}
 			return true
 		},
-		1*time.Minute,
+		govPropTimeout,
 		10*time.Millisecond,
 		"Osmosis node failed to retrieve prop tally",
 	)
-	noTotal, _, _, _, _ := chainANode.QueryPropTally(chainA.LatestProposalNumber)
-	noTotalFinal, err := strconv.Atoi(noTotal.String())
+	propTally, err := chainABNode.QueryPropTally(propNumber)
+	s.Require().NoError(err)
+	noTotalFinal, err := strconv.Atoi(propTally.No.String())
 	s.NoError(err)
 
 	s.Eventually(
 		func() bool {
-			intAccountBalance, err := chainANode.QueryIntermediaryAccount(fmt.Sprintf("gamm/pool/%d", poolId), chainA.NodeConfigs[1].OperatorAddress)
+			intAccountBalance, err := chainABNode.QueryIntermediaryAccount(fmt.Sprintf("gamm/pool/%d", poolId), chainABNode.OperatorAddress)
 			s.Require().NoError(err)
 			if err != nil {
 				return false
@@ -238,188 +437,192 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	)
 }
 
-// Copy a file from A to B with io.Copy
-func copyFile(a, b string) error {
-	source, err := os.Open(a)
-	if err != nil {
-		return err
-	}
-	defer source.Close()
-	destination, err := os.Create(b)
-	if err != nil {
-		return err
-	}
-	defer destination.Close()
-	_, err = io.Copy(destination, source)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
+func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainB := s.configurer.GetChainConfig(1)
+	chainA, chainANode := s.getChainACfgs()
+	chainB, chainBNode := s.getChainBCfgs()
 
-	node, err := chainA.GetDefaultNode()
-	s.NoError(err)
+	receiver := chainBNode.GetWallet(initialization.ValidatorWalletName)
 
-	osmoSupply, err := node.QuerySupplyOf("uosmo")
-	s.NoError(err)
+	// If the RL param is already set. Remember it to set it back at the end
+	param := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	fmt.Println("param", param)
 
-	f, err := osmoSupply.ToDec().Float64()
-	s.NoError(err)
+	osmoSupply, err := chainANode.QuerySupplyOf("uosmo")
+	s.Require().NoError(err)
+
+	f, err := osmoSupply.ToLegacyDec().Float64()
+	s.Require().NoError(err)
 
 	over := f * 0.02
 
+	paths := fmt.Sprintf(`{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] }`, initialization.OsmoToken.Denom)
+
 	// Sending >1%
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
+	fmt.Println("Sending >1%")
+	chainANode.SendIBC(chainA, chainB, receiver, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
-	// copy the contract from x/rate-limit/testdata/
-	wd, err := os.Getwd()
-	s.NoError(err)
-	// co up two levels
-	projectDir := filepath.Dir(filepath.Dir(wd))
-	fmt.Println(wd, projectDir)
-	err = copyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
-	s.NoError(err)
-
-	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-	chainA.LatestCodeId = int(node.QueryLatestWasmCodeID())
-	node.InstantiateWasmContract(
-		strconv.Itoa(chainA.LatestCodeId),
-		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] } ] }`, node.PublicAddress, node.PublicAddress, initialization.OsmoToken.Denom),
-		initialization.ValidatorWalletName)
-
-	contracts, err := node.QueryContractsFromId(chainA.LatestCodeId)
-	s.NoError(err)
-	s.Require().Len(contracts, 1, "Wrong number of contracts for the rate limiter")
-
-	proposal := paramsutils.ParamChangeProposalJSON{
-		Title:       "Param Change",
-		Description: "Changing the rate limit contract param",
-		Changes: paramsutils.ParamChangesJSON{
-			paramsutils.ParamChangeJSON{
-				Subspace: ibcratelimittypes.ModuleName,
-				Key:      "contract",
-				Value:    []byte(fmt.Sprintf(`"%s"`, contracts[0])),
-			},
-		},
-		Deposit: "625000000uosmo",
-	}
-	proposalJson, err := json.Marshal(proposal)
-	s.NoError(err)
-
-	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
-	chainA.LatestProposalNumber += 1
-
-	for _, n := range chainA.NodeConfigs {
-		n.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
-	}
-
-	// The value is returned as a string, so we have to unmarshal twice
-	type Params struct {
-		Key      string `json:"key"`
-		Subspace string `json:"subspace"`
-		Value    string `json:"value"`
-	}
+	contract, err := chainANode.SetupRateLimiting(paths, chainANode.PublicAddress, chainA)
+	s.Require().NoError(err)
 
 	s.Eventually(
 		func() bool {
-			var params Params
-			node.QueryParams(ibcratelimittypes.ModuleName, "contract", &params)
-			var val string
-			err := json.Unmarshal([]byte(params.Value), &val)
-			if err != nil {
-				return false
-			}
-			return val == contracts[0]
+			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+			return strings.Contains(val, contract)
 		},
-		1*time.Minute,
+		govPropTimeout,
 		10*time.Millisecond,
 		"Osmosis node failed to retrieve params",
 	)
 
 	// Sending <1%. Should work
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
+	fmt.Println("Sending <1%. Should work")
+	chainANode.SendIBC(chainA, chainB, receiver, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
 	// Sending >1%. Should fail
-	node.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
+	fmt.Println("Sending >1%. Should fail")
+	chainANode.FailIBCTransfer(initialization.ValidatorWalletName, receiver, fmt.Sprintf("%duosmo", int(over)))
 
 	// Removing the rate limit so it doesn't affect other tests
-	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
+	chainANode.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
+	// reset the param to the original contract if it existed
+	if param != "" {
+		err = chainANode.ParamChangeProposal(
+			ibcratelimittypes.ModuleName,
+			string(ibcratelimittypes.KeyContractAddress),
+			[]byte(param),
+			chainA,
+		)
+		s.Require().NoError(err)
+		s.Eventually(func() bool {
+			val := chainANode.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+			return strings.Contains(val, param)
+		}, time.Second*30, 10*time.Millisecond)
+	}
 }
 
-func (s *IntegrationTestSuite) TestLargeWasmUpload() {
-	chainA := s.configurer.GetChainConfig(0)
-	node, err := chainA.GetDefaultNode()
-	s.NoError(err)
-	node.StoreWasmCode("bytecode/large.wasm", initialization.ValidatorWalletName)
+func (s *IntegrationTestSuite) LargeWasmUpload() {
+	_, chainNode := s.getChainCfgs()
+	validatorAddr := chainNode.GetWallet(initialization.ValidatorWalletName)
+	chainNode.StoreWasmCode("bytecode/large.wasm", validatorAddr)
 }
 
-func (s *IntegrationTestSuite) TestIBCWasmHooks() {
+func (s *IntegrationTestSuite) IBCWasmHooks() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainB := s.configurer.GetChainConfig(1)
+	chainA, chainANode := s.getChainACfgs()
+	_, chainBNode := s.getChainBCfgs()
 
-	nodeA, err := chainA.GetDefaultNode()
-	s.NoError(err)
-	nodeB, err := chainB.GetDefaultNode()
-	s.NoError(err)
-
-	// copy the contract from x/rate-limit/testdata/
-	wd, err := os.Getwd()
-	s.NoError(err)
-	// co up two levels
-	projectDir := filepath.Dir(filepath.Dir(wd))
-	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
-	s.NoError(err)
-
-	nodeA.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
-	chainA.LatestCodeId = int(nodeA.QueryLatestWasmCodeID())
-	nodeA.InstantiateWasmContract(
-		strconv.Itoa(chainA.LatestCodeId),
-		`{"count": 0}`,
-		initialization.ValidatorWalletName)
-
-	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
-	s.NoError(err)
-	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
-	contractAddr := contracts[0]
+	contractAddr := s.UploadAndInstantiateCounter(chainA)
 
 	transferAmount := int64(10)
-	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
-	nodeB.SendIBCTransfer(validatorAddr, contractAddr, fmt.Sprintf("%duosmo", transferAmount),
-		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
+	validatorAddr := chainBNode.GetWallet(initialization.ValidatorWalletName)
+	fmt.Println("Sending IBC transfer IBCWasmHooks")
+	coin := sdk.NewCoin("uosmo", osmomath.NewInt(transferAmount))
+	chainBNode.SendIBCTransfer(chainA, validatorAddr, contractAddr,
+		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr), coin)
 
 	// check the balance of the contract
-	s.Eventually(func() bool {
-		balance, err := nodeA.QueryBalances(contractAddr)
-		s.Require().NoError(err)
-		if len(balance) == 0 {
-			return false
-		}
-		return balance[0].Amount.Int64() == transferAmount
-	},
-		1*time.Minute,
-		10*time.Millisecond,
-	)
+	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
+	ibcDenom := denomTrace.IBCDenom()
+	s.CallCheckBalance(chainANode, contractAddr, ibcDenom, transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
 
 	var response map[string]interface{}
-	s.Eventually(func() bool {
-		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
-		totalFunds := response["total_funds"].([]interface{})[0]
-		amount := totalFunds.(map[string]interface{})["amount"].(string)
-		denom := totalFunds.(map[string]interface{})["denom"].(string)
+	s.Require().Eventually(func() bool {
+		response, err = chainANode.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
+		if err != nil {
+			return false
+		}
+
+		totalFundsIface, ok := response["total_funds"].([]interface{})
+		if !ok || len(totalFundsIface) == 0 {
+			return false
+		}
+
+		totalFunds, ok := totalFundsIface[0].(map[string]interface{})
+		if !ok {
+			return false
+		}
+
+		amount, ok := totalFunds["amount"].(string)
+		if !ok {
+			return false
+		}
+
+		denom, ok := totalFunds["denom"].(string)
+		if !ok {
+			return false
+		}
+
 		// check if denom contains "uosmo"
-		return err == nil && amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
+		return amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
+	},
+
+		15*time.Second,
+		10*time.Millisecond,
+	)
+}
+
+// TestPacketForwarding sends a packet from chainA to chainB, and forwards it
+// back to chainA with a custom memo to execute the counter contract on chain A
+func (s *IntegrationTestSuite) PacketForwarding() {
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	}
+	chainA, chainANode := s.getChainACfgs()
+	chainB, _ := s.getChainBCfgs()
+
+	// Instantiate the counter contract on chain A
+	contractAddr := s.UploadAndInstantiateCounter(chainA)
+
+	transferAmount := int64(10)
+	validatorAddr := chainANode.GetWallet(initialization.ValidatorWalletName)
+	// Specify that the counter contract should be called on chain A when the packet is received
+	contractCallMemo := []byte(fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
+	// Generate the forward metadata
+	forwardMetadata := packetforwardingtypes.ForwardMetadata{
+		Receiver: contractAddr,
+		Port:     "transfer",
+		Channel:  "channel-0",
+		Next:     packetforwardingtypes.NewJSONObject(false, contractCallMemo, orderedmap.OrderedMap{}), // The packet sent to chainA will have this memo
+	}
+	memoData := packetforwardingtypes.PacketMetadata{Forward: &forwardMetadata}
+	forwardMemo, err := json.Marshal(memoData)
+	s.NoError(err)
+	// Send the transfer from chainA to chainB. ChainB will parse the memo and forward the packet back to chainA
+	coin := sdk.NewCoin("uosmo", osmomath.NewInt(transferAmount))
+	chainANode.SendIBCTransfer(chainB, validatorAddr, validatorAddr, string(forwardMemo), coin)
+
+	// check the balance of the contract
+	s.CallCheckBalance(chainANode, contractAddr, "uosmo", transferAmount)
+
+	// Getting the sender as set by PFM
+	senderStr := fmt.Sprintf("channel-0/%s", validatorAddr)
+	senderHash32 := address.Hash(packetforwardingtypes.ModuleName, []byte(senderStr)) // typo intended
+	sender := sdk.AccAddress(senderHash32[:20])
+	bech32Prefix := "osmo"
+	pfmSender, err := sdk.Bech32ifyAddressBytes(bech32Prefix, sender)
+	s.Require().NoError(err)
+
+	// sender wasm addr
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", pfmSender, "osmo")
+	s.Require().NoError(err)
+
+	s.Require().Eventually(func() bool {
+		response, err := chainANode.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
+		if err != nil {
+			return false
+		}
+		countValue, ok := response["count"].(float64)
+		if !ok {
+			return false
+		}
+		return countValue == 0
 	},
 		15*time.Second,
 		10*time.Millisecond,
@@ -427,46 +630,52 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 }
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
-func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
+func (s *IntegrationTestSuite) AddToExistingLockPostUpgrade() {
 	if s.skipUpgrade {
 		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
 	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.NoError(err)
+
+	chainAB, chainABNode := s.getChainCfgs()
+	index := s.getChainIndex(chainAB)
+
 	// ensure we can add to existing locks and superfluid locks that existed pre upgrade on chainA
 	// we use the hardcoded gamm/pool/1 and these specific wallet names to match what was created pre upgrade
-	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.GetWallet("lockup-wallet"), chainANode.GetWallet("lockup-wallet-superfluid")
-	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletAddr)
-	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletSuperfluidAddr)
+	preUpgradePoolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId[index])
+
+	lockupWalletAddr, lockupWalletSuperfluidAddr := chainABNode.GetWallet("lockup-wallet"), chainABNode.GetWallet("lockup-wallet-superfluid")
+	chainABNode.AddToExistingLock(osmomath.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletAddr, 1)
+	chainABNode.AddToExistingLock(osmomath.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletSuperfluidAddr, 2)
 }
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
-func (s *IntegrationTestSuite) TestAddToExistingLock() {
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.NoError(err)
+func (s *IntegrationTestSuite) AddToExistingLock() {
+	chainAB, chainABNode := s.getChainCfgs()
+
+	funder := chainABNode.GetWallet(initialization.ValidatorWalletName)
 	// ensure we can add to new locks and superfluid locks
 	// create pool and enable superfluid assets
-	poolId := chainANode.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
-	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
+	poolId := chainABNode.CreateBalancerPool("nativeDenomPool.json", funder)
+	chainABNode.EnableSuperfluidAsset(chainAB, fmt.Sprintf("gamm/pool/%d", poolId))
 
 	// setup wallets and send gamm tokens to these wallets on chainA
-	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.CreateWallet("TestAddToExistingLock"), chainANode.CreateWallet("TestAddToExistingLockSuperfluid")
-	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, lockupWalletAddr)
-	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, lockupWalletSuperfluidAddr)
+	gammShares := fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId)
+	fundTokens := []string{gammShares, initialization.WalletFeeTokens.String()}
+	lockupWalletAddr := chainABNode.CreateWalletAndFundFrom("TestAddToExistingLock", funder, fundTokens, chainAB)
+	lockupWalletSuperfluidAddr := chainABNode.CreateWalletAndFundFrom("TestAddToExistingLockSuperfluid", funder, fundTokens, chainAB)
 
 	// ensure we can add to new locks and superfluid locks on chainA
-	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
+	chainABNode.LockAndAddToExistingLock(chainAB, osmomath.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
 }
 
 // TestArithmeticTWAP tests TWAP by creating a pool, performing a swap.
 // These two operations should create TWAP records.
 // Then, we wait until the epoch for the records to be pruned.
-// The records are guranteed to be pruned at the next epoch
+// The records are guaranteed to be pruned at the next epoch
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
-func (s *IntegrationTestSuite) TestArithmeticTWAP() {
+func (s *IntegrationTestSuite) ArithmeticTWAP() {
+	s.T().Skip("TODO: investigate further: https://github.com/osmosis-labs/osmosis/issues/4342")
+
 	const (
 		poolFile   = "nativeDenomThreeAssetPool.json"
 		walletName = "arithmetic-twap-wallet"
@@ -482,69 +691,67 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 
 	coinAIn, coinBIn, coinCIn := fmt.Sprintf("2000000%s", denomA), fmt.Sprintf("2000000%s", denomB), fmt.Sprintf("2000000%s", denomC)
 
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.NoError(err)
+	chainAB, chainABNode := s.getChainCfgs()
+	sender := chainABNode.GetWallet(initialization.ValidatorWalletName)
 
 	// Triggers the creation of TWAP records.
-	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
-	swapWalletAddr := chainANode.CreateWallet(walletName)
+	poolId := chainABNode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
+	swapWalletAddr := chainABNode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()}, chainAB)
 
-	timeBeforeSwap := chainANode.QueryLatestBlockTime()
+	timeBeforeSwap := chainABNode.QueryLatestBlockTime()
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforeSwap) is not equal to the block time.
-	chainA.WaitForNumHeights(1)
+	chainAB.WaitForNumHeights(2)
 
 	s.T().Log("querying for the first TWAP to now before swap")
-	twapFromBeforeSwapToBeforeSwapOneAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
+	twapFromBeforeSwapToBeforeSwapOneAB, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
 	s.Require().NoError(err)
-	twapFromBeforeSwapToBeforeSwapOneBC, err := chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap)
+	twapFromBeforeSwapToBeforeSwapOneBC, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap)
 	s.Require().NoError(err)
-	twapFromBeforeSwapToBeforeSwapOneCA, err := chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
+	twapFromBeforeSwapToBeforeSwapOneCA, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
 	s.Require().NoError(err)
 
-	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
-	chainANode.BankSend(coinBIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
-	chainANode.BankSend(coinCIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+	swapAmt := coinAIn + "," + coinBIn + "," + coinCIn
+	chainABNode.BankSend(swapAmt, sender, swapWalletAddr)
 
 	s.T().Log("querying for the second TWAP to now before swap, must equal to first")
-	twapFromBeforeSwapToBeforeSwapTwoAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap.Add(50*time.Millisecond))
+	twapFromBeforeSwapToBeforeSwapTwoAB, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap.Add(50*time.Millisecond))
 	s.Require().NoError(err)
-	twapFromBeforeSwapToBeforeSwapTwoBC, err := chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap.Add(50*time.Millisecond))
+	twapFromBeforeSwapToBeforeSwapTwoBC, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap.Add(50*time.Millisecond))
 	s.Require().NoError(err)
-	twapFromBeforeSwapToBeforeSwapTwoCA, err := chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap.Add(50*time.Millisecond))
+	twapFromBeforeSwapToBeforeSwapTwoCA, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap.Add(50*time.Millisecond))
 	s.Require().NoError(err)
 
 	// Since there were no swaps between the two queries, the TWAPs should be the same.
-	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneAB, twapFromBeforeSwapToBeforeSwapTwoAB, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneBC, twapFromBeforeSwapToBeforeSwapTwoBC, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneCA, twapFromBeforeSwapToBeforeSwapTwoCA, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneAB, twapFromBeforeSwapToBeforeSwapTwoAB, osmomath.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneBC, twapFromBeforeSwapToBeforeSwapTwoBC, osmomath.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneCA, twapFromBeforeSwapToBeforeSwapTwoCA, osmomath.NewDecWithPrec(1, 3))
 
 	s.T().Log("performing swaps")
-	chainANode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", poolId), denomB, swapWalletAddr)
-	chainANode.SwapExactAmountIn(coinBIn, minAmountOut, fmt.Sprintf("%d", poolId), denomC, swapWalletAddr)
-	chainANode.SwapExactAmountIn(coinCIn, minAmountOut, fmt.Sprintf("%d", poolId), denomA, swapWalletAddr)
+	chainABNode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", poolId), denomB, swapWalletAddr)
+	chainABNode.SwapExactAmountIn(coinBIn, minAmountOut, fmt.Sprintf("%d", poolId), denomC, swapWalletAddr)
+	chainABNode.SwapExactAmountIn(coinCIn, minAmountOut, fmt.Sprintf("%d", poolId), denomA, swapWalletAddr)
 
 	keepPeriodCountDown := time.NewTimer(initialization.TWAPPruningKeepPeriod)
 
 	// Make sure that we are still producing blocks and move far enough for the swap TWAP record to be created
 	// so that we can measure start time post-swap (timeAfterSwap).
-	chainA.WaitForNumHeights(2)
+	chainAB.WaitForNumHeights(2)
 
 	// Measure time after swap and wait for a few blocks to be produced.
 	// This is needed to ensure that start time is before the block time
 	// when we query for TWAP.
-	timeAfterSwap := chainANode.QueryLatestBlockTime()
-	chainA.WaitForNumHeights(2)
+	timeAfterSwap := chainABNode.QueryLatestBlockTime()
+	chainAB.WaitForNumHeights(2)
 
 	// TWAP "from before to after swap" should be different from "from before to before swap"
 	// because swap introduces a new record with a different spot price.
 	s.T().Log("querying for the TWAP from before swap to now after swap")
-	twapFromBeforeSwapToAfterSwapAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
+	twapFromBeforeSwapToAfterSwapAB, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
 	s.Require().NoError(err)
-	twapFromBeforeSwapToAfterSwapBC, err := chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap)
+	twapFromBeforeSwapToAfterSwapBC, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap)
 	s.Require().NoError(err)
-	twapFromBeforeSwapToAfterSwapCA, err := chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
+	twapFromBeforeSwapToAfterSwapCA, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
 	s.Require().NoError(err)
 	// We had a swap of 2000000stake for some amount of uion,
 	// 2000000uion for some amount of uosmo, and
@@ -557,11 +764,11 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 	s.Require().True(twapFromBeforeSwapToAfterSwapCA.GT(twapFromBeforeSwapToBeforeSwapOneCA))
 
 	s.T().Log("querying for the TWAP from after swap to now")
-	twapFromAfterToNowAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeAfterSwap)
+	twapFromAfterToNowAB, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeAfterSwap)
 	s.Require().NoError(err)
-	twapFromAfterToNowBC, err := chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeAfterSwap)
+	twapFromAfterToNowBC, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeAfterSwap)
 	s.Require().NoError(err)
-	twapFromAfterToNowCA, err := chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeAfterSwap)
+	twapFromAfterToNowCA, err := chainABNode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeAfterSwap)
 	s.Require().NoError(err)
 	// Because twapFromAfterToNow has a higher time weight for the after swap period,
 	// we expect the results to be flipped from the previous comparison to twapFromBeforeSwapToBeforeSwapOne
@@ -570,11 +777,11 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 	s.Require().True(twapFromBeforeSwapToAfterSwapCA.LT(twapFromAfterToNowCA))
 
 	s.T().Log("querying for the TWAP from after swap to after swap + 10ms")
-	twapAfterSwapBeforePruning10MsAB, err := chainANode.QueryArithmeticTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	twapAfterSwapBeforePruning10MsAB, err := chainABNode.QueryArithmeticTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
 	s.Require().NoError(err)
-	twapAfterSwapBeforePruning10MsBC, err := chainANode.QueryArithmeticTwap(poolId, denomB, denomC, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	twapAfterSwapBeforePruning10MsBC, err := chainABNode.QueryArithmeticTwap(poolId, denomB, denomC, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
 	s.Require().NoError(err)
-	twapAfterSwapBeforePruning10MsCA, err := chainANode.QueryArithmeticTwap(poolId, denomC, denomA, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	twapAfterSwapBeforePruning10MsCA, err := chainABNode.QueryArithmeticTwap(poolId, denomC, denomA, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
 	s.Require().NoError(err)
 	// Again, because twapAfterSwapBeforePruning10Ms has a higher time weight for the after swap period between the two,
 	// we expect no change in the inequality
@@ -584,9 +791,9 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 
 	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
 	// There are potential rounding errors requiring us to approximate the comparison.
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsAB, twapFromAfterToNowAB, sdk.NewDecWithPrec(2, 3))
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsBC, twapFromAfterToNowBC, sdk.NewDecWithPrec(2, 3))
-	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsCA, twapFromAfterToNowCA, sdk.NewDecWithPrec(2, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsAB, twapFromAfterToNowAB, osmomath.NewDecWithPrec(2, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsBC, twapFromAfterToNowBC, osmomath.NewDecWithPrec(2, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsCA, twapFromAfterToNowCA, osmomath.NewDecWithPrec(2, 3))
 
 	// Make sure that the pruning keep period has passed.
 	s.T().Logf("waiting for pruning keep period of (%.f) seconds to pass", initialization.TWAPPruningKeepPeriod.Seconds())
@@ -594,24 +801,24 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 
 	// Epoch end triggers the prunning of TWAP records.
 	// Records before swap should be pruned.
-	chainA.WaitForNumEpochs(1, epochIdentifier)
+	chainAB.WaitForNumEpochs(1, epochIdentifier)
 
 	// We should not be able to get TWAP before swap since it should have been pruned.
 	s.T().Log("pruning is now complete, querying TWAP for period that should be pruned")
-	_, err = chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
+	_, err = chainABNode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
 	s.Require().ErrorContains(err, "too old")
-	_, err = chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap)
+	_, err = chainABNode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap)
 	s.Require().ErrorContains(err, "too old")
-	_, err = chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
+	_, err = chainABNode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
 	s.Require().ErrorContains(err, "too old")
 
 	// TWAPs for the same time range should be the same when we query for them before and after pruning.
 	s.T().Log("querying for TWAP for period before pruning took place but should not have been pruned")
-	twapAfterPruning10msAB, err := chainANode.QueryArithmeticTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	twapAfterPruning10msAB, err := chainABNode.QueryArithmeticTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
 	s.Require().NoError(err)
-	twapAfterPruning10msBC, err := chainANode.QueryArithmeticTwap(poolId, denomB, denomC, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	twapAfterPruning10msBC, err := chainABNode.QueryArithmeticTwap(poolId, denomB, denomC, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
 	s.Require().NoError(err)
-	twapAfterPruning10msCA, err := chainANode.QueryArithmeticTwap(poolId, denomC, denomA, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	twapAfterPruning10msCA, err := chainABNode.QueryArithmeticTwap(poolId, denomC, denomA, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
 	s.Require().NoError(err)
 	s.Require().Equal(twapAfterSwapBeforePruning10MsAB, twapAfterPruning10msAB)
 	s.Require().Equal(twapAfterSwapBeforePruning10MsBC, twapAfterPruning10msBC)
@@ -619,129 +826,33 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 
 	// TWAP "from after to after swap" should equal to "from after swap to after pruning"
 	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
-	timeAfterPruning := chainANode.QueryLatestBlockTime()
+	timeAfterPruning := chainABNode.QueryLatestBlockTime()
 	s.T().Log("querying for TWAP from after swap to after pruning")
-	twapToNowPostPruningAB, err := chainANode.QueryArithmeticTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterPruning)
+	twapToNowPostPruningAB, err := chainABNode.QueryArithmeticTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterPruning)
 	s.Require().NoError(err)
-	twapToNowPostPruningBC, err := chainANode.QueryArithmeticTwap(poolId, denomB, denomC, timeAfterSwap, timeAfterPruning)
+	twapToNowPostPruningBC, err := chainABNode.QueryArithmeticTwap(poolId, denomB, denomC, timeAfterSwap, timeAfterPruning)
 	s.Require().NoError(err)
-	twapToNowPostPruningCA, err := chainANode.QueryArithmeticTwap(poolId, denomC, denomA, timeAfterSwap, timeAfterPruning)
+	twapToNowPostPruningCA, err := chainABNode.QueryArithmeticTwap(poolId, denomC, denomA, timeAfterSwap, timeAfterPruning)
 	s.Require().NoError(err)
 	// There are potential rounding errors requiring us to approximate the comparison.
-	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningAB, twapAfterSwapBeforePruning10MsAB, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningBC, twapAfterSwapBeforePruning10MsBC, sdk.NewDecWithPrec(1, 3))
-	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningCA, twapAfterSwapBeforePruning10MsCA, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningAB, twapAfterSwapBeforePruning10MsAB, osmomath.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningBC, twapAfterSwapBeforePruning10MsBC, osmomath.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapToNowPostPruningCA, twapAfterSwapBeforePruning10MsCA, osmomath.NewDecWithPrec(1, 3))
 }
 
-func (s *IntegrationTestSuite) TestStateSync() {
-	if s.skipStateSync {
-		s.T().Skip()
-	}
+func (s *IntegrationTestSuite) ExpeditedProposals() {
+	chainAB, chainABNode := s.getChainCfgs()
 
-	chainA := s.configurer.GetChainConfig(0)
-	runningNode, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
+	propNumber := chainABNode.SubmitTextProposal("expedited text proposal", true)
 
-	persistentPeers := chainA.GetPersistentPeers()
-
-	stateSyncHostPort := fmt.Sprintf("%s:26657", runningNode.Name)
-	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
-
-	// get trust height and trust hash.
-	trustHeight, err := runningNode.QueryCurrentHeight()
-	s.Require().NoError(err)
-
-	trustHash, err := runningNode.QueryHashFromBlock(trustHeight)
-	s.Require().NoError(err)
-
-	stateSynchingNodeConfig := &initialization.NodeConfig{
-		Name:               "state-sync",
-		Pruning:            "default",
-		PruningKeepRecent:  "0",
-		PruningInterval:    "0",
-		SnapshotInterval:   1500,
-		SnapshotKeepRecent: 2,
-	}
-
-	tempDir, err := os.MkdirTemp("", "osmosis-e2e-statesync-")
-	s.Require().NoError(err)
-
-	// configure genesis and config files for the state-synchin node.
-	nodeInit, err := initialization.InitSingleNode(
-		chainA.Id,
-		tempDir,
-		filepath.Join(runningNode.ConfigDir, "config", "genesis.json"),
-		stateSynchingNodeConfig,
-		time.Duration(chainA.VotingPeriod),
-		// time.Duration(chainA.ExpeditedVotingPeriod),
-		trustHeight,
-		trustHash,
-		stateSyncRPCServers,
-		persistentPeers,
-	)
-	s.Require().NoError(err)
-
-	stateSynchingNode := chainA.CreateNode(nodeInit)
-
-	// ensure that the running node has snapshots at a height > trustHeight.
-	hasSnapshotsAvailable := func(syncInfo coretypes.SyncInfo) bool {
-		snapshotHeight := runningNode.SnapshotInterval
-		if uint64(syncInfo.LatestBlockHeight) < snapshotHeight {
-			s.T().Logf("snapshot height is not reached yet, current (%d), need (%d)", syncInfo.LatestBlockHeight, snapshotHeight)
-			return false
-		}
-
-		snapshots, err := runningNode.QueryListSnapshots()
-		s.Require().NoError(err)
-
-		for _, snapshot := range snapshots {
-			if snapshot.Height > uint64(trustHeight) {
-				s.T().Log("found state sync snapshot after trust height")
-				return true
-			}
-		}
-		s.T().Log("state sync snashot after trust height is not found")
-		return false
-	}
-	runningNode.WaitUntil(hasSnapshotsAvailable)
-
-	// start the state synchin node.
-	err = stateSynchingNode.Run()
-	s.Require().NoError(err)
-
-	// ensure that the state synching node cathes up to the running node.
-	s.Require().Eventually(func() bool {
-		stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
-		s.Require().NoError(err)
-		runningNodeHeight, err := runningNode.QueryCurrentHeight()
-		s.Require().NoError(err)
-		return stateSyncNodeHeight == runningNodeHeight
-	},
-		3*time.Minute,
-		500*time.Millisecond,
-	)
-
-	// stop the state synching node.
-	err = chainA.RemoveNode(stateSynchingNode.Name)
-	s.Require().NoError(err)
-}
-
-func (s *IntegrationTestSuite) TestExpeditedProposals() {
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.NoError(err)
-
-	chainANode.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
-	chainA.LatestProposalNumber += 1
-	chainANode.DepositProposal(chainA.LatestProposalNumber, true)
 	totalTimeChan := make(chan time.Duration, 1)
-	go chainANode.QueryPropStatusTimed(chainA.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
-	for _, node := range chainA.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
-	}
+	go chainABNode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
+
+	chain.AllValsVoteOnProposal(chainAB, propNumber)
+
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	var elapsed time.Duration
-	timeoutPeriod := time.Duration(2 * time.Minute)
+	timeoutPeriod := 2 * govPropTimeout
 	select {
 	case elapsed = <-totalTimeChan:
 	case <-time.After(timeoutPeriod):
@@ -750,7 +861,7 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 	}
 
 	// compare the time it took to reach pass status to expected expedited voting period
-	expeditedVotingPeriodDuration := time.Duration(chainA.ExpeditedVotingPeriod * float32(time.Second))
+	expeditedVotingPeriodDuration := time.Duration(chainAB.ExpeditedVotingPeriod * float32(time.Second))
 	timeDelta := elapsed - expeditedVotingPeriodDuration
 	// ensure delta is within two seconds of expected time
 	s.Require().Less(timeDelta, 2*time.Second)
@@ -765,7 +876,10 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 // Assuming base asset is uosmo, the initial twap is 2
 // Upon swapping 1_000_000 uosmo for stake, supply changes, making uosmo less expensive.
 // As a result of the swap, twap changes to 0.5.
-func (s *IntegrationTestSuite) TestGeometricTWAP() {
+// Note: do not use chain B in this test as it has taker fee set.
+// This TWAP test depends on specific values that might be affected
+// by the taker fee.
+func (s *IntegrationTestSuite) GeometricTWAP() {
 	const (
 		// This pool contains 1_000_000 uosmo and 2_000_000 stake.
 		// Equals weights.
@@ -776,43 +890,48 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 		denomB = "stake" // 2_000_000 stake
 
 		minAmountOut = "1"
-
-		epochIdentifier = "day"
 	)
 
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.NoError(err)
+	// Note: use chain A specifically as this is the chain where we do not
+	// set taker fee.
+	chainA, chainANode := s.getChainACfgs()
+
+	sender := chainANode.GetWallet(initialization.ValidatorWalletName)
 
 	// Triggers the creation of TWAP records.
 	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
-	swapWalletAddr := chainANode.CreateWallet(walletName)
+	swapWalletAddr := chainANode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()}, chainA)
 
 	// We add 5 ms to avoid landing directly on block time in twap. If block time
 	// is provided as start time, the latest spot price is used. Otherwise
 	// interpolation is done.
 	timeBeforeSwapPlus5ms := chainANode.QueryLatestBlockTime().Add(5 * time.Millisecond)
+	s.T().Log("geometric twap, start time ", timeBeforeSwapPlus5ms.Unix())
+
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforeSwap) is not equal to the block time.
-	chainA.WaitForNumHeights(1)
+	chainA.WaitForNumHeights(2)
 
 	s.T().Log("querying for the first geometric TWAP to now (before swap)")
 	// Assume base = uosmo, quote = stake
 	// At pool creation time, the twap should be:
 	// quote assset supply / base asset supply = 2_000_000 / 1_000_000 = 2
+	curBlockTime := chainANode.QueryLatestBlockTime().Unix()
+	s.T().Log("geometric twap, end time ", curBlockTime)
+
 	initialTwapBOverA, err := chainANode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeBeforeSwapPlus5ms)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewDec(2), initialTwapBOverA)
+	s.Require().Equal(osmomath.NewDec(2), initialTwapBOverA)
 
 	// Assume base = stake, quote = uosmo
 	// At pool creation time, the twap should be:
 	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	initialTwapAOverB, err := chainANode.QueryGeometricTwapToNow(poolId, denomB, denomA, timeBeforeSwapPlus5ms)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewDecWithPrec(5, 1), initialTwapAOverB)
+	s.Require().Equal(osmomath.NewDecWithPrec(5, 1), initialTwapAOverB)
 
 	coinAIn := fmt.Sprintf("1000000%s", denomA)
-	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+	chainANode.BankSend(coinAIn, sender, swapWalletAddr)
 
 	s.T().Logf("performing swap of %s for %s", coinAIn, denomB)
 
@@ -829,7 +948,7 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 	timeAfterSwap := chainANode.QueryLatestBlockTime()
 	chainA.WaitForNumHeights(1)
 	timeAfterSwapPlus1Height := chainANode.QueryLatestBlockTime()
-
+	chainA.WaitForNumHeights(1)
 	s.T().Log("querying for the TWAP from after swap to now")
 	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(poolId, denomA, denomB, timeAfterSwap, timeAfterSwapPlus1Height)
 	s.Require().NoError(err)
@@ -846,5 +965,16 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 	// uatom = 1_000_000
 	// uosmo = 2_000_000
 	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
-	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
+	osmoassert.DecApproxEq(s.T(), osmomath.NewDecWithPrec(5, 1), afterSwapTwapBOverA, osmomath.NewDecWithPrec(1, 2))
+}
+
+// Only set taker fee on chain B as some tests depend on the exact swap values.
+// For example, Geometric twap. As a result, we use chain A for these tests.
+//
+// Similarly, CL tests depend on taker fee being set.
+// As a result, we deterministically configure chain B's taker fee prior to running CL tests.
+func (s *IntegrationTestSuite) SetDefaultTakerFeeChainB() {
+	chainB, chainBNode := s.getChainBCfgs()
+	err := chainBNode.ParamChangeProposal("poolmanager", string(poolmanagertypes.KeyDefaultTakerFee), json.RawMessage(`"0.001500000000000000"`), chainB)
+	s.Require().NoError(err)
 }

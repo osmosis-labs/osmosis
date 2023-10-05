@@ -3,6 +3,7 @@ package types
 import (
 	fmt "fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -30,15 +31,15 @@ func (m MsgSetValidatorSetPreference) Type() string  { return TypeMsgSetValidato
 func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid delegator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid delegator address (%s)", err)
 	}
 
-	totalWeight := sdk.ZeroDec()
+	totalWeight := osmomath.ZeroDec()
 	validatorAddrs := []string{}
 	for _, validator := range m.Preferences {
 		_, err := sdk.ValAddressFromBech32(validator.ValOperAddress)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid validator address (%s)", err)
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid validator address (%s)", err)
 		}
 
 		// all the weights should be positive
@@ -57,10 +58,10 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	}
 
 	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
-	roundedValue := osmomath.SigFigRound(totalWeight, sdk.NewDec(10).Power(2).TruncateInt())
+	roundedValue := osmomath.SigFigRound(totalWeight, osmomath.NewDec(10).Power(2).TruncateInt())
 
 	// check if the total validator distribution weights equal 1
-	if !roundedValue.Equal(sdk.OneDec()) {
+	if !roundedValue.Equal(osmomath.OneDec()) {
 		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %f", roundedValue)
 	}
 
@@ -97,7 +98,7 @@ func (m MsgDelegateToValidatorSet) Type() string  { return TypeMsgDelegateToVali
 func (m MsgDelegateToValidatorSet) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if !m.Coin.IsValid() {
@@ -136,7 +137,7 @@ func (m MsgUndelegateFromValidatorSet) Type() string  { return TypeMsgUndelegate
 func (m MsgUndelegateFromValidatorSet) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if !m.Coin.IsValid() {
@@ -175,15 +176,15 @@ func (m MsgRedelegateValidatorSet) Type() string  { return TypeMsgRedelegateVali
 func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid delegator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid delegator address (%s)", err)
 	}
 
-	totalWeight := sdk.NewDec(0)
+	totalWeight := osmomath.NewDec(0)
 	validatorAddrs := []string{}
 	for _, validator := range m.Preferences {
 		_, err := sdk.ValAddressFromBech32(validator.ValOperAddress)
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid validator address (%s)", err)
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid validator address (%s)", err)
 		}
 
 		totalWeight = totalWeight.Add(validator.Weight)
@@ -197,10 +198,10 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 	}
 
 	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
-	roundedValue := osmomath.SigFigRound(totalWeight, sdk.NewDec(10).Power(2).TruncateInt())
+	roundedValue := osmomath.SigFigRound(totalWeight, osmomath.NewDec(10).Power(2).TruncateInt())
 
 	// check if the total validator distribution weights equal 1
-	if !roundedValue.Equal(sdk.OneDec()) {
+	if !roundedValue.Equal(osmomath.OneDec()) {
 		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %f", roundedValue)
 	}
 
@@ -235,7 +236,7 @@ func (m MsgWithdrawDelegationRewards) Type() string  { return TypeMsgWithdrawDel
 func (m MsgWithdrawDelegationRewards) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	return nil
@@ -269,11 +270,11 @@ func (m MsgDelegateBondedTokens) Type() string { return TypeMsgDelegateBondedTok
 func (m MsgDelegateBondedTokens) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if m.LockID <= 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lock id should be bigger than 1 (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "lock id should be bigger than 1 (%s)", err)
 	}
 
 	return nil

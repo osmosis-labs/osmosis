@@ -2,13 +2,12 @@ package concentrated_liquidity
 
 import (
 	"context"
-	"fmt"
-	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
 type msgServer struct {
@@ -21,32 +20,21 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 	}
 }
 
-func NewMsgCreatorServerImpl(keeper *Keeper) clmodel.MsgCreatorServer {
+func NewMsgCreatorServerImpl(keeper *Keeper) clmodel.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}
 }
 
 var (
-	_ types.MsgServer          = msgServer{}
-	_ clmodel.MsgCreatorServer = msgServer{}
+	_ types.MsgServer   = msgServer{}
+	_ clmodel.MsgServer = msgServer{}
 )
 
-// CreateConcentratedPool attempts to create a pool returning a MsgCreateConcentratedPoolResponse or an error upon failure.
-// The pool creation fee is used to fund the community pool.
-// It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
+// CreateConcentratedPool attempts to create a concentrated liquidity pool via the poolmanager module, returning a MsgCreateConcentratedPoolResponse or an error upon failure.
+// The pool creation fee is used to fund the community pool. It will also create a dedicated module account for the pool.
 func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmodel.MsgCreateConcentratedPool) (*clmodel.MsgCreateConcentratedPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	_, denomExists := server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom0)
-	if !denomExists {
-		return nil, fmt.Errorf("received denom0 with invalid metadata: %s", msg.Denom0)
-	}
-
-	_, denomExists = server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom1)
-	if !denomExists {
-		return nil, fmt.Errorf("received denom1 with invalid metadata: %s", msg.Denom1)
-	}
 
 	poolId, err := server.keeper.poolmanagerKeeper.CreatePool(ctx, msg)
 	if err != nil {
@@ -65,7 +53,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	actualAmount0, actualAmount1, liquidityCreated, err := server.keeper.CreatePosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick, msg.FrozenUntil)
+	positionData, err := server.keeper.CreatePosition(ctx, msg.PoolId, sender, msg.TokensProvided, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick)
 	if err != nil {
 		return nil, err
 	}
@@ -76,20 +64,42 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
+	})
+
+	// Note: create position event is emitted in keeper.createPosition(...)
+
+	return &types.MsgCreatePositionResponse{PositionId: positionData.ID, Amount0: positionData.Amount0, Amount1: positionData.Amount1, LiquidityCreated: positionData.Liquidity, LowerTick: positionData.LowerTick, UpperTick: positionData.UpperTick}, nil
+}
+
+func (server msgServer) AddToPosition(goCtx context.Context, msg *types.MsgAddToPosition) (*types.MsgAddToPositionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.TokenMinAmount0.IsNil() {
+		msg.TokenMinAmount0 = osmomath.ZeroInt()
+	}
+	if msg.TokenMinAmount1.IsNil() {
+		msg.TokenMinAmount1 = osmomath.ZeroInt()
+	}
+
+	positionId, actualAmount0, actualAmount1, err := server.keeper.addToPosition(ctx, sender, msg.PositionId, msg.Amount0, msg.Amount1, msg.TokenMinAmount0, msg.TokenMinAmount1)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.TypeEvtWithdrawPosition,
+			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-			sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
-			sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
-			sdk.NewAttribute(types.AttributeLiquidity, liquidityCreated.String()),
-			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
-			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
 		),
 	})
 
-	return &types.MsgCreatePositionResponse{Amount0: actualAmount0, Amount1: actualAmount1}, nil
+	return &types.MsgAddToPositionResponse{PositionId: positionId, Amount0: actualAmount0, Amount1: actualAmount1}, nil
 }
 
 // TODO: tests, including events
@@ -101,7 +111,7 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	amount0, amount1, err := server.keeper.WithdrawPosition(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.FrozenUntil, msg.LiquidityAmount.ToDec())
+	amount0, amount1, err := server.keeper.WithdrawPosition(ctx, sender, msg.PositionId, msg.LiquidityAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -112,23 +122,16 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
-		sdk.NewEvent(
-			types.TypeEvtWithdrawPosition,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-			sdk.NewAttribute(types.AttributeLiquidity, msg.LiquidityAmount.String()),
-			sdk.NewAttribute(types.AttributeAmount0, amount0.String()),
-			sdk.NewAttribute(types.AttributeAmount1, amount1.String()),
-			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
-			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
-		),
 	})
+
+	// Note: withdraw position event is emitted in keeper.withdrawPosition(...)
 
 	return &types.MsgWithdrawPositionResponse{Amount0: amount0, Amount1: amount1}, nil
 }
 
-func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollectFees) (*types.MsgCollectFeesResponse, error) {
+// CollectSpreadRewards collects the fees earned by each position ID provided and sends them to the owner's account.
+// Returns error if one of the provided position IDs do not exist or if the function fails to get the fee accumulator.
+func (server msgServer) CollectSpreadRewards(goCtx context.Context, msg *types.MsgCollectSpreadRewards) (*types.MsgCollectSpreadRewardsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
@@ -136,9 +139,13 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 		return nil, err
 	}
 
-	tokenOut, err := server.keeper.collectFees(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick)
-	if err != nil {
-		return nil, err
+	totalCollectedSpreadRewards := sdk.NewCoins()
+	for _, positionId := range msg.PositionIds {
+		collectedFees, err := server.keeper.collectSpreadRewards(ctx, sender, positionId)
+		if err != nil {
+			return nil, err
+		}
+		totalCollectedSpreadRewards = totalCollectedSpreadRewards.Add(collectedFees...)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -148,15 +155,49 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 		sdk.NewEvent(
-			types.TypeEvtCollectFees,
+			types.TypeEvtTotalCollectSpreadRewards,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-			sdk.NewAttribute(types.AttributeKeyTokensOut, tokenOut.String()),
-			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
-			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedSpreadRewards.String()),
 		),
 	})
 
-	return &types.MsgCollectFeesResponse{TokenOut: tokenOut}, nil
+	return &types.MsgCollectSpreadRewardsResponse{CollectedSpreadRewards: totalCollectedSpreadRewards}, nil
+}
+
+// CollectIncentives collects incentives for all positions in given range that belong to sender
+func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgCollectIncentives) (*types.MsgCollectIncentivesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	totalCollectedIncentives := sdk.NewCoins()
+	totalForefeitedIncentives := sdk.NewCoins()
+	for _, positionId := range msg.PositionIds {
+		collectedIncentives, forfeitedIncentives, err := server.keeper.collectIncentives(ctx, sender, positionId)
+		if err != nil {
+			return nil, err
+		}
+		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
+		totalForefeitedIncentives = totalForefeitedIncentives.Add(forfeitedIncentives...)
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+		sdk.NewEvent(
+			types.TypeEvtTotalCollectIncentives,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedIncentives.String()),
+		),
+	})
+
+	return &types.MsgCollectIncentivesResponse{CollectedIncentives: totalCollectedIncentives, ForfeitedIncentives: totalForefeitedIncentives}, nil
 }

@@ -12,8 +12,8 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
 )
 
 type NodeConfig struct {
@@ -32,6 +32,7 @@ type NodeConfig struct {
 
 // NewNodeConfig returens new initialized NodeConfig.
 func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *initialization.NodeConfig, chainId string, containerManager *containers.Manager) *NodeConfig {
+	t.Helper()
 	return &NodeConfig{
 		Node:             *initNode,
 		SnapshotInterval: initConfig.SnapshotInterval,
@@ -46,35 +47,63 @@ func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *init
 // The node configuration must be already added to the chain config prior to calling this
 // method.
 func (n *NodeConfig) Run() error {
-	n.t.Logf("starting node container: %s", n.Name)
-	resource, err := n.containerManager.RunNodeResource(n.chainId, n.Name, n.ConfigDir)
-	if err != nil {
-		return err
-	}
+	maxRetries := 3
+	currentRetry := 0
 
-	hostPort := resource.GetHostPort("26657/tcp")
-	rpcClient, err := rpchttp.New("tcp://"+hostPort, "/websocket")
-	if err != nil {
-		return err
-	}
+	for currentRetry < maxRetries {
+		n.t.Logf("starting node container: %s", n.Name)
+		resource, err := n.containerManager.RunNodeResource(n.chainId, n.Name, n.ConfigDir)
+		if err != nil {
+			return err
+		}
 
-	n.rpcClient = rpcClient
+		hostPort := resource.GetHostPort("26657/tcp")
+		rpcClient, err := rpchttp.New("tcp://"+hostPort, "/websocket")
+		if err != nil {
+			return err
+		}
 
-	require.Eventually(
-		n.t,
-		func() bool {
-			// This fails if unsuccessful.
-			_, err := n.QueryCurrentHeight()
-			if err != nil {
-				return false
+		n.rpcClient = rpcClient
+
+		success := false
+		timeout := time.After(time.Second * 20)
+		ticker := time.NewTicker(10 * time.Millisecond)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-timeout:
+				n.t.Logf("Osmosis node failed to produce blocks")
+				break
+			case <-ticker.C:
+				_, err := n.QueryCurrentHeight()
+				if err == nil {
+					n.t.Logf("started node container: %s", n.Name)
+					success = true
+					break
+				}
 			}
-			n.t.Logf("started node container: %s", n.Name)
-			return true
-		},
-		2*time.Minute,
-		time.Second,
-		"Osmosis node failed to produce blocks",
-	)
+
+			if success {
+				break
+			}
+		}
+
+		if success {
+			break
+		} else {
+			n.t.Logf("failed to start node container, retrying... (%d/%d)", currentRetry+1, maxRetries)
+			err := n.containerManager.RemoveNodeResource(n.Name)
+			if err != nil {
+				return err
+			}
+			currentRetry++
+		}
+	}
+
+	if currentRetry >= maxRetries {
+		return fmt.Errorf("failed to start node container after %d retries", maxRetries)
+	}
 
 	if err := n.extractOperatorAddressIfValidator(); err != nil {
 		return err
@@ -91,6 +120,24 @@ func (n *NodeConfig) Stop() error {
 	}
 	n.t.Logf("stopped node container: %s", n.Name)
 	return nil
+}
+
+func (n *NodeConfig) WaitForNumHeights(numBlocks int) {
+	targetHeight, err := n.QueryCurrentHeight()
+	require.NoError(n.t, err)
+	targetHeight += int64(numBlocks)
+	// Ensure the nodes are making progress.
+	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
+		curHeight := syncInfo.LatestBlockHeight
+
+		if curHeight < targetHeight {
+			n.t.Logf("current block height is %d, waiting to reach: %d", curHeight, targetHeight)
+			return false
+		}
+
+		return !syncInfo.CatchingUp
+	}
+	n.WaitUntil(doneCondition)
 }
 
 // WaitUntil waits until node reaches doneCondition. Return nil

@@ -5,12 +5,11 @@ import (
 	"math"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/twap"
 
-	"github.com/osmosis-labs/osmosis/v14/x/twap"
-
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
 )
 
 // TestTrackChangedPool takes a list of poolIds as test cases, and runs one list per block.
@@ -162,11 +161,11 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 	defaultInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, denom0, denom1} }
 	wrongPoolIdInputAt := func(t time.Time) getRecordInput { return getRecordInput{2, t, denom0, denom1} }
 	defaultRevInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, denom1, denom0} }
-	baseRecord := withPrice0Set(newEmptyPriceRecord(1, baseTime, denom0, denom1), sdk.OneDec())
+	baseRecord := withPrice0Set(newEmptyPriceRecord(1, baseTime, denom0, denom1), osmomath.OneDec())
 	tMin1 := baseTime.Add(-time.Second)
-	tMin1Record := withPrice0Set(newEmptyPriceRecord(1, tMin1, denom0, denom1), sdk.OneDec())
+	tMin1Record := withPrice0Set(newEmptyPriceRecord(1, tMin1, denom0, denom1), osmomath.OneDec())
 	tPlus1 := baseTime.Add(time.Second)
-	tPlus1Record := withPrice0Set(newEmptyPriceRecord(1, tPlus1, denom0, denom1), sdk.OneDec())
+	tPlus1Record := withPrice0Set(newEmptyPriceRecord(1, tPlus1, denom0, denom1), osmomath.OneDec())
 
 	tests := map[string]struct {
 		recordsToSet   []types.TwapRecord
@@ -273,13 +272,13 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 	pool5Min2SBaseMsAB, pool5Min2SBaseMsAC, pool5Min2SBaseMsBC,
 		pool5Min1SBaseMsAB, pool5Min1SBaseMsAC, pool5Min1SBaseMsBC,
 		pool5BaseSecBaseMsAB, pool5BaseSecBaseMsAC, pool5BaseSecBaseMsBC,
-		pool5Plus1SBaseMsAB, pool5Plus1SBaseMsAC, pool5Plus1SBaseMsBC := s.createTestRecordsFromTimeInPool(baseTime, 5)
+		pool5Plus1SBaseMsAB, pool5Plus1SBaseMsAC, pool5Plus1SBaseMsBC := s.CreateTestRecordsFromTimeInPool(baseTime, 5)
 
 	// Create 12 records in the same pool from base time - 1 ms, each record with the difference of 1 second between them
 	pool5Min2SMin1MsAB, pool5Min2SMin1MsAC, pool5Min2SMin1MsBC,
 		pool5Min1SMin1MsAB, pool5Min1SMin1MsAC, pool5Min1SMin1MsBC,
 		pool5BaseSecMin1MsAB, pool5BaseSecMin1MsAC, pool5BaseSecMin1MsBC,
-		pool5Plus1SMin1MsAB, pool5Plus1SMin1MsAC, pool5Plus1SMin1MsBC := s.createTestRecordsFromTimeInPool(baseTime.Add(-time.Millisecond), 5)
+		pool5Plus1SMin1MsAB, pool5Plus1SMin1MsAC, pool5Plus1SMin1MsBC := s.CreateTestRecordsFromTimeInPool(baseTime.Add(-time.Millisecond), 5)
 
 	tests := map[string]struct {
 		// order does not follow any specific pattern
@@ -534,18 +533,18 @@ func (s *TestSuite) TestAccumulatorOverflow() {
 	maxSpotPrice := gammtypes.MaxSpotPrice
 	tests := map[string]struct {
 		// timeDelta is duration in nano seconds.
-		// we use sdk.Dec here because time.Duration would automatically cap to
-		// time.duration.maxDuration without erroring.
-		timeDelta sdk.Dec
+		// we use osmomath.Dec here because time.Duration would automatically cap to
+		// time.duosmomath.DecmaxDuration without erroring.
+		timeDelta osmomath.Dec
 		panics    bool
 	}{
 		"no overflow": {
 			// 2562047h47m16.854775807s in duration, this is over 292 years.
-			timeDelta: sdk.NewDec(2).Power(128),
+			timeDelta: osmomath.NewDec(2).Power(128),
 			panics:    false,
 		},
 		"overflow": {
-			timeDelta: sdk.NewDec(2).Power(129),
+			timeDelta: osmomath.NewDec(2).Power(129),
 			panics:    true,
 		},
 	}
@@ -553,7 +552,7 @@ func (s *TestSuite) TestAccumulatorOverflow() {
 		s.Run(name, func() {
 			s.SetupTest()
 
-			var accumulatorVal sdk.Dec
+			var accumulatorVal osmomath.Dec
 
 			fmt.Println(time.Duration(math.Pow(2, 128)))
 			if test.panics {
@@ -571,6 +570,48 @@ func (s *TestSuite) TestAccumulatorOverflow() {
 
 				s.twapkeeper.StoreNewRecord(s.Ctx, twapRecordToStore)
 			}
+		})
+	}
+}
+
+func (s *TestSuite) TestGetAllHistoricalPoolIndexedTWAPsForPooId() {
+	baseRecord := newEmptyPriceRecord(1, baseTime, denom0, denom1)
+	tPlusOneRecord := newEmptyPriceRecord(1, tPlusOne, denom0, denom1)
+	tests := map[string]struct {
+		recordsToSet    []types.TwapRecord
+		poolId          uint64
+		expectedRecords []types.TwapRecord
+	}{
+		"set single record": {
+			poolId:          1,
+			expectedRecords: []types.TwapRecord{baseRecord},
+		},
+		"query non-existent pool": {
+			poolId:          2,
+			expectedRecords: []types.TwapRecord{},
+		},
+		"set single record, different pool ID": {
+			poolId:          2,
+			expectedRecords: []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom0, denom1)},
+		},
+		"set two records": {
+			poolId:          1,
+			expectedRecords: []types.TwapRecord{baseRecord, tPlusOneRecord},
+		},
+	}
+
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			twapKeeper := s.twapkeeper
+			s.preSetRecords(test.expectedRecords)
+
+			// System under test.
+			actualRecords, err := twapKeeper.GetAllHistoricalPoolIndexedTWAPsForPoolId(s.Ctx, test.poolId)
+			s.NoError(err)
+
+			// Assertions.
+			s.Equal(test.expectedRecords, actualRecords)
 		})
 	}
 }

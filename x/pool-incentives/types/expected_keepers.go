@@ -7,8 +7,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
+	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // AccountKeeper interface contains functions for getting accounts and the module address
@@ -25,19 +28,36 @@ type BankKeeper interface {
 // PoolManagerKeeper gets the pool interface from poolID.
 type PoolManagerKeeper interface {
 	GetNextPoolId(ctx sdk.Context) uint64
+	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
+}
+
+type GAMMKeeper interface {
+	GetAllMigrationInfo(ctx sdk.Context) (gammmigration.MigrationRecords, error)
 }
 
 // IncentivesKeeper creates and gets gauges, and also allows additions to gauge rewards.
 type IncentivesKeeper interface {
-	CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error)
+	CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64, poolId uint64) (uint64, error)
 	GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*incentivestypes.Gauge, error)
 	GetGauges(ctx sdk.Context) []incentivestypes.Gauge
+	GetParams(ctx sdk.Context) incentivestypes.Params
+	GetEpochInfo(ctx sdk.Context) epochstypes.EpochInfo
 
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
+	GetGroupByGaugeID(ctx sdk.Context, gaugeID uint64) (incentivestypes.Group, error)
+	GetPoolIdsAndDurationsFromGaugeRecords(ctx sdk.Context, gaugeRecords []incentivestypes.InternalGaugeRecord) ([]uint64, []time.Duration, error)
 }
 
 // DistrKeeper handles pool-fees functionality - setting / getting fees and funding the community pool.
 type DistrKeeper interface {
 	SetFeePool(ctx sdk.Context, feePool distrtypes.FeePool)
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
+type EpochKeeper interface {
+	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
+}
+
+type SuperfluidKeeper interface {
+	GetAllMigrationInfo(ctx sdk.Context) (MigrationRecords, error)
 }

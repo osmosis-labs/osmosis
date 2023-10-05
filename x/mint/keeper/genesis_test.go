@@ -4,33 +4,34 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v14/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v19/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/mint/types"
 )
 
 var customGenesis = types.NewGenesisState(
-	types.NewMinter(sdk.ZeroDec()),
+	types.NewMinter(osmomath.ZeroDec()),
 	types.NewParams(
-		"uosmo",                  // denom
-		sdk.NewDec(200),          // epoch provisions
-		"year",                   // epoch identifier
-		sdk.NewDecWithPrec(5, 1), // reduction factor
-		5,                        // reduction perion in epochs
+		"uosmo",                       // denom
+		osmomath.NewDec(200),          // epoch provisions
+		"year",                        // epoch identifier
+		osmomath.NewDecWithPrec(5, 1), // reduction factor
+		5,                             // reduction perion in epochs
 		types.DistributionProportions{
-			Staking:          sdk.NewDecWithPrec(25, 2),
-			PoolIncentives:   sdk.NewDecWithPrec(25, 2),
-			DeveloperRewards: sdk.NewDecWithPrec(25, 2),
-			CommunityPool:    sdk.NewDecWithPrec(25, 2),
+			Staking:          osmomath.NewDecWithPrec(25, 2),
+			PoolIncentives:   osmomath.NewDecWithPrec(25, 2),
+			DeveloperRewards: osmomath.NewDecWithPrec(25, 2),
+			CommunityPool:    osmomath.NewDecWithPrec(25, 2),
 		},
 		[]types.WeightedAddress{
 			{
 				Address: "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj",
-				Weight:  sdk.NewDecWithPrec(6, 1),
+				Weight:  osmomath.NewDecWithPrec(6, 1),
 			},
 			{
 				Address: "osmo1gw445ta0aqn26suz2rg3tkqfpxnq2hs224d7gq",
-				Weight:  sdk.NewDecWithPrec(4, 1),
+				Weight:  osmomath.NewDecWithPrec(4, 1),
 			},
 		},
 		2), // minting reward distribution start epoch
@@ -38,7 +39,7 @@ var customGenesis = types.NewGenesisState(
 
 // TestMintInitGenesis tests that genesis is initialized correctly
 // with different parameters and state.
-func (suite *KeeperTestSuite) TestMintInitGenesis() {
+func (s *KeeperTestSuite) TestMintInitGenesis() {
 	testCases := map[string]struct {
 		mintGenesis                     *types.GenesisState
 		mintDenom                       string
@@ -46,12 +47,12 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 		isDeveloperModuleAccountCreated bool
 
 		expectPanic             bool
-		expectedEpochProvisions sdk.Dec
+		expectedEpochProvisions osmomath.Dec
 		// Deltas represent by how much a certain paramets
 		// has changed after calling InitGenesis()
-		expectedSupplyOffsetDelta           sdk.Int
-		expectedSupplyWithOffsetDelta       sdk.Int
-		expectedDeveloperVestingAmountDelta sdk.Int
+		expectedSupplyOffsetDelta           osmomath.Int
+		expectedSupplyWithOffsetDelta       osmomath.Int
+		expectedDeveloperVestingAmountDelta osmomath.Int
 		expectedHalvenStartedEpoch          int64
 	}{
 		"default genesis - developer module account is not created prior to InitGenesis() - created during the call": {
@@ -59,9 +60,9 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			mintDenom:   sdk.DefaultBondDenom,
 
 			expectedEpochProvisions:             types.DefaultGenesisState().Params.GenesisEpochProvisions,
-			expectedSupplyOffsetDelta:           sdk.NewInt(keeper.DeveloperVestingAmount).Neg(),
-			expectedSupplyWithOffsetDelta:       sdk.ZeroInt(),
-			expectedDeveloperVestingAmountDelta: sdk.NewInt(keeper.DeveloperVestingAmount),
+			expectedSupplyOffsetDelta:           osmomath.NewInt(keeper.DeveloperVestingAmount).Neg(),
+			expectedSupplyWithOffsetDelta:       osmomath.ZeroInt(),
+			expectedDeveloperVestingAmountDelta: osmomath.NewInt(keeper.DeveloperVestingAmount),
 		},
 		"default genesis - developer module account is created prior to InitGenesis() - not created during the call": {
 			mintGenesis:                     types.DefaultGenesisState(),
@@ -69,18 +70,18 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			isDeveloperModuleAccountCreated: true,
 
 			expectedEpochProvisions:             types.DefaultGenesisState().Params.GenesisEpochProvisions,
-			expectedSupplyOffsetDelta:           sdk.ZeroInt(),
-			expectedSupplyWithOffsetDelta:       sdk.ZeroInt(),
-			expectedDeveloperVestingAmountDelta: sdk.ZeroInt(),
+			expectedSupplyOffsetDelta:           osmomath.ZeroInt(),
+			expectedSupplyWithOffsetDelta:       osmomath.ZeroInt(),
+			expectedDeveloperVestingAmountDelta: osmomath.ZeroInt(),
 		},
 		"custom genesis": {
 			mintGenesis: customGenesis,
 			mintDenom:   "uosmo",
 
-			expectedEpochProvisions:             sdk.NewDec(200),
-			expectedSupplyOffsetDelta:           sdk.NewInt(keeper.DeveloperVestingAmount).Neg(),
-			expectedSupplyWithOffsetDelta:       sdk.ZeroInt(),
-			expectedDeveloperVestingAmountDelta: sdk.NewInt(keeper.DeveloperVestingAmount),
+			expectedEpochProvisions:             osmomath.NewDec(200),
+			expectedSupplyOffsetDelta:           osmomath.NewInt(keeper.DeveloperVestingAmount).Neg(),
+			expectedSupplyWithOffsetDelta:       osmomath.ZeroInt(),
+			expectedDeveloperVestingAmountDelta: osmomath.NewInt(keeper.DeveloperVestingAmount),
 			expectedHalvenStartedEpoch:          3,
 		},
 		"nil genesis state - panic": {
@@ -90,13 +91,13 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 	}
 
 	for name, tc := range testCases {
-		suite.Run(name, func() {
+		s.Run(name, func() {
 			// Setup.
-			suite.setupDeveloperVestingModuleAccountTest(tc.ctxHeight, tc.isDeveloperModuleAccountCreated)
-			ctx := suite.Ctx
-			accountKeeper := suite.App.AccountKeeper
-			bankKeeper := suite.App.BankKeeper
-			mintKeeper := suite.App.MintKeeper
+			s.setupDeveloperVestingModuleAccountTest(tc.ctxHeight, tc.isDeveloperModuleAccountCreated)
+			ctx := s.Ctx
+			accountKeeper := s.App.AccountKeeper
+			bankKeeper := s.App.BankKeeper
+			mintKeeper := s.App.MintKeeper
 
 			developerAccount := accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
 
@@ -105,7 +106,7 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			originalVestingCoins := bankKeeper.GetBalance(ctx, developerAccount, tc.mintDenom)
 
 			// Test.
-			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() { mintKeeper.InitGenesis(ctx, tc.mintGenesis) })
+			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() { mintKeeper.InitGenesis(ctx, tc.mintGenesis) })
 			if tc.expectPanic {
 				return
 			}
@@ -114,29 +115,29 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 
 			// Module account was created.
 			acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
-			suite.NotNil(acc)
+			s.NotNil(acc)
 
 			// Epoch provisions are set to genesis epoch provisions from params.
 			actualEpochProvisions := mintKeeper.GetMinter(ctx).EpochProvisions
-			suite.Require().Equal(tc.expectedEpochProvisions, actualEpochProvisions)
+			s.Require().Equal(tc.expectedEpochProvisions, actualEpochProvisions)
 
 			// Supply offset is applied to genesis supply.
 			actualSupplyOffset := bankKeeper.GetSupplyOffset(ctx, tc.mintDenom)
 			expectedSupplyOffset := tc.expectedSupplyOffsetDelta.Add(originalSupplyOffset)
-			suite.Require().Equal(expectedSupplyOffset, actualSupplyOffset)
+			s.Require().Equal(expectedSupplyOffset, actualSupplyOffset)
 
 			// Supply with offset is as expected.
 			actualSupplyWithOffset := bankKeeper.GetSupplyWithOffset(ctx, tc.mintDenom).Amount
 			expectedSupplyWithOffset := tc.expectedSupplyWithOffsetDelta.Add(originalSupplyWithOffset.Amount)
-			suite.Require().Equal(expectedSupplyWithOffset.Int64(), actualSupplyWithOffset.Int64())
+			s.Require().Equal(expectedSupplyWithOffset.Int64(), actualSupplyWithOffset.Int64())
 
 			// Developer vesting account has the desired amount of tokens.
 			actualVestingCoins := bankKeeper.GetBalance(ctx, developerAccount, tc.mintDenom)
 			expectedDeveloperVestingAmount := tc.expectedDeveloperVestingAmountDelta.Add(originalVestingCoins.Amount)
-			suite.Require().Equal(expectedDeveloperVestingAmount.Int64(), actualVestingCoins.Amount.Int64())
+			s.Require().Equal(expectedDeveloperVestingAmount.Int64(), actualVestingCoins.Amount.Int64())
 
 			// Last halven epoch num is set to 0.
-			suite.Require().Equal(tc.expectedHalvenStartedEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
+			s.Require().Equal(tc.expectedHalvenStartedEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
 		})
 	}
 }
@@ -144,7 +145,7 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 // TestMintExportGenesis tests that genesis is exported correctly.
 // It first initializes genesis to the expected value. Then, attempts
 // to export it. Lastly, compares exported to the expected.
-func (suite *KeeperTestSuite) TestMintExportGenesis() {
+func (s *KeeperTestSuite) TestMintExportGenesis() {
 	testCases := map[string]struct {
 		expectedGenesis *types.GenesisState
 	}{
@@ -157,10 +158,10 @@ func (suite *KeeperTestSuite) TestMintExportGenesis() {
 	}
 
 	for name, tc := range testCases {
-		suite.Run(name, func() {
+		s.Run(name, func() {
 			// Setup.
-			app := suite.App
-			ctx := suite.Ctx
+			app := s.App
+			ctx := s.Ctx
 
 			app.MintKeeper.InitGenesis(ctx, tc.expectedGenesis)
 
@@ -168,7 +169,7 @@ func (suite *KeeperTestSuite) TestMintExportGenesis() {
 			actualGenesis := app.MintKeeper.ExportGenesis(ctx)
 
 			// Assertions.
-			suite.Require().Equal(tc.expectedGenesis, actualGenesis)
+			s.Require().Equal(tc.expectedGenesis, actualGenesis)
 		})
 	}
 }

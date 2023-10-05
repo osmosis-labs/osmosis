@@ -1,12 +1,10 @@
 package types
 
 import (
-	fmt "fmt"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
 
 const (
@@ -48,17 +46,17 @@ func DeconstructDenom(denom string) (creator string, subdenom string, err error)
 
 	strParts := strings.Split(denom, "/")
 	if len(strParts) < 3 {
-		return "", "", sdkerrors.Wrapf(ErrInvalidDenom, "not enough parts of denom %s", denom)
+		return "", "", errorsmod.Wrapf(ErrInvalidDenom, "not enough parts of denom %s", denom)
 	}
 
 	if strParts[0] != ModuleDenomPrefix {
-		return "", "", sdkerrors.Wrapf(ErrInvalidDenom, "denom prefix is incorrect. Is: %s.  Should be: %s", strParts[0], ModuleDenomPrefix)
+		return "", "", errorsmod.Wrapf(ErrInvalidDenom, "denom prefix is incorrect. Is: %s.  Should be: %s", strParts[0], ModuleDenomPrefix)
 	}
 
 	creator = strParts[1]
 	creatorAddr, err := sdk.AccAddressFromBech32(creator)
 	if err != nil {
-		return "", "", sdkerrors.Wrapf(ErrInvalidDenom, "Invalid creator address (%s)", err)
+		return "", "", errorsmod.Wrapf(ErrInvalidDenom, "Invalid creator address (%s)", err)
 	}
 
 	// Handle the case where a denom has a slash in its subdenom. For example,
@@ -67,18 +65,4 @@ func DeconstructDenom(denom string) (creator string, subdenom string, err error)
 	subdenom = strings.Join(strParts[2:], "/")
 
 	return creatorAddr.String(), subdenom, nil
-}
-
-// NewTokenFactoryDenomMintCoinsRestriction creates and returns a BankMintingRestrictionFn that only allows minting of
-// valid tokenfactory denoms
-func NewTokenFactoryDenomMintCoinsRestriction() bankkeeper.BankMintingRestrictionFn {
-	return func(ctx sdk.Context, coinsToMint sdk.Coins) error {
-		for _, coin := range coinsToMint {
-			_, _, err := DeconstructDenom(coin.Denom)
-			if err != nil {
-				return fmt.Errorf("does not have permission to mint %s", coin.Denom)
-			}
-		}
-		return nil
-	}
 }

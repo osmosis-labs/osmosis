@@ -9,7 +9,6 @@ linters:
   enable:
     - asciicheck
     - bidichk
-    - depguard
     - durationcheck
     - errcheck
     - errname
@@ -18,7 +17,6 @@ linters:
     - goconst
     - gofmt
     - goimports
-    # - gofumpt
     - goheader
     - gomodguard
     - goprintffuncname
@@ -30,26 +28,31 @@ linters:
     - misspell
     - nakedret
     - nilnil
-    - paralleltest
     - promlinter
     - staticcheck
     - stylecheck
     - tenv
-    - testpackage
+    - thelper
+    - tparallel
     - typecheck
+    - thelper
     - unconvert
     - unused
     - whitespace
+    - unparam
+    - revive
+
+linters-settings:
+  revive:
+    rules:
+      - name: function-result-limit
+        severity: warning
+        disabled: false
+        # limits the number of returns to 4
+        arguments: [4]
 
 issues:
   exclude-rules:
-    - path: x/gamm/pool-models/stableswap
-      linters:
-        # Stableswap is in development.
-        # We should re-enable deadcode and unused linting
-        # across its files, once stableswap is fully complete.
-        - unused
-        - deadcode
     - linters:
         - staticcheck
       text: "SA1024: cutset contains duplicate characters" # proved to not provide much value, only false positives.

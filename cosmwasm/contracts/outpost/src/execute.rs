@@ -1,10 +1,10 @@
 use crate::{
-    checks::validate_input_amount,
-    msg::{Callback, ExecuteMsg, Wasm, WasmHookExecute},
+    msg::{ExecuteMsg, Wasm, WasmHookExecute},
     state::CONFIG,
     ContractError,
 };
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, Timestamp};
+use registry::msg::{Callback, SerializableJson};
 
 // IBC timeout
 pub const PACKET_LIFETIME: u64 = 604_800u64; // One week in seconds
@@ -12,7 +12,7 @@ pub const PACKET_LIFETIME: u64 = 604_800u64; // One week in seconds
 //#[cfg(feature = "callbacks")]
 fn build_callback_memo(
     callback: Option<Callback>,
-) -> Result<Option<crosschain_swaps::msg::SerializableJson>, ContractError> {
+) -> Result<Option<SerializableJson>, ContractError> {
     match callback {
         Some(callback) => Ok(Some(callback.to_json()?)),
         None => Ok(None),
@@ -27,13 +27,13 @@ pub fn execute_swap(
     user_msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     let ExecuteMsg::OsmosisSwap {
-        swap_amount,
         output_denom,
         receiver,
         slippage,
         on_failed_delivery,
         #[cfg(feature = "callbacks")]
         callback,
+        route,
     } = user_msg;
     let config = CONFIG.load(deps.storage)?;
 
@@ -43,26 +43,17 @@ pub fn execute_swap(
 
     let next_memo = build_callback_memo(callback)?;
 
-    if swap_amount > coin.amount.into() {
-        return Err(ContractError::SwapAmountTooHigh {
-            received: swap_amount,
-            max: coin.amount.into(),
-        });
-    }
-
-    validate_input_amount(swap_amount, coin.amount)?;
-
     // note that this is not the same osmosis swap as the one above (which is
     // defined in this create). The one in crosschain_swaps doesn't accept a
     // callback. They share the same name because that's the name we want to
     // expose to the user
     let instruction = crosschain_swaps::ExecuteMsg::OsmosisSwap {
-        swap_amount,
         output_denom,
         receiver,
         slippage,
         next_memo,
         on_failed_delivery,
+        route,
     };
 
     let msg = WasmHookExecute {
@@ -75,7 +66,7 @@ pub fn execute_swap(
         error: e.to_string(),
     })?;
 
-    let ibc_transfer_msg = crosschain_swaps::ibc::MsgTransfer {
+    let ibc_transfer_msg = registry::proto::MsgTransfer {
         source_port: "transfer".to_string(),
         source_channel: "channel-0".to_string(),
         token: Some(Coin::new(coin.amount.into(), coin.denom).into()),

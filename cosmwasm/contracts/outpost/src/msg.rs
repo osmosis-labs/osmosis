@@ -1,7 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Addr;
-
-use crate::ContractError;
+use osmosis_std::types::osmosis::poolmanager::v1beta1::SwapAmountInRoute;
 
 /// Message type for `instantiate` entry_point
 #[cw_serde]
@@ -22,38 +20,11 @@ pub struct Wasm {
     pub msg: crosschain_swaps::ExecuteMsg,
 }
 
-/// Information about which contract to call when the crosschain swap finishes
-#[cw_serde]
-pub struct Callback {
-    pub contract: Addr,
-    pub msg: crosschain_swaps::msg::SerializableJson,
-}
-
-impl Callback {
-    pub fn try_string(&self) -> Result<String, ContractError> {
-        serde_json_wasm::to_string(self).map_err(|e| ContractError::InvalidJson {
-            error: e.to_string(),
-        })
-    }
-
-    pub fn to_json(&self) -> Result<crosschain_swaps::msg::SerializableJson, ContractError> {
-        Ok(crosschain_swaps::msg::SerializableJson(
-            serde_json_wasm::from_str(&self.try_string()?).map_err(|e| {
-                ContractError::InvalidJson {
-                    error: e.to_string(),
-                }
-            })?,
-        ))
-    }
-}
-
 /// Message type for `execute` entry_point
 #[cw_serde]
 pub enum ExecuteMsg {
     /// Execute a swap and forward it to the receiver address on the specified ibc channel
     OsmosisSwap {
-        /// The amount to be swapped
-        swap_amount: u128,
         /// The final denom to be received (as represented on osmosis)
         output_denom: String,
         /// The receiver of the IBC packet to be sent after the swap
@@ -69,7 +40,10 @@ pub enum ExecuteMsg {
         /// Execute a contract when the crosschain swaps has finished.
         /// This is only avaibale on chains that support wasm hooks
         #[cfg(feature = "callbacks")]
-        callback: Option<Callback>,
+        callback: Option<crosschain_swaps::msg::Callback>,
+
+        // Optional Route specification
+        route: Option<Vec<SwapAmountInRoute>>,
     },
 }
 

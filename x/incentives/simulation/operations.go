@@ -4,13 +4,14 @@ import (
 	"math/rand"
 	"time"
 
-	osmosimtypes "github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	"github.com/osmosis-labs/osmosis/v14/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -31,7 +32,7 @@ const (
 // WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingTypes.AccountKeeper,
-	bk stakingTypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper,
+	bk osmosimtypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
 		weightMsgCreateGauge int
@@ -63,12 +64,12 @@ func WeightedOperations(
 }
 
 // genRewardCoins generates a random number of coin denoms with a respective random value for each coin.
-func genRewardCoins(r *rand.Rand, coins sdk.Coins, fee sdk.Int) (res sdk.Coins) {
+func genRewardCoins(r *rand.Rand, coins sdk.Coins, fee osmomath.Int) (res sdk.Coins) {
 	numCoins := 1 + r.Intn(Min(coins.Len(), 1))
 	denomIndices := r.Perm(numCoins)
 	for i := 0; i < numCoins; i++ {
 		var (
-			amt sdk.Int
+			amt osmomath.Int
 			err error
 		)
 		denom := coins[denomIndices[i]].Denom
@@ -120,7 +121,7 @@ func Max(x, y int) int {
 }
 
 // SimulateMsgCreateGauge generates and executes a MsgCreateGauge with random parameters
-func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -159,7 +160,7 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 }
 
 // SimulateMsgAddToGauge generates and executes a MsgAddToGauge with random parameters
-func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -174,14 +175,16 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		if gauge == nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgAddToGauge, "No gauge exists"), nil, nil
+		} else if gauge.IsFinishedGauge(ctx.BlockTime()) {
+			// TODO: Ideally we'd still run this but expect failure.
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgAddToGauge, "Selected a gauge that is finished"), nil, nil
 		}
-		gaugeId := RandomGauge(ctx, r, k).Id
 
 		rewards := genRewardCoins(r, simCoins, types.AddToGaugeFee)
-
 		msg := types.MsgAddToGauge{
 			Owner:   simAccount.Address.String(),
-			GaugeId: gaugeId,
+			GaugeId: gauge.Id,
 			Rewards: rewards,
 		}
 

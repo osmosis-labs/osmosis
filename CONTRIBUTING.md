@@ -10,7 +10,7 @@ Contributions come in the form of writing documentation, raising issues / PRs, a
 
 The first step is to find an issue you want to fix. To identify issues we think are good for first-time contributors, we add the **good first issue** label. [You can see a list of issues to contribute here](https://github.com/osmosis-labs/osmosis/contribute).
 
-We recommend setting up your IDE as per our [recommended IDE setup](https://docs.osmosis.zone/developing/osmosis-core/ide-guide.html) before proceeding.
+We recommend setting up your IDE as per our [recommended IDE setup](https://docs.osmosis.zone/osmosis-core/ide-guide) before proceeding.
 
 If you have a feature request, please use the [feature-request repo](https://github.com/osmosis-labs/feature-requests). We also welcome you to [make an issue](https://github.com/osmosis-labs/osmosis/issues/new/choose) for anything of substance, or posting an issue if you want to work on it.
 
@@ -26,7 +26,7 @@ To contribute a change proposal, use the following workflow:
 4. Create a branch and name it appropriately.
 5. Work on only one major change in one pull request.
 6. Make sure all tests are passing locally.
-7. Next, rince and repeat the following:
+7. Next, rinse and repeat the following:
 
     1. Commit your changes. Write a simple, straightforward commit message. To learn more, see [How to Write a Git Commit Message](https://chris.beams.io/posts/git-commit/).
     2. Push your changes to your remote fork. To add your remote, you can copy/paste the following:
@@ -68,13 +68,29 @@ Making table-driven tests in an environment built on the Cosmos SDK has some qui
 
 We'll lay out three examples below (one that uses our format for messages, one that applies to keeper methods, and one that applies to our GAMM module), each of which will hopefully be simple enough to copy-paste into a test file and use as a starting point for your test-writing in the Osmosis Core repo.
 
+### High level testing strategy and requirements
+
+To ensure that our tests are both robust and readable, we have a number of preferences on how tests should generally be written regardless of the specific code being tested. While these might seem simple, they are critical to ensuring reviewability of complex features.
+
+#### Test comments
+
+Every test should have a description explaining what specifically it tests and what the high level testing strategy is. Without this, it is difficult for an external (or even internal) reviewer to efficiently get a good grasp on what functionality is covered by existing tests or how to parse testing logic for more complex features.
+
+#### Test names
+
+Test names should be descriptive and focus on the core functionality being tested. If forced to choose between being concise and verbose where being concise would make it unclear what is being tested, it is acceptable for the test name to be slightly more verbose (although with good test comments and properly isolated tests this should ideally rarely be an issue).
+
+#### Test size
+
+When possible, contributors should err on the side of keeping tests small and story-driven. While it is ultimately up to the author's discretion and judgement whether a specific test case being added is getting too large or testing too many things, it is acceptable and encouraged to split up larger tests into smaller, more pointed ones that cover specific flows and functionality.
+
 ### Generating unit tests using our Gotest template
 
 To simplify (and speed up) the process of writing unit tests that fit our standard, we have put together a Gotest template that allows you to easily generate unit tests using built-in functionality for the Vscode Go plugin (complete with parameters listed, basic error checking logic etc.). The following two sections lay out how to generate a unit test automatically using this method.
 
 #### 1. Setup
 
-Note: this section assumes you already have the Go plugin for Vscode installed. Please refer to our [IDE setup docs](https://docs.osmosis.zone/developing/osmosis-core/ide-guide.html) if you haven't done any IDE setup yet.
+Note: this section assumes you already have the Go plugin for Vscode installed. Please refer to our [IDE setup docs](https:/docs.osmosis.zone/osmosis-core/ide-guide) if you haven't done any IDE setup yet.
 
 Copy the `templates` folder into your `.vscode` folder from our main repo [here](https://github.com/osmosis-labs/osmosis/tree/main/.vscode). This folder has our custom templates for generating tests that fit our testing standards as accurately as possible.
 
@@ -105,7 +121,7 @@ On the function you want to generate a unit test for, right click the function n
 This type of test is mainly for functions that would be triggered by incoming messages (we interact directly with the message server since all other metadata is stripped from a message by the time it hits the msg_server):
 
 ```go
-func(suite *KeeperTestSuite) TestCreateDenom() {
+func(s *KeeperTestSuite) TestCreateDenom() {
     testCases := map[string] struct {
         subdenom            string
         expectError         bool
@@ -157,7 +173,7 @@ This type of test is mainly for functions that would be triggered by other modul
 // TestMintExportGenesis tests that genesis is exported correctly.
 // It first initializes genesis to the expected value. Then, attempts
 // to export it. Lastly, compares exported to the expected.
-func(suite *KeeperTestSuite) TestMintExportGenesis() {
+func(s *KeeperTestSuite) TestMintExportGenesis() {
     testCases := map[string] struct {
         expectedGenesis *types.GenesisState
     } {
@@ -203,13 +219,13 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
             poolAssets: []balancer.PoolAsset {
                 {
                     Token:  sdk.NewInt64Coin("uosmo", 1e12),
-                    Weight: sdk.NewInt(100),
+                    Weight: osmomath.NewInt(100),
                 },
             },
             expectedPoolAssetsByDenom: map[string]balancer.PoolAsset {
                 "uosmo": {
                     Token:  sdk.NewInt64Coin("uosmo", 1e12),
-                    Weight: sdk.NewInt(100),
+                    Weight: osmomath.NewInt(100),
                 },
             },
         },
@@ -218,10 +234,10 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
             poolAssets: []balancer.PoolAsset {
                 {
                     Token:  sdk.NewInt64Coin("uosmo", 1e12),
-                    Weight: sdk.NewInt(100),
+                    Weight: osmomath.NewInt(100),
                 }, {
                     Token:  sdk.NewInt64Coin("uosmo", 123),
-                    Weight: sdk.NewInt(400),
+                    Weight: osmomath.NewInt(400),
                 },
             },
             err: fmt.Errorf(balancer.ErrMsgFormatRepeatingPoolAssetsNotAllowed, "uosmo"),
@@ -327,7 +343,7 @@ You can also feel free to do `make format` if you're getting errors related to `
 
 There are several steps that go into a major release
 
-- The GitHub release is created via this [GitHub workflow](https://github.com/osmosis-labs/osmosis/blob/main/.github/workflows/release.yml). The workflow is manually triggered from the [osmosis-ci repository](https://github.com/osmosis-labs/osmosis-ci). The workflow uses the `make build-reproducible` command to create the `osmosisd` binaries using the default [Makefile](https://github.com/osmosis-labs/osmosis/blob/main/Makefile#L99).
+- The GitHub release is created in our private repo via this [GitHub workflow](https://github.com/osmosis-labs/osmosis-ci/blob/main/.github/workflows/create-release.yaml). The workflow is manually triggered from the [osmosis-ci repository](https://github.com/osmosis-labs/osmosis-ci). The workflow uses the `make build-reproducible` command to create the `osmosisd` binaries using the default [Makefile](https://github.com/osmosis-labs/osmosis/blob/main/Makefile#L99).
 
 - Make a PR to main, with a cosmovisor config, generated in tandem with the binaries from tool.
   - Should be its own PR, as it may get denied for Fork upgrades.
@@ -479,7 +495,7 @@ Additionally, this affects `LastResultsHash` because it contains a `Data` field 
 Version A
 
 ```go
-func (sk Keeper) validateAmount(ctx context.Context, amount sdk.Int) error {
+func (sk Keeper) validateAmount(ctx context.Context, amount osmomath.Int) error {
     if amount.IsNegative() {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "amount must be positive or zero")
     }
@@ -490,7 +506,7 @@ func (sk Keeper) validateAmount(ctx context.Context, amount sdk.Int) error {
 Version B
 
 ```go
-func (sk Keeper) validateAmount(ctx context.Context, amount sdk.Int) error {
+func (sk Keeper) validateAmount(ctx context.Context, amount osmomath.Int) error {
     if amount.IsNegative() || amount.IsZero() {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "amount must be positive")
     }
@@ -601,3 +617,41 @@ We communicate with various integrators if they'd like release-blocking QA testi
 [3]:https://github.com/tendermint/tendermint/blob/main/types/results.go#L47-L54
 [4]:https://github.com/osmosis-labs/cosmos-sdk/blob/5c9a51c277d067e0ec5cf48df30a85fae95bcd14/store/rootmulti/store.go#L430
 [5]:https://github.com/osmosis-labs/cosmos-sdk/blob/5c9a51c277d067e0ec5cf48df30a85fae95bcd14/store/types/commit_info.go#L40
+
+## Common Security Considerations
+
+There are several security patterns that come up frequently enough to be synthesized into general rules of thumb. While the high level risks are appchain agnostic, the details are mostly tailored to contributing to Osmosis. This is, of course, not even close to a complete list – just a few considerations to keep in mind.
+
+### Rounding Behavior
+
+As a general rule of thumb, for DEX-related operations, we should be rounding in whichever direction is in the pool’s favor. This is to ensure that no single operation can output more value than was passed in and thus allow for a pool to be drained.
+
+Note that in many cases, such attacks are made unprofitable by fees, but to ensure that these attack vectors are never exposed in the first place, we need to ensure we round properly at each step.
+
+#### Examples
+
+- Round input tokens required for a swap up
+
+- Round output tokens from a swap down
+
+- Round charged fees for swaps up
+
+- Round the liquidity placed into a pool down
+
+### Panics
+
+It is common for unexpected behavior in Go code to be guardrailed with panics. There are of course times when panics are appropriate to use instead of errors, but it is important to keep in mind that panics in module-executed code will cause the chain to halt.
+
+While these halts are not terribly difficult to recover, they still pose a valid attack vector, especially if the panics can be triggered repeatably.
+
+Thus, we should be cognisant of when we use panics and ensure that we do not panic on behavior that could be very well handled with an error.
+
+#### Example 1: Spot Price Overflow
+
+One example of behavior that would by default panic is spot price overflow (i.e. when the price in a pool is pushed to overflow or underflow by a swap). While we might want to maintain panics in general for overflows, we can catch panics for spot price overflows and return an error on messages that would trigger them.
+
+Thus, from the user's perspective, attempting to execute a swap that would cause a spot price overflow would simply raise an error and the transaction would fail. Since no normal user flow would ever touch spot prices so large (or so small for underflows), this protects the chain from spot price triggered halts without hurting core UX.
+
+#### Example 2: Bulk Coin Sends in Begin/EndBlock
+
+A much less obvious example of a panic trigger is running `SendCoins` on arbitrary input coins in begin/endblock, especially if the coins that can be included have logic that can trigger panics (e.g. blacklisted accounts for CW20 tokens). The solution in this case would be to transfer coins one by one with `SendCoin` and verifying each coin so that bad ones could be skipped.

@@ -1,6 +1,6 @@
 package bindings
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import "github.com/osmosis-labs/osmosis/osmomath"
 
 type OsmosisMsg struct {
 	/// Contracts can create denoms, namespaced under the contract's address.
@@ -35,14 +35,14 @@ type ChangeAdmin struct {
 }
 
 type MintTokens struct {
-	Denom         string  `json:"denom"`
-	Amount        sdk.Int `json:"amount"`
-	MintToAddress string  `json:"mint_to_address"`
+	Denom         string       `json:"denom"`
+	Amount        osmomath.Int `json:"amount"`
+	MintToAddress string       `json:"mint_to_address"`
 }
 
 type BurnTokens struct {
-	Denom  string  `json:"denom"`
-	Amount sdk.Int `json:"amount"`
+	Denom  string       `json:"denom"`
+	Amount osmomath.Int `json:"amount"`
 	// BurnFromAddress must be set to "" for now.
 	BurnFromAddress string `json:"burn_from_address"`
 }

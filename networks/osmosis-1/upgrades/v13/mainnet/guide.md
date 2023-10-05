@@ -4,7 +4,7 @@ Osmosis v13 Gov Prop: <https://www.mintscan.io/osmosis/proposals/370>
 
 Countdown: <https://www.mintscan.io/osmosis/blocks/7241500>
 
-Height: 6246000 TODO: Update upgrade height
+Height: 7241500
 
 ## Memory Requirements
 
@@ -43,7 +43,7 @@ pre-install new binaries, and cosmovisor will automatically update them
 based on on-chain SoftwareUpgrade proposals.
 
 You should review the docs for cosmovisor located here:
-<https://docs.cosmos.network/master/run-node/cosmovisor.html>
+<https://docs.cosmos.network/main/tooling/cosmovisor>
 
 If you choose to use cosmovisor, please continue with these
 instructions:

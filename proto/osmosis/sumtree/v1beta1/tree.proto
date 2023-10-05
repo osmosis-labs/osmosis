@@ -11,7 +11,8 @@ message Node { repeated Child children = 1; }
 message Child {
   bytes index = 1;
   string accumulation = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
 }

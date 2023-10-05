@@ -12,8 +12,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v14/simulation/executor/internal/stats"
-	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes/simlogger"
+	"github.com/osmosis-labs/osmosis/v19/simulation/executor/internal/stats"
+	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes/simlogger"
 )
 
 // List of available flags for the simulator
@@ -115,6 +115,7 @@ func NewExecutionDbConfigFromFlags() ExecutionDbConfig {
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for
 // the simulation tests. If `FlagEnabledValue` is false it skips the current test.
 // Returns error on an invalid db intantiation or temp dir creation.
+// nolint: revive
 func SetupSimulation(dirPrefix, dbName string) (cfg Config, db dbm.DB, logger log.Logger, cleanup func(), err error) {
 	if !FlagEnabledValue {
 		return Config{}, nil, nil, func() {}, nil

@@ -8,35 +8,34 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/osmosis-labs/osmosis/v14/app"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	simapp "github.com/osmosis-labs/osmosis/v19/app"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 )
 
 var now = time.Now().UTC()
 
 var testGenesis = types.GenesisState{
 	Params: types.Params{
-		MinimumRiskFactor: sdk.NewDecWithPrec(5, 1), // 50%
+		MinimumRiskFactor: osmomath.NewDecWithPrec(5, 1), // 50%
 	},
 	SuperfluidAssets: []types.SuperfluidAsset{
 		{
-			Denom:     "gamm/pool/1",
+			Denom:     DefaultGammAsset,
 			AssetType: types.SuperfluidAssetTypeLPShare,
 		},
 	},
 	OsmoEquivalentMultipliers: []types.OsmoEquivalentMultiplierRecord{
 		{
 			EpochNumber: 1,
-			Denom:       "gamm/pool/1",
-			Multiplier:  sdk.NewDec(1000),
+			Denom:       DefaultGammAsset,
+			Multiplier:  osmomath.NewDec(1000),
 		},
 	},
 	IntermediaryAccounts: []types.SuperfluidIntermediaryAccount{
 		{
-			Denom:   "gamm/pool/1",
+			Denom:   DefaultGammAsset,
 			ValAddr: "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n",
 			GaugeId: 1,
 		},
@@ -56,7 +55,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	encodingConfig := simapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
-	am := superfluid.NewAppModule(*app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper)
+	am := superfluid.NewAppModule(*app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper, app.ConcentratedLiquidityKeeper)
 	genesis := testGenesis
 	app.SuperfluidKeeper.InitGenesis(ctx, genesis)
 
@@ -65,7 +64,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		app := simapp.Setup(false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
-		am := superfluid.NewAppModule(*app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper)
+		am := superfluid.NewAppModule(*app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper, app.ConcentratedLiquidityKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }
@@ -105,7 +104,8 @@ func TestExportGenesis(t *testing.T) {
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
 	app.SuperfluidKeeper.SetSuperfluidAsset(ctx, asset)
-	savedAsset := app.SuperfluidKeeper.GetSuperfluidAsset(ctx, "gamm/pool/2")
+	savedAsset, err := app.SuperfluidKeeper.GetSuperfluidAsset(ctx, "gamm/pool/2")
+	require.NoError(t, err)
 	require.Equal(t, savedAsset, asset)
 
 	genesisExported := app.SuperfluidKeeper.ExportGenesis(ctx)

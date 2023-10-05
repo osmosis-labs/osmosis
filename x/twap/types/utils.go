@@ -5,10 +5,13 @@ import (
 	"sort"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
-var MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
+var (
+	MaxSpotPrice       = osmomath.NewDec(2).Power(128).Sub(osmomath.OneDec())
+	MaxSpotPriceBigDec = osmomath.BigDecFromDec(MaxSpotPrice)
+)
 
 // GetAllUniqueDenomPairs returns all unique pairs of denoms, where for every pair
 // (X, Y), X < Y.
@@ -37,16 +40,14 @@ func GetAllUniqueDenomPairs(denoms []string) []DenomPair {
 // SpotPriceMulDuration returns the spot price multiplied by the time delta,
 // that is the spot price between the current and last TWAP record.
 // A single second accounts for 1_000_000_000 when converted to int64.
-func SpotPriceMulDuration(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
-	deltaMS := timeDelta.Milliseconds()
-	return sp.MulInt64(deltaMS)
+func SpotPriceMulDuration(sp osmomath.Dec, timeDeltaMs int64) osmomath.Dec {
+	return sp.MulInt64(timeDeltaMs)
 }
 
-// AccumDiffDivDuration returns the accumulated difference divided by the the
+// AccumDiffDivDuration returns the osmomath.Decated difference dividosmomath.Deche the
 // time delta, that is the spot price between the current and last TWAP record.
-func AccumDiffDivDuration(accumDiff sdk.Dec, timeDelta time.Duration) sdk.Dec {
-	deltaMS := timeDelta.Milliseconds()
-	return accumDiff.QuoInt64(deltaMS)
+func AccumDiffDivDuration(accumDiff osmomath.Dec, timeDeltaMs int64) osmomath.Dec {
+	return accumDiff.QuoInt64(timeDeltaMs)
 }
 
 // LexicographicalOrderDenoms takes two denoms and returns them to be in lexicographically ascending order.
@@ -60,6 +61,14 @@ func LexicographicalOrderDenoms(denom0, denom1 string) (string, string, error) {
 		denom0, denom1 = denom1, denom0
 	}
 	return denom0, denom1, nil
+}
+
+// CanonicalTimeMs returns the canonical time in milliseconds used for twap
+// math computations in UTC. Removes any monotonic clock reading prior to conversion to ms.
+// In twap, we assume all calculations are done in milliseconds. Therefore, this conversion
+// is necessary to make sure that there are no rounding errors.
+func CanonicalTimeMs(twapTime time.Time) int64 {
+	return twapTime.Round(0).UnixMilli()
 }
 
 // DenomPair contains pair of assetA and assetB denoms which belong to a pool.

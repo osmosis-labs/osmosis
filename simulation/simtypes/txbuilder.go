@@ -11,7 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
-	"github.com/osmosis-labs/osmosis/v14/app/params"
+	"github.com/osmosis-labs/osmosis/v19/app/params"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v19/x/tokenfactory/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -36,12 +37,15 @@ func (sim *SimCtx) defaultTxBuilder(
 	txConfig := params.MakeEncodingConfig().TxConfig // TODO: unhardcode
 	// TODO: Consider making a default tx builder that charges some random fees
 	// Low value for amount of work right now though.
-	fees := sdk.Coins{}
+	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 25000))
+
+	gas := getGas(msg)
+
 	tx, err := genTx(
 		txConfig,
 		[]sdk.Msg{msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		gas,
 		ctx.ChainID(),
 		[]uint64{authAcc.GetAccountNumber()},
 		[]uint64{authAcc.GetSequence()},
@@ -58,14 +62,14 @@ func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation
 	txConfig := params.MakeEncodingConfig().TxConfig // TODO: unhardcode
 	gasInfo, results, err := sim.BaseApp().Deliver(txConfig.TxEncoder(), tx)
 	if err != nil {
-		return simulation.NoOpMsg(msgName, msgName, fmt.Sprintf("unable to deliver tx. \nreason: %v\n results: %v\n msg: %s\n tx: %s", err, results, msg, tx)), nil, nil, err
+		return simulation.NoOpMsg(msgName, msgName, fmt.Sprintf("unable to deliver tx. \nreason: %v\n results: %v\n msg: %s\n tx: %s", err, results, msg, tx)), []simulation.FutureOperation{}, nil, err
 	}
 
 	opMsg := simulation.NewOperationMsg(msg, true, "", gasInfo.GasWanted, gasInfo.GasUsed, nil)
 	opMsg.Route = msgName
 	opMsg.Name = msgName
 
-	return opMsg, nil, results.Data, nil
+	return opMsg, []simulation.FutureOperation{}, results.Data, nil
 }
 
 // GenTx generates a signed mock transaction.
@@ -121,4 +125,13 @@ func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 	}
 
 	return txBuilder.GetTx(), nil
+}
+
+// special cases some messages that require higher gas limits
+func getGas(msg sdk.Msg) uint64 {
+	_, ok := msg.(*tokenfactorytypes.MsgCreateDenom)
+	if ok {
+		return uint64(tokenfactorytypes.DefaultCreationGasFee + helpers.DefaultGenTxGas)
+	}
+	return uint64(helpers.DefaultGenTxGas)
 }

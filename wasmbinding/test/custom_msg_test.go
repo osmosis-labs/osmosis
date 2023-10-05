@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v14/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 
 	"github.com/stretchr/testify/require"
 
@@ -13,21 +14,18 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app"
-	"github.com/osmosis-labs/osmosis/v14/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v19/app"
+	"github.com/osmosis-labs/osmosis/v19/wasmbinding/bindings"
 )
 
 func TestCreateDenomMsg(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
 	lucky := RandomAccountAddress()
 	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
 	require.NotEmpty(t, reflect)
-
-	// Fund reflect contract with 100 base denom creation fees
-	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
 
 	msg := bindings.OsmosisMsg{CreateDenom: &bindings.CreateDenom{
 		Subdenom: "SUN",
@@ -49,16 +47,13 @@ func TestCreateDenomMsg(t *testing.T) {
 }
 
 func TestMintMsg(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
 	lucky := RandomAccountAddress()
 	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
 	require.NotEmpty(t, reflect)
-
-	// Fund reflect contract with 100 base denom creation fees
-	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
 
 	// lucky was broke
 	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
@@ -72,7 +67,7 @@ func TestMintMsg(t *testing.T) {
 	require.NoError(t, err)
 	sunDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
-	amount, ok := sdk.NewIntFromString("808010808")
+	amount, ok := osmomath.NewIntFromString("808010808")
 	require.True(t, ok)
 	msg = bindings.OsmosisMsg{MintTokens: &bindings.MintTokens{
 		Denom:         sunDenom,
@@ -177,16 +172,13 @@ func TestMintMsg(t *testing.T) {
 }
 
 func TestBurnMsg(t *testing.T) {
+	apptesting.SkipIfWSL(t)
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
 	lucky := RandomAccountAddress()
 	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
 	require.NotEmpty(t, reflect)
-
-	// Fund reflect contract with 100 base denom creation fees
-	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
 
 	// lucky was broke
 	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
@@ -200,7 +192,7 @@ func TestBurnMsg(t *testing.T) {
 	require.NoError(t, err)
 	sunDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
-	amount, ok := sdk.NewIntFromString("808010808")
+	amount, ok := osmomath.NewIntFromString("808010808")
 	require.True(t, ok)
 
 	msg = bindings.OsmosisMsg{MintTokens: &bindings.MintTokens{
@@ -254,6 +246,8 @@ type ReflectSubMsgs struct {
 }
 
 func executeCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contract sdk.AccAddress, sender sdk.AccAddress, msg bindings.OsmosisMsg, funds sdk.Coin) error {
+	t.Helper()
+
 	customBz, err := json.Marshal(msg)
 	require.NoError(t, err)
 	reflectMsg := ReflectExec{

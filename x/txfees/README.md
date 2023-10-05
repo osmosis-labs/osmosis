@@ -4,6 +4,7 @@ The txfees modules allows nodes to easily support many tokens for usage as txfee
 This is done by having this module maintain an allow-list of token denoms which can be used as tx fees, each with some associated metadata.
 Then this metadata is used in tandem with a "Spot Price Calculator" provided to the module, to convert the provided tx fees into their equivalent value in the base denomination.
 Currently the only supported metadata & spot price calculator is using a GAMM pool ID & the GAMM keeper.
+Two new module accounts are created in this module; one is the fee collector for staking rewards and the other is the fee collector for the community pool. The primary fee collector that this module sends funds to is the fee collector initialized in the sdk's authtypes module, which automatically sends funds to stakers after each epoch. See the [Epoch Hooks](#epoch-hooks) section below for more details.
 
 ## State Changes
 
@@ -14,6 +15,22 @@ Currently the only supported metadata & spot price calculator is using a GAMM po
         account to be batched and swapped into the base denom at the end
         of each epoch.
 * Adds a new SDK message for creating governance proposals for adding new TxFee denoms.
+
+## Epoch Hooks
+
+The txfees module includes hooks that trigger actions at the end of each epoch.
+
+The `AfterEpochEnd` hook performs several actions:
+
+1. It swaps all non-OSMO denominated fees in the non-native fee collector for staking rewards module account into OSMO. This is done by checking the balance of the non-native fee collector for staking rewards module account, and swapping each non-OSMO denominated fee into OSMO. If a pool does not exist for a particular denomination pair, the swap is silently skipped. See the `swapNonNativeFeeToDenom` function description below for more details.
+
+2. After the swap, it transfers all OSMO from the non-native fee collector for staking rewards to the primary txfees fee collector module account. This indirectly distributes the fees to stakers.
+
+3. It also swaps non-whitelisted assets in the non-native community pool collector into the denomination specified in the pool manager parameters (currently USDC).
+
+4. Finally, it funds the community pool with the swapped denomination.
+
+The `swapNonNativeFeeToDenom` function is used to perform the swaps. It iterates over each coin in the balance of the specified fee collector account, and swaps it into the specified denomination. This function assumes that a pool route exists in the protorev route store for each denomination pair. If a pool route does not exist or is disabled, the swap is silently skipped.
 
 ## Local Mempool Filters Added
 

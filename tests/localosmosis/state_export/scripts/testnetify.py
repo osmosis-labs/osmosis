@@ -27,24 +27,23 @@ config = {
     "epoch_duration": '21600s',
 }
 
-def replace(d, old_value, new_value):
+def replace(obj, old_value, new_value):
     """
-    Replace all the occurences of `old_value` with `new_value`
-    in `d` dictionary
+    Replace all the occurrences of `old_value` with `new_value`
+    in `obj`, which can be a dictionary or a list
     """
-    for k in d.keys():
-        if isinstance(d[k], dict):
-            replace(d[k], old_value, new_value)
-        elif isinstance(d[k], list):
-            for i in range(len(d[k])):
-                if isinstance(d[k][i], dict) or isinstance(d[k][i], list):
-                    replace(d[k][i], old_value, new_value)
-                else:
-                    if d[k][i] == old_value:
-                        d[k][i] = new_value
-        else:
-            if d[k] == old_value:
-                d[k] = new_value
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if isinstance(value, (dict, list)):
+                replace(value, old_value, new_value)
+            elif value == old_value:
+                obj[key] = new_value
+    elif isinstance(obj, list):
+        for index, value in enumerate(obj):
+            if isinstance(value, (dict, list)):
+                replace(value, old_value, new_value)
+            elif value == old_value:
+                obj[index] = new_value
 
 def replace_validator(genesis, old_validator, new_validator):
     

@@ -6,15 +6,17 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v4/modules/core/exported"
 
-	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/types"
 )
 
 type IBCModule struct {
@@ -113,7 +115,7 @@ func ValidateReceiverAddress(packet exported.PacketI) error {
 		return err
 	}
 	if len(packetData.Receiver) >= 4096 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "IBC Receiver address too long. Max supported length is %d", 4096)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "IBC Receiver address too long. Max supported length is %d", 4096)
 	}
 	return nil
 }
@@ -128,7 +130,7 @@ func (im *IBCModule) OnRecvPacket(
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadMessage, err.Error())
 	}
 
-	contract := im.ics4Middleware.GetParams(ctx)
+	contract := im.ics4Middleware.GetContractAddress(ctx)
 	if contract == "" {
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
@@ -139,7 +141,7 @@ func (im *IBCModule) OnRecvPacket(
 		if strings.Contains(err.Error(), "rate limit exceeded") {
 			return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrRateLimitExceeded)
 		}
-		fullError := sdkerrors.Wrap(types.ErrContractError, err.Error())
+		fullError := errorsmod.Wrap(types.ErrContractError, err.Error())
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, fullError)
 	}
 
@@ -156,7 +158,7 @@ func (im *IBCModule) OnAcknowledgementPacket(
 ) error {
 	var ack channeltypes.Acknowledgement
 	if err := json.Unmarshal(acknowledgement, &ack); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
 	}
 
 	if osmoutils.IsAckError(acknowledgement) {
@@ -202,7 +204,7 @@ func (im *IBCModule) RevertSentPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 ) error {
-	contract := im.ics4Middleware.GetParams(ctx)
+	contract := im.ics4Middleware.GetContractAddress(ctx)
 	if contract == "" {
 		// The contract has not been configured. Continue as usual
 		return nil

@@ -1,18 +1,20 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
-use schemars::JsonSchema;
+use osmosis_std::types::osmosis::poolmanager::v1beta1::SwapAmountInRoute;
+use registry::msg::SerializableJson;
 use swaprouter::msg::Slippage;
 
 /// Message type for `instantiate` entry_point
 #[cw_serde]
 pub struct InstantiateMsg {
+    /// The address that will be allowed to manage which swap_contract to use
+    pub governor: String,
+
     /// This should be an instance of the Osmosis swaprouter contract
     pub swap_contract: String,
 
-    /// These are the channels that will be accepted by the contract. This is
-    /// needed to avoid sending packets to addresses not supported by the
-    /// receiving chain. The channels are specified as (bech32_prefix, channel_id)
-    pub channels: Vec<(String, String)>,
+    /// This should be an instance of the Osmosis registry contract
+    pub registry_contract: String,
 }
 
 /// An enum specifying what resolution the user expects in the case of a bad IBC
@@ -23,36 +25,18 @@ pub enum FailedDeliveryAction {
     /// An osmosis addres used to recover any tokens that get stuck in the
     /// contract due to IBC failures
     LocalRecoveryAddr(Addr),
+    //
     // Here we could potentially add new actions in the future
     // example: SendBackToSender, SwapBackAndReturn, etc
-}
-
-// Value does not implement JsonSchema, so we wrap it here. This can be removed
-// if https://github.com/CosmWasm/serde-cw-value/pull/3 gets merged
-#[derive(
-    ::cosmwasm_schema::serde::Serialize,
-    ::cosmwasm_schema::serde::Deserialize,
-    ::std::clone::Clone,
-    ::std::fmt::Debug,
-    PartialEq,
-    Eq,
-)]
-pub struct SerializableJson(pub serde_cw_value::Value);
-
-impl JsonSchema for SerializableJson {
-    fn schema_name() -> String {
-        "JSON".to_string()
-    }
-
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        schemars::schema::Schema::from(true)
-    }
-}
-
-impl SerializableJson {
-    pub fn as_value(&self) -> &serde_cw_value::Value {
-        &self.0
-    }
+    //
+    // If a failure occures, any tokens belonging (either before or after a
+    // swap) to the user will be sent to `SendTo.address` on `SendTo.chain`.
+    // If that send fails, the tokens will be recoverable by `SendTo.emergency_recover_addr`
+    // SendTo {
+    //     chain: String,
+    //     address: String,
+    //     emergency_recovery_addr: String,
+    // },
 }
 
 /// message type for `execute` entry_point
@@ -60,8 +44,6 @@ impl SerializableJson {
 pub enum ExecuteMsg {
     /// Execute a swap and forward it to the receiver address on the specified ibc channel
     OsmosisSwap {
-        /// The amount to be swapped
-        swap_amount: u128,
         /// The final denom to be received (as represented on osmosis)
         output_denom: String,
         /// The receiver of the IBC packet to be sent after the swap
@@ -76,6 +58,8 @@ pub enum ExecuteMsg {
         /// "recovery address" that can clain the funds on osmosis after a
         /// confirmed failure.
         on_failed_delivery: FailedDeliveryAction,
+        /// Users can optionally specify which route to use for the swap
+        route: Option<Vec<SwapAmountInRoute>>,
     },
     /// Executing a recover will transfer any recoverable tokens that the sender
     /// has in this contract to its account.
@@ -87,6 +71,14 @@ pub enum ExecuteMsg {
     /// have failed, and that originated with a message specifying the "sender"
     /// as its recovery address.
     Recover {},
+
+    // Contract Management
+    TransferOwnership {
+        new_governor: String,
+    },
+    SetSwapContract {
+        new_contract: String,
+    },
 }
 
 /// Message type for `query` entry_point
@@ -101,13 +93,27 @@ pub enum QueryMsg {
 // tmp structure for crosschain response
 #[cw_serde]
 pub struct CrosschainSwapResponse {
-    pub msg: String, // Do we want to provide more detailed information here?
+    pub sent_amount: Uint128,
+    pub denom: String,
+    pub channel_id: String,
+    pub receiver: String,
+    pub packet_sequence: u64,
 }
 
 impl CrosschainSwapResponse {
-    pub fn base(amount: &Uint128, denom: &str, channel_id: &str, receiver: &str) -> Self {
+    pub fn new(
+        amount: impl Into<Uint128>,
+        denom: &str,
+        channel_id: &str,
+        receiver: &str,
+        packet_sequence: u64,
+    ) -> Self {
         CrosschainSwapResponse {
-            msg: format!("Sent {amount}{denom} to {channel_id}/{receiver}"),
+            sent_amount: amount.into(),
+            denom: denom.to_string(),
+            channel_id: channel_id.to_string(),
+            receiver: receiver.to_string(),
+            packet_sequence,
         }
     }
 }

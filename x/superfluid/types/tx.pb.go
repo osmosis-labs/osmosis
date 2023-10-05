@@ -5,25 +5,30 @@ package types
 
 import (
 	context "context"
+	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/gogo/protobuf/types"
+	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -365,6 +370,10 @@ func (m *MsgSuperfluidUndelegateAndUnbondLock) GetCoin() types.Coin {
 }
 
 type MsgSuperfluidUndelegateAndUnbondLockResponse struct {
+	// lock id of the new lock created for the remaining amount.
+	// returns the original lockid if the unlocked amount is equal to the
+	// original lock's amount.
+	LockId uint64 `protobuf:"varint,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
 }
 
 func (m *MsgSuperfluidUndelegateAndUnbondLockResponse) Reset() {
@@ -403,6 +412,13 @@ func (m *MsgSuperfluidUndelegateAndUnbondLockResponse) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_MsgSuperfluidUndelegateAndUnbondLockResponse proto.InternalMessageInfo
+
+func (m *MsgSuperfluidUndelegateAndUnbondLockResponse) GetLockId() uint64 {
+	if m != nil {
+		return m.LockId
+	}
+	return 0
+}
 
 // MsgLockAndSuperfluidDelegate locks coins with the unbonding period duration,
 // and then does a superfluid lock from the newly created lockup, to the
@@ -511,6 +527,136 @@ func (m *MsgLockAndSuperfluidDelegateResponse) GetID() uint64 {
 	return 0
 }
 
+// MsgCreateFullRangePositionAndSuperfluidDelegate creates a full range position
+// in a concentrated liquidity pool, then superfluid delegates.
+type MsgCreateFullRangePositionAndSuperfluidDelegate struct {
+	Sender  string                                   `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	Coins   github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+	ValAddr string                                   `protobuf:"bytes,3,opt,name=val_addr,json=valAddr,proto3" json:"val_addr,omitempty"`
+	PoolId  uint64                                   `protobuf:"varint,4,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+}
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) Reset() {
+	*m = MsgCreateFullRangePositionAndSuperfluidDelegate{}
+}
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgCreateFullRangePositionAndSuperfluidDelegate) ProtoMessage() {}
+func (*MsgCreateFullRangePositionAndSuperfluidDelegate) Descriptor() ([]byte, []int) {
+	return fileDescriptor_55b645f187d22814, []int{10}
+}
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateFullRangePositionAndSuperfluidDelegate.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateFullRangePositionAndSuperfluidDelegate.Merge(m, src)
+}
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateFullRangePositionAndSuperfluidDelegate.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateFullRangePositionAndSuperfluidDelegate proto.InternalMessageInfo
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) GetSender() string {
+	if m != nil {
+		return m.Sender
+	}
+	return ""
+}
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
+}
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) GetValAddr() string {
+	if m != nil {
+		return m.ValAddr
+	}
+	return ""
+}
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+type MsgCreateFullRangePositionAndSuperfluidDelegateResponse struct {
+	LockID     uint64 `protobuf:"varint,1,opt,name=lockID,proto3" json:"lockID,omitempty"`
+	PositionID uint64 `protobuf:"varint,2,opt,name=positionID,proto3" json:"positionID,omitempty"`
+}
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) Reset() {
+	*m = MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}
+}
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgCreateFullRangePositionAndSuperfluidDelegateResponse) ProtoMessage() {}
+func (*MsgCreateFullRangePositionAndSuperfluidDelegateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_55b645f187d22814, []int{11}
+}
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateFullRangePositionAndSuperfluidDelegateResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateFullRangePositionAndSuperfluidDelegateResponse.Merge(m, src)
+}
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateFullRangePositionAndSuperfluidDelegateResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateFullRangePositionAndSuperfluidDelegateResponse proto.InternalMessageInfo
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) GetLockID() uint64 {
+	if m != nil {
+		return m.LockID
+	}
+	return 0
+}
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) GetPositionID() uint64 {
+	if m != nil {
+		return m.PositionID
+	}
+	return 0
+}
+
 // MsgUnPoolWhitelistedPool Unpools every lock the sender has, that is
 // associated with pool pool_id. If pool_id is not approved for unpooling by
 // governance, this is a no-op. Unpooling takes the locked gamm shares, and runs
@@ -528,7 +674,7 @@ func (m *MsgUnPoolWhitelistedPool) Reset()         { *m = MsgUnPoolWhitelistedPo
 func (m *MsgUnPoolWhitelistedPool) String() string { return proto.CompactTextString(m) }
 func (*MsgUnPoolWhitelistedPool) ProtoMessage()    {}
 func (*MsgUnPoolWhitelistedPool) Descriptor() ([]byte, []int) {
-	return fileDescriptor_55b645f187d22814, []int{10}
+	return fileDescriptor_55b645f187d22814, []int{12}
 }
 func (m *MsgUnPoolWhitelistedPool) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -579,7 +725,7 @@ func (m *MsgUnPoolWhitelistedPoolResponse) Reset()         { *m = MsgUnPoolWhite
 func (m *MsgUnPoolWhitelistedPoolResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUnPoolWhitelistedPoolResponse) ProtoMessage()    {}
 func (*MsgUnPoolWhitelistedPoolResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_55b645f187d22814, []int{11}
+	return fileDescriptor_55b645f187d22814, []int{13}
 }
 func (m *MsgUnPoolWhitelistedPoolResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -615,6 +761,383 @@ func (m *MsgUnPoolWhitelistedPoolResponse) GetExitedLockIds() []uint64 {
 	return nil
 }
 
+// =====================
+// MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition
+type MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition struct {
+	Sender          string     `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	LockId          int64      `protobuf:"varint,2,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty" yaml:"lock_id"`
+	SharesToMigrate types.Coin `protobuf:"bytes,3,opt,name=shares_to_migrate,json=sharesToMigrate,proto3" json:"shares_to_migrate" yaml:"shares_to_migrate"`
+	// token_out_mins indicates minimum token to exit Balancer pool with.
+	TokenOutMins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=token_out_mins,json=tokenOutMins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"token_out_mins" yaml:"token_out_mins"`
+}
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Reset() {
+	*m = MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) ProtoMessage() {}
+func (*MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Descriptor() ([]byte, []int) {
+	return fileDescriptor_55b645f187d22814, []int{14}
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition.Merge(m, src)
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition proto.InternalMessageInfo
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSender() string {
+	if m != nil {
+		return m.Sender
+	}
+	return ""
+}
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetLockId() int64 {
+	if m != nil {
+		return m.LockId
+	}
+	return 0
+}
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSharesToMigrate() types.Coin {
+	if m != nil {
+		return m.SharesToMigrate
+	}
+	return types.Coin{}
+}
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetTokenOutMins() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.TokenOutMins
+	}
+	return nil
+}
+
+type MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse struct {
+	Amount0          cosmossdk_io_math.Int       `protobuf:"bytes,1,opt,name=amount0,proto3,customtype=cosmossdk.io/math.Int" json:"amount0" yaml:"amount0"`
+	Amount1          cosmossdk_io_math.Int       `protobuf:"bytes,2,opt,name=amount1,proto3,customtype=cosmossdk.io/math.Int" json:"amount1" yaml:"amount1"`
+	LiquidityCreated cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=liquidity_created,json=liquidityCreated,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"liquidity_created" yaml:"liquidity_created"`
+	JoinTime         time.Time                   `protobuf:"bytes,4,opt,name=join_time,json=joinTime,proto3,stdtime" json:"join_time" yaml:"join_time"`
+}
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) Reset() {
+	*m = MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse{}
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) ProtoMessage() {}
+func (*MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_55b645f187d22814, []int{15}
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse.Merge(m, src)
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse proto.InternalMessageInfo
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) GetJoinTime() time.Time {
+	if m != nil {
+		return m.JoinTime
+	}
+	return time.Time{}
+}
+
+// ===================== MsgAddToConcentratedLiquiditySuperfluidPosition
+type MsgAddToConcentratedLiquiditySuperfluidPosition struct {
+	PositionId    uint64     `protobuf:"varint,1,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty" yaml:"position_id"`
+	Sender        string     `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	TokenDesired0 types.Coin `protobuf:"bytes,3,opt,name=token_desired0,json=tokenDesired0,proto3" json:"token_desired0" yaml:"token_desired0"`
+	TokenDesired1 types.Coin `protobuf:"bytes,4,opt,name=token_desired1,json=tokenDesired1,proto3" json:"token_desired1" yaml:"token_desired1"`
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) Reset() {
+	*m = MsgAddToConcentratedLiquiditySuperfluidPosition{}
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgAddToConcentratedLiquiditySuperfluidPosition) ProtoMessage() {}
+func (*MsgAddToConcentratedLiquiditySuperfluidPosition) Descriptor() ([]byte, []int) {
+	return fileDescriptor_55b645f187d22814, []int{16}
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAddToConcentratedLiquiditySuperfluidPosition.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddToConcentratedLiquiditySuperfluidPosition.Merge(m, src)
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddToConcentratedLiquiditySuperfluidPosition.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAddToConcentratedLiquiditySuperfluidPosition proto.InternalMessageInfo
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) GetPositionId() uint64 {
+	if m != nil {
+		return m.PositionId
+	}
+	return 0
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) GetSender() string {
+	if m != nil {
+		return m.Sender
+	}
+	return ""
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) GetTokenDesired0() types.Coin {
+	if m != nil {
+		return m.TokenDesired0
+	}
+	return types.Coin{}
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) GetTokenDesired1() types.Coin {
+	if m != nil {
+		return m.TokenDesired1
+	}
+	return types.Coin{}
+}
+
+type MsgAddToConcentratedLiquiditySuperfluidPositionResponse struct {
+	PositionId uint64                `protobuf:"varint,1,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty" yaml:"position_id"`
+	Amount0    cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=amount0,proto3,customtype=cosmossdk.io/math.Int" json:"amount0" yaml:"amount0"`
+	Amount1    cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=amount1,proto3,customtype=cosmossdk.io/math.Int" json:"amount1" yaml:"amount1"`
+	// new_liquidity is the final liquidity after the add.
+	// It includes the liquidity that existed before in the position
+	// and the new liquidity that was added to the position.
+	NewLiquidity cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=new_liquidity,json=newLiquidity,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"new_liquidity" yaml:"new_liquidity"`
+	LockId       uint64                      `protobuf:"varint,4,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty" yaml:"lock_id"`
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) Reset() {
+	*m = MsgAddToConcentratedLiquiditySuperfluidPositionResponse{}
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgAddToConcentratedLiquiditySuperfluidPositionResponse) ProtoMessage() {}
+func (*MsgAddToConcentratedLiquiditySuperfluidPositionResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_55b645f187d22814, []int{17}
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAddToConcentratedLiquiditySuperfluidPositionResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddToConcentratedLiquiditySuperfluidPositionResponse.Merge(m, src)
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddToConcentratedLiquiditySuperfluidPositionResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAddToConcentratedLiquiditySuperfluidPositionResponse proto.InternalMessageInfo
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) GetPositionId() uint64 {
+	if m != nil {
+		return m.PositionId
+	}
+	return 0
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) GetLockId() uint64 {
+	if m != nil {
+		return m.LockId
+	}
+	return 0
+}
+
+// ===================== MsgUnbondConvertAndStake
+type MsgUnbondConvertAndStake struct {
+	// lock ID to convert and stake.
+	// lock id with 0 should be provided if converting liquid gamm shares to stake
+	LockId uint64 `protobuf:"varint,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty" yaml:"lock_id"`
+	Sender string `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	// validator address to delegate to.
+	// If provided empty string, we use the validators returned from
+	// valset-preference module.
+	ValAddr string `protobuf:"bytes,3,opt,name=val_addr,json=valAddr,proto3" json:"val_addr,omitempty"`
+	// min_amt_to_stake indicates the minimum amount to stake after conversion
+	MinAmtToStake cosmossdk_io_math.Int `protobuf:"bytes,4,opt,name=min_amt_to_stake,json=minAmtToStake,proto3,customtype=cosmossdk.io/math.Int" json:"min_amt_to_stake" yaml:"min_amt_to_stake"`
+	// shares_to_convert indicates shares wanted to stake.
+	// Note that this field is only used for liquid(unlocked) gamm shares.
+	// For all other cases, this field would be disregarded.
+	SharesToConvert types.Coin `protobuf:"bytes,5,opt,name=shares_to_convert,json=sharesToConvert,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coin" json:"shares_to_convert" yaml:"shares_to_convert"`
+}
+
+func (m *MsgUnbondConvertAndStake) Reset()         { *m = MsgUnbondConvertAndStake{} }
+func (m *MsgUnbondConvertAndStake) String() string { return proto.CompactTextString(m) }
+func (*MsgUnbondConvertAndStake) ProtoMessage()    {}
+func (*MsgUnbondConvertAndStake) Descriptor() ([]byte, []int) {
+	return fileDescriptor_55b645f187d22814, []int{18}
+}
+func (m *MsgUnbondConvertAndStake) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUnbondConvertAndStake) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUnbondConvertAndStake.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUnbondConvertAndStake) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUnbondConvertAndStake.Merge(m, src)
+}
+func (m *MsgUnbondConvertAndStake) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUnbondConvertAndStake) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUnbondConvertAndStake.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUnbondConvertAndStake proto.InternalMessageInfo
+
+func (m *MsgUnbondConvertAndStake) GetLockId() uint64 {
+	if m != nil {
+		return m.LockId
+	}
+	return 0
+}
+
+func (m *MsgUnbondConvertAndStake) GetSender() string {
+	if m != nil {
+		return m.Sender
+	}
+	return ""
+}
+
+func (m *MsgUnbondConvertAndStake) GetValAddr() string {
+	if m != nil {
+		return m.ValAddr
+	}
+	return ""
+}
+
+func (m *MsgUnbondConvertAndStake) GetSharesToConvert() types.Coin {
+	if m != nil {
+		return m.SharesToConvert
+	}
+	return types.Coin{}
+}
+
+type MsgUnbondConvertAndStakeResponse struct {
+	TotalAmtStaked cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=total_amt_staked,json=totalAmtStaked,proto3,customtype=cosmossdk.io/math.Int" json:"total_amt_staked" yaml:"total_amt_staked"`
+}
+
+func (m *MsgUnbondConvertAndStakeResponse) Reset()         { *m = MsgUnbondConvertAndStakeResponse{} }
+func (m *MsgUnbondConvertAndStakeResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUnbondConvertAndStakeResponse) ProtoMessage()    {}
+func (*MsgUnbondConvertAndStakeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_55b645f187d22814, []int{19}
+}
+func (m *MsgUnbondConvertAndStakeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUnbondConvertAndStakeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUnbondConvertAndStakeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUnbondConvertAndStakeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUnbondConvertAndStakeResponse.Merge(m, src)
+}
+func (m *MsgUnbondConvertAndStakeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUnbondConvertAndStakeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUnbondConvertAndStakeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUnbondConvertAndStakeResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgSuperfluidDelegate)(nil), "osmosis.superfluid.MsgSuperfluidDelegate")
 	proto.RegisterType((*MsgSuperfluidDelegateResponse)(nil), "osmosis.superfluid.MsgSuperfluidDelegateResponse")
@@ -626,57 +1149,117 @@ func init() {
 	proto.RegisterType((*MsgSuperfluidUndelegateAndUnbondLockResponse)(nil), "osmosis.superfluid.MsgSuperfluidUndelegateAndUnbondLockResponse")
 	proto.RegisterType((*MsgLockAndSuperfluidDelegate)(nil), "osmosis.superfluid.MsgLockAndSuperfluidDelegate")
 	proto.RegisterType((*MsgLockAndSuperfluidDelegateResponse)(nil), "osmosis.superfluid.MsgLockAndSuperfluidDelegateResponse")
+	proto.RegisterType((*MsgCreateFullRangePositionAndSuperfluidDelegate)(nil), "osmosis.superfluid.MsgCreateFullRangePositionAndSuperfluidDelegate")
+	proto.RegisterType((*MsgCreateFullRangePositionAndSuperfluidDelegateResponse)(nil), "osmosis.superfluid.MsgCreateFullRangePositionAndSuperfluidDelegateResponse")
 	proto.RegisterType((*MsgUnPoolWhitelistedPool)(nil), "osmosis.superfluid.MsgUnPoolWhitelistedPool")
 	proto.RegisterType((*MsgUnPoolWhitelistedPoolResponse)(nil), "osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse")
+	proto.RegisterType((*MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition)(nil), "osmosis.superfluid.MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition")
+	proto.RegisterType((*MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse)(nil), "osmosis.superfluid.MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse")
+	proto.RegisterType((*MsgAddToConcentratedLiquiditySuperfluidPosition)(nil), "osmosis.superfluid.MsgAddToConcentratedLiquiditySuperfluidPosition")
+	proto.RegisterType((*MsgAddToConcentratedLiquiditySuperfluidPositionResponse)(nil), "osmosis.superfluid.MsgAddToConcentratedLiquiditySuperfluidPositionResponse")
+	proto.RegisterType((*MsgUnbondConvertAndStake)(nil), "osmosis.superfluid.MsgUnbondConvertAndStake")
+	proto.RegisterType((*MsgUnbondConvertAndStakeResponse)(nil), "osmosis.superfluid.MsgUnbondConvertAndStakeResponse")
 }
 
 func init() { proto.RegisterFile("osmosis/superfluid/tx.proto", fileDescriptor_55b645f187d22814) }
 
 var fileDescriptor_55b645f187d22814 = []byte{
-	// 674 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0x5f, 0x4f, 0xd3, 0x5e,
-	0x18, 0x5e, 0xb7, 0xfd, 0xc6, 0xcf, 0x97, 0x80, 0xb1, 0x42, 0x28, 0x55, 0xdb, 0x51, 0x8d, 0x99,
-	0x01, 0x7a, 0x18, 0x10, 0x42, 0xbc, 0x92, 0xc9, 0xcd, 0x0c, 0x4b, 0x48, 0x0d, 0x31, 0x31, 0x31,
-	0xa4, 0xdd, 0x39, 0x94, 0x86, 0xd2, 0xb3, 0xf4, 0x74, 0xcb, 0x88, 0x1f, 0xc0, 0x5b, 0xaf, 0xbc,
-	0xf5, 0xde, 0x0b, 0xbf, 0x86, 0x5c, 0x72, 0xe9, 0xd5, 0x34, 0xf0, 0x0d, 0xf8, 0x04, 0xe6, 0xf4,
-	0x1f, 0xa2, 0x2d, 0x6c, 0x8a, 0x57, 0x3b, 0xe7, 0xbc, 0xcf, 0xfb, 0xbc, 0xcf, 0x9b, 0xf7, 0xcf,
-	0x0a, 0xf7, 0x28, 0x3b, 0xa4, 0xcc, 0x61, 0x88, 0x75, 0x3b, 0xc4, 0xdf, 0x73, 0xbb, 0x0e, 0x46,
-	0x41, 0x5f, 0xef, 0xf8, 0x34, 0xa0, 0xa2, 0x18, 0x1b, 0xf5, 0x0b, 0xa3, 0x3c, 0x65, 0x53, 0x9b,
-	0x86, 0x66, 0xc4, 0x4f, 0x11, 0x52, 0x56, 0x6c, 0x4a, 0x6d, 0x97, 0xa0, 0xf0, 0x66, 0x75, 0xf7,
-	0x10, 0xee, 0xfa, 0x66, 0xe0, 0x50, 0x2f, 0xb1, 0xb7, 0x43, 0x2a, 0x64, 0x99, 0x8c, 0xa0, 0x5e,
-	0xdd, 0x22, 0x81, 0x59, 0x47, 0x6d, 0xea, 0x24, 0xf6, 0x87, 0x19, 0x32, 0x2e, 0x8e, 0x11, 0x48,
-	0xeb, 0xc1, 0x74, 0x8b, 0xd9, 0x2f, 0xd3, 0xe7, 0x4d, 0xe2, 0x12, 0xdb, 0x0c, 0x88, 0xf8, 0x04,
-	0x2a, 0x8c, 0x78, 0x98, 0xf8, 0x92, 0x50, 0x15, 0x6a, 0xb7, 0x1a, 0x77, 0xce, 0x07, 0xea, 0xc4,
-	0x91, 0x79, 0xe8, 0x3e, 0xd5, 0xa2, 0x77, 0xcd, 0x88, 0x01, 0xe2, 0x0c, 0x8c, 0xb9, 0xb4, 0x7d,
-	0xb0, 0xeb, 0x60, 0xa9, 0x58, 0x15, 0x6a, 0x65, 0xa3, 0xc2, 0xaf, 0x4d, 0x2c, 0xce, 0xc2, 0xff,
-	0x3d, 0xd3, 0xdd, 0x35, 0x31, 0xf6, 0xa5, 0x12, 0x67, 0x31, 0xc6, 0x7a, 0xa6, 0xbb, 0x81, 0xb1,
-	0xaf, 0xa9, 0xf0, 0x20, 0x33, 0xae, 0x41, 0x58, 0x87, 0x7a, 0x8c, 0x68, 0x6f, 0x60, 0xe6, 0x12,
-	0x60, 0xc7, 0xc3, 0x37, 0x28, 0x4d, 0x9b, 0x03, 0x35, 0x87, 0xfe, 0x0a, 0x05, 0x16, 0xf5, 0xf0,
-	0x16, 0x6d, 0x1f, 0xfc, 0x23, 0x05, 0x09, 0x7d, 0xaa, 0xe0, 0xb3, 0x00, 0x8f, 0x72, 0x54, 0x6e,
-	0x78, 0x37, 0xac, 0x47, 0x6c, 0x40, 0x99, 0x37, 0x4f, 0x58, 0xa8, 0xf1, 0xe5, 0x59, 0x3d, 0xea,
-	0x2e, 0x9d, 0x77, 0x97, 0x1e, 0x77, 0x97, 0xfe, 0x9c, 0x3a, 0x5e, 0xe3, 0xee, 0xf1, 0x40, 0x2d,
-	0x9c, 0x0f, 0xd4, 0xf1, 0x28, 0x00, 0x77, 0xd2, 0x8c, 0xd0, 0x57, 0xd3, 0x61, 0x61, 0x18, 0xbd,
-	0x69, 0x82, 0x5f, 0x04, 0xb8, 0xdf, 0x62, 0x36, 0x7f, 0xdb, 0xf0, 0xf0, 0xdf, 0x75, 0xa1, 0x09,
-	0xff, 0x71, 0x0d, 0x4c, 0x2a, 0x56, 0x4b, 0x57, 0x27, 0xb0, 0xc4, 0x13, 0xf8, 0xf4, 0x4d, 0xad,
-	0xd9, 0x4e, 0xb0, 0xdf, 0xb5, 0xf4, 0x36, 0x3d, 0x44, 0xf1, 0x2c, 0x45, 0x3f, 0x8b, 0x0c, 0x1f,
-	0xa0, 0xe0, 0xa8, 0x43, 0x58, 0xe8, 0xc0, 0x8c, 0x88, 0xf9, 0xaa, 0x7e, 0x5e, 0x0b, 0x2b, 0x95,
-	0x9b, 0x48, 0x92, 0xb1, 0x38, 0x09, 0xc5, 0xe6, 0x66, 0x98, 0x4c, 0xd9, 0x28, 0x36, 0x37, 0x35,
-	0x1f, 0xa4, 0x16, 0xb3, 0x77, 0xbc, 0x6d, 0x4a, 0xdd, 0x57, 0xfb, 0x4e, 0x40, 0x5c, 0x87, 0x05,
-	0x04, 0xf3, 0xeb, 0x28, 0xc9, 0xcf, 0xc3, 0x58, 0x87, 0x52, 0x37, 0xad, 0x6a, 0x43, 0x3c, 0x1f,
-	0xa8, 0x93, 0x11, 0x36, 0x36, 0x68, 0x46, 0x85, 0x9f, 0x9a, 0x58, 0x7b, 0x01, 0xd5, 0xbc, 0x98,
-	0xa9, 0xce, 0xc7, 0x70, 0x9b, 0xf4, 0x9d, 0x80, 0xe0, 0xdd, 0xb8, 0x5b, 0x98, 0x24, 0x54, 0x4b,
-	0xb5, 0xb2, 0x31, 0x11, 0x3d, 0x6f, 0x85, 0x4d, 0xc3, 0x96, 0x3f, 0x54, 0xa0, 0xd4, 0x62, 0xb6,
-	0xe8, 0x83, 0x98, 0x55, 0x3e, 0xfd, 0xf7, 0x6d, 0xa7, 0x67, 0xce, 0xbd, 0x5c, 0x1f, 0x1a, 0x9a,
-	0x6a, 0xec, 0xc3, 0x54, 0xe6, 0x7e, 0x98, 0xbf, 0x96, 0xea, 0x02, 0x2c, 0xaf, 0x8c, 0x00, 0xce,
-	0x8b, 0x9c, 0xce, 0xe1, 0x30, 0x91, 0x13, 0xf0, 0x50, 0x91, 0x7f, 0x9d, 0x18, 0xf1, 0xa3, 0x00,
-	0x73, 0xd7, 0xef, 0x83, 0xf5, 0x11, 0x92, 0xba, 0xe4, 0x29, 0x3f, 0xfb, 0x53, 0xcf, 0x54, 0xe1,
-	0x3b, 0x01, 0x66, 0xf3, 0x07, 0x7a, 0x29, 0x87, 0x3f, 0xd7, 0x43, 0x5e, 0x1f, 0xd5, 0x23, 0x55,
-	0xf2, 0x16, 0xa6, 0xb3, 0x07, 0x6b, 0x21, 0x87, 0x32, 0x13, 0x2d, 0xaf, 0x8e, 0x82, 0x4e, 0x82,
-	0x37, 0xb6, 0x8f, 0x4f, 0x15, 0xe1, 0xe4, 0x54, 0x11, 0xbe, 0x9f, 0x2a, 0xc2, 0xfb, 0x33, 0xa5,
-	0x70, 0x72, 0xa6, 0x14, 0xbe, 0x9e, 0x29, 0x85, 0xd7, 0x6b, 0x3f, 0xad, 0x9d, 0x98, 0x79, 0xd1,
-	0x35, 0x2d, 0x96, 0x5c, 0x50, 0xaf, 0xbe, 0x8a, 0xfa, 0x97, 0x3e, 0x1e, 0xf8, 0x2a, 0xb2, 0x2a,
-	0xe1, 0x3f, 0xf6, 0xca, 0x8f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x04, 0x3d, 0x2c, 0x3c, 0x5f, 0x08,
-	0x00, 0x00,
+	// 1519 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0xcd, 0x6f, 0x13, 0x47,
+	0x1b, 0xcf, 0xda, 0x21, 0x81, 0x09, 0x09, 0xc9, 0xbe, 0x04, 0x8c, 0x01, 0xdb, 0x0c, 0xf0, 0x12,
+	0x3e, 0xbc, 0x1b, 0x43, 0x0b, 0x69, 0x7a, 0x28, 0x71, 0xac, 0x56, 0x2e, 0x89, 0x8a, 0x96, 0xa0,
+	0x4a, 0xbd, 0xb8, 0x6b, 0xcf, 0x64, 0xb3, 0xcd, 0xee, 0x8e, 0xf1, 0x8c, 0x43, 0xa2, 0x9e, 0xda,
+	0x4a, 0xad, 0xc4, 0x09, 0xf5, 0xd2, 0x5e, 0xaa, 0x9e, 0x5b, 0x55, 0x15, 0x7f, 0x42, 0x8f, 0x1c,
+	0x39, 0x56, 0xad, 0x14, 0x2a, 0x38, 0xf4, 0x9e, 0x4b, 0xaf, 0xd5, 0xec, 0xce, 0xae, 0xd7, 0xf1,
+	0x6e, 0xec, 0x35, 0xb9, 0xf4, 0x92, 0xec, 0xcc, 0x3c, 0x1f, 0xbf, 0xe7, 0x7b, 0xc6, 0xe0, 0x2c,
+	0xa1, 0x36, 0xa1, 0x26, 0x55, 0x69, 0xbb, 0x89, 0x5b, 0xeb, 0x56, 0xdb, 0x44, 0x2a, 0xdb, 0x56,
+	0x9a, 0x2d, 0xc2, 0x88, 0x2c, 0x8b, 0x43, 0xa5, 0x73, 0x98, 0x3d, 0x69, 0x10, 0x83, 0xb8, 0xc7,
+	0x2a, 0xff, 0xf2, 0x28, 0xb3, 0x33, 0xba, 0x6d, 0x3a, 0x44, 0x75, 0xff, 0x8a, 0xad, 0x9c, 0x41,
+	0x88, 0x61, 0x61, 0xd5, 0x5d, 0xd5, 0xdb, 0xeb, 0x2a, 0x6a, 0xb7, 0x74, 0x66, 0x12, 0xc7, 0x3f,
+	0x6f, 0xb8, 0xd2, 0xd5, 0xba, 0x4e, 0xb1, 0xba, 0x55, 0xaa, 0x63, 0xa6, 0x97, 0xd4, 0x06, 0x31,
+	0xfd, 0xf3, 0xfc, 0x7e, 0x7e, 0x66, 0xda, 0x98, 0x32, 0xdd, 0x6e, 0x0a, 0x82, 0x8b, 0x11, 0xd0,
+	0x3b, 0x9f, 0x1e, 0x11, 0xfc, 0x5e, 0x02, 0xb3, 0xab, 0xd4, 0x78, 0x10, 0xec, 0x57, 0xb0, 0x85,
+	0x0d, 0x9d, 0x61, 0xf9, 0x2a, 0x18, 0xa3, 0xd8, 0x41, 0xb8, 0x95, 0x91, 0x0a, 0xd2, 0xdc, 0xb1,
+	0xf2, 0xcc, 0xde, 0x6e, 0x7e, 0x72, 0x47, 0xb7, 0xad, 0x45, 0xe8, 0xed, 0x43, 0x4d, 0x10, 0xc8,
+	0xa7, 0xc1, 0xb8, 0x45, 0x1a, 0x9b, 0x35, 0x13, 0x65, 0x52, 0x05, 0x69, 0x6e, 0x54, 0x1b, 0xe3,
+	0xcb, 0x2a, 0x92, 0xcf, 0x80, 0xa3, 0x5b, 0xba, 0x55, 0xd3, 0x11, 0x6a, 0x65, 0xd2, 0x5c, 0x8a,
+	0x36, 0xbe, 0xa5, 0x5b, 0x4b, 0x08, 0xb5, 0x16, 0x0b, 0x4f, 0xfe, 0x7e, 0x76, 0x2d, 0xc2, 0xbb,
+	0x45, 0x24, 0x00, 0xc0, 0x3c, 0x38, 0x1f, 0x89, 0x4c, 0xc3, 0xb4, 0x49, 0x1c, 0x8a, 0xe1, 0x17,
+	0x12, 0x38, 0xdd, 0x45, 0xf1, 0xd0, 0x41, 0x87, 0x88, 0x7e, 0x11, 0x72, 0x88, 0xe7, 0x23, 0x20,
+	0xb6, 0x03, 0x3d, 0xf0, 0x02, 0xc8, 0xc7, 0x40, 0x08, 0x60, 0x7e, 0xd9, 0x0b, 0xb3, 0x4e, 0x1c,
+	0xb4, 0x42, 0x1a, 0x9b, 0x87, 0x02, 0xf3, 0x22, 0x87, 0x99, 0x8b, 0x84, 0xc9, 0xf5, 0x14, 0x39,
+	0x59, 0x04, 0x4e, 0x1f, 0x43, 0x80, 0xf3, 0x57, 0x09, 0x5c, 0x8a, 0xb1, 0x65, 0xc9, 0x39, 0x64,
+	0xd0, 0x72, 0x19, 0x8c, 0xf2, 0x5c, 0x76, 0xb3, 0x62, 0xe2, 0xe6, 0x19, 0xc5, 0x4b, 0x76, 0x85,
+	0x27, 0xbb, 0x22, 0x92, 0x5d, 0x59, 0x26, 0xa6, 0x53, 0xfe, 0xdf, 0xf3, 0xdd, 0xfc, 0xc8, 0xde,
+	0x6e, 0x7e, 0xc2, 0x53, 0xc0, 0x99, 0xa0, 0xe6, 0xf2, 0xc2, 0x0f, 0xc0, 0x8d, 0x41, 0xf0, 0xfa,
+	0x06, 0x86, 0xc1, 0x48, 0x61, 0x30, 0x70, 0x4f, 0x02, 0xe7, 0x56, 0xa9, 0xc1, 0x89, 0x97, 0x1c,
+	0xf4, 0x66, 0xb5, 0xa0, 0x83, 0x23, 0x1c, 0x1c, 0xcd, 0xa4, 0x0a, 0xe9, 0x83, 0x2d, 0x9b, 0xe7,
+	0x96, 0xfd, 0xfc, 0x32, 0x3f, 0x67, 0x98, 0x6c, 0xa3, 0x5d, 0x57, 0x1a, 0xc4, 0x56, 0x45, 0xcd,
+	0x7b, 0xff, 0x8a, 0x14, 0x6d, 0xaa, 0x6c, 0xa7, 0x89, 0xa9, 0xcb, 0x40, 0x35, 0x4f, 0xf2, 0x41,
+	0x55, 0x75, 0x95, 0xe7, 0xc2, 0x25, 0x3f, 0x17, 0xb8, 0x79, 0x45, 0xdd, 0x41, 0xc5, 0xa8, 0xf2,
+	0xba, 0xed, 0x46, 0x3b, 0xd6, 0xe6, 0xc0, 0x6b, 0x53, 0x20, 0x55, 0xad, 0x08, 0x87, 0xa5, 0xaa,
+	0x15, 0xf8, 0x2c, 0x05, 0xd4, 0x55, 0x6a, 0x2c, 0xb7, 0xb0, 0xce, 0xf0, 0xfb, 0x6d, 0xcb, 0xd2,
+	0x74, 0xc7, 0xc0, 0xf7, 0x09, 0x35, 0x79, 0xf3, 0xfa, 0x6f, 0xfb, 0x4f, 0xbe, 0x0e, 0xc6, 0x9b,
+	0x84, 0x58, 0x3c, 0x45, 0x46, 0xb9, 0xc5, 0x65, 0x79, 0x6f, 0x37, 0x3f, 0xe5, 0x21, 0x15, 0x07,
+	0x50, 0x1b, 0xe3, 0x5f, 0x55, 0xb4, 0x78, 0x85, 0x3b, 0x1b, 0xfa, 0xce, 0x5e, 0x6f, 0x5b, 0x56,
+	0xb1, 0xc5, 0x7d, 0xe1, 0xb9, 0x7c, 0xbd, 0xe3, 0xea, 0x47, 0xe0, 0x4e, 0x42, 0x8f, 0x05, 0xde,
+	0x3f, 0x05, 0xbc, 0x24, 0xad, 0x74, 0xa5, 0x6c, 0x45, 0xce, 0x01, 0xd0, 0x14, 0x02, 0xaa, 0x15,
+	0x51, 0x5b, 0xa1, 0x1d, 0xde, 0xd7, 0x33, 0xab, 0xd4, 0x78, 0xe8, 0xdc, 0x27, 0xc4, 0xfa, 0x78,
+	0xc3, 0x64, 0xd8, 0x32, 0x29, 0xc3, 0x88, 0x2f, 0x93, 0x84, 0x23, 0xe4, 0x90, 0x54, 0x5f, 0x87,
+	0x5c, 0xe2, 0x0e, 0xc9, 0xfb, 0x0e, 0x69, 0x3b, 0x7c, 0xbb, 0xf8, 0xb8, 0xa3, 0xbc, 0xc8, 0x37,
+	0xe0, 0x87, 0xa0, 0x10, 0x87, 0x2c, 0x30, 0xfb, 0xff, 0xe0, 0x04, 0xde, 0x36, 0x19, 0x46, 0x35,
+	0x51, 0xb1, 0x34, 0x23, 0x15, 0xd2, 0x73, 0xa3, 0xda, 0xa4, 0xb7, 0xbd, 0xe2, 0x16, 0x2e, 0x85,
+	0x3f, 0xa5, 0xc1, 0x82, 0x2b, 0xcc, 0xf2, 0xf2, 0x78, 0xd5, 0x34, 0x5a, 0x3a, 0xc3, 0x0f, 0x36,
+	0xf4, 0x16, 0xa6, 0x6b, 0x24, 0x70, 0xf6, 0x32, 0x71, 0x1a, 0xd8, 0x61, 0xfc, 0x0c, 0xf9, 0x8e,
+	0x4f, 0xe8, 0x86, 0x70, 0x1f, 0x4b, 0x87, 0xdd, 0x20, 0x0e, 0x60, 0xd0, 0xdb, 0x0c, 0x30, 0x43,
+	0x5d, 0x00, 0x35, 0x46, 0x6a, 0xb6, 0x87, 0xa8, 0x7f, 0xa3, 0x2b, 0x88, 0x46, 0x97, 0x11, 0x08,
+	0xf6, 0x4b, 0x80, 0xda, 0x09, 0x2a, 0xcc, 0x12, 0x56, 0xca, 0x4f, 0x24, 0x30, 0xc5, 0xc8, 0x26,
+	0x76, 0x6a, 0xa4, 0xcd, 0x6a, 0x36, 0xaf, 0x9a, 0xd1, 0x7e, 0x55, 0x53, 0x15, 0x6a, 0x66, 0x3d,
+	0x35, 0xdd, 0xec, 0x30, 0x51, 0x39, 0x1d, 0x77, 0x99, 0x3f, 0x6a, 0xb3, 0x55, 0xd3, 0xa1, 0x8b,
+	0x79, 0x1e, 0xfc, 0x6c, 0x27, 0xf8, 0x41, 0xf3, 0xf1, 0xf1, 0xff, 0x90, 0x06, 0x77, 0x87, 0x8d,
+	0x55, 0x90, 0x18, 0x55, 0x30, 0xae, 0xdb, 0xa4, 0xed, 0xb0, 0x79, 0x11, 0x34, 0x95, 0xdb, 0xf3,
+	0xc7, 0x6e, 0x7e, 0xd6, 0x03, 0x49, 0xd1, 0xa6, 0x62, 0x12, 0xd5, 0xd6, 0xd9, 0x86, 0x52, 0x75,
+	0x58, 0x27, 0x4a, 0x82, 0x0b, 0x6a, 0x3e, 0x7f, 0x47, 0x54, 0xc9, 0x8d, 0x69, 0x52, 0x51, 0xa5,
+	0x40, 0x54, 0x49, 0xb6, 0xc0, 0x8c, 0x65, 0x3e, 0x6a, 0x9b, 0xc8, 0x64, 0x3b, 0xb5, 0x86, 0x5b,
+	0xe7, 0xc8, 0x6b, 0x2d, 0xe5, 0xf7, 0x84, 0xd0, 0xb3, 0xbd, 0x42, 0x57, 0xb0, 0xa1, 0x37, 0x76,
+	0x2a, 0xb8, 0xd1, 0x89, 0x7a, 0x8f, 0x14, 0xa8, 0x4d, 0x07, 0x7b, 0x5e, 0x03, 0x41, 0xf2, 0x43,
+	0x70, 0xec, 0x33, 0x62, 0x3a, 0x35, 0x7e, 0xe1, 0x73, 0xdb, 0xd4, 0xc4, 0xcd, 0xac, 0xe2, 0xdd,
+	0x06, 0x15, 0xff, 0x36, 0xa8, 0xac, 0xf9, 0xb7, 0xc1, 0xf2, 0x39, 0x11, 0xf1, 0x69, 0x4f, 0x45,
+	0xc0, 0x0a, 0x9f, 0xbe, 0xcc, 0x4b, 0xda, 0x51, 0xbe, 0xe6, 0xc4, 0xf0, 0xab, 0xb4, 0xdb, 0xd8,
+	0x97, 0x10, 0x5a, 0x23, 0xe1, 0x18, 0xac, 0xf8, 0xfa, 0x3b, 0x6d, 0x2a, 0x28, 0xa1, 0x3b, 0x60,
+	0xc2, 0x6f, 0x3a, 0xc1, 0x58, 0x2d, 0x9f, 0xda, 0xdb, 0xcd, 0xcb, 0x7e, 0x8b, 0x08, 0x0e, 0x61,
+	0xa8, 0x3f, 0xa1, 0x50, 0xed, 0xa5, 0xfa, 0xd5, 0x5e, 0xcd, 0x4f, 0x72, 0x84, 0xa9, 0xd9, 0xc2,
+	0x68, 0xbe, 0x7f, 0x2d, 0x9d, 0x8f, 0x4a, 0x72, 0x9f, 0x1d, 0x6a, 0x93, 0xee, 0x46, 0x45, 0xac,
+	0x7b, 0x14, 0x94, 0x84, 0x53, 0x87, 0x54, 0x50, 0xda, 0xa7, 0xa0, 0xb4, 0x78, 0x8d, 0x97, 0xc6,
+	0x65, 0xbf, 0x34, 0x74, 0x84, 0x8a, 0x8c, 0x14, 0x1b, 0x56, 0x78, 0x2c, 0xfb, 0xae, 0x81, 0xdf,
+	0xa5, 0xdd, 0x61, 0x91, 0x24, 0x0a, 0x41, 0x71, 0x0c, 0x1d, 0x8d, 0x50, 0x55, 0xa5, 0x0e, 0xaf,
+	0xaa, 0xd2, 0x6f, 0x58, 0x55, 0x9f, 0x82, 0x49, 0x07, 0x3f, 0xae, 0x05, 0xf9, 0x9f, 0x39, 0xe2,
+	0x0a, 0x7c, 0x77, 0xb0, 0x8a, 0x3a, 0xe9, 0x89, 0xed, 0x92, 0x00, 0xb5, 0xe3, 0x0e, 0x7e, 0x1c,
+	0xb8, 0x32, 0xdc, 0xd6, 0x7b, 0xc6, 0xfd, 0xfe, 0xb6, 0x0e, 0x7f, 0x49, 0x8b, 0x91, 0xca, 0x2f,
+	0x96, 0xcb, 0xc4, 0xd9, 0xc2, 0x2d, 0xc6, 0x87, 0x37, 0xd3, 0x37, 0x71, 0x58, 0x92, 0xd4, 0x4f,
+	0x52, 0x92, 0xe4, 0x3f, 0xe0, 0xae, 0xa2, 0x83, 0x69, 0xdb, 0x74, 0x6a, 0xba, 0xcd, 0xf8, 0x94,
+	0xa0, 0x1c, 0x86, 0x6b, 0xc5, 0xb1, 0xf2, 0x42, 0x3f, 0x97, 0x9f, 0xf6, 0x94, 0xed, 0x67, 0x87,
+	0xda, 0xa4, 0x6d, 0x3a, 0x4b, 0x36, 0x5b, 0x23, 0x9e, 0x55, 0xdf, 0x4a, 0xe1, 0x51, 0xd6, 0xf0,
+	0x6c, 0x76, 0xc3, 0x70, 0x60, 0x75, 0xdc, 0x8b, 0x1b, 0x65, 0x42, 0x02, 0x1f, 0x33, 0x57, 0x06,
+	0x1c, 0x33, 0x9d, 0xa9, 0x27, 0x5c, 0xbe, 0x78, 0x99, 0x57, 0x53, 0xa1, 0x33, 0x68, 0xdc, 0x47,
+	0x8e, 0x90, 0xec, 0x5d, 0xbd, 0x5c, 0x5b, 0xbe, 0x96, 0xc4, 0x3d, 0x23, 0x22, 0x5c, 0x41, 0xc5,
+	0xd4, 0xc1, 0x34, 0x23, 0x8c, 0x3b, 0xd8, 0x66, 0x9e, 0x0f, 0x90, 0x98, 0x2b, 0x83, 0xfa, 0x70,
+	0x3f, 0x3b, 0xd4, 0xa6, 0xdc, 0xad, 0x25, 0x9b, 0xb9, 0xaa, 0xd0, 0xcd, 0x7f, 0x26, 0x40, 0x7a,
+	0x95, 0x1a, 0x72, 0x0b, 0xc8, 0x51, 0x57, 0x63, 0xa5, 0xf7, 0x47, 0x04, 0x25, 0xf2, 0xdd, 0x9b,
+	0x2d, 0x0d, 0x4c, 0x1a, 0xd8, 0xb7, 0x0d, 0x4e, 0x46, 0x3e, 0x8f, 0xaf, 0xf7, 0x15, 0xd5, 0x21,
+	0xce, 0xde, 0x4a, 0x40, 0x1c, 0xa7, 0x39, 0x78, 0x3c, 0x0e, 0xa2, 0xd9, 0x27, 0x1e, 0x48, 0x73,
+	0xcf, 0x33, 0xef, 0x47, 0x09, 0x5c, 0xe8, 0xff, 0x88, 0x5d, 0x48, 0x60, 0x54, 0x17, 0x67, 0xf6,
+	0xee, 0xb0, 0x9c, 0x01, 0xc2, 0x6f, 0x24, 0x70, 0x26, 0xfe, 0xb1, 0x39, 0x1f, 0x23, 0x3f, 0x96,
+	0x23, 0xbb, 0x90, 0x94, 0x23, 0x40, 0xf2, 0x9b, 0x04, 0x6e, 0x24, 0x7a, 0xc9, 0x2d, 0xc7, 0xa8,
+	0x4a, 0x22, 0x24, 0x7b, 0xef, 0x10, 0x84, 0x04, 0x26, 0x7c, 0x0e, 0x66, 0xa3, 0x5f, 0x39, 0x37,
+	0x62, 0xb4, 0x44, 0x52, 0x67, 0xdf, 0x4a, 0x42, 0x1d, 0x28, 0xff, 0x53, 0x02, 0x6f, 0x0f, 0xf7,
+	0xf8, 0x58, 0x89, 0xd5, 0x37, 0x84, 0xb4, 0xec, 0xda, 0x61, 0x4a, 0xeb, 0xca, 0x8e, 0x44, 0xd7,
+	0xc1, 0xb8, 0xec, 0x48, 0x22, 0x24, 0x36, 0x3b, 0x86, 0xba, 0x12, 0xb9, 0xd9, 0x11, 0x35, 0xb0,
+	0xe3, 0xb3, 0x23, 0x82, 0xfa, 0x80, 0xec, 0x38, 0x60, 0xba, 0x94, 0xef, 0x3f, 0x7f, 0x95, 0x93,
+	0x5e, 0xbc, 0xca, 0x49, 0x7f, 0xbd, 0xca, 0x49, 0x4f, 0x5f, 0xe7, 0x46, 0x5e, 0xbc, 0xce, 0x8d,
+	0xfc, 0xfe, 0x3a, 0x37, 0xf2, 0xc9, 0xed, 0xd0, 0xf4, 0x13, 0x92, 0x8b, 0x96, 0x5e, 0xa7, 0xfe,
+	0x42, 0xdd, 0x2a, 0xbd, 0xa3, 0x6e, 0x77, 0xfd, 0xe8, 0xcc, 0x27, 0x62, 0x7d, 0xcc, 0xbd, 0xdf,
+	0xdf, 0xfa, 0x37, 0x00, 0x00, 0xff, 0xff, 0x01, 0x69, 0x0d, 0xa8, 0x97, 0x16, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -702,7 +1285,13 @@ type MsgClient interface {
 	SuperfluidUndelegateAndUnbondLock(ctx context.Context, in *MsgSuperfluidUndelegateAndUnbondLock, opts ...grpc.CallOption) (*MsgSuperfluidUndelegateAndUnbondLockResponse, error)
 	// Execute lockup lock and superfluid delegation in a single msg
 	LockAndSuperfluidDelegate(ctx context.Context, in *MsgLockAndSuperfluidDelegate, opts ...grpc.CallOption) (*MsgLockAndSuperfluidDelegateResponse, error)
+	CreateFullRangePositionAndSuperfluidDelegate(ctx context.Context, in *MsgCreateFullRangePositionAndSuperfluidDelegate, opts ...grpc.CallOption) (*MsgCreateFullRangePositionAndSuperfluidDelegateResponse, error)
 	UnPoolWhitelistedPool(ctx context.Context, in *MsgUnPoolWhitelistedPool, opts ...grpc.CallOption) (*MsgUnPoolWhitelistedPoolResponse, error)
+	UnlockAndMigrateSharesToFullRangeConcentratedPosition(ctx context.Context, in *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition, opts ...grpc.CallOption) (*MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse, error)
+	AddToConcentratedLiquiditySuperfluidPosition(ctx context.Context, in *MsgAddToConcentratedLiquiditySuperfluidPosition, opts ...grpc.CallOption) (*MsgAddToConcentratedLiquiditySuperfluidPositionResponse, error)
+	// UnbondConvertAndStake breaks all locks / superfluid staked assets,
+	// converts them to osmo then stakes the osmo to the designated validator.
+	UnbondConvertAndStake(ctx context.Context, in *MsgUnbondConvertAndStake, opts ...grpc.CallOption) (*MsgUnbondConvertAndStakeResponse, error)
 }
 
 type msgClient struct {
@@ -758,9 +1347,45 @@ func (c *msgClient) LockAndSuperfluidDelegate(ctx context.Context, in *MsgLockAn
 	return out, nil
 }
 
+func (c *msgClient) CreateFullRangePositionAndSuperfluidDelegate(ctx context.Context, in *MsgCreateFullRangePositionAndSuperfluidDelegate, opts ...grpc.CallOption) (*MsgCreateFullRangePositionAndSuperfluidDelegateResponse, error) {
+	out := new(MsgCreateFullRangePositionAndSuperfluidDelegateResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.superfluid.Msg/CreateFullRangePositionAndSuperfluidDelegate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) UnPoolWhitelistedPool(ctx context.Context, in *MsgUnPoolWhitelistedPool, opts ...grpc.CallOption) (*MsgUnPoolWhitelistedPoolResponse, error) {
 	out := new(MsgUnPoolWhitelistedPoolResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.superfluid.Msg/UnPoolWhitelistedPool", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UnlockAndMigrateSharesToFullRangeConcentratedPosition(ctx context.Context, in *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition, opts ...grpc.CallOption) (*MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse, error) {
+	out := new(MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.superfluid.Msg/UnlockAndMigrateSharesToFullRangeConcentratedPosition", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) AddToConcentratedLiquiditySuperfluidPosition(ctx context.Context, in *MsgAddToConcentratedLiquiditySuperfluidPosition, opts ...grpc.CallOption) (*MsgAddToConcentratedLiquiditySuperfluidPositionResponse, error) {
+	out := new(MsgAddToConcentratedLiquiditySuperfluidPositionResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.superfluid.Msg/AddToConcentratedLiquiditySuperfluidPosition", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UnbondConvertAndStake(ctx context.Context, in *MsgUnbondConvertAndStake, opts ...grpc.CallOption) (*MsgUnbondConvertAndStakeResponse, error) {
+	out := new(MsgUnbondConvertAndStakeResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.superfluid.Msg/UnbondConvertAndStake", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -780,7 +1405,13 @@ type MsgServer interface {
 	SuperfluidUndelegateAndUnbondLock(context.Context, *MsgSuperfluidUndelegateAndUnbondLock) (*MsgSuperfluidUndelegateAndUnbondLockResponse, error)
 	// Execute lockup lock and superfluid delegation in a single msg
 	LockAndSuperfluidDelegate(context.Context, *MsgLockAndSuperfluidDelegate) (*MsgLockAndSuperfluidDelegateResponse, error)
+	CreateFullRangePositionAndSuperfluidDelegate(context.Context, *MsgCreateFullRangePositionAndSuperfluidDelegate) (*MsgCreateFullRangePositionAndSuperfluidDelegateResponse, error)
 	UnPoolWhitelistedPool(context.Context, *MsgUnPoolWhitelistedPool) (*MsgUnPoolWhitelistedPoolResponse, error)
+	UnlockAndMigrateSharesToFullRangeConcentratedPosition(context.Context, *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) (*MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse, error)
+	AddToConcentratedLiquiditySuperfluidPosition(context.Context, *MsgAddToConcentratedLiquiditySuperfluidPosition) (*MsgAddToConcentratedLiquiditySuperfluidPositionResponse, error)
+	// UnbondConvertAndStake breaks all locks / superfluid staked assets,
+	// converts them to osmo then stakes the osmo to the designated validator.
+	UnbondConvertAndStake(context.Context, *MsgUnbondConvertAndStake) (*MsgUnbondConvertAndStakeResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -802,8 +1433,20 @@ func (*UnimplementedMsgServer) SuperfluidUndelegateAndUnbondLock(ctx context.Con
 func (*UnimplementedMsgServer) LockAndSuperfluidDelegate(ctx context.Context, req *MsgLockAndSuperfluidDelegate) (*MsgLockAndSuperfluidDelegateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LockAndSuperfluidDelegate not implemented")
 }
+func (*UnimplementedMsgServer) CreateFullRangePositionAndSuperfluidDelegate(ctx context.Context, req *MsgCreateFullRangePositionAndSuperfluidDelegate) (*MsgCreateFullRangePositionAndSuperfluidDelegateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateFullRangePositionAndSuperfluidDelegate not implemented")
+}
 func (*UnimplementedMsgServer) UnPoolWhitelistedPool(ctx context.Context, req *MsgUnPoolWhitelistedPool) (*MsgUnPoolWhitelistedPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnPoolWhitelistedPool not implemented")
+}
+func (*UnimplementedMsgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(ctx context.Context, req *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) (*MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnlockAndMigrateSharesToFullRangeConcentratedPosition not implemented")
+}
+func (*UnimplementedMsgServer) AddToConcentratedLiquiditySuperfluidPosition(ctx context.Context, req *MsgAddToConcentratedLiquiditySuperfluidPosition) (*MsgAddToConcentratedLiquiditySuperfluidPositionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddToConcentratedLiquiditySuperfluidPosition not implemented")
+}
+func (*UnimplementedMsgServer) UnbondConvertAndStake(ctx context.Context, req *MsgUnbondConvertAndStake) (*MsgUnbondConvertAndStakeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnbondConvertAndStake not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -900,6 +1543,24 @@ func _Msg_LockAndSuperfluidDelegate_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateFullRangePositionAndSuperfluidDelegate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateFullRangePositionAndSuperfluidDelegate)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateFullRangePositionAndSuperfluidDelegate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.superfluid.Msg/CreateFullRangePositionAndSuperfluidDelegate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateFullRangePositionAndSuperfluidDelegate(ctx, req.(*MsgCreateFullRangePositionAndSuperfluidDelegate))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_UnPoolWhitelistedPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUnPoolWhitelistedPool)
 	if err := dec(in); err != nil {
@@ -914,6 +1575,60 @@ func _Msg_UnPoolWhitelistedPool_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UnPoolWhitelistedPool(ctx, req.(*MsgUnPoolWhitelistedPool))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UnlockAndMigrateSharesToFullRangeConcentratedPosition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UnlockAndMigrateSharesToFullRangeConcentratedPosition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.superfluid.Msg/UnlockAndMigrateSharesToFullRangeConcentratedPosition",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UnlockAndMigrateSharesToFullRangeConcentratedPosition(ctx, req.(*MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_AddToConcentratedLiquiditySuperfluidPosition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAddToConcentratedLiquiditySuperfluidPosition)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).AddToConcentratedLiquiditySuperfluidPosition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.superfluid.Msg/AddToConcentratedLiquiditySuperfluidPosition",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).AddToConcentratedLiquiditySuperfluidPosition(ctx, req.(*MsgAddToConcentratedLiquiditySuperfluidPosition))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UnbondConvertAndStake_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUnbondConvertAndStake)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UnbondConvertAndStake(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.superfluid.Msg/UnbondConvertAndStake",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UnbondConvertAndStake(ctx, req.(*MsgUnbondConvertAndStake))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -943,8 +1658,24 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_LockAndSuperfluidDelegate_Handler,
 		},
 		{
+			MethodName: "CreateFullRangePositionAndSuperfluidDelegate",
+			Handler:    _Msg_CreateFullRangePositionAndSuperfluidDelegate_Handler,
+		},
+		{
 			MethodName: "UnPoolWhitelistedPool",
 			Handler:    _Msg_UnPoolWhitelistedPool_Handler,
+		},
+		{
+			MethodName: "UnlockAndMigrateSharesToFullRangeConcentratedPosition",
+			Handler:    _Msg_UnlockAndMigrateSharesToFullRangeConcentratedPosition_Handler,
+		},
+		{
+			MethodName: "AddToConcentratedLiquiditySuperfluidPosition",
+			Handler:    _Msg_AddToConcentratedLiquiditySuperfluidPosition_Handler,
+		},
+		{
+			MethodName: "UnbondConvertAndStake",
+			Handler:    _Msg_UnbondConvertAndStake_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1197,6 +1928,11 @@ func (m *MsgSuperfluidUndelegateAndUnbondLockResponse) MarshalToSizedBuffer(dAtA
 	_ = i
 	var l int
 	_ = l
+	if m.LockId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.LockId))
+		i--
+		dAtA[i] = 0x8
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -1279,6 +2015,95 @@ func (m *MsgLockAndSuperfluidDelegateResponse) MarshalToSizedBuffer(dAtA []byte)
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.ValAddr) > 0 {
+		i -= len(m.ValAddr)
+		copy(dAtA[i:], m.ValAddr)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ValAddr)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PositionID != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PositionID))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.LockID != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.LockID))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *MsgUnPoolWhitelistedPool) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1352,6 +2177,339 @@ func (m *MsgUnPoolWhitelistedPoolResponse) MarshalToSizedBuffer(dAtA []byte) (in
 		i--
 		dAtA[i] = 0xa
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.TokenOutMins) > 0 {
+		for iNdEx := len(m.TokenOutMins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.TokenOutMins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	{
+		size, err := m.SharesToMigrate.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if m.LockId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.LockId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	n5, err5 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.JoinTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.JoinTime):])
+	if err5 != nil {
+		return 0, err5
+	}
+	i -= n5
+	i = encodeVarintTx(dAtA, i, uint64(n5))
+	i--
+	dAtA[i] = 0x22
+	{
+		size := m.LiquidityCreated.Size()
+		i -= size
+		if _, err := m.LiquidityCreated.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size := m.Amount1.Size()
+		i -= size
+		if _, err := m.Amount1.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size := m.Amount0.Size()
+		i -= size
+		if _, err := m.Amount0.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.TokenDesired1.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	{
+		size, err := m.TokenDesired0.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.PositionId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PositionId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.NewLiquidity.Size()
+		i -= size
+		if _, err := m.NewLiquidity.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
+	if m.LockId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.LockId))
+		i--
+		dAtA[i] = 0x20
+	}
+	{
+		size := m.Amount1.Size()
+		i -= size
+		if _, err := m.Amount1.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size := m.Amount0.Size()
+		i -= size
+		if _, err := m.Amount0.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if m.PositionId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PositionId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUnbondConvertAndStake) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUnbondConvertAndStake) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUnbondConvertAndStake) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.SharesToConvert.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
+	{
+		size := m.MinAmtToStake.Size()
+		i -= size
+		if _, err := m.MinAmtToStake.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	if len(m.ValAddr) > 0 {
+		i -= len(m.ValAddr)
+		copy(dAtA[i:], m.ValAddr)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ValAddr)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.LockId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.LockId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUnbondConvertAndStakeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUnbondConvertAndStakeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUnbondConvertAndStakeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.TotalAmtStaked.Size()
+		i -= size
+		if _, err := m.TotalAmtStaked.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1469,6 +2627,9 @@ func (m *MsgSuperfluidUndelegateAndUnbondLockResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.LockId != 0 {
+		n += 1 + sovTx(uint64(m.LockId))
+	}
 	return n
 }
 
@@ -1507,6 +2668,47 @@ func (m *MsgLockAndSuperfluidDelegateResponse) Size() (n int) {
 	return n
 }
 
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	l = len(m.ValAddr)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.PoolId != 0 {
+		n += 1 + sovTx(uint64(m.PoolId))
+	}
+	return n
+}
+
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.LockID != 0 {
+		n += 1 + sovTx(uint64(m.LockID))
+	}
+	if m.PositionID != 0 {
+		n += 1 + sovTx(uint64(m.PositionID))
+	}
+	return n
+}
+
 func (m *MsgUnPoolWhitelistedPool) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1536,6 +2738,123 @@ func (m *MsgUnPoolWhitelistedPoolResponse) Size() (n int) {
 		}
 		n += 1 + sovTx(uint64(l)) + l
 	}
+	return n
+}
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.LockId != 0 {
+		n += 1 + sovTx(uint64(m.LockId))
+	}
+	l = m.SharesToMigrate.Size()
+	n += 1 + l + sovTx(uint64(l))
+	if len(m.TokenOutMins) > 0 {
+		for _, e := range m.TokenOutMins {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Amount0.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.Amount1.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.LiquidityCreated.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.JoinTime)
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PositionId != 0 {
+		n += 1 + sovTx(uint64(m.PositionId))
+	}
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.TokenDesired0.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.TokenDesired1.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PositionId != 0 {
+		n += 1 + sovTx(uint64(m.PositionId))
+	}
+	l = m.Amount0.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.Amount1.Size()
+	n += 1 + l + sovTx(uint64(l))
+	if m.LockId != 0 {
+		n += 1 + sovTx(uint64(m.LockId))
+	}
+	l = m.NewLiquidity.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUnbondConvertAndStake) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.LockId != 0 {
+		n += 1 + sovTx(uint64(m.LockId))
+	}
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.ValAddr)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.MinAmtToStake.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.SharesToConvert.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUnbondConvertAndStakeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.TotalAmtStaked.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -2193,6 +3512,25 @@ func (m *MsgSuperfluidUndelegateAndUnbondLockResponse) Unmarshal(dAtA []byte) er
 			return fmt.Errorf("proto: MsgSuperfluidUndelegateAndUnbondLockResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockId", wireType)
+			}
+			m.LockId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LockId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -2431,6 +3769,261 @@ func (m *MsgLockAndSuperfluidDelegateResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegate) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateFullRangePositionAndSuperfluidDelegate: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateFullRangePositionAndSuperfluidDelegate: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, types.Coin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValAddr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateFullRangePositionAndSuperfluidDelegateResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateFullRangePositionAndSuperfluidDelegateResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateFullRangePositionAndSuperfluidDelegateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockID", wireType)
+			}
+			m.LockID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LockID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PositionID", wireType)
+			}
+			m.PositionID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PositionID |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *MsgUnPoolWhitelistedPool) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2637,6 +4230,1000 @@ func (m *MsgUnPoolWhitelistedPoolResponse) Unmarshal(dAtA []byte) error {
 			} else {
 				return fmt.Errorf("proto: wrong wireType = %d for field ExitedLockIds", wireType)
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockId", wireType)
+			}
+			m.LockId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LockId |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SharesToMigrate", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.SharesToMigrate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenOutMins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TokenOutMins = append(m.TokenOutMins, types.Coin{})
+			if err := m.TokenOutMins[len(m.TokenOutMins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount0", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount0.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount1", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount1.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LiquidityCreated", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.LiquidityCreated.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field JoinTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.JoinTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPosition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAddToConcentratedLiquiditySuperfluidPosition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAddToConcentratedLiquiditySuperfluidPosition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PositionId", wireType)
+			}
+			m.PositionId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PositionId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenDesired0", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TokenDesired0.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenDesired1", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TokenDesired1.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgAddToConcentratedLiquiditySuperfluidPositionResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAddToConcentratedLiquiditySuperfluidPositionResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAddToConcentratedLiquiditySuperfluidPositionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PositionId", wireType)
+			}
+			m.PositionId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PositionId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount0", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount0.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount1", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount1.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockId", wireType)
+			}
+			m.LockId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LockId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewLiquidity", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.NewLiquidity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUnbondConvertAndStake) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUnbondConvertAndStake: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUnbondConvertAndStake: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockId", wireType)
+			}
+			m.LockId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LockId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValAddr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinAmtToStake", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MinAmtToStake.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SharesToConvert", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.SharesToConvert.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUnbondConvertAndStakeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUnbondConvertAndStakeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUnbondConvertAndStakeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalAmtStaked", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TotalAmtStaked.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

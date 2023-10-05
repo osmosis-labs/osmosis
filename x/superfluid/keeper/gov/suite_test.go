@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
 )
 
 type KeeperTestSuite struct {
@@ -16,9 +16,9 @@ type KeeperTestSuite struct {
 	querier types.QueryServer
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
-	suite.querier = keeper.NewQuerier(*suite.App.SuperfluidKeeper)
+func (s *KeeperTestSuite) SetupTest() {
+	s.Setup()
+	s.querier = keeper.NewQuerier(*s.App.SuperfluidKeeper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

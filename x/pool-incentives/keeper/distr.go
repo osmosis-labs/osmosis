@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"sort"
 
+	errorsmod "cosmossdk.io/errors"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // FundCommunityPoolFromModule allows the pool-incentives module to directly fund the community fund pool.
@@ -39,10 +41,12 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 		return k.FundCommunityPoolFromModule(ctx, asset)
 	}
 
-	assetAmountDec := asset.Amount.ToDec()
-	totalWeightDec := distrInfo.TotalWeight.ToDec()
+	ctx.Logger().Info("AllocateAsset minted amount", "module", types.ModuleName, "totalMintedAmount", asset.Amount, "height", ctx.BlockHeight())
+
+	assetAmountDec := asset.Amount.ToLegacyDec()
+	totalWeightDec := distrInfo.TotalWeight.ToLegacyDec()
 	for _, record := range distrInfo.Records {
-		allocatingAmount := assetAmountDec.Mul(record.Weight.ToDec().Quo(totalWeightDec)).TruncateInt()
+		allocatingAmount := assetAmountDec.Mul(record.Weight.ToLegacyDec().Quo(totalWeightDec)).TruncateInt()
 
 		// when weight is too small and no amount is allocated, just skip this to avoid zero coin send issues
 		if !allocatingAmount.IsPositive() {
@@ -50,7 +54,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 			continue
 		}
 
-		if record.GaugeId == 0 { // fund community pool if gaugeId is zero
+		if record.GaugeId == types.CommunityPoolDistributionGaugeID { // fund community pool if gaugeId is zero
 			if err := k.FundCommunityPoolFromModule(ctx, sdk.NewCoin(asset.Denom, allocatingAmount)); err != nil {
 				return err
 			}
@@ -58,6 +62,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 		}
 
 		coins := sdk.NewCoins(sdk.NewCoin(asset.Denom, allocatingAmount))
+		ctx.Logger().Debug("Adding to gauge rewards", "module", types.ModuleName, "gaugeId", record.GaugeId, "coins", coins.String(), "height", ctx.BlockHeight())
 		err := k.incentivesKeeper.AddToGaugeRewards(ctx, k.accountKeeper.GetModuleAddress(types.ModuleName), coins, record.GaugeId)
 		if err != nil {
 			return err
@@ -89,7 +94,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.DistrRecord) e
 
 	for _, record := range records {
 		if gaugeIdFlags[record.GaugeId] {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrDistrRecordRegisteredGauge,
 				"Gauge ID #%d has duplications.",
 				record.GaugeId,
@@ -98,7 +103,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.DistrRecord) e
 
 		// Ensure records are sorted because ~AESTHETIC~
 		if record.GaugeId < lastGaugeID {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrDistrRecordNotSorted,
 				"Gauge ID #%d came after Gauge ID #%d.",
 				record.GaugeId, lastGaugeID,
@@ -113,7 +118,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.DistrRecord) e
 				return err
 			}
 			if !gauge.IsPerpetual {
-				return sdkerrors.Wrapf(types.ErrDistrRecordRegisteredGauge,
+				return errorsmod.Wrapf(types.ErrDistrRecordRegisteredGauge,
 					"Gauge ID #%d is not perpetual.",
 					record.GaugeId)
 			}
@@ -133,7 +138,7 @@ func (k Keeper) ReplaceDistrRecords(ctx sdk.Context, records ...types.DistrRecor
 		return err
 	}
 
-	totalWeight := sdk.NewInt(0)
+	totalWeight := osmomath.NewInt(0)
 
 	for _, record := range records {
 		totalWeight = totalWeight.Add(record.Weight)
@@ -149,7 +154,7 @@ func (k Keeper) ReplaceDistrRecords(ctx sdk.Context, records ...types.DistrRecor
 // UpdateDistrRecords is checked for no err when a proposal is made, and executed when a proposal passes.
 func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
 	recordsMap := make(map[uint64]types.DistrRecord)
-	totalWeight := sdk.NewInt(0)
+	totalWeight := osmomath.NewInt(0)
 
 	for _, existingRecord := range k.GetDistrInfo(ctx).Records {
 		recordsMap[existingRecord.GaugeId] = existingRecord
@@ -175,7 +180,7 @@ func (k Keeper) UpdateDistrRecords(ctx sdk.Context, records ...types.DistrRecord
 	newRecords := []types.DistrRecord{}
 
 	for _, val := range recordsMap {
-		if !val.Weight.Equal(sdk.ZeroInt()) {
+		if !val.Weight.Equal(osmomath.ZeroInt()) {
 			newRecords = append(newRecords, val)
 		}
 	}

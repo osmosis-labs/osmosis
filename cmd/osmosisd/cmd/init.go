@@ -26,6 +26,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+
+	"github.com/osmosis-labs/osmosis/v19/app"
 )
 
 const (
@@ -34,6 +36,9 @@ const (
 
 	// FlagSeed defines a flag to initialize the private validator key from a specific seed.
 	FlagRecover = "recover"
+
+	// FlagSetEnv defines a flag to create environment file & save current home directory into it.
+	FlagSetEnv = "set-env"
 )
 
 type printInfo struct {
@@ -94,7 +99,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				"24841abfc8fbd401d8c86747eec375649a2e8a7e@osmosis.pbcups.org:26656",                        // Pbcups
 				"77bb5fb9b6964d6e861e91c1d55cf82b67d838b5@bd-osmosis-seed-mainnet-us-01.bdnodes.net:26656", // Blockdaemon US
 				"3243426ab56b67f794fa60a79cc7f11bc7aa752d@bd-osmosis-seed-mainnet-eu-02.bdnodes.net:26656", // Blockdaemon EU
-				"ebc272824924ea1a27ea3183dd0b9ba713494f83@osmosis-mainnet-seed.autostake.net:26716",        // AutoStake
+				"ebc272824924ea1a27ea3183dd0b9ba713494f83@osmosis-mainnet-seed.autostake.com:26716",        // AutoStake.com
 				"7c66126b64cd66bafd9ccfc721f068df451d31a3@osmosis-seed.sunshinevalidation.io:9393",         // Sunshine Validation
 			}
 			config.P2P.Seeds = strings.Join(seeds, ",")
@@ -167,6 +172,18 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
+			err = writeConfigToFile(filepath.Join(config.RootDir, "config", "client.toml"), nil)
+			if err != nil {
+				return errors.Wrap(err, "Failed to write client.toml file")
+			}
+
+			createEnv, _ := cmd.Flags().GetBool(FlagSetEnv)
+			if createEnv {
+				err = CreateEnvFile(cmd)
+				if err != nil {
+					return errors.Wrapf(err, "Failed to create environment file")
+				}
+			}
 			return displayInfo(toPrint)
 		},
 	}
@@ -175,6 +192,44 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().Bool(FlagRecover, false, "provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().Bool(FlagSetEnv, false, "set and save current directory as home directory")
 
 	return cmd
+}
+
+func CreateEnvFile(cmd *cobra.Command) error {
+	// Check if .env file was created in /.osmosisd
+	envPath := filepath.Join(app.DefaultNodeHome, ".env")
+	if _, err := os.Stat(envPath); err != nil {
+		// If not exist, we create a new .env file with node dir passed
+		if os.IsNotExist(err) {
+			// Create ./osmosisd if not exist
+			if _, err = os.Stat(app.DefaultNodeHome); err != nil {
+				if os.IsNotExist(err) {
+					err = os.MkdirAll(app.DefaultNodeHome, 0777)
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			// Create environment file
+			envFile, err := os.Create(envPath)
+			if err != nil {
+				return err
+			}
+
+			// In case the user wants to init in a specific dir, save it to .env
+			nodeHome, err := cmd.Flags().GetString(cli.HomeFlag)
+			if err != nil {
+				fmt.Println("using mainnet environment")
+				nodeHome = EnvMainnet
+			}
+			_, err = envFile.WriteString(fmt.Sprintf("OSMOSISD_ENVIRONMENT=%s", nodeHome))
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

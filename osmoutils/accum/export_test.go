@@ -8,18 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
-
-// GetPosition returns the position associated with the given address.
-// This function is currently used for testing purposes only.
-// If there is a need to use this function in production, it
-// can be moved to a non-test file.
-func (accum AccumulatorObject) GetPosition(name string) Record {
-	position := Record{}
-	osmoutils.MustGet(accum.store, formatPositionPrefixKey(accum.name, name), &position)
-	return position
-}
 
 // GetAllPositions returns all positions associated with the receiver accumulator.
 // Returns error if any database errors occur.
@@ -27,28 +18,22 @@ func (accum AccumulatorObject) GetPosition(name string) Record {
 // If there is a need to use this function in production, it
 // can be moved to a non-test file.
 func (accum AccumulatorObject) GetAllPositions() ([]Record, error) {
-	return osmoutils.GatherValuesFromStorePrefix(accum.store, formatPositionPrefixKey(accum.name, ""), parseRecordFromBz)
+	return osmoutils.GatherValuesFromStorePrefix(accum.store, FormatPositionPrefixKey(accum.name, ""), parseRecordFromBz)
 }
 
 // Creates an accumulator object for testing purposes
-func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, totalShares sdk.Dec) AccumulatorObject {
+func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, totalShares osmomath.Dec) *AccumulatorObject {
 	// We store an accumulator object in state even if unused in tests
 	// because position operations still require GetAccumulator to work
 	_ = MakeAccumulator(store, name)
-	return AccumulatorObject{
-		store: store,
-		name:  name,
-		value: value,
-		totalShares: totalShares,
+	acc := AccumulatorObject{
+		store:         store,
+		name:          name,
+		valuePerShare: value,
+		totalShares:   totalShares,
 	}
-}
-
-func CreateRawPosition(accum AccumulatorObject, name string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
-	initOrUpdatePosition(accum, accum.value, name, numShareUnits, unclaimedRewards, options)
-}
-
-func GetPosition(accum AccumulatorObject, name string) (Record, error) {
-	return getPosition(accum, name)
+	setAccumulator(&acc, value, totalShares)
+	return &acc
 }
 
 // Gets store from accumulator for testing purposes
@@ -70,22 +55,34 @@ func parseRecordFromBz(bz []byte) (record Record, err error) {
 	return record, nil
 }
 
-func ValidateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValue sdk.DecCoins) error {
-	return validateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValue)
-}
-
 // WithPosition is a decorator test function to append a position with the given name to the given accumulator.
-func WithPosition(accum AccumulatorObject, name string, position Record) AccumulatorObject {
-	osmoutils.MustSet(accum.store, formatPositionPrefixKey(accum.name, name), &position)
+func WithPosition(accum *AccumulatorObject, name string, position Record) *AccumulatorObject {
+	osmoutils.MustSet(accum.store, FormatPositionPrefixKey(accum.name, name), &position)
 	return accum
 }
 
 // SetValue is a convinience test helper for updatung the value of an accumulator object
 // in tests.
 func (accum *AccumulatorObject) SetValue(value sdk.DecCoins) {
-	accum.value = value
+	accum.valuePerShare = value
 }
 
 func (o *Options) Validate() error {
 	return o.validate()
+}
+
+// WARNING: only used in tests to make sure that receiver is mutated.
+// Do not move out of export_test.go and do not use in production code.
+func (accum AccumulatorObject) GetTotalShareField() osmomath.Dec {
+	return accum.totalShares
+}
+
+// WARNING: only used in tests to make sure that receiver is mutated.
+// Do not move out of export_test.go and do not use in production code.
+func (accum AccumulatorObject) GetValueField() sdk.DecCoins {
+	return accum.valuePerShare
+}
+
+func InitOrUpdatePosition(accum *AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits osmomath.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
+	initOrUpdatePosition(accum, accumulatorValue, index, numShareUnits, unclaimedRewards, options)
 }

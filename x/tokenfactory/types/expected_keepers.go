@@ -23,10 +23,21 @@ type BankKeeper interface {
 }
 
 type AccountKeeper interface {
-	SetModuleAccount(ctx sdk.Context, macc authtypes.ModuleAccountI)
+	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
+	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
+}
+
+// BankHooks event hooks
+type BankHooks interface {
+	TrackBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins)       // Must be before any send is executed
+	BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error // Must be before any send is executed
 }
 
 // CommunityPoolKeeper defines the contract needed to be fulfilled for community pool interactions.
 type CommunityPoolKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
+type ContractKeeper interface {
+	Sudo(ctx sdk.Context, contractAddress sdk.AccAddress, msg []byte) ([]byte, error)
 }

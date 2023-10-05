@@ -47,7 +47,6 @@ path = "build-schema/schema.rs"
 [dependencies]
 cosmwasm-schema =  { workspace = true }
 cosmwasm-std =  { workspace = true }
-cosmwasm-storage = { workspace = true }
 cw-storage-plus = { workspace = true }
 cw2 = { workspace = true }
 schemars = { workspace = true }
@@ -56,4 +55,4 @@ serde = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
-osmosis-testing = { workspace = true }
+osmosis-test-tube = { workspace = true }

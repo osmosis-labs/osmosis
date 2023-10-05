@@ -1,168 +1,161 @@
 package keeper_test
 
 import (
-	"testing"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v14/app"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
 )
 
-var (
-	defaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
-		{BalancerPoolId: 1, ClPoolId: 50},
-		{BalancerPoolId: 2, ClPoolId: 51},
-		{BalancerPoolId: 3, ClPoolId: 52},
-	}}
-)
+var DefaultMigrationRecords = gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
+	{BalancerPoolId: 1, ClPoolId: 4},
+	{BalancerPoolId: 2, ClPoolId: 5},
+	{BalancerPoolId: 3, ClPoolId: 6},
+}}
 
-func TestGammInitGenesis(t *testing.T) {
-	app := osmoapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+func (s *KeeperTestSuite) TestGammInitGenesis() {
+	s.SetupTest()
 
-	balancerPool, err := balancer.NewBalancerPool(1, balancer.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
-	}, []balancer.PoolAsset{
-		{
-			Weight: sdk.NewInt(1),
-			Token:  sdk.NewInt64Coin(sdk.DefaultBondDenom, 10),
-		},
-		{
-			Weight: sdk.NewInt(1),
-			Token:  sdk.NewInt64Coin("nodetoken", 10),
-		},
-	}, "", ctx.BlockTime())
-	require.NoError(t, err)
+	for i := 0; i < 3; i++ {
+		s.PrepareBalancerPool()
+	}
+	for i := 0; i < 3; i++ {
+		s.PrepareConcentratedPool()
+	}
 
-	any, err := codectypes.NewAnyWithValue(&balancerPool)
-	require.NoError(t, err)
+	pools, err := s.App.GAMMKeeper.GetPoolsAndPoke(s.Ctx)
+	if err != nil {
+		panic(err)
+	}
 
-	app.GAMMKeeper.InitGenesis(ctx, types.GenesisState{
-		Pools:          []*codectypes.Any{any},
-		NextPoolNumber: 2,
+	balancerPoolPreInit := pools[0]
+
+	poolAnys := []*codectypes.Any{}
+	for _, poolI := range pools {
+		any, err := codectypes.NewAnyWithValue(poolI)
+		if err != nil {
+			panic(err)
+		}
+		poolAnys = append(poolAnys, any)
+	}
+
+	// Reset the testing env so that we can see if the pools get re-initialized via init genesis
+	s.SetupTest()
+
+	// Check if the pools were reset
+	_, err = s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, 1)
+	s.Require().Error(err)
+
+	s.App.GAMMKeeper.InitGenesis(s.Ctx, types.GenesisState{
+		Pools:          poolAnys,
+		NextPoolNumber: 7,
 		Params: types.Params{
 			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)},
 		},
-		MigrationRecords: &defaultMigrationRecords,
-	}, app.AppCodec())
+		MigrationRecords: &DefaultMigrationRecords,
+	}, s.App.AppCodec())
 
-	require.Equal(t, app.PoolManagerKeeper.GetNextPoolId(ctx), uint64(1))
-	poolStored, err := app.GAMMKeeper.GetPoolAndPoke(ctx, 1)
-	require.NoError(t, err)
-	require.Equal(t, balancerPool.GetId(), poolStored.GetId())
-	require.Equal(t, balancerPool.GetAddress(), poolStored.GetAddress())
-	require.Equal(t, balancerPool.GetSwapFee(ctx), poolStored.GetSwapFee(ctx))
-	require.Equal(t, balancerPool.GetExitFee(ctx), poolStored.GetExitFee(ctx))
-	// require.Equal(t, balancerPool.GetTotalWeight(), sdk.Nw)
-	require.Equal(t, balancerPool.GetTotalShares(), poolStored.GetTotalShares())
-	// require.Equal(t, balancerPool.GetAllPoolAssets(), poolStored.GetAllPoolAssets())
-	require.Equal(t, balancerPool.String(), poolStored.String())
+	poolStored, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, 1)
+	s.Require().NoError(err)
+	s.Require().Equal(balancerPoolPreInit.GetId(), poolStored.GetId())
+	s.Require().Equal(balancerPoolPreInit.GetAddress(), poolStored.GetAddress())
+	s.Require().Equal(balancerPoolPreInit.GetSpreadFactor(s.Ctx), poolStored.GetSpreadFactor(s.Ctx))
+	s.Require().Equal(balancerPoolPreInit.GetExitFee(s.Ctx), poolStored.GetExitFee(s.Ctx))
+	s.Require().Equal(balancerPoolPreInit.GetTotalShares(), poolStored.GetTotalShares())
+	s.Require().Equal(balancerPoolPreInit.String(), poolStored.String())
 
-	_, err = app.GAMMKeeper.GetPoolAndPoke(ctx, 2)
-	require.Error(t, err)
+	_, err = s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, 7)
+	s.Require().Error(err)
 
-	liquidity := app.GAMMKeeper.GetTotalLiquidity(ctx)
-	require.Equal(t, liquidity, sdk.Coins{sdk.NewInt64Coin("nodetoken", 10), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)})
+	liquidity, err := s.App.GAMMKeeper.GetTotalLiquidity(s.Ctx)
+	s.Require().NoError(err)
+	expectedLiquidity := sdk.NewCoins(sdk.NewInt64Coin("bar", 15000000), sdk.NewInt64Coin("baz", 15000000), sdk.NewInt64Coin("foo", 15000000), sdk.NewInt64Coin("uosmo", 15000000))
+	s.Require().Equal(expectedLiquidity.String(), liquidity.String())
 
-	postInitGenMigrationRecords := app.GAMMKeeper.GetMigrationInfo(ctx)
-	require.Equal(t, defaultMigrationRecords, postInitGenMigrationRecords)
+	postInitGenMigrationRecords, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(DefaultMigrationRecords, postInitGenMigrationRecords)
 }
 
-func TestGammExportGenesis(t *testing.T) {
-	app := osmoapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+func (s *KeeperTestSuite) TestGammExportGenesis() {
+	s.SetupTest()
+	ctx := s.Ctx
 
-	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	err := simapp.FundAccount(app.BankKeeper, ctx, acc1, sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+	acc1 := s.TestAccs[0]
+	err := simapp.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
+		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
 	))
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
 	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		SwapFee: osmomath.NewDecWithPrec(1, 2),
+		ExitFee: osmomath.ZeroDec(),
 	}, []balancer.PoolAsset{{
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(100),
+		Token:  sdk.NewCoin("foo", osmomath.NewInt(10000)),
 	}, {
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(100),
+		Token:  sdk.NewCoin("bar", osmomath.NewInt(10000)),
 	}}, "")
-	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
-	require.NoError(t, err)
+	_, err = s.App.PoolManagerKeeper.CreatePool(ctx, msg)
+	s.Require().NoError(err)
 
 	msg = balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		SwapFee: osmomath.NewDecWithPrec(1, 2),
+		ExitFee: osmomath.ZeroDec(),
 	}, []balancer.PoolAsset{{
-		Weight: sdk.NewInt(70),
-		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(70),
+		Token:  sdk.NewCoin("foo", osmomath.NewInt(10000)),
 	}, {
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(100),
+		Token:  sdk.NewCoin("bar", osmomath.NewInt(10000)),
 	}}, "")
-	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
-	require.NoError(t, err)
+	_, err = s.App.PoolManagerKeeper.CreatePool(ctx, msg)
+	s.Require().NoError(err)
 
-	app.GAMMKeeper.SetMigrationInfo(ctx, defaultMigrationRecords)
+	s.App.GAMMKeeper.SetMigrationRecords(ctx, DefaultMigrationRecords)
 
-	genesis := app.GAMMKeeper.ExportGenesis(ctx)
-	// Note: the next pool number index has been migrated to
-	// poolmanager.
-	// The reason it is kept in gamm is for migrations.
-	// As a result, it is 1 here. This index is to be removed
-	// in a subsequent upgrade.
-	require.Equal(t, genesis.NextPoolNumber, uint64(1))
-	require.Len(t, genesis.Pools, 2)
-	require.Equal(t, genesis.MigrationRecords, &defaultMigrationRecords)
+	genesis := s.App.GAMMKeeper.ExportGenesis(ctx)
+	s.Require().Len(genesis.Pools, 2)
+	s.Require().Equal(&DefaultMigrationRecords, genesis.MigrationRecords)
 }
 
-func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := osmoapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+func (s *KeeperTestSuite) TestMarshalUnmarshalGenesis() {
+	s.SetupTest()
+	ctx := s.Ctx
 
-	encodingConfig := osmoapp.MakeEncodingConfig()
-	appCodec := encodingConfig.Marshaler
-	am := gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
-	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	err := simapp.FundAccount(app.BankKeeper, ctx, acc1, sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+	acc1 := s.TestAccs[0]
+	err := simapp.FundAccount(s.App.BankKeeper, ctx, acc1, sdk.NewCoins(
+		sdk.NewCoin("uosmo", osmomath.NewInt(10000000000)),
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
 	))
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
 	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		SwapFee: osmomath.NewDecWithPrec(1, 2),
+		ExitFee: osmomath.ZeroDec(),
 	}, []balancer.PoolAsset{{
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(100),
+		Token:  sdk.NewCoin("foo", osmomath.NewInt(10000)),
 	}, {
-		Weight: sdk.NewInt(100),
-		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+		Weight: osmomath.NewInt(100),
+		Token:  sdk.NewCoin("bar", osmomath.NewInt(10000)),
 	}}, "")
-	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
-	require.NoError(t, err)
+	_, err = s.App.PoolManagerKeeper.CreatePool(ctx, msg)
+	s.Require().NoError(err)
 
-	app.GAMMKeeper.SetMigrationInfo(ctx, defaultMigrationRecords)
+	s.App.GAMMKeeper.SetMigrationRecords(ctx, DefaultMigrationRecords)
+	s.Require().NoError(err)
 
-	genesis := am.ExportGenesis(ctx, appCodec)
-	assert.NotPanics(t, func() {
-		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-		am := gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
-		am.InitGenesis(ctx, appCodec, genesis)
+	genesis := s.App.GAMMKeeper.ExportGenesis(ctx)
+	s.Assert().NotPanics(func() {
+		s.App.GAMMKeeper.InitGenesis(s.Ctx, *genesis, s.App.AppCodec())
 	})
 }

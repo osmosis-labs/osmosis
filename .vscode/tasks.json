@@ -7,6 +7,16 @@
             "label": "e2e-setup",
             "type": "shell",
             "command": "make e2e-setup"
+        },
+        {
+            "label": "test-unit",
+            "type": "shell",
+            "command": "make test-unit",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
         }
     ]
 }

@@ -6,10 +6,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	osmoapp "github.com/osmosis-labs/osmosis/v14/app"
-	"github.com/osmosis-labs/osmosis/v14/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/mint/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v19/app"
+	"github.com/osmosis-labs/osmosis/v19/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v19/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,12 +28,12 @@ const (
 )
 
 var (
-	defaultReductionFactor         = sdk.NewDec(2).Quo(sdk.NewDec(3))
+	defaultReductionFactor         = osmomath.NewDec(2).Quo(osmomath.NewDec(3))
 	defaultDistributionProportions = types.DistributionProportions{
-		Staking:          sdk.NewDecWithPrec(25, 2),
-		PoolIncentives:   sdk.NewDecWithPrec(45, 2),
-		DeveloperRewards: sdk.NewDecWithPrec(25, 2),
-		CommunityPool:    sdk.NewDecWithPrec(0o5, 2),
+		Staking:          osmomath.NewDecWithPrec(25, 2),
+		PoolIncentives:   osmomath.NewDecWithPrec(45, 2),
+		DeveloperRewards: osmomath.NewDecWithPrec(25, 2),
+		CommunityPool:    osmomath.NewDecWithPrec(0o5, 2),
 	}
 )
 
@@ -42,38 +43,38 @@ func TestHooksTestSuite(t *testing.T) {
 
 // TestAfterEpochEnd tests that the after epoch end hook correctly
 // distributes the rewards depending on what epoch it is in.
-func (suite *KeeperTestSuite) TestAfterEpochEnd() {
+func (s *KeeperTestSuite) TestAfterEpochEnd() {
 	var (
 		testWeightedAddresses = []types.WeightedAddress{
 			{
 				Address: testAddressOne.String(),
-				Weight:  sdk.NewDecWithPrec(233, 3),
+				Weight:  osmomath.NewDecWithPrec(233, 3),
 			},
 			{
 				Address: testAddressTwo.String(),
-				Weight:  sdk.NewDecWithPrec(5, 1),
+				Weight:  osmomath.NewDecWithPrec(5, 1),
 			},
 			{
 				Address: testAddressThree.String(),
-				Weight:  sdk.NewDecWithPrec(50, 3),
+				Weight:  osmomath.NewDecWithPrec(50, 3),
 			},
 			{
 				Address: testAddressFour.String(),
-				Weight:  sdk.NewDecWithPrec(217, 3),
+				Weight:  osmomath.NewDecWithPrec(217, 3),
 			},
 		}
-		maxArithmeticTolerance   = sdk.NewDec(5)
-		expectedSupplyWithOffset = sdk.NewDec(0)
-		expectedSupply           = sdk.NewDec(keeper.DeveloperVestingAmount)
+		maxArithmeticTolerance   = osmomath.NewDec(5)
+		expectedSupplyWithOffset = osmomath.NewDec(0)
+		expectedSupply           = osmomath.NewDec(keeper.DeveloperVestingAmount)
 	)
 
-	suite.assertAddressWeightsAddUpToOne(testWeightedAddresses)
+	s.assertAddressWeightsAddUpToOne(testWeightedAddresses)
 
-	defaultGenesisEpochProvisionsDec, err := sdk.NewDecFromStr(defaultGenesisEpochProvisions)
-	suite.Require().NoError(err)
+	defaultGenesisEpochProvisionsDec, err := osmomath.NewDecFromStr(defaultGenesisEpochProvisions)
+	s.Require().NoError(err)
 
-	defaultMainnetThirdenedProvisionsDec, err := sdk.NewDecFromStr(defaultMainnetThirdenedProvisions)
-	suite.Require().NoError(err)
+	defaultMainnetThirdenedProvisionsDec, err := osmomath.NewDecFromStr(defaultMainnetThirdenedProvisions)
+	s.Require().NoError(err)
 
 	testcases := map[string]struct {
 		// Args.
@@ -83,16 +84,16 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 		preExistingEpochNum     int64
 		mintDenom               string
 		epochIdentifier         string
-		genesisEpochProvisions  sdk.Dec
+		genesisEpochProvisions  osmomath.Dec
 		reductionPeriodInEpochs int64
-		reductionFactor         sdk.Dec
+		reductionFactor         osmomath.Dec
 		distributionProportions types.DistributionProportions
 		weightedAddresses       []types.WeightedAddress
 		mintStartEpoch          int64
 
 		// Expected results.
 		expectedLastReductionEpochNum int64
-		expectedDistribution          sdk.Dec
+		expectedDistribution          osmomath.Dec
 		expectedError                 bool
 	}{
 		"before start epoch - no distributions": {
@@ -107,7 +108,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
-			expectedDistribution: sdk.ZeroDec(),
+			expectedDistribution: osmomath.ZeroDec(),
 		},
 		"at start epoch - distributes": {
 			hookArgEpochNum: defaultMintingRewardsDistributionStartEpoch,
@@ -230,7 +231,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultReductionPeriodInEpochs + 1,
 
-			expectedDistribution: sdk.ZeroDec(),
+			expectedDistribution: osmomath.ZeroDec(),
 		},
 		// N.B.: This test case would not work since it would require changing default genesis denom.
 		// Leaving it to potentially revisit in the future.
@@ -247,13 +248,13 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
-			expectedDistribution: sdk.ZeroDec(),
+			expectedDistribution: osmomath.ZeroDec(),
 		},
 		"custom genesisEpochProvisions, at start epoch": {
 			hookArgEpochNum: defaultMintingRewardsDistributionStartEpoch,
 
 			mintDenom:               sdk.DefaultBondDenom,
-			genesisEpochProvisions:  sdk.NewDec(1_000_000_000),
+			genesisEpochProvisions:  osmomath.NewDec(1_000_000_000),
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
 			reductionFactor:         defaultReductionFactor,
@@ -271,12 +272,12 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(43).Quo(sdk.NewDec(55)),
+			reductionFactor:         osmomath.NewDec(43).Quo(osmomath.NewDec(55)),
 			distributionProportions: defaultDistributionProportions,
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
-			expectedDistribution:          defaultGenesisEpochProvisionsDec.Mul(sdk.NewDec(43)).Quo(sdk.NewDec(55)),
+			expectedDistribution:          defaultGenesisEpochProvisionsDec.Mul(osmomath.NewDec(43)).Quo(osmomath.NewDec(55)),
 			expectedLastReductionEpochNum: defaultMintingRewardsDistributionStartEpoch + defaultReductionPeriodInEpochs,
 		},
 		"custom distribution proportions, at start epoch": {
@@ -288,10 +289,10 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
 			reductionFactor:         defaultReductionFactor,
 			distributionProportions: types.DistributionProportions{
-				Staking:          sdk.NewDecWithPrec(11, 2),
-				PoolIncentives:   sdk.NewDecWithPrec(22, 2),
-				DeveloperRewards: sdk.NewDecWithPrec(33, 2),
-				CommunityPool:    sdk.NewDecWithPrec(34, 2),
+				Staking:          osmomath.NewDecWithPrec(11, 2),
+				PoolIncentives:   osmomath.NewDecWithPrec(22, 2),
+				DeveloperRewards: osmomath.NewDecWithPrec(33, 2),
+				CommunityPool:    osmomath.NewDecWithPrec(34, 2),
 			},
 			weightedAddresses: testWeightedAddresses,
 			mintStartEpoch:    defaultMintingRewardsDistributionStartEpoch,
@@ -312,19 +313,19 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			weightedAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
-					Weight:  sdk.NewDecWithPrec(11, 2),
+					Weight:  osmomath.NewDecWithPrec(11, 2),
 				},
 				{
 					Address: testAddressTwo.String(),
-					Weight:  sdk.NewDecWithPrec(22, 2),
+					Weight:  osmomath.NewDecWithPrec(22, 2),
 				},
 				{
 					Address: testAddressThree.String(),
-					Weight:  sdk.NewDecWithPrec(33, 2),
+					Weight:  osmomath.NewDecWithPrec(33, 2),
 				},
 				{
 					Address: testAddressFour.String(),
-					Weight:  sdk.NewDecWithPrec(34, 2),
+					Weight:  osmomath.NewDecWithPrec(34, 2),
 				},
 			},
 			mintStartEpoch: defaultMintingRewardsDistributionStartEpoch,
@@ -344,14 +345,14 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
-			expectedDistribution:          sdk.ZeroDec(),
+			expectedDistribution:          osmomath.ZeroDec(),
 			expectedLastReductionEpochNum: defaultMintingRewardsDistributionStartEpoch,
 			expectedError:                 true,
 		},
 	}
 
 	for name, tc := range testcases {
-		suite.Run(name, func() {
+		s.Run(name, func() {
 			mintParams := types.Params{
 				MintDenom:                            tc.mintDenom,
 				GenesisEpochProvisions:               tc.genesisEpochProvisions,
@@ -385,18 +386,18 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			if tc.expectedError {
 				// If panic is expected, burn developer module account balance so that it causes an error that leads to a
 				// panic in the hook.
-				suite.Require().NoError(distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(developerAccountBalanceBeforeHook), accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)))
-				developerAccountBalanceBeforeHook.Amount = sdk.ZeroInt()
+				s.Require().NoError(distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(developerAccountBalanceBeforeHook), accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)))
+				developerAccountBalanceBeforeHook.Amount = osmomath.ZeroInt()
 			}
 
 			// Old supply
 			oldSupply := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount
-			suite.Require().Equal(sdk.NewInt(keeper.DeveloperVestingAmount), oldSupply)
+			s.Require().Equal(osmomath.NewInt(keeper.DeveloperVestingAmount), oldSupply)
 
 			if tc.expectedError {
-				suite.Require().Error(mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))
+				s.Require().Error(mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))
 			} else {
-				suite.Require().NoError(mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))
+				s.Require().NoError(mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))
 			}
 
 			// If panics, the behavior is undefined.
@@ -406,20 +407,20 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 
 			// Validate developer account balance.
 			developerAccountBalanceAfterHook := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
-			osmoassert.DecApproxEq(suite.T(), developerAccountBalanceBeforeHook.Amount.Sub(expectedDevRewards.TruncateInt()).ToDec(), developerAccountBalanceAfterHook.Amount.ToDec(), maxArithmeticTolerance)
+			osmoassert.DecApproxEq(s.T(), developerAccountBalanceBeforeHook.Amount.Sub(expectedDevRewards.TruncateInt()).ToLegacyDec(), developerAccountBalanceAfterHook.Amount.ToLegacyDec(), maxArithmeticTolerance)
 
 			// Validate supply.
-			osmoassert.DecApproxEq(suite.T(), expectedSupply.Add(tc.expectedDistribution).Sub(expectedDevRewards), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.ToDec(), maxArithmeticTolerance)
+			osmoassert.DecApproxEq(s.T(), expectedSupply.Add(tc.expectedDistribution).Sub(expectedDevRewards), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.ToLegacyDec(), maxArithmeticTolerance)
 
 			// Validate supply with offset.
-			osmoassert.DecApproxEq(suite.T(), expectedSupplyWithOffset.Add(tc.expectedDistribution), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToDec(), maxArithmeticTolerance)
+			osmoassert.DecApproxEq(s.T(), expectedSupplyWithOffset.Add(tc.expectedDistribution), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToLegacyDec(), maxArithmeticTolerance)
 
 			// Validate epoch provisions.
-			suite.Require().Equal(tc.expectedLastReductionEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
+			s.Require().Equal(tc.expectedLastReductionEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
 
 			if !tc.expectedDistribution.IsZero() {
 				// Validate distribution.
-				osmoassert.DecApproxEq(suite.T(), tc.expectedDistribution, mintKeeper.GetMinter(ctx).EpochProvisions, sdk.NewDecWithPrec(1, 6))
+				osmoassert.DecApproxEq(s.T(), tc.expectedDistribution, mintKeeper.GetMinter(ctx).EpochProvisions, osmomath.NewDecWithPrec(1, 6))
 			}
 		})
 	}
@@ -430,14 +431,14 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 // supply for correctness.
 //
 // Ref: https://github.com/osmosis-labs/osmosis/issues/1917
-func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters() {
+func (s *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters() {
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	mintKeeper := app.MintKeeper
 	accountKeeper := app.AccountKeeper
 
-	genesisEpochProvisionsDec, err := sdk.NewDecFromStr(defaultGenesisEpochProvisions)
-	suite.Require().NoError(err)
+	genesisEpochProvisionsDec, err := osmomath.NewDecFromStr(defaultGenesisEpochProvisions)
+	s.Require().NoError(err)
 
 	mintParams := types.Params{
 		MintDenom:               sdk.DefaultBondDenom,
@@ -446,77 +447,77 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 		ReductionPeriodInEpochs: defaultReductionPeriodInEpochs,
 		ReductionFactor:         defaultReductionFactor,
 		DistributionProportions: types.DistributionProportions{
-			Staking:          sdk.NewDecWithPrec(25, 2),
-			PoolIncentives:   sdk.NewDecWithPrec(45, 2),
-			DeveloperRewards: sdk.NewDecWithPrec(25, 2),
-			CommunityPool:    sdk.NewDecWithPrec(0o5, 2),
+			Staking:          osmomath.NewDecWithPrec(25, 2),
+			PoolIncentives:   osmomath.NewDecWithPrec(45, 2),
+			DeveloperRewards: osmomath.NewDecWithPrec(25, 2),
+			CommunityPool:    osmomath.NewDecWithPrec(0o5, 2),
 		},
 		WeightedDeveloperRewardsReceivers: []types.WeightedAddress{
 			{
 				Address: "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj",
-				Weight:  sdk.NewDecWithPrec(2887, 4),
+				Weight:  osmomath.NewDecWithPrec(2887, 4),
 			},
 			{
 				Address: "osmo1gw445ta0aqn26suz2rg3tkqfpxnq2hs224d7gq",
-				Weight:  sdk.NewDecWithPrec(229, 3),
+				Weight:  osmomath.NewDecWithPrec(229, 3),
 			},
 			{
 				Address: "osmo13lt0hzc6u3htsk7z5rs6vuurmgg4hh2ecgxqkf",
-				Weight:  sdk.NewDecWithPrec(1625, 4),
+				Weight:  osmomath.NewDecWithPrec(1625, 4),
 			},
 			{
 				Address: "osmo1kvc3he93ygc0us3ycslwlv2gdqry4ta73vk9hu",
-				Weight:  sdk.NewDecWithPrec(109, 3),
+				Weight:  osmomath.NewDecWithPrec(109, 3),
 			},
 			{
 				Address: "osmo19qgldlsk7hdv3ddtwwpvzff30pxqe9phq9evxf",
-				Weight:  sdk.NewDecWithPrec(995, 3).Quo(sdk.NewDec(10)), // 0.0995
+				Weight:  osmomath.NewDecWithPrec(995, 3).Quo(osmomath.NewDec(10)), // 0.0995
 			},
 			{
 				Address: "osmo19fs55cx4594een7qr8tglrjtt5h9jrxg458htd",
-				Weight:  sdk.NewDecWithPrec(6, 1).Quo(sdk.NewDec(10)), // 0.06
+				Weight:  osmomath.NewDecWithPrec(6, 1).Quo(osmomath.NewDec(10)), // 0.06
 			},
 			{
 				Address: "osmo1ssp6px3fs3kwreles3ft6c07mfvj89a544yj9k",
-				Weight:  sdk.NewDecWithPrec(15, 2).Quo(sdk.NewDec(10)), // 0.015
+				Weight:  osmomath.NewDecWithPrec(15, 2).Quo(osmomath.NewDec(10)), // 0.015
 			},
 			{
 				Address: "osmo1c5yu8498yzqte9cmfv5zcgtl07lhpjrj0skqdx",
-				Weight:  sdk.NewDecWithPrec(1, 1).Quo(sdk.NewDec(10)), // 0.01
+				Weight:  osmomath.NewDecWithPrec(1, 1).Quo(osmomath.NewDec(10)), // 0.01
 			},
 			{
 				Address: "osmo1yhj3r9t9vw7qgeg22cehfzj7enwgklw5k5v7lj",
-				Weight:  sdk.NewDecWithPrec(75, 2).Quo(sdk.NewDec(100)), // 0.0075
+				Weight:  osmomath.NewDecWithPrec(75, 2).Quo(osmomath.NewDec(100)), // 0.0075
 			},
 			{
 				Address: "osmo18nzmtyn5vy5y45dmcdnta8askldyvehx66lqgm",
-				Weight:  sdk.NewDecWithPrec(7, 1).Quo(sdk.NewDec(100)), // 0.007
+				Weight:  osmomath.NewDecWithPrec(7, 1).Quo(osmomath.NewDec(100)), // 0.007
 			},
 			{
 				Address: "osmo1z2x9z58cg96ujvhvu6ga07yv9edq2mvkxpgwmc",
-				Weight:  sdk.NewDecWithPrec(5, 1).Quo(sdk.NewDec(100)), // 0.005
+				Weight:  osmomath.NewDecWithPrec(5, 1).Quo(osmomath.NewDec(100)), // 0.005
 			},
 			{
 				Address: "osmo1tvf3373skua8e6480eyy38avv8mw3hnt8jcxg9",
-				Weight:  sdk.NewDecWithPrec(25, 2).Quo(sdk.NewDec(100)), // 0.0025
+				Weight:  osmomath.NewDecWithPrec(25, 2).Quo(osmomath.NewDec(100)), // 0.0025
 			},
 			{
 				Address: "osmo1zs0txy03pv5crj2rvty8wemd3zhrka2ne8u05n",
-				Weight:  sdk.NewDecWithPrec(25, 2).Quo(sdk.NewDec(100)), // 0.0025
+				Weight:  osmomath.NewDecWithPrec(25, 2).Quo(osmomath.NewDec(100)), // 0.0025
 			},
 			{
 				Address: "osmo1djgf9p53n7m5a55hcn6gg0cm5mue4r5g3fadee",
-				Weight:  sdk.NewDecWithPrec(1, 1).Quo(sdk.NewDec(100)), // 0.001
+				Weight:  osmomath.NewDecWithPrec(1, 1).Quo(osmomath.NewDec(100)), // 0.001
 			},
 			{
 				Address: "osmo1488zldkrn8xcjh3z40v2mexq7d088qkna8ceze",
-				Weight:  sdk.NewDecWithPrec(8, 1).Quo(sdk.NewDec(1000)), // 0.0008
+				Weight:  osmomath.NewDecWithPrec(8, 1).Quo(osmomath.NewDec(1000)), // 0.0008
 			},
 		},
 		MintingRewardsDistributionStartEpoch: defaultMintingRewardsDistributionStartEpoch,
 	}
 
-	suite.assertAddressWeightsAddUpToOne(mintParams.WeightedDeveloperRewardsReceivers)
+	s.assertAddressWeightsAddUpToOne(mintParams.WeightedDeveloperRewardsReceivers)
 
 	// Test setup parameters are not identical with mainnet.
 	// Therfore, we set them here to the desired mainnet values.
@@ -526,24 +527,25 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 		EpochProvisions: genesisEpochProvisionsDec,
 	})
 
-	expectedSupplyWithOffset := sdk.NewDec(0)
-	expectedSupply := sdk.NewDec(keeper.DeveloperVestingAmount)
+	expectedSupplyWithOffset := osmomath.NewDec(0)
+	expectedSupply := osmomath.NewDec(keeper.DeveloperVestingAmount)
 
 	supplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
-	suite.Require().Equal(expectedSupplyWithOffset.TruncateInt64(), supplyWithOffset.Amount.Int64())
+	s.Require().Equal(expectedSupplyWithOffset.TruncateInt64(), supplyWithOffset.Amount.Int64())
 
 	supply := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom)
-	suite.Require().Equal(expectedSupply.TruncateInt64(), supply.Amount.Int64())
+	s.Require().Equal(expectedSupply.TruncateInt64(), supply.Amount.Int64())
 
-	devRewardsDelta := sdk.ZeroDec()
-	epochProvisionsDelta := genesisEpochProvisionsDec.Sub(genesisEpochProvisionsDec.TruncateInt().ToDec()).Mul(sdk.NewDec(defaultReductionPeriodInEpochs))
+	devRewardsDelta := osmomath.ZeroDec()
+	epochProvisionsDelta := genesisEpochProvisionsDec.Sub(genesisEpochProvisionsDec.TruncateInt().ToLegacyDec()).Mul(osmomath.NewDec(defaultReductionPeriodInEpochs))
 
 	// Actual test for running AfterEpochEnd hook thirdeningEpoch times.
 	for i := int64(1); i <= defaultReductionPeriodInEpochs; i++ {
 		developerAccountBalanceBeforeHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
 
 		// System under test.
-		mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, i)
+		err = mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, i)
+		s.Require().NoError(err)
 
 		// System truncates EpochProvisions because bank takes an Int.
 		// This causes rounding errors. Let's refer to this source as #1.
@@ -552,12 +554,12 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 		// be off by reductionPeriodInEpochs * (genesisEpochProvisionsDec - truncatedEpochProvisions)
 		// Therefore, we store this delta in epochProvisionsDelta to add to the actual supply to compare
 		// to expected at the end.
-		truncatedEpochProvisions := genesisEpochProvisionsDec.TruncateInt().ToDec()
+		truncatedEpochProvisions := genesisEpochProvisionsDec.TruncateInt().ToLegacyDec()
 
 		// We want supply with offset to exclude unvested developer rewards
 		// Truncation also happens when subtracting dev rewards.
 		// Potential source of minor rounding errors #2.
-		devRewards := truncatedEpochProvisions.Mul(mintParams.DistributionProportions.DeveloperRewards).TruncateInt().ToDec()
+		devRewards := truncatedEpochProvisions.Mul(mintParams.DistributionProportions.DeveloperRewards).TruncateInt().ToLegacyDec()
 
 		// We aim to exclude developer account balance from the supply with offset calculation.
 		developerAccountBalance := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
@@ -566,25 +568,25 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 		// This check is now failing because of rounding errors.
 		// To prove that this is the source of errors, we keep accumulating
 		// the delta and add it to the expected supply validation after the loop.
-		if !developerAccountBalanceBeforeHook.Amount.ToDec().Sub(devRewards).Equal(developerAccountBalance.Amount.ToDec()) {
-			expectedDeveloperAccountBalanceAfterHook := developerAccountBalanceBeforeHook.Amount.ToDec().Sub(devRewards)
-			actualDeveloperAccountBalanceAfterHook := developerAccountBalance.Amount.ToDec()
+		if !developerAccountBalanceBeforeHook.Amount.ToLegacyDec().Sub(devRewards).Equal(developerAccountBalance.Amount.ToLegacyDec()) {
+			expectedDeveloperAccountBalanceAfterHook := developerAccountBalanceBeforeHook.Amount.ToLegacyDec().Sub(devRewards)
+			actualDeveloperAccountBalanceAfterHook := developerAccountBalance.Amount.ToLegacyDec()
 
 			// This is supposed to be equal but is failing due to the rounding errors from devRewards.
-			suite.Require().NotEqual(expectedDeveloperAccountBalanceAfterHook, actualDeveloperAccountBalanceAfterHook)
+			s.Require().NotEqual(expectedDeveloperAccountBalanceAfterHook, actualDeveloperAccountBalanceAfterHook)
 
 			devRewardsDelta = devRewardsDelta.Add(actualDeveloperAccountBalanceAfterHook.Sub(expectedDeveloperAccountBalanceAfterHook))
 		}
 
 		expectedSupply = expectedSupply.Add(truncatedEpochProvisions).Sub(devRewards)
-		suite.Require().Equal(expectedSupply.RoundInt(), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount)
+		s.Require().Equal(expectedSupply.RoundInt(), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount)
 
-		expectedSupplyWithOffset = expectedSupply.Sub(developerAccountBalance.Amount.ToDec())
-		suite.Require().Equal(expectedSupplyWithOffset.RoundInt(), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
+		expectedSupplyWithOffset = expectedSupply.Sub(developerAccountBalance.Amount.ToLegacyDec())
+		s.Require().Equal(expectedSupplyWithOffset.RoundInt(), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
 
 		// Validate that the epoch provisions have not been reduced.
-		suite.Require().Equal(defaultMintingRewardsDistributionStartEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
-		suite.Require().Equal(defaultGenesisEpochProvisions, mintKeeper.GetMinter(ctx).EpochProvisions.String())
+		s.Require().Equal(defaultMintingRewardsDistributionStartEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
+		s.Require().Equal(defaultGenesisEpochProvisions, mintKeeper.GetMinter(ctx).EpochProvisions.String())
 	}
 
 	// Validate total supply.
@@ -593,32 +595,33 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 	// Here, we add the deltas to the actual supply and compare against expected.
 	//
 	// expectedTotalProvisionedSupply = 365 * 821917808219.178082191780821917 = 299_999_999_999_999.999999999999999705
-	expectedTotalProvisionedSupply := sdk.NewDec(defaultReductionPeriodInEpochs).Mul(genesisEpochProvisionsDec)
+	expectedTotalProvisionedSupply := osmomath.NewDec(defaultReductionPeriodInEpochs).Mul(genesisEpochProvisionsDec)
 	// actualTotalProvisionedSupply = 299_999_999_997_380 (off by 2619.999999999999999705)
 	// devRewardsDelta = 2555 (hard to estimate but the source is from truncating dev rewards )
 	// epochProvisionsDelta = 0.178082191780821917 * 365 = 64.999999999999999705
-	actualTotalProvisionedSupply := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToDec()
+	actualTotalProvisionedSupply := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToLegacyDec()
 
 	// 299_999_999_999_999.999999999999999705 == 299_999_999_997_380 + 2555 + 64.999999999999999705
-	suite.Require().Equal(expectedTotalProvisionedSupply, actualTotalProvisionedSupply.Add(devRewardsDelta).Add(epochProvisionsDelta))
+	s.Require().Equal(expectedTotalProvisionedSupply, actualTotalProvisionedSupply.Add(devRewardsDelta).Add(epochProvisionsDelta))
 
 	// This end of epoch should trigger thirdening. It will utilize the updated
 	// (reduced) provisions.
-	mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, defaultThirdeningEpochNum)
+	err = mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, defaultThirdeningEpochNum)
+	s.Require().NoError(err)
 
-	suite.Require().Equal(defaultThirdeningEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
+	s.Require().Equal(defaultThirdeningEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
 
 	expectedThirdenedProvisions := mintParams.ReductionFactor.Mul(genesisEpochProvisionsDec)
 	// Sanity check with the actual value on mainnet.
-	suite.Require().Equal(defaultMainnetThirdenedProvisions, expectedThirdenedProvisions.String())
-	suite.Require().Equal(expectedThirdenedProvisions, mintKeeper.GetMinter(ctx).EpochProvisions)
+	s.Require().Equal(defaultMainnetThirdenedProvisions, expectedThirdenedProvisions.String())
+	s.Require().Equal(expectedThirdenedProvisions, mintKeeper.GetMinter(ctx).EpochProvisions)
 }
 
-func (suite KeeperTestSuite) assertAddressWeightsAddUpToOne(receivers []types.WeightedAddress) {
-	sumOfWeights := sdk.ZeroDec()
+func (s *KeeperTestSuite) assertAddressWeightsAddUpToOne(receivers []types.WeightedAddress) { //nolint:govet // this is a test and we can copy locks here.
+	sumOfWeights := osmomath.ZeroDec()
 	// As a sanity check, ensure developer reward receivers add up to 1.
 	for _, w := range receivers {
 		sumOfWeights = sumOfWeights.Add(w.Weight)
 	}
-	suite.Require().Equal(sdk.OneDec(), sumOfWeights)
+	s.Require().Equal(osmomath.OneDec(), sumOfWeights)
 }

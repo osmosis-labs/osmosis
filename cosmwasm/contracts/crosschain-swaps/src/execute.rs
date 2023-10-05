@@ -1,59 +1,190 @@
-use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Timestamp};
+use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Env, MessageInfo};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
+use osmosis_std::types::osmosis::poolmanager::v1beta1::SwapAmountInRoute;
+use registry::msg::{Callback, SerializableJson};
+use registry::RegistryError;
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
-use crate::checks::{ensure_key_missing, validate_receiver};
-use crate::consts::{MsgReplyID, CALLBACK_KEY, PACKET_LIFETIME};
-use crate::ibc::{MsgTransfer, MsgTransferResponse};
-use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction, SerializableJson};
+use crate::checks::{
+    check_is_contract_governor, ensure_key_missing, get_registry, validate_receiver,
+};
+use crate::consts::{MsgReplyID, CALLBACK_KEY};
+use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction};
+use registry::proto::MsgTransferResponse;
 
-use crate::state;
 use crate::state::{
-    ForwardMsgReplyState, ForwardTo, SwapMsgReplyState, CONFIG, FORWARD_REPLY_STATE,
+    Config, ForwardMsgReplyState, ForwardTo, SwapMsgReplyState, CONFIG, FORWARD_REPLY_STATE,
     INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATE,
 };
 use crate::utils::{build_memo, parse_swaprouter_reply};
 use crate::ContractError;
+use crate::{state, ExecuteMsg};
 
-/// This is the main execute call of this contract.
-///
-/// It's objective is to trigger a swap between the supplied pairs
-///
-#[allow(clippy::too_many_arguments)]
-pub fn swap_and_forward(
-    deps: DepsMut,
-    block_time: Timestamp,
-    contract_addr: Addr,
-    swap_amount: u128,
-    received_coin: Coin,
+use std::fmt::Debug;
+
+// Helper to add consistent events on ibc message submission
+fn ibc_message_event<T: Debug>(context: &str, message: T) -> cosmwasm_std::Event {
+    cosmwasm_std::Event::new("ibc_message_added")
+        .add_attribute("context", context)
+        .add_attribute("ibc_message", format!("{message:?}"))
+}
+
+/// This function takes any token. If it's already something we can work with
+/// (either native to osmosis or native to a chain connected to osmosis via a
+/// valid channel), it will just proceed to swap and forward. If it's not, then
+/// it will send an IBC message to unwrap it first and provide a callback to
+/// ensure the right swap_and_forward gets called after the unwrap succeeds
+pub fn unwrap_or_swap_and_forward(
+    ctx: (DepsMut, Env, MessageInfo),
     output_denom: String,
     slippage: swaprouter::Slippage,
     receiver: &str,
     next_memo: Option<SerializableJson>,
     failed_delivery_action: FailedDeliveryAction,
+    route: Option<Vec<SwapAmountInRoute>>,
 ) -> Result<Response, ContractError> {
+    let (deps, env, info) = ctx;
+    let swap_coin = cw_utils::one_coin(&info)?;
+
+    deps.api
+        .debug(&format!("executing unwrap or swap and forward"));
+    let registry = get_registry(deps.as_ref())?;
+
+    // Check the path that the coin took to get to the current chain.
+    // Each element in the path is an IBC hop.
+    let path = registry.unwrap_denom_path(&swap_coin.denom)?;
+    if path.is_empty() {
+        return Err(RegistryError::InvalidDenomTracePath {
+            path: String::new(),
+            denom: swap_coin.denom,
+        }
+        .into());
+    }
+
+    let amount: u128 = swap_coin.amount.into();
+
+    // If the path is larger than 2, we need to unwrap this token first
+    if path.len() > 2 {
+        let registry = get_registry(deps.as_ref())?;
+        let ibc_transfer = registry.unwrap_coin_into(
+            swap_coin,
+            env.contract.address.to_string(),
+            None,
+            env.contract.address.to_string(),
+            env.block.time,
+            build_memo(None, env.contract.address.as_str())?,
+            Some(Callback {
+                contract: env.contract.address.clone(),
+                msg: serde_cw_value::to_value(&ExecuteMsg::OsmosisSwap {
+                    output_denom,
+                    receiver: receiver.to_string(),
+                    slippage,
+                    next_memo,
+                    on_failed_delivery: failed_delivery_action.clone(),
+                    route,
+                })?
+                .into(),
+            }),
+            false,
+        )?;
+
+        // Ensure the state is properly setup to handle a reply from the ibc_message
+        save_forward_reply_state(
+            deps,
+            ForwardMsgReplyState {
+                channel_id: ibc_transfer.source_channel.clone(),
+                to_address: env.contract.address.to_string(),
+                amount,
+                denom: String::new(),
+                on_failed_delivery: failed_delivery_action,
+                is_swap: false,
+            },
+        )?;
+
+        // Here we should add a response for the sender with the packet
+        // sequence, but that would require habdling the reply. This will be
+        // unncecessary once async acks lands, so we should wait for that
+        return Ok(Response::new()
+            //.set_data(data)
+            .add_attribute("action", "unwrap_before_swap")
+            .add_event(ibc_message_event(
+                "pre-swap unwinding ibc message created",
+                &ibc_transfer,
+            ))
+            .add_submessage(SubMsg::reply_on_success(
+                ibc_transfer,
+                MsgReplyID::Forward.repr(),
+            )));
+    }
+
+    // If the denom is either native or only one hop, we swap it directly
+    swap_and_forward(
+        (deps, env, info),
+        swap_coin,
+        output_denom,
+        slippage,
+        receiver,
+        next_memo,
+        failed_delivery_action,
+        route,
+    )
+}
+
+/// This function takes token "known to the chain", swaps it, and then forwards
+/// the result to the receiver.
+///
+///
+#[allow(clippy::too_many_arguments)]
+pub fn swap_and_forward(
+    ctx: (DepsMut, Env, MessageInfo),
+    swap_coin: Coin,
+    output_denom: String,
+    slippage: swaprouter::Slippage,
+    receiver: &str,
+    next_memo: Option<SerializableJson>,
+    failed_delivery_action: FailedDeliveryAction,
+    route: Option<Vec<SwapAmountInRoute>>,
+) -> Result<Response, ContractError> {
+    let (deps, env, _) = ctx;
+
     deps.api.debug(&format!("executing swap and forward"));
     let config = CONFIG.load(deps.storage)?;
 
-    // TODO: Here we can take the fees
-    let swap_coin = Coin::new(swap_amount, received_coin.denom);
+    // Check that the received is valid and retrieve its channel
+    let (valid_chain, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
+    // If there is a memo, check that it is valid (i.e. a valud json object that
+    // doesn't contain the key that we will insert later)
+    let memo = if let Some(memo) = &next_memo {
+        // Ensure the json is an object ({...}) and that it does not contain the CALLBACK_KEY
+        deps.api.debug(&format!("checking memo: {memo:?}"));
+        ensure_key_missing(memo.as_value(), CALLBACK_KEY)?;
+        serde_json_wasm::to_string(&memo)?
+    } else {
+        String::new()
+    };
+
+    // Validate that the swapped token can be unwrapped. If it can't, abort
+    // early to avoid swapping unnecessarily
+    let registry = get_registry(deps.as_ref())?;
+    registry.unwrap_coin_into(
+        Coin::new(1, output_denom.clone()),
+        valid_receiver.to_string(),
+        Some(&valid_chain),
+        env.contract.address.to_string(),
+        env.block.time,
+        memo,
+        None,
+        false,
+    )?;
 
     // Message to swap tokens in the underlying swaprouter contract
     let swap_msg = SwapRouterExecute::Swap {
         input_coin: swap_coin.clone(),
         output_denom,
         slippage,
+        route,
     };
     let msg = wasm_execute(config.swap_contract, &swap_msg, vec![swap_coin])?;
-
-    // Check that the received is valid and retrieve its channel
-    let (valid_channel, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
-    // If there is a memo, check that it is valid (i.e. a valud json object that
-    // doesn't contain the key that we will insert later)
-    if let Some(memo) = &next_memo {
-        // Ensure the json is an object ({...}) and that it does not contain the CALLBACK_KEY
-        ensure_key_missing(memo.as_value(), CALLBACK_KEY)?;
-    }
 
     // Check that there isn't anything stored in SWAP_REPLY_STATES. If there is,
     // it means that the contract is already waiting for a reply and should not
@@ -71,10 +202,10 @@ pub fn swap_and_forward(
         deps.storage,
         &SwapMsgReplyState {
             swap_msg,
-            block_time,
-            contract_addr,
+            block_time: env.block.time,
+            contract_addr: env.contract.address,
             forward_to: ForwardTo {
-                channel: valid_channel,
+                chain: valid_chain,
                 receiver: valid_receiver,
                 next_memo,
                 on_failed_delivery: failed_delivery_action,
@@ -82,75 +213,15 @@ pub fn swap_and_forward(
         },
     )?;
 
-    Ok(Response::new().add_submessage(SubMsg::reply_on_success(msg, MsgReplyID::Swap.repr())))
+    Ok(Response::new()
+        .add_attribute("action", "swap_and_forward")
+        .add_submessage(SubMsg::reply_on_success(msg, MsgReplyID::Swap.repr())))
 }
 
-// The swap has succeeded and we need to generate the forward IBC transfer
-pub fn handle_swap_reply(
+fn save_forward_reply_state(
     deps: DepsMut,
-    msg: cosmwasm_std::Reply,
-) -> Result<Response, ContractError> {
-    deps.api.debug(&format!("handle_swap_reply"));
-    let swap_msg_state = SWAP_REPLY_STATE.load(deps.storage)?;
-    SWAP_REPLY_STATE.remove(deps.storage);
-
-    // Extract the relevant response from the swaprouter reply
-    let swap_response = parse_swaprouter_reply(msg)?;
-
-    // Build an IBC packet to forward the swap.
-    let contract_addr = &swap_msg_state.contract_addr;
-    let ts = swap_msg_state.block_time.plus_seconds(PACKET_LIFETIME);
-
-    // If the memo is provided we want to include it in the IBC message. If not,
-    // we default to an empty object. The resulting memo will always include the
-    // callback so this contract can track the IBC send
-    let memo = build_memo(swap_msg_state.forward_to.next_memo, contract_addr.as_str())?;
-
-    // Cosmwasm's  IBCMsg::Transfer  does not support memo.
-    // To build and send the packet properly, we need to send it using stargate messages.
-    // See https://github.com/CosmWasm/cosmwasm/issues/1477
-    let ibc_transfer = MsgTransfer {
-        source_port: "transfer".to_string(),
-        source_channel: swap_msg_state.forward_to.channel.clone(),
-        token: Some(
-            Coin::new(
-                swap_response.amount.into(),
-                swap_response.token_out_denom.clone(),
-            )
-            .into(),
-        ),
-        sender: contract_addr.to_string(),
-        receiver: swap_msg_state.forward_to.receiver.clone().into(),
-        timeout_height: None,
-        timeout_timestamp: Some(ts.nanos()),
-        memo,
-    };
-
-    // Base response
-    let response = Response::new()
-        .add_attribute("status", "ibc_message_created")
-        .add_attribute("ibc_message", format!("{:?}", ibc_transfer));
-
-    // If there isn't any recovery addres, then there's no need to listen to
-    // the response of the send, so we short-circuit here.
-    if matches!(
-        swap_msg_state.forward_to.on_failed_delivery,
-        FailedDeliveryAction::DoNothing,
-    ) {
-        // The response data needs to be added for consistency here. It would
-        // normally be added in the next reply (after the forward succeeds)
-        let data = CrosschainSwapResponse::base(
-            &swap_response.amount,
-            &swap_response.token_out_denom,
-            &swap_msg_state.forward_to.channel,
-            swap_msg_state.forward_to.receiver.as_str(),
-        );
-
-        return Ok(response
-            .set_data(to_binary(&data)?)
-            .add_message(ibc_transfer));
-    }
-
+    forward_reply_state: ForwardMsgReplyState,
+) -> Result<(), ContractError> {
     // Check that there isn't anything stored in FORWARD_REPLY_STATES. If there
     // is, it means that the contract is already waiting for a reply and should
     // not override the stored state. This should never happen here, but adding
@@ -163,14 +234,64 @@ pub fn handle_swap_reply(
     }
     // Store the ibc send information and the user's failed delivery preference
     // so that it can be handled by the response
-    FORWARD_REPLY_STATE.save(
-        deps.storage,
-        &ForwardMsgReplyState {
-            channel_id: swap_msg_state.forward_to.channel,
+    FORWARD_REPLY_STATE.save(deps.storage, &forward_reply_state)?;
+    Ok(())
+}
+
+// The swap has succeeded and we need to generate the forward IBC transfer
+pub fn handle_swap_reply(
+    deps: DepsMut,
+    env: Env,
+    msg: cosmwasm_std::Reply,
+) -> Result<Response, ContractError> {
+    let swap_msg_state = SWAP_REPLY_STATE.load(deps.storage)?;
+    SWAP_REPLY_STATE.remove(deps.storage);
+
+    // Extract the relevant response from the swaprouter reply
+    let swap_response = parse_swaprouter_reply(msg)?;
+
+    // Build an IBC packet to forward the swap.
+    let contract_addr = &swap_msg_state.contract_addr;
+
+    // If the memo is provided we want to include it in the IBC message. If not,
+    // we default to an empty object. The resulting memo will always include the
+    // callback so this contract can track the IBC send
+    let memo = build_memo(swap_msg_state.forward_to.next_memo, contract_addr.as_str())?;
+
+    let registry = get_registry(deps.as_ref())?;
+    let ibc_transfer = registry.unwrap_coin_into(
+        Coin::new(
+            swap_response.amount.into(),
+            swap_response.token_out_denom.clone(),
+        ),
+        swap_msg_state.forward_to.receiver.clone().to_string(),
+        Some(&swap_msg_state.forward_to.chain),
+        env.contract.address.to_string(),
+        env.block.time,
+        memo,
+        None,
+        false,
+    )?;
+    deps.api.debug(&format!("IBC transfer: {ibc_transfer:?}"));
+
+    // Base response
+    let response = Response::new()
+        .add_attribute("action", "handle_swap_reply")
+        .add_event(ibc_message_event(
+            "forward ibc message added",
+            &ibc_transfer,
+        ));
+
+    // Ensure the state is properly setup to handle a reply from the ibc_message
+    save_forward_reply_state(
+        deps,
+        ForwardMsgReplyState {
+            channel_id: ibc_transfer.source_channel.clone(),
             to_address: swap_msg_state.forward_to.receiver.into(),
             amount: swap_response.amount.into(),
             denom: swap_response.token_out_denom,
             on_failed_delivery: swap_msg_state.forward_to.on_failed_delivery,
+            is_swap: true,
         },
     )?;
 
@@ -190,6 +311,7 @@ pub fn handle_forward_reply(
     deps: DepsMut,
     msg: cosmwasm_std::Reply,
 ) -> Result<Response, ContractError> {
+    deps.api.debug(&format!("handle_forward_reply"));
     // Parse the result from the underlying chain call (IBC send)
     let SubMsgResult::Ok(SubMsgResponse { data: Some(b), .. }) = msg.result else {
         return Err(ContractError::FailedIBCTransfer { msg: format!("failed reply: {:?}", msg.result) })
@@ -198,7 +320,7 @@ pub fn handle_forward_reply(
     // The response contains the packet sequence. This is needed to be able to
     // ensure that, if there is a delivery failure, the packet that failed is
     // the same one that we stored recovery information for
-    let response =
+    let transfer_response =
         MsgTransferResponse::decode(&b[..]).map_err(|_e| ContractError::FailedIBCTransfer {
             msg: format!("could not decode response: {b}"),
         })?;
@@ -209,6 +331,7 @@ pub fn handle_forward_reply(
         amount,
         denom,
         on_failed_delivery: failed_delivery_action,
+        is_swap,
     } = FORWARD_REPLY_STATE.load(deps.storage)?;
     FORWARD_REPLY_STATE.remove(deps.storage);
 
@@ -220,36 +343,205 @@ pub fn handle_forward_reply(
             let recovery = state::ibc::IBCTransfer {
                 recovery_addr,
                 channel_id: channel_id.clone(),
-                sequence: response.sequence,
+                sequence: transfer_response.sequence,
                 amount,
                 denom: denom.clone(),
                 status: state::ibc::PacketLifecycleStatus::Sent,
             };
 
             // Save as in-flight to be able to manipulate when the ack/timeout is received
-            INFLIGHT_PACKETS.save(deps.storage, (&channel_id, response.sequence), &recovery)?;
+            INFLIGHT_PACKETS.save(
+                deps.storage,
+                (&channel_id, transfer_response.sequence),
+                &recovery,
+            )?;
         }
     }
 
-    // The response data
-    let response_data =
-        CrosschainSwapResponse::base(&amount.into(), &denom, &channel_id, &to_address);
+    let response = Response::new()
+        .add_attribute("action", "handle_forward_reply")
+        .add_attribute("status", "ibc_message_successfully_submitted")
+        .add_attribute("channel", &channel_id)
+        .add_attribute("receiver", &to_address)
+        .add_attribute(
+            "packet_sequence",
+            format!("{:?}", transfer_response.sequence),
+        );
 
-    Ok(Response::new()
+    if !is_swap {
+        return Ok(response);
+    }
+
+    // Add the information about the swap
+    let response_data = CrosschainSwapResponse::new(
+        amount,
+        &denom,
+        &channel_id,
+        &to_address,
+        transfer_response.sequence,
+    );
+
+    Ok(response
         .set_data(to_binary(&response_data)?)
-        .add_attribute("status", "ibc_message_created")
         .add_attribute("amount", amount.to_string())
-        .add_attribute("denom", denom)
-        .add_attribute("channel", channel_id)
-        .add_attribute("receiver", to_address))
+        .add_attribute("denom", denom))
 }
 
 /// Transfers any tokens stored in RECOVERY_STATES[sender] to the sender.
 pub fn recover(deps: DepsMut, sender: Addr) -> Result<Response, ContractError> {
     let recoveries = RECOVERY_STATES.load(deps.storage, &sender)?;
+    // Remove the recoveries from the store. If the sends fail, the whole tx should be reverted.
+    RECOVERY_STATES.remove(deps.storage, &sender);
     let msgs = recoveries.into_iter().map(|r| BankMsg::Send {
-        to_address: r.recovery_addr.into(),
+        to_address: r.recovery_addr.into_string(),
         amount: coins(r.amount, r.denom),
     });
-    Ok(Response::new().add_messages(msgs))
+    Ok(Response::new()
+        .add_attribute("action", "recover")
+        .add_messages(msgs))
+}
+
+// Transfer ownership of this contract
+pub fn transfer_ownership(
+    deps: DepsMut,
+    sender: Addr,
+    new_governor: String,
+) -> Result<Response, ContractError> {
+    // only owner can transfer
+    check_is_contract_governor(deps.as_ref(), sender)?;
+    let new_governor = deps.api.addr_validate(&new_governor)?;
+
+    CONFIG.update(
+        deps.storage,
+        |mut config| -> Result<Config, ContractError> {
+            config.governor = new_governor;
+            Ok(config)
+        },
+    )?;
+
+    Ok(Response::new().add_attribute("action", "transfer_ownership"))
+}
+
+/// Set the address of the swap contract to use
+pub fn set_swap_contract(
+    deps: DepsMut,
+    sender: Addr,
+    new_contract: String,
+) -> Result<Response, ContractError> {
+    check_is_contract_governor(deps.as_ref(), sender)?;
+    let new_contract = deps.api.addr_validate(&new_contract)?;
+
+    CONFIG.update(
+        deps.storage,
+        |mut config| -> Result<Config, ContractError> {
+            config.swap_contract = new_contract;
+            Ok(config)
+        },
+    )?;
+
+    Ok(Response::new().add_attribute("action", "set_swaps_contract"))
+}
+
+#[cfg(test)]
+mod tests {
+    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+
+    use super::*;
+    use crate::{contract, msg::InstantiateMsg, ExecuteMsg};
+
+    static CREATOR_ADDRESS: &str = "creator";
+    static SWAPCONTRACT_ADDRESS: &str = "swapcontract";
+    static REGISTRY_ADDRESS: &str = "registrycontract";
+
+    // test helper
+    #[allow(unused_assignments)]
+    fn initialize_contract(deps: DepsMut) -> Addr {
+        let msg = InstantiateMsg {
+            governor: String::from(CREATOR_ADDRESS),
+            swap_contract: String::from(SWAPCONTRACT_ADDRESS),
+            registry_contract: String::from(REGISTRY_ADDRESS),
+        };
+        let info = mock_info(CREATOR_ADDRESS, &[]);
+
+        contract::instantiate(deps, mock_env(), info.clone(), msg).unwrap();
+
+        info.sender
+    }
+
+    #[test]
+    fn proper_initialization() {
+        let mut deps = mock_dependencies();
+
+        let governor = initialize_contract(deps.as_mut());
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(config.governor, governor);
+    }
+
+    #[test]
+    fn transfer_ownership() {
+        let mut deps = mock_dependencies();
+
+        let governor = initialize_contract(deps.as_mut());
+        let governor_info = mock_info(governor.as_str(), &vec![] as &Vec<Coin>);
+
+        let new_governor = "new_owner".to_string();
+        // The owner can transfer ownership
+        let msg = ExecuteMsg::TransferOwnership {
+            new_governor: new_governor.clone(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), governor_info, msg).unwrap();
+
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(new_governor, config.governor);
+    }
+
+    #[test]
+    fn transfer_ownership_unauthorized() {
+        let mut deps = mock_dependencies();
+
+        let governor = initialize_contract(deps.as_mut());
+
+        let other_info = mock_info("other_sender", &vec![] as &Vec<Coin>);
+
+        // An unauthorized user cannot transfer ownership
+        let msg = ExecuteMsg::TransferOwnership {
+            new_governor: "new_owner".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), other_info, msg).unwrap_err();
+
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(governor, config.governor);
+    }
+
+    #[test]
+    fn set_swap_contract() {
+        let mut deps = mock_dependencies();
+
+        let governor = initialize_contract(deps.as_mut());
+        let governor_info = mock_info(governor.as_str(), &vec![] as &Vec<Coin>);
+
+        // and new channel
+        let msg = ExecuteMsg::SetSwapContract {
+            new_contract: "new_swap_contract".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), governor_info, msg).unwrap();
+
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(config.swap_contract, "new_swap_contract".to_string());
+    }
+
+    #[test]
+    fn set_swap_contract_unauthorized() {
+        let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
+
+        // A user other than the owner cannot modify the channel registry
+        let other_info = mock_info("other_sender", &vec![] as &Vec<Coin>);
+        let msg = ExecuteMsg::SetSwapContract {
+            new_contract: "new_swap_contract".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), other_info, msg).unwrap_err();
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(config.swap_contract, SWAPCONTRACT_ADDRESS.to_string());
+    }
 }

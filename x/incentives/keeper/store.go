@@ -2,10 +2,15 @@ package keeper
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v14/x/incentives/types"
+	"github.com/gogo/protobuf/proto"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -100,4 +105,94 @@ func (k Keeper) deleteGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) 
 // addGaugeIDForDenom adds the provided ID to the list of gauge ID's associated with the provided denom.
 func (k Keeper) addGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) error {
 	return k.addGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), ID)
+}
+
+// SetGroup sets groupGroup for a specific key.
+// TODO: explore if we can store this better, this has GroupGaugeId in key and value
+func (k Keeper) SetGroup(ctx sdk.Context, group types.Group) {
+	store := ctx.KVStore(k.storeKey)
+	osmoutils.MustSet(store, types.KeyGroupByGaugeID(group.GroupGaugeId), &group)
+}
+
+// GetAllGroupGauges gets all the groupGauges that is in state.
+func (k Keeper) GetAllGroups(ctx sdk.Context) ([]types.Group, error) {
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPrefixGroup, k.ParseGroupFromBz)
+}
+
+// GetAllGroupsGauges iterates through all groups, sequentially pulls the gauges from each, and returns just the gauges.
+func (k Keeper) GetAllGroupsGauges(ctx sdk.Context) ([]types.Gauge, error) {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixGroup)
+	iter := prefixStore.Iterator(nil, nil)
+
+	var gauges []types.Gauge
+	for ; iter.Valid(); iter.Next() {
+		group, err := k.ParseGroupFromBz(iter.Value())
+		if err != nil {
+			iter.Close()
+			panic(fmt.Errorf("invalid group key (%s): %v", string(iter.Key()), err))
+		}
+
+		gauge, err := k.GetGaugeByID(ctx, group.GroupGaugeId)
+		if err != nil {
+			iter.Close()
+			return nil, err
+		}
+		gauges = append(gauges, *gauge)
+	}
+	return gauges, nil
+}
+
+// GetAllGroupsWithGauge iterates through all groups, sequentially pulls the gauges from each, and returns the groups with their associated gauge.
+func (k Keeper) GetAllGroupsWithGauge(ctx sdk.Context) ([]types.GroupsWithGauge, error) {
+	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixGroup)
+	iter := prefixStore.Iterator(nil, nil)
+
+	var groupsWithGauge []types.GroupsWithGauge
+	for ; iter.Valid(); iter.Next() {
+		group, err := k.ParseGroupFromBz(iter.Value())
+		if err != nil {
+			iter.Close()
+			panic(fmt.Errorf("invalid group key (%s): %v", string(iter.Key()), err))
+		}
+
+		gauge, err := k.GetGaugeByID(ctx, group.GroupGaugeId)
+		if err != nil {
+			iter.Close()
+			return nil, err
+		}
+		groupsWithGauge = append(groupsWithGauge, types.GroupsWithGauge{
+			Group: group,
+			Gauge: *gauge,
+		})
+	}
+	return groupsWithGauge, nil
+}
+
+func (k Keeper) ParseGroupFromBz(bz []byte) (group types.Group, err error) {
+	if len(bz) == 0 {
+		return types.Group{}, errors.New("group gauge not found")
+	}
+	err = proto.Unmarshal(bz, &group)
+
+	return group, err
+}
+
+// GetGroupByGaugeID gets group struct for a given gauge ID. Note that Group and group's associated gauge
+// are 1:1 mapped. As a result, they share the same ID.
+func (k Keeper) GetGroupByGaugeID(ctx sdk.Context, gaugeID uint64) (types.Group, error) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyGroupByGaugeID(gaugeID)
+	bz := store.Get(key)
+	if bz == nil {
+		return types.Group{}, types.GroupNotFoundError{GroupGaugeId: gaugeID}
+	}
+
+	var group types.Group
+	if err := proto.Unmarshal(bz, &group); err != nil {
+		return types.Group{}, err
+	}
+
+	return group, nil
 }

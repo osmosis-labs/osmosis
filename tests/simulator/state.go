@@ -7,9 +7,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v14/app"
-	osmosim "github.com/osmosis-labs/osmosis/v14/simulation/executor"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app"
+	osmosim "github.com/osmosis-labs/osmosis/v19/simulation/executor"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,7 +79,7 @@ func updateStakingAndBankState(appState json.RawMessage, cdc codec.JSONCodec) js
 		panic(err)
 	}
 	// compute not bonded balance
-	notBondedTokens := sdk.ZeroInt()
+	notBondedTokens := osmomath.ZeroInt()
 	for _, val := range stakingState.Validators {
 		if val.Status != stakingtypes.Unbonded {
 			continue
@@ -136,7 +137,8 @@ func AppStateRandomizedFn(
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts
 	initialStake := r.Int63n(1e12)
-	numInitiallyBonded := int64(r.Intn(300))
+	// Don't allow 0 validators to start off with
+	numInitiallyBonded := int64(r.Intn(299)) + 1
 
 	if numInitiallyBonded > numAccs {
 		numInitiallyBonded = numAccs

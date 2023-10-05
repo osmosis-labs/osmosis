@@ -5,7 +5,6 @@ pub mod consts;
 pub mod contract;
 mod error;
 mod execute;
-pub mod ibc;
 mod ibc_lifecycle;
 pub mod msg;
 pub mod state;

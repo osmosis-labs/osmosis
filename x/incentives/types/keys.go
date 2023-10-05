@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 var (
 	// ModuleName defines the module name.
 	ModuleName = "incentives"
@@ -43,10 +45,31 @@ var (
 	// KeyIndexSeparator defines key for merging bytes.
 	KeyIndexSeparator = []byte{0x07}
 
+	// KeyPrefixGroup defines prefix key for storing groups.
+	KeyPrefixGroup = []byte{0x08}
+
 	// LockableDurationsKey defines key for storing valid durations for giving incentives.
 	LockableDurationsKey = []byte("lockable_durations")
+
+	NoLockInternalPrefix = "no-lock/i/"
+	NoLockExternalPrefix = "no-lock/e/"
 )
 
 func KeyPrefix(p string) []byte {
 	return []byte(p)
+}
+
+// NoLockExternalGaugeDenom returns the gauge denom for the no-lock external gauge for the given pool ID.
+func NoLockExternalGaugeDenom(poolId uint64) string {
+	return fmt.Sprintf("%s%d", NoLockExternalPrefix, poolId)
+}
+
+// NoLockInternalGaugeDenom returns the gauge denom for the no-lock internal gauge for the given pool ID.
+func NoLockInternalGaugeDenom(poolId uint64) string {
+	return fmt.Sprintf("%s%d", NoLockInternalPrefix, poolId)
+}
+
+// KeyGroupByGaugeID returns group key for a given groupGaugeId.
+func KeyGroupByGaugeID(groupGaugeId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%d%s", KeyPrefixGroup, groupGaugeId, KeyIndexSeparator))
 }

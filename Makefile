@@ -2,16 +2,25 @@
 
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
+
 LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
-GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
-DOCKER := $(shell which docker)
 BUILDDIR ?= $(CURDIR)/build
-E2E_UPGRADE_VERSION := "v15"
+DOCKER := $(shell which docker)
+E2E_UPGRADE_VERSION := "v20"
+#SHELL := /bin/bash
 
-
+# Go version to be used in docker images
+GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
+# currently installed Go version
+GO_MODULE := $(shell cat go.mod | grep "module " | cut -d ' ' -f 2)
 GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
 GO_MINOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
+# minimum supported Go version
+GO_MINIMUM_MAJOR_VERSION = $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f2 | cut -d'.' -f1)
+GO_MINIMUM_MINOR_VERSION = $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f2 | cut -d'.' -f2)
+# message to be printed if Go does not meet the minimum required version
+GO_VERSION_ERR_MSG = "ERROR: Go version $(GO_MINIMUM_MAJOR_VERSION).$(GO_MINIMUM_MINOR_VERSION)+ is required"
 
 export GO111MODULE = on
 
@@ -50,7 +59,7 @@ build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
 
 whitespace :=
-whitespace += $(whitespace)
+whitespace := $(whitespace) $(whitespace)
 comma := ,
 build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
@@ -82,27 +91,87 @@ ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   BUILD_FLAGS += -trimpath
 endif
 
+# Note that this skips certain tests that are not supported on WSL
+# This is a workaround to enable quickly running full unit test suite locally
+# on WSL without failures. The failures are stemming from trying to upload
+# wasm code. An OS permissioning issue.
+is_wsl := $(shell uname -a | grep -i Microsoft)
+ifeq ($(is_wsl),)
+    # Not in WSL
+    SKIP_WASM_WSL_TESTS := "false"
+else
+    # In WSL
+    SKIP_WASM_WSL_TESTS := "true"
+endif
+
 ###############################################################################
 ###                                  Build                                  ###
 ###############################################################################
 
 check_version:
-ifneq ($(GO_MINOR_VERSION),19)
-	@echo "ERROR: Go version 1.19 is required for this version of Osmosis."
-	exit 1
-endif
+	@echo "Go version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION)"
+	@if [ $(GO_MAJOR_VERSION) -gt $(GO_MINIMUM_MAJOR_VERSION) ]; then \
+		echo "Go version is sufficient"; \
+		exit 0; \
+	elif [ $(GO_MAJOR_VERSION) -lt $(GO_MINIMUM_MAJOR_VERSION) ]; then \
+		echo '$(GO_VERSION_ERR_MSG)'; \
+		exit 1; \
+	elif [ $(GO_MINOR_VERSION) -lt $(GO_MINIMUM_MINOR_VERSION) ]; then \
+		echo '$(GO_VERSION_ERR_MSG)'; \
+		exit 1; \
+	fi
 
 all: install lint test
 
-BUILD_TARGETS := build install
-
-build: BUILD_ARGS=-o $(BUILDDIR)/
-
-$(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
-	GOWORK=off go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
-
-$(BUILDDIR)/:
+build: check_version go.sum
 	mkdir -p $(BUILDDIR)/
+	GOWORK=off go build -mod=readonly  $(BUILD_FLAGS) -o $(BUILDDIR)/ $(GO_MODULE)/cmd/osmosisd
+
+build-all: check_version go.sum
+	mkdir -p $(BUILDDIR)/
+	GOWORK=off go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./...
+
+install: check_version go.sum
+	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
+
+install-with-autocomplete: check_version go.sum
+	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
+	@PARENT_SHELL=$$(ps -o ppid= -p $$PPID | xargs ps -o comm= -p); \
+	if echo "$$PARENT_SHELL" | grep -q "zsh"; then \
+		if ! grep -q ". <(osmosisd enable-cli-autocomplete zsh)" ~/.zshrc; then \
+			echo ". <(osmosisd enable-cli-autocomplete zsh)" >> ~/.zshrc; \
+			echo; \
+			echo "Autocomplete enabled. Run 'source ~/.zshrc' to complete installation."; \
+		else \
+			echo; \
+			echo "Autocomplete already enabled in ~/.zshrc"; \
+		fi \
+	elif echo "$$PARENT_SHELL" | grep -q "bash" && [ "$$(uname)" = "Darwin" ]; then \
+		if ! grep -q -e "\. <(osmosisd enable-cli-autocomplete bash)" -e '\[\[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" \]\] && \. "/opt/homebrew/etc/profile.d/bash_completion.sh"' ~/.bash_profile; then \
+			brew install bash-completion; \
+			echo '[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"' >> ~/.bash_profile; \
+			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bash_profile; \
+			echo; \
+			echo; \
+			echo "Autocomplete enabled. Run 'source ~/.bash_profile' to complete installation."; \
+		else \
+			echo "Autocomplete already enabled in ~/.bash_profile"; \
+		fi \
+	elif echo "$$PARENT_SHELL" | grep -q "bash" && [ "$$(uname)" = "Linux" ]; then \
+		if ! grep -q ". <(osmosisd enable-cli-autocomplete bash)" ~/.bash_profile; then \
+			sudo apt-get install -y bash-completion; \
+			echo '[ -r "/etc/bash_completion" ] && . "/etc/bash_completion"' >> ~/.bash_profile; \
+			echo ". <(osmosisd enable-cli-autocomplete bash)" >> ~/.bash_profile; \
+			echo; \
+			echo "Autocomplete enabled. Run 'source ~/.bash_profile' to complete installation."; \
+		else \
+			echo; \
+			echo "Autocomplete already enabled in ~/.bash_profile"; \
+		fi \
+	else \
+		echo "Shell or OS not recognized. Skipping autocomplete setup."; \
+	fi
+
 
 # Cross-building for arm64 from amd64 (or viceversa) takes
 # a lot of time due to QEMU virtualization but it's the only way (afaik)
@@ -110,14 +179,15 @@ $(BUILDDIR)/:
 
 build-reproducible: build-reproducible-amd64 build-reproducible-arm64
 
-build-reproducible-amd64: go.sum $(BUILDDIR)/
+build-reproducible-amd64: go.sum
+	mkdir -p $(BUILDDIR)
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg GIT_VERSION=$(VERSION) \
 		--build-arg GIT_COMMIT=$(COMMIT) \
-		--build-arg RUNNER_IMAGE=alpine:3.16 \
+		--build-arg RUNNER_IMAGE=alpine:3.17 \
 		--platform linux/amd64 \
 		-t osmosis:local-amd64 \
 		--load \
@@ -127,14 +197,15 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-amd64
 	$(DOCKER) rm -f osmobinary
 
-build-reproducible-arm64: go.sum $(BUILDDIR)/
+build-reproducible-arm64: go.sum
+	mkdir -p $(BUILDDIR)
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg GIT_VERSION=$(VERSION) \
 		--build-arg GIT_COMMIT=$(COMMIT) \
-		--build-arg RUNNER_IMAGE=alpine:3.16 \
+		--build-arg RUNNER_IMAGE=alpine:3.17 \
 		--platform linux/arm64 \
 		-t osmosis:local-arm64 \
 		--load \
@@ -157,7 +228,7 @@ go-mod-cache: go.sum
 
 go.sum: go.mod
 	@echo "--> Ensure dependencies have not been modified"
-	@go mod verify
+	@GOWORK=off go mod verify
 
 draw-deps:
 	@# requires brew install graphviz or apt-get install graphviz
@@ -169,6 +240,35 @@ clean:
 
 distclean: clean
 	rm -rf vendor/
+
+###############################################################################
+###                           Dependency Updates                            ###
+###############################################################################
+
+VERSION := 
+MODFILES := ./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod
+# run with VERSION argument specified
+# e.g) make update-sdk-version VERSION=v0.45.1-0.20230523200430-193959b898ec
+# This will change sdk dependencyu version for go.mod in root directory + all sub-modules in this repo.
+update-sdk-version:
+	@if [ -z "$(VERSION)" ]; then \
+		echo "VERSION not set"; \
+		exit 1; \
+	fi
+	@echo "Updating version to $(VERSION)"
+	@for modfile in $(MODFILES); do \
+		if [ -e "$$modfile" ]; then \
+			sed -i '' 's|github.com/osmosis-labs/cosmos-sdk v[0-9a-z.\-]*|github.com/osmosis-labs/cosmos-sdk $(VERSION)|g' $$modfile; \
+			cd `dirname $$modfile`; \
+			go mod tidy; \
+			cd - > /dev/null; \
+		else \
+			echo "File $$modfile does not exist"; \
+		fi; \
+	done
+
+tidy-workspace:
+	@./scripts/tidy_workspace.sh
 
 ###############################################################################
 ###                                  Proto                                  ###
@@ -206,7 +306,7 @@ docs:
 	@echo
 .PHONY: docs
 
-protoVer=v0.8
+protoVer=v0.9
 protoImageName=osmolabs/osmo-proto-gen:$(protoVer)
 containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
 containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
@@ -238,8 +338,8 @@ run-querygen:
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
-PACKAGES_UNIT=$(shell go list ./... ./osmomath/... ./osmoutils/... ./x/ibc-hooks/... | grep -E -v 'tests/simulator|e2e')
-PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
+PACKAGES_UNIT=$(shell go list ./... ./osmomath/... ./osmoutils/... ./x/ibc-hooks/... ./x/epochs | grep -E -v 'tests/simulator|e2e')
+PACKAGES_E2E := $(shell go list ./... | grep '/e2e' | awk -F'/e2e' '{print $$1 "/e2e"}' | uniq)
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
 TEST_PACKAGES=./...
 
@@ -248,7 +348,7 @@ test: test-unit test-build
 test-all: test-race test-cover
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
+	@VERSION=$(VERSION) SKIP_WASM_WSL_TESTS=$(SKIP_WASM_WSL_TESTS) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
 
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
@@ -275,11 +375,15 @@ test-sim-bench:
 # Utilizes Go cache.
 test-e2e: e2e-setup test-e2e-ci e2e-remove-resources
 
-# test-e2e-ci runs a full e2e test suite
+# test-e2e-ci runs a majority of e2e tests, only skipping the ones that are marked as scheduled tests
 # does not do any validation about the state of the Docker environment
 # As a result, avoid using this locally.
 test-e2e-ci:
-	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -p 4
+
+# test-e2e-ci-scheduled runs every e2e test available, and is only run on a scheduled basis
+test-e2e-ci-scheduled:
+	@VERSION=$(VERSION) OSMOSIS_E2E_SCHEDULED=True OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -p 4
 
 # test-e2e-debug runs a full e2e test suite but does
 # not attempt to delete Docker resources at the end.
@@ -308,7 +412,7 @@ docker-build-debug:
 	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
 
 docker-build-e2e-init-chain:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmolabs/osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
 
 docker-build-e2e-init-node:
 	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
@@ -329,7 +433,7 @@ e2e-remove-resources:
 ###############################################################################
 
 RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
-RUNNER_BASE_IMAGE_ALPINE := alpine:3.16
+RUNNER_BASE_IMAGE_ALPINE := alpine:3.17
 RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
 
 docker-build:
@@ -429,6 +533,136 @@ localnet-state-export-stop:
 
 localnet-state-export-clean: localnet-clean
 
+# create 100 concentrated-liquidity positions in localosmosis at pool id 1
+localnet-cl-create-positions:
+	go run tests/cl-go-client/main.go --operation 0
+
+# does 100 small randomized swaps in localosmosis at pool id 1
+localnet-cl-small-swap:
+	go run tests/cl-go-client/main.go --operation 1
+
+# does 100 large swaps where the output of the previous swap is swapped back at the
+# next swap. localosmosis at pool id 1
+localnet-cl-large-swap:
+	go run tests/cl-go-client/main.go --operation 2
+
+# creates a gauge and waits for one epoch so that the gauge
+# is converted into an incentive record for pool id 1.
+localnet-cl-external-incentive:
+	go run tests/cl-go-client/main.go --operation 3
+
+# attempts to create a CL pool at id 1.
+# if pool already exists, this is a no-op.
+# if pool with different id is desired, tweak expectedPoolId
+# in the script.
+localnet-cl-create-pool:
+	go run tests/cl-go-client/main.go --operation 4
+
+# claims spread rewards for a random account for a random
+# subset of positions.
+localnet-cl-claim-spread-rewards:
+	go run tests/cl-go-client/main.go --operation 5
+
+# claims incentives for a random account for a random
+# subset of positions.
+localnet-cl-claim-incentives:
+	go run tests/cl-go-client/main.go --operation 6
+
+localnet-cl-add-to-positions:
+	go run tests/cl-go-client/main.go --operation 7
+
+localnet-cl-withdraw-positions:
+	go run tests/cl-go-client/main.go --operation 8
+
+
+# does both of localnet-cl-create-positions and localnet-cl-small-swap
+localnet-cl-positions-small-swaps: localnet-cl-create-positions localnet-cl-small-swap
+
+# does both of localnet-cl-create-positions and localnet-cl-large-swap
+localnet-cl-positions-large-swaps: localnet-cl-create-positions localnet-cl-large-swap
+
+# This script retrieves Uniswap v3 Ethereum position data
+# from subgraph. It uses WETH / USDC pool. This is helpful
+# for setting up somewhat realistic positions for testing
+# in localosmosis. It writes the file under
+# tests/cl-genesis-positions/subgraph_positions.json
+cl-refresh-subgraph-positions:
+	go run ./tests/cl-genesis-positions --operation 0
+
+# This script converts the positions data created by the
+# cl-refresh-subgraph-positions makefile step into an Osmosis
+# genesis. It writes the file under tests/cl-genesis-positions/genesis.json
+cl-refresh-subgraph-genesis:
+	go run ./tests/cl-genesis-positions --operation 1
+
+# This script converts the positions data created by the
+# cl-refresh-subgraph-positions makefile step into a Big Bang
+# configuration file for spinning up testnets.
+# It writes the file under tests/cl-genesis-positions/bigbang_positions.json
+cl-create-bigbang-config:
+	go run ./tests/cl-genesis-positions --operation 1 --big-bang
+
+###############################################################################
+###                                Go Mock                                  ###
+###############################################################################
+
+go-mock-update:
+	mockgen -source=x/poolmanager/types/expected_keepers.go -destination=tests/mocks/pool_module.go -package=mocks
+	mockgen -source=x/poolmanager/types/pool.go -destination=tests/mocks/pool.go -package=mocks
+	mockgen -source=x/gamm/types/pool.go -destination=tests/mocks/cfmm_pool.go -package=mocks
+	mockgen -source=x/concentrated-liquidity/types/cl_pool_extensionI.go -destination=tests/mocks/cl_pool.go -package=mocks
+
+###############################################################################
+###                                Release                                  ###
+###############################################################################
+
+GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v$(GO_VERSION)
+COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm | sed 's/.* //')
+
+ifdef GITHUB_TOKEN
+release:
+	docker run \
+		--rm \
+		-e GITHUB_TOKEN=$(GITHUB_TOKEN) \
+		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/osmosisd \
+		-w /go/src/osmosisd \
+		$(GORELEASER_IMAGE) \
+		release \
+		--clean
+else
+release:
+	@echo "Error: GITHUB_TOKEN is not defined. Please define it before running 'make release'."
+endif
+
+release-dry-run:
+	docker run \
+		--rm \
+		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/osmosisd \
+		-w /go/src/osmosisd \
+		$(GORELEASER_IMAGE) \
+		release \
+		--clean \
+		--skip-publish
+
+release-snapshot:
+	docker run \
+		--rm \
+		-e COSMWASM_VERSION=$(COSMWASM_VERSION) \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/osmosisd \
+		-w /go/src/osmosisd \
+		$(GORELEASER_IMAGE) \
+		release \
+		--clean \
+		--snapshot \
+		--skip-validate \
+		--skip-publish
+
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
-	test test-all test-build test-cover test-unit test-race benchmark
+	test test-all test-build test-cover test-unit test-race benchmark \
+	release release-dry-run release-snapshot

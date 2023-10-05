@@ -28,13 +28,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v14/x/lockup/client/cli"
-	"github.com/osmosis-labs/osmosis/v14/x/lockup/client/rest"
-	"github.com/osmosis-labs/osmosis/v14/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v19/x/lockup/client/cli"
+	"github.com/osmosis-labs/osmosis/v19/x/lockup/client/rest"
+	"github.com/osmosis-labs/osmosis/v19/x/lockup/keeper"
 
-	simulation "github.com/osmosis-labs/osmosis/v14/x/lockup/simulation"
-	"github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	simulation "github.com/osmosis-labs/osmosis/v19/x/lockup/simulation"
+	"github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 )
 
 var (
@@ -113,11 +113,11 @@ type AppModule struct {
 
 	keeper        keeper.Keeper
 	accountKeeper stakingtypes.AccountKeeper
-	bankKeeper    stakingtypes.BankKeeper
+	bankKeeper    simtypes.BankKeeper
 }
 
 func NewAppModule(keeper keeper.Keeper,
-	accountKeeper stakingtypes.AccountKeeper, bankKeeper stakingtypes.BankKeeper,
+	accountKeeper stakingtypes.AccountKeeper, bankKeeper simtypes.BankKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(),

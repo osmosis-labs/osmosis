@@ -86,7 +86,7 @@ and have a similar cosmwasm binding.
 func (k Keeper) GetArithmeticTwap(ctx sdk.Context,
 	poolId uint64,
 	baseAssetDenom string, quoteAssetDenom string,
-	startTime time.Time, endTime time.Time) (sdk.Dec, error) { ... }
+	startTime time.Time, endTime time.Time) (osmomath.Dec, error) { ... }
 ```
 
 There are convenience methods for `GetArithmeticTwapToNow` which sets `endTime = ctx.BlockTime()`, and has minor gas reduction.
@@ -186,13 +186,23 @@ Therefore, at the end of an epoch, records older than 48 hours before the curren
 This could potentially leave the store with only one record - or no records at all within the "keep" period, so the pruning mechanism keeps the newest record that is older than the pruning time. This record is necessary to enable us interpolating from and getting TWAPs from the "keep" period.
 Such record is preserved for each pool.
 
+## New Pool Types
+
+Post-TWAP launch, new pool types were introduced, one such example
+being the concentrated liquidity pool. In the context of `x/twap`, there are subtle
+differences in terms of when the spot price updates for a concentrated liquidity pool. As a result,
+the need for their twap state updates are delivered by distinct listeners that implement a
+`concentratedliquiditytypes.ConcentratedLiquidityListener` interface. 
+
+See `x/concentrated-liquidity/README.md` for the details about these differences.
+
 
 ## TWAP - storing records and pruning process flow
 <br/>
 
 <p style="text-align:center;">
 
-<img src="TWAP module - process flow.png" height="700"/>
+<img src="TWAP_module-process_flow.png" height="700"/>
 
 </p>
 

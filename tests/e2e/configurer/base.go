@@ -8,15 +8,16 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v19/tests/e2e/util"
 )
 
 // baseConfigurer is the base implementation for the
@@ -52,18 +53,52 @@ func (bc *baseConfigurer) GetChainConfig(chainIndex int) *chain.Config {
 }
 
 func (bc *baseConfigurer) RunValidators() error {
+	errChan := make(chan error, len(bc.chainConfigs))
+
+	// Launch goroutines for each chainConfig
 	for _, chainConfig := range bc.chainConfigs {
-		if err := bc.runValidators(chainConfig); err != nil {
+		go func(config *chain.Config) {
+			err := bc.runValidators(config)
+			errChan <- err
+		}(chainConfig)
+	}
+
+	// Collect errors from goroutines
+	for range bc.chainConfigs {
+		if err := <-errChan; err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
 func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 	bc.t.Logf("starting %s validator containers...", chainConfig.Id)
+
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(chainConfig.NodeConfigs)) // Buffer the channel to avoid blocking
+
+	// Increment the WaitGroup counter for each node
+	wg.Add(len(chainConfig.NodeConfigs))
+
+	// Iterate over each node
 	for _, node := range chainConfig.NodeConfigs {
-		if err := node.Run(); err != nil {
+		go func(n *chain.NodeConfig) {
+			defer wg.Done()  // Decrement the WaitGroup counter when the goroutine is done
+			errCh <- n.Run() // Run the node and send any error to the channel
+		}(node)
+	}
+
+	// Wait for all goroutines to finish
+	wg.Wait()
+
+	// Close the error channel since all goroutines are done sending errors
+	close(errCh)
+
+	// Collect errors from the channel
+	for err := range errCh {
+		if err != nil {
 			return err
 		}
 	}
@@ -149,8 +184,8 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 
 		return status == "success" && len(chains) == 2
 	},
-		5*time.Minute,
-		time.Second,
+		time.Minute,
+		10*time.Millisecond,
 		"hermes relayer not healthy")
 
 	bc.t.Logf("started Hermes relayer container: %s", hermesResource.Container.ID)
@@ -165,8 +200,9 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 
 func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.Config) error {
 	bc.t.Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
-	cmd := []string{"hermes", "create", "channel", chainA.ChainMeta.Id, chainB.ChainMeta.Id, "--port-a=transfer", "--port-b=transfer"}
-	_, _, err := bc.containerManager.ExecHermesCmd(bc.t, cmd, "successfully opened init channel")
+	cmd := []string{"hermes", "create", "channel", "--a-chain", chainA.ChainMeta.Id, "--b-chain", chainB.ChainMeta.Id, "--a-port", "transfer", "--b-port", "transfer", "--new-client-connection", "--yes"}
+	bc.t.Log(cmd)
+	_, _, err := bc.containerManager.ExecHermesCmd(bc.t, cmd, "SUCCESS")
 	if err != nil {
 		return err
 	}

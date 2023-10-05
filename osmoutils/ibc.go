@@ -2,29 +2,49 @@ package osmoutils
 
 import (
 	"encoding/json"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v4/modules/core/exported"
 )
 
+const IbcAcknowledgementErrorType = "ibc-acknowledgement-error"
+
 // NewEmitErrorAcknowledgement creates a new error acknowledgement after having emitted an event with the
 // details of the error.
 func NewEmitErrorAcknowledgement(ctx sdk.Context, err error, errorContexts ...string) channeltypes.Acknowledgement {
+	EmitIBCErrorEvents(ctx, err, errorContexts)
+
+	return channeltypes.NewErrorAcknowledgement(err)
+}
+
+// NewSuccessAckRepresentingAnError creates a new success acknowledgement that represents an error.
+// This is useful for notifying the sender that an error has occurred in a way that does not allow
+// the received tokens to be reverted (which means they shouldn't be released by the sender's ics20 escrow)
+func NewSuccessAckRepresentingAnError(ctx sdk.Context, err error, errorContent []byte, errorContexts ...string) channeltypes.Acknowledgement {
+	EmitIBCErrorEvents(ctx, err, errorContexts)
+
+	return channeltypes.NewResultAcknowledgement(errorContent)
+}
+
+// EmitIBCErrorEvents Emit and Log errors
+func EmitIBCErrorEvents(ctx sdk.Context, err error, errorContexts []string) {
+	logger := ctx.Logger().With("module", IbcAcknowledgementErrorType)
+
 	attributes := make([]sdk.Attribute, len(errorContexts)+1)
 	attributes[0] = sdk.NewAttribute("error", err.Error())
 	for i, s := range errorContexts {
 		attributes[i+1] = sdk.NewAttribute("error-context", s)
+		logger.Error(fmt.Sprintf("error-context: %v", s))
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			"ibc-acknowledgement-error",
+			IbcAcknowledgementErrorType,
 			attributes...,
 		),
 	})
-
-	return channeltypes.NewErrorAcknowledgement(err)
 }
 
 // MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the

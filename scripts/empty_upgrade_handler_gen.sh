@@ -79,7 +79,14 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		return mm.RunMigrations(ctx, configurator, fromVM)
+		// Run migrations before applying any other state changes.
+		// NOTE: DO NOT PUT ANY STATE CHANGES BEFORE RunMigrations().
+		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
+		if err != nil {
+			return nil, err
+		}
+
+		return migrations, nil
 	}
 }" >> $UPGRADES_FILE
 
@@ -98,7 +105,7 @@ sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VE
 
 # bumps up prev e2e version
 e2e_file=./tests/e2e/containers/config.go
-PREV_OSMOSIS_DEV_TAG=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/osmolabs/osmosis-dev/tags?page=1&page_size=100'            | jq -r '.results[] | .name | select(.|test("^(?:v|)[0-9]+\\.[0-9]+(?:$|\\.[0-9]+$)"))' | grep --max-count=1 "")
+PREV_OSMOSIS_DEV_TAG=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/osmolabs/osmosis/tags?page=1&page_size=100' | jq -r '.results[] | .name | select(.|test("^(?:v|)[0-9]+\\.0\\.0-alpine$"))' | grep --max-count=1 "")
 PREV_OSMOSIS_E2E_TAG=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/osmolabs/osmosis-e2e-init-chain/tags?page=1&page_size=100' | jq -r '.results[] | .name | select(.|test("^(?:v|)[0-9]+\\.[0-9]+(?:$|\\.[0-9]+$)"))' | grep --max-count=1 "")
 
 # previousVersionOsmoTag  = PREV_OSMOSIS_DEV_TAG

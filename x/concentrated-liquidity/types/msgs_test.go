@@ -7,19 +7,44 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 )
 
-func TestMsgCreatePosition(t *testing.T) {
+type extMsg interface {
+	sdk.Msg
+	Route() string
+	Type() string
+}
+
+var addr1 string
+var invalidAddr sdk.AccAddress
+
+func init() {
 	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
-	invalidAddr := sdk.AccAddress("invalid")
+	addr1 = sdk.AccAddress(pk1.Address()).String()
+	invalidAddr = sdk.AccAddress("invalid")
+}
 
+func runValidateBasicTest(t *testing.T, name string, msg extMsg, expectPass bool, expType string) {
+	if expectPass {
+		require.NoError(t, msg.ValidateBasic(), "test: %v", name)
+		require.Equal(t, msg.Route(), types.RouterKey)
+		require.Equal(t, msg.Type(), expType)
+		signers := msg.GetSigners()
+		require.Equal(t, len(signers), 1)
+		require.Equal(t, signers[0].String(), addr1)
+	} else {
+		require.Error(t, msg.ValidateBasic(), "test: %v", name)
+	}
+}
+
+func TestMsgCreatePosition(t *testing.T) {
 	tests := []struct {
 		name       string
 		msg        types.MsgCreatePosition
@@ -32,10 +57,9 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
-				TokenMinAmount0: sdk.OneInt(),
-				TokenMinAmount1: sdk.OneInt(),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", osmomath.OneInt()), sdk.NewCoin("osmo", osmomath.OneInt())),
+				TokenMinAmount0: osmomath.OneInt(),
+				TokenMinAmount1: osmomath.OneInt(),
 			},
 			expectPass: true,
 		},
@@ -46,10 +70,9 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          invalidAddr.String(),
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
-				TokenMinAmount0: sdk.OneInt(),
-				TokenMinAmount1: sdk.OneInt(),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", osmomath.OneInt()), sdk.NewCoin("osmo", osmomath.OneInt())),
+				TokenMinAmount0: osmomath.OneInt(),
+				TokenMinAmount1: osmomath.OneInt(),
 			},
 			expectPass: false,
 		},
@@ -60,10 +83,9 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       10,
 				UpperTick:       1,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
-				TokenMinAmount0: sdk.OneInt(),
-				TokenMinAmount1: sdk.OneInt(),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", osmomath.OneInt()), sdk.NewCoin("osmo", osmomath.OneInt())),
+				TokenMinAmount0: osmomath.OneInt(),
+				TokenMinAmount1: osmomath.OneInt(),
 			},
 			expectPass: false,
 		},
@@ -74,10 +96,9 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.Coin{Denom: "stake", Amount: sdk.NewInt(-10)},
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
-				TokenMinAmount0: sdk.OneInt(),
-				TokenMinAmount1: sdk.OneInt(),
+				TokensProvided:  sdk.Coins{sdk.Coin{Denom: "stake", Amount: osmomath.NewInt(-10)}, sdk.NewCoin("osmo", osmomath.OneInt())},
+				TokenMinAmount0: osmomath.OneInt(),
+				TokenMinAmount1: osmomath.OneInt(),
 			},
 			expectPass: false,
 		},
@@ -88,10 +109,9 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.Coin{Denom: "osmo", Amount: sdk.NewInt(-10)},
-				TokenMinAmount0: sdk.OneInt(),
-				TokenMinAmount1: sdk.OneInt(),
+				TokensProvided:  sdk.Coins{sdk.NewCoin("stake", osmomath.OneInt()), sdk.Coin{Denom: "osmo", Amount: osmomath.NewInt(-10)}},
+				TokenMinAmount0: osmomath.OneInt(),
+				TokenMinAmount1: osmomath.OneInt(),
 			},
 			expectPass: false,
 		},
@@ -102,10 +122,22 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.ZeroInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.ZeroInt()),
-				TokenMinAmount0: sdk.OneInt(),
-				TokenMinAmount1: sdk.OneInt(),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", osmomath.ZeroInt()), sdk.NewCoin("osmo", osmomath.ZeroInt())),
+				TokenMinAmount0: osmomath.OneInt(),
+				TokenMinAmount1: osmomath.OneInt(),
+			},
+			expectPass: false,
+		},
+		{
+			name: "upper tick is same as lower tick",
+			msg: types.MsgCreatePosition{
+				PoolId:          1,
+				Sender:          addr1,
+				LowerTick:       10,
+				UpperTick:       10,
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", osmomath.ZeroInt()), sdk.NewCoin("osmo", osmomath.ZeroInt())),
+				TokenMinAmount0: osmomath.OneInt(),
+				TokenMinAmount1: osmomath.OneInt(),
 			},
 			expectPass: false,
 		},
@@ -116,10 +148,9 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
-				TokenMinAmount0: sdk.NewInt(-1),
-				TokenMinAmount1: sdk.NewInt(-1),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", osmomath.OneInt()), sdk.NewCoin("osmo", osmomath.OneInt())),
+				TokenMinAmount0: osmomath.NewInt(-1),
+				TokenMinAmount1: osmomath.NewInt(-1),
 			},
 			expectPass: false,
 		},
@@ -130,37 +161,130 @@ func TestMsgCreatePosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				TokenDesired0:   sdk.NewCoin("stake", sdk.OneInt()),
-				TokenDesired1:   sdk.NewCoin("osmo", sdk.OneInt()),
-				TokenMinAmount0: sdk.ZeroInt(),
-				TokenMinAmount1: sdk.ZeroInt(),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("stake", osmomath.OneInt()), sdk.NewCoin("osmo", osmomath.OneInt())),
+				TokenMinAmount0: osmomath.ZeroInt(),
+				TokenMinAmount1: osmomath.ZeroInt(),
 			},
 			expectPass: true,
 		},
 	}
 
 	for _, test := range tests {
-		msg := test.msg
+		runValidateBasicTest(t, test.name, &test.msg, test.expectPass, types.TypeMsgCreatePosition)
+	}
+}
 
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
-			require.Equal(t, msg.Route(), types.RouterKey)
-			require.Equal(t, msg.Type(), "create-position")
-			signers := msg.GetSigners()
-			require.Equal(t, len(signers), 1)
-			require.Equal(t, signers[0].String(), addr1)
-		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
-		}
+func TestMsgAddToPosition(t *testing.T) {
+	baseMsg := types.MsgAddToPosition{
+		PositionId:      1,
+		Sender:          addr1,
+		Amount0:         osmomath.OneInt(),
+		Amount1:         osmomath.OneInt(),
+		TokenMinAmount0: osmomath.OneInt(),
+		TokenMinAmount1: osmomath.OneInt(),
+	}
+
+	tests := []struct {
+		name       string
+		msgFn      func() types.MsgAddToPosition
+		expectPass bool
+	}{
+		{
+			name:       "proper msg",
+			msgFn:      func() types.MsgAddToPosition { return baseMsg },
+			expectPass: true,
+		},
+		{
+			name:       "proper msg",
+			msgFn:      func() types.MsgAddToPosition { copy := baseMsg; copy.Sender = invalidAddr.String(); return copy },
+			expectPass: false,
+		},
+		{
+			name:       "position id zero",
+			msgFn:      func() types.MsgAddToPosition { copy := baseMsg; copy.PositionId = 0; return copy },
+			expectPass: false,
+		},
+		{
+			name:       "amount0 is negative",
+			msgFn:      func() types.MsgAddToPosition { copy := baseMsg; copy.Amount0 = osmomath.OneInt().Neg(); return copy },
+			expectPass: false,
+		},
+		{
+			name:       "amount1 is negative",
+			msgFn:      func() types.MsgAddToPosition { copy := baseMsg; copy.Amount1 = osmomath.OneInt().Neg(); return copy },
+			expectPass: false,
+		},
+		{
+			name: "token min amount0 is negative",
+			msgFn: func() types.MsgAddToPosition {
+				copy := baseMsg
+				copy.TokenMinAmount0 = osmomath.OneInt().Neg()
+				return copy
+			},
+			expectPass: false,
+		},
+		{
+			name: "token min amount1 is negative",
+			msgFn: func() types.MsgAddToPosition {
+				copy := baseMsg
+				copy.TokenMinAmount1 = osmomath.OneInt().Neg()
+				return copy
+			},
+			expectPass: false,
+		},
+		{
+			name: "proper msg",
+			// sanity check that above edits weren't mutative
+			msgFn:      func() types.MsgAddToPosition { return baseMsg },
+			expectPass: true,
+		},
+	}
+
+	for _, test := range tests {
+		msg := test.msgFn()
+		runValidateBasicTest(t, test.name, &msg, test.expectPass, types.TypeAddToPosition)
+	}
+}
+
+func TestMsgFungifyChargedPositions(t *testing.T) {
+	var validPositionIds = []uint64{1, 2}
+
+	tests := []struct {
+		name       string
+		msg        types.MsgFungifyChargedPositions
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: types.MsgFungifyChargedPositions{
+				Sender:      addr1,
+				PositionIds: validPositionIds,
+			},
+			expectPass: true,
+		},
+		{
+			name: "error: invalid sender",
+			msg: types.MsgFungifyChargedPositions{
+				Sender:      invalidAddr.String(),
+				PositionIds: validPositionIds,
+			},
+			expectPass: false,
+		},
+		{
+			name: "error: only one id given, must have at least 2",
+			msg: types.MsgFungifyChargedPositions{
+				Sender:      addr1,
+				PositionIds: []uint64{1},
+			},
+			expectPass: false,
+		},
+	}
+	for _, test := range tests {
+		runValidateBasicTest(t, test.name, &test.msg, test.expectPass, types.TypeMsgFungifyChargedPositions)
 	}
 }
 
 func TestMsgWithdrawPosition(t *testing.T) {
-	appParams.SetAddressPrefixes()
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
-	invalidAddr := sdk.AccAddress("invalid")
-
 	tests := []struct {
 		name       string
 		msg        types.MsgWithdrawPosition
@@ -169,79 +293,28 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		{
 			name: "proper msg",
 			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
+				PositionId:      1,
 				Sender:          addr1,
-				LowerTick:       1,
-				UpperTick:       10,
-				LiquidityAmount: sdk.OneInt(),
+				LiquidityAmount: osmomath.OneDec(),
 			},
 			expectPass: true,
 		},
 		{
 			name: "invalid sender",
 			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
+				PositionId:      1,
 				Sender:          invalidAddr.String(),
-				LowerTick:       1,
-				UpperTick:       10,
-				LiquidityAmount: sdk.OneInt(),
-			},
-			expectPass: false,
-		},
-		{
-			name: "invalid price range, lower tick > upper",
-			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       10,
-				UpperTick:       1,
-				LiquidityAmount: sdk.OneInt(),
-			},
-			expectPass: false,
-		},
-		{
-			name: "negative amount",
-			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       1,
-				UpperTick:       10,
-				LiquidityAmount: sdk.NewInt(-10),
-			},
-			expectPass: false,
-		},
-		{
-			name: "zero amount",
-			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       1,
-				UpperTick:       10,
-				LiquidityAmount: sdk.ZeroInt(),
+				LiquidityAmount: osmomath.OneDec(),
 			},
 			expectPass: false,
 		},
 	}
-
 	for _, test := range tests {
-		msg := test.msg
-
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
-			require.Equal(t, msg.Route(), types.RouterKey)
-			require.Equal(t, msg.Type(), "withdraw-position")
-			signers := msg.GetSigners()
-			require.Equal(t, len(signers), 1)
-			require.Equal(t, signers[0].String(), addr1)
-		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
-		}
+		runValidateBasicTest(t, test.name, &test.msg, test.expectPass, types.TypeMsgWithdrawPosition)
 	}
 }
 
 func TestConcentratedLiquiditySerialization(t *testing.T) {
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
 	defaultPoolId := uint64(1)
 
 	testCases := []struct {
@@ -260,11 +333,9 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 		{
 			name: "MsgWithdrawPosition",
 			clMsg: &types.MsgWithdrawPosition{
-				PoolId:          defaultPoolId,
+				PositionId:      1,
 				Sender:          addr1,
-				LowerTick:       int64(10000),
-				UpperTick:       int64(20000),
-				LiquidityAmount: sdk.NewInt(100),
+				LiquidityAmount: osmomath.NewDec(100),
 			},
 		},
 		{
@@ -274,10 +345,16 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       int64(10000),
 				UpperTick:       int64(20000),
-				TokenDesired0:   sdk.NewCoin("foo", sdk.NewInt(1000)),
-				TokenDesired1:   sdk.NewCoin("bar", sdk.NewInt(1000)),
-				TokenMinAmount0: sdk.OneInt(),
-				TokenMinAmount1: sdk.OneInt(),
+				TokensProvided:  sdk.NewCoins(sdk.NewCoin("foo", osmomath.NewInt(1000)), sdk.NewCoin("bar", osmomath.NewInt(1000))),
+				TokenMinAmount0: osmomath.OneInt(),
+				TokenMinAmount1: osmomath.OneInt(),
+			},
+		},
+		{
+			name: "MsgFungifyChargedPositions",
+			clMsg: &types.MsgFungifyChargedPositions{
+				Sender:      addr1,
+				PositionIds: []uint64{1, 2},
 			},
 		},
 	}

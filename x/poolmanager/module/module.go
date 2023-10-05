@@ -15,12 +15,16 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
-	gammsimulation "github.com/osmosis-labs/osmosis/v14/x/gamm/simulation"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
+	gammsimulation "github.com/osmosis-labs/osmosis/v19/x/gamm/simulation"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager"
+	pmclient "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/cli"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/grpc"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/grpcv2"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryprotov2"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 var (
@@ -58,6 +62,9 @@ func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux 
 	if err := queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
+	if err := queryprotov2.RegisterQueryHandlerClient(context.Background(), mux, queryprotov2.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -77,14 +84,16 @@ type AppModule struct {
 	AppModuleBasic
 
 	k          poolmanager.Keeper
-	gammKeeper types.SwapI
+	gammKeeper types.PoolModuleI
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), poolmanager.NewMsgServerImpl(&am.k))
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: pmclient.NewQuerier(am.k)})
+	queryprotov2.RegisterQueryServer(cfg.QueryServer(), grpcv2.Querier{Q: pmclient.NewV2Querier(am.k)})
 }
 
-func NewAppModule(poolmanagerKeeper poolmanager.Keeper, gammKeeper types.SwapI) AppModule {
+func NewAppModule(poolmanagerKeeper poolmanager.Keeper, gammKeeper types.PoolModuleI) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		k:              poolmanagerKeeper,

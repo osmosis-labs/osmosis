@@ -4,19 +4,20 @@ import (
 	"errors"
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/events"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/events"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
 // swapExactAmountIn is an internal method for swapping an exact amount of tokens
-// as input to a pool, using the provided swapFee. This is intended to allow
-// different swap fees as determined by multi-hops, or when recovering from
+// as input to a pool, using the provided spreadFactor. This is intended to allow
+// different spread factors as determined by multi-hops, or when recovering from
 // chain liveness failures.
-// TODO: investigate if swapFee can be unexported
+// TODO: investigate if spreadFactor can be unexported
 // https://github.com/osmosis-labs/osmosis/issues/3130
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
@@ -24,107 +25,112 @@ func (k Keeper) SwapExactAmountIn(
 	pool poolmanagertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
-	tokenOutMinAmount sdk.Int,
-	swapFee sdk.Dec,
-) (tokenOutAmount sdk.Int, err error) {
+	tokenOutMinAmount osmomath.Int,
+	spreadFactor osmomath.Dec,
+) (tokenOutAmount osmomath.Int, err error) {
 	if tokenIn.Denom == tokenOutDenom {
-		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
+		return osmomath.Int{}, errors.New("cannot trade same denomination in and out")
 	}
-	poolSwapFee := pool.GetSwapFee(ctx)
-	if swapFee.LT(poolSwapFee.QuoInt64(2)) {
-		return sdk.Int{}, fmt.Errorf("given swap fee (%s) must be greater than or equal to half of the pool's swap fee (%s)", swapFee, poolSwapFee)
+	poolSpreadFactor := pool.GetSpreadFactor(ctx)
+	if spreadFactor.LT(poolSpreadFactor.QuoInt64(2)) {
+		return osmomath.Int{}, fmt.Errorf("given spread factor (%s) must be greater than or equal to half of the pool's spread factor (%s)", spreadFactor, poolSpreadFactor)
 	}
 	tokensIn := sdk.Coins{tokenIn}
 
 	defer func() {
 		if r := recover(); r != nil {
-			tokenOutAmount = sdk.Int{}
+			tokenOutAmount = osmomath.Int{}
 			err = fmt.Errorf("function swapExactAmountIn failed due to internal reason: %v", r)
 		}
 	}()
 
-	cfmmPool, err := convertToCFMMPool(pool)
+	cfmmPool, err := asCFMMPool(pool)
 	if err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 
 	// Executes the swap in the pool and stores the output. Updates pool assets but
 	// does not actually transfer any tokens to or from the pool.
-	tokenOutCoin, err := cfmmPool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
+	tokenOutCoin, err := cfmmPool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, spreadFactor)
 	if err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 
 	tokenOutAmount = tokenOutCoin.Amount
 
 	if !tokenOutAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
+		return osmomath.Int{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
 
 	if tokenOutAmount.LT(tokenOutMinAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
+		return osmomath.Int{}, errorsmod.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
 	}
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
 	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOutCoin); err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 
 	return tokenOutAmount, nil
 }
 
 // SwapExactAmountOut is a method for swapping to get an exact number of tokens out of a pool,
-// using the provided swapFee.
-// This is intended to allow different swap fees as determined by multi-hops,
+// using the provided spreadFactor.
+// This is intended to allow different spread factors as determined by multi-hops,
 // or when recovering from chain liveness failures.
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	pool poolmanagertypes.PoolI,
 	tokenInDenom string,
-	tokenInMaxAmount sdk.Int,
+	tokenInMaxAmount osmomath.Int,
 	tokenOut sdk.Coin,
-	swapFee sdk.Dec,
-) (tokenInAmount sdk.Int, err error) {
+	spreadFactor osmomath.Dec,
+) (tokenInAmount osmomath.Int, err error) {
 	if tokenInDenom == tokenOut.Denom {
-		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
+		return osmomath.Int{}, errors.New("cannot trade same denomination in and out")
 	}
 	defer func() {
 		if r := recover(); r != nil {
-			tokenInAmount = sdk.Int{}
+			tokenInAmount = osmomath.Int{}
 			err = fmt.Errorf("function swapExactAmountOut failed due to internal reason: %v", r)
 		}
 	}()
 
-	poolOutBal := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenOut.Denom)
+	liquidity, err := k.GetTotalPoolLiquidity(ctx, pool.GetId())
+	if err != nil {
+		return osmomath.Int{}, err
+	}
+
+	poolOutBal := liquidity.AmountOf(tokenOut.Denom)
 	if tokenOut.Amount.GTE(poolOutBal) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
+		return osmomath.Int{}, errorsmod.Wrapf(types.ErrTooManyTokensOut,
 			"can't get more tokens out than there are tokens in the pool")
 	}
 
-	cfmmPool, err := convertToCFMMPool(pool)
+	cfmmPool, err := asCFMMPool(pool)
 	if err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 
-	tokenIn, err := cfmmPool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
+	tokenIn, err := cfmmPool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, spreadFactor)
 	if err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 	tokenInAmount = tokenIn.Amount
 
-	if tokenInAmount.LTE(sdk.ZeroInt()) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
+	if tokenInAmount.LTE(osmomath.ZeroInt()) {
+		return osmomath.Int{}, errorsmod.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
 
 	if tokenInAmount.GT(tokenInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "Swap requires %s, which is greater than the amount %s", tokenIn, tokenInMaxAmount)
+		return osmomath.Int{}, errorsmod.Wrapf(types.ErrLimitMaxAmount, "Swap requires %s, which is greater than the amount %s", tokenIn, tokenInMaxAmount)
 	}
 
 	err = k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut)
 	if err != nil {
-		return sdk.Int{}, err
+		return osmomath.Int{}, err
 	}
 	return tokenInAmount, nil
 }
@@ -136,13 +142,13 @@ func (k Keeper) CalcOutAmtGivenIn(
 	poolI poolmanagertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
-	swapFee sdk.Dec,
+	spreadFactor osmomath.Dec,
 ) (tokenOut sdk.Coin, err error) {
-	cfmmPool, err := convertToCFMMPool(poolI)
+	cfmmPool, err := asCFMMPool(poolI)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	return cfmmPool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenIn), tokenOutDenom, swapFee)
+	return cfmmPool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(tokenIn), tokenOutDenom, spreadFactor)
 }
 
 // CalcInAmtGivenOut calculates the amount of tokenIn given tokenOut and the pool's current state.
@@ -152,13 +158,13 @@ func (k Keeper) CalcInAmtGivenOut(
 	poolI poolmanagertypes.PoolI,
 	tokenOut sdk.Coin,
 	tokenInDenom string,
-	swapFee sdk.Dec,
+	spreadFactor osmomath.Dec,
 ) (tokenIn sdk.Coin, err error) {
-	cfmmPool, err := convertToCFMMPool(poolI)
+	cfmmPool, err := asCFMMPool(poolI)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	return cfmmPool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), tokenInDenom, swapFee)
+	return cfmmPool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), tokenInDenom, spreadFactor)
 }
 
 // updatePoolForSwap takes a pool, sender, and tokenIn, tokenOut amounts
@@ -194,7 +200,7 @@ func (k Keeper) updatePoolForSwap(
 	}
 
 	events.EmitSwapEvent(ctx, sender, pool.GetId(), tokensIn, tokensOut)
-	k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokensIn, tokensOut)
+	k.hooks.AfterCFMMSwap(ctx, sender, pool.GetId(), tokensIn, tokensOut)
 	k.RecordTotalLiquidityIncrease(ctx, tokensIn)
 	k.RecordTotalLiquidityDecrease(ctx, tokensOut)
 
