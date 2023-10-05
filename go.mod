@@ -24,7 +24,7 @@ require (
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230924192433-36cf2950dca4
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230929193736-aae32321cac7
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230911120014-b14342e08daf
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231005183223-b0f54b95b77a
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20230911120014-b14342e08daf
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
@@ -57,7 +57,7 @@ require (
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/butuzov/mirror v1.1.0 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.1 // indirect
-	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
+	github.com/chenzhuoyu/iasm v0.9.0 // indirect
 	github.com/cosmos/gogoproto v1.4.11 // indirect
 	github.com/cosmos/iavl v0.19.7 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
@@ -81,6 +81,7 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/timonwong/loggercheck v0.9.4 // indirect
+	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/xen0n/gosmopolitan v1.2.1 // indirect
 	github.com/ykadowak/zerologlint v0.1.3 // indirect
 	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00 // indirect
