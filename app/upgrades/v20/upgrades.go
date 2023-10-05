@@ -2,6 +2,7 @@ package v20
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -13,6 +14,7 @@ import (
 	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	poolincenitvestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 type IncentivizedCFMMDirectWhenMigrationLinkPresentError struct {
@@ -50,6 +52,22 @@ func CreateUpgradeHandler(
 		err = createGroupsForIncentivePairs(ctx, keepers)
 		if err != nil {
 			return nil, err
+		}
+
+		// Special logic for testnets
+		// Makes the epoch happen 45 minutes after the upgrade
+		// This allows for us to create volume on the testnet and check if volume splitting works
+		if ctx.ChainID() != "osmosis-1" {
+			epochs := keepers.EpochsKeeper.AllEpochInfos(ctx)
+			desiredEpochInfo := epochtypes.EpochInfo{}
+			for _, epoch := range epochs {
+				if epoch.Identifier == "day" {
+					epoch.CurrentEpochStartTime = time.Now().Add(-epoch.Duration).Add(time.Minute * 45)
+					desiredEpochInfo = epoch
+					keepers.EpochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
+				}
+			}
+			keepers.EpochsKeeper.SetEpochInfo(ctx, desiredEpochInfo)
 		}
 
 		return migrations, nil
