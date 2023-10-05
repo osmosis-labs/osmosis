@@ -133,7 +133,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, undelegation sdk.Coin) error {
 	existingSet, err := k.GetValSetPreferencesWithDelegations(ctx, delegatorAddr)
 	if err != nil {
-		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
+		return types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: delegatorAddr}
 	}
 
 	delegator := sdk.MustAccAddressFromBech32(delegatorAddr)
@@ -146,7 +146,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	}
 
 	if undelegation.Amount.ToLegacyDec().GT(totalDelegatedAmt) {
-		return fmt.Errorf("Total tokenAmountToUndelegate more than delegated amount have %s got %s\n", totalDelegatedAmt, undelegation.Amount)
+		return types.UndelegateMoreThanDelegatedError{TotalDelegatedAmt: totalDelegatedAmt, UndelegationAmt: undelegation.Amount}
 	}
 
 	// Step 3: Sort validators in descending order of VRatio.
@@ -383,7 +383,7 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delegatorAddr string)
 	// get the existingValSet if it exists, if not check existingStakingPosition and return it
 	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
 	if err != nil {
-		return fmt.Errorf("user %s doesn't have validator set or existing delegations", delegatorAddr)
+		return types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: delegatorAddr}
 	}
 
 	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)

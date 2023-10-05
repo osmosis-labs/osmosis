@@ -110,7 +110,7 @@ func (server msgServer) DelegateBondedTokens(goCtx context.Context, msg *types.M
 	// get the existingValSet if it exists, if not check existingStakingPosition and return it
 	_, err := server.keeper.GetDelegationPreferences(ctx, msg.Delegator)
 	if err != nil {
-		return nil, fmt.Errorf("user %s doesn't have validator set", msg.Delegator)
+		return nil, types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: msg.Delegator}
 	}
 
 	// Message 1: force unlock bonded osmo tokens.

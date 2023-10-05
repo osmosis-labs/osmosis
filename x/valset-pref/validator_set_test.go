@@ -152,7 +152,7 @@ func (s *KeeperTestSuite) TestUndelegateFromValidatorSet() {
 		undelegateAmt         osmomath.Int
 		noValset              bool
 		expectedUndelegateAmt []osmomath.Int
-		expectedError         string
+		expectedError         error
 	}{
 		{
 			name:                  "exit at step 4: undelegating amount is under existing delegation amount",
@@ -164,14 +164,14 @@ func (s *KeeperTestSuite) TestUndelegateFromValidatorSet() {
 			name:          "error: attempt to undelegate more than delegated",
 			delegateAmt:   []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
 			undelegateAmt: sdk.NewInt(200),
-			expectedError: "Total tokenAmountToUndelegate more than delegated amount have",
+			expectedError: types.UndelegateMoreThanDelegatedError{TotalDelegatedAmt: sdk.NewDec(150), UndelegationAmt: sdk.NewInt(200)},
 		},
 		{
 			name:          "error: user does not have val-set preference set",
 			delegateAmt:   []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
 			undelegateAmt: sdk.NewInt(100),
 			noValset:      true,
-			expectedError: "doesn't have validator set",
+			expectedError: types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: s.TestAccs[0].String()},
 		},
 	}
 	for _, test := range tests {
@@ -213,8 +213,9 @@ func (s *KeeperTestSuite) TestUndelegateFromValidatorSet() {
 			// System Under Test
 			err := s.App.ValidatorSetPreferenceKeeper.UndelegateFromValidatorSet(s.Ctx, defaultDelegator.String(), sdk.NewCoin(bondDenom, test.undelegateAmt))
 
-			if test.expectedError != "" {
-				s.Require().ErrorContains(err, test.expectedError)
+			if test.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedError.Error())
 				return
 			}
 			s.Require().NoError(err)
