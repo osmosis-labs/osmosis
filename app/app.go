@@ -9,8 +9,6 @@ import (
 	"reflect"
 	"strings"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
-
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -18,6 +16,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	dbm "github.com/cometbft/cometbft-db"
@@ -34,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -47,7 +45,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/v19/app/keepers"
 	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
@@ -233,6 +230,7 @@ func NewOsmosisApp(
 	app.setupUpgradeStoreLoaders()
 	app.InitNormalKeepers(
 		appCodec,
+		encodingConfig,
 		bApp,
 		maccPerms,
 		wasmDir,
@@ -276,7 +274,8 @@ func NewOsmosisApp(
 	app.mm.SetOrderInitGenesis(OrderInitGenesis(app.mm.ModuleNames())...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
-	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
+	// UNFORKINGTODO: Figure out register routes
+	//app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.AppCodec(), app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 
@@ -309,7 +308,8 @@ func NewOsmosisApp(
 			app.IBCKeeper,
 		),
 	)
-	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
+	// UNFORKINGTODO: Figure out set post handler
+	//app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
 	app.SetEndBlocker(app.EndBlocker)
 
 	// Register snapshot extensions to enable state-sync for wasm.
@@ -408,14 +408,16 @@ func (app *OsmosisApp) ModuleManager() module.Manager {
 // API server.
 func (app *OsmosisApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
-	rpc.RegisterRoutes(clientCtx, apiSvr.Router)
+	// UNFORKINGTODO: I think we dont need to register routes anymore
+	//rpc.RegisterRoutes(clientCtx, apiSvr.Router)
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	// Register new tendermint queries routes from grpc-gateway.
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register legacy and grpc-gateway routes for all modules.
-	ModuleBasics.RegisterRESTRoutes(clientCtx, apiSvr.Router)
+	// UNFORKINGTODO: I think we dont need to register REST routes anymore
+	//ModuleBasics.RegisterRESTRoutes(clientCtx, apiSvr.Router)
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register swagger API from root so that other applications can override easily
@@ -429,10 +431,14 @@ func (app *OsmosisApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
 }
 
-// RegisterTendermintService implements the Application.RegisterTendermintService
-// method.
+// RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
-	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
+	tmservice.RegisterTendermintService(
+		clientCtx,
+		app.BaseApp.GRPCQueryRouter(),
+		app.interfaceRegistry,
+		app.Query,
+	)
 }
 
 // RegisterNodeService registers the node gRPC Query service.
@@ -465,7 +471,7 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 	}
 }
 
-func (app *OsmosisApp) customPreUpgradeHandler(upgradeInfo store.UpgradeInfo) {
+func (app *OsmosisApp) customPreUpgradeHandler(upgradeInfo upgradetypes.Plan) {
 	switch upgradeInfo.Name {
 	case "v16":
 		// v16 upgrade handler

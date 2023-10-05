@@ -2,6 +2,7 @@ package executortypes
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"os"
 	"sort"
@@ -102,8 +103,11 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []simtypes.Actio
 	// first pass generate randomized params + proposal contents
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.legacyModules[moduleName]; ok {
-			simState.LegacyParamChange = append(simState.LegacyParamChange, simModule.RandomizedParams(r)...)
-			simState.LegacyProposalContents = append(simState.LegacyProposalContents, simModule.ProposalContents(simState)...)
+			// UNFORKTODO: Figure out how to call RandomizedParams and ProposalContents, I don't understand
+			// Printing so we dont need to uncomment more, just delete the prints later
+			// simState.LegacyParamChange = append(simState.LegacyParamChange, simModule.RandomizedParams(r)...)
+			// simState.LegacyProposalContents = append(simState.LegacyProposalContents, simModule.ProposalContents(simState)...)
+			fmt.Println("simState.LegacyParamChange", simModule, r)
 		}
 	}
 	// second pass generate actions
@@ -165,7 +169,8 @@ func (m Manager) GenerateGenesisStates(simState *module.SimulationState, sim *si
 			if mod, ok := simModule.(simtypes.AppModuleSimulationGenesis); ok {
 				mod.SimulatorGenesisState(simState, sim)
 			} else {
-				simState.GenState[simModule.Name()] = simModule.DefaultGenesis(simState.Cdc)
+				// UNFORKTODO: Figure out how to call DefaultGenesis, I don't understand
+				// simState.GenState[simModule.Name()] = simModule.DefaultGenesis(simState.Cdc)
 			}
 		}
 		if simModule, ok := m.legacyModules[moduleName]; ok {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -60,12 +61,14 @@ func (sim *SimCtx) defaultTxBuilder(
 // TODO: Fix these args
 func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation.OperationMsg, []simulation.FutureOperation, []byte, error) {
 	txConfig := params.MakeEncodingConfig().TxConfig // TODO: unhardcode
-	gasInfo, results, err := sim.BaseApp().Deliver(txConfig.TxEncoder(), tx)
+	txBytes, err := txConfig.TxEncoder()(tx)
 	if err != nil {
-		return simulation.NoOpMsg(msgName, msgName, fmt.Sprintf("unable to deliver tx. \nreason: %v\n results: %v\n msg: %s\n tx: %s", err, results, msg, tx)), []simulation.FutureOperation{}, nil, err
+		return simulation.OperationMsg{}, nil, nil, err
 	}
 
-	opMsg := simulation.NewOperationMsg(msg, true, "", gasInfo.GasWanted, gasInfo.GasUsed, nil)
+	results := sim.BaseApp().DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+
+	opMsg := simulation.NewOperationMsg(msg, true, "", nil)
 	opMsg.Route = msgName
 	opMsg.Name = msgName
 

@@ -15,7 +15,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.0.0
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.0.0
-	github.com/cosmos/ibc-go/v7 v7.1.0
+	github.com/cosmos/ibc-go/v7 v7.2.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
@@ -101,6 +101,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-getter v1.7.1 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
+	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
@@ -364,6 +365,8 @@ require (
 
 replace (
 	github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.2.3
+
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005000258-cad4b1563b8d
 	// TODO: remove in favor of github.com/cosmos/cosmos-proto
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 

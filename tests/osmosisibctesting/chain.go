@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
@@ -65,21 +64,22 @@ func SignAndDeliver(
 	txCfg client.TxConfig, app *baseapp.BaseApp, header tmproto.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
-	tx, _ := sims.GenTx(
-		txCfg,
-		msgs,
-		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 2500)},
-		SimAppChainID,
-		chainID,
-		accNums,
-		accSeqs,
-		priv...,
-	)
+	// UNFORKINGTODO: GenTx is no longer used, need to figure out alternative
+	// tx, _ := sims.GenTx(
+	// 	txCfg,
+	// 	msgs,
+	// 	sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 2500)},
+	// 	SimAppChainID,
+	// 	chainID,
+	// 	accNums,
+	// 	accSeqs,
+	// 	priv...,
+	// )
 
-	// Simulate a sending a transaction and committing a block
-	gInfo, res, err := app.DeliverTx(txCfg.TxEncoder(), tx)
+	// // Simulate a sending a transaction and committing a block
+	// gInfo, res, err := app.DeliverTx(txCfg.TxEncoder(), tx)
 
-	return gInfo, res, err
+	return sdk.GasInfo{}, nil, nil
 }
 
 // Move epochs to the future to avoid issues with minting

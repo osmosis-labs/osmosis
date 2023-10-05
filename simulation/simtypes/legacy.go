@@ -3,12 +3,15 @@ package simtypes
 import (
 	"math/rand"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+
+	"github.com/osmosis-labs/osmosis/v19/app/params"
 )
 
 // TODO: Must delete
@@ -57,7 +60,7 @@ func GenAndDeliverTx(
 	moduleName string,
 ) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 	account := ak.GetAccount(ctx, simAccount.Address)
-	tx, err := sims.GenTx(
+	tx, err := genTx(
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
@@ -71,10 +74,13 @@ func GenAndDeliverTx(
 		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to generate mock tx"), nil, err
 	}
 
-	gasInfo, _, err := app.DeliverTx(txGen.TxEncoder(), tx)
+	txConfig := params.MakeEncodingConfig().TxConfig
+	txBytes, err := txConfig.TxEncoder()(tx)
 	if err != nil {
-		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to deliver tx"), nil, err
+		return simulation.OperationMsg{}, nil, err
 	}
 
-	return simulation.NewOperationMsg(msg, true, "", gasInfo.GasWanted, gasInfo.GasUsed, nil), nil, nil
+	app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+
+	return simulation.NewOperationMsg(msg, true, "", nil), nil, nil
 }

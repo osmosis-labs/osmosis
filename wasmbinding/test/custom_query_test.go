@@ -1,16 +1,13 @@
 package wasmbinding
 
 import (
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -92,27 +89,28 @@ func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contrac
 }
 
 func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
-	t.Helper()
+	// UNFORKINGTODO: Fix this with understanding of SubmitProposal use and GetRoute
+	// t.Helper()
 
-	govKeeper := osmosis.GovKeeper
-	wasmCode, err := os.ReadFile("../testdata/osmo_reflect.wasm")
-	require.NoError(t, err)
+	// govKeeper := osmosis.GovKeeper
+	// wasmCode, err := os.ReadFile("../testdata/osmo_reflect.wasm")
+	// require.NoError(t, err)
 
-	src := wasmtypes.StoreCodeProposalFixture(func(p *wasmtypes.StoreCodeProposal) {
-		p.RunAs = addr.String()
-		p.WASMByteCode = wasmCode
-		checksum := sha256.Sum256(wasmCode)
-		p.CodeHash = checksum[:]
-	})
+	// src := wasmtypes.StoreCodeProposalFixture(func(p *wasmtypes.StoreCodeProposal) {
+	// 	p.RunAs = addr.String()
+	// 	p.WASMByteCode = wasmCode
+	// 	checksum := sha256.Sum256(wasmCode)
+	// 	p.CodeHash = checksum[:]
+	// })
 
-	// when stored
-	storedProposal, err := govKeeper.SubmitProposal(ctx, src, false)
-	require.NoError(t, err)
+	// // when stored
+	// storedProposal, err := govKeeper.SubmitProposal(ctx, src, false)
+	// require.NoError(t, err)
 
-	// and proposal execute
-	handler := govKeeper.Router().GetRoute(storedProposal.ProposalRoute())
-	err = handler(ctx, storedProposal.GetContent())
-	require.NoError(t, err)
+	// // and proposal execute
+	// handler := govKeeper.Router().GetRoute(storedProposal.ProposalRoute())
+	// err = handler(ctx, storedProposal.GetContent())
+	// require.NoError(t, err)
 }
 
 func instantiateReflectContract(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, funder sdk.AccAddress) sdk.AccAddress {

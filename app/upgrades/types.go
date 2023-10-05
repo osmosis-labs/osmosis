@@ -1,7 +1,7 @@
 package upgrades
 
 import (
-	tmtypes "github.com/cometbft/cometbft/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -13,8 +13,8 @@ import (
 // BaseAppParamManager defines an interrace that BaseApp is expected to fullfil
 // that allows upgrade handlers to modify BaseApp parameters.
 type BaseAppParamManager interface {
-	GetConsensusParams(ctx sdk.Context) *tmtypes.ConsensusParams
-	StoreConsensusParams(ctx sdk.Context, cp *tmtypes.ConsensusParams)
+	GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams
+	StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusParams)
 }
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal

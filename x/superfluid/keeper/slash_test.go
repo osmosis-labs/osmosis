@@ -187,7 +187,6 @@ func (s *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 				s.App.SuperfluidKeeper.SlashLockupsForValidatorSlash(
 					s.Ctx,
 					valAddrs[i],
-					s.Ctx.BlockHeight(),
 					slashFactor)
 			}
 

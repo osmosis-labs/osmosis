@@ -10,6 +10,8 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
+	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
+
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 )
 
@@ -20,7 +22,8 @@ type App interface {
 	AppCodec() codec.Codec
 	GetAccountKeeper() AccountKeeper
 	GetBankKeeper() BankKeeper
-	GetStakingKeeper() stakingkeeper.Keeper
+	GetStakingKeeper() ibctestingtypes.StakingKeeper
+	GetSDKStakingKeeper() stakingkeeper.Keeper
 	ModuleManager() module.Manager
 	GetPoolManagerKeeper() PoolManagerKeeper
 	GetSubspace(moduleName string) paramtypes.Subspace

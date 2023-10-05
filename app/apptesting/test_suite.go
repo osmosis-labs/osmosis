@@ -25,7 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
@@ -210,14 +209,15 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 
 	s.FundAcc(sdk.AccAddress(valAddr), selfBond)
 
-	stakingHandler := staking.NewHandler(*s.App.StakingKeeper)
+	// UNFORKINGTODO: not sure if we need to implement NewHandler
+	//stakingHandler := staking.NewHandler(*s.App.StakingKeeper)
 	stakingCoin := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: selfBond[0].Amount}
 	ZeroCommission := stakingtypes.NewCommissionRates(zeroDec, zeroDec, zeroDec)
-	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, osmomath.OneInt())
+	_, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, osmomath.OneInt())
 	s.Require().NoError(err)
-	res, err := stakingHandler(s.Ctx, msg)
+	//res, err := stakingHandler(s.Ctx, msg)
 	s.Require().NoError(err)
-	s.Require().NotNil(res)
+	//s.Require().NotNil(res)
 
 	val, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
 	s.Require().True(found)

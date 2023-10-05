@@ -1099,7 +1099,6 @@ func (s *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, gammLockId, co
 	s.App.SuperfluidKeeper.SlashLockupsForValidatorSlash(
 		ctx,
 		valAddr,
-		ctx.BlockHeight(),
 		slashFactor)
 
 	// Retrieve the concentrated lock and gamm lock after slashing.

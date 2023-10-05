@@ -13,9 +13,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
@@ -37,6 +38,9 @@ import (
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+
+	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
 	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
 	downtimedetector "github.com/osmosis-labs/osmosis/v19/x/downtime-detector"
@@ -112,10 +116,11 @@ const (
 type AppKeepers struct {
 	// keepers, by order of initialization
 	// "Special" keepers
-	ParamsKeeper     *paramskeeper.Keeper
-	CapabilityKeeper *capabilitykeeper.Keeper
-	CrisisKeeper     *crisiskeeper.Keeper
-	UpgradeKeeper    *upgradekeeper.Keeper
+	ParamsKeeper          *paramskeeper.Keeper
+	CapabilityKeeper      *capabilitykeeper.Keeper
+	CrisisKeeper          *crisiskeeper.Keeper
+	UpgradeKeeper         *upgradekeeper.Keeper
+	ConsensusParamsKeeper consensusparamkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -175,6 +180,7 @@ type AppKeepers struct {
 // InitNormalKeepers initializes all 'normal' keepers (account, app, bank, auth, staking, distribution, slashing, transfer, gamm, IBC router, pool incentives, governance, mint, txfees keepers).
 func (appKeepers *AppKeepers) InitNormalKeepers(
 	appCodec codec.Codec,
+	encodingConfig appparams.EncodingConfig,
 	bApp *baseapp.BaseApp,
 	maccPerms map[string][]string,
 	wasmDir string,
@@ -183,6 +189,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	wasmOpts []wasm.Option,
 	blockedAddress map[string]bool,
 ) {
+	legacyAmino := encodingConfig.Amino
 	// Add 'normal' keepers
 	accountKeeper := authkeeper.NewAccountKeeper(
 		appCodec,
@@ -235,6 +242,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	slashingKeeper := slashingkeeper.NewKeeper(
 		appCodec,
+		legacyAmino,
 		appKeepers.keys[slashingtypes.StoreKey],
 		appKeepers.StakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -471,11 +479,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	wasmKeeper := wasm.NewKeeper(
 		appCodec,
 		appKeepers.keys[wasm.StoreKey],
-		appKeepers.GetSubspace(wasm.ModuleName),
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.StakingKeeper,
-		appKeepers.DistrKeeper,
+		*appKeepers.AccountKeeper,
+		*appKeepers.BankKeeper,
+		*appKeepers.StakingKeeper,
+		*appKeepers.DistrKeeper,
+		appKeepers.RateLimitingICS4Wrapper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.ScopedWasmKeeper,
@@ -485,6 +493,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		wasmDir,
 		wasmConfig,
 		supportedFeatures,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		wasmOpts...,
 	)
 	appKeepers.WasmKeeper = &wasmKeeper
@@ -510,9 +519,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	govRouter := govtypesv1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*appKeepers.ParamsKeeper)).
-		AddRoute(distrtypes.RouterKey, distribution.NewCommunityPoolSpendProposalHandler(*appKeepers.DistrKeeper)).
+		// UNFORKINGTODO: Figure out what we do with community pool spend prop
+		//AddRoute(distrtypes.RouterKey, distribution.NewCommunityPoolSpendProposalHandler(*appKeepers.DistrKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(*appKeepers.UpgradeKeeper)).
+		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(appKeepers.UpgradeKeeper)).
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*appKeepers.PoolIncentivesKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
@@ -528,10 +538,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(appKeepers.WasmKeeper, wasmEnabledProposals))
 	}
 
+	govConfig := govtypes.DefaultConfig()
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, appKeepers.keys[govtypes.StoreKey],
-		appKeepers.GetSubspace(govtypes.ModuleName), appKeepers.AccountKeeper, appKeepers.BankKeeper,
-		appKeepers.SuperfluidKeeper, govRouter)
+		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, bApp.MsgServiceRouter(),
+		govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	appKeepers.GovKeeper = govKeeper
 }
 
@@ -633,7 +644,10 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 	appKeepers.ParamsKeeper = &paramsKeeper
 
 	// set the BaseApp's parameter store
-	bApp.SetParamStore(appKeepers.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramskeeper.ConsensusParamsKeyTable()))
+	// set the BaseApp's parameter store
+	appKeepers.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
+		appCodec, appKeepers.keys[upgradetypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	bApp.SetParamStore(&appKeepers.ConsensusParamsKeeper)
 
 	// add capability keeper and ScopeToModule for ibc module
 	appKeepers.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, appKeepers.keys[capabilitytypes.StoreKey], appKeepers.memKeys[capabilitytypes.MemStoreKey])
@@ -647,7 +661,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 	// TODO: Make a SetInvCheckPeriod fn on CrisisKeeper.
 	// IMO, its bad design atm that it requires this in state machine initialization
 	crisisKeeper := crisiskeeper.NewKeeper(
-		appKeepers.GetSubspace(crisistypes.ModuleName), invCheckPeriod, appKeepers.BankKeeper, authtypes.FeeCollectorName,
+		appCodec, appKeepers.keys[crisistypes.StoreKey], invCheckPeriod, appKeepers.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	appKeepers.CrisisKeeper = crisisKeeper
 
@@ -657,6 +671,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 		appCodec,
 		homePath,
 		bApp,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	appKeepers.UpgradeKeeper = upgradeKeeper
 }
@@ -671,7 +686,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(distrtypes.ModuleName)
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
-	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
+	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
@@ -785,6 +800,7 @@ func KVStoreKeys() []string {
 		slashingtypes.StoreKey,
 		govtypes.StoreKey,
 		paramstypes.StoreKey,
+		consensusparamtypes.StoreKey,
 		ibchost.StoreKey,
 		icahosttypes.StoreKey,
 		upgradetypes.StoreKey,
