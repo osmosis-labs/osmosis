@@ -4,6 +4,8 @@ on:
   pull_request:
     types:
       - closed
+    branches:
+      - main
 
 jobs:
   scan-for-todos:
@@ -13,13 +15,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
       with:
+        fetch-depth: 0
         ref: ${{ github.event.pull_request.merge_commit_sha }}
     
     - name: Scan for TODOs
       id: todos
       run: |
+        git fetch origin main
         todos=$(git diff ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.merge_commit_sha }} --unified=0 | awk '/^\+.*TODO:/ { sub(/^.*TODO:\s*/, ""); sub(/^ */, ""); $0=toupper(substr($0,1,1)) substr($0,2); print $0 }')
-        echo TODOS: $todos
         
         # Set output
         echo "todo_list=$todos" >> $GITHUB_OUTPUT;
@@ -27,8 +30,11 @@ jobs:
     - name: Create GitHub issue for each TODO
       if: steps.todos.outputs.todo_list != ''
       run: |
-        # Read TODOs from the output
-        IFS=$'\n' read -rd '' -a todos <<< "${{ steps.todos.outputs.todo_list }}"
+        # Split the `todo_list` string into an array
+        SAVEIFS=$IFS   # Save current IFS (Internal Field Separator)
+        IFS=$'\n'      # Change IFS to newline char
+        todos=("${{ steps.todos.outputs.todo_list }}") # split the `todo_list` string into an array by the same name
+        IFS=$SAVEIFS   # Restore original IFS
         
         # Create an issue for each TODO
         for todo in "${todos[@]}"; do
@@ -38,5 +44,5 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/issues \
-            -d '{"title":"$todo","body":"Auto-generated issue triggered by the merge of ${{ github.event.pull_request.html_url }}","assignees":["${{ github.event.pull_request.user.login }}"],"labels":["T:auto"]}'
+            -d '{"title":"'"$todo"'","body":"Auto-generated issue triggered by the merge of ${{ github.event.pull_request.html_url }} with an introduced TODO","assignees":["${{ github.event.pull_request.user.login }}"],"labels":["T:auto"]}'
         done
