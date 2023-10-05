@@ -114,8 +114,8 @@ require (
 	github.com/tendermint/btcd v0.1.1 // indirect
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
-	github.com/cometbft/cometbft v0.37.0-rc1 // indirect
-	github.com/cometbft/cometbft-db v0.6.8-0.20220506192307-f628bb5dc95b // indirect
+	github.com/cometbft/cometbft v0.37.2 // indirect
+	github.com/cometbft/cometbft-db v0.8.0 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
