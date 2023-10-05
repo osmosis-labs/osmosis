@@ -586,6 +586,7 @@ func (d BigDec) MustFloat64() float64 {
 }
 
 // Dec is a non-mutative version of DecMut
+// Values in any additional decimal places are truncated.
 func (d BigDec) Dec() Dec {
 	copy := d.Clone()
 	return copy.DecMut()
