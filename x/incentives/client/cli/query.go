@@ -29,6 +29,10 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdActiveGaugesPerDenom)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdUpcomingGauges)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdUpcomingGaugesPerDenom)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAllGroups)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAllGroupsGauges)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAllGroupsWithGauge)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdGroupByGroupGaugeID)
 	cmd.AddCommand(GetCmdRewardsEst())
 
 	return cmd
@@ -214,4 +218,36 @@ func contains(s []uint64, value uint64) bool {
 	}
 
 	return false
+}
+
+func GetCmdAllGroups() (*osmocli.QueryDescriptor, *types.QueryAllGroupsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-groups",
+		Short: "Query all groups",
+		Long:  `{{.Short}}`,
+	}, &types.QueryAllGroupsRequest{}
+}
+
+func GetCmdAllGroupsGauges() (*osmocli.QueryDescriptor, *types.QueryAllGroupsGaugesRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-groups-gauges",
+		Short: "Query all group gauges",
+		Long:  `{{.Short}}`,
+	}, &types.QueryAllGroupsGaugesRequest{}
+}
+
+func GetCmdAllGroupsWithGauge() (*osmocli.QueryDescriptor, *types.QueryAllGroupsWithGaugeRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-groups-with-gauge",
+		Short: "Query all groups with their respective group gauge",
+		Long:  `{{.Short}}`,
+	}, &types.QueryAllGroupsWithGaugeRequest{}
+}
+
+func GetCmdGroupByGroupGaugeID() (*osmocli.QueryDescriptor, *types.QueryGroupByGroupGaugeIDRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "group-by-group-gauge-id [group-gauge-id]",
+		Short: "Query a group it's respective group gauge ID",
+		Long:  `{{.Short}}`,
+	}, &types.QueryGroupByGroupGaugeIDRequest{}
 }

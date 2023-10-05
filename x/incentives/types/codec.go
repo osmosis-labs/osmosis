@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 var (
@@ -18,6 +19,9 @@ var (
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreateGauge{}, "osmosis/incentives/create-gauge", nil)
 	cdc.RegisterConcrete(&MsgAddToGauge{}, "osmosis/incentives/add-to-gauge", nil)
+
+	// gov proposals
+	cdc.RegisterConcrete(&CreateGroupsProposal{}, "osmosis/create-groups-proposal", nil)
 }
 
 // RegisterInterfaces registers interfaces and implementations of the incentives module.
@@ -26,6 +30,11 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgCreateGauge{},
 		&MsgAddToGauge{},
+	)
+
+	registry.RegisterImplementations(
+		(*govtypesv1.Content)(nil),
+		&CreateGroupsProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

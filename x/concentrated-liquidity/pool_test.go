@@ -43,17 +43,38 @@ func (s *KeeperTestSuite) TestInitializePool() {
 	poolmanagerModuleAccount := s.App.AccountKeeper.GetModuleAccount(s.Ctx, poolmanagertypes.ModuleName).GetAddress()
 
 	tests := []struct {
-		name                             string
-		poolI                            poolmanagertypes.PoolI
-		authorizedDenomsOverwrite        []string
-		unrestrictedPoolCreatorWhitelist []string
-		creatorAddress                   sdk.AccAddress
-		expectedErr                      error
+		name                               string
+		poolI                              poolmanagertypes.PoolI
+		authorizedDenomsOverwrite          []string
+		unrestrictedPoolCreatorWhitelist   []string
+		permissionlessPoolCreationDisabled bool
+		creatorAddress                     sdk.AccAddress
+		expectedErr                        error
 	}{
 		{
 			name:           "Happy path",
 			poolI:          validPoolI,
 			creatorAddress: validCreatorAddress,
+		},
+		{
+			name:                               "Permissionless pool creation disabled",
+			poolI:                              validPoolI,
+			permissionlessPoolCreationDisabled: true,
+			creatorAddress:                     validCreatorAddress,
+			expectedErr:                        types.ErrPermissionlessPoolCreationDisabled,
+		},
+		{
+			name:                               "bypass disabled permissionless pool creation check because poolmanager module account",
+			poolI:                              validPoolI,
+			permissionlessPoolCreationDisabled: true,
+			creatorAddress:                     poolmanagerModuleAccount,
+		},
+		{
+			name:                               "bypass disabled permissionless pool creation check because of whitelisted bypass",
+			poolI:                              validPoolI,
+			permissionlessPoolCreationDisabled: true,
+			creatorAddress:                     validCreatorAddress,
+			unrestrictedPoolCreatorWhitelist:   []string{validCreatorAddress.String()},
 		},
 		{
 			name:           "Wrong pool type: empty pool interface that doesn't implement ConcentratedPoolExtension",
@@ -83,7 +104,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			expectedErr:               types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: USDC, AuthorizedQuoteDenoms: []string{"otherDenom"}},
 		},
 		{
-			name:                      "bypass check because poolmanager module account",
+			name:                      "bypass unauthorized quote denom check because poolmanager module account",
 			poolI:                     validPoolI,
 			authorizedDenomsOverwrite: []string{"otherDenom"},
 			// despite the quote denom not being authorized, will still
@@ -91,7 +112,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			creatorAddress: poolmanagerModuleAccount,
 		},
 		{
-			name:                      "bypass check because of whitelisted bypass",
+			name:                      "bypass unauthorized quote denom check because of whitelisted bypass",
 			poolI:                     validPoolI,
 			authorizedDenomsOverwrite: []string{"otherDenom"},
 			// despite the quote denom not being authorized, will still
@@ -104,6 +125,12 @@ func (s *KeeperTestSuite) TestInitializePool() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			s.SetupTest()
+
+			if test.permissionlessPoolCreationDisabled {
+				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+				params.IsPermissionlessPoolCreationEnabled = false
+				s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+			}
 
 			if len(test.authorizedDenomsOverwrite) > 0 {
 				params := s.App.PoolManagerKeeper.GetParams(s.Ctx)

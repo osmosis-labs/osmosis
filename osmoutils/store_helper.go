@@ -213,7 +213,7 @@ func Get(store store.KVStore, key []byte, result proto.Message) (found bool, err
 }
 
 // DeleteAllKeysFromPrefix deletes all store records that contains the given prefixKey.
-func DeleteAllKeysFromPrefix(ctx sdk.Context, store store.KVStore, prefixKey []byte) {
+func DeleteAllKeysFromPrefix(store store.KVStore, prefixKey []byte) {
 	prefixStore := prefix.NewStore(store, prefixKey)
 	iter := prefixStore.Iterator(nil, nil)
 	defer iter.Close()

@@ -1,4 +1,5 @@
-package grpc 
+
+package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `proto/osmosis/concentrated-liquidity/query.yml`

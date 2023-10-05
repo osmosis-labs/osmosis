@@ -113,7 +113,7 @@ func ParseField(v reflect.Value, t reflect.Type, fieldIndex int, arg string, fla
 func ParseFieldFromFlag(fVal reflect.Value, fType reflect.StructField, flagAdvice FlagAdvice, flags *pflag.FlagSet) (bool, error) {
 	lowercaseFieldNameStr := strings.ToLower(fType.Name)
 	if flagName, ok := flagAdvice.CustomFlagOverrides[lowercaseFieldNameStr]; ok {
-		return true, parseFieldFromDirectlySetFlag(fVal, fType, flagAdvice, flagName, flags)
+		return true, parseFieldFromDirectlySetFlag(fVal, fType, flagName, flags)
 	}
 
 	kind := fType.Type.Kind()
@@ -145,7 +145,7 @@ func ParseFieldFromFlag(fVal reflect.Value, fType reflect.StructField, flagAdvic
 	return false, nil
 }
 
-func parseFieldFromDirectlySetFlag(fVal reflect.Value, fType reflect.StructField, flagAdvice FlagAdvice, flagName string, flags *pflag.FlagSet) error {
+func parseFieldFromDirectlySetFlag(fVal reflect.Value, fType reflect.StructField, flagName string, flags *pflag.FlagSet) error {
 	// get string. If its a string great, run through arg parser. Otherwise try setting directly
 	s, err := flags.GetString(flagName)
 	if err != nil {
@@ -348,4 +348,35 @@ func ParseSdkDec(arg, fieldName string) (osmomath.Dec, error) {
 		return osmomath.Dec{}, fmt.Errorf("could not parse %s as osmomath.Dec for field %s: %w", arg, fieldName, err)
 	}
 	return i, nil
+}
+
+func ParseStringTo2DArray(input string) ([][]uint64, error) {
+	// Split the input string into sub-arrays
+	subArrays := strings.Split(input, ";")
+
+	// Initialize the 2D array
+	result := make([][]uint64, len(subArrays))
+
+	// Iterate over each sub-array
+	for i, subArray := range subArrays {
+		// Split the sub-array into elements
+		elements := strings.Split(subArray, ",")
+
+		// Initialize the sub-array in the 2D array
+		result[i] = make([]uint64, len(elements))
+
+		// Iterate over each element
+		for j, element := range elements {
+			// Parse the element into a uint64
+			value, err := strconv.ParseUint(element, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+
+			// Store the value in the 2D array
+			result[i][j] = value
+		}
+	}
+
+	return result, nil
 }

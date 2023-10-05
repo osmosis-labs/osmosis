@@ -64,6 +64,10 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	}
 
 	if !bypassRestrictions {
+		if !k.IsPermissionlessPoolCreationEnabled(ctx) {
+			return types.ErrPermissionlessPoolCreationDisabled
+		}
+
 		if !k.validateTickSpacing(params, tickSpacing) {
 			return types.UnauthorizedTickSpacingError{ProvidedTickSpacing: tickSpacing, AuthorizedTickSpacings: params.AuthorizedTickSpacing}
 		}

@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis/osmomath
 go 1.20
 
 require (
-	cosmossdk.io/math v1.1.2
+	cosmossdk.io/math v1.1.3-rc.0
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230911115719-1d5a34978fe1
 	github.com/stretchr/testify v1.8.4
@@ -86,7 +86,7 @@ require (
 
 replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/05346fa12992
-	github.com/cosmos/cosmos-sdk => v0.47.6-0.20231005000258-cad4b1563b8d
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005000258-cad4b1563b8d
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2

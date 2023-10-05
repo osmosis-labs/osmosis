@@ -1,4 +1,4 @@
-package coins
+package coinutil
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
