@@ -914,7 +914,6 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 
 	// check synthetic lockup exists
 	if k.HasAnySyntheticLockups(ctx, lock.ID) {
-		// TODO: export this error
 		return errorsmod.Wrap(types.ErrLockHasSyntheticLockup, fmt.Sprintf("cannot edit lockup with synthetic lock %d", lock.ID))
 	}
 
