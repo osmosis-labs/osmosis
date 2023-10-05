@@ -120,6 +120,24 @@ func (s *UpgradeTestSuite) TestCreateGroupsForIncentivePairs() {
 
 			expectedDistributionRecords: []poolincentivestypes.DistrRecord(nil),
 		},
+		"migration link between gamm pool and concentrated pool exists; no distr record with community pool gauge ID (no-op)": {
+			migrationInfo: []gammmigration.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: poolInfo.BalancerPoolID,
+					ClPoolId:       poolInfo.ConcentratedPoolID,
+				},
+			},
+
+			distributionRecords: []poolincentivestypes.DistrRecord{{
+				GaugeId: poolincentivestypes.CommunityPoolDistributionGaugeID,
+				Weight:  defaultWeight,
+			}},
+
+			expectedDistributionRecords: []poolincentivestypes.DistrRecord{{
+				GaugeId: poolincentivestypes.CommunityPoolDistributionGaugeID,
+				Weight:  defaultWeight,
+			}},
+		},
 
 		// error cases
 
@@ -280,7 +298,7 @@ func (s *UpgradeTestSuite) TestCreateGroupsForIncentivePairs() {
 
 func (s *UpgradeTestSuite) runCreateGroupsForIncentivePairsTest(migrationInfo []gammmigration.BalancerToConcentratedPoolLink, distributionRecords []poolincentivestypes.DistrRecord, expectedDistributionRecords []poolincentivestypes.DistrRecord, expectedGroupGaugeID uint64, expectedError error) {
 	// Confgiure migration records for each test individually (overwrites previous migration records).
-	err := s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: migrationInfo})
+	err := s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx, gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: migrationInfo})
 	s.Require().NoError(err)
 
 	// Configure distribution records for each test individually (overwrites previous distribution records).
