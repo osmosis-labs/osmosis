@@ -58,7 +58,7 @@ func CreateUpgradeHandler(
 		// Makes the "day" epoch happen 45 minutes after the upgrade
 		// This allows for us to create volume on the testnet and check if volume splitting works without waiting an entire 24 hours
 		epochs := keepers.EpochsKeeper.AllEpochInfos(ctx)
-		fmt.Println("HEEEREEE")
+		fmt.Println("HEEEREEE2")
 		desiredEpochInfo := epochtypes.EpochInfo{}
 		for _, epoch := range epochs {
 			fmt.Println("epoch.Identifier", epoch.Identifier)
