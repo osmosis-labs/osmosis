@@ -620,6 +620,15 @@ github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194 h1:/cX8V6G7ExFRGxV0FOdxS9rJ8HEBbX0O82GCQ/MB8bg=
 github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194/go.mod h1:EHwCeN9IXonsjKcjpS12MqeStdZvIdxt3VYXhus3G3c=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231006174743-30fda72673dd h1:+JWSg+HKvnYh9lAwWbV7w/uD+Us10kG4jDp7dq6Uv10=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231006174743-30fda72673dd/go.mod h1:wPZdDVP87Fph0quoE3tuYkGQI17dbQPXLHOVmg1nO6Y=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231006174743-30fda72673dd h1:MTnEMlpWy0VXYVSex5DR7Q/GB0fcKf1OYUxIyvgigYE=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231006174743-30fda72673dd/go.mod h1:mHcVcpGfLFkfz4qymuNTbzi74qCxvydOpc4fYlWTiL8=
+github.com/osmosis-labs/osmosis/v19 v19.0.0-20231006174743-30fda72673dd h1:QqzDTwsfX3LNcbMRERZtwG2nm/tC+fiVn12jnzZFPnI=
+github.com/osmosis-labs/osmosis/v19 v19.0.0-20231006174743-30fda72673dd/go.mod h1:TJoKA5lgt8qdTuH2fbISu3Q1aHAekyPCPxwiPWkzIQ4=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231006174743-30fda72673dd h1:Thg5iB4tVwFMN3HXkJi+Y8znpoQE/s8uQYhY1pGpHFY=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231006174743-30fda72673dd/go.mod h1:9VyGWDFdsBNvmDh+UKxGd+enYLmomr3JIvixpOKF8Lw=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231006174257-bdb9dc0de766 h1:By5DAAygW7ZYgX7nfp5sqo9GklAVFfBNcCsp7Ryc/lQ=
 github.com/p0mvn/cli v0.23.1 h1:Y4vUUNzTmrhhlaj1FIuLDCX9Go0oTqlf88m2PtaG5Zs=
 github.com/p0mvn/cli v0.23.1/go.mod h1:r92KMcpaLyYii0XnlQz5nfCxAMraLgOvWCHYw4pWZ7w=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=

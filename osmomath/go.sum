@@ -290,6 +290,8 @@ github.com/onsi/gomega v1.19.0/go.mod h1:LY+I3pBVzYsTBU1AnDwOSxaYi9WoWiqgwooUqq9
 github.com/onsi/gomega v1.27.10 h1:naR28SdDFlqrG6kScpT8VWpu1xWY5nJRCF3XaYyBjhI=
 github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194 h1:/cX8V6G7ExFRGxV0FOdxS9rJ8HEBbX0O82GCQ/MB8bg=
 github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194/go.mod h1:EHwCeN9IXonsjKcjpS12MqeStdZvIdxt3VYXhus3G3c=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231006174743-30fda72673dd h1:MTnEMlpWy0VXYVSex5DR7Q/GB0fcKf1OYUxIyvgigYE=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231006174743-30fda72673dd/go.mod h1:mHcVcpGfLFkfz4qymuNTbzi74qCxvydOpc4fYlWTiL8=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
 github.com/pelletier/go-toml/v2 v2.0.8 h1:0ctb6s9mE31h0/lhu+J6OPmVeDxJn+kYnJc2jZR9tGQ=
 github.com/pelletier/go-toml/v2 v2.0.8/go.mod h1:vuYfssBdrU2XDZ9bYydBu6t+6a6PYNcZljzZR9VXg+4=

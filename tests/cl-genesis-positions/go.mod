@@ -204,12 +204,12 @@ replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	github.com/ignite/cli => github.com/p0mvn/cli v0.23.1
-	github.com/osmosis-labs/osmosis/osmomath => ../../osmomath
-	github.com/osmosis-labs/osmosis/osmoutils => ../../osmoutils
+// github.com/osmosis-labs/osmosis/osmomath => ../../osmomath
+// github.com/osmosis-labs/osmosis/osmoutils => ../../osmoutils
 
-	github.com/osmosis-labs/osmosis/v19 => ../../
-	github.com/osmosis-labs/osmosis/x/epochs => ../../x/epochs
-	github.com/osmosis-labs/osmosis/x/ibc-hooks => ../../x/ibc-hooks
+// github.com/osmosis-labs/osmosis/v19 => ../../
+// github.com/osmosis-labs/osmosis/x/epochs => ../../x/epochs
+// github.com/osmosis-labs/osmosis/x/ibc-hooks => ../../x/ibc-hooks
 )
 
 exclude (
