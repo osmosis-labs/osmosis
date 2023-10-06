@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis/osmomath
 go 1.20
 
 require (
-	cosmossdk.io/math v1.1.3-rc.0
+	cosmossdk.io/math v1.1.2
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230911115719-1d5a34978fe1
 	github.com/stretchr/testify v1.8.4
@@ -21,7 +21,7 @@ require (
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2 // indirect
-	github.com/cosmos/gogoproto v1.4.10 // indirect
+	github.com/cosmos/gogoproto v1.4.11 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
@@ -31,7 +31,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
-	github.com/go-logfmt/logfmt v0.5.1 // indirect
+	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/glog v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -54,10 +54,10 @@ require (
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.16.0 // indirect
-	github.com/prometheus/client_model v0.3.0 // indirect
-	github.com/prometheus/common v0.42.0 // indirect
-	github.com/prometheus/procfs v0.10.1 // indirect
+	github.com/prometheus/client_golang v1.17.0 // indirect
+	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
+	github.com/prometheus/common v0.44.0 // indirect
+	github.com/prometheus/procfs v0.11.1 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
@@ -86,4 +86,6 @@ replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/05346fa12992
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/osmosis-labs/osmosis/osmoutils => ./../osmoutils
+	github.com/osmosis-labs/osmosis/v19 => ./..
 )

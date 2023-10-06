@@ -3,15 +3,15 @@ module github.com/osmosis-labs/osmosis/osmoutils
 go 1.20
 
 require (
-	cosmossdk.io/math v1.1.3-rc.0
+	cosmossdk.io/math v1.1.2
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/iavl v0.20.0
 	github.com/cosmos/ibc-go/v7 v7.2.0
 	github.com/gogo/protobuf v1.3.3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231006001818-d70bbbd12d69
-	github.com/osmosis-labs/osmosis/v19 v19.0.0-20231006161255-5f5bc2f066ca
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230911120014-b14342e08daf
+	github.com/osmosis-labs/osmosis/v19 v19.0.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
@@ -42,6 +42,7 @@ require (
 	github.com/cockroachdb/errors v1.10.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
+	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2 // indirect
@@ -158,6 +159,10 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/osmosis-labs/osmosis/osmomath => ./../osmomath
+	github.com/osmosis-labs/osmosis/v19 => ./../
+	github.com/osmosis-labs/osmosis/x/epochs => ./../x/epochs
+	github.com/osmosis-labs/osmosis/x/ibc-hooks => ./../x/ibc-hooks
 )
 
 // use grpc compatible with cosmos protobufs

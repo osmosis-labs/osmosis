@@ -5,7 +5,7 @@ go 1.20
 require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/errors v1.0.0
-	cosmossdk.io/math v1.1.3-rc.0
+	cosmossdk.io/math v1.1.2
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/CosmWasm/wasmd v0.40.1
 	github.com/cometbft/cometbft v0.37.2
@@ -26,10 +26,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230924192433-36cf2950dca4
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20230929193736-aae32321cac7
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230911120014-b14342e08daf
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20230911120014-b14342e08daf
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230911120014-b14342e08daf
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230911115719-1d5a34978fe1
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-00010101000000-000000000000
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-00010101000000-000000000000
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.1
@@ -365,8 +365,8 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194
 	// TODO: remove in favor of github.com/cosmos/cosmos-proto
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/osmosis-labs/osmosis/osmomath => ./osmomath
 
+	github.com/osmosis-labs/osmosis/osmomath => ./osmomath
 	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
 	github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
 	github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
