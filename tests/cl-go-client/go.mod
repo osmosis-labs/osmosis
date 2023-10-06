@@ -5,10 +5,10 @@ go 1.20
 require (
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/ignite/cli v0.23.0
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231006172951-c3c33dc8b6da
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231006172951-c3c33dc8b6da
-	github.com/osmosis-labs/osmosis/v19 v19.0.0-20231006172951-c3c33dc8b6da
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231006172951-c3c33dc8b6da
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231006174743-30fda72673dd
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231006174743-30fda72673dd
+	github.com/osmosis-labs/osmosis/v19 v19.0.0-20231006174743-30fda72673dd
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231006174743-30fda72673dd
 
 )
 

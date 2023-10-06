@@ -6,9 +6,9 @@ require (
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/ignite/cli v0.23.0
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231006172951-c3c33dc8b6da
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231006172951-c3c33dc8b6da
-	github.com/osmosis-labs/osmosis/v19 v19.0.0-20231006172951-c3c33dc8b6da
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231006174743-30fda72673dd
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231006174743-30fda72673dd
+	github.com/osmosis-labs/osmosis/v19 v19.0.0-20231006174743-30fda72673dd
 )
 
 require (
@@ -138,8 +138,8 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.2 // indirect
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.8 // indirect
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231006174743-30fda72673dd // indirect
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231006174743-30fda72673dd // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

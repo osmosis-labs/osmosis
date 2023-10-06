@@ -10,8 +10,8 @@ require (
 	github.com/cosmos/iavl v0.20.0
 	github.com/cosmos/ibc-go/v7 v7.2.0
 	github.com/gogo/protobuf v1.3.3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231006172951-c3c33dc8b6da
-	github.com/osmosis-labs/osmosis/v19 v19.0.0-20231006172951-c3c33dc8b6da
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231006174743-30fda72673dd
+	github.com/osmosis-labs/osmosis/v19 v19.0.0-20231006174743-30fda72673dd
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
