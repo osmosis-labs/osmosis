@@ -8,6 +8,8 @@ import (
 // TODO: Analyze choice here.
 var powPrecision, _ = NewDecFromStr("0.00000001")
 
+const powIterationLimit = 150_000
+
 var (
 	one_half Dec = MustNewDecFromStr("0.5")
 	one      Dec = OneDec()
@@ -81,8 +83,8 @@ func Pow(base Dec, exp Dec) Dec {
 
 // Contract: 0 < base <= 2
 // 0 <= exp < 1.
-func PowApprox(base Dec, exp Dec, precision Dec) Dec {
-	if !base.IsPositive() {
+func PowApprox(originalBase Dec, exp Dec, precision Dec) Dec {
+	if !originalBase.IsPositive() {
 		panic(fmt.Errorf("base must be greater than 0"))
 	}
 
@@ -93,7 +95,7 @@ func PowApprox(base Dec, exp Dec, precision Dec) Dec {
 	// Common case optimization
 	// Optimize for it being equal to one-half
 	if exp.Equal(one_half) {
-		output, err := base.ApproxSqrt()
+		output, err := originalBase.ApproxSqrt()
 		if err != nil {
 			panic(err)
 		}
@@ -129,7 +131,7 @@ func PowApprox(base Dec, exp Dec, precision Dec) Dec {
 	// TODO: Check with our parameterization
 	// TODO: If theres a bug, balancer is also wrong here :thonk:
 
-	base = base.Clone()
+	base := originalBase.Clone()
 	x, xneg := AbsDifferenceWithSign(base, one)
 	term := OneDec()
 	sum := OneDec()
@@ -165,6 +167,10 @@ func PowApprox(base Dec, exp Dec, precision Dec) Dec {
 			sum.SubMut(term)
 		} else {
 			sum.AddMut(term)
+		}
+
+		if i == powIterationLimit {
+			panic(fmt.Errorf("failed to reach precision within %d iterations, best guess: %s for %s^%s", powIterationLimit, sum, originalBase, exp))
 		}
 	}
 	return sum
