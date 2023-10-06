@@ -60,13 +60,14 @@ func CreateUpgradeHandler(
 		epochs := keepers.EpochsKeeper.AllEpochInfos(ctx)
 		desiredEpochInfo := epochtypes.EpochInfo{}
 		for _, epoch := range epochs {
+			fmt.Println("epoch.Identifier", epoch.Identifier)
 			if epoch.Identifier == "day" {
 				epoch.CurrentEpochStartTime = ctx.BlockTime().Add(-epoch.Duration).Add(5 * time.Minute)
 				desiredEpochInfo = epoch
 				keepers.EpochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
+				keepers.EpochsKeeper.SetEpochInfo(ctx, desiredEpochInfo)
 			}
 		}
-		keepers.EpochsKeeper.SetEpochInfo(ctx, desiredEpochInfo)
 
 		return migrations, nil
 	}
