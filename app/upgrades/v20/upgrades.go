@@ -57,18 +57,16 @@ func CreateUpgradeHandler(
 		// Special logic for testnets
 		// Makes the "day" epoch happen 45 minutes after the upgrade
 		// This allows for us to create volume on the testnet and check if volume splitting works without waiting an entire 24 hours
-		if ctx.ChainID() == "localosmosis" {
-			epochs := keepers.EpochsKeeper.AllEpochInfos(ctx)
-			desiredEpochInfo := epochtypes.EpochInfo{}
-			for _, epoch := range epochs {
-				if epoch.Identifier == "day" {
-					epoch.CurrentEpochStartTime = time.Now().Add(-epoch.Duration).Add(time.Minute * 45)
-					desiredEpochInfo = epoch
-					keepers.EpochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
-				}
+		epochs := keepers.EpochsKeeper.AllEpochInfos(ctx)
+		desiredEpochInfo := epochtypes.EpochInfo{}
+		for _, epoch := range epochs {
+			if epoch.Identifier == "day" {
+				epoch.CurrentEpochStartTime = time.Now().Add(-epoch.Duration).Add(time.Minute * 45)
+				desiredEpochInfo = epoch
+				keepers.EpochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
 			}
-			keepers.EpochsKeeper.SetEpochInfo(ctx, desiredEpochInfo)
 		}
+		keepers.EpochsKeeper.SetEpochInfo(ctx, desiredEpochInfo)
 
 		return migrations, nil
 	}
