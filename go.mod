@@ -6,7 +6,6 @@ require (
 	cosmossdk.io/api v0.3.1
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/math v1.1.3-rc.0
-	cosmossdk.io/simapp v0.0.0-20230323161446-0af178d721ff
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/CosmWasm/wasmd v0.40.1
 	github.com/cometbft/cometbft v0.37.2
