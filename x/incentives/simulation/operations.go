@@ -13,9 +13,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 
-	simappparams "cosmossdk.io/simapp/params"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
@@ -154,7 +154,7 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankK
 			NumEpochsPaidOver: numEpochsPaidOver,
 		}
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		txGen := testutil.MakeTestEncodingConfig().TxConfig
 		return osmosimtypes.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName)
 	}
@@ -189,7 +189,7 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk osmosimtypes.BankKe
 			Rewards: rewards,
 		}
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
+		txGen := testutil.MakeTestEncodingConfig().TxConfig
 		return osmosimtypes.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName,
 		)

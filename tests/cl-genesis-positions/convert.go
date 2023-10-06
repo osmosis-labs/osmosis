@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"os"
 
-	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -77,7 +77,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 
 	// fund all accounts
 	for _, acc := range osmosis.TestAccs {
-		err := simapp.FundAccount(osmosis.App.BankKeeper, osmosis.Ctx, acc, initAmounts)
+		err := simtestutil.FundAccount(osmosis.App.BankKeeper, osmosis.Ctx, acc, initAmounts)
 		if err != nil {
 			panic(err)
 		}
