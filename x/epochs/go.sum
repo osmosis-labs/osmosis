@@ -624,6 +624,8 @@ github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194 h1:/cX8
 github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194/go.mod h1:EHwCeN9IXonsjKcjpS12MqeStdZvIdxt3VYXhus3G3c=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230911120014-b14342e08daf h1:sXSC/RG9sxQCB5QJ5JB+M9Bok7Xbpv2zx9ee6287glw=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230911120014-b14342e08daf/go.mod h1:pIItelRYvonB+H8A6KqucOi7xFnJxzDHaWJqOdFNLI4=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231006172951-c3c33dc8b6da h1:5EXvMxJqUA2dnoXWgFA1IbOGr9kun6cTqPw2RXXyTHs=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231006172951-c3c33dc8b6da/go.mod h1:pT4xuf8+wwdDJWJe9wgmKdEpOIp4MDrldqx7TVVo8BE=
 github.com/osmosis-labs/osmosis/v19 v19.0.0 h1:gqcas/XfxtEuZXsWGTO9vNMHiY78Qs09FBQw73djIVM=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=

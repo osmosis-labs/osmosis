@@ -6,9 +6,9 @@ require (
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/ignite/cli v0.23.0
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230911120014-b14342e08daf
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230911115719-1d5a34978fe1
-	github.com/osmosis-labs/osmosis/v19 v19.0.0
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231006172951-c3c33dc8b6da
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231006172951-c3c33dc8b6da
+	github.com/osmosis-labs/osmosis/v19 v19.0.0-20231006172951-c3c33dc8b6da
 )
 
 require (
@@ -208,6 +208,7 @@ replace (
 	github.com/osmosis-labs/osmosis/osmoutils => ../../osmoutils
 
 	github.com/osmosis-labs/osmosis/v19 => ../../
+	github.com/osmosis-labs/osmosis/x/epochs => ../../x/epochs
 	github.com/osmosis-labs/osmosis/x/ibc-hooks => ../../x/ibc-hooks
 )
 
