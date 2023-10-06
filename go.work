@@ -1,16 +1,15 @@
 go 1.20
 
-//use ./osmomath
-//
+use ./osmomath
+
 use ./osmoutils
 
-//
-//use ./x/ibc-hooks
-//
-//use ./tests/cl-go-client
-//
-//use ./tests/cl-genesis-positions
+use ./x/ibc-hooks
+
+use ./tests/cl-go-client
+
+use ./tests/cl-genesis-positions
 
 use .
 
-//use ./x/epochs
+use ./x/epochs
