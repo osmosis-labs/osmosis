@@ -115,7 +115,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	igniteClient.Factory = igniteClient.Factory.WithGas(300000).WithGasAdjustment(1.3).WithFees(consensusFee)
+	igniteClient.TxFactory = igniteClient.TxFactory.WithGas(300000).WithGasAdjustment(1.3).WithFees(consensusFee)
 
 	statusResp, err := igniteClient.Status(ctx)
 	if err != nil {
@@ -140,6 +140,7 @@ func main() {
 
 	switch operation(desiredOperation) {
 	case createPositions:
+		// nolint
 		createManyRandomPositions(igniteClient, expectedPoolId, numPositions)
 		return
 	case addToPositions:
@@ -164,6 +165,7 @@ func main() {
 	}
 }
 
+// nolint
 func createRandomPosition(igniteClient cosmosclient.Client, poolId uint64) (string, int64, int64, sdk.Coins, error) {
 	minTick, maxTick := cltypes.MinInitializedTick, cltypes.MaxTick
 	log.Println(minTick, " ", maxTick)
@@ -202,6 +204,7 @@ func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, 
 	return nil
 }
 
+// nolint
 func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId uint64, numSwaps int) {
 	for i := 0; i < numSwaps; i++ {
 		var (
@@ -230,6 +233,7 @@ func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId
 	log.Println("finished swapping, num swaps done", numSwaps)
 }
 
+// nolint
 func swapGivenLargeAmountsBothDirections(igniteClient cosmosclient.Client, poolId uint64, numSwaps int, largeStartAmount int64) {
 	var (
 		randAccountNum = rand.Intn(8) + 1
@@ -270,6 +274,7 @@ func swapGivenLargeAmountsBothDirections(igniteClient cosmosclient.Client, poolI
 	log.Println("finished swapping, num swaps done", numSwaps)
 }
 
+// nolint
 func createExternalCLIncentive(igniteClient cosmosclient.Client, poolId uint64, gaugeCoins sdk.Coins, expectedEpochIdentifier string) {
 	var (
 		randAccountNum = rand.Intn(8) + 1
@@ -350,7 +355,9 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 		TickSpacing:  1,
 		SpreadFactor: defaultSpreadFactor,
 	}
-	txResp, err := igniteClient.BroadcastTx(accountName, msg)
+	ctx := context.Background()
+	cosmosAcc := cosmosaccount.Account{Name: accountName}
+	txResp, err := igniteClient.BroadcastTx(ctx, cosmosAcc, msg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -361,6 +368,7 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	return resp.PoolID
 }
 
+// nolint
 func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 osmomath.Int) (positionId uint64, amountCreated0, amountCreated1 osmomath.Int, liquidityCreated osmomath.Dec, err error) {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
@@ -377,7 +385,9 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 		TokenMinAmount0: tokenMinAmount0,
 		TokenMinAmount1: tokenMinAmount1,
 	}
-	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
+	ctx := context.Background()
+	cosmosAcc := cosmosaccount.Account{Name: senderKeyringAccountName}
+	txResp, err := client.BroadcastTx(ctx, cosmosAcc, msg)
 	if err != nil {
 		return 0, osmomath.Int{}, osmomath.Int{}, osmomath.Dec{}, err
 	}
@@ -431,7 +441,9 @@ func addToPositionsOp(igniteClient cosmosclient.Client) {
 			TokenMinAmount0: defaultMinAmount,
 			TokenMinAmount1: defaultMinAmount,
 		}
-		txResp, err := igniteClient.BroadcastTx(accountName, msg)
+		ctx := context.Background()
+		cosmosAcc := cosmosaccount.Account{Name: accountName}
+		txResp, err := igniteClient.BroadcastTx(ctx, cosmosAcc, msg)
 		if err != nil {
 			return
 		}
@@ -477,7 +489,9 @@ func withdrawPositionsOp(igniteClient cosmosclient.Client) {
 			LiquidityAmount: position.Liquidity,
 		}
 
-		txResp, err := igniteClient.BroadcastTx(accountName, msg)
+		ctx := context.Background()
+		cosmosAcc := cosmosaccount.Account{Name: accountName}
+		txResp, err := igniteClient.BroadcastTx(ctx, cosmosAcc, msg)
 		if err != nil {
 			log.Println(err)
 			return
@@ -491,6 +505,7 @@ func withdrawPositionsOp(igniteClient cosmosclient.Client) {
 	}
 }
 
+// nolint
 func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, tokenInCoin sdk.Coin, tokenOutDenom string, tokenOutMinAmount osmomath.Int) (osmomath.Int, error) {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
@@ -509,7 +524,9 @@ func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountNam
 		TokenIn:           tokenInCoin,
 		TokenOutMinAmount: tokenOutMinAmount,
 	}
-	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
+	ctx := context.Background()
+	cosmosAcc := cosmosaccount.Account{Name: senderKeyringAccountName}
+	txResp, err := client.BroadcastTx(ctx, cosmosAcc, msg)
 	if err != nil {
 		return osmomath.Int{}, err
 	}
@@ -522,6 +539,7 @@ func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountNam
 	return resp.TokenOutAmount, nil
 }
 
+// nolint
 func createGauge(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, gaugeCoins sdk.Coins) error {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
@@ -540,7 +558,9 @@ func createGauge(client cosmosclient.Client, poolId uint64, senderKeyringAccount
 		NumEpochsPaidOver: 5,
 		PoolId:            expectedPoolId,
 	}
-	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
+	ctx := context.Background()
+	cosmosAcc := cosmosaccount.Account{Name: senderKeyringAccountName}
+	txResp, err := client.BroadcastTx(ctx, cosmosAcc, msg)
 	if err != nil {
 		return err
 	}
@@ -610,7 +630,9 @@ func claimSpreadRewardsOp(igniteClient cosmosclient.Client) {
 		PositionIds: positionIds,
 		Sender:      senderAddress,
 	}
-	txResp, err := igniteClient.BroadcastTx(accountName, msg)
+	ctx := context.Background()
+	cosmosAcc := cosmosaccount.Account{Name: accountName}
+	txResp, err := igniteClient.BroadcastTx(ctx, cosmosAcc, msg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -660,7 +682,9 @@ func claimIncentivesOp(igniteClient cosmosclient.Client) {
 		PositionIds: positionIds,
 		Sender:      senderAddress,
 	}
-	txResp, err := igniteClient.BroadcastTx(accountName, msg)
+	ctx := context.Background()
+	cosmosAcc := cosmosaccount.Account{Name: accountName}
+	txResp, err := igniteClient.BroadcastTx(ctx, cosmosAcc, msg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -678,7 +702,7 @@ func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName 
 		log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", accountName, err))
 	}
 
-	address := account.Address(addressPrefix)
+	address, err := account.Address(addressPrefix)
 	if err != nil {
 		log.Fatal(err)
 	}

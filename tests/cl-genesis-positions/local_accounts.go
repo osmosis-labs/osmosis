@@ -53,7 +53,8 @@ func GetLocalKeyringAccounts() []sdk.AccAddress {
 		if err != nil {
 			panic(err)
 		}
-		accounts[i-1] = account.Info.GetAddress()
+		addr, err := account.Address("osmo")
+		accounts[i-1] = sdk.MustAccAddressFromBech32(addr)
 	}
 
 	fmt.Println("retrieved accounts")
