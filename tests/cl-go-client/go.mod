@@ -6,9 +6,9 @@ require (
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/ignite/cli v0.23.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231006202121-3eb65f09f997
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231006213638-3705c83a2da9
 	github.com/osmosis-labs/osmosis/v19 v19.1.0
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231006202121-3eb65f09f997
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231006213638-3705c83a2da9
 
 )
 
