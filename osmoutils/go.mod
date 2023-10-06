@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/math v1.1.3-rc.0
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/iavl v0.19.7
-	github.com/cosmos/ibc-go/v4 v4.3.1
+	github.com/cosmos/ibc-go/v4 v4.5.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.6
 	github.com/osmosis-labs/osmosis/v19 v19.0.0
@@ -34,7 +34,7 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
-	github.com/confio/ics23/go v0.9.0 // indirect
+	github.com/confio/ics23/go v0.9.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
