@@ -374,9 +374,6 @@ replace (
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
 
-// exclusion so we use v1.0.0 instead
-exclude github.com/coinbase/rosetta-sdk-go v0.7.9
-
 // dragonberry
 //github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 // Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/05346fa12992
