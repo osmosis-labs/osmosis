@@ -42,7 +42,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			}
 		}
 
-		// UNFORKTODO: do we upstream this method?
+		// UNFORKINGTODO: do we upstream this method?
 		// if len(gauges) > 10 {
 		// 	ctx.EventManager().IncreaseCapacity(2e6)
 		// }

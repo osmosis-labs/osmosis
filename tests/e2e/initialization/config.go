@@ -512,10 +512,10 @@ func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 func updateGovGenesis(votingPeriod, expeditedVotingPeriod time.Duration) func(*govtypesv1.GenesisState) {
 	return func(govGenState *govtypesv1.GenesisState) {
 		govGenState.VotingParams.VotingPeriod = votingPeriod
-		// UNFORKTODO: Uncomment when expedited prop is implemented
+		// UNFORKINGTODO: Uncomment when expedited prop is implemented
 		//govGenState.VotingParams.ExpeditedVotingPeriod = expeditedVotingPeriod
 		govGenState.DepositParams.MinDeposit = tenOsmo
-		// UNFORKTODO: Uncomment when expedited prop is implemented
+		// UNFORKINGTODO: Uncomment when expedited prop is implemented
 		//govGenState.DepositParams.MinExpeditedDeposit = fiftyOsmo
 	}
 }

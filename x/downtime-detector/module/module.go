@@ -87,7 +87,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-// UNFORKTODO: Ensure this is no longer needed
+// UNFORKINGTODO: Ensure this is no longer needed
 // func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 // 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
 // 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)

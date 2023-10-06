@@ -264,7 +264,7 @@ func NewCreatePoolCmd() *cobra.Command {
 				return err
 			}
 
-			// UNFORKTODO: This is what the old NewFactoryCLI txf looked like. Just want to confirm removing WithTxConfig and WithAccRetriever is okay.
+			// UNFORKINGTODO: This is what the old NewFactoryCLI txf looked like. Just want to confirm removing WithTxConfig and WithAccRetriever is okay.
 			// It was done on all NewFactoryCLIs
 			//txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
@@ -511,7 +511,7 @@ Ex) denom-pair-taker-fee-proposal uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosm
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
-	// UNFORKTODO: Uncomment when merge expedited feat
+	// UNFORKINGTODO: Uncomment when merge expedited feat
 	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
 	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 

@@ -64,7 +64,7 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 	// We need the full packet so the contract can process it. If it can't be cast to a channeltypes.Packet, this
 	// should fail. The only reason that would happen is if another middleware is modifying the packet, though. In
 	// that case we can modify the middleware order or change this cast so we have all the data we need.
-	// UNFORKTODO: We no longer pass in an exported.PacketI, so its not clear to me how to type case this
+	// UNFORKINGTODO: We no longer pass in an exported.PacketI, so its not clear to me how to type case this
 	// and use it as a full packet.
 	// fullPacket, ok := packet.(channeltypes.Packet)
 	// if !ok {

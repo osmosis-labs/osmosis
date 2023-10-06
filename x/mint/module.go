@@ -128,7 +128,7 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// UNFORKTODO: Ensure this is no longer needed
+// UNFORKINGTODO: Ensure this is no longer needed
 // // LegacyQuerierHandler returns the x/mint module's sdk.Querier.
 // func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 // 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {

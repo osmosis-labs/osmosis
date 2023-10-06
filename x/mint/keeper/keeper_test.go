@@ -82,7 +82,7 @@ func (s *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight int
 
 		// If developer module account is created, the s.Setup() also sets the offset,
 		// therefore, we should reset it to 0 to set up the environment truly w/o the module account.
-		// UNFORKTODO: Uncomment when supply offset is re-implemented
+		// UNFORKINGTODO: Uncomment when supply offset is re-implemented
 		// supplyOffset := bankKeeper.GetSupplyOffset(s.Ctx, sdk.DefaultBondDenom)
 		// bankKeeper.AddSupplyOffset(s.Ctx, sdk.DefaultBondDenom, supplyOffset.Mul(osmomath.NewInt(-1)))
 		// s.Require().Equal(osmomath.ZeroInt(), bankKeeper.GetSupplyOffset(s.Ctx, sdk.DefaultBondDenom))

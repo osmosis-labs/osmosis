@@ -14,7 +14,7 @@ const (
 
 func init() {
 	govtypesv1.RegisterProposalType(ProposalTypeUploadCosmWasmPoolCodeAndWhiteList)
-	// UNFORKTODO: I have removed all the register prop type codecs since it doesn't exist anymore. Need to confirm this is okay.
+	// UNFORKINGTODO: I have removed all the register prop type codecs since it doesn't exist anymore. Need to confirm this is okay.
 	// I left the one below as an example.
 	// govtypesv1.RegisterProposalTypeCodec(&UploadCosmWasmPoolCodeAndWhiteListProposal{}, "osmosis/UploadCosmWasmPoolCodeAndWhiteListProposal")
 	govtypesv1.RegisterProposalType(ProposalTypeMigratePoolContractsProposal)

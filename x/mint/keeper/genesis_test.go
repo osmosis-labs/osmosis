@@ -101,7 +101,7 @@ func (s *KeeperTestSuite) TestMintInitGenesis() {
 
 			developerAccount := accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
 
-			// UNFORKTODO: Uncomment when supply offset is re-implemented
+			// UNFORKINGTODO: Uncomment when supply offset is re-implemented
 			// originalSupplyOffset := bankKeeper.GetSupplyOffset(ctx, tc.mintDenom)
 			// originalSupplyWithOffset := bankKeeper.GetSupplyWithOffset(ctx, tc.mintDenom)
 			originalVestingCoins := bankKeeper.GetBalance(ctx, developerAccount, tc.mintDenom)
@@ -122,7 +122,7 @@ func (s *KeeperTestSuite) TestMintInitGenesis() {
 			actualEpochProvisions := mintKeeper.GetMinter(ctx).EpochProvisions
 			s.Require().Equal(tc.expectedEpochProvisions, actualEpochProvisions)
 
-			// UNFORKTODO: Uncomment when supply offset is re-implemented
+			// UNFORKINGTODO: Uncomment when supply offset is re-implemented
 			// // Supply offset is applied to genesis supply.
 			// actualSupplyOffset := bankKeeper.GetSupplyOffset(ctx, tc.mintDenom)
 			// expectedSupplyOffset := tc.expectedSupplyOffsetDelta.Add(originalSupplyOffset)

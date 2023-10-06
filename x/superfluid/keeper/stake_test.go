@@ -79,7 +79,7 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 
 			// get pre-superfluid delgations osmo supply and supplyWithOffset
 			presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-			// UNFORKTODO: change this back to GetSupplyWithOffset once it is re-implemented
+			// UNFORKINGTODO: change this back to GetSupplyWithOffset once it is re-implemented
 			presupplyWithOffset := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 
 			// setup superfluid delegations
@@ -87,7 +87,7 @@ func (s *KeeperTestSuite) TestSuperfluidDelegate() {
 
 			// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
 			postsupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-			// UNFORKTODO: change this back to GetSupplyWithOffset once it is re-implemented
+			// UNFORKINGTODO: change this back to GetSupplyWithOffset once it is re-implemented
 			postsupplyWithOffset := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 			s.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
 			s.Require().Equal(postsupplyWithOffset.String(), presupplyWithOffset.String())
@@ -369,7 +369,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 
 				// get pre-superfluid delgations osmo supply and supplyWithOffset
 				presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				// UNFORKTODO: change this back to GetSupplyWithOffset once it is re-implemented
+				// UNFORKINGTODO: change this back to GetSupplyWithOffset once it is re-implemented
 				presupplyWithOffset := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 
 				// superfluid undelegate
@@ -382,7 +382,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegate() {
 
 				// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
 				postsupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				// UNFORKTODO: change this back to GetSupplyWithOffset once it is re-implemented
+				// UNFORKINGTODO: change this back to GetSupplyWithOffset once it is re-implemented
 				postsupplyWithOffset := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 				s.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
 				s.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset))
@@ -535,7 +535,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 
 				// get pre-superfluid delgations osmo supply and supplyWithOffset
 				presupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				// UNFORKTODO: change this back to GetSupplyWithOffset once it is re-implemented
+				// UNFORKINGTODO: change this back to GetSupplyWithOffset once it is re-implemented
 				presupplyWithOffset := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 
 				// superfluid undelegate
@@ -548,7 +548,7 @@ func (s *KeeperTestSuite) TestSuperfluidUndelegateToConcentratedPosition() {
 
 				// ensure post-superfluid delegations osmo supplywithoffset is the same while supply is not
 				postsupply := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
-				// UNFORKTODO: change this back to GetSupplyWithOffset once it is re-implemented
+				// UNFORKINGTODO: change this back to GetSupplyWithOffset once it is re-implemented
 				postsupplyWithOffset := s.App.BankKeeper.GetSupply(s.Ctx, bondDenom)
 				s.Require().False(postsupply.IsEqual(presupply), "presupply: %s   postsupply: %s", presupply, postsupply)
 				s.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset))

@@ -110,7 +110,7 @@ func (AppModule) QuerierRoute() string {
 	return ""
 }
 
-// UNFORKTODO: Ensure this is no longer needed
+// UNFORKINGTODO: Ensure this is no longer needed
 // // LegacyQuerierHandler returns the x/ibc-hooks module's sdk.Querier.
 // func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 // 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {

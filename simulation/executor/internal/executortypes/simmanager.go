@@ -103,7 +103,7 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []simtypes.Actio
 	// first pass generate randomized params + proposal contents
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.legacyModules[moduleName]; ok {
-			// UNFORKTODO: Figure out how to call RandomizedParams and ProposalContents, I don't understand
+			// UNFORKINGTODO: Figure out how to call RandomizedParams and ProposalContents, I don't understand
 			// Printing so we dont need to uncomment more, just delete the prints later
 			// simState.LegacyParamChange = append(simState.LegacyParamChange, simModule.RandomizedParams(r)...)
 			// simState.LegacyProposalContents = append(simState.LegacyProposalContents, simModule.ProposalContents(simState)...)
@@ -169,7 +169,7 @@ func (m Manager) GenerateGenesisStates(simState *module.SimulationState, sim *si
 			if mod, ok := simModule.(simtypes.AppModuleSimulationGenesis); ok {
 				mod.SimulatorGenesisState(simState, sim)
 			} else {
-				// UNFORKTODO: Figure out how to call DefaultGenesis, I don't understand
+				// UNFORKINGTODO: Figure out how to call DefaultGenesis, I don't understand
 				// simState.GenState[simModule.Name()] = simModule.DefaultGenesis(simState.Cdc)
 			}
 		}

@@ -123,7 +123,7 @@ func NewAppModule(
 // Deprecated: use RegisterServices
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-// UNFORKTODO: Ensure this is no longer needed
+// UNFORKINGTODO: Ensure this is no longer needed
 // // Deprecated: use RegisterServices
 // func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 // 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {

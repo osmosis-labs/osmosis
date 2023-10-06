@@ -752,7 +752,7 @@ func (n *NodeConfig) ParamChangeProposal(subspace, key string, value []byte, cha
 				Value:    value,
 			},
 		},
-		// UNFORKTODO: When expedited props are implemented, uncomment this
+		// UNFORKINGTODO: When expedited props are implemented, uncomment this
 		// IsExpedited: true,
 		Deposit: strconv.Itoa(int(config.InitialMinExpeditedDeposit)) + appparams.BaseCoinUnit,
 	}

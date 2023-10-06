@@ -43,7 +43,7 @@ func NewAnteHandler(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(wasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(txCounterStoreKey),
-		// UNFORKTODO: I think this is correct in using nil for NewExtensionOptionsDecorator to reject all, but want ACK
+		// UNFORKINGTODO: I think this is correct in using nil for NewExtensionOptionsDecorator to reject all, but want ACK
 		ante.NewExtensionOptionsDecorator(nil),
 		v9.MsgFilterDecorator{},
 		// Use Mempool Fee Decorator from our txfees module instead of default one from auth
@@ -60,7 +60,7 @@ func NewAnteHandler(
 		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
 		ante.NewSigVerificationDecorator(ak, signModeHandler),
 		ante.NewIncrementSequenceDecorator(ak),
-		// UNFORKTODO: I think this is correct in changing NewAnteDecorator to NewRedundantRelayDecorator, but want ACK
+		// UNFORKINGTODO: I think this is correct in changing NewAnteDecorator to NewRedundantRelayDecorator, but want ACK
 		//ibcante.NewAnteDecorator(channelKeeper),
 		ibcante.NewRedundantRelayDecorator(channelKeeper),
 	)

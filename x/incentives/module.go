@@ -140,7 +140,7 @@ func (am AppModule) Name() string {
 // QuerierRoute returns the module's query routing key.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
-// UNFORKTODO: Ensure this is no longer needed
+// UNFORKINGTODO: Ensure this is no longer needed
 // // LegacyQuerierHandler returns the incentive module's Querier.
 // func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 // 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
