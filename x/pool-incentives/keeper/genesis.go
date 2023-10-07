@@ -57,7 +57,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 
 		isCLPool := pool.GetType() == poolmanagertypes.Concentrated
 		if isCLPool {
-
 			// This creates a link for the internal pool gauge.
 			// Every CL pool has one such gauge.
 			incParams := k.incentivesKeeper.GetEpochInfo(ctx)
@@ -77,14 +76,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 				panic(err)
 			}
 			for _, gaugeID := range gaugeIDs {
-
 				poolToGauge := types.PoolToGauge{
 					GaugeId: gaugeID,
 					PoolId:  uint64(poolId),
 				}
 				concentratedPoolToNoLockGauges.PoolToGauge = append(concentratedPoolToNoLockGauges.PoolToGauge, poolToGauge)
 			}
-
 		} else {
 			for _, duration := range lockableDurations {
 				gaugeID, err := k.GetPoolGaugeId(ctx, uint64(poolId), duration)
