@@ -61,7 +61,7 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			// Set whitelist.
 			if tc.shouldSetSenderWhitelist {
 				poolManagerParams := poolManager.GetParams(s.Ctx)
-				poolManagerParams.TakerFeeParams.BypassWhitelist = []string{tc.sender.String()}
+				poolManagerParams.TakerFeeParams.ReducedFeeWhitelist = []string{tc.sender.String()}
 				poolManager.SetParams(s.Ctx, poolManagerParams)
 			}
 
