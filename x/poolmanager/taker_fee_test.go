@@ -12,6 +12,11 @@ import (
 // Otherwise, the taker fee is charged.
 func (s *KeeperTestSuite) TestChargeTakerFee() {
 
+	const (
+		whitelistedSenderIndex = iota
+		nonWhitelistedSenderIndex
+	)
+
 	var (
 		defaultTakerFee = osmomath.MustNewDecFromStr("0.01")
 		defaultAmount   = sdk.NewInt(100)
@@ -21,7 +26,7 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 		shouldSetSenderWhitelist bool
 		tokenIn                  sdk.Coin
 		tokenOutDenom            string
-		sender                   sdk.AccAddress
+		senderIndex              int
 		exactIn                  bool
 		takerFee                 osmomath.Dec
 
@@ -32,8 +37,18 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			takerFee:      defaultTakerFee,
 			tokenIn:       sdk.NewCoin(apptesting.ETH, defaultAmount),
 			tokenOutDenom: apptesting.USDC,
-			sender:        s.TestAccs[0],
+			senderIndex:   whitelistedSenderIndex,
 			exactIn:       true,
+
+			expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount.ToLegacyDec().Mul(osmomath.OneDec().Sub(defaultTakerFee)).TruncateInt()),
+		},
+		"fee charged on token in due to different address being whitelisted": {
+			takerFee:                 defaultTakerFee,
+			tokenIn:                  sdk.NewCoin(apptesting.ETH, defaultAmount),
+			tokenOutDenom:            apptesting.USDC,
+			senderIndex:              nonWhitelistedSenderIndex,
+			exactIn:                  true,
+			shouldSetSenderWhitelist: true,
 
 			expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount.ToLegacyDec().Mul(osmomath.OneDec().Sub(defaultTakerFee)).TruncateInt()),
 		},
@@ -41,7 +56,7 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			takerFee:                 defaultTakerFee,
 			tokenIn:                  sdk.NewCoin(apptesting.ETH, defaultAmount),
 			tokenOutDenom:            apptesting.USDC,
-			sender:                   s.TestAccs[0],
+			senderIndex:              whitelistedSenderIndex,
 			exactIn:                  true,
 			shouldSetSenderWhitelist: true,
 
@@ -61,7 +76,7 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			// Set whitelist.
 			if tc.shouldSetSenderWhitelist {
 				poolManagerParams := poolManager.GetParams(s.Ctx)
-				poolManagerParams.TakerFeeParams.ReducedFeeWhitelist = []string{tc.sender.String()}
+				poolManagerParams.TakerFeeParams.ReducedFeeWhitelist = []string{s.TestAccs[whitelistedSenderIndex].String()}
 				poolManager.SetParams(s.Ctx, poolManagerParams)
 			}
 
@@ -72,10 +87,10 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			poolManager.SetDenomPairTakerFee(s.Ctx, tc.tokenIn.Denom, tc.tokenOutDenom, tc.takerFee)
 
 			// Pre-fund owner.
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(tc.tokenIn))
+			s.FundAcc(s.TestAccs[tc.senderIndex], sdk.NewCoins(tc.tokenIn))
 
 			// System under test.
-			tokenInAfterTakerFee, err := poolManager.ChargeTakerFee(s.Ctx, tc.tokenIn, tc.tokenOutDenom, tc.sender, tc.exactIn)
+			tokenInAfterTakerFee, err := poolManager.ChargeTakerFee(s.Ctx, tc.tokenIn, tc.tokenOutDenom, s.TestAccs[tc.senderIndex], tc.exactIn)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
