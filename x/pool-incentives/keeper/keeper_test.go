@@ -345,17 +345,17 @@ func (s *KeeperTestSuite) TestGetLongestLockableDuration() {
 func (s *KeeperTestSuite) TestIsPoolIncentivized() {
 	testCases := []struct {
 		name                   string
-		poolId                 uint64
+		poolIdToQuery          uint64
 		expectedIsIncentivized bool
 	}{
 		{
 			name:                   "Incentivized Pool",
-			poolId:                 1,
+			poolIdToQuery:          1,
 			expectedIsIncentivized: true,
 		},
 		{
 			name:                   "Unincentivized Pool",
-			poolId:                 2,
+			poolIdToQuery:          2,
 			expectedIsIncentivized: false,
 		},
 	}
@@ -363,19 +363,20 @@ func (s *KeeperTestSuite) TestIsPoolIncentivized() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			s.PrepareConcentratedPool()
+			s.PrepareAllSupportedPools()
 
 			s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, poolincentivestypes.DistrInfo{
 				TotalWeight: osmomath.NewInt(100),
 				Records: []poolincentivestypes.DistrRecord{
 					{
-						GaugeId: tc.poolId,
+						GaugeId: 1,
 						Weight:  osmomath.NewInt(50),
 					},
 				},
 			})
 
-			actualIsIncentivized := s.App.PoolIncentivesKeeper.IsPoolIncentivized(s.Ctx, tc.poolId)
+			actualIsIncentivized, err := s.App.PoolIncentivesKeeper.IsPoolIncentivized(s.Ctx, tc.poolIdToQuery)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedIsIncentivized, actualIsIncentivized)
 		})
 	}

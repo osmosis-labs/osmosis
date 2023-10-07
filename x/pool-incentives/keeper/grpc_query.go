@@ -120,25 +120,12 @@ func (q Querier) LockableDurations(ctx context.Context, _ *types.QueryLockableDu
 func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivizedPoolsRequest) (*types.QueryIncentivizedPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
+	// We use lockable durations for byDuration gauges.
 	lockableDurations := q.Keeper.GetLockableDurations(sdkCtx)
 	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
 
-	// Add epoch duration to lockable durations if not already present.
-	// This is to ensure that concentrated gauges (which run on epoch time) are
-	// always included in the query, even if the epoch duration changes in the future.
+	// We use epoch duration for CL noLock gauges.
 	epochDuration := q.incentivesKeeper.GetEpochInfo(sdkCtx).Duration
-	epochAlreadyLockable := false
-	for _, lockableDuration := range lockableDurations {
-		if lockableDuration == epochDuration {
-			epochAlreadyLockable = true
-			break
-		}
-	}
-
-	// Ensure that we only add epoch duration if it does not already exist as a lockable duration.
-	if !epochAlreadyLockable {
-		lockableDurations = append(lockableDurations, epochDuration)
-	}
 
 	// While there are exceptions, typically the number of incentivizedPools
 	// equals to the number of incentivized gauges / number of lockable durations.
@@ -179,28 +166,43 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 			}
 		} else if gauge.DistributeTo.LockQueryType == lockuptypes.NoLock {
 			poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, epochDuration)
-			if err == nil {
-				incentivizedPool := types.IncentivizedPool{
-					PoolId:           poolId,
-					LockableDuration: epochDuration,
-					GaugeId:          record.GaugeId,
-				}
-
-				incentivizedPools = append(incentivizedPools, incentivizedPool)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
 			}
+			incentivizedPool := types.IncentivizedPool{
+				PoolId:           poolId,
+				LockableDuration: epochDuration,
+				GaugeId:          record.GaugeId,
+			}
+
+			incentivizedPools = append(incentivizedPools, incentivizedPool)
 		} else if gauge.DistributeTo.LockQueryType == lockuptypes.ByDuration {
-			for _, lockableDuration := range lockableDurations {
-				poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, lockableDuration)
-				if err == nil {
-					incentivizedPool := types.IncentivizedPool{
-						PoolId:           poolId,
-						LockableDuration: lockableDuration,
-						GaugeId:          record.GaugeId,
-					}
-
-					incentivizedPools = append(incentivizedPools, incentivizedPool)
+			gauge, err := q.incentivesKeeper.GetGaugeByID(sdkCtx, record.GaugeId)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			// Ensure the gauge's duration matches one of the lockable durations.
+			matchFound := false
+			for _, duration := range lockableDurations {
+				if gauge.DistributeTo.Duration == duration {
+					matchFound = true
+					break
 				}
 			}
+			if !matchFound {
+				return nil, types.IncentiveRecordContainsNonLockableDurationError{GaugeId: gauge.Id, Duration: gauge.DistributeTo.Duration, LockableDurations: lockableDurations}
+			}
+			poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, gauge.DistributeTo.Duration)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			incentivizedPool := types.IncentivizedPool{
+				PoolId:           poolId,
+				LockableDuration: gauge.DistributeTo.Duration,
+				GaugeId:          record.GaugeId,
+			}
+
+			incentivizedPools = append(incentivizedPools, incentivizedPool)
 		} else {
 			return nil, status.Error(codes.Internal, "unknown lock query type")
 		}
