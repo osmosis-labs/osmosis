@@ -710,7 +710,7 @@ github.com/onsi/gomega v1.4.1/go.mod h1:C1qb7wdrVGGVU+Z6iS04AVkA3Q65CEZX59MT0QO5
 github.com/onsi/gomega v1.4.3/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
 github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7JYyY=
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
-github.com/onsi/gomega v1.27.6 h1:ENqfyGeS5AX/rlXDd/ETokDz93u0YufY1Pgxuy/PvWE=
+github.com/onsi/gomega v1.27.10 h1:naR28SdDFlqrG6kScpT8VWpu1xWY5nJRCF3XaYyBjhI=
 github.com/op/go-logging v0.0.0-20160315200505-970db520ece7/go.mod h1:HzydrMdWErDVzsI23lYNej1Htcns9BCg93Dk0bBINWk=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
@@ -733,8 +733,8 @@ github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230922030206-734f99fba785 h1:
 github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230922030206-734f99fba785/go.mod h1:toI9Pf+e5C4TuWAFpXfkxnkpr1RVFMK2qr7QMdkFrY8=
 github.com/osmosis-labs/osmosis/osmomath v0.0.6 h1:WNkVmeeudAqRFk5a4CChWsdxfiY/XLClT1i845L78ss=
 github.com/osmosis-labs/osmosis/osmomath v0.0.6/go.mod h1:UlftwozB+QObT3o0YfkuuyL9fsVdgoWt0dm6J7MLYnU=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231003223742-febb5d40fc1d h1:eQK6rkHA6bkP7Hq9huFtx8Fz/attOyKN7++ITam0p7U=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231003223742-febb5d40fc1d/go.mod h1:Zmyx5zMUBN2KV94booSFn2v8KQcUKeCHqyWpKZ4PRMo=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231008211958-c96b5053c286 h1:ObizQgnIo8UEFFRu8or/6BWMm11JBCxXE+WDswo95+Q=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231008211958-c96b5053c286/go.mod h1:Zmyx5zMUBN2KV94booSFn2v8KQcUKeCHqyWpKZ4PRMo=
 github.com/osmosis-labs/wasmd v0.31.0-osmo-v16 h1:X747cZYdnqc/+RV48iPVeGprpVb/fUWSaKGsZUWrdbg=
 github.com/osmosis-labs/wasmd v0.31.0-osmo-v16/go.mod h1:Rf8zW/GgBQyFRRB4s62VQHWA6sTlMFSjoDQQpoq64iI=
 github.com/otiai10/copy v1.7.0 h1:hVoPiN+t+7d2nzzwMiDHPSOogsWAStewq3TwU05+clE=
