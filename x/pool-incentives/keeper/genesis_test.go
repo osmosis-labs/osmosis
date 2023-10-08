@@ -9,10 +9,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	pool_incentives "github.com/osmosis-labs/osmosis/v19/x/pool-incentives"
-
 	simapp "github.com/osmosis-labs/osmosis/v19/app"
-
+	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	pool_incentives "github.com/osmosis-labs/osmosis/v19/x/pool-incentives"
 	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 )
 
@@ -36,7 +35,7 @@ var (
 				},
 			},
 		},
-		PoolToGauges: &types.PoolToGauges{
+		AnyPoolToInternalGauges: &types.AnyPoolToInternalGauges{
 			PoolToGauge: []types.PoolToGauge{
 				{
 					PoolId:   1,
@@ -48,18 +47,14 @@ var (
 					GaugeId:  2,
 					Duration: time.Second,
 				},
-				// This duplication with zero duration
-				// can happen with "NoLock" gauges
-				// where the link containing the duration
-				// is used to signify that the gauge is internal
-				// while the link without the duration is used
-				// for general purpose. This redundancy is
-				// made for convinience of plugging in the
-				// later added "NoLock" gauge into the existing
-				// logic without having to change majority of the queries.
+			},
+		},
+		ConcentratedPoolToNoLockGauges: &types.ConcentratedPoolToNoLockGauges{
+			PoolToGauge: []types.PoolToGauge{
 				{
-					PoolId:  2,
-					GaugeId: 2,
+					PoolId:   3,
+					GaugeId:  3,
+					Duration: 0,
 				},
 			},
 		},
@@ -124,7 +119,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.App.PoolIncentivesKeeper.SetLockableDurations(ctx, durations)
 	savedDurations := s.App.PoolIncentivesKeeper.GetLockableDurations(ctx)
 	s.Equal(savedDurations, durations)
-	var expectedPoolToGauges types.PoolToGauges
+	var expectedPoolToGauges types.AnyPoolToInternalGauges
 	var gauge uint64
 	for _, duration := range durations {
 		gauge++
@@ -139,5 +134,57 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.Equal(genesisExported.Params, genesis.Params)
 	s.Equal(genesisExported.LockableDurations, durations)
 	s.Equal(genesisExported.DistrInfo, genesis.DistrInfo)
-	s.Equal(genesisExported.PoolToGauges, &expectedPoolToGauges)
+	s.Equal(genesisExported.AnyPoolToInternalGauges, &expectedPoolToGauges)
+}
+
+// This test validates that all store indexes are set correctly
+// for NoLock gauges after exporting and then reimporting genesis.
+func (s *KeeperTestSuite) TestImportExportGenesis_ExternalNoLock() {
+	s.SetupTest()
+
+	// Prepare concentrated pool
+	clPool := s.PrepareConcentratedPool()
+
+	// Fund account to create gauge
+	s.FundAcc(s.TestAccs[0], defaultCoins.Add(defaultCoins...))
+
+	// Create external non-perpetual gauge
+	externalGaugeID, err := s.App.IncentivesKeeper.CreateGauge(s.Ctx, false, s.TestAccs[0], defaultCoins.Add(defaultCoins...), lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.NoLock,
+	}, s.Ctx.BlockTime(), 2, clPool.GetId())
+	s.Require().NoError(err)
+
+	// We expect internal gauge to be created first
+	internalGaugeID := externalGaugeID - 1
+
+	// Export genesis
+	export := s.App.PoolIncentivesKeeper.ExportGenesis(s.Ctx)
+
+	// Validate that only one link for internal gauges is created
+	s.Require().Equal(1, len(export.AnyPoolToInternalGauges.PoolToGauge))
+
+	// Validate that 2 links, one for external and one for internal gauge, are created
+	s.Require().Equal(2, len(export.ConcentratedPoolToNoLockGauges.PoolToGauge))
+
+	// Reset state
+	s.SetupTest()
+
+	// Import genesis
+	s.App.PoolIncentivesKeeper.InitGenesis(s.Ctx, export)
+
+	// Get the general link between external gauge ID and pool
+	poolID, err := s.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, externalGaugeID, 0)
+	s.Require().NoError(err)
+	s.Require().Equal(clPool.GetId(), poolID)
+
+	// Get the general link between internal gauge ID and pool
+	poolID, err = s.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(s.Ctx, internalGaugeID, 0)
+	s.Require().NoError(err)
+	s.Require().Equal(clPool.GetId(), poolID)
+
+	// Get the internal gauge
+	incentivesEpochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
+	internalGaugeIDAfterImport, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, poolID, incentivesEpochDuration)
+	s.Require().NoError(err)
+	s.Require().Equal(internalGaugeID, internalGaugeIDAfterImport)
 }
