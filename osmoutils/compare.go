@@ -73,6 +73,10 @@ func Max(values ...interface{}) interface{} {
 // Note: This function returns the difference between the two arrays in ascending order,
 // and does not preserve the order of the elements in the original arrays.
 func DisjointArrays(a, b []uint64) []uint64 {
+	if len(a) == 0 && len(b) == 0 {
+		return []uint64{}
+	}
+
 	m1 := make(map[uint64]bool)
 	m2 := make(map[uint64]bool)
 
@@ -95,6 +99,10 @@ func DisjointArrays(a, b []uint64) []uint64 {
 		if !m1[item] {
 			result = append(result, item)
 		}
+	}
+
+	if len(result) == 0 {
+		return []uint64{}
 	}
 
 	sort.Slice(result, func(i, j int) bool { return result[i] < result[j] })
