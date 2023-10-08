@@ -49,15 +49,39 @@ func TestDisjointArrays(t *testing.T) {
 		want []uint64
 	}{
 		{
-			name: "Test 1",
+			name: "Both arrays contain unique elements, sorted",
 			a:    []uint64{1, 2, 3, 4, 5},
 			b:    []uint64{4, 5, 6, 7, 8},
 			want: []uint64{1, 2, 3, 6, 7, 8},
 		},
 		{
-			name: "Test 2",
-			a:    []uint64{10, 20, 30},
-			b:    []uint64{20, 30, 40},
+			name: "Only array 'a' contains unique elements, sorted",
+			a:    []uint64{10, 20, 30, 40},
+			b:    []uint64{20, 30},
+			want: []uint64{10, 40},
+		},
+		{
+			name: "Only array 'b' contains unique elements, sorted",
+			a:    []uint64{20, 30},
+			b:    []uint64{10, 20, 30, 40},
+			want: []uint64{10, 40},
+		},
+		{
+			name: "Both arrays contain unique elements, unsorted",
+			a:    []uint64{5, 4, 3, 2, 1},
+			b:    []uint64{8, 7, 6, 5, 4},
+			want: []uint64{1, 2, 3, 6, 7, 8},
+		},
+		{
+			name: "Only array 'a' contains unique elements, unsorted",
+			a:    []uint64{40, 30, 20, 10},
+			b:    []uint64{30, 20},
+			want: []uint64{10, 40},
+		},
+		{
+			name: "Only array 'b' contains unique elements, unsorted",
+			a:    []uint64{30, 20},
+			b:    []uint64{40, 30, 20, 10},
 			want: []uint64{10, 40},
 		},
 	}

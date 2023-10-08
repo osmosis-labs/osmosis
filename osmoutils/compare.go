@@ -1,5 +1,7 @@
 package osmoutils
 
+import "sort"
+
 // Max returns the maximum value among the given values of any type that supports comparison.
 func Max(values ...interface{}) interface{} {
 	if len(values) == 0 {
@@ -65,10 +67,11 @@ func Max(values ...interface{}) interface{} {
 // Example:
 // a := []uint64{1, 2, 3, 4, 5}
 // b := []uint64{4, 5, 6, 7, 8}
-// result := DifferenceBetweenUint64Arrays(a, b)
+// result := DisjointArrays(a, b)
 // result will be []uint64{1, 2, 3, 6, 7, 8}
 //
-// Note: This function does not preserve the order of the elements.
+// Note: This function returns the difference between the two arrays in ascending order,
+// and does not preserve the order of the elements in the original arrays.
 func DisjointArrays(a, b []uint64) []uint64 {
 	m1 := make(map[uint64]bool)
 	m2 := make(map[uint64]bool)
@@ -93,6 +96,8 @@ func DisjointArrays(a, b []uint64) []uint64 {
 			result = append(result, item)
 		}
 	}
+
+	sort.Slice(result, func(i, j int) bool { return result[i] < result[j] })
 
 	return result
 }
