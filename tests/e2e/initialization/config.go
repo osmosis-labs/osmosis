@@ -409,7 +409,7 @@ func updatePoolIncentiveGenesis(pooliGenState *poolitypes.GenesisState) {
 	}
 
 	// START: CAN REMOVE POST v17 UPGRADE
-	poolToGauges := poolitypes.PoolToGauges{}
+	poolToGauges := poolitypes.AnyPoolToInternalGauges{}
 	currentGaugeId := uint64(1)
 	for _, assetPair := range AssetPairs {
 		for _, duration := range pooliGenState.LockableDurations {
@@ -422,7 +422,7 @@ func updatePoolIncentiveGenesis(pooliGenState *poolitypes.GenesisState) {
 			poolToGauges.PoolToGauge = append(poolToGauges.PoolToGauge, poolToGauge)
 		}
 	}
-	pooliGenState.PoolToGauges = &poolToGauges
+	pooliGenState.AnyPoolToInternalGauges = &poolToGauges
 	// END: CAN REMOVE POST v17 UPGRADE
 }
 
