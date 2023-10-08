@@ -103,7 +103,7 @@ If swap fails, IBC packet rollbacks. Described above. Works for multi hop too.
 
 In case of success of swap, swapped tokens are forwarded to chain B.
 If for any reason delivery to chain B fails. 
-Tokens are retained on `crosschain-swaps` contract of no failed delivery address specified.
+Tokens are retained on `crosschain-swaps` contract if no failed delivery address specified.
 In case it was, tokens transferred to account on Osmosis.
 Osmosis ensures that both timeout and failures of IBC packets attempted to be delivered to B work like that.
 
