@@ -163,7 +163,7 @@ func (s *KeeperTestSuite) TestImportExportGenesis_ExternalNoLock() {
 	// Validate that only one link for internal gauges is created
 	s.Require().Equal(1, len(export.AnyPoolToInternalGauges.PoolToGauge))
 
-	// Validate that 2 links for external gauges are created
+	// Validate that 2 links, one for external and one for internal gauge, are created
 	s.Require().Equal(2, len(export.ConcentratedPoolToNoLockGauges.PoolToGauge))
 
 	// Reset state
