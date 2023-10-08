@@ -15,7 +15,6 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 	poolincenitvestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
-	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 type IncentivizedCFMMDirectWhenMigrationLinkPresentError struct {
@@ -64,15 +63,12 @@ func CreateUpgradeHandler(
 		// Makes the "day" epoch happen 45 minutes after the upgrade
 		// This allows for us to create volume on the testnet and check if volume splitting works without waiting an entire 24 hours
 		epochs := keepers.EpochsKeeper.AllEpochInfos(ctx)
-		fmt.Println("HEEEREEE2")
-		desiredEpochInfo := epochtypes.EpochInfo{}
 		for _, epoch := range epochs {
 			fmt.Println("epoch.Identifier", epoch.Identifier)
 			if epoch.Identifier == "day" {
 				epoch.CurrentEpochStartTime = time.Now().Add(-epoch.Duration).Add(5 * time.Minute)
-				desiredEpochInfo = epoch
 				keepers.EpochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
-				keepers.EpochsKeeper.SetEpochInfo(ctx, desiredEpochInfo)
+				keepers.EpochsKeeper.SetEpochInfo(ctx, epoch)
 			}
 		}
 
