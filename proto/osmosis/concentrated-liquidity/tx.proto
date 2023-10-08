@@ -23,6 +23,8 @@ service Msg {
       returns (MsgCollectSpreadRewardsResponse);
   rpc CollectIncentives(MsgCollectIncentives)
       returns (MsgCollectIncentivesResponse);
+  // TransferPositions transfers ownership of a set of one or more positions
+  // from a sender to a recipient.
   rpc TransferPositions(MsgTransferPositions)
       returns (MsgTransferPositionsResponse);
 }

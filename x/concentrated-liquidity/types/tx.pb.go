@@ -909,6 +909,8 @@ type MsgClient interface {
 	AddToPosition(ctx context.Context, in *MsgAddToPosition, opts ...grpc.CallOption) (*MsgAddToPositionResponse, error)
 	CollectSpreadRewards(ctx context.Context, in *MsgCollectSpreadRewards, opts ...grpc.CallOption) (*MsgCollectSpreadRewardsResponse, error)
 	CollectIncentives(ctx context.Context, in *MsgCollectIncentives, opts ...grpc.CallOption) (*MsgCollectIncentivesResponse, error)
+	// TransferPositions transfers ownership of a set of one or more positions
+	// from a sender to a recipient.
 	TransferPositions(ctx context.Context, in *MsgTransferPositions, opts ...grpc.CallOption) (*MsgTransferPositionsResponse, error)
 }
 
@@ -986,6 +988,8 @@ type MsgServer interface {
 	AddToPosition(context.Context, *MsgAddToPosition) (*MsgAddToPositionResponse, error)
 	CollectSpreadRewards(context.Context, *MsgCollectSpreadRewards) (*MsgCollectSpreadRewardsResponse, error)
 	CollectIncentives(context.Context, *MsgCollectIncentives) (*MsgCollectIncentivesResponse, error)
+	// TransferPositions transfers ownership of a set of one or more positions
+	// from a sender to a recipient.
 	TransferPositions(context.Context, *MsgTransferPositions) (*MsgTransferPositionsResponse, error)
 }
 
