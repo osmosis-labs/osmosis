@@ -2247,6 +2247,18 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 	s.clk.InitGenesis(s.Ctx, *export)
 }
 
+// TestTransferPositions validates the following:
+// - Positions can be transferred from one owner to another.
+// - The transfer of positions does not modify the positions that are not transferred.
+// - The outstanding incentives and spread rewards go to the old owner after the transfer.
+// - The new owner does not receive the outstanding incentives and spread rewards after the transfer.
+// - Claiming incentives/spread rewards with the new owner returns nothing after the transfer.
+// - Adding incentives/spread rewards and then claiming returns it to the new owner, and the old owner does not get anything.
+// - The new owner can withdraw the positions and receive the correct amount of funds.
+// The test also checks for expected errors such as:
+// - Attempting to transfer a position ID that does not exist.
+// - Attempting to transfer a position that the sender does not own.
+// - Attempting to transfer the last position in the pool.
 func (s *KeeperTestSuite) TestTransferPositions() {
 	// expectedUptimes are used for claimable incentives tests
 	expectedUptimes := getExpectedUptimes()
