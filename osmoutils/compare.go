@@ -69,7 +69,7 @@ func Max(values ...interface{}) interface{} {
 // result will be []uint64{1, 2, 3, 6, 7, 8}
 //
 // Note: This function does not preserve the order of the elements.
-func DifferenceBetweenUint64Arrays(a, b []uint64) []uint64 {
+func DisjointArrays(a, b []uint64) []uint64 {
 	m1 := make(map[uint64]bool)
 	m2 := make(map[uint64]bool)
 
