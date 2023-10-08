@@ -97,7 +97,7 @@ func NewFungifyChargedPositionsCmd() (*osmocli.TxCliDesc, *types.MsgFungifyCharg
 
 func NewTransferPositionsCmd() (*osmocli.TxCliDesc, *types.MsgTransferPositions) {
 	return &osmocli.TxCliDesc{
-		Use:     "transfer-positions [position-ids] [new-owner]",
+		Use:     "transfer-positions",
 		Short:   "transfer a list of concentrated liquidity positions to a new owner",
 		Example: "osmosisd tx concentratedliquidity transfer-positions 56,89,1011 osmo10fhdy8zhepstpwsr9l4a8yxuyggqmpqx4ktheq --from val --chain-id osmosis-1 -b block --keyring-backend test --fees 1000uosmo",
 	}, &types.MsgTransferPositions{}
