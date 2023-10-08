@@ -134,3 +134,11 @@ pull_request_rules:
       backport:
         branches:
           - v19.x
+  - name: backport patches to v20.x branch
+    conditions:
+      - base=main
+      - label=A:backport/v20.x
+    actions:
+      backport:
+        branches:
+          - v20.x

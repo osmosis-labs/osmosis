@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -790,7 +789,7 @@ func (s *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 			s.PrepareMultipleBalancerPools(3)
 			s.PrepareMultipleConcentratedPools(3)
 
-			keeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, DefaultMigrationRecords)
+			keeper.OverwriteMigrationRecords(s.Ctx, DefaultMigrationRecords)
 
 			for i, poolIdLeaving := range test.poolIdLeaving {
 				poolIdEntering, err := keeper.GetLinkedConcentratedPoolID(s.Ctx, poolIdLeaving)
@@ -857,7 +856,7 @@ func (s *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 			s.PrepareMultipleConcentratedPools(3)
 
 			if !test.skipLinking {
-				keeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, DefaultMigrationRecords)
+				keeper.OverwriteMigrationRecords(s.Ctx, DefaultMigrationRecords)
 			}
 
 			s.Require().True(len(test.poolIdEntering) > 0)
@@ -903,7 +902,7 @@ func (s *KeeperTestSuite) TestGetAllMigrationInfo() {
 			s.PrepareMultipleConcentratedPools(3)
 
 			if !test.skipLinking {
-				keeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, DefaultMigrationRecords)
+				keeper.OverwriteMigrationRecords(s.Ctx, DefaultMigrationRecords)
 			}
 
 			migrationRecords, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)
@@ -913,106 +912,6 @@ func (s *KeeperTestSuite) TestGetAllMigrationInfo() {
 			} else {
 				s.Require().Equal(len(migrationRecords.BalancerToConcentratedPoolLinks), 0)
 			}
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestRedirectDistributionRecord() {
-	s.Setup()
-
-	var (
-		defaultUsdcAmount = osmomath.NewInt(7300000000)
-		defaultOsmoAmount = osmomath.NewInt(10000000000)
-		usdcCoin          = sdk.NewCoin("uusdc", defaultUsdcAmount)
-		osmoCoin          = sdk.NewCoin("uosmo", defaultOsmoAmount)
-	)
-
-	longestLockableDuration, err := s.App.PoolIncentivesKeeper.GetLongestLockableDuration(s.Ctx)
-	s.Require().NoError(err)
-
-	tests := map[string]struct {
-		poolLiquidity sdk.Coins
-		cfmmPoolId    uint64
-		clPoolId      uint64
-		expectError   error
-	}{
-		"happy path": {
-			poolLiquidity: sdk.NewCoins(usdcCoin, osmoCoin),
-			cfmmPoolId:    uint64(1),
-			clPoolId:      uint64(3),
-		},
-		"error: cfmm pool ID doesn't exist": {
-			poolLiquidity: sdk.NewCoins(usdcCoin, osmoCoin),
-			cfmmPoolId:    uint64(4),
-			clPoolId:      uint64(3),
-			expectError:   poolincentivestypes.NoGaugeAssociatedWithPoolError{PoolId: 4, Duration: longestLockableDuration},
-		},
-		"error: cl pool ID doesn't exist": {
-			poolLiquidity: sdk.NewCoins(usdcCoin, osmoCoin),
-			cfmmPoolId:    uint64(1),
-			clPoolId:      uint64(4),
-			expectError:   poolincentivestypes.NoGaugeAssociatedWithPoolError{PoolId: 4, Duration: longestLockableDuration},
-		},
-	}
-
-	for name, tc := range tests {
-		tc := tc
-		s.Run(name, func() {
-			s.SetupTest()
-
-			// Create primary balancer pool.
-			balancerId := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
-			balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerId)
-			s.Require().NoError(err)
-
-			// Create another balancer pool to test that its gauge links are unchanged
-			balancerId2 := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
-
-			// Get gauges for both balancer pools.
-			gaugeToRedirect, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerPool.GetId(), longestLockableDuration)
-			s.Require().NoError(err)
-			gaugeToNotRedirect, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, balancerId2, longestLockableDuration)
-			s.Require().NoError(err)
-
-			// Distribution info prior to redirecting.
-			originalDistrInfo := poolincentivestypes.DistrInfo{
-				TotalWeight: osmomath.NewInt(100),
-				Records: []poolincentivestypes.DistrRecord{
-					{
-						GaugeId: gaugeToRedirect,
-						Weight:  osmomath.NewInt(50),
-					},
-					{
-						GaugeId: gaugeToNotRedirect,
-						Weight:  osmomath.NewInt(50),
-					},
-				},
-			}
-			s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, originalDistrInfo)
-
-			// Create concentrated pool.
-			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.poolLiquidity[1].Denom, tc.poolLiquidity[0].Denom, 100, osmomath.MustNewDecFromStr("0.001"))
-
-			// Redirect distribution record from the primary balancer pool to the concentrated pool.
-			err = s.App.GAMMKeeper.RedirectDistributionRecord(s.Ctx, tc.cfmmPoolId, tc.clPoolId)
-			if tc.expectError != nil {
-				s.Require().Error(err)
-				return
-			}
-			s.Require().NoError(err)
-
-			// Validate that the balancer gauge is now linked to the new concentrated pool.
-			concentratedPoolGaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPool.GetId(), s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration)
-			s.Require().NoError(err)
-			distrInfo := s.App.PoolIncentivesKeeper.GetDistrInfo(s.Ctx)
-			s.Require().Equal(distrInfo.Records[0].GaugeId, concentratedPoolGaugeId)
-
-			// Validate that distribution record from another pool is not redirected.
-			s.Require().Equal(distrInfo.Records[1].GaugeId, gaugeToNotRedirect)
-
-			// Validate that old gauge still exist
-			_, err = s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, gaugeToRedirect)
-			s.Require().NoError(err)
 		})
 	}
 }
@@ -1100,7 +999,6 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 		desiredDenom0              string
 		expectedBalancerDenoms     []string
 		expectedConcentratedDenoms []string
-		setupInvalidDuraitons      bool
 		expectError                error
 	}{
 		"success - denoms reordered relative to balancer": {
@@ -1133,24 +1031,12 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			desiredDenom0:        USDCIBCDenom,
 			expectError:          types.ErrMustHaveTwoDenoms,
 		},
-		"error: invalid denom durations": {
-			poolLiquidity:         sdk.NewCoins(desiredDenom0Coin, daiCoin),
-			cfmmPoolIdToLinkWith:  validPoolId,
-			desiredDenom0:         desiredDenom0,
-			setupInvalidDuraitons: true,
-			expectError:           types.ErrNoGaugeToRedirect,
-		},
 	}
 
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
 			s.SetupTest()
-
-			if tc.setupInvalidDuraitons {
-				// Overwrite default lockable durations.
-				s.App.PoolIncentivesKeeper.SetLockableDurations(s.Ctx, []time.Duration{})
-			}
 
 			balancerId := s.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
 
@@ -1185,6 +1071,10 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			}
 			s.App.PoolIncentivesKeeper.SetDistrInfo(s.Ctx, originalDistrInfo)
 
+			// CreateCanonicalConcentratedLiquidityPoolAndMigration is used to change the distribution records and now no longer does.
+			// We take the distribution records before execution to ensure it is not changed.
+			distrInfoPre := s.App.PoolIncentivesKeeper.GetDistrInfo(s.Ctx)
+
 			clPool, err := s.App.GAMMKeeper.CreateCanonicalConcentratedLiquidityPoolAndMigrationLink(s.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, osmomath.ZeroDec(), defaultTickSpacing)
 
 			if tc.expectError != nil {
@@ -1215,15 +1105,13 @@ func (s *KeeperTestSuite) TestCreateCanonicalConcentratedLiquidityPoolAndMigrati
 			// Validate order of concentrated pool denoms which might be different from balancer.
 			s.Require().Equal(tc.expectedConcentratedDenoms, concentratedDenoms)
 
-			// Validate that CFMM gauge is linked to the new concentrated pool.
-			concentratedPoolGaugeId, err := s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPoolInState.GetId(), s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration)
+			// Validate that the new concentrated pool has a gauge.
+			_, err = s.App.PoolIncentivesKeeper.GetPoolGaugeId(s.Ctx, clPoolInState.GetId(), s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration)
 			s.Require().NoError(err)
 
-			distrInfo := s.App.PoolIncentivesKeeper.GetDistrInfo(s.Ctx)
-			s.Require().Equal(distrInfo.Records[0].GaugeId, concentratedPoolGaugeId)
-
-			// Validate that distribution record from another pool is not redirected.
-			s.Require().Equal(distrInfo.Records[1].GaugeId, gaugeToNotRedeirect)
+			// Ensure the distribution records are unchanged.
+			distrInfoPost := s.App.PoolIncentivesKeeper.GetDistrInfo(s.Ctx)
+			s.Require().Equal(distrInfoPre, distrInfoPost)
 
 			// Validate migration record.
 			migrationInfo, err := s.App.GAMMKeeper.GetAllMigrationInfo(s.Ctx)

@@ -191,16 +191,16 @@ func (s *KeeperTestSuite) TestIncentivizedPools() {
 			queryClient := s.queryClient
 			var balancerPoolId uint64
 
-			// Replace the longest lockable durations with the epoch duration to match the record that gets auto created when making a cl pool.
-			epochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
+			// // Replace the longest lockable durations with the epoch duration to match the record that gets auto created when making a cl pool.
+			// epochDuration := s.App.IncentivesKeeper.GetEpochInfo(s.Ctx).Duration
 			lockableDurations := keeper.GetLockableDurations(s.Ctx)
-			lockableDurations[len(lockableDurations)-1] = epochDuration
-			keeper.SetLockableDurations(s.Ctx, lockableDurations)
-			lockableDurations = keeper.GetLockableDurations(s.Ctx)
-			s.Require().Equal(3, len(lockableDurations))
-			s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, lockableDurations)
-			lockableDurations = s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
-			s.Require().Equal(3, len(lockableDurations))
+			// lockableDurations[len(lockableDurations)-1] = epochDuration
+			// keeper.SetLockableDurations(s.Ctx, lockableDurations)
+			// lockableDurations = keeper.GetLockableDurations(s.Ctx)
+			// s.Require().Equal(3, len(lockableDurations))
+			// s.App.IncentivesKeeper.SetLockableDurations(s.Ctx, lockableDurations)
+			// lockableDurations = s.App.IncentivesKeeper.GetLockableDurations(s.Ctx)
+			// s.Require().Equal(3, len(lockableDurations))
 
 			if tc.poolCreated {
 				balancerPoolId = s.PrepareBalancerPoolWithCoins(sdk.NewCoin("eth", osmomath.NewInt(100000000000)), sdk.NewCoin("usdc", osmomath.NewInt(100000000000)))

@@ -505,7 +505,7 @@ func (s *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosit
 	migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 		{BalancerPoolId: balancerPool.GetId(), ClPoolId: clPool.GetId()},
 	}}
-	err = s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, migrationRecord)
+	err = s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx, migrationRecord)
 	s.Require().NoError(err)
 
 	// Superfluid delegate the balancer pool shares

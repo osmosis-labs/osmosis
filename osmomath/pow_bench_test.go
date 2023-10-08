@@ -89,7 +89,13 @@ func BenchmarkSlowPowCases(b *testing.B) {
 		exp  Dec
 	}{
 		{
-			base: MustNewDecFromStr("1.99999999999999"),
+			// Original worst case:
+			// 1.99999999999999
+			// 0.1
+			//
+			// The values below are hand-picked to be close to the worst case
+			// while under the iteration bound.
+			base: MustNewDecFromStr("1.9999"),
 			exp:  MustNewDecFromStr("0.1"),
 		},
 	}
