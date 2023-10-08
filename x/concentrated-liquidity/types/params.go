@@ -8,7 +8,6 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 // Parameter store keys.
@@ -79,7 +78,7 @@ func (p Params) Validate() error {
 	if err := validateAuthorizedUptimes(p.AuthorizedUptimes); err != nil {
 		return err
 	}
-	if err := osmoutils.ValidateAddressList(p.UnrestrictedPoolCreatorWhitelist); err != nil {
+	if err := validateUnrestrictedPoolCreatorWhitelist(p.UnrestrictedPoolCreatorWhitelist); err != nil {
 		return err
 	}
 	return nil
@@ -94,7 +93,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyIsPermisionlessPoolCreationEnabled, &p.IsPermissionlessPoolCreationEnabled, validateIsPermissionLessPoolCreationEnabled),
 		paramtypes.NewParamSetPair(KeyDiscountRate, &p.BalancerSharesRewardDiscount, validateBalancerSharesDiscount),
 		paramtypes.NewParamSetPair(KeyAuthorizedUptimes, &p.AuthorizedUptimes, validateAuthorizedUptimes),
-		paramtypes.NewParamSetPair(KeyUnrestrictedPoolCreatorWhitelist, &p.UnrestrictedPoolCreatorWhitelist, osmoutils.ValidateAddressList),
+		paramtypes.NewParamSetPair(KeyUnrestrictedPoolCreatorWhitelist, &p.UnrestrictedPoolCreatorWhitelist, validateUnrestrictedPoolCreatorWhitelist),
 	}
 }
 
@@ -238,6 +237,30 @@ func validateAuthorizedUptimes(i interface{}) error {
 
 		if !supported {
 			return UptimeNotSupportedError{Uptime: uptime}
+		}
+	}
+
+	return nil
+}
+
+// validateUnrestrictedPoolCreatorWhitelist validates a slice of addresses
+// that are allowed to bypass the restrictions on permissionless pool creation
+//
+// Parameters:
+// - i: The parameter to validate.
+//
+// Returns:
+// - An error if any of the strings are not addresses
+func validateUnrestrictedPoolCreatorWhitelist(i interface{}) error {
+	whitelist, ok := i.([]string)
+
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	for _, a := range whitelist {
+		if _, err := sdk.AccAddressFromBech32(a); err != nil {
+			return fmt.Errorf("invalid address")
 		}
 	}
 
