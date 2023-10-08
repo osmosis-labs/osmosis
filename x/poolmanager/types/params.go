@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,6 +20,7 @@ var (
 	KeyAdminAddresses                                 = []byte("AdminAddresses")
 	KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo = []byte("CommunityPoolDenomToSwapNonWhitelistedAssetsTo")
 	KeyAuthorizedQuoteDenoms                          = []byte("AuthorizedQuoteDenoms")
+	KeyReducedTakerFeeByWhitelist                     = []byte("ReducedTakerFeeByWhitelist")
 )
 
 // ParamTable for gamm module.
@@ -60,6 +62,7 @@ func DefaultParams() Params {
 			},
 			AdminAddresses: []string{},
 			CommunityPoolDenomToSwapNonWhitelistedAssetsTo: "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
+			ReducedFeeWhitelist:                            []string{},
 		},
 		AuthorizedQuoteDenoms: []string{
 			"uosmo",
@@ -90,6 +93,9 @@ func (p Params) Validate() error {
 	if err := validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo(p.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo); err != nil {
 		return err
 	}
+	if err := osmoutils.ValidateAddressList(p.TakerFeeParams.ReducedFeeWhitelist); err != nil {
+		return err
+	}
 	if err := validateAuthorizedQuoteDenoms(p.AuthorizedQuoteDenoms); err != nil {
 		return err
 	}
@@ -107,6 +113,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyAdminAddresses, &p.TakerFeeParams.AdminAddresses, validateAdminAddresses),
 		paramtypes.NewParamSetPair(KeyCommunityPoolDenomToSwapNonWhitelistedAssetsTo, &p.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo, validateCommunityPoolDenomToSwapNonWhitelistedAssetsTo),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
+		paramtypes.NewParamSetPair(KeyReducedTakerFeeByWhitelist, &p.TakerFeeParams.ReducedFeeWhitelist, osmoutils.ValidateAddressList),
 	}
 }
 

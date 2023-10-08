@@ -89,6 +89,16 @@ message TakerFeeParams {
   string community_pool_denom_to_swap_non_whitelisted_assets_to = 5
       [ (gogoproto.moretags) =
             "yaml:\"community_pool_denom_to_swap_non_whitelisted_assets_to\"" ];
+
+  // reduced_fee_whitelist is a list of addresses that are
+  // allowed to pay a reduce taker fee when performing a swap
+  // (i.e. swap without paying the taker fee).
+  // It is intended to be used for integrators who meet qualifying factors
+  // that are approved by governance.
+  // Initially, the taker fee is allowed to be bypassed completely. However
+  // In the future, we will charge a reduced taker fee instead of no fee at all.
+  repeated string reduced_fee_whitelist = 6
+      [ (gogoproto.moretags) = "yaml:\"reduced_fee_whitelist\"" ];
 }
 
 // TakerFeeDistributionPercentage defines what percent of the taker fee category

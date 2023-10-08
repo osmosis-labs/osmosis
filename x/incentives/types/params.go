@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -52,6 +53,11 @@ func (p Params) Validate() error {
 	if err := ValidateGroupCreaionFee(p.GroupCreationFee); err != nil {
 		return err
 	}
+
+	if err := osmoutils.ValidateAddressList(p.UnrestrictedCreatorWhitelist); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -61,22 +67,6 @@ func ValidateGroupCreaionFee(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return v.Validate()
-}
-
-func ValidateCreatorWhitelist(i interface{}) error {
-	v, ok := i.([]string)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	// Validate that addresses are set correctly
-	for _, creator := range v {
-		if _, err := sdk.AccAddressFromBech32(creator); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func ValidateGroupCreationFee(i interface{}) error {
@@ -92,6 +82,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyDistrEpochIdentifier, &p.DistrEpochIdentifier, epochtypes.ValidateEpochIdentifierInterface),
 		paramtypes.NewParamSetPair(KeyGroupCreationFee, &p.GroupCreationFee, ValidateGroupCreaionFee),
-		paramtypes.NewParamSetPair(KeyCreatorWhitelist, &p.UnrestrictedCreatorWhitelist, ValidateCreatorWhitelist),
+		paramtypes.NewParamSetPair(KeyCreatorWhitelist, &p.UnrestrictedCreatorWhitelist, osmoutils.ValidateAddressList),
 	}
 }
