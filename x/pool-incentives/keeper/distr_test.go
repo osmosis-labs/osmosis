@@ -7,6 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var defaultCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000)))
+
 func (s *KeeperTestSuite) TestAllocateAsset() {
 	tests := []struct {
 		name                   string
