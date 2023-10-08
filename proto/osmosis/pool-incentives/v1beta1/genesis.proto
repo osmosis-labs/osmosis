@@ -20,8 +20,18 @@ message GenesisState {
     (gogoproto.nullable) = true,
     (gogoproto.moretags) = "yaml:\"distr_info\""
   ];
-  PoolToGauges pool_to_gauges = 4 [
+  // any_pool_to_internal_gauges defines the gauges for any pool to internal
+  // pool. For every pool type (e.g. LP, Concentrated, etc), there is one such
+  // link
+  AnyPoolToInternalGauges any_pool_to_internal_gauges = 4 [
     (gogoproto.nullable) = true,
-    (gogoproto.moretags) = "yaml:\"pool_to_gauges\""
+    (gogoproto.moretags) = "yaml:\"internal_pool_to_gauges\""
+  ];
+  // concentrated_pool_to_no_lock_gauges defines the no lock gauges for
+  // concentrated pool. This only exists between concentrated pool and no lock
+  // gauges. Both external and internal gauges are included.
+  ConcentratedPoolToNoLockGauges concentrated_pool_to_no_lock_gauges = 5 [
+    (gogoproto.nullable) = true,
+    (gogoproto.moretags) = "yaml:\"concentrated_pool_to_no_lock_gauges\""
   ];
 }
