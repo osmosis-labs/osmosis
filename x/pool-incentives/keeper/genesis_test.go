@@ -9,19 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-<<<<<<< HEAD
+	"github.com/osmosis-labs/osmosis/osmomath"
 	pool_incentives "github.com/osmosis-labs/osmosis/v18/x/pool-incentives"
+	lockuptypes "github.com/osmosis-labs/osmosis/v18/x/lockup/types"
 
 	simapp "github.com/osmosis-labs/osmosis/v18/app"
 
 	"github.com/osmosis-labs/osmosis/v18/x/pool-incentives/types"
-=======
-	"github.com/osmosis-labs/osmosis/osmomath"
-	simapp "github.com/osmosis-labs/osmosis/v19/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
-	pool_incentives "github.com/osmosis-labs/osmosis/v19/x/pool-incentives"
-	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
->>>>>>> ab93bb25 (fix: genesis bug in pool incentives linking NoLock gauges and PoolIDs (#6644))
 )
 
 var (
