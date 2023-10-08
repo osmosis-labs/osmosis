@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#6468](https://github.com/osmosis-labs/osmosis/pull/6468) feat: remove osmo multihop discount
 * [#6420](https://github.com/osmosis-labs/osmosis/pull/6420) feat[CL]: Creates a governance set whitelist of addresses that can bypass the normal pool creation restrictions on concentrated liquidity pools
+* [#6632](https://github.com/osmosis-labs/osmosis/pull/6632) Taker fee bypass whitelist
 
 ### State Breaking
 
@@ -58,6 +59,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6627](https://github.com/osmosis-labs/osmosis/pull/6627) Limit pow iterations in osmomath.
 * [#6586](https://github.com/osmosis-labs/osmosis/pull/6586) add auth.moduleaccounts to the stargate whitelist
 * [#6643](https://github.com/osmosis-labs/osmosis/pull/6643) chore: bump ibc-go to v4.5.0
+
+### Bug Fixes
+* [#6644](https://github.com/osmosis-labs/osmosis/pull/6644) fix: genesis bug in pool incentives linking NoLock gauges and PoolIDs
 
 ## v19.2.0
 
