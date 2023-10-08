@@ -2408,7 +2408,7 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 				}
 
 				allPositions := append(tc.inRangePositions, tc.outOfRangePositions...)
-				positionsNotTransfered := osmoutils.DifferenceBetweenUint64Arrays(allPositions, tc.positionsToTransfer)
+				positionsNotTransfered := osmoutils.DisjointArrays(allPositions, tc.positionsToTransfer)
 
 				// Check that the positions not transferred were not modified
 				for _, positionId := range positionsNotTransfered {

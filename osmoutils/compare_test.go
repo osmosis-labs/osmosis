@@ -41,7 +41,7 @@ func TestMax(t *testing.T) {
 	}
 }
 
-func TestDifferenceBetweenUint64Arrays(t *testing.T) {
+func TestDisjointArrays(t *testing.T) {
 	tests := []struct {
 		name string
 		a    []uint64
@@ -64,7 +64,7 @@ func TestDifferenceBetweenUint64Arrays(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := osmoutils.DifferenceBetweenUint64Arrays(tt.a, tt.b)
+			got := osmoutils.DisjointArrays(tt.a, tt.b)
 			sort.Slice(got, func(i, j int) bool { return got[i] < got[j] })
 			sort.Slice(tt.want, func(i, j int) bool { return tt.want[i] < tt.want[j] })
 
