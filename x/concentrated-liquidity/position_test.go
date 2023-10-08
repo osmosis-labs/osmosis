@@ -2265,7 +2265,8 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 
 	errTolerance := osmomath.ErrTolerance{
 		AdditiveTolerance: osmomath.NewDec(1),
-		// Actual should be less than expected, so we round down
+		// Actual amount should be less than expected, so we round down
+		// This is because when we withdraw the position, we always round in favor of the pool
 		RoundingDir: osmomath.RoundDown,
 	}
 
