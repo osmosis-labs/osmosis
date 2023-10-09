@@ -85,4 +85,4 @@ jobs:
           build-args: |
             E2E_SCRIPT_NAME=chain
           tags: |
-            ${{ env.OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY }}:"test"
+            ${{ env.OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY }}:test
