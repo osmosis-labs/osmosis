@@ -536,7 +536,7 @@ localnet-state-export-clean: localnet-clean
 POOL := 1
 POOL1 := 1
 POOL2 := 2
-RATION := 0.4
+RATIO := 0.4
 SWAPS := 100
 POS := 100
 
