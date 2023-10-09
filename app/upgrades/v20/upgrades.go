@@ -99,6 +99,7 @@ func createGroupsForIncentivePairs(ctx sdk.Context, keepers *keepers.AppKeepers)
 	}
 
 	distrInfo := keepers.PoolIncentivesKeeper.GetDistrInfo(ctx)
+	ctx.Logger().Info(fmt.Sprintf("Found %d distribution records", len(distrInfo.Records)))
 
 	// For all incentive distribution records,
 	// retrieve the gauge associated with the record
@@ -182,6 +183,7 @@ func createGroupsForIncentivePairs(ctx sdk.Context, keepers *keepers.AppKeepers)
 		if err != nil {
 			return err
 		}
+		ctx.Logger().Info(fmt.Sprintf("Created group gauge %d for pools %v", groupGaugeID, groupedPoolIDs))
 
 		// Replace the gauge ID with the group gauge ID in the distribution records
 		distrInfo.Records[i].GaugeId = groupGaugeID
