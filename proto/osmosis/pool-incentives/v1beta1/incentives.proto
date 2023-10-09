@@ -55,6 +55,10 @@ message PoolToGauge {
   ];
 }
 
-message PoolToGauges {
+message AnyPoolToInternalGauges {
   repeated PoolToGauge pool_to_gauge = 2 [ (gogoproto.nullable) = false ];
+}
+
+message ConcentratedPoolToNoLockGauges {
+  repeated PoolToGauge pool_to_gauge = 1 [ (gogoproto.nullable) = false ];
 }
