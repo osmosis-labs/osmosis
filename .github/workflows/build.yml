@@ -78,6 +78,7 @@ jobs:
           name: osmosisd-${{ matrix.targetos }}-${{ matrix.arch }}
           path: cmd/osmosisd/osmosisd
   tidy:
+    needs: build
     runs-on: ubuntu-latest
     name: Tidy
     steps:
@@ -87,7 +88,7 @@ jobs:
         with:
           go-version: ${{env.GO_VERSION}}
       - run: |
-          go mod tidy
+          make tidy-workspace
           CHANGES_IN_REPO=$(git status --porcelain)
           if [[ -n "$CHANGES_IN_REPO" ]]; then
             echo "Repository is dirty. Showing 'git status' and 'git --no-pager diff' for debugging now:"
