@@ -681,6 +681,9 @@ func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender 
 		return types.DuplicatePositionIdsError{PositionIds: positionIds}
 	}
 
+	// Fixed gas consumption per position ID to prevent spam
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForTransferPosition*len(positionIds)), "cl transfer position fee")
+
 	for _, positionId := range positionIds {
 		position, err := k.GetPosition(ctx, positionId)
 		if err != nil {
