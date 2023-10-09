@@ -538,29 +538,28 @@ POOL1 := 1
 POOL2 := 2
 RATION := 0.4
 SWAPS := 100
+POS := 100
 
-# create 100 concentrated-liquidity positions in localosmosis at pool id 1
+# create (POS) number of concentrated-liquidity positions in localosmosis at pool id (POOL)
 localnet-cl-create-positions:
-	go run tests/cl-go-client/main.go --operation 0 --poolId $(POOL)
+	go run tests/cl-go-client/main.go --operation 0 --poolId $(POOL) --numPositions $(POS)
 
-# does 100 small randomized swaps in localosmosis at pool id 1
+# does (SWAPS) number of small randomized swaps in localosmosis at pool id (POOL)
 localnet-cl-small-swap:
-	go run tests/cl-go-client/main.go --operation 1 --poolId $(POOL)
+	go run tests/cl-go-client/main.go --operation 1 --poolId $(POOL) --numSwaps $(SWAPS)
 
-# does 100 large swaps where the output of the previous swap is swapped back at the
-# next swap. localosmosis at pool id 1
+# does (SWAPS) number of large swaps where the output of the previous swap is swapped back at the
+# next swap. localosmosis at pool id (POOL)
 localnet-cl-large-swap:
 	go run tests/cl-go-client/main.go --operation 2 --poolId $(POOL) --numSwaps $(SWAPS)
 
 # creates a gauge and waits for one epoch so that the gauge
-# is converted into an incentive record for pool id 1.
+# is converted into an incentive record for pool id (POOL).
 localnet-cl-external-incentive:
-	go run tests/cl-go-client/main.go --operation 3
+	go run tests/cl-go-client/main.go --operation 3 --poolId $(POOL)
 
-# attempts to create a CL pool at id 1.
+# attempts to create a CL pool at id (POOL).
 # if pool already exists, this is a no-op.
-# if pool with different id is desired, tweak expectedPoolId
-# in the script.
 localnet-cl-create-pool:
 	go run tests/cl-go-client/main.go --operation 4 --poolId $(POOL)
 
@@ -574,12 +573,19 @@ localnet-cl-claim-spread-rewards:
 localnet-cl-claim-incentives:
 	go run tests/cl-go-client/main.go --operation 6
 
+# adds to positions for a random account for a random
+# subset of positions.
 localnet-cl-add-to-positions:
 	go run tests/cl-go-client/main.go --operation 7
 
+# withdraws from positions for a random account for a random
+# subset of positions.
 localnet-cl-withdraw-positions:
 	go run tests/cl-go-client/main.go --operation 8
 
+# swaps random amounts between pool id (POOL1) and pool id (POOL2) for (SWAPS) number of times.
+# attempt to reach a volume ratio of (RATIO) between the two pools. If for instance RATIO is 0.4,
+# then the volume of pool 1 will be 40% of the volume of pool 2.
 localnet-cl-distr-swap-volume:
 	go run tests/cl-go-client/main.go --operation 9 --poolId1 $(POOL1) --poolId2 $(POOL2) --volumeRatio $(RATIO) --numSwaps $(SWAPS)
 

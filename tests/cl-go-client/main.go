@@ -91,7 +91,6 @@ const (
 	accountNamePrefix              = "lo-test"
 	// Note, this is localosmosis-specific.
 	expectedEpochIdentifier = "hour"
-	numPositions            = 100
 
 	minAmountDeposited  = int64(1_000_000)
 	randSeed            = 1
@@ -106,6 +105,7 @@ var (
 	volumeRatio         float64
 	expectedPoolId      uint64
 	numSwaps            int
+	numPositions        int
 	defaultAccountName  = fmt.Sprintf("%s%d", accountNamePrefix, 1)
 	defaultMinAmount    = osmomath.ZeroInt()
 	defaultSpreadFactor = osmomath.MustNewDecFromStr("0.001")
@@ -124,6 +124,7 @@ func main() {
 	flag.Uint64Var(&poolId2, "poolId2", 2, "ID of the second pool")
 	flag.Float64Var(&volumeRatio, "volumeRatio", 0.3, "desired volume ratio for the first pool")
 	flag.IntVar(&numSwaps, "numSwaps", 100, "number of swaps to make")
+	flag.IntVar(&numPositions, "numPositions", 100, "number of positions to create")
 	flag.Parse()
 
 	ctx := context.Background()
