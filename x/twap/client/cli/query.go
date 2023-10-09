@@ -136,7 +136,7 @@ Example:
 					tempStartTime = twapArgs.EndTime.Add(-time.Hour * 48)
 				}
 
-				height, err := findBlockByTime(clientCtx, tempEndTime, latestHeight)
+				height, err := findBlockByTime(clientCtx, tempEndTime.UTC(), latestHeight)
 				if err != nil {
 					return err
 				}
@@ -161,7 +161,7 @@ Example:
 
 				timeDelta := types.CanonicalTimeMs(tempEndTime) - types.CanonicalTimeMs(tempStartTime)
 				diffAccum = diffAccum.Add(res.ArithmeticTwap.MulInt64(timeDelta))
-				twapArgs.StartTime = twapArgs.EndTime.Add(-time.Hour * 48)
+				twapArgs.EndTime = twapArgs.EndTime.Add(-time.Hour * 48)
 				latestHeight = height
 			}
 
@@ -201,12 +201,12 @@ func findBlockByTime(clientCtx client.Context, time time.Time, currentHeight int
 		return -1, err
 	}
 
-	if estimateBlockResult.Block.Header.Time.Before(time) {
+	if estimateBlockResult.Block.Time.Before(time) {
 		// Use blockTime to limit the search range,
 		// when estimateBlock is 5 blocks away from targetBlock,
 		// loop each block to search for the most accurate one
-		for estimateBlockResult.Block.Header.Time.Before(time) {
-			estimateBlockDelta := int64(time.Sub(estimateBlockResult.Block.Header.Time).Seconds() / blockTime)
+		for estimateBlockResult.Block.Time.Before(time) {
+			estimateBlockDelta := int64(time.Sub(estimateBlockResult.Block.Time).Seconds() / blockTime)
 			if estimateBlockDelta > 5 {
 				estimateBlock += estimateBlockDelta
 			} else {
@@ -220,9 +220,9 @@ func findBlockByTime(clientCtx client.Context, time time.Time, currentHeight int
 		}
 		return estimateBlock, nil
 	}
-	if estimateBlockResult.Block.Header.Time.After(time) {
-		for estimateBlockResult.Block.Header.Time.After(time) {
-			estimateBlockDelta := int64(estimateBlockResult.Block.Header.Time.Sub(time).Seconds() / blockTime)
+	if estimateBlockResult.Block.Time.After(time) {
+		for estimateBlockResult.Block.Time.After(time) {
+			estimateBlockDelta := int64(estimateBlockResult.Block.Time.Sub(time).Seconds() / blockTime)
 			if estimateBlockDelta > 5 {
 				estimateBlock -= estimateBlockDelta
 			} else {
