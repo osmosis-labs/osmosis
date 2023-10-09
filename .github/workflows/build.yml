@@ -47,6 +47,8 @@ jobs:
       - uses: EndBug/add-and-commit@v9
         with:
           message: 'make tidy-workspace'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build:
     needs: tidy
     name: osmosisd-${{ matrix.targetos }}-${{ matrix.arch }}
