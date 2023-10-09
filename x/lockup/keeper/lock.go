@@ -905,7 +905,7 @@ func (k Keeper) getCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
 	return coins
 }
 
-// RebondTokens rebonds some amount or all coins of a lock with id lockID only if it is already unbonding
+// RebondTokens rebonds all coins of an unbonding lock with id lockID, only if it is already unbonding
 func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddress) error {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
