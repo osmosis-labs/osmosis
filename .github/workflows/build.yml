@@ -48,7 +48,7 @@ jobs:
         with:
           message: 'make tidy-workspace'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ADD_TO_PROJECT_PAT }}
   build:
     needs: tidy
     name: osmosisd-${{ matrix.targetos }}-${{ matrix.arch }}
