@@ -24,6 +24,7 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
 	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
@@ -102,6 +103,7 @@ const (
 var (
 	poolId1             uint64
 	poolId2             uint64
+	groupGaugeId        uint64
 	volumeRatio         float64
 	expectedPoolId      uint64
 	numSwaps            int
@@ -122,7 +124,8 @@ func main() {
 	flag.Uint64Var(&expectedPoolId, "poolId", 1, "ID of the pool to interact with")
 	flag.Uint64Var(&poolId1, "poolId1", 1, "ID of the first pool")
 	flag.Uint64Var(&poolId2, "poolId2", 2, "ID of the second pool")
-	flag.Float64Var(&volumeRatio, "volumeRatio", 0.3, "desired volume ratio for the first pool")
+	flag.Uint64Var(&groupGaugeId, "groupGaugeId", 3, "ID of the gauge group")
+	flag.Float64Var(&volumeRatio, "volumeRatio", 0.4, "desired volume ratio for the first pool")
 	flag.IntVar(&numSwaps, "numSwaps", 100, "number of swaps to make")
 	flag.IntVar(&numPositions, "numPositions", 100, "number of positions to create")
 	flag.Parse()
@@ -189,7 +192,7 @@ func main() {
 	case claimIncentivesOperation:
 		claimIncentivesOp(igniteClient)
 	case distributeSwapVolumeOperation:
-		distributeSwapVolume(igniteClient, poolId1, poolId2, volumeRatio, numSwaps)
+		distributeSwapVolume(igniteClient, poolId1, poolId2, groupGaugeId, volumeRatio, numSwaps)
 	default:
 		log.Fatalf("invalid operation: %d", desiredOperation)
 	}
@@ -567,7 +570,7 @@ func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountNam
 	return resp.TokenOutAmount, nil
 }
 
-func distributeSwapVolume(igniteClient cosmosclient.Client, poolId1 uint64, poolId2 uint64, volumeRatio float64, numSwaps int) {
+func distributeSwapVolume(igniteClient cosmosclient.Client, poolId1, poolId2, groupGaugeId uint64, volumeRatio float64, numSwaps int) {
 	var (
 		randAccountNum = rand.Intn(8) + 1
 		accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
@@ -578,31 +581,30 @@ func distributeSwapVolume(igniteClient cosmosclient.Client, poolId1 uint64, pool
 		tokenOutDenom     = denom1
 	)
 
+	targetGaugeId, err := targetGaugeIdFromPoolId(igniteClient, poolId1)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Println("distributing swap volume between pools", poolId1, poolId2, "volume ratio", volumeRatio, "num swaps", numSwaps)
 
 	for i := 0; i < numSwaps; i++ {
 		// Retrieve total volume for each pool
-		volume1, err := retrievePoolVolume(igniteClient, poolId1)
+		currentRatio, err := retrievePoolVolume(igniteClient, groupGaugeId, targetGaugeId)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(volume1)
-		volume2, err := retrievePoolVolume(igniteClient, poolId2)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(volume2)
-		fmt.Println(volume1, volume2)
 
-		// Calculate the current ratio
-		totalVolume := volume1.Add(volume2...)
-		currentRatio := float64(volume1.AmountOf("uosmo").Int64()) / float64(totalVolume.AmountOf("uosmo").Int64())
+		currentRatioFloat, err := currentRatio.Float64()
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		fmt.Println("current volume ratio:", currentRatio)
 
 		// Determine the pool to swap in next time
 		var nextPoolId uint64
-		if currentRatio < volumeRatio {
+		if currentRatioFloat < volumeRatio {
 			nextPoolId = poolId1
 		} else {
 			nextPoolId = poolId2
@@ -617,7 +619,7 @@ func distributeSwapVolume(igniteClient cosmosclient.Client, poolId1 uint64, pool
 
 		// Calculate the amount to swap, scaling it based on the exponential of the difference between the current and desired ratios
 		// and the remaining number of swaps
-		ratioDiff := math.Abs(currentRatio - volumeRatio)
+		ratioDiff := math.Abs(currentRatioFloat - volumeRatio)
 		remainingSwapsFactor := float64(numSwaps-i) / float64(numSwaps)
 		swapAmount := int64(float64(maxAmountDeposited*10) * math.Exp(ratioDiff) * remainingSwapsFactor)
 
@@ -629,34 +631,49 @@ func distributeSwapVolume(igniteClient cosmosclient.Client, poolId1 uint64, pool
 		})
 	}
 
-	// Calculate the final volume ratio
-	finalVolume1, err := retrievePoolVolume(igniteClient, poolId1)
+	finalRatio, err := retrievePoolVolume(igniteClient, groupGaugeId, targetGaugeId)
 	if err != nil {
 		log.Fatal(err)
 	}
-	finalVolume2, err := retrievePoolVolume(igniteClient, poolId2)
-	if err != nil {
-		log.Fatal(err)
-	}
-	finalTotalVolume := finalVolume1.Add(finalVolume2...)
-	finalRatio := float64(finalVolume1.AmountOf("uosmo").Int64()) / float64(finalTotalVolume.AmountOf("uosmo").Int64())
 
 	log.Println("desired volume ratio:", volumeRatio)
 	log.Println("final volume ratio:", finalRatio)
 }
 
-func retrievePoolVolume(igniteClient cosmosclient.Client, poolId uint64) (sdk.Coins, error) {
-	pmClient := poolmanagerqueryproto.NewQueryClient(igniteClient.Context())
-	resp, err := pmClient.TotalVolumeForPool(context.Background(), &poolmanagerqueryproto.TotalVolumeForPoolRequest{
+func retrievePoolVolume(igniteClient cosmosclient.Client, groupGaugeId uint64, targetGaugeId uint64) (osmomath.Dec, error) {
+	iClient := incentivestypes.NewQueryClient(igniteClient.Context())
+
+	resp, err := iClient.CurrentVolumeByGroupGaugeID(context.Background(), &incentivestypes.QueryCurrentVolumeByGroupGaugeIDRequest{
+		GroupGaugeId: groupGaugeId,
+	})
+	if err != nil {
+		return osmomath.Dec{}, err
+	}
+
+	for _, gauge := range resp.GaugeVolume {
+		if gauge.GaugeId == targetGaugeId {
+			return gauge.RatioOfVolume, nil
+		}
+	}
+	return osmomath.Dec{}, fmt.Errorf("could not find gauge with id %d", targetGaugeId)
+}
+
+func targetGaugeIdFromPoolId(igniteClient cosmosclient.Client, poolId uint64) (uint64, error) {
+	pooliClient := poolincentivestypes.NewQueryClient(igniteClient.Context())
+
+	resp, err := pooliClient.GaugeIds(context.Background(), &poolincentivestypes.QueryGaugeIdsRequest{
 		PoolId: poolId,
 	})
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	if resp.Volume == nil {
-		resp.Volume = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.OneInt()))
+
+	if len(resp.GaugeIdsWithDuration) <= 0 {
+		return 0, fmt.Errorf("could not find any gauges for pool id %d", poolId)
 	}
-	return resp.Volume, nil
+	targetGaugeId := resp.GaugeIdsWithDuration[len(resp.GaugeIdsWithDuration)-1].GaugeId
+
+	return targetGaugeId, nil
 }
 
 func createGauge(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, gaugeCoins sdk.Coins) error {

@@ -536,6 +536,7 @@ localnet-state-export-clean: localnet-clean
 POOL := 1
 POOL1 := 1
 POOL2 := 2
+GROUP := 3
 RATIO := 0.4
 SWAPS := 100
 POS := 100
@@ -586,8 +587,9 @@ localnet-cl-withdraw-positions:
 # swaps random amounts between pool id (POOL1) and pool id (POOL2) for (SWAPS) number of times.
 # attempt to reach a volume ratio of (RATIO) between the two pools. If for instance RATIO is 0.4,
 # then the volume of pool 1 will be 40% of the volume of pool 2.
+# Note: for now this only works across two pools, but many of the important groups will only exist between two for now.
 localnet-cl-distr-swap-volume:
-	go run tests/cl-go-client/main.go --operation 9 --poolId1 $(POOL1) --poolId2 $(POOL2) --volumeRatio $(RATIO) --numSwaps $(SWAPS)
+	go run tests/cl-go-client/main.go --operation 9 --poolId1 $(POOL1) --poolId2 $(POOL2) --groupGaugeId $(GROUP) --volumeRatio $(RATIO) --numSwaps $(SWAPS)
 
 
 # does both of localnet-cl-create-positions and localnet-cl-small-swap
