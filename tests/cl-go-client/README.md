@@ -15,11 +15,15 @@ Make sure that you run `localosmosis` in the background and have keys
 added to your keyring with:
 
 ```bash
-make set-env localosmosis # sets environment to $HOME/.osmosisd-local
+osmosisd set-env localosmosis # sets environment to $HOME/.osmosisd-local
 
-make localnet-start
+make localnet-clean
+
+make localnet-build
 
 make localnet-keys
+
+make localnet-start
 ```
 
 See `tests/localosmosis` for more info.
@@ -29,23 +33,26 @@ See `tests/localosmosis` for more info.
 Configure a different `osmosisd` environment with configs.
 
 ```bash
-make set-env .osmosisd-testnet-script
+osmosisd set-env .osmosisd-testnet-script
 
 osmosisd init test-script
+```
 
-cd $HOME/.osmosisd-testnet-script/config
+If running node on a different IP other than localhost, replace node RPC with appropriate RPC address and save,
+
+```bash
+cd ./.osmosisd-testnet-script/config
 
 nano client.toml
 ```
 
-Replace node RPC with the testnet value and save,
-
 Next, manually edit the `localosmosisFromHomePath` variable in the script:
 <https://github.com/osmosis-labs/osmosis/blob/98025f185ab2ee1b060511ed22679112abcc08fa/tests/cl-go-client/main.go#L28>
 
-Set the value to `.osmosisd-testnet-script` and save.
+Say, for instance, your `.osmosisd-testnet-script` folder is in `~/osmosis/.osmosisd-testnet-script` folder, then you would modify the
+`localosmosisFromHomePath` variable to be `/osmosis/.osmosisd-testnet-script`. Save `main.go`.
 
-Now, you are able to run this script on testnet. This assummes that
+Now, you are able to run this script on testnet. This assumes that
 testnet accounts have been set up with the default test accounts
 and balances. By default, we mean accounts created with
 `make localnet-keys`.

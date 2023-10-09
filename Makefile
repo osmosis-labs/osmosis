@@ -535,16 +535,16 @@ localnet-state-export-clean: localnet-clean
 
 # create 100 concentrated-liquidity positions in localosmosis at pool id 1
 localnet-cl-create-positions:
-	go run tests/cl-go-client/main.go --operation 0
+	go run tests/cl-go-client/main.go --operation 0 --poolId $(POOL)
 
 # does 100 small randomized swaps in localosmosis at pool id 1
 localnet-cl-small-swap:
-	go run tests/cl-go-client/main.go --operation 1
+	go run tests/cl-go-client/main.go --operation 1 --poolId $(POOL)
 
 # does 100 large swaps where the output of the previous swap is swapped back at the
 # next swap. localosmosis at pool id 1
 localnet-cl-large-swap:
-	go run tests/cl-go-client/main.go --operation 2
+	go run tests/cl-go-client/main.go --operation 2 --poolId $(POOL) --numSwaps $(SWAPS)
 
 # creates a gauge and waits for one epoch so that the gauge
 # is converted into an incentive record for pool id 1.
@@ -556,7 +556,7 @@ localnet-cl-external-incentive:
 # if pool with different id is desired, tweak expectedPoolId
 # in the script.
 localnet-cl-create-pool:
-	go run tests/cl-go-client/main.go --operation 4
+	go run tests/cl-go-client/main.go --operation 4 --poolId $(POOL)
 
 # claims spread rewards for a random account for a random
 # subset of positions.
@@ -573,6 +573,9 @@ localnet-cl-add-to-positions:
 
 localnet-cl-withdraw-positions:
 	go run tests/cl-go-client/main.go --operation 8
+
+localnet-cl-distr-swap-volume:
+	go run tests/cl-go-client/main.go --operation 9 --poolId1 $(POOL1) --poolId2 $(POOL2) --volumeRatio $(RATIO) --numSwaps $(SWAPS)
 
 
 # does both of localnet-cl-create-positions and localnet-cl-small-swap

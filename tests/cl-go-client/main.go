@@ -62,29 +62,36 @@ const (
 
 	// withdrawPositions withdraws a position
 	withdrawPositions
+
+	// distributeSwapVolumeOperation distributes swap volume between two pools
+	distributeSwapVolumeOperation
 )
 
 const (
-	expectedPoolId           uint64 = 1
-	addressPrefix                   = "osmo"
-	localosmosisFromHomePath        = "/.osmosisd-local"
-	consensusFee                    = "3000uosmo"
-	denom0                          = "uosmo"
-	denom1                          = "uusdc"
-	tickSpacing              int64  = 100
-	accountNamePrefix               = "lo-test"
+	addressPrefix                  = "osmo"
+	localosmosisFromHomePath       = "/.osmosisd-local" // "/osmosis/.osmosisd-testnet-script"
+	consensusFee                   = "3000uosmo"
+	denom0                         = "uosmo"
+	denom1                         = "uusdc"
+	tickSpacing              int64 = 100
+	accountNamePrefix              = "lo-test"
 	// Note, this is localosmosis-specific.
 	expectedEpochIdentifier = "hour"
 	numPositions            = 100
-	numSwaps                = 100
-	minAmountDeposited      = int64(1_000_000)
-	randSeed                = 1
-	maxAmountDeposited      = 1_00_000_000
-	maxAmountSingleSwap     = 1_000_000
-	largeSwapAmount         = 90_000_000_000
+
+	minAmountDeposited  = int64(1_000_000)
+	randSeed            = 1
+	maxAmountDeposited  = 1_00_000_000
+	maxAmountSingleSwap = 1_000_000
+	largeSwapAmount     = 90_000_000_000
 )
 
 var (
+	poolId1             uint64
+	poolId2             uint64
+	volumeRatio         float64
+	expectedPoolId      uint64
+	numSwaps            int
 	defaultAccountName  = fmt.Sprintf("%s%d", accountNamePrefix, 1)
 	defaultMinAmount    = osmomath.ZeroInt()
 	defaultSpreadFactor = osmomath.MustNewDecFromStr("0.001")
@@ -98,7 +105,11 @@ func main() {
 	)
 
 	flag.IntVar(&desiredOperation, "operation", 0, fmt.Sprintf("operation to run:\ncreate positions: %v, make many swaps: %v", createPositions, makeManySmallSwaps))
-
+	flag.Uint64Var(&expectedPoolId, "poolId", 1, "ID of the pool to interact with")
+	flag.Uint64Var(&poolId1, "poolId1", 1, "ID of the first pool")
+	flag.Uint64Var(&poolId2, "poolId2", 2, "ID of the second pool")
+	flag.Float64Var(&volumeRatio, "volumeRatio", 0.3, "desired volume ratio for the first pool")
+	flag.IntVar(&numSwaps, "numSwaps", 100, "number of swaps to make")
 	flag.Parse()
 
 	ctx := context.Background()
@@ -159,6 +170,8 @@ func main() {
 		claimSpreadRewardsOp(igniteClient)
 	case claimIncentivesOperation:
 		claimIncentivesOp(igniteClient)
+	case distributeSwapVolumeOperation:
+		distributeSwapVolume(igniteClient, poolId1, poolId2, volumeRatio, numSwaps)
 	default:
 		log.Fatalf("invalid operation: %d", desiredOperation)
 	}
@@ -166,7 +179,6 @@ func main() {
 
 func createRandomPosition(igniteClient cosmosclient.Client, poolId uint64) (string, int64, int64, sdk.Coins, error) {
 	minTick, maxTick := cltypes.MinInitializedTick, cltypes.MaxTick
-	log.Println(minTick, " ", maxTick)
 
 	// Generate random values for position creation
 	// 1 to 9. These are localosmosis keyring test accounts with names such as:
@@ -385,7 +397,7 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 	if err := txResp.Decode(&resp); err != nil {
 		return 0, osmomath.Int{}, osmomath.Int{}, osmomath.Dec{}, err
 	}
-	log.Println("created position: positionId", positionId, "amt0", resp.Amount0, "amt1", resp.Amount1, "liquidity", resp.LiquidityCreated)
+	log.Println("created position: positionId", resp.PositionId, "amt0", resp.Amount0, "amt1", resp.Amount1, "liquidity", resp.LiquidityCreated)
 
 	return resp.PositionId, resp.Amount0, resp.Amount1, resp.LiquidityCreated, nil
 }
@@ -496,13 +508,13 @@ func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountNam
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
 
-	log.Println("making swap in: pool id", expectedPoolId, "tokenIn", tokenInCoin, "tokenOutDenom", tokenOutDenom, "tokenOutMinAmount", tokenOutMinAmount, "from", senderKeyringAccountName)
+	log.Println("making swap in: pool id", poolId, "tokenIn", tokenInCoin, "tokenOutDenom", tokenOutDenom, "tokenOutMinAmount", tokenOutMinAmount, "from", senderKeyringAccountName)
 
 	msg := &poolmanagertypes.MsgSwapExactAmountIn{
 		Sender: senderAddress,
 		Routes: []poolmanagertypes.SwapAmountInRoute{
 			{
-				PoolId:        expectedPoolId,
+				PoolId:        poolId,
 				TokenOutDenom: tokenOutDenom,
 			},
 		},
@@ -520,6 +532,98 @@ func makeSwap(client cosmosclient.Client, poolId uint64, senderKeyringAccountNam
 
 	log.Println("swap made, token out amount: ", resp.TokenOutAmount)
 	return resp.TokenOutAmount, nil
+}
+
+func distributeSwapVolume(igniteClient cosmosclient.Client, poolId1 uint64, poolId2 uint64, volumeRatio float64, numSwaps int) {
+	var (
+		randAccountNum = rand.Intn(8) + 1
+		accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+
+		tokenOutMinAmount = osmomath.OneInt()
+		lastPoolId        uint64
+		tokenInDenom      = denom0
+		tokenOutDenom     = denom1
+	)
+
+	fmt.Println("distributing swap volume between pools", poolId1, poolId2, "volume ratio", volumeRatio, "num swaps", numSwaps)
+
+	for i := 0; i < numSwaps; i++ {
+		// Retrieve total volume for each pool
+		volume1, err := retrievePoolVolume(igniteClient, poolId1)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(volume1)
+		volume2, err := retrievePoolVolume(igniteClient, poolId2)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(volume2)
+		fmt.Println(volume1, volume2)
+
+		// Calculate the current ratio
+		totalVolume := volume1.Add(volume2...)
+		currentRatio := float64(volume1.AmountOf("uosmo").Int64()) / float64(totalVolume.AmountOf("uosmo").Int64())
+
+		fmt.Println("current volume ratio:", currentRatio)
+
+		// Determine the pool to swap in next time
+		var nextPoolId uint64
+		if currentRatio < volumeRatio {
+			nextPoolId = poolId1
+		} else {
+			nextPoolId = poolId2
+		}
+
+		// If the next pool is the same as the last one, switch the denomination
+		if nextPoolId == lastPoolId {
+			tokenInDenom, tokenOutDenom = tokenOutDenom, tokenInDenom
+		}
+
+		lastPoolId = nextPoolId
+
+		// Calculate the amount to swap, scaling it based on the exponential of the difference between the current and desired ratios
+		// and the remaining number of swaps
+		ratioDiff := math.Abs(currentRatio - volumeRatio)
+		remainingSwapsFactor := float64(numSwaps-i) / float64(numSwaps)
+		swapAmount := int64(float64(maxAmountDeposited*10) * math.Exp(ratioDiff) * remainingSwapsFactor)
+
+		// Perform the swap
+		tokenInCoin := sdk.NewCoin(tokenInDenom, osmomath.NewInt(rand.Int63n(swapAmount)))
+		runMessageWithRetries(func() error {
+			_, err := makeSwap(igniteClient, nextPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
+			return err
+		})
+	}
+
+	// Calculate the final volume ratio
+	finalVolume1, err := retrievePoolVolume(igniteClient, poolId1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	finalVolume2, err := retrievePoolVolume(igniteClient, poolId2)
+	if err != nil {
+		log.Fatal(err)
+	}
+	finalTotalVolume := finalVolume1.Add(finalVolume2...)
+	finalRatio := float64(finalVolume1.AmountOf("uosmo").Int64()) / float64(finalTotalVolume.AmountOf("uosmo").Int64())
+
+	log.Println("desired volume ratio:", volumeRatio)
+	log.Println("final volume ratio:", finalRatio)
+}
+
+func retrievePoolVolume(igniteClient cosmosclient.Client, poolId uint64) (sdk.Coins, error) {
+	pmClient := poolmanagerqueryproto.NewQueryClient(igniteClient.Context())
+	resp, err := pmClient.TotalVolumeForPool(context.Background(), &poolmanagerqueryproto.TotalVolumeForPoolRequest{
+		PoolId: poolId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if resp.Volume == nil {
+		resp.Volume = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.OneInt()))
+	}
+	return resp.Volume, nil
 }
 
 func createGauge(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, gaugeCoins sdk.Coins) error {
@@ -691,6 +795,9 @@ func getClientHomePath() string {
 		log.Fatal(err)
 		return ""
 	}
+
+	fmt.Println("current user home dir: ", currentUser.HomeDir)
+	fmt.Println("localosmosis from home path: ", currentUser.HomeDir+localosmosisFromHomePath)
 
 	return currentUser.HomeDir + localosmosisFromHomePath
 }
