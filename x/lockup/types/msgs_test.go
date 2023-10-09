@@ -294,22 +294,6 @@ func TestMsgRebondTokens(t *testing.T) {
 				ID:    0,
 			},
 		},
-		{
-			name: "zero coins (same as nil)",
-			msg: types.MsgRebondTokens{
-				Owner: addr1,
-				ID:    1,
-			},
-			expectPass: true,
-		},
-		{
-			name: "nil coins",
-			msg: types.MsgRebondTokens{
-				Owner: addr1,
-				ID:    1,
-			},
-			expectPass: true,
-		},
 	}
 
 	for _, test := range tests {
