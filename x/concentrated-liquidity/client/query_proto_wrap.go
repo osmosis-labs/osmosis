@@ -319,7 +319,7 @@ func (q Querier) NumNextInitializedTicks(ctx sdk.Context, req clquery.NumNextIni
 	return &clquery.NumNextInitializedTicksResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity(), CurrentTick: pool.GetCurrentTick()}, nil
 }
 
-// TickRangeUnderlyingAssets returns uderlying asset of a tick range
+// TickRangeUnderlyingAssets returns underlying asset of a tick range
 func (q Querier) TickRangeUnderlyingAssets(ctx sdk.Context, req clquery.TickRangeUnderlyingAssetsRequest) (*clquery.TickRangeUnderlyingAssetsResponse, error) {
 	if req.PoolId == 0 {
 		return nil, status.Error(codes.InvalidArgument, "pool id is zero")

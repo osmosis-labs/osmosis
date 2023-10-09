@@ -133,7 +133,7 @@ service Query {
                                    "num_next_initialized_ticks";
   }
 
-  // TickRangeUnderlyingAssets returns uderlying asset of a tick range
+  // TickRangeUnderlyingAssets returns underlying asset of a tick range
   rpc TickRangeUnderlyingAssets(TickRangeUnderlyingAssetsRequest)
       returns (TickRangeUnderlyingAssetsResponse) {
     option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"

@@ -1979,7 +1979,7 @@ type QueryClient interface {
 	// NumNextInitializedTicks returns the provided number of next initialized
 	// ticks in the direction of swapping the token in denom.
 	NumNextInitializedTicks(ctx context.Context, in *NumNextInitializedTicksRequest, opts ...grpc.CallOption) (*NumNextInitializedTicksResponse, error)
-	// TickRangeUnderlyingAssets returns uderlying asset of a tick range
+	// TickRangeUnderlyingAssets returns underlying asset of a tick range
 	TickRangeUnderlyingAssets(ctx context.Context, in *TickRangeUnderlyingAssetsRequest, opts ...grpc.CallOption) (*TickRangeUnderlyingAssetsResponse, error)
 }
 
@@ -2177,7 +2177,7 @@ type QueryServer interface {
 	// NumNextInitializedTicks returns the provided number of next initialized
 	// ticks in the direction of swapping the token in denom.
 	NumNextInitializedTicks(context.Context, *NumNextInitializedTicksRequest) (*NumNextInitializedTicksResponse, error)
-	// TickRangeUnderlyingAssets returns uderlying asset of a tick range
+	// TickRangeUnderlyingAssets returns underlying asset of a tick range
 	TickRangeUnderlyingAssets(context.Context, *TickRangeUnderlyingAssetsRequest) (*TickRangeUnderlyingAssetsResponse, error)
 }
 

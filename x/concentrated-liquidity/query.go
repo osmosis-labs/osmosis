@@ -337,7 +337,7 @@ func (k Keeper) GetNumNextInitializedTicks(ctx sdk.Context, poolId, numberOfNext
 	return liquidityDepths, nil
 }
 
-// GetNumNextInitializedTicks is a method that returns underlying assets of a tick range
+// TickRangeUnderlyingAssets is a method that returns underlying assets of a tick range
 // Errors:
 // * ticks given not found
 // * There exists at least 1 tick inside the given range
@@ -415,6 +415,8 @@ func (k Keeper) TickRangeUnderlyingAssets(ctx sdk.Context, poolId uint64, lowerT
 		totalLiquidity = totalLiquidity.Add(tickStruct.LiquidityNet)
 		previousTickIndex = tickIndex
 	}
+
+	fmt.Println("liquidity", totalLiquidity)
 
 	actualAmountDenom0, actualAmountDenom1, err := pool.CalcActualAmounts(ctx, lowerTick, upperTick, totalLiquidity)
 	if err != nil {
