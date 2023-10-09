@@ -528,6 +528,98 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 	return nil
 }
 
+func (k Keeper) QueryVolumeSplitGroup(ctx sdk.Context, group types.Group) ([]types.GaugeVolume, error) {
+	totalWeight := sdk.ZeroInt()
+	gaugeVolumes := make([]types.GaugeVolume, len(group.InternalGaugeInfo.GaugeRecords))
+
+	// We operate on a deep copy of the given group because we expect to handle specific errors quietly
+	// and want to avoid the scenario where the original group gauge is partially mutated in such cases.
+	updatedGroup := types.Group{
+		GroupGaugeId: group.GroupGaugeId,
+		InternalGaugeInfo: types.InternalGaugeInfo{
+			TotalWeight:  group.InternalGaugeInfo.TotalWeight,
+			GaugeRecords: make([]types.InternalGaugeRecord, len(group.InternalGaugeInfo.GaugeRecords)),
+		},
+		SplittingPolicy: group.SplittingPolicy,
+	}
+
+	// Loop through gauge records and update their state to reflect new pool volumes
+	for i, gaugeRecord := range group.InternalGaugeInfo.GaugeRecords {
+		gauge, err := k.GetGaugeByID(ctx, gaugeRecord.GaugeId)
+		if err != nil {
+			return nil, err
+		}
+
+		gaugeType := gauge.DistributeTo.LockQueryType
+		gaugeDuration := time.Duration(0)
+
+		if gaugeType == lockuptypes.NoLock {
+			// If NoLock, it's a CL pool, so we set the "lockableDuration" to epoch duration
+			gaugeDuration = k.GetEpochInfo(ctx).Duration
+		} else {
+			// Otherwise, it's a balancer pool so we set it to longest lockable duration
+			// TODO: add support for CW pools once there's clarity around default gauge type.
+			// Tracked in issue https://github.com/osmosis-labs/osmosis/issues/6403
+			gaugeDuration, err = k.pik.GetLongestLockableDuration(ctx)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// Retrieve pool ID using GetPoolIdFromGaugeId(gaugeId, lockableDuration)
+		poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeRecord.GaugeId, gaugeDuration)
+		if err != nil {
+			return nil, err
+		}
+
+		// Get new volume for pool. Assert GTE gauge's weight
+		cumulativePoolVolume := k.pmk.GetOsmoVolumeForPool(ctx, poolId)
+
+		// If new volume is 0, there was an issue with volume tracking. Return error.
+		// We expect this to be handled quietly in update logic but not in init logic.
+		// By returning an error, we let the caller decide whether to handle it quietly or not.
+		if !cumulativePoolVolume.IsPositive() {
+			return nil, types.NoPoolVolumeError{PoolId: poolId}
+		}
+
+		// Update gauge record's weight to new volume - last volume snapshot
+		volumeDelta := cumulativePoolVolume.Sub(gaugeRecord.CumulativeWeight)
+		if volumeDelta.IsNegative() {
+			return nil, types.CumulativeVolumeDecreasedError{PoolId: poolId, PreviousVolume: gaugeRecord.CumulativeWeight, NewVolume: cumulativePoolVolume}
+		}
+
+		gaugeRecord.CurrentWeight = volumeDelta
+
+		// Snapshot cumulative volume
+		gaugeRecord.CumulativeWeight = cumulativePoolVolume
+
+		// Add new this diff to total weight
+		totalWeight = totalWeight.Add(volumeDelta)
+
+		// Mutate original group to ensure changes are tracked
+		updatedGroup.InternalGaugeInfo.GaugeRecords[i] = gaugeRecord
+	}
+
+	// Update group's total weight
+	updatedGroup.InternalGaugeInfo.TotalWeight = totalWeight
+
+	for i, gaugeRecord := range updatedGroup.InternalGaugeInfo.GaugeRecords {
+		if totalWeight.IsZero() {
+			gaugeVolumes[i] = types.GaugeVolume{
+				GaugeId:       gaugeRecord.GaugeId,
+				RatioOfVolume: sdk.ZeroDec(),
+			}
+		} else {
+			gaugeVolumes[i] = types.GaugeVolume{
+				GaugeId:       gaugeRecord.GaugeId,
+				RatioOfVolume: gaugeRecord.CurrentWeight.ToLegacyDec().Quo(totalWeight.ToLegacyDec()),
+			}
+		}
+	}
+
+	return gaugeVolumes, nil
+}
+
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
 // It handles any kind of gauges:

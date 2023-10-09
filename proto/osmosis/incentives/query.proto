@@ -87,6 +87,14 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/group_by_group_gauge_id/{id}";
   }
+  // CurrentVolumeByGroupGaugeID returns the current volume since the
+  // the last epoch given a group gauge ID
+  rpc CurrentVolumeByGroupGaugeID(QueryCurrentVolumeByGroupGaugeIDRequest)
+      returns (QueryCurrentVolumeByGroupGaugeIDResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/current_volume_by_group_gauge_id/"
+        "{group_gauge_id}";
+  }
 }
 
 message ModuleToDistributeCoinsRequest {}
@@ -214,4 +222,18 @@ message QueryAllGroupsWithGaugeResponse {
 message QueryGroupByGroupGaugeIDRequest { uint64 id = 1; }
 message QueryGroupByGroupGaugeIDResponse {
   Group group = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryCurrentVolumeByGroupGaugeIDRequest { uint64 group_gauge_id = 1; }
+message QueryCurrentVolumeByGroupGaugeIDResponse {
+  repeated GaugeVolume gauge_volume = 1 [ (gogoproto.nullable) = false ];
+}
+
+message GaugeVolume {
+  uint64 gauge_id = 1;
+  string ratio_of_volume = 2 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.moretags) = "yaml:\"ratio_of_volume\"",
+    (gogoproto.nullable) = false
+  ];
 }
