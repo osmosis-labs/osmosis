@@ -604,9 +604,16 @@ func (k Keeper) QueryVolumeSplitGroup(ctx sdk.Context, group types.Group) ([]typ
 	updatedGroup.InternalGaugeInfo.TotalWeight = totalWeight
 
 	for i, gaugeRecord := range updatedGroup.InternalGaugeInfo.GaugeRecords {
-		gaugeVolumes[i] = types.GaugeVolume{
-			GaugeId:       gaugeRecord.GaugeId,
-			RatioOfVolume: gaugeRecord.CurrentWeight.ToLegacyDec().Quo(totalWeight.ToLegacyDec()),
+		if totalWeight.IsZero() {
+			gaugeVolumes[i] = types.GaugeVolume{
+				GaugeId:       gaugeRecord.GaugeId,
+				RatioOfVolume: sdk.ZeroDec(),
+			}
+		} else {
+			gaugeVolumes[i] = types.GaugeVolume{
+				GaugeId:       gaugeRecord.GaugeId,
+				RatioOfVolume: gaugeRecord.CurrentWeight.ToLegacyDec().Quo(totalWeight.ToLegacyDec()),
+			}
 		}
 	}
 
