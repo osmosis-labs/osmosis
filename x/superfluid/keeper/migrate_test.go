@@ -1020,7 +1020,7 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 		{BalancerPoolId: balancerPooId, ClPoolId: clPoolId},
 	}}
-	err = gammKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, migrationRecord)
+	err = gammKeeper.OverwriteMigrationRecords(ctx, migrationRecord)
 	s.Require().NoError(err)
 
 	// The unbonding duration is the same as the staking module's unbonding duration.
@@ -1315,13 +1315,15 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		s.Require().NoError(err)
 		balancerSpotPrice, err := balancerPool.SpotPrice(s.Ctx, DefaultCoin1.Denom, DefaultCoin0.Denom)
 		s.Require().NoError(err)
-		s.CreateFullRangePosition(clPool, sdk.NewCoins(sdk.NewCoin(DefaultCoin0.Denom, osmomath.NewInt(100000000)), sdk.NewCoin(DefaultCoin1.Denom, osmomath.NewDec(100000000).Mul(balancerSpotPrice).TruncateInt())))
+		// balancerSpotPrice truncation is acceptable because all CFMM pools only allow 18 decimals.
+		// The reason why BigDec is returned is to maintain compatibility with the generalized `PoolI.SpotPrice`API.
+		s.CreateFullRangePosition(clPool, sdk.NewCoins(sdk.NewCoin(DefaultCoin0.Denom, osmomath.NewInt(100000000)), sdk.NewCoin(DefaultCoin1.Denom, osmomath.NewDec(100000000).Mul(balancerSpotPrice.Dec()).TruncateInt())))
 
 		// Add a gov sanctioned link between the balancer and concentrated liquidity pool.
 		migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 			{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},
 		}}
-		err = s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, migrationRecord)
+		err = s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx, migrationRecord)
 		s.Require().NoError(err)
 
 		// Register the CL denom as superfluid.

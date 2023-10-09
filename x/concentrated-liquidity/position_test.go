@@ -1796,7 +1796,7 @@ func (s *KeeperTestSuite) TestTickRoundingEdgeCase() {
 	swapAddr := testAccs[2]
 	desiredTokenOut := sdk.NewCoin(USDC, osmomath.NewInt(10000))
 	s.FundAcc(swapAddr, sdk.NewCoins(sdk.NewCoin(ETH, osmomath.NewInt(1000000000000000000))))
-	_, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, osmomath.ZeroDec(), osmomath.ZeroDec())
+	_, _, _, err := s.clk.SwapInAmtGivenOut(s.Ctx, swapAddr, pool, desiredTokenOut, ETH, osmomath.ZeroDec(), osmomath.ZeroBigDec())
 	s.Require().NoError(err)
 
 	// Both positions should be able to withdraw successfully
@@ -2018,9 +2018,11 @@ func (s *KeeperTestSuite) TestNegativeTickRange_SpreadFactor() {
 		denom0           = pool.GetToken0()
 		denom1           = pool.GetToken1()
 		rewardsPerSecond = osmomath.NewDec(1000)
+		incentiveCoin    = sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000))
 	)
 
-	_, err := s.clk.CreateIncentive(s.Ctx, poolId, s.TestAccs[0], sdk.NewCoin("uosmo", osmomath.NewInt(1_000_000)), rewardsPerSecond, s.Ctx.BlockTime(), time.Nanosecond)
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(incentiveCoin))
+	_, err := s.clk.CreateIncentive(s.Ctx, poolId, s.TestAccs[0], incentiveCoin, rewardsPerSecond, s.Ctx.BlockTime(), time.Nanosecond)
 	s.Require().NoError(err)
 
 	// Estimates how much to swap in to approximately reach the given tick

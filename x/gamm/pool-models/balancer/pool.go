@@ -629,13 +629,13 @@ func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coin
 // In other words, it costs 0.5 uosmo to get one uatom.
 //
 // panics if the pool in state is incorrect, and has any weight that is 0.
-func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset, baseAsset string) (spotPrice osmomath.Dec, err error) {
+func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset, baseAsset string) (spotPrice osmomath.BigDec, err error) {
 	quote, base, err := p.parsePoolAssetsByDenoms(quoteAsset, baseAsset)
 	if err != nil {
-		return osmomath.Dec{}, err
+		return osmomath.BigDec{}, err
 	}
 	if base.Weight.IsZero() || quote.Weight.IsZero() {
-		return osmomath.Dec{}, errors.New("pool is misconfigured, got 0 weight")
+		return osmomath.BigDec{}, errors.New("pool is misconfigured, got 0 weight")
 	}
 
 	// spot_price = (Quote Supply / Quote Weight) / (Base Supply / Base Weight)
@@ -643,9 +643,9 @@ func (p Pool) SpotPrice(ctx sdk.Context, quoteAsset, baseAsset string) (spotPric
 	//            = (Base Weight  / Quote Weight) * (Quote Supply / Base Supply)
 	invWeightRatio := base.Weight.ToLegacyDec().Quo(quote.Weight.ToLegacyDec())
 	supplyRatio := quote.Token.Amount.ToLegacyDec().Quo(base.Token.Amount.ToLegacyDec())
-	spotPrice = supplyRatio.Mul(invWeightRatio)
+	spotPriceDec := supplyRatio.Mul(invWeightRatio)
 
-	return spotPrice, err
+	return osmomath.BigDecFromDec(spotPriceDec), err
 }
 
 // calcPoolOutGivenSingleIn - balance pAo.

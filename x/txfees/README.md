@@ -4,6 +4,7 @@ The txfees modules allows nodes to easily support many tokens for usage as txfee
 This is done by having this module maintain an allow-list of token denoms which can be used as tx fees, each with some associated metadata.
 Then this metadata is used in tandem with a "Spot Price Calculator" provided to the module, to convert the provided tx fees into their equivalent value in the base denomination.
 Currently the only supported metadata & spot price calculator is using a GAMM pool ID & the GAMM keeper.
+Two new module accounts are created in this module; one is the fee collector for staking rewards and the other is the fee collector for the community pool. The primary fee collector that this module sends funds to is the fee collector initialized in the sdk's authtypes module, which automatically sends funds to stakers after each epoch. See the [Epoch Hooks](#epoch-hooks) section below for more details.
 
 ## State Changes
 

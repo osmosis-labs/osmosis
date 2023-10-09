@@ -1,4 +1,5 @@
-package grpc 
+
+package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `proto/osmosis/concentrated-liquidity/query.yml`
@@ -88,6 +89,16 @@ func (q Querier) Params(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.Params(ctx, *req)
+}
+
+func (q Querier) NumNextInitializedTicks(grpcCtx context.Context,
+	req *queryproto.NumNextInitializedTicksRequest,
+) (*queryproto.NumNextInitializedTicksResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.NumNextInitializedTicks(ctx, *req)
 }
 
 func (q Querier) LiquidityPerTickRange(grpcCtx context.Context,

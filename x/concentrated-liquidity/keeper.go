@@ -59,6 +59,11 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
+// SetParam sets a specific concentrated-liquidity module's parameter with the provided parameter.
+func (k Keeper) SetParam(ctx sdk.Context, key []byte, value interface{}) {
+	k.paramSpace.Set(ctx, key, value)
+}
+
 // Set the poolmanager keeper.
 func (k *Keeper) SetPoolManagerKeeper(poolmanagerKeeper types.PoolManagerKeeper) {
 	k.poolmanagerKeeper = poolmanagerKeeper
@@ -118,13 +123,10 @@ func (k *Keeper) SetListeners(listeners types.ConcentratedLiquidityListeners) *K
 	return k
 }
 
-// ValidatePermissionlessPoolCreationEnabled returns nil if permissionless pool creation in the module is enabled.
-// Otherwise, returns an error.
-func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error {
-	if !k.GetParams(ctx).IsPermissionlessPoolCreationEnabled {
-		return types.ErrPermissionlessPoolCreationDisabled
-	}
-	return nil
+// IsPermissionlessPoolCreationEnabled returns true if permissionless pool creation in the module is enabled.
+// Otherwise, returns false
+func (k Keeper) IsPermissionlessPoolCreationEnabled(ctx sdk.Context) bool {
+	return k.GetParams(ctx).IsPermissionlessPoolCreationEnabled
 }
 
 // GetAuthorizedQuoteDenoms gets the authorized quote denoms from the poolmanager keeper.

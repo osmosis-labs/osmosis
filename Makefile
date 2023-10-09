@@ -7,7 +7,7 @@ LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 BUILDDIR ?= $(CURDIR)/build
 DOCKER := $(shell which docker)
-E2E_UPGRADE_VERSION := "v19"
+E2E_UPGRADE_VERSION := "v20"
 #SHELL := /bin/bash
 
 # Go version to be used in docker images
@@ -266,6 +266,9 @@ update-sdk-version:
 			echo "File $$modfile does not exist"; \
 		fi; \
 	done
+
+tidy-workspace:
+	@./scripts/tidy_workspace.sh
 
 ###############################################################################
 ###                                  Proto                                  ###

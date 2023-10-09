@@ -1,11 +1,15 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
 )
+
+var ByGroupQueryCondition = byGroupQueryCondition
 
 // AddGaugeRefByKey appends the provided gauge ID into an array associated with the provided key.
 func (k Keeper) AddGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
@@ -40,4 +44,52 @@ func (k Keeper) MoveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 // ChargeFeeIfSufficientFeeDenomBalance see chargeFeeIfSufficientFeeDenomBalance spec.
 func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee osmomath.Int, gaugeCoins sdk.Coins) error {
 	return k.chargeFeeIfSufficientFeeDenomBalance(ctx, address, fee, gaugeCoins)
+}
+
+// SyncGroupWeights updates the individual and total weights of the gauge records based on the splitting policy.
+func (k Keeper) SyncGroupWeights(ctx sdk.Context, group types.Group) error {
+	return k.syncGroupWeights(ctx, group)
+}
+
+// SetGauge sets the regular gauge to state.
+func (k Keeper) SetGauge(ctx sdk.Context, gauge *types.Gauge) error {
+	return k.setGauge(ctx, gauge)
+}
+
+// exporting an internal helper for testing
+func (k Keeper) AddToGaugeRewardsInternal(ctx sdk.Context, coins sdk.Coins, gaugeID uint64) error {
+	return k.addToGaugeRewards(ctx, coins, gaugeID)
+}
+
+// SyncVolumeSplitGroup updates the individual and total weights of the gauge records based on the volume splitting policy.
+func (k Keeper) SyncVolumeSplitGroup(ctx sdk.Context, volumeSplitGauge types.Group) error {
+	return k.syncVolumeSplitGroup(ctx, volumeSplitGauge)
+}
+
+func (k Keeper) HandleGroupPostDistribute(ctx sdk.Context, groupGauge types.Gauge, coinsDistributed sdk.Coins) error {
+	return k.handleGroupPostDistribute(ctx, groupGauge, coinsDistributed)
+}
+
+func (k Keeper) InitGaugeInfo(ctx sdk.Context, poolIds []uint64) (types.InternalGaugeInfo, error) {
+	return k.initGaugeInfo(ctx, poolIds)
+}
+
+func RegularGaugeStoreKey(ID uint64) []byte {
+	return gaugeStoreKey(ID)
+}
+
+func CombineKeys(keys ...[]byte) []byte {
+	return combineKeys(keys...)
+}
+
+func GetTimeKeys(timestamp time.Time) []byte {
+	return getTimeKey(timestamp)
+}
+
+func (k Keeper) ChargeGroupCreationFeeIfNotWhitelisted(ctx sdk.Context, sender sdk.AccAddress) (chargedFee bool, err error) {
+	return k.chargeGroupCreationFeeIfNotWhitelisted(ctx, sender)
+}
+
+func (k Keeper) CreateGroupInternal(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, poolIDs []uint64) (types.Group, error) {
+	return k.createGroup(ctx, coins, numEpochPaidOver, owner, poolIDs)
 }

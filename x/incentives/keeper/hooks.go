@@ -20,6 +20,17 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	params := k.GetParams(ctx)
 
 	if epochIdentifier == params.DistrEpochIdentifier {
+		groups, err := k.GetAllGroups(ctx)
+		if err != nil {
+			return err
+		}
+
+		ctx.Logger().Info(fmt.Sprintf("x/incentives AfterEpochEnd, num groups %d, %d", len(groups), ctx.BlockHeight()))
+		err = k.AllocateAcrossGauges(ctx, groups)
+		if err != nil {
+			return err
+		}
+
 		// begin distribution if it's start time
 		gauges := k.GetUpcomingGauges(ctx)
 		ctx.Logger().Info(fmt.Sprintf("x/incentives AfterEpochEnd, num upcoming gauges %d, %d", len(gauges), ctx.BlockHeight()))
@@ -33,11 +44,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 		if len(gauges) > 10 {
 			ctx.EventManager().IncreaseCapacity(2e6)
-		}
-
-		err := k.AllocateAcrossGauges(ctx)
-		if err != nil {
-			return err
 		}
 
 		// distribute due to epoch event

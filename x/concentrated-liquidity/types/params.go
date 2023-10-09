@@ -8,6 +8,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 // Parameter store keys.
@@ -18,6 +19,7 @@ var (
 	KeyAuthorizedQuoteDenoms              = []byte("AuthorizedQuoteDenoms")
 	KeyAuthorizedUptimes                  = []byte("AuthorizedUptimes")
 	KeyIsPermisionlessPoolCreationEnabled = []byte("IsPermisionlessPoolCreationEnabled")
+	KeyUnrestrictedPoolCreatorWhitelist   = []byte("UnrestrictedPoolCreatorWhitelist")
 
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -27,7 +29,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomath.Dec, discountRate osmomath.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool) Params {
+func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomath.Dec, discountRate osmomath.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool, unrestrictedPoolCreatorWhitelist []string) Params {
 	return Params{
 		AuthorizedTickSpacing:               authorizedTickSpacing,
 		AuthorizedSpreadFactors:             authorizedSpreadFactors,
@@ -35,6 +37,7 @@ func NewParams(authorizedTickSpacing []uint64, authorizedSpreadFactors []osmomat
 		BalancerSharesRewardDiscount:        discountRate,
 		AuthorizedUptimes:                   authorizedUptimes,
 		IsPermissionlessPoolCreationEnabled: isPermissionlessPoolCreationEnabled,
+		UnrestrictedPoolCreatorWhitelist:    unrestrictedPoolCreatorWhitelist,
 	}
 }
 
@@ -52,6 +55,7 @@ func DefaultParams() Params {
 		BalancerSharesRewardDiscount:        DefaultBalancerSharesDiscount,
 		AuthorizedUptimes:                   DefaultAuthorizedUptimes,
 		IsPermissionlessPoolCreationEnabled: false,
+		UnrestrictedPoolCreatorWhitelist:    DefaultUnrestrictedPoolCreatorWhitelist,
 	}
 }
 
@@ -75,6 +79,9 @@ func (p Params) Validate() error {
 	if err := validateAuthorizedUptimes(p.AuthorizedUptimes); err != nil {
 		return err
 	}
+	if err := osmoutils.ValidateAddressList(p.UnrestrictedPoolCreatorWhitelist); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -87,6 +94,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyIsPermisionlessPoolCreationEnabled, &p.IsPermissionlessPoolCreationEnabled, validateIsPermissionLessPoolCreationEnabled),
 		paramtypes.NewParamSetPair(KeyDiscountRate, &p.BalancerSharesRewardDiscount, validateBalancerSharesDiscount),
 		paramtypes.NewParamSetPair(KeyAuthorizedUptimes, &p.AuthorizedUptimes, validateAuthorizedUptimes),
+		paramtypes.NewParamSetPair(KeyUnrestrictedPoolCreatorWhitelist, &p.UnrestrictedPoolCreatorWhitelist, osmoutils.ValidateAddressList),
 	}
 }
 

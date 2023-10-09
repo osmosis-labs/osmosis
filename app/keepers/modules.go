@@ -39,6 +39,7 @@ import (
 	gammclient "github.com/osmosis-labs/osmosis/v19/x/gamm/client"
 	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/ibcratelimitmodule"
 	"github.com/osmosis-labs/osmosis/v19/x/incentives"
+	incentivesclient "github.com/osmosis-labs/osmosis/v19/x/incentives/client"
 	"github.com/osmosis-labs/osmosis/v19/x/lockup"
 	"github.com/osmosis-labs/osmosis/v19/x/mint"
 	poolincentives "github.com/osmosis-labs/osmosis/v19/x/pool-incentives"
@@ -91,6 +92,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 			cwpoolclient.MigratePoolContractsProposalHandler,
 			txfeesclient.SubmitUpdateFeeTokenProposalHandler,
 			poolmanagerclient.DenomPairTakerFeeProposalHandler,
+			incentivesclient.HandleCreateGroupsProposal,
 		)...,
 	),
 	params.AppModuleBasic{},

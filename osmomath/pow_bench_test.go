@@ -82,3 +82,27 @@ func BenchmarkSqrtPow(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkSlowPowCases(b *testing.B) {
+	tests := []struct {
+		base Dec
+		exp  Dec
+	}{
+		{
+			// Original worst case:
+			// 1.99999999999999
+			// 0.1
+			//
+			// The values below are hand-picked to be close to the worst case
+			// while under the iteration bound.
+			base: MustNewDecFromStr("1.9999"),
+			exp:  MustNewDecFromStr("0.1"),
+		},
+	}
+
+	for i := 0; i < b.N; i++ {
+		for _, test := range tests {
+			Pow(test.base, test.exp)
+		}
+	}
+}

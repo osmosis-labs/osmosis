@@ -205,7 +205,8 @@ func (s *TestSuite) TestEndBlock() {
 				// check if spot price has been correctly updated in twap record
 				asset0sp, err := s.App.PoolManagerKeeper.RouteCalculateSpotPrice(s.Ctx, poolId, twapAfterBlock1.Asset0Denom, twapAfterBlock1.Asset1Denom)
 				s.Require().NoError(err)
-				s.Require().Equal(asset0sp, twapAfterBlock1.P0LastSpotPrice)
+				// Note: twap only supports decimal precision of 18. Thus, truncation.
+				s.Require().Equal(asset0sp.Dec(), twapAfterBlock1.P0LastSpotPrice)
 
 				// run basic swap on block two for price change
 				if tc.block2Swap {
@@ -233,7 +234,8 @@ func (s *TestSuite) TestEndBlock() {
 				// check if spot price has been correctly updated in twap record
 				asset0sp, err = s.App.PoolManagerKeeper.RouteCalculateSpotPrice(s.Ctx, poolId, twapAfterBlock1.Asset0Denom, twapAfterBlock2.Asset1Denom)
 				s.Require().NoError(err)
-				s.Require().Equal(asset0sp, twapAfterBlock2.P0LastSpotPrice)
+				// Note: twap only supports decimal precision of 18. Thus, truncation.
+				s.Require().Equal(asset0sp.Dec(), twapAfterBlock2.P0LastSpotPrice)
 			})
 		}
 	}

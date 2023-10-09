@@ -51,7 +51,7 @@ jobs:
             
             Please follow the instructions below:
 
-            1. Open https://github.com/osmosis/osmosis/actions/workflows/go-mod-auto-bump.yml
+            1. Open https://github.com/osmosis-labs/osmosis/actions/workflows/go-mod-auto-bump.yml
             2. Provide the current branch name
             3. On success, confirm if an automated commit corretly updated the go.mod and go.sum files
             

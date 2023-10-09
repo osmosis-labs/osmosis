@@ -29,6 +29,12 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalPoolLiquidity)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdAllPools)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdPool)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalVolumeForPool)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateTradeBasedOnPriceImpact)
+	cmd.AddCommand(
+		osmocli.GetParams[*queryproto.ParamsRequest](
+			types.ModuleName, queryproto.NewQueryClient),
+	)
 
 	return cmd
 }
@@ -161,7 +167,28 @@ func GetCmdTotalPoolLiquidity() (*osmocli.QueryDescriptor, *queryproto.TotalPool
 	return &osmocli.QueryDescriptor{
 		Use:   "total-pool-liquidity",
 		Short: "Query total-pool-liquidity",
-		Long: `{{.Short}} 
+		Long: `{{.Short}}
 		{{.CommandPrefix}} total-pool-liquidity 1`,
 	}, &queryproto.TotalPoolLiquidityRequest{}
+}
+
+func GetCmdTotalVolumeForPool() (*osmocli.QueryDescriptor, *queryproto.TotalVolumeForPoolRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "total-volume-for-pool",
+		Short: "Query total-volume-for-pool",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} total-volume-for-pool 1`,
+	}, &queryproto.TotalVolumeForPoolRequest{}
+}
+
+func GetCmdEstimateTradeBasedOnPriceImpact() (
+	*osmocli.QueryDescriptor, *queryproto.EstimateTradeBasedOnPriceImpactRequest,
+) {
+	return &osmocli.QueryDescriptor{
+		Use:   "estimate-trade-based-on-price-impact  <fromCoin> <toCoinDenom> <poolId> <maxPriceImpact> <externalPrice>",
+		Short: "Query estimate-trade-based-on-price-impact",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} estimate-trade-based-on-price-impact 100uosmo stosmo  833 0.001 1.00`,
+		QueryFnName: "EstimateTradeBasedOnPriceImpact",
+	}, &queryproto.EstimateTradeBasedOnPriceImpactRequest{}
 }

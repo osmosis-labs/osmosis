@@ -118,14 +118,14 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	s.Require().Equal(osmomath.Dec{}, afterRemoveTwapBOverA)
 
 	// Create a position and check that TWAP now returns a value.
-	// Should be equal to 1 since the position contains equal amounts of both tokens.
 	s.T().Log("creating position")
-	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s,10000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
+	chainANode.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("20000000%s,10000000%s", concentratedPool.GetToken0(), concentratedPool.GetToken1()), 0, 0, concentratedPool.GetId())
 	chainANode.WaitForNumHeights(1)
-	timeAfterSwapRemoveAndCreatePlus1Height := chainANode.QueryLatestBlockTime()
-	secondTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapRemoveAndCreatePlus1Height)
+	timeAfterSwapRemoveAndCreate := chainANode.QueryLatestBlockTime()
+	chainANode.WaitForNumHeights(1)
+	secondTwapBOverA, err := chainANode.QueryGeometricTwapToNow(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwapRemoveAndCreate)
 	s.Require().NoError(err)
-	s.Require().Equal(osmomath.NewDec(1), secondTwapBOverA)
+	s.Require().Equal(osmomath.NewDec(2), secondTwapBOverA)
 }
 
 // Note: this test depends on taker fee being set.

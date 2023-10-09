@@ -424,7 +424,7 @@ func (s *KeeperTestSuite) TestSpotPriceOverflow() {
 			poolId := s.PrepareBalancerPoolWithCoinsAndWeights(tc.poolLiquidity, tc.poolWeights)
 			pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
 			s.Require().NoError(err)
-			var poolSpotPrice osmomath.Dec
+			var poolSpotPrice osmomath.BigDec
 			var poolErr error
 			osmoassert.ConditionalPanic(s.T(), tc.panics, func() {
 				poolSpotPrice, poolErr = pool.SpotPrice(s.Ctx, tc.baseAssetDenom, tc.quoteAssetDenom)
@@ -434,15 +434,18 @@ func (s *KeeperTestSuite) TestSpotPriceOverflow() {
 				s.Require().NoError(poolErr)
 				s.Require().ErrorIs(keeperErr, types.ErrSpotPriceOverflow)
 				s.Require().Error(keeperErr)
-				s.Require().Equal(types.MaxSpotPrice, keeperSpotPrice)
+				s.Require().Equal(types.MaxSpotPriceBigDec, keeperSpotPrice)
 			} else if tc.panics {
 				s.Require().ErrorIs(keeperErr, types.ErrSpotPriceInternal)
 				s.Require().Error(keeperErr)
-				s.Require().Equal(osmomath.Dec{}, keeperSpotPrice)
+				s.Require().Equal(osmomath.BigDec{}, keeperSpotPrice)
 			} else {
 				s.Require().NoError(poolErr)
 				s.Require().NoError(keeperErr)
-				s.Require().Equal(poolSpotPrice, keeperSpotPrice)
+				// Truncation is acceptable here because both stableswap and balancer
+				// only support 18 decimal places and wrap around the 36 BigDec for
+				// compatibility with the `PoolI.SpotPrice` API
+				s.Require().Equal(poolSpotPrice.Dec(), keeperSpotPrice)
 			}
 		})
 	}
