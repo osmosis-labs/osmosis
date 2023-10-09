@@ -221,6 +221,20 @@ func (q Querier) GroupByGroupGaugeID(goCtx context.Context, req *types.QueryGrou
 	return &types.QueryGroupByGroupGaugeIDResponse{Group: group}, nil
 }
 
+func (q Querier) CurrentVolumeByGroupGaugeID(goCtx context.Context, req *types.QueryCurrentVolumeByGroupGaugeIDRequest) (*types.QueryCurrentVolumeByGroupGaugeIDResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	group, err := q.Keeper.GetGroupByGaugeID(ctx, req.GroupGaugeId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	gaugeVolumes, err := q.Keeper.QueryVolumeSplitGroup(ctx, group)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryCurrentVolumeByGroupGaugeIDResponse{GaugeVolume: gaugeVolumes}, nil
+}
+
 // getGaugeFromIDJsonBytes returns gauges from the json bytes of gaugeIDs.
 func (q Querier) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]types.Gauge, error) {
 	gauges := []types.Gauge{}
