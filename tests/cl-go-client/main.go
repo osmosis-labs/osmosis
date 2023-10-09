@@ -32,6 +32,20 @@ import (
 // operation defines the desired operation to be run by this script.
 type operation int
 
+type Position struct {
+	AccountName string
+	LowerTick   int64
+	UpperTick   int64
+	Tokens      sdk.Coins
+}
+
+type PositionResult struct {
+	PositionId       uint64
+	AmountCreated0   osmomath.Int
+	AmountCreated1   osmomath.Int
+	LiquidityCreated osmomath.Dec
+}
+
 const (
 	// createPositions creates positions in the CL pool with id expectedPoolId.
 	createPositions operation = iota
@@ -151,7 +165,10 @@ func main() {
 
 	switch operation(desiredOperation) {
 	case createPositions:
-		createManyRandomPositions(igniteClient, expectedPoolId, numPositions)
+		err := createManyRandomPositions(igniteClient, expectedPoolId, numPositions)
+		if err != nil {
+			log.Fatalf("Failed to create positions: %v", err)
+		}
 		return
 	case addToPositions:
 		addToPositionsOp(igniteClient)
@@ -177,7 +194,7 @@ func main() {
 	}
 }
 
-func createRandomPosition(igniteClient cosmosclient.Client, poolId uint64) (string, int64, int64, sdk.Coins, error) {
+func createRandomPosition(igniteClient cosmosclient.Client, poolId uint64) (Position, error) {
 	minTick, maxTick := cltypes.MinInitializedTick, cltypes.MaxTick
 
 	// Generate random values for position creation
@@ -195,17 +212,27 @@ func createRandomPosition(igniteClient cosmosclient.Client, poolId uint64) (stri
 	tokenDesired1 := sdk.NewCoin(denom1, osmomath.NewInt(rand.Int63n(maxAmountDeposited)))
 	tokensDesired := sdk.NewCoins(tokenDesired0, tokenDesired1)
 
+	var createPositionErr error
 	runMessageWithRetries(func() error {
-		_, _, _, _, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
-		return err
+		_, createPositionErr = createPosition(igniteClient, poolId, accountName, lowerTick, upperTick, tokensDesired, defaultMinAmount, defaultMinAmount)
+		return createPositionErr
 	})
 
-	return accountName, lowerTick, upperTick, tokensDesired, nil
+	if createPositionErr != nil {
+		return Position{}, createPositionErr
+	}
+
+	return Position{
+		AccountName: accountName,
+		LowerTick:   lowerTick,
+		UpperTick:   upperTick,
+		Tokens:      tokensDesired,
+	}, nil
 }
 
 func createManyRandomPositions(igniteClient cosmosclient.Client, poolId uint64, numPositions int) error {
 	for i := 0; i < numPositions; i++ {
-		_, _, _, _, err := createRandomPosition(igniteClient, poolId)
+		_, err := createRandomPosition(igniteClient, poolId)
 		if err != nil {
 			// Handle the error
 			return err
@@ -234,7 +261,7 @@ func swapRandomSmallAmountsContinuously(igniteClient cosmosclient.Client, poolId
 		tokenInCoin := sdk.NewCoin(tokenInDenom, osmomath.NewInt(rand.Int63n(maxAmountSingleSwap)))
 
 		runMessageWithRetries(func() error {
-			_, err := makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
+			_, err := makeSwap(igniteClient, poolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
 			return err
 		})
 	}
@@ -263,7 +290,7 @@ func swapGivenLargeAmountsBothDirections(igniteClient cosmosclient.Client, poolI
 
 	for i := 0; i < numSwaps; i++ {
 		runMessageWithRetries(func() error {
-			tokenOut, err := makeSwap(igniteClient, expectedPoolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
+			tokenOut, err := makeSwap(igniteClient, poolId, accountName, tokenInCoin, tokenOutDenom, tokenOutMinAmount)
 
 			if err == nil {
 				// Swap the resulting amount out back while accounting for spread factor.
@@ -345,7 +372,7 @@ func createExternalCLIncentive(igniteClient cosmosclient.Client, poolId uint64, 
 	clQueryClient := clqueryproto.NewQueryClient(igniteClient.Context())
 
 	incentiveRecordsResponse, err := clQueryClient.IncentiveRecords(context.Background(), &clqueryproto.IncentiveRecordsRequest{
-		PoolId: expectedPoolId,
+		PoolId: poolId,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -373,7 +400,7 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	return resp.PoolID
 }
 
-func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 osmomath.Int) (positionId uint64, amountCreated0, amountCreated1 osmomath.Int, liquidityCreated osmomath.Dec, err error) {
+func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokensProvided sdk.Coins, tokenMinAmount0, tokenMinAmount1 osmomath.Int) (result PositionResult, err error) {
 	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
@@ -391,15 +418,20 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
 	if err != nil {
-		return 0, osmomath.Int{}, osmomath.Int{}, osmomath.Dec{}, err
+		return PositionResult{}, err
 	}
 	resp := cltypes.MsgCreatePositionResponse{}
 	if err := txResp.Decode(&resp); err != nil {
-		return 0, osmomath.Int{}, osmomath.Int{}, osmomath.Dec{}, err
+		return PositionResult{}, err
 	}
 	log.Println("created position: positionId", resp.PositionId, "amt0", resp.Amount0, "amt1", resp.Amount1, "liquidity", resp.LiquidityCreated)
 
-	return resp.PositionId, resp.Amount0, resp.Amount1, resp.LiquidityCreated, nil
+	return PositionResult{
+		PositionId:       resp.PositionId,
+		AmountCreated0:   resp.Amount0,
+		AmountCreated1:   resp.Amount1,
+		LiquidityCreated: resp.LiquidityCreated,
+	}, nil
 }
 
 func addToPositionsOp(igniteClient cosmosclient.Client) {
@@ -631,7 +663,7 @@ func createGauge(client cosmosclient.Client, poolId uint64, senderKeyringAccount
 	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
 
-	log.Println("creating CL gauge for pool id", expectedPoolId, "gaugeCoins", gaugeCoins)
+	log.Println("creating CL gauge for pool id", poolId, "gaugeCoins", gaugeCoins)
 
 	msg := &incentivestypes.MsgCreateGauge{
 		IsPerpetual: false,
@@ -642,7 +674,7 @@ func createGauge(client cosmosclient.Client, poolId uint64, senderKeyringAccount
 		StartTime:         time.Now(),
 		Coins:             gaugeCoins,
 		NumEpochsPaidOver: 5,
-		PoolId:            expectedPoolId,
+		PoolId:            poolId,
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
 	if err != nil {

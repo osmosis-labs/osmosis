@@ -533,6 +533,12 @@ localnet-state-export-stop:
 
 localnet-state-export-clean: localnet-clean
 
+POOL := 1
+POOL1 := 1
+POOL2 := 2
+RATION := 0.4
+SWAPS := 100
+
 # create 100 concentrated-liquidity positions in localosmosis at pool id 1
 localnet-cl-create-positions:
 	go run tests/cl-go-client/main.go --operation 0 --poolId $(POOL)
