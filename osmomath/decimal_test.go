@@ -41,9 +41,9 @@ type BigIntDecorator interface {
 func Precision(decimal interface{}) int64 {
 	switch any(decimal).(type) {
 	case osmomath.BigDec:
-		return osmomath.PrecisionBigDec
+		return osmomath.BigDecPrecision
 	case osmomath.Dec:
-		return osmomath.PrecisionDec
+		return osmomath.DecPrecision
 	case osmomath.Int, osmomath.Uint:
 		return 0
 	default:
@@ -1610,8 +1610,8 @@ func (s *decimalTestSuite) TestDecWithPrecision_Mutative() {
 		precision         uint64
 		expPanic          bool
 	}{
-		// basic Dec conversion, since precision is osmomath.PrecisionDec
-		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), osmomath.PrecisionDec, false},
+		// basic Dec conversion, since precision is osmomath.DecPrecision
+		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), osmomath.DecPrecision, false},
 		// test cases with custom precision:
 		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000"), 12, false},
 		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000"), 12, false},
