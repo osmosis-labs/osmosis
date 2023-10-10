@@ -638,8 +638,6 @@ func (k Keeper) distributeInternal(
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 
-	ctx.Logger().Info("distributeInternal gauge %s", gauge.String())
-
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
 
 	// if its a perpetual gauge, we set remaining epochs to 1.
@@ -841,8 +839,6 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 // CONTRACT: gauges must be active.
 func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
 	distrInfo := newDistributionInfo()
-
-	ctx.Logger().Info("gauges Distribute: %s", gauges)
 
 	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
 	totalDistributedCoins := sdk.NewCoins()
