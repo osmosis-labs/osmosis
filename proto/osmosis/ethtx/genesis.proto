@@ -1,0 +1,9 @@
+syntax = "proto3";
+package osmosis.ethtx.types;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/ethtx/types";
+
+// GenesisState defines the mint module's genesis state.
+message GenesisState {}

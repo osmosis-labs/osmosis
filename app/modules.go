@@ -6,6 +6,7 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
+	"github.com/osmosis-labs/osmosis/v19/x/ethtx"
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v4/modules/core"
@@ -65,6 +66,7 @@ import (
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	cwpoolmodule "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/module"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
+	ethtxtypes "github.com/osmosis-labs/osmosis/v19/x/ethtx/types"
 	"github.com/osmosis-labs/osmosis/v19/x/gamm"
 	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/ibcratelimitmodule"
@@ -104,6 +106,7 @@ var moduleAccountPermissions = map[string][]string{
 	icatypes.ModuleName:                           nil,
 	icqtypes.ModuleName:                           nil,
 	minttypes.ModuleName:                          {authtypes.Minter, authtypes.Burner},
+	ethtxtypes.ModuleName:                         nil,
 	minttypes.DeveloperVestingModuleAcctName:      nil,
 	stakingtypes.BondedPoolName:                   {authtypes.Burner, authtypes.Staking},
 	stakingtypes.NotBondedPoolName:                {authtypes.Burner, authtypes.Staking},
@@ -147,6 +150,7 @@ func appModules(
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
+		ethtx.NewAppModule(appCodec),
 		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		downtimemodule.NewAppModule(*app.DowntimeKeeper),
@@ -242,6 +246,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
 		minttypes.ModuleName,
+		ethtxtypes.ModuleName,
 		crisistypes.ModuleName,
 		ibchost.ModuleName,
 		icatypes.ModuleName,

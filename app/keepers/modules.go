@@ -7,6 +7,7 @@ import (
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v4/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
+	"github.com/osmosis-labs/osmosis/v19/x/ethtx"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -66,6 +67,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	capability.AppModuleBasic{},
 	staking.AppModuleBasic{},
 	mint.AppModuleBasic{},
+	ethtx.AppModuleBasic{},
 	downtimemodule.AppModuleBasic{},
 	distr.AppModuleBasic{},
 	gov.NewAppModuleBasic(

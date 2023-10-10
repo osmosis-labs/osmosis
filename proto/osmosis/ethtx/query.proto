@@ -1,0 +1,18 @@
+syntax = "proto3";
+package osmosis.ethtx.types;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v19/x/ethtx/types";
+
+service Query {
+  // Params returns the total set of minting parameters.
+  rpc Hello(HelloRequest) returns (HelloResponse) {
+    option (google.api.http).get = "/osmosis/ethtx/hello";
+  }
+}
+
+message HelloRequest {}
+
+message HelloResponse { string response = 1; }
