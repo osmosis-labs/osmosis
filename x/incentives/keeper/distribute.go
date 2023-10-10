@@ -638,6 +638,11 @@ func (k Keeper) distributeInternal(
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 
+	if gauge.Id == 3 {
+		ctx.Logger().Info(fmt.Sprintf("distributeInternal gauge id %d", gauge.Id))
+		ctx.Logger().Info(fmt.Sprintf("distrInfo %v", distrInfo))
+	}
+
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
 
 	// if its a perpetual gauge, we set remaining epochs to 1.
