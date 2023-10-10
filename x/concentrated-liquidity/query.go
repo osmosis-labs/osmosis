@@ -343,26 +343,26 @@ func (k Keeper) GetNumNextInitializedTicks(ctx sdk.Context, poolId, numberOfNext
 // * There exists at least 1 tick inside the given range
 // TODO: Currently, we can only get the assets of 2 consecutive ticks
 // need to think of a way to get assets between any 2 ticks
-func (k Keeper) TickRangeUnderlyingAssets(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (queryproto.TickRangeUnderlyingAssetsResponse, error) {
+func (k Keeper) TickRangeUnderlyingAssets(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (*queryproto.TickRangeUnderlyingAssetsResponse, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
-		return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+		return nil, err
 	}
 
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
 	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
-		return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+		return nil, err
 	}
 
 	// Check lowerTick and upperTick is valid
 	_, err = k.getTickByTickIndex(ctx, poolId, lowerTick)
 	if err != nil {
-		return queryproto.TickRangeUnderlyingAssetsResponse{}, fmt.Errorf("lower tick (%d) not found, error: %w", lowerTick, err)
+		return nil, fmt.Errorf("lower tick (%d) not found, error: %w", lowerTick, err)
 	}
 
 	_, err = k.getTickByTickIndex(ctx, poolId, upperTick)
 	if err != nil {
-		return queryproto.TickRangeUnderlyingAssetsResponse{}, fmt.Errorf("upper tick (%d) not found, error: %w", upperTick, err)
+		return nil, fmt.Errorf("upper tick (%d) not found, error: %w", upperTick, err)
 	}
 
 	//--------- Calculate liquidity of tick range -----------
@@ -376,17 +376,17 @@ func (k Keeper) TickRangeUnderlyingAssets(ctx sdk.Context, poolId uint64, lowerT
 	defer nextTickIter.Close()
 
 	if !nextTickIter.Valid() {
-		return queryproto.TickRangeUnderlyingAssetsResponse{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
+		return nil, types.RanOutOfTicksForPoolError{PoolId: poolId}
 	}
 
 	nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
 	if err != nil {
-		return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+		return nil, err
 	}
 
 	tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
 	if err != nil {
-		return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+		return nil, err
 	}
 
 	// use the smallest tick initialized as the starting point for calculating liquidity.
@@ -398,32 +398,30 @@ func (k Keeper) TickRangeUnderlyingAssets(ctx sdk.Context, poolId uint64, lowerT
 	for ; nextTickIter.Valid(); nextTickIter.Next() {
 		tickIndex, err := types.TickIndexFromBytes(nextTickIter.Key())
 		if err != nil {
-			return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+			return nil, err
 		}
 
 		tickStruct, err := ParseTickFromBz(nextTickIter.Value())
 		if err != nil {
-			return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+			return nil, err
 		}
 
 		if previousTickIndex == lowerTick && tickIndex == upperTick {
 			break
 		}
 		if previousTickIndex == lowerTick && tickIndex != upperTick {
-			return queryproto.TickRangeUnderlyingAssetsResponse{}, fmt.Errorf("Can not get liquidity of range [%d, %d]", lowerTick, upperTick)
+			return nil, fmt.Errorf("Can not get liquidity of range [%d, %d]", lowerTick, upperTick)
 		}
 		totalLiquidity = totalLiquidity.Add(tickStruct.LiquidityNet)
 		previousTickIndex = tickIndex
 	}
 
-	fmt.Println("liquidity", totalLiquidity)
-
 	actualAmountDenom0, actualAmountDenom1, err := pool.CalcActualAmounts(ctx, lowerTick, upperTick, totalLiquidity)
 	if err != nil {
-		return queryproto.TickRangeUnderlyingAssetsResponse{}, err
+		return nil, err
 	}
 
-	return queryproto.TickRangeUnderlyingAssetsResponse{
+	return &queryproto.TickRangeUnderlyingAssetsResponse{
 		Token0: sdk.NewCoin(pool.GetToken0(), actualAmountDenom0.TruncateInt()),
 		Token1: sdk.NewCoin(pool.GetToken1(), actualAmountDenom1.TruncateInt()),
 	}, nil
