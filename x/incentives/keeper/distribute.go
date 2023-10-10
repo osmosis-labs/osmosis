@@ -638,11 +638,6 @@ func (k Keeper) distributeInternal(
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 
-	if gauge.Id == 3 {
-		ctx.Logger().Info(fmt.Sprintf("distributeInternal gauge id %d", gauge.Id))
-		ctx.Logger().Info(fmt.Sprintf("distrInfo %v", distrInfo))
-	}
-
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
 
 	// if its a perpetual gauge, we set remaining epochs to 1.
@@ -711,9 +706,17 @@ func (k Keeper) distributeInternal(
 			totalDistrCoins = totalDistrCoins.Add(remainCoinPerEpoch)
 		}
 	} else {
+		if gauge.Id == 3 {
+			ctx.Logger().Info("distributeInternal, gauge id 3")
+			ctx.Logger().Info(fmt.Sprintf("remaining coins %s", remainCoins))
+		}
 		// This is a standard lock distribution flow that assumes that we have locks associated with the gauge.
 		if len(locks) == 0 {
 			return nil, nil
+		}
+
+		if gauge.Id == 3 {
+			ctx.Logger().Info("length of locks was not zero")
 		}
 
 		// In this case, remove redundant cases.
@@ -740,9 +743,17 @@ func (k Keeper) distributeInternal(
 			return nil, nil
 		}
 
+		if gauge.Id == 3 {
+			ctx.Logger().Info("lock sum was not zero")
+		}
+
 		for _, lock := range locks {
 			distrCoins := sdk.Coins{}
 			ctx.Logger().Debug("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCons", remainCoins, "height", ctx.BlockHeight())
+
+			if gauge.Id == 3 {
+				ctx.Logger().Info("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCons", remainCoins, "height", ctx.BlockHeight())
+			}
 			for _, coin := range remainCoins {
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 				denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
@@ -770,6 +781,10 @@ func (k Keeper) distributeInternal(
 
 			totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 		}
+	}
+
+	if gauge.Id == 3 {
+		ctx.Logger().Info(fmt.Sprintf("total distributed coins %s", totalDistrCoins))
 	}
 
 	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
