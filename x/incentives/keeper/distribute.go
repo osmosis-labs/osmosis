@@ -751,9 +751,6 @@ func (k Keeper) distributeInternal(
 			distrCoins := sdk.Coins{}
 			ctx.Logger().Debug("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCons", remainCoins, "height", ctx.BlockHeight())
 
-			if gauge.Id == 3 {
-				ctx.Logger().Info("distributeInternal, distribute to lock", "module", types.ModuleName, "gaugeId", gauge.Id, "lockId", lock.ID, "remainCons", remainCoins, "height", ctx.BlockHeight())
-			}
 			for _, coin := range remainCoins {
 				// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
 				denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
@@ -781,10 +778,6 @@ func (k Keeper) distributeInternal(
 
 			totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 		}
-	}
-
-	if gauge.Id == 3 {
-		ctx.Logger().Info(fmt.Sprintf("total distributed coins %s", totalDistrCoins))
 	}
 
 	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
