@@ -201,41 +201,28 @@ func findBlockByTime(clientCtx client.Context, time time.Time, currentHeight int
 		return -1, err
 	}
 
-	if estimateBlockResult.Block.Time.Before(time) {
-		// Use blockTime to limit the search range,
-		// when estimateBlock is 5 blocks away from targetBlock,
-		// loop each block to search for the most accurate one
-		for estimateBlockResult.Block.Time.Before(time) {
-			estimateBlockDelta := int64(time.Sub(estimateBlockResult.Block.Time).Seconds() / blockTime)
-			if estimateBlockDelta > 5 {
-				estimateBlock += estimateBlockDelta
-			} else {
-				estimateBlock += 1
-			}
-
-			estimateBlockResult, err = client.Block(context.Background(), &estimateBlock)
-			if err != nil {
-				return -1, err
-			}
+	estimateBlockDelta := int64(time.Sub(estimateBlockResult.Block.Time).Seconds() / blockTime)
+	for estimateBlockDelta != 0 {
+		if estimateBlockDelta > 0 && estimateBlockDelta < 5 {
+			estimateBlock += 1
+		} else if estimateBlockDelta < 0 && estimateBlockDelta > -5 {
+			estimateBlock -= 1
+		} else {
+			estimateBlock += estimateBlockDelta
 		}
+
+		estimateBlockResult, err = client.Block(context.Background(), &estimateBlock)
+		if err != nil {
+			return -1, err
+		}
+		estimateBlockDelta = int64(time.Sub(estimateBlockResult.Block.Time).Seconds() / blockTime)
+	}
+
+	if time.After(estimateBlockResult.Block.Time) {
+		return estimateBlock + 1, nil
+	} else {
 		return estimateBlock, nil
 	}
-	if estimateBlockResult.Block.Time.After(time) {
-		for estimateBlockResult.Block.Time.After(time) {
-			estimateBlockDelta := int64(estimateBlockResult.Block.Time.Sub(time).Seconds() / blockTime)
-			if estimateBlockDelta > 5 {
-				estimateBlock -= estimateBlockDelta
-			} else {
-				estimateBlock -= 1
-			}
-			estimateBlockResult, err = client.Block(context.Background(), &estimateBlock)
-			if err != nil {
-				return -1, err
-			}
-		}
-		return estimateBlock + 1, nil
-	}
-	return estimateBlock, nil
 }
 
 // GetQueryGeometricCommand returns a geometric twap query command.
