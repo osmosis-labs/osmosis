@@ -131,6 +131,10 @@ func TestTickToSqrtPrice(t *testing.T) {
 			// to account for exponent at price one of -6.
 			expectedPrice: types.MinSpotPriceBigDec,
 		},
+		"max sqrt price, max tick -> max spot price": {
+			tickIndex:     types.MaxTick,
+			expectedPrice: types.MaxSpotPriceBigDec,
+		},
 		"tickIndex is MinCurrentTickV1": {
 			tickIndex: types.MinCurrentTick,
 			// 1 order of magnitude below min spot price of 10^-12 + 6 orders of magnitude smaller
