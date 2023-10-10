@@ -218,6 +218,9 @@ func findBlockByTime(clientCtx client.Context, time time.Time, currentHeight int
 		estimateBlockDelta = int64(time.Sub(estimateBlockResult.Block.Time).Seconds() / blockTime)
 	}
 
+	// If target time after estimate block time, target block is next block
+	// If target time equal estimate block time => target time equal to end block time, return estimate block
+	// If target time before estimate block time => target time inside estimate block, return estimate block
 	if time.After(estimateBlockResult.Block.Time) {
 		return estimateBlock + 1, nil
 	} else {
