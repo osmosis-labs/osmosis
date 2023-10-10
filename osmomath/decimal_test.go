@@ -99,7 +99,7 @@ func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeR
 // BigDec, Dec, Int, etc, are just wrappers around big.Int values, some of which are multiplied
 // by some constant factor and are being treated as if they are decimal numbers.
 // Because of this multiplication, it is not possible to directly compare different osmomath numericals (Dec with Int, BigDec with Dec, etc),
-// but if we chop the precision of all numericals, we will be able to compare them.
+// but if we make them all share the biggest osmomath numerical's precision, we will be able to compare them.
 // scale() does exactly that.
 //
 // Example:
@@ -108,7 +108,8 @@ func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeR
 //
 // Dec internally does not hold decimal values, it holds big.Int scaled with 18 precision numbers
 // To compare the two above, we need to "scale" them to a common precision.
-// To do that, we need to divide underlying big.Int of Dec by 10^PrecisionDec and then compare it with Int's underlying big.Int
+// To do that, we append to each of underlying Dec's and Int's big.Int values the exact amount of zeros to match biggest precision among osmomath numericals.
+// In other words, we multiply all of them by 10 ^ (BigDecPrecision - precision), where precision is a precision of a given numerical.
 func scale(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue BigIntDecorator) mutResultToAssert {
 	// scale expectedResult
 	expectedResultScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(osmomath.BigDecPrecision-Precision(expectedResult)), nil)
