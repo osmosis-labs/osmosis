@@ -1796,3 +1796,35 @@ func (s *decimalTestSuite) TestQuoTruncate_MutativeAndNonMutative() {
 		})
 	}
 }
+
+func (s *decimalTestSuite) TestDec_Mutative() {
+	tests := []struct {
+		startValue        osmomath.BigDec
+		expectedMutResult osmomath.Dec
+		expPanic          bool
+	}{
+		{osmomath.NewBigDec(0), sdk.MustNewDecFromStr("0.000000000000000000"), false},
+		{osmomath.NewBigDec(1), sdk.MustNewDecFromStr("1.000000000000000000"), false},
+		{osmomath.NewBigDec(10), sdk.MustNewDecFromStr("10.000000000000000000"), false},
+		{osmomath.NewBigDec(12340), sdk.MustNewDecFromStr("12340.000000000000000000"), false},
+		{osmomath.NewBigDecWithPrec(12340, 4), sdk.MustNewDecFromStr("1.234000000000000000"), false},
+		{osmomath.NewBigDecWithPrec(12340, 5), sdk.MustNewDecFromStr("0.123400000000000000"), false},
+		{osmomath.NewBigDecWithPrec(12340, 8), sdk.MustNewDecFromStr("0.000123400000000000"), false},
+		{osmomath.NewBigDecWithPrec(1009009009009009009, 17), sdk.MustNewDecFromStr("10.090090090090090090"), false},
+	}
+
+	for id, tc := range tests {
+		name := "testcase_" + fmt.Sprint(id)
+		s.Run(name, func() {
+			osmomath.ConditionalPanic(s.T(), tc.expPanic, func() {
+				startMut := tc.startValue.Clone()
+				startNonMut := tc.startValue.Clone()
+
+				resultMut := startMut.DecMut()
+				resultNonMut := startNonMut.Dec()
+
+				s.assertMutResult(tc.expectedMutResult, tc.startValue, resultMut, resultNonMut, startMut, startNonMut)
+			})
+		})
+	}
+}
