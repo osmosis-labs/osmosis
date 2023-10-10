@@ -321,9 +321,6 @@ func (q Querier) NumNextInitializedTicks(ctx sdk.Context, req clquery.NumNextIni
 
 // TickRangeUnderlyingAssets returns underlying asset of a tick range
 func (q Querier) TickRangeUnderlyingAssets(ctx sdk.Context, req clquery.TickRangeUnderlyingAssetsRequest) (*clquery.TickRangeUnderlyingAssetsResponse, error) {
-	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "pool id is zero")
-	}
 	res, err := q.Keeper.TickRangeUnderlyingAssets(ctx, req.PoolId, req.LowerTick, req.UpperTick)
 	if err != nil {
 		return nil, err
