@@ -1,7 +1,7 @@
 # This workflow pushes new docker images to osmolabs/osmosis-dev and osmolabs/osmosis-e2e-init-chain on these events:
 #
 # 1. Every new tag containing a release candidate (e.g. `v1.2.3-rc4`).
-#     `osmolabs/osmosis-dev:1.2.3-rc4` is pushed.      
+#     `osmolabs/osmosis-dev:1.2.3-rc4` is pushed.
 # 2. Every new commit to the main branch
 #     `osmolabs/osmosis-dev:main-{SHORT_SHA}-$(date +%s)` is pushed.
 # 3. Every new commit to a development branch vN.x (e.g. `v1.x`)
@@ -17,10 +17,10 @@ name: Push Dev and E2E Images to Docker
 on:
   push:
     tags:
-    - v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+
+      - v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+
     branches:
-    - main
-    - v[0-9]+.x
+      - main
+      - v[0-9]+.x
 
 env:
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.17
@@ -31,63 +31,55 @@ jobs:
   docker:
     runs-on: self-hosted
     steps:
-    - 
-      name: Check out repo
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - 
-      name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    - 
-      name: Login to DockerHub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-    -
-      name: Find go version
-      run: |
-        GO_VERSION=$(cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
-        echo "GO_VERSION=$GO_VERSION" >> $GITHUB_ENV          
-    - 
-      name: Create Docker Image Tag for release candidate
-      if:   startsWith(github.ref, 'refs/tags/v')
-      run:  |
-        GITHUB_TAG=${{ github.ref_name }}
-        echo "DOCKER_IMAGE_TAG=${GITHUB_TAG#v}" >> $GITHUB_ENV
-        echo "OSMOSIS_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-    - 
-      name: Create Docker Image Tag for vN.x branch
-      if:   "!startsWith(github.ref, 'refs/tags/v')"
-      run:  |
-        SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-8)
-        echo "DOCKER_IMAGE_TAG=${{ github.ref_name }}-${SHORT_SHA}-$(date +%s)" >> $GITHUB_ENV
-        echo "OSMOSIS_VERSION=${{ github.ref_name }}-$SHORT_SHA" >> $GITHUB_ENV
-    - 
-      name: Build and Push Docker Images
-      uses: docker/build-push-action@v5
-      with:
-        file: Dockerfile
-        context: .
-        push: true
-        platforms: linux/amd64
-        build-args: |
-          GO_VERSION=${{ env.GO_VERSION }}
-          RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_ALPINE }}
-          GIT_VERSION=${{ env.OSMOSIS_VERSION }}
-          GIT_COMMIT=${{ github.sha }}
-        tags: |
-          ${{ env.OSMOSIS_DEV_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
-    - 
-      name: Build and Push E2E Init Docker Images
-      uses: docker/build-push-action@v5
-      with:
-        file: tests/e2e/initialization/init.Dockerfile
-        context: .
-        push: true
-        platforms: linux/amd64,linux/arm64
-        build-args: |
-          E2E_SCRIPT_NAME=chain
-        tags: |
-          ${{ env.OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Find go version
+        run: |
+          GO_VERSION=$(cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
+          echo "GO_VERSION=$GO_VERSION" >> $GITHUB_ENV
+      - name: Create Docker Image Tag for release candidate
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          GITHUB_TAG=${{ github.ref_name }}
+          echo "DOCKER_IMAGE_TAG=${GITHUB_TAG#v}" >> $GITHUB_ENV
+          echo "OSMOSIS_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+      - name: Create Docker Image Tag for vN.x branch
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        run: |
+          SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-8)
+          echo "DOCKER_IMAGE_TAG=${{ github.ref_name }}-${SHORT_SHA}-$(date +%s)" >> $GITHUB_ENV
+          echo "OSMOSIS_VERSION=${{ github.ref_name }}-$SHORT_SHA" >> $GITHUB_ENV
+      - name: Build and Push Docker Images
+        uses: docker/build-push-action@v5
+        with:
+          file: Dockerfile
+          context: .
+          push: true
+          platforms: linux/amd64
+          build-args: |
+            GO_VERSION=${{ env.GO_VERSION }}
+            RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_ALPINE }}
+            GIT_VERSION=${{ env.OSMOSIS_VERSION }}
+            GIT_COMMIT=${{ github.sha }}
+          tags: |
+            ${{ env.OSMOSIS_DEV_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+      - name: Build and Push E2E Init Docker Images
+        uses: docker/build-push-action@v5
+        with:
+          file: tests/e2e/initialization/init.Dockerfile
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            E2E_SCRIPT_NAME=chain
+          tags: |
+            ${{ env.OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
