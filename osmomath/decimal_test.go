@@ -111,28 +111,28 @@ func (s *decimalTestSuite) assertMutResult(expectedResult, startValue, mutativeR
 // To do that, we need to divide underlying big.Int of Dec by 10^PrecisionDec and then compare it with Int's underlying big.Int
 func scale(expectedResult, startValue, mutativeResult, nonMutativeResult, mutativeStartValue, nonMutativeStartValue BigIntDecorator) mutResultToAssert {
 	// scale expectedResult
-	expectedResultScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(expectedResult)), nil)
-	expectedResultBig := new(big.Int).Quo(expectedResult.BigInt(), expectedResultScaler)
+	expectedResultScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(osmomath.BigDecPrecision-Precision(expectedResult)), nil)
+	expectedResultBig := new(big.Int).Mul(expectedResult.BigInt(), expectedResultScaler)
 
 	// scale startValue
-	startValueScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(startValue)), nil)
-	startValueBig := new(big.Int).Quo(startValue.BigInt(), startValueScaler)
+	startValueScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(osmomath.BigDecPrecision-Precision(startValue)), nil)
+	startValueBig := new(big.Int).Mul(startValue.BigInt(), startValueScaler)
 
 	// scale mutativeResult
-	mutativeResultScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(mutativeResult)), nil)
-	mutativeResultBig := new(big.Int).Quo(mutativeResult.BigInt(), mutativeResultScaler)
+	mutativeResultScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(osmomath.BigDecPrecision-Precision(mutativeResult)), nil)
+	mutativeResultBig := new(big.Int).Mul(mutativeResult.BigInt(), mutativeResultScaler)
 
 	// scale nonMutativeResult
-	nonMutativeResultScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(nonMutativeResult)), nil)
-	nonMutativeResultBig := new(big.Int).Quo(nonMutativeResult.BigInt(), nonMutativeResultScaler)
+	nonMutativeResultScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(osmomath.BigDecPrecision-Precision(nonMutativeResult)), nil)
+	nonMutativeResultBig := new(big.Int).Mul(nonMutativeResult.BigInt(), nonMutativeResultScaler)
 
 	// scale mutativeStartValue
-	mutativeStartValueScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(mutativeStartValue)), nil)
-	mutativeStartValueBig := new(big.Int).Quo(mutativeStartValue.BigInt(), mutativeStartValueScaler)
+	mutativeStartValueScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(osmomath.BigDecPrecision-Precision(mutativeStartValue)), nil)
+	mutativeStartValueBig := new(big.Int).Mul(mutativeStartValue.BigInt(), mutativeStartValueScaler)
 
 	// scale nonMutativeStartValue
-	nonMutativeStartValueScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(Precision(nonMutativeStartValue)), nil)
-	nonMutativeStartValueBig := new(big.Int).Quo(nonMutativeStartValue.BigInt(), nonMutativeStartValueScaler)
+	nonMutativeStartValueScaler := new(big.Int).Exp(big.NewInt(10), big.NewInt(osmomath.BigDecPrecision-Precision(nonMutativeStartValue)), nil)
+	nonMutativeStartValueBig := new(big.Int).Mul(nonMutativeStartValue.BigInt(), nonMutativeStartValueScaler)
 
 	return mutResultToAssert{
 		*expectedResultBig,
