@@ -33,7 +33,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAllGroupsGauges)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAllGroupsWithGauge)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdGroupByGroupGaugeID)
-	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdCurrentEpochVolumeByGroupGaugeID)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdCurrentVolumeByGroupGaugeID)
 	cmd.AddCommand(GetCmdRewardsEst())
 
 	return cmd
@@ -105,8 +105,8 @@ func GetCmdUpcomingGaugesPerDenom() (*osmocli.QueryDescriptor, *types.UpcomingGa
 	}, &types.UpcomingGaugesPerDenomRequest{}
 }
 
-// GetCmdCurrentEpochVolumeByGroupGaugeID returns current volume for each gauge respectively from a group gauge ID.
-func GetCmdCurrentEpochVolumeByGroupGaugeID() (*osmocli.QueryDescriptor, *types.QueryCurrentVolumeByGroupGaugeIDRequest) {
+// GetCmdCurrentVolumeByGroupGaugeID returns current volume for each gauge respectively since the last epoch from a group gauge ID.
+func GetCmdCurrentVolumeByGroupGaugeID() (*osmocli.QueryDescriptor, *types.QueryCurrentVolumeByGroupGaugeIDRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "current-volume-by-group-gauge-id",
 		Short: "Query current volume since epoch for each gauge respectively from a group gauge ID",
