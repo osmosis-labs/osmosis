@@ -51,7 +51,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 			// TODO: remove this post-v19. In v19 we did not create a hook for cw pool gauges.
 			// Fix tracked in:
 			// https://github.com/osmosis-labs/osmosis/issues/6122
-			ctx.Logger().Info("Skipping pool ID", "poolId", poolId, "reason", "cosmwasm pool")
 			continue
 		}
 
