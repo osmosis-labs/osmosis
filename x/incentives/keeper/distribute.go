@@ -538,37 +538,6 @@ func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
 	return nil
 }
 
-// QueryWeightSplitGroup calculates the ratio of volume for each gauge in a group since the last epoch.
-// It first updates the group weights based on the pool volumes.
-// Then, for each gauge in the updated group, it calculates the ratio of the gauge's current weight to the total weight of the group.
-// If the total weight of the group is zero, the ratio of volume for the gauge is set to zero.
-// The function returns a slice of GaugeVolume, each representing a gauge and its ratio of volume.
-// It returns an error if there is an issue updating the group weights.
-func (k Keeper) QueryWeightSplitGroup(ctx sdk.Context, group types.Group) ([]types.GaugeWeight, error) {
-	updatedGroup, err := k.updatedGroupWeights(ctx, group)
-	if err != nil {
-		return nil, err
-	}
-
-	gaugeVolumes := make([]types.GaugeWeight, len(updatedGroup.InternalGaugeInfo.GaugeRecords))
-
-	for i, gaugeRecord := range updatedGroup.InternalGaugeInfo.GaugeRecords {
-		if updatedGroup.InternalGaugeInfo.TotalWeight.IsZero() {
-			gaugeVolumes[i] = types.GaugeWeight{
-				GaugeId:     gaugeRecord.GaugeId,
-				WeightRatio: sdk.ZeroDec(),
-			}
-		} else {
-			gaugeVolumes[i] = types.GaugeWeight{
-				GaugeId:     gaugeRecord.GaugeId,
-				WeightRatio: gaugeRecord.CurrentWeight.ToLegacyDec().Quo(updatedGroup.InternalGaugeInfo.TotalWeight.ToLegacyDec()),
-			}
-		}
-	}
-
-	return gaugeVolumes, nil
-}
-
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
 // It handles any kind of gauges:
