@@ -29,6 +29,8 @@ type ValRatio struct {
 	VRatio        osmomath.Dec
 }
 
+const maxDelegations = 100
+
 // SetValidatorSetPreferences sets a new valset position for a delegator in modules state.
 func (k Keeper) SetValidatorSetPreferences(ctx sdk.Context, delegator string, validators types.ValidatorSetPreferences) {
 	store := ctx.KVStore(k.storeKey)
@@ -124,6 +126,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 }
 
 // UndelegateFromValidatorSet undelegates {coin} amount from the validator set.
+// TODO: this comment is not what is hapenning here. What is the desired behavior?
 // If the valset does not exist, it undelegates from existing staking position.
 // Ex: userA has staked 10tokens with weight {Val->0.5, ValB->0.3, ValC->0.2}
 // undelegate 6osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
@@ -131,16 +134,17 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // Truncation ensures we do not undelegate more than the user has staked with the validator set.
 // NOTE: check README.md for more verbose description of the algorithm.
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, undelegation sdk.Coin) error {
-	existingSet, err := k.GetValSetPreferencesWithDelegations(ctx, delegatorAddr)
-	if err != nil {
-		return types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: delegatorAddr}
-	}
-
+	validatorRatios, exists := k.GetValidatorSetPreference(ctx, delegatorAddr)
 	delegator := sdk.MustAccAddressFromBech32(delegatorAddr)
+	if !exists {
+		// If val set pref does not exist, use existing delegations instead
+		existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delegator, maxDelegations)
+		validatorRatios = types.ValidatorSetPreferences{Preferences: formatToValPrefArr(existingDelegations)}
+	}
 
 	// Step 1,2: compute the total amount delegated and the amount to undelegate for each validator
 	// under valset-ratios.
-	valSetRatio, validators, totalDelegatedAmt, err := k.getValsetRatios(ctx, delegator, existingSet.Preferences, undelegation.Amount)
+	valSetRatio, validators, totalDelegatedAmt, err := k.getValsetRatios(ctx, delegator, validatorRatios.Preferences, undelegation.Amount)
 	if err != nil {
 		return err
 	}
@@ -164,7 +168,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 
 			// in the last valset iteration we don't calculate it from shares using decimals and trucation,
 			// we use whats remaining to get more accurate value
-			if len(existingSet.Preferences)-1 == index {
+			if len(validatorRatios.Preferences)-1 == index {
 				amountToUnDelegate = undelegation.Amount.Sub(totalUnDelAmt).ToLegacyDec().TruncateInt()
 			} else {
 				// Calculate the amount to undelegate based on the existing weightxs
@@ -191,33 +195,34 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	targetRatio := sdk.OneDec()
 	amountRemaining := undelegation.Amount
 
-	// Step 6
-	for len(valSetRatio) > 0 && valSetRatio[0].VRatio.GT(targetRatio) {
-		_, err = k.stakingKeeper.Undelegate(ctx, delegator, valSetRatio[0].ValAddr, valSetRatio[0].DelegatedAmt.ToLegacyDec()) // this has to be shares amount
-		if err != nil {
-			return err
-		}
-		amountRemaining = amountRemaining.Sub(valSetRatio[0].DelegatedAmt)
-		targetRatio = targetRatio.Mul(sdk.OneDec().Sub(valSetRatio[0].Weight))
-		valSetRatio = valSetRatio[1:]
-	}
-
-	// Step 7
 	for _, val := range valSetRatio {
-		_, validator, err := k.getValAddrAndVal(ctx, val.ValAddr.String())
-		if err != nil {
-			return err
+
+		// Step 6
+		if val.VRatio.GT(targetRatio) {
+			_, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, val.DelegatedAmt.ToLegacyDec()) // this has to be shares amount
+			if err != nil {
+				return err
+			}
+			amountRemaining = amountRemaining.Sub(val.DelegatedAmt)
+			targetRatio = targetRatio.Mul(sdk.OneDec().Sub(val.Weight))
+		} else {
+			// Step 7
+			_, validator, err := k.getValAddrAndVal(ctx, val.ValAddr.String())
+			if err != nil {
+				return err
+			}
+
+			sharesAmt, err := validator.SharesFromTokens(val.UndelegateAmt)
+			if err != nil {
+				return err
+			}
+
+			_, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, sharesAmt) // this has to be shares amount
+			if err != nil {
+				return err
+			}
 		}
 
-		sharesAmt, err := validator.SharesFromTokens(val.UndelegateAmt)
-		if err != nil {
-			return err
-		}
-
-		_, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, sharesAmt) // this has to be shares amount
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil

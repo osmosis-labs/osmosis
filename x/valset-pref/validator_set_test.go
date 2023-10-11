@@ -147,67 +147,108 @@ func (s *KeeperTestSuite) TestIsValidatorSetEqual() {
 
 func (s *KeeperTestSuite) TestUndelegateFromValidatorSet() {
 	tests := []struct {
-		name                  string
-		delegateAmt           []osmomath.Int
-		undelegateAmt         osmomath.Int
-		noValset              bool
-		expectedUndelegateAmt []osmomath.Int
-		expectedError         error
+		name                     string
+		delegateAmt              []osmomath.Int
+		validatorPrefenceWeights []osmomath.Dec
+		undelegateAmt            osmomath.Int
+		noValset                 bool
+		expectedUndelegateAmt    []osmomath.Int
+		expectedError            error
 	}{
 		{
-			name:                  "exit at step 4: undelegating amount is under existing delegation amount",
+			name:                     "exit at step 4: undelegating amount is under existing delegation amount",
+			validatorPrefenceWeights: []osmomath.Dec{osmomath.NewDecWithPrec(1, 1), osmomath.NewDecWithPrec(9, 1)},
+			delegateAmt:              []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
+			undelegateAmt:            sdk.NewInt(50),
+			// 50 * 0.1 + 50 * 0.9
+			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(5), sdk.NewInt(45)},
+		},
+		{
+			name:                     "go through step 7: undelegating amount is under total delegation amount but val set pref weights only allow partial withdrawal",
+			validatorPrefenceWeights: []osmomath.Dec{osmomath.NewDecWithPrec(1, 1), osmomath.NewDecWithPrec(9, 1)},
+			delegateAmt:              []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
+			undelegateAmt:            sdk.NewInt(100),
+			// 100 * 0.1 + (100*0.9 - 50) + min(100 * 0.9, 50)
+			// TODO: we returned fewer than the total amount, is this expected?
+			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(10), sdk.NewInt(50)},
+		},
+		{
+			name:                  "user does not have val-set preference set - use actual delegation",
 			delegateAmt:           []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
-			undelegateAmt:         sdk.NewInt(50),
-			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(33), sdk.NewInt(17)},
+			undelegateAmt:         sdk.NewInt(100),
+			noValset:              true,
+			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(66), sdk.NewInt(34)},
 		},
 		{
-			name:          "error: attempt to undelegate more than delegated",
-			delegateAmt:   []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
-			undelegateAmt: sdk.NewInt(200),
-			expectedError: types.UndelegateMoreThanDelegatedError{TotalDelegatedAmt: sdk.NewDec(150), UndelegationAmt: sdk.NewInt(200)},
-		},
-		{
-			name:          "error: user does not have val-set preference set",
-			delegateAmt:   []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
+			name: "4 validators - staked: 10, 10, 40, 40, weights 0.4, 0.4, 0.1, 0.1, undelegateAmt: 100",
+			validatorPrefenceWeights: []osmomath.Dec{
+				osmomath.NewDecWithPrec(4, 1),
+				osmomath.NewDecWithPrec(4, 1),
+				osmomath.NewDecWithPrec(1, 1),
+				osmomath.NewDecWithPrec(1, 1),
+			},
+			delegateAmt: []osmomath.Int{
+				sdk.NewInt(10),
+				sdk.NewInt(10),
+				sdk.NewInt(27),
+				sdk.NewInt(53),
+			},
 			undelegateAmt: sdk.NewInt(100),
-			noValset:      true,
-			expectedError: types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: s.TestAccs[0].String()},
+			// TODO: this does not seem right:
+			// What are the expected values in this case?
+			// A: Do we want to consume the full amount undelegated (100) and undelegate remaining amounts, ignoring the val set pref
+			// B: Do we want to consume the max amounts possible under the val set pref and undelegate the remaining amounts for other validators?
+			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(10), sdk.NewInt(10), sdk.NewInt(27), sdk.NewInt(10)},
+		},
+		// TODO add tests:
+		// - Validator set preference does not exist, actual delegations are used
+		// - Test multiple variotions of preference weights, actual delegated amounts and undelegateAmt
+		//    * 3 validators - preference and actual delegations mismatch but undelegateAmt is small making it possible to withdraw under validator set preferences
+		//    * 3 validators - preference and actual delegations mismatch but undelegateAmt is large, making it impossible to withdraw under validator set preferences
+		//    * 4 validators - staked: 10, 10, 30, 50, weights: 0.4, 0.4, 0.1, 0.1, undelegateAmt: 100
+		//    * 4 validators - staked: 10, 10, 40, 40, weights 0.4, 0.4, 0.1, 0.1, undelegateAmt: 100
+		{
+			name:                     "error: attempt to undelegate more than delegated",
+			validatorPrefenceWeights: []osmomath.Dec{osmomath.NewDecWithPrec(1, 1), osmomath.NewDecWithPrec(1, 9)},
+			delegateAmt:              []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
+			undelegateAmt:            sdk.NewInt(200),
+			expectedError:            types.UndelegateMoreThanDelegatedError{TotalDelegatedAmt: sdk.NewDec(150), UndelegationAmt: sdk.NewInt(200)},
 		},
 	}
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			s.SetupTest()
-			valAddrs := s.SetupMultipleValidators(3)
+			valAddrs := s.SetupMultipleValidators(len(test.delegateAmt))
 			defaultDelegator := s.TestAccs[0]
 			bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 
 			// set val-set pref
-			valPreferences := []types.ValidatorPreference{
-				{
-					ValOperAddress: valAddrs[0],
-					Weight:         sdk.NewDecWithPrec(1, 1),
-				},
-				{
-					ValOperAddress: valAddrs[1],
-					Weight:         sdk.NewDecWithPrec(9, 1),
-				},
+			valPreferences := []types.ValidatorPreference{}
+
+			for i, valPrefWeight := range test.validatorPrefenceWeights {
+				valPreferences = append(valPreferences, types.ValidatorPreference{
+
+					ValOperAddress: valAddrs[i],
+					Weight:         valPrefWeight,
+				})
 			}
 
 			if !test.noValset {
 				s.App.ValidatorSetPreferenceKeeper.SetValidatorSetPreferences(s.Ctx, defaultDelegator.String(), types.ValidatorSetPreferences{
 					Preferences: valPreferences,
 				})
-				// delegate for each of the validators
-				for i, valsetPref := range valPreferences {
-					valAddr, err := sdk.ValAddressFromBech32(valsetPref.ValOperAddress)
-					s.Require().NoError(err)
-					validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
-					s.Require().True(found)
+			}
 
-					s.FundAcc(defaultDelegator, sdk.NewCoins(sdk.NewCoin(bondDenom, test.delegateAmt[i])))
-					_, err = s.App.StakingKeeper.Delegate(s.Ctx, defaultDelegator, test.delegateAmt[i], stakingtypes.Unbonded, validator, true)
-					s.Require().NoError(err)
-				}
+			// delegate for each of the validators
+			for i, delegationAmount := range test.delegateAmt {
+				valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])
+				s.Require().NoError(err)
+				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+				s.Require().True(found)
+
+				s.FundAcc(defaultDelegator, sdk.NewCoins(sdk.NewCoin(bondDenom, test.delegateAmt[i])))
+				_, err = s.App.StakingKeeper.Delegate(s.Ctx, defaultDelegator, delegationAmount, stakingtypes.Unbonded, validator, true)
+				s.Require().NoError(err)
 			}
 
 			// System Under Test
@@ -226,7 +267,7 @@ func (s *KeeperTestSuite) TestUndelegateFromValidatorSet() {
 
 				delegation, found := s.App.StakingKeeper.GetUnbondingDelegation(s.Ctx, defaultDelegator, valAddr)
 				s.Require().True(found)
-				s.Require().Equal(delegation.Entries[0].Balance, test.expectedUndelegateAmt[i])
+				s.Require().Equal(test.expectedUndelegateAmt[i].String(), delegation.Entries[0].Balance.String())
 			}
 		})
 	}
