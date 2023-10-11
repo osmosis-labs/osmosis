@@ -221,18 +221,18 @@ func (q Querier) GroupByGroupGaugeID(goCtx context.Context, req *types.QueryGrou
 	return &types.QueryGroupByGroupGaugeIDResponse{Group: group}, nil
 }
 
-func (q Querier) CurrentVolumeByGroupGaugeID(goCtx context.Context, req *types.QueryCurrentVolumeByGroupGaugeIDRequest) (*types.QueryCurrentVolumeByGroupGaugeIDResponse, error) {
+func (q Querier) CurrentWeightByGroupGaugeID(goCtx context.Context, req *types.QueryCurrentWeightByGroupGaugeIDRequest) (*types.QueryCurrentWeightByGroupGaugeIDResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	group, err := q.Keeper.GetGroupByGaugeID(ctx, req.GroupGaugeId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	gaugeVolumes, err := q.Keeper.QueryVolumeSplitGroup(ctx, group)
+	gaugeWeights, err := q.Keeper.QueryWeightSplitGroup(ctx, group)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryCurrentVolumeByGroupGaugeIDResponse{GaugeVolume: gaugeVolumes}, nil
+	return &types.QueryCurrentWeightByGroupGaugeIDResponse{GaugeWeight: gaugeWeights}, nil
 }
 
 // getGaugeFromIDJsonBytes returns gauges from the json bytes of gaugeIDs.
