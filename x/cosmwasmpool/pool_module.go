@@ -100,6 +100,23 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
 	return osmoutils.GatherValuesFromStorePrefix(
 		ctx.KVStore(k.storeKey), types.PoolsKey, func(value []byte) (poolmanagertypes.PoolI, error) {
+			pool := model.Pool{}
+			err := k.cdc.Unmarshal(value, &pool)
+			if err != nil {
+				return nil, err
+			}
+			return &pool, nil
+		},
+	)
+}
+
+// GetPoolsSerializable retrieves all pool objects stored in the keeper.
+// Because the Pool struct has a non-serializable wasmKeeper field, this method
+// utilizes the CosmWasmPool struct directly instead, which allows it to be serialized
+// in import/export genesis.
+func (k Keeper) GetPoolsSerializable(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
+	return osmoutils.GatherValuesFromStorePrefix(
+		ctx.KVStore(k.storeKey), types.PoolsKey, func(value []byte) (poolmanagertypes.PoolI, error) {
 			pool := model.CosmWasmPool{}
 			err := k.cdc.Unmarshal(value, &pool)
 			if err != nil {
@@ -383,7 +400,7 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 // GetTotalLiquidity retrieves the total liquidity of all cw pools.
 func (k Keeper) GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	totalLiquidity := sdk.Coins{}
-	pools, err := k.GetPoolsWithWasmKeeper(ctx)
+	pools, err := k.GetPoolsSerializable(ctx)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
