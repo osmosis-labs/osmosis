@@ -400,7 +400,7 @@ func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins
 // GetTotalLiquidity retrieves the total liquidity of all cw pools.
 func (k Keeper) GetTotalLiquidity(ctx sdk.Context) (sdk.Coins, error) {
 	totalLiquidity := sdk.Coins{}
-	pools, err := k.GetPoolsSerializable(ctx)
+	pools, err := k.GetPoolsWithWasmKeeper(ctx)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
