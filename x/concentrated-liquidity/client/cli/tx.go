@@ -30,6 +30,7 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewCollectSpreadRewardsCmd)
 	osmocli.AddTxCmd(txCmd, NewCollectIncentivesCmd)
 	osmocli.AddTxCmd(txCmd, NewFungifyChargedPositionsCmd)
+	osmocli.AddTxCmd(txCmd, NewTransferPositionsCmd)
 	return txCmd
 }
 
@@ -92,6 +93,14 @@ func NewFungifyChargedPositionsCmd() (*osmocli.TxCliDesc, *types.MsgFungifyCharg
 		Short:   "Combine fully charged positions within the same range into a new single fully charged position",
 		Example: "osmosisd tx concentratedliquidity fungify-positions 1,2 --from val --keyring-backend test -b=block --chain-id=localosmosis --gas=1000000 --fees 20000uosmo",
 	}, &types.MsgFungifyChargedPositions{}
+}
+
+func NewTransferPositionsCmd() (*osmocli.TxCliDesc, *types.MsgTransferPositions) {
+	return &osmocli.TxCliDesc{
+		Use:     "transfer-positions",
+		Short:   "transfer a list of concentrated liquidity positions to a new owner",
+		Example: "osmosisd tx concentratedliquidity transfer-positions 56,89,1011 osmo10fhdy8zhepstpwsr9l4a8yxuyggqmpqx4ktheq --from val --chain-id osmosis-1 -b block --keyring-backend test --fees 1000uosmo",
+	}, &types.MsgTransferPositions{}
 }
 
 // NewCmdCreateConcentratedLiquidityPoolsProposal implements a command handler for create concentrated liquidity pool proposal

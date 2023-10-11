@@ -14,6 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
@@ -663,4 +664,106 @@ func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 
 	osmoutils.MustSetDec(store, poolIdLiquidityKey, newTotalFullRangeLiquidity)
 	return nil
+}
+
+// transferPositions transfers ownership of a set of positions from a sender to a recipient.
+// It first checks if the provided position IDs are unique. If not, it returns a DuplicatePositionIdsError.
+// For each position ID, it retrieves the corresponding position and checks if the sender is the owner of the position.
+// If the sender is not the owner, it returns an error.
+// It then checks if the position has an active underlying lock, and if so, returns an error.
+// It then collects any outstanding incentives and rewards for the position, deletes the KVStore entries for the position,
+// and restores the position under the recipient's account.
+// If any of these operations fail, it returns the corresponding error.
+// If all operations succeed, it returns nil.
+func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender sdk.AccAddress, recipient sdk.AccAddress) error {
+	// Fixed gas consumption per position ID to prevent spam
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForTransferPosition*len(positionIds)), "cl transfer position fee")
+
+	// All position IDs in the array must be unique.
+	if !osmoassert.Uint64ArrayValuesAreUnique(positionIds) {
+		return types.DuplicatePositionIdsError{PositionIds: positionIds}
+	}
+
+	for _, positionId := range positionIds {
+		position, err := k.GetPosition(ctx, positionId)
+		if err != nil {
+			return err
+		}
+
+		// Check that the sender is the owner of the position.
+		if position.Address != sender.String() {
+			return types.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: sender.String()}
+		}
+
+		// If the position has an active underlying lock, we cannot transfer it.
+		positionHasActiveUnderlyingLock, lockId, err := k.positionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
+		if err != nil {
+			return err
+		}
+		if positionHasActiveUnderlyingLock {
+			return types.LockNotMatureError{PositionId: position.PositionId, LockId: lockId}
+		}
+
+		// Collect any outstanding incentives and rewards for the position.
+		if _, err := k.collectSpreadRewards(ctx, sender, positionId); err != nil {
+			return err
+		}
+		if _, _, err := k.collectIncentives(ctx, sender, positionId); err != nil {
+			return err
+		}
+
+		// Delete the KVStore entries for the position.
+		err = k.deletePosition(ctx, positionId, sender, position.PoolId)
+		if err != nil {
+			return err
+		}
+
+		// There exists special logic branches we take if a position is the last position in a pool and it is withdrawn.
+		// It makes sense to accept the small annoyance of preventing a position from being transferred if it is the last position in a pool
+		// instead of considering all the edge cases that would arise if we allowed it.
+		anyPositionsRemainingInPool, err := k.HasAnyPositionForPool(ctx, position.PoolId)
+		if err != nil {
+			return err
+		}
+		if !anyPositionsRemainingInPool {
+			return types.LastPositionTransferError{PositionId: positionId, PoolId: position.PoolId}
+		}
+
+		// Restore the position under the recipient's account.
+		err = k.SetPosition(ctx, position.PoolId, recipient, position.LowerTick, position.UpperTick, position.JoinTime, position.Liquidity, position.PositionId, 0)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// underlyingPositionsValue calculates the value of the underlying assets in the given positions.
+func (k Keeper) UnderlyingPositionsValue(ctx sdk.Context, positionIds []uint64) (sdk.Coins, error) {
+	underlyingAssets := sdk.Coins{}
+
+	for _, positionId := range positionIds {
+		position, err := k.GetPosition(ctx, positionId)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+
+		pool, err := k.GetConcentratedPoolById(ctx, position.PoolId)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+
+		asset0, asset1, err := pool.CalcActualAmounts(ctx, position.LowerTick, position.UpperTick, position.Liquidity)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+
+		underlyingAssets = underlyingAssets.Add(
+			sdk.NewCoin(pool.GetToken0(), asset0.TruncateInt()),
+			sdk.NewCoin(pool.GetToken1(), asset1.TruncateInt()),
+		)
+	}
+
+	return underlyingAssets, nil
 }

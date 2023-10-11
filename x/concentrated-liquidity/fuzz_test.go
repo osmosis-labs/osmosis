@@ -136,6 +136,11 @@ func (s *KeeperTestSuite) fuzzTestWithSeed(r *rand.Rand, poolId uint64, numSwaps
 			completedPositions++
 		}
 
+		if r.Intn(2) == 0 {
+			// at some interval, transfer position to a new account
+			s.transferRandomPosition(r)
+		}
+
 		s.assertGlobalInvariants(ExpectedGlobalRewardValues{})
 	}
 }
@@ -543,6 +548,42 @@ func (s *KeeperTestSuite) removeRandomPosition(r *rand.Rand) {
 	if s.positionData[positionIndexToRemove].liquidity.IsZero() {
 		s.positionData = append(s.positionData[:positionIndexToRemove], s.positionData[positionIndexToRemove+1:]...)
 	}
+}
+
+func (s *KeeperTestSuite) transferRandomPosition(r *rand.Rand) {
+	if len(s.positionData) == 0 {
+		return
+	}
+
+	positionIndexToRemove := r.Intn(len(s.positionData))
+	positionData := s.positionData[positionIndexToRemove]
+
+	positionIdToTransfer := positionData.positionId
+
+	liqToTransfer := positionData.liquidity
+
+	originalOwner := s.TestAccs[positionData.accountIndex]
+
+	newOwnerIndex := r.Intn(len(s.TestAccs))
+	newOwner := s.TestAccs[newOwnerIndex]
+
+	if originalOwner.Equals(newOwner) {
+		return
+	}
+
+	fmt.Println("transferring position: ", "position id", positionIdToTransfer, "liqToTransfer", liqToTransfer, "from account: ", originalOwner.String(), "to account: ", newOwner.String())
+
+	err := s.App.ConcentratedLiquidityKeeper.TransferPositions(s.Ctx, []uint64{positionIdToTransfer}, originalOwner, newOwner)
+	s.Require().NoError(err)
+
+	// remove position from slice
+	s.positionData = append(s.positionData[:positionIndexToRemove], s.positionData[positionIndexToRemove+1:]...)
+
+	s.positionData = append(s.positionData, positionAndLiquidity{
+		positionId:   positionIdToTransfer,
+		liquidity:    liqToTransfer,
+		accountIndex: newOwnerIndex,
+	})
 }
 
 // returns multiplier of the liqudity to withdraw

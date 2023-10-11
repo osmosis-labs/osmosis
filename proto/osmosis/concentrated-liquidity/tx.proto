@@ -23,6 +23,10 @@ service Msg {
       returns (MsgCollectSpreadRewardsResponse);
   rpc CollectIncentives(MsgCollectIncentives)
       returns (MsgCollectIncentivesResponse);
+  // TransferPositions transfers ownership of a set of one or more positions
+  // from a sender to a recipient.
+  rpc TransferPositions(MsgTransferPositions)
+      returns (MsgTransferPositionsResponse);
 }
 
 // ===================== MsgCreatePosition
@@ -222,3 +226,15 @@ message MsgFungifyChargedPositionsResponse {
   uint64 new_position_id = 1
       [ (gogoproto.moretags) = "yaml:\"new_position_id\"" ];
 }
+
+// ===================== MsgTransferPositions
+message MsgTransferPositions {
+  option (amino.name) = "osmosis/cl-transfer-positions";
+
+  repeated uint64 position_ids = 1
+      [ (gogoproto.moretags) = "yaml:\"position_ids\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string new_owner = 3 [ (gogoproto.moretags) = "yaml:\"new_owner\"" ];
+}
+
+message MsgTransferPositionsResponse {}

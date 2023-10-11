@@ -174,6 +174,11 @@ func (k Keeper) collectSpreadRewards(ctx sdk.Context, sender sdk.AccAddress, pos
 		return sdk.Coins{}, err
 	}
 
+	// Early return, emit no events if there is no spread rewards to claim.
+	if spreadRewardsClaimed.IsZero() {
+		return sdk.Coins{}, nil
+	}
+
 	// Send the claimed spread rewards from the pool's address to the owner's address.
 	pool, err := k.getPoolById(ctx, position.PoolId)
 	if err != nil {
@@ -253,7 +258,7 @@ func (k Keeper) prepareClaimableSpreadRewards(ctx sdk.Context, positionId uint64
 		return nil, err
 	}
 
-	// add foreited dust back to the global accumulator
+	// add forfeited dust back to the global accumulator
 	if !forfeitedDust.IsZero() {
 		// Refetch the spread reward accumulator as the number of shares has changed after claiming.
 		spreadRewardAccumulator, err := k.GetSpreadRewardAccumulator(ctx, position.PoolId)

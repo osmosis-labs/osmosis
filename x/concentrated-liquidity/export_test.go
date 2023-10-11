@@ -328,3 +328,7 @@ func (k Keeper) SetupSwapStrategy(ctx sdk.Context, p types.ConcentratedPoolExten
 func MoveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum *accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
 	return moveRewardsToNewPositionAndDeleteOldAcc(accum, oldPositionName, newPositionName, growthOutside)
 }
+
+func (k Keeper) TransferPositions(ctx sdk.Context, positionIds []uint64, sender sdk.AccAddress, recipient sdk.AccAddress) error {
+	return k.transferPositions(ctx, positionIds, sender, recipient)
+}

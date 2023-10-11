@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
@@ -159,7 +160,7 @@ func (s *KeeperTestSuite) TestAddToPosition_Events() {
 	}{
 		"happy path": {
 			expectedAddedToPositionEvent: 1,
-			expectedMessageEvents:        5,
+			expectedMessageEvents:        4,
 		},
 		"error: last position in pool": {
 			lastPositionInPool:           true,
@@ -542,6 +543,145 @@ func (s *KeeperTestSuite) TestFungify_Events() {
 			// 	s.Require().ErrorAs(err, &tc.expectedError)
 			// 	s.Require().Nil(response)
 			// }
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestTransferPositions_Events() {
+	// expectedUptimes are used for claimable incentives tests
+	expectedUptimes := getExpectedUptimes()
+
+	testcases := map[string]struct {
+		positionIds                    []uint64
+		numPositionsToCreate           int
+		shouldSetupUnownedPosition     bool
+		hasIncentivesToClaim           bool
+		hasSpreadRewardsToClaim        bool
+		expectedTransferPositionsEvent int
+		expectedMessageEvents          int
+		isLastPositionInPool           bool
+		expectedError                  error
+	}{
+		"single position ID": {
+			positionIds:                    []uint64{DefaultPositionId},
+			numPositionsToCreate:           1,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          1, // 1 for transfer
+		},
+		"single position ID with claimable incentives": {
+			positionIds:                    []uint64{DefaultPositionId},
+			hasIncentivesToClaim:           true,
+			numPositionsToCreate:           1,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          3, // 1 for transfer, 1 for collect incentives claim send, 1 for collect incentives forfeit send
+		},
+		"single position ID with claimable spread rewards": {
+			positionIds:                    []uint64{DefaultPositionId},
+			hasSpreadRewardsToClaim:        true,
+			numPositionsToCreate:           1,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          2, // 1 for transfer, 1 for collect spread rewards claim send
+		},
+		"single position ID with claimable incentives and spread rewards": {
+			positionIds:                    []uint64{DefaultPositionId},
+			hasIncentivesToClaim:           true,
+			hasSpreadRewardsToClaim:        true,
+			numPositionsToCreate:           1,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          4, // 1 for transfer, 1 for collect incentives claim send, 1 for collect incentives forfeit send, 1 for collect spread rewards claim send
+		},
+		"two position IDs": {
+			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1},
+			numPositionsToCreate:           2,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          1, // 1 for transfer
+		},
+		"three position IDs": {
+			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:           3,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          1, // 1 for transfer
+		},
+		"three position IDs with claimable incentives and spread rewards": {
+			positionIds:                    []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			hasIncentivesToClaim:           true,
+			hasSpreadRewardsToClaim:        true,
+			numPositionsToCreate:           3,
+			expectedTransferPositionsEvent: 1,
+			expectedMessageEvents:          10, // 1 for transfer, 3 for collect incentives claim send, 3 for collect incentives forfeit send, 3 for collect spread rewards claim send
+		},
+		"two position IDs, second ID does not exist": {
+			positionIds:          []uint64{DefaultPositionId, DefaultPositionId + 1},
+			numPositionsToCreate: 1,
+			expectedError:        types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
+		},
+		"three position IDs, not an owner of one of them": {
+			positionIds:                []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:       2,
+			shouldSetupUnownedPosition: true,
+			expectedError:              types.NotPositionOwnerError{},
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			// Create a cl pool with a default position
+			pool := s.PrepareConcentratedPool()
+			for i := 0; i < tc.numPositionsToCreate; i++ {
+				s.SetupDefaultPosition(pool.GetId())
+			}
+
+			if tc.shouldSetupUnownedPosition {
+				// Position from another account.
+				s.SetupDefaultPositionAcc(pool.GetId(), s.TestAccs[1])
+			}
+
+			if tc.hasIncentivesToClaim {
+				s.fundIncentiveAddr(s.Ctx, pool.GetIncentivesAddress(), tc.positionIds)
+				s.addUptimeGrowthInsideRange(s.Ctx, pool.GetId(), s.TestAccs[0], apptesting.DefaultLowerTick+1, DefaultLowerTick, DefaultUpperTick, expectedUptimes.hundredTokensMultiDenom)
+			}
+
+			if tc.hasSpreadRewardsToClaim {
+				s.fundSpreadRewardsAddr(s.Ctx, pool.GetSpreadRewardsAddress(), tc.positionIds)
+				s.AddToSpreadRewardAccumulator(pool.GetId(), sdk.NewDecCoin(ETH, osmomath.NewInt(10)))
+			}
+
+			// Move block time forward one day to claim and forfeit part of the incentives.
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
+
+			if !tc.isLastPositionInPool {
+				// Setup a far out of range position that we do not touch, so when we transfer positions we do not transfer the last position in the pool.
+				// This is because we special case this logic in the keeper to not allow the last position in the pool to be transferred.
+				s.SetupPosition(pool.GetId(), s.TestAccs[2], sdk.NewCoins(DefaultCoin1), DefaultMinTick, DefaultMinTick+100, true)
+			}
+
+			msgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
+
+			// Reset event counts to 0 by creating a new manager.
+			s.Ctx = s.Ctx.WithEventManager(sdk.NewEventManager())
+			s.Equal(0, len(s.Ctx.EventManager().Events()))
+
+			msg := &types.MsgTransferPositions{
+				PositionIds: tc.positionIds,
+				Sender:      s.TestAccs[0].String(),
+				NewOwner:    s.TestAccs[1].String(),
+			}
+
+			// System under test
+			response, err := msgServer.TransferPositions(sdk.WrapSDKContext(s.Ctx), msg)
+
+			if tc.expectedError == nil {
+				s.Require().NoError(err)
+				s.Require().NotNil(response)
+				s.AssertEventEmitted(s.Ctx, types.TypeEvtTransferPositions, tc.expectedTransferPositionsEvent)
+				s.AssertEventEmitted(s.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			} else {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectedError)
+				s.Require().Nil(response)
+			}
 		})
 	}
 }
