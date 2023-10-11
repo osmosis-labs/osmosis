@@ -2546,7 +2546,6 @@ func (s *KeeperTestSuite) fundSpreadRewardsAddr(ctx sdk.Context, spreadRewardsAd
 		position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(ctx, positionId)
 		s.Require().NoError(err)
 
-		// We fund the account with roundedInt because, there occurs
 		expectedAmountToClaim := position.Liquidity.MulInt(osmomath.NewInt(10)).TruncateInt()
 		totalExpectedRewards = totalExpectedRewards.Add(sdk.NewCoin(ETH, expectedAmountToClaim))
 		// Fund the spread rewards account with the expected rewards and add to the pool's accum
