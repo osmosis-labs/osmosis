@@ -100,7 +100,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
 	return osmoutils.GatherValuesFromStorePrefix(
 		ctx.KVStore(k.storeKey), types.PoolsKey, func(value []byte) (poolmanagertypes.PoolI, error) {
-			pool := model.Pool{}
+			pool := model.CosmWasmPool{}
 			err := k.cdc.Unmarshal(value, &pool)
 			if err != nil {
 				return nil, err
