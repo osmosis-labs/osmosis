@@ -189,6 +189,11 @@ func TestParseUint64SliceToString(t *testing.T) {
 			input:    []uint64{1, 2, 3, 4, 5},
 			expected: "1, 2, 3, 4, 5",
 		},
+		{
+			name:     "Test with multiple elements out of order",
+			input:    []uint64{9, 1, 2, 3, 4, 5},
+			expected: "9, 1, 2, 3, 4, 5",
+		},
 	}
 
 	for _, tt := range tests {

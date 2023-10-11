@@ -676,13 +676,13 @@ func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 // If any of these operations fail, it returns the corresponding error.
 // If all operations succeed, it returns nil.
 func (k Keeper) transferPositions(ctx sdk.Context, positionIds []uint64, sender sdk.AccAddress, recipient sdk.AccAddress) error {
+	// Fixed gas consumption per position ID to prevent spam
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForTransferPosition*len(positionIds)), "cl transfer position fee")
+
 	// All position IDs in the array must be unique.
 	if !osmoassert.Uint64ArrayValuesAreUnique(positionIds) {
 		return types.DuplicatePositionIdsError{PositionIds: positionIds}
 	}
-
-	// Fixed gas consumption per position ID to prevent spam
-	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForTransferPosition*len(positionIds)), "cl transfer position fee")
 
 	for _, positionId := range positionIds {
 		position, err := k.GetPosition(ctx, positionId)
