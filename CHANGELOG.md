@@ -62,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug Fixes
 * [#6644](https://github.com/osmosis-labs/osmosis/pull/6644) fix: genesis bug in pool incentives linking NoLock gauges and PoolIDs
+* [#6674](https://github.com/osmosis-labs/osmosis/pull/6674) fix: remove dragonberry replace directive
 
 ## v19.2.0
 
