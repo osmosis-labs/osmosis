@@ -232,6 +232,111 @@ func (s *KeeperTestSuite) TestUndelegateFromValidatorSet() {
 	}
 }
 
+func (s *KeeperTestSuite) TestUndelegateFromRebalancedValidatorSet() {
+	tests := []struct {
+		name                  string
+		delegateAmt           []osmomath.Int
+		undelegateAmt         osmomath.Int
+		noValset              bool
+		expectedUndelegateAmt []osmomath.Int
+		expectedError         error
+	}{
+		{
+			name:                  "happy path: undelegate all, weights match the current delegations to valset",
+			delegateAmt:           []osmomath.Int{sdk.NewInt(10), sdk.NewInt(90)},
+			undelegateAmt:         sdk.NewInt(100),
+			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(10), sdk.NewInt(90)},
+		},
+		{
+			name:                  "happy path: undelegate some, weights match the current delegations to valset",
+			delegateAmt:           []osmomath.Int{sdk.NewInt(10), sdk.NewInt(90)},
+			undelegateAmt:         sdk.NewInt(50),
+			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(5), sdk.NewInt(45)},
+		},
+		{
+			name:                  "undelegate all, weights do not match the current delegations to valset",
+			delegateAmt:           []osmomath.Int{sdk.NewInt(90), sdk.NewInt(10)},
+			undelegateAmt:         sdk.NewInt(100),
+			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(90), sdk.NewInt(10)},
+		},
+		{
+			name:                  "undelegate some, weights do not match the current delegations to valset",
+			delegateAmt:           []osmomath.Int{sdk.NewInt(90), sdk.NewInt(10)},
+			undelegateAmt:         sdk.NewInt(50),
+			expectedUndelegateAmt: []osmomath.Int{sdk.NewInt(45), sdk.NewInt(5)},
+		},
+		{
+			name:          "error: attempt to undelegate more than delegated",
+			delegateAmt:   []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
+			undelegateAmt: sdk.NewInt(200),
+			expectedError: types.UndelegateMoreThanDelegatedError{TotalDelegatedAmt: sdk.NewDec(150), UndelegationAmt: sdk.NewInt(200)},
+		},
+		{
+			name:          "error: user does not have val-set preference set",
+			delegateAmt:   []osmomath.Int{sdk.NewInt(100), sdk.NewInt(50)},
+			undelegateAmt: sdk.NewInt(100),
+			noValset:      true,
+			expectedError: types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: s.TestAccs[0].String()},
+		},
+	}
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			valAddrs := s.SetupMultipleValidators(3)
+			defaultDelegator := s.TestAccs[0]
+			bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+
+			// set val-set pref
+			valPreferences := []types.ValidatorPreference{
+				{
+					ValOperAddress: valAddrs[0],
+					Weight:         sdk.NewDecWithPrec(1, 1),
+				},
+				{
+					ValOperAddress: valAddrs[1],
+					Weight:         sdk.NewDecWithPrec(9, 1),
+				},
+			}
+
+			if !test.noValset {
+				s.App.ValidatorSetPreferenceKeeper.SetValidatorSetPreferences(s.Ctx, defaultDelegator.String(), types.ValidatorSetPreferences{
+					Preferences: valPreferences,
+				})
+				// delegate for each of the validators
+				for i, valsetPref := range valPreferences {
+					valAddr, err := sdk.ValAddressFromBech32(valsetPref.ValOperAddress)
+					s.Require().NoError(err)
+					validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+					s.Require().True(found)
+
+					s.FundAcc(defaultDelegator, sdk.NewCoins(sdk.NewCoin(bondDenom, test.delegateAmt[i])))
+					_, err = s.App.StakingKeeper.Delegate(s.Ctx, defaultDelegator, test.delegateAmt[i], stakingtypes.Unbonded, validator, true)
+					s.Require().NoError(err)
+				}
+			}
+
+			// System Under Test
+			err := s.App.ValidatorSetPreferenceKeeper.UndelegateFromRebalancedValidatorSet(s.Ctx, defaultDelegator.String(), sdk.NewCoin(bondDenom, test.undelegateAmt))
+
+			if test.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedError.Error())
+				return
+			}
+			s.Require().NoError(err)
+
+			for i, valsetPref := range valPreferences {
+				valAddr, err := sdk.ValAddressFromBech32(valsetPref.ValOperAddress)
+				s.Require().NoError(err)
+
+				delegation, found := s.App.StakingKeeper.GetUnbondingDelegation(s.Ctx, defaultDelegator, valAddr)
+				s.Require().True(found)
+				s.Require().Equal(delegation.Entries[0].Balance, test.expectedUndelegateAmt[i])
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestGetValsetRatios() {
 	defaultDelegationAmt := sdk.NewInt(100)
 	tests := []struct {
