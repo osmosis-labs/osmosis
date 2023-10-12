@@ -298,6 +298,18 @@ func (q Querier) TotalVolumeForPool(ctx sdk.Context, req queryproto.TotalVolumeF
 	}, nil
 }
 
+// TradingPairTakerFee returns the taker fee for the given trading pair
+func (q Querier) TradingPairTakerFee(ctx sdk.Context, req queryproto.TradingPairTakerFeeRequest) (*queryproto.TradingPairTakerFeeResponse, error) {
+	tradingPairTakerFee, err := q.K.GetTradingPairTakerFee(ctx, req.Denom_0, req.Denom_1)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryproto.TradingPairTakerFeeResponse{
+		TakerFee: tradingPairTakerFee,
+	}, nil
+}
+
 // EstimateTradeBasedOnPriceImpact returns the input and output amount of coins for a pool trade
 // based on external price and maximum price impact.
 func (q Querier) EstimateTradeBasedOnPriceImpact(
