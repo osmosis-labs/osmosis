@@ -274,7 +274,7 @@ func (k Keeper) UndelegateFromRebalancedValidatorSet(ctx sdk.Context, delegatorA
 	// Ensure largest VRatio is under 1.
 	// Since we called GetValSetPreferencesWithDelegations, there should be no VRatio > 1
 	if valSetRatio[0].VRatio.GT(sdk.OneDec()) {
-		return fmt.Errorf("valset ratio is greater than 1")
+		return types.ValsetRatioGreaterThanOneError{ValsetRatio: valSetRatio[0].VRatio}
 	}
 
 	// Step 4: Undelegate target amount from each validator
