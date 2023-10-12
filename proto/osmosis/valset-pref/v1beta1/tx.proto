@@ -118,7 +118,7 @@ message MsgUndelegateFromRebalancedValidatorSet {
   // the rebalanced validator set would be {ValA -> 0.9, ValB -> 0.1}
   // So now the 45 osmo would be undelegated from ValA and 5 osmo would be
   // undelegated from ValB.
-  cosmos.base.v1beta1.Coin coin = 3 [
+  cosmos.base.v1beta1.Coin coin = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
