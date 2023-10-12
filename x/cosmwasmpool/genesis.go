@@ -26,34 +26,25 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, gen *types.GenesisState, unpacker 
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	params := k.GetParams(ctx)
 
-	// TODO: We remove this as there is an issue with resolving the
-	// type url for the cosmwasm pools.
-	// panic: unable to resolve type URL /
-	//pools, err := k.GetPools(ctx)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//poolAnys := []*codectypes.Any{}
-	//for _, poolI := range pools {
-	//	cosmwasmPool, ok := poolI.(types.CosmWasmExtension)
-	//	if !ok {
-	//		panic("invalid pool type")
-	//	}
-	//	any, err := codectypes.NewAnyWithValue(cosmwasmPool)
-	//	if err != nil {
-	//		panic(err)
-	//	}
-	//	poolAnys = append(poolAnys, any)
-	//}
+	pools, err := k.GetPoolsSerializable(ctx)
+	if err != nil {
+		panic(err)
+	}
+	poolAnys := []*codectypes.Any{}
+	for _, poolI := range pools {
+		cosmwasmPool, ok := poolI.(types.CosmWasmExtension)
+		if !ok {
+			panic("invalid pool type")
+		}
+		any, err := codectypes.NewAnyWithValue(cosmwasmPool)
+		if err != nil {
+			panic(err)
+		}
+		poolAnys = append(poolAnys, any)
+	}
 
 	return &types.GenesisState{
 		Params: params,
-		// TODO: This is likely because amino is being used directly
-		// (instead of codec.LegacyAmino which is preferred) or
-		// UnpackInterfacesMessage is not defined for some type which
-		// contains a protobuf Any either directly or via one of its members.
-		// To see a stacktrace of where the error is coming from,
-		// set the var Debug = true in codec/types/compat.go
-		// Pools:  poolAnys,
+		Pools:  poolAnys,
 	}
 }
