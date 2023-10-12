@@ -132,7 +132,8 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // NOTE: check README.md for more verbose description of the algorithm.
 // TODO: Properly implement for vratio > 1 to hit steps 5-7, then re-enable
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, undelegation sdk.Coin) error {
-	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
+	// TODO: Change to GetDelegationPreferences
+	existingSet, err := k.GetValSetPreferencesWithDelegations(ctx, delegatorAddr)
 	if err != nil {
 		return types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: delegatorAddr}
 	}
