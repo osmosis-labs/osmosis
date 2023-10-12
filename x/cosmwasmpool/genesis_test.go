@@ -81,20 +81,6 @@ func (s *PoolModuleSuite) TestInitGenesis() {
 	s.Require().Equal(expectedTotalLiquidity.String(), liquidity.String())
 }
 
-<<<<<<< HEAD
-// TODO: Fix this test when fixing genesis export functionality
-//func (s *PoolModuleSuite) TestExportGenesis() {
-//	s.Setup()
-//
-//	for i := 0; i < 2; i++ {
-//		s.FundAcc(s.TestAccs[0], initalDefaultSupply)
-//		s.PrepareCustomTransmuterPool(s.TestAccs[0], defaultDenoms)
-//	}
-//
-//	genesis := s.App.CosmwasmPoolKeeper.ExportGenesis(s.Ctx)
-//	s.Require().Len(genesis.Pools, 2)
-//}
-=======
 func (s *PoolModuleSuite) TestExportGenesis() {
 	s.Setup()
 
@@ -110,7 +96,6 @@ func (s *PoolModuleSuite) TestExportGenesis() {
 		s.Require().Equal("/osmosis.cosmwasmpool.v1beta1.CosmWasmPool", pool.GetTypeUrl())
 	}
 }
->>>>>>> d4582d49 (fix: cosmwasmpool state export (#6666))
 
 func (s *PoolModuleSuite) TestMarshalUnmarshalGenesis() {
 	s.Setup()
