@@ -44,7 +44,7 @@ func (p CosmWasmPool) GetAddress() sdk.AccAddress {
 }
 
 func (p CosmWasmPool) GetId() uint64 {
-	panic("CosmWasmPool.GetId not implemented")
+	return p.PoolId
 }
 
 func (p CosmWasmPool) GetSpreadFactor(ctx sdk.Context) osmomath.Dec {
