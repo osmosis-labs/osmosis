@@ -226,8 +226,10 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	return nil
 }
 
-// UndelegateFromRebalancedValidatorSet undelegates a specified amount of tokens from a delegator's existing validator set.
-// The method first fetches the delegator's validator set preferences, considering their existing delegations.
+// UndelegateFromRebalancedValidatorSet undelegates a specified amount of tokens from a delegator's existing validator set,
+// but takes into consideration the user's existing delegations to the validators in the set.
+// The method first fetches the delegator's validator set preferences, checks their existing delegations, and
+// returns a set with modified weights that consider their existing delegations.
 // If there is no existing delegation, it returns an error.
 // The method then computes the total amount delegated and the amount to undelegate for each validator under this
 // newly calculated valset-ratio set.
