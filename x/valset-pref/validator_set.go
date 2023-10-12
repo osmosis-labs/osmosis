@@ -131,6 +131,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // Truncation ensures we do not undelegate more than the user has staked with the validator set.
 // NOTE: check README.md for more verbose description of the algorithm.
 // TODO: Properly implement for vratio > 1 to hit steps 5-7, then re-enable
+// https://github.com/osmosis-labs/osmosis/issues/6686
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, undelegation sdk.Coin) error {
 	// TODO: Change to GetDelegationPreferences
 	existingSet, err := k.GetValSetPreferencesWithDelegations(ctx, delegatorAddr)
@@ -225,6 +226,17 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	return nil
 }
 
+// UndelegateFromRebalancedValidatorSet undelegates a specified amount of tokens from a delegator's existing validator set.
+// The method first fetches the delegator's validator set preferences, considering their existing delegations.
+// If there is no existing delegation, it returns an error.
+// The method then computes the total amount delegated and the amount to undelegate for each validator under this
+// newly calculated valset-ratio set.
+//
+// If the undelegation amount is greater than the total delegated amount, it returns an error.
+// The validators are then sorted in descending order of VRatio.
+// The method ensures that the largest VRatio is under 1. If it is greater than 1, it returns an error.
+// Finally, the method undelegates the target amount from each validator.
+// If an error occurs during the undelegation process, it is returned.
 func (k Keeper) UndelegateFromRebalancedValidatorSet(ctx sdk.Context, delegatorAddr string, undelegation sdk.Coin) error {
 	// GetValSetPreferencesWithDelegations fetches the delegator's validator set preferences, but returns a set with
 	// modified weights that consider their existing delegations. If there is no existing delegation, it returns an error.
