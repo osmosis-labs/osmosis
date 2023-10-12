@@ -19,6 +19,8 @@ func GetTxCmd() *cobra.Command {
 	txCmd := osmocli.TxIndexCmd(types.ModuleName)
 	osmocli.AddTxCmd(txCmd, NewSetValSetCmd)
 	osmocli.AddTxCmd(txCmd, NewDelValSetCmd)
+	// TODO: Uncomment when undelegate is implemented
+	// https://github.com/osmosis-labs/osmosis/issues/6686
 	//osmocli.AddTxCmd(txCmd, NewUnDelValSetCmd)
 	osmocli.AddTxCmd(txCmd, NewUndelRebalancedValSetCmd)
 	osmocli.AddTxCmd(txCmd, NewReDelValSetCmd)
@@ -45,6 +47,8 @@ func NewDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgDelegateToValidatorSet) {
 	}, &types.MsgDelegateToValidatorSet{}
 }
 
+// TODO: Uncomment when undelegate is implemented
+// https://github.com/osmosis-labs/osmosis/issues/6686
 // func NewUnDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgUndelegateFromValidatorSet) {
 // 	return &osmocli.TxCliDesc{
 // 		Use:     "undelegate-valset",
