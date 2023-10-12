@@ -56,7 +56,7 @@ func (server msgServer) UndelegateFromValidatorSet(goCtx context.Context, msg *t
 	// 	return nil, err
 	// }
 
-	return &types.MsgUndelegateFromValidatorSetResponse{}, fmt.Errorf("not implemented, utilize UndelegateProportionallyFromValidatorSet instead")
+	return &types.MsgUndelegateFromValidatorSetResponse{}, fmt.Errorf("not implemented, utilize UndelegateFromRebalancedValidatorSet instead")
 }
 
 // UndelegateFromRebalancedValidatorSet undelegates {coin} amount from the validator set, utilizing a user's current delegations
