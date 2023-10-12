@@ -250,18 +250,6 @@ func CalculateSqrtPriceToTick(sqrtPrice osmomath.BigDec) (tickIndex int64, err e
 		return 0, err
 	}
 
-	// TODO: remove this check. It is present to maintain backwards state-compatibility with
-	// v19.x and earlier major releases of Osmosis.
-	// Once https://github.com/osmosis-labs/osmosis/issues/5726 is fully complete,
-	// this should be removed.
-	//
-	// Backwards state-compatibility is maintained by having the swap and LP logic error
-	// here in case the price/tick falls below the origina minimum tick bounds that are
-	// consistent with v19.x and earlier release lines.
-	if tick < types.MinCurrentTick {
-		return 0, types.TickIndexMinimumError{MinTick: types.MinCurrentTick}
-	}
-
 	// We have a candidate bucket index `t`. We discern here if:
 	// * sqrtPrice in [TickToSqrtPrice(t - 1), TickToSqrtPrice(t))
 	// * sqrtPrice in [TickToSqrtPrice(t), TickToSqrtPrice(t + 1))
