@@ -26,6 +26,7 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, gen *types.GenesisState, unpacker 
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	params := k.GetParams(ctx)
 
+<<<<<<< HEAD
 	// TODO: We remove this as there is an issue with resolving the
 	// type url for the cosmwasm pools.
 	// panic: unable to resolve type URL /
@@ -45,6 +46,24 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	//	}
 	//	poolAnys = append(poolAnys, any)
 	//}
+=======
+	pools, err := k.GetPoolsSerializable(ctx)
+	if err != nil {
+		panic(err)
+	}
+	poolAnys := []*codectypes.Any{}
+	for _, poolI := range pools {
+		cosmwasmPool, ok := poolI.(types.CosmWasmExtension)
+		if !ok {
+			panic("invalid pool type")
+		}
+		any, err := codectypes.NewAnyWithValue(cosmwasmPool)
+		if err != nil {
+			panic(err)
+		}
+		poolAnys = append(poolAnys, any)
+	}
+>>>>>>> d4582d49 (fix: cosmwasmpool state export (#6666))
 
 	return &types.GenesisState{
 		Params: params,
