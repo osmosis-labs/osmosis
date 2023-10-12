@@ -91,17 +91,6 @@ func (q Querier) NumPools(grpcCtx context.Context,
 	return q.Q.NumPools(ctx, *req)
 }
 
-
-func (q Querier) TradingPairTakerFee(grpcCtx context.Context,
-	req *queryproto.TradingPairTakerFeeRequest,
-) (*queryproto.TradingPairTakerFeeResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.TradingPairTakerFee(ctx, *req)
-}
-
 func (q Querier) EstimateTradeBasedOnPriceImpact(grpcCtx context.Context,
 	req *queryproto.EstimateTradeBasedOnPriceImpactRequest,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
