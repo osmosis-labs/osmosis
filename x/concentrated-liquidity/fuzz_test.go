@@ -203,6 +203,15 @@ func (s *KeeperTestSuite) swapNearNextTickBoundary(r *rand.Rand, pool types.Conc
 	} else {
 		targetTick += 1
 	}
+	// TODO: remove this limit upon completion of the refactor in:
+	// https://github.com/osmosis-labs/osmosis/issues/5726
+	// Due to an intermediary refactor step where we have
+	// full range positions created in the extended full range it
+	// sometimes tries to swap to the V2 MinInitializedTick that
+	// is not supported yet by the rest of the system.
+	if targetTick < types.MinInitializedTick {
+		return false, false
+	}
 	return s.swapNearTickBoundary(r, pool, targetTick, zfo)
 }
 
