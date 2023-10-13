@@ -335,6 +335,10 @@ func (k Keeper) IsPoolIncentivized(ctx sdk.Context, providedPoolId uint64) (bool
 	distrInfo := k.GetDistrInfo(ctx)
 
 	for _, record := range distrInfo.Records {
+		// Skip community pool gauge
+		if record.GaugeId == 0 {
+			continue
+		}
 		gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
 		if err != nil {
 			return false, err
