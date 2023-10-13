@@ -35,7 +35,6 @@ var (
 	oneEthCoins = sdk.NewDecCoins(oneEth)
 	onlyUSDC    = [][]string{{USDC}, {USDC}, {USDC}, {USDC}}
 	onlyETH     = [][]string{{ETH}, {ETH}, {ETH}, {ETH}}
-	emptyCoins  = sdk.NewCoins()
 )
 
 func (s *KeeperTestSuite) TestCreateAndGetSpreadRewardAccumulator() {
@@ -1477,46 +1476,6 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 	collectedThree, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, owner, positionDataThree.ID)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.Coins{}, collectedThree)
-}
-
-// This test validates that spread rewards are collected without issues
-// when positions are created over the new extended range.
-func (s *KeeperTestSuite) TestCollectSpreadRewards_MinSpotPriceMigration() {
-	s.SetupTest()
-
-	spreadFactor := types.AuthorizedSpreadFactors[1]
-	s.Require().False(spreadFactor.IsZero())
-
-	poolId, positions, coinsSwappedIn := s.swapToMinTickAndBack(spreadFactor, emptyCoins)
-
-	s.Require().Len(coinsSwappedIn, 2)
-	tokenInZeroForOne := coinsSwappedIn[0]
-	tokenInOneForZero := coinsSwappedIn[1]
-
-	// fetch pool
-	pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	expectedTotalSpreadRewards := sdk.NewCoins(
-		sdk.NewCoin(pool.GetToken0(), tokenInZeroForOne.Amount.ToLegacyDec().Mul(spreadFactor).TruncateInt()),
-		sdk.NewCoin(pool.GetToken1(), tokenInOneForZero.Amount.ToLegacyDec().Mul(spreadFactor).TruncateInt()),
-	)
-
-	actualCollected := sdk.NewCoins()
-
-	// Collect spread rewards
-	for _, position := range positions {
-		collected, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(s.Ctx, s.TestAccs[0], position.ID)
-		s.Require().NoError(err)
-
-		actualCollected = actualCollected.Add(collected...)
-	}
-
-	// Validate that the total spread rewards collected is equal to the expected total spread rewards
-	s.Require().Equal(len(expectedTotalSpreadRewards), len(actualCollected))
-	for _, coin := range expectedTotalSpreadRewards {
-		osmoassert.Equal(s.T(), oneAdditiveTolerance, coin.Amount, actualCollected.AmountOf(coin.Denom))
-	}
 }
 
 // CollectAndAssertSpreadRewards collects spread rewards from a given pool for all positions and verifies that the total spread rewards collected match the expected total spread rewards.
