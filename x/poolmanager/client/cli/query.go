@@ -30,6 +30,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdAllPools)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalVolumeForPool)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTradingPairTakerFee)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateTradeBasedOnPriceImpact)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
@@ -179,6 +180,15 @@ func GetCmdTotalVolumeForPool() (*osmocli.QueryDescriptor, *queryproto.TotalVolu
 		Long: `{{.Short}}
 		{{.CommandPrefix}} total-volume-for-pool 1`,
 	}, &queryproto.TotalVolumeForPoolRequest{}
+}
+
+func GetCmdTradingPairTakerFee() (*osmocli.QueryDescriptor, *queryproto.TradingPairTakerFeeRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "trading-pair-taker-fee",
+		Short: "Query trading pair taker fee",
+		Long: `{{.Short}}
+		{{.CommandPrefix}} trading-pair-taker-fee uosmo uatom`,
+	}, &queryproto.TradingPairTakerFeeRequest{}
 }
 
 func GetCmdEstimateTradeBasedOnPriceImpact() (
