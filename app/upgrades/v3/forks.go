@@ -6,7 +6,7 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/app/keepers"
+	"github.com/osmosis-labs/osmosis/v20/app/keepers"
 )
 
 // RunForkLogic executes height-gated on-chain fork logic for the Osmosis v3

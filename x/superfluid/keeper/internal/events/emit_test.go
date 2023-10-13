@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v19/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v20/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
 )
 
 type SuperfluidEventsTestSuite struct {

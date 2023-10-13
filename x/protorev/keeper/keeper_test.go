@@ -10,15 +10,15 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v19/x/protorev"
-	protorevkeeper "github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v20/x/protorev"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v20/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
 
-	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/stableswap"
 
-	osmosisapp "github.com/osmosis-labs/osmosis/v19/app"
+	osmosisapp "github.com/osmosis-labs/osmosis/v20/app"
 )
 
 type KeeperTestSuite struct {
