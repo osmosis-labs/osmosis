@@ -14,8 +14,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -174,6 +174,51 @@ func (q Querier) LockableDurations(ctx context.Context, _ *types.QueryLockableDu
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryLockableDurationsResponse{LockableDurations: q.Keeper.GetLockableDurations(sdkCtx)}, nil
+}
+
+// AllGroups returns all groups that exist on chain.
+func (q Querier) AllGroups(goCtx context.Context, req *types.QueryAllGroupsRequest) (*types.QueryAllGroupsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	groups, err := q.Keeper.GetAllGroups(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAllGroupsResponse{Groups: groups}, nil
+}
+
+// AllGroupsGauges returns all group gauges that exist on chain.
+func (q Querier) AllGroupsGauges(goCtx context.Context, req *types.QueryAllGroupsGaugesRequest) (*types.QueryAllGroupsGaugesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	gauges, err := q.Keeper.GetAllGroupsGauges(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAllGroupsGaugesResponse{Gauges: gauges}, nil
+}
+
+// AllGroupsWithGauge returns all groups with their respective gauge that exist on chain.
+func (q Querier) AllGroupsWithGauge(goCtx context.Context, req *types.QueryAllGroupsWithGaugeRequest) (*types.QueryAllGroupsWithGaugeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	groupsWithGauge, err := q.Keeper.GetAllGroupsWithGauge(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAllGroupsWithGaugeResponse{GroupsWithGauge: groupsWithGauge}, nil
+}
+
+// GroupByGroupGaugeID retrieves a group by its associated gauge ID.
+// If the group cannot be found or an error occurs during the operation, it returns an error.
+func (q Querier) GroupByGroupGaugeID(goCtx context.Context, req *types.QueryGroupByGroupGaugeIDRequest) (*types.QueryGroupByGroupGaugeIDResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	group, err := q.Keeper.GetGroupByGaugeID(ctx, req.Id)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryGroupByGroupGaugeIDResponse{Group: group}, nil
 }
 
 // getGaugeFromIDJsonBytes returns gauges from the json bytes of gaugeIDs.

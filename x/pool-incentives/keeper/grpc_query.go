@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -11,9 +10,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -120,77 +120,95 @@ func (q Querier) LockableDurations(ctx context.Context, _ *types.QueryLockableDu
 func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivizedPoolsRequest) (*types.QueryIncentivizedPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
+	// We use lockable durations for byDuration gauges.
 	lockableDurations := q.Keeper.GetLockableDurations(sdkCtx)
 	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
 
-	// Add epoch duration to lockable durations if not already present.
-	// This is to ensure that concentrated gauges (which run on epoch time) are
-	// always included in the query, even if the epoch duration changes in the future.
+	// We use epoch duration for CL noLock gauges.
 	epochDuration := q.incentivesKeeper.GetEpochInfo(sdkCtx).Duration
-	epochAlreadyLockable := false
-	for _, lockableDuration := range lockableDurations {
-		if lockableDuration == epochDuration {
-			epochAlreadyLockable = true
-			break
-		}
-	}
-
-	// Ensure that we only add epoch duration if it does not already exist as a lockable duration.
-	if !epochAlreadyLockable {
-		lockableDurations = append(lockableDurations, epochDuration)
-	}
 
 	// While there are exceptions, typically the number of incentivizedPools
 	// equals to the number of incentivized gauges / number of lockable durations.
 	incentivizedPools := make([]types.IncentivizedPool, 0, len(distrInfo.Records)/len(lockableDurations))
-	incentivizedPoolIDs := make(map[uint64]time.Duration)
 
 	// Loop over the distribution records and fill in the incentivized pools struct.
 	for _, record := range distrInfo.Records {
-		for _, lockableDuration := range lockableDurations {
-			poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, lockableDuration)
-			if err == nil {
-				incentivizedPool := types.IncentivizedPool{
-					PoolId:           poolId,
-					LockableDuration: lockableDuration,
-					GaugeId:          record.GaugeId,
-				}
-
-				incentivizedPools = append(incentivizedPools, incentivizedPool)
-				incentivizedPoolIDs[poolId] = lockableDuration
-			}
+		// Skip community pool gauge
+		if record.GaugeId == 0 {
+			continue
 		}
-	}
-
-	// Only run the following if the above loop determined there were incentivized pools.
-	if len(incentivizedPoolIDs) > 0 {
-		// Retrieve the migration records between balancer pools and concentrated liquidity pools.
-		// This comes from the superfluid keeper, since superfluid is the only pool incentives connected
-		// module that has access to the gamm modules store.
-		migrationRecords, err := q.gammKeeper.GetAllMigrationInfo(sdkCtx)
+		gauge, err := q.incentivesKeeper.GetGaugeByID(sdkCtx, record.GaugeId)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		// Iterate over all migration records.
-		for _, record := range migrationRecords.BalancerToConcentratedPoolLinks {
-			// If the cl pool is not in the list of incentivized pools, skip it.
-			lockableDuration, incentivized := incentivizedPoolIDs[record.ClPoolId]
-			if !incentivized {
+		if gauge.DistributeTo.LockQueryType == lockuptypes.ByGroup {
+			group, err := q.Keeper.incentivesKeeper.GetGroupByGaugeID(sdkCtx, record.GaugeId)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			groupGauge, err := q.Keeper.incentivesKeeper.GetGaugeByID(sdkCtx, group.GroupGaugeId)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			if !groupGauge.IsPerpetual {
+				// if the group is not perpetual, it is an externally incentivized gauge so we skip it
 				continue
 			}
-
-			// Add the indirectly incentivized balancer pools to the list of incentivized pools.
-			gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, record.BalancerPoolId, lockableDuration)
-			if err == nil {
+			poolIds, durations, err := q.Keeper.incentivesKeeper.GetPoolIdsAndDurationsFromGaugeRecords(sdkCtx, group.InternalGaugeInfo.GaugeRecords)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			for i, poolId := range poolIds {
 				incentivizedPool := types.IncentivizedPool{
-					PoolId:           record.BalancerPoolId,
-					LockableDuration: lockableDuration,
-					GaugeId:          gaugeId,
+					PoolId:           poolId,
+					LockableDuration: durations[i],
+					GaugeId:          record.GaugeId,
 				}
 
 				incentivizedPools = append(incentivizedPools, incentivizedPool)
 			}
+		} else if gauge.DistributeTo.LockQueryType == lockuptypes.NoLock {
+			poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, epochDuration)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			incentivizedPool := types.IncentivizedPool{
+				PoolId:           poolId,
+				LockableDuration: epochDuration,
+				GaugeId:          record.GaugeId,
+			}
+
+			incentivizedPools = append(incentivizedPools, incentivizedPool)
+		} else if gauge.DistributeTo.LockQueryType == lockuptypes.ByDuration {
+			gauge, err := q.incentivesKeeper.GetGaugeByID(sdkCtx, record.GaugeId)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			// Ensure the gauge's duration matches one of the lockable durations.
+			matchFound := false
+			for _, duration := range lockableDurations {
+				if gauge.DistributeTo.Duration == duration {
+					matchFound = true
+					break
+				}
+			}
+			if !matchFound {
+				return nil, types.IncentiveRecordContainsNonLockableDurationError{GaugeId: gauge.Id, Duration: gauge.DistributeTo.Duration, LockableDurations: lockableDurations}
+			}
+			poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, gauge.DistributeTo.Duration)
+			if err != nil {
+				return nil, status.Error(codes.Internal, err.Error())
+			}
+			incentivizedPool := types.IncentivizedPool{
+				PoolId:           poolId,
+				LockableDuration: gauge.DistributeTo.Duration,
+				GaugeId:          record.GaugeId,
+			}
+
+			incentivizedPools = append(incentivizedPools, incentivizedPool)
+		} else {
+			return nil, status.Error(codes.Internal, "unknown lock query type")
 		}
 	}
 

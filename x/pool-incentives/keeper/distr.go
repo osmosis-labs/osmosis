@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -54,7 +54,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 			continue
 		}
 
-		if record.GaugeId == 0 { // fund community pool if gaugeId is zero
+		if record.GaugeId == types.CommunityPoolDistributionGaugeID { // fund community pool if gaugeId is zero
 			if err := k.FundCommunityPoolFromModule(ctx, sdk.NewCoin(asset.Denom, allocatingAmount)); err != nil {
 				return err
 			}

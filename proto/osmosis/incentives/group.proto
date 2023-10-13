@@ -6,8 +6,9 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/lockup/lock.proto";
+import "osmosis/incentives/gauge.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v19/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v20/x/incentives/types";
 
 // SplittingPolicy determines the way we want to split incentives in groupGauges
 enum SplittingPolicy {
@@ -60,4 +61,15 @@ message Group {
   uint64 group_gauge_id = 1;
   InternalGaugeInfo internal_gauge_info = 2 [ (gogoproto.nullable) = false ];
   SplittingPolicy splitting_policy = 3;
+}
+
+// CreateGroup is called via governance to create a new group.
+// It takes an array of pool IDs to split the incentives across.
+message CreateGroup { repeated uint64 pool_ids = 1; }
+
+// GroupsWithGauge is a helper struct that stores a group and its
+// associated gauge.
+message GroupsWithGauge {
+  Group group = 1 [ (gogoproto.nullable) = false ];
+  Gauge gauge = 2 [ (gogoproto.nullable) = false ];
 }

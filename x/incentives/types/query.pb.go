@@ -14,7 +14,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/gogo/protobuf/types"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	_ "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	_ "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -912,6 +912,334 @@ func (m *QueryLockableDurationsResponse) GetLockableDurations() []time.Duration 
 	return nil
 }
 
+type QueryAllGroupsRequest struct {
+}
+
+func (m *QueryAllGroupsRequest) Reset()         { *m = QueryAllGroupsRequest{} }
+func (m *QueryAllGroupsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllGroupsRequest) ProtoMessage()    {}
+func (*QueryAllGroupsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{18}
+}
+func (m *QueryAllGroupsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllGroupsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllGroupsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllGroupsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllGroupsRequest.Merge(m, src)
+}
+func (m *QueryAllGroupsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllGroupsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllGroupsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllGroupsRequest proto.InternalMessageInfo
+
+type QueryAllGroupsResponse struct {
+	Groups []Group `protobuf:"bytes,1,rep,name=groups,proto3" json:"groups"`
+}
+
+func (m *QueryAllGroupsResponse) Reset()         { *m = QueryAllGroupsResponse{} }
+func (m *QueryAllGroupsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllGroupsResponse) ProtoMessage()    {}
+func (*QueryAllGroupsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{19}
+}
+func (m *QueryAllGroupsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllGroupsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllGroupsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllGroupsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllGroupsResponse.Merge(m, src)
+}
+func (m *QueryAllGroupsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllGroupsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllGroupsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllGroupsResponse proto.InternalMessageInfo
+
+func (m *QueryAllGroupsResponse) GetGroups() []Group {
+	if m != nil {
+		return m.Groups
+	}
+	return nil
+}
+
+type QueryAllGroupsGaugesRequest struct {
+}
+
+func (m *QueryAllGroupsGaugesRequest) Reset()         { *m = QueryAllGroupsGaugesRequest{} }
+func (m *QueryAllGroupsGaugesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllGroupsGaugesRequest) ProtoMessage()    {}
+func (*QueryAllGroupsGaugesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{20}
+}
+func (m *QueryAllGroupsGaugesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllGroupsGaugesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllGroupsGaugesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllGroupsGaugesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllGroupsGaugesRequest.Merge(m, src)
+}
+func (m *QueryAllGroupsGaugesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllGroupsGaugesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllGroupsGaugesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllGroupsGaugesRequest proto.InternalMessageInfo
+
+type QueryAllGroupsGaugesResponse struct {
+	Gauges []Gauge `protobuf:"bytes,1,rep,name=gauges,proto3" json:"gauges"`
+}
+
+func (m *QueryAllGroupsGaugesResponse) Reset()         { *m = QueryAllGroupsGaugesResponse{} }
+func (m *QueryAllGroupsGaugesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllGroupsGaugesResponse) ProtoMessage()    {}
+func (*QueryAllGroupsGaugesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{21}
+}
+func (m *QueryAllGroupsGaugesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllGroupsGaugesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllGroupsGaugesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllGroupsGaugesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllGroupsGaugesResponse.Merge(m, src)
+}
+func (m *QueryAllGroupsGaugesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllGroupsGaugesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllGroupsGaugesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllGroupsGaugesResponse proto.InternalMessageInfo
+
+func (m *QueryAllGroupsGaugesResponse) GetGauges() []Gauge {
+	if m != nil {
+		return m.Gauges
+	}
+	return nil
+}
+
+type QueryAllGroupsWithGaugeRequest struct {
+}
+
+func (m *QueryAllGroupsWithGaugeRequest) Reset()         { *m = QueryAllGroupsWithGaugeRequest{} }
+func (m *QueryAllGroupsWithGaugeRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllGroupsWithGaugeRequest) ProtoMessage()    {}
+func (*QueryAllGroupsWithGaugeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{22}
+}
+func (m *QueryAllGroupsWithGaugeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllGroupsWithGaugeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllGroupsWithGaugeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllGroupsWithGaugeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllGroupsWithGaugeRequest.Merge(m, src)
+}
+func (m *QueryAllGroupsWithGaugeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllGroupsWithGaugeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllGroupsWithGaugeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllGroupsWithGaugeRequest proto.InternalMessageInfo
+
+type QueryAllGroupsWithGaugeResponse struct {
+	GroupsWithGauge []GroupsWithGauge `protobuf:"bytes,1,rep,name=groups_with_gauge,json=groupsWithGauge,proto3" json:"groups_with_gauge"`
+}
+
+func (m *QueryAllGroupsWithGaugeResponse) Reset()         { *m = QueryAllGroupsWithGaugeResponse{} }
+func (m *QueryAllGroupsWithGaugeResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllGroupsWithGaugeResponse) ProtoMessage()    {}
+func (*QueryAllGroupsWithGaugeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{23}
+}
+func (m *QueryAllGroupsWithGaugeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllGroupsWithGaugeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllGroupsWithGaugeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllGroupsWithGaugeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllGroupsWithGaugeResponse.Merge(m, src)
+}
+func (m *QueryAllGroupsWithGaugeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllGroupsWithGaugeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllGroupsWithGaugeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllGroupsWithGaugeResponse proto.InternalMessageInfo
+
+func (m *QueryAllGroupsWithGaugeResponse) GetGroupsWithGauge() []GroupsWithGauge {
+	if m != nil {
+		return m.GroupsWithGauge
+	}
+	return nil
+}
+
+type QueryGroupByGroupGaugeIDRequest struct {
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (m *QueryGroupByGroupGaugeIDRequest) Reset()         { *m = QueryGroupByGroupGaugeIDRequest{} }
+func (m *QueryGroupByGroupGaugeIDRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGroupByGroupGaugeIDRequest) ProtoMessage()    {}
+func (*QueryGroupByGroupGaugeIDRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{24}
+}
+func (m *QueryGroupByGroupGaugeIDRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGroupByGroupGaugeIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGroupByGroupGaugeIDRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGroupByGroupGaugeIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGroupByGroupGaugeIDRequest.Merge(m, src)
+}
+func (m *QueryGroupByGroupGaugeIDRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGroupByGroupGaugeIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGroupByGroupGaugeIDRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGroupByGroupGaugeIDRequest proto.InternalMessageInfo
+
+func (m *QueryGroupByGroupGaugeIDRequest) GetId() uint64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+type QueryGroupByGroupGaugeIDResponse struct {
+	Group Group `protobuf:"bytes,1,opt,name=group,proto3" json:"group"`
+}
+
+func (m *QueryGroupByGroupGaugeIDResponse) Reset()         { *m = QueryGroupByGroupGaugeIDResponse{} }
+func (m *QueryGroupByGroupGaugeIDResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGroupByGroupGaugeIDResponse) ProtoMessage()    {}
+func (*QueryGroupByGroupGaugeIDResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8124258a89427f98, []int{25}
+}
+func (m *QueryGroupByGroupGaugeIDResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGroupByGroupGaugeIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGroupByGroupGaugeIDResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGroupByGroupGaugeIDResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGroupByGroupGaugeIDResponse.Merge(m, src)
+}
+func (m *QueryGroupByGroupGaugeIDResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGroupByGroupGaugeIDResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGroupByGroupGaugeIDResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGroupByGroupGaugeIDResponse proto.InternalMessageInfo
+
+func (m *QueryGroupByGroupGaugeIDResponse) GetGroup() Group {
+	if m != nil {
+		return m.Group
+	}
+	return Group{}
+}
+
 func init() {
 	proto.RegisterType((*ModuleToDistributeCoinsRequest)(nil), "osmosis.incentives.ModuleToDistributeCoinsRequest")
 	proto.RegisterType((*ModuleToDistributeCoinsResponse)(nil), "osmosis.incentives.ModuleToDistributeCoinsResponse")
@@ -931,79 +1259,103 @@ func init() {
 	proto.RegisterType((*RewardsEstResponse)(nil), "osmosis.incentives.RewardsEstResponse")
 	proto.RegisterType((*QueryLockableDurationsRequest)(nil), "osmosis.incentives.QueryLockableDurationsRequest")
 	proto.RegisterType((*QueryLockableDurationsResponse)(nil), "osmosis.incentives.QueryLockableDurationsResponse")
+	proto.RegisterType((*QueryAllGroupsRequest)(nil), "osmosis.incentives.QueryAllGroupsRequest")
+	proto.RegisterType((*QueryAllGroupsResponse)(nil), "osmosis.incentives.QueryAllGroupsResponse")
+	proto.RegisterType((*QueryAllGroupsGaugesRequest)(nil), "osmosis.incentives.QueryAllGroupsGaugesRequest")
+	proto.RegisterType((*QueryAllGroupsGaugesResponse)(nil), "osmosis.incentives.QueryAllGroupsGaugesResponse")
+	proto.RegisterType((*QueryAllGroupsWithGaugeRequest)(nil), "osmosis.incentives.QueryAllGroupsWithGaugeRequest")
+	proto.RegisterType((*QueryAllGroupsWithGaugeResponse)(nil), "osmosis.incentives.QueryAllGroupsWithGaugeResponse")
+	proto.RegisterType((*QueryGroupByGroupGaugeIDRequest)(nil), "osmosis.incentives.QueryGroupByGroupGaugeIDRequest")
+	proto.RegisterType((*QueryGroupByGroupGaugeIDResponse)(nil), "osmosis.incentives.QueryGroupByGroupGaugeIDResponse")
 }
 
 func init() { proto.RegisterFile("osmosis/incentives/query.proto", fileDescriptor_8124258a89427f98) }
 
 var fileDescriptor_8124258a89427f98 = []byte{
-	// 1058 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x96, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xc7, 0x33, 0x4e, 0x52, 0x9a, 0xd7, 0x12, 0x9a, 0x21, 0x40, 0xe2, 0xb6, 0x6b, 0xb3, 0x6a,
-	0x53, 0x37, 0x25, 0x3b, 0x71, 0x4c, 0x53, 0x7e, 0x08, 0x24, 0x8c, 0x4b, 0xa9, 0x04, 0x52, 0x58,
-	0x81, 0x90, 0x90, 0xd0, 0x6a, 0xed, 0x1d, 0xb6, 0xab, 0xd8, 0x3b, 0xee, 0xce, 0x6e, 0x82, 0x15,
-	0xe5, 0x82, 0x38, 0x57, 0x20, 0x22, 0xc4, 0xa1, 0x7f, 0x01, 0x47, 0x90, 0x38, 0x72, 0xe0, 0xd4,
-	0x63, 0x25, 0x24, 0xc4, 0x29, 0x45, 0x09, 0x7f, 0x41, 0xff, 0x02, 0xb4, 0xb3, 0xb3, 0xf6, 0xda,
-	0x5e, 0xaf, 0x13, 0xd4, 0x56, 0x39, 0x39, 0x93, 0xf7, 0xeb, 0xf3, 0xbe, 0x1e, 0xbf, 0x37, 0xa0,
-	0x30, 0xde, 0x62, 0xdc, 0xe1, 0xc4, 0x71, 0x1b, 0xd4, 0xf5, 0x9d, 0x2d, 0xca, 0xc9, 0xdd, 0x80,
-	0x7a, 0x1d, 0xad, 0xed, 0x31, 0x9f, 0x61, 0x2c, 0xed, 0x5a, 0xcf, 0x9e, 0x9f, 0xb7, 0x99, 0xcd,
-	0x84, 0x99, 0x84, 0x7f, 0x45, 0x9e, 0xf9, 0x0b, 0x36, 0x63, 0x76, 0x93, 0x12, 0xb3, 0xed, 0x10,
-	0xd3, 0x75, 0x99, 0x6f, 0xfa, 0x0e, 0x73, 0xb9, 0xb4, 0x2a, 0xd2, 0x2a, 0x4e, 0xf5, 0xe0, 0x2b,
-	0x62, 0x05, 0x9e, 0x70, 0x88, 0xed, 0x0d, 0x51, 0x88, 0xd4, 0x4d, 0x4e, 0xc9, 0x56, 0xb9, 0x4e,
-	0x7d, 0xb3, 0x4c, 0x1a, 0xcc, 0x89, 0xed, 0xcb, 0x49, 0xbb, 0x00, 0xec, 0x7a, 0xb5, 0x4d, 0xdb,
-	0x71, 0xfb, 0x72, 0xa5, 0xf4, 0x64, 0x9b, 0x81, 0x4d, 0xa5, 0x7d, 0x31, 0xb6, 0x37, 0x59, 0x63,
-	0x33, 0x68, 0x8b, 0x8f, 0xc8, 0xa4, 0x16, 0x41, 0xf9, 0x98, 0x59, 0x41, 0x93, 0x7e, 0xca, 0x6a,
-	0x0e, 0xf7, 0x3d, 0xa7, 0x1e, 0xf8, 0xf4, 0x7d, 0xe6, 0xb8, 0x5c, 0xa7, 0x77, 0x03, 0xca, 0x7d,
-	0xf5, 0x5b, 0x04, 0x85, 0x91, 0x2e, 0xbc, 0xcd, 0x5c, 0x4e, 0xb1, 0x09, 0xd3, 0x21, 0x3a, 0x5f,
-	0x40, 0xc5, 0xc9, 0xd2, 0x99, 0xb5, 0x45, 0x2d, 0x82, 0xd7, 0x42, 0x78, 0x4d, 0x62, 0x6b, 0x61,
-	0x48, 0x75, 0xf5, 0xc1, 0x7e, 0x61, 0xe2, 0xe7, 0x47, 0x85, 0x92, 0xed, 0xf8, 0x77, 0x82, 0xba,
-	0xd6, 0x60, 0x2d, 0x22, 0x3b, 0x8d, 0x3e, 0x56, 0xb8, 0xb5, 0x49, 0xfc, 0x4e, 0x9b, 0x72, 0x2d,
-	0xaa, 0x11, 0x65, 0x56, 0x55, 0x38, 0x77, 0x2b, 0x6c, 0xa9, 0xda, 0xb9, 0x5d, 0x93, 0x68, 0x78,
-	0x16, 0x72, 0x8e, 0xb5, 0x80, 0x8a, 0xa8, 0x34, 0xa5, 0xe7, 0x1c, 0x4b, 0xad, 0xc1, 0x5c, 0xc2,
-	0x47, 0xb2, 0x11, 0x98, 0x16, 0x5a, 0x08, 0xbf, 0x90, 0x6d, 0xf8, 0x0b, 0xd6, 0x44, 0x94, 0x1e,
-	0xf9, 0xa9, 0x9f, 0xc3, 0xf3, 0xe2, 0x1c, 0x2b, 0x80, 0x3f, 0x00, 0xe8, 0x49, 0x2e, 0xd3, 0x2c,
-	0xf5, 0xb5, 0x18, 0x5d, 0xa0, 0xb8, 0xd1, 0x0d, 0xd3, 0xa6, 0x32, 0x56, 0x4f, 0x44, 0xaa, 0xf7,
-	0x10, 0xcc, 0xc6, 0x99, 0x25, 0x5c, 0x05, 0xa6, 0x2c, 0xd3, 0x37, 0xbb, 0xba, 0x8d, 0x62, 0xab,
-	0x4e, 0x85, 0xba, 0xe9, 0xc2, 0x19, 0xdf, 0xea, 0xe3, 0xc9, 0x09, 0x9e, 0x2b, 0x63, 0x79, 0xa2,
-	0x8a, 0x7d, 0x40, 0x5f, 0xc2, 0x8b, 0xef, 0x35, 0xc2, 0x2a, 0x4f, 0xa7, 0xdf, 0x3d, 0x04, 0xf3,
-	0xfd, 0xf9, 0x4f, 0x44, 0xd7, 0x3b, 0x70, 0x3e, 0x49, 0xb5, 0x41, 0xbd, 0x1a, 0x75, 0x59, 0x2b,
-	0xee, 0x7e, 0x1e, 0xa6, 0xad, 0xf0, 0x2c, 0x1a, 0x9f, 0xd1, 0xa3, 0xc3, 0x80, 0x26, 0xb9, 0xff,
-	0xad, 0xc9, 0x7d, 0x04, 0x17, 0xd2, 0xab, 0x9f, 0x08, 0x6d, 0x0c, 0x78, 0xe9, 0xb3, 0x76, 0x83,
-	0xb5, 0x1c, 0xd7, 0x7e, 0x3a, 0x77, 0xe2, 0x47, 0x04, 0x2f, 0x0f, 0x56, 0x38, 0x11, 0x9d, 0xef,
-	0xc2, 0xc5, 0x7e, 0xae, 0x67, 0x7b, 0x2f, 0x7e, 0x45, 0xa0, 0x8c, 0xaa, 0x2f, 0xf5, 0xf9, 0x10,
-	0x5e, 0x08, 0xa4, 0x87, 0x21, 0x26, 0x15, 0x3f, 0xaa, 0x54, 0xb3, 0x41, 0x5f, 0xe6, 0x27, 0x27,
-	0x1a, 0x87, 0x39, 0x9d, 0x6e, 0x9b, 0x9e, 0xc5, 0x6f, 0x72, 0x3f, 0x16, 0x6a, 0x09, 0xa6, 0xd9,
-	0xb6, 0x4b, 0xbd, 0x48, 0xa8, 0xea, 0xb9, 0xc7, 0xfb, 0x85, 0xb3, 0x1d, 0xb3, 0xd5, 0x7c, 0x4b,
-	0x15, 0xff, 0x56, 0xf5, 0xc8, 0x8c, 0x17, 0xe1, 0x74, 0xb8, 0x88, 0x0c, 0xc7, 0xe2, 0x0b, 0xb9,
-	0xe2, 0x64, 0x69, 0x4a, 0x7f, 0x2e, 0x3c, 0xdf, 0xb6, 0x38, 0x3e, 0x0f, 0x33, 0xd4, 0xb5, 0x0c,
-	0xda, 0x66, 0x8d, 0x3b, 0x0b, 0x93, 0x45, 0x54, 0x9a, 0xd4, 0x4f, 0x53, 0xd7, 0xba, 0x19, 0x9e,
-	0xd5, 0x6d, 0xc0, 0xc9, 0xa2, 0xcf, 0x6e, 0x05, 0x15, 0xe0, 0xe2, 0x27, 0xa1, 0x2e, 0x1f, 0xb1,
-	0xc6, 0xa6, 0x59, 0x6f, 0xd2, 0x9a, 0xdc, 0xe8, 0xdd, 0x55, 0xf9, 0x3d, 0x02, 0x65, 0x94, 0x87,
-	0xc4, 0x64, 0x80, 0x9b, 0xd2, 0x68, 0xc4, 0x2f, 0x82, 0x1e, 0x73, 0xf4, 0x66, 0xd0, 0xe2, 0x37,
-	0x83, 0x16, 0xc7, 0x57, 0x2f, 0x87, 0xcc, 0x8f, 0xf7, 0x0b, 0x8b, 0x91, 0x90, 0xc3, 0x29, 0xd4,
-	0x9f, 0x1e, 0x15, 0x90, 0x3e, 0xd7, 0x1c, 0x2c, 0xbc, 0xf6, 0xd7, 0x19, 0x98, 0x16, 0x4c, 0xf8,
-	0x0f, 0x04, 0xaf, 0x8c, 0x58, 0xe4, 0x78, 0x2d, 0xed, 0x0a, 0x65, 0x3f, 0x0c, 0xf2, 0x95, 0x63,
-	0xc5, 0x44, 0xfd, 0xab, 0xef, 0x7e, 0xf3, 0xe7, 0xbf, 0x3f, 0xe4, 0xde, 0xc0, 0xeb, 0x24, 0xe5,
-	0xcd, 0x12, 0x3f, 0x70, 0x5a, 0x22, 0x89, 0xe1, 0x33, 0xc3, 0xea, 0xa6, 0x31, 0xc4, 0x77, 0x80,
-	0xef, 0x21, 0x98, 0xe9, 0xee, 0x78, 0x7c, 0x69, 0xf4, 0xcd, 0xef, 0x3d, 0x13, 0xf2, 0x97, 0xc7,
-	0x78, 0x49, 0xb4, 0xd7, 0x05, 0x9a, 0x86, 0x5f, 0xcb, 0x42, 0x13, 0x3f, 0x3c, 0xa3, 0xde, 0x31,
-	0x1c, 0x8b, 0xec, 0x38, 0xd6, 0x2e, 0xde, 0x81, 0x53, 0xf2, 0x57, 0xf5, 0xea, 0xc8, 0x32, 0x5d,
-	0xc9, 0xd4, 0x2c, 0x17, 0x89, 0xb1, 0x2c, 0x30, 0x2e, 0x61, 0x75, 0x2c, 0x06, 0xc7, 0x7b, 0x08,
-	0xce, 0x26, 0xb7, 0x09, 0xbe, 0x92, 0x56, 0x20, 0x65, 0xc7, 0xe7, 0x4b, 0xe3, 0x1d, 0x25, 0x4f,
-	0x59, 0xf0, 0x5c, 0xc3, 0x57, 0xb3, 0x78, 0x4c, 0x11, 0x29, 0xc7, 0x12, 0xfe, 0x6d, 0x60, 0xf1,
-	0xc7, 0xa3, 0x0c, 0x93, 0x71, 0x55, 0x07, 0x86, 0x6e, 0x7e, 0xf5, 0xe8, 0x01, 0x12, 0xf7, 0x6d,
-	0x81, 0x7b, 0x1d, 0x57, 0x8e, 0x8c, 0x6b, 0xb4, 0xa9, 0x67, 0x44, 0xd3, 0xfc, 0x3e, 0x82, 0xd9,
-	0xfe, 0x29, 0x8c, 0xaf, 0xa6, 0x11, 0xa4, 0xee, 0xc8, 0xfc, 0xf2, 0x51, 0x5c, 0x25, 0x66, 0x45,
-	0x60, 0xae, 0xe0, 0x6b, 0x59, 0x98, 0x03, 0xe3, 0x1e, 0xff, 0x3e, 0xb4, 0x3c, 0xbb, 0xca, 0x96,
-	0xc7, 0xd7, 0x1e, 0xd4, 0x76, 0xed, 0x38, 0x21, 0x12, 0xfb, 0x1d, 0x81, 0x7d, 0x03, 0x5f, 0x3f,
-	0x06, 0x76, 0x42, 0xdf, 0x3d, 0x04, 0xd0, 0x9b, 0xdd, 0x38, 0xf5, 0x87, 0x39, 0xb4, 0x50, 0xf2,
-	0x4b, 0xe3, 0xdc, 0x24, 0xdc, 0x0d, 0x01, 0x57, 0xc6, 0x24, 0x0b, 0xce, 0x8b, 0xe2, 0x0c, 0xca,
-	0x7d, 0xb2, 0x23, 0x16, 0xd1, 0x2e, 0xfe, 0x05, 0xc1, 0xdc, 0xd0, 0xc8, 0x4e, 0x97, 0x34, 0x73,
-	0x01, 0xa4, 0x4b, 0x9a, 0xbd, 0x11, 0xd4, 0x75, 0x41, 0xbd, 0x8a, 0xb5, 0x2c, 0xea, 0xe1, 0x81,
-	0x5f, 0xdd, 0x78, 0x70, 0xa0, 0xa0, 0x87, 0x07, 0x0a, 0xfa, 0xe7, 0x40, 0x41, 0xdf, 0x1d, 0x2a,
-	0x13, 0x0f, 0x0f, 0x95, 0x89, 0xbf, 0x0f, 0x95, 0x89, 0x2f, 0xd6, 0x13, 0x8b, 0x4d, 0xe6, 0x5c,
-	0x69, 0x9a, 0x75, 0xde, 0x2d, 0xb0, 0x55, 0x7e, 0x93, 0x7c, 0x9d, 0x2c, 0x23, 0x96, 0x5d, 0xfd,
-	0x94, 0xd8, 0x3b, 0x95, 0xff, 0x02, 0x00, 0x00, 0xff, 0xff, 0x64, 0xfd, 0x34, 0x2f, 0x23, 0x0f,
-	0x00, 0x00,
+	// 1316 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x96, 0x5f, 0x6f, 0xdb, 0xd4,
+	0x1b, 0xc7, 0x7b, 0xd2, 0x66, 0xbf, 0xf5, 0xf9, 0x8d, 0x6e, 0x39, 0xfb, 0xd7, 0x66, 0x5b, 0x12,
+	0xcc, 0xd6, 0x65, 0x1d, 0xb5, 0x9b, 0x64, 0x6d, 0xc7, 0x10, 0x88, 0x85, 0x8e, 0x32, 0x09, 0xa4,
+	0x2e, 0x62, 0xaa, 0x40, 0x42, 0x96, 0x13, 0x1f, 0x52, 0xab, 0x8e, 0x4f, 0x16, 0xdb, 0xed, 0xaa,
+	0xaa, 0x37, 0x88, 0xeb, 0x89, 0x3f, 0x15, 0x02, 0x69, 0xaf, 0x00, 0xee, 0x40, 0x42, 0x5c, 0x71,
+	0xc1, 0xd5, 0x2e, 0x27, 0x71, 0xc3, 0x55, 0x87, 0x5a, 0x5e, 0xc1, 0x5e, 0x01, 0xf2, 0x39, 0xc7,
+	0x49, 0x9c, 0xd8, 0x4e, 0x8a, 0xd8, 0xd4, 0xab, 0xc4, 0x79, 0xfe, 0x7d, 0x9e, 0x27, 0xe7, 0xf8,
+	0xf9, 0x42, 0x86, 0xda, 0x0d, 0x6a, 0x1b, 0xb6, 0x62, 0x58, 0x35, 0x62, 0x39, 0xc6, 0x06, 0xb1,
+	0x95, 0x07, 0x2e, 0x69, 0x6d, 0xc9, 0xcd, 0x16, 0x75, 0x28, 0xc6, 0xc2, 0x2e, 0x77, 0xec, 0xe9,
+	0x33, 0x75, 0x5a, 0xa7, 0xcc, 0xac, 0x78, 0xdf, 0xb8, 0x67, 0xfa, 0x62, 0x9d, 0xd2, 0xba, 0x49,
+	0x14, 0xad, 0x69, 0x28, 0x9a, 0x65, 0x51, 0x47, 0x73, 0x0c, 0x6a, 0xd9, 0xc2, 0x9a, 0x11, 0x56,
+	0xf6, 0x54, 0x75, 0x3f, 0x53, 0x74, 0xb7, 0xc5, 0x1c, 0x7c, 0x7b, 0x8d, 0x15, 0x52, 0xaa, 0x9a,
+	0x4d, 0x94, 0x8d, 0x42, 0x95, 0x38, 0x5a, 0x41, 0xa9, 0x51, 0xc3, 0xb7, 0xcf, 0x74, 0xdb, 0x19,
+	0x60, 0xdb, 0xab, 0xa9, 0xd5, 0x0d, 0x2b, 0x90, 0x2b, 0xa4, 0xa7, 0xba, 0xe6, 0xd6, 0x89, 0xb0,
+	0x4f, 0xf9, 0x76, 0x93, 0xd6, 0xd6, 0xdd, 0x26, 0xfb, 0x88, 0x0b, 0x6d, 0x51, 0xb7, 0xc9, 0xed,
+	0x52, 0x0e, 0x32, 0x1f, 0x52, 0xdd, 0x35, 0xc9, 0x47, 0x74, 0xc9, 0xb0, 0x9d, 0x96, 0x51, 0x75,
+	0x1d, 0xf2, 0x2e, 0x35, 0x2c, 0xbb, 0x42, 0x1e, 0xb8, 0xc4, 0x76, 0xa4, 0x2f, 0x10, 0x64, 0x23,
+	0x5d, 0xec, 0x26, 0xb5, 0x6c, 0x82, 0x35, 0x48, 0x7a, 0xad, 0xd9, 0x93, 0x28, 0x37, 0x9a, 0xff,
+	0x7f, 0x71, 0x4a, 0xe6, 0xcd, 0xc9, 0x5e, 0x73, 0xb2, 0x68, 0x4b, 0xf6, 0x42, 0xca, 0x73, 0x4f,
+	0xf6, 0xb2, 0x23, 0x3f, 0x3c, 0xcb, 0xe6, 0xeb, 0x86, 0xb3, 0xe6, 0x56, 0xe5, 0x1a, 0x6d, 0x28,
+	0x62, 0x12, 0xfc, 0x63, 0xd6, 0xd6, 0xd7, 0x15, 0x67, 0xab, 0x49, 0x6c, 0x99, 0xd7, 0xe0, 0x99,
+	0x25, 0x09, 0x4e, 0x2d, 0x7b, 0x2d, 0x97, 0xb7, 0xee, 0x2e, 0x09, 0x34, 0x3c, 0x01, 0x09, 0x43,
+	0x9f, 0x44, 0x39, 0x94, 0x1f, 0xab, 0x24, 0x0c, 0x5d, 0x5a, 0x82, 0x54, 0x97, 0x8f, 0x60, 0x53,
+	0x20, 0xc9, 0x66, 0xc5, 0xfc, 0x3c, 0xb6, 0xfe, 0x03, 0x20, 0xb3, 0xa8, 0x0a, 0xf7, 0x93, 0x56,
+	0xe1, 0x15, 0xf6, 0xec, 0x4f, 0x00, 0xbf, 0x07, 0xd0, 0xf9, 0x4b, 0x44, 0x9a, 0xe9, 0x40, 0x8b,
+	0xfc, 0x80, 0xf9, 0x8d, 0xae, 0x68, 0x75, 0x22, 0x62, 0x2b, 0x5d, 0x91, 0xd2, 0x23, 0x04, 0x13,
+	0x7e, 0x66, 0x01, 0x57, 0x82, 0x31, 0x5d, 0x73, 0xb4, 0xf6, 0xdc, 0xa2, 0xd8, 0xca, 0x63, 0xde,
+	0xdc, 0x2a, 0xcc, 0x19, 0x2f, 0x07, 0x78, 0x12, 0x8c, 0xe7, 0xea, 0x40, 0x1e, 0x5e, 0x31, 0x00,
+	0xf4, 0x29, 0x9c, 0xbe, 0x5d, 0xf3, 0xaa, 0xbc, 0x98, 0x7e, 0x77, 0x11, 0x9c, 0x09, 0xe6, 0x3f,
+	0x12, 0x5d, 0x6f, 0xc3, 0x85, 0x6e, 0xaa, 0x15, 0xd2, 0x5a, 0x22, 0x16, 0x6d, 0xf8, 0xdd, 0x9f,
+	0x81, 0xa4, 0xee, 0x3d, 0xb3, 0xc6, 0xc7, 0x2b, 0xfc, 0xa1, 0x67, 0x26, 0x89, 0x7f, 0x3d, 0x93,
+	0xc7, 0x08, 0x2e, 0x86, 0x57, 0x3f, 0x12, 0xb3, 0x51, 0xe1, 0xec, 0xfd, 0x66, 0x8d, 0x36, 0x0c,
+	0xab, 0xfe, 0x62, 0xce, 0xc4, 0xb7, 0x08, 0xce, 0xf5, 0x56, 0x38, 0x12, 0x9d, 0xef, 0xc0, 0xa5,
+	0x20, 0xd7, 0xcb, 0x3d, 0x17, 0x3f, 0x23, 0xc8, 0x44, 0xd5, 0x17, 0xf3, 0x79, 0x1f, 0x4e, 0xba,
+	0xc2, 0x43, 0x65, 0x6f, 0x2a, 0x7b, 0xd8, 0x51, 0x4d, 0xb8, 0x81, 0xcc, 0xff, 0xdd, 0xd0, 0x6c,
+	0x48, 0x55, 0xc8, 0xa6, 0xd6, 0xd2, 0xed, 0x3b, 0xb6, 0xe3, 0x0f, 0x6a, 0x1a, 0x92, 0x74, 0xd3,
+	0x22, 0x2d, 0x3e, 0xa8, 0xf2, 0xa9, 0xe7, 0x7b, 0xd9, 0x13, 0x5b, 0x5a, 0xc3, 0xbc, 0x25, 0xb1,
+	0x9f, 0xa5, 0x0a, 0x37, 0xe3, 0x29, 0x38, 0xee, 0x2d, 0x2a, 0xd5, 0xd0, 0xed, 0xc9, 0x44, 0x6e,
+	0x34, 0x3f, 0x56, 0xf9, 0x9f, 0xf7, 0x7c, 0x57, 0xb7, 0xf1, 0x05, 0x18, 0x27, 0x96, 0xae, 0x92,
+	0x26, 0xad, 0xad, 0x4d, 0x8e, 0xe6, 0x50, 0x7e, 0xb4, 0x72, 0x9c, 0x58, 0xfa, 0x1d, 0xef, 0x59,
+	0xda, 0x04, 0xdc, 0x5d, 0xf4, 0xe5, 0xad, 0xa0, 0x2c, 0x5c, 0xba, 0xe7, 0xcd, 0xe5, 0x03, 0x5a,
+	0x5b, 0xd7, 0xaa, 0x26, 0x59, 0x12, 0x1b, 0xbf, 0xbd, 0x2a, 0xbf, 0x42, 0x90, 0x89, 0xf2, 0x10,
+	0x98, 0x14, 0xb0, 0x29, 0x8c, 0xaa, 0xaf, 0x18, 0x3a, 0xcc, 0x5c, 0x53, 0xc8, 0xbe, 0xa6, 0x90,
+	0xfd, 0xf8, 0xf2, 0x15, 0x8f, 0xf9, 0xf9, 0x5e, 0x76, 0x8a, 0x0f, 0xb2, 0x3f, 0x85, 0xf4, 0xdd,
+	0xb3, 0x2c, 0xaa, 0xa4, 0xcc, 0xde, 0xc2, 0xd2, 0x79, 0x38, 0xcb, 0x90, 0x6e, 0x9b, 0xe6, 0xb2,
+	0xb7, 0xf7, 0xdb, 0xb0, 0xf7, 0xe0, 0x5c, 0xaf, 0x41, 0x30, 0x2e, 0xc2, 0x31, 0x26, 0x11, 0xe2,
+	0xcf, 0x97, 0xe7, 0x21, 0xce, 0x97, 0x70, 0x97, 0x2e, 0xc1, 0x85, 0x60, 0xca, 0xc0, 0x3b, 0x44,
+	0x5a, 0x85, 0x8b, 0xe1, 0xe6, 0xae, 0xba, 0x87, 0x3a, 0xd7, 0xc2, 0xdd, 0x13, 0x31, 0xc1, 0xc4,
+	0xab, 0x86, 0xb3, 0xc6, 0x77, 0xba, 0x28, 0xfd, 0x10, 0xb2, 0x91, 0x1e, 0xa2, 0xfa, 0x7d, 0x48,
+	0xf1, 0x36, 0xd4, 0x4d, 0xc3, 0x59, 0x53, 0x7d, 0xcd, 0xe0, 0x81, 0xbc, 0x16, 0x39, 0x80, 0x4e,
+	0x1e, 0x81, 0x74, 0xb2, 0x1e, 0xfc, 0x59, 0x2a, 0x88, 0xca, 0x7c, 0x5e, 0xfc, 0x83, 0x59, 0xa2,
+	0x65, 0xcc, 0xc7, 0x90, 0x8b, 0x0e, 0x11, 0xb4, 0xf3, 0x90, 0x64, 0x95, 0x62, 0x55, 0x4d, 0xd7,
+	0x5f, 0xc4, 0xbd, 0x8b, 0xdf, 0xa7, 0x20, 0xc9, 0x72, 0xe3, 0xdf, 0x11, 0x9c, 0x8f, 0x90, 0x75,
+	0xb8, 0x18, 0x96, 0x2d, 0x5e, 0x26, 0xa6, 0x4b, 0x87, 0x8a, 0xe1, 0x5d, 0x48, 0x6f, 0x7f, 0xfe,
+	0xc7, 0xdf, 0xdf, 0x24, 0x6e, 0xe2, 0x05, 0x25, 0x44, 0xa6, 0xfa, 0x72, 0xb8, 0xc1, 0x92, 0xa8,
+	0x0e, 0x55, 0xf5, 0x76, 0x1a, 0x95, 0xdd, 0x48, 0xfc, 0x08, 0xc1, 0x78, 0x5b, 0xf1, 0xe1, 0xcb,
+	0xd1, 0xe7, 0xa5, 0x23, 0x1a, 0xd3, 0x57, 0x06, 0x78, 0x09, 0xb4, 0x1b, 0x0c, 0x4d, 0xc6, 0xaf,
+	0xc7, 0xa1, 0xb1, 0x43, 0xa2, 0x56, 0xb7, 0x54, 0x43, 0x57, 0xb6, 0x0d, 0x7d, 0x07, 0x6f, 0xc3,
+	0x31, 0xf1, 0x8e, 0x7d, 0x35, 0xb2, 0x4c, 0x7b, 0x64, 0x52, 0x9c, 0x8b, 0xc0, 0x98, 0x61, 0x18,
+	0x97, 0xb1, 0x34, 0x10, 0xc3, 0xc6, 0xbb, 0x08, 0x4e, 0x74, 0x6b, 0x0b, 0x7c, 0x35, 0xac, 0x40,
+	0x88, 0xe2, 0x4b, 0xe7, 0x07, 0x3b, 0x0a, 0x9e, 0x02, 0xe3, 0xb9, 0x8e, 0xaf, 0xc5, 0xf1, 0x68,
+	0x2c, 0x52, 0x2c, 0x29, 0xfc, 0x4b, 0x8f, 0x0c, 0xf4, 0x17, 0x1b, 0x56, 0x06, 0x55, 0xed, 0x59,
+	0xc1, 0xe9, 0xb9, 0xe1, 0x03, 0x04, 0xee, 0x9b, 0x0c, 0x77, 0x1e, 0x97, 0x86, 0xc6, 0x55, 0x9b,
+	0xa4, 0xa5, 0xf2, 0xdd, 0xfe, 0x18, 0xc1, 0x44, 0x70, 0x27, 0xe3, 0x6b, 0x61, 0x04, 0xa1, 0x8a,
+	0x29, 0x3d, 0x33, 0x8c, 0xab, 0xc0, 0x2c, 0x31, 0xcc, 0x59, 0x7c, 0x3d, 0x0e, 0xb3, 0x67, 0xf9,
+	0xe3, 0xdf, 0xfa, 0xa4, 0x54, 0x7b, 0xb2, 0x85, 0xc1, 0xb5, 0x7b, 0x67, 0x5b, 0x3c, 0x4c, 0x88,
+	0xc0, 0x7e, 0x8b, 0x61, 0x2f, 0xe2, 0xf9, 0x43, 0x60, 0x77, 0xcd, 0x77, 0x17, 0x01, 0x74, 0x36,
+	0x39, 0x0e, 0xbd, 0x98, 0x7d, 0xf2, 0x22, 0x3d, 0x3d, 0xc8, 0x4d, 0xc0, 0x2d, 0x32, 0xb8, 0x02,
+	0x56, 0xe2, 0xe0, 0x5a, 0x3c, 0x4e, 0x25, 0xb6, 0xa3, 0x6c, 0x33, 0x59, 0xb2, 0x83, 0x7f, 0x42,
+	0x90, 0xea, 0x5b, 0xe0, 0xe1, 0x23, 0x8d, 0x95, 0x03, 0xe1, 0x23, 0x8d, 0xd7, 0x07, 0xd2, 0x02,
+	0xa3, 0x9e, 0xc3, 0x72, 0x1c, 0x75, 0xff, 0xfa, 0xc7, 0x5f, 0x23, 0x18, 0x6f, 0x2f, 0xb7, 0xf0,
+	0x63, 0x1a, 0x2a, 0x03, 0xc2, 0x8f, 0x69, 0xb8, 0x30, 0x90, 0x64, 0x06, 0x97, 0xc7, 0xd3, 0xb1,
+	0xb7, 0xc9, 0x34, 0x55, 0xbe, 0x04, 0xf1, 0x8f, 0x08, 0x4e, 0xf6, 0x2c, 0xfb, 0xf0, 0x4b, 0x1f,
+	0xa3, 0x1a, 0xc2, 0x2f, 0x7d, 0x9c, 0x8e, 0x90, 0xe6, 0x19, 0xa6, 0x82, 0x67, 0x87, 0xc3, 0xf4,
+	0xef, 0xd3, 0xaf, 0x08, 0x70, 0xbf, 0x3e, 0xc0, 0xc5, 0xc1, 0xf5, 0x7b, 0xe5, 0x46, 0xf8, 0x32,
+	0x1c, 0x20, 0x40, 0xa4, 0x37, 0x18, 0x76, 0x09, 0x17, 0x86, 0xc4, 0xee, 0xc8, 0x14, 0x6f, 0x99,
+	0x9f, 0x0e, 0x51, 0x0b, 0x38, 0x9a, 0x23, 0x5a, 0x8e, 0xa4, 0x6f, 0x1c, 0x2e, 0x48, 0xd0, 0xbf,
+	0xc3, 0xe8, 0x6f, 0xe1, 0x9b, 0xb1, 0x8b, 0xca, 0x8b, 0xf4, 0xf6, 0x25, 0xff, 0xc2, 0xd7, 0xa7,
+	0xd8, 0x9d, 0xe5, 0x95, 0x27, 0xfb, 0x19, 0xf4, 0x74, 0x3f, 0x83, 0xfe, 0xda, 0xcf, 0xa0, 0x2f,
+	0x0f, 0x32, 0x23, 0x4f, 0x0f, 0x32, 0x23, 0x7f, 0x1e, 0x64, 0x46, 0x3e, 0x59, 0xe8, 0x52, 0xea,
+	0x22, 0xfb, 0xac, 0xa9, 0x55, 0xed, 0x76, 0xa9, 0x8d, 0xe2, 0x9c, 0xf2, 0xb0, 0xbb, 0x20, 0x53,
+	0xef, 0xd5, 0x63, 0x4c, 0x48, 0x97, 0xfe, 0x09, 0x00, 0x00, 0xff, 0xff, 0x03, 0x49, 0x89, 0x0b,
+	0x14, 0x14, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1040,6 +1392,14 @@ type QueryClient interface {
 	// LockableDurations returns lockable durations that are valid to distribute
 	// incentives for
 	LockableDurations(ctx context.Context, in *QueryLockableDurationsRequest, opts ...grpc.CallOption) (*QueryLockableDurationsResponse, error)
+	// AllGroups returns all groups
+	AllGroups(ctx context.Context, in *QueryAllGroupsRequest, opts ...grpc.CallOption) (*QueryAllGroupsResponse, error)
+	// AllGroupsGauges returns all group gauges
+	AllGroupsGauges(ctx context.Context, in *QueryAllGroupsGaugesRequest, opts ...grpc.CallOption) (*QueryAllGroupsGaugesResponse, error)
+	// AllGroupsWithGauge returns all groups with their group gauge
+	AllGroupsWithGauge(ctx context.Context, in *QueryAllGroupsWithGaugeRequest, opts ...grpc.CallOption) (*QueryAllGroupsWithGaugeResponse, error)
+	// GroupByGroupGaugeID returns a group given its group gauge ID
+	GroupByGroupGaugeID(ctx context.Context, in *QueryGroupByGroupGaugeIDRequest, opts ...grpc.CallOption) (*QueryGroupByGroupGaugeIDResponse, error)
 }
 
 type queryClient struct {
@@ -1131,6 +1491,42 @@ func (c *queryClient) LockableDurations(ctx context.Context, in *QueryLockableDu
 	return out, nil
 }
 
+func (c *queryClient) AllGroups(ctx context.Context, in *QueryAllGroupsRequest, opts ...grpc.CallOption) (*QueryAllGroupsResponse, error) {
+	out := new(QueryAllGroupsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/AllGroups", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllGroupsGauges(ctx context.Context, in *QueryAllGroupsGaugesRequest, opts ...grpc.CallOption) (*QueryAllGroupsGaugesResponse, error) {
+	out := new(QueryAllGroupsGaugesResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/AllGroupsGauges", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllGroupsWithGauge(ctx context.Context, in *QueryAllGroupsWithGaugeRequest, opts ...grpc.CallOption) (*QueryAllGroupsWithGaugeResponse, error) {
+	out := new(QueryAllGroupsWithGaugeResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/AllGroupsWithGauge", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GroupByGroupGaugeID(ctx context.Context, in *QueryGroupByGroupGaugeIDRequest, opts ...grpc.CallOption) (*QueryGroupByGroupGaugeIDResponse, error) {
+	out := new(QueryGroupByGroupGaugeIDResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.incentives.Query/GroupByGroupGaugeID", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// ModuleToDistributeCoins returns coins that are going to be distributed
@@ -1155,6 +1551,14 @@ type QueryServer interface {
 	// LockableDurations returns lockable durations that are valid to distribute
 	// incentives for
 	LockableDurations(context.Context, *QueryLockableDurationsRequest) (*QueryLockableDurationsResponse, error)
+	// AllGroups returns all groups
+	AllGroups(context.Context, *QueryAllGroupsRequest) (*QueryAllGroupsResponse, error)
+	// AllGroupsGauges returns all group gauges
+	AllGroupsGauges(context.Context, *QueryAllGroupsGaugesRequest) (*QueryAllGroupsGaugesResponse, error)
+	// AllGroupsWithGauge returns all groups with their group gauge
+	AllGroupsWithGauge(context.Context, *QueryAllGroupsWithGaugeRequest) (*QueryAllGroupsWithGaugeResponse, error)
+	// GroupByGroupGaugeID returns a group given its group gauge ID
+	GroupByGroupGaugeID(context.Context, *QueryGroupByGroupGaugeIDRequest) (*QueryGroupByGroupGaugeIDResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -1187,6 +1591,18 @@ func (*UnimplementedQueryServer) RewardsEst(ctx context.Context, req *RewardsEst
 }
 func (*UnimplementedQueryServer) LockableDurations(ctx context.Context, req *QueryLockableDurationsRequest) (*QueryLockableDurationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LockableDurations not implemented")
+}
+func (*UnimplementedQueryServer) AllGroups(ctx context.Context, req *QueryAllGroupsRequest) (*QueryAllGroupsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllGroups not implemented")
+}
+func (*UnimplementedQueryServer) AllGroupsGauges(ctx context.Context, req *QueryAllGroupsGaugesRequest) (*QueryAllGroupsGaugesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllGroupsGauges not implemented")
+}
+func (*UnimplementedQueryServer) AllGroupsWithGauge(ctx context.Context, req *QueryAllGroupsWithGaugeRequest) (*QueryAllGroupsWithGaugeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllGroupsWithGauge not implemented")
+}
+func (*UnimplementedQueryServer) GroupByGroupGaugeID(ctx context.Context, req *QueryGroupByGroupGaugeIDRequest) (*QueryGroupByGroupGaugeIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GroupByGroupGaugeID not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1355,6 +1771,78 @@ func _Query_LockableDurations_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_AllGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllGroupsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllGroups(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/AllGroups",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllGroups(ctx, req.(*QueryAllGroupsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllGroupsGauges_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllGroupsGaugesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllGroupsGauges(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/AllGroupsGauges",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllGroupsGauges(ctx, req.(*QueryAllGroupsGaugesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllGroupsWithGauge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllGroupsWithGaugeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllGroupsWithGauge(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/AllGroupsWithGauge",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllGroupsWithGauge(ctx, req.(*QueryAllGroupsWithGaugeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GroupByGroupGaugeID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGroupByGroupGaugeIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GroupByGroupGaugeID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.incentives.Query/GroupByGroupGaugeID",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GroupByGroupGaugeID(ctx, req.(*QueryGroupByGroupGaugeIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.incentives.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -1394,6 +1882,22 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LockableDurations",
 			Handler:    _Query_LockableDurations_Handler,
+		},
+		{
+			MethodName: "AllGroups",
+			Handler:    _Query_AllGroups_Handler,
+		},
+		{
+			MethodName: "AllGroupsGauges",
+			Handler:    _Query_AllGroupsGauges_Handler,
+		},
+		{
+			MethodName: "AllGroupsWithGauge",
+			Handler:    _Query_AllGroupsWithGauge_Handler,
+		},
+		{
+			MethodName: "GroupByGroupGaugeID",
+			Handler:    _Query_GroupByGroupGaugeID_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2105,6 +2609,247 @@ func (m *QueryLockableDurationsResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryAllGroupsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllGroupsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllGroupsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllGroupsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllGroupsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllGroupsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Groups) > 0 {
+		for iNdEx := len(m.Groups) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Groups[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllGroupsGaugesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllGroupsGaugesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllGroupsGaugesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllGroupsGaugesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllGroupsGaugesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllGroupsGaugesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Gauges) > 0 {
+		for iNdEx := len(m.Gauges) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Gauges[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllGroupsWithGaugeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllGroupsWithGaugeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllGroupsWithGaugeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllGroupsWithGaugeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllGroupsWithGaugeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllGroupsWithGaugeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.GroupsWithGauge) > 0 {
+		for iNdEx := len(m.GroupsWithGauge) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.GroupsWithGauge[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGroupByGroupGaugeIDRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGroupByGroupGaugeIDRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGroupByGroupGaugeIDRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Id != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Id))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGroupByGroupGaugeIDResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGroupByGroupGaugeIDResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGroupByGroupGaugeIDResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Group.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -2392,6 +3137,101 @@ func (m *QueryLockableDurationsResponse) Size() (n int) {
 			n += 1 + l + sovQuery(uint64(l))
 		}
 	}
+	return n
+}
+
+func (m *QueryAllGroupsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryAllGroupsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Groups) > 0 {
+		for _, e := range m.Groups {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryAllGroupsGaugesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryAllGroupsGaugesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Gauges) > 0 {
+		for _, e := range m.Gauges {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryAllGroupsWithGaugeRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryAllGroupsWithGaugeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.GroupsWithGauge) > 0 {
+		for _, e := range m.GroupsWithGauge {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryGroupByGroupGaugeIDRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Id != 0 {
+		n += 1 + sovQuery(uint64(m.Id))
+	}
+	return n
+}
+
+func (m *QueryGroupByGroupGaugeIDResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Group.Size()
+	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
 
@@ -4155,6 +4995,560 @@ func (m *QueryLockableDurationsResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.LockableDurations = append(m.LockableDurations, time.Duration(0))
 			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&(m.LockableDurations[len(m.LockableDurations)-1]), dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllGroupsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllGroupsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllGroupsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllGroupsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllGroupsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllGroupsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Groups", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Groups = append(m.Groups, Group{})
+			if err := m.Groups[len(m.Groups)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllGroupsGaugesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllGroupsGaugesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllGroupsGaugesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllGroupsGaugesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllGroupsGaugesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllGroupsGaugesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Gauges", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Gauges = append(m.Gauges, Gauge{})
+			if err := m.Gauges[len(m.Gauges)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllGroupsWithGaugeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllGroupsWithGaugeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllGroupsWithGaugeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllGroupsWithGaugeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllGroupsWithGaugeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllGroupsWithGaugeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GroupsWithGauge", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.GroupsWithGauge = append(m.GroupsWithGauge, GroupsWithGauge{})
+			if err := m.GroupsWithGauge[len(m.GroupsWithGauge)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGroupByGroupGaugeIDRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGroupByGroupGaugeIDRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGroupByGroupGaugeIDRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			m.Id = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Id |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGroupByGroupGaugeIDResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGroupByGroupGaugeIDResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGroupByGroupGaugeIDResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Group", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Group.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

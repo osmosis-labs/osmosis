@@ -2,7 +2,7 @@ package math
 
 import (
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 )
 
 var (
@@ -78,8 +78,8 @@ func buildTickExpCache() {
 
 // Set precision multipliers
 func init() {
-	negPowersOfTen = make([]osmomath.Dec, osmomath.PrecisionDec+1)
-	for i := 0; i <= osmomath.PrecisionDec; i++ {
+	negPowersOfTen = make([]osmomath.Dec, osmomath.DecPrecision+1)
+	for i := 0; i <= osmomath.DecPrecision; i++ {
 		negPowersOfTen[i] = sdkOneDec.Quo(sdkTenDec.Power(uint64(i)))
 	}
 	// 10^77 < osmomath.MaxInt < 10^78
@@ -88,8 +88,8 @@ func init() {
 		powersOfTen[i] = sdkTenDec.Power(uint64(i))
 	}
 
-	bigNegPowersOfTen = make([]osmomath.BigDec, osmomath.PrecisionBigDec+1)
-	for i := 0; i <= osmomath.PrecisionBigDec; i++ {
+	bigNegPowersOfTen = make([]osmomath.BigDec, osmomath.BigDecPrecision+1)
+	for i := 0; i <= osmomath.BigDecPrecision; i++ {
 		bigNegPowersOfTen[i] = osmomathBigOneDec.Quo(osmomathBigTenDec.PowerInteger(uint64(i)))
 	}
 	// 10^308 < osmomath.MaxInt < 10^309

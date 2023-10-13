@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 )
 
 // constants.
@@ -17,6 +18,7 @@ const (
 	TypeMsgCollectSpreadRewards    = "collect-spread-rewards"
 	TypeMsgCollectIncentives       = "collect-incentives"
 	TypeMsgFungifyChargedPositions = "fungify-charged-positions"
+	TypeMsgTransferPositions       = "transfer-positions"
 )
 
 var _ sdk.Msg = &MsgCreatePosition{}
@@ -217,6 +219,48 @@ func (msg MsgFungifyChargedPositions) GetSignBytes() []byte {
 }
 
 func (msg MsgFungifyChargedPositions) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgTransferPositions{}
+
+func (msg MsgTransferPositions) Route() string { return RouterKey }
+func (msg MsgTransferPositions) Type() string  { return TypeMsgTransferPositions }
+func (msg MsgTransferPositions) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return fmt.Errorf("Invalid sender address (%s)", err)
+	}
+
+	_, err = sdk.AccAddressFromBech32(msg.NewOwner)
+	if err != nil {
+		return fmt.Errorf("Invalid new owner address (%s)", err)
+	}
+
+	if msg.Sender == msg.NewOwner {
+		return fmt.Errorf("Sender and new owner cannot be the same (%s)", msg.Sender)
+	}
+
+	if !osmoassert.Uint64ArrayValuesAreUnique(msg.PositionIds) {
+		return fmt.Errorf("Position IDs must be unique, got %v", msg.PositionIds)
+	}
+
+	if len(msg.PositionIds) < 1 {
+		return fmt.Errorf("Must provide at least 1 position ID, got %d", len(msg.PositionIds))
+	}
+
+	return nil
+}
+
+func (msg MsgTransferPositions) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgTransferPositions) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)

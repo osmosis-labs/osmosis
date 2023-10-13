@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 )
 
 // TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks by
@@ -201,7 +201,7 @@ func CalculatePriceToTick(price osmomath.BigDec) (tickIndex int64, err error) {
 	if price.GTE(types.MinSpotPriceBigDec) {
 		// It is acceptable to truncate price as the minimum we support is
 		// 10**-12 which is above the smallest value of sdk.Dec.
-		price.ChopPrecisionMut(osmomath.PrecisionDec)
+		price.ChopPrecisionMut(osmomath.DecPrecision)
 	}
 
 	// The approach here is to try determine which "geometric spacing" are we in.

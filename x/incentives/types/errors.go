@@ -4,6 +4,13 @@ import (
 	fmt "fmt"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+)
+
+var (
+	ErrNoPoolIDsGiven        = fmt.Errorf("no pool IDs given")
+	ErrZeroNumEpochsPaidOver = fmt.Errorf("num epochs paid over must be greater than zero for non-perpetual gauges")
+	ErrUnauthorized          = fmt.Errorf("unauthorized to perform this action. Must be an incentives module account")
 )
 
 type UnsupportedSplittingPolicyError struct {
@@ -55,4 +62,44 @@ type GaugeNotFoundError struct {
 
 func (e GaugeNotFoundError) Error() string {
 	return fmt.Sprintf("gauge with ID (%d) not found", e.GaugeID)
+}
+
+type OnePoolIDGroupError struct {
+	PoolID uint64
+}
+
+func (e OnePoolIDGroupError) Error() string {
+	return fmt.Sprintf("one pool ID %d given. Need at least two to create valid Group", e.PoolID)
+}
+
+type GroupTotalWeightZeroError struct {
+	GroupID uint64
+}
+
+func (e GroupTotalWeightZeroError) Error() string {
+	return fmt.Sprintf("Group with ID %d has total weight of zero", e.GroupID)
+}
+
+type InvalidGaugeTypeError struct {
+	GaugeType lockuptypes.LockQueryType
+}
+
+func (e InvalidGaugeTypeError) Error() string {
+	return fmt.Sprintf("invalid gauge type: %s", e.GaugeType)
+}
+
+type NoVolumeSinceLastSyncError struct {
+	PoolID uint64
+}
+
+func (e NoVolumeSinceLastSyncError) Error() string {
+	return fmt.Sprintf("Pool %d has no volume since last sync", e.PoolID)
+}
+
+type DuplicatePoolIDError struct {
+	PoolIDs []uint64
+}
+
+func (e DuplicatePoolIDError) Error() string {
+	return fmt.Sprintf("one or more pool IDs provided in the pool ID array contains a duplicate: %d", e.PoolIDs)
 }

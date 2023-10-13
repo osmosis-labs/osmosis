@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/tests/mocks"
-	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v19/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/tests/mocks"
+	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)

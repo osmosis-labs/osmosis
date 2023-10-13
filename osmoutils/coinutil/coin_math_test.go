@@ -1,4 +1,4 @@
-package coins_test
+package coinutil_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/coins"
+	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 )
 
 var (
@@ -44,19 +44,19 @@ func TestMul(t *testing.T) {
 	t.Run("test mutative multiplication", func(t *testing.T) {
 		t.Run("MulIntMut", func(t *testing.T) {
 			defaulCoins := deepCopy(defaultCoins)
-			coins.MulIntMut(defaulCoins, defaultMultiplier)
+			coinutil.MulIntMut(defaulCoins, defaultMultiplier)
 			require.Equal(t, defaultMulExpectedResult, defaulCoins)
 		})
 
 		t.Run("MulIntRawMut", func(t *testing.T) {
 			defaulCoins := deepCopy(defaultCoins)
-			coins.MulRawMut(defaulCoins, defaultMultiplier.Int64())
+			coinutil.MulRawMut(defaulCoins, defaultMultiplier.Int64())
 			require.Equal(t, defaultMulExpectedResult, defaulCoins)
 		})
 
 		t.Run("MulDecMut", func(t *testing.T) {
 			defaulCoins := deepCopy(defaultCoins)
-			coins.MulDecMut(defaulCoins, osmomath.NewDecFromInt(defaultMultiplier))
+			coinutil.MulDecMut(defaulCoins, osmomath.NewDecFromInt(defaultMultiplier))
 			require.Equal(t, defaultMulExpectedResult, defaulCoins)
 		})
 	})
@@ -66,21 +66,21 @@ func TestMul(t *testing.T) {
 	t.Run("test non-mutative multiplication", func(t *testing.T) {
 		t.Run("MulInt", func(t *testing.T) {
 			defaulCoinsCopy := deepCopy(defaultCoins)
-			result := coins.MulInt(defaulCoinsCopy, defaultMultiplier)
+			result := coinutil.MulInt(defaulCoinsCopy, defaultMultiplier)
 			require.Equal(t, defaultMulExpectedResult, result)
 			require.Equal(t, defaultCoins, defaulCoinsCopy)
 		})
 
 		t.Run("MulIntRaw", func(t *testing.T) {
 			defaulCoinsCopy := deepCopy(defaultCoins)
-			result := coins.MulRaw(defaulCoinsCopy, defaultMultiplier.Int64())
+			result := coinutil.MulRaw(defaulCoinsCopy, defaultMultiplier.Int64())
 			require.Equal(t, defaultMulExpectedResult, result)
 			require.Equal(t, defaultCoins, defaulCoinsCopy)
 		})
 
 		t.Run("MulDec", func(t *testing.T) {
 			defaulCoinsCopy := deepCopy(defaultCoins)
-			result := coins.MulDec(defaulCoinsCopy, osmomath.NewDecFromInt(defaultMultiplier))
+			result := coinutil.MulDec(defaulCoinsCopy, osmomath.NewDecFromInt(defaultMultiplier))
 			require.Equal(t, defaultMulExpectedResult, result)
 			require.Equal(t, defaultCoins, defaulCoinsCopy)
 		})
@@ -91,19 +91,19 @@ func TestQuo(t *testing.T) {
 	t.Run("test mutative division", func(t *testing.T) {
 		t.Run("QuoIntMut", func(t *testing.T) {
 			defaulCoins := deepCopy(defaultCoins)
-			coins.QuoIntMut(defaulCoins, defaultMultiplier)
+			coinutil.QuoIntMut(defaulCoins, defaultMultiplier)
 			require.Equal(t, defaultQuoExpectedResult, defaulCoins)
 		})
 
 		t.Run("QuoIntRawMut", func(t *testing.T) {
 			defaulCoins := deepCopy(defaultCoins)
-			coins.QuoRawMut(defaulCoins, defaultMultiplier.Int64())
+			coinutil.QuoRawMut(defaulCoins, defaultMultiplier.Int64())
 			require.Equal(t, defaultQuoExpectedResult, defaulCoins)
 		})
 
 		t.Run("QuoDecMut", func(t *testing.T) {
 			defaulCoins := deepCopy(defaultCoins)
-			coins.QuoDecMut(defaulCoins, osmomath.NewDecFromInt(defaultMultiplier))
+			coinutil.QuoDecMut(defaulCoins, osmomath.NewDecFromInt(defaultMultiplier))
 			require.Equal(t, defaultQuoExpectedResult, defaulCoins)
 		})
 	})
@@ -113,21 +113,21 @@ func TestQuo(t *testing.T) {
 	t.Run("test non-mutative division", func(t *testing.T) {
 		t.Run("QuoInt", func(t *testing.T) {
 			defaulCoinsCopy := deepCopy(defaultCoins)
-			result := coins.QuoInt(defaulCoinsCopy, defaultMultiplier)
+			result := coinutil.QuoInt(defaulCoinsCopy, defaultMultiplier)
 			require.Equal(t, defaultQuoExpectedResult, result)
 			require.Equal(t, defaultCoins, defaulCoinsCopy)
 		})
 
 		t.Run("QuoIntRaw", func(t *testing.T) {
 			defaulCoinsCopy := deepCopy(defaultCoins)
-			result := coins.QuoRaw(defaulCoinsCopy, defaultMultiplier.Int64())
+			result := coinutil.QuoRaw(defaulCoinsCopy, defaultMultiplier.Int64())
 			require.Equal(t, defaultQuoExpectedResult, result)
 			require.Equal(t, defaultCoins, defaulCoinsCopy)
 		})
 
 		t.Run("QuoDec", func(t *testing.T) {
 			defaulCoinsCopy := deepCopy(defaultCoins)
-			result := coins.QuoDec(defaulCoinsCopy, osmomath.NewDecFromInt(defaultMultiplier))
+			result := coinutil.QuoDec(defaulCoinsCopy, osmomath.NewDecFromInt(defaultMultiplier))
 			require.Equal(t, defaultQuoExpectedResult, result)
 			require.Equal(t, defaultCoins, defaulCoinsCopy)
 		})
