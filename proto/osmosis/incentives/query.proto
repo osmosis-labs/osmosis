@@ -87,6 +87,14 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/group_by_group_gauge_id/{id}";
   }
+  // CurrentWeightByGroupGaugeID returns the current weight since the
+  // the last epoch given a group gauge ID
+  rpc CurrentWeightByGroupGaugeID(QueryCurrentWeightByGroupGaugeIDRequest)
+      returns (QueryCurrentWeightByGroupGaugeIDResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/current_weight_by_group_gauge_id/"
+        "{group_gauge_id}";
+  }
 }
 
 message ModuleToDistributeCoinsRequest {}
@@ -214,4 +222,18 @@ message QueryAllGroupsWithGaugeResponse {
 message QueryGroupByGroupGaugeIDRequest { uint64 id = 1; }
 message QueryGroupByGroupGaugeIDResponse {
   Group group = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryCurrentWeightByGroupGaugeIDRequest { uint64 group_gauge_id = 1; }
+message QueryCurrentWeightByGroupGaugeIDResponse {
+  repeated GaugeWeight gauge_weight = 1 [ (gogoproto.nullable) = false ];
+}
+
+message GaugeWeight {
+  uint64 gauge_id = 1;
+  string weight_ratio = 2 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.moretags) = "yaml:\"weight_ratio\"",
+    (gogoproto.nullable) = false
+  ];
 }
