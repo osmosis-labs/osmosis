@@ -133,6 +133,10 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 
 	// Loop over the distribution records and fill in the incentivized pools struct.
 	for _, record := range distrInfo.Records {
+		// Skip community pool gauge
+		if record.GaugeId == 0 {
+			continue
+		}
 		gauge, err := q.incentivesKeeper.GetGaugeByID(sdkCtx, record.GaugeId)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
