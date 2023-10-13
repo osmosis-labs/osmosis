@@ -49,14 +49,27 @@ func (server msgServer) DelegateToValidatorSet(goCtx context.Context, msg *types
 
 // UndelegateFromValidatorSet undelegates {coin} amount from the validator set.
 func (server msgServer) UndelegateFromValidatorSet(goCtx context.Context, msg *types.MsgUndelegateFromValidatorSet) (*types.MsgUndelegateFromValidatorSetResponse, error) {
+	// ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// err := server.keeper.UndelegateFromValidatorSet(ctx, msg.Delegator, msg.Coin)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	return &types.MsgUndelegateFromValidatorSetResponse{}, fmt.Errorf("not implemented, utilize UndelegateFromRebalancedValidatorSet instead")
+}
+
+// UndelegateFromRebalancedValidatorSet undelegates {coin} amount from the validator set, utilizing a user's current delegations
+// to their validator set to determine the weights.
+func (server msgServer) UndelegateFromRebalancedValidatorSet(goCtx context.Context, msg *types.MsgUndelegateFromRebalancedValidatorSet) (*types.MsgUndelegateFromRebalancedValidatorSetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := server.keeper.UndelegateFromValidatorSet(ctx, msg.Delegator, msg.Coin)
+	err := server.keeper.UndelegateFromRebalancedValidatorSet(ctx, msg.Delegator, msg.Coin)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgUndelegateFromValidatorSetResponse{}, nil
+	return &types.MsgUndelegateFromRebalancedValidatorSetResponse{}, nil
 }
 
 // RedelegateValidatorSet allows delegators to set a new validator set and switch validators.

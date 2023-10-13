@@ -130,7 +130,10 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
 // Truncation ensures we do not undelegate more than the user has staked with the validator set.
 // NOTE: check README.md for more verbose description of the algorithm.
+// TODO: Properly implement for vratio > 1 to hit steps 5-7, then re-enable
+// https://github.com/osmosis-labs/osmosis/issues/6686
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, undelegation sdk.Coin) error {
+	// TODO: Change to GetDelegationPreferences
 	existingSet, err := k.GetValSetPreferencesWithDelegations(ctx, delegatorAddr)
 	if err != nil {
 		return types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: delegatorAddr}
@@ -220,6 +223,95 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 		}
 	}
 
+	return nil
+}
+
+// UndelegateFromRebalancedValidatorSet undelegates a specified amount of tokens from a delegator's existing validator set,
+// but takes into consideration the user's existing delegations to the validators in the set.
+// The method first fetches the delegator's validator set preferences, checks their existing delegations, and
+// returns a set with modified weights that consider their existing delegations.
+// If there is no existing delegation, it returns an error.
+// The method then computes the total amount delegated and the amount to undelegate for each validator under this
+// newly calculated valset-ratio set.
+//
+// If the undelegation amount is greater than the total delegated amount, it returns an error.
+// The validators are then sorted in descending order of VRatio.
+// The method ensures that the largest VRatio is under 1. If it is greater than 1, it returns an error.
+// Finally, the method undelegates the target amount from each validator.
+// If an error occurs during the undelegation process, it is returned.
+func (k Keeper) UndelegateFromRebalancedValidatorSet(ctx sdk.Context, delegatorAddr string, undelegation sdk.Coin) error {
+	// GetValSetPreferencesWithDelegations fetches the delegator's validator set preferences, but returns a set with
+	// modified weights that consider their existing delegations. If there is no existing delegation, it returns an error.
+	// The new weights based on the existing delegations is returned, but the original valset preferences
+	// are not modified.
+	// For example, if someone's valset is 50/50 between two validators, but they have 10 OSMO delegated to validator A,
+	// and 90 OSMO delegated to validator B, the returned valset preference weight will be 10/90.
+
+	existingSet, err := k.GetValSetPreferencesWithDelegations(ctx, delegatorAddr)
+	if err != nil {
+		return types.NoValidatorSetOrExistingDelegationsError{DelegatorAddr: delegatorAddr}
+	}
+
+	delegator := sdk.MustAccAddressFromBech32(delegatorAddr)
+
+	// Step 1,2: compute the total amount delegated and the amount to undelegate for each validator
+	// under valset-ratios.
+	valSetRatio, validators, totalDelegatedAmt, err := k.getValsetRatios(ctx, delegator, existingSet.Preferences, undelegation.Amount)
+	if err != nil {
+		return err
+	}
+
+	if undelegation.Amount.ToLegacyDec().GT(totalDelegatedAmt) {
+		return types.UndelegateMoreThanDelegatedError{TotalDelegatedAmt: totalDelegatedAmt, UndelegationAmt: undelegation.Amount}
+	}
+
+	// Step 3: Sort validators in descending order of VRatio.
+	sort.Slice(valSetRatio, func(i, j int) bool {
+		return valSetRatio[i].VRatio.GT(valSetRatio[j].VRatio)
+	})
+
+	totalUnDelAmt := sdk.NewInt(0)
+	var amountToUnDelegate osmomath.Int
+
+	// Ensure largest VRatio is under 1.
+	// Since we called GetValSetPreferencesWithDelegations, there should be no VRatio > 1
+	if valSetRatio[0].VRatio.GT(sdk.OneDec()) {
+		return types.ValsetRatioGreaterThanOneError{ValsetRatio: valSetRatio[0].VRatio}
+	}
+
+	// Step 4: Undelegate target amount from each validator
+	for index, val := range valSetRatio {
+		validator := validators[val.ValAddr.String()]
+
+		// in the last valset iteration we don't calculate it from shares using decimals and truncation,
+		// we use whats remaining to get more accurate value
+		if len(existingSet.Preferences)-1 == index {
+			// Directly retrieve the delegation to the last validator
+			// Use the min between our undelegation amount calculated via iterations of undelegating
+			// and the amount actually delegated to the validator. This is done to prevent an error
+			// in the event some rounding issue increases our calculated undelegation amount.
+			delegation, found := k.stakingKeeper.GetDelegation(ctx, delegator, val.ValAddr)
+			if !found {
+				return fmt.Errorf("No delegation found for delegator %s to validator %s\n", delegator, val.ValAddr)
+			}
+			delegationToVal := delegation.Shares.TruncateInt()
+			calculatedUndelegationAmt := undelegation.Amount.Sub(totalUnDelAmt).ToLegacyDec().TruncateInt()
+			amountToUnDelegate = osmomath.MinInt(delegationToVal, calculatedUndelegationAmt)
+		} else {
+			// Calculate the amount to undelegate based on the existing weightxs
+			amountToUnDelegate = val.UndelegateAmt
+			totalUnDelAmt = totalUnDelAmt.Add(amountToUnDelegate)
+		}
+		sharesAmt, err := validator.SharesFromTokens(amountToUnDelegate)
+		if err != nil {
+			return err
+		}
+
+		_, err = k.stakingKeeper.Undelegate(ctx, delegator, val.ValAddr, sharesAmt) // this has to be shares amount
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

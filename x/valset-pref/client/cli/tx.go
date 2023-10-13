@@ -19,7 +19,10 @@ func GetTxCmd() *cobra.Command {
 	txCmd := osmocli.TxIndexCmd(types.ModuleName)
 	osmocli.AddTxCmd(txCmd, NewSetValSetCmd)
 	osmocli.AddTxCmd(txCmd, NewDelValSetCmd)
-	osmocli.AddTxCmd(txCmd, NewUnDelValSetCmd)
+	// TODO: Uncomment when undelegate is implemented
+	// https://github.com/osmosis-labs/osmosis/issues/6686
+	//osmocli.AddTxCmd(txCmd, NewUnDelValSetCmd)
+	osmocli.AddTxCmd(txCmd, NewUndelRebalancedValSetCmd)
 	osmocli.AddTxCmd(txCmd, NewReDelValSetCmd)
 	osmocli.AddTxCmd(txCmd, NewWithRewValSetCmd)
 	return txCmd
@@ -44,13 +47,25 @@ func NewDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgDelegateToValidatorSet) {
 	}, &types.MsgDelegateToValidatorSet{}
 }
 
-func NewUnDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgUndelegateFromValidatorSet) {
+// TODO: Uncomment when undelegate is implemented
+// https://github.com/osmosis-labs/osmosis/issues/6686
+// func NewUnDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgUndelegateFromValidatorSet) {
+// 	return &osmocli.TxCliDesc{
+// 		Use:     "undelegate-valset",
+// 		Short:   "UnDelegate tokens from existing valset using delegatorAddress and tokenAmount.",
+// 		Example: "osmosisd tx valset-pref undelegate-valset osmo1... 100stake",
+// 		NumArgs: 2,
+// 	}, &types.MsgUndelegateFromValidatorSet{}
+// }
+
+func NewUndelRebalancedValSetCmd() (*osmocli.TxCliDesc, *types.MsgUndelegateFromRebalancedValidatorSet) {
 	return &osmocli.TxCliDesc{
-		Use:     "undelegate-valset",
-		Short:   "UnDelegate tokens from existing valset using delegatorAddress and tokenAmount.",
-		Example: "osmosisd tx valset-pref undelegate-valset osmo1... 100stake",
+		Use:     "undelegate-rebalanced-valset",
+		Short:   "Undelegate tokens from rebalanced valset using delegatorAddress and tokenAmount.",
+		Long:    "Undelegates from an existing valset, but calculates the valset weights based on current user delegations.",
+		Example: "osmosisd tx valset-pref undelegate-rebalanced-valset osmo1... 100stake",
 		NumArgs: 2,
-	}, &types.MsgUndelegateFromValidatorSet{}
+	}, &types.MsgUndelegateFromRebalancedValidatorSet{}
 }
 
 func NewReDelValSetCmd() (*osmocli.TxCliDesc, *types.MsgRedelegateValidatorSet) {

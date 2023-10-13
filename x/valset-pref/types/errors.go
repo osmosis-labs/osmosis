@@ -27,3 +27,11 @@ type NoValidatorSetOrExistingDelegationsError struct {
 func (e NoValidatorSetOrExistingDelegationsError) Error() string {
 	return fmt.Sprintf("user %s doesn't have validator set or existing delegations", e.DelegatorAddr)
 }
+
+type ValsetRatioGreaterThanOneError struct {
+	ValsetRatio math.LegacyDec
+}
+
+func (e ValsetRatioGreaterThanOneError) Error() string {
+	return fmt.Sprintf("valset ratio %s greater than one", e.ValsetRatio)
+}
