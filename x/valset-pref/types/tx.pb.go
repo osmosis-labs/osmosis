@@ -311,6 +311,108 @@ func (m *MsgUndelegateFromValidatorSetResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUndelegateFromValidatorSetResponse proto.InternalMessageInfo
 
+type MsgUndelegateFromRebalancedValidatorSet struct {
+	// delegator is the user who is trying to undelegate.
+	Delegator string `protobuf:"bytes,1,opt,name=delegator,proto3" json:"delegator,omitempty" yaml:"delegator"`
+	// the amount the user wants to undelegate
+	// For ex: Undelegate 50 osmo with validator-set {ValA -> 0.5, ValB -> 0.5}
+	// Our undelegate logic would first check the current delegation balance.
+	// If the user has 90 osmo delegated to ValA and 10 osmo delegated to ValB,
+	// the rebalanced validator set would be {ValA -> 0.9, ValB -> 0.1}
+	// So now the 45 osmo would be undelegated from ValA and 5 osmo would be
+	// undelegated from ValB.
+	Coin types.Coin `protobuf:"bytes,2,opt,name=coin,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coin" json:"coin"`
+}
+
+func (m *MsgUndelegateFromRebalancedValidatorSet) Reset() {
+	*m = MsgUndelegateFromRebalancedValidatorSet{}
+}
+func (m *MsgUndelegateFromRebalancedValidatorSet) String() string { return proto.CompactTextString(m) }
+func (*MsgUndelegateFromRebalancedValidatorSet) ProtoMessage()    {}
+func (*MsgUndelegateFromRebalancedValidatorSet) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daa95be02b2fc560, []int{6}
+}
+func (m *MsgUndelegateFromRebalancedValidatorSet) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUndelegateFromRebalancedValidatorSet) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUndelegateFromRebalancedValidatorSet.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUndelegateFromRebalancedValidatorSet) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUndelegateFromRebalancedValidatorSet.Merge(m, src)
+}
+func (m *MsgUndelegateFromRebalancedValidatorSet) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUndelegateFromRebalancedValidatorSet) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUndelegateFromRebalancedValidatorSet.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUndelegateFromRebalancedValidatorSet proto.InternalMessageInfo
+
+func (m *MsgUndelegateFromRebalancedValidatorSet) GetDelegator() string {
+	if m != nil {
+		return m.Delegator
+	}
+	return ""
+}
+
+func (m *MsgUndelegateFromRebalancedValidatorSet) GetCoin() types.Coin {
+	if m != nil {
+		return m.Coin
+	}
+	return types.Coin{}
+}
+
+type MsgUndelegateFromRebalancedValidatorSetResponse struct {
+}
+
+func (m *MsgUndelegateFromRebalancedValidatorSetResponse) Reset() {
+	*m = MsgUndelegateFromRebalancedValidatorSetResponse{}
+}
+func (m *MsgUndelegateFromRebalancedValidatorSetResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgUndelegateFromRebalancedValidatorSetResponse) ProtoMessage() {}
+func (*MsgUndelegateFromRebalancedValidatorSetResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daa95be02b2fc560, []int{7}
+}
+func (m *MsgUndelegateFromRebalancedValidatorSetResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUndelegateFromRebalancedValidatorSetResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUndelegateFromRebalancedValidatorSetResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUndelegateFromRebalancedValidatorSetResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUndelegateFromRebalancedValidatorSetResponse.Merge(m, src)
+}
+func (m *MsgUndelegateFromRebalancedValidatorSetResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUndelegateFromRebalancedValidatorSetResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUndelegateFromRebalancedValidatorSetResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUndelegateFromRebalancedValidatorSetResponse proto.InternalMessageInfo
+
 type MsgRedelegateValidatorSet struct {
 	// delegator is the user who is trying to create a validator-set.
 	Delegator string `protobuf:"bytes,1,opt,name=delegator,proto3" json:"delegator,omitempty" yaml:"delegator"`
@@ -322,7 +424,7 @@ func (m *MsgRedelegateValidatorSet) Reset()         { *m = MsgRedelegateValidato
 func (m *MsgRedelegateValidatorSet) String() string { return proto.CompactTextString(m) }
 func (*MsgRedelegateValidatorSet) ProtoMessage()    {}
 func (*MsgRedelegateValidatorSet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_daa95be02b2fc560, []int{6}
+	return fileDescriptor_daa95be02b2fc560, []int{8}
 }
 func (m *MsgRedelegateValidatorSet) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -372,7 +474,7 @@ func (m *MsgRedelegateValidatorSetResponse) Reset()         { *m = MsgRedelegate
 func (m *MsgRedelegateValidatorSetResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgRedelegateValidatorSetResponse) ProtoMessage()    {}
 func (*MsgRedelegateValidatorSetResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_daa95be02b2fc560, []int{7}
+	return fileDescriptor_daa95be02b2fc560, []int{9}
 }
 func (m *MsgRedelegateValidatorSetResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -412,7 +514,7 @@ func (m *MsgWithdrawDelegationRewards) Reset()         { *m = MsgWithdrawDelegat
 func (m *MsgWithdrawDelegationRewards) String() string { return proto.CompactTextString(m) }
 func (*MsgWithdrawDelegationRewards) ProtoMessage()    {}
 func (*MsgWithdrawDelegationRewards) Descriptor() ([]byte, []int) {
-	return fileDescriptor_daa95be02b2fc560, []int{8}
+	return fileDescriptor_daa95be02b2fc560, []int{10}
 }
 func (m *MsgWithdrawDelegationRewards) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -455,7 +557,7 @@ func (m *MsgWithdrawDelegationRewardsResponse) Reset()         { *m = MsgWithdra
 func (m *MsgWithdrawDelegationRewardsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgWithdrawDelegationRewardsResponse) ProtoMessage()    {}
 func (*MsgWithdrawDelegationRewardsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_daa95be02b2fc560, []int{9}
+	return fileDescriptor_daa95be02b2fc560, []int{11}
 }
 func (m *MsgWithdrawDelegationRewardsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -498,7 +600,7 @@ func (m *MsgDelegateBondedTokens) Reset()         { *m = MsgDelegateBondedTokens
 func (m *MsgDelegateBondedTokens) String() string { return proto.CompactTextString(m) }
 func (*MsgDelegateBondedTokens) ProtoMessage()    {}
 func (*MsgDelegateBondedTokens) Descriptor() ([]byte, []int) {
-	return fileDescriptor_daa95be02b2fc560, []int{10}
+	return fileDescriptor_daa95be02b2fc560, []int{12}
 }
 func (m *MsgDelegateBondedTokens) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -548,7 +650,7 @@ func (m *MsgDelegateBondedTokensResponse) Reset()         { *m = MsgDelegateBond
 func (m *MsgDelegateBondedTokensResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgDelegateBondedTokensResponse) ProtoMessage()    {}
 func (*MsgDelegateBondedTokensResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_daa95be02b2fc560, []int{11}
+	return fileDescriptor_daa95be02b2fc560, []int{13}
 }
 func (m *MsgDelegateBondedTokensResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -584,6 +686,8 @@ func init() {
 	proto.RegisterType((*MsgDelegateToValidatorSetResponse)(nil), "osmosis.valsetpref.v1beta1.MsgDelegateToValidatorSetResponse")
 	proto.RegisterType((*MsgUndelegateFromValidatorSet)(nil), "osmosis.valsetpref.v1beta1.MsgUndelegateFromValidatorSet")
 	proto.RegisterType((*MsgUndelegateFromValidatorSetResponse)(nil), "osmosis.valsetpref.v1beta1.MsgUndelegateFromValidatorSetResponse")
+	proto.RegisterType((*MsgUndelegateFromRebalancedValidatorSet)(nil), "osmosis.valsetpref.v1beta1.MsgUndelegateFromRebalancedValidatorSet")
+	proto.RegisterType((*MsgUndelegateFromRebalancedValidatorSetResponse)(nil), "osmosis.valsetpref.v1beta1.MsgUndelegateFromRebalancedValidatorSetResponse")
 	proto.RegisterType((*MsgRedelegateValidatorSet)(nil), "osmosis.valsetpref.v1beta1.MsgRedelegateValidatorSet")
 	proto.RegisterType((*MsgRedelegateValidatorSetResponse)(nil), "osmosis.valsetpref.v1beta1.MsgRedelegateValidatorSetResponse")
 	proto.RegisterType((*MsgWithdrawDelegationRewards)(nil), "osmosis.valsetpref.v1beta1.MsgWithdrawDelegationRewards")
@@ -597,51 +701,54 @@ func init() {
 }
 
 var fileDescriptor_daa95be02b2fc560 = []byte{
-	// 699 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0x4b, 0x4f, 0xd4, 0x5e,
-	0x14, 0x9f, 0x0b, 0x84, 0x7f, 0xb8, 0x6c, 0xfe, 0x36, 0x04, 0xa1, 0xd1, 0x0e, 0x54, 0x5e, 0x92,
-	0xd0, 0x2b, 0x43, 0x8c, 0x8a, 0x31, 0xd1, 0x91, 0x98, 0xb8, 0x98, 0x44, 0x0b, 0x6a, 0xe2, 0xc2,
-	0xa4, 0x33, 0x3d, 0x94, 0x86, 0xb6, 0x77, 0xd2, 0x7b, 0x79, 0x2d, 0x5c, 0xb9, 0x31, 0x2e, 0x8c,
-	0x3b, 0x13, 0x3f, 0x82, 0x2b, 0x3f, 0x06, 0x4b, 0x76, 0xba, 0x02, 0xc3, 0x24, 0xba, 0x71, 0xc5,
-	0x27, 0x30, 0x7d, 0xcc, 0xa5, 0x84, 0xb9, 0xad, 0xa9, 0x8f, 0xcd, 0xcc, 0x74, 0xce, 0xf9, 0x9d,
-	0xf3, 0xbb, 0xbf, 0xf3, 0xe8, 0xc5, 0x53, 0x94, 0xf9, 0x94, 0xb9, 0x8c, 0x6c, 0x5b, 0x1e, 0x03,
-	0xbe, 0xd0, 0x0e, 0x61, 0x9d, 0x6c, 0x2f, 0x36, 0x81, 0x5b, 0x8b, 0x84, 0xef, 0x1a, 0xed, 0x90,
-	0x72, 0xaa, 0xa8, 0xa9, 0x97, 0x91, 0x78, 0x45, 0x4e, 0x46, 0xea, 0xa4, 0x8e, 0x38, 0xd4, 0xa1,
-	0xb1, 0x1b, 0x89, 0x7e, 0x25, 0x08, 0xf5, 0x82, 0xe5, 0xbb, 0x01, 0x25, 0xf1, 0x67, 0xfa, 0x57,
-	0xd5, 0xa1, 0xd4, 0xf1, 0x80, 0xc4, 0x4f, 0xcd, 0xad, 0x75, 0xc2, 0x5d, 0x1f, 0x18, 0xb7, 0xfc,
-	0x76, 0xea, 0xa0, 0xb5, 0xe2, 0x34, 0xa4, 0x69, 0x31, 0x10, 0x1c, 0x5a, 0xd4, 0x0d, 0x52, 0xfb,
-	0x6c, 0x1e, 0x57, 0xc6, 0x2d, 0x0e, 0x89, 0xa3, 0xfe, 0x03, 0xe1, 0x4b, 0x0d, 0xe6, 0xac, 0x02,
-	0x7f, 0x6a, 0x79, 0xae, 0x6d, 0x71, 0x1a, 0xae, 0x02, 0x7f, 0x14, 0xc2, 0x3a, 0x84, 0x10, 0xb4,
-	0x40, 0xa9, 0xe1, 0x21, 0x1b, 0x3c, 0x70, 0x22, 0xcb, 0x18, 0x9a, 0x40, 0x73, 0x43, 0xf5, 0x91,
-	0x93, 0xc3, 0xea, 0xff, 0x7b, 0x96, 0xef, 0x2d, 0xeb, 0xc2, 0xa4, 0x9b, 0xa7, 0x6e, 0x8a, 0x8f,
-	0x87, 0xdb, 0x22, 0x02, 0x1b, 0xeb, 0x9b, 0xe8, 0x9f, 0x1b, 0xae, 0x11, 0x43, 0xae, 0x8c, 0x21,
-	0x92, 0x9f, 0x66, 0xae, 0xab, 0xfb, 0x87, 0xd5, 0xca, 0xc9, 0x61, 0x55, 0x49, 0x52, 0x65, 0x22,
-	0xea, 0x66, 0x36, 0xfe, 0xf2, 0xd5, 0x37, 0xdf, 0x3f, 0xcd, 0x8b, 0xea, 0xe4, 0x9d, 0x46, 0x9f,
-	0xc1, 0x53, 0x79, 0x76, 0x13, 0x58, 0x9b, 0x06, 0x0c, 0xf4, 0xcf, 0x08, 0x8f, 0x37, 0x98, 0xb3,
-	0x92, 0x1c, 0x09, 0xd6, 0x68, 0xd6, 0xbf, 0x94, 0x26, 0x2f, 0xf0, 0x40, 0x54, 0x9f, 0xb1, 0xbe,
-	0x09, 0x34, 0x37, 0x5c, 0x1b, 0x37, 0x92, 0x02, 0x1a, 0x51, 0x01, 0x85, 0x0a, 0xf7, 0xa9, 0x1b,
-	0xd4, 0x49, 0x74, 0xec, 0x8f, 0x47, 0xd5, 0x59, 0xc7, 0xe5, 0x1b, 0x5b, 0x4d, 0xa3, 0x45, 0x7d,
-	0x92, 0x56, 0x3b, 0xf9, 0x5a, 0x60, 0xf6, 0x26, 0xe1, 0x7b, 0x6d, 0x60, 0x31, 0xc0, 0x8c, 0xe3,
-	0x2e, 0xcf, 0x44, 0x22, 0x4c, 0x66, 0x44, 0xe8, 0xcd, 0x5d, 0xbf, 0x82, 0x27, 0xa5, 0x46, 0x71,
-	0xfc, 0x23, 0x84, 0x2f, 0x37, 0x98, 0xf3, 0x24, 0x48, 0xf9, 0xc3, 0x83, 0x90, 0xfa, 0x7f, 0x4c,
-	0x82, 0xfe, 0xbf, 0x24, 0xc1, 0x7c, 0x24, 0xc1, 0x74, 0x46, 0x02, 0x39, 0x7f, 0x7d, 0x16, 0x4f,
-	0xe7, 0x3a, 0x08, 0x29, 0xbe, 0x25, 0x9d, 0x60, 0x42, 0xd7, 0xf3, 0xb7, 0x65, 0xf8, 0xc7, 0xd3,
-	0x71, 0xae, 0x31, 0x7a, 0x1f, 0x25, 0x6d, 0x8c, 0xde, 0x46, 0xa1, 0xc6, 0xcb, 0x78, 0x5b, 0x3c,
-	0x73, 0xf9, 0x86, 0x1d, 0x5a, 0x3b, 0x69, 0x17, 0xb9, 0x34, 0x30, 0x61, 0xc7, 0x0a, 0x6d, 0x56,
-	0x46, 0x8f, 0xf3, 0xe3, 0x2b, 0x0d, 0x9f, 0x8e, 0xaf, 0xd4, 0x2e, 0x68, 0x02, 0xbe, 0x98, 0x69,
-	0xf2, 0x3a, 0x0d, 0x6c, 0xb0, 0xd7, 0xe8, 0x26, 0x04, 0xa5, 0x18, 0x2a, 0xa3, 0x78, 0xd0, 0xa3,
-	0xad, 0xcd, 0x87, 0x2b, 0xf1, 0xf4, 0x0e, 0x98, 0xe9, 0x93, 0x3e, 0x89, 0xab, 0x92, 0x34, 0x5d,
-	0x26, 0xb5, 0x57, 0xff, 0xe1, 0xfe, 0x06, 0x73, 0x94, 0xf7, 0x08, 0x8f, 0xcb, 0x97, 0xec, 0xcd,
-	0xbc, 0xea, 0xe7, 0x2d, 0x2c, 0xf5, 0x6e, 0x59, 0x64, 0x97, 0xa1, 0xf2, 0x16, 0xe1, 0x51, 0xc9,
-	0x9e, 0xbb, 0x5e, 0x10, 0xbc, 0x37, 0x4c, 0xbd, 0x53, 0x0a, 0x26, 0x08, 0x7d, 0x40, 0x58, 0xcd,
-	0xd9, 0x3c, 0xb7, 0x0a, 0xa2, 0xcb, 0xa1, 0xea, 0xbd, 0xd2, 0xd0, 0x33, 0x6a, 0x49, 0x76, 0x41,
-	0x91, 0x5a, 0xbd, 0x61, 0x85, 0x6a, 0xe5, 0x4f, 0x64, 0xdc, 0x58, 0xf2, 0x79, 0x2c, 0x6a, 0x2c,
-	0x29, 0xb2, 0xb0, 0xb1, 0x0a, 0x87, 0x50, 0x79, 0x8d, 0xf0, 0x48, 0xcf, 0x11, 0x5c, 0xfa, 0xc5,
-	0xfe, 0xc8, 0x82, 0xd4, 0xdb, 0x25, 0x40, 0x5d, 0x2a, 0xf5, 0xc7, 0xfb, 0xc7, 0x1a, 0x3a, 0x38,
-	0xd6, 0xd0, 0xd7, 0x63, 0x0d, 0xbd, 0xeb, 0x68, 0x95, 0x83, 0x8e, 0x56, 0xf9, 0xd2, 0xd1, 0x2a,
-	0xcf, 0x6f, 0x64, 0x5e, 0x31, 0x69, 0x82, 0x05, 0xcf, 0x6a, 0x32, 0x22, 0x2e, 0x50, 0xb5, 0x6b,
-	0x64, 0xf7, 0xcc, 0x35, 0x2a, 0x7e, 0xef, 0x34, 0x07, 0xe3, 0xfb, 0xd3, 0xd2, 0xcf, 0x00, 0x00,
-	0x00, 0xff, 0xff, 0xc4, 0xeb, 0x36, 0xdf, 0x16, 0x0a, 0x00, 0x00,
+	// 751 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0xcd, 0x4f, 0xd4, 0x4c,
+	0x18, 0xdf, 0x01, 0x42, 0x5e, 0x86, 0xcb, 0xfb, 0x36, 0x84, 0x17, 0x1a, 0xed, 0x42, 0x05, 0x16,
+	0x49, 0xe8, 0xc8, 0xa2, 0x51, 0x31, 0x26, 0xba, 0x10, 0x13, 0x63, 0x36, 0xd1, 0x82, 0x9a, 0x78,
+	0x30, 0x99, 0x6e, 0x87, 0xd2, 0xd0, 0x76, 0x36, 0x9d, 0xe1, 0xeb, 0xe0, 0xdd, 0x78, 0x30, 0xde,
+	0x4c, 0xfc, 0x13, 0x3c, 0x79, 0xf4, 0xe4, 0x99, 0x23, 0x37, 0x3d, 0x81, 0x81, 0x44, 0x2f, 0x9e,
+	0xf0, 0x1f, 0x30, 0xfd, 0xd8, 0xa1, 0x84, 0x7e, 0x60, 0x45, 0xe3, 0x65, 0x77, 0xbb, 0xcf, 0xd7,
+	0xef, 0xf9, 0x3d, 0xf3, 0xfc, 0xa6, 0x70, 0x8c, 0x32, 0x97, 0x32, 0x9b, 0xa1, 0x75, 0xec, 0x30,
+	0xc2, 0xa7, 0xdb, 0x3e, 0x59, 0x46, 0xeb, 0x33, 0x06, 0xe1, 0x78, 0x06, 0xf1, 0x4d, 0xad, 0xed,
+	0x53, 0x4e, 0x25, 0x39, 0xf6, 0xd2, 0x22, 0xaf, 0xc0, 0x49, 0x8b, 0x9d, 0xe4, 0x01, 0x8b, 0x5a,
+	0x34, 0x74, 0x43, 0xc1, 0xaf, 0x28, 0x42, 0xfe, 0x0f, 0xbb, 0xb6, 0x47, 0x51, 0xf8, 0x19, 0xff,
+	0x55, 0xb5, 0x28, 0xb5, 0x1c, 0x82, 0xc2, 0x27, 0x63, 0x6d, 0x19, 0x71, 0xdb, 0x25, 0x8c, 0x63,
+	0xb7, 0x1d, 0x3b, 0x28, 0xad, 0xb0, 0x0c, 0x32, 0x30, 0x23, 0x02, 0x43, 0x8b, 0xda, 0x5e, 0x6c,
+	0xaf, 0xe5, 0x61, 0x65, 0x1c, 0x73, 0x12, 0x39, 0xaa, 0xdf, 0x00, 0x3c, 0xd7, 0x64, 0xd6, 0x22,
+	0xe1, 0x8f, 0xb0, 0x63, 0x9b, 0x98, 0x53, 0x7f, 0x91, 0xf0, 0xfb, 0x3e, 0x59, 0x26, 0x3e, 0xf1,
+	0x5a, 0x44, 0xaa, 0xc3, 0x3e, 0x93, 0x38, 0xc4, 0x0a, 0x2c, 0x43, 0x60, 0x04, 0x4c, 0xf6, 0x35,
+	0x06, 0x0e, 0x77, 0xab, 0xff, 0x6e, 0x61, 0xd7, 0x99, 0x53, 0x85, 0x49, 0xd5, 0x8f, 0xdc, 0x24,
+	0x17, 0xf6, 0xb7, 0x45, 0x06, 0x36, 0xd4, 0x35, 0xd2, 0x3d, 0xd9, 0x5f, 0x47, 0x5a, 0x36, 0x33,
+	0x9a, 0x28, 0x7e, 0x54, 0xb9, 0x21, 0x6f, 0xef, 0x56, 0x2b, 0x87, 0xbb, 0x55, 0x29, 0x2a, 0x95,
+	0xc8, 0xa8, 0xea, 0xc9, 0xfc, 0x73, 0x17, 0x5f, 0x7c, 0x7d, 0x37, 0x25, 0xa6, 0x93, 0xd7, 0x8d,
+	0x3a, 0x01, 0xc7, 0xf2, 0xec, 0x3a, 0x61, 0x6d, 0xea, 0x31, 0xa2, 0x7e, 0x04, 0x70, 0xb8, 0xc9,
+	0xac, 0x85, 0xa8, 0x25, 0xb2, 0x44, 0x93, 0xfe, 0xa5, 0x38, 0x79, 0x0a, 0x7b, 0x82, 0xf9, 0x0c,
+	0x75, 0x8d, 0x80, 0xc9, 0xfe, 0xfa, 0xb0, 0x16, 0x0d, 0x50, 0x0b, 0x06, 0x28, 0x58, 0x98, 0xa7,
+	0xb6, 0xd7, 0x40, 0x41, 0xdb, 0x6f, 0xf7, 0xaa, 0x35, 0xcb, 0xe6, 0x2b, 0x6b, 0x86, 0xd6, 0xa2,
+	0x2e, 0x8a, 0xa7, 0x1d, 0x7d, 0x4d, 0x33, 0x73, 0x15, 0xf1, 0xad, 0x36, 0x61, 0x61, 0x80, 0x1e,
+	0xe6, 0x9d, 0x9b, 0x08, 0x48, 0x18, 0x4d, 0x90, 0x90, 0x8e, 0x5d, 0xbd, 0x00, 0x47, 0x33, 0x8d,
+	0xa2, 0xfd, 0x3d, 0x00, 0xcf, 0x37, 0x99, 0xf5, 0xd0, 0x8b, 0xf1, 0x93, 0x3b, 0x3e, 0x75, 0xcf,
+	0x8c, 0x82, 0xee, 0xdf, 0x44, 0xc1, 0x54, 0x40, 0xc1, 0x78, 0x82, 0x82, 0x6c, 0xfc, 0x6a, 0x0d,
+	0x8e, 0xe7, 0x3a, 0x08, 0x2a, 0xbe, 0x03, 0x58, 0x3b, 0xe1, 0xa9, 0x13, 0x03, 0x3b, 0xd8, 0x6b,
+	0x11, 0xf3, 0xaf, 0x3f, 0x17, 0x97, 0x03, 0x52, 0x50, 0x26, 0x29, 0xe9, 0x9d, 0xa8, 0x33, 0xf0,
+	0xb4, 0xae, 0x82, 0xa8, 0x2f, 0xd1, 0xca, 0xe8, 0xa4, 0x13, 0xf3, 0xcb, 0xd4, 0xfc, 0x61, 0x19,
+	0x39, 0xb1, 0x41, 0xe9, 0xad, 0xc4, 0x1b, 0x94, 0x6e, 0x14, 0x6c, 0x3c, 0x0b, 0x65, 0xf5, 0xb1,
+	0xcd, 0x57, 0x4c, 0x1f, 0x6f, 0xc4, 0xeb, 0x66, 0x53, 0x4f, 0x27, 0x1b, 0xd8, 0x37, 0x59, 0x19,
+	0x3e, 0x4e, 0xea, 0x5c, 0x66, 0xfa, 0x58, 0xe7, 0x32, 0xed, 0x02, 0x26, 0x81, 0xff, 0x27, 0xd4,
+	0xa0, 0x41, 0x3d, 0x93, 0x98, 0x4b, 0x74, 0x95, 0x78, 0xa5, 0x10, 0x4a, 0x83, 0xb0, 0xd7, 0xa1,
+	0xad, 0xd5, 0xbb, 0x0b, 0xe1, 0x71, 0xee, 0xd1, 0xe3, 0x27, 0x75, 0x14, 0x56, 0x33, 0xca, 0x74,
+	0x90, 0xd4, 0x3f, 0xfc, 0x03, 0xbb, 0x9b, 0xcc, 0x92, 0x5e, 0x03, 0x38, 0x9c, 0x7d, 0x1b, 0x5d,
+	0xcb, 0x9b, 0x7e, 0x9e, 0xb2, 0xcb, 0xb7, 0xca, 0x46, 0x76, 0x10, 0x4a, 0x2f, 0x01, 0x1c, 0xcc,
+	0xb8, 0x10, 0xae, 0x14, 0x24, 0x4f, 0x0f, 0x93, 0x6f, 0x96, 0x0a, 0x13, 0x80, 0xde, 0x00, 0x28,
+	0xe7, 0x48, 0xf4, 0xf5, 0x82, 0xec, 0xd9, 0xa1, 0xf2, 0xed, 0xd2, 0xa1, 0x02, 0xdc, 0x7b, 0x00,
+	0xc7, 0x4e, 0x25, 0x9a, 0xf3, 0x3f, 0x55, 0x2b, 0x3d, 0x89, 0x7c, 0xef, 0x0c, 0x92, 0x1c, 0x1b,
+	0x74, 0x86, 0x8c, 0x15, 0x0d, 0x3a, 0x3d, 0xac, 0x70, 0xd0, 0xf9, 0x62, 0x12, 0xee, 0x44, 0xb6,
+	0x94, 0x14, 0xed, 0x44, 0x66, 0x64, 0xe1, 0x4e, 0x14, 0xea, 0x87, 0xf4, 0x1c, 0xc0, 0x81, 0x54,
+	0xf5, 0x98, 0x3d, 0xe5, 0xd1, 0x4e, 0x06, 0xc9, 0x37, 0x4a, 0x04, 0x75, 0xa0, 0x34, 0x1e, 0x6c,
+	0xef, 0x2b, 0x60, 0x67, 0x5f, 0x01, 0x9f, 0xf7, 0x15, 0xf0, 0xea, 0x40, 0xa9, 0xec, 0x1c, 0x28,
+	0x95, 0x4f, 0x07, 0x4a, 0xe5, 0xc9, 0xd5, 0xc4, 0x8d, 0x19, 0x17, 0x98, 0x76, 0xb0, 0xc1, 0xc4,
+	0xad, 0xb8, 0x5e, 0xbf, 0x84, 0x36, 0x8f, 0xbd, 0x2a, 0x87, 0xd7, 0xa8, 0xd1, 0x1b, 0xbe, 0x23,
+	0xcf, 0xfe, 0x08, 0x00, 0x00, 0xff, 0xff, 0xa2, 0x40, 0x19, 0xbc, 0xfa, 0x0b, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -666,6 +773,10 @@ type MsgClient interface {
 	// validator-set. The unbonding logic will follow the `Undelegate` logic from
 	// the sdk.
 	UndelegateFromValidatorSet(ctx context.Context, in *MsgUndelegateFromValidatorSet, opts ...grpc.CallOption) (*MsgUndelegateFromValidatorSetResponse, error)
+	// UndelegateFromRebalancedValidatorSet undelegates the proivded amount from
+	// the validator set, but takes into consideration the current delegations
+	// to the user's validator set to determine the weights assigned to each.
+	UndelegateFromRebalancedValidatorSet(ctx context.Context, in *MsgUndelegateFromRebalancedValidatorSet, opts ...grpc.CallOption) (*MsgUndelegateFromRebalancedValidatorSetResponse, error)
 	// RedelegateValidatorSet takes the existing validator set and redelegates to
 	// a new set.
 	RedelegateValidatorSet(ctx context.Context, in *MsgRedelegateValidatorSet, opts ...grpc.CallOption) (*MsgRedelegateValidatorSetResponse, error)
@@ -712,6 +823,15 @@ func (c *msgClient) UndelegateFromValidatorSet(ctx context.Context, in *MsgUndel
 	return out, nil
 }
 
+func (c *msgClient) UndelegateFromRebalancedValidatorSet(ctx context.Context, in *MsgUndelegateFromRebalancedValidatorSet, opts ...grpc.CallOption) (*MsgUndelegateFromRebalancedValidatorSetResponse, error) {
+	out := new(MsgUndelegateFromRebalancedValidatorSetResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.valsetpref.v1beta1.Msg/UndelegateFromRebalancedValidatorSet", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) RedelegateValidatorSet(ctx context.Context, in *MsgRedelegateValidatorSet, opts ...grpc.CallOption) (*MsgRedelegateValidatorSetResponse, error) {
 	out := new(MsgRedelegateValidatorSetResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.valsetpref.v1beta1.Msg/RedelegateValidatorSet", in, out, opts...)
@@ -751,6 +871,10 @@ type MsgServer interface {
 	// validator-set. The unbonding logic will follow the `Undelegate` logic from
 	// the sdk.
 	UndelegateFromValidatorSet(context.Context, *MsgUndelegateFromValidatorSet) (*MsgUndelegateFromValidatorSetResponse, error)
+	// UndelegateFromRebalancedValidatorSet undelegates the proivded amount from
+	// the validator set, but takes into consideration the current delegations
+	// to the user's validator set to determine the weights assigned to each.
+	UndelegateFromRebalancedValidatorSet(context.Context, *MsgUndelegateFromRebalancedValidatorSet) (*MsgUndelegateFromRebalancedValidatorSetResponse, error)
 	// RedelegateValidatorSet takes the existing validator set and redelegates to
 	// a new set.
 	RedelegateValidatorSet(context.Context, *MsgRedelegateValidatorSet) (*MsgRedelegateValidatorSetResponse, error)
@@ -774,6 +898,9 @@ func (*UnimplementedMsgServer) DelegateToValidatorSet(ctx context.Context, req *
 }
 func (*UnimplementedMsgServer) UndelegateFromValidatorSet(ctx context.Context, req *MsgUndelegateFromValidatorSet) (*MsgUndelegateFromValidatorSetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UndelegateFromValidatorSet not implemented")
+}
+func (*UnimplementedMsgServer) UndelegateFromRebalancedValidatorSet(ctx context.Context, req *MsgUndelegateFromRebalancedValidatorSet) (*MsgUndelegateFromRebalancedValidatorSetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UndelegateFromRebalancedValidatorSet not implemented")
 }
 func (*UnimplementedMsgServer) RedelegateValidatorSet(ctx context.Context, req *MsgRedelegateValidatorSet) (*MsgRedelegateValidatorSetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RedelegateValidatorSet not implemented")
@@ -839,6 +966,24 @@ func _Msg_UndelegateFromValidatorSet_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UndelegateFromValidatorSet(ctx, req.(*MsgUndelegateFromValidatorSet))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UndelegateFromRebalancedValidatorSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUndelegateFromRebalancedValidatorSet)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UndelegateFromRebalancedValidatorSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.valsetpref.v1beta1.Msg/UndelegateFromRebalancedValidatorSet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UndelegateFromRebalancedValidatorSet(ctx, req.(*MsgUndelegateFromRebalancedValidatorSet))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -912,6 +1057,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UndelegateFromValidatorSet",
 			Handler:    _Msg_UndelegateFromValidatorSet_Handler,
+		},
+		{
+			MethodName: "UndelegateFromRebalancedValidatorSet",
+			Handler:    _Msg_UndelegateFromRebalancedValidatorSet_Handler,
 		},
 		{
 			MethodName: "RedelegateValidatorSet",
@@ -1116,6 +1265,69 @@ func (m *MsgUndelegateFromValidatorSetResponse) MarshalTo(dAtA []byte) (int, err
 }
 
 func (m *MsgUndelegateFromValidatorSetResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUndelegateFromRebalancedValidatorSet) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUndelegateFromRebalancedValidatorSet) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUndelegateFromRebalancedValidatorSet) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Coin.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Delegator) > 0 {
+		i -= len(m.Delegator)
+		copy(dAtA[i:], m.Delegator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Delegator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUndelegateFromRebalancedValidatorSetResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUndelegateFromRebalancedValidatorSetResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUndelegateFromRebalancedValidatorSetResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1380,6 +1592,30 @@ func (m *MsgUndelegateFromValidatorSet) Size() (n int) {
 }
 
 func (m *MsgUndelegateFromValidatorSetResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUndelegateFromRebalancedValidatorSet) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Delegator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Coin.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUndelegateFromRebalancedValidatorSetResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1942,6 +2178,171 @@ func (m *MsgUndelegateFromValidatorSetResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUndelegateFromValidatorSetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUndelegateFromRebalancedValidatorSet) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUndelegateFromRebalancedValidatorSet: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUndelegateFromRebalancedValidatorSet: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Delegator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Delegator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coin", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Coin.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUndelegateFromRebalancedValidatorSetResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUndelegateFromRebalancedValidatorSetResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUndelegateFromRebalancedValidatorSetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

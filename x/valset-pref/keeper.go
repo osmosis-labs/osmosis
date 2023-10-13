@@ -6,10 +6,11 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/x/valset-pref/types"
 )
 
@@ -49,42 +50,63 @@ func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (typ
 		if err != nil {
 			return types.ValidatorSetPreferences{}, err
 		}
-		existingDelsValSetFormatted, err := k.GetExistingStakingDelegations(ctx, delAddr)
-		if err != nil {
-			return types.ValidatorSetPreferences{}, err
+		existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
+		if len(existingDelegations) == 0 {
+			return types.ValidatorSetPreferences{}, types.ErrNoDelegation
 		}
 
-		return types.ValidatorSetPreferences{Preferences: existingDelsValSetFormatted}, nil
+		return types.ValidatorSetPreferences{Preferences: formatToValPrefArr(existingDelegations)}, nil
 	}
 
 	return valSet, nil
 }
 
-// GetExistingStakingDelegations returns the existing delegation that's not valset.
-// This function also formats the output into ValidatorSetPreference struct {valAddr, weight}.
-// The weight is calculated based on (valDelegation / totalDelegations) for each validator.
-// This method erros when given address does not have any existing delegations.
-func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delAddr sdk.AccAddress) ([]types.ValidatorPreference, error) {
-	var existingDelsValSetFormatted []types.ValidatorPreference
+// GetValSetPreferencesWithDelegations fetches the delegator's validator set preferences
+// considering their existing delegations.
+// -If validator set preference does not exist and there are no existing delegations, it returns an error.
+// -If validator set preference exists and there are no existing delegations, it returns the existing preference.
+// -If there is any existing delegation:
+// calculates the delegator's shares in each delegation
+// as a ratio of the total shares and returns it as part of ValidatorSetPreferences.
+func (k Keeper) GetValSetPreferencesWithDelegations(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, error) {
+	delAddr, err := sdk.AccAddressFromBech32(delegator)
+	if err != nil {
+		return types.ValidatorSetPreferences{}, err
+	}
 
+	valSet, exists := k.GetValidatorSetPreference(ctx, delegator)
 	existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
-	if len(existingDelegations) == 0 {
-		return nil, types.ErrNoDelegation
+
+	// No existing delegations for a delegator when valSet does not exist
+	if !exists && len(existingDelegations) == 0 {
+		return types.ValidatorSetPreferences{}, fmt.Errorf("No Existing delegation to unbond from")
 	}
 
-	existingTotalShares := osmomath.NewDec(0)
-	// calculate total shares that currently exists
-	for _, existingDelegation := range existingDelegations {
-		existingTotalShares = existingTotalShares.Add(existingDelegation.Shares)
+	// Returning existing valSet when there are no existing delegations
+	if exists && len(existingDelegations) == 0 {
+		return valSet, nil
 	}
 
-	// for each delegation format it in types.ValidatorSetPreferences format
-	for _, existingDelegation := range existingDelegations {
-		existingDelsValSetFormatted = append(existingDelsValSetFormatted, types.ValidatorPreference{
-			ValOperAddress: existingDelegation.ValidatorAddress,
-			Weight:         existingDelegation.Shares.Quo(existingTotalShares),
-		})
+	// when existing delegation exists, have it based upon the existing delegation
+	// regardless of the delegator having valset pref or not
+	return types.ValidatorSetPreferences{Preferences: formatToValPrefArr(existingDelegations)}, nil
+}
+
+// formatToValPrefArr iterates over given delegations array, formats it into ValidatorPreference array.
+// Used to calculate weights for the each delegation towards validator.
+// CONTRACT: This method assumes no duplicated ValOperAddress exists in the given delegation.
+func formatToValPrefArr(delegations []stakingtypes.Delegation) []types.ValidatorPreference {
+	totalShares := sdk.NewDec(0)
+	for _, existingDelegation := range delegations {
+		totalShares = totalShares.Add(existingDelegation.Shares)
 	}
 
-	return existingDelsValSetFormatted, nil
+	valPrefs := make([]types.ValidatorPreference, len(delegations))
+	for i, delegation := range delegations {
+		valPrefs[i] = types.ValidatorPreference{
+			ValOperAddress: delegation.ValidatorAddress,
+			Weight:         delegation.Shares.Quo(totalShares),
+		}
+	}
+	return valPrefs
 }
