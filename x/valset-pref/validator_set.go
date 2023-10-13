@@ -283,10 +283,20 @@ func (k Keeper) UndelegateFromRebalancedValidatorSet(ctx sdk.Context, delegatorA
 	for index, val := range valSetRatio {
 		validator := validators[val.ValAddr.String()]
 
-		// in the last valset iteration we don't calculate it from shares using decimals and trucation,
+		// in the last valset iteration we don't calculate it from shares using decimals and truncation,
 		// we use whats remaining to get more accurate value
 		if len(existingSet.Preferences)-1 == index {
-			amountToUnDelegate = undelegation.Amount.Sub(totalUnDelAmt).ToLegacyDec().TruncateInt()
+			// Directly retrieve the delegation to the last validator
+			// Use the min between our undelegation amount calculated via iterations of undelegating
+			// and the amount actually delegated to the validator. This is done to prevent an error
+			// in the event some rounding issue increases our calculated undelegation amount.
+			delegation, found := k.stakingKeeper.GetDelegation(ctx, delegator, val.ValAddr)
+			if !found {
+				return fmt.Errorf("No delegation found for delegator %s to validator %s\n", delegator, val.ValAddr)
+			}
+			delegationToVal := delegation.Shares.TruncateInt()
+			calculatedUndelegationAmt := undelegation.Amount.Sub(totalUnDelAmt).ToLegacyDec().TruncateInt()
+			amountToUnDelegate = osmomath.MinInt(delegationToVal, calculatedUndelegationAmt)
 		} else {
 			// Calculate the amount to undelegate based on the existing weightxs
 			amountToUnDelegate = val.UndelegateAmt
