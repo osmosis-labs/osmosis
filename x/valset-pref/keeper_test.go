@@ -196,6 +196,181 @@ func (s *KeeperTestSuite) TestGetDelegationPreference() {
 	}
 }
 
+func (s *KeeperTestSuite) TestGetValSetPreferencesWithDelegations() {
+	s.SetupTest()
+
+	defaultDelegateAmt := sdk.NewInt(1000)
+
+	tests := []struct {
+		name          string
+		setPref       bool
+		setDelegation bool
+		expectedErr   bool
+	}{
+		{
+			name:    "valset preference exists, no existing delegation",
+			setPref: true,
+		},
+		{
+			name:        "no valset preference, no existing delegation",
+			expectedErr: true,
+		},
+		{
+			name:          "valset preference exists, existing delegation exists",
+			setPref:       true,
+			setDelegation: true,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.Setup()
+
+			delegator := s.TestAccs[0]
+
+			// prepare existing delegations validators
+			valAddrs := s.SetupMultipleValidators(3)
+			defaultValPrefs := types.ValidatorSetPreferences{
+				Preferences: []types.ValidatorPreference{
+					{
+						ValOperAddress: valAddrs[0],
+						Weight:         sdk.NewDecWithPrec(5, 1), // 0.5
+					},
+					{
+						ValOperAddress: valAddrs[1],
+						Weight:         sdk.NewDecWithPrec(5, 1), // 0.5
+					},
+				},
+			}
+
+			var expectedValsetPref types.ValidatorSetPreferences
+			if test.setPref {
+				s.App.ValidatorSetPreferenceKeeper.SetValidatorSetPreferences(s.Ctx, delegator.String(), defaultValPrefs)
+				expectedValsetPref = defaultValPrefs
+			}
+
+			// set two delegation with different weights to test delegation -> val set pref conversion
+			if test.setDelegation {
+				valAddr0, err := sdk.ValAddressFromBech32(valAddrs[0])
+				s.Require().NoError(err)
+				validator0, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr0)
+				s.Require().True(found)
+				bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+
+				s.FundAcc(delegator, sdk.NewCoins(sdk.NewCoin(bondDenom, defaultDelegateAmt)))
+				_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, defaultDelegateAmt, stakingtypes.Unbonded, validator0, true)
+				s.Require().NoError(err)
+
+				valAddr1, err := sdk.ValAddressFromBech32(valAddrs[1])
+				s.Require().NoError(err)
+				validator1, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr1)
+				s.Require().True(found)
+
+				s.FundAcc(delegator, sdk.NewCoins(sdk.NewCoin(bondDenom, defaultDelegateAmt.Mul(sdk.NewInt(2)))))
+				_, err = s.App.StakingKeeper.Delegate(s.Ctx, delegator, defaultDelegateAmt.Mul(sdk.NewInt(2)), stakingtypes.Unbonded, validator1, true)
+				s.Require().NoError(err)
+
+				expectedValsetPref = types.ValidatorSetPreferences{
+					Preferences: []types.ValidatorPreference{
+						{
+							ValOperAddress: validator0.OperatorAddress,
+							Weight:         sdk.MustNewDecFromStr("0.333333333333333333"),
+						},
+						{
+							Weight:         sdk.MustNewDecFromStr("0.666666666666666667"),
+							ValOperAddress: validator1.OperatorAddress,
+						},
+					},
+				}
+			}
+
+			// system under test
+			valsetPref, err := s.App.ValidatorSetPreferenceKeeper.GetValSetPreferencesWithDelegations(s.Ctx, delegator.String())
+
+			if test.expectedErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				for _, valset := range valsetPref.Preferences {
+					for _, expectedvalSet := range expectedValsetPref.Preferences {
+						if valset.ValOperAddress == expectedvalSet.ValOperAddress {
+							s.Require().True(valset.Weight.Equal(expectedvalSet.Weight))
+						}
+					}
+				}
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestFormatToValPrefArr() {
+	s.SetupTest()
+
+	// prepare existing delegations validators
+	valAddrs := s.SetupMultipleValidators(3)
+
+	tests := []struct {
+		name             string
+		delegations      []stakingtypes.Delegation
+		expectedValPrefs []types.ValidatorPreference
+	}{
+		{
+			name: "Single delegation",
+			delegations: []stakingtypes.Delegation{
+				{
+					ValidatorAddress: valAddrs[0],
+					Shares:           sdk.NewDec(100),
+				},
+			},
+			expectedValPrefs: []types.ValidatorPreference{
+				{
+					ValOperAddress: valAddrs[0],
+					Weight:         sdk.NewDec(1),
+				},
+			},
+		},
+		{
+			name: "Multiple Delegations",
+			delegations: []stakingtypes.Delegation{
+				{
+					ValidatorAddress: valAddrs[0],
+					Shares:           sdk.NewDec(100),
+				},
+				{
+					ValidatorAddress: valAddrs[1],
+					Shares:           sdk.NewDec(200),
+				},
+			},
+			expectedValPrefs: []types.ValidatorPreference{
+				{
+					ValOperAddress: valAddrs[0],
+					Weight:         sdk.MustNewDecFromStr("0.333333333333333333"),
+				},
+				{
+					ValOperAddress: valAddrs[1],
+					Weight:         sdk.MustNewDecFromStr("0.666666666666666667"),
+				},
+			},
+		},
+		{
+			name:             "No Delegation",
+			delegations:      []stakingtypes.Delegation{},
+			expectedValPrefs: []types.ValidatorPreference{},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.Setup()
+
+			// system under test
+			actualPrefArr := valPref.FormatToValPrefArr(test.delegations)
+
+			s.Require().Equal(actualPrefArr, test.expectedValPrefs)
+		})
+	}
+}
+
 // SetupValidatorsAndDelegations sets up existing delegation by creating a certain number of validators and delegating tokenAmt to them.
 func (s *KeeperTestSuite) SetupValidatorsAndDelegations() ([]string, []types.ValidatorPreference, sdk.Coins) {
 	// prepare existing delegations validators

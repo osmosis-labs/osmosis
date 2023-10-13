@@ -158,6 +158,47 @@ func (m MsgUndelegateFromValidatorSet) GetSigners() []sdk.AccAddress {
 
 // constants
 const (
+	TypeMsgUndelegateFromRebalancedValidatorSet = "undelegate_from_rebalanced_validator_set"
+)
+
+var _ sdk.Msg = &MsgUndelegateFromRebalancedValidatorSet{}
+
+// NewMsgUndelegateFromRebalancedValidatorSet creates a msg to undelegated from a rebalanced validator set.
+func NewMsgUndelegateFromRebalancedValidatorSet(delegator sdk.AccAddress, coin sdk.Coin) *MsgUndelegateFromRebalancedValidatorSet {
+	return &MsgUndelegateFromRebalancedValidatorSet{
+		Delegator: delegator.String(),
+		Coin:      coin,
+	}
+}
+
+func (m MsgUndelegateFromRebalancedValidatorSet) Route() string { return RouterKey }
+func (m MsgUndelegateFromRebalancedValidatorSet) Type() string {
+	return TypeMsgUndelegateFromRebalancedValidatorSet
+}
+func (m MsgUndelegateFromRebalancedValidatorSet) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Delegator)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	if !m.Coin.IsValid() {
+		return fmt.Errorf("The stake coin is not valid")
+	}
+
+	return nil
+}
+
+func (m MsgUndelegateFromRebalancedValidatorSet) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgUndelegateFromRebalancedValidatorSet) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(m.Delegator)
+	return []sdk.AccAddress{delegator}
+}
+
+// constants
+const (
 	TypeMsgRedelegateValidatorSet = "redelegate_validator_set"
 )
 
