@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/config"
 
-	"github.com/osmosis-labs/osmosis/v19/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v20/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
 )
 
 type Config struct {

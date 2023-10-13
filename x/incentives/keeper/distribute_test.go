@@ -11,12 +11,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
-	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
-	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
-	poolincentivetypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	appParams "github.com/osmosis-labs/osmosis/v20/app/params"
+	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	poolincentivetypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)

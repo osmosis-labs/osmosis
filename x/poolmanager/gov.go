@@ -7,7 +7,7 @@ import (
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 func (k Keeper) HandleDenomPairTakerFeeProposal(ctx sdk.Context, p *types.DenomPairTakerFeeProposal) error {
