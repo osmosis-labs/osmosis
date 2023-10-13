@@ -14,9 +14,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
-	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
+	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"

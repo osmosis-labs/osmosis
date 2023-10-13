@@ -7,7 +7,7 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -15,7 +15,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 // 1 << 256 - 1 where 256 is the max bit length defined for osmomath.Int
