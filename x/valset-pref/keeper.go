@@ -106,18 +106,25 @@ func (k Keeper) GetValSetPreferencesWithDelegations(ctx sdk.Context, delegator s
 // CONTRACT: This method assumes no duplicated ValOperAddress exists in the given delegation.
 func (k Keeper) formatToValPrefArr(ctx sdk.Context, delegations []stakingtypes.Delegation) ([]types.ValidatorPreference, error) {
 	totalTokens := osmomath.NewDec(0)
+
+	// We cache token amounts for each delegation to avoid a second set of reads
 	tokenDelegations := make(map[stakingtypes.Delegation]osmomath.Dec)
 	for _, existingDelegation := range delegations {
+		// Fetch validator corresponding to current delegation
 		validator, found := k.stakingKeeper.GetValidator(ctx, existingDelegation.GetValidatorAddr())
 		if !found {
 			return []types.ValidatorPreference{}, types.ValidatorNotFoundError{ValidatorAddr: existingDelegation.ValidatorAddress}
 		}
 
+		// Convert shares to underlying token amounts
 		currentDelegationTokens := validator.TokensFromSharesRoundUp(existingDelegation.Shares)
+
+		// Cache token amounts for each delegation and track total tokens
 		tokenDelegations[existingDelegation] = currentDelegationTokens
 		totalTokens = totalTokens.Add(currentDelegationTokens)
 	}
 
+	// Build ValidatorPreference array from delegations
 	valPrefs := make([]types.ValidatorPreference, len(delegations))
 	for i, delegation := range delegations {
 		valPrefs[i] = types.ValidatorPreference{

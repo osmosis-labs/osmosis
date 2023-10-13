@@ -340,11 +340,12 @@ func (s *KeeperTestSuite) TestFormatToValPrefArr() {
 			defaultDelegator := s.TestAccs[0]
 			bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 
-			// Prepare delegations
-			// Note: Since `SetupMultipleValidators` is nondeterministic, we do this setup logic in each test case.
+			// --- Setup ---
+
+			// Prepare delegations by setting up validators and delegating the appropriate amount to each.
+			// Since `SetupMultipleValidators` is nondeterministic, we do this setup logic in each test case.
 			valAddrs := s.SetupMultipleValidators(len(test.delegationShares))
-			delegations := []stakingtypes.Delegation{}
-			expectedValPrefs := []types.ValidatorPreference{}
+			delegations, expectedValPrefs := []stakingtypes.Delegation{}, []types.ValidatorPreference{}
 			for i, delegationShare := range test.delegationShares {
 				// Get validator to delegate to
 				valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])
@@ -352,7 +353,7 @@ func (s *KeeperTestSuite) TestFormatToValPrefArr() {
 				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
 				s.Require().True(found)
 
-				// Execute delegation
+				// Fund delegator and execute delegation
 				s.FundAcc(defaultDelegator, sdk.NewCoins(sdk.NewCoin(bondDenom, delegationShare.RoundInt())))
 				_, err = s.App.StakingKeeper.Delegate(s.Ctx, defaultDelegator, delegationShare.RoundInt(), stakingtypes.Unbonded, validator, true)
 				s.Require().NoError(err)
@@ -380,10 +381,12 @@ func (s *KeeperTestSuite) TestFormatToValPrefArr() {
 				})
 			}
 
-			// System under test
+			// --- System under test ---
+
 			actualPrefArr, err := s.App.ValidatorSetPreferenceKeeper.FormatToValPrefArr(s.Ctx, delegations)
 
-			// Assertions
+			// --- Assertions ---
+
 			if test.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().IsType(test.expectedError, err)
