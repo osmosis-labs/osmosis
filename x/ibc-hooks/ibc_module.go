@@ -235,7 +235,6 @@ func (im IBCMiddleware) OnTimeoutPacket(
 }
 
 // SendPacket implements the ICS4 Wrapper interface
-// UNFORKINGTODO: This method
 func (im IBCMiddleware) SendPacket(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,

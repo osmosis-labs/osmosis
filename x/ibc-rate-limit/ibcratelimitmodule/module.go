@@ -97,14 +97,6 @@ func (am AppModule) Name() string {
 // QuerierRoute returns the ibc-rate-limit module's query routing key.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-// UNFORKINGTODO: Ensure this is no longer needed
-// // LegacyQuerierHandler is a no-op. Needed to meet AppModule interface.
-// func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-// 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-// 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-// 	}
-// }
-
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {

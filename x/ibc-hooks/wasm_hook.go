@@ -25,12 +25,12 @@ import (
 )
 
 type WasmHooks struct {
-	ContractKeeper      *wasmkeeper.PermissionedKeeper
+	ContractKeeper      *wasmkeeper.Keeper
 	ibcHooksKeeper      *keeper.Keeper
 	bech32PrefixAccAddr string
 }
 
-func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.PermissionedKeeper, bech32PrefixAccAddr string) WasmHooks {
+func NewWasmHooks(ibcHooksKeeper *keeper.Keeper, contractKeeper *wasmkeeper.Keeper, bech32PrefixAccAddr string) WasmHooks {
 	return WasmHooks{
 		ContractKeeper:      contractKeeper,
 		ibcHooksKeeper:      ibcHooksKeeper,
@@ -47,7 +47,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		// Not configured
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
-	isIcs20, data := isIcs20Packet(packet)
+	isIcs20, data := isIcs20Packet(packet.GetData())
 	if !isIcs20 {
 		return im.App.OnRecvPacket(ctx, packet, relayer)
 	}
@@ -140,22 +140,20 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	return channeltypes.NewResultAcknowledgement(bz)
 }
 
-// UNFORKINGTODO: Figure out this implementation
 func (h WasmHooks) execWasmMsg(ctx sdk.Context, execMsg *wasmtypes.MsgExecuteContract) (*wasmtypes.MsgExecuteContractResponse, error) {
-	// if err := execMsg.ValidateBasic(); err != nil {
-	// 	return nil, fmt.Errorf(types.ErrBadExecutionMsg, err.Error())
-	// }
-	// wasmMsgServer := wasmkeeper.NewMsgServerImpl(h.ContractKeeper)
-	// return wasmMsgServer.ExecuteContract(sdk.WrapSDKContext(ctx), execMsg)
-	return nil, nil
+	if err := execMsg.ValidateBasic(); err != nil {
+		return nil, fmt.Errorf(types.ErrBadExecutionMsg, err.Error())
+	}
+	wasmMsgServer := wasmkeeper.NewMsgServerImpl(h.ContractKeeper)
+	return wasmMsgServer.ExecuteContract(sdk.WrapSDKContext(ctx), execMsg)
 }
 
-func isIcs20Packet(packet channeltypes.Packet) (isIcs20 bool, ics20data transfertypes.FungibleTokenPacketData) {
-	var data transfertypes.FungibleTokenPacketData
-	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
-		return false, data
+func isIcs20Packet(data []byte) (isIcs20 bool, ics20data transfertypes.FungibleTokenPacketData) {
+	var packetdata transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(data, &packetdata); err != nil {
+		return false, packetdata
 	}
-	return true, data
+	return true, packetdata
 }
 
 // jsonStringHasKey parses the memo as a json object and checks if it contains the key.
@@ -243,74 +241,56 @@ func ValidateAndParseMemo(memo string, receiver string) (isWasmRouted bool, cont
 	return isWasmRouted, contractAddr, msgBytes, nil
 }
 
-// UNFORKINGTODO: Figure this implementation out
 func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte) (uint64, error) {
-	// concretePacket, ok := packet.(channeltypes.Packet)
-	// if !ok {
-	// 	return i.channel.SendPacket(ctx, chanCap, packet) // continue
-	// }
+	isIcs20, ics20data := isIcs20Packet(data)
+	if !isIcs20 {
+		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
+	}
 
-	// isIcs20, data := isIcs20Packet(concretePacket)
-	// if !isIcs20 {
-	// 	return i.channel.SendPacket(ctx, chanCap, packet) // continue
-	// }
+	isCallbackRouted, metadata := jsonStringHasKey(ics20data.GetMemo(), types.IBCCallbackKey)
+	if !isCallbackRouted {
+		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data) // continue
+	}
 
-	// isCallbackRouted, metadata := jsonStringHasKey(data.GetMemo(), types.IBCCallbackKey)
-	// if !isCallbackRouted {
-	// 	return i.channel.SendPacket(ctx, chanCap, packet) // continue
-	// }
+	// We remove the callback metadata from the memo as it has already been processed.
 
-	// // We remove the callback metadata from the memo as it has already been processed.
+	// If the only available key in the memo is the callback, we should remove the memo
+	// from the data completely so the packet is sent without it.
+	// This way receiver chains that are on old versions of IBC will be able to process the packet
+	callbackRaw := metadata[types.IBCCallbackKey] // This will be used later.
+	delete(metadata, types.IBCCallbackKey)
+	bzMetadata, err := json.Marshal(metadata)
+	if err != nil {
+		return 0, errorsmod.Wrap(err, "Send packet with callback error")
+	}
+	stringMetadata := string(bzMetadata)
+	if stringMetadata == "{}" {
+		ics20data.Memo = ""
+	} else {
+		ics20data.Memo = stringMetadata
+	}
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return 0, errorsmod.Wrap(err, "Send packet with callback error")
+	}
 
-	// // If the only available key in the memo is the callback, we should remove the memo
-	// // from the data completely so the packet is sent without it.
-	// // This way receiver chains that are on old versions of IBC will be able to process the packet
+	seq, err := i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, dataBytes)
+	if err != nil {
+		return 0, err
+	}
 
-	// callbackRaw := metadata[types.IBCCallbackKey] // This will be used later.
-	// delete(metadata, types.IBCCallbackKey)
-	// bzMetadata, err := json.Marshal(metadata)
-	// if err != nil {
-	// 	return 0, errorsmod.Wrap(err, "Send packet with callback error")
-	// }
-	// stringMetadata := string(bzMetadata)
-	// if stringMetadata == "{}" {
-	// 	data.Memo = ""
-	// } else {
-	// 	data.Memo = stringMetadata
-	// }
-	// dataBytes, err := json.Marshal(data)
-	// if err != nil {
-	// 	return 0, errorsmod.Wrap(err, "Send packet with callback error")
-	// }
+	// Make sure the callback contract is a string and a valid bech32 addr. If it isn't, ignore this packet
+	contract, ok := callbackRaw.(string)
+	if !ok {
+		return 0, nil
+	}
+	_, err = sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return 0, nil
+	}
 
-	// packetWithoutCallbackMemo := channeltypes.Packet{
-	// 	Sequence:           concretePacket.Sequence,
-	// 	SourcePort:         concretePacket.SourcePort,
-	// 	SourceChannel:      concretePacket.SourceChannel,
-	// 	DestinationPort:    concretePacket.DestinationPort,
-	// 	DestinationChannel: concretePacket.DestinationChannel,
-	// 	Data:               dataBytes,
-	// 	TimeoutTimestamp:   concretePacket.TimeoutTimestamp,
-	// 	TimeoutHeight:      concretePacket.TimeoutHeight,
-	// }
-
-	// err = i.channel.SendPacket(ctx, chanCap, packetWithoutCallbackMemo)
-	// if err != nil {
-	// 	return 0, err
-	// }
-
-	// // Make sure the callback contract is a string and a valid bech32 addr. If it isn't, ignore this packet
-	// contract, ok := callbackRaw.(string)
-	// if !ok {
-	// 	return 0, nil
-	// }
-	// _, err = sdk.AccAddressFromBech32(contract)
-	// if err != nil {
-	// 	return 0, nil
-	// }
-
-	// h.ibcHooksKeeper.StorePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence(), contract)
-	return 0, nil
+	h.ibcHooksKeeper.StorePacketCallback(ctx, sourceChannel, seq, contract)
+	return seq, nil
 }
 
 func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {

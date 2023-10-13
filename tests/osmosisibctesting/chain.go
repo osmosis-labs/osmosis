@@ -2,6 +2,8 @@ package osmosisibctesting
 
 import (
 	"encoding/json"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"math/rand"
 	"time"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -64,22 +66,22 @@ func SignAndDeliver(
 	txCfg client.TxConfig, app *baseapp.BaseApp, header tmproto.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
-	// UNFORKINGTODO: GenTx is no longer used, need to figure out alternative
-	// tx, _ := sims.GenTx(
-	// 	txCfg,
-	// 	msgs,
-	// 	sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 2500)},
-	// 	SimAppChainID,
-	// 	chainID,
-	// 	accNums,
-	// 	accSeqs,
-	// 	priv...,
-	// )
+	tx, err := simtestutil.GenSignedMockTx(
+		rand.New(rand.NewSource(time.Now().UnixNano())),
+		txCfg,
+		msgs,
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+		simtestutil.DefaultGenTxGas,
+		chainID,
+		accNums,
+		accSeqs,
+		priv...,
+	)
 
-	// // Simulate a sending a transaction and committing a block
-	// gInfo, res, err := app.DeliverTx(txCfg.TxEncoder(), tx)
+	// Simulate a sending a transaction
+	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
 
-	return sdk.GasInfo{}, nil, nil
+	return gInfo, res, err
 }
 
 // Move epochs to the future to avoid issues with minting

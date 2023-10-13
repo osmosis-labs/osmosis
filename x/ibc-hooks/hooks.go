@@ -112,12 +112,11 @@ type OnTimeoutPacketAfterHooks interface {
 }
 
 // SendPacket Hooks
-// UNFORKINGTODO: These hooks
 type SendPacketOverrideHooks interface {
 	SendPacketOverride(ctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte) (uint64, error)
 }
 type SendPacketBeforeHooks interface {
-	SendPacketBeforeHook(ctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte) (uint64, error)
+	SendPacketBeforeHook(ctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte)
 }
 type SendPacketAfterHooks interface {
 	SendPacketAfterHook(cctx sdk.Context, chanCap *capabilitytypes.Capability, sourcePort string, sourceChannel string, timeoutHeight clienttypes.Height, timeoutTimestamp uint64, data []byte, err error)

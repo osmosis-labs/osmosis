@@ -27,8 +27,6 @@ func NewICS4Middleware(channel porttypes.ICS4Wrapper, hooks Hooks) ICS4Middlewar
 	}
 }
 
-// UNFORKINGTODO: The hooks need to get fixed
-// along with the rest of this method
 func (i ICS4Middleware) SendPacket(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
