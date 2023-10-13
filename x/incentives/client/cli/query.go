@@ -33,6 +33,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAllGroupsGauges)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAllGroupsWithGauge)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdGroupByGroupGaugeID)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdCurrentWeightByGroupGaugeID)
 	cmd.AddCommand(GetCmdRewardsEst())
 
 	return cmd
@@ -102,6 +103,15 @@ func GetCmdUpcomingGaugesPerDenom() (*osmocli.QueryDescriptor, *types.UpcomingGa
 		Short: "Query scheduled gauges per denom",
 		Long:  `{{.Short}}`,
 	}, &types.UpcomingGaugesPerDenomRequest{}
+}
+
+// GetCmdCurrentWeightByGroupGaugeID returns current weight for each gauge respectively since the last epoch from a group gauge ID.
+func GetCmdCurrentWeightByGroupGaugeID() (*osmocli.QueryDescriptor, *types.QueryCurrentWeightByGroupGaugeIDRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "current-weight-by-group-gauge-id",
+		Short: "Query current incentives distribution weight since epoch for each gauge respectively from a group gauge ID",
+		Long:  `{{.Short}}`,
+	}, &types.QueryCurrentWeightByGroupGaugeIDRequest{}
 }
 
 // GetCmdRewardsEst returns rewards estimation.
