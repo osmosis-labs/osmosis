@@ -1205,7 +1205,7 @@ func (m *TotalVolumeForPoolResponse) GetVolume() github_com_cosmos_cosmos_sdk_ty
 	return nil
 }
 
-// =============================== TotalVolumeForPool
+// =============================== TradingPairTakerFee
 type TradingPairTakerFeeRequest struct {
 	Denom_0 string `protobuf:"bytes,1,opt,name=denom_0,json=denom0,proto3" json:"denom_0,omitempty" yaml:"denom_0"`
 	Denom_1 string `protobuf:"bytes,2,opt,name=denom_1,json=denom1,proto3" json:"denom_1,omitempty" yaml:"denom_1"`
@@ -1642,7 +1642,7 @@ type QueryClient interface {
 	TotalLiquidity(ctx context.Context, in *TotalLiquidityRequest, opts ...grpc.CallOption) (*TotalLiquidityResponse, error)
 	// TotalVolumeForPool returns the total volume of the specified pool.
 	TotalVolumeForPool(ctx context.Context, in *TotalVolumeForPoolRequest, opts ...grpc.CallOption) (*TotalVolumeForPoolResponse, error)
-	// TotalVolumeForPool returns the total volume of the specified pool.
+	// TradingPairTakerFee returns the taker fee for a given set of denoms
 	TradingPairTakerFee(ctx context.Context, in *TradingPairTakerFeeRequest, opts ...grpc.CallOption) (*TradingPairTakerFeeResponse, error)
 	// EstimateTradeBasedOnPriceImpact returns an estimated trade based on price
 	// impact, if a trade cannot be estimated a 0 input and 0 output would be
@@ -1839,7 +1839,7 @@ type QueryServer interface {
 	TotalLiquidity(context.Context, *TotalLiquidityRequest) (*TotalLiquidityResponse, error)
 	// TotalVolumeForPool returns the total volume of the specified pool.
 	TotalVolumeForPool(context.Context, *TotalVolumeForPoolRequest) (*TotalVolumeForPoolResponse, error)
-	// TotalVolumeForPool returns the total volume of the specified pool.
+	// TradingPairTakerFee returns the taker fee for a given set of denoms
 	TradingPairTakerFee(context.Context, *TradingPairTakerFeeRequest) (*TradingPairTakerFeeResponse, error)
 	// EstimateTradeBasedOnPriceImpact returns an estimated trade based on price
 	// impact, if a trade cannot be estimated a 0 input and 0 output would be
