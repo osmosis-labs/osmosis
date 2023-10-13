@@ -124,7 +124,7 @@ func (q Querier) LiquidityPerTickRange(ctx sdk.Context, req clquery.LiquidityPer
 	return &clquery.LiquidityPerTickRangeResponse{Liquidity: liquidity}, nil
 }
 
-// LiquidityNetInDirection returns an array of LiquidityDepthWithRange, which contains the range(lower tick and upper tick) and the liquidity amount in the range.
+// LiquidityNetInDirection returns an array of LiquidityDepthWithRange, which contains the range(lower tick and upper tick), the liquidity amount in the range, and current sqrt price.
 func (q Querier) LiquidityNetInDirection(ctx sdk.Context, req clquery.LiquidityNetInDirectionRequest) (*clquery.LiquidityNetInDirectionResponse, error) {
 	if req.TokenIn == "" {
 		return nil, status.Error(codes.InvalidArgument, "tokenIn is empty")
@@ -156,7 +156,7 @@ func (q Querier) LiquidityNetInDirection(ctx sdk.Context, req clquery.LiquidityN
 		return nil, err
 	}
 
-	return &clquery.LiquidityNetInDirectionResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity(), CurrentTick: pool.GetCurrentTick()}, nil
+	return &clquery.LiquidityNetInDirectionResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity(), CurrentTick: pool.GetCurrentTick(), CurrentSqrtPrice: pool.GetCurrentSqrtPrice()}, nil
 }
 
 func (q Querier) ClaimableSpreadRewards(ctx sdk.Context, req clquery.ClaimableSpreadRewardsRequest) (*clquery.ClaimableSpreadRewardsResponse, error) {

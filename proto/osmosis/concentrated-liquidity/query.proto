@@ -212,6 +212,12 @@ message LiquidityNetInDirectionResponse {
     (gogoproto.moretags) = "yaml:\"current_liquidity\"",
     (gogoproto.nullable) = false
   ];
+  string current_sqrt_price = 4 [
+
+    (gogoproto.customtype) = "github.com/osmosis-labs/osmosis/osmomath.BigDec",
+    (gogoproto.moretags) = "yaml:\"current_sqrt_price\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 //=============================== LiquidityPerTickRange
