@@ -7,7 +7,7 @@ import (
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
 )
 
 func (k Keeper) HandleCreateGaugeProposal(ctx sdk.Context, p *types.CreateGroupsProposal) error {

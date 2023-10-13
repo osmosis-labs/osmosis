@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v19/app/params"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v20/app/params"
 
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 )
 
 type extMsg interface {
@@ -21,13 +21,18 @@ type extMsg interface {
 	Type() string
 }
 
-var addr1 string
-var invalidAddr sdk.AccAddress
+var (
+	addr1       string
+	addr2       string
+	invalidAddr sdk.AccAddress
+)
 
 func init() {
 	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 = sdk.AccAddress(pk1.Address()).String()
+	pk2 := ed25519.GenPrivKey().PubKey()
+	addr2 = sdk.AccAddress(pk2.Address()).String()
 	invalidAddr = sdk.AccAddress("invalid")
 }
 
@@ -362,5 +367,70 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			apptesting.TestMessageAuthzSerialization(t, tc.clMsg)
 		})
+	}
+}
+
+func TestMsgTransferPositions(t *testing.T) {
+	tests := []struct {
+		name       string
+		msg        types.MsgTransferPositions
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: types.MsgTransferPositions{
+				PositionIds: []uint64{1, 2, 5, 9, 20},
+				Sender:      addr1,
+				NewOwner:    addr2,
+			},
+			expectPass: true,
+		},
+		{
+			name: "position ids are not unique",
+			msg: types.MsgTransferPositions{
+				PositionIds: []uint64{1, 2, 5, 9, 1},
+				Sender:      addr1,
+				NewOwner:    addr2,
+			},
+			expectPass: false,
+		},
+		{
+			name: "no position ids",
+			msg: types.MsgTransferPositions{
+				Sender:   addr1,
+				NewOwner: addr2,
+			},
+			expectPass: false,
+		},
+		{
+			name: "invalid sender",
+			msg: types.MsgTransferPositions{
+				PositionIds: []uint64{1, 2, 5, 9, 20},
+				Sender:      invalidAddr.String(),
+				NewOwner:    addr2,
+			},
+			expectPass: false,
+		},
+		{
+			name: "invalid new owner",
+			msg: types.MsgTransferPositions{
+				PositionIds: []uint64{1, 2, 5, 9, 20},
+				Sender:      addr1,
+				NewOwner:    invalidAddr.String(),
+			},
+			expectPass: false,
+		},
+		{
+			name: "sender and new owner are the same",
+			msg: types.MsgTransferPositions{
+				PositionIds: []uint64{1, 2, 5, 9, 20},
+				Sender:      addr1,
+				NewOwner:    addr1,
+			},
+			expectPass: false,
+		},
+	}
+	for _, test := range tests {
+		runValidateBasicTest(t, test.name, &test.msg, test.expectPass, types.TypeMsgTransferPositions)
 	}
 }

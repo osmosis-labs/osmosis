@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
@@ -51,7 +51,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 			// TODO: remove this post-v19. In v19 we did not create a hook for cw pool gauges.
 			// Fix tracked in:
 			// https://github.com/osmosis-labs/osmosis/issues/6122
-			ctx.Logger().Info("Skipping pool ID", "poolId", poolId, "reason", "cosmwasm pool")
 			continue
 		}
 

@@ -7,15 +7,15 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 type Keeper struct {
@@ -335,6 +335,10 @@ func (k Keeper) IsPoolIncentivized(ctx sdk.Context, providedPoolId uint64) (bool
 	distrInfo := k.GetDistrInfo(ctx)
 
 	for _, record := range distrInfo.Records {
+		// Skip community pool gauge
+		if record.GaugeId == 0 {
+			continue
+		}
 		gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
 		if err != nil {
 			return false, err

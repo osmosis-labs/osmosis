@@ -10,10 +10,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	incentivetypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -133,6 +133,10 @@ func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentiviz
 
 	// Loop over the distribution records and fill in the incentivized pools struct.
 	for _, record := range distrInfo.Records {
+		// Skip community pool gauge
+		if record.GaugeId == 0 {
+			continue
+		}
 		gauge, err := q.incentivesKeeper.GetGaugeByID(sdkCtx, record.GaugeId)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
