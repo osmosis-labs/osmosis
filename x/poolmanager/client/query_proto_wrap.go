@@ -143,7 +143,7 @@ func (q Querier) EstimateSwapExactAmountOutWithPrimitiveTypes(ctx sdk.Context, r
 func (q Querier) EstimateSinglePoolSwapExactAmountOut(ctx sdk.Context, req queryproto.EstimateSinglePoolSwapExactAmountOutRequest) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
 	routeReq := &queryproto.EstimateSwapExactAmountOutRequest{
 		TokenOut: req.TokenOut,
-		Routes:   types.SwapAmountOutRoutes{{TokenInDenom: req.TokenInDenom}},
+		Routes:   types.SwapAmountOutRoutes{{TokenInDenom: req.TokenInDenom, PoolId: req.PoolId}},
 	}
 	return q.EstimateSwapExactAmountOut(ctx, *routeReq)
 }
@@ -151,7 +151,7 @@ func (q Querier) EstimateSinglePoolSwapExactAmountOut(ctx sdk.Context, req query
 func (q Querier) EstimateSinglePoolSwapExactAmountIn(ctx sdk.Context, req queryproto.EstimateSinglePoolSwapExactAmountInRequest) (*queryproto.EstimateSwapExactAmountInResponse, error) {
 	routeReq := &queryproto.EstimateSwapExactAmountInRequest{
 		TokenIn: req.TokenIn,
-		Routes:  types.SwapAmountInRoutes{{TokenOutDenom: req.TokenOutDenom}},
+		Routes:  types.SwapAmountInRoutes{{TokenOutDenom: req.TokenOutDenom, PoolId: req.PoolId}},
 	}
 	return q.EstimateSwapExactAmountIn(ctx, *routeReq)
 }
