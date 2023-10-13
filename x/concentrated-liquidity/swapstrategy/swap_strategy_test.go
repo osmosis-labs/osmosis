@@ -9,10 +9,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 )
 
 type StrategyTestSuite struct {
