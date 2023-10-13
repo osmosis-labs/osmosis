@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6309](https://github.com/osmosis-labs/osmosis/pull/6309) Add  Cosmwasm Pool Queries to Stargate Query
 * [#6493](https://github.com/osmosis-labs/osmosis/pull/6493) Add PoolManager Params query to Stargate Whitelist
 * [#6421](https://github.com/osmosis-labs/osmosis/pull/6421) Moves ValidatePermissionlessPoolCreationEnabled out of poolmanager module
+* [#5967](https://github.com/osmosis-labs/osmosis/pull/5967) fix ValSet undelegate API out of sync with existing staking
 * [#6627](https://github.com/osmosis-labs/osmosis/pull/6627) Limit pow iterations in osmomath.
 * [#6586](https://github.com/osmosis-labs/osmosis/pull/6586) add auth.moduleaccounts to the stargate whitelist
 * [#6680](https://github.com/osmosis-labs/osmosis/pull/6680) Add Taker Fee query and add it to stargate whitelist
