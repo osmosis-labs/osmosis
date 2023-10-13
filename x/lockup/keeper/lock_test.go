@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v20/x/lockup"
 	"github.com/osmosis-labs/osmosis/v20/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v20/x/lockup/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
@@ -21,50 +22,114 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 	// coins that will be locked
 	lockedCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
 
-	addr1 := suite.TestAccs[0]
+	defaultOwner := suite.TestAccs[0]
+	arbitraryAccount := suite.TestAccs[1]
+
 	defaultLockID := uint64(1)
 	nonExistingLockID := uint64(2)
-	notOwnerAddress := suite.TestAccs[1]
+
+	defaultDuration := time.Second
+
+	// lockTokensF is a callback that locks tokens
+	lockTokensF := func(ID uint64, coins sdk.Coins) {
+		// lock coins
+		lockID := suite.LockTokens(defaultOwner, coins, defaultDuration)
+
+		// since every subtest is independant from one another, lockID returned should always be zero
+		suite.Require().Equal(ID, lockID)
+	}
+
+	// startUnlockingF is a callback that starts unlocking tokens
+	startUnlockingF := func(ID uint64, coins sdk.Coins) {
+		_, err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, ID, coins)
+		suite.Require().NoError(err)
+	}
 
 	testCases := []struct {
-		name                string
-		unlock              bool
-		rebondLockID        uint64
-		createSyntheticLock bool
-		owner               sdk.AccAddress
+		name           string
+		rebondLockID   uint64
+		setupFunctions []func(uint64, sdk.Coins)
 
 		expectedError error
 	}{
 		{
-			name:         "Valid test case",
-			unlock:       true,
-			owner:        addr1,
+			name:           "Valid test case",
+			setupFunctions: []func(uint64, sdk.Coins){lockTokensF, startUnlockingF},
+			rebondLockID:   defaultLockID,
+		},
+		{
+			name: "Valid: lock partially finished unlocking",
+			setupFunctions: []func(uint64, sdk.Coins){
+				lockTokensF,
+				startUnlockingF,
+				// time set to half of the unbonding period
+				func(_ uint64, _ sdk.Coins) { suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(defaultDuration / 2)) },
+			},
 			rebondLockID: defaultLockID,
 		},
 		{
-			name:          "Invalid: Trying to rebond a non existent lock id",
-			unlock:        true,
-			owner:         addr1,
-			rebondLockID:  nonExistingLockID,
+			name: "Invalid: lock exactly finished unlocking",
+			setupFunctions: []func(uint64, sdk.Coins){
+				lockTokensF,
+				startUnlockingF,
+				// time set to exactly the unbonding period
+				func(_ uint64, _ sdk.Coins) {
+					suite.Ctx = suite.Ctx.WithBlockHeight(7)
+					suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(defaultDuration))
+				},
+			},
+			rebondLockID:  defaultLockID,
 			expectedError: types.ErrLockupNotFound,
 		},
 		{
-			name:          "Invalid: Trying to rebond a non-unbonding lock",
-			owner:         addr1,
+			name: "Invalid: lock finished unlocking",
+			setupFunctions: []func(uint64, sdk.Coins){
+				lockTokensF,
+				startUnlockingF,
+				func(_ uint64, _ sdk.Coins) {
+					suite.Ctx = suite.Ctx.WithBlockHeight(7)
+					suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(defaultDuration * 2))
+				},
+			},
 			rebondLockID:  defaultLockID,
-			expectedError: types.ErrLockNotUnlocking,
+			expectedError: types.ErrLockupNotFound,
 		},
 		{
-			name:                "Invalid: Trying to rebond a synthetic's underlying lock",
-			createSyntheticLock: true,
-			owner:               addr1,
-			rebondLockID:        defaultLockID,
-			expectedError:       types.ErrLockHasSyntheticLockup,
+			name:           "Invalid: Trying to rebond a non existent lock id",
+			setupFunctions: []func(uint64, sdk.Coins){lockTokensF, startUnlockingF},
+			rebondLockID:   nonExistingLockID,
+			expectedError:  types.ErrLockupNotFound,
 		},
 		{
-			name:          "Invalid: Not the owner of a lock",
-			unlock:        true,
-			owner:         notOwnerAddress,
+			name:           "Invalid: Trying to rebond a non-unbonding lock",
+			setupFunctions: []func(uint64, sdk.Coins){lockTokensF},
+			rebondLockID:   defaultLockID,
+			expectedError:  types.ErrLockNotUnlocking,
+		},
+		{
+			name: "Invalid: Trying to rebond a synthetic's underlying lock",
+			setupFunctions: []func(uint64, sdk.Coins){
+				lockTokensF,
+				startUnlockingF,
+				// create synthetic lockup
+				func(ID uint64, coins sdk.Coins) {
+					err := suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, ID, "synthetic", defaultDuration, false)
+					suite.Require().NoError(err)
+				}},
+			rebondLockID:  defaultLockID,
+			expectedError: types.ErrLockHasSyntheticLockup,
+		},
+		{
+			name: "Invalid: Not the owner of a lock",
+			setupFunctions: []func(uint64, sdk.Coins){
+				// lock is created not by default account
+				func(ID uint64, coins sdk.Coins) {
+					lockID := suite.LockTokens(arbitraryAccount, coins, defaultDuration)
+
+					suite.Require().Equal(ID, lockID)
+				},
+				startUnlockingF,
+			},
 			rebondLockID:  defaultLockID,
 			expectedError: types.ErrNotLockOwner,
 		},
@@ -74,52 +139,39 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			// lock coins
-			lockID := suite.LockTokens(addr1, lockedCoins, time.Second)
-
-			if tc.unlock {
-				// unlock coins
-				_, err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lockID, lockedCoins)
-				suite.Require().NoError(err)
+			for _, setupFunction := range tc.setupFunctions {
+				setupFunction(defaultLockID, lockedCoins)
 			}
 
-			initialLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
+			initialLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, defaultLockID)
 			suite.Require().NoError(err)
 
-			// a sanity check to make sure the lock is in the correct state
-			if tc.unlock {
-				suite.Require().True(initialLock.IsUnlocking())
-			}
+			// calling end blocker to automatically remove matured locks (no-op if setup functions did not modify blocktime)
+			lockup.EndBlocker(suite.Ctx, *suite.App.LockupKeeper)
 
-			// underlying synthetic locks' period locks cannot be rebonded
-			if tc.createSyntheticLock {
-				err := suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, lockID, "synthetic", initialLock.Duration, false)
-				suite.Require().NoError(err)
-			}
-
-			// rebond coins
-			err = suite.App.LockupKeeper.RebondTokens(suite.Ctx, tc.rebondLockID, tc.owner)
-
+			// SUT
+			err = suite.App.LockupKeeper.RebondTokens(suite.Ctx, tc.rebondLockID, defaultOwner)
 			if tc.expectedError != nil {
 				suite.Require().ErrorIs(err, tc.expectedError)
 				return
 			}
+
 			suite.Require().NoError(err)
 
 			// get rebonded lock
-			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
+			rebondedLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, tc.rebondLockID)
 			suite.Require().NoError(err)
 
 			// Assertions
-			suite.Require().Equal(lock.Owner, initialLock.Owner)
-			suite.Require().Equal(lock.Duration, initialLock.Duration)
-			suite.Require().Equal(lock.ID, initialLock.ID)
-			suite.Require().Equal(lock.Coins, initialLock.Coins)
-			suite.Require().Equal(lock.RewardReceiverAddress, initialLock.RewardReceiverAddress)
-			suite.Require().False(lock.IsUnlocking())
+			suite.Require().Equal(rebondedLock.Owner, initialLock.Owner)
+			suite.Require().Equal(rebondedLock.Duration, initialLock.Duration)
+			suite.Require().Equal(rebondedLock.ID, initialLock.ID)
+			suite.Require().Equal(rebondedLock.Coins, initialLock.Coins)
+			suite.Require().Equal(rebondedLock.RewardReceiverAddress, initialLock.RewardReceiverAddress)
+			suite.Require().False(rebondedLock.IsUnlocking())
 
 			// Check lock refs
-			suite.assertLockRefs(*lock)
+			suite.assertLockRefs(*rebondedLock)
 		})
 	}
 }
