@@ -94,6 +94,6 @@ func (k Keeper) CreateGroupInternal(ctx sdk.Context, coins sdk.Coins, numEpochPa
 	return k.createGroup(ctx, coins, numEpochPaidOver, owner, poolIDs)
 }
 
-func (k Keeper) UpdatedGroupWeights(ctx sdk.Context, group types.Group) (types.Group, error) {
-	return k.updatedGroupWeights(ctx, group)
+func (k Keeper) CalculateGroupWeights(ctx sdk.Context, group types.Group) (types.Group, error) {
+	return k.calculateGroupWeights(ctx, group)
 }

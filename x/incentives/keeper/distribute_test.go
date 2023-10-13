@@ -1348,9 +1348,9 @@ func withGaugeDistrType(gauge types.Gauge, gaugeType lockuptypes.LockQueryType) 
 	return gauge
 }
 
-// TestUpdatedGroupWeights should test the same invariants as TestSyncVolumeSplitGroup,
+// TestCalculateGroupWeights should test the same invariants as TestSyncVolumeSplitGroup,
 // except the result should not be stored in state and no GroupTotalWeightZeroError case.
-func (s *KeeperTestSuite) TestUpdatedGroupWeights() {
+func (s *KeeperTestSuite) TestCalculateGroupWeights() {
 	const clPoolID uint64 = 1
 	tests := map[string]struct {
 		groupToSync types.Group
@@ -1446,7 +1446,7 @@ func (s *KeeperTestSuite) TestUpdatedGroupWeights() {
 			ik.SetGroup(s.Ctx, tc.groupToSync)
 
 			// --- System under test ---
-			updatedGroup, err := ik.UpdatedGroupWeights(s.Ctx, tc.groupToSync)
+			updatedGroup, err := ik.CalculateGroupWeights(s.Ctx, tc.groupToSync)
 
 			// --- Assertions ---
 

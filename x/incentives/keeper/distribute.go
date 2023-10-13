@@ -428,9 +428,9 @@ func (k Keeper) syncGroupWeights(ctx sdk.Context, group types.Group) error {
 	return nil
 }
 
-// updatedGroupWeights calculates the updated weights of the group records based on the pool volumes.
+// calculateGroupWeights calculates the updated weights of the group records based on the pool volumes.
 // It returns the updated group and an error if any. It does not mutate the passed in object.
-func (k Keeper) updatedGroupWeights(ctx sdk.Context, group types.Group) (types.Group, error) {
+func (k Keeper) calculateGroupWeights(ctx sdk.Context, group types.Group) (types.Group, error) {
 	totalWeight := sdk.ZeroInt()
 
 	// We operate on a deep copy of the given group because we expect to handle specific errors quietly
@@ -522,7 +522,7 @@ func (k Keeper) updatedGroupWeights(ctx sdk.Context, group types.Group) (types.G
 // - the volume for any linked pool is zero or cannot be found
 // - the cumulative volume for any linked pool has decreased (should never happen)
 func (k Keeper) syncVolumeSplitGroup(ctx sdk.Context, group types.Group) error {
-	updatedGroup, err := k.updatedGroupWeights(ctx, group)
+	updatedGroup, err := k.calculateGroupWeights(ctx, group)
 	if err != nil {
 		return err
 	}

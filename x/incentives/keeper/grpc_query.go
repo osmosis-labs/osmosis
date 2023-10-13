@@ -294,7 +294,7 @@ func (q Querier) filterByPrefixAndDenom(ctx sdk.Context, prefixType []byte, deno
 // The function returns a slice of GaugeVolume, each representing a gauge and its ratio of volume.
 // It returns an error if there is an issue updating the group weights.
 func (k Keeper) queryWeightSplitGroup(ctx sdk.Context, group types.Group) ([]types.GaugeWeight, error) {
-	updatedGroup, err := k.updatedGroupWeights(ctx, group)
+	updatedGroup, err := k.calculateGroupWeights(ctx, group)
 	if err != nil {
 		return nil, err
 	}
