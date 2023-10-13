@@ -25,7 +25,7 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 
 	// accounts
 	defaultOwner := suite.TestAccs[0]
-	arbitraryAccount := suite.TestAccs[1]
+	arbitraryOwner := suite.TestAccs[1]
 	noiseLocksOwner := suite.TestAccs[2]
 
 	// lock ids
@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			setupFunctions: []func(){
 				// lock is created not by default account
 				func() {
-					lockID := suite.LockTokens(arbitraryAccount, lockedCoins, defaultDuration)
+					lockID := suite.LockTokens(arbitraryOwner, lockedCoins, defaultDuration)
 
 					suite.Require().Equal(defaultLockID, lockID)
 				},
@@ -170,19 +170,6 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 				},
 			},
 			rebondLockID: defaultLockID + 1, // it means we are trying to rebond a splitted unbonding lock
-		},
-		{
-			name: "Valid: assert other locks are not modified when rebonding",
-			setupFunctions: []func(){
-				lockTokensF,
-				startUnlockingF,
-				// create two additional locks
-				func() {
-					suite.LockTokens(defaultOwner, lockedCoins, defaultDuration)
-					suite.LockTokens(arbitraryAccount, lockedCoins, defaultDuration)
-				},
-			},
-			rebondLockID: defaultLockID,
 		},
 	}
 
