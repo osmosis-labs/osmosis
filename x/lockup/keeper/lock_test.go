@@ -20,61 +20,69 @@ import (
 
 func (suite *KeeperTestSuite) TestRebondTokens() {
 	// coins that will be locked
-	lockedCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
+	lockedCoinsAmount := int64(10)
+	lockedCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", lockedCoinsAmount))
 
+	// accounts
 	defaultOwner := suite.TestAccs[0]
 	arbitraryAccount := suite.TestAccs[1]
+	noiseLocksOwner := suite.TestAccs[2]
 
+	// lock ids
 	defaultLockID := uint64(1)
-	nonExistingLockID := uint64(2)
+	nonExistingLockID := uint64(10)
 
+	// unlocking time
 	defaultDuration := time.Second
 
-	// lockTokensF is a callback that locks tokens
-	lockTokensF := func(ID uint64, coins sdk.Coins) {
+	// autoUnlockingStartHeight is a height at which EndBlocker starts automatically unlocking matured locks
+	autoUnlockingStartHeight := int64(7)
+
+	// lockTokensF is a callback that locks default tokens
+	lockTokensF := func() {
 		// lock coins
-		lockID := suite.LockTokens(defaultOwner, coins, defaultDuration)
+		lockID := suite.LockTokens(defaultOwner, lockedCoins, defaultDuration)
 
 		// since every subtest is independant from one another, lockID returned should always be zero
-		suite.Require().Equal(ID, lockID)
+		suite.Require().Equal(defaultLockID, lockID)
 	}
 
-	// startUnlockingF is a callback that starts unlocking tokens
-	startUnlockingF := func(ID uint64, coins sdk.Coins) {
-		_, err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, ID, coins)
+	// startUnlockingF is a callback that starts unlocking of all default tokens
+	startUnlockingF := func() {
+		_, err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, defaultLockID, lockedCoins)
 		suite.Require().NoError(err)
 	}
 
 	testCases := []struct {
 		name           string
 		rebondLockID   uint64
-		setupFunctions []func(uint64, sdk.Coins)
+		setupFunctions []func()
 
 		expectedError error
 	}{
 		{
 			name:           "Valid test case",
-			setupFunctions: []func(uint64, sdk.Coins){lockTokensF, startUnlockingF},
+			setupFunctions: []func(){lockTokensF, startUnlockingF},
 			rebondLockID:   defaultLockID,
 		},
 		{
 			name: "Valid: lock partially finished unlocking",
-			setupFunctions: []func(uint64, sdk.Coins){
+			setupFunctions: []func(){
 				lockTokensF,
 				startUnlockingF,
-				// time set to half of the unbonding period
-				func(_ uint64, _ sdk.Coins) { suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(defaultDuration / 2)) },
+				// time set to half of the unbonding period (functions as normal)
+				func() { suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(defaultDuration / 2)) },
 			},
 			rebondLockID: defaultLockID,
 		},
 		{
 			name: "Invalid: lock exactly finished unlocking",
-			setupFunctions: []func(uint64, sdk.Coins){
+			setupFunctions: []func(){
 				lockTokensF,
 				startUnlockingF,
-				// time set to exactly the unbonding period
-				func(_ uint64, _ sdk.Coins) {
-					suite.Ctx = suite.Ctx.WithBlockHeight(7)
+				// blocktime is set exactly to the unbonding period
+				func() {
+					suite.Ctx = suite.Ctx.WithBlockHeight(autoUnlockingStartHeight)
 					suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(defaultDuration))
 				},
 			},
@@ -83,11 +91,12 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 		},
 		{
 			name: "Invalid: lock finished unlocking",
-			setupFunctions: []func(uint64, sdk.Coins){
+			setupFunctions: []func(){
 				lockTokensF,
 				startUnlockingF,
-				func(_ uint64, _ sdk.Coins) {
-					suite.Ctx = suite.Ctx.WithBlockHeight(7)
+				// blocktime is set past unbonding period
+				func() {
+					suite.Ctx = suite.Ctx.WithBlockHeight(autoUnlockingStartHeight)
 					suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(defaultDuration * 2))
 				},
 			},
@@ -96,42 +105,84 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 		},
 		{
 			name:           "Invalid: Trying to rebond a non existent lock id",
-			setupFunctions: []func(uint64, sdk.Coins){lockTokensF, startUnlockingF},
+			setupFunctions: []func(){lockTokensF, startUnlockingF},
 			rebondLockID:   nonExistingLockID,
 			expectedError:  types.ErrLockupNotFound,
 		},
 		{
 			name:           "Invalid: Trying to rebond a non-unbonding lock",
-			setupFunctions: []func(uint64, sdk.Coins){lockTokensF},
+			setupFunctions: []func(){lockTokensF},
 			rebondLockID:   defaultLockID,
 			expectedError:  types.ErrLockNotUnlocking,
 		},
 		{
 			name: "Invalid: Trying to rebond a synthetic's underlying lock",
-			setupFunctions: []func(uint64, sdk.Coins){
+			setupFunctions: []func(){
 				lockTokensF,
 				startUnlockingF,
 				// create synthetic lockup
-				func(ID uint64, coins sdk.Coins) {
-					err := suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, ID, "synthetic", defaultDuration, false)
+				func() {
+					err := suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, defaultLockID, "synthetic", defaultDuration, false)
 					suite.Require().NoError(err)
-				}},
+				},
+			},
 			rebondLockID:  defaultLockID,
 			expectedError: types.ErrLockHasSyntheticLockup,
 		},
 		{
 			name: "Invalid: Not the owner of a lock",
-			setupFunctions: []func(uint64, sdk.Coins){
+			setupFunctions: []func(){
 				// lock is created not by default account
-				func(ID uint64, coins sdk.Coins) {
-					lockID := suite.LockTokens(arbitraryAccount, coins, defaultDuration)
+				func() {
+					lockID := suite.LockTokens(arbitraryAccount, lockedCoins, defaultDuration)
 
-					suite.Require().Equal(ID, lockID)
+					suite.Require().Equal(defaultLockID, lockID)
 				},
 				startUnlockingF,
 			},
 			rebondLockID:  defaultLockID,
 			expectedError: types.ErrNotLockOwner,
+		},
+		{
+			name: "Invalid: unlock half of lock's supply - try to rebond initial lock",
+			setupFunctions: []func(){
+				lockTokensF,
+				// start unlocking half of the locked coins, then rebond the original lock
+				func() {
+					c := lockedCoins.Sub(sdk.NewCoins(sdk.NewInt64Coin("stake", lockedCoinsAmount/2)))
+					_, err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, defaultLockID, c)
+					suite.Require().NoError(err)
+				},
+			},
+			rebondLockID: defaultLockID, // it means we are trying to rebond a not-unbonding lock
+			// treat this kind of rebonding as if trying to rebond arbitrary not-unbonding lock
+			expectedError: types.ErrLockNotUnlocking,
+		},
+		{
+			name: "Valid: unlock half of lock's supply - try to rebond splitted lock",
+			setupFunctions: []func(){
+				lockTokensF,
+				// start unlocking half of the locked coins, then rebond the original lock
+				func() {
+					c := lockedCoins.Sub(sdk.NewCoins(sdk.NewInt64Coin("stake", lockedCoinsAmount/2)))
+					_, err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, defaultLockID, c)
+					suite.Require().NoError(err)
+				},
+			},
+			rebondLockID: defaultLockID + 1, // it means we are trying to rebond a splitted unbonding lock
+		},
+		{
+			name: "Valid: assert other locks are not modified when rebonding",
+			setupFunctions: []func(){
+				lockTokensF,
+				startUnlockingF,
+				// create two additional locks
+				func() {
+					suite.LockTokens(defaultOwner, lockedCoins, defaultDuration)
+					suite.LockTokens(arbitraryAccount, lockedCoins, defaultDuration)
+				},
+			},
+			rebondLockID: defaultLockID,
 		},
 	}
 
@@ -140,9 +191,15 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			suite.SetupTest()
 
 			for _, setupFunction := range tc.setupFunctions {
-				setupFunction(defaultLockID, lockedCoins)
+				setupFunction()
 			}
 
+			// create two additional locks prior to testing to assert that they are not modified in the process
+			suite.LockTokens(noiseLocksOwner, lockedCoins, defaultDuration)
+			suite.LockTokens(noiseLocksOwner, lockedCoins, defaultDuration)
+			initialNoiseLocks := suite.App.LockupKeeper.GetAccountPeriodLocks(suite.Ctx, noiseLocksOwner)
+
+			// get initial testing lock
 			initialLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, defaultLockID)
 			suite.Require().NoError(err)
 
@@ -155,7 +212,6 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 				suite.Require().ErrorIs(err, tc.expectedError)
 				return
 			}
-
 			suite.Require().NoError(err)
 
 			// get rebonded lock
@@ -163,15 +219,19 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			suite.Require().NoError(err)
 
 			// Assertions
+			suite.Require().Equal(rebondedLock.ID, tc.rebondLockID) // not comparing to initial lock in case of partial unlock
 			suite.Require().Equal(rebondedLock.Owner, initialLock.Owner)
 			suite.Require().Equal(rebondedLock.Duration, initialLock.Duration)
-			suite.Require().Equal(rebondedLock.ID, initialLock.ID)
 			suite.Require().Equal(rebondedLock.Coins, initialLock.Coins)
 			suite.Require().Equal(rebondedLock.RewardReceiverAddress, initialLock.RewardReceiverAddress)
 			suite.Require().False(rebondedLock.IsUnlocking())
 
 			// Check lock refs
 			suite.assertLockRefs(*rebondedLock)
+
+			// Assert two other lock are not modified
+			noiseLocks := suite.App.LockupKeeper.GetAccountPeriodLocks(suite.Ctx, noiseLocksOwner)
+			suite.Require().Equal(noiseLocks, initialNoiseLocks)
 		})
 	}
 }
