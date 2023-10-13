@@ -7,7 +7,7 @@ require (
 	github.com/ignite/cli v0.23.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7
-	github.com/osmosis-labs/osmosis/v20 v19.1.0
+	github.com/osmosis-labs/osmosis/v19 v19.1.0
 	github.com/tendermint/tendermint v0.37.0-rc1
 )
 
