@@ -4,7 +4,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
 )
 
 // InitGenesis initializes the store state from a genesis state.
@@ -26,7 +26,7 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, gen *types.GenesisState, unpacker 
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	params := k.GetParams(ctx)
 
-	pools, err := k.GetPools(ctx)
+	pools, err := k.GetPoolsSerializable(ctx)
 	if err != nil {
 		panic(err)
 	}

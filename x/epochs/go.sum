@@ -724,7 +724,7 @@ github.com/osmosis-labs/osmosis/osmomath v0.0.6 h1:WNkVmeeudAqRFk5a4CChWsdxfiY/X
 github.com/osmosis-labs/osmosis/osmomath v0.0.6/go.mod h1:UlftwozB+QObT3o0YfkuuyL9fsVdgoWt0dm6J7MLYnU=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231011004221-fd24b80f8366 h1:EJDJ88w2Yv5LnlaJw5x53C0k/dp/fnEYOfBYOQiMsTc=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231011004221-fd24b80f8366/go.mod h1:Zmyx5zMUBN2KV94booSFn2v8KQcUKeCHqyWpKZ4PRMo=
-github.com/osmosis-labs/osmosis/v19 v19.0.0 h1:gqcas/XfxtEuZXsWGTO9vNMHiY78Qs09FBQw73djIVM=
+github.com/osmosis-labs/osmosis/v20 v19.0.0 h1:gqcas/XfxtEuZXsWGTO9vNMHiY78Qs09FBQw73djIVM=
 github.com/otiai10/copy v1.7.0 h1:hVoPiN+t+7d2nzzwMiDHPSOogsWAStewq3TwU05+clE=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=

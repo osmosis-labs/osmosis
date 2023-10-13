@@ -9,8 +9,8 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v20/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
 )
 
 func (s *KeeperTestSuite) TestBackRunEvent() {
