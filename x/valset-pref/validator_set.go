@@ -130,7 +130,8 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
 // Truncation ensures we do not undelegate more than the user has staked with the validator set.
 // NOTE: check README.md for more verbose description of the algorithm.
-// TODO: Properly implement for vratio > 1 to hit steps 5-7, then re-enable
+// TODO: This is currently disabled.
+// Properly implement for vratio > 1 to hit steps 5-7, then re-enable
 // https://github.com/osmosis-labs/osmosis/issues/6686
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, undelegation sdk.Coin) error {
 	// TODO: Change to GetDelegationPreferences
