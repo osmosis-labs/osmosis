@@ -119,6 +119,13 @@ service Query {
         "/osmosis/poolmanager/v1beta1/pools/{pool_id}/total_volume";
   }
 
+  // TradingPairTakerFee returns the taker fee for a given set of denoms
+  rpc TradingPairTakerFee(TradingPairTakerFeeRequest)
+      returns (TradingPairTakerFeeResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/pools/trading_pair_takerfee";
+  }
+
   // EstimateTradeBasedOnPriceImpact returns an estimated trade based on price
   // impact, if a trade cannot be estimated a 0 input and 0 output would be
   // returned.
@@ -277,6 +284,19 @@ message TotalVolumeForPoolResponse {
   repeated cosmos.base.v1beta1.Coin volume = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"volume\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== TradingPairTakerFee
+message TradingPairTakerFeeRequest {
+  string denom_0 = 1 [ (gogoproto.moretags) = "yaml:\"denom_0\"" ];
+  string denom_1 = 2 [ (gogoproto.moretags) = "yaml:\"denom_1\"" ];
+}
+
+message TradingPairTakerFeeResponse {
+  string taker_fee = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
 }
