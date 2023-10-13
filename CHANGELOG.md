@@ -45,9 +45,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
 * [#6468](https://github.com/osmosis-labs/osmosis/pull/6468) feat: remove osmo multihop discount
-* [#6420](https://github.com/osmosis-labs/osmosis/pull/6420) feat[CL]: creates a governance set whitelist of addresses that can bypass the normal pool creation restrictions on concentrated liquidity pools
 * [#4713](https://github.com/osmosis-labs/osmosis/pull/4713) feat: allow rebonding of unbonding tokens
-* [#6632](https://github.com/osmosis-labs/osmosis/pull/6632) feat: taker fee bypass whitelist
+* [#6420](https://github.com/osmosis-labs/osmosis/pull/6420) feat[CL]: Creates a governance set whitelist of addresses that can bypass the normal pool creation restrictions on concentrated liquidity pools
+* [#6623](https://github.com/osmosis-labs/osmosis/pull/6420) feat: transfer cl positions to new owner
+* [#6632](https://github.com/osmosis-labs/osmosis/pull/6632) Taker fee bypass whitelist
 
 ### State Breaking
 
@@ -59,9 +60,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6421](https://github.com/osmosis-labs/osmosis/pull/6421) Moves ValidatePermissionlessPoolCreationEnabled out of poolmanager module
 * [#6627](https://github.com/osmosis-labs/osmosis/pull/6627) Limit pow iterations in osmomath.
 * [#6586](https://github.com/osmosis-labs/osmosis/pull/6586) add auth.moduleaccounts to the stargate whitelist
+* [#6680](https://github.com/osmosis-labs/osmosis/pull/6680) Add Taker Fee query and add it to stargate whitelist
 
 ### Bug Fixes
 * [#6644](https://github.com/osmosis-labs/osmosis/pull/6644) fix: genesis bug in pool incentives linking NoLock gauges and PoolIDs
+* [#6666](https://github.com/osmosis-labs/osmosis/pull/6666) fix: cosmwasmpool state export bug
+* [#6674](https://github.com/osmosis-labs/osmosis/pull/6674) fix: remove dragonberry replace directive
+* [#6692](https://github.com/osmosis-labs/osmosis/pull/6692) chore: add cur sqrt price to LiquidityNetInDirection return value
 
 ## v19.2.0
 

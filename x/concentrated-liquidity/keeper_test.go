@@ -14,16 +14,16 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	concentrated_liquidity "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/clmocks"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	concentrated_liquidity "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/clmocks"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 
-	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
 
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 )
 
 const (

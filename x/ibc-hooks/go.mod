@@ -12,7 +12,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.6
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231009212613-77825371576d
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231011004221-fd24b80f8366
 	github.com/spf13/cobra v1.7.0
 	github.com/tendermint/tendermint v0.37.0-rc1
 	google.golang.org/grpc v1.58.2
@@ -76,6 +76,7 @@ require (
 	github.com/gtank/merlin v0.1.1 // indirect
 	github.com/gtank/ristretto255 v0.1.2 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
+	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.0.0-20220222234857-c00d1f31bab3 // indirect
@@ -151,8 +152,6 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.31.0-osmo-v16
 	// Security patch for wasmvm. See https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md
 	github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.2.3
-	// dragonberry
-	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/05346fa12992
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230922030206-734f99fba785
 	// use cosmos-compatible protobufs

@@ -8,11 +8,11 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
-	clmath "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/math"
-	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
+	clmath "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/math"
+	clmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 )
 
 const (
@@ -1476,7 +1476,7 @@ func (s *KeeperTestSuite) TestFunctional_SpreadRewards_LP() {
 
 	collectedThree, err := s.App.ConcentratedLiquidityKeeper.CollectSpreadRewards(ctx, owner, positionDataThree.ID)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.Coins(nil), collectedThree)
+	s.Require().Equal(sdk.Coins{}, collectedThree)
 }
 
 // This test validates that spread rewards are collected without issues
@@ -1576,7 +1576,7 @@ func (s *KeeperTestSuite) tickStatusInvariance(ticksActivatedAfterEachSwap [][]i
 			}
 		} else {
 			// If the position was not active, check that the spread rewards collected are zero
-			s.Require().Nil(coins)
+			s.Require().Equal(sdk.Coins{}, coins)
 		}
 	}
 }

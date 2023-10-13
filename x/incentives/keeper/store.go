@@ -8,7 +8,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
