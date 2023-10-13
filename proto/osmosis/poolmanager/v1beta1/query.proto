@@ -119,7 +119,7 @@ service Query {
         "/osmosis/poolmanager/v1beta1/pools/{pool_id}/total_volume";
   }
 
-  // TotalVolumeForPool returns the total volume of the specified pool.
+  // TradingPairTakerFee returns the taker fee for a given set of denoms
   rpc TradingPairTakerFee(TradingPairTakerFeeRequest)
       returns (TradingPairTakerFeeResponse) {
     option (google.api.http).get =
