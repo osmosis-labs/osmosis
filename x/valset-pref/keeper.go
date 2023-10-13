@@ -8,10 +8,10 @@ import (
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v19/x/valset-pref/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	"github.com/osmosis-labs/osmosis/v20/x/valset-pref/types"
 )
 
 type Keeper struct {

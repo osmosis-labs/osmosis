@@ -380,3 +380,15 @@ func ParseStringTo2DArray(input string) ([][]uint64, error) {
 
 	return result, nil
 }
+
+// ParseUint64SliceToString converts a slice of uint64 values into a string.
+// Each uint64 value in the slice is converted to a string using base 10.
+// The resulting strings are then joined together with a comma separator.
+// The resulting string is returned.
+func ParseUint64SliceToString(values []uint64) string {
+	strs := make([]string, len(values))
+	for i, v := range values {
+		strs[i] = strconv.FormatUint(v, 10)
+	}
+	return strings.Join(strs, ", ")
+}

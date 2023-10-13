@@ -3,12 +3,11 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	valPref "github.com/osmosis-labs/osmosis/v19/x/valset-pref"
-	"github.com/osmosis-labs/osmosis/v19/x/valset-pref/types"
-
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	valPref "github.com/osmosis-labs/osmosis/v20/x/valset-pref"
+	"github.com/osmosis-labs/osmosis/v20/x/valset-pref/types"
 )
 
 func (s *KeeperTestSuite) TestValidateLockForForceUnlock() {

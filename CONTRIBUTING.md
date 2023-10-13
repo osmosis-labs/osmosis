@@ -655,3 +655,21 @@ Thus, from the user's perspective, attempting to execute a swap that would cause
 #### Example 2: Bulk Coin Sends in Begin/EndBlock
 
 A much less obvious example of a panic trigger is running `SendCoins` on arbitrary input coins in begin/endblock, especially if the coins that can be included have logic that can trigger panics (e.g. blacklisted accounts for CW20 tokens). The solution in this case would be to transfer coins one by one with `SendCoin` and verifying each coin so that bad ones could be skipped.
+
+## Debug Osmosis Node VS Code & Delve
+
+1. Build the binary without stripping away debug symbols
+- Make sure `ldflags += -w -s` is not present
+- We have a vs code task named `build-debug` that builds the debug binary
+
+2. Start Osmosis node with the binary from step 1.
+
+3. Run "Attach to running osmosisd process" VS Code debug configuration
+
+What it does:
+- Runs a vs code background task that starts a delve server and attaches to the Osmosis node process ID
+- Attaches VS code project to delve and allows you to set breakpoints
+
+FAQ
+- Can this be used with localosmosis or inside Docker?
+  * Not currently but possible. Would need to run the delve server inside the container and expose the debug port

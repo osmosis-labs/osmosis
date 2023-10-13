@@ -7,12 +7,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v19/app/keepers"
-	"github.com/osmosis-labs/osmosis/v19/app/upgrades"
-	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
-	poolincenitvestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v20/app/keepers"
+	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
+	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	poolincenitvestypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 type IncentivizedCFMMDirectWhenMigrationLinkPresentError struct {
@@ -20,6 +21,8 @@ type IncentivizedCFMMDirectWhenMigrationLinkPresentError struct {
 	ConcentratedPoolID uint64
 	CFMMGaugeID        uint64
 }
+
+var emptySlice = []string{}
 
 func (e IncentivizedCFMMDirectWhenMigrationLinkPresentError) Error() string {
 	return fmt.Sprintf("CFMM gauge ID (%d) incentivized CFMM pool (%d) directly when migration link is present with concentrated pool (%d)", e.CFMMGaugeID, e.CFMMPoolID, e.ConcentratedPoolID)
@@ -40,11 +43,14 @@ func CreateUpgradeHandler(
 		}
 
 		// Initialize the newly created param
-		keepers.ConcentratedLiquidityKeeper.SetParam(ctx, cltypes.KeyUnrestrictedPoolCreatorWhitelist, []string{})
+		keepers.ConcentratedLiquidityKeeper.SetParam(ctx, cltypes.KeyUnrestrictedPoolCreatorWhitelist, emptySlice)
 
 		// Initialize the new params in incentives for group creation.
 		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyGroupCreationFee, incentivestypes.DefaultGroupCreationFee)
-		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyCreatorWhitelist, []string{})
+		keepers.IncentivesKeeper.SetParam(ctx, incentivestypes.KeyCreatorWhitelist, emptySlice)
+
+		// Initialize new param in the poolmanager module with a whitelist allowing to bypass taker fees.
+		keepers.PoolManagerKeeper.SetParam(ctx, poolmanagertypes.KeyReducedTakerFeeByWhitelist, emptySlice)
 
 		// Converts pool incentive distribution records from concentrated gauges to group gauges.
 		err = createGroupsForIncentivePairs(ctx, keepers)

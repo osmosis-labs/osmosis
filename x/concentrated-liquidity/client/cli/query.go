@@ -5,8 +5,8 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -110,7 +110,10 @@ func GetTickLiquidityNetInDirection() (*osmocli.QueryDescriptor, *queryproto.Liq
 		Use:   "liquidity-net-in-direction",
 		Short: "Query liquidity net in direction",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} 4 uosmo "[-18000000]" true "[-9000000]" true`,
+{{.CommandPrefix}} 4 uosmo "[-18000000]" true "[-9000000]" true
+
+[poolid] [inputDenom] [start tick] [use cur tick] [bound tick] [use_no_bound]
+TODO: What does any of that mean...?`,
 	}, &queryproto.LiquidityNetInDirectionRequest{}
 }
 

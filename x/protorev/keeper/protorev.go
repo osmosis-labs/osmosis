@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
