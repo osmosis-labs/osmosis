@@ -503,6 +503,9 @@ markdown:
 ###############################################################################
 ###                                Localnet                                 ###
 ###############################################################################
+#
+# Please refer to https://github.com/osmosis-labs/osmosis/blob/main/tests/localosmosis/README.md for detailed 
+# usage of localnet.
 
 localnet-keys:
 	. tests/localosmosis/scripts/add_keys.sh
