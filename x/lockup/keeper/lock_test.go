@@ -25,8 +25,8 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 
 	// accounts
 	defaultOwner := suite.TestAccs[0]
-	arbitraryOwner := suite.TestAccs[1]
-	noiseLocksOwner := suite.TestAccs[2]
+	arbitraryOwner := suite.TestAccs[1]  // used to test that the lock cannot be rebonded by non-owners
+	noiseLocksOwner := suite.TestAccs[2] // used to test that other locks are not modified in the process
 
 	// lock ids
 	defaultLockID := uint64(1)
