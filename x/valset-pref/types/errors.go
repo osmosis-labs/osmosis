@@ -35,3 +35,11 @@ type ValsetRatioGreaterThanOneError struct {
 func (e ValsetRatioGreaterThanOneError) Error() string {
 	return fmt.Sprintf("valset ratio %s greater than one", e.ValsetRatio)
 }
+
+type ValidatorNotFoundError struct {
+	ValidatorAddr string
+}
+
+func (e ValidatorNotFoundError) Error() string {
+	return fmt.Sprintf("validator %s not found", e.ValidatorAddr)
+}
