@@ -4,7 +4,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 )
@@ -91,6 +91,10 @@ func (s *PoolModuleSuite) TestExportGenesis() {
 
 	genesis := s.App.CosmwasmPoolKeeper.ExportGenesis(s.Ctx)
 	s.Require().Len(genesis.Pools, 2)
+
+	for _, pool := range genesis.Pools {
+		s.Require().Equal("/osmosis.cosmwasmpool.v1beta1.CosmWasmPool", pool.GetTypeUrl())
+	}
 }
 
 func (s *PoolModuleSuite) TestMarshalUnmarshalGenesis() {

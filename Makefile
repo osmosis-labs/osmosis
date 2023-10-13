@@ -134,6 +134,19 @@ build-all: check_version go.sum
 install: check_version go.sum
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 
+# disables optimization, inlining and symbol removal
+GC_FLAGS := -gcflags="all=-N -l"
+REMOVE_STRING := -w -s
+DEBUG_BUILD_FLAGS:= $(subst $(REMOVE_STRING),,$(BUILD_FLAGS))
+DEBUG_LDFLAGS = $(subst $(REMOVE_STRING),,$(ldflags))
+
+dev-install: go.sum
+	GOWORK=off go install $(DEBUG_BUILD_FLAGS) $(GC_FLAGS) $(GO_MODULE)/cmd/osmosisd
+
+dev-build:
+	mkdir -p $(BUILDDIR)/
+	GOWORK=off go build $(GC_FLAGS) -mod=readonly -ldflags '$(DEBUG_LDFLAGS)' -trimpath -o $(BUILDDIR) ./...;
+
 install-with-autocomplete: check_version go.sum
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 	@PARENT_SHELL=$$(ps -o ppid= -p $$PPID | xargs ps -o comm= -p); \

@@ -896,3 +896,20 @@ type NumberOfTicksExceedsMaxError struct {
 func (e NumberOfTicksExceedsMaxError) Error() string {
 	return fmt.Sprintf("number of ticks exceeds max ticks. Provided number of ticks (%d), max ticks (%d)", e.NumberOfTicks, e.MaxNumberOfTicks)
 }
+
+type DuplicatePositionIdsError struct {
+	PositionIds []uint64
+}
+
+func (e DuplicatePositionIdsError) Error() string {
+	return fmt.Sprintf("duplicate position ids found (%v)", e.PositionIds)
+}
+
+type LastPositionTransferError struct {
+	PositionId uint64
+	PoolId     uint64
+}
+
+func (e LastPositionTransferError) Error() string {
+	return fmt.Sprintf("cannot transfer position %d because it is the last position in pool %d", e.PositionId, e.PoolId)
+}

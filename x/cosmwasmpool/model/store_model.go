@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 var (
@@ -44,7 +44,7 @@ func (p CosmWasmPool) GetAddress() sdk.AccAddress {
 }
 
 func (p CosmWasmPool) GetId() uint64 {
-	panic("CosmWasmPool.GetId not implemented")
+	return p.PoolId
 }
 
 func (p CosmWasmPool) GetSpreadFactor(ctx sdk.Context) osmomath.Dec {
