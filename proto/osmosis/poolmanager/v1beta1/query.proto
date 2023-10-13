@@ -288,7 +288,7 @@ message TotalVolumeForPoolResponse {
   ];
 }
 
-//=============================== TotalVolumeForPool
+//=============================== TradingPairTakerFee
 message TradingPairTakerFeeRequest {
   string denom_0 = 1 [ (gogoproto.moretags) = "yaml:\"denom_0\"" ];
   string denom_1 = 2 [ (gogoproto.moretags) = "yaml:\"denom_1\"" ];
