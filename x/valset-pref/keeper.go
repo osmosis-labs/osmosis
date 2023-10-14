@@ -117,7 +117,7 @@ func (k Keeper) formatToValPrefArr(ctx sdk.Context, delegations []stakingtypes.D
 		}
 
 		// Convert shares to underlying token amounts
-		currentDelegationTokens := validator.TokensFromSharesRoundUp(existingDelegation.Shares)
+		currentDelegationTokens := validator.TokensFromShares(existingDelegation.Shares)
 
 		// Cache token amounts for each delegation and track total tokens
 		tokenDelegations[existingDelegation] = currentDelegationTokens
