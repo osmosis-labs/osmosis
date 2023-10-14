@@ -9,7 +9,7 @@ import (
 // ErrTolerance is used to define a compare function, which checks if two
 // ints are within a certain error tolerance of one another,
 // and (optionally) that they are rounding in the correct direction.
-// ErrTolerance.Compare(a, b) returns true iff:
+// ErrTolerance.Compare(a, b) returns true if:
 // * RoundingMode = RoundUp, then a <= b
 // * RoundingMode = RoundDown, then a >= b
 // * |a - b| <= AdditiveTolerance
