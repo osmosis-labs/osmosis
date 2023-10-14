@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/crypto/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -306,67 +307,97 @@ func (s *KeeperTestSuite) TestGetValSetPreferencesWithDelegations() {
 func (s *KeeperTestSuite) TestFormatToValPrefArr() {
 	s.SetupTest()
 
-	// prepare existing delegations validators
-	valAddrs := s.SetupMultipleValidators(3)
+	tests := map[string]struct {
+		delegationShares       []osmomath.Dec
+		expectedValPrefWeights []osmomath.Dec
+		invalidDelegation      bool
 
-	tests := []struct {
-		name             string
-		delegations      []stakingtypes.Delegation
-		expectedValPrefs []types.ValidatorPreference
+		expectedError error
 	}{
-		{
-			name: "Single delegation",
-			delegations: []stakingtypes.Delegation{
-				{
-					ValidatorAddress: valAddrs[0],
-					Shares:           sdk.NewDec(100),
-				},
-			},
-			expectedValPrefs: []types.ValidatorPreference{
-				{
-					ValOperAddress: valAddrs[0],
-					Weight:         sdk.NewDec(1),
-				},
+		"Single delegation": {
+			delegationShares:       []osmomath.Dec{osmomath.NewDec(100)},
+			expectedValPrefWeights: []osmomath.Dec{osmomath.NewDec(1)},
+		},
+		"Multiple Delegations": {
+			delegationShares: []osmomath.Dec{osmomath.NewDec(100), osmomath.NewDec(200)},
+			expectedValPrefWeights: []osmomath.Dec{
+				sdk.MustNewDecFromStr("0.333333333333333333"),
+				sdk.MustNewDecFromStr("0.666666666666666667"),
 			},
 		},
-		{
-			name: "Multiple Delegations",
-			delegations: []stakingtypes.Delegation{
-				{
-					ValidatorAddress: valAddrs[0],
-					Shares:           sdk.NewDec(100),
-				},
-				{
-					ValidatorAddress: valAddrs[1],
-					Shares:           sdk.NewDec(200),
-				},
-			},
-			expectedValPrefs: []types.ValidatorPreference{
-				{
-					ValOperAddress: valAddrs[0],
-					Weight:         sdk.MustNewDecFromStr("0.333333333333333333"),
-				},
-				{
-					ValOperAddress: valAddrs[1],
-					Weight:         sdk.MustNewDecFromStr("0.666666666666666667"),
-				},
-			},
+		"No Delegation": {
+			expectedValPrefWeights: []osmomath.Dec{},
 		},
-		{
-			name:             "No Delegation",
-			delegations:      []stakingtypes.Delegation{},
-			expectedValPrefs: []types.ValidatorPreference{},
+		"Invalid delegation (validator doesn't exist)": {
+			invalidDelegation: true,
+			expectedError:     types.ValidatorNotFoundError{},
 		},
 	}
 
-	for _, test := range tests {
-		s.Run(test.name, func() {
+	for name, test := range tests {
+		s.Run(name, func() {
 			s.Setup()
+			defaultDelegator := s.TestAccs[0]
+			bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 
-			// system under test
-			actualPrefArr := valPref.FormatToValPrefArr(test.delegations)
+			// --- Setup ---
 
-			s.Require().Equal(actualPrefArr, test.expectedValPrefs)
+			// Prepare delegations by setting up validators and delegating the appropriate amount to each.
+			// Since `SetupMultipleValidators` is nondeterministic, we do this setup logic in each test case.
+			valAddrs := s.SetupMultipleValidators(len(test.delegationShares))
+			delegations, expectedValPrefs := []stakingtypes.Delegation{}, []types.ValidatorPreference{}
+			for i, delegationShare := range test.delegationShares {
+				// Get validator to delegate to
+				valAddr, err := sdk.ValAddressFromBech32(valAddrs[i])
+				s.Require().NoError(err)
+				validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+				s.Require().True(found)
+
+				// Fund delegator and execute delegation
+				s.FundAcc(defaultDelegator, sdk.NewCoins(sdk.NewCoin(bondDenom, delegationShare.RoundInt())))
+				_, err = s.App.StakingKeeper.Delegate(s.Ctx, defaultDelegator, delegationShare.RoundInt(), stakingtypes.Unbonded, validator, true)
+				s.Require().NoError(err)
+
+				// Build list of delegations to pass into SUT
+				delegation, found := s.App.StakingKeeper.GetDelegation(s.Ctx, defaultDelegator, valAddr)
+				s.Require().True(found)
+				delegations = append(delegations, delegation)
+
+				// Build expected validator preferences
+				expectedValPrefs = append(expectedValPrefs, types.ValidatorPreference{
+					ValOperAddress: valAddrs[i],
+					Weight:         test.expectedValPrefWeights[i],
+				})
+			}
+
+			// Add invalid delegation if specified by test case
+			if test.invalidDelegation {
+				// Add invalid delegation
+				delegations = append(delegations, stakingtypes.Delegation{
+					DelegatorAddress: defaultDelegator.String(),
+					// Generate random but valid validator address
+					ValidatorAddress: sdk.ValAddress(secp256k1.GenPrivKey().PubKey().Address()).String(),
+					Shares:           osmomath.NewDec(100),
+				})
+			}
+
+			// --- System under test ---
+
+			actualPrefArr, err := s.App.ValidatorSetPreferenceKeeper.FormatToValPrefArr(s.Ctx, delegations)
+
+			// --- Assertions ---
+
+			if test.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().IsType(test.expectedError, err)
+				return
+			}
+
+			s.Require().NoError(err)
+			if test.delegationShares == nil {
+				expectedValPrefs = []types.ValidatorPreference{}
+			}
+			s.Require().Equal(actualPrefArr, expectedValPrefs)
 		})
 	}
 }

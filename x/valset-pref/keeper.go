@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/x/valset-pref/types"
 )
 
@@ -55,7 +56,11 @@ func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (typ
 			return types.ValidatorSetPreferences{}, types.ErrNoDelegation
 		}
 
-		return types.ValidatorSetPreferences{Preferences: formatToValPrefArr(existingDelegations)}, nil
+		preferences, err := k.formatToValPrefArr(ctx, existingDelegations)
+		if err != nil {
+			return types.ValidatorSetPreferences{}, err
+		}
+		return types.ValidatorSetPreferences{Preferences: preferences}, nil
 	}
 
 	return valSet, nil
@@ -89,24 +94,45 @@ func (k Keeper) GetValSetPreferencesWithDelegations(ctx sdk.Context, delegator s
 
 	// when existing delegation exists, have it based upon the existing delegation
 	// regardless of the delegator having valset pref or not
-	return types.ValidatorSetPreferences{Preferences: formatToValPrefArr(existingDelegations)}, nil
+	preferences, err := k.formatToValPrefArr(ctx, existingDelegations)
+	if err != nil {
+		return types.ValidatorSetPreferences{}, err
+	}
+	return types.ValidatorSetPreferences{Preferences: preferences}, nil
 }
 
 // formatToValPrefArr iterates over given delegations array, formats it into ValidatorPreference array.
 // Used to calculate weights for the each delegation towards validator.
 // CONTRACT: This method assumes no duplicated ValOperAddress exists in the given delegation.
-func formatToValPrefArr(delegations []stakingtypes.Delegation) []types.ValidatorPreference {
-	totalShares := sdk.NewDec(0)
+func (k Keeper) formatToValPrefArr(ctx sdk.Context, delegations []stakingtypes.Delegation) ([]types.ValidatorPreference, error) {
+	totalTokens := osmomath.NewDec(0)
+
+	// We cache token amounts for each delegation to avoid a second set of reads
+	tokenDelegations := make(map[stakingtypes.Delegation]osmomath.Dec)
 	for _, existingDelegation := range delegations {
-		totalShares = totalShares.Add(existingDelegation.Shares)
+		// Fetch validator corresponding to current delegation
+		validator, found := k.stakingKeeper.GetValidator(ctx, existingDelegation.GetValidatorAddr())
+		if !found {
+			return []types.ValidatorPreference{}, types.ValidatorNotFoundError{ValidatorAddr: existingDelegation.ValidatorAddress}
+		}
+
+		// Convert shares to underlying token amounts
+		currentDelegationTokens := validator.TokensFromShares(existingDelegation.Shares)
+
+		// Cache token amounts for each delegation and track total tokens
+		tokenDelegations[existingDelegation] = currentDelegationTokens
+		totalTokens = totalTokens.Add(currentDelegationTokens)
 	}
 
+	// Build ValidatorPreference array from delegations
 	valPrefs := make([]types.ValidatorPreference, len(delegations))
 	for i, delegation := range delegations {
 		valPrefs[i] = types.ValidatorPreference{
 			ValOperAddress: delegation.ValidatorAddress,
-			Weight:         delegation.Shares.Quo(totalShares),
+			// We accept bankers rounding here as rounding direction is not critical
+			// and we want to minimize rounding error.
+			Weight: tokenDelegations[delegation].Quo(totalTokens),
 		}
 	}
-	return valPrefs
+	return valPrefs, nil
 }
