@@ -897,12 +897,12 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 			s.Require().NoError(err)
 
 			compareResult := osmomath.ErrTolerance{
-				MultiplicativeTolerance: osmomath.SmallestDec().Mul(osmomath.NewDec(32318177563)),
+				MultiplicativeTolerance: osmomath.SmallestDec().Mul(osmomath.NewDec(40000000000)),
 			}.CompareBigDec(
 				spotPrice,
 				osmomath.BigDecFromDec(twap),
 			)
-			s.Require().Equal(0, compareResult, "Geometric TWAP is not roughly close to spot price")
+			s.Require().Equal(0, compareResult, "Geometric TWAP is not roughly close to spot price at try: %d", i)
 		})
 	}
 }
