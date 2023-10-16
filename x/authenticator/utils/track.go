@@ -9,8 +9,8 @@ import (
 // GetAccount retrieves the account associated with the first signer of a transaction message.
 // It returns the account's address or an error if no signers are present.
 func GetAccount(msg sdk.Msg) (sdk.AccAddress, error) {
-	if len(msg.GetSigners()) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "no signers")
+	if len(msg.GetSigners()) != 1 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "messages must have exactly one signer")
 	}
 	return msg.GetSigners()[0], nil
 }
