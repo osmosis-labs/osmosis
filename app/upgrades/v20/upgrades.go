@@ -84,7 +84,25 @@ func createGroupsForIncentivePairs(ctx sdk.Context, keepers *keepers.AppKeepers)
 		poolIDMigrationRecordMap[info.BalancerPoolId] = info.ClPoolId
 	}
 
-	distrInfo := keepers.PoolIncentivesKeeper.GetDistrInfo(ctx)
+	distrInfo := poolincenitvestypes.DistrInfo{
+		TotalWeight: sdk.NewInt(21000),
+		Records: []poolincenitvestypes.DistrRecord{
+			{
+				GaugeId: 234,
+				Weight:  sdk.NewInt(10000),
+			},
+			{
+				GaugeId: 235,
+				Weight:  sdk.NewInt(10000),
+			},
+			{
+				GaugeId: 246,
+				Weight:  sdk.NewInt(1000),
+			},
+		},
+	}
+
+	keepers.PoolIncentivesKeeper.SetDistrInfo(ctx, distrInfo)
 
 	// For all incentive distribution records,
 	// retrieve the gauge associated with the record
