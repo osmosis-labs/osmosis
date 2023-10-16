@@ -76,8 +76,7 @@ type StakingKeeper interface {
 	GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool)
 	ValidateUnbondAmount(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt osmomath.Int) (shares osmomath.Dec, err error)
 	Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt osmomath.Int, tokenSrc stakingtypes.BondStatus, validator stakingtypes.Validator, subtractAccount bool) (newShares osmomath.Dec, err error)
-	// UNFORKINGTODO: Once this gets implemented in sdk fork, uncomment this
-	//InstantUndelegate(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount osmomath.Dec) (sdk.Coins, error)
+	InstantUndelegate(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount osmomath.Dec) (sdk.Coins, error)
 	GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, found bool)
 	UnbondingTime(ctx sdk.Context) time.Duration
 	GetParams(ctx sdk.Context) stakingtypes.Params

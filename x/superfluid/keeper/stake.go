@@ -499,13 +499,10 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 		return err
 	}
 	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-		// UNFORKINGTODO: Once instantUndelegate is implemented in our fork, uncomment this and remove hard-coded coins
-		// undelegatedCoins, err := k.sk.InstantUndelegate(cacheCtx, intermediaryAcc.GetAccAddress(), valAddr, shares)
-		// if err != nil {
-		// 	return err
-		// }
-		// UNFORKINGTODO: DELETE THIS LINE AFTER THE ABOVE IS IMPLEMENTED AND UNCOMMENTED
-		undelegatedCoins := sdk.NewCoins(sdk.NewCoin(k.sk.BondDenom(cacheCtx), shares.RoundInt()))
+		undelegatedCoins, err := k.sk.InstantUndelegate(cacheCtx, intermediaryAcc.GetAccAddress(), valAddr, shares)
+		if err != nil {
+			return err
+		}
 
 		// TODO: Should we compare undelegatedCoins vs osmoAmount?
 		err = k.bk.SendCoinsFromAccountToModule(cacheCtx, intermediaryAcc.GetAccAddress(), types.ModuleName, undelegatedCoins)

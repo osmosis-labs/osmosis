@@ -105,7 +105,7 @@ func (mfd MempoolFeeDecorator) getMinBaseGasPrice(ctx sdk.Context, baseDenom str
 		minBaseGasPrice = sdk.MaxDec(minBaseGasPrice, mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx))
 	}
 	// If we are in genesis or are simulating a tx, then we actually override all of the above, to set it to 0.
-	// UNFORKINGTODO: look into what we should use in place of ctx.IsGenesis() here
+	// UNFORKINGTODO OQ: look into what we should use in place of ctx.IsGenesis() here
 	// if ctx.IsGenesis() || simulate {
 	if simulate {
 		minBaseGasPrice = osmomath.ZeroDec()

@@ -128,14 +128,6 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// UNFORKINGTODO: Ensure this is no longer needed
-// // LegacyQuerierHandler returns the x/mint module's sdk.Querier.
-// func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-// 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-// 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-// 	}
-// }
-
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {

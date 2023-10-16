@@ -23,7 +23,7 @@ var (
 	// Minimum deposit value for a proposal to enter a voting period.
 	MinDepositValue = govtypesv1.DefaultMinDepositTokens.Int64()
 	// Minimum expedited deposit value for a proposal to enter a voting period.
-	// UNFORKINGTODO: Change this to DefaultMinExpeditedDepositTokens when implemented
+	// UNFORKINGTODO N: Change this to DefaultMinExpeditedDepositTokens when implemented
 	MinExpeditedDepositValue = govtypesv1.DefaultMinDepositTokens.Int64()
 	// Minimum deposit value for proposal to be submitted.
 	InitialMinDeposit = MinDepositValue / 4

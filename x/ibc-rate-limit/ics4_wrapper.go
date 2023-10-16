@@ -66,11 +66,11 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 	// We need the full packet so the contract can process it. If it can't be cast to a channeltypes.Packet, this
 	// should fail. The only reason that would happen is if another middleware is modifying the packet, though. In
 	// that case we can modify the middleware order or change this cast so we have all the data we need.
-	// UNFORKINGTODO: The full packet data is not available here. Specifically, the sequence, destPort and destChannel are not available.
+	// UNFORKINGTODO OQ: The full packet data is not available here. Specifically, the sequence, destPort and destChannel are not available.
 	// This is silly as it means we cannot filter packets based on destination (the sequence could be obtained by calling channel.SendPacket() before checking the rate limits)
 	// I think this works with the current contracts as destination is not checked for sends, but would need to double check to be 100% sure.
 	// Should we modify what the contracts expect so that there's no risk of them trying to rely on the missing data? Alt. just document this
-	// UNFORKINGTODO: I am setting the sequence to 0 so it can compile, but note that this needs to be addressed.
+	// UNFORKINGTODO N: I am setting the sequence to 0 so it can compile, but note that this needs to be addressed.
 	fullPacket := channeltypes.Packet{
 		Sequence:           0,
 		SourcePort:         sourcePort,

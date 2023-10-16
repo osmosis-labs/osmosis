@@ -89,7 +89,7 @@ func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contrac
 }
 
 func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
-	// UNFORKINGTODO: Fix this with understanding of SubmitProposal use and GetRoute
+	// UNFORKINGTODO OQ: Fix this with understanding of SubmitProposal use and GetRoute
 	// t.Helper()
 
 	// govKeeper := osmosis.GovKeeper

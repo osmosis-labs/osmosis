@@ -284,7 +284,7 @@ func NewOsmosisApp(
 	app.mm.SetOrderInitGenesis(OrderInitGenesis(app.mm.ModuleNames())...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
-	// UNFORKINGTODO: Figure out register routes
+	// UNFORKINGTODO OQ: Figure out register routes, if at all needed
 	//app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.AppCodec(), app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
@@ -294,7 +294,7 @@ func NewOsmosisApp(
 	// app.sm.RegisterStoreDecoders()
 
 	// add test gRPC service for testing gRPC queries in isolation
-	// UNFORKINGTODO: I think we only need to register the autocli query server, but leaving this commented for now
+	// UNFORKINGTODO OQ: I think we only need to register the autocli query server, but leaving this commented for now
 	// testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
 
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
@@ -327,7 +327,7 @@ func NewOsmosisApp(
 			app.IBCKeeper,
 		),
 	)
-	// UNFORKINGTODO: Figure out set post handler
+	// UNFORKINGTODO OQ: Figure out set post handler
 	//app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
 	app.SetEndBlocker(app.EndBlocker)
 
@@ -427,7 +427,7 @@ func (app *OsmosisApp) ModuleManager() module.Manager {
 // API server.
 func (app *OsmosisApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
-	// UNFORKINGTODO: I think we dont need to register routes anymore
+	// UNFORKINGTODO OQ: I think we dont need to register routes anymore
 	//rpc.RegisterRoutes(clientCtx, apiSvr.Router)
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
@@ -435,7 +435,7 @@ func (app *OsmosisApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.AP
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register legacy and grpc-gateway routes for all modules.
-	// UNFORKINGTODO: I think we dont need to register REST routes anymore
+	// UNFORKINGTODO OQ: I think we dont need to register REST routes anymore
 	//ModuleBasics.RegisterRESTRoutes(clientCtx, apiSvr.Router)
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 

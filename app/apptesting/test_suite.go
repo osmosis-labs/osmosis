@@ -262,7 +262,7 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 
 	s.FundAcc(sdk.AccAddress(valAddr), selfBond)
 
-	// UNFORKINGTODO: not sure if we need to implement NewHandler
+	// UNFORKINGTODO OQ: not sure if we need to implement NewHandler
 	//stakingHandler := staking.NewHandler(*s.App.StakingKeeper)
 	stakingCoin := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: selfBond[0].Amount}
 	ZeroCommission := stakingtypes.NewCommissionRates(zeroDec, zeroDec, zeroDec)

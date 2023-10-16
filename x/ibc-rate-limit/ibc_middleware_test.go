@@ -117,8 +117,7 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount osmomath.
 }
 
 func CalculateChannelValue(ctx sdk.Context, denom string, bankKeeper bankkeeper.Keeper) osmomath.Int {
-	// UNFORKINGTODO: Change back to GetSupplyWithOffset
-	return bankKeeper.GetSupply(ctx, denom).Amount
+	return bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 
 	// ToDo: The commented-out code bellow is what we want to happen, but we're temporarily
 	//  using the whole supply for efficiency until there's a solution for
@@ -271,8 +270,7 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 
 func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed osmomath.Int) {
 	osmosisApp := suite.chainA.GetOsmosisApp()
-	// UNFORKINGTODO: Change back to GetSupplyWithOffset
-	supply := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 
 	// Move some funds from chainA to chainB so that there is something in escrow
 	// Each user has 10% of the supply, so we send most of the funds from one user to chainA
@@ -472,8 +470,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	// ToDo: This is what we eventually want here, but using the full supply temporarily for performance reasons. See CalculateChannelValue
 	// escrowAddress := transfertypes.GetEscrowAddress("transfer", "channel-0")
 	// escrowed := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), escrowAddress, sdk.DefaultBondDenom)
-	// UNFORKINGTODO: Change back to GetSupplyWithOffset
-	escrowed := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	escrowed := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := escrowed.Amount.QuoRaw(100) // 1% of the escrowed amount
 
 	// Use the whole quota

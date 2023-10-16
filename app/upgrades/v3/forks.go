@@ -21,7 +21,7 @@ func RunForkLogic(ctx sdk.Context, keepers *keepers.AppKeepers) {
 // Fixes an error where minimum deposit was set to "500 osmo". This denom does
 // not exist, which makes it impossible for a proposal to go to a vote.
 func FixMinDepositDenom(ctx sdk.Context, gov *govkeeper.Keeper) {
-	// UNFORKINGTODO: No longer exists, how do we want to go about this?
+	// UNFORKINGTODO OQ: No longer exists, how do we want to go about this?
 	// params := gov.GetDepositParams(ctx)
 	// params.MinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(500000000)))
 	// gov.SetDepositParams(ctx, params)
@@ -35,7 +35,7 @@ func FixMinCommisionRate(ctx sdk.Context, staking *stakingkeeper.Keeper) {
 	minCommissionRate := staking.GetParams(ctx).MinCommissionRate
 	for _, v := range validators {
 		if v.Commission.Rate.LT(minCommissionRate) {
-			// UNFORKING TODO: No longer exists, how do we want to go about this?
+			// UNFORKINGTODO OQ: No longer exists, how do we want to go about this?
 			// comm, err := staking.MustUpdateValidatorCommission(ctx, v, minCommissionRate)
 			// if err != nil {
 			// 	panic(err)

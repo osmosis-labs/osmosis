@@ -130,12 +130,6 @@ func (am AppModule) Name() string {
 // QuerierRoute returns the x/tokenfactory module's query routing key.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
-// UNFORKINGTODO: Ensure this is no longer needed
-// // LegacyQuerierHandler returns the x/tokenfactory module's Querier.
-// func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-// 	return nil
-// }
-
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {

@@ -199,7 +199,7 @@ Group 3: Pool IDs 6, 7
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
-	// UNFORKINGTODO: Enable when expedited is back
+	// UNFORKINGTODO N: Enable when expedited is back
 	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
 	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 

@@ -34,7 +34,7 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 }
 
 func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
-	// UNFORKINGTODO: Fix this with understanding of SubmitProposal use and GetRoute
+	// UNFORKINGTODO OQ: Fix this with understanding of SubmitProposal use and GetRoute
 	// t.Helper()
 	// govKeeper := osmosis.GovKeeper
 	// wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")

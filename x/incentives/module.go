@@ -140,14 +140,6 @@ func (am AppModule) Name() string {
 // QuerierRoute returns the module's query routing key.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
-// UNFORKINGTODO: Ensure this is no longer needed
-// // LegacyQuerierHandler returns the incentive module's Querier.
-// func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-// 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-// 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-// 	}
-// }
-
 // RegisterServices registers the module's services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(&am.keeper))

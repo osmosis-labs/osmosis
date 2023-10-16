@@ -115,14 +115,6 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 // QuerierRoute returns the pool-incentives module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-// UNFORKINGTODO: Ensure this is no longer needed
-// // LegacyQuerierHandler returns the x/pool-incentives's module sdk.Querier.
-// func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-// 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-// 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-// 	}
-// }
-
 // InitGenesis performs genesis initialization for the pool-incentives module.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
