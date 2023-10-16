@@ -85,14 +85,10 @@ func createGroupsForIncentivePairs(ctx sdk.Context, keepers *keepers.AppKeepers)
 	}
 
 	distrInfo := poolincenitvestypes.DistrInfo{
-		TotalWeight: sdk.NewInt(21000),
+		TotalWeight: sdk.NewInt(11000),
 		Records: []poolincenitvestypes.DistrRecord{
 			{
 				GaugeId: 234,
-				Weight:  sdk.NewInt(10000),
-			},
-			{
-				GaugeId: 235,
 				Weight:  sdk.NewInt(10000),
 			},
 			{
