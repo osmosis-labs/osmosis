@@ -41,6 +41,16 @@ func (q Querier) UserPositions(grpcCtx context.Context,
 	return q.Q.UserPositions(ctx, *req)
 }
 
+func (q Querier) UnderlyingPositionsValue(grpcCtx context.Context,
+	req *queryproto.UnderlyingPositionsValueRequest,
+) (*queryproto.UnderlyingPositionsValueResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.UnderlyingPositionsValue(ctx, *req)
+}
+
 func (q Querier) TickAccumulatorTrackers(grpcCtx context.Context,
 	req *queryproto.TickAccumulatorTrackersRequest,
 ) (*queryproto.TickAccumulatorTrackersResponse, error) {

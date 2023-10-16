@@ -132,6 +132,11 @@ service Query {
     option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
                                    "num_next_initialized_ticks";
   }
+  rpc UnderlyingPositionsValue(UnderlyingPositionsValueRequest)
+      returns (UnderlyingPositionsValueResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/underlying_positions_value";
+  }
 }
 
 //=============================== UserPositions
@@ -350,5 +355,14 @@ message NumNextInitializedTicksResponse {
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.moretags) = "yaml:\"current_liquidity\"",
     (gogoproto.nullable) = false
+  ];
+}
+
+message UnderlyingPositionsValueRequest { repeated uint64 position_ids = 1; }
+
+message UnderlyingPositionsValueResponse {
+  repeated cosmos.base.v1beta1.Coin underlying_assets = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }

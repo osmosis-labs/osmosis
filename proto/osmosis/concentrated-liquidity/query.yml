@@ -74,3 +74,8 @@ queries:
       query_func: "k.NumNextInitializedTicks"
     cli:
       cmd: "NumNextInitializedTicks"
+  UnderlyingPositionsValue:
+    proto_wrapper:
+      query_func: "k.GetUnderlyingPositionsValue"
+    cli:
+      cmd: "UnderlyingPositionsValue"

@@ -45,6 +45,18 @@ func (q Querier) UserPositions(ctx sdk.Context, req clquery.UserPositionsRequest
 	}, nil
 }
 
+// UnderlyingPositionsValue calculates the value of the underlying assets in the given positions.
+func (q Querier) UnderlyingPositionsValue(ctx sdk.Context, req clquery.UnderlyingPositionsValueRequest) (*clquery.UnderlyingPositionsValueResponse, error) {
+	underlyingAssets, err := q.Keeper.UnderlyingPositionsValue(ctx, req.PositionIds)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &clquery.UnderlyingPositionsValueResponse{
+		UnderlyingAssets: underlyingAssets,
+	}, nil
+}
+
 // PositionById returns a position with the specified id. The position is broken down by:
 // - the position itself
 // - the underlying assets
