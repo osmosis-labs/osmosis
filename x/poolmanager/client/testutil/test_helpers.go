@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/app"
-	poolmanagercli "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/cli"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/app"
+	poolmanagercli "github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/cli"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

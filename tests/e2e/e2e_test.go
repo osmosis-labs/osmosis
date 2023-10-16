@@ -19,15 +19,15 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v19/x/ibc-rate-limit/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v20/x/ibc-rate-limit/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v19/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v19/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v20/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
 )
 
 var (

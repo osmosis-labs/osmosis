@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 var IntMaxValue = intMaxValue
@@ -55,4 +55,8 @@ func (k Keeper) CalcTakerFeeExactOut(tokenOut sdk.Coin, takerFee osmomath.Dec) (
 
 func (k Keeper) TrackVolume(ctx sdk.Context, poolId uint64, volumeGenerated sdk.Coin) {
 	k.trackVolume(ctx, poolId, volumeGenerated)
+}
+
+func (k Keeper) ChargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
+	return k.chargeTakerFee(ctx, tokenIn, tokenOutDenom, sender, exactIn)
 }

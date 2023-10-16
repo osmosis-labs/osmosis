@@ -167,3 +167,41 @@ func TestParseFieldFromArg(t *testing.T) {
 		})
 	}
 }
+
+func TestParseUint64SliceToString(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []uint64
+		expected string
+	}{
+		{
+			name:     "Test with empty slice",
+			input:    []uint64{},
+			expected: "",
+		},
+		{
+			name:     "Test with single element",
+			input:    []uint64{1},
+			expected: "1",
+		},
+		{
+			name:     "Test with multiple elements",
+			input:    []uint64{1, 2, 3, 4, 5},
+			expected: "1, 2, 3, 4, 5",
+		},
+		{
+			name:     "Test with multiple elements out of order",
+			input:    []uint64{9, 1, 2, 3, 4, 5},
+			expected: "9, 1, 2, 3, 4, 5",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ParseUint64SliceToString(tt.input)
+			if result != tt.expected {
+				t.Errorf("expected %s, got %s", tt.expected, result)
+			}
+		})
+	}
+}

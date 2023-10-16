@@ -15,13 +15,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v19/app/keepers"
-	v17 "github.com/osmosis-labs/osmosis/v19/app/upgrades/v17"
-	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
-	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v20/app/keepers"
+	v17 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v17"
+	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v20/x/twap/types"
 )
 
 type UpgradeTestSuite struct {

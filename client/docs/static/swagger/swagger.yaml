@@ -5063,6 +5063,586 @@ paths:
           type: boolean
       tags:
         - Query
+  /osmosis/incentives/v1beta1/all_groups:
+    get:
+      summary: AllGroups returns all groups
+      operationId: AllGroups
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              groups:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    group_gauge_id:
+                      type: string
+                      format: uint64
+                    internal_gauge_info:
+                      type: object
+                      properties:
+                        total_weight:
+                          type: string
+                        gauge_records:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              gauge_id:
+                                type: string
+                                format: uint64
+                              current_weight:
+                                type: string
+                                description: >-
+                                  CurrentWeight is the current weight of this
+                                  gauge being distributed to for
+
+                                  this epoch. For instance, for volume splitting
+                                  policy, this stores the
+
+                                  volume generated in the last epoch of the
+                                  linked pool.
+                              cumulative_weight:
+                                type: string
+                                description: >-
+                                  CumulativeWeight serves as a snapshot of the
+                                  accumulator being tracked
+
+                                  based on splitting policy. For instance, for
+                                  volume splitting policy, this
+
+                                  stores the cumulative volume for the linked
+                                  pool at time of last update.
+                      description: >-
+                        Note that while both InternalGaugeInfo and
+                        InternalGaugeRecord could
+
+                        technically be replaced by DistrInfo and DistrRecord
+                        from the pool-incentives
+
+                        module, we create separate types here to keep our
+                        abstractions clean and
+
+                        readable (pool-incentives distribution abstractions are
+                        used in a very
+
+                        specific way that does not directly relate to gauge
+                        logic). This also helps
+
+                        us sidestep a refactor to avoid an import cycle.
+                    splitting_policy:
+                      type: string
+                      enum:
+                        - ByVolume
+                      default: ByVolume
+                      title: >-
+                        SplittingPolicy determines the way we want to split
+                        incentives in groupGauges
+                  description: >-
+                    Group is an object that stores a 1:1 mapped gauge ID, a list
+                    of pool gauge
+
+                    info, and a splitting policy. These are grouped into a
+                    single abstraction to
+
+                    allow for distribution of group incentives to internal
+                    gauges according to
+
+                    the specified splitting policy.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /osmosis/incentives/v1beta1/all_groups_gauges:
+    get:
+      summary: AllGroupsGauges returns all group gauges
+      operationId: AllGroupsGauges
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              gauges:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uint64
+                      title: id is the unique ID of a Gauge
+                    is_perpetual:
+                      type: boolean
+                      description: >-
+                        is_perpetual is a flag to show if it's a perpetual or
+                        non-perpetual gauge
+
+                        Non-perpetual gauges distribute their tokens equally per
+                        epoch while the
+
+                        gauge is in the active period. Perpetual gauges
+                        distribute all their tokens
+
+                        at a single time and only distribute their tokens again
+                        once the gauge is
+
+                        refilled, Intended for use with incentives that get
+                        refilled daily.
+                    distribute_to:
+                      title: >-
+                        distribute_to is where the gauge rewards are distributed
+                        to.
+
+                        This is queried via lock duration or by timestamp
+                      type: object
+                      properties:
+                        lock_query_type:
+                          title: >-
+                            LockQueryType is a type of lock query,
+                            ByLockDuration | ByLockTime
+                          type: string
+                          enum:
+                            - ByDuration
+                            - ByTime
+                            - NoLock
+                            - ByGroup
+                          default: ByDuration
+                          description: >-
+                            LockQueryType defines the type of the lock query
+                            that can
+
+                            either be by duration or start time of the lock.
+                        denom:
+                          type: string
+                          title: >-
+                            Denom represents the token denomination we are
+                            looking to lock up
+                        duration:
+                          type: string
+                          description: >-
+                            Duration is used to query locks with longer duration
+                            than the specified
+
+                            duration. Duration field must not be nil when the
+                            lock query type is
+
+                            `ByLockDuration`.
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: >-
+                            Timestamp is used by locks started before the
+                            specified duration.
+
+                            Timestamp field must not be nil when the lock query
+                            type is `ByLockTime`.
+
+                            Querying locks with timestamp is currently not
+                            implemented.
+                      description: >-
+                        QueryCondition is a struct used for querying locks upon
+                        different conditions.
+
+                        Duration field and timestamp fields could be optional,
+                        depending on the
+
+                        LockQueryType.
+                    coins:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          Coin defines a token with a denomination and an
+                          amount.
+
+
+                          NOTE: The amount field is an Int which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+                      title: >-
+                        coins is the total amount of coins that have been in the
+                        gauge
+
+                        Can distribute multiple coin denoms
+                    start_time:
+                      type: string
+                      format: date-time
+                      title: start_time is the distribution start time
+                    num_epochs_paid_over:
+                      type: string
+                      format: uint64
+                      title: >-
+                        num_epochs_paid_over is the number of total epochs
+                        distribution will be
+
+                        completed over
+                    filled_epochs:
+                      type: string
+                      format: uint64
+                      title: >-
+                        filled_epochs is the number of epochs distribution has
+                        been completed on
+
+                        already
+                    distributed_coins:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          Coin defines a token with a denomination and an
+                          amount.
+
+
+                          NOTE: The amount field is an Int which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+                      title: >-
+                        distributed_coins are coins that have been distributed
+                        already
+                  description: >-
+                    Gauge is an object that stores and distributes yields to
+                    recipients who
+
+                    satisfy certain conditions. Currently gauges support
+                    conditions around the
+
+                    duration for which a given denom is locked.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /osmosis/incentives/v1beta1/all_groups_with_gauge:
+    get:
+      summary: AllGroupsWithGauge returns all groups with their group gauge
+      operationId: AllGroupsWithGauge
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              groups_with_gauge:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    group:
+                      type: object
+                      properties:
+                        group_gauge_id:
+                          type: string
+                          format: uint64
+                        internal_gauge_info:
+                          type: object
+                          properties:
+                            total_weight:
+                              type: string
+                            gauge_records:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  gauge_id:
+                                    type: string
+                                    format: uint64
+                                  current_weight:
+                                    type: string
+                                    description: >-
+                                      CurrentWeight is the current weight of
+                                      this gauge being distributed to for
+
+                                      this epoch. For instance, for volume
+                                      splitting policy, this stores the
+
+                                      volume generated in the last epoch of the
+                                      linked pool.
+                                  cumulative_weight:
+                                    type: string
+                                    description: >-
+                                      CumulativeWeight serves as a snapshot of
+                                      the accumulator being tracked
+
+                                      based on splitting policy. For instance,
+                                      for volume splitting policy, this
+
+                                      stores the cumulative volume for the
+                                      linked pool at time of last update.
+                          description: >-
+                            Note that while both InternalGaugeInfo and
+                            InternalGaugeRecord could
+
+                            technically be replaced by DistrInfo and DistrRecord
+                            from the pool-incentives
+
+                            module, we create separate types here to keep our
+                            abstractions clean and
+
+                            readable (pool-incentives distribution abstractions
+                            are used in a very
+
+                            specific way that does not directly relate to gauge
+                            logic). This also helps
+
+                            us sidestep a refactor to avoid an import cycle.
+                        splitting_policy:
+                          type: string
+                          enum:
+                            - ByVolume
+                          default: ByVolume
+                          title: >-
+                            SplittingPolicy determines the way we want to split
+                            incentives in groupGauges
+                      description: >-
+                        Group is an object that stores a 1:1 mapped gauge ID, a
+                        list of pool gauge
+
+                        info, and a splitting policy. These are grouped into a
+                        single abstraction to
+
+                        allow for distribution of group incentives to internal
+                        gauges according to
+
+                        the specified splitting policy.
+                    gauge:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uint64
+                          title: id is the unique ID of a Gauge
+                        is_perpetual:
+                          type: boolean
+                          description: >-
+                            is_perpetual is a flag to show if it's a perpetual
+                            or non-perpetual gauge
+
+                            Non-perpetual gauges distribute their tokens equally
+                            per epoch while the
+
+                            gauge is in the active period. Perpetual gauges
+                            distribute all their tokens
+
+                            at a single time and only distribute their tokens
+                            again once the gauge is
+
+                            refilled, Intended for use with incentives that get
+                            refilled daily.
+                        distribute_to:
+                          title: >-
+                            distribute_to is where the gauge rewards are
+                            distributed to.
+
+                            This is queried via lock duration or by timestamp
+                          type: object
+                          properties:
+                            lock_query_type:
+                              title: >-
+                                LockQueryType is a type of lock query,
+                                ByLockDuration | ByLockTime
+                              type: string
+                              enum:
+                                - ByDuration
+                                - ByTime
+                                - NoLock
+                                - ByGroup
+                              default: ByDuration
+                              description: >-
+                                LockQueryType defines the type of the lock query
+                                that can
+
+                                either be by duration or start time of the lock.
+                            denom:
+                              type: string
+                              title: >-
+                                Denom represents the token denomination we are
+                                looking to lock up
+                            duration:
+                              type: string
+                              description: >-
+                                Duration is used to query locks with longer
+                                duration than the specified
+
+                                duration. Duration field must not be nil when
+                                the lock query type is
+
+                                `ByLockDuration`.
+                            timestamp:
+                              type: string
+                              format: date-time
+                              description: >-
+                                Timestamp is used by locks started before the
+                                specified duration.
+
+                                Timestamp field must not be nil when the lock
+                                query type is `ByLockTime`.
+
+                                Querying locks with timestamp is currently not
+                                implemented.
+                          description: >-
+                            QueryCondition is a struct used for querying locks
+                            upon different conditions.
+
+                            Duration field and timestamp fields could be
+                            optional, depending on the
+
+                            LockQueryType.
+                        coins:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
+
+
+                              NOTE: The amount field is an Int which implements
+                              the custom method
+
+                              signatures required by gogoproto.
+                          title: >-
+                            coins is the total amount of coins that have been in
+                            the gauge
+
+                            Can distribute multiple coin denoms
+                        start_time:
+                          type: string
+                          format: date-time
+                          title: start_time is the distribution start time
+                        num_epochs_paid_over:
+                          type: string
+                          format: uint64
+                          title: >-
+                            num_epochs_paid_over is the number of total epochs
+                            distribution will be
+
+                            completed over
+                        filled_epochs:
+                          type: string
+                          format: uint64
+                          title: >-
+                            filled_epochs is the number of epochs distribution
+                            has been completed on
+
+                            already
+                        distributed_coins:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
+
+
+                              NOTE: The amount field is an Int which implements
+                              the custom method
+
+                              signatures required by gogoproto.
+                          title: >-
+                            distributed_coins are coins that have been
+                            distributed already
+                      description: >-
+                        Gauge is an object that stores and distributes yields to
+                        recipients who
+
+                        satisfy certain conditions. Currently gauges support
+                        conditions around the
+
+                        duration for which a given denom is locked.
+                  description: >-
+                    GroupsWithGauge is a helper struct that stores a group and
+                    its
+
+                    associated gauge.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
   /osmosis/incentives/v1beta1/gauge_by_id/{id}:
     get:
       summary: GaugeByID returns gauges by their respective ID
@@ -5533,6 +6113,123 @@ paths:
           in: query
           required: false
           type: boolean
+      tags:
+        - Query
+  /osmosis/incentives/v1beta1/group_by_group_gauge_id/{id}:
+    get:
+      summary: GroupByGroupGaugeID returns a group given its group gauge ID
+      operationId: GroupByGroupGaugeID
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              group:
+                type: object
+                properties:
+                  group_gauge_id:
+                    type: string
+                    format: uint64
+                  internal_gauge_info:
+                    type: object
+                    properties:
+                      total_weight:
+                        type: string
+                      gauge_records:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            gauge_id:
+                              type: string
+                              format: uint64
+                            current_weight:
+                              type: string
+                              description: >-
+                                CurrentWeight is the current weight of this
+                                gauge being distributed to for
+
+                                this epoch. For instance, for volume splitting
+                                policy, this stores the
+
+                                volume generated in the last epoch of the linked
+                                pool.
+                            cumulative_weight:
+                              type: string
+                              description: >-
+                                CumulativeWeight serves as a snapshot of the
+                                accumulator being tracked
+
+                                based on splitting policy. For instance, for
+                                volume splitting policy, this
+
+                                stores the cumulative volume for the linked pool
+                                at time of last update.
+                    description: >-
+                      Note that while both InternalGaugeInfo and
+                      InternalGaugeRecord could
+
+                      technically be replaced by DistrInfo and DistrRecord from
+                      the pool-incentives
+
+                      module, we create separate types here to keep our
+                      abstractions clean and
+
+                      readable (pool-incentives distribution abstractions are
+                      used in a very
+
+                      specific way that does not directly relate to gauge
+                      logic). This also helps
+
+                      us sidestep a refactor to avoid an import cycle.
+                  splitting_policy:
+                    type: string
+                    enum:
+                      - ByVolume
+                    default: ByVolume
+                    title: >-
+                      SplittingPolicy determines the way we want to split
+                      incentives in groupGauges
+                description: >-
+                  Group is an object that stores a 1:1 mapped gauge ID, a list
+                  of pool gauge
+
+                  info, and a splitting policy. These are grouped into a single
+                  abstraction to
+
+                  allow for distribution of group incentives to internal gauges
+                  according to
+
+                  the specified splitting policy.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
       tags:
         - Query
   /osmosis/incentives/v1beta1/lockable_durations:
@@ -36204,6 +36901,377 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
+  osmosis.incentives.Group:
+    type: object
+    properties:
+      group_gauge_id:
+        type: string
+        format: uint64
+      internal_gauge_info:
+        type: object
+        properties:
+          total_weight:
+            type: string
+          gauge_records:
+            type: array
+            items:
+              type: object
+              properties:
+                gauge_id:
+                  type: string
+                  format: uint64
+                current_weight:
+                  type: string
+                  description: >-
+                    CurrentWeight is the current weight of this gauge being
+                    distributed to for
+
+                    this epoch. For instance, for volume splitting policy, this
+                    stores the
+
+                    volume generated in the last epoch of the linked pool.
+                cumulative_weight:
+                  type: string
+                  description: >-
+                    CumulativeWeight serves as a snapshot of the accumulator
+                    being tracked
+
+                    based on splitting policy. For instance, for volume
+                    splitting policy, this
+
+                    stores the cumulative volume for the linked pool at time of
+                    last update.
+        description: >-
+          Note that while both InternalGaugeInfo and InternalGaugeRecord could
+
+          technically be replaced by DistrInfo and DistrRecord from the
+          pool-incentives
+
+          module, we create separate types here to keep our abstractions clean
+          and
+
+          readable (pool-incentives distribution abstractions are used in a very
+
+          specific way that does not directly relate to gauge logic). This also
+          helps
+
+          us sidestep a refactor to avoid an import cycle.
+      splitting_policy:
+        type: string
+        enum:
+          - ByVolume
+        default: ByVolume
+        title: >-
+          SplittingPolicy determines the way we want to split incentives in
+          groupGauges
+    description: >-
+      Group is an object that stores a 1:1 mapped gauge ID, a list of pool gauge
+
+      info, and a splitting policy. These are grouped into a single abstraction
+      to
+
+      allow for distribution of group incentives to internal gauges according to
+
+      the specified splitting policy.
+  osmosis.incentives.GroupsWithGauge:
+    type: object
+    properties:
+      group:
+        type: object
+        properties:
+          group_gauge_id:
+            type: string
+            format: uint64
+          internal_gauge_info:
+            type: object
+            properties:
+              total_weight:
+                type: string
+              gauge_records:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    gauge_id:
+                      type: string
+                      format: uint64
+                    current_weight:
+                      type: string
+                      description: >-
+                        CurrentWeight is the current weight of this gauge being
+                        distributed to for
+
+                        this epoch. For instance, for volume splitting policy,
+                        this stores the
+
+                        volume generated in the last epoch of the linked pool.
+                    cumulative_weight:
+                      type: string
+                      description: >-
+                        CumulativeWeight serves as a snapshot of the accumulator
+                        being tracked
+
+                        based on splitting policy. For instance, for volume
+                        splitting policy, this
+
+                        stores the cumulative volume for the linked pool at time
+                        of last update.
+            description: >-
+              Note that while both InternalGaugeInfo and InternalGaugeRecord
+              could
+
+              technically be replaced by DistrInfo and DistrRecord from the
+              pool-incentives
+
+              module, we create separate types here to keep our abstractions
+              clean and
+
+              readable (pool-incentives distribution abstractions are used in a
+              very
+
+              specific way that does not directly relate to gauge logic). This
+              also helps
+
+              us sidestep a refactor to avoid an import cycle.
+          splitting_policy:
+            type: string
+            enum:
+              - ByVolume
+            default: ByVolume
+            title: >-
+              SplittingPolicy determines the way we want to split incentives in
+              groupGauges
+        description: >-
+          Group is an object that stores a 1:1 mapped gauge ID, a list of pool
+          gauge
+
+          info, and a splitting policy. These are grouped into a single
+          abstraction to
+
+          allow for distribution of group incentives to internal gauges
+          according to
+
+          the specified splitting policy.
+      gauge:
+        type: object
+        properties:
+          id:
+            type: string
+            format: uint64
+            title: id is the unique ID of a Gauge
+          is_perpetual:
+            type: boolean
+            description: >-
+              is_perpetual is a flag to show if it's a perpetual or
+              non-perpetual gauge
+
+              Non-perpetual gauges distribute their tokens equally per epoch
+              while the
+
+              gauge is in the active period. Perpetual gauges distribute all
+              their tokens
+
+              at a single time and only distribute their tokens again once the
+              gauge is
+
+              refilled, Intended for use with incentives that get refilled
+              daily.
+          distribute_to:
+            title: |-
+              distribute_to is where the gauge rewards are distributed to.
+              This is queried via lock duration or by timestamp
+            type: object
+            properties:
+              lock_query_type:
+                title: >-
+                  LockQueryType is a type of lock query, ByLockDuration |
+                  ByLockTime
+                type: string
+                enum:
+                  - ByDuration
+                  - ByTime
+                  - NoLock
+                  - ByGroup
+                default: ByDuration
+                description: |-
+                  LockQueryType defines the type of the lock query that can
+                  either be by duration or start time of the lock.
+              denom:
+                type: string
+                title: >-
+                  Denom represents the token denomination we are looking to lock
+                  up
+              duration:
+                type: string
+                description: >-
+                  Duration is used to query locks with longer duration than the
+                  specified
+
+                  duration. Duration field must not be nil when the lock query
+                  type is
+
+                  `ByLockDuration`.
+              timestamp:
+                type: string
+                format: date-time
+                description: >-
+                  Timestamp is used by locks started before the specified
+                  duration.
+
+                  Timestamp field must not be nil when the lock query type is
+                  `ByLockTime`.
+
+                  Querying locks with timestamp is currently not implemented.
+            description: >-
+              QueryCondition is a struct used for querying locks upon different
+              conditions.
+
+              Duration field and timestamp fields could be optional, depending
+              on the
+
+              LockQueryType.
+          coins:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            title: |-
+              coins is the total amount of coins that have been in the gauge
+              Can distribute multiple coin denoms
+          start_time:
+            type: string
+            format: date-time
+            title: start_time is the distribution start time
+          num_epochs_paid_over:
+            type: string
+            format: uint64
+            title: >-
+              num_epochs_paid_over is the number of total epochs distribution
+              will be
+
+              completed over
+          filled_epochs:
+            type: string
+            format: uint64
+            title: >-
+              filled_epochs is the number of epochs distribution has been
+              completed on
+
+              already
+          distributed_coins:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            title: distributed_coins are coins that have been distributed already
+        description: >-
+          Gauge is an object that stores and distributes yields to recipients
+          who
+
+          satisfy certain conditions. Currently gauges support conditions around
+          the
+
+          duration for which a given denom is locked.
+    description: |-
+      GroupsWithGauge is a helper struct that stores a group and its
+      associated gauge.
+  osmosis.incentives.InternalGaugeInfo:
+    type: object
+    properties:
+      total_weight:
+        type: string
+      gauge_records:
+        type: array
+        items:
+          type: object
+          properties:
+            gauge_id:
+              type: string
+              format: uint64
+            current_weight:
+              type: string
+              description: >-
+                CurrentWeight is the current weight of this gauge being
+                distributed to for
+
+                this epoch. For instance, for volume splitting policy, this
+                stores the
+
+                volume generated in the last epoch of the linked pool.
+            cumulative_weight:
+              type: string
+              description: >-
+                CumulativeWeight serves as a snapshot of the accumulator being
+                tracked
+
+                based on splitting policy. For instance, for volume splitting
+                policy, this
+
+                stores the cumulative volume for the linked pool at time of last
+                update.
+    description: >-
+      Note that while both InternalGaugeInfo and InternalGaugeRecord could
+
+      technically be replaced by DistrInfo and DistrRecord from the
+      pool-incentives
+
+      module, we create separate types here to keep our abstractions clean and
+
+      readable (pool-incentives distribution abstractions are used in a very
+
+      specific way that does not directly relate to gauge logic). This also
+      helps
+
+      us sidestep a refactor to avoid an import cycle.
+  osmosis.incentives.InternalGaugeRecord:
+    type: object
+    properties:
+      gauge_id:
+        type: string
+        format: uint64
+      current_weight:
+        type: string
+        description: >-
+          CurrentWeight is the current weight of this gauge being distributed to
+          for
+
+          this epoch. For instance, for volume splitting policy, this stores the
+
+          volume generated in the last epoch of the linked pool.
+      cumulative_weight:
+        type: string
+        description: >-
+          CumulativeWeight serves as a snapshot of the accumulator being tracked
+
+          based on splitting policy. For instance, for volume splitting policy,
+          this
+
+          stores the cumulative volume for the linked pool at time of last
+          update.
   osmosis.incentives.ModuleToDistributeCoinsResponse:
     type: object
     properties:
@@ -36222,6 +37290,554 @@ definitions:
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
         title: Coins that have yet to be distributed
+  osmosis.incentives.QueryAllGroupsGaugesResponse:
+    type: object
+    properties:
+      gauges:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uint64
+              title: id is the unique ID of a Gauge
+            is_perpetual:
+              type: boolean
+              description: >-
+                is_perpetual is a flag to show if it's a perpetual or
+                non-perpetual gauge
+
+                Non-perpetual gauges distribute their tokens equally per epoch
+                while the
+
+                gauge is in the active period. Perpetual gauges distribute all
+                their tokens
+
+                at a single time and only distribute their tokens again once the
+                gauge is
+
+                refilled, Intended for use with incentives that get refilled
+                daily.
+            distribute_to:
+              title: |-
+                distribute_to is where the gauge rewards are distributed to.
+                This is queried via lock duration or by timestamp
+              type: object
+              properties:
+                lock_query_type:
+                  title: >-
+                    LockQueryType is a type of lock query, ByLockDuration |
+                    ByLockTime
+                  type: string
+                  enum:
+                    - ByDuration
+                    - ByTime
+                    - NoLock
+                    - ByGroup
+                  default: ByDuration
+                  description: |-
+                    LockQueryType defines the type of the lock query that can
+                    either be by duration or start time of the lock.
+                denom:
+                  type: string
+                  title: >-
+                    Denom represents the token denomination we are looking to
+                    lock up
+                duration:
+                  type: string
+                  description: >-
+                    Duration is used to query locks with longer duration than
+                    the specified
+
+                    duration. Duration field must not be nil when the lock query
+                    type is
+
+                    `ByLockDuration`.
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: >-
+                    Timestamp is used by locks started before the specified
+                    duration.
+
+                    Timestamp field must not be nil when the lock query type is
+                    `ByLockTime`.
+
+                    Querying locks with timestamp is currently not implemented.
+              description: >-
+                QueryCondition is a struct used for querying locks upon
+                different conditions.
+
+                Duration field and timestamp fields could be optional, depending
+                on the
+
+                LockQueryType.
+            coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+              title: |-
+                coins is the total amount of coins that have been in the gauge
+                Can distribute multiple coin denoms
+            start_time:
+              type: string
+              format: date-time
+              title: start_time is the distribution start time
+            num_epochs_paid_over:
+              type: string
+              format: uint64
+              title: >-
+                num_epochs_paid_over is the number of total epochs distribution
+                will be
+
+                completed over
+            filled_epochs:
+              type: string
+              format: uint64
+              title: >-
+                filled_epochs is the number of epochs distribution has been
+                completed on
+
+                already
+            distributed_coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+              title: distributed_coins are coins that have been distributed already
+          description: >-
+            Gauge is an object that stores and distributes yields to recipients
+            who
+
+            satisfy certain conditions. Currently gauges support conditions
+            around the
+
+            duration for which a given denom is locked.
+  osmosis.incentives.QueryAllGroupsResponse:
+    type: object
+    properties:
+      groups:
+        type: array
+        items:
+          type: object
+          properties:
+            group_gauge_id:
+              type: string
+              format: uint64
+            internal_gauge_info:
+              type: object
+              properties:
+                total_weight:
+                  type: string
+                gauge_records:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      gauge_id:
+                        type: string
+                        format: uint64
+                      current_weight:
+                        type: string
+                        description: >-
+                          CurrentWeight is the current weight of this gauge
+                          being distributed to for
+
+                          this epoch. For instance, for volume splitting policy,
+                          this stores the
+
+                          volume generated in the last epoch of the linked pool.
+                      cumulative_weight:
+                        type: string
+                        description: >-
+                          CumulativeWeight serves as a snapshot of the
+                          accumulator being tracked
+
+                          based on splitting policy. For instance, for volume
+                          splitting policy, this
+
+                          stores the cumulative volume for the linked pool at
+                          time of last update.
+              description: >-
+                Note that while both InternalGaugeInfo and InternalGaugeRecord
+                could
+
+                technically be replaced by DistrInfo and DistrRecord from the
+                pool-incentives
+
+                module, we create separate types here to keep our abstractions
+                clean and
+
+                readable (pool-incentives distribution abstractions are used in
+                a very
+
+                specific way that does not directly relate to gauge logic). This
+                also helps
+
+                us sidestep a refactor to avoid an import cycle.
+            splitting_policy:
+              type: string
+              enum:
+                - ByVolume
+              default: ByVolume
+              title: >-
+                SplittingPolicy determines the way we want to split incentives
+                in groupGauges
+          description: >-
+            Group is an object that stores a 1:1 mapped gauge ID, a list of pool
+            gauge
+
+            info, and a splitting policy. These are grouped into a single
+            abstraction to
+
+            allow for distribution of group incentives to internal gauges
+            according to
+
+            the specified splitting policy.
+  osmosis.incentives.QueryAllGroupsWithGaugeResponse:
+    type: object
+    properties:
+      groups_with_gauge:
+        type: array
+        items:
+          type: object
+          properties:
+            group:
+              type: object
+              properties:
+                group_gauge_id:
+                  type: string
+                  format: uint64
+                internal_gauge_info:
+                  type: object
+                  properties:
+                    total_weight:
+                      type: string
+                    gauge_records:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          gauge_id:
+                            type: string
+                            format: uint64
+                          current_weight:
+                            type: string
+                            description: >-
+                              CurrentWeight is the current weight of this gauge
+                              being distributed to for
+
+                              this epoch. For instance, for volume splitting
+                              policy, this stores the
+
+                              volume generated in the last epoch of the linked
+                              pool.
+                          cumulative_weight:
+                            type: string
+                            description: >-
+                              CumulativeWeight serves as a snapshot of the
+                              accumulator being tracked
+
+                              based on splitting policy. For instance, for
+                              volume splitting policy, this
+
+                              stores the cumulative volume for the linked pool
+                              at time of last update.
+                  description: >-
+                    Note that while both InternalGaugeInfo and
+                    InternalGaugeRecord could
+
+                    technically be replaced by DistrInfo and DistrRecord from
+                    the pool-incentives
+
+                    module, we create separate types here to keep our
+                    abstractions clean and
+
+                    readable (pool-incentives distribution abstractions are used
+                    in a very
+
+                    specific way that does not directly relate to gauge logic).
+                    This also helps
+
+                    us sidestep a refactor to avoid an import cycle.
+                splitting_policy:
+                  type: string
+                  enum:
+                    - ByVolume
+                  default: ByVolume
+                  title: >-
+                    SplittingPolicy determines the way we want to split
+                    incentives in groupGauges
+              description: >-
+                Group is an object that stores a 1:1 mapped gauge ID, a list of
+                pool gauge
+
+                info, and a splitting policy. These are grouped into a single
+                abstraction to
+
+                allow for distribution of group incentives to internal gauges
+                according to
+
+                the specified splitting policy.
+            gauge:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uint64
+                  title: id is the unique ID of a Gauge
+                is_perpetual:
+                  type: boolean
+                  description: >-
+                    is_perpetual is a flag to show if it's a perpetual or
+                    non-perpetual gauge
+
+                    Non-perpetual gauges distribute their tokens equally per
+                    epoch while the
+
+                    gauge is in the active period. Perpetual gauges distribute
+                    all their tokens
+
+                    at a single time and only distribute their tokens again once
+                    the gauge is
+
+                    refilled, Intended for use with incentives that get refilled
+                    daily.
+                distribute_to:
+                  title: |-
+                    distribute_to is where the gauge rewards are distributed to.
+                    This is queried via lock duration or by timestamp
+                  type: object
+                  properties:
+                    lock_query_type:
+                      title: >-
+                        LockQueryType is a type of lock query, ByLockDuration |
+                        ByLockTime
+                      type: string
+                      enum:
+                        - ByDuration
+                        - ByTime
+                        - NoLock
+                        - ByGroup
+                      default: ByDuration
+                      description: >-
+                        LockQueryType defines the type of the lock query that
+                        can
+
+                        either be by duration or start time of the lock.
+                    denom:
+                      type: string
+                      title: >-
+                        Denom represents the token denomination we are looking
+                        to lock up
+                    duration:
+                      type: string
+                      description: >-
+                        Duration is used to query locks with longer duration
+                        than the specified
+
+                        duration. Duration field must not be nil when the lock
+                        query type is
+
+                        `ByLockDuration`.
+                    timestamp:
+                      type: string
+                      format: date-time
+                      description: >-
+                        Timestamp is used by locks started before the specified
+                        duration.
+
+                        Timestamp field must not be nil when the lock query type
+                        is `ByLockTime`.
+
+                        Querying locks with timestamp is currently not
+                        implemented.
+                  description: >-
+                    QueryCondition is a struct used for querying locks upon
+                    different conditions.
+
+                    Duration field and timestamp fields could be optional,
+                    depending on the
+
+                    LockQueryType.
+                coins:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                  title: >-
+                    coins is the total amount of coins that have been in the
+                    gauge
+
+                    Can distribute multiple coin denoms
+                start_time:
+                  type: string
+                  format: date-time
+                  title: start_time is the distribution start time
+                num_epochs_paid_over:
+                  type: string
+                  format: uint64
+                  title: >-
+                    num_epochs_paid_over is the number of total epochs
+                    distribution will be
+
+                    completed over
+                filled_epochs:
+                  type: string
+                  format: uint64
+                  title: >-
+                    filled_epochs is the number of epochs distribution has been
+                    completed on
+
+                    already
+                distributed_coins:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                  title: >-
+                    distributed_coins are coins that have been distributed
+                    already
+              description: >-
+                Gauge is an object that stores and distributes yields to
+                recipients who
+
+                satisfy certain conditions. Currently gauges support conditions
+                around the
+
+                duration for which a given denom is locked.
+          description: |-
+            GroupsWithGauge is a helper struct that stores a group and its
+            associated gauge.
+  osmosis.incentives.QueryGroupByGroupGaugeIDResponse:
+    type: object
+    properties:
+      group:
+        type: object
+        properties:
+          group_gauge_id:
+            type: string
+            format: uint64
+          internal_gauge_info:
+            type: object
+            properties:
+              total_weight:
+                type: string
+              gauge_records:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    gauge_id:
+                      type: string
+                      format: uint64
+                    current_weight:
+                      type: string
+                      description: >-
+                        CurrentWeight is the current weight of this gauge being
+                        distributed to for
+
+                        this epoch. For instance, for volume splitting policy,
+                        this stores the
+
+                        volume generated in the last epoch of the linked pool.
+                    cumulative_weight:
+                      type: string
+                      description: >-
+                        CumulativeWeight serves as a snapshot of the accumulator
+                        being tracked
+
+                        based on splitting policy. For instance, for volume
+                        splitting policy, this
+
+                        stores the cumulative volume for the linked pool at time
+                        of last update.
+            description: >-
+              Note that while both InternalGaugeInfo and InternalGaugeRecord
+              could
+
+              technically be replaced by DistrInfo and DistrRecord from the
+              pool-incentives
+
+              module, we create separate types here to keep our abstractions
+              clean and
+
+              readable (pool-incentives distribution abstractions are used in a
+              very
+
+              specific way that does not directly relate to gauge logic). This
+              also helps
+
+              us sidestep a refactor to avoid an import cycle.
+          splitting_policy:
+            type: string
+            enum:
+              - ByVolume
+            default: ByVolume
+            title: >-
+              SplittingPolicy determines the way we want to split incentives in
+              groupGauges
+        description: >-
+          Group is an object that stores a 1:1 mapped gauge ID, a list of pool
+          gauge
+
+          info, and a splitting policy. These are grouped into a single
+          abstraction to
+
+          allow for distribution of group incentives to internal gauges
+          according to
+
+          the specified splitting policy.
   osmosis.incentives.QueryLockableDurationsResponse:
     type: object
     properties:
@@ -36252,6 +37868,14 @@ definitions:
         title: |-
           Estimated coin rewards that will be recieved at provided address
           from specified locks between current time and end epoch
+  osmosis.incentives.SplittingPolicy:
+    type: string
+    enum:
+      - ByVolume
+    default: ByVolume
+    title: >-
+      SplittingPolicy determines the way we want to split incentives in
+      groupGauges
   osmosis.incentives.UpcomingGaugesPerDenomResponse:
     type: object
     properties:

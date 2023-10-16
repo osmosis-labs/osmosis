@@ -7,10 +7,10 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryprotov2"
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryprotov2"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 // This file should evolve to being code gen'd, off of `proto/poolmanager/v1beta/query.yml`
@@ -295,6 +295,18 @@ func (q Querier) TotalVolumeForPool(ctx sdk.Context, req queryproto.TotalVolumeF
 
 	return &queryproto.TotalVolumeForPoolResponse{
 		Volume: totalVolume,
+	}, nil
+}
+
+// TradingPairTakerFee returns the taker fee for the given trading pair
+func (q Querier) TradingPairTakerFee(ctx sdk.Context, req queryproto.TradingPairTakerFeeRequest) (*queryproto.TradingPairTakerFeeResponse, error) {
+	tradingPairTakerFee, err := q.K.GetTradingPairTakerFee(ctx, req.Denom_0, req.Denom_1)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryproto.TradingPairTakerFeeResponse{
+		TakerFee: tradingPairTakerFee,
 	}, nil
 }
 

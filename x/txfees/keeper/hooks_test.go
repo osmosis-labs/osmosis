@@ -8,10 +8,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"

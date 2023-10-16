@@ -15,21 +15,21 @@ import (
 
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	gammv2types "github.com/osmosis-labs/osmosis/v19/x/gamm/v2types"
+	gammv2types "github.com/osmosis-labs/osmosis/v20/x/gamm/v2types"
 
-	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/client/queryproto"
-	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/client/queryproto"
-	downtimequerytypes "github.com/osmosis-labs/osmosis/v19/x/downtime-detector/client/queryproto"
-	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v19/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v19/x/tokenfactory/types"
-	twapquerytypes "github.com/osmosis-labs/osmosis/v19/x/twap/client/queryproto"
-	txfeestypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
+	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/client/queryproto"
+	downtimequerytypes "github.com/osmosis-labs/osmosis/v20/x/downtime-detector/client/queryproto"
+	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v20/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v20/x/tokenfactory/types"
+	twapquerytypes "github.com/osmosis-labs/osmosis/v20/x/twap/client/queryproto"
+	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -146,6 +146,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/SpotPrice", &poolmanagerqueryproto.SpotPriceResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/TotalPoolLiquidity", &poolmanagerqueryproto.TotalPoolLiquidityResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/Params", &poolmanagerqueryproto.ParamsResponse{})
+	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/TradingPairTakerFee", &poolmanagerqueryproto.TradingPairTakerFeeResponse{})
 
 	// txfees
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/FeeTokens", &txfeestypes.QueryFeeTokensResponse{})

@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	clmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 const (

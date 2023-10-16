@@ -14,10 +14,10 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
 
-	superfluidtypes "github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
 )
 
 const (

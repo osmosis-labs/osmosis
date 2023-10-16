@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v20/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 )
 
 func (s *KeeperTestSuite) TestFeeDecorator() {

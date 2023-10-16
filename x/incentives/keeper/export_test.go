@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
 )
 
 var ByGroupQueryCondition = byGroupQueryCondition
@@ -92,4 +92,8 @@ func (k Keeper) ChargeGroupCreationFeeIfNotWhitelisted(ctx sdk.Context, sender s
 
 func (k Keeper) CreateGroupInternal(ctx sdk.Context, coins sdk.Coins, numEpochPaidOver uint64, owner sdk.AccAddress, poolIDs []uint64) (types.Group, error) {
 	return k.createGroup(ctx, coins, numEpochPaidOver, owner, poolIDs)
+}
+
+func (k Keeper) CalculateGroupWeights(ctx sdk.Context, group types.Group) (types.Group, error) {
+	return k.calculateGroupWeights(ctx, group)
 }

@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
-	"github.com/osmosis-labs/osmosis/v19/app"
+	"github.com/osmosis-labs/osmosis/v20/app"
 )
 
 const SimAppChainID = "simulation-app"

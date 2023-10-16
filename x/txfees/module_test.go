@@ -7,7 +7,7 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
-	simapp "github.com/osmosis-labs/osmosis/v19/app"
+	simapp "github.com/osmosis-labs/osmosis/v20/app"
 )
 
 func TestSetBaseDenomOnInitBlock(t *testing.T) {

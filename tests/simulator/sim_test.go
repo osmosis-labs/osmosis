@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosim "github.com/osmosis-labs/osmosis/v19/simulation/executor"
-	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes/simlogger"
-	txfeetypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
+	osmosim "github.com/osmosis-labs/osmosis/v20/simulation/executor"
+	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes/simlogger"
+	txfeetypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 )
 
 const SimAppChainID = "simulation-app"

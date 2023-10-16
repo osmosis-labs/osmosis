@@ -8,8 +8,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/x/txfees/keeper/txfee_filters"
-	"github.com/osmosis-labs/osmosis/v19/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v20/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )

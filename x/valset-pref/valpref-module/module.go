@@ -16,13 +16,13 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v19/simulation/simtypes"
-	keeper "github.com/osmosis-labs/osmosis/v19/x/valset-pref"
-	validatorprefclient "github.com/osmosis-labs/osmosis/v19/x/valset-pref/client"
-	valsetprefcli "github.com/osmosis-labs/osmosis/v19/x/valset-pref/client/cli"
-	"github.com/osmosis-labs/osmosis/v19/x/valset-pref/client/grpc"
-	"github.com/osmosis-labs/osmosis/v19/x/valset-pref/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v19/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
+	keeper "github.com/osmosis-labs/osmosis/v20/x/valset-pref"
+	validatorprefclient "github.com/osmosis-labs/osmosis/v20/x/valset-pref/client"
+	valsetprefcli "github.com/osmosis-labs/osmosis/v20/x/valset-pref/client/cli"
+	"github.com/osmosis-labs/osmosis/v20/x/valset-pref/client/grpc"
+	"github.com/osmosis-labs/osmosis/v20/x/valset-pref/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v20/x/valset-pref/types"
 )
 
 var (
