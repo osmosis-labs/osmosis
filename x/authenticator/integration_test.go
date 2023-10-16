@@ -454,9 +454,6 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorIntegration() {
 	anyOf := authenticator.NewAnyOfAuthenticator(s.app.AuthenticatorManager)
 	allOf := authenticator.NewAllOfAuthenticator(s.app.AuthenticatorManager)
 
-	s.app.AuthenticatorManager.RegisterAuthenticator(anyOf)
-	s.app.AuthenticatorManager.RegisterAuthenticator(allOf)
-
 	// construct InitializationData for each SigVerificationAuthenticator
 	initDataPrivKey0 := authenticator.InitializationData{
 		AuthenticatorType: "SignatureVerificationAuthenticator",
