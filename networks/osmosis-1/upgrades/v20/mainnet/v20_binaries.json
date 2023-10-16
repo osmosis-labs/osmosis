@@ -1,0 +1,6 @@
+{
+    "binaries": {
+        "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/TODO/osmosisd-TODO-linux-amd64?checksum=sha256:TODO",
+        "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/TODO/osmosisd-TODO-linux-arm64?checksum=sha256:TODO"
+    }
+}
