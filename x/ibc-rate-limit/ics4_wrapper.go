@@ -70,8 +70,9 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 	// This is silly as it means we cannot filter packets based on destination (the sequence could be obtained by calling channel.SendPacket() before checking the rate limits)
 	// I think this works with the current contracts as destination is not checked for sends, but would need to double check to be 100% sure.
 	// Should we modify what the contracts expect so that there's no risk of them trying to rely on the missing data? Alt. just document this
+	// UNFORKINGTODO: I am setting the sequence to 0 so it can compile, but note that this needs to be addressed.
 	fullPacket := channeltypes.Packet{
-		Sequence:           -1,
+		Sequence:           0,
 		SourcePort:         sourcePort,
 		SourceChannel:      sourceChannel,
 		DestinationPort:    "omitted",
