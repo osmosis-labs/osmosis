@@ -26,5 +26,9 @@
   "[proto3]": {
     "editor.defaultFormatter": "xaver.clang-format"
   },
-  "clang-format.style": "{BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 120, AlignConsecutiveAssignments: true, AlignConsecutiveDeclarations: true, SpacesInSquareBrackets: true}"
+  "clang-format.style": "{BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 120, AlignConsecutiveAssignments: true, AlignConsecutiveDeclarations: true, SpacesInSquareBrackets: true}",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.autopep8"
+  },
+  "python.formatting.provider": "none"
 }
