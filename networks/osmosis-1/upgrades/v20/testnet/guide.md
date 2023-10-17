@@ -2,9 +2,9 @@
 
 ## Overview
 
-- **v20 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/TODO)
-- **v20 Upgrade Block Height**: `TODO`
-- **v20 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/TODO)
+- **v20 Proposal**: [Proposal Page](https://testnet.mintscan.io/osmosis-testnet/proposals/113)
+- **v20 Upgrade Block Height**: `3197200`
+- **v20 Upgrade Countdown**: [Block Countdown](https://testnet.mintscan.io/osmosis-testnet/blocks/3197200)
 
 ## Hardware Requirements
 
@@ -82,12 +82,12 @@ source ~/.profile
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v20/bin
 cd $HOME/osmosis
 git pull
-git checkout v20.0.0-rc0
+git checkout v20.0.0-rc1-testnet
 make build
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v20/bin
 ```
 
-At the designated block height, Cosmovisor will automatically upgrade to version v20.0.0-rc0.
+At the designated block height, Cosmovisor will automatically upgrade to version v20.0.0-rc1-testnet.
 
 ---
 
@@ -95,14 +95,14 @@ At the designated block height, Cosmovisor will automatically upgrade to version
 
 Follow these steps if you opt for a manual upgrade:
 
-1. Monitor Osmosis until it reaches the specified upgrade block height: TODO.
+1. Monitor Osmosis until it reaches the specified upgrade block height: 3197200.
 2. Observe for a panic message followed by continuous peer logs, then halt the daemon.
 3. Perform these steps:
 
 ```sh
 cd $HOME/osmosis
 git pull
-git checkout v20.0.0-rc0
+git checkout v20.0.0-rc1-testnet
 make install
 ```
 
