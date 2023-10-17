@@ -519,7 +519,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	govRouter := govtypesv1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypesv1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*appKeepers.ParamsKeeper)).
-		// UNFORKINGTODO OQ: Figure out what we do with community pool spend prop
+		// UNFORKINGTODO C: I think it got depricated in favor of MsgCommunityPoolSpend, but need to make sure this is okay to remove.
 		//AddRoute(distrtypes.RouterKey, distribution.NewCommunityPoolSpendProposalHandler(*appKeepers.DistrKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(appKeepers.UpgradeKeeper)).

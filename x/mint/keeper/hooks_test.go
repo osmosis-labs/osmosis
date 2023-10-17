@@ -63,10 +63,9 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 				Weight:  osmomath.NewDecWithPrec(217, 3),
 			},
 		}
-		maxArithmeticTolerance = osmomath.NewDec(5)
-		// UNFORKINGTODO: Uncomment when supply offset is re-implemented
-		// expectedSupplyWithOffset = osmomath.NewDec(0)
-		expectedSupply = osmomath.NewDec(keeper.DeveloperVestingAmount)
+		maxArithmeticTolerance   = osmomath.NewDec(5)
+		expectedSupplyWithOffset = osmomath.NewDec(0)
+		expectedSupply           = osmomath.NewDec(keeper.DeveloperVestingAmount)
 	)
 
 	s.assertAddressWeightsAddUpToOne(testWeightedAddresses)
@@ -414,8 +413,7 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 			osmoassert.DecApproxEq(s.T(), expectedSupply.Add(tc.expectedDistribution).Sub(expectedDevRewards), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.ToLegacyDec(), maxArithmeticTolerance)
 
 			// Validate supply with offset.
-			// UNFORKINGTODO: Uncomment when supply offset is re-implemented
-			//osmoassert.DecApproxEq(s.T(), expectedSupplyWithOffset.Add(tc.expectedDistribution), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToLegacyDec(), maxArithmeticTolerance)
+			osmoassert.DecApproxEq(s.T(), expectedSupplyWithOffset.Add(tc.expectedDistribution), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToLegacyDec(), maxArithmeticTolerance)
 
 			// Validate epoch provisions.
 			s.Require().Equal(tc.expectedLastReductionEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))

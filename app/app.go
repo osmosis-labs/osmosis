@@ -427,7 +427,7 @@ func (app *OsmosisApp) ModuleManager() module.Manager {
 // API server.
 func (app *OsmosisApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
-	// UNFORKINGTODO OQ: I think we dont need to register routes anymore
+	// UNFORKINGTODO C: I think we dont need to register routes anymore
 	//rpc.RegisterRoutes(clientCtx, apiSvr.Router)
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
@@ -435,7 +435,7 @@ func (app *OsmosisApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.AP
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register legacy and grpc-gateway routes for all modules.
-	// UNFORKINGTODO OQ: I think we dont need to register REST routes anymore
+	// UNFORKINGTODO C I think we dont need to register REST routes anymore
 	//ModuleBasics.RegisterRESTRoutes(clientCtx, apiSvr.Router)
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 

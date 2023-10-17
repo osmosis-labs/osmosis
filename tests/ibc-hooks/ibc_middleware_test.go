@@ -348,20 +348,18 @@ func (suite *HooksTestSuite) receivePacket(receiver, memo string) []byte {
 }
 
 func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, prevSequence uint64) []byte {
-	// UNFORKINGTODO: Figure out SendPacket desired implementation
-	// channelCap := suite.chainB.GetChannelCapability(
-	// 	suite.pathAB.EndpointB.ChannelConfig.PortID,
-	// 	suite.pathAB.EndpointB.ChannelID)
+	channelCap := suite.chainB.GetChannelCapability(
+		suite.pathAB.EndpointB.ChannelConfig.PortID,
+		suite.pathAB.EndpointB.ChannelID)
 
 	packet := suite.makeMockPacket(receiver, memo, prevSequence)
 
-	// UNFORKINGTODO: Figure out SendPacket desired implementation
-	// _, err := suite.chainB.GetOsmosisApp().HooksICS4Wrapper.SendPacket(
-	// 	suite.chainB.GetContext(), channelCap, packet)
-	// suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
+	_, err := suite.chainB.GetOsmosisApp().HooksICS4Wrapper.SendPacket(
+		suite.chainB.GetContext(), channelCap, packet.SourcePort, packet.SourceChannel, packet.TimeoutHeight, packet.TimeoutTimestamp, packet.Data)
+	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 
 	// Update both clients
-	err := suite.pathAB.EndpointB.UpdateClient()
+	err = suite.pathAB.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 	err = suite.pathAB.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
@@ -1922,7 +1920,7 @@ func (suite *HooksTestSuite) SendAndAckPacketThroughPath(packetPath []Direction,
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
 	suite.Require().NoError(err)
 
-	for i, _ := range packetPath {
+	for i := range packetPath {
 		packet = packetStack[len(packetStack)-i-1]
 		direction := packetPath[len(packetPath)-i-1]
 		// sender Acknowledges
