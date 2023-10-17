@@ -8,7 +8,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.8-0.20230926014346-27a13ec134bd
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tendermint/tendermint v0.37.0-rc1
@@ -87,6 +87,7 @@ require (
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
+	github.com/onsi/gomega v1.27.10 // indirect
 	github.com/opencontainers/runc v1.1.5 // indirect
 	github.com/osmosis-labs/osmosis/osmomath v0.0.8-0.20230926014346-27a13ec134bd // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
