@@ -31,6 +31,6 @@ jobs:
     - name: Validate Makefile
       run: |
         # make the script executable
-        chmod +x ./scripts/validate-makefile.sh
+        chmod +x ./validate-makefile.sh
         # run the script with parameters
-        ./scripts/validate-makefile.sh Makefile Makefile.main
+        ./validate-makefile.sh Makefile Makefile.main
