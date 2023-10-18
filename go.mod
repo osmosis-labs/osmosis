@@ -44,6 +44,7 @@ require (
 	google.golang.org/grpc v1.57.0
 	gopkg.in/yaml.v2 v2.4.0
 	mvdan.cc/gofumpt v0.5.0
+    github.com/nsf/jsondiff v0.0.0-20230430225905-43f6cf3098c1
 )
 
 require (
