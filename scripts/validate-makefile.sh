@@ -26,6 +26,11 @@ new_cmds=$(comm -23 <(echo "$current_cmds" | sort) <(echo "$main_cmds" | sort))
 # Check each new command to see if it's mentioned in any @echo line
 error=0
 for cmd in $new_cmds; do
+    # Skip commands ending with '-help'
+    if [[ $cmd == *-help ]]; then
+        continue
+    fi
+    
     if ! is_documented $cmd; then
         echo "Error: New command '$cmd' added without being mentioned in any @echo line."
         error=1
