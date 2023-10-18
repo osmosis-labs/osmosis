@@ -1,0 +1,44 @@
+name: Validate Makefile
+
+on:
+  pull_request:
+    paths:
+      - 'Makefile'
+
+jobs:
+  check-makefile:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Check for changes in Makefile
+      id: check_changes
+      run: |
+        git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
+        changed=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }})
+        if echo "$changed" | grep -q "Makefile"; then
+            echo "::set-output name=run_job::true"
+        else
+            echo "No changes in Makefile"
+            echo "::set-output name=run_job::false"
+        fi
+
+    - name: Check out the previous version
+      if: steps.check_changes.outputs.run_job == 'true'
+      run: |
+        git checkout HEAD^ -- Makefile
+        mv Makefile Makefile.prev
+        git checkout HEAD -- Makefile
+
+    - name: Install dependencies
+      if: steps.check_changes.outputs.run_job == 'true'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y make
+
+    - name: Validate Makefile
+      if: steps.check_changes.outputs.run_job == 'true'
+      run: |
+        ./scripts/validate-makefile.sh Makefile Makefile.prev

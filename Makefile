@@ -263,7 +263,22 @@ MODFILES := ./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/
 # run with VERSION argument specified
 # e.g) make update-sdk-version VERSION=v0.45.1-0.20230523200430-193959b898ec
 # This will change sdk dependencyu version for go.mod in root directory + all sub-modules in this repo.
-update-sdk-version:
+
+deps-update-help:
+	@echo "deps update subcommands"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make deps-update-[command]"
+	@echo ""
+	@echo "Available Commands:"
+	@echo "  deps-update-sdk-version        Update all sdk versions within respository."
+	@echo "     				e.g. make deps-update-sdk-version VERSION=v0.45.1-0.20230523200430-193959b898ec"
+	@echo "  deps-update-tidy-workspace        Run go mod tidy for workspace"
+
+
+deps-update: deps-update-help
+
+deps-update-sdk-version:
 	@if [ -z "$(VERSION)" ]; then \
 		echo "VERSION not set"; \
 		exit 1; \
@@ -280,7 +295,7 @@ update-sdk-version:
 		fi; \
 	done
 
-tidy-workspace:
+deps-update-tidy-workspace:
 	@./scripts/tidy_workspace.sh
 
 ###############################################################################
