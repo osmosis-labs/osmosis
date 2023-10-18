@@ -8,24 +8,32 @@ extract_commands() {
 # Function to check if command is documented in help
 is_documented() {
     local cmd=$1
-    local help_output=$(make -s $2) # assuming that running 'make help' or 'make {specific-help-command}' returns the help text
+    local help_cmd="$2"
+    local help_output=$(make -s $help_cmd) # This captures the output of the help command
     echo "$help_output" | grep -q "$cmd"
 }
 
-# Compare Makefile and Makefile.prev
-current_cmds=$(extract_commands Makefile)
-previous_cmds=$(extract_commands Makefile.prev)
+# Get the Makefile from the main branch
+git fetch origin main
+git show origin/main:Makefile > Makefile.main
 
-# Check for new commands and if they are documented
+# Extract commands from both Makefiles
+current_cmds=$(extract_commands Makefile)
+main_cmds=$(extract_commands Makefile.main)
+
+# Check for commands that are in the current branch but not in main
+new_cmds=$(comm -23 <(echo "$current_cmds" | sort) <(echo "$main_cmds" | sort))
+
+# Check each new command to see if it's documented
 error=0
-for cmd in $current_cmds; do
-    if ! grep -q "^$cmd$" <<< "$previous_cmds"; then
-        # This is a new command, check if it's documented under the help command
-        if ! is_documented $cmd "help"; then # replace "help" with the specific help command if necessary
-            echo "Error: New command '$cmd' added without documentation under the help command."
-            error=1
-        fi
+for cmd in $new_cmds; do
+    if ! is_documented $cmd "help"; then # replace "help" with your actual help command if it's different
+        echo "Error: New command '$cmd' added without documentation under the help command."
+        error=1
     fi
 done
+
+# Clean up
+rm Makefile.main
 
 exit $error
