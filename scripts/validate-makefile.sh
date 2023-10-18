@@ -6,11 +6,25 @@ extract_commands() {
 }
 
 # Function to check if command has help
+# Function to check if command has help
 has_help() {
     local cmd=$1
-    local help_cmd="${cmd}-help"
-    grep -q "^[[:space:]]*$help_cmd" $2
+    local makefile=$2
+
+    # Extract the base command name (e.g., "deps-update" from "deps-update-sdk-version")
+    local base_cmd=$(echo $cmd | grep -oP '^[a-zA-Z_-]+(?=-)')
+
+    # If the command is a base command itself (not a subcommand), check for its own help
+    if [ -z "$base_cmd" ] || [ "$base_cmd" = "$cmd" ]; then
+        base_cmd=$cmd
+    fi
+
+    local help_cmd="${base_cmd}-help"
+
+    # Check if the Makefile contains the help command
+    grep -q "^[[:space:]]*$help_cmd" "$makefile"
 }
+
 
 # Extract commands from the current branch's Makefile and the main branch's Makefile
 current_cmds=$(extract_commands "$1")  # First argument is expected to be the current branch's Makefile
