@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/manifoldco/promptui"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -90,6 +91,8 @@ var (
 	assetFS   embed.FS
 	mainnetId = "osmosis-1"
 	testnetId = "osmo-test-5"
+
+	FlagNavigate = "navigate"
 )
 
 func loadAssetList(initClientCtx client.Context, cmd *cobra.Command, basedenomToIBC, IBCtoBasedenom bool) (map[string]DenomUnitMap, map[string]string) {
@@ -287,6 +290,18 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	rootCmd := &cobra.Command{
 		Use:   "osmosisd",
 		Short: "Start osmosis app",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			navigate, err := cmd.Flags().GetBool(FlagNavigate)
+			if err != nil {
+				fmt.Printf("error getting flag %s: %v", FlagNavigate, err)
+				return err
+			}
+			if navigate {
+				navigateSubcommands(cmd)
+				return nil
+			}
+			return cmd.Help() // Display help message if the navigate flag is not set
+		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// If not calling the set-env command, this is a no-op.
 			err := changeEnvPriorToSetup(cmd, &initClientCtx, args, homeDir)
@@ -501,6 +516,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	)
 	// add rosetta
 	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
+	rootCmd.PersistentFlags().BoolP(FlagNavigate, "n", false, "help message for navigate flag")
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
@@ -736,4 +752,60 @@ func transformCoinValueToBaseInt(coinValue, coinDenom string, assetMap map[strin
 		}
 	}
 	return "", fmt.Errorf("denom %s not found in asset map", coinDenom)
+}
+
+func navigateSubcommands(cmd *cobra.Command) {
+	currentCmd := cmd
+	for {
+		// List subcommands if they exist
+		subcommands := currentCmd.Commands()
+		if len(subcommands) > 0 {
+			var commands []string
+			for _, subcmd := range subcommands {
+				commands = append(commands, subcmd.Use)
+			}
+
+			prompt := promptui.Select{
+				Label: "Select Subcommand",
+				Items: commands,
+			}
+
+			_, result, err := prompt.Run()
+
+			if err != nil {
+				fmt.Printf("Prompt failed %v\n", err)
+				os.Exit(1)
+			}
+
+			// Find the selected subcommand
+			for _, subcmd := range subcommands {
+				if subcmd.Use == result {
+					// If the selected subcommand has further subcommands, continue the loop with this subcommand.
+					if len(subcmd.Commands()) > 0 {
+						currentCmd = subcmd
+						break
+					} else {
+						// If the selected subcommand has no further subcommands, print the full command path and exit.
+						fullCommand := buildFullCommandPath(subcmd)
+						fmt.Println("Full command path:", fullCommand)
+						os.Exit(0)
+					}
+				}
+			}
+		} else {
+			// If no subcommands, print the current command and exit
+			fullCommand := buildFullCommandPath(currentCmd)
+			fmt.Println("Full command path:", fullCommand)
+			os.Exit(0)
+		}
+	}
+}
+
+// Recursively build the full command path from the current command up through its parents
+func buildFullCommandPath(cmd *cobra.Command) string {
+	names := []string{cmd.Use}
+	for current := cmd.Parent(); current != nil; current = current.Parent() {
+		names = append([]string{current.Use}, names...)
+	}
+	return strings.Join(names, " ")
 }
