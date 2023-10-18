@@ -3,9 +3,10 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"time"
 
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/testutils"
@@ -733,7 +734,7 @@ func (s *AuthenticatorSuite) TestSpendWithinLimitWithAuthzTableTest() {
 	}
 
 	// Create account for the second private key. This is needed for executing the grant
-	s.CreateAccount(s.PrivKeys[1], 50_000)
+	s.CreateAccount(s.PrivKeys[1], 100_000)
 
 	// Store the grant
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, grantMsg)
