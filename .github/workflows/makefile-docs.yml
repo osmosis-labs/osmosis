@@ -2,45 +2,35 @@ name: Validate Makefile
 
 on:
   pull_request:
-    paths:
-      - 'Makefile'
+    branches:
+      - main  # assuming your default branch is named "main"
 
 jobs:
-  check-makefile:
+  validate:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Check out the repository
     - name: Check out code
       uses: actions/checkout@v2
       with:
-        fetch-depth: 2  # this fetches 2 commits instead of only 1
+        # Fetch all history for all branches and tags so we can access everything needed for the comparison
+        fetch-depth: 0
 
-    - name: Check for changes in Makefile
-      id: check_changes
+    # Step 2: Set up the environment for the script, in this case, it's likely to be a shell script so we might not need to install additional dependencies
+
+    # Step 3: Check out the main branch Makefile
+    - name: Check out main branch Makefile
       run: |
-        git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
-        changed=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }})
-        if echo "$changed" | grep -q "Makefile"; then
-            echo "::set-output name=run_job::true"
-        else
-            echo "No changes in Makefile"
-            echo "::set-output name=run_job::false"
-        fi
+        # Fetch the main branch
+        git fetch origin main:main
+        # Check out the Makefile from the main branch
+        git show main:Makefile > Makefile.main
 
-    - name: Check out the previous version
-      if: steps.check_changes.outputs.run_job == 'true'
-      run: |
-        git checkout HEAD^ -- Makefile
-        mv Makefile Makefile.prev
-        git checkout HEAD -- Makefile
-
-    - name: Install dependencies
-      if: steps.check_changes.outputs.run_job == 'true'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y make
-
+    # Step 4: Run your validation script
     - name: Validate Makefile
-      if: steps.check_changes.outputs.run_job == 'true'
       run: |
-        ./scripts/validate-makefile.sh Makefile Makefile.prev
+        # make the script executable
+        chmod +x ./validate-makefile.sh
+        # run the script with parameters
+        ./validate-makefile.sh Makefile Makefile.main
