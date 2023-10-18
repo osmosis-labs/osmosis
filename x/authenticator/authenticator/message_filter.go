@@ -2,8 +2,6 @@ package authenticator
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -16,13 +14,11 @@ import (
 var _ iface.Authenticator = &MessageFilterAuthenticator{}
 
 type MessageFilterAuthenticator struct {
-	cdc codec.Codec
-
 	pattern []byte
 }
 
-func NewMessageFilterAuthenticator(cdc codec.Codec) MessageFilterAuthenticator {
-	return MessageFilterAuthenticator{cdc: cdc}
+func NewMessageFilterAuthenticator() MessageFilterAuthenticator {
+	return MessageFilterAuthenticator{}
 }
 
 func (m MessageFilterAuthenticator) Type() string {
@@ -74,8 +70,6 @@ func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, account sdk.Ac
 	if err != nil {
 		return iface.NotAuthenticated()
 	}
-	fmt.Println(string(encodedMsg))
-	fmt.Println(string(m.pattern))
 
 	opts := jsondiff.DefaultJSONOptions()
 	// Is encodedMsg a superset of m.pattern?

@@ -25,7 +25,7 @@ func (s *MessageFilterAuthenticatorTest) SetupTest() {
 	s.OsmosisApp = app.Setup(false)
 	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
 	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
-	s.MessageFilterAuthenticator = authenticator.NewMessageFilterAuthenticator(s.OsmosisApp.AppCodec())
+	s.MessageFilterAuthenticator = authenticator.NewMessageFilterAuthenticator()
 }
 
 func (s *MessageFilterAuthenticatorTest) TestMessageTypes() {
