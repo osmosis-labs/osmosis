@@ -12,6 +12,8 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 2  # this fetches 2 commits instead of only 1
 
     - name: Check for changes in Makefile
       id: check_changes
