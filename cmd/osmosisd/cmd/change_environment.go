@@ -241,7 +241,7 @@ Example:
 				fmt.Printf("Error: %v \n", err)
 			}
 
-		         fmt.Printf("Environment name, path: %s, %s\n", EnvMainnet, path)
+			fmt.Printf("Environment name, path: %s, %s\n", EnvMainnet, path)
 
 			// localnet
 			path, err = environmentNameToPath(EnvLocalnet)
@@ -258,7 +258,7 @@ Example:
 			}
 
 			fmt.Printf("Environment name, path: %s, %s\n", EnvTestnet, path)
-			
+
 			// OSMOSISD_ENVIRONMENT
 			val := os.Getenv(EnvVariable)
 			path, err = environmentNameToPath(val)
