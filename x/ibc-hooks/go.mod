@@ -5,7 +5,7 @@ go 1.20
 require (
 	cosmossdk.io/errors v1.0.0
 	github.com/CosmWasm/wasmd v0.40.1
-	github.com/cometbft/cometbft v0.38.0
+	github.com/cometbft/cometbft v0.37.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/ibc-go/v7 v7.2.0
