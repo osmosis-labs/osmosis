@@ -42,17 +42,11 @@ func (a *poolsUseCase) GetAllPools(ctx context.Context) ([]domain.PoolI, error) 
 	}
 
 	allPools := make([]domain.PoolI, 0, len(cfmmPools)+len(concentratedPools)+len(cosmWasmPools))
-	for _, pool := range cfmmPools {
-		allPools = append(allPools, pool)
-	}
+	allPools = append(allPools, cfmmPools...)
 
-	for _, pool := range concentratedPools {
-		allPools = append(allPools, pool)
-	}
+	allPools = append(allPools, concentratedPools...)
 
-	for _, pool := range cosmWasmPools {
-		allPools = append(allPools, pool)
-	}
+	allPools = append(allPools, cosmWasmPools...)
 
 	// Sort by ID
 	sort.Slice(allPools, func(i, j int) bool {

@@ -48,7 +48,6 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context) error {
 	// Parse CFMM pool to the standard SQS types.
 	cfmmPoolsParsed := make([]domain.PoolI, 0, len(cfmmPools))
 	for _, pool := range cfmmPools {
-
 		pool, err := parser.ConvertCFMM(ctx, pool)
 		if err != nil {
 			return err
@@ -71,7 +70,6 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context) error {
 
 	concentratedPoolsParsed := make([]domain.PoolI, 0, len(concentratedPools))
 	for _, pool := range concentratedPools {
-
 		// Parse concentrated pool to the standard SQS types.
 		parsedPool, err := parser.ConvertConcentrated(ctx, pool, pi.bankKeeper)
 		if err != nil {
@@ -95,7 +93,6 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context) error {
 
 	cosmWasmPoolsParsed := make([]domain.PoolI, 0, len(cosmWasmPools))
 	for _, pool := range cosmWasmPools {
-
 		// Parse CosmWasm pools to the standard SQS types.
 		pool, err := parser.ConvertCosmWasm(ctx, pool)
 		if err != nil {
