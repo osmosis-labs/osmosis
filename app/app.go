@@ -40,6 +40,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -106,7 +107,7 @@ var (
 	// EmptyWasmOpts defines a type alias for a list of wasm options.
 	EmptyWasmOpts []wasm.Option
 
-	// _ sdksimapp.App = (*OsmosisApp)(nil)
+	_ runtime.AppI = (*OsmosisApp)(nil)
 
 	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade, v17.Upgrade, v18.Upgrade, v19.Upgrade, v20.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
@@ -466,6 +467,11 @@ func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
 // RegisterNodeService registers the node gRPC Query service.
 func (app *OsmosisApp) RegisterNodeService(clientCtx client.Context) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
+}
+
+// SimulationManager always returns nil.
+func (app *OsmosisApp) SimulationManager() *module.SimulationManager {
+	return nil
 }
 
 // configure store loader that checks if version == upgradeHeight and applies store upgrades
