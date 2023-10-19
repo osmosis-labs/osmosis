@@ -42,7 +42,7 @@ func CreateUpgradeHandler(
 
 		// Add Interchain Accounts host module
 		// set the ICS27 consensus version so InitGenesis is not run
-		// UNFORKINGTODO OQ: consensus version not working here
+		// UNFORKINGNOTE: ConsensusVersion no longer exists, keeping commented for historical purposes
 		//fromVM[icatypes.ModuleName] = mm.Modules[icatypes.ModuleName].ConsensusVersion()
 
 		// create ICS27 Controller submodule params, controller module not enabled.
