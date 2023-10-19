@@ -83,7 +83,7 @@ func CreateUpgradeHandler(
 
 		// Update expedited governance param
 		// In particular, set expedited quorum to 2/3.
-		// UNFORKINGTODO OQ: GetTallyParams no longer exists
+		// UNFORKINGNOTE: GetTallyParams no longer exists, keeping commented for historical purposes
 		// params := keepers.GovKeeper.GetTallyParams(ctx)
 		// params.ExpeditedQuorum = osmomath.NewDec(2).Quo(osmomath.NewDec(3))
 		// keepers.GovKeeper.SetTallyParams(ctx, params)

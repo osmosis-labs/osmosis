@@ -176,7 +176,7 @@ func (s *UpgradeTestSuite) TestUpgrade() {
 				s.Require().Contains(icaHostAllowList.AllowMessages, sdk.MsgTypeURL(&cosmwasmtypes.MsgInstantiateContract{}))
 
 				// Validate that expedited quorum was set to 2/3
-				// UNFORKINGTODO OQ: GetTallyParams no longer exists
+				// UNFORKINGNOTE: GetTallyParams no longer exists, keeping commented for historical purposes
 				//expQuorum := s.App.GovKeeper.GetTallyParams(s.Ctx).ExpeditedQuorum
 				//s.Require().Equal(osmomath.NewDec(2).Quo(osmomath.NewDec(3)), expQuorum)
 
