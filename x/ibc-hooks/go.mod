@@ -13,7 +13,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231017231137-95bb0e52a709
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231018000801-0aea6ecd039b
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231019173605-9f625c025329
 	github.com/spf13/cobra v1.7.0
 	google.golang.org/grpc v1.58.2
 )
