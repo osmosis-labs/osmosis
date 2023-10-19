@@ -107,8 +107,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.P2P.MaxNumOutboundPeers = 60
 			config.Mempool.Size = 10000
 			config.StateSync.TrustPeriod = 112 * time.Hour
-			// UNFORKINGTODO OQ: Uncomment this line if we enable fastSync, do we need this?
-			//config.FastSync.Version = "v0"
 
 			config.SetRoot(clientCtx.HomeDir)
 
