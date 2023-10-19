@@ -10,8 +10,8 @@ require (
 	github.com/cosmos/iavl v0.20.0
 	github.com/cosmos/ibc-go/v7 v7.2.0
 	github.com/gogo/protobuf v1.3.3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231017231137-95bb0e52a709
-	github.com/osmosis-labs/osmosis/v20 v20.0.0-20231017233618-15a2036fe9b8
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231019173605-9f625c025329
+	github.com/osmosis-labs/osmosis/v20 v20.0.0-20231019180727-d47810d6ead2
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
@@ -139,10 +139,10 @@ require (
 	github.com/zondax/ledger-go v0.14.1 // indirect
 	go.etcd.io/bbolt v1.3.7 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
-	golang.org/x/net v0.15.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
-	golang.org/x/term v0.12.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/genproto v0.0.0-20230913181813-007df8e322eb // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230913181813-007df8e322eb // indirect
