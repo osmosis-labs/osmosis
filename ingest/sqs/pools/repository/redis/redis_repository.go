@@ -12,10 +12,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 
-	concentrated "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	cosmwasmpool "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/stableswap"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -45,17 +41,17 @@ func NewRedisPoolsRepo(client *redis.Client) domain.PoolsRepository {
 
 // GetAllCFMM implements domain.PoolsRepository.
 // Returns balancer and stableswap pools sorted by ID.
-func (r *redisPoolsRepo) GetAllCFMM(ctx context.Context) ([]domain.CFMMPoolI, error) {
+func (r *redisPoolsRepo) GetAllCFMM(ctx context.Context) ([]domain.PoolI, error) {
 	// TODO: use generics to reduce code duplication stemming from these methods.
 	poolMapByID := r.client.HGetAll(ctx, cfmmPoolKey).Val()
 
-	pools := make([]domain.CFMMPoolI, 0, len(poolMapByID))
+	pools := make([]domain.PoolI, 0, len(poolMapByID))
 	for key, v := range poolMapByID {
-		var pool domain.CFMMPoolI
+		var pool domain.PoolI
 		if strings.HasPrefix(key, balancerPrefix) {
-			pool = &balancer.Pool{}
+			pool = &domain.Pool{}
 		} else if strings.HasPrefix(key, stableswapPrefix) {
-			pool = &stableswap.Pool{}
+			pool = &domain.Pool{}
 		} else {
 			return nil, domain.InvalidPoolTypeError{PoolType: int32(pool.GetType())}
 		}
@@ -78,13 +74,13 @@ func (r *redisPoolsRepo) GetAllCFMM(ctx context.Context) ([]domain.CFMMPoolI, er
 
 // GetAllConcentrated implements domain.PoolsRepository.
 // Returns concentrated pools sorted by ID.
-func (r *redisPoolsRepo) GetAllConcentrated(ctx context.Context) ([]domain.ConcentratedPoolI, error) {
+func (r *redisPoolsRepo) GetAllConcentrated(ctx context.Context) ([]domain.PoolI, error) {
 	// TODO: use generics to reduce code duplication stemming from these methods.
 	poolMapByID := r.client.HGetAll(ctx, concentratedPoolKey).Val()
 
-	pools := make([]domain.ConcentratedPoolI, 0, len(poolMapByID))
+	pools := make([]domain.PoolI, 0, len(poolMapByID))
 	for _, v := range poolMapByID {
-		pool := &concentrated.Pool{}
+		pool := &domain.Pool{}
 		err := json.Unmarshal([]byte(v), pool)
 		if err != nil {
 			return nil, err
@@ -102,13 +98,13 @@ func (r *redisPoolsRepo) GetAllConcentrated(ctx context.Context) ([]domain.Conce
 
 // GetAllCosmWasm implements domain.PoolsRepository.
 // Returns cosmwasm pools sorted by ID.
-func (r *redisPoolsRepo) GetAllCosmWasm(ctx context.Context) ([]domain.CosmWasmPoolI, error) {
+func (r *redisPoolsRepo) GetAllCosmWasm(ctx context.Context) ([]domain.PoolI, error) {
 	// TODO: use generics to reduce code duplication stemming from these methods.
 	poolMapByID := r.client.HGetAll(ctx, cosmWasmPoolKey).Val()
 
-	pools := make([]domain.CosmWasmPoolI, 0, len(poolMapByID))
+	pools := make([]domain.PoolI, 0, len(poolMapByID))
 	for _, v := range poolMapByID {
-		pool := &cosmwasmpool.CosmWasmPool{}
+		pool := &domain.Pool{}
 		err := json.Unmarshal([]byte(v), pool)
 		if err != nil {
 			return nil, err
@@ -118,29 +114,21 @@ func (r *redisPoolsRepo) GetAllCosmWasm(ctx context.Context) ([]domain.CosmWasmP
 
 	// Sort by ID ascending.
 	sort.Slice(pools, func(i, j int) bool {
-		// TODO: avoid casting after removing dependency on the chain types
-		// Currently, CosmWasmPool does not implement this method and panics due
-		// to serialization issues.
-		// nolint: forcetypeassert
-		poolI := pools[i].(*cosmwasmpool.CosmWasmPool)
-		// nolint: forcetypeassert
-		poolJ := pools[j].(*cosmwasmpool.CosmWasmPool)
-
-		return poolI.PoolId < poolJ.PoolId
+		return pools[i].GetId() < pools[j].GetId()
 	})
 
 	return pools, nil
 }
 
 // StoreCFMM implements domain.PoolsRepository.
-func (r *redisPoolsRepo) StoreCFMM(ctx context.Context, pools []domain.CFMMPoolI) (err error) {
+func (r *redisPoolsRepo) StoreCFMM(ctx context.Context, pools []domain.PoolI) (err error) {
 	for _, pool := range pools {
 		var (
 			serializedPool []byte
 			poolType       = pool.GetType()
 		)
 		if poolType == poolmanagertypes.Balancer {
-			balancerPool, ok := pool.(*balancer.Pool)
+			balancerPool, ok := pool.(*domain.Pool)
 			if !ok {
 				return domain.InvalidPoolTypeError{PoolType: int32(poolType)}
 			}
@@ -150,7 +138,7 @@ func (r *redisPoolsRepo) StoreCFMM(ctx context.Context, pools []domain.CFMMPoolI
 				return err
 			}
 		} else if poolType == poolmanagertypes.Stableswap {
-			stableswapPool, ok := pool.(*stableswap.Pool)
+			stableswapPool, ok := pool.(*domain.Pool)
 			if !ok {
 				return domain.InvalidPoolTypeError{PoolType: int32(poolType)}
 			}
@@ -173,9 +161,9 @@ func (r *redisPoolsRepo) StoreCFMM(ctx context.Context, pools []domain.CFMMPoolI
 }
 
 // StoreConcentrated implements domain.PoolsRepository.
-func (r *redisPoolsRepo) StoreConcentrated(ctx context.Context, pools []domain.ConcentratedPoolI) error {
+func (r *redisPoolsRepo) StoreConcentrated(ctx context.Context, pools []domain.PoolI) error {
 	for _, pool := range pools {
-		concentratedPool, ok := pool.(*concentrated.Pool)
+		concentratedPool, ok := pool.(*domain.Pool)
 		if !ok {
 			return domain.InvalidPoolTypeError{PoolType: int32(pool.GetType())}
 		}
@@ -194,9 +182,9 @@ func (r *redisPoolsRepo) StoreConcentrated(ctx context.Context, pools []domain.C
 }
 
 // StoreCosmWasm implements domain.PoolsRepository.
-func (r *redisPoolsRepo) StoreCosmWasm(ctx context.Context, pools []domain.CosmWasmPoolI) error {
+func (r *redisPoolsRepo) StoreCosmWasm(ctx context.Context, pools []domain.PoolI) error {
 	for _, pool := range pools {
-		cosmWasmPool, ok := pool.(*cosmwasmpool.CosmWasmPool)
+		cosmWasmPool, ok := pool.(*domain.Pool)
 		if !ok {
 			return domain.InvalidPoolTypeError{PoolType: int32(pool.GetType())}
 		}
@@ -206,7 +194,7 @@ func (r *redisPoolsRepo) StoreCosmWasm(ctx context.Context, pools []domain.CosmW
 			return err
 		}
 
-		err = r.client.HSet(ctx, cosmWasmPoolKey, cosmWasmPool.PoolId, serializedPool).Err()
+		err = r.client.HSet(ctx, cosmWasmPoolKey, cosmWasmPool.GetId(), serializedPool).Err()
 		if err != nil {
 			return err
 		}

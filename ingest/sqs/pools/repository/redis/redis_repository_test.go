@@ -21,10 +21,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/tests/mocks"
-	concentrated "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	cosmwasmpool "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
@@ -49,15 +45,15 @@ var _ = Describe("RedisRepository", func() {
 	)
 
 	var (
-		testBalancerPools     []domain.CFMMPoolI
-		testStableSwapPools   []domain.CFMMPoolI
-		testConcentratedPools []domain.ConcentratedPoolI
-		testCosmWasmPools     []domain.CosmWasmPoolI
+		testBalancerPools     []domain.PoolI
+		testStableSwapPools   []domain.PoolI
+		testConcentratedPools []domain.PoolI
+		testCosmWasmPools     []domain.PoolI
 		clientMock            redismock.ClientMock
 		ctx                   context.Context
-		mockCFMMPool          *mocks.MockPoolI
-		mockConcentratedPool  *mocks.MockPoolI
-		mockCosmWasmPool      *mocks.MockPoolI
+		mockCFMMPool          *mocks.MockSQSPoolI
+		mockConcentratedPool  *mocks.MockSQSPoolI
+		mockCosmWasmPool      *mocks.MockSQSPoolI
 	)
 
 	BeforeEach(func() {
@@ -65,28 +61,28 @@ var _ = Describe("RedisRepository", func() {
 		// Create balancer pools
 		for i := 0; i < numPoolsCreate; i++ {
 			expectedPoolID := uint64(i + 1)
-			pool := withBalancerPoolID(newDefaultBalancerPool(), expectedPoolID)
+			pool := withPoolID(newDefaultBalancerPool(), expectedPoolID)
 			testBalancerPools = append(testBalancerPools, pool)
 		}
 
 		// Create stableswap pools
 		for i := stableSwapPoolIDOffset; i < stableSwapPoolIDOffset+numPoolsCreate; i++ {
 			expectedPoolID := uint64(i)
-			pool := withStableswapPoolID(newDefaultStableswapPool(), expectedPoolID)
+			pool := withPoolType(withPoolID(newDefaultBalancerPool(), expectedPoolID), poolmanagertypes.Balancer)
 			testStableSwapPools = append(testStableSwapPools, pool)
 		}
 
 		// Create concentrated pools
 		for i := concentratedPoolIDOffset; i <= concentratedPoolIDOffset+numPoolsCreate-1; i++ {
 			expectedPoolID := uint64(i)
-			pool := withConcentratedPoolID(newDefaultConcentratedPool(), expectedPoolID)
+			pool := withPoolType(withPoolID(newDefaultBalancerPool(), expectedPoolID), poolmanagertypes.Concentrated)
 			testConcentratedPools = append(testConcentratedPools, pool)
 		}
 
 		// Create cosmwasm pools
 		for i := cosmWasmPoolIDOffset; i <= cosmWasmPoolIDOffset+numPoolsCreate-1; i++ {
 			expectedPoolID := uint64(i)
-			pool := withCosmwasmPoolID(newDefaultCosmWasmPool(), expectedPoolID)
+			pool := withPoolType(withPoolID(newDefaultBalancerPool(), expectedPoolID), poolmanagertypes.CosmWasm)
 			testCosmWasmPools = append(testCosmWasmPools, pool)
 		}
 
@@ -97,13 +93,13 @@ var _ = Describe("RedisRepository", func() {
 
 		// configure CFMM pool mock
 		ctrl := gomock.NewController(GinkgoT())
-		mockCFMMPool = mocks.NewMockPoolI(ctrl)
+		mockCFMMPool = mocks.NewMockSQSPoolI(ctrl)
 
 		// configure Concentrated pool mock
-		mockConcentratedPool = mocks.NewMockPoolI(ctrl)
+		mockConcentratedPool = mocks.NewMockSQSPoolI(ctrl)
 
 		// configure CosmWasm pool mock
-		mockCosmWasmPool = mocks.NewMockPoolI(ctrl)
+		mockCosmWasmPool = mocks.NewMockSQSPoolI(ctrl)
 
 		// Create context
 		ctx = context.Background()
@@ -111,10 +107,10 @@ var _ = Describe("RedisRepository", func() {
 
 	AfterEach(func() {
 		// clear test pools
-		testBalancerPools = []domain.CFMMPoolI{}
-		testStableSwapPools = []domain.CFMMPoolI{}
-		testConcentratedPools = []domain.ConcentratedPoolI{}
-		testCosmWasmPools = []domain.CosmWasmPoolI{}
+		testBalancerPools = []domain.PoolI{}
+		testStableSwapPools = []domain.PoolI{}
+		testConcentratedPools = []domain.PoolI{}
+		testCosmWasmPools = []domain.PoolI{}
 	})
 
 	Describe("CFMM Pools", func() {
@@ -123,7 +119,7 @@ var _ = Describe("RedisRepository", func() {
 
 			When("called with empty pools", func() {
 				It("should succeed", func() {
-					err := poolRepo.StoreCFMM(ctx, []domain.CFMMPoolI{})
+					err := poolRepo.StoreCFMM(ctx, []domain.PoolI{})
 					Expect(err).ToNot(HaveOccurred())
 				})
 			})
@@ -201,7 +197,7 @@ var _ = Describe("RedisRepository", func() {
 				It("should fail", func() {
 					mockCFMMPool.EXPECT().GetType().Return(types.Concentrated)
 
-					err := poolRepo.StoreCFMM(ctx, []domain.CFMMPoolI{mockCFMMPool})
+					err := poolRepo.StoreCFMM(ctx, []domain.PoolI{mockCFMMPool})
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(Equal(domain.InvalidPoolTypeError{PoolType: int32(types.Concentrated)}))
 				})
@@ -228,7 +224,7 @@ var _ = Describe("RedisRepository", func() {
 					// Mock stableswap pools in the map
 					for _, stableswapPool := range testStableSwapPools {
 						// cast to conrete type to be able to marshal
-						stableswapModel := stableswapPool.(*stableswap.Pool)
+						stableswapModel := stableswapPool.(*domain.Pool)
 
 						expectedSerialized, err := json.Marshal(stableswapModel)
 						Expect(err).ToNot(HaveOccurred())
@@ -240,7 +236,7 @@ var _ = Describe("RedisRepository", func() {
 					// Mock balancer pools in the map
 					for _, balancerPool := range testBalancerPools {
 						// cast to conrete type to be able to marshal
-						balancerModel := balancerPool.(*balancer.Pool)
+						balancerModel := balancerPool.(*domain.Pool)
 
 						expectedSerialized, err := json.Marshal(balancerModel)
 						Expect(err).ToNot(HaveOccurred())
@@ -285,7 +281,7 @@ var _ = Describe("RedisRepository", func() {
 
 			When("called with empty pools", func() {
 				It("should succeed", func() {
-					err := poolRepo.StoreConcentrated(ctx, []domain.ConcentratedPoolI{})
+					err := poolRepo.StoreConcentrated(ctx, []domain.PoolI{})
 					Expect(err).ToNot(HaveOccurred())
 				})
 			})
@@ -309,7 +305,7 @@ var _ = Describe("RedisRepository", func() {
 				It("should fail", func() {
 					mockConcentratedPool.EXPECT().GetType().Return(types.Balancer)
 
-					err := poolRepo.StoreConcentrated(ctx, []domain.ConcentratedPoolI{mockConcentratedPool})
+					err := poolRepo.StoreConcentrated(ctx, []domain.PoolI{mockConcentratedPool})
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(Equal(domain.InvalidPoolTypeError{PoolType: int32(types.Balancer)}))
 				})
@@ -336,7 +332,7 @@ var _ = Describe("RedisRepository", func() {
 					// Mock concentrated pools in the map
 					for _, concentratedPool := range testConcentratedPools {
 						// cast to conrete type to be able to marshal
-						concentratedModel := concentratedPool.(*concentrated.Pool)
+						concentratedModel := concentratedPool.(*domain.Pool)
 
 						expectedSerialized, err := json.Marshal(concentratedModel)
 						Expect(err).ToNot(HaveOccurred())
@@ -374,7 +370,7 @@ var _ = Describe("RedisRepository", func() {
 
 			When("called with empty pools", func() {
 				It("should succeed", func() {
-					err := poolRepo.StoreCosmWasm(ctx, []domain.CosmWasmPoolI{})
+					err := poolRepo.StoreCosmWasm(ctx, []domain.PoolI{})
 					Expect(err).ToNot(HaveOccurred())
 				})
 			})
@@ -398,7 +394,7 @@ var _ = Describe("RedisRepository", func() {
 				It("should fail", func() {
 					mockCosmWasmPool.EXPECT().GetType().Return(types.Balancer)
 
-					err := poolRepo.StoreCosmWasm(ctx, []domain.CosmWasmPoolI{mockCosmWasmPool})
+					err := poolRepo.StoreCosmWasm(ctx, []domain.PoolI{mockCosmWasmPool})
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(Equal(domain.InvalidPoolTypeError{PoolType: int32(types.Balancer)}))
 				})
@@ -425,12 +421,12 @@ var _ = Describe("RedisRepository", func() {
 					// Mock concentrated pools in the map
 					for _, cosmWasmPool := range testCosmWasmPools {
 						// cast to conrete type to be able to marshal
-						cosmWasmModel := cosmWasmPool.(*cosmwasmpool.CosmWasmPool)
+						cosmWasmModel := cosmWasmPool.(*domain.Pool)
 
 						expectedSerialized, err := json.Marshal(cosmWasmModel)
 						Expect(err).ToNot(HaveOccurred())
 
-						expectedReturn[strconv.Itoa(int(cosmWasmModel.PoolId))] = string(expectedSerialized)
+						expectedReturn[strconv.Itoa(int(cosmWasmModel.GetId()))] = string(expectedSerialized)
 					}
 
 					clientMock.ExpectHGetAll(redis.CosmWasmPoolKey).SetVal(expectedReturn)
@@ -443,13 +439,13 @@ var _ = Describe("RedisRepository", func() {
 					// TODO: reduce duplication with generics
 					for i := 0; i < len(result); i++ {
 						currentPool := result[i]
-						currentCosmWasmPool := currentPool.(*cosmwasmpool.CosmWasmPool)
+						currentCosmWasmPool := currentPool.(*domain.Pool)
 						if i < len(result)-i {
 							nextPool := result[i+1]
-							nextCosmWasmPool := nextPool.(*cosmwasmpool.CosmWasmPool)
+							nextCosmWasmPool := nextPool.(*domain.Pool)
 
 							// Asserts sorted order
-							Expect(currentCosmWasmPool.PoolId).Should(Equal(nextCosmWasmPool.PoolId - 1))
+							Expect(currentCosmWasmPool.GetId()).Should(Equal(nextCosmWasmPool.GetId() - 1))
 						}
 					}
 				})
@@ -459,71 +455,27 @@ var _ = Describe("RedisRepository", func() {
 })
 
 // creates a default balancer pool to be used in tests
-func newDefaultBalancerPool() *balancer.Pool {
-	pool, _ := balancer.NewBalancerPool(1, balancer.PoolParams{
-		SwapFee: osmomath.ZeroDec(),
-		ExitFee: osmomath.ZeroDec(),
-	}, []balancer.PoolAsset{
-		{
-			Token:  sdk.NewCoin(UOSMO, defaultAmountA),
-			Weight: osmomath.NewInt(5),
-		},
-		{
-			Token:  sdk.NewCoin(UION, defaultAmountB),
-			Weight: osmomath.NewInt(5),
-		},
-	}, "", defaultCreationTime)
+func newDefaultBalancerPool() *domain.Pool {
+	pool := &domain.Pool{
+		Id:           1,
+		Type:         int(poolmanagertypes.Balancer),
+		SpreadFactor: osmomath.NewDecWithPrec(1, 2).String(),
+		Denoms:       []string{UOSMO, UION},
+		Weights:      []string{"1", "1"},
+		Balances:     sdk.NewCoins(sdk.NewCoin(UOSMO, defaultAmountA), sdk.NewCoin(UION, defaultAmountB)).String(),
+		Liquidity:    sdk.NewInt(500).String(),
+	}
 
-	return &pool
+	return pool
 }
 
 // modifies the ID of the given balancer pool to given.
-func withBalancerPoolID(pool *balancer.Pool, ID uint64) *balancer.Pool {
+func withPoolID(pool *domain.Pool, ID uint64) *domain.Pool {
 	pool.Id = ID
 	return pool
 }
 
-// creates a default stableswap pool to be used in tests
-func newDefaultStableswapPool() *stableswap.Pool {
-	pool, _ := stableswap.NewStableswapPool(1, stableswap.PoolParams{
-		SwapFee: osmomath.ZeroDec(),
-		ExitFee: osmomath.ZeroDec(),
-	}, sdk.NewCoins(sdk.NewCoin(UOSMO, defaultAmountA), sdk.NewCoin(UION, defaultAmountB)),
-		[]uint64{1, 1}, "", "")
-
-	return &pool
-}
-
-// modifies the ID of the given stableswap pool to given
-func withStableswapPoolID(pool *stableswap.Pool, ID uint64) *stableswap.Pool {
-	pool.Id = ID
-	return pool
-}
-
-// creates a default concentrated pool to be used in tests
-func newDefaultConcentratedPool() *concentrated.Pool {
-	pool, _ := concentrated.NewConcentratedLiquidityPool(1, UOSMO, UION, 1, osmomath.ZeroDec())
-	return &pool
-}
-
-// modifies the ID of the given concentrated pool to given
-func withConcentratedPoolID(pool *concentrated.Pool, ID uint64) *concentrated.Pool {
-	pool.Id = ID
-	return pool
-}
-
-// creates a default transmuter pool to be used in tests
-func newDefaultCosmWasmPool() *cosmwasmpool.CosmWasmPool {
-	pool := cosmwasmpool.CosmWasmPool{
-		ContractAddress: "testAddress",
-		PoolId:          1,
-		CodeId:          1,
-		InstantiateMsg:  []byte{},
-	}
-	return &pool
-}
-
-func withCosmwasmPoolID(pool *cosmwasmpool.CosmWasmPool, poolID uint64) *cosmwasmpool.CosmWasmPool {
-	pool.PoolId = poolID
+func withPoolType(pool *domain.Pool, poolType poolmanagertypes.PoolType) *domain.Pool {
+	pool.Type = int(poolType)
 	return pool
 }

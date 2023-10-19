@@ -275,7 +275,7 @@ func NewOsmosisApp(
 		}
 
 		// Create pools ingester
-		poolsIngester := poolsingester.NewPoolIngester(sidecarQueryServer.GetPoolsRepository(), app.GAMMKeeper, app.ConcentratedLiquidityKeeper, app.CosmwasmPoolKeeper)
+		poolsIngester := poolsingester.NewPoolIngester(sidecarQueryServer.GetPoolsRepository(), app.GAMMKeeper, app.ConcentratedLiquidityKeeper, app.CosmwasmPoolKeeper, app.BankKeeper)
 
 		// Create sqs ingester that encapsulates all ingesters.
 		sqsIngester := sqs.NewSidecarQueryServerIngester(poolsIngester)
@@ -407,7 +407,6 @@ func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
 
 // EndBlocker application updates every end block.
 func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-
 	app.IngestManager.ProcessBlock(ctx)
 
 	return app.mm.EndBlock(ctx, req)

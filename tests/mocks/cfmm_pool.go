@@ -199,6 +199,21 @@ func (mr *MockCFMMPoolIMockRecorder) GetSpreadFactor(ctx interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpreadFactor", reflect.TypeOf((*MockCFMMPoolI)(nil).GetSpreadFactor), ctx)
 }
 
+// GetTokenWeight mocks base method.
+func (m *MockCFMMPoolI) GetTokenWeight(denom string) (osmomath.Int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTokenWeight", denom)
+	ret0, _ := ret[0].(osmomath.Int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTokenWeight indicates an expected call of GetTokenWeight.
+func (mr *MockCFMMPoolIMockRecorder) GetTokenWeight(denom interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTokenWeight", reflect.TypeOf((*MockCFMMPoolI)(nil).GetTokenWeight), denom)
+}
+
 // GetTotalPoolLiquidity mocks base method.
 func (m *MockCFMMPoolI) GetTotalPoolLiquidity(ctx types.Context) types.Coins {
 	m.ctrl.T.Helper()
@@ -581,6 +596,21 @@ func (m *MockPoolAmountOutExtension) GetSpreadFactor(ctx types.Context) osmomath
 func (mr *MockPoolAmountOutExtensionMockRecorder) GetSpreadFactor(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpreadFactor", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).GetSpreadFactor), ctx)
+}
+
+// GetTokenWeight mocks base method.
+func (m *MockPoolAmountOutExtension) GetTokenWeight(denom string) (osmomath.Int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTokenWeight", denom)
+	ret0, _ := ret[0].(osmomath.Int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTokenWeight indicates an expected call of GetTokenWeight.
+func (mr *MockPoolAmountOutExtensionMockRecorder) GetTokenWeight(denom interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTokenWeight", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).GetTokenWeight), denom)
 }
 
 // GetTotalPoolLiquidity mocks base method.

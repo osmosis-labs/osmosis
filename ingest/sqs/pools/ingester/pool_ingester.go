@@ -5,28 +5,26 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v20/ingest"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/common"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/parser"
 )
 
 type poolIngester struct {
 	poolsRepository    domain.PoolsRepository
-	gammKeeper         PoolKeeper
-	concentratedKeeper PoolKeeper
-	cosmWasmKeeper     PoolKeeper
-}
-
-// PoolKeeper is an interface for getting pools from a keeper.
-type PoolKeeper interface {
-	GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error)
+	gammKeeper         common.PoolKeeper
+	concentratedKeeper common.PoolKeeper
+	cosmWasmKeeper     common.CosmWasmPoolKeeper
+	bankKeeper         common.BankKeeper
 }
 
 // NewPoolIngester returns a new pool ingester.
-func NewPoolIngester(poolsRepository domain.PoolsRepository, gammKeeper PoolKeeper, concentratedKeeper PoolKeeper, cosmwasmKeeper PoolKeeper) ingest.Ingester {
+func NewPoolIngester(poolsRepository domain.PoolsRepository, gammKeeper common.PoolKeeper, concentratedKeeper common.PoolKeeper, cosmwasmKeeper common.CosmWasmPoolKeeper, bankKeeper common.BankKeeper) ingest.Ingester {
 	return &poolIngester{
 		poolsRepository:    poolsRepository,
 		gammKeeper:         gammKeeper,
 		concentratedKeeper: concentratedKeeper,
 		cosmWasmKeeper:     cosmwasmKeeper,
+		bankKeeper:         bankKeeper,
 	}
 }
 
@@ -38,7 +36,6 @@ func (pi *poolIngester) ProcessBlock(ctx sdk.Context) error {
 var _ ingest.Ingester = &poolIngester{}
 
 func (pi *poolIngester) updatePoolState(ctx sdk.Context) error {
-
 	goCtx := sdk.WrapSDKContext(ctx)
 
 	// CFMM pools
@@ -48,9 +45,15 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context) error {
 		return err
 	}
 
-	// TODO: parse pools to the appropriate SQS types
-	cfmmPoolsParsed := make([]domain.CFMMPoolI, 0, len(cfmmPools))
+	// Parse CFMM pool to the standard SQS types.
+	cfmmPoolsParsed := make([]domain.PoolI, 0, len(cfmmPools))
 	for _, pool := range cfmmPools {
+
+		pool, err := parser.ConvertCFMM(ctx, pool)
+		if err != nil {
+			return err
+		}
+
 		cfmmPoolsParsed = append(cfmmPoolsParsed, pool)
 	}
 
@@ -66,10 +69,16 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context) error {
 		return err
 	}
 
-	// TODO: parse pools to the appropriate SQS types
-	concentratedPoolsParsed := make([]domain.ConcentratedPoolI, 0, len(cfmmPools))
+	concentratedPoolsParsed := make([]domain.PoolI, 0, len(concentratedPools))
 	for _, pool := range concentratedPools {
-		concentratedPoolsParsed = append(concentratedPoolsParsed, pool)
+
+		// Parse concentrated pool to the standard SQS types.
+		parsedPool, err := parser.ConvertConcentrated(ctx, pool, pi.bankKeeper)
+		if err != nil {
+			return err
+		}
+
+		concentratedPoolsParsed = append(concentratedPoolsParsed, parsedPool)
 	}
 
 	err = pi.poolsRepository.StoreConcentrated(goCtx, concentratedPoolsParsed)
@@ -79,14 +88,20 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context) error {
 
 	// CosmWasm pools
 
-	cosmWasmPools, err := pi.cosmWasmKeeper.GetPools(ctx)
+	cosmWasmPools, err := pi.cosmWasmKeeper.GetPoolsWithWasmKeeper(ctx)
 	if err != nil {
 		return err
 	}
 
-	// TODO: parse pools to the appropriate SQS types
-	cosmWasmPoolsParsed := make([]domain.CosmWasmPoolI, 0, len(cfmmPools))
+	cosmWasmPoolsParsed := make([]domain.PoolI, 0, len(cosmWasmPools))
 	for _, pool := range cosmWasmPools {
+
+		// Parse CosmWasm pools to the standard SQS types.
+		pool, err := parser.ConvertCosmWasm(ctx, pool)
+		if err != nil {
+			return err
+		}
+
 		cosmWasmPoolsParsed = append(cosmWasmPoolsParsed, pool)
 	}
 

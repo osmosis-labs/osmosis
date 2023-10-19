@@ -8,46 +8,82 @@ import (
 
 // PoolI represents a generalized Pool interface.
 type PoolI interface {
+	// GetId returns the ID of the pool.
 	GetId() uint64
 	// GetType returns the type of the pool (Balancer, Stableswap, Concentrated, etc.)
 	GetType() poolmanagertypes.PoolType
+
+	GetLiquidity() string
+
+	GetSpreadFactor() string
+
+	GetDenoms() []string
+
+	GetWeights() []string
 }
 
-// CFMMPoolI represents a constant function market maker pool interface
-type CFMMPoolI interface {
-	PoolI
+type Pool struct {
+	Id           uint64   `json:"id"`
+	Type         int      `json:"type"`
+	SpreadFactor string   `json:"spread_factor"`
+	Denoms       []string `json:"pool_denoms"`
+	Balances     string   `json:"balances"`
+	Liquidity    string   `json:"liquidity,omitempty"`
+	Weights      []string `json:"weights,omitempty"`
 }
 
-// ConcentratedPoolI represents a concentrated liquidity pool inteface.
-type ConcentratedPoolI interface {
-	PoolI
+var _ PoolI = &Pool{}
+
+// GetId implements PoolI.
+func (p *Pool) GetId() uint64 {
+	return p.Id
 }
 
-// CosmWasmPoolI represents a cosm wasm pool interface.
-type CosmWasmPoolI interface {
-	PoolI
+// GetType implements PoolI.
+func (p *Pool) GetType() poolmanagertypes.PoolType {
+	return poolmanagertypes.PoolType(p.Type)
+}
+
+// GetDenoms implements PoolI.
+func (p *Pool) GetDenoms() []string {
+	return p.Denoms
+}
+
+// GetLiquidity implements PoolI.
+func (p *Pool) GetLiquidity() string {
+	return p.Liquidity
+}
+
+// GetSpreadFactor implements PoolI.
+func (p *Pool) GetSpreadFactor() string {
+	return p.SpreadFactor
+}
+
+// GetWeights implements PoolI.
+func (p *Pool) GetWeights() []string {
+	return p.Weights
 }
 
 // PoolsRepository represent the pool's repository contract
 type PoolsRepository interface {
 	// GetAllConcentrated returns concentrated pools sorted by ID.
-	GetAllConcentrated(context.Context) ([]ConcentratedPoolI, error)
+	GetAllConcentrated(context.Context) ([]PoolI, error)
 	// GetAllCFMM returns CFMM pools sorted by ID.
-	GetAllCFMM(context.Context) ([]CFMMPoolI, error)
+	GetAllCFMM(context.Context) ([]PoolI, error)
 	// GetAllCosmWasm returns CosmWasm pools sorted by ID.
-	GetAllCosmWasm(context.Context) ([]CosmWasmPoolI, error)
+	GetAllCosmWasm(context.Context) ([]PoolI, error)
 
 	// StoreConcentrated stores concentrated pools.
 	// Returns error if any occurs when interacting with repository.
-	StoreConcentrated(context.Context, []ConcentratedPoolI) error
+	StoreConcentrated(context.Context, []PoolI) error
 
 	// StoreCFMM stores CFMM pools.
 	// Returns error if any occurs when interacting with repository.
-	StoreCFMM(context.Context, []CFMMPoolI) error
+	StoreCFMM(context.Context, []PoolI) error
 
 	// StoreCosmWasm stores CosmWasm pools.
 	// Returns error if any occurs when interacting with repository.
-	StoreCosmWasm(context.Context, []CosmWasmPoolI) error
+	StoreCosmWasm(context.Context, []PoolI) error
 }
 
 // PoolsUsecase represent the pool's usecases
