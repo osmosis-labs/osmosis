@@ -36,6 +36,7 @@ import (
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
 
+	"github.com/osmosis-labs/osmosis/v20/ingest"
 	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
 	downtimedetector "github.com/osmosis-labs/osmosis/v20/x/downtime-detector"
@@ -158,6 +159,9 @@ type AppKeepers struct {
 	Ics20WasmHooks            *ibchooks.WasmHooks
 	HooksICS4Wrapper          ibchooks.ICS4Middleware
 	PacketForwardKeeper       *packetforwardkeeper.Keeper
+
+	// Ingest
+	IngestManager ingest.IngestManager
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
