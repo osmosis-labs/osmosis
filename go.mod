@@ -26,7 +26,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231019181032-61868ce96ec2
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231019181538-069e69fac08e
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231019181032-61868ce96ec2
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231019181032-61868ce96ec2
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231019181032-61868ce96ec2
@@ -362,14 +362,15 @@ require (
 )
 
 replace (
+	// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
+
+	// github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
+	// github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
+	// github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
+	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194
 	// TODO: remove in favor of github.com/cosmos/cosmos-proto
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/osmosis-labs/osmosis/osmomath => ./osmomath
-
-	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
-	github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
-	github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
