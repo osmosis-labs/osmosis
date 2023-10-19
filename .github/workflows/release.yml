@@ -27,7 +27,10 @@ jobs:
       - 
         name: Make release
         run: |
-          sudo rm -rf dist
           make release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: 🧹 Clean release folder
+        run: |
+          sudo rm -rf dist
