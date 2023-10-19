@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-redis/redismock/v9"
-	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo/v2"
 
 	. "github.com/onsi/gomega"
@@ -20,8 +19,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/repository/redis"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/tests/mocks"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -51,9 +48,6 @@ var _ = Describe("RedisRepository", func() {
 		testCosmWasmPools     []domain.PoolI
 		clientMock            redismock.ClientMock
 		ctx                   context.Context
-		mockCFMMPool          *mocks.MockSQSPoolI
-		mockConcentratedPool  *mocks.MockSQSPoolI
-		mockCosmWasmPool      *mocks.MockSQSPoolI
 	)
 
 	BeforeEach(func() {
@@ -68,7 +62,7 @@ var _ = Describe("RedisRepository", func() {
 		// Create stableswap pools
 		for i := stableSwapPoolIDOffset; i < stableSwapPoolIDOffset+numPoolsCreate; i++ {
 			expectedPoolID := uint64(i)
-			pool := withPoolType(withPoolID(newDefaultBalancerPool(), expectedPoolID), poolmanagertypes.Balancer)
+			pool := withPoolType(withPoolID(newDefaultBalancerPool(), expectedPoolID), poolmanagertypes.Stableswap)
 			testStableSwapPools = append(testStableSwapPools, pool)
 		}
 
@@ -90,16 +84,6 @@ var _ = Describe("RedisRepository", func() {
 		var client *redisdb.Client
 		client, clientMock = redismock.NewClientMock()
 		poolRepo = redis.NewRedisPoolsRepo(client)
-
-		// configure CFMM pool mock
-		ctrl := gomock.NewController(GinkgoT())
-		mockCFMMPool = mocks.NewMockSQSPoolI(ctrl)
-
-		// configure Concentrated pool mock
-		mockConcentratedPool = mocks.NewMockSQSPoolI(ctrl)
-
-		// configure CosmWasm pool mock
-		mockCosmWasmPool = mocks.NewMockSQSPoolI(ctrl)
 
 		// Create context
 		ctx = context.Background()
@@ -129,12 +113,11 @@ var _ = Describe("RedisRepository", func() {
 
 					// Define assertions on redis client methods being called
 					for i := 0; i < numPoolsCreate; i++ {
-						expectedID := uint64(i + 1)
+						expectedID := i + 1
 
 						serializedPool, err := json.Marshal(testBalancerPools[i])
 						Expect(err).ToNot(HaveOccurred())
-						expectedPoolKey := redis.CfmmKeyFromPoolTypeAndID(poolmanagertypes.Balancer, expectedID)
-						clientMock.ExpectHSet(redis.CfmmPoolKey, expectedPoolKey, serializedPool).SetVal(1)
+						clientMock.ExpectHSet(redis.CfmmPoolKey, strconv.Itoa(expectedID), serializedPool).SetVal(1)
 					}
 
 					err := poolRepo.StoreCFMM(ctx, testBalancerPools)
@@ -146,13 +129,10 @@ var _ = Describe("RedisRepository", func() {
 				It("should succeed", func() {
 
 					// Define assertions on redis client methods being called
-					for i := stableSwapPoolIDOffset; i <= numPoolsCreate*2; i++ {
-						expectedID := uint64(i)
-
+					for expectedID := stableSwapPoolIDOffset; expectedID <= numPoolsCreate*2; expectedID++ {
 						serializedPool, err := json.Marshal(testStableSwapPools[expectedID-numPoolsCreate-1])
 						Expect(err).ToNot(HaveOccurred())
-						expectedPoolKey := redis.CfmmKeyFromPoolTypeAndID(poolmanagertypes.Stableswap, expectedID)
-						clientMock.ExpectHSet(redis.CfmmPoolKey, expectedPoolKey, serializedPool).SetVal(1)
+						clientMock.ExpectHSet(redis.CfmmPoolKey, strconv.Itoa(expectedID), serializedPool).SetVal(1)
 					}
 
 					err := poolRepo.StoreCFMM(ctx, testStableSwapPools)
@@ -166,22 +146,17 @@ var _ = Describe("RedisRepository", func() {
 					// Define assertions on redis client methods being called
 
 					// Change order by storing stableswap first - order does not matter here.
-					for i := stableSwapPoolIDOffset; i <= numPoolsCreate*2; i++ {
-						expectedID := uint64(i)
-
+					for expectedID := stableSwapPoolIDOffset; expectedID <= numPoolsCreate*2; expectedID++ {
 						serializedPool, err := json.Marshal(testStableSwapPools[expectedID-numPoolsCreate-1])
 						Expect(err).ToNot(HaveOccurred())
-						expectedPoolKey := redis.CfmmKeyFromPoolTypeAndID(poolmanagertypes.Stableswap, expectedID)
-						clientMock.ExpectHSet(redis.CfmmPoolKey, expectedPoolKey, serializedPool).SetVal(1)
+						clientMock.ExpectHSet(redis.CfmmPoolKey, strconv.Itoa(expectedID), serializedPool).SetVal(1)
 					}
 
 					for i := 0; i < numPoolsCreate; i++ {
-						expectedID := uint64(i + 1)
-
+						expectedID := i + 1
 						serializedPool, err := json.Marshal(testBalancerPools[i])
 						Expect(err).ToNot(HaveOccurred())
-						expectedPoolKey := redis.CfmmKeyFromPoolTypeAndID(poolmanagertypes.Balancer, expectedID)
-						clientMock.ExpectHSet(redis.CfmmPoolKey, expectedPoolKey, serializedPool).SetVal(1)
+						clientMock.ExpectHSet(redis.CfmmPoolKey, strconv.Itoa(expectedID), serializedPool).SetVal(1)
 					}
 
 					// Note that this is out of pool ID order.
@@ -190,16 +165,6 @@ var _ = Describe("RedisRepository", func() {
 					err := poolRepo.StoreCFMM(ctx, storedPools)
 
 					Expect(err).ToNot(HaveOccurred())
-				})
-			})
-
-			When("storing non-CFMM pools", func() {
-				It("should fail", func() {
-					mockCFMMPool.EXPECT().GetType().Return(types.Concentrated)
-
-					err := poolRepo.StoreCFMM(ctx, []domain.PoolI{mockCFMMPool})
-					Expect(err).To(HaveOccurred())
-					Expect(err).To(Equal(domain.InvalidPoolTypeError{PoolType: int32(types.Concentrated)}))
 				})
 			})
 		})
@@ -229,8 +194,7 @@ var _ = Describe("RedisRepository", func() {
 						expectedSerialized, err := json.Marshal(stableswapModel)
 						Expect(err).ToNot(HaveOccurred())
 
-						expectedPoolKey := redis.CfmmKeyFromPoolTypeAndID(poolmanagertypes.Stableswap, stableswapModel.GetId())
-						expectedReturn[expectedPoolKey] = string(expectedSerialized)
+						expectedReturn[strconv.Itoa(int(stableswapModel.GetId()))] = string(expectedSerialized)
 					}
 
 					// Mock balancer pools in the map
@@ -240,9 +204,7 @@ var _ = Describe("RedisRepository", func() {
 
 						expectedSerialized, err := json.Marshal(balancerModel)
 						Expect(err).ToNot(HaveOccurred())
-
-						expectedPoolKey := redis.CfmmKeyFromPoolTypeAndID(poolmanagertypes.Balancer, balancerPool.GetId())
-						expectedReturn[expectedPoolKey] = string(expectedSerialized)
+						expectedReturn[strconv.Itoa(int(balancerPool.GetId()))] = string(expectedSerialized)
 					}
 
 					clientMock.ExpectHGetAll(redis.CfmmPoolKey).SetVal(expectedReturn)
@@ -298,16 +260,6 @@ var _ = Describe("RedisRepository", func() {
 
 					err := poolRepo.StoreConcentrated(ctx, testConcentratedPools)
 					Expect(err).ToNot(HaveOccurred())
-				})
-			})
-
-			When("storing non-Concentrated pools", func() {
-				It("should fail", func() {
-					mockConcentratedPool.EXPECT().GetType().Return(types.Balancer)
-
-					err := poolRepo.StoreConcentrated(ctx, []domain.PoolI{mockConcentratedPool})
-					Expect(err).To(HaveOccurred())
-					Expect(err).To(Equal(domain.InvalidPoolTypeError{PoolType: int32(types.Balancer)}))
 				})
 			})
 		})
@@ -387,16 +339,6 @@ var _ = Describe("RedisRepository", func() {
 
 					err := poolRepo.StoreCosmWasm(ctx, testCosmWasmPools)
 					Expect(err).ToNot(HaveOccurred())
-				})
-			})
-
-			When("storing non-Cosmwasm pools", func() {
-				It("should fail", func() {
-					mockCosmWasmPool.EXPECT().GetType().Return(types.Balancer)
-
-					err := poolRepo.StoreCosmWasm(ctx, []domain.PoolI{mockCosmWasmPool})
-					Expect(err).To(HaveOccurred())
-					Expect(err).To(Equal(domain.InvalidPoolTypeError{PoolType: int32(types.Balancer)}))
 				})
 			})
 		})

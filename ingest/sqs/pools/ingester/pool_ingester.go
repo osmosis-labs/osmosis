@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/ingest"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/common"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/parser"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/ingester/parser"
 )
 
 type poolIngester struct {
