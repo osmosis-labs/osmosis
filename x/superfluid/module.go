@@ -11,7 +11,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/gorilla/mux"
@@ -201,9 +200,10 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 	return simulation.ProposalContents(am.keeper, am.gammKeeper)
 }
 
-// RandomizedParams creates randomized pool-incentives param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.LegacyParamChange {
-	return nil // TODO
+// UNFORKINGNOTE: Implement simulated gov proposal
+// ProposalMsgs doesn't return any content functions for governance proposals
+func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types.
