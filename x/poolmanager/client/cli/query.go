@@ -3,7 +3,7 @@ package cli
 import (
 	"strconv"
 
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 

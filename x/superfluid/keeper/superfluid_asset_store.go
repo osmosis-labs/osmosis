@@ -3,7 +3,7 @@ package keeper
 // This file handles
 
 import (
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
 

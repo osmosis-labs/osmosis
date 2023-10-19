@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
 

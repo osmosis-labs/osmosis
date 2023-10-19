@@ -11,7 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 )
 
 var (

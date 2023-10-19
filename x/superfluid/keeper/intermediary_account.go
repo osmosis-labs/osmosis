@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/proto"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"

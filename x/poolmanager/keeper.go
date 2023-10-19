@@ -2,7 +2,7 @@ package poolmanager
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gogotypes "github.com/cosmos/gogoproto/types"
+	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
