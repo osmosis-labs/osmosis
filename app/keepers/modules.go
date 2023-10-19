@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	distrclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -71,7 +70,6 @@ var AppModuleBasics = []module.AppModuleBasic{
 	gov.NewAppModuleBasic(
 		[]govclient.ProposalHandler{
 			paramsclient.ProposalHandler,
-			distrclient.ProposalHandler,
 			upgradeclient.LegacyProposalHandler,
 			upgradeclient.LegacyCancelProposalHandler,
 			poolincentivesclient.UpdatePoolIncentivesHandler,
