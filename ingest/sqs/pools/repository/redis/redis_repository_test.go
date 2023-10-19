@@ -203,7 +203,7 @@ var _ = Describe("RedisRepository", func() {
 
 					err := poolRepo.StoreCFMM(ctx, []domain.CFMMPoolI{mockCFMMPool})
 					Expect(err).To(HaveOccurred())
-					Expect(err).To(Equal(domain.InvalidPoolTypeError{int32(types.Concentrated)}))
+					Expect(err).To(Equal(domain.InvalidPoolTypeError{PoolType: int32(types.Concentrated)}))
 				})
 			})
 		})
@@ -311,7 +311,7 @@ var _ = Describe("RedisRepository", func() {
 
 					err := poolRepo.StoreConcentrated(ctx, []domain.ConcentratedPoolI{mockConcentratedPool})
 					Expect(err).To(HaveOccurred())
-					Expect(err).To(Equal(domain.InvalidPoolTypeError{int32(types.Balancer)}))
+					Expect(err).To(Equal(domain.InvalidPoolTypeError{PoolType: int32(types.Balancer)}))
 				})
 			})
 		})
@@ -400,7 +400,7 @@ var _ = Describe("RedisRepository", func() {
 
 					err := poolRepo.StoreCosmWasm(ctx, []domain.CosmWasmPoolI{mockCosmWasmPool})
 					Expect(err).To(HaveOccurred())
-					Expect(err).To(Equal(domain.InvalidPoolTypeError{int32(types.Balancer)}))
+					Expect(err).To(Equal(domain.InvalidPoolTypeError{PoolType: int32(types.Balancer)}))
 				})
 			})
 		})
