@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
 
@@ -511,10 +511,10 @@ func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 
 func updateGovGenesis(votingPeriod, expeditedVotingPeriod time.Duration) func(*govtypesv1.GenesisState) {
 	return func(govGenState *govtypesv1.GenesisState) {
-		govGenState.VotingParams.VotingPeriod = votingPeriod
+		govGenState.Params.VotingPeriod = &votingPeriod
 		// UNFORKINGTODO N: Uncomment when expedited prop is implemented
 		//govGenState.VotingParams.ExpeditedVotingPeriod = expeditedVotingPeriod
-		govGenState.DepositParams.MinDeposit = tenOsmo
+		govGenState.Params.MinDeposit = tenOsmo
 		// UNFORKINGTODO N: Uncomment when expedited prop is implemented
 		//govGenState.DepositParams.MinExpeditedDeposit = fiftyOsmo
 	}

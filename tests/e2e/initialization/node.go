@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -167,7 +168,8 @@ func (n *internalNode) createConsensusKey() error {
 }
 
 func (n *internalNode) createKeyFromMnemonic(name, mnemonic string) error {
-	kb, err := keyring.New(keyringAppName, keyring.BackendTest, n.configDir(), nil, nil)
+	cfg := testutil.MakeTestEncodingConfig()
+	kb, err := keyring.New(keyringAppName, keyring.BackendTest, n.configDir(), nil, cfg.Codec)
 	if err != nil {
 		return err
 	}
