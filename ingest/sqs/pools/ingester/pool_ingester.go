@@ -48,7 +48,7 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context) error {
 	// Parse CFMM pool to the standard SQS types.
 	cfmmPoolsParsed := make([]domain.PoolI, 0, len(cfmmPools))
 	for _, pool := range cfmmPools {
-		pool, err := parser.ConvertCFMM(ctx, pool)
+		pool, err := parser.ConvertCFMM(ctx, pool, pi.bankKeeper)
 		if err != nil {
 			return err
 		}

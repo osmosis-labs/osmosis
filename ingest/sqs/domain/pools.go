@@ -3,6 +3,9 @@ package domain
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -13,55 +16,42 @@ type PoolI interface {
 	// GetType returns the type of the pool (Balancer, Stableswap, Concentrated, etc.)
 	GetType() poolmanagertypes.PoolType
 
-	GetLiquidity() string
+	GetTotalValueLockedUSDC() osmomath.Int
 
-	GetSpreadFactor() string
-
-	GetDenoms() []string
-
-	GetWeights() []string
+	GetPoolDenoms() []string
 }
 
 type Pool struct {
-	Id           uint64   `json:"id"`
-	Type         int      `json:"type"`
-	SpreadFactor string   `json:"spread_factor"`
-	Denoms       []string `json:"pool_denoms"`
-	Balances     string   `json:"balances"`
-	Liquidity    string   `json:"liquidity,omitempty"`
-	Weights      []string `json:"weights,omitempty"`
+	UnderlyingPool       poolmanagertypes.PoolI `json:"pool"`
+	TotalValueLockedUSDC osmomath.Int           `json:"total_value_locked_usdc"`
+	// Only CL and Cosmwasm pools need balances appended
+	Balances sdk.Coins `json:"balances,omitempty"`
 }
 
 var _ PoolI = &Pool{}
 
 // GetId implements PoolI.
 func (p *Pool) GetId() uint64 {
-	return p.Id
+	return p.UnderlyingPool.GetId()
 }
 
 // GetType implements PoolI.
 func (p *Pool) GetType() poolmanagertypes.PoolType {
-	return poolmanagertypes.PoolType(p.Type)
+	return poolmanagertypes.PoolType(p.UnderlyingPool.GetType())
 }
 
-// GetDenoms implements PoolI.
-func (p *Pool) GetDenoms() []string {
-	return p.Denoms
+// GetTotalValueLockedUSDC implements PoolI.
+func (p *Pool) GetTotalValueLockedUSDC() osmomath.Int {
+	return p.TotalValueLockedUSDC
 }
 
-// GetLiquidity implements PoolI.
-func (p *Pool) GetLiquidity() string {
-	return p.Liquidity
-}
-
-// GetSpreadFactor implements PoolI.
-func (p *Pool) GetSpreadFactor() string {
-	return p.SpreadFactor
-}
-
-// GetWeights implements PoolI.
-func (p *Pool) GetWeights() []string {
-	return p.Weights
+// GetPoolDenoms implements PoolI.
+func (p *Pool) GetPoolDenoms() []string {
+	denoms := make([]string, 0, len(p.Balances))
+	for _, balance := range p.Balances {
+		denoms = append(denoms, balance.Denom)
+	}
+	return denoms
 }
 
 // PoolsRepository represent the pool's repository contract
