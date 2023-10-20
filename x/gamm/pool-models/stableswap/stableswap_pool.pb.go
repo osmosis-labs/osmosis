@@ -13,7 +13,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth/types"
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "github.com/cosmos/gogoproto/types"
-	_ "github.com/gogo/protobuf/gogoproto"
+	
 	io "io"
 	math "math"
 	math_bits "math/bits"
