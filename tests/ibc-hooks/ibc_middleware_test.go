@@ -338,7 +338,7 @@ func (suite *HooksTestSuite) makeMockPacket(receiver, memo string, prevSequence 
 		suite.pathAB.EndpointB.ChannelID,
 		suite.pathAB.EndpointA.ChannelConfig.PortID,
 		suite.pathAB.EndpointA.ChannelID,
-		clienttypes.NewHeight(0, 100),
+		clienttypes.NewHeight(1, 100),
 		0,
 	)
 }
@@ -543,7 +543,7 @@ func NewMsgTransfer(token sdk.Coin, sender, receiver, channel, memo string) *tra
 		Token:            token,
 		Sender:           sender,
 		Receiver:         receiver,
-		TimeoutHeight:    clienttypes.NewHeight(0, 500),
+		TimeoutHeight:    clienttypes.NewHeight(1, 500),
 		TimeoutTimestamp: 0,
 		Memo:             memo,
 	}

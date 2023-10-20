@@ -6,6 +6,7 @@ import (
 	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
+	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -121,4 +122,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	ibcratelimitmodule.AppModuleBasic{},
 	router.AppModuleBasic{},
 	cosmwasmpoolmodule.AppModuleBasic{},
+	tendermint.AppModuleBasic{},
 }

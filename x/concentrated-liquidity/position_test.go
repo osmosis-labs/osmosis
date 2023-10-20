@@ -2453,8 +2453,8 @@ func (s *KeeperTestSuite) TestTransferPositions() {
 				for _, positionId := range tc.positionsToTransfer {
 					fundsToClaim, fundsToForefeit, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, positionId)
 					s.Require().NoError(err)
-					s.Require().Equal(sdk.Coins(nil), fundsToClaim)
-					s.Require().Equal(sdk.Coins(nil), fundsToForefeit)
+					s.Require().Equal(sdk.Coins{}, fundsToClaim)
+					s.Require().Equal(sdk.Coins{}, fundsToForefeit)
 
 					spreadRewards, err := s.App.ConcentratedLiquidityKeeper.GetClaimableSpreadRewards(s.Ctx, positionId)
 					s.Require().NoError(err)
