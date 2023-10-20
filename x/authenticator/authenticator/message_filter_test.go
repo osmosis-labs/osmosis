@@ -5,6 +5,7 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/osmosis-labs/osmosis/v19/app"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"testing"
@@ -28,7 +29,7 @@ func (s *MessageFilterAuthenticatorTest) SetupTest() {
 	s.MessageFilterAuthenticator = authenticator.NewMessageFilterAuthenticator()
 }
 
-func (s *MessageFilterAuthenticatorTest) TestMessageTypes() {
+func (s *MessageFilterAuthenticatorTest) TestBankSend() {
 	tests := []struct {
 		name    string // name
 		pattern string
@@ -108,7 +109,7 @@ func (s *MessageFilterAuthenticatorTest) TestMessageTypes() {
 		},
 
 		{"bank send. using map as generic",
-			`{{"type":"/cosmos.bank.v1beta1.MsgSend","value":{}}`,
+			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("bar", 100))},
 			true,
 		},
@@ -117,6 +118,98 @@ func (s *MessageFilterAuthenticatorTest) TestMessageTypes() {
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": []}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))},
 			true,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			filter, err := s.MessageFilterAuthenticator.Initialize([]byte(tt.pattern))
+			s.Require().NoError(err)
+			result := filter.Authenticate(s.Ctx, sdk.AccAddress{}, tt.msg, nil)
+			if tt.match {
+				s.Require().True(result.IsAuthenticated())
+			} else {
+				s.Require().True(result.IsAuthenticationFailed())
+			}
+		})
+	}
+}
+
+func (s *MessageFilterAuthenticatorTest) TestPoolManagerSwapExactAmountIn() {
+	tests := []struct {
+		name    string
+		pattern string
+		msg     sdk.Msg
+		match   bool
+	}{
+		{"poolmanager swap exact amount in",
+			`{"type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","value":{"sender":"senderAddr","token_in":{"denom":"inputDenom", "amount":"500"}, "token_out_min_amount": "100"}}`,
+			&poolmanagertypes.MsgSwapExactAmountIn{
+				Sender:            "senderAddr",
+				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
+				TokenOutMinAmount: sdk.NewInt(100),
+			},
+			true,
+		},
+
+		{"swap exact amount. basic match",
+			`{"type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","value":{"sender":"senderAddr"}}`,
+			&poolmanagertypes.MsgSwapExactAmountIn{
+				Sender:            "senderAddr",
+				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
+				TokenOutMinAmount: sdk.NewInt(100),
+			},
+			true,
+		},
+
+		{"swap exact amount. match denom",
+			`{"type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","value":{"token_in":{"denom":"inputDenom"}}}`,
+			&poolmanagertypes.MsgSwapExactAmountIn{
+				Sender:            "senderAddr",
+				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
+				TokenOutMinAmount: sdk.NewInt(100),
+			},
+			true,
+		},
+
+		{"swap exact amount. match denom and sender",
+			`{"type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","value":{"token_in":{"denom":"inputDenom"}, "sender": "senderAddr"}}`,
+			&poolmanagertypes.MsgSwapExactAmountIn{
+				Sender:            "senderAddr",
+				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
+				TokenOutMinAmount: sdk.NewInt(100),
+			},
+			true,
+		},
+
+		{"swap exact amount. mismatch denom",
+			`{"type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","value":{"token_in":{"denom":"wrongDenom"}}}`,
+			&poolmanagertypes.MsgSwapExactAmountIn{
+				Sender:            "senderAddr",
+				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
+				TokenOutMinAmount: sdk.NewInt(100),
+			},
+			false,
+		},
+
+		{"swap exact amount. match with token out min amount",
+			`{"type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","value":{"token_out_min_amount":"100"}}`,
+			&poolmanagertypes.MsgSwapExactAmountIn{
+				Sender:            "senderAddr",
+				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
+				TokenOutMinAmount: sdk.NewInt(100),
+			},
+			true,
+		},
+
+		{"swap exact amount. mismatch with token out min amount",
+			`{"type":"/osmosis.poolmanager.v1beta1.MsgSwapExactAmountIn","value":{"token_out_min_amount":"200"}}`,
+			&poolmanagertypes.MsgSwapExactAmountIn{
+				Sender:            "senderAddr",
+				TokenIn:           sdk.NewCoin("inputDenom", sdk.NewInt(500)),
+				TokenOutMinAmount: sdk.NewInt(100),
+			},
+			false,
 		},
 	}
 
