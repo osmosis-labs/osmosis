@@ -13,7 +13,7 @@ check_if_exists() {
 # check_if_exists returns 1 if an "osmosis" image is built from the same commit SHA
 # as the current commit, 0 otherwise.
 # It assummes that the "osmosis" image was specifically tagged with Git SHA at build
-# time. Please see "docker-build-debug" Makefile step for details.
+# time. Please see "e2e-docker-build-debug" Makefile step for details.
 check_if_up_to_date() {
     sha_from_image=$LIST_DOCKER_IMAGE_HASHES
     local_git_sha=$(git rev-parse HEAD)
@@ -47,6 +47,6 @@ else
 fi
 
 # Rebuild the image
-make docker-build-debug
+make e2e-docker-build-debug
 
 check_if_up_to_date

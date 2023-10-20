@@ -1,5 +1,27 @@
 #!/usr/bin/make -f
 
+.DEFAULT_GOAL := help
+help:
+	@echo "Available top-level commands:"
+	@echo ""
+	@echo "Usage:"
+	@echo "    make [command]"
+	@echo ""
+	@echo "  make build        	        Build osmosisd binary"
+	@echo "  make install        	    Install osmosisd binary"
+	@echo "  make deps                  Show available deps commands"
+	@echo "  make proto                 Show available proto commands"
+	@echo "  make release               Show available release commands"
+	@echo "  make e2e                   Show available e2e commands"
+	@echo "  make docker                Show available docker commands"
+	@echo "  make lint                  Show available lint commands"
+	@echo "  make test                  Show available test commands"
+	@echo "  make test                  Show available test commands"
+	@echo "  make localnet              Show available localnet commands"
+	@echo "  make release-help          Show available release commands"
+	@echo ""
+	@echo "Run 'make [subcommand]' to see the available commands for each subcommand."
+
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 
@@ -122,16 +144,16 @@ build-help:
 	@echo "  make build-[command]"
 	@echo ""
 	@echo "Available Commands:"
-	@echo "  all        Build all targets"
-	@echo "  check-version Check Go version"
-	@echo "  dev-install Install development build"
-	@echo "  dev-build  Build development version"
-	@echo "  install-with-autocomplete Install with autocomplete support"
-	@echo "  reproducible Build reproducible binaries"
-	@echo "  reproducible-amd64 Build reproducible amd64 binary"
-	@echo "  reproducible-arm64 Build reproducible arm64 binary"
-	@echo "  linux      Build for Linux"
-	@echo "  contract-tests-hooks Build contract tests hooks"
+	@echo "  all                              Build all targets"
+	@echo "  check-version                    Check Go version"
+	@echo "  dev-install                      Install development build"
+	@echo "  dev-build                        Build development version"
+	@echo "  install-with-autocomplete        Install with autocomplete support"
+	@echo "  reproducible                     Build reproducible binaries"
+	@echo "  reproducible-amd64               Build reproducible amd64 binary"
+	@echo "  reproducible-arm64               Build reproducible arm64 binary"
+	@echo "  linux                            Build for Linux"
+	@echo "  contract-tests-hooks             Build contract tests hooks"
 
 build-check-version:
 	@echo "Go version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION)"
@@ -252,41 +274,51 @@ build-contract-tests-hooks:
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/contract_tests
 
 
-###############################################################################
-###                           Dependency                           ###
-###############################################################################
-
-
-
-go-mod-cache: go.sum
-	@echo "--> Download go modules to local cache"
-	@go mod download
-
-go.sum: go.mod
-	@echo "--> Ensure dependencies have not been modified"
-	@GOWORK=off go mod verify
-
-draw-deps:
-	@# requires brew install graphviz or apt-get install graphviz
-	go get github.com/RobotsAndPencils/goviz
-	@goviz -i ./cmd/osmosisd -d 2 | dot -Tpng -o dependency-graph.png
-
-clean:
-	rm -rf $(CURDIR)/artifacts/
-
-distclean: clean
-	rm -rf vendor/
 
 ###############################################################################
 ###                           Dependency Updates                            ###
 ###############################################################################
+deps-help:
+	@echo "Dependency Update subcommands"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make deps-[command]"
+	@echo ""
+	@echo "Available Commands:"
+	@echo "  go-mod-cache             Download go modules to local cache"
+	@echo "  go.sum                   Ensure dependencies have not been modified"
+	@echo "  draw                     Create a dependency graph"
+	@echo "  clean                    Remove artifacts"
+	@echo "  distclean                Remove vendor directory"
+	@echo "  update-sdk-version       Update SDK version"
+	@echo "  tidy-workspace           Tidy workspace"
+deps: deps-help
+
+deps-go-mod-cache: go.sum
+	@echo "--> Download go modules to local cache"
+	@go mod download
+
+deps-go.sum: go.mod
+	@echo "--> Ensure dependencies have not been modified"
+	@GOWORK=off go mod verify
+
+deps-draw:
+	@# requires brew install graphviz or apt-get install graphviz
+	go get github.com/RobotsAndPencils/goviz
+	@goviz -i ./cmd/osmosisd -d 2 | dot -Tpng -o dependency-graph.png
+
+dpes-clean:
+	rm -rf $(CURDIR)/artifacts/
+
+deps-distclean: clean
+	rm -rf vendor/
 
 VERSION := 
 MODFILES := ./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod
 # run with VERSION argument specified
 # e.g) make update-sdk-version VERSION=v0.45.1-0.20230523200430-193959b898ec
 # This will change sdk dependencyu version for go.mod in root directory + all sub-modules in this repo.
-update-sdk-version:
+deps-update-sdk-version:
 	@if [ -z "$(VERSION)" ]; then \
 		echo "VERSION not set"; \
 		exit 1; \
@@ -303,7 +335,7 @@ update-sdk-version:
 		fi; \
 	done
 
-tidy-workspace:
+deps-tidy-workspace:
 	@./scripts/tidy_workspace.sh
 
 ###############################################################################
@@ -348,9 +380,6 @@ proto-image-push:
 	docker push $(protoImageName)
 
 
-test:
-	@go test -v ./x/...
-
 docs:
 	@echo
 	@echo "=========== Generate Message ============"
@@ -371,14 +400,14 @@ docs:
 
 
 ###############################################################################
-###                                Querygen                                 ###
+###                                Gen                                      ###
 ###############################################################################
 
 run-querygen:
 	@go run cmd/querygen/main.go
 
 ###############################################################################
-###                           Tests & Simulation                            ###
+###                                 Tests                                   ###
 ###############################################################################
 
 PACKAGES_UNIT=$(shell go list ./... ./osmomath/... ./osmoutils/... ./x/ibc-hooks/... ./x/epochs | grep -E -v 'tests/simulator|e2e')
@@ -386,9 +415,32 @@ PACKAGES_E2E := $(shell go list ./... | grep '/e2e' | awk -F'/e2e' '{print $$1 "
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
 TEST_PACKAGES=./...
 
-test: test-unit test-build
+test-help:
+	@echo "test subcommands"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make test-[command]"
+	@echo ""
+	@echo "Available Commands:"
+	@echo "  all                Run all tests"
+	@echo "  unit               Run unit tests"
+	@echo "  race               Run race tests"
+	@echo "  cover              Run coverage tests"
+	@echo "  sim-suite          Run sim suite tests"
+	@echo "  sim-app            Run sim app tests"
+	@echo "  sim-determinism    Run sim determinism tests"
+	@echo "  sim-bench          Run sim benchmark tests"
+	@echo "  e2e                Run e2e tests"
+	@echo "  e2e-ci             Run e2e CI tests"
+	@echo "  e2e-ci-scheduled   Run e2e CI scheduled tests"
+	@echo "  e2e-debug          Run e2e debug tests"
+	@echo "  e2e-short          Run e2e short tests"
+	@echo "  mutation           Run mutation tests"
+	@echo "  benchmark          Run benchmark tests"
 
-test-all: test-race test-cover
+test: test-help
+
+test-all: test-race test-covertest-unit test-build
 
 test-unit:
 	@VERSION=$(VERSION) SKIP_WASM_WSL_TESTS=$(SKIP_WASM_WSL_TESTS) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
@@ -443,21 +495,41 @@ test-e2e-short: e2e-setup
 test-mutation:
 	@bash scripts/mutation-test.sh $(MODULES)
 
-benchmark:
+test-benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
-build-e2e-script:
+
+###############################################################################
+###                                 E2E                                     ###
+###############################################################################
+e2e-help:
+	@echo "e2e subcommands"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make e2e-[command]"
+	@echo ""
+	@echo "Available Commands:"
+	@echo "  build-script                          Build e2e script"
+	@echo "  docker-build-debug                    Build e2e debug Docker image"
+	@echo "  docker-build-e2e-init-chain           Build e2e init chain Docker image"
+	@echo "  docker-build-e2e-init-node            Build e2e init node Docker image"
+	@echo "  setup                                 Set up e2e environment"
+	@echo "  check-image-sha                       Check e2e image SHA"
+	@echo "  remove-resources                      Remove e2e resources"
+e2e: e2e-help
+
+e2e-build-script:
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/initialization/$(E2E_SCRIPT_NAME)
 
-docker-build-debug:
+e2e-docker-build-debug:
 	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug --build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_ALPINE) -f Dockerfile .
 	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
 
-docker-build-e2e-init-chain:
+e2e-docker-build-e2e-init-chain:
 	@DOCKER_BUILDKIT=1 docker build -t osmolabs/osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
 
-docker-build-e2e-init-node:
+e2e-docker-build-e2e-init-node:
 	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
 
 e2e-setup: e2e-check-image-sha e2e-remove-resources
@@ -478,6 +550,19 @@ e2e-remove-resources:
 RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
 RUNNER_BASE_IMAGE_ALPINE := alpine:3.17
 RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
+
+docker-help:
+	@echo "docker subcommands"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make docker-[command]"
+	@echo ""
+	@echo "Available Commands:"
+	@echo "  build                Build Docker image"
+	@echo "  build-distroless     Build distroless Docker image"
+	@echo "  build-alpine         Build alpine Docker image"
+	@echo "  build-nonroot        Build nonroot Docker image"
+docker: docker-help
 
 docker-build:
 	@DOCKER_BUILDKIT=1 docker build \
@@ -512,22 +597,34 @@ docker-build-nonroot:
 ###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
+lint-help:
+	@echo "lint subcommands"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make lint-[command]"
+	@echo ""
+	@echo "Available Commands:"
+	@echo "  all          Run all linters"
+	@echo "  format       Run linters with auto-fix"
+	@echo "  mdlint       Run markdown linter"
+	@echo "  markdown     Run markdown linter with auto-fix"
+lint: lint-help
 
-lint:
+lint-all:
 	@echo "--> Running linter"
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m
 	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md"
 
-format:
+lint-format:
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --fix
 	@go run mvdan.cc/gofumpt -l -w x/ app/ ante/ tests/
 	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --fix
 
-mdlint:
+lint-mdlint:
 	@echo "--> Running markdown linter"
 	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md"
 
-markdown:
+lint-markdown:
 	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --fix
 
 ###############################################################################
@@ -536,6 +633,44 @@ markdown:
 #
 # Please refer to https://github.com/osmosis-labs/osmosis/blob/main/tests/localosmosis/README.md for detailed 
 # usage of localnet.
+
+localnet-help:
+	@echo "localnet subcommands"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make localnet-[command]"
+	@echo ""
+	@echo "Available Commands:"
+	@echo "  keys                            Add keys for localnet"
+	@echo "  init                            Initialize localnet"
+	@echo "  build                           Build localnet"
+	@echo "  start                           Start localnet"
+	@echo "  start-with-state                Start localnet with state"
+	@echo "  startd                          Start localnet in detached mode"
+	@echo "  startd-with-state               Start localnet in detached mode with state"
+	@echo "  stop                            Stop localnet"
+	@echo "  clean                           Clean localnet"
+	@echo "  state-export-init               Initialize localnet state export"
+	@echo "  state-export-build              Build localnet state export"
+	@echo "  state-export-start              Start localnet state export"
+	@echo "  state-export-startd             Start localnet state export in detached mode"
+	@echo "  state-export-stop               Stop localnet state export"
+	@echo "  state-export-clean              Clean localnet state export"
+	@echo "  cl-create-positions             Create concentrated liquidity positions"
+	@echo "  cl-small-swap                   Perform small randomized swaps"
+	@echo "  cl-large-swap                   Perform large swaps"
+	@echo "  cl-external-incentive           Create external incentive"
+	@echo "  cl-create-pool                  Create concentrated liquidity pool"
+	@echo "  cl-claim-spread-rewards         Claim spread rewards"
+	@echo "  cl-claim-incentives             Claim incentives"
+	@echo "  cl-add-to-positions             Add to positions"
+	@echo "  cl-withdraw-positions           Withdraw positions"
+	@echo "  cl-positions-small-swaps        Create positions and perform small swaps"
+	@echo "  cl-positions-large-swaps        Create positions and perform large swaps"
+	@echo "  cl-refresh-subgraph-positions   Refresh subgraph positions"
+	@echo "  cl-refresh-subgraph-genesis     Refresh subgraph genesis"
+	@echo "  cl-create-bigbang-config        Create Big Bang configuration"
+localnet: localnet-help
 
 localnet-keys:
 	. tests/localosmosis/scripts/add_keys.sh
@@ -620,7 +755,6 @@ localnet-cl-add-to-positions:
 localnet-cl-withdraw-positions:
 	go run tests/cl-go-client/main.go --operation 8
 
-
 # does both of localnet-cl-create-positions and localnet-cl-small-swap
 localnet-cl-positions-small-swaps: localnet-cl-create-positions localnet-cl-small-swap
 
@@ -632,20 +766,20 @@ localnet-cl-positions-large-swaps: localnet-cl-create-positions localnet-cl-larg
 # for setting up somewhat realistic positions for testing
 # in localosmosis. It writes the file under
 # tests/cl-genesis-positions/subgraph_positions.json
-cl-refresh-subgraph-positions:
+localnet-cl-refresh-subgraph-positions:
 	go run ./tests/cl-genesis-positions --operation 0
 
 # This script converts the positions data created by the
 # cl-refresh-subgraph-positions makefile step into an Osmosis
 # genesis. It writes the file under tests/cl-genesis-positions/genesis.json
-cl-refresh-subgraph-genesis:
+localnet-cl-refresh-subgraph-genesis:
 	go run ./tests/cl-genesis-positions --operation 1
 
 # This script converts the positions data created by the
 # cl-refresh-subgraph-positions makefile step into a Big Bang
 # configuration file for spinning up testnets.
 # It writes the file under tests/cl-genesis-positions/bigbang_positions.json
-cl-create-bigbang-config:
+localnet-cl-create-bigbang-config:
 	go run ./tests/cl-genesis-positions --operation 1 --big-bang
 
 ###############################################################################
@@ -661,6 +795,15 @@ go-mock-update:
 ###############################################################################
 ###                                Release                                  ###
 ###############################################################################
+release-help:
+	@echo "release subcommands"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make release-[command]"
+	@echo ""
+	@echo "Available Commands:"
+	@echo "  dry-run                   Perform a dry run release"
+	@echo "  snapshot                  Create a snapshot release"
 
 GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v$(GO_VERSION)
 COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm | sed 's/.* //')

@@ -35,7 +35,7 @@ jobs:
       -
         name: Run golangci-lint
         if: env.GIT_DIFF
-        run: make lint
+        run: make lint-all
 
   documentation-linter:
     name: Run super-linter
