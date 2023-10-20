@@ -303,8 +303,8 @@ proto-help:
 proto: proto-help
 proto-all: proto-format proto-gen
 
-protoVer=v0.9
-protoImageName=osmolabs/osmo-proto-gen:$(protoVer)
+protoVer=0.14.0
+protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
 containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
 

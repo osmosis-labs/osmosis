@@ -55,7 +55,6 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/gateway v1.1.0 // indirect
-	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/glog v1.1.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -146,8 +145,6 @@ require (
 
 replace (
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194
-	// TODO: remove in favor of github.com/cosmos/cosmos-proto
-	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
 	github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
@@ -165,7 +162,7 @@ replace (
 // 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 
 // 	// use cosmos-compatible protobufs
-// 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+// 	github.com/cosmos/gogoproto => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 // 	github.com/ignite/cli => github.com/p0mvn/cli v0.23.1
 
