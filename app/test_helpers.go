@@ -122,6 +122,11 @@ func GenesisStateWithValSet(app *OsmosisApp) GenesisState {
 	)
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
+	_, err := tmtypes.PB2TM.ValidatorUpdates(initValPowers)
+	if err != nil {
+		panic("failed to get vals")
+	}
+
 	return genesisState
 }
 

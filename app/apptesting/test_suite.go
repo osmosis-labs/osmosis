@@ -37,6 +37,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
 
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+
 	lockupkeeper "github.com/osmosis-labs/osmosis/v20/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v20/x/mint/types"
@@ -229,7 +231,7 @@ func (s *KeeperTestHelper) Commit() {
 	oldHeight := s.Ctx.BlockHeight()
 	oldHeader := s.Ctx.BlockHeader()
 	s.App.Commit()
-	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
+	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: "", Time: oldHeader.Time.Add(time.Second)}
 	s.App.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
 	s.Ctx = s.App.GetBaseApp().NewContext(false, newHeader)
 
@@ -262,15 +264,14 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 
 	s.FundAcc(sdk.AccAddress(valAddr), selfBond)
 
-	// UNFORKINGTODO OQ: not sure if we need to implement NewHandler
-	//stakingHandler := staking.NewHandler(*s.App.StakingKeeper)
 	stakingCoin := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: selfBond[0].Amount}
 	ZeroCommission := stakingtypes.NewCommissionRates(zeroDec, zeroDec, zeroDec)
-	_, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, osmomath.OneInt())
+	valCreateMsg, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, osmomath.OneInt())
 	s.Require().NoError(err)
-	//res, err := stakingHandler(s.Ctx, msg)
+	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(s.App.StakingKeeper)
+	res, err := stakingMsgSvr.CreateValidator(sdk.WrapSDKContext(s.Ctx), valCreateMsg)
 	s.Require().NoError(err)
-	//s.Require().NotNil(res)
+	s.Require().NotNil(res)
 
 	val, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
 	s.Require().True(found)
