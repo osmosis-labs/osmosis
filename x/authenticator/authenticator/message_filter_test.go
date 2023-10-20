@@ -65,6 +65,13 @@ func (s *MessageFilterAuthenticatorTest) TestMessageTypes() {
 			false,
 		},
 
+		// Numbers don't work as they get encoded to strings
+		{"bank send. amount as number",
+			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo", "amount": 100}]}}`,
+			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
+			false,
+		},
+
 		{"bank send. just denom",
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo"}]}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},

@@ -49,7 +49,20 @@ func (m MessageFilterAuthenticator) Track(ctx sdk.Context, account sdk.AccAddres
 
 type EncodedMsg struct {
 	MsgType string          `json:"type"`
-	Msg     json.RawMessage `json:"value"`
+	Value   json.RawMessage `json:"value"`
+}
+
+// I don't think we actually need this since numbers get encoded as strings, but adding it to avoid non-determinism if they were to exist
+func compareNumbersAsDecs(a, b json.Number) bool {
+	decA, errA := sdk.NewDecFromStr(string(a))
+	decB, errB := sdk.NewDecFromStr(string(b))
+
+	// If any of the numbers couldn't be parsed, consider them non-matching
+	if errA != nil || errB != nil {
+		return false
+	}
+
+	return decA.Equal(decB)
 }
 
 func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
@@ -65,14 +78,16 @@ func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, account sdk.Ac
 
 	encodedMsg, err := json.Marshal(EncodedMsg{
 		MsgType: msgAsAny.TypeUrl,
-		Msg:     jsonMsg,
+		Value:   jsonMsg,
 	})
 	if err != nil {
 		return iface.NotAuthenticated()
 	}
 
 	opts := jsondiff.DefaultJSONOptions()
-	// Is encodedMsg a superset of m.pattern?
+	opts.CompareNumbers = compareNumbersAsDecs
+
+	// Check that the encoding is a superset of the pattern
 	diff, _ := jsondiff.Compare(encodedMsg, m.pattern, &opts)
 	if diff == jsondiff.FullMatch || diff == jsondiff.SupersetMatch {
 		return iface.Authenticated()
