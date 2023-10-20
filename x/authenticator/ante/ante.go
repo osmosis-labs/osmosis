@@ -115,17 +115,16 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			return sdk.Context{}, err
 		}
 
-		msgAuthenticated := false
-		var authenticators []types.Authenticator
-		if selectedAuthenticators[msgIndex] == -1 {
-			authenticators = allAuthenticators
-		} else {
+		// Check if there has been a selected authenticator in the transaction
+		authenticators := allAuthenticators
+		if selectedAuthenticators[msgIndex] >= 0 {
 			if int(selectedAuthenticators[msgIndex]) >= len(allAuthenticators) {
 				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("invalid authenticator index for message %d", msgIndex))
 			}
 			authenticators = []types.Authenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
 		}
 
+		msgAuthenticated := false
 		for _, authenticator := range authenticators {
 			// Consume the authenticator's static gas
 			cacheCtx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
