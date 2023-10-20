@@ -160,9 +160,9 @@ require (
 replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/05346fa12992
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194
-// use cosmos-compatible protobufs
-//github.com/osmosis-labs/osmosis/osmomath => ../osmomath
-//github.com/osmosis-labs/osmosis/v19 => ./../
+	// use cosmos-compatible protobufs
+	//github.com/osmosis-labs/osmosis/osmomath => ../osmomath
+	github.com/osmosis-labs/osmosis/v20 => ./../
 )
 
 // use grpc compatible with cosmos protobufs

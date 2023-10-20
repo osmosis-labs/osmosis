@@ -151,7 +151,7 @@ replace (
 
 	github.com/ignite/cli => github.com/p0mvn/cli v0.23.1
 
-	github.com/osmosis-labs/osmosis/v15 => ../../
+	github.com/osmosis-labs/osmosis/v20 => ./../
 )
 
 // replace (
