@@ -2,11 +2,13 @@ package authenticator
 
 import (
 	"encoding/json"
+	"fmt"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/nsf/jsondiff"
 	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
+	"sort"
+	"strconv"
 )
 
 // Compile time type assertion for the SignatureData using the
@@ -52,17 +54,133 @@ type EncodedMsg struct {
 	Value   json.RawMessage `json:"value"`
 }
 
-// I don't think we actually need this since numbers get encoded as strings, but adding it to avoid non-determinism if they were to exist
-func compareNumbersAsDecs(a, b json.Number) bool {
-	decA, errA := sdk.NewDecFromStr(string(a))
-	decB, errB := sdk.NewDecFromStr(string(b))
-
-	// If any of the numbers couldn't be parsed, consider them non-matching
-	if errA != nil || errB != nil {
-		return false
+func containsFloats(data []byte) (bool, error) {
+	var v interface{}
+	if err := json.Unmarshal(data, &v); err != nil {
+		return false, err
 	}
 
-	return decA.Equal(decB)
+	return checkForFloats(v), nil
+}
+
+func checkForFloats(v interface{}) bool {
+	switch vv := v.(type) {
+	case map[string]interface{}:
+		for _, val := range vv {
+			if checkForFloats(val) {
+				return true
+			}
+		}
+	case []interface{}:
+		for _, val := range vv {
+			if checkForFloats(val) {
+				return true
+			}
+		}
+	case string:
+		if _, err := strconv.ParseFloat(vv, 64); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func isSuperset(a, b interface{}) error {
+	switch av := a.(type) {
+	case map[string]interface{}:
+		bv, ok := b.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("expected map, got %T", b)
+		}
+
+		// Sort the keys of 'a' to avoid non-determinism
+		var sortedKeysA []string
+		for key := range av {
+			sortedKeysA = append(sortedKeysA, key)
+		}
+		sort.Strings(sortedKeysA)
+
+		for _, key := range sortedKeysA {
+			valA := av[key]
+			valB, exists := bv[key]
+			if !exists {
+				return fmt.Errorf("key %s missing from second map", key)
+			}
+			if err := isSuperset(valA, valB); err != nil {
+				return err
+			}
+		}
+
+	case []interface{}:
+		bv, ok := b.([]interface{})
+		if !ok {
+			return fmt.Errorf("expected slice, got %T", b)
+		}
+
+		// TODO: Do we want to allow subset/superset checks here or require both slices to be the same?
+		// If we want to allow this, maybe we want to either:
+		//      1. Treat them like a set
+		// 	    2. Ensure all elements of A are in B and in the same order, but B can have more elements
+		if len(av) > len(bv) {
+			return fmt.Errorf("first slice has more elements than second slice")
+		}
+
+		for i, valA := range av {
+			if err := isSuperset(valA, bv[i]); err != nil {
+				return err
+			}
+		}
+
+	case string:
+		if bv, ok := b.(string); ok {
+			// Attempt to treat strings as numbers if they look like numbers
+			if decA, err := sdk.NewDecFromStr(av); err == nil {
+				if decB, err := sdk.NewDecFromStr(bv); err == nil {
+					if !decA.Equal(decB) {
+						return fmt.Errorf("numbers do not match: %s != %s", decA, decB)
+					}
+				}
+			}
+			if av != bv {
+				return fmt.Errorf("strings do not match: %s != %s", av, bv)
+			}
+		} else {
+			return fmt.Errorf("expected string, got %T", b)
+		}
+
+	case bool:
+		if bv, ok := b.(bool); !ok || av != bv {
+			return fmt.Errorf("booleans do not match or wrong type: %v != %v", av, b)
+		}
+
+	case nil:
+		if b != nil {
+			return fmt.Errorf("expected null, got %T", b)
+		}
+
+	case float64:
+		return fmt.Errorf("numbers encoded as floats are not allowed. They should be encoded as strings")
+
+	default:
+		return fmt.Errorf("unexpected type %T", a)
+	}
+
+	return nil
+}
+
+func IsJsonSuperset(a, b []byte) error {
+	var av, bv interface{}
+
+	errA := json.Unmarshal(a, &av)
+	if errA != nil {
+		return fmt.Errorf("error unmarshaling first JSON: %v", errA)
+	}
+	errB := json.Unmarshal(b, &bv)
+	if errB != nil {
+		return fmt.Errorf("error unmarshaling second JSON: %v", errB)
+	}
+
+	return isSuperset(av, bv)
 }
 
 func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
@@ -84,15 +202,20 @@ func (m MessageFilterAuthenticator) Authenticate(ctx sdk.Context, account sdk.Ac
 		return iface.NotAuthenticated()
 	}
 
-	opts := jsondiff.DefaultJSONOptions()
-	opts.CompareNumbers = compareNumbersAsDecs
-
 	// Check that the encoding is a superset of the pattern
-	diff, _ := jsondiff.Compare(encodedMsg, m.pattern, &opts)
-	if diff == jsondiff.FullMatch || diff == jsondiff.SupersetMatch {
-		return iface.Authenticated()
+	err = IsJsonSuperset(m.pattern, encodedMsg)
+	if err != nil {
+		// emit an event with the error
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				"AuthenticatorError",
+				sdk.NewAttribute("error", err.Error()),
+			),
+		)
+
+		return iface.NotAuthenticated()
 	}
-	return iface.NotAuthenticated()
+	return iface.Authenticated()
 }
 
 func (m MessageFilterAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
@@ -103,6 +226,13 @@ func (m MessageFilterAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, accoun
 	err := json.Unmarshal(data, &m.pattern)
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid json representation of message")
+	}
+	hasFloats, err := containsFloats(m.pattern)
+	if err != nil {
+		return sdkerrors.Wrap(err, "invalid json representation of message") // This should never happen
+	}
+	if hasFloats {
+		return fmt.Errorf("invalid json representation of message. Numbers should be encoded as strings")
 	}
 	return nil
 }

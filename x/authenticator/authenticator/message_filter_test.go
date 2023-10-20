@@ -65,9 +65,20 @@ func (s *MessageFilterAuthenticatorTest) TestMessageTypes() {
 			false,
 		},
 
-		// Numbers don't work as they get encoded to strings
 		{"bank send. amount as number",
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo", "amount": 100}]}}`,
+			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
+			false, // This fails because of floats. Should be prevented by validation
+		},
+
+		{"bank send. amount as mix string number",
+			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo", "amount": "100"}]}}`,
+			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
+			true,
+		},
+
+		{"bank send. amount as mix string number but bad",
+			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo", "amount": "50"}]}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 100))},
 			false,
 		},
@@ -88,6 +99,24 @@ func (s *MessageFilterAuthenticatorTest) TestMessageTypes() {
 			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": [{"denom": "foo"}]}}`,
 			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("bar", 100))},
 			false,
+		},
+
+		{"bank send. any match",
+			`{}`,
+			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("bar", 100))},
+			true,
+		},
+
+		{"bank send. using map as generic",
+			`{{"type":"/cosmos.bank.v1beta1.MsgSend","value":{}}`,
+			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("bar", 100))},
+			true,
+		},
+
+		{"bank send. empty array as generic for arrays",
+			`{"type":"/cosmos.bank.v1beta1.MsgSend","value":{"from_address":"from","to_address":"to", "amount": []}}`,
+			&bank.MsgSend{FromAddress: "from", ToAddress: "to", Amount: sdk.NewCoins(sdk.NewInt64Coin("foo", 1))},
+			true,
 		},
 	}
 
