@@ -104,9 +104,18 @@ func (s *KeeperTestHelper) Setup() {
 	// Manually set calidatoring signing info, otherwise we panic
 	vals := s.App.StakingKeeper.GetAllValidators(s.Ctx)
 	for _, val := range vals {
-		val, _ := val.GetConsAddr()
-		s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, val, slashingtypes.ValidatorSigningInfo{})
+		consAddr, _ := val.GetConsAddr()
+		signingInfo := slashingtypes.NewValidatorSigningInfo(
+			consAddr,
+			s.Ctx.BlockHeight(),
+			0,
+			time.Unix(0, 0),
+			false,
+			0,
+		)
+		s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
 	}
+
 }
 
 // PrepareAllSupportedPools creates all supported pools and returns their IDs.
@@ -267,7 +276,8 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	valPub := secp256k1.GenPrivKey().PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
 	bondDenom := s.App.StakingKeeper.GetParams(s.Ctx).BondDenom
-	selfBond := sdk.NewCoins(sdk.Coin{Amount: osmomath.NewInt(100), Denom: bondDenom})
+	bondAmt := sdk.DefaultPowerReduction
+	selfBond := sdk.NewCoins(sdk.Coin{Amount: bondAmt, Denom: bondDenom})
 
 	s.FundAcc(sdk.AccAddress(valAddr), selfBond)
 
