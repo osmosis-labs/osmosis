@@ -108,7 +108,32 @@ endif
 ###                                  Build                                  ###
 ###############################################################################
 
-check_version:
+build: check_version go.sum
+	mkdir -p $(BUILDDIR)/
+	GOWORK=off go build -mod=readonly  $(BUILD_FLAGS) -o $(BUILDDIR)/ $(GO_MODULE)/cmd/osmosisd
+
+install: check_version go.sum
+	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
+
+build-help:
+	@echo "build subcommands"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make build-[command]"
+	@echo ""
+	@echo "Available Commands:"
+	@echo "  all        Build all targets"
+	@echo "  check-version Check Go version"
+	@echo "  dev-install Install development build"
+	@echo "  dev-build  Build development version"
+	@echo "  install-with-autocomplete Install with autocomplete support"
+	@echo "  reproducible Build reproducible binaries"
+	@echo "  reproducible-amd64 Build reproducible amd64 binary"
+	@echo "  reproducible-arm64 Build reproducible arm64 binary"
+	@echo "  linux      Build for Linux"
+	@echo "  contract-tests-hooks Build contract tests hooks"
+
+build-check-version:
 	@echo "Go version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION)"
 	@if [ $(GO_MAJOR_VERSION) -gt $(GO_MINIMUM_MAJOR_VERSION) ]; then \
 		echo "Go version is sufficient"; \
@@ -121,18 +146,9 @@ check_version:
 		exit 1; \
 	fi
 
-all: install lint test
-
-build: check_version go.sum
-	mkdir -p $(BUILDDIR)/
-	GOWORK=off go build -mod=readonly  $(BUILD_FLAGS) -o $(BUILDDIR)/ $(GO_MODULE)/cmd/osmosisd
-
 build-all: check_version go.sum
 	mkdir -p $(BUILDDIR)/
 	GOWORK=off go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./...
-
-install: check_version go.sum
-	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 
 # disables optimization, inlining and symbol removal
 GC_FLAGS := -gcflags="all=-N -l"
@@ -140,14 +156,14 @@ REMOVE_STRING := -w -s
 DEBUG_BUILD_FLAGS:= $(subst $(REMOVE_STRING),,$(BUILD_FLAGS))
 DEBUG_LDFLAGS = $(subst $(REMOVE_STRING),,$(ldflags))
 
-dev-install: go.sum
+build-dev-install: go.sum
 	GOWORK=off go install $(DEBUG_BUILD_FLAGS) $(GC_FLAGS) $(GO_MODULE)/cmd/osmosisd
 
-dev-build:
+build-dev-build:
 	mkdir -p $(BUILDDIR)/
 	GOWORK=off go build $(GC_FLAGS) -mod=readonly -ldflags '$(DEBUG_LDFLAGS)' -trimpath -o $(BUILDDIR) ./...;
 
-install-with-autocomplete: check_version go.sum
+build-install-with-autocomplete: check_version go.sum
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 	@PARENT_SHELL=$$(ps -o ppid= -p $$PPID | xargs ps -o comm= -p); \
 	if echo "$$PARENT_SHELL" | grep -q "zsh"; then \
@@ -234,6 +250,13 @@ build-linux: go.sum
 build-contract-tests-hooks:
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/contract_tests
+
+
+###############################################################################
+###                           Dependency                           ###
+###############################################################################
+
+
 
 go-mod-cache: go.sum
 	@echo "--> Download go modules to local cache"
