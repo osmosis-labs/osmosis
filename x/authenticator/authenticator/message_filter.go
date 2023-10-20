@@ -12,7 +12,7 @@ import (
 )
 
 // Compile time type assertion for the SignatureData using the
-// PassKeyAuthenticator struct
+// MessageFilterAuthenticator struct
 var _ iface.Authenticator = &MessageFilterAuthenticator{}
 
 type MessageFilterAuthenticator struct {
