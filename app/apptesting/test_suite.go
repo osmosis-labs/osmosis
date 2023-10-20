@@ -100,6 +100,13 @@ func (s *KeeperTestHelper) Setup() {
 	s.T().Cleanup(func() { os.RemoveAll(dir); s.withCaching = false })
 	s.App = app.SetupWithCustomHome(false, dir)
 	s.setupGeneral()
+
+	// Manually set calidatoring signing info, otherwise we panic
+	vals := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	for _, val := range vals {
+		val, _ := val.GetConsAddr()
+		s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, val, slashingtypes.ValidatorSigningInfo{})
+	}
 }
 
 // PrepareAllSupportedPools creates all supported pools and returns their IDs.
@@ -310,6 +317,7 @@ func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	var valAddr []byte
 
 	validators := s.App.StakingKeeper.GetAllValidators(s.Ctx)
+	fmt.Println("validators", validators)
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
 		s.Require().NoError(err)

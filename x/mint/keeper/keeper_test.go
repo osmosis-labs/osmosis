@@ -573,7 +573,7 @@ func (s *KeeperTestSuite) TestDistributeDeveloperRewards() {
 					Weight:  osmomath.NewDec(1),
 				},
 			},
-			expectedError: errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", validPreMintCoinSubOne, validPreMintCoin)),
+			expectedError: errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("spendable balance %s is smaller than %s", validPreMintCoinSubOne, validPreMintCoin)),
 		},
 		"distribute * proportion < pre-mint but distribute * proportion > developer vesting amount - error": {
 			preMintCoin: validPreMintCoin,

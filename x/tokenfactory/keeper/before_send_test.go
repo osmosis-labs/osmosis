@@ -40,12 +40,12 @@ func (s *KeeperTestSuite) TestBeforeSendHook() {
 					expectPass: true,
 				},
 				{
-					desc: "sending 100 of non-factorydenom should not error",
+					desc: "sending 1 of non-factorydenom should not error",
 					msg: func(factorydenom string) *banktypes.MsgSend {
 						return banktypes.NewMsgSend(
 							s.TestAccs[0],
 							s.TestAccs[1],
-							sdk.NewCoins(sdk.NewInt64Coin(factorydenom, 1)),
+							sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
 						)
 					},
 					expectPass: true,
@@ -107,7 +107,7 @@ func (s *KeeperTestSuite) TestBeforeSendHook() {
 			_, err = s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(denom, 1000000000)))
 			s.Require().NoError(err)
 			// mint some non token factory denom coins for testing
-			s.FundAcc(sdk.AccAddress(s.TestAccs[0].String()), sdk.Coins{sdk.NewInt64Coin("foo", 100000000000)})
+			s.FundAcc(sdk.MustAccAddressFromBech32(s.TestAccs[0].String()), sdk.Coins{sdk.NewInt64Coin("foo", 100000000000)})
 
 			// set beforesend hook to the new denom
 			_, err = s.msgServer.SetBeforeSendHook(sdk.WrapSDKContext(s.Ctx), types.NewMsgSetBeforeSendHook(s.TestAccs[0].String(), denom, cosmwasmAddress.String()))

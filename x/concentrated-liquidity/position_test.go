@@ -939,7 +939,7 @@ func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
 			s.PrepareConcentratedPool()
 
 			for _, pos := range test.setupPositions {
-				s.SetupPosition(pos.PoolId, sdk.AccAddress(pos.Address), DefaultCoins, pos.LowerTick, pos.UpperTick, false)
+				s.SetupPosition(pos.PoolId, sdk.MustAccAddressFromBech32(pos.Address), DefaultCoins, pos.LowerTick, pos.UpperTick, false)
 			}
 
 			// System under test

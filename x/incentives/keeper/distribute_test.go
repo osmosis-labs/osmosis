@@ -679,7 +679,7 @@ func (s *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 
 	// check that the sum of coins yet to be distributed is nil
 	coins := s.App.IncentivesKeeper.GetModuleToDistributeCoins(s.Ctx)
-	s.Require().Equal(coins, sdk.Coins(nil))
+	s.Require().Equal(coins, sdk.Coins{})
 
 	// setup a non perpetual lock and gauge
 	_, gaugeID, gaugeCoins, startTime := s.SetupLockAndGauge(false)
@@ -723,14 +723,14 @@ func (s *KeeperTestSuite) TestGetModuleDistributedCoins() {
 
 	// check that the sum of coins yet to be distributed is nil
 	coins := s.App.IncentivesKeeper.GetModuleDistributedCoins(s.Ctx)
-	s.Require().Equal(coins, sdk.Coins(nil))
+	s.Require().Equal(coins, sdk.Coins{})
 
 	// setup a non perpetual lock and gauge
 	_, gaugeID, _, startTime := s.SetupLockAndGauge(false)
 
 	// check that the sum of coins yet to be distributed is equal to the newly created gaugeCoins
 	coins = s.App.IncentivesKeeper.GetModuleDistributedCoins(s.Ctx)
-	s.Require().Equal(coins, sdk.Coins(nil))
+	s.Require().Equal(coins, sdk.Coins{})
 
 	// move all created gauges from upcoming to active
 	s.Ctx = s.Ctx.WithBlockTime(startTime)
@@ -788,7 +788,7 @@ func (s *KeeperTestSuite) TestByDurationPerpetualGaugeDistribution_NoLockNoOp() 
 	// distribute coins to stakers, since it's perpetual distribute everything on single distribution
 	distrCoins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, []types.Gauge{*gauge})
 	s.Require().NoError(err)
-	s.Require().Equal(distrCoins, sdk.Coins(nil))
+	s.Require().Equal(distrCoins, sdk.Coins{})
 
 	// check state is same after distribution
 	gauges = s.App.IncentivesKeeper.GetNotFinishedGauges(s.Ctx)
@@ -838,7 +838,7 @@ func (s *KeeperTestSuite) TestByDurationNonPerpetualGaugeDistribution_NoLockNoOp
 	// distribute coins to stakers
 	distrCoins, err := s.App.IncentivesKeeper.Distribute(s.Ctx, []types.Gauge{*gauge})
 	s.Require().NoError(err)
-	s.Require().Equal(distrCoins, sdk.Coins(nil))
+	s.Require().Equal(distrCoins, sdk.Coins{})
 
 	// check state is same after distribution
 	gauges = s.App.IncentivesKeeper.GetNotFinishedGauges(s.Ctx)

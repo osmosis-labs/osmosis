@@ -428,7 +428,7 @@ func (s *KeeperTestSuite) TestModuleLockedCoins() {
 
 	// initial check
 	lockedCoins := s.App.LockupKeeper.GetModuleLockedCoins(s.Ctx)
-	s.Require().Equal(lockedCoins, sdk.Coins(nil))
+	s.Require().Equal(lockedCoins, sdk.Coins{})
 
 	// lock coins
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
@@ -1164,8 +1164,7 @@ func (s *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 			expectedCoins = expectedCoins.Add(coin)
 		}
 	}
-	s.Require().Equal(addr1.String(), s.App.BankKeeper.GetAccountsBalances(s.Ctx)[1].Address)
-	s.Require().Equal(expectedCoins, s.App.BankKeeper.GetAccountsBalances(s.Ctx)[1].Coins)
+	s.Require().Equal(expectedCoins, s.App.BankKeeper.GetAllBalances(s.Ctx, addr1))
 
 	s.SetupTest()
 	setupInitLocks()

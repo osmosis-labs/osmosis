@@ -2314,7 +2314,6 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		poolId                   uint64
 		isInvalidPoolId          bool
 		useNegativeIncentiveCoin bool
-		sender                   sdk.AccAddress
 		senderBalance            sdk.Coins
 		recordToSet              types.IncentiveRecord
 		existingRecords          []types.IncentiveRecord
@@ -2539,7 +2538,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 				s.PrepareConcentratedPool()
 				clKeeper := s.App.ConcentratedLiquidityKeeper
-				s.FundAcc(tc.sender, tc.senderBalance)
+				s.FundAcc(s.TestAccs[0], tc.senderBalance)
 
 				if tc.isInvalidPoolId {
 					tc.poolId = tc.poolId + 1
@@ -2563,7 +2562,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 				clKeeper.SetNextIncentiveRecordId(s.Ctx, originalNextIncentiveRecordId)
 
 				// system under test
-				incentiveRecord, err := clKeeper.CreateIncentive(s.Ctx, tc.poolId, tc.sender, incentiveCoin, tc.recordToSet.IncentiveRecordBody.EmissionRate, tc.recordToSet.IncentiveRecordBody.StartTime, tc.recordToSet.MinUptime)
+				incentiveRecord, err := clKeeper.CreateIncentive(s.Ctx, tc.poolId, s.TestAccs[0], incentiveCoin, tc.recordToSet.IncentiveRecordBody.EmissionRate, tc.recordToSet.IncentiveRecordBody.StartTime, tc.recordToSet.MinUptime)
 
 				// Assertions
 				if tc.expectedError != nil {
