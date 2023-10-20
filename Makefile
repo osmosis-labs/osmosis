@@ -168,16 +168,6 @@ go-mock-update:
 ###############################################################################
 ###                                Release                                  ###
 ###############################################################################
-release-help:
-	@echo "release subcommands"
-	@echo ""
-	@echo "Usage:"
-	@echo "  make release-[command]"
-	@echo ""
-	@echo "Available Commands:"
-	@echo "  dry-run                   Perform a dry run release"
-	@echo "  snapshot                  Create a snapshot release"
-
 GORELEASER_IMAGE := ghcr.io/goreleaser/goreleaser-cross:v$(GO_VERSION)
 COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm | sed 's/.* //')
 
