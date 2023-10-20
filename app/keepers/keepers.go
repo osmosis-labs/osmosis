@@ -131,7 +131,7 @@ type AppKeepers struct {
 
 	// "Normal" keepers
 	AccountKeeper                *authkeeper.AccountKeeper
-	BankKeeper                   *bankkeeper.BaseKeeper
+	BankKeeper                   bankkeeper.BaseKeeper
 	AuthzKeeper                  *authzkeeper.Keeper
 	StakingKeeper                *stakingkeeper.Keeper
 	DistrKeeper                  *distrkeeper.Keeper
@@ -207,7 +207,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		blockedAddress,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	appKeepers.BankKeeper = &bankKeeper
+	appKeepers.BankKeeper = bankKeeper
 
 	authzKeeper := authzkeeper.NewKeeper(
 		appKeepers.keys[authzkeeper.StoreKey],
@@ -473,14 +473,14 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1,cosmwasm_1_2"
 
-	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
+	wasmOpts = append(owasm.RegisterCustomPlugins(&appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
 	wasmOpts = append(owasm.RegisterStargateQueries(*bApp.GRPCQueryRouter(), appCodec), wasmOpts...)
 
 	wasmKeeper := wasm.NewKeeper(
 		appCodec,
 		appKeepers.keys[wasm.StoreKey],
 		*appKeepers.AccountKeeper,
-		*appKeepers.BankKeeper,
+		appKeepers.BankKeeper,
 		*appKeepers.StakingKeeper,
 		*appKeepers.DistrKeeper,
 		appKeepers.RateLimitingICS4Wrapper,
@@ -580,7 +580,7 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 		appKeepers.AccountKeeper,
 		// wasm keeper we set later.
 		nil,
-		appKeepers.BankKeeper,
+		&appKeepers.BankKeeper,
 		appKeepers.GetSubspace(ibcratelimittypes.ModuleName),
 	)
 	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
@@ -800,6 +800,7 @@ func KVStoreKeys() []string {
 		downtimetypes.StoreKey,
 		slashingtypes.StoreKey,
 		govtypes.StoreKey,
+		crisistypes.StoreKey,
 		paramstypes.StoreKey,
 		consensusparamtypes.StoreKey,
 		ibchost.StoreKey,

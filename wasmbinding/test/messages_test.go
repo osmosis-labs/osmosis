@@ -48,7 +48,7 @@ func TestCreateDenom(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotErr := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, spec.createDenom)
+			gotErr := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, actor, spec.createDenom)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -143,7 +143,7 @@ func TestChangeAdmin(t *testing.T) {
 			// Setup
 			osmosis, ctx := SetupCustomApp(t, tokenCreator)
 
-			err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, tokenCreator, &bindings.CreateDenom{
+			err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, tokenCreator, &bindings.CreateDenom{
 				Subdenom: validDenom,
 			})
 			require.NoError(t, err)
@@ -169,13 +169,13 @@ func TestMint(t *testing.T) {
 	validDenom := bindings.CreateDenom{
 		Subdenom: "MOON",
 	}
-	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
+	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, &validDenom)
 	require.NoError(t, err)
 
 	emptyDenom := bindings.CreateDenom{
 		Subdenom: "",
 	}
-	err = wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &emptyDenom)
+	err = wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, &emptyDenom)
 	require.NoError(t, err)
 
 	validDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), validDenom.Subdenom)
@@ -265,7 +265,7 @@ func TestMint(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotErr := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, spec.mint)
+			gotErr := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, spec.mint)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -285,13 +285,13 @@ func TestBurn(t *testing.T) {
 	validDenom := bindings.CreateDenom{
 		Subdenom: "MOON",
 	}
-	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
+	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, &validDenom)
 	require.NoError(t, err)
 
 	emptyDenom := bindings.CreateDenom{
 		Subdenom: "",
 	}
-	err = wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &emptyDenom)
+	err = wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, &emptyDenom)
 	require.NoError(t, err)
 
 	lucky := RandomAccountAddress()
@@ -379,7 +379,7 @@ func TestBurn(t *testing.T) {
 				Amount:        mintAmount,
 				MintToAddress: creator.String(),
 			}
-			err := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, mintBinding)
+			err := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, mintBinding)
 			require.NoError(t, err)
 
 			emptyDenomMintBinding := &bindings.MintTokens{
@@ -387,7 +387,7 @@ func TestBurn(t *testing.T) {
 				Amount:        mintAmount,
 				MintToAddress: creator.String(),
 			}
-			err = wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, emptyDenomMintBinding)
+			err = wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, &osmosis.BankKeeper, ctx, creator, emptyDenomMintBinding)
 			require.NoError(t, err)
 
 			// when

@@ -185,7 +185,7 @@ func (s *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	s.Require().False(found)
 
 	// system under test.
-	v15.RegisterOsmoIonMetadata(ctx, *bankKeeper)
+	v15.RegisterOsmoIonMetadata(ctx, bankKeeper)
 
 	uosmoMetadata, found := s.App.BankKeeper.GetDenomMetaData(ctx, "uosmo")
 	s.Require().True(found)

@@ -22,7 +22,7 @@ cp -r github.com/osmosis-labs/osmosis/v20/* ./
 cp -r github.com/osmosis-labs/osmosis/osmoutils ./
 rm -rf github.com
 
-go mod tidy -compat=1.18
+go mod tidy
 
 # TODO: Uncomment once ORM/Pulsar support is needed.
 #
