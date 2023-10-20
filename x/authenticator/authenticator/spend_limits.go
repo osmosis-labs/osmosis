@@ -199,7 +199,7 @@ func (sla SpendLimitAuthenticator) getPriceInQuoteDenom(ctx sdk.Context, coin sd
 		numPools := sla.poolManagerKeeper.GetNextPoolId(ctx)
 		for i := uint64(1); i < numPools; i++ {
 			price, err := sla.twapKeeper.GetArithmeticTwapToNow(ctx, i, coin.Denom, sla.quoteDenom, oneWeekAgo)
-			if err != nil {
+			if err == nil {
 				return price, nil
 			}
 		}

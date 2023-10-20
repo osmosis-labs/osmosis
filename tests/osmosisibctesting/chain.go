@@ -113,7 +113,7 @@ func SignAndDeliver(
 	tx, _ := helpers.GenTx(
 		txCfg,
 		msgs,
-		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 2500)},
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5000)},
 		helpers.DefaultGenTxGas,
 		chainID,
 		accNums,
