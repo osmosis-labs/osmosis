@@ -42,9 +42,9 @@ func TestFullDenom(t *testing.T) {
 			subdenom:     "",
 			expFullDenom: fmt.Sprintf("factory/%s/", actor.String()),
 		},
-		"invalid sub-denom (contains underscore)": {
+		"invalid sub-denom (contains exclamation point)": {
 			addr:     actor.String(),
-			subdenom: "sub_denom",
+			subdenom: "subdenom!",
 			expErr:   true,
 		},
 	}

@@ -3,6 +3,7 @@ package wasmbinding
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,6 +12,8 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	"github.com/osmosis-labs/osmosis/v20/app"
 	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
@@ -89,28 +92,24 @@ func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contrac
 }
 
 func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
-	// UNFORKINGTODO OQ: Fix this with understanding of SubmitProposal use and GetRoute
-	// t.Helper()
+	t.Helper()
+	wasmCode, err := os.ReadFile("../testdata/osmo_reflect.wasm")
+	require.NoError(t, err)
 
-	// govKeeper := osmosis.GovKeeper
-	// wasmCode, err := os.ReadFile("../testdata/osmo_reflect.wasm")
-	// require.NoError(t, err)
+	// Quick hack to allow code upload
+	originalParams := osmosis.WasmKeeper.GetParams(ctx)
+	temporaryParams := originalParams
+	temporaryParams.CodeUploadAccess.Permission = wasmtypes.AccessTypeEverybody
+	osmosis.WasmKeeper.SetParams(ctx, temporaryParams)
 
-	// src := wasmtypes.StoreCodeProposalFixture(func(p *wasmtypes.StoreCodeProposal) {
-	// 	p.RunAs = addr.String()
-	// 	p.WASMByteCode = wasmCode
-	// 	checksum := sha256.Sum256(wasmCode)
-	// 	p.CodeHash = checksum[:]
-	// })
+	msg := wasmtypes.MsgStoreCodeFixture(func(m *wasmtypes.MsgStoreCode) {
+		m.WASMByteCode = wasmCode
+		m.Sender = addr.String()
+	})
+	_, err = osmosis.MsgServiceRouter().Handler(msg)(ctx, msg)
+	require.NoError(t, err)
 
-	// // when stored
-	// storedProposal, err := govKeeper.SubmitProposal(ctx, src, false)
-	// require.NoError(t, err)
-
-	// // and proposal execute
-	// handler := govKeeper.Router().GetRoute(storedProposal.ProposalRoute())
-	// err = handler(ctx, storedProposal.GetContent())
-	// require.NoError(t, err)
+	osmosis.WasmKeeper.SetParams(ctx, originalParams)
 }
 
 func instantiateReflectContract(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, funder sdk.AccAddress) sdk.AccAddress {
