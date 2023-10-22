@@ -12,7 +12,7 @@ import (
 )
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
-	sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+	sdk.NewCoin("udym", sdk.NewInt(100000000000000000)),
 	sdk.NewCoin("foo", sdk.NewInt(10000000000)),
 	sdk.NewCoin("bar", sdk.NewInt(10000000000)),
 	sdk.NewCoin("baz", sdk.NewInt(10000000000)),
@@ -94,7 +94,7 @@ func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "baz", "foo")
 	s.NoError(err)
 	oneThird := sdk.NewDec(1).Quo(sdk.NewDec(3))
-	sp := oneThird.MulInt(gammtypes.SpotPriceSigFigs).RoundInt().ToDec().QuoInt(gammtypes.SpotPriceSigFigs)
+	sp := sdk.NewDecFromInt(oneThird.MulInt(gammtypes.SpotPriceSigFigs).RoundInt()).QuoInt(gammtypes.SpotPriceSigFigs)
 	s.Equal(sp.String(), spotPrice.String())
 
 	return poolId
@@ -151,7 +151,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer
 // PrepareCustomBalancerPool sets up a Balancer pool with an array of assets and given parameters
 func (s *KeeperTestHelper) PrepareCustomBalancerPool(assets []balancer.PoolAsset, params balancer.PoolParams) uint64 {
 	// Add coins for pool creation fee + coins needed to mint balances
-	fundCoins := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000000000)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin("udym", sdk.NewInt(10000000000)))
 	for _, a := range assets {
 		fundCoins = fundCoins.Add(a.Token)
 	}
@@ -304,9 +304,9 @@ func (s *KeeperTestHelper) CalcAmoutOfTokenToGetTargetPrice(ctx sdk.Context, poo
 	// AmoutQuoteTokenNeedToTrade = AmoutQuoTokenNow * ((targetSpotPrice/spotPriceNow)^((weight_base/(weight_base + weight_quote))) -1 )
 
 	ratioPrice := targetSpotPrice.Quo(spotPriceNow)
-	ratioWeight := (baseAsset.Weight.ToDec()).Quo(baseAsset.Weight.ToDec().Add(quoteAsset.Weight.ToDec()))
+	ratioWeight := (sdk.NewDecFromInt(baseAsset.Weight)).Quo(sdk.NewDecFromInt(baseAsset.Weight).Add(sdk.NewDecFromInt(quoteAsset.Weight)))
 
-	amountTrade = quoteAsset.Token.Amount.ToDec().Mul(osmomath.Pow(ratioPrice, ratioWeight).Sub(sdk.OneDec()))
+	amountTrade = sdk.NewDecFromInt(quoteAsset.Token.Amount).Mul(osmomath.Pow(ratioPrice, ratioWeight).Sub(sdk.OneDec()))
 
 	return amountTrade
 }

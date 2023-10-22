@@ -71,7 +71,7 @@ func TestGammInitGenesis(t *testing.T) {
 }
 
 func TestGammExportGenesis(t *testing.T) {
-	app := osmoapp.Setup(t, t, false)
+	app := osmoapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
