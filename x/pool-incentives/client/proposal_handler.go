@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/dymensionxyz/dymension/x/pool-incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/client/cli"
 
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 )

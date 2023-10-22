@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	pool_incentives "github.com/dymensionxyz/dymension/x/pool-incentives"
+	pool_incentives "github.com/osmosis-labs/osmosis/v15/x/pool-incentives"
 
 	simapp "github.com/dymensionxyz/dymension/app"
 
-	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 )
 
 var (

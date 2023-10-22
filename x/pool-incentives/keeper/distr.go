@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/dymensionxyz/dymension/osmoutils"
-	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v15/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

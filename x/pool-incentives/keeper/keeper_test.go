@@ -6,8 +6,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/dymensionxyz/dymension/testutil"
-	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
+
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {

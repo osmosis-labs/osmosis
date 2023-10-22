@@ -4,9 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
