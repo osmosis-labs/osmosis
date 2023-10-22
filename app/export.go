@@ -3,11 +3,13 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -26,8 +28,13 @@ func (app *OsmosisApp) ExportAppStateAndValidators(
 		return servertypes.ExportedApp{}, fmt.Errorf("forZeroHeight not supported")
 	}
 
-	genState := app.mm.ExportGenesisForModules(ctx, app.appCodec, modulesToExport)
-	appState, err := json.MarshalIndent(genState, "", "  ")
+	genStateDir, err := app.mm.ExportGenesisForModules(ctx, app.appCodec, modulesToExport)
+	if err != nil {
+		return servertypes.ExportedApp{}, err
+	}
+
+	// Stream the data from the files in genStateDir when marshalling the AppState
+	appState, err := streamAndMarshalAppState(genStateDir)
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}
@@ -41,6 +48,39 @@ func (app *OsmosisApp) ExportAppStateAndValidators(
 	}, err
 }
 
-func (app *OsmosisApp) ExportState(ctx sdk.Context) map[string]json.RawMessage {
-	return app.mm.ExportGenesis(ctx, app.AppCodec())
+func streamAndMarshalAppState(genStateDir string) ([]byte, error) {
+	genesisData := make(map[string]json.RawMessage)
+
+	err := filepath.Walk(genStateDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() {
+			data, err := ioutil.ReadFile(path)
+			if err != nil {
+				return err
+			}
+
+			moduleName := filepath.Base(path)
+			genesisData[moduleName] = json.RawMessage(data)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	appState, err := json.MarshalIndent(genesisData, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	return appState, nil
 }
+
+// func (app *OsmosisApp) ExportState(ctx sdk.Context) map[string]json.RawMessage {
+// 	return app.mm.ExportGenesis(ctx, app.AppCodec())
+// }
