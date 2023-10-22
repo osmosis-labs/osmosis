@@ -972,8 +972,8 @@ github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230911120014-b14342e08daf h1
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230911120014-b14342e08daf/go.mod h1:C0Uqe6X4N5ASA+1xZ6guaaJyUVKLcaVJIQa4Q4LG9Vk=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20230911120014-b14342e08daf h1:ZEi+yJJPgpYtmNwZ1bMiP5cMBDQ83FK/YGgmTnWmoAI=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20230911120014-b14342e08daf/go.mod h1:pqkAsS04Er1kFM41gg3aWTSaYHyLe8C9Dw3Sj8KMXk8=
-github.com/osmosis-labs/wasmd v0.31.0-osmo-v16.0.20231022224309-e172da9eba93 h1:XFz1hDpKvfZbhoOPqx+XG8gjDk7Y4tBE1iikJf4KaAM=
-github.com/osmosis-labs/wasmd v0.31.0-osmo-v16.0.20231022224309-e172da9eba93/go.mod h1:wuCN31ZQmND3IWMv1B/FZv5HpGjZ+NYaDqf/XWBaYBI=
+github.com/osmosis-labs/wasmd v0.31.0-osmo-v16.0.20231022230207-9972f7633d02 h1:pthjcWbHmuy+RuqlXY6gA3SdS6IvWHjDODGJoRyL1As=
+github.com/osmosis-labs/wasmd v0.31.0-osmo-v16.0.20231022230207-9972f7633d02/go.mod h1:wuCN31ZQmND3IWMv1B/FZv5HpGjZ+NYaDqf/XWBaYBI=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/copy v1.7.0 h1:hVoPiN+t+7d2nzzwMiDHPSOogsWAStewq3TwU05+clE=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
