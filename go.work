@@ -14,4 +14,4 @@ use .
 
 use ./x/epochs
 
-replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20231022193019-6ade6d04aa6e
+replace github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20231022195054-38bb1feb4cad
