@@ -919,5 +919,5 @@ type ContractHookOutOfGasError struct {
 }
 
 func (e ContractHookOutOfGasError) Error() string {
-	return fmt.Sprintf("a single contract call cannot exceed %d gas in a CL hook call.", e.GasLimit)
+	return fmt.Sprintf("A single contract call cannot exceed %d gas in a CL hook call.", e.GasLimit)
 }

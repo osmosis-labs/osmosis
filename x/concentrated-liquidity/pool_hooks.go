@@ -102,6 +102,7 @@ func (k Keeper) setPoolHookContract(ctx sdk.Context, poolID uint64, actionPrefix
 		return nil
 	}
 
+	// Verify that the cosmwasm address is valid bech32 that can be converted to AccAddress.
 	_, err := sdk.AccAddressFromBech32(cosmwasmAddress)
 	if err != nil {
 		return err

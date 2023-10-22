@@ -336,3 +336,7 @@ func (k Keeper) TransferPositions(ctx sdk.Context, positionIds []uint64, sender 
 func (k Keeper) SetPoolHookContract(ctx sdk.Context, poolID uint64, actionPrefix string, cosmwasmAddress string) error {
 	return k.setPoolHookContract(ctx, poolID, actionPrefix, cosmwasmAddress)
 }
+
+func (k Keeper) CallPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uint64, actionPrefix string) (err error) {
+	return k.callPoolActionListener(ctx, msgBz, poolId, actionPrefix)
+}
