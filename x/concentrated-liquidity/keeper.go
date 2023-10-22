@@ -27,6 +27,7 @@ type Keeper struct {
 	incentivesKeeper     types.IncentivesKeeper
 	lockupKeeper         types.LockupKeeper
 	communityPoolKeeper  types.CommunityPoolKeeper
+	contractKeeper       types.ContractKeeper
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, gammKeeper types.GAMMKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper, incentivesKeeper types.IncentivesKeeper, lockupKeeper types.LockupKeeper, communityPoolKeeper types.CommunityPoolKeeper, paramSpace paramtypes.Subspace) *Keeper {

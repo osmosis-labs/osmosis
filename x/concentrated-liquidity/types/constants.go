@@ -28,6 +28,14 @@ const (
 	BaseGasFeeForNewIncentive           = 10_000
 	BaseGasFeeForInitializingTick       = 10_000
 	BaseGasFeeForTransferPosition       = 10_000
+	// This is a (very generous) gas limit intended to protect against CL hooks that are
+	// executed with malicious intent in begin block code. This is an unlikely scenario
+	// as long as contract deployment is gated by governance and protorev/txfee swaps are
+	// on whitelisted tokens, but letting contract calls take unbounded gas in these scenarios
+	// is a risk we don't want to take regardless.
+	// 2M gas is enough to execute tens of expensive CL operations and is only set this high
+	// to accommodate position withdrawals, which are unusually expesive.
+	ContractHookGasLimit = 2_000_000
 )
 
 var (
