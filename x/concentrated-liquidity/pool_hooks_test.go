@@ -26,6 +26,7 @@ type CountSudoMsg struct {
 	Count CountMsg `json:"count"`
 }
 
+// TestSetAndGetPoolHookContract tests the basic functionality of setting and getting a CW contract address for a specific hook type from state.
 func (s *KeeperTestSuite) TestSetAndGetPoolHookContract() {
 	tests := map[string]struct {
 		cosmwasmAddress string

@@ -7,33 +7,14 @@ import (
 	types "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 )
 
-// --- Specific hook messages ---
-
-/*
-func (k Keeper) BeforeSwapSudoMsg(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coin, denom string) error {
-	// Build the message
-	msg := types.TrackBeforeSendSudoMsg{
-		TrackBeforeSend: types.TrackBeforeSendMsg{
-			From:   from.String(),
-			To:     to.String(),
-			Amount: CWCoinFromSDKCoin(amount),
-		},
-	}
-
-	// Marshal the message into msgBz
-	msgBz, err := json.Marshal(msg)
-	if err != nil {
-		return err
-	}
-
-	// Call callBeforeCLActionListener with the marshaled message
-	return k.callPoolActionListener(ctx, msgBz, denom)
-}
-*/
-
-// --- Generic hook helpers ---
-
 // nolint: unused
+// callPoolActionListener processes and dispatches the passed in message to the contract corresponding to the hook
+// defined by the given pool ID and action prefix (e.g. pool Id: 1, action prefix: "beforeSwap").
+//
+// This function returns an error if the contract address in state is invalid (should be impossible) or if the contract execution fails.
+//
+// Since it is possible for this function to be triggered in begin block code, we need to directly meter its execution and set a limit.
+// If no contract is linked to the hook, this function is a no-op.
 func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uint64, actionPrefix string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -51,10 +32,10 @@ func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uin
 		em := sdk.NewEventManager()
 
 		// Since it is possible for this hook to be triggered in begin block code, we need to
-		// directly meter it with a limit. See comments on `ContractHookGasLimit` for details on
-		// how the specific limit was chosen.
+		// directly meter its execution and set a limit. See comments on `ContractHookGasLimit`
+		// for details on how the specific limit was chosen.
 		//
-		// We ensure this limit only applies to this call by creating a child context with a global
+		// We ensure this limit only applies to this call by creating a child context with a gas
 		// limit and then metering the gas used in parent context once the operation is completed.
 		childCtx := ctx.WithGasMeter(sdk.NewGasMeter(types.ContractHookGasLimit))
 		_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
@@ -63,7 +44,7 @@ func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uin
 		}
 
 		// Consume gas used for calling contract to the parent ctx
-		ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "track CL action contract call gas")
+		ctx.GasMeter().ConsumeGas(childCtx.GasMeter().GasConsumed(), "Track CL action contract call gas")
 	}
 
 	return nil
