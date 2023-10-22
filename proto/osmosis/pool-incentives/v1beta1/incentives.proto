@@ -9,11 +9,10 @@ option go_package = "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types
 message Params {
   option (gogoproto.goproto_stringer) = false;
 
-  // minted_denom is the denomination of the coin expected to be minted by the
-  // minting module. Pool-incentives module doesn’t actually mint the coin
-  // itself, but rather manages the distribution of coins that matches the
-  // defined minted_denom.
+  // minted_denom is the denomination of the coin expected to be used for incentives
   string minted_denom = 1 [ (gogoproto.moretags) = "yaml:\"minted_denom\"" ];
+
+  uint64 num_epochs_paid_over = 2;
 }
 
 message LockableDurationsInfo {
