@@ -7,7 +7,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.46.15
 	github.com/cosmos/iavl v0.19.6
-	github.com/dymensionxyz/dymension v1.0.0-rc1.0.20231019163653-1ea9c9ca2b28
+	github.com/dymensionxyz/dymension v1.0.0-rc1.0.20231022170528-b575ca131f67
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
@@ -346,13 +346,11 @@ replace (
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
+	github.com/osmosis-labs/osmosis/osmomath => github.com/dymensionxyz/osmosis/osmomath v0.0.4-dymension-v0.1
+
 	//  broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
 	// use cometbft
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29
 )
-
-replace github.com/osmosis-labs/osmosis/osmomath => ./osmomath
-
-replace github.com/dymensionxyz/dymension => /Users/mtsitrin/Applications/dymension/settelment
