@@ -235,7 +235,7 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 				sdk.NewCoin("foo", sdk.NewInt(tokenInMaxAmount)),
 				sdk.NewCoin("bar", sdk.NewInt(tokenInMaxAmount)),
 				sdk.NewCoin("baz", sdk.NewInt(tokenInMaxAmount)),
-				sdk.NewCoin("uosmo", sdk.NewInt(tokenInMaxAmount)),
+				sdk.NewCoin("udym", sdk.NewInt(tokenInMaxAmount)),
 			),
 			expectedAddLiquidityEvents: 1,
 			expectedMessageEvents:      3, // 1 gamm + 2 events emitted by other keeper methods.
@@ -329,7 +329,7 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 					sdk.NewCoin("foo", sdk.NewInt(int64Max)),
 					sdk.NewCoin("bar", sdk.NewInt(int64Max)),
 					sdk.NewCoin("baz", sdk.NewInt(int64Max)),
-					sdk.NewCoin("uosmo", sdk.NewInt(int64Max)),
+					sdk.NewCoin("udym", sdk.NewInt(int64Max)),
 				),
 			})
 			suite.Require().NoError(err)

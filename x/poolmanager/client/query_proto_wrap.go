@@ -5,18 +5,18 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
+	keeper "github.com/osmosis-labs/osmosis/v15/x/poolmanager/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 // This file should evolve to being code gen'd, off of `proto/poolmanager/v1beta/query.yml`
 
 type Querier struct {
-	K poolmanager.Keeper
+	K keeper.Keeper
 }
 
-func NewQuerier(k poolmanager.Keeper) Querier {
+func NewQuerier(k keeper.Keeper) Querier {
 	return Querier{k}
 }
 

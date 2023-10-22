@@ -25,12 +25,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/client/cli"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
-	simulation "github.com/osmosis-labs/osmosis/v15/x/gamm/simulation"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
 )
@@ -75,8 +73,8 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))     //nolint:errcheck
-	v2types.RegisterQueryHandlerClient(context.Background(), mux, v2types.NewQueryClient(clientCtx)) //nolint:errcheck
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))     //nolint:errcheck,gosec
+	v2types.RegisterQueryHandlerClient(context.Background(), mux, v2types.NewQueryClient(clientCtx)) //nolint:errcheck,gosec
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -169,15 +167,3 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-// **** simulation implementation ****
-// GenerateGenesisState creates a randomized GenState of the gamm module.
-func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
-	DefaultGen := types.DefaultGenesis()
-	DefaultGenJson := simState.Cdc.MustMarshalJSON(DefaultGen)
-	simState.GenState[types.ModuleName] = DefaultGenJson
-}
-
-func (am AppModule) Actions() []simtypes.Action {
-	return simulation.DefaultActions(am.keeper)
-}

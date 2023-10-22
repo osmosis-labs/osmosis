@@ -56,7 +56,7 @@ var (
 	ErrPoolAlreadyExist    = sdkerrors.Register(ModuleName, 2, "pool already exist")
 	ErrPoolLocked          = sdkerrors.Register(ModuleName, 3, "pool is locked")
 	ErrTooFewPoolAssets    = sdkerrors.Register(ModuleName, 4, "pool should have at least 2 assets, as they must be swapping between at least two assets")
-	ErrTooManyPoolAssets   = sdkerrors.Register(ModuleName, 5, "pool has too many assets (currently capped at 8 assets for both balancer and stableswap)")
+	ErrTooManyPoolAssets   = sdkerrors.Register(ModuleName, 5, "pool has too many assets (currently capped at 2 assets for both balancer and stableswap)")
 	ErrLimitMaxAmount      = sdkerrors.Register(ModuleName, 6, "calculated amount is larger than max amount")
 	ErrLimitMinAmount      = sdkerrors.Register(ModuleName, 7, "calculated amount is lesser than min amount")
 	ErrInvalidMathApprox   = sdkerrors.Register(ModuleName, 8, "invalid calculated result")
@@ -90,4 +90,7 @@ var (
 	ErrInvalidScalingFactors      = sdkerrors.Register(ModuleName, 64, "scaling factors cannot be 0 or use more than 63 bits")
 	ErrHitMaxScaledAssets         = sdkerrors.Register(ModuleName, 65, "post-scaled pool assets can not exceed 10^34")
 	ErrHitMinScaledAssets         = sdkerrors.Register(ModuleName, 66, "post-scaled pool assets can not be less than 1")
+
+	ErrPoolAssetNotAllowed = sdkerrors.Register(ModuleName, 67, "pool must cointain one of the whitelisted assets")
+	ErrPoolAlreadyExists   = sdkerrors.Register(ModuleName, 68, "pool with same assets already exists")
 )

@@ -55,7 +55,7 @@ func NewStableswapPool(poolId uint64,
 		Address:                 types.NewPoolAddress(poolId).String(),
 		Id:                      poolId,
 		PoolParams:              stableswapPoolParams,
-		TotalShares:             sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),
+		TotalShares:             sdk.NewCoin(types.GetPoolShareDenom(poolId), sdk.NewIntFromBigInt(types.InitPoolSharesSupply.BigInt())),
 		PoolLiquidity:           initialLiquidity,
 		ScalingFactors:          scalingFactors,
 		ScalingFactorController: scalingFactorController,
@@ -209,7 +209,7 @@ func (p Pool) reorderReservesAndScalingFactors(first string, second string) ([]s
 func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coins) {
 	numTokens := p.PoolLiquidity.Len()
 	// update liquidity
-	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...).Sub(tokensOut)
+	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...).Sub(tokensOut...)
 	// sanity check that no new denoms were added
 	if len(p.PoolLiquidity) != numTokens {
 		panic("updatePoolLiquidityForSwap changed number of tokens in pool")
@@ -346,7 +346,7 @@ func (p Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swap
 	}
 
 	// ensure that no more tokens have been joined than is possible with the given `tokensIn`
-	tokensJoined = tokensIn.Sub(remainingTokensIn)
+	tokensJoined = tokensIn.Sub(remainingTokensIn...)
 	if tokensJoined.IsAnyGT(tokensIn) {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than token In")
 	}
@@ -376,7 +376,7 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 		return sdk.Coins{}, err
 	}
 
-	postExitLiquidity := p.PoolLiquidity.Sub(exitingCoins)
+	postExitLiquidity := p.PoolLiquidity.Sub(exitingCoins...)
 	if err := validatePoolLiquidity(postExitLiquidity, p.ScalingFactors); err != nil {
 		return sdk.Coins{}, err
 	}

@@ -8,6 +8,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -175,7 +176,7 @@ func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.CFMMPoolI, shareOutAmo
 	totalSharesAmount := pool.GetTotalShares()
 	// shareRatio is the desired number of shares, divided by the total number of
 	// shares currently in the pool. It is intended to be used in scenarios where you want
-	shareRatio := shareOutAmount.ToDec().QuoInt(totalSharesAmount)
+	shareRatio := sdk.NewDecFromInt(shareOutAmount).QuoInt(totalSharesAmount)
 	if shareRatio.LTE(sdk.ZeroDec()) {
 		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted. "+
 			"(debug: getMaximalNoSwapLPAmount share ratio is zero or negative)")
@@ -186,7 +187,7 @@ func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.CFMMPoolI, shareOutAmo
 
 	for _, coin := range poolLiquidity {
 		// (coin.Amt * shareRatio).Ceil()
-		neededAmt := coin.Amount.ToDec().Mul(shareRatio).Ceil().RoundInt()
+		neededAmt := sdk.NewDecFromInt(coin.Amount).Mul(shareRatio).Ceil().RoundInt()
 		if neededAmt.LTE(sdk.ZeroInt()) {
 			return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "Too few shares out wanted")
 		}

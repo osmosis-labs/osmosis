@@ -20,9 +20,9 @@ func SigFigRound(d sdk.Dec, tenToSigFig sdk.Int) sdk.Dec {
 	}
 	// d * 10^k * 10^sigfig
 	dkSigFig := dTimesK.MulInt(tenToSigFig)
-	numerator := dkSigFig.RoundInt().ToDec()
+	numerator := sdk.NewDecFromInt(dkSigFig.RoundInt())
 
-	tenToK := sdk.NewInt(10).ToDec().Power(k)
+	tenToK := sdk.NewDecFromInt(sdk.NewInt(10)).Power(k)
 	denominator := tenToSigFig.Mul(tenToK.TruncateInt())
 	return numerator.QuoInt(denominator)
 }

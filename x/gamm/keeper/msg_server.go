@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v15/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
@@ -42,8 +43,69 @@ var (
 
 // CreateBalancerPool is a create balancer pool message.
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	params := server.keeper.GetParams(ctx)
+
+	//validate the pool contains asset which is whitelisted
+	found := false
+	for _, asset := range msg.PoolAssets {
+		if ok, _ := params.PoolCreationFee.Find(asset.Token.Denom); ok {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, types.ErrPoolAssetNotAllowed
+	}
+
+	//set global fees
+	if params.GetGlobalFees() {
+		msg.PoolParams.SwapFee = params.PoolParams.SwapFee
+		msg.PoolParams.ExitFee = params.PoolParams.ExitFee
+	}
+
+	//validate uniqueness of pool assets
+	poolAlreadyExists := false
+	iter := server.keeper.iterator(ctx, types.KeyPrefixPools)
+	defer iter.Close() //nolint:errcheck
+
+	for ; iter.Valid(); iter.Next() {
+		pool, err := server.keeper.UnmarshalPool(iter.Value())
+		if err != nil {
+			return nil, err
+		}
+
+		existingPoolDenoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
+		sameAssets := true
+		for _, asset := range msg.PoolAssets {
+			if contains(existingPoolDenoms, asset.Token.Denom) {
+				continue
+			}
+			sameAssets = false
+			break
+		}
+		if sameAssets {
+			poolAlreadyExists = true
+			break
+		}
+	}
+
+	if poolAlreadyExists {
+		return nil, types.ErrPoolAlreadyExists
+	}
+
 	poolId, err := server.CreatePool(goCtx, msg)
 	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
+}
+
+// Function to check if a slice contains a string
+func contains(slice []string, str string) bool {
+	for _, v := range slice {
+		if v == str {
+			return true
+		}
+	}
+	return false
 }
 
 func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {

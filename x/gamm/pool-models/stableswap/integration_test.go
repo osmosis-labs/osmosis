@@ -13,6 +13,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 type TestSuite struct {
@@ -25,6 +26,7 @@ func TestTestSuite(t *testing.T) {
 
 func (suite *TestSuite) SetupTest() {
 	suite.Setup()
+	gammtypes.MaxNumOfAssetsInPool = 8
 }
 
 func (s *TestSuite) TestSetScalingFactors() {

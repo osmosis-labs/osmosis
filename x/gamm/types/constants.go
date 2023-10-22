@@ -2,6 +2,8 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 const (
@@ -14,15 +16,15 @@ const (
 	StableswapMinScaledAmtPerAsset = 1
 	// We keep this multiplier at 1, but can increase if needed in the unlikely scenario where default scaling factors of 1 cannot accommodate enough assets
 	ScalingFactorMultiplier = 1
-
-	// pools can be created with min and max number of assets defined with this constants
-	MinNumOfAssetsInPool = 2
-	MaxNumOfAssetsInPool = 8
 )
 
 var (
+	// pools can be created with min and max number of assets defined with this constants
+	MinNumOfAssetsInPool = 2
+	MaxNumOfAssetsInPool = 2
+
 	// OneShare represents the amount of subshares in a single pool share.
-	OneShare = sdk.NewIntWithDecimal(1, OneShareExponent)
+	OneShare = osmomath.NewIntWithDecimal(1, OneShareExponent)
 
 	// InitPoolSharesSupply is the amount of new shares to initialize a pool with.
 	InitPoolSharesSupply = OneShare.MulRaw(100)

@@ -1,12 +1,19 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
 )
 
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
+	recipientAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
+	if recipientAcc == nil {
+		panic(fmt.Sprintf("module account %s does not exist", types.ModuleName))
+	}
+
 	k.SetParams(ctx, genState.Params)
 	k.SetLockableDurations(ctx, genState.LockableDurations)
 	if genState.DistrInfo == nil {

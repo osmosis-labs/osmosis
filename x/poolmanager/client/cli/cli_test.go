@@ -7,9 +7,9 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/cli"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
 	poolmanagertestutil "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/testutil"
@@ -18,9 +18,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 )
@@ -32,12 +34,12 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
-var testAddresses = osmoutils.CreateRandomAccounts(3)
+var testAddresses = apptesting.CreateRandomAccounts(3)
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.cfg = app.DefaultConfig()
+	s.cfg = network.DefaultConfig()
 	s.cfg.GenesisState = poolmanagertestutil.UpdateTxFeeDenom(s.cfg.Codec, s.cfg.BondDenom)
 
 	s.network = network.New(s.T(), s.cfg)
@@ -232,7 +234,10 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	pub, err := info.GetPubKey()
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(pub.Address())
 
 	_, err = banktestutil.MsgSendExec(
 		val.ClientCtx,
@@ -307,7 +312,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "100node0token,100stake",
 			  "%s": "0.001",
 			  "%s": "0.001",
-			  "%s": "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
+			  "%s": "dym1celvklgrnfmpxwknlvyxlxvtns2szsm8sey5u5"
 			}
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
 			false, &sdk.TxResponse{}, 0,
@@ -480,7 +485,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			cmd := cli.NewCreatePoolCmd()
 			clientCtx := val.ClientCtx
 
-			jsonFile := testutil.WriteToNewTempFile(s.T(), tc.json)
+			jsonFile := sdktestutil.WriteToNewTempFile(s.T(), tc.json)
 
 			args := []string{
 				fmt.Sprintf("--%s=%s", cli.FlagPoolFile, jsonFile.Name()),

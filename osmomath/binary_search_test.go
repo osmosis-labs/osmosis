@@ -22,9 +22,9 @@ func TestBinarySearch(t *testing.T) {
 		return a, nil
 	}
 	cubicF := func(a sdk.Int) (sdk.Int, error) {
-		calculation := sdk.Dec(a)
+		calculation := sdk.NewDecFromIntWithPrec(a, sdk.Precision)
 		result := calculation.Power(3)
-		output := sdk.Int(result)
+		output := sdk.NewIntFromBigInt(result.BigInt())
 		return output, nil
 	}
 	noErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroDec()}

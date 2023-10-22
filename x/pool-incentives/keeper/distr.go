@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	"github.com/dymensionxyz/dymension/osmoutils"
+	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -26,6 +26,8 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 	logger := k.Logger(ctx)
 	params := k.GetParams(ctx)
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+
+	//TODO: we should support distribution of all assets, not only specific denom
 	asset := k.bankKeeper.GetBalance(ctx, moduleAddr, params.MintedDenom)
 	if asset.Amount.IsZero() {
 		// when allocating asset is zero, skip execution
@@ -39,10 +41,10 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 		return k.FundCommunityPoolFromModule(ctx, asset)
 	}
 
-	assetAmountDec := asset.Amount.ToDec()
-	totalWeightDec := distrInfo.TotalWeight.ToDec()
+	assetAmountDec := sdk.NewDecFromInt(asset.Amount)
+	totalWeightDec := sdk.NewDecFromInt(distrInfo.TotalWeight)
 	for _, record := range distrInfo.Records {
-		allocatingAmount := assetAmountDec.Mul(record.Weight.ToDec().Quo(totalWeightDec)).TruncateInt()
+		allocatingAmount := assetAmountDec.Mul(sdk.NewDecFromInt(record.Weight).Quo(totalWeightDec)).TruncateInt()
 
 		// when weight is too small and no amount is allocated, just skip this to avoid zero coin send issues
 		if !allocatingAmount.IsPositive() {
@@ -108,15 +110,15 @@ func (k Keeper) validateRecords(ctx sdk.Context, records ...types.DistrRecord) e
 
 		// unless GaugeID is 0 for the community pool, don't allow distribution records for gauges that don't exist
 		if record.GaugeId != 0 {
-			gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
+			_, err := k.incentivesKeeper.GetGaugeByID(ctx, record.GaugeId)
 			if err != nil {
 				return err
 			}
-			if !gauge.IsPerpetual {
-				return sdkerrors.Wrapf(types.ErrDistrRecordRegisteredGauge,
-					"Gauge ID #%d is not perpetual.",
-					record.GaugeId)
-			}
+			// if !gauge.IsPerpetual {
+			// 	return sdkerrors.Wrapf(types.ErrDistrRecordRegisteredGauge,
+			// 		"Gauge ID #%d is not perpetual.",
+			// 		record.GaugeId)
+			// }
 		}
 
 		gaugeIdFlags[record.GaugeId] = true

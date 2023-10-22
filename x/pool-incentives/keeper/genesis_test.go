@@ -9,18 +9,19 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	pool_incentives "github.com/osmosis-labs/osmosis/v15/x/pool-incentives"
+	pool_incentives "github.com/dymensionxyz/dymension/x/pool-incentives"
 
-	simapp "github.com/osmosis-labs/osmosis/v15/app"
+	simapp "github.com/dymensionxyz/dymension/app"
 
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
 )
 
 var (
 	now         = time.Now().UTC()
 	testGenesis = types.GenesisState{
 		Params: types.Params{
-			MintedDenom: "uosmo",
+			MintedDenom:       "uosmo",
+			NumEpochsPaidOver: 30,
 		},
 		LockableDurations: []time.Duration{
 			time.Second,
@@ -40,12 +41,12 @@ var (
 )
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
 	encodingConfig := simapp.MakeEncodingConfig()
-	appCodec := encodingConfig.Marshaler
+	appCodec := encodingConfig.Codec
 	am := pool_incentives.NewAppModule(*app.PoolIncentivesKeeper)
 
 	genesis := testGenesis
@@ -54,7 +55,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {
-		app := simapp.Setup(false)
+		app := simapp.Setup(t, false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
 		am := pool_incentives.NewAppModule(*app.PoolIncentivesKeeper)
@@ -63,7 +64,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 }
 
 func TestInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis

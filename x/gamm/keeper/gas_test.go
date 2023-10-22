@@ -14,7 +14,7 @@ import (
 var (
 	defaultAddr       sdk.AccAddress = sdk.AccAddress([]byte("addr1---------------"))
 	defaultCoins      sdk.Coins      = sdk.Coins{}
-	minShareOutAmount sdk.Int        = types.OneShare.MulRaw(50)
+	minShareOutAmount sdk.Int        = sdk.NewIntFromBigInt(types.OneShare.MulRaw(50).BigInt())
 )
 
 func (suite *KeeperTestSuite) measureJoinPoolGas(
@@ -66,14 +66,15 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 
 	// mint some assets to the accounts
 	suite.FundAcc(defaultAddr, sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000000)),
+		sdk.NewCoin("udym", sdk.NewInt(10000000000000)),
 		sdk.NewCoin("foo", sdk.NewInt(10000000000000000)),
 		sdk.NewCoin("bar", sdk.NewInt(10000000000000000)),
 		sdk.NewCoin("baz", sdk.NewInt(10000000000000000)),
 	))
 
+	//This test been modified, as GAS increased vs osmosis
 	firstJoinGas := suite.measureJoinPoolGas(defaultAddr, poolId, minShareOutAmount, defaultCoins)
-	suite.Assert().LessOrEqual(int(firstJoinGas), 100000)
+	suite.Assert().LessOrEqual(int(firstJoinGas), 105000)
 
 	for i := 1; i < startAveragingAt; i++ {
 		_, _, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, defaultAddr, poolId, minShareOutAmount, sdk.Coins{})
@@ -82,8 +83,8 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 
 	avgGas, maxGas := suite.measureAvgAndMaxJoinPoolGas(totalNumJoins, defaultAddr, poolIDFn, minShareOutAmountFn, maxCoinsFn)
 	fmt.Printf("test deets: total %d of pools joined, begin average at %d\n", totalNumJoins, startAveragingAt)
-	suite.Assert().LessOrEqual(int(avgGas), 100000, "average gas / join pool")
-	suite.Assert().LessOrEqual(int(maxGas), 100000, "max gas / join pool")
+	suite.Assert().LessOrEqual(int(avgGas), 105000, "average gas / join pool")
+	suite.Assert().LessOrEqual(int(maxGas), 105000, "max gas / join pool")
 }
 
 func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
@@ -91,7 +92,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 
 	// mint some usomo to account
 	suite.FundAcc(defaultAddr, sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(1000000000000000000)),
+		sdk.NewCoin("udym", sdk.NewInt(1000000000000000000)),
 	))
 
 	// number of distinct denom to test

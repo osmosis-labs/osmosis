@@ -6,20 +6,20 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/client/cli"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
-var testAddresses = osmoutils.CreateRandomAccounts(3)
+var testAddresses = apptesting.CreateRandomAccounts(3)
 
 type IntegrationTestSuite struct {
 	suite.Suite
@@ -49,20 +49,20 @@ func TestNewCreatePoolCmd(t *testing.T) {
 			  "%s": "100node0token,100stake",
 			  "%s": "0.001",
 			  "%s": "0.001",
-			  "%s": "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
+			  "%s": "dym1celvklgrnfmpxwknlvyxlxvtns2szsm8sey5u5"
 			}
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
 			false,
 		},
 		"bad pool json - missing quotes around exit fee": {
 			fmt.Sprintf(`
-			{
-			  "%s": "1node0token,3stake",
-			  "%s": "100node0token,100stake",
-			  "%s": "0.001",
-			  "%s": 0.001
-			}
-	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
+				{
+				  "%s": "1node0token,3stake",
+				  "%s": "100node0token,100stake",
+				  "%s": "0.001",
+				  "%s": 0.001
+				}
+		`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
 			true,
 		},
 		"empty pool json": {
@@ -70,93 +70,93 @@ func TestNewCreatePoolCmd(t *testing.T) {
 		},
 		"smooth change params": {
 			fmt.Sprintf(`
-				{
-					"%s": "1node0token,3stake",
-					"%s": "100node0token,100stake",
-					"%s": "0.001",
-					"%s": "0.001",
-					"%s": {
-						"%s": "864h",
-						"%s": "2node0token,1stake",
-						"%s": "2006-01-02T15:04:05Z"
+					{
+						"%s": "1node0token,3stake",
+						"%s": "100node0token,100stake",
+						"%s": "0.001",
+						"%s": "0.001",
+						"%s": {
+							"%s": "864h",
+							"%s": "2node0token,1stake",
+							"%s": "2006-01-02T15:04:05Z"
+						}
 					}
-				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+					`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights, cli.PoolFileStartTime,
 			),
 			false,
 		},
 		"smooth change params - no start time": {
 			fmt.Sprintf(`
-				{
-					"%s": "1node0token,3stake",
-					"%s": "100node0token,100stake",
-					"%s": "0.001",
-					"%s": "0.001",
-					"%s": {
-						"%s": "864h",
-						"%s": "2node0token,1stake"
+					{
+						"%s": "1node0token,3stake",
+						"%s": "100node0token,100stake",
+						"%s": "0.001",
+						"%s": "0.001",
+						"%s": {
+							"%s": "864h",
+							"%s": "2node0token,1stake"
+						}
 					}
-				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+					`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights,
 			),
 			false,
 		},
 		"empty smooth change params": {
 			fmt.Sprintf(`
-				{
-					"%s": "1node0token,3stake",
-					"%s": "100node0token,100stake",
-					"%s": "0.001",
-					"%s": "0.001",
-					"%s": {}
-				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+					{
+						"%s": "1node0token,3stake",
+						"%s": "100node0token,100stake",
+						"%s": "0.001",
+						"%s": "0.001",
+						"%s": {}
+					}
+					`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
 				cli.PoolFileSmoothWeightChangeParams,
 			),
 			false,
 		},
 		"smooth change params wrong type": {
 			fmt.Sprintf(`
-				{
-					"%s": "1node0token,3stake",
-					"%s": "100node0token,100stake",
-					"%s": "0.001",
-					"%s": "0.001",
-					"%s": "invalid string"
-				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+					{
+						"%s": "1node0token,3stake",
+						"%s": "100node0token,100stake",
+						"%s": "0.001",
+						"%s": "0.001",
+						"%s": "invalid string"
+					}
+					`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
 				cli.PoolFileSmoothWeightChangeParams,
 			),
 			true,
 		},
 		"smooth change params missing duration": {
 			fmt.Sprintf(`
-				{
-					"%s": "1node0token,3stake",
-					"%s": "100node0token,100stake",
-					"%s": "0.001",
-					"%s": "0.001",
-					"%s": {
-						"%s": "2node0token,1stake"
+					{
+						"%s": "1node0token,3stake",
+						"%s": "100node0token,100stake",
+						"%s": "0.001",
+						"%s": "0.001",
+						"%s": {
+							"%s": "2node0token,1stake"
+						}
 					}
-				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+					`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileTargetPoolWeights,
 			),
 			true,
 		},
 		"unknown fields in json": {
 			fmt.Sprintf(`
-			{
-			  "%s": "1node0token",
-			  "%s": "100node0token",
-			  "%s": "0.001",
-			  "%s": "0.001"
-			  "unknown": true,
-			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
+				{
+				  "%s": "1node0token",
+				  "%s": "100node0token",
+				  "%s": "0.001",
+				  "%s": "0.001"
+				  "unknown": true,
+				}
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
 			true,
 		},
 	}
@@ -164,7 +164,7 @@ func TestNewCreatePoolCmd(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(tt *testing.T) {
 			desc := cli.NewCreatePoolCmd()
-			jsonFile := testutil.WriteToNewTempFile(tt, tc.json)
+			jsonFile := sdktestutil.WriteToNewTempFile(tt, tc.json)
 			Cmd := fmt.Sprintf("--pool-file=%s --from=%s", jsonFile.Name(), testAddresses[0].String())
 
 			txTc := osmocli.TxCliTestCase[*balancer.MsgCreateBalancerPool]{
@@ -172,7 +172,7 @@ func TestNewCreatePoolCmd(t *testing.T) {
 				ExpectedErr:            tc.expectErr,
 				OnlyCheckValidateBasic: true,
 			}
-			osmocli.RunTxTestCase(tt, desc, &txTc)
+			osmocli.RunTxTestCase(tt, desc, txTc)
 		})
 	}
 }
@@ -335,10 +335,10 @@ func TestGetCmdSpotPrice(t *testing.T) {
 	desc, _ := cli.GetCmdSpotPrice()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySpotPriceRequest]{
 		"basic test": {
-			Cmd: "1 uosmo ibc/111",
+			Cmd: "1 udym ibc/111",
 			ExpectedQuery: &types.QuerySpotPriceRequest{
 				PoolId:          1,
-				BaseAssetDenom:  "uosmo",
+				BaseAssetDenom:  "udym",
 				QuoteAssetDenom: "ibc/111",
 			},
 		},

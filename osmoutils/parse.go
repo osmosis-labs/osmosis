@@ -53,7 +53,7 @@ func ParseProposalFlags(fs *pflag.FlagSet) (*Proposal, error) {
 		}
 	}
 
-	contents, err := os.ReadFile(proposalFile)
+	contents, err := os.ReadFile(proposalFile) // nolint:gosec
 	if err != nil {
 		return nil, err
 	}

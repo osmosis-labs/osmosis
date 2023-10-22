@@ -6,12 +6,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	"github.com/dymensionxyz/dymension/testutil"
+	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
 )
 
 type QueryTestSuite struct {
-	apptesting.KeeperTestHelper
+	testutil.KeeperTestHelper
 	queryClient types.QueryClient
 }
 

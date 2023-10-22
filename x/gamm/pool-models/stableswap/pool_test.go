@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v15/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
@@ -70,7 +70,7 @@ func poolStructFromAssets(assets sdk.Coins, scalingFactors []uint64) Pool {
 		Address:            types.NewPoolAddress(defaultPoolId).String(),
 		Id:                 defaultPoolId,
 		PoolParams:         defaultStableswapPoolParams,
-		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
+		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), sdk.NewIntFromBigInt(types.InitPoolSharesSupply.BigInt())),
 		PoolLiquidity:      assets,
 		ScalingFactors:     scalingFactors,
 		FuturePoolGovernor: defaultFutureGovernor,
@@ -706,7 +706,7 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 			scalingFactors:        defaultTwoAssetScalingFactors,
 			tokenIn:               sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
 			expectedTokenOut:      sdk.NewInt64Coin("bar", 99),
-			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 99))),
+			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 99))...),
 			swapFee:               sdk.ZeroDec(),
 			expError:              false,
 		},
@@ -793,7 +793,7 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 			scalingFactors:        defaultTwoAssetScalingFactors,
 			tokenOut:              sdk.NewCoins(sdk.NewInt64Coin("bar", 100)),
 			expectedTokenIn:       sdk.NewInt64Coin("foo", 100),
-			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 100))),
+			expectedPoolLiquidity: twoEvenStablePoolAssets.Add(sdk.NewInt64Coin("foo", 100)).Sub(sdk.NewCoins(sdk.NewInt64Coin("bar", 100))...),
 			swapFee:               sdk.ZeroDec(),
 			expError:              false,
 		},
@@ -974,7 +974,7 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 			var expectedTokenOut sdk.Coins
 			if len(tc.tokensIn) == 1 {
 				oneMinusSingleSwapFee := sdk.OneDec().Sub((swapRatio.Mul(tc.swapFee)))
-				expectedAmt := (tc.tokensIn[0].Amount.ToDec().Mul(oneMinusSingleSwapFee)).TruncateInt()
+				expectedAmt := (sdk.NewDecFromInt(tc.tokensIn[0].Amount).Mul(oneMinusSingleSwapFee)).TruncateInt()
 				expectedTokenOut = sdk.NewCoins(sdk.NewCoin(tc.tokensIn[0].Denom, expectedAmt))
 			} else {
 				expectedTokenOut = tc.tokensIn
@@ -1002,32 +1002,32 @@ func TestExitPool(t *testing.T) {
 	}
 	tests := map[string]testcase{
 		"basic two-asset pool exit on even pool": {
-			sharesIn:              types.InitPoolSharesSupply.Quo(sdk.NewInt(10)),
+			sharesIn:              sdk.NewIntFromBigInt(types.InitPoolSharesSupply.BigInt()).Quo(sdk.NewInt(10)),
 			initialPoolLiquidity:  twoEvenStablePoolAssets,
 			scalingFactors:        defaultTwoAssetScalingFactors,
-			expectedPoolLiquidity: twoEvenStablePoolAssets.Sub(tenPercentOfTwoPoolCoins),
+			expectedPoolLiquidity: twoEvenStablePoolAssets.Sub(tenPercentOfTwoPoolCoins...),
 			expectedTokenOut:      tenPercentOfTwoPoolCoins,
 			expectPass:            true,
 		},
 		"basic three-asset pool exit on even pool": {
-			sharesIn:              types.InitPoolSharesSupply.Quo(sdk.NewInt(10)),
+			sharesIn:              sdk.NewIntFromBigInt(types.InitPoolSharesSupply.BigInt()).Quo(sdk.NewInt(10)),
 			initialPoolLiquidity:  threeEvenStablePoolAssets,
 			scalingFactors:        defaultThreeAssetScalingFactors,
-			expectedPoolLiquidity: threeEvenStablePoolAssets.Sub(tenPercentOfThreePoolCoins),
+			expectedPoolLiquidity: threeEvenStablePoolAssets.Sub(tenPercentOfThreePoolCoins...),
 			expectedTokenOut:      tenPercentOfThreePoolCoins,
 			expectPass:            true,
 		},
 		"basic three-asset pool exit on uneven pool": {
-			sharesIn:              types.InitPoolSharesSupply.Quo(sdk.NewInt(10)),
+			sharesIn:              sdk.NewIntFromBigInt(types.InitPoolSharesSupply.BigInt()).Quo(sdk.NewInt(10)),
 			initialPoolLiquidity:  threeUnevenStablePoolAssets,
 			scalingFactors:        defaultThreeAssetScalingFactors,
-			expectedPoolLiquidity: threeUnevenStablePoolAssets.Sub(tenPercentOfUnevenThreePoolCoins),
+			expectedPoolLiquidity: threeUnevenStablePoolAssets.Sub(tenPercentOfUnevenThreePoolCoins...),
 			expectedTokenOut:      tenPercentOfUnevenThreePoolCoins,
 			expectPass:            true,
 		},
 		"pool exit pushes post-scaled asset below 1": {
 			// attempt to exit one token when post-scaled amount is already 1 for each asset
-			sharesIn:              types.InitPoolSharesSupply.Quo(sdk.NewInt(1000000)),
+			sharesIn:              sdk.NewIntFromBigInt(types.InitPoolSharesSupply.BigInt()).Quo(sdk.NewInt(1000000)),
 			initialPoolLiquidity:  threeEvenStablePoolAssets,
 			scalingFactors:        []uint64{1000000 / types.ScalingFactorMultiplier, 100000 / types.ScalingFactorMultiplier, 100000 / types.ScalingFactorMultiplier},
 			expectedPoolLiquidity: threeEvenStablePoolAssets,

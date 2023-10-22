@@ -5,13 +5,15 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/dymensionxyz/dymension/testutil"
-	"github.com/dymensionxyz/dymension/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/keeper"
 )
 
 type KeeperTestSuite struct {
-	testutil.KeeperTestHelper
+	apptesting.KeeperTestHelper
 
 	querier keeper.Querier
 	cleanup func()

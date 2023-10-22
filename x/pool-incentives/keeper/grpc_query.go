@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
 	incentivetypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -36,7 +36,7 @@ func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) 
 	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
 	gaugeIdsWithDuration := make([]*types.QueryGaugeIdsResponse_GaugeIdWithDuration, len(lockableDurations))
 
-	totalWeightDec := distrInfo.TotalWeight.ToDec()
+	totalWeightDec := sdk.NewDecFromInt(distrInfo.TotalWeight)
 	incentivePercentage := sdk.NewDec(0)
 	percentMultiplier := sdk.NewInt(100)
 
@@ -49,7 +49,7 @@ func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) 
 		for _, record := range distrInfo.Records {
 			if record.GaugeId == gaugeId {
 				// Pool incentive % = (gauge_id_weight / sum_of_all_pool_gauge_weight) * 100
-				incentivePercentage = record.Weight.ToDec().Quo(totalWeightDec).MulInt(percentMultiplier)
+				incentivePercentage = sdk.NewDecFromInt(record.Weight).Quo(totalWeightDec).MulInt(percentMultiplier)
 			}
 		}
 
@@ -123,7 +123,7 @@ func (q Querier) ExternalIncentiveGauges(ctx context.Context, req *types.QueryEx
 	prefixStore := prefix.NewStore(store, []byte("pool-incentives"))
 
 	iterator := prefixStore.Iterator(nil, nil)
-	defer iterator.Close()
+	defer iterator.Close() // nolint: errcheck
 
 	// map true to default gauges created with pool
 	poolGaugeIds := make(map[uint64]bool)

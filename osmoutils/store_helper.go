@@ -13,7 +13,7 @@ import (
 
 func GatherAllKeysFromStore(storeObj store.KVStore) []string {
 	iterator := storeObj.Iterator(nil, nil)
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck
 
 	keys := []string{}
 	for ; iterator.Valid(); iterator.Next() {
@@ -24,7 +24,7 @@ func GatherAllKeysFromStore(storeObj store.KVStore) []string {
 
 func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart []byte, keyEnd []byte, parseValue func([]byte) (T, error)) ([]T, error) {
 	iterator := storeObj.Iterator(keyStart, keyEnd)
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck
 	return gatherValuesFromIterator(iterator, parseValue, noStopFn)
 }
 
@@ -46,7 +46,7 @@ func GatherValuesFromStorePrefix[T any](storeObj store.KVStore, prefix []byte, p
 // - internal database error
 func GatherValuesFromStorePrefixWithKeyParser[T any](storeObj store.KVStore, prefix []byte, parse func(key []byte, value []byte) (T, error)) ([]T, error) {
 	iterator := sdk.KVStorePrefixIterator(storeObj, prefix)
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck
 	return gatherValuesFromIteratorWithKeyParser(iterator, parse, noStopFn)
 }
 
@@ -74,7 +74,7 @@ func GetIterValuesWithStop[T any](
 	parseValue func([]byte) (T, error),
 ) ([]T, error) {
 	iter := makeIterator(storeObj, keyStart, keyEnd, reverse)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 
 	return gatherValuesFromIterator(iter, parseValue, stopFn)
 }
@@ -88,7 +88,7 @@ func GetFirstValueAfterPrefixInclusive[T any](storeObj store.KVStore, keyStart [
 
 func GetFirstValueInRange[T any](storeObj store.KVStore, keyStart []byte, keyEnd []byte, reverseIterate bool, parseValue func([]byte) (T, error)) (T, error) {
 	iterator := makeIterator(storeObj, keyStart, keyEnd, reverseIterate)
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck
 
 	if !iterator.Valid() {
 		var blankValue T

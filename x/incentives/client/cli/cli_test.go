@@ -1,19 +1,20 @@
-package cli
+package cli_test
 
 import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/client/cli"
 	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 )
 
-var testAddresses = osmoutils.CreateRandomAccounts(3)
+var testAddresses = apptesting.CreateRandomAccounts(3)
 
 func TestGetCmdGauges(t *testing.T) {
-	desc, _ := GetCmdGauges()
+	desc, _ := cli.GetCmdGauges()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.GaugesRequest]{
 		"basic test": {
 			Cmd: "--offset=2",
@@ -26,7 +27,7 @@ func TestGetCmdGauges(t *testing.T) {
 }
 
 func TestGetCmdToDistributeCoins(t *testing.T) {
-	desc, _ := GetCmdToDistributeCoins()
+	desc, _ := cli.GetCmdToDistributeCoins()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.ModuleToDistributeCoinsRequest]{
 		"basic test": {
 			Cmd: "", ExpectedQuery: &types.ModuleToDistributeCoinsRequest{},
@@ -36,7 +37,7 @@ func TestGetCmdToDistributeCoins(t *testing.T) {
 }
 
 func TestGetCmdGaugeByID(t *testing.T) {
-	desc, _ := GetCmdGaugeByID()
+	desc, _ := cli.GetCmdGaugeByID()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.GaugeByIDRequest]{
 		"basic test": {
 			Cmd: "1", ExpectedQuery: &types.GaugeByIDRequest{Id: 1},
@@ -46,7 +47,7 @@ func TestGetCmdGaugeByID(t *testing.T) {
 }
 
 func TestGetCmdActiveGauges(t *testing.T) {
-	desc, _ := GetCmdActiveGauges()
+	desc, _ := cli.GetCmdActiveGauges()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.ActiveGaugesRequest]{
 		"basic test": {
 			Cmd: "--offset=2",
@@ -58,7 +59,7 @@ func TestGetCmdActiveGauges(t *testing.T) {
 }
 
 func TestGetCmdActiveGaugesPerDenom(t *testing.T) {
-	desc, _ := GetCmdActiveGaugesPerDenom()
+	desc, _ := cli.GetCmdActiveGaugesPerDenom()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.ActiveGaugesPerDenomRequest]{
 		"basic test": {
 			Cmd: "uosmo --offset=2",
@@ -71,7 +72,7 @@ func TestGetCmdActiveGaugesPerDenom(t *testing.T) {
 }
 
 func TestGetCmdUpcomingGauges(t *testing.T) {
-	desc, _ := GetCmdUpcomingGauges()
+	desc, _ := cli.GetCmdUpcomingGauges()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.UpcomingGaugesRequest]{
 		"basic test": {
 			Cmd: "--offset=2",
@@ -83,7 +84,7 @@ func TestGetCmdUpcomingGauges(t *testing.T) {
 }
 
 func TestGetCmdUpcomingGaugesPerDenom(t *testing.T) {
-	desc, _ := GetCmdUpcomingGaugesPerDenom()
+	desc, _ := cli.GetCmdUpcomingGaugesPerDenom()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.UpcomingGaugesPerDenomRequest]{
 		"basic test": {
 			Cmd: "uosmo --offset=2",

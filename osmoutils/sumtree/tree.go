@@ -66,7 +66,7 @@ func (t Tree) Decrease(key []byte, amt sdk.Int) {
 
 func (t Tree) Clear() {
 	iter := t.store.Iterator(nil, nil)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 	for ; iter.Valid(); iter.Next() {
 		t.store.Delete(iter.Key())
 	}
@@ -123,7 +123,7 @@ func (t Tree) leafKey(key []byte) []byte {
 
 func (t Tree) root() *ptr {
 	iter := stypes.KVStoreReversePrefixIterator(t.store, nodeKeyPrefix)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck
 	if !iter.Valid() {
 		return nil
 	}

@@ -29,7 +29,7 @@ var (
 )
 
 func MustGetPoolIdFromShareDenom(denom string) uint64 {
-	numberStr := strings.TrimLeft(denom, "gamm/pool/")
+	numberStr := strings.TrimLeft(denom, "gamm/pool/") //nolint:staticcheck
 	number, err := strconv.Atoi(numberStr)
 	if err != nil {
 		panic(err)
@@ -38,7 +38,7 @@ func MustGetPoolIdFromShareDenom(denom string) uint64 {
 }
 
 func ValidatePoolShareDenom(denom string) error {
-	numberStr := strings.TrimLeft(denom, "gamm/pool/")
+	numberStr := strings.TrimLeft(denom, "gamm/pool/") //nolint:staticcheck
 	_, err := strconv.Atoi(numberStr)
 	if err != nil {
 		return err

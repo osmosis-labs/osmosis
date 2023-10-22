@@ -21,7 +21,7 @@ import (
 // getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
 func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []types.Gauge {
 	gauges := []types.Gauge{}
-	defer iterator.Close()
+	defer iterator.Close() // nolint: errcheck
 	for ; iterator.Valid(); iterator.Next() {
 		gaugeIDs := []uint64{}
 		err := json.Unmarshal(iterator.Value(), &gaugeIDs)
@@ -286,7 +286,12 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 // The fee is sent to the community pool.
 // Returns nil on success, error otherwise.
 func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) (err error) {
-	feeDenom, err := k.tk.GetBaseDenom(ctx)
+	var feeDenom string
+	if k.tk == nil {
+		feeDenom, err = sdk.GetBaseDenom()
+	} else {
+		feeDenom, err = k.tk.GetBaseDenom(ctx)
+	}
 	if err != nil {
 		return err
 	}

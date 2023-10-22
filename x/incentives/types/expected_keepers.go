@@ -15,9 +15,10 @@ type BankKeeper interface {
 
 	HasSupply(ctx sdk.Context, denom string) bool
 
-	SendCoinsFromModuleToManyAccounts(
-		ctx sdk.Context, senderModule string, recipientAddrs []sdk.AccAddress, amts []sdk.Coins,
+	SendCoinsFromModuleToAccount(
+		ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 	) error
+
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
 

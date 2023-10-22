@@ -5,14 +5,15 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type msgServer struct {
-	keeper *Keeper
+	keeper *keeper.Keeper
 }
 
-func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
+func NewMsgServerImpl(keeper *keeper.Keeper) types.MsgServer {
 	return &msgServer{
 		keeper: keeper,
 	}

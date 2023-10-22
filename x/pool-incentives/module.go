@@ -29,9 +29,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	"github.com/dymensionxyz/dymension/x/pool-incentives/client/cli"
+	"github.com/dymensionxyz/dymension/x/pool-incentives/keeper"
+	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
 )
 
 var (
@@ -149,7 +149,12 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock returns the end blocker for the pool-incentives module. It returns no validator
 // updates.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (m AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	err := m.keeper.AllocateAsset(ctx)
+	if err != nil {
+		ctx.Logger().Error("failed to allocate asset", "error", err)
+	}
+
 	return []abci.ValidatorUpdate{}
 }
 

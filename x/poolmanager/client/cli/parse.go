@@ -46,7 +46,7 @@ func parseCreateBalancerPoolFlags(fs *pflag.FlagSet) (*createBalancerPoolInputs,
 		return nil, fmt.Errorf("must pass in a pool json using the --%s flag", FlagPoolFile)
 	}
 
-	contents, err := os.ReadFile(poolFile)
+	contents, err := os.ReadFile(poolFile) //nolint:gosec
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func parseCreateStableswapPoolFlags(fs *pflag.FlagSet) (*createStableswapPoolInp
 		return nil, fmt.Errorf("must pass in a pool json using the --%s flag", FlagPoolFile)
 	}
 
-	contents, err := os.ReadFile(poolFile)
+	contents, err := os.ReadFile(poolFile) //nolint:gosec
 	if err != nil {
 		return nil, err
 	}

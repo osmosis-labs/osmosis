@@ -8,7 +8,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -23,10 +25,27 @@ func (s *QueryTestSuite) SetupSuite() {
 	s.queryClient = types.NewQueryClient(s.QueryHelper)
 
 	// create a pool
-	s.PrepareBalancerPool()
+	poolID := s.PrepareBalancerPool()
+
 	// set up lock with id = 1
 	s.LockTokens(s.TestAccs[0], sdk.Coins{sdk.NewCoin("gamm/pool/1", sdk.NewInt(1000000))}, time.Hour*24)
 
+	// create a gauge
+	_, err := s.App.IncentivesKeeper.CreateGauge(
+		s.Ctx,
+		true,
+		s.App.AccountKeeper.GetModuleAddress(types.ModuleName),
+		sdk.Coins{},
+		lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         gammtypes.GetPoolShareDenom(poolID),
+			Duration:      time.Hour,
+			Timestamp:     time.Time{},
+		},
+		s.Ctx.BlockTime(),
+		1,
+	)
+	s.NoError(err)
 	s.Commit()
 }
 

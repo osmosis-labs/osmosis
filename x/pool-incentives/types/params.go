@@ -13,6 +13,7 @@ import (
 )
 
 var KeyMintedDenom = []byte("MintedDenom")
+var KeyNumEpochsPaidOver = []byte("NumEpochsPaidOver")
 
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
@@ -20,7 +21,8 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 func NewParams(mintedDenom string) Params {
 	return Params{
-		MintedDenom: mintedDenom,
+		MintedDenom:       mintedDenom,
+		NumEpochsPaidOver: 30,
 	}
 }
 
@@ -58,8 +60,22 @@ func validateMintedDenom(i interface{}) error {
 	return nil
 }
 
+func validateNumEpochsPaidOver(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v <= 0 {
+		return errors.New("num epochs paid over cannot be negative")
+	}
+
+	return nil
+}
+
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMintedDenom, &p.MintedDenom, validateMintedDenom),
+		paramtypes.NewParamSetPair(KeyNumEpochsPaidOver, &p.NumEpochsPaidOver, validateNumEpochsPaidOver),
 	}
 }

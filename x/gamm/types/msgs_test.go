@@ -10,8 +10,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
+	appParams "github.com/dymensionxyz/dymension/app/params"
+
+	apptesting "github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -517,7 +518,8 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		{
 			name: "invalid sender",
 			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
-				msg.Sender = invalidAddr.String()
+				aa := invalidAddr.String()
+				msg.Sender = aa
 				return msg
 			}),
 			expectPass: false,

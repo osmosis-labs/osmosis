@@ -27,7 +27,7 @@ func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares sdk.Int, 
 		oneSubExitFee := sdk.OneDec().SubMut(exitFee)
 		refundedShares = oneSubExitFee.MulIntMut(exitingShares)
 	} else {
-		refundedShares = exitingShares.ToDec()
+		refundedShares = sdk.NewDecFromInt(exitingShares)
 	}
 
 	shareOutRatio := refundedShares.QuoInt(totalShares)
@@ -74,7 +74,7 @@ func MaximalExactRatioJoin(p types.CFMMPoolI, ctx sdk.Context, tokensIn sdk.Coin
 		// Note: QuoInt implements floor division, unlike Quo
 		// This is because it calls the native golang routine big.Int.Quo
 		// https://pkg.go.dev/math/big#Int.Quo
-		shareRatio := coin.Amount.ToDec().QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
+		shareRatio := sdk.NewDecFromInt(coin.Amount).QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
 		if shareRatio.LT(minShareRatio) {
 			minShareRatio = shareRatio
 		}
@@ -134,7 +134,8 @@ func BinarySearchSingleAssetJoin(
 	// upperbound of number of LP shares = existingShares * tokenIn.Amount / pool.totalLiquidity.AmountOf(tokenIn.Denom)
 	existingTokenLiquidity := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenIn.Denom)
 	existingLPShares := pool.GetTotalShares()
-	LPShareUpperBound := existingLPShares.Mul(tokenIn.Amount).ToDec().QuoInt(existingTokenLiquidity).Ceil().TruncateInt()
+
+	LPShareUpperBound := sdk.NewDecFromInt(existingLPShares.Mul(tokenIn.Amount)).QuoInt(existingTokenLiquidity).Ceil().TruncateInt()
 	LPShareLowerBound := sdk.ZeroInt()
 
 	// Creates a pool with tokenIn liquidity added, where it created `sharesIn` number of shares.

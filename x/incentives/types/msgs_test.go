@@ -9,11 +9,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	appParams "github.com/dymensionxyz/dymension/app/params"
 
-	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 

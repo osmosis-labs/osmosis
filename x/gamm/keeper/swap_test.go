@@ -160,7 +160,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				}
 
 				// Ratio of the token out should be between the before spot price and after spot price.
-				tradeAvgPrice := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
+				tradeAvgPrice := sdk.NewDecFromInt(test.param.tokenIn.Amount).Quo(sdk.NewDecFromInt(tokenOutAmount))
 				suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
 				_, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], pool, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, swapFee)
@@ -408,7 +408,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				suite.NoError(err, "test: %v", test.name)
 
 				// Ratio of the token out should be between the before spot price and after spot price.
-				tradeAvgPrice := tokenInAmount.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
+				tradeAvgPrice := sdk.NewDecFromInt(tokenInAmount).Quo(sdk.NewDecFromInt(test.param.tokenOut.Amount))
 				suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
 			} else {
 				_, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], pool, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut, swapFee)

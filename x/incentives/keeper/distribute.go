@@ -30,7 +30,7 @@ func (k Keeper) getToDistributeCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 		coins = coins.Add(gauge.Coins...)
 		distributed = distributed.Add(gauge.DistributedCoins...)
 	}
-	return coins.Sub(distributed)
+	return coins.Sub(distributed...)
 }
 
 // getToDistributeCoinsFromIterator utilizes iterator to return a list of gauges.
@@ -107,7 +107,7 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 		return types.Gauge{}, nil, true, nil
 	}
 
-	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins...)
 	// remainEpochs is the number of remaining epochs that the gauge will pay out its rewards.
 	// for a perpetual gauge, it will pay out everything in the next epoch, and we don't make
 	// an assumption of the rate at which it will get refilled at.
@@ -196,14 +196,21 @@ func (d *distributionInfo) addLockRewards(owner string, rewards sdk.Coins) error
 // doDistributionSends utilizes provided distributionInfo to send coins from the module account to various recipients.
 func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) error {
 	numIDs := len(distrs.idToDecodedAddr)
+	if len(distrs.idToDistrCoins) != numIDs {
+		return fmt.Errorf("number of addresses and coins to distribute to must be equal")
+	}
 	ctx.Logger().Debug(fmt.Sprintf("Beginning distribution to %d users", numIDs))
-	err := k.bk.SendCoinsFromModuleToManyAccounts(
-		ctx,
-		types.ModuleName,
-		distrs.idToDecodedAddr,
-		distrs.idToDistrCoins)
-	if err != nil {
-		return err
+
+	for id := 0; id < numIDs; id++ {
+		err := k.bk.SendCoinsFromModuleToAccount(
+			ctx,
+			types.ModuleName,
+			distrs.idToDecodedAddr[id],
+			distrs.idToDistrCoins[id])
+
+		if err != nil {
+			return err
+		}
 	}
 	ctx.Logger().Debug("Finished sending, now creating liquidity add events")
 	for id := 0; id < numIDs; id++ {
@@ -272,7 +279,7 @@ func (k Keeper) distributeInternal(
 		return nil, nil
 	}
 
-	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins...)
 	// if its a perpetual gauge, we set remaining epochs to 1.
 	// otherwise is is a non perpetual gauge and we determine how many epoch payouts are left
 	remainEpochs := uint64(1)

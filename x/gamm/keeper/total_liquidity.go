@@ -50,7 +50,7 @@ func (k Keeper) IterateDenomLiquidity(ctx sdk.Context, cb func(sdk.Coin) bool) {
 	prefixStore := prefix.NewStore(store, types.KeyTotalLiquidity)
 
 	iterator := prefixStore.Iterator(nil, nil)
-	defer iterator.Close()
+	defer iterator.Close() //nolint:errcheck
 
 	for ; iterator.Valid(); iterator.Next() {
 		var amount sdk.Int

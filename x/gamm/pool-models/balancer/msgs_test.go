@@ -8,8 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
+	appParams "github.com/dymensionxyz/dymension/app/params"
+
+	apptesting "github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	balancer "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
@@ -186,7 +187,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 		{
 			name: "valid governor: address",
 			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
-				msg.FuturePoolGovernor = "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
+				msg.FuturePoolGovernor = "dym1celvklgrnfmpxwknlvyxlxvtns2szsm8sey5u5"
 				return msg
 			}),
 			expectPass: true,
@@ -286,7 +287,7 @@ func (suite *KeeperTestSuite) TestMsgCreateBalancerPool() {
 				expectedPoolLiquidity = expectedPoolLiquidity.Add(asset.Token)
 			}
 			suite.Require().Equal(expectedPoolLiquidity, pool.GetTotalPoolLiquidity(suite.Ctx))
-			suite.Require().Equal(types.InitPoolSharesSupply, pool.GetTotalShares())
+			suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String())
 		})
 	}
 }

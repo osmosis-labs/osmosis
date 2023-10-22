@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/dymensionxyz/dymension/testutil"
+	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {
-	apptesting.KeeperTestHelper
+	testutil.KeeperTestHelper
 
 	queryClient types.QueryClient
 }
@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeId)
 		suite.NoError(err)
 		suite.Equal(0, len(gauge.Coins))
-		suite.Equal(true, gauge.IsPerpetual)
+		suite.Equal(false, gauge.IsPerpetual)
 		suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[0], gauge.DistributeTo.Duration)
 
@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		gauge, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeId)
 		suite.NoError(err)
 		suite.Equal(0, len(gauge.Coins))
-		suite.Equal(true, gauge.IsPerpetual)
+		suite.Equal(false, gauge.IsPerpetual)
 		suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[1], gauge.DistributeTo.Duration)
 
@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		gauge, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeId)
 		suite.NoError(err)
 		suite.Equal(0, len(gauge.Coins))
-		suite.Equal(true, gauge.IsPerpetual)
+		suite.Equal(false, gauge.IsPerpetual)
 		suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[2], gauge.DistributeTo.Duration)
 	}

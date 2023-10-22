@@ -4,15 +4,15 @@ import (
 	"testing"
 	"time"
 
+	simapp "github.com/dymensionxyz/dymension/app"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/dymensionxyz/dymension/app"
-	"github.com/dymensionxyz/dymension/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v15/x/epochs/types"
 
 	"golang.org/x/exp/maps"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/osmoutils"
 )
 
 // This test is responsible for testing how epochs increment based off

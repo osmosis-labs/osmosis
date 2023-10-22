@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/dymensionxyz/dymension/app"
+
 	poolmanagercli "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/cli"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -38,7 +40,7 @@ func MsgCreatePool(
 ) (testutil.BufferWriter, error) {
 	args := []string{}
 
-	jsonFile := testutil.WriteToNewTempFile(t,
+	jsonFile := sdktestutil.WriteToNewTempFile(t,
 		fmt.Sprintf(`
 		{
 		  "%s": "%s",

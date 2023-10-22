@@ -3,8 +3,8 @@ package types_test
 import (
 	"testing"
 
+	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

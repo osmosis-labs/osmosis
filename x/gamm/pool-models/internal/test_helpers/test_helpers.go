@@ -13,7 +13,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	sdkrand "github.com/osmosis-labs/osmosis/v15/simulation/simtypes/random"
+	sdkrand "github.com/osmosis-labs/osmosis/v15/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
@@ -56,14 +56,14 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 
 	require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
 
-	expected := initialOut.Amount.ToDec()
-	actual := inverseTokenOut.Amount.ToDec()
+	expected := sdk.NewDecFromInt(initialOut.Amount)
+	actual := sdk.NewDecFromInt(inverseTokenOut.Amount)
 
 	// If the pool is extremely imbalanced (specifically in the case of stableswap),
 	// we expect there to be drastically amplified error that will fall outside our usual bounds.
 	// Since these cases are effectively unusable by design, we only really care about whether
 	// they are safe i.e. round correctly.
-	preFeeTokenIn := actualTokenIn.Amount.ToDec().Mul((sdk.OneDec().Sub(swapFee))).Ceil().TruncateInt()
+	preFeeTokenIn := sdk.NewDecFromInt(actualTokenIn.Amount).Mul((sdk.OneDec().Sub(swapFee))).Ceil().TruncateInt()
 	if preFeeTokenIn.Equal(sdk.OneInt()) {
 		require.True(t, actual.GT(expected))
 	} else {
@@ -93,7 +93,7 @@ func TestSlippageRelationOutGivenIn(
 	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.CFMMPoolI,
 	initLiquidity sdk.Coins,
 ) {
-	r := rand.New(rand.NewSource(100))
+	r := rand.New(rand.NewSource(100)) //nolint:gosec
 	swapInAmt := sdkrand.RandCoin(r, initLiquidity[:1])
 	swapOutDenom := initLiquidity[1].Denom
 
@@ -126,7 +126,7 @@ func TestSlippageRelationInGivenOut(
 	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.CFMMPoolI,
 	initLiquidity sdk.Coins,
 ) {
-	r := rand.New(rand.NewSource(100))
+	r := rand.New(rand.NewSource(100)) //nolint:gosec
 	swapOutAmt := sdkrand.RandCoin(r, initLiquidity[:1])
 	swapInDenom := initLiquidity[1].Denom
 

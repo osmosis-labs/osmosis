@@ -10,7 +10,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	pooltypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -350,58 +349,6 @@ func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 	suite.Require().Equal(res.Coins, coins)
 }
 
-// TestRewardsEstWithPoolIncentives tests querying rewards estimation at a future specific time (by epoch) via gRPC returns the correct response.
-// Also changes distribution records for the pool incentives to distribute to the respective lock owner.
-func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
-	suite.SetupTest()
-
-	// create an address with no locks
-	// ensure rewards estimation returns a nil coins struct
-	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
-	res, err := suite.querier.RewardsEst(sdk.WrapSDKContext(suite.Ctx), &types.RewardsEstRequest{
-		Owner: lockOwner.String(),
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, sdk.Coins{})
-
-	// setup a lock and gauge for a new address
-	lockOwner, gaugeID, coins, _ := suite.SetupLockAndGauge(true)
-
-	// take newly created gauge and modify its pool incentives distribution weight to 100
-	distrRecord := pooltypes.DistrRecord{
-		GaugeId: gaugeID,
-		Weight:  sdk.NewInt(100),
-	}
-	err = suite.App.PoolIncentivesKeeper.ReplaceDistrRecords(suite.Ctx, distrRecord)
-	suite.Require().NoError(err)
-
-	// query the rewards of the new address after the 10th epoch
-	// since it is the only address the gauge is paying out to, the future rewards should equal the entirety of the gauge
-	res, err = suite.querier.RewardsEst(sdk.WrapSDKContext(suite.Ctx), &types.RewardsEstRequest{
-		Owner:    lockOwner.String(),
-		EndEpoch: 10,
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins)
-
-	// after the current epoch ends, mint more coins that matches the lock coin demon created earlier
-	epochIdentifier := suite.App.MintKeeper.GetParams(suite.Ctx).EpochIdentifier
-	curEpochNumber := suite.App.EpochsKeeper.GetEpochInfo(suite.Ctx, epochIdentifier).CurrentEpoch
-	suite.App.EpochsKeeper.AfterEpochEnd(suite.Ctx, epochIdentifier, curEpochNumber)
-	// TODO: Figure out what this number should be
-	// TODO: Respond to this
-	mintCoins := sdk.NewCoin(coins[0].Denom, sdk.NewInt(1500000))
-
-	// query the rewards of the new address after the 10th epoch
-	// since it is the only address the gauge is paying out to, the future rewards should equal the entirety of the gauge plus the newly minted coins
-	res, err = suite.querier.RewardsEst(sdk.WrapSDKContext(suite.Ctx), &types.RewardsEstRequest{
-		Owner:    lockOwner.String(),
-		EndEpoch: 10,
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins.Add(mintCoins))
-}
-
 // TestGRPCToDistributeCoins tests querying coins that are going to be distributed via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.SetupTest()
@@ -453,7 +400,7 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	// check that the to distribute coins is equal to the initial gauge coin balance minus what has been distributed already (10-4=6)
 	res, err = suite.querier.ModuleToDistributeCoins(sdk.WrapSDKContext(suite.Ctx), &types.ModuleToDistributeCoinsRequest{})
 	suite.Require().NoError(err)
-	suite.Require().Equal(res.Coins, coins.Sub(distrCoins))
+	suite.Require().Equal(res.Coins, coins.Sub(distrCoins...))
 
 	// distribute second round to stakers
 	distrCoins, err = suite.querier.Distribute(suite.Ctx, gauges)

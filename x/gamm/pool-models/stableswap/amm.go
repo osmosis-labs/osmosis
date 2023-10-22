@@ -12,9 +12,7 @@ import (
 
 var (
 	cubeRootTwo, _        = osmomath.NewBigDec(2).ApproxRoot(3)
-	threeRootTwo, _       = osmomath.NewBigDec(3).ApproxRoot(2)
 	cubeRootThree, _      = osmomath.NewBigDec(3).ApproxRoot(3)
-	threeCubeRootTwo      = cubeRootTwo.MulInt64(3)
 	cubeRootSixSquared, _ = (osmomath.NewBigDec(6).MulInt64(6)).ApproxRoot(3)
 	twoCubeRootThree      = cubeRootThree.MulInt64(2)
 	twentySevenRootTwo, _ = osmomath.NewBigDec(27).ApproxRoot(2)
@@ -234,15 +232,6 @@ func solveCFMMMultiDirect(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) 
 	return xOut
 }
 
-func approxDecEqual(a, b, tol osmomath.BigDec) bool {
-	return (a.Sub(b).Abs()).LTE(tol)
-}
-
-var (
-	twodec      = osmomath.MustNewDecFromStr("2.0")
-	k_threshold = osmomath.NewDecWithPrec(1, 1) // Correct within a factor of 1 * 10^{-1}
-)
-
 // $$k_{target} = \frac{x_0 y_0 (x_0^2 + y_0^2 + w)}{y_f} - (x_0 (y_f^2 + w) + x_0^3)$$
 func targetKCalculator(x0, y0, w, yf osmomath.BigDec) osmomath.BigDec {
 	// cfmmNoV(x0, y0, w) = x_0 y_0 (x_0^2 + y_0^2 + w)
@@ -444,7 +433,8 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 		return sdk.Int{}, err
 	}
 	oneMinusSwapFee := sdk.OneDec().Sub(swapFee.Mul(swapFeeApplicableRatio))
-	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(oneMinusSwapFee).TruncateInt()
+
+	tokenInAmtAfterFee := sdk.NewDecFromInt(tokenIn.Amount).Mul(oneMinusSwapFee).TruncateInt()
 
 	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
 }
@@ -502,7 +492,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 			return sdk.ZeroInt(), sdk.NewCoins(), err
 		}
 
-		tokensJoined = tokensIn.Sub(remCoins)
+		tokensJoined = tokensIn.Sub(remCoins...)
 	}
 
 	p.updatePoolForJoin(tokensJoined, numShares)

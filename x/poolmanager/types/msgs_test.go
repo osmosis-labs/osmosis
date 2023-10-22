@@ -9,8 +9,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
+	appParams "github.com/dymensionxyz/dymension/app/params"
+
+	apptesting "github.com/osmosis-labs/osmosis/v15/app/apptesting"
 )
 
 func TestMsgSwapExactAmountIn(t *testing.T) {

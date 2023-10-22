@@ -6,7 +6,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/dymensionxyz/dymension/x/epochs/types"
+
+	"github.com/osmosis-labs/osmosis/v15/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

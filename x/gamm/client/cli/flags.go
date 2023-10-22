@@ -89,7 +89,7 @@ func FlagSetJoinPool() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.Uint64(FlagPoolId, 0, "The id of pool")
 	fs.String(FlagShareAmountOut, "", "Minimum amount of Gamm tokens to receive")
-	fs.StringArray(FlagMaxAmountsIn, []string{""}, "Maximum amount of each denom to send into the pool (specify multiple denoms with: --max-amounts-in=1uosmo --max-amounts-in=1uion)")
+	fs.StringArray(FlagMaxAmountsIn, []string{""}, "Maximum amount of each denom to send into the pool (specify multiple denoms with: --max-amounts-in=1udym --max-amounts-in=1uion)")
 	return fs
 }
 

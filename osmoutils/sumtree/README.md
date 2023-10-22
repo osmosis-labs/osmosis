@@ -129,6 +129,7 @@ The following constraints are valid for all branch nodes:
 
 Here is an example tree data:
 
+```bash
     - Level 2 nil
       - Level 1 0xaaaa 
         - Level 0 0xaaaa Value 10
@@ -140,6 +141,7 @@ Here is an example tree data:
       - Level 1 0xeeaaaa
         - Level 0 0xef1234 Value 300
         - Level 0 0xffff Value 400
+```
 
 The branch nodes will have the following childrens:
 

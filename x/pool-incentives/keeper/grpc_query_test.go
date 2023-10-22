@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 )
 
 var (
@@ -187,7 +187,7 @@ func (suite *KeeperTestSuite) TestIncentivizedPools() {
 			poolCreated:          true,
 			weights:              []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
 			nonPerpetual:         true,
-			expectedRecordLength: 0,
+			expectedRecordLength: 3,
 		},
 	} {
 		tc := tc

@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
-	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v15/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
@@ -79,11 +79,11 @@ func NewJoinPoolCmd() (*osmocli.TxCliDesc, *types.MsgJoinPool) {
 		Use:   "join-pool",
 		Short: "join a new pool and provide the liquidity to it",
 		CustomFlagOverrides: map[string]string{
-			"poolid":         FlagPoolId,
-			"ShareOutAmount": FlagShareAmountOut,
+			"poolid": FlagPoolId,
 		},
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
-			"TokenInMaxs": osmocli.FlagOnlyParser(maxAmountsInParser),
+			"TokenInMaxs":    osmocli.FlagOnlyParser(maxAmountsInParser),
+			"ShareOutAmount": osmocli.FlagOnlyParser(shareAmountOutParser),
 		},
 		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJoinPool()}},
 	}, &types.MsgJoinPool{}
@@ -94,11 +94,11 @@ func NewExitPoolCmd() (*osmocli.TxCliDesc, *types.MsgExitPool) {
 		Use:   "exit-pool",
 		Short: "exit a new pool and withdraw the liquidity from it",
 		CustomFlagOverrides: map[string]string{
-			"poolid":        FlagPoolId,
-			"ShareInAmount": FlagShareAmountIn,
+			"poolid": FlagPoolId,
 		},
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
-			"TokenOutMins": osmocli.FlagOnlyParser(minAmountsOutParser),
+			"TokenOutMins":  osmocli.FlagOnlyParser(minAmountsOutParser),
+			"ShareInAmount": osmocli.FlagOnlyParser(shareAmountInParser),
 		},
 		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetExitPool()}},
 	}, &types.MsgExitPool{}
@@ -354,6 +354,27 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, fs *flag.FlagSet)
 		ScalingFactorController: flags.ScalingFactorController,
 		FuturePoolGovernor:      flags.FutureGovernor,
 	}, nil
+}
+
+func shareAmountInParser(fs *flag.FlagSet) (sdk.Int, error) {
+	return sdkIntParser(FlagShareAmountIn, fs)
+}
+
+func shareAmountOutParser(fs *flag.FlagSet) (sdk.Int, error) {
+	return sdkIntParser(FlagShareAmountOut, fs)
+}
+
+func sdkIntParser(flagName string, fs *flag.FlagSet) (sdk.Int, error) {
+	amountStr, err := fs.GetString(flagName)
+	if err != nil {
+		return sdk.ZeroInt(), err
+	}
+
+	res, ok := sdk.NewIntFromString(amountStr)
+	if !ok {
+		return sdk.ZeroInt(), errors.New("invalid share amount")
+	}
+	return res, nil
 }
 
 func maxAmountsInParser(fs *flag.FlagSet) (sdk.Coins, error) {

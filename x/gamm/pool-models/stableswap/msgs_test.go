@@ -7,7 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
+	appParams "github.com/dymensionxyz/dymension/app/params"
+
 	stableswap "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
@@ -179,7 +180,7 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 		{
 			name: "valid governor: address",
 			msg: updateMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
-				msg.FuturePoolGovernor = "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
+				msg.FuturePoolGovernor = "dym1celvklgrnfmpxwknlvyxlxvtns2szsm8sey5u5"
 				return msg
 			}),
 			expectPass: true,
@@ -349,7 +350,8 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 
 			suite.Require().Equal(tc.poolId, pool.GetId())
 			suite.Require().Equal(tc.msg.InitialPoolLiquidity, pool.GetTotalPoolLiquidity(suite.Ctx))
-			suite.Require().Equal(types.InitPoolSharesSupply, pool.GetTotalShares())
+			// suite.Require().Equal(sdk.NewIntFromBigInt(types.InitPoolSharesSupply.BigInt()), pool.GetTotalShares())
+			suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String())
 		})
 	}
 }

@@ -6,19 +6,20 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/dymensionxyz/dymension/osmoutils"
+	"github.com/dymensionxyz/dymension/x/pool-incentives/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type Keeper struct {
-	storeKey sdk.StoreKey
+	storeKey storetypes.StoreKey
 
 	paramSpace paramtypes.Subspace
 
@@ -29,7 +30,7 @@ type Keeper struct {
 	poolmanagerKeeper types.PoolManagerKeeper
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, poolmanagerKeeper types.PoolManagerKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, poolmanagerKeeper types.PoolManagerKeeper) Keeper {
 	// ensure pool-incentives module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -63,7 +64,7 @@ func (k Keeper) CreatePoolGauges(ctx sdk.Context, poolId uint64) error {
 	for _, lockableDuration := range k.GetLockableDurations(ctx) {
 		gaugeId, err := k.incentivesKeeper.CreateGauge(
 			ctx,
-			true,
+			k.GetParams(ctx).NumEpochsPaidOver == 1,
 			k.accountKeeper.GetModuleAddress(types.ModuleName),
 			sdk.Coins{},
 			lockuptypes.QueryCondition{
@@ -74,7 +75,7 @@ func (k Keeper) CreatePoolGauges(ctx sdk.Context, poolId uint64) error {
 			},
 			// QUESTION: Should we set the startTime as the epoch start time that the modules share or the current block time?
 			ctx.BlockTime(),
-			1,
+			k.GetParams(ctx).NumEpochsPaidOver,
 		)
 		if err != nil {
 			return err
