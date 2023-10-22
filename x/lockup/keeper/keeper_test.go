@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (suite *KeeperTestSuite) SetupTestWithLevelDb() {
 	suite.App, suite.cleanup = app.SetupTestingAppWithLevelDb(false)
-	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis_100-1", Time: time.Now().UTC()})
 }
 
 func (suite *KeeperTestSuite) Cleanup() {

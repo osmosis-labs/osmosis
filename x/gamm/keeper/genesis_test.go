@@ -21,7 +21,7 @@ import (
 )
 
 func TestGammInitGenesis(t *testing.T) {
-	app := osmoapp.Setup(t, t, false)
+	app := osmoapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	balancerPool, err := balancer.NewBalancerPool(1, balancer.PoolParams{
@@ -119,7 +119,7 @@ func TestGammExportGenesis(t *testing.T) {
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := osmoapp.Setup(t, t, false)
+	app := osmoapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	encodingConfig := osmoapp.MakeEncodingConfig()
