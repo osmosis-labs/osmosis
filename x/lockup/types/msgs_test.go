@@ -13,7 +13,8 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
+	appParams "github.com/dymensionxyz/dymension/app/params"
+	apptesting "github.com/dymensionxyz/dymension/testutil"
 )
 
 func TestMsgLockTokens(t *testing.T) {

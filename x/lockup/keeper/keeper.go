@@ -5,15 +5,16 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/dymensionxyz/dymension/x/lockup/types"
 
+	stroretypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Keeper provides a way to manage module storage.
 type Keeper struct {
-	storeKey sdk.StoreKey
+	storeKey stroretypes.StoreKey
 
 	hooks types.LockupHooks
 
@@ -25,7 +26,7 @@ type Keeper struct {
 }
 
 // NewKeeper returns an instance of Keeper.
-func NewKeeper(storeKey sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper, ck types.CommunityPoolKeeper, paramSpace paramtypes.Subspace) *Keeper {
+func NewKeeper(storeKey stroretypes.StoreKey, ak types.AccountKeeper, bk types.BankKeeper, ck types.CommunityPoolKeeper, paramSpace paramtypes.Subspace) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())

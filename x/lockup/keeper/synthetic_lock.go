@@ -40,7 +40,7 @@ func (k Keeper) GetSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom st
 func (k Keeper) GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) []types.SyntheticLock {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)))
-	defer iterator.Close()
+	defer iterator.Close() // nolint: errcheck
 
 	synthLocks := []types.SyntheticLock{}
 	for ; iterator.Valid(); iterator.Next() {
@@ -68,7 +68,7 @@ func (k Keeper) GetAllSyntheticLockupsByAddr(ctx sdk.Context, owner sdk.AccAddre
 func (k Keeper) HasAnySyntheticLockups(ctx sdk.Context, lockID uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)))
-	defer iterator.Close()
+	defer iterator.Close() // nolint: errcheck
 	return iterator.Valid()
 }
 
@@ -76,7 +76,7 @@ func (k Keeper) HasAnySyntheticLockups(ctx sdk.Context, lockID uint64) bool {
 func (k Keeper) GetAllSyntheticLockups(ctx sdk.Context) []types.SyntheticLock {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixSyntheticLockup)
-	defer iterator.Close()
+	defer iterator.Close() // nolint: errcheck
 
 	synthLocks := []types.SyntheticLock{}
 	for ; iterator.Valid(); iterator.Next() {
@@ -196,7 +196,7 @@ func (k Keeper) DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom
 // DeleteAllMaturedSyntheticLocks deletes all matured synthetic locks.
 func (k Keeper) DeleteAllMaturedSyntheticLocks(ctx sdk.Context) {
 	iterator := k.iteratorBeforeTime(ctx, combineKeys(types.KeyPrefixSyntheticLockTimestamp), ctx.BlockTime())
-	defer iterator.Close()
+	defer iterator.Close() // nolint: errcheck
 	for ; iterator.Valid(); iterator.Next() {
 		synthLock := types.SyntheticLock{}
 		err := proto.Unmarshal(iterator.Value(), &synthLock)

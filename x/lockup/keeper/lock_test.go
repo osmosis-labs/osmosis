@@ -776,8 +776,8 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 		suite.Require().NoError(err)
 		suite.Require().Len(locks, len(times)-i-1)
 	}
-	suite.Require().Equal(suite.App.BankKeeper.GetAccountsBalances(suite.Ctx)[1].Address, addr1.String())
-	suite.Require().Equal(suite.App.BankKeeper.GetAccountsBalances(suite.Ctx)[1].Coins, totalCoins)
+
+	suite.Require().Equal(suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr1), totalCoins)
 
 	suite.SetupTest()
 	setupInitLocks()

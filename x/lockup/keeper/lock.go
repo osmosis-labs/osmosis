@@ -254,7 +254,7 @@ func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 func (k Keeper) clearKeysByPrefix(ctx sdk.Context, prefix []byte) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
-	defer iterator.Close()
+	defer iterator.Close() // nolint: errcheck
 
 	for ; iterator.Valid(); iterator.Next() {
 		store.Delete(iterator.Key())
@@ -630,7 +630,7 @@ func (k Keeper) accumulationStore(ctx sdk.Context, denom string) sumtree.Tree {
 // Called by the superfluid module ONLY.
 func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
 	// TODO: Handle 100% slash eventually, not needed for osmosis codebase atm.
-	lock.Coins = lock.Coins.Sub(coins)
+	lock.Coins = lock.Coins.Sub(coins...)
 
 	err := k.setLock(ctx, *lock)
 	if err != nil {
@@ -699,7 +699,7 @@ func (k Keeper) splitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coin
 		return types.PeriodLock{}, fmt.Errorf("cannot split unlocking lock")
 	}
 
-	lock.Coins = lock.Coins.Sub(coins)
+	lock.Coins = lock.Coins.Sub(coins...)
 	err := k.setLock(ctx, lock)
 	if err != nil {
 		return types.PeriodLock{}, err

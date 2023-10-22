@@ -41,6 +41,7 @@ If the liquidity provider begins the unbonding process for their 2 week bonded L
 
 After the first day passes, they will only receive rewards for the 1 day and 1 week lockup periods. After seven days pass, they will only receive the 1 day rewards until the 2 weeks is complete and their LP shares are unlocked. The below chart is a visual example of what was just explained.
 
+<!-- markdownlint-disable MD033 -->
 <br/>
 <p style="text-align:center;">
 <img src="/img/bonding.png" height="300"/>

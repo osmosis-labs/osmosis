@@ -7,8 +7,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 )
 
 func (suite *KeeperTestSuite) TestMsgLockTokens() {
@@ -317,7 +317,7 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 	for _, test := range tests {
 		suite.SetupTest()
 
-		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsToLock)
+		err := bankutil.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsToLock)
 		suite.Require().NoError(err)
 
 		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
@@ -343,7 +343,6 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
-	defaultPoolID, defaultLockID := uint64(1), uint64(1)
 	defaultLockAmount := sdk.NewInt(1000000000)
 
 	tests := []struct {
@@ -359,29 +358,6 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 			func() {},
 			defaultLockAmount,
 			true,
-		},
-		{
-			"force unlock superfluid delegated lock",
-			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String()}},
-			func() {
-				err := suite.SuperfluidDelegateToDefaultVal(addr1, defaultPoolID, defaultLockID)
-				suite.Require().NoError(err)
-			},
-			defaultLockAmount,
-			false,
-		},
-		{
-			"superfluid undelegating lock",
-			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String()}},
-			func() {
-				err := suite.SuperfluidDelegateToDefaultVal(addr1, defaultPoolID, defaultLockID)
-				suite.Require().NoError(err)
-
-				err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, addr1.String(), defaultLockID)
-				suite.Require().NoError(err)
-			},
-			defaultLockAmount,
-			false,
 		},
 		{
 			"partial unlock",

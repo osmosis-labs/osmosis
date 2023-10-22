@@ -181,7 +181,7 @@ func (k Keeper) AccountLockIteratorDurationDenom(ctx sdk.Context, isUnlocking bo
 // getLocksFromIterator returns an array of single lock unit by period defined by the x/lockup module.
 func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []types.PeriodLock {
 	locks := []types.PeriodLock{}
-	defer iterator.Close()
+	defer iterator.Close() // nolint: errcheck
 	for ; iterator.Valid(); iterator.Next() {
 		lockID := sdk.BigEndianToUint64(iterator.Value())
 		lock, err := k.GetLockByID(ctx, lockID)

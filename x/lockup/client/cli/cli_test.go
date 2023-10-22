@@ -1,4 +1,4 @@
-package cli
+package cli_test
 
 import (
 	"testing"
@@ -14,7 +14,7 @@ import (
 var testAddresses = osmoutils.CreateRandomAccounts(3)
 
 func TestLockTokensCmd(t *testing.T) {
-	desc, _ := NewLockTokensCmd()
+	desc, _ := cli.NewLockTokensCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgLockTokens]{
 		"lock 201stake tokens for 1 day": {
 			Cmd: "201uosmo --duration=24h --from=" + testAddresses[0].String(),
@@ -29,7 +29,7 @@ func TestLockTokensCmd(t *testing.T) {
 }
 
 func TestBeginUnlockingAllCmd(t *testing.T) {
-	desc, _ := NewBeginUnlockingAllCmd()
+	desc, _ := cli.NewBeginUnlockingAllCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgBeginUnlockingAll]{
 		"basic test": {
 			Cmd: "--from=" + testAddresses[0].String(),
@@ -42,7 +42,7 @@ func TestBeginUnlockingAllCmd(t *testing.T) {
 }
 
 func TestBeginUnlockingByIDCmd(t *testing.T) {
-	desc, _ := NewBeginUnlockByIDCmd()
+	desc, _ := cli.NewBeginUnlockByIDCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgBeginUnlocking]{
 		"basic test no coins": {
 			Cmd: "10 --from=" + testAddresses[0].String(),
@@ -65,7 +65,7 @@ func TestBeginUnlockingByIDCmd(t *testing.T) {
 }
 
 func TestModuleBalanceCmd(t *testing.T) {
-	desc, _ := GetCmdModuleBalance()
+	desc, _ := cli.GetCmdModuleBalance()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.ModuleBalanceRequest]{
 		"basic test": {
 			Cmd:           "",
@@ -76,7 +76,7 @@ func TestModuleBalanceCmd(t *testing.T) {
 }
 
 func TestAccountUnlockingCoinsCmd(t *testing.T) {
-	desc, _ := GetCmdAccountUnlockingCoins()
+	desc, _ := cli.GetCmdAccountUnlockingCoins()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.AccountUnlockingCoinsRequest]{
 		"basic test": {
 			Cmd: testAddresses[0].String(),
@@ -89,7 +89,7 @@ func TestAccountUnlockingCoinsCmd(t *testing.T) {
 }
 
 func TestCmdAccountLockedPastTime(t *testing.T) {
-	desc, _ := GetCmdAccountLockedPastTime()
+	desc, _ := cli.GetCmdAccountLockedPastTime()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.AccountLockedPastTimeRequest]{
 		"basic test": {
 			Cmd: testAddresses[0].String() + " 1670431012",
@@ -103,7 +103,7 @@ func TestCmdAccountLockedPastTime(t *testing.T) {
 }
 
 func TestCmdAccountLockedPastTimeNotUnlockingOnly(t *testing.T) {
-	desc, _ := GetCmdAccountLockedPastTimeNotUnlockingOnly()
+	desc, _ := cli.GetCmdAccountLockedPastTimeNotUnlockingOnly()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.AccountLockedPastTimeNotUnlockingOnlyRequest]{
 		"basic test": {
 			Cmd: testAddresses[0].String() + " 1670431012",
@@ -117,7 +117,7 @@ func TestCmdAccountLockedPastTimeNotUnlockingOnly(t *testing.T) {
 }
 
 func TestCmdTotalLockedByDenom(t *testing.T) {
-	desc, _ := GetCmdTotalLockedByDenom()
+	desc, _ := cli.GetCmdTotalLockedByDenom()
 	tcs := map[string]osmocli.QueryCliTestCase[*types.LockedDenomRequest]{
 		"basic test": {
 			Cmd: "uosmo --min-duration=1s",

@@ -55,7 +55,7 @@ func syntheticLockTimeStoreKey(lockID uint64, synthDenom string, endTime time.Ti
 func (k Keeper) getLockRefs(ctx sdk.Context, key []byte) []uint64 {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, key)
-	defer iterator.Close()
+	defer iterator.Close() // nolint: errcheck
 
 	lockIDs := []uint64{}
 	for ; iterator.Valid(); iterator.Next() {
