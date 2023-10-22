@@ -81,6 +81,7 @@ func streamAndMarshalAppState(genStateDir string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("json.MarshalIndent fin")
 
 	return appState, nil
 }
