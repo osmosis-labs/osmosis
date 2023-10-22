@@ -33,7 +33,7 @@ var DefaultPoolAssets = []balancer.PoolAsset{
 	},
 	{
 		Weight: sdk.NewInt(400),
-		Token:  sdk.NewCoin("uosmo", sdk.NewInt(5000000)),
+		Token:  sdk.NewCoin("udym", sdk.NewInt(5000000)),
 	},
 }
 
