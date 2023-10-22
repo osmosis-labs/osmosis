@@ -68,9 +68,12 @@ require (
 	github.com/gogo/gateway v1.1.0 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nunnatsa/ginkgolinter v0.13.3 // indirect
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
 	github.com/sashamelentyev/interfacebloat v1.1.0 // indirect
@@ -325,7 +328,7 @@ require (
 
 replace (
 	// osmosis-patched wasmd.
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.31.0-osmo-v16.0.20231022211249-65ccbcdec032
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.31.0-osmo-v16.0.20231022220617-d66c5b081fa3
 	// Security patch for wasmvm. See https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md
 	github.com/CosmWasm/wasmvm => github.com/CosmWasm/wasmvm v1.2.3
 	// dragonberry
