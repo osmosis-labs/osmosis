@@ -8,15 +8,17 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	dymd "github.com/dymensionxyz/dymension/app"
 )
 
 var defaultGenesisBz []byte
 
-func getDefaultGenesisStateBytes() []byte {
+func getDefaultGenesisStateBytes(cdc codec.JSONCodec) []byte {
 	if len(defaultGenesisBz) == 0 {
-		genesisState := NewDefaultGenesisState()
+		genesisState := dymd.NewDefaultGenesisState(cdc)
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 		if err != nil {
 			panic(err)
@@ -27,11 +29,13 @@ func getDefaultGenesisStateBytes() []byte {
 }
 
 // Setup initializes a new OsmosisApp.
-func Setup(isCheckTx bool) *OsmosisApp {
+func Setup(isCheckTx bool) *dymd.App {
 	db := dbm.NewMemDB()
-	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, simapp.EmptyAppOptions{}, GetWasmEnabledProposals(), EmptyWasmOpts)
+	encCdc := dymd.MakeEncodingConfig()
+	app := dymd.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dymd.DefaultNodeHome, 0, encCdc, simapp.EmptyAppOptions{})
+
 	if !isCheckTx {
-		stateBytes := getDefaultGenesisStateBytes()
+		stateBytes := getDefaultGenesisStateBytes(encCdc.Codec)
 
 		app.InitChain(
 			abci.RequestInitChain{
@@ -47,7 +51,7 @@ func Setup(isCheckTx bool) *OsmosisApp {
 
 // SetupTestingAppWithLevelDb initializes a new OsmosisApp intended for testing,
 // with LevelDB as a db.
-func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func()) {
+func SetupTestingAppWithLevelDb(isCheckTx bool) (app *dymd.App, cleanupFn func()) {
 	dir, err := os.MkdirTemp(os.TempDir(), "osmosis_leveldb_testing")
 	if err != nil {
 		panic(err)
@@ -56,9 +60,11 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 	if err != nil {
 		panic(err)
 	}
-	app = NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, simapp.EmptyAppOptions{}, GetWasmEnabledProposals(), EmptyWasmOpts)
+	encCdc := dymd.MakeEncodingConfig()
+	app = dymd.New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dymd.DefaultNodeHome, 5, encCdc, simapp.EmptyAppOptions{})
+
 	if !isCheckTx {
-		genesisState := NewDefaultGenesisState()
+		genesisState := dymd.NewDefaultGenesisState(encCdc.Codec)
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 		if err != nil {
 			panic(err)

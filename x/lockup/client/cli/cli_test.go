@@ -6,13 +6,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/client/cli"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
-var testAddresses = osmoutils.CreateRandomAccounts(3)
+var testAddresses = apptesting.CreateRandomAccounts(3)
 
 func TestLockTokensCmd(t *testing.T) {
 	desc, _ := cli.NewLockTokensCmd()

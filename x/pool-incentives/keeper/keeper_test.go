@@ -5,14 +5,13 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/dymensionxyz/dymension/testutil"
-
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {
-	testutil.KeeperTestHelper
+	apptesting.KeeperTestHelper
 
 	queryClient types.QueryClient
 }
