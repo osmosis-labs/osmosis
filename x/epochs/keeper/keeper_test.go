@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v15/x/epochs/types"
+	"github.com/dymensionxyz/dymension/testutil"
+	"github.com/dymensionxyz/dymension/x/epochs/types"
 )
 
 type KeeperTestSuite struct {
-	apptesting.KeeperTestHelper
+	testutil.KeeperTestHelper
 	queryClient types.QueryClient
 }
 

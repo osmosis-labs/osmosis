@@ -69,7 +69,7 @@ func (k Keeper) IterateEpochInfo(ctx sdk.Context, fn func(index int64, epochInfo
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixEpoch)
-	defer iterator.Close()
+	defer iterator.Close() // nolint: errcheck
 
 	i := int64(0)
 

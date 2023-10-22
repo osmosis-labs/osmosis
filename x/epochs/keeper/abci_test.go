@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/osmosis-labs/osmosis/v15/app"
-	"github.com/osmosis-labs/osmosis/v15/x/epochs/types"
+	"github.com/dymensionxyz/dymension/app"
+	"github.com/dymensionxyz/dymension/x/epochs/types"
 
 	"golang.org/x/exp/maps"
 
