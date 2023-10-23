@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeId)
 		suite.NoError(err)
 		suite.Equal(0, len(gauge.Coins))
-		suite.Equal(false, gauge.IsPerpetual)
+		suite.Equal(true, gauge.IsPerpetual)
 		suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[0], gauge.DistributeTo.Duration)
 
@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		gauge, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeId)
 		suite.NoError(err)
 		suite.Equal(0, len(gauge.Coins))
-		suite.Equal(false, gauge.IsPerpetual)
+		suite.Equal(true, gauge.IsPerpetual)
 		suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[1], gauge.DistributeTo.Duration)
 
@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		gauge, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeId)
 		suite.NoError(err)
 		suite.Equal(0, len(gauge.Coins))
-		suite.Equal(false, gauge.IsPerpetual)
+		suite.Equal(true, gauge.IsPerpetual)
 		suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 		suite.Equal(lockableDurations[2], gauge.DistributeTo.Duration)
 	}

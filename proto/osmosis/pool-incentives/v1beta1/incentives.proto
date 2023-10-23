@@ -11,8 +11,6 @@ message Params {
 
   // minted_denom is the denomination of the coin expected to be used for incentives
   string minted_denom = 1 [ (gogoproto.moretags) = "yaml:\"minted_denom\"" ];
-
-  uint64 num_epochs_paid_over = 2;
 }
 
 message LockableDurationsInfo {

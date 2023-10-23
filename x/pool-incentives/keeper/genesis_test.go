@@ -20,8 +20,7 @@ var (
 	now         = time.Now().UTC()
 	testGenesis = types.GenesisState{
 		Params: types.Params{
-			MintedDenom:       "uosmo",
-			NumEpochsPaidOver: 30,
+			MintedDenom: "uosmo",
 		},
 		LockableDurations: []time.Duration{
 			time.Second,
