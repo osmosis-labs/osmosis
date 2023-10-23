@@ -103,7 +103,7 @@ func (sla SpendLimitAuthenticator) Initialize(data []byte) (iface.Authenticator,
 }
 
 func (sla SpendLimitAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
-	return SignatureData{}, nil // No data needed for this authenticator
+	return iface.EmptyAuthenticationData{}, nil // No data needed for this authenticator
 }
 
 func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
