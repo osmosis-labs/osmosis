@@ -47,13 +47,9 @@ func GenesisStateWithValSet(app *OsmosisApp) GenesisState {
 	senderPrivKey := secp256k1.GenPrivKey()
 	senderPrivKey.PubKey().Address()
 	acc := authtypes.NewBaseAccountWithAddress(senderPrivKey.PubKey().Address().Bytes())
-	balance := banktypes.Balance{
-		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
-	}
 
 	//////////////////////
-	balances := []banktypes.Balance{balance}
+	balances := []banktypes.Balance{}
 	genesisState := NewDefaultGenesisState()
 	genAccs := []authtypes.GenesisAccount{acc}
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
