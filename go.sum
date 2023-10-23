@@ -269,8 +269,6 @@ github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
 github.com/cosmos/iavl v0.19.7 h1:ij32FaEnwxfEurtK0QKDNhTWFnz6NUmrI5gky/WnoY0=
 github.com/cosmos/iavl v0.19.7/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
-github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.1.0 h1:96fDMIUSlSQ6dBcwhdYwTT+uTwFP+EWbSyLORcKSJZ8=
-github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.1.0/go.mod h1:Mn/jr9pIYr1ofFuptLEi9N6MjcshTT0cpoOY4ln1DeA=
 github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.1.0 h1:1iQ8/rJwkeGJe81fKyZC/ASSajoJP0jEi6IJFiKIr7Y=
 github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.1.0/go.mod h1:X/dLZ6QxTImzno7qvD6huLhh6ZZBcRt2URn4YCLcXFY=
 github.com/cosmos/ibc-go/v4 v4.3.1 h1:xbg0CaCdxK3lvgGvSaI91ROOLd7s30UqEcexH6Ba4Ys=
@@ -963,6 +961,7 @@ github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230927020814-2854ac001f06 h1:
 github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230927020814-2854ac001f06/go.mod h1:nZwthKhHt2cvngoDGFR1kSFsAz+MxCJWAg1hTDiwp8E=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
+<<<<<<< HEAD
 github.com/osmosis-labs/osmosis/osmomath v0.0.8-0.20230926014346-27a13ec134bd h1:Op+svYjumlLTHIupuXrTh8OWOhjP0vKWQR3LLZv24Dg=
 github.com/osmosis-labs/osmosis/osmomath v0.0.8-0.20230926014346-27a13ec134bd/go.mod h1:8VWhMEgMVTavPs8ttIJdG5VE0xiJXhnFazQdIBhKzH0=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.8-0.20230926154241-a9f2936565f4 h1:w/1YTjPZ5qf9iKzBJgUqVnNWhrJyC1gsfqrdX0/6vcI=
@@ -971,6 +970,19 @@ github.com/osmosis-labs/osmosis/x/epochs v0.0.2 h1:aEeXHGCSJMgMtAvCucsD2RSaWZ8lI
 github.com/osmosis-labs/osmosis/x/epochs v0.0.2/go.mod h1:8dvJFHTpu6SIxmOaSaEw0tHnQ/Z9blf5qsF/ZJnMVHo=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.8 h1:BUGowctYQT0vdPgULrvwraEsW+sS6DnbzndTLKLmWVY=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.8/go.mod h1:sR0lpev9mcm9/9RY50T1og3UC3WpZAsINh/OmgrmFlg=
+=======
+github.com/osmosis-labs/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20231023074229-4b649a9d9cee h1:Ki30YyIgI1DNbGzR9zs9/Q+PxCHGq5VKfbyPZKQToL8=
+github.com/osmosis-labs/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20231023074229-4b649a9d9cee/go.mod h1:Mn/jr9pIYr1ofFuptLEi9N6MjcshTT0cpoOY4ln1DeA=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231014001935-1946419d44eb h1:pXsC6vqGD+pbMGt+fVBHi9XBk/KDQuRZde2fh4s/1+k=
+github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231014001935-1946419d44eb/go.mod h1:jNZ952fypVNMzOsh31LAUS27JbF9naNJGtELxId6ZCg=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231011004221-fd24b80f8366 h1:EJDJ88w2Yv5LnlaJw5x53C0k/dp/fnEYOfBYOQiMsTc=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231011004221-fd24b80f8366/go.mod h1:Zmyx5zMUBN2KV94booSFn2v8KQcUKeCHqyWpKZ4PRMo=
+github.com/osmosis-labs/osmosis/v19 v19.0.0 h1:gqcas/XfxtEuZXsWGTO9vNMHiY78Qs09FBQw73djIVM=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231011004221-fd24b80f8366 h1:E6H0V3MKbSNwo1iXE9Kzatd2M02MgZpS5AiJ6CKK5us=
+github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231011004221-fd24b80f8366/go.mod h1:vU0IHK5W38dqMeux3MkSaT3MZU6whAkx7vNuxv1IzeU=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231014001935-1946419d44eb h1:6lYLEiJERdD+QK925XYyHkvNyvQTghVFufMH5VAQLpg=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231014001935-1946419d44eb/go.mod h1:3xD12hg/OzBdtrCOJHGGJrI2zRAdOXBfqFoPP33x0jQ=
+>>>>>>> 5640a99c3 (Fix bad PFM error (#6734))
 github.com/osmosis-labs/wasmd v0.31.0-osmo-v16 h1:X747cZYdnqc/+RV48iPVeGprpVb/fUWSaKGsZUWrdbg=
 github.com/osmosis-labs/wasmd v0.31.0-osmo-v16/go.mod h1:Rf8zW/GgBQyFRRB4s62VQHWA6sTlMFSjoDQQpoq64iI=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
