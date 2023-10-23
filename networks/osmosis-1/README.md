@@ -18,9 +18,9 @@ Each version is identified by a specific id, name, tag, block height and softwar
 | `v15` | Sodium    | `v15.2.0` | 8732500        | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v15.2.0/) | [458](https://www.mintscan.io/osmosis/proposals/458) |
 | `v16` | Magnesium | `v16.1.1` | 10517000       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v16.1.1/) | [556](https://www.mintscan.io/osmosis/proposals/556) |
 | `v17` | Aluminium | `v17.0.0` | 11126100       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v17.0.0/) | [586](https://www.mintscan.io/osmosis/proposals/586) |
-| `v18` |   | `v18.0.0` | 11155350       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v18.0.0/) | [588](https://www.mintscan.io/osmosis/proposals/588) |
-| `v19` |   | `v19.2.0` | 11317300       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v19.2.0/) | [606](https://www.mintscan.io/osmosis/proposals/606) |
-| `v20` |   | `v20.1.0` | 11317300       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v20.1.0/) | [658](https://www.mintscan.io/osmosis/proposals/658) |
+| `v18` |           | `v18.0.0` | 11155350       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v18.0.0/) | [588](https://www.mintscan.io/osmosis/proposals/588) |
+| `v19` |           | `v19.2.0` | 11317300       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v19.2.0/) | [606](https://www.mintscan.io/osmosis/proposals/606) |
+| `v20` | Silicon   | `v20.1.0` | 11317300       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v20.1.0/) | [658](https://www.mintscan.io/osmosis/proposals/658) |
 
 ## Upgrade binaries
 
