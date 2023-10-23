@@ -20,7 +20,7 @@ Each version is identified by a specific id, name, tag, block height and softwar
 | `v17` | Aluminium | `v17.0.0` | 11126100       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v17.0.0/) | [586](https://www.mintscan.io/osmosis/proposals/586) |
 | `v18` |           | `v18.0.0` | 11155350       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v18.0.0/) | [588](https://www.mintscan.io/osmosis/proposals/588) |
 | `v19` |           | `v19.2.0` | 11317300       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v19.2.0/) | [606](https://www.mintscan.io/osmosis/proposals/606) |
-| `v20` | Silicon   | `v20.1.0` | 11317300       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v20.1.0/) | [658](https://www.mintscan.io/osmosis/proposals/658) |
+| `v20` | Silicon   | `v20.1.0` | 12028900       | [Release](https://github.com/osmosis-labs/osmosis/releases/tag/v20.1.0/) | [658](https://www.mintscan.io/osmosis/proposals/658) |
 
 ## Upgrade binaries
 
