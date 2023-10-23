@@ -2,9 +2,9 @@
 
 ## Overview
 
-- **v20 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/TODO)
-- **v20 Upgrade Block Height**: `TODO`
-- **v20 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/TODO)
+- **v20 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/658)
+- **v20 Upgrade Block Height**: `12028900`
+- **v20 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/12028900)
 
 ## Hardware Requirements
 
