@@ -53,8 +53,8 @@ func streamAndMarshalAppState(genStateDir string) ([]byte, error) {
 	genesisData := make(map[string]json.RawMessage)
 
 	err := filepath.Walk(genStateDir, func(path string, info os.FileInfo, err error) error {
-		fmt.Println("filepath.Walk", path)
-		fmt.Println("filepath.Walk", info)
+		fmt.Println("filepath.Walks", path)
+		fmt.Println("filepath.Walks", info)
 		if err != nil {
 			return err
 		}
@@ -65,16 +65,19 @@ func streamAndMarshalAppState(genStateDir string) ([]byte, error) {
 				return err
 			}
 
+			// Skip if data is empty
+			fmt.Println("check if skip empty file", path)
+			if len(data) == 0 {
+				fmt.Println("skipping empty file", path)
+				return nil
+			}
+
 			moduleName := filepath.Base(path)
 			genesisData[moduleName] = json.RawMessage(data)
 		}
 
 		return nil
 	})
-
-	if err != nil {
-		return nil, err
-	}
 
 	fmt.Println("json.MarshalIndent")
 	appState, err := json.MarshalIndent(genesisData, "", "  ")
