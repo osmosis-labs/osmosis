@@ -3,6 +3,7 @@ package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/v1beta1/tx.proto";
+import "osmosis/gamm/v1beta1/genesis.proto";
 import "osmosis/poolmanager/v1beta1/swap_route.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
@@ -14,6 +15,11 @@ import "cosmos_proto/cosmos.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/gamm/types";
 
 service Query {
+  // Params returns lockup params.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/params";
+  }
+
   rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools";
   }
@@ -103,6 +109,12 @@ service Query {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
   }
+}
+
+//================================================== Params
+message QueryParamsRequest {}
+message QueryParamsResponse {
+  Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
 //=============================== Pool

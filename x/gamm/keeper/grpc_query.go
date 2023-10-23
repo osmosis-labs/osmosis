@@ -41,6 +41,16 @@ func NewV2Querier(k Keeper) QuerierV2 {
 	return QuerierV2{Keeper: k}
 }
 
+// Params queries the parameters of the pool manager module.
+func (q Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(sdkCtx)}, nil
+}
+
 // Pool checks if a pool exists and their respective poolWeights.
 func (q Querier) Pool(
 	ctx context.Context,
