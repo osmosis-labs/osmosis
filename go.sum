@@ -960,8 +960,8 @@ github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest/v3 v3.10.0 h1:4K3z2VMe8Woe++invjaTB7VRyQXQy5UY+loujO4aNE4=
 github.com/ory/dockertest/v3 v3.10.0/go.mod h1:nr57ZbRWMqfsdGdFNLHz5jjNdDb7VVFnzAeW1n5N1Lg=
-github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20231023043539-9774fa38e2d5 h1:ZrYE9nWYUR7wVWaoquBn86Re08KBf5wkPkNQ0ykhLfQ=
-github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20231023043539-9774fa38e2d5/go.mod h1:toI9Pf+e5C4TuWAFpXfkxnkpr1RVFMK2qr7QMdkFrY8=
+github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20231023045731-f232d09865bd h1:Ocv2/D3kkBh7SUpbEwVLp6XtyfRSFceFEKtTqTrQfqY=
+github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20231023045731-f232d09865bd/go.mod h1:toI9Pf+e5C4TuWAFpXfkxnkpr1RVFMK2qr7QMdkFrY8=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20230924192433-36cf2950dca4 h1:venI3u6DjxKcQbjiCO3V8s0ww/jx+cAZRkpwLHadms8=
@@ -972,8 +972,8 @@ github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230911120014-b14342e08daf h1
 github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20230911120014-b14342e08daf/go.mod h1:C0Uqe6X4N5ASA+1xZ6guaaJyUVKLcaVJIQa4Q4LG9Vk=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20230911120014-b14342e08daf h1:ZEi+yJJPgpYtmNwZ1bMiP5cMBDQ83FK/YGgmTnWmoAI=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20230911120014-b14342e08daf/go.mod h1:pqkAsS04Er1kFM41gg3aWTSaYHyLe8C9Dw3Sj8KMXk8=
-github.com/osmosis-labs/wasmd v0.31.0-osmo-v16.0.20231023033849-84e759945b75 h1:YyFVq/vwHTyRn2VoFfBTp1Z7Ibrs9+avNfjYWPLXrL8=
-github.com/osmosis-labs/wasmd v0.31.0-osmo-v16.0.20231023033849-84e759945b75/go.mod h1:JIsIwEeNV5kDtqIIm6ab0Leo18gxKgujkAqxRkEOjuc=
+github.com/osmosis-labs/wasmd v0.31.0-osmo-v16.0.20231023050202-2900746172e4 h1:ihH/cRyCquIQY5ZihzmvTOayBHrNTqjRgHmSK47JcEY=
+github.com/osmosis-labs/wasmd v0.31.0-osmo-v16.0.20231023050202-2900746172e4/go.mod h1:WD5WinFhBAp6ScDCvRAsB7fRgrMjclMwBnSIINiZAWI=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/copy v1.7.0 h1:hVoPiN+t+7d2nzzwMiDHPSOogsWAStewq3TwU05+clE=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
