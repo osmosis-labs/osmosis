@@ -962,8 +962,8 @@ github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230922030206-734f99fba785 h1:
 github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230922030206-734f99fba785/go.mod h1:toI9Pf+e5C4TuWAFpXfkxnkpr1RVFMK2qr7QMdkFrY8=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
-github.com/osmosis-labs/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20231023074229-4b649a9d9cee h1:Ki30YyIgI1DNbGzR9zs9/Q+PxCHGq5VKfbyPZKQToL8=
-github.com/osmosis-labs/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20231023074229-4b649a9d9cee/go.mod h1:Mn/jr9pIYr1ofFuptLEi9N6MjcshTT0cpoOY4ln1DeA=
+github.com/osmosis-labs/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20231023100650-a0662f3019fe h1:J3MIvc4irCisu3YOUH+ZOGvs7nDUtMYd3TK5HORQ09g=
+github.com/osmosis-labs/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20231023100650-a0662f3019fe/go.mod h1:Mn/jr9pIYr1ofFuptLEi9N6MjcshTT0cpoOY4ln1DeA=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231014001935-1946419d44eb h1:pXsC6vqGD+pbMGt+fVBHi9XBk/KDQuRZde2fh4s/1+k=
 github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231014001935-1946419d44eb/go.mod h1:jNZ952fypVNMzOsh31LAUS27JbF9naNJGtELxId6ZCg=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231011004221-fd24b80f8366 h1:EJDJ88w2Yv5LnlaJw5x53C0k/dp/fnEYOfBYOQiMsTc=

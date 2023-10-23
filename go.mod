@@ -340,7 +340,7 @@ replace (
 	github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.7
 
 	// Replace PFM with a version that includes https://github.com/cosmos/ibc-apps/pull/105
-	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 => github.com/osmosis-labs/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20231023074229-4b649a9d9cee
+	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 => github.com/osmosis-labs/ibc-apps/middleware/packet-forward-middleware/v4 v4.0.0-20231023100650-a0662f3019fe
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
