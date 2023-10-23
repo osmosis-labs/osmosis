@@ -3,20 +3,25 @@ package sqs
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/labstack/echo"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/middleware"
 	poolsHttpDelivery "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/delivery/http"
 	poolsRedisRepository "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/repository/redis"
 	poolsUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/usecase"
+
+	routerHttpDelivery "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/delivery/http"
+	routerUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 )
 
 // SideCarQueryServer defines an interface for sidecar query server (SQS).
@@ -36,14 +41,19 @@ func (sqs *sideCarQueryServer) GetPoolsRepository() domain.PoolsRepository {
 }
 
 // NewSideCarQueryServer creates a new sidecar query server (SQS).
-func NewSideCarQueryServer(dbHost, dbPort, sideCarQueryServerAddress string, useCaseTimeoutDuration int) (SideCarQueryServer, error) {
+func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQueryServerAddress string, useCaseTimeoutDuration int) (SideCarQueryServer, error) {
 	// Handle SIGINT and SIGTERM signals to initiate shutdown
 	exitChan := make(chan os.Signal, 1)
 	signal.Notify(exitChan, os.Interrupt, syscall.SIGTERM)
 
+	// logger
+	// TODO: figure out logging to file
+	logger, err := log.NewLogger()
+	logger.Info("Starting sidecar query server")
+
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println(err)
+			logger.Error("panic occurred", zap.Any("error", err))
 			exitChan <- syscall.SIGTERM
 		}
 	}()
@@ -62,32 +72,45 @@ func NewSideCarQueryServer(dbHost, dbPort, sideCarQueryServerAddress string, use
 
 		err := e.Shutdown(ctx)
 		if err != nil {
-			log.Fatal(err)
+			logger.Error("error shutting down server", zap.Error(err))
 		}
 
 		os.Exit(0)
 	}()
 
 	// Create redis client and ensure that it is up.
+	redisAddress := fmt.Sprintf("%s:%s", dbHost, dbPort)
+	logger.Info("Pinging redis", zap.String("redis_address", redisAddress))
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", dbHost, dbPort),
+		Addr:     redisAddress,
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
 	redisStatus := redisClient.Ping(ctx)
-	_, err := redisStatus.Result()
+	_, err = redisStatus.Result()
 	if err != nil {
 		return nil, err
 	}
 
 	// Initialize pools repository, usecase and HTTP handler
-	poolsRepository := poolsRedisRepository.NewRedisPoolsRepo(redisClient)
+	poolsRepository := poolsRedisRepository.NewRedisPoolsRepo(appCodec, redisClient)
 	timeoutContext := time.Duration(useCaseTimeoutDuration) * time.Second
 	poolsUseCase := poolsUseCase.NewPoolsUsecase(timeoutContext, poolsRepository)
 	poolsHttpDelivery.NewPoolsHandler(e, poolsUseCase)
 
+	routerConfig := domain.RouterConfig{
+		PreferredPoolIDs: []uint64{},
+		MaxPoolsPerRoute: 4,
+		MaxRoutes:        100,
+	}
+
+	// Initialize router usecase and HTTP handler
+	routerUsecase := routerUseCase.NewRouterUsecase(timeoutContext, poolsUseCase, routerConfig, logger)
+	routerHttpDelivery.NewRouterHandler(e, routerUsecase)
+
 	// Start server in a separate goroutine
 	go func() {
+		logger.Info("Starting sidecar query server", zap.String("address", sideCarQueryServerAddress))
 		err = e.Start(sideCarQueryServerAddress)
 		if err != nil {
 			panic(err)

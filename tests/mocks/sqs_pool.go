@@ -8,9 +8,11 @@ import (
 	context "context"
 	reflect "reflect"
 
+	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
+	osmomath "github.com/osmosis-labs/osmosis/osmomath"
 	domain "github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	types "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	types0 "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 // MockSQSPoolI is a mock of PoolI interface.
@@ -36,20 +38,6 @@ func (m *MockSQSPoolI) EXPECT() *MockSQSPoolIMockRecorder {
 	return m.recorder
 }
 
-// GetDenoms mocks base method.
-func (m *MockSQSPoolI) GetDenoms() []string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDenoms")
-	ret0, _ := ret[0].([]string)
-	return ret0
-}
-
-// GetDenoms indicates an expected call of GetDenoms.
-func (mr *MockSQSPoolIMockRecorder) GetDenoms() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDenoms", reflect.TypeOf((*MockSQSPoolI)(nil).GetDenoms))
-}
-
 // GetId mocks base method.
 func (m *MockSQSPoolI) GetId() uint64 {
 	m.ctrl.T.Helper()
@@ -64,39 +52,53 @@ func (mr *MockSQSPoolIMockRecorder) GetId() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetId", reflect.TypeOf((*MockSQSPoolI)(nil).GetId))
 }
 
-// GetLiquidity mocks base method.
-func (m *MockSQSPoolI) GetLiquidity() string {
+// GetPoolDenoms mocks base method.
+func (m *MockSQSPoolI) GetPoolDenoms() []string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLiquidity")
-	ret0, _ := ret[0].(string)
+	ret := m.ctrl.Call(m, "GetPoolDenoms")
+	ret0, _ := ret[0].([]string)
 	return ret0
 }
 
-// GetLiquidity indicates an expected call of GetLiquidity.
-func (mr *MockSQSPoolIMockRecorder) GetLiquidity() *gomock.Call {
+// GetPoolDenoms indicates an expected call of GetPoolDenoms.
+func (mr *MockSQSPoolIMockRecorder) GetPoolDenoms() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLiquidity", reflect.TypeOf((*MockSQSPoolI)(nil).GetLiquidity))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPoolDenoms", reflect.TypeOf((*MockSQSPoolI)(nil).GetPoolDenoms))
 }
 
-// GetSpreadFactor mocks base method.
-func (m *MockSQSPoolI) GetSpreadFactor() string {
+// GetSQSPoolModel mocks base method.
+func (m *MockSQSPoolI) GetSQSPoolModel() domain.SQSPool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSpreadFactor")
-	ret0, _ := ret[0].(string)
+	ret := m.ctrl.Call(m, "GetSQSPoolModel")
+	ret0, _ := ret[0].(domain.SQSPool)
 	return ret0
 }
 
-// GetSpreadFactor indicates an expected call of GetSpreadFactor.
-func (mr *MockSQSPoolIMockRecorder) GetSpreadFactor() *gomock.Call {
+// GetSQSPoolModel indicates an expected call of GetSQSPoolModel.
+func (mr *MockSQSPoolIMockRecorder) GetSQSPoolModel() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpreadFactor", reflect.TypeOf((*MockSQSPoolI)(nil).GetSpreadFactor))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSQSPoolModel", reflect.TypeOf((*MockSQSPoolI)(nil).GetSQSPoolModel))
+}
+
+// GetTotalValueLockedUSDC mocks base method.
+func (m *MockSQSPoolI) GetTotalValueLockedUSDC() osmomath.Int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTotalValueLockedUSDC")
+	ret0, _ := ret[0].(osmomath.Int)
+	return ret0
+}
+
+// GetTotalValueLockedUSDC indicates an expected call of GetTotalValueLockedUSDC.
+func (mr *MockSQSPoolIMockRecorder) GetTotalValueLockedUSDC() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalValueLockedUSDC", reflect.TypeOf((*MockSQSPoolI)(nil).GetTotalValueLockedUSDC))
 }
 
 // GetType mocks base method.
-func (m *MockSQSPoolI) GetType() types.PoolType {
+func (m *MockSQSPoolI) GetType() types0.PoolType {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetType")
-	ret0, _ := ret[0].(types.PoolType)
+	ret0, _ := ret[0].(types0.PoolType)
 	return ret0
 }
 
@@ -106,18 +108,18 @@ func (mr *MockSQSPoolIMockRecorder) GetType() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetType", reflect.TypeOf((*MockSQSPoolI)(nil).GetType))
 }
 
-// GetWeights mocks base method.
-func (m *MockSQSPoolI) GetWeights() []string {
+// GetUnderlyingPool mocks base method.
+func (m *MockSQSPoolI) GetUnderlyingPool() types0.PoolI {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetWeights")
-	ret0, _ := ret[0].([]string)
+	ret := m.ctrl.Call(m, "GetUnderlyingPool")
+	ret0, _ := ret[0].(types0.PoolI)
 	return ret0
 }
 
-// GetWeights indicates an expected call of GetWeights.
-func (mr *MockSQSPoolIMockRecorder) GetWeights() *gomock.Call {
+// GetUnderlyingPool indicates an expected call of GetUnderlyingPool.
+func (mr *MockSQSPoolIMockRecorder) GetUnderlyingPool() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWeights", reflect.TypeOf((*MockSQSPoolI)(nil).GetWeights))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnderlyingPool", reflect.TypeOf((*MockSQSPoolI)(nil).GetUnderlyingPool))
 }
 
 // MockPoolsRepository is a mock of PoolsRepository interface.
@@ -266,4 +268,42 @@ func (m *MockPoolsUsecase) GetAllPools(ctx context.Context) ([]domain.PoolI, err
 func (mr *MockPoolsUsecaseMockRecorder) GetAllPools(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllPools", reflect.TypeOf((*MockPoolsUsecase)(nil).GetAllPools), ctx)
+}
+
+// MockRouterUsecase is a mock of RouterUsecase interface.
+type MockRouterUsecase struct {
+	ctrl     *gomock.Controller
+	recorder *MockRouterUsecaseMockRecorder
+}
+
+// MockRouterUsecaseMockRecorder is the mock recorder for MockRouterUsecase.
+type MockRouterUsecaseMockRecorder struct {
+	mock *MockRouterUsecase
+}
+
+// NewMockRouterUsecase creates a new mock instance.
+func NewMockRouterUsecase(ctrl *gomock.Controller) *MockRouterUsecase {
+	mock := &MockRouterUsecase{ctrl: ctrl}
+	mock.recorder = &MockRouterUsecaseMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockRouterUsecase) EXPECT() *MockRouterUsecaseMockRecorder {
+	return m.recorder
+}
+
+// GetOptimalQuote mocks base method.
+func (m *MockRouterUsecase) GetOptimalQuote(ctx context.Context, tokenIn types.Coin, tokenOutDenom string) (domain.Quote, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOptimalQuote", ctx, tokenIn, tokenOutDenom)
+	ret0, _ := ret[0].(domain.Quote)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOptimalQuote indicates an expected call of GetOptimalQuote.
+func (mr *MockRouterUsecaseMockRecorder) GetOptimalQuote(ctx, tokenIn, tokenOutDenom interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptimalQuote", reflect.TypeOf((*MockRouterUsecase)(nil).GetOptimalQuote), ctx, tokenIn, tokenOutDenom)
 }

@@ -1,9 +1,12 @@
-package router
+package usecase
 
 import (
 	"sort"
 
+	"go.uber.org/zap"
+
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 )
 
 type Router struct {
@@ -12,68 +15,15 @@ type Router struct {
 	maxHops int
 	// The maximum number of routes to return.
 	maxRoutes int
-}
-
-type Route interface {
-	GetPools() []RoutablePool
-	DeepCopy() Route
-	AddPool(pool domain.PoolI, tokenOut string)
-}
-
-var _ RoutablePool = &routablePoolImpl{}
-
-type routablePoolImpl struct {
-	domain.PoolI
-	tokenOutDenom string
-}
-
-// GetTokenOutDenom implements RoutablePool.
-func (rp *routablePoolImpl) GetTokenOutDenom() string {
-	return rp.tokenOutDenom
-}
-
-// // SetTokenOutDenom implements RoutablePool.
-// func (rp *routablePoolImpl) SetTokenOutDenom(tokenOutDenom string) {
-// 	rp.tokenOutDenom = tokenOutDenom
-// }
-
-type RoutablePool interface {
-	domain.PoolI
-	GetTokenOutDenom() string
-}
-
-var _ Route = &routeImpl{}
-
-type routeImpl struct {
-	pools []RoutablePool
-}
-
-// GetPools implements Route.
-func (r *routeImpl) GetPools() []RoutablePool {
-	return r.pools
-}
-
-func (r routeImpl) DeepCopy() Route {
-	poolsCopy := make([]RoutablePool, len(r.pools))
-	copy(poolsCopy, r.pools)
-	return &routeImpl{
-		pools: poolsCopy,
-	}
-}
-
-func (r *routeImpl) AddPool(pool domain.PoolI, tokenOutDenom string) {
-	routablePool := &routablePoolImpl{
-		PoolI:         pool,
-		tokenOutDenom: tokenOutDenom,
-	}
-	r.pools = append(r.pools, routablePool)
+	// The logger.
+	logger *zap.Logger
 }
 
 // NewRouter returns a new Router.
 // It initialized the routable pools where the given preferredPoolIDs take precedence.
 // The rest of the pools are sorted by TVL.
 // Sets
-func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, maxRoutes int) Router {
+func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, maxRoutes int, logger log.Logger) Router {
 	// TODO: consider mutating directly on allPools
 	poolsCopy := make([]domain.PoolI, len(allPools))
 	copy(poolsCopy, allPools)
@@ -84,18 +34,20 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, 
 	}
 
 	// Sort all pools by TVL.
-	sort.Slice(allPools, func(i, j int) bool {
+	sort.Slice(poolsCopy, func(i, j int) bool {
 
-		_, isIPreferred := preferredPoolIDsMap[allPools[i].GetId()]
-		_, isJPreferred := preferredPoolIDsMap[allPools[j].GetId()]
+		_, isIPreferred := preferredPoolIDsMap[poolsCopy[i].GetId()]
+		_, isJPreferred := preferredPoolIDsMap[poolsCopy[j].GetId()]
 
 		isIFirstByPreference := isIPreferred && !isJPreferred
 
-		return isIFirstByPreference && allPools[i].GetTotalValueLockedUSDC().GT(allPools[j].GetTotalValueLockedUSDC())
+		return isIFirstByPreference && poolsCopy[i].GetTotalValueLockedUSDC().GT(poolsCopy[j].GetTotalValueLockedUSDC())
 	})
 
+	logger.Debug("pool count in router ", zap.Int("pool_count", len(poolsCopy)))
+
 	return Router{
-		sortedPools: allPools,
+		sortedPools: poolsCopy,
 		maxHops:     maxHops,
 		maxRoutes:   maxRoutes,
 	}
@@ -103,7 +55,8 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, 
 
 // getCandidateRoutes returns candidate routes from tokenInDenom to tokenOutDenom using DFS.
 // Relies on the constructor to initialize the sorted pools with preferred pool IDs, max routes and max hops
-func (r Router) getCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]Route, error) {
+func (r Router) getCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain.Route, error) {
+	r.logger.Debug("getting candidate routes", zap.String("token_in_denom", tokenInDenom), zap.String("token_out_denom", tokenOutDenom), zap.Int("sorted_pool_count", len(r.sortedPools)))
 	return r.findRoutes(tokenInDenom, tokenOutDenom, &routeImpl{}, make([]bool, len(r.sortedPools)), nil)
 }
 
@@ -119,10 +72,17 @@ func (r Router) getCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]Route,
 // - currentRoute is nil
 // - sortedPools and poolsUsed have different lengths
 // - sortedPools and pools in the route have different lengths
-func (r Router) findRoutes(tokenInDenom, tokenOutDenom string, currentRoute Route, poolsUsed []bool, previousTokenOutDenoms []string) ([]Route, error) {
+func (r Router) findRoutes(tokenInDenom, tokenOutDenom string, currentRoute domain.Route, poolsUsed []bool, previousTokenOutDenoms []string) ([]domain.Route, error) {
 	if currentRoute == nil {
 		return nil, ErrNilCurrentRoute
 	}
+
+	// currentRoutePools := currentRoute.GetPools()
+	// fmt.Println("currentRoute pools ", len(currentRoutePools))
+	// for _, pool := range currentRoutePools {
+	// 	fmt.Println("pool ", pool.GetId(), " ", pool.GetPoolDenoms(), " ", pool.GetTokenOutDenom())
+	// }
+	// fmt.Printf("\n")
 
 	// Sorted pools and pools used should have the same length.
 	if len(r.sortedPools) != len(poolsUsed) {
@@ -145,15 +105,15 @@ func (r Router) findRoutes(tokenInDenom, tokenOutDenom string, currentRoute Rout
 
 	// Base case - route found
 	if numPoolInCurrentRoute > 0 && poolsInCurrentRoute[numPoolInCurrentRoute-1].GetTokenOutDenom() == tokenOutDenom {
-		return []Route{currentRoute}, nil
+		return []domain.Route{currentRoute}, nil
 	}
 
 	// Unable to find - max hops reached
 	if numPoolInCurrentRoute == r.maxHops {
-		return []Route{}, nil
+		return []domain.Route{}, nil
 	}
 
-	result := []Route{}
+	result := []domain.Route{}
 
 	if len(previousTokenOutDenoms) == 0 {
 		previousTokenOutDenoms = make([]string, 0, r.maxHops)

@@ -3,15 +3,19 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"sort"
 
 	"github.com/redis/go-redis/v9"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 )
 
 type redisPoolsRepo struct {
-	client *redis.Client
+	appCodec codec.Codec
+	client   *redis.Client
 }
 
 var _ domain.PoolsRepository = &redisPoolsRepo{}
@@ -23,9 +27,10 @@ const (
 )
 
 // NewRedisPoolsRepo will create an implementation of pools.Repository
-func NewRedisPoolsRepo(client *redis.Client) domain.PoolsRepository {
+func NewRedisPoolsRepo(appCodec codec.Codec, client *redis.Client) domain.PoolsRepository {
 	return &redisPoolsRepo{
-		client: client,
+		appCodec: appCodec,
+		client:   client,
 	}
 }
 
@@ -70,15 +75,36 @@ func (r *redisPoolsRepo) StoreCosmWasm(ctx context.Context, pools []domain.PoolI
 
 // getPools returns pools from Redis by storeKey.
 func (r *redisPoolsRepo) getPools(ctx context.Context, storeKey string) ([]domain.PoolI, error) {
-	poolMapByID := r.client.HGetAll(ctx, storeKey).Val()
+	sqsPoolMapByID := r.client.HGetAll(ctx, sqsPoolModelKey(storeKey)).Val()
+	chainPoolMapByID := r.client.HGetAll(ctx, chainPoolModelKey(storeKey)).Val()
 
-	pools := make([]domain.PoolI, 0, len(poolMapByID))
-	for _, v := range poolMapByID {
-		pool := &domain.Pool{}
-		err := json.Unmarshal([]byte(v), pool)
+	if len(sqsPoolMapByID) != len(chainPoolMapByID) {
+		return nil, fmt.Errorf("pools count mismatch: sqsPoolMapByID: %d, chainPoolMapByID: %d", len(sqsPoolMapByID), len(chainPoolMapByID))
+	}
+
+	pools := make([]domain.PoolI, 0, len(sqsPoolMapByID))
+	for poolIDKeyStr, sqsPoolModelBytes := range sqsPoolMapByID {
+
+		pool := &domain.PoolWrapper{
+			SQSModel: domain.SQSPool{},
+		}
+
+		err := json.Unmarshal([]byte(sqsPoolModelBytes), &pool.SQSModel)
+		if err != nil {
+			fmt.Println(sqsPoolModelBytes)
+			return nil, err
+		}
+
+		chainPoolModelBytes, ok := chainPoolMapByID[poolIDKeyStr]
+		if !ok {
+			return nil, fmt.Errorf("pool ID %s not found in chainPoolMapByID", poolIDKeyStr)
+		}
+
+		err = r.appCodec.UnmarshalInterfaceJSON([]byte(chainPoolModelBytes), &pool.ChainModel)
 		if err != nil {
 			return nil, err
 		}
+
 		pools = append(pools, pool)
 	}
 
@@ -93,15 +119,34 @@ func (r *redisPoolsRepo) getPools(ctx context.Context, storeKey string) ([]domai
 // storePools stores pools in Redis by storeKey.
 func (r *redisPoolsRepo) storePools(ctx context.Context, storeKey string, pools []domain.PoolI) error {
 	for _, pool := range pools {
-		serializedPool, err := json.Marshal(pool)
+		serializedSQSPoolModel, err := json.Marshal(pool.GetSQSPoolModel())
 		if err != nil {
 			return err
 		}
 
-		err = r.client.HSet(ctx, storeKey, pool.GetId(), serializedPool).Err()
+		serializedChainPoolModel, err := r.appCodec.MarshalInterfaceJSON(pool.GetUnderlyingPool())
+		if err != nil {
+			return err
+		}
+
+		// Note that we have 2x write and read amplification due to storage layout. We can optimize this later.
+		err = r.client.HSet(ctx, sqsPoolModelKey(storeKey), pool.GetId(), serializedSQSPoolModel).Err()
+		if err != nil {
+			return err
+		}
+
+		err = r.client.HSet(ctx, chainPoolModelKey(storeKey), pool.GetId(), serializedChainPoolModel).Err()
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func sqsPoolModelKey(storeKey string) string {
+	return fmt.Sprintf("%s/sqs", storeKey)
+}
+
+func chainPoolModelKey(storeKey string) string {
+	return fmt.Sprintf("%s/chain", storeKey)
 }

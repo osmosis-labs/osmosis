@@ -18,11 +18,13 @@ func ConvertCFMM(ctx sdk.Context, pool poolmanagertypes.PoolI, bankKeeper common
 
 	balances := bankKeeper.GetAllBalances(ctx, pool.GetAddress())
 
-	return &domain.Pool{
-		UnderlyingPool: pool,
-		// TODO: get it properly from TWAP and protorev routes
-		TotalValueLockedUSDC: osmomath.OneInt(),
-		Balances:             balances,
+	return &domain.PoolWrapper{
+		ChainModel: pool,
+		SQSModel: domain.SQSPool{
+			// TODO: get it properly from TWAP and protorev routes
+			TotalValueLockedUSDC: osmomath.OneInt(),
+			Balances:             balances,
+		},
 	}, nil
 }
 
@@ -33,11 +35,13 @@ func ConvertConcentrated(ctx sdk.Context, pool poolmanagertypes.PoolI, bankeKeep
 
 	balances := bankeKeeper.GetAllBalances(ctx, pool.GetAddress())
 
-	return &domain.Pool{
-		UnderlyingPool: pool,
-		// TODO: get it properly from TWAP and protorev routes
-		TotalValueLockedUSDC: osmomath.OneInt(),
-		Balances:             balances,
+	return &domain.PoolWrapper{
+		ChainModel: pool,
+		SQSModel: domain.SQSPool{
+			// TODO: get it properly from TWAP and protorev routes
+			TotalValueLockedUSDC: osmomath.OneInt(),
+			Balances:             balances,
+		},
 	}, nil
 }
 
@@ -59,10 +63,12 @@ func ConvertCosmWasm(ctx sdk.Context, pool poolmanagertypes.PoolI) (domain.PoolI
 		denoms = append(denoms, balance.Denom)
 	}
 
-	return &domain.Pool{
-		UnderlyingPool: pool,
-		// TODO: get it properly from TWAP and protorev routes
-		TotalValueLockedUSDC: osmomath.OneInt(),
-		Balances:             balances,
+	return &domain.PoolWrapper{
+		ChainModel: pool,
+		SQSModel: domain.SQSPool{
+			// TODO: get it properly from TWAP and protorev routes
+			TotalValueLockedUSDC: osmomath.OneInt(),
+			Balances:             balances,
+		},
 	}, nil
 }

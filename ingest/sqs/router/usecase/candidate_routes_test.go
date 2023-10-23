@@ -1,17 +1,18 @@
-package router_test
+package usecase_test
 
 import (
 	"fmt"
 	"testing"
 
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
-	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router"
-	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 type RouterTestSuite struct {
@@ -54,21 +55,29 @@ func (s *RouterTestSuite) TestNewRouter() {
 		maxHops          = 3
 		maxRoutes        = 5
 		defaultAllPools  = []domain.PoolI{
-			&domain.Pool{
-				UnderlyingPool:       balancerPool,
-				TotalValueLockedUSDC: osmomath.NewInt(5), // 5
+			&domain.PoolWrapper{
+				ChainModel: balancerPool,
+				SQSModel: domain.SQSPool{
+					TotalValueLockedUSDC: osmomath.NewInt(5), // 5
+				},
 			},
-			&domain.Pool{
-				UnderlyingPool:       stableswapPool,
-				TotalValueLockedUSDC: osmomath.OneInt(),
+			&domain.PoolWrapper{
+				ChainModel: stableswapPool,
+				SQSModel: domain.SQSPool{
+					TotalValueLockedUSDC: osmomath.OneInt(), // 1
+				},
 			},
-			&domain.Pool{
-				UnderlyingPool:       concentratedPool,
-				TotalValueLockedUSDC: osmomath.NewInt(4), // 4
+			&domain.PoolWrapper{
+				ChainModel: concentratedPool,
+				SQSModel: domain.SQSPool{
+					TotalValueLockedUSDC: osmomath.NewInt(4), // 4
+				},
 			},
-			&domain.Pool{
-				UnderlyingPool:       cosmWasmPool,
-				TotalValueLockedUSDC: osmomath.NewInt(3), // 3
+			&domain.PoolWrapper{
+				ChainModel: cosmWasmPool,
+				SQSModel: domain.SQSPool{
+					TotalValueLockedUSDC: osmomath.NewInt(3), // 3
+				},
 			},
 		}
 
@@ -78,7 +87,7 @@ func (s *RouterTestSuite) TestNewRouter() {
 	)
 
 	// System under test
-	router := router.NewRouter(preferredPoolIDs, defaultAllPools, maxHops, maxRoutes)
+	router := routerusecase.NewRouter(preferredPoolIDs, defaultAllPools, maxHops, maxRoutes, nil)
 
 	// Assert
 	s.Require().Equal(maxHops, router.GetMaxHops())
@@ -87,20 +96,40 @@ func (s *RouterTestSuite) TestNewRouter() {
 }
 
 type mockPool struct {
+	UnderlyingPool       poolmanagertypes.PoolI
 	ID                   uint64
 	denoms               []string
 	totalValueLockedUSDC osmomath.Int
-	poolType             types.PoolType
+	poolType             poolmanagertypes.PoolType
 	tokenOutDenom        string
 }
 
-// GetTokenOutDenom implements router.RoutablePool.
+var _ domain.PoolI = &mockPool{}
+
+// GetUnderlyingPool implements routerusecase.RoutablePool.
+func (mp *mockPool) GetUnderlyingPool() poolmanagertypes.PoolI {
+	return mp.UnderlyingPool
+}
+
+// GetSQSPoolModel implements domain.PoolI.
+func (mp *mockPool) GetSQSPoolModel() domain.SQSPool {
+	return domain.SQSPool{
+		TotalValueLockedUSDC: mp.totalValueLockedUSDC,
+	}
+}
+
+// CalculateTokenOutByTokenIn implements routerusecase.RoutablePool.
+func (*mockPool) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
+	panic("unimplemented")
+}
+
+// GetTokenOutDenom implements routerusecase.RoutablePool.
 func (mp *mockPool) GetTokenOutDenom() string {
 	return mp.tokenOutDenom
 }
 
 var _ domain.PoolI = &mockPool{}
-var _ router.RoutablePool = &mockPool{}
+var _ domain.RoutablePool = &mockPool{}
 
 // GetId implements domain.PoolI.
 func (mp *mockPool) GetId() uint64 {
@@ -118,7 +147,7 @@ func (mp *mockPool) GetTotalValueLockedUSDC() math.Int {
 }
 
 // GetType implements domain.PoolI.
-func (mp *mockPool) GetType() types.PoolType {
+func (mp *mockPool) GetType() poolmanagertypes.PoolType {
 	return mp.poolType
 }
 
@@ -159,7 +188,7 @@ func denomNum(i int) string {
 	return fmt.Sprintf("denom%d", i)
 }
 
-func withRoutePools(r router.Route, pools []router.RoutablePool) router.Route {
+func withRoutePools(r domain.Route, pools []domain.RoutablePool) domain.Route {
 	newRoute := r.DeepCopy()
 	for _, pool := range pools {
 		newRoute.AddPool(pool, pool.GetTokenOutDenom())
@@ -179,7 +208,7 @@ func (s *RouterTestSuite) TestFindRoutes() {
 		ID:                   1,
 		denoms:               []string{denomNum(1), denomNum(2)},
 		totalValueLockedUSDC: osmomath.NewInt(10),
-		poolType:             types.Balancer,
+		poolType:             poolmanagertypes.Balancer,
 	}
 
 	tests := map[string]struct {
@@ -190,11 +219,11 @@ func (s *RouterTestSuite) TestFindRoutes() {
 
 		tokenInDenom           string
 		tokenOutDenom          string
-		currentRoute           router.Route
+		currentRoute           domain.Route
 		poolsUsed              []bool
 		previousTokenOutDenoms []string
 
-		expectedRoutes []router.Route
+		expectedRoutes []domain.Route
 		expectedError  error
 	}{
 		"no pools -> no routes": {
@@ -202,9 +231,9 @@ func (s *RouterTestSuite) TestFindRoutes() {
 
 			tokenInDenom:   denomOne,
 			tokenOutDenom:  denomTwo,
-			currentRoute:   &router.RouteImpl{},
+			currentRoute:   &routerusecase.RouteImpl{},
 			poolsUsed:      []bool{},
-			expectedRoutes: []router.Route{},
+			expectedRoutes: []domain.Route{},
 		},
 		"one pool; tokens in & out match -> route created": {
 			pools: []domain.PoolI{
@@ -216,10 +245,10 @@ func (s *RouterTestSuite) TestFindRoutes() {
 
 			tokenInDenom:  denomOne,
 			tokenOutDenom: denomTwo,
-			currentRoute:  &router.RouteImpl{},
+			currentRoute:  &routerusecase.RouteImpl{},
 			poolsUsed:     []bool{false},
-			expectedRoutes: []router.Route{
-				withRoutePools(&router.RouteImpl{}, []router.RoutablePool{withTokenOutDenom(defaultPool, denomTwo)}),
+			expectedRoutes: []domain.Route{
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{withTokenOutDenom(defaultPool, denomTwo)}),
 			},
 		},
 		"one pool; tokens in & out match but max hops stops route from being found": {
@@ -232,9 +261,9 @@ func (s *RouterTestSuite) TestFindRoutes() {
 
 			tokenInDenom:   denomOne,
 			tokenOutDenom:  denomTwo,
-			currentRoute:   &router.RouteImpl{},
+			currentRoute:   &routerusecase.RouteImpl{},
 			poolsUsed:      []bool{false},
-			expectedRoutes: []router.Route{},
+			expectedRoutes: []domain.Route{},
 		},
 		"one pool; tokens in & out match but max router stops route from being found": {
 			pools: []domain.PoolI{
@@ -246,9 +275,9 @@ func (s *RouterTestSuite) TestFindRoutes() {
 
 			tokenInDenom:   denomOne,
 			tokenOutDenom:  denomTwo,
-			currentRoute:   &router.RouteImpl{},
+			currentRoute:   &routerusecase.RouteImpl{},
 			poolsUsed:      []bool{false},
-			expectedRoutes: []router.Route{},
+			expectedRoutes: []domain.Route{},
 		},
 		"one pool; token out does not match -> no route": {
 			pools: []domain.PoolI{
@@ -260,9 +289,9 @@ func (s *RouterTestSuite) TestFindRoutes() {
 
 			tokenInDenom:   denomOne,
 			tokenOutDenom:  denomNum(3),
-			currentRoute:   &router.RouteImpl{},
+			currentRoute:   &routerusecase.RouteImpl{},
 			poolsUsed:      []bool{false},
-			expectedRoutes: []router.Route{},
+			expectedRoutes: []domain.Route{},
 		},
 		"one pool; token in does not match -> no route": {
 			pools: []domain.PoolI{
@@ -274,9 +303,9 @@ func (s *RouterTestSuite) TestFindRoutes() {
 
 			tokenInDenom:   denomNum(3),
 			tokenOutDenom:  denomTwo,
-			currentRoute:   &router.RouteImpl{},
+			currentRoute:   &routerusecase.RouteImpl{},
 			poolsUsed:      []bool{false},
-			expectedRoutes: []router.Route{},
+			expectedRoutes: []domain.Route{},
 		},
 		"two pools; valid 2 hop route": {
 			pools: []domain.PoolI{
@@ -289,10 +318,10 @@ func (s *RouterTestSuite) TestFindRoutes() {
 
 			tokenInDenom:  denomOne,
 			tokenOutDenom: denomNum(3),
-			currentRoute:  &router.RouteImpl{},
+			currentRoute:  &routerusecase.RouteImpl{},
 			poolsUsed:     []bool{false, false},
-			expectedRoutes: []router.Route{
-				withRoutePools(&router.RouteImpl{}, []router.RoutablePool{
+			expectedRoutes: []domain.Route{
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
 					withTokenOutDenom(defaultPool, denomTwo),
 					withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(2), denomNum(3)}), denomNum(3)),
 				}),
@@ -309,9 +338,9 @@ func (s *RouterTestSuite) TestFindRoutes() {
 
 			tokenInDenom:   denomOne,
 			tokenOutDenom:  denomNum(3),
-			currentRoute:   &router.RouteImpl{},
+			currentRoute:   &routerusecase.RouteImpl{},
 			poolsUsed:      []bool{false, false},
-			expectedRoutes: []router.Route{},
+			expectedRoutes: []domain.Route{},
 		},
 		"4 pools; valid 4 hop route (not in order)": {
 			pools: []domain.PoolI{
@@ -327,10 +356,10 @@ func (s *RouterTestSuite) TestFindRoutes() {
 			// D (denom5 for denom4) -> C (denom4 for denom1) -> A (denom1 for denom2) -> B (denom2 for denom3)
 			tokenInDenom:  denomNum(5),
 			tokenOutDenom: denomNum(3),
-			currentRoute:  &router.RouteImpl{},
+			currentRoute:  &routerusecase.RouteImpl{},
 			poolsUsed:     []bool{false, false, false, false},
-			expectedRoutes: []router.Route{
-				withRoutePools(&router.RouteImpl{}, []router.RoutablePool{
+			expectedRoutes: []domain.Route{
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
 					withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(4), denomNum(5)}), denomNum(4)),
 					withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(4), denomNum(1)}), denomNum(1)),
 					withTokenOutDenom(defaultPool, denomTwo),
@@ -352,14 +381,14 @@ func (s *RouterTestSuite) TestFindRoutes() {
 			// Route 2: A (denom1 for denom3) -> B (denom3 for denom2)
 			tokenInDenom:  denomNum(1),
 			tokenOutDenom: denomNum(2),
-			currentRoute:  &router.RouteImpl{},
+			currentRoute:  &routerusecase.RouteImpl{},
 			poolsUsed:     []bool{false, false, false},
-			expectedRoutes: []router.Route{
-				withRoutePools(&router.RouteImpl{}, []router.RoutablePool{
+			expectedRoutes: []domain.Route{
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
 					withTokenOutDenom(defaultPool, denomTwo),
 				}),
 
-				withRoutePools(&router.RouteImpl{}, []router.RoutablePool{
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
 					withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(1), denomNum(3)}), denomNum(3)),
 					withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(2), denomNum(3)}), denomNum(2)),
 				}),
@@ -391,11 +420,11 @@ func (s *RouterTestSuite) TestFindRoutes() {
 			// Route 6: F (denom1 for denom5)
 			tokenInDenom:  denomNum(1),
 			tokenOutDenom: denomNum(5),
-			currentRoute:  &router.RouteImpl{},
+			currentRoute:  &routerusecase.RouteImpl{},
 			poolsUsed:     []bool{false, false, false, false, false, false, false, false, false},
-			expectedRoutes: []router.Route{
+			expectedRoutes: []domain.Route{
 				// Route 1
-				withRoutePools(&router.RouteImpl{}, []router.RoutablePool{
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
 					withTokenOutDenom(defaultPool, denomTwo),
 					withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(2), denomNum(3)}), denomNum(3)),
 					withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(3), denomNum(4)}), denomNum(4)),
@@ -403,7 +432,7 @@ func (s *RouterTestSuite) TestFindRoutes() {
 				}),
 
 				// Route 2
-				withRoutePools(&router.RouteImpl{}, []router.RoutablePool{
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
 					withTokenOutDenom(defaultPool, denomTwo),
 					withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(2), denomNum(3)}), denomNum(3)),
 					withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(1), denomNum(3)}), denomNum(1)),
@@ -411,7 +440,7 @@ func (s *RouterTestSuite) TestFindRoutes() {
 				}),
 
 				// Route 3
-				withRoutePools(&router.RouteImpl{}, []router.RoutablePool{
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
 					withTokenOutDenom(defaultPool, denomTwo),
 					withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(2), denomNum(3)}), denomNum(3)),
 					withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(3), denomNum(5)}), denomNum(5)),
@@ -426,19 +455,19 @@ func (s *RouterTestSuite) TestFindRoutes() {
 			tokenOutDenom:  denomTwo,
 			currentRoute:   nil,
 			poolsUsed:      []bool{},
-			expectedRoutes: []router.Route{},
+			expectedRoutes: []domain.Route{},
 
-			expectedError: router.ErrNilCurrentRoute,
+			expectedError: routerusecase.ErrNilCurrentRoute,
 		},
 		"error: sorted pools and pools used mismatch": {
 			pools: []domain.PoolI{},
 
 			tokenInDenom:  denomOne,
 			tokenOutDenom: denomTwo,
-			currentRoute:  &router.RouteImpl{},
+			currentRoute:  &routerusecase.RouteImpl{},
 			poolsUsed:     []bool{true, false},
 
-			expectedError: router.SortedPoolsAndPoolsUsedLengthMismatchError{
+			expectedError: routerusecase.SortedPoolsAndPoolsUsedLengthMismatchError{
 				SortedPoolsLen: 0,
 				PoolsUsedLen:   2,
 			},
@@ -448,10 +477,10 @@ func (s *RouterTestSuite) TestFindRoutes() {
 
 			tokenInDenom:  denomOne,
 			tokenOutDenom: denomTwo,
-			currentRoute:  withRoutePools(&router.RouteImpl{}, []router.RoutablePool{defaultPool}),
+			currentRoute:  withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{defaultPool}),
 			poolsUsed:     []bool{},
 
-			expectedError: router.SortedPoolsAndPoolsInRouteLengthMismatchError{
+			expectedError: routerusecase.SortedPoolsAndPoolsInRouteLengthMismatchError{
 				SortedPoolsLen: 0,
 				PoolsInRoute:   1,
 			},
@@ -461,7 +490,7 @@ func (s *RouterTestSuite) TestFindRoutes() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 
-			r := router.NewRouter([]uint64{}, tc.pools, tc.maxHops, tc.maxRoutes)
+			r := routerusecase.NewRouter([]uint64{}, tc.pools, tc.maxHops, tc.maxRoutes, nil)
 
 			routes, err := r.FindRoutes(tc.tokenInDenom, tc.tokenOutDenom, tc.currentRoute, tc.poolsUsed, tc.previousTokenOutDenoms)
 

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"time"
 
@@ -26,15 +27,21 @@ func (a *poolsUseCase) GetAllPools(ctx context.Context) ([]domain.PoolI, error) 
 	ctx, cancel := context.WithTimeout(ctx, a.contextTimeout)
 	defer cancel()
 
+	fmt.Println("CFMM")
+
 	cfmmPools, err := a.poolsRepository.GetAllCFMM(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	fmt.Println("CL")
+
 	concentratedPools, err := a.poolsRepository.GetAllConcentrated(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("CW")
 
 	cosmWasmPools, err := a.poolsRepository.GetAllCosmWasm(ctx)
 	if err != nil {
@@ -43,9 +50,7 @@ func (a *poolsUseCase) GetAllPools(ctx context.Context) ([]domain.PoolI, error) 
 
 	allPools := make([]domain.PoolI, 0, len(cfmmPools)+len(concentratedPools)+len(cosmWasmPools))
 	allPools = append(allPools, cfmmPools...)
-
 	allPools = append(allPools, concentratedPools...)
-
 	allPools = append(allPools, cosmWasmPools...)
 
 	// Sort by ID

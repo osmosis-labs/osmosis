@@ -269,7 +269,7 @@ func NewOsmosisApp(
 		}
 
 		// Create sidecar query server
-		sidecarQueryServer, err := sqs.NewSideCarQueryServer(dbHost, dbPort, sidecarQueryServerAddress, sidecarQueryServerTimeoutDuration)
+		sidecarQueryServer, err := sqs.NewSideCarQueryServer(appCodec, dbHost, dbPort, sidecarQueryServerAddress, sidecarQueryServerTimeoutDuration)
 		if err != nil {
 			panic(fmt.Sprintf("error while creating sidecar query server: %s", err))
 		}

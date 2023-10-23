@@ -294,5 +294,19 @@
                 "-test.v"
             ],
         },
+        {
+            "name": "ingest/sqs/router",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/ingest/sqs/router",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestRouterTestSuite/TestCalculateTokenOutByTokenIn",
+                "-test.v"
+            ],
+        },
     ]
 }

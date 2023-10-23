@@ -13,7 +13,6 @@ require (
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.1.0
 	github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.1.0
 	github.com/cosmos/ibc-go/v4 v4.5.0
-	github.com/go-redis/redismock/v9 v9.2.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
@@ -86,6 +85,7 @@ require (
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
 	github.com/nunnatsa/ginkgolinter v0.13.5 // indirect
+	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
 	github.com/sagikazarmark/locafero v0.3.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
@@ -106,8 +106,8 @@ require (
 	github.com/zondax/ledger-go v0.14.1 // indirect
 	go.tmz.dev/musttag v0.7.2 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	go.uber.org/goleak v1.1.12 // indirect
-	go.uber.org/zap v1.24.0 // indirect
+	go.uber.org/goleak v1.2.0 // indirect
+	go.uber.org/zap v1.26.0 // indirect
 	google.golang.org/genproto v0.0.0-20230913181813-007df8e322eb // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230920204549-e6e6cdab5c13 // indirect
 )

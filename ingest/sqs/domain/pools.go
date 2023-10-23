@@ -19,39 +19,63 @@ type PoolI interface {
 	GetTotalValueLockedUSDC() osmomath.Int
 
 	GetPoolDenoms() []string
+
+	GetUnderlyingPool() poolmanagertypes.PoolI
+
+	GetSQSPoolModel() SQSPool
 }
 
-type Pool struct {
-	UnderlyingPool       poolmanagertypes.PoolI `json:"pool"`
-	TotalValueLockedUSDC osmomath.Int           `json:"total_value_locked_usdc"`
+type SQSPool struct {
+	TotalValueLockedUSDC osmomath.Int `json:"total_value_locked_usdc"`
 	// Only CL and Cosmwasm pools need balances appended
-	Balances sdk.Coins `json:"balances,omitempty"`
+	Balances sdk.Coins `json:"balances,string,omitempty"`
 }
 
-var _ PoolI = &Pool{}
+type PoolWrapper struct {
+	ChainModel poolmanagertypes.PoolI `json:"underlying_pool"`
+	SQSModel   SQSPool                `json:"sqs_model"`
+}
+
+var _ PoolI = &PoolWrapper{}
+
+func NewPool(model poolmanagertypes.PoolI) PoolI {
+	return &PoolWrapper{
+		ChainModel: model,
+	}
+}
 
 // GetId implements PoolI.
-func (p *Pool) GetId() uint64 {
-	return p.UnderlyingPool.GetId()
+func (p *PoolWrapper) GetId() uint64 {
+	return p.ChainModel.GetId()
 }
 
 // GetType implements PoolI.
-func (p *Pool) GetType() poolmanagertypes.PoolType {
-	return poolmanagertypes.PoolType(p.UnderlyingPool.GetType())
+func (p *PoolWrapper) GetType() poolmanagertypes.PoolType {
+	return poolmanagertypes.PoolType(p.ChainModel.GetType())
 }
 
 // GetTotalValueLockedUSDC implements PoolI.
-func (p *Pool) GetTotalValueLockedUSDC() osmomath.Int {
-	return p.TotalValueLockedUSDC
+func (p *PoolWrapper) GetTotalValueLockedUSDC() osmomath.Int {
+	return p.SQSModel.TotalValueLockedUSDC
 }
 
 // GetPoolDenoms implements PoolI.
-func (p *Pool) GetPoolDenoms() []string {
-	denoms := make([]string, 0, len(p.Balances))
-	for _, balance := range p.Balances {
+func (p *PoolWrapper) GetPoolDenoms() []string {
+	denoms := make([]string, 0, len(p.SQSModel.Balances))
+	for _, balance := range p.SQSModel.Balances {
 		denoms = append(denoms, balance.Denom)
 	}
 	return denoms
+}
+
+// GetUnderlyingPool implements PoolI.
+func (p *PoolWrapper) GetUnderlyingPool() poolmanagertypes.PoolI {
+	return p.ChainModel
+}
+
+// GetSQSPoolModel implements PoolI.
+func (p *PoolWrapper) GetSQSPoolModel() SQSPool {
+	return p.SQSModel
 }
 
 // PoolsRepository represent the pool's repository contract
@@ -79,4 +103,9 @@ type PoolsRepository interface {
 // PoolsUsecase represent the pool's usecases
 type PoolsUsecase interface {
 	GetAllPools(ctx context.Context) ([]PoolI, error)
+}
+
+// RouterUsecase represent the router's usecases
+type RouterUsecase interface {
+	GetOptimalQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string) (Quote, error)
 }
