@@ -13,7 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
-	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -164,7 +164,7 @@ func TestNewCreatePoolCmd(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(tt *testing.T) {
 			desc := cli.NewCreatePoolCmd()
-			jsonFile := sdktestutil.WriteToNewTempFile(tt, tc.json)
+			jsonFile := testutil.WriteToNewTempFile(tt, tc.json)
 			Cmd := fmt.Sprintf("--pool-file=%s --from=%s", jsonFile.Name(), testAddresses[0].String())
 
 			txTc := osmocli.TxCliTestCase[*balancer.MsgCreateBalancerPool]{

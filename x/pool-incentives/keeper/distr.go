@@ -27,7 +27,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 	params := k.GetParams(ctx)
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
-	//TODO: we should support distribution of all assets, not only specific denom
+	//TODO(#5): we should support distribution of all assets, not only specific denom
 	asset := k.bankKeeper.GetBalance(ctx, moduleAddr, params.MintedDenom)
 	if asset.Amount.IsZero() {
 		// when allocating asset is zero, skip execution
