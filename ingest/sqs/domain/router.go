@@ -1,6 +1,10 @@
 package domain
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+)
 
 type RoutablePool interface {
 	PoolI
@@ -23,10 +27,16 @@ type Route interface {
 	String() string
 }
 
+type SplitRoute interface {
+	Route
+	GetAmountIn() osmomath.Int
+	GetAmountOut() osmomath.Int
+}
+
 type Quote interface {
 	GetAmountIn() sdk.Coin
-	GetAmountOut() sdk.Coin
-	GetRoute() []Route
+	GetAmountOut() osmomath.Int
+	GetRoute() []SplitRoute
 }
 
 type RouterConfig struct {

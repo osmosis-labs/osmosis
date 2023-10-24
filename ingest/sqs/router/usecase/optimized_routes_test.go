@@ -4,7 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
@@ -24,13 +26,33 @@ var (
 func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 
 	s.Setup()
-	balancerPoolID := s.PrepareBalancerPoolWithCoins(
+
+	xLiquidity := sdk.NewCoins(
 		sdk.NewCoin(denomNum(1), sdk.NewInt(1_000_000_000_000)),
 		sdk.NewCoin(denomNum(2), sdk.NewInt(2_000_000_000_000)),
 	)
 
-	// Get the pool from the store
-	pool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerPoolID)
+	// X Liquidity
+	defaultBalancerPoolID := s.PrepareBalancerPoolWithCoins(xLiquidity...)
+
+	// 2X liquidity
+	// Note that the second pool has more liquidity than the first so it should be preferred
+	secondBalancerPoolIDSameDenoms := s.PrepareBalancerPoolWithCoins(coinutil.MulRaw(xLiquidity, 2)...)
+
+	// 4X liquidity
+	// Note that the third pool has more liquidity than first and second so it should be preferred
+	thirdBalancerPoolIDSameDenoms := s.PrepareBalancerPoolWithCoins(coinutil.MulRaw(xLiquidity, 4)...)
+
+	// Get the defaultBalancerPool from the store
+	defaultBalancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, defaultBalancerPoolID)
+	s.Require().NoError(err)
+
+	// Get the secondBalancerPool from the store
+	secondBalancerPoolSameDenoms, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, secondBalancerPoolIDSameDenoms)
+	s.Require().NoError(err)
+
+	// Get the thirdBalancerPool from the store
+	thirdBalancerPoolSameDenoms, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, thirdBalancerPoolIDSameDenoms)
 	s.Require().NoError(err)
 
 	tests := map[string]struct {
@@ -45,28 +67,68 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 		// "valid single route": {
 		// 	routes: []domain.Route{
 		// 		withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-		// 			withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(1)), pool),
+		// 			withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(1)), defaultBalancerPool),
 		// 		})},
-		// 	tokenIn:       sdk.NewCoin(denomNum(2), sdk.NewInt(100)),
-		// 	tokenOutDenom: denomNum(1),
+		// 	tokenIn: sdk.NewCoin(denomNum(2), sdk.NewInt(100)),
+
+		// 	expectedTokenOutDenom: denomNum(1),
 		// },
+		// "valid two route single hop": {
+		// 	routes: []domain.Route{
+		// 		// Route 1
+		// 		withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
+		// 			withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(1)), defaultBalancerPool),
+		// 		}),
 
-		// errors
-		"error: invalid single route - token out is not set on the pool": {
+		// 		// Route 2
+		// 		withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
+		// 			withPoolID(withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(1)), secondBalancerPoolSameDenoms), 2),
+		// 		}),
+		// 	},
+
+		// 	maxSplitIterations: 10,
+
+		// 	tokenIn: sdk.NewCoin(denomNum(2), sdk.NewInt(5_000_000)),
+
+		// 	expectedTokenOutDenom: denomNum(1),
+		// },
+		"valid three route single hop": {
 			routes: []domain.Route{
-				withRoutePools(emptyRoute, []domain.RoutablePool{
-					withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(2)), pool),
-				})},
-			tokenIn: sdk.NewCoin(denomNum(2), sdk.NewInt(100)),
+				// Route 1
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
+					withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(1)), defaultBalancerPool),
+				}),
 
-			expectError: usecase.TokenOutDenomMatchesTokenInDenomError{Denom: denomNum(2)},
+				// Route 2
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
+					withPoolID(withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(1)), thirdBalancerPoolSameDenoms), 3),
+				}),
+
+				// Route 3
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
+					withPoolID(withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(1)), secondBalancerPoolSameDenoms), 2),
+				}),
+			},
+
+			maxSplitIterations: 17,
+
+			tokenIn: sdk.NewCoin(denomNum(2), sdk.NewInt(56_789_321)),
+
+			expectedTokenOutDenom: denomNum(1),
 		},
+
+		// TODO: cover error cases
+		// TODO: multi route multi hop
+		// TODO: assert that split ratios are correct
 	}
 
 	for name, tc := range tests {
 		s.Run(name, func() {
 
-			r := routerusecase.NewRouter([]uint64{}, []domain.PoolI{}, 0, 0, tc.maxSplitIterations, nil)
+			logger, err := log.NewLogger(false)
+			s.Require().NoError(err)
+
+			r := routerusecase.NewRouter([]uint64{}, []domain.PoolI{}, 0, 0, tc.maxSplitIterations, logger)
 
 			quote, err := r.GetBestSplitRoutesQuote(tc.routes, tc.tokenIn)
 
@@ -77,8 +139,20 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 			}
 			s.Require().NoError(err)
 			s.Require().Equal(tc.tokenIn, quote.GetAmountIn())
-			s.Require().Equal(tc.expectedTokenOutDenom, quote.GetAmountOut().Denom)
-			s.Require().NotNil(tc.tokenIn.Amount)
+
+			quoteCoinOut := quote.GetAmountOut()
+			// We only validate that some amount is returned. The correctness of the amount is to be calculated at a different level
+			// of abstraction.
+			s.Require().NotNil(quoteCoinOut)
+
+			// Validate that amounts in in the quote split routes add up to the original amount in
+			routes := quote.GetRoute()
+			actualTotalFromSplits := sdk.ZeroInt()
+			for _, splitRoute := range routes {
+				actualTotalFromSplits = actualTotalFromSplits.Add(splitRoute.GetAmountIn())
+			}
+
+			s.Require().Equal(tc.tokenIn.Amount, actualTotalFromSplits)
 		})
 	}
 }

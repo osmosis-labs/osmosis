@@ -56,7 +56,7 @@ func (s *RouterTestSuite) TestNewRouter() {
 		maxHops            = 3
 		maxRoutes          = 5
 		maxSplitIterations = 10
-		logger, _          = log.NewLogger()
+		logger, _          = log.NewLogger(false)
 		defaultAllPools    = []domain.PoolI{
 			&domain.PoolWrapper{
 				ChainModel: balancerPool,

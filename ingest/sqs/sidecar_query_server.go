@@ -48,7 +48,8 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 
 	// logger
 	// TODO: figure out logging to file
-	logger, err := log.NewLogger()
+	isProductionLogger := true
+	logger, err := log.NewLogger(isProductionLogger)
 	logger.Info("Starting sidecar query server")
 
 	defer func() {

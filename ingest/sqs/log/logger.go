@@ -63,10 +63,14 @@ func (l *loggerImpl) Warn(msg string, fields ...zapcore.Field) {
 }
 
 // NewLogger creates a new logger.
-func NewLogger() (Logger, error) {
+func NewLogger(isProduction bool) (Logger, error) {
 	// logger
 	// TODO: figure out logging to file
 	loggerConfig := zap.NewProductionConfig()
+	if !isProduction {
+		loggerConfig = zap.NewDevelopmentConfig()
+	}
+
 	logger, err := loggerConfig.Build()
 	if err != nil {
 		return nil, err
