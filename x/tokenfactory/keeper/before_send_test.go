@@ -62,7 +62,7 @@ func (s *KeeperTestSuite) TestBeforeSendHook() {
 					expectPass: false,
 				},
 				{
-					desc: "sending 100 of factorydenom should not work",
+					desc: "sending 100 of non-factorydenom should work",
 					msg: func(factorydenom string) *banktypes.MsgSend {
 						return banktypes.NewMsgSend(
 							s.TestAccs[0],
@@ -70,7 +70,7 @@ func (s *KeeperTestSuite) TestBeforeSendHook() {
 							sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
 						)
 					},
-					expectPass: false,
+					expectPass: true,
 				},
 				{
 					desc: "having 100 coin within coins should not work",

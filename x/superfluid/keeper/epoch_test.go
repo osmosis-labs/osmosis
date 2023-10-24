@@ -140,11 +140,14 @@ type distributionTestCase struct {
 
 var (
 	// distributed coin when there is one account receiving from one gauge
-	defaultSingleLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 19999))
+	// since val tokens is 11000000 and reward is 20000, we get 18181stake
+	defaultSingleLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 18181))
 	// distributed coins when there is two account receiving from one gauge
-	defaultTwoLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 9999))
+	// since val tokens is 2100000 and reward is 20000, we get 9523stake
+	defaultTwoLockDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 9523))
 	// distributed coins when there is one account receiving from two gauge
-	defaultTwoGaugeDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 19998))
+	// two lock distribution * 2
+	defaultTwoGaugeDistributedCoins = sdk.NewCoins(sdk.NewInt64Coin("stake", 19046))
 	distributionTestCases           = []distributionTestCase{
 		{
 			"happy path with single validator and delegator",
