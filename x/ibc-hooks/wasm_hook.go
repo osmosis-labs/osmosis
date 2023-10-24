@@ -269,7 +269,7 @@ func (h WasmHooks) SendPacketOverride(i ICS4Middleware, ctx sdk.Context, chanCap
 	} else {
 		ics20data.Memo = stringMetadata
 	}
-	dataBytes, err := json.Marshal(data)
+	dataBytes, err := json.Marshal(ics20data)
 	if err != nil {
 		return 0, errorsmod.Wrap(err, "Send packet with callback error")
 	}
