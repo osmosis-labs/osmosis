@@ -84,7 +84,7 @@ func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount osmomath.
 	channel := suite.path.EndpointA.ChannelID
 	accountFrom := suite.chainA.SenderAccount.GetAddress().String()
 	accountTo := suite.chainB.SenderAccount.GetAddress().String()
-	timeoutHeight := clienttypes.NewHeight(0, 100)
+	timeoutHeight := clienttypes.NewHeight(10, 100)
 	return transfertypes.NewMsgTransfer(
 		port,
 		channel,
@@ -92,7 +92,7 @@ func (suite *MiddlewareTestSuite) MessageFromAToB(denom string, amount osmomath.
 		accountFrom,
 		accountTo,
 		timeoutHeight,
-		0,
+		uint64(time.Now().UnixNano()),
 		"",
 	)
 }
@@ -103,7 +103,7 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount osmomath.
 	channel := suite.path.EndpointB.ChannelID
 	accountFrom := suite.chainB.SenderAccount.GetAddress().String()
 	accountTo := suite.chainA.SenderAccount.GetAddress().String()
-	timeoutHeight := clienttypes.NewHeight(0, 100)
+	timeoutHeight := clienttypes.NewHeight(10, 100)
 	return transfertypes.NewMsgTransfer(
 		port,
 		channel,
@@ -111,7 +111,7 @@ func (suite *MiddlewareTestSuite) MessageFromBToA(denom string, amount osmomath.
 		accountFrom,
 		accountTo,
 		timeoutHeight,
-		0,
+		uint64(time.Now().UnixNano()),
 		"",
 	)
 }
@@ -147,8 +147,8 @@ func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
 		sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(1)),
 		suite.chainB.SenderAccount.GetAddress().String(),
 		strings.Repeat("x", 4097),
-		clienttypes.NewHeight(0, 100),
-		0,
+		clienttypes.NewHeight(10, 100),
+		uint64(time.Now().UnixNano()),
 		"",
 	)
 	_, ack, _ := suite.FullSendBToA(msg)
@@ -478,7 +478,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 	port := suite.path.EndpointA.ChannelConfig.PortID
 	channel := suite.path.EndpointA.ChannelID
 	accountFrom := suite.chainA.SenderAccount.GetAddress().String()
-	timeoutHeight := clienttypes.NewHeight(0, 100)
+	timeoutHeight := clienttypes.NewHeight(10, 100)
 	msg := transfertypes.NewMsgTransfer(port, channel, coins, accountFrom, "INVALID", timeoutHeight, 0, "")
 
 	// Sending the message manually because AssertSend updates both clients. We need to update the clients manually
