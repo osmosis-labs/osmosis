@@ -372,13 +372,13 @@ The following is the example input/output when executing `CalcOutAmtGivenIn` on 
 
 - If the input is greater than the total liquidity of the pool, the output will be the total liquidity of the target token.
 - If the input is an amount that is reasonably within the range of liquidity of the pool, the output will be a tolerable slippage amount based on pool data.
-- If the input is a small amount for which the pool cannot calculate a viable swap output e.g `1`, the output will be `1`, regardless of slippage.
+- If the input is a small amount for which the pool cannot calculate a viable swap output e.g `1`, the output will be a small value which can be either positive (greater or equal to 1) or zero, depending on the pool's weights. In the latter case an `ErrInvalidMathApprox` is returned.
 
 Here is the following process for the `EstimateTradeBasedOnPriceImpactBalancerPool` function:
 
 1. The function initially calculates the output amount (`tokenOut`) using the input amount (`FromCoin`) without including a swap fee using the `CalcOutAmtGivenIn` function.
 
-   1. If `tokenOut` is zero, the function returns zero for both the input and output coin, signifying that trading a negligible amount yields no output. It is not likely that this pool type returns a zero but it is still catered for.
+   1. If `tokenOut` is zero or an `ErrInvalidMathApprox` is returned, the function returns zero for both the input and output coin, signifying that trading a negligible amount yields no output.
 
 2. The function calculates the current trade price (`currTradePrice`) using the initially estimated `tokenOut`. Following that, it calculates the deviation of this price from the spot price (`priceDeviation`).
 
