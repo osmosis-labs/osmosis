@@ -36,7 +36,7 @@ func (i ICS4Middleware) SendPacket(
 	data []byte,
 ) (sequence uint64, err error) {
 	if hook, ok := i.Hooks.(SendPacketOverrideHooks); ok {
-		return hook.SendPacketOverride(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+		return hook.SendPacketOverride(i, ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
 
 	if hook, ok := i.Hooks.(SendPacketBeforeHooks); ok {

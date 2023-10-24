@@ -371,6 +371,8 @@ replace (
 	github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 	// TODO: remove in favor of github.com/cosmos/cosmos-proto
 
+	github.com/CosmWasm/wasmd => ../wasmd
+
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
 
