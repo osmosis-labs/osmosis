@@ -228,6 +228,7 @@ type Split struct {
 // splitRecursive recursively splits the token in amount into the best split from the remaining routes.
 // It does not perform single route quote estimate (100% single route split) as we assume that those were already calculated prior to this method.
 // Returns the best split and error if any.
+// Returs error if the maxSplitIterations is less than 1.
 func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []domain.Route, currentSplit Split) (bestSplit Split, err error) {
 	r.logger.Debug("splitRecursive START", zap.Stringer("remainingTokenIn", remainingTokenIn))
 
