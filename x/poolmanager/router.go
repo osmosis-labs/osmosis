@@ -548,6 +548,40 @@ func (k Keeper) AllPools(
 	return sortedPools, nil
 }
 
+func (k Keeper) ListPoolsByDenom(
+	ctx sdk.Context,
+	Denom string,
+) ([]types.PoolI, error) {
+	less := func(i, j types.PoolI) bool {
+		return i.GetId() < j.GetId()
+	}
+	//	Allocate the slice with the exact capacity to avoid reallocations.
+	poolCount := k.GetNextPoolId(ctx)
+	sortedPools := make([]types.PoolI, 0, poolCount)
+	for _, poolModule := range k.poolModules {
+		currentModulePools, err := poolModule.GetPools(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		var poolsByDenom []types.PoolI
+		for _, pool := range currentModulePools {
+			coins, err := k.GetTotalPoolLiquidity(ctx, pool.GetId())
+			if err != nil {
+				return nil, err
+			}
+			if coins.AmountOf(Denom).GT(osmomath.ZeroInt()) {
+				if err != nil {
+					return nil, err
+				}
+				poolsByDenom = append(poolsByDenom, pool)
+			}
+		}
+		sortedPools = osmoutils.MergeSlices(sortedPools, poolsByDenom, less)
+	}
+	return sortedPools, nil
+}
+
 // createMultihopExpectedSwapOuts defines the output denom and output amount for the last pool in
 // the routeStep of pools the caller is intending to hop through in a fixed-output multihop tx. It estimates the input
 // amount for this last pool and then chains that input as the output of the previous pool in the routeStep, repeating

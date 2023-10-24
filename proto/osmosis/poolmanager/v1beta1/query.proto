@@ -91,6 +91,10 @@ service Query {
   rpc AllPools(AllPoolsRequest) returns (AllPoolsResponse) {
     option (google.api.http).get = "/osmosis/poolmanager/v1beta1/all-pools";
   }
+  // List pools by denom
+  rpc ListPoolsByDenom(ListPoolsByDenomRequest) returns (ListPoolsByDenomResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/list-pools-by-denom";
+  }
 
   // SpotPrice defines a gRPC query handler that returns the spot price given
   // a base denomination and a quote denomination.
@@ -234,6 +238,19 @@ message AllPoolsResponse {
       [ (cosmos_proto.accepts_interface) = "PoolI" ];
 }
 
+// =======================================================
+
+message ListPoolsByDenomRequest {
+  string denom = 1
+      [ (gogoproto.moretags) = "yaml:\"base_asset_denom\"" ];
+}
+
+
+message ListPoolsByDenomResponse {
+  repeated google.protobuf.Any pools = 1
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
+}
+// ==========================================================
 // SpotPriceRequest defines the gRPC request structure for a SpotPrice
 // query.
 message SpotPriceRequest {
