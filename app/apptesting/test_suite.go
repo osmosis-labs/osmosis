@@ -101,7 +101,7 @@ func (s *KeeperTestHelper) Setup() {
 	s.App = app.SetupWithCustomHome(false, dir)
 	s.setupGeneral()
 
-	// Manually set calidatoring signing info, otherwise we panic
+	// Manually set validator signing info, otherwise we panic
 	vals := s.App.StakingKeeper.GetAllValidators(s.Ctx)
 	for _, val := range vals {
 		consAddr, _ := val.GetConsAddr()
@@ -115,7 +115,6 @@ func (s *KeeperTestHelper) Setup() {
 		)
 		s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
 	}
-
 }
 
 // PrepareAllSupportedPools creates all supported pools and returns their IDs.

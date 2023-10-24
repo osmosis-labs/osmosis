@@ -42,7 +42,7 @@ func TestUpgradeTestSuite(t *testing.T) {
 }
 
 func (s *UpgradeTestSuite) TestUpgrade() {
-	initialTokenBonded := osmomath.NewInt(100)
+	initialTokenBonded := sdk.DefaultPowerReduction
 	s.Setup()
 
 	// prepare superfluid delegation
