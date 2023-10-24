@@ -9,9 +9,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v20/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -253,6 +253,108 @@ func (s *KeeperTestSuite) TestAddToGauge_Fee() {
 			s.Require().Equal(finalAccountBalance.String(), bal.String(), "test: %v", tc.name)
 		} else if tc.expectErr && !tc.isGaugeComplete {
 			s.Require().Equal(tc.accountBalanceToFund.String(), bal.String(), "test: %v", tc.name)
+		}
+	}
+}
+
+func (s *KeeperTestSuite) TestCreateGroup_Fee() {
+	tests := []struct {
+		name                 string
+		accountBalanceToFund sdk.Coins
+		expectedEndBalance   sdk.Coins
+		groupFunds           sdk.Coins
+		isModuleAccount      bool
+		numEpochsPaidOver    uint64
+		expectErr            bool
+	}{
+		{
+			name:                 "user creates a non-perpetual group and fills group with all remaining tokens",
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
+			groupFunds:           tenTokens,
+			numEpochsPaidOver:    3,
+		},
+		{
+			name:                 "user creates a perpetual group and fills group with all remaining tokens",
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
+			groupFunds:           tenTokens,
+			numEpochsPaidOver:    0,
+		},
+		{
+			name:                 "user creates a non-perpetual group and fills group with some remaining tokens",
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(15000000))),
+			groupFunds:           tenTokens,
+			numEpochsPaidOver:    3,
+		},
+		{
+			name:                 "module account creates a perpetual group",
+			accountBalanceToFund: sdk.Coins{},
+			groupFunds:           sdk.Coins{},
+			isModuleAccount:      true,
+			numEpochsPaidOver:    0,
+		},
+		{
+			name:                 "user tries to create a non-perpetual group but does not have enough funds to pay for the create group fee",
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(90000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000000))),
+			groupFunds:           tenTokens,
+			expectErr:            true,
+			numEpochsPaidOver:    3,
+		},
+		{
+			name:                 "one user tries to create a group, has enough funds to pay for the create group fee but not enough to fill the group funds",
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("uosmo", osmomath.NewInt(100000000)), sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(9000000))),
+			groupFunds:           tenTokens,
+			expectErr:            true,
+			numEpochsPaidOver:    3,
+		},
+	}
+
+	for _, tc := range tests {
+		s.SetupTest()
+
+		testAccountPubkey := secp256k1.GenPrivKeyFromSecret([]byte("acc")).PubKey()
+		testAccountAddress := sdk.AccAddress(testAccountPubkey.Address())
+
+		ctx := s.Ctx
+		bankKeeper := s.App.BankKeeper
+		accountKeeper := s.App.AccountKeeper
+		msgServer := keeper.NewMsgServerImpl(s.App.IncentivesKeeper)
+		groupCreationFee := s.App.IncentivesKeeper.GetParams(ctx).GroupCreationFee
+
+		s.FundAcc(testAccountAddress, tc.accountBalanceToFund)
+
+		if tc.isModuleAccount {
+			testAccountAddress = accountKeeper.GetModuleAddress(types.ModuleName)
+		}
+
+		poolInfo := s.PrepareAllSupportedPools()
+
+		poolIDs := []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID, poolInfo.StableSwapPoolID}
+
+		msg := &types.MsgCreateGroup{
+			Coins:             tc.groupFunds,
+			NumEpochsPaidOver: tc.numEpochsPaidOver,
+			Owner:             testAccountAddress.String(),
+			PoolIds:           poolIDs,
+		}
+
+		// setup volume so that the pool can be created
+		s.overwriteVolumes(poolIDs, []osmomath.Int{defaultVolumeAmount, defaultVolumeAmount, defaultVolumeAmount})
+
+		// System under test.
+		_, err := msgServer.CreateGroup(sdk.WrapSDKContext(ctx), msg)
+
+		if tc.expectErr {
+			s.Require().Error(err)
+		} else {
+			s.Require().NoError(err)
+			balanceAmount := bankKeeper.GetAllBalances(ctx, testAccountAddress)
+
+			accountBalance := tc.accountBalanceToFund.Sub(tc.groupFunds)
+			finalAccountBalance := accountBalance
+			if !tc.isModuleAccount {
+				finalAccountBalance = accountBalance.Sub(groupCreationFee)
+			}
+			s.Require().Equal(finalAccountBalance.String(), balanceAmount.String(), "test: %v", tc.name)
 		}
 	}
 }

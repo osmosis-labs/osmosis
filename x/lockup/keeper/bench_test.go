@@ -10,8 +10,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v20/app"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"

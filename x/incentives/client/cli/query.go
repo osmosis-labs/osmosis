@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -29,6 +29,11 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdActiveGaugesPerDenom)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdUpcomingGauges)
 	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdUpcomingGaugesPerDenom)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAllGroups)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAllGroupsGauges)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdAllGroupsWithGauge)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdGroupByGroupGaugeID)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdCurrentWeightByGroupGaugeID)
 	cmd.AddCommand(GetCmdRewardsEst())
 
 	return cmd
@@ -98,6 +103,15 @@ func GetCmdUpcomingGaugesPerDenom() (*osmocli.QueryDescriptor, *types.UpcomingGa
 		Short: "Query scheduled gauges per denom",
 		Long:  `{{.Short}}`,
 	}, &types.UpcomingGaugesPerDenomRequest{}
+}
+
+// GetCmdCurrentWeightByGroupGaugeID returns current weight for each gauge respectively since the last epoch from a group gauge ID.
+func GetCmdCurrentWeightByGroupGaugeID() (*osmocli.QueryDescriptor, *types.QueryCurrentWeightByGroupGaugeIDRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "current-weight-by-group-gauge-id",
+		Short: "Query current incentives distribution weight since epoch for each gauge respectively from a group gauge ID",
+		Long:  `{{.Short}}`,
+	}, &types.QueryCurrentWeightByGroupGaugeIDRequest{}
 }
 
 // GetCmdRewardsEst returns rewards estimation.
@@ -214,4 +228,36 @@ func contains(s []uint64, value uint64) bool {
 	}
 
 	return false
+}
+
+func GetCmdAllGroups() (*osmocli.QueryDescriptor, *types.QueryAllGroupsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-groups",
+		Short: "Query all groups",
+		Long:  `{{.Short}}`,
+	}, &types.QueryAllGroupsRequest{}
+}
+
+func GetCmdAllGroupsGauges() (*osmocli.QueryDescriptor, *types.QueryAllGroupsGaugesRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-groups-gauges",
+		Short: "Query all group gauges",
+		Long:  `{{.Short}}`,
+	}, &types.QueryAllGroupsGaugesRequest{}
+}
+
+func GetCmdAllGroupsWithGauge() (*osmocli.QueryDescriptor, *types.QueryAllGroupsWithGaugeRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "all-groups-with-gauge",
+		Short: "Query all groups with their respective group gauge",
+		Long:  `{{.Short}}`,
+	}, &types.QueryAllGroupsWithGaugeRequest{}
+}
+
+func GetCmdGroupByGroupGaugeID() (*osmocli.QueryDescriptor, *types.QueryGroupByGroupGaugeIDRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "group-by-group-gauge-id [group-gauge-id]",
+		Short: "Query a group it's respective group gauge ID",
+		Long:  `{{.Short}}`,
+	}, &types.QueryGroupByGroupGaugeIDRequest{}
 }

@@ -7,10 +7,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
 
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v19/x/twap"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v20/x/twap"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -18,7 +18,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/utils"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/utils"
 )
 
 type PeriodType string

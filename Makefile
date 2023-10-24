@@ -134,6 +134,19 @@ build-all: check_version go.sum
 install: check_version go.sum
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 
+# disables optimization, inlining and symbol removal
+GC_FLAGS := -gcflags="all=-N -l"
+REMOVE_STRING := -w -s
+DEBUG_BUILD_FLAGS:= $(subst $(REMOVE_STRING),,$(BUILD_FLAGS))
+DEBUG_LDFLAGS = $(subst $(REMOVE_STRING),,$(ldflags))
+
+dev-install: go.sum
+	GOWORK=off go install $(DEBUG_BUILD_FLAGS) $(GC_FLAGS) $(GO_MODULE)/cmd/osmosisd
+
+dev-build:
+	mkdir -p $(BUILDDIR)/
+	GOWORK=off go build $(GC_FLAGS) -mod=readonly -ldflags '$(DEBUG_LDFLAGS)' -trimpath -o $(BUILDDIR) ./...;
+
 install-with-autocomplete: check_version go.sum
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 	@PARENT_SHELL=$$(ps -o ppid= -p $$PPID | xargs ps -o comm= -p); \
@@ -245,20 +258,20 @@ distclean: clean
 ###                           Dependency Updates                            ###
 ###############################################################################
 
-VERSION := 
+SDK_VERSION :=
 MODFILES := ./go.mod ./osmoutils/go.mod ./osmomath/go.mod ./x/epochs/go.mod ./x/ibc-hooks/go.mod ./tests/cl-genesis-positions/go.mod ./tests/cl-go-client/go.mod
-# run with VERSION argument specified
-# e.g) make update-sdk-version VERSION=v0.45.1-0.20230523200430-193959b898ec
+# run with SDK_VERSION argument specified
+# e.g) make update-sdk-version SDK_VERSION=v0.45.1-0.20230523200430-193959b898ec
 # This will change sdk dependencyu version for go.mod in root directory + all sub-modules in this repo.
 update-sdk-version:
-	@if [ -z "$(VERSION)" ]; then \
-		echo "VERSION not set"; \
+	@if [ -z "$(SDK_VERSION)" ]; then \
+		echo "SDK_VERSION not set"; \
 		exit 1; \
 	fi
-	@echo "Updating version to $(VERSION)"
+	@echo "Updating version to $(SDK_VERSION)"
 	@for modfile in $(MODFILES); do \
 		if [ -e "$$modfile" ]; then \
-			sed -i '' 's|github.com/osmosis-labs/cosmos-sdk v[0-9a-z.\-]*|github.com/osmosis-labs/cosmos-sdk $(VERSION)|g' $$modfile; \
+			sed -i '' 's|github.com/osmosis-labs/cosmos-sdk v[0-9a-z.\-]*|github.com/osmosis-labs/cosmos-sdk $(SDK_VERSION)|g' $$modfile; \
 			cd `dirname $$modfile`; \
 			go mod tidy; \
 			cd - > /dev/null; \
@@ -267,20 +280,50 @@ update-sdk-version:
 		fi; \
 	done
 
+tidy-workspace:
+	@./scripts/tidy_workspace.sh
+
 ###############################################################################
 ###                                  Proto                                  ###
 ###############################################################################
 
+proto-help:
+	@echo "proto subcommands"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make proto-[command]"
+	@echo ""
+	@echo "Available Commands:"
+	@echo "  all        Run proto-format and proto-gen"
+	@echo "  gen        Generate Protobuf files"
+	@echo "  format     Format Protobuf files"
+	@echo "  image-build  Build the protobuf Docker image"
+	@echo "  image-push  Push the protobuf Docker image"
+
+proto: proto-help
 proto-all: proto-format proto-gen
 
-proto:
-	@echo
-	@echo "=========== Generate Message ============"
-	@echo
-	./scripts/protocgen.sh
-	@echo
-	@echo "=========== Generate Complete ============"
-	@echo
+protoVer=v0.9
+protoImageName=osmolabs/osmo-proto-gen:$(protoVer)
+containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
+containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
+
+proto-gen:
+	@echo "Generating Protobuf files"
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
+		sh ./scripts/protocgen.sh; fi
+
+proto-format:
+	@echo "Formatting Protobuf files"
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
+
+proto-image-build:
+	@DOCKER_BUILDKIT=1 docker build -t $(protoImageName) -f ./proto/Dockerfile ./proto
+
+proto-image-push:
+	docker push $(protoImageName)
+
 
 test:
 	@go test -v ./x/...
@@ -303,26 +346,6 @@ docs:
 	@echo
 .PHONY: docs
 
-protoVer=v0.9
-protoImageName=osmolabs/osmo-proto-gen:$(protoVer)
-containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
-containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
-
-proto-gen:
-	@echo "Generating Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
-		sh ./scripts/protocgen.sh; fi
-
-proto-format:
-	@echo "Formatting Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
-		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
-
-proto-image-build:
-	@DOCKER_BUILDKIT=1 docker build -t $(protoImageName) -f ./proto/Dockerfile ./proto
-
-proto-image-push:
-	docker push $(protoImageName)
 
 ###############################################################################
 ###                                Querygen                                 ###
@@ -487,6 +510,9 @@ markdown:
 ###############################################################################
 ###                                Localnet                                 ###
 ###############################################################################
+#
+# Please refer to https://github.com/osmosis-labs/osmosis/blob/main/tests/localosmosis/README.md for detailed 
+# usage of localnet.
 
 localnet-keys:
 	. tests/localosmosis/scripts/add_keys.sh

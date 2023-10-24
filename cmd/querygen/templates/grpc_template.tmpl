@@ -1,4 +1,5 @@
-package grpc 
+{{ $version := .VersionSuffix }}
+package grpc{{$version}}
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `{{.ProtoPath}}`
@@ -11,25 +12,25 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"{{.ClientPath}}"
-	"{{.ClientPath}}/queryproto"
+	"{{.ClientPath}}/queryproto{{$version}}"
 )
 
 type Querier struct {
-	Q client.Querier
+	Q client.Querier{{ $version | ToUpper }}
 }
 
-var _ queryproto.QueryServer = Querier{}
+var _ queryproto{{$version}}.QueryServer = Querier{}
 
 {{range .Queries -}} 
 
-func (q Querier) {{.QueryName}}(grpcCtx context.Context,
-	req *queryproto.{{.QueryName}}Request,
-) ({{ if .Response }}{{.Response}}{{else}}*queryproto.{{.QueryName}}Response{{end}}, error) {
+func (q Querier) {{.QueryName}}{{ $version | ToUpper }}(grpcCtx context.Context,
+	req *queryproto{{$version}}.{{.QueryName}}Request,
+) ({{ if .Response }}{{.Response}}{{else}}*queryproto{{$version}}.{{.QueryName}}Response{{end}}, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.{{.QueryName}}(ctx, *req)
+	return q.Q.{{.QueryName}}{{ $version | ToUpper }}(ctx, *req)
 }
 
 {{end -}} 

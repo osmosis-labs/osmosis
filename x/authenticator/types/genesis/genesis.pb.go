@@ -7,7 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	types "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
+	types "github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"

@@ -6,11 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	appparams "github.com/osmosis-labs/osmosis/v19/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v19/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 )
 
 // SetDenomPairTakerFee sets the taker fee for the given trading pair.
@@ -79,11 +79,18 @@ func (k Keeper) GetTradingPairTakerFee(ctx sdk.Context, denom0, denom1 string) (
 
 // chargeTakerFee extracts the taker fee from the given tokenIn and sends it to the appropriate
 // module account. It returns the tokenIn after the taker fee has been extracted.
+// If the sender is in the taker fee reduced whitelisted, it returns the tokenIn without extracting the taker fee.
+// In the future, we might charge a lower taker fee as opposed to no fee at all.
 func (k Keeper) chargeTakerFee(ctx sdk.Context, tokenIn sdk.Coin, tokenOutDenom string, sender sdk.AccAddress, exactIn bool) (sdk.Coin, error) {
 	feeCollectorForStakingRewardsName := txfeestypes.FeeCollectorForStakingRewardsName
 	feeCollectorForCommunityPoolName := txfeestypes.FeeCollectorForCommunityPoolName
 	defaultTakerFeeDenom := appparams.BaseCoinUnit
 	poolManagerParams := k.GetParams(ctx)
+
+	// Determine if eligible to bypass taker fee.
+	if osmoutils.Contains(poolManagerParams.TakerFeeParams.ReducedFeeWhitelist, sender.String()) {
+		return tokenIn, nil
+	}
 
 	takerFee, err := k.GetTradingPairTakerFee(ctx, tokenIn.Denom, tokenOutDenom)
 	if err != nil {

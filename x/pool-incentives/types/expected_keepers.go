@@ -7,10 +7,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
-	incentivestypes "github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v20/x/gamm/types/migration"
+	incentivestypes "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -44,6 +44,8 @@ type IncentivesKeeper interface {
 	GetEpochInfo(ctx sdk.Context) epochstypes.EpochInfo
 
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
+	GetGroupByGaugeID(ctx sdk.Context, gaugeID uint64) (incentivestypes.Group, error)
+	GetPoolIdsAndDurationsFromGaugeRecords(ctx sdk.Context, gaugeRecords []incentivestypes.InternalGaugeRecord) ([]uint64, []time.Duration, error)
 }
 
 // DistrKeeper handles pool-fees functionality - setting / getting fees and funding the community pool.

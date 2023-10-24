@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
 )
 
 type GovTestSuite struct {

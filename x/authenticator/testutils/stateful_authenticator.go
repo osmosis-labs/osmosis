@@ -3,7 +3,7 @@ package testutils
 import (
 	"encoding/json"
 
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"

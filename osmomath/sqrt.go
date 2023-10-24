@@ -11,7 +11,7 @@ var tenTo36 = big.NewInt(0).Mul(tenTo18, tenTo18)
 var oneBigInt = big.NewInt(1)
 
 // Returns square root of d
-// returns an error iff one of the following conditions is met:
+// returns an error if one of the following conditions is met:
 // - d is negative
 // - d is too small to have a representable square root.
 // This function guarantees:

@@ -1,14 +1,15 @@
 package types_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 	"testing"
+
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
 )
 
 // Mock Authenticator for testing purposes

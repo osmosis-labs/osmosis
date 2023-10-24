@@ -3,8 +3,9 @@ package post
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/utils"
+
+	authenticatorkeeper "github.com/osmosis-labs/osmosis/v20/x/authenticator/keeper"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/utils"
 )
 
 type AuthenticatorDecorator struct {

@@ -13,10 +13,10 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v19/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
 )
 
 // BenchmarkBalancerSwapHighestLiquidityArb benchmarks a balancer swap that creates a single three hop arbitrage

@@ -1,7 +1,7 @@
 keeper:
-  path: "github.com/osmosis-labs/osmosis/v19/x/poolmanager"
+  path: "github.com/osmosis-labs/osmosis/v20/x/poolmanager"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client"
+client_path: "github.com/osmosis-labs/osmosis/v20/x/poolmanager/client"
 queries:
   Params:
     proto_wrapper:
@@ -72,3 +72,19 @@ queries:
       query_func: "k.TotalLiquidity"
     cli:
       cmd: "TotalLiquidity"
+  TotalVolumeForPool:
+    proto_wrapper:
+      query_func: "k.GetTotalVolumeForPool"
+    cli:
+      cmd: "TotalVolumeForPool"
+  EstimateTradeBasedOnPriceImpact:
+    proto_wrapper:
+      query_func: "k.EstimateTradeBasedOnPriceImpact"
+      response: "*queryproto.EstimateTradeBasedOnPriceImpactResponse"
+    cli:
+      cmd: "EstimateTradeBasedOnPriceImpact"
+  TradingPairTakerFee:
+    proto_wrapper:
+      query_func: "k.GetTradingPairTakerFee"
+    cli:
+      cmd: "TradingPairTakerFee"

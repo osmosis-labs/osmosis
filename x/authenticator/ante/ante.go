@@ -3,14 +3,15 @@ package ante
 import (
 	"fmt"
 
-	types "github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/utils"
+	types "github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/utils"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
+
+	authenticatorkeeper "github.com/osmosis-labs/osmosis/v20/x/authenticator/keeper"
 )
 
 // AuthenticatorDecorator is responsible for processing authentication logic

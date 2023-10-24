@@ -14,10 +14,10 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v19/app"
-	"github.com/osmosis-labs/osmosis/v19/app/params"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v20/app"
+	"github.com/osmosis-labs/osmosis/v20/app/params"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
 )
 
 type PassKeyAuthenticationSuite struct {

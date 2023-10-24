@@ -1,0 +1,21 @@
+syntax = "proto3";
+package osmosis.incentives;
+
+import "gogoproto/gogo.proto";
+import "osmosis/incentives/group.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v20/x/incentives/types";
+
+// CreateGroupsProposal is a type for creating one or more groups via
+// governance. This is useful for creating groups without having to pay
+// creation fees.
+message CreateGroupsProposal {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+
+  repeated osmosis.incentives.CreateGroup create_groups = 3
+      [ (gogoproto.nullable) = false ];
+}

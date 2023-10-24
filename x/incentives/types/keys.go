@@ -45,13 +45,14 @@ var (
 	// KeyIndexSeparator defines key for merging bytes.
 	KeyIndexSeparator = []byte{0x07}
 
+	// KeyPrefixGroup defines prefix key for storing groups.
+	KeyPrefixGroup = []byte{0x08}
+
 	// LockableDurationsKey defines key for storing valid durations for giving incentives.
 	LockableDurationsKey = []byte("lockable_durations")
 
 	NoLockInternalPrefix = "no-lock/i/"
 	NoLockExternalPrefix = "no-lock/e/"
-
-	GroupPrefix = "group_gauge"
 )
 
 func KeyPrefix(p string) []byte {
@@ -68,7 +69,7 @@ func NoLockInternalGaugeDenom(poolId uint64) string {
 	return fmt.Sprintf("%s%d", NoLockInternalPrefix, poolId)
 }
 
-// KeyGroupByGaugeID returns key for a given groupGaugeId.
+// KeyGroupByGaugeID returns group key for a given groupGaugeId.
 func KeyGroupByGaugeID(groupGaugeId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s", GroupPrefix, "|", groupGaugeId, "|"))
+	return []byte(fmt.Sprintf("%s%d%s", KeyPrefixGroup, groupGaugeId, KeyIndexSeparator))
 }

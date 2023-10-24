@@ -1,14 +1,16 @@
 package authenticator_test
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/osmosis-labs/osmosis/v19/app"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"testing"
+
+	"github.com/osmosis-labs/osmosis/v20/app"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 type MessageFilterAuthenticatorTest struct {

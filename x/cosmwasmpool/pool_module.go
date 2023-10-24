@@ -6,10 +6,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/cosmwasm/msg"
-	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v19/x/cosmwasmpool/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/cosmwasm/msg"
+	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/cosmwasm"
 )
@@ -101,6 +101,23 @@ func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
 	return osmoutils.GatherValuesFromStorePrefix(
 		ctx.KVStore(k.storeKey), types.PoolsKey, func(value []byte) (poolmanagertypes.PoolI, error) {
 			pool := model.Pool{}
+			err := k.cdc.Unmarshal(value, &pool)
+			if err != nil {
+				return nil, err
+			}
+			return &pool, nil
+		},
+	)
+}
+
+// GetPoolsSerializable retrieves all pool objects stored in the keeper.
+// Because the Pool struct has a non-serializable wasmKeeper field, this method
+// utilizes the CosmWasmPool struct directly instead, which allows it to be serialized
+// in import/export genesis.
+func (k Keeper) GetPoolsSerializable(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
+	return osmoutils.GatherValuesFromStorePrefix(
+		ctx.KVStore(k.storeKey), types.PoolsKey, func(value []byte) (poolmanagertypes.PoolI, error) {
+			pool := model.CosmWasmPool{}
 			err := k.cdc.Unmarshal(value, &pool)
 			if err != nil {
 				return nil, err

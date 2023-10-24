@@ -8,15 +8,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/testutils"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/testutils"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v19/app"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v20/app"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -26,8 +26,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v19/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v20/tests/osmosisibctesting"
 )
 
 type AuthenticatorSuite struct {

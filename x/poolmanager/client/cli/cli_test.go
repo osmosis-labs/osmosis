@@ -10,11 +10,11 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v19/app"
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
-	poolmanagertestutil "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/testutil"
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/app"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/cli"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
+	poolmanagertestutil "github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/testutil"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -541,4 +541,24 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			}
 		})
 	}
+}
+
+func TestEstimateTradeBasedOnPriceImpact(t *testing.T) {
+	desc, _ := cli.GetCmdEstimateTradeBasedOnPriceImpact()
+	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateTradeBasedOnPriceImpactRequest]{
+		"basic test": {
+			Cmd: "100node0token stake 1 0.01 0.02",
+			ExpectedQuery: &queryproto.EstimateTradeBasedOnPriceImpactRequest{
+				FromCoin: sdk.Coin{
+					Denom:  "node0token",
+					Amount: sdk.NewInt(100),
+				},
+				ToCoinDenom:    "stake",
+				PoolId:         1,
+				MaxPriceImpact: sdk.MustNewDecFromStr("0.01"), // equivalent to 0.01
+				ExternalPrice:  sdk.MustNewDecFromStr("0.02"), // equivalent to 0.02
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
 }

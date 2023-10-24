@@ -4,7 +4,7 @@ package osmosis.poolincentives.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types";
 
 message Params {
   option (gogoproto.goproto_stringer) = false;
@@ -55,6 +55,10 @@ message PoolToGauge {
   ];
 }
 
-message PoolToGauges {
+message AnyPoolToInternalGauges {
   repeated PoolToGauge pool_to_gauge = 2 [ (gogoproto.nullable) = false ];
+}
+
+message ConcentratedPoolToNoLockGauges {
+  repeated PoolToGauge pool_to_gauge = 1 [ (gogoproto.nullable) = false ];
 }

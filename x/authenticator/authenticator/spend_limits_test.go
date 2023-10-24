@@ -1,16 +1,18 @@
 package authenticator_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v19/app"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
-	minttypes "github.com/osmosis-labs/osmosis/v19/x/mint/types"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/osmosis-labs/osmosis/v20/app"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
+	minttypes "github.com/osmosis-labs/osmosis/v20/x/mint/types"
 )
 
 type SpendLimitAuthenticatorTest struct {

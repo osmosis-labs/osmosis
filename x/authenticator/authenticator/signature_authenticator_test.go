@@ -22,10 +22,11 @@ import (
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 
-	"github.com/osmosis-labs/osmosis/v19/app"
-	"github.com/osmosis-labs/osmosis/v19/app/params"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osmosis-labs/osmosis/v20/app"
+	"github.com/osmosis-labs/osmosis/v20/app/params"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
 )
 
 type SigVerifyAuthenticationSuite struct {

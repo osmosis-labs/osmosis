@@ -14,14 +14,14 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	cltypes "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
-	gammmigration "github.com/osmosis-labs/osmosis/v19/x/gamm/types/migration"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v19/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v19/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	gammmigration "github.com/osmosis-labs/osmosis/v20/x/gamm/types/migration"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v20/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v20/x/superfluid/types"
 )
 
 var (
@@ -1020,7 +1020,7 @@ func (s *KeeperTestSuite) SetupMigrationTest(ctx sdk.Context, superfluidDelegate
 	migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 		{BalancerPoolId: balancerPooId, ClPoolId: clPoolId},
 	}}
-	err = gammKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(ctx, migrationRecord)
+	err = gammKeeper.OverwriteMigrationRecords(ctx, migrationRecord)
 	s.Require().NoError(err)
 
 	// The unbonding duration is the same as the staking module's unbonding duration.
@@ -1323,7 +1323,7 @@ func (s *KeeperTestSuite) TestFunctional_VaryingPositions_Migrations() {
 		migrationRecord := gammmigration.MigrationRecords{BalancerToConcentratedPoolLinks: []gammmigration.BalancerToConcentratedPoolLink{
 			{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},
 		}}
-		err = s.App.GAMMKeeper.OverwriteMigrationRecordsAndRedirectDistrRecords(s.Ctx, migrationRecord)
+		err = s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx, migrationRecord)
 		s.Require().NoError(err)
 
 		// Register the CL denom as superfluid.
