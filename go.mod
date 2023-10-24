@@ -26,10 +26,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231019181538-069e69fac08e
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231019181032-61868ce96ec2
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.2
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.8
+	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231024172613-f3e433263a2a
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231024172613-f3e433263a2a
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231024172613-f3e433263a2a
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231024172613-f3e433263a2a
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.1
@@ -92,7 +92,7 @@ require (
 	github.com/getsentry/sentry-go v0.23.0 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/uuid v1.3.1 // indirect
@@ -364,8 +364,8 @@ require (
 replace (
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194
-	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmomath => ./osmomath
