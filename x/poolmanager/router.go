@@ -3,7 +3,6 @@ package poolmanager
 import (
 	"errors"
 	"fmt"
-
 	"math/big"
 	"strings"
 
@@ -744,17 +743,12 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 	swapModule types.PoolModuleI,
 	poolI types.PoolI,
 ) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
-	// There isn't a case where the tokenOut could be zero or an error is received but those possibilities are handled
-	// anyway.
 	tokenOut, err := swapModule.CalcOutAmtGivenIn(ctx, poolI, req.FromCoin, req.ToCoinDenom, sdk.ZeroDec())
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return queryproto.ZeroEstimateTradeBasedOnPriceImpactResponseOnErrInvalidMathApprox(req, err)
 	}
 	if tokenOut.IsZero() {
-		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-			InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
-			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
-		}, nil
+		return queryproto.ZeroEstimateTradeBasedOnPriceImpactResponseFromRequest(req), nil
 	}
 
 	// Validate if the trade as is respects the price impact, if it does re-estimate it with a swap fee and return
@@ -765,7 +759,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 			ctx, poolI, req.FromCoin, req.ToCoinDenom, poolI.GetSpreadFactor(ctx),
 		)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return queryproto.ZeroEstimateTradeBasedOnPriceImpactResponseOnErrInvalidMathApprox(req, err)
 		}
 
 		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
@@ -798,20 +792,14 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 		midAmount := lowAmount.Add(highAmount).Quo(sdk.NewInt(2))
 		currFromCoin = sdk.NewCoin(req.FromCoin.Denom, midAmount)
 
-		// There isn't a case where the tokenOut could be zero or an error is received but those possibilities are
-		// handled anyway.
 		tokenOut, err := swapModule.CalcOutAmtGivenIn(
 			ctx, poolI, currFromCoin, req.ToCoinDenom, sdk.ZeroDec(),
 		)
 		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
+			return queryproto.ZeroEstimateTradeBasedOnPriceImpactResponseOnErrInvalidMathApprox(req, err)
 		}
-
 		if tokenOut.IsZero() {
-			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
-				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
-			}, nil
+			return queryproto.ZeroEstimateTradeBasedOnPriceImpactResponseFromRequest(req), nil
 		}
 
 		priceDeviation := calculatePriceDeviation(currFromCoin, tokenOut, spotPrice)
@@ -825,10 +813,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactBalancerPool(
 	// highAmount is 0 it means the loop has iterated to the end without finding a viable trade that respects
 	// the price impact.
 	if highAmount.IsZero() {
-		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-			InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
-			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
-		}, nil
+		return queryproto.ZeroEstimateTradeBasedOnPriceImpactResponseFromRequest(req), nil
 	}
 
 	tokenOut, err = swapModule.CalcOutAmtGivenIn(
@@ -867,10 +852,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactStableSwapPool(
 	// we want to continue to iterate to find attempt to find a smaller value. StableSwap panics on amounts that
 	// are too large due to the maths involved, while Balancer pool types do not.
 	if err != nil && !strings.Contains(err.Error(), "panic") {
-		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-			InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
-			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
-		}, nil
+		return queryproto.ZeroEstimateTradeBasedOnPriceImpactResponseFromRequest(req), nil
 	} else if err == nil {
 		// Validate if the trade as is respects the price impact, if it does re-estimate it with a swap fee and return
 		// the result.
@@ -923,10 +905,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactStableSwapPool(
 		// This occurs for the StableSwap pool type due to the maths involved, this does not occur for Balancer
 		// pool types.
 		if err != nil && !strings.Contains(err.Error(), "panic") {
-			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
-				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
-			}, nil
+			return queryproto.ZeroEstimateTradeBasedOnPriceImpactResponseFromRequest(req), nil
 		} else if err != nil {
 			// If there is an error that does contain a panic it means the amount is still too large,
 			// and we should continue halving.
@@ -944,10 +923,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactStableSwapPool(
 	// highAmount is 0 it means the loop has iterated to the end without finding a viable trade that respects
 	// the price impact.
 	if highAmount.IsZero() {
-		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-			InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
-			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
-		}, nil
+		return queryproto.ZeroEstimateTradeBasedOnPriceImpactResponseFromRequest(req), nil
 	}
 
 	tokenOut, err = swapModule.CalcOutAmtGivenIn(
@@ -981,10 +957,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
 		// If the tokenOut was returned to be zero it means the amount being traded is too small. We ignore the
 		// error output here as it could mean that the input is too large.
 		if tokenOut.IsZero() {
-			return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-				InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
-				OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
-			}, nil
+			return queryproto.ZeroEstimateTradeBasedOnPriceImpactResponseFromRequest(req), nil
 		}
 
 		priceDeviation := calculatePriceDeviation(req.FromCoin, tokenOut, spotPrice)
@@ -1032,10 +1005,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
 			// If the tokenOut was returned to be zero it means the amount being traded is too small. We ignore the
 			// error output here as it could mean that the input is too large.
 			if tokenOut.IsZero() {
-				return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-					InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
-					OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
-				}, nil
+				return queryproto.ZeroEstimateTradeBasedOnPriceImpactResponseFromRequest(req), nil
 			}
 
 			priceDeviation := calculatePriceDeviation(currFromCoin, tokenOut, spotPrice)
@@ -1052,10 +1022,7 @@ func (k Keeper) EstimateTradeBasedOnPriceImpactConcentratedLiquidity(
 	// highAmount is 0 it means the loop has iterated to the end without finding a viable trade that respects
 	// the price impact.
 	if highAmount.IsZero() {
-		return &queryproto.EstimateTradeBasedOnPriceImpactResponse{
-			InputCoin:  sdk.NewCoin(req.FromCoin.Denom, sdk.ZeroInt()),
-			OutputCoin: sdk.NewCoin(req.ToCoinDenom, sdk.ZeroInt()),
-		}, nil
+		return queryproto.ZeroEstimateTradeBasedOnPriceImpactResponseFromRequest(req), nil
 	}
 
 	tokenOut, err = swapModule.CalcOutAmtGivenIn(
