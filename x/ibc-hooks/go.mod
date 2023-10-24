@@ -192,14 +192,10 @@ require (
 )
 
 replace (
-	// osmosis-patched wasmd
-	//github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.31.0-osmo-v16
-	// Security patch for wasmvm. See https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md
-	//github.com/cometbft/cometbft => github.com/informalsystems/tendermint v0.34.24
-	// dragonberry
-	//github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/05346fa12992
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194
-//github.com/osmosis-labs/osmosis/osmoutils => ../../osmoutils
-//github.com/osmosis-labs/osmosis/v19 => ./../
+
+// Local replaces commented for development
+// github.com/osmosis-labs/osmosis/osmoutils => ../../osmoutils
+// github.com/osmosis-labs/osmosis/v19 => ./../
 )

@@ -364,29 +364,14 @@ require (
 replace (
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194
-	github.com/osmosis-labs/osmosis/osmomath => ./osmomath
-
-	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
-	github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
-	github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
-	// TODO: remove in favor of github.com/cosmos/cosmos-proto
-
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+
+// Local replaces commented for development
+// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
+// github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
+// github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
+// github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 )
 
 // exclusion so we use v1.0.0 instead
 exclude github.com/coinbase/rosetta-sdk-go v0.7.9
-
-// dragonberry
-//github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/05346fa12992
-//github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230908065430-05346fa12992
-// N.B. v0.19.5 contains a breaking change to the IAVL API
-//github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.4
-// osmosis-patched wasmd.
-//github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.31.0-osmo-v16
-// Security patch for wasmvm. See https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md
-// Informal Tendermint fork
-//github.com/cometbft/cometbft => github.com/informalsystems/tendermint v0.34.24
-// use grpc compatible with cosmos protobufs
-//google.golang.org/grpc => google.golang.org/grpc v1.33.2

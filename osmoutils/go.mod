@@ -160,14 +160,8 @@ require (
 replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/05346fa12992
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194
-	// use cosmos-compatible protobufs
-	//github.com/osmosis-labs/osmosis/osmomath => ../osmomath
-	github.com/osmosis-labs/osmosis/v20 => ./../
-)
 
-// use grpc compatible with cosmos protobufs
-//google.golang.org/grpc => google.golang.org/grpc v1.33.2
-//	github.com/cometbft/cometbft => github.com/informalsystems/tendermint v0.34.24
-// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/05346fa12992
-//github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.0-rc1.0.20230908065430-05346fa12992
-// use cosmos-compatible protobufs
+// Local replaces commented for development
+// github.com/osmosis-labs/osmosis/osmomath => ../osmomath
+// github.com/osmosis-labs/osmosis/v20 => ./../
+)

@@ -161,9 +161,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// use cosmos-compatible protobufs
 replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/05346fa12992
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194
+
+// Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmoutils => ../../osmoutils
 )
