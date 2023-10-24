@@ -29,7 +29,7 @@ func DefaultConfig() network.Config {
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor:    NewAppConstructor(),
+		AppConstructor:    NewAppConstructor("osmosis-code-test"),
 		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:     1 * time.Second / 2,
 		ChainID:           "osmosis-code-test",
@@ -47,7 +47,7 @@ func DefaultConfig() network.Config {
 }
 
 // NewAppConstructor returns a new Osmosis app given encoding type configs.
-func NewAppConstructor() network.AppConstructor {
+func NewAppConstructor(chainId string) network.AppConstructor {
 	return func(val network.ValidatorI) servertypes.Application {
 		valCtx := val.GetCtx()
 		appConfig := val.GetAppConfig()
@@ -57,6 +57,7 @@ func NewAppConstructor() network.AppConstructor {
 			sims.EmptyAppOptions{},
 			EmptyWasmOpts,
 			baseapp.SetMinGasPrices(appConfig.MinGasPrices),
+			baseapp.SetChainID(chainId),
 		)
 	}
 }

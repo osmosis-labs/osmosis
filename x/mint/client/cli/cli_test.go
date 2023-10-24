@@ -1,5 +1,3 @@
-//go:build norace
-
 package cli_test
 
 import (

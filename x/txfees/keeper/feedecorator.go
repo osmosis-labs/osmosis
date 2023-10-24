@@ -51,6 +51,13 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 	}
 
+	// UNFORKINGTODO C: Added this logic so that we can create gentx's without having to pay a fee.
+	// If this is genesis height, don't check the fee.
+	// This is needed so that gentx's can be created without having to pay a fee (chicken/egg problem).
+	if ctx.BlockHeight() == 0 {
+		return next(ctx, tx, simulate)
+	}
+
 	feeCoins := feeTx.GetFee()
 
 	if len(feeCoins) > 1 {
