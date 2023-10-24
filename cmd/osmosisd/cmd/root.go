@@ -508,6 +508,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		ConfigCmd(),
 		ChangeEnvironmentCmd(),
 		PrintEnvironmentCmd(),
+		PrintAllEnvironmentCmd(),
 		UpdateAssetListCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
 	)
 
