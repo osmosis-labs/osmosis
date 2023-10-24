@@ -99,9 +99,10 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 	poolsHttpDelivery.NewPoolsHandler(e, poolsUseCase)
 
 	routerConfig := domain.RouterConfig{
-		PreferredPoolIDs: []uint64{},
-		MaxPoolsPerRoute: 4,
-		MaxRoutes:        100,
+		PreferredPoolIDs:   []uint64{},
+		MaxPoolsPerRoute:   4,
+		MaxRoutes:          100,
+		MaxSplitIterations: 10,
 	}
 
 	// Initialize router usecase and HTTP handler

@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
 	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
@@ -51,10 +52,12 @@ func (s *RouterTestSuite) TestNewRouter() {
 
 	var (
 		// Inputs
-		preferredPoolIDs = []uint64{allPool.BalancerPoolID, allPool.StableSwapPoolID}
-		maxHops          = 3
-		maxRoutes        = 5
-		defaultAllPools  = []domain.PoolI{
+		preferredPoolIDs   = []uint64{allPool.BalancerPoolID, allPool.StableSwapPoolID}
+		maxHops            = 3
+		maxRoutes          = 5
+		maxSplitIterations = 10
+		logger, _          = log.NewLogger()
+		defaultAllPools    = []domain.PoolI{
 			&domain.PoolWrapper{
 				ChainModel: balancerPool,
 				SQSModel: domain.SQSPool{
@@ -87,16 +90,18 @@ func (s *RouterTestSuite) TestNewRouter() {
 	)
 
 	// System under test
-	router := routerusecase.NewRouter(preferredPoolIDs, defaultAllPools, maxHops, maxRoutes, nil)
+	router := routerusecase.NewRouter(preferredPoolIDs, defaultAllPools, maxHops, maxRoutes, maxSplitIterations, logger)
 
 	// Assert
 	s.Require().Equal(maxHops, router.GetMaxHops())
 	s.Require().Equal(maxRoutes, router.GetMaxRoutes())
+	s.Require().Equal(maxSplitIterations, router.GetMaxSplitIterations())
+	s.Require().Equal(logger, router.GetLogger())
 	s.Require().Equal(expectedSortedPoolIDs, router.GetSortedPoolIDs())
 }
 
 type mockPool struct {
-	UnderlyingPool       poolmanagertypes.PoolI
+	ChainPoolModel       poolmanagertypes.PoolI
 	ID                   uint64
 	denoms               []string
 	totalValueLockedUSDC osmomath.Int
@@ -104,11 +109,14 @@ type mockPool struct {
 	tokenOutDenom        string
 }
 
-var _ domain.PoolI = &mockPool{}
+var (
+	_ domain.PoolI        = &mockPool{}
+	_ domain.RoutablePool = &mockPool{}
+)
 
 // GetUnderlyingPool implements routerusecase.RoutablePool.
 func (mp *mockPool) GetUnderlyingPool() poolmanagertypes.PoolI {
-	return mp.UnderlyingPool
+	return mp.ChainPoolModel
 }
 
 // GetSQSPoolModel implements domain.PoolI.
@@ -120,6 +128,11 @@ func (mp *mockPool) GetSQSPoolModel() domain.SQSPool {
 
 // CalculateTokenOutByTokenIn implements routerusecase.RoutablePool.
 func (*mockPool) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
+	panic("unimplemented")
+}
+
+// String implements domain.RoutablePool.
+func (*mockPool) String() string {
 	panic("unimplemented")
 }
 
@@ -163,6 +176,10 @@ func deepCopyPool(mp *mockPool) *mockPool {
 		denoms:               newDenoms,
 		totalValueLockedUSDC: newTotalValueLocker,
 		poolType:             mp.poolType,
+
+		// Note these are not deep copied.
+		ChainPoolModel: mp.ChainPoolModel,
+		tokenOutDenom:  mp.tokenOutDenom,
 	}
 }
 
@@ -181,6 +198,12 @@ func withDenoms(mockPool *mockPool, denoms []string) *mockPool {
 func withTokenOutDenom(mockPool *mockPool, tokenOutDenom string) *mockPool {
 	newPool := deepCopyPool(mockPool)
 	newPool.tokenOutDenom = tokenOutDenom
+	return newPool
+}
+
+func withChainPoolModel(mockPool *mockPool, chainPool poolmanagertypes.PoolI) *mockPool {
+	newPool := deepCopyPool(mockPool)
+	newPool.ChainPoolModel = chainPool
 	return newPool
 }
 
@@ -490,7 +513,7 @@ func (s *RouterTestSuite) TestFindRoutes() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 
-			r := routerusecase.NewRouter([]uint64{}, tc.pools, tc.maxHops, tc.maxRoutes, nil)
+			r := routerusecase.NewRouter([]uint64{}, tc.pools, tc.maxHops, tc.maxRoutes, 3, nil)
 
 			routes, err := r.FindRoutes(tc.tokenInDenom, tc.tokenOutDenom, tc.currentRoute, tc.poolsUsed, tc.previousTokenOutDenoms)
 

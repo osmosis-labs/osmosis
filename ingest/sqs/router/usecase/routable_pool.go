@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"fmt"
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -57,4 +58,9 @@ func (r *routablePoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coi
 // GetTokenOutDenom implements RoutablePool.
 func (rp *routablePoolImpl) GetTokenOutDenom() string {
 	return rp.tokenOutDenom
+}
+
+// String implements domain.RoutablePool.
+func (r *routablePoolImpl) String() string {
+	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v)", r.PoolI.GetId(), r.PoolI.GetType(), r.PoolI.GetPoolDenoms())
 }

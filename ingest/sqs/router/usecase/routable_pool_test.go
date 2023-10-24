@@ -30,7 +30,7 @@ func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn() {
 			balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, balancerPoolID)
 			s.Require().NoError(err)
 
-			mock := &mockPool{UnderlyingPool: balancerPool}
+			mock := &mockPool{ChainPoolModel: balancerPool}
 			routablePool := routerusecase.NewRoutablePool(mock, tc.tokenOutDenom)
 
 			tokenOut, err := routablePool.CalculateTokenOutByTokenIn(tc.tokenIn)

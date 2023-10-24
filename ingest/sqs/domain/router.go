@@ -6,6 +6,8 @@ type RoutablePool interface {
 	PoolI
 	GetTokenOutDenom() string
 	CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error)
+
+	String() string
 }
 
 type Route interface {
@@ -14,7 +16,11 @@ type Route interface {
 	AddPool(pool PoolI, tokenOut string)
 	// CalculateTokenOutByTokenIn calculates the token out amount given the token in amount.
 	// Returns error if the calculation fails.
-	CalculateTokenOutByTokenIn(tokenIn sdk.Coin, tokenOutDenom string) (sdk.Coin, error)
+	CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error)
+
+	GetTokenOutDenom() string
+
+	String() string
 }
 
 type Quote interface {
@@ -24,7 +30,8 @@ type Quote interface {
 }
 
 type RouterConfig struct {
-	PreferredPoolIDs []uint64
-	MaxPoolsPerRoute int
-	MaxRoutes        int
+	PreferredPoolIDs   []uint64
+	MaxPoolsPerRoute   int
+	MaxRoutes          int
+	MaxSplitIterations int
 }

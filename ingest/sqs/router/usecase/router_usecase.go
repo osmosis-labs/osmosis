@@ -37,7 +37,7 @@ func (a *routerUseCase) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coin, t
 		return nil, err
 	}
 
-	router := NewRouter([]uint64{}, allPools, a.config.MaxPoolsPerRoute, a.config.MaxRoutes, a.logger)
+	router := NewRouter([]uint64{}, allPools, a.config.MaxPoolsPerRoute, a.config.MaxRoutes, a.config.MaxSplitIterations, a.logger)
 
 	return router.getQuote(tokenIn, tokenOutDenom)
 }
