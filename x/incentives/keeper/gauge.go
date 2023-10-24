@@ -128,7 +128,16 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	}
 
 	// Ensure that this gauge's duration is one of the allowed durations on chain
-	durations := k.GetLockableDurations(ctx)
+	// If the gauge has no lock, then we assume it is a concentrated pool and ensure
+	// the gauge "lock" duration is an authorized uptime. Otherwise,
+	// proceed with the normal lock duration check.
+	var durations []time.Duration
+	if distrTo.LockQueryType == lockuptypes.NoLock {
+		durations = k.clk.GetParams(ctx).AuthorizedUptimes
+	} else {
+		durations = k.GetLockableDurations(ctx)
+	}
+
 	if distrTo.LockQueryType == lockuptypes.ByDuration {
 		durationOk := false
 		for _, duration := range durations {
