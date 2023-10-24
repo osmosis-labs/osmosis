@@ -590,10 +590,13 @@ func (k Keeper) distributeInternal(
 		// Get distribution epoch duration. This is used to calculate the emission rate.
 		currentEpoch := k.GetEpochInfo(ctx)
 
-		// If it is not, simply use the default value of types.DefaultConcentratedUptime
-		// This is to avoid having to do a state migration on existing gauges from before
-		// this change was made, even though it is no longer possible to create CL gauges
-		// that don't use an authorized uptime.
+		// Validate that the gauge's corresponding uptime is authorized.
+		// If it is not, we fall back to a default instead of erroring.
+		// This is for two reasons:
+		// 1. To allow uptimes to be unauthorized without entirely freezing existing gauges
+		// 2. To avoid having to do a state migration on existing gauges at time of adding
+		// this change, since prior to this, CL gauges were not required to associate with
+		// an uptime that was authorized.
 		authorizedUptimes := k.clk.GetParams(ctx).AuthorizedUptimes
 		gaugeUptime := types.DefaultConcentratedUptime
 		for _, uptime := range authorizedUptimes {
