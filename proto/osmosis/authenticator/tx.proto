@@ -9,6 +9,7 @@ service Msg {
       returns (MsgAddAuthenticatorResponse);
   rpc RemoveAuthenticator(MsgRemoveAuthenticator)
       returns (MsgRemoveAuthenticatorResponse);
+  rpc CreateAccount(MsgCreateAccount) returns (MsgCreateAccountResponse);
 }
 
 // MsgAddAuthenticatorRequest defines the Msg/AddAuthenticator request type.
@@ -39,3 +40,20 @@ message TxExtension {
   // message.
   repeated int32 selected_authenticators = 1;
 }
+
+// AuthenticatorData defines the data for instantiating an authenticator.
+message AuthenticatorData {
+  string type = 1;
+  bytes data = 2;
+}
+
+// MsgCreateAccount defines the Msg/CreateAccount request type.
+message MsgCreateAccount {
+  string sender = 1;
+  string salt = 2; // The salt may be empty but it's used to be able to create
+                   // an account even if the authenticator data is not unique
+  repeated AuthenticatorData authenticators = 3;
+}
+
+// MsgCreateAccountResponse defines the Msg/CreateAccount response type.
+message MsgCreateAccountResponse { string address = 1; }

@@ -1,7 +1,9 @@
 package keeper_test
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
+	"strings"
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
@@ -121,4 +123,103 @@ func (s *KeeperTestSuite) TestMsgServer_RemoveAuthenticator() {
 	resp, err := msgServer.RemoveAuthenticator(sdk.WrapSDKContext(ctx), removeMsg)
 	s.Require().NoError(err)
 	s.Require().True(resp.Success)
+}
+
+func (s *KeeperTestSuite) TestMsgServer_CreateAccount() {
+	msgServer := keeper.NewMsgServerImpl(*s.App.AuthenticatorKeeper)
+	ctx := s.Ctx
+
+	testCases := []struct {
+		name            string
+		msg             *types.MsgCreateAccount
+		expectError     bool
+		expectedAddress string
+	}{
+		{
+			name: "valid input",
+			msg: &types.MsgCreateAccount{
+				Sender: "osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89",
+				Salt:   "testSalt",
+				Authenticators: []*types.AuthenticatorData{
+					{Type: "SignatureVerificationAuthenticator", Data: []byte("testData")},
+				},
+			},
+			expectError: false,
+		},
+
+		{
+			name: "invalid sender",
+			msg: &types.MsgCreateAccount{
+				Sender: "invalidSender",
+				Salt:   "testSalt",
+				Authenticators: []*types.AuthenticatorData{
+					{Type: "SignatureVerificationAuthenticator", Data: []byte("testData")},
+				},
+			},
+			expectError: true,
+		},
+
+		{
+			name: "empty salt",
+			msg: &types.MsgCreateAccount{
+				Sender: "osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89",
+				Salt:   "",
+				Authenticators: []*types.AuthenticatorData{
+					{Type: "SignatureVerificationAuthenticator", Data: []byte("testData")},
+				},
+			},
+			expectError: false,
+		},
+
+		{
+			name: "valid input again (already exists)",
+			msg: &types.MsgCreateAccount{
+				Sender: "osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89",
+				Salt:   "testSalt",
+				Authenticators: []*types.AuthenticatorData{
+					{Type: "SignatureVerificationAuthenticator", Data: []byte("testData")},
+				},
+			},
+			expectError: true,
+		},
+
+		{
+			name: "valid input again (but with new salt)",
+			msg: &types.MsgCreateAccount{
+				Sender: "osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89",
+				Salt:   "testSalt2",
+				Authenticators: []*types.AuthenticatorData{
+					{Type: "SignatureVerificationAuthenticator", Data: []byte("testData")},
+				},
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			resp, err := msgServer.CreateAccount(sdk.WrapSDKContext(ctx), tc.msg)
+
+			if tc.expectError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotNil(resp.Address)
+
+				_, err = sdk.AccAddressFromBech32(resp.Address)
+				s.Require().NoError(err)
+
+				var data strings.Builder
+				data.WriteString(tc.msg.Salt)
+				for _, authenticatorData := range tc.msg.Authenticators {
+					data.WriteString(authenticatorData.Type)
+					data.Write(authenticatorData.Data)
+				}
+
+				hashResult := sha256.Sum256([]byte(data.String()))
+				expectedAddress := sdk.AccAddress(hashResult[:]).String()
+				s.Require().Equal(expectedAddress, resp.Address)
+			}
+		})
+	}
 }

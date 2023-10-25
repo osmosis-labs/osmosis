@@ -103,3 +103,21 @@ func (m msgServer) RemoveAuthenticator(goCtx context.Context, msg *types.MsgRemo
 		Success: true,
 	}, nil
 }
+
+func (m msgServer) CreateAccount(goCtx context.Context, msg *types.MsgCreateAccount) (*types.MsgCreateAccountResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	addr, err := m.Keeper.CreateAccount(ctx, sender, msg.Salt, msg.Authenticators)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCreateAccountResponse{
+		Address: addr.String(),
+	}, nil
+}

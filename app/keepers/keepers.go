@@ -224,6 +224,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.keys[authenticatortypes.AuthenticatorStoreKey],
 		appKeepers.GetSubspace(authenticatortypes.ModuleName),
 		appKeepers.AuthenticatorManager,
+		appKeepers.AccountKeeper,
 	)
 	appKeepers.AuthenticatorKeeper = &authenticatorKeeper
 

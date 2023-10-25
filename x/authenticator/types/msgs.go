@@ -44,3 +44,13 @@ func (msg *MsgRemoveAuthenticator) ValidateBasic() error {
 func (msg *MsgRemoveAuthenticator) GetSigners() []sdk.AccAddress {
 	return getSender(msg.Sender)
 }
+
+var _ sdk.Msg = &MsgCreateAccount{}
+
+func (msg *MsgCreateAccount) ValidateBasic() error {
+	return validateSender(msg.Sender)
+}
+
+func (msg *MsgCreateAccount) GetSigners() []sdk.AccAddress {
+	return getSender(msg.Sender)
+}

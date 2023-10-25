@@ -1,7 +1,10 @@
 package keeper
 
 import (
+	"crypto/sha256"
 	"fmt"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"strings"
 
 	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
 
@@ -29,6 +32,7 @@ type Keeper struct {
 
 	AuthenticatorManager *authenticator.AuthenticatorManager
 	TransientStore       *authenticator.TransientStore
+	accountKeeper        *authkeeper.AccountKeeper
 }
 
 func NewKeeper(
@@ -37,6 +41,7 @@ func NewKeeper(
 	authenticatorStoreKey sdk.StoreKey,
 	ps paramtypes.Subspace,
 	authenticatorManager *authenticator.AuthenticatorManager,
+	accountKeeper *authkeeper.AccountKeeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -49,6 +54,7 @@ func NewKeeper(
 		paramSpace:           ps,
 		AuthenticatorManager: authenticatorManager,
 		TransientStore:       authenticator.NewTransientStore(authenticatorStoreKey, sdk.Context{}),
+		accountKeeper:        accountKeeper,
 	}
 }
 
@@ -197,4 +203,31 @@ func (k Keeper) GetAuthenticatorExtension(exts []*codectypes.Any) types.Authenti
 		}
 	}
 	return nil
+}
+
+func (k Keeper) CreateAccount(ctx sdk.Context, sender sdk.AccAddress, salt string, authenticators []*types.AuthenticatorData) (sdk.AccAddress, error) {
+	// We are ignoring the sender right now, but in the future we could enforce that only certain senders can create accounts
+	// ToDo: do we want to have an account creation fee? We could have a list of whitelisted accounts that can create accounts for free
+	//   But we probably want to require that they pass a personhood check (i.e.: captcha)
+
+	// concatenate the salt and then each authenticator type and each authenticator data
+	// to generate the account address
+	var data strings.Builder
+	data.WriteString(salt)
+	for _, authenticatorData := range authenticators {
+		data.WriteString(authenticatorData.Type)
+		// ToDo: should we validate that the type is registered?
+		data.Write(authenticatorData.Data)
+	}
+
+	hashResult := sha256.Sum256([]byte(data.String()))
+	address := sdk.AccAddress(hashResult[:])
+
+	accExists := k.accountKeeper.HasAccount(ctx, address)
+	if accExists {
+		return nil, fmt.Errorf("account %s already exists. Try using  a different salt.", address)
+	}
+
+	k.accountKeeper.SetAccount(ctx, k.accountKeeper.NewAccountWithAddress(ctx, address))
+	return address, nil
 }
