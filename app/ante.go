@@ -14,8 +14,6 @@ import (
 	osmoante "github.com/osmosis-labs/osmosis/v20/ante"
 	v9 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v9"
 
-	authante "github.com/osmosis-labs/osmosis/v20/x/authenticator/ante"
-	authenticators "github.com/osmosis-labs/osmosis/v20/x/authenticator/keeper"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v20/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 )
@@ -26,8 +24,7 @@ func NewAnteHandler(
 	appOpts servertypes.AppOptions,
 	wasmConfig wasm.Config,
 	txCounterStoreKey sdk.StoreKey,
-	accountKeeper ante.AccountKeeper,
-	authenticatorKeeper *authenticators.Keeper,
+	ak ante.AccountKeeper,
 	bankKeeper txfeestypes.BankKeeper,
 	txFeesKeeper *txfeeskeeper.Keeper,
 	spotPriceCalculator txfeestypes.SpotPriceCalculator,
@@ -39,7 +36,7 @@ func NewAnteHandler(
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
 	sendblockOptions := osmoante.NewSendBlockOptions(appOpts)
 	sendblockDecorator := osmoante.NewSendBlockDecorator(sendblockOptions)
-	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*txFeesKeeper, accountKeeper, bankKeeper, nil)
+	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*txFeesKeeper, ak, bankKeeper, nil)
 	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(wasmConfig.SimulationGasLimit),
@@ -52,14 +49,14 @@ func NewAnteHandler(
 		sendblockDecorator,
 		ante.NewValidateBasicDecorator(),
 		ante.TxTimeoutHeightDecorator{},
-		ante.NewValidateMemoDecorator(accountKeeper),
-		ante.NewConsumeGasForTxSizeDecorator(accountKeeper),
+		ante.NewValidateMemoDecorator(ak),
+		ante.NewConsumeGasForTxSizeDecorator(ak),
 		deductFeeDecorator,
-		authante.NewSetPubKeyDecorator(accountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
-		ante.NewValidateSigCountDecorator(accountKeeper),
-		// Our authenticator decorator
-		authante.NewAuthenticatorDecorator(authenticatorKeeper, 20_000), // TODO: what's a good value for maxFeePayerGas?
-		ante.NewIncrementSequenceDecorator(accountKeeper),
+		ante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
+		ante.NewValidateSigCountDecorator(ak),
+		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
+		ante.NewSigVerificationDecorator(ak, signModeHandler),
+		ante.NewIncrementSequenceDecorator(ak),
 		ibcante.NewAnteDecorator(channelKeeper),
 	)
 }
