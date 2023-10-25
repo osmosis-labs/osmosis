@@ -304,7 +304,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestRouterTestSuite/TestGetBestSplitRoutesQuote",
+                "TestRouterTestSuite/TestValidateAndFilterRoutes/1",
                 "-test.v"
             ],
         },

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"go.uber.org/zap"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
@@ -40,4 +41,29 @@ func (a *routerUseCase) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coin, t
 	router := NewRouter([]uint64{}, allPools, a.config.MaxPoolsPerRoute, a.config.MaxRoutes, a.config.MaxSplitIterations, a.logger)
 
 	return router.getQuote(tokenIn, tokenOutDenom)
+}
+
+// GetBestSingleRouteQuote returns the best single route quote to be done directly without a split.
+func (a *routerUseCase) GetBestSingleRouteQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string) (domain.Quote, error) {
+	allPools, err := a.poolsUsecase.GetAllPools(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	router := NewRouter([]uint64{}, allPools, a.config.MaxPoolsPerRoute, a.config.MaxRoutes, a.config.MaxSplitIterations, a.logger)
+
+	routes, err := router.getCandidateRoutes(tokenIn.Denom, tokenOutDenom)
+	if err != nil {
+		return nil, err
+	}
+
+	router.logger.Debug("routes ", zap.Int("routes_count", len(routes)))
+
+	// Validate the chosen routes.
+	if routes, err = router.validateAndFilterRoutes(routes, tokenIn.Denom); err != nil {
+		router.logger.Error("validateRoutes failed", zap.Error(err))
+		// return nil, err
+	}
+
+	return router.getBestSingleRouteQuote(routes, tokenIn)
 }

@@ -234,6 +234,7 @@ if [[ $STATE == 'true' ]]
 then
     create_two_asset_pool "nativeDenomPoolA.json"
     create_two_asset_pool "nativeDenomPoolB.json"
+    create_two_asset_pool "nativeDenomPoolUUSDCUION.json"
     create_three_asset_pool
 fi
 wait

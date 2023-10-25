@@ -155,9 +155,42 @@ func (r Router) findRoutes(tokenInDenom, tokenOutDenom string, currentRoute doma
 			continue
 		}
 
-		updatedPoolsUsed := make([]bool, len(poolsUsed))
-		copy(updatedPoolsUsed, poolsUsed)
-		updatedPoolsUsed[i] = true
+		// updatedPoolsUsed := make([]bool, len(poolsUsed))
+		// copy(updatedPoolsUsed, poolsUsed)
+		// updatedPoolsUsed[i] = true
+		poolsUsed[i] = true
+
+		// Check if final token out denom is in the current pool
+		// If so, we do not need to recurse further on other denoms
+		foundTokenOut := false
+		// foundTokenIn := false
+		for _, poolDenom := range poolDenoms {
+			if poolDenom == tokenOutDenom {
+				foundTokenOut = true
+
+				updatedCurrentRoute := currentRoute.DeepCopy()
+				updatedCurrentRoute.AddPool(pool, poolDenom)
+
+				updatedPreviousTokenOutDenoms := make([]string, len(previousTokenOutDenoms))
+				copy(updatedPreviousTokenOutDenoms, previousTokenOutDenoms)
+				updatedPreviousTokenOutDenoms = append(updatedPreviousTokenOutDenoms, poolDenom)
+
+				newRoutes, err := r.findRoutes(tokenInDenom, tokenOutDenom, updatedCurrentRoute, poolsUsed, updatedPreviousTokenOutDenoms)
+				if err != nil {
+					return nil, err
+				}
+
+				// Append new routes to result up until the max number of routes is reached.
+				for i := 0; i < len(newRoutes) && len(result) < r.maxRoutes; i++ {
+					result = append(result, newRoutes[i])
+				}
+			}
+
+		}
+
+		if foundTokenOut {
+			continue
+		}
 
 		for _, poolDenom := range poolDenoms {
 			// Skip if this is the previous token out denom
@@ -165,14 +198,27 @@ func (r Router) findRoutes(tokenInDenom, tokenOutDenom string, currentRoute doma
 				continue
 			}
 
+			var updatedPreviousTokenOutDenoms []string
+
 			updatedCurrentRoute := currentRoute.DeepCopy()
+
+			// If we find token in denom in the intermediary pool in the route,
+			// we know for sure that it is more beneficial to start from this pool directly.
+			// As a result, we reset the current route to be empty. This may lead to duplicate routes.
+			// That should be filtered out later.
+			// TODO: alternatively, can we detect this and simply skip?
+			if poolDenom == tokenInDenom {
+				updatedCurrentRoute = &routeImpl{}
+				updatedPreviousTokenOutDenoms = []string{}
+			} else {
+				updatedPreviousTokenOutDenoms = make([]string, len(previousTokenOutDenoms))
+				copy(updatedPreviousTokenOutDenoms, previousTokenOutDenoms)
+				updatedPreviousTokenOutDenoms = append(updatedPreviousTokenOutDenoms, poolDenom)
+			}
+
 			updatedCurrentRoute.AddPool(pool, poolDenom)
 
-			updatedPreviousTokenOutDenoms := make([]string, len(previousTokenOutDenoms))
-			copy(updatedPreviousTokenOutDenoms, previousTokenOutDenoms)
-			updatedPreviousTokenOutDenoms = append(updatedPreviousTokenOutDenoms, poolDenom)
-
-			newRoutes, err := r.findRoutes(tokenInDenom, tokenOutDenom, updatedCurrentRoute, updatedPoolsUsed, updatedPreviousTokenOutDenoms)
+			newRoutes, err := r.findRoutes(tokenInDenom, tokenOutDenom, updatedCurrentRoute, poolsUsed, updatedPreviousTokenOutDenoms)
 			if err != nil {
 				return nil, err
 			}

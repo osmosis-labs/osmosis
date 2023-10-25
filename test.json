@@ -1,0 +1,169 @@
+{
+  "amount_in": {
+    "denom": "uosmo",
+    "amount": "5000000"
+  },
+  "amount_out": "4944845",
+  "route": [
+    {
+      "Route": {
+        "Pools": [
+          {
+            "PoolI": {
+              "underlying_pool": {
+                "address": "osmo19e2mf7cywkv7zaug6nk5f87d07fxrdgrladvymh2gwv5crvm3vnsuewhh7",
+                "id": 1,
+                "pool_params": {
+                  "swap_fee": "0.010000000000000000",
+                  "exit_fee": "0.000000000000000000"
+                },
+                "future_pool_governor": "",
+                "total_weight": "10737418240.000000000000000000",
+                "total_shares": {
+                  "denom": "gamm/pool/1",
+                  "amount": "100000000000000000000"
+                },
+                "pool_assets": [
+                  {
+                    "token": {
+                      "denom": "uosmo",
+                      "amount": "100000000000"
+                    },
+                    "weight": "5368709120"
+                  },
+                  {
+                    "token": {
+                      "denom": "uusdc",
+                      "amount": "100000000000"
+                    },
+                    "weight": "5368709120"
+                  }
+                ]
+              },
+              "sqs_model": {
+                "total_value_locked_usdc": "1",
+                "balances": [
+                  {
+                    "denom": "uosmo",
+                    "amount": "100000000000"
+                  },
+                  {
+                    "denom": "uusdc",
+                    "amount": "100000000000"
+                  }
+                ]
+              }
+            },
+            "token_out_denom": "uusdc"
+          }
+        ]
+      },
+      "out_amount": "4454801",
+      "in_amount": "4500000"
+    },
+    {
+      "Route": {
+        "Pools": [
+          {
+            "PoolI": {
+              "underlying_pool": {
+                "address": "osmo1pjkt93g9lhntcpxk6pn04xwa87gf23wpjghjudql5p7n2exujh7szrdvtc",
+                "id": 5,
+                "pool_params": {
+                  "swap_fee": "0.010000000000000000",
+                  "exit_fee": "0.000000000000000000"
+                },
+                "future_pool_governor": "",
+                "total_weight": "10737418240.000000000000000000",
+                "total_shares": {
+                  "denom": "gamm/pool/5",
+                  "amount": "100000000000000000000"
+                },
+                "pool_assets": [
+                  {
+                    "token": {
+                      "denom": "uion",
+                      "amount": "100000000000"
+                    },
+                    "weight": "5368709120"
+                  },
+                  {
+                    "token": {
+                      "denom": "uosmo",
+                      "amount": "100000000000"
+                    },
+                    "weight": "5368709120"
+                  }
+                ]
+              },
+              "sqs_model": {
+                "total_value_locked_usdc": "1",
+                "balances": [
+                  {
+                    "denom": "uion",
+                    "amount": "100000000000"
+                  },
+                  {
+                    "denom": "uosmo",
+                    "amount": "100000000000"
+                  }
+                ]
+              }
+            },
+            "token_out_denom": "uosmo"
+          },
+          {
+            "PoolI": {
+              "underlying_pool": {
+                "address": "osmo1ad4r3uh5pdn5pgg5hnl6u5utfeqmpwstlvgvg2h2jdztrcnwkqgs3hs85z",
+                "id": 4,
+                "pool_params": {
+                  "swap_fee": "0.010000000000000000",
+                  "exit_fee": "0.000000000000000000"
+                },
+                "future_pool_governor": "",
+                "total_weight": "10737418240.000000000000000000",
+                "total_shares": {
+                  "denom": "gamm/pool/4",
+                  "amount": "100000000000000000000"
+                },
+                "pool_assets": [
+                  {
+                    "token": {
+                      "denom": "uosmo",
+                      "amount": "100000000000"
+                    },
+                    "weight": "5368709120"
+                  },
+                  {
+                    "token": {
+                      "denom": "uusdc",
+                      "amount": "100000000000"
+                    },
+                    "weight": "5368709120"
+                  }
+                ]
+              },
+              "sqs_model": {
+                "total_value_locked_usdc": "1",
+                "balances": [
+                  {
+                    "denom": "uosmo",
+                    "amount": "100000000000"
+                  },
+                  {
+                    "denom": "uusdc",
+                    "amount": "100000000000"
+                  }
+                ]
+              }
+            },
+            "token_out_denom": "uusdc"
+          }
+        ]
+      },
+      "out_amount": "490044",
+      "in_amount": "500000"
+    }
+  ]
+}

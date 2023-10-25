@@ -44,9 +44,8 @@ func (r *Router) getQuote(tokenIn sdk.Coin, tokenOutDenom string) (domain.Quote,
 	r.logger.Debug("routes ", zap.Int("routes_count", len(routes)))
 
 	// Validate the chosen routes.
-	if err := validateRoutes(routes, tokenIn.Denom); err != nil {
+	if routes, err = r.validateAndFilterRoutes(routes, tokenIn.Denom); err != nil {
 		r.logger.Error("validateRoutes failed", zap.Error(err))
-		// TODO: filter out the route instead
 		// return nil, err
 	}
 
@@ -137,7 +136,7 @@ func (r *Router) getBestSplitRoutesQuote(routes []domain.Route, tokenIn sdk.Coin
 	}, nil
 }
 
-// validateRoutes validates all routes. Specifically:
+// validateAndFilterRoutes validates all routes. Specifically:
 // - all routes have at least one pool.
 // - all routes have the same final token out denom.
 // - the final token out denom is not the same as the token in denom.
@@ -145,12 +144,19 @@ func (r *Router) getBestSplitRoutesQuote(routes []domain.Route, tokenIn sdk.Coin
 // - the previous pool token out denom is in the current pool.
 // - the current pool token out denom is in the current pool.
 // Returns error if not. Nil otherwise.
-func validateRoutes(routes []domain.Route, tokenInDenom string) error {
-	var tokenOutDenom string
+func (r *Router) validateAndFilterRoutes(routes []domain.Route, tokenInDenom string) ([]domain.Route, error) {
+	var (
+		tokenOutDenom  string
+		filteredRoutes []domain.Route
+	)
+
+	uniquePoolIDs := make(map[uint64]struct{})
+
+ROUTE_LOOP:
 	for i, route := range routes {
 		currentRoutePools := route.GetPools()
 		if len(currentRoutePools) == 0 {
-			return NoPoolsInRoute{RouteIndex: i}
+			return nil, NoPoolsInRoute{RouteIndex: i}
 		}
 
 		lastPool := route.GetPools()[len(route.GetPools())-1]
@@ -159,6 +165,13 @@ func validateRoutes(routes []domain.Route, tokenInDenom string) error {
 		// Validate that route pools do not have the token in denom or token out denom
 		previousTokenOut := tokenInDenom
 		for j, currentPool := range currentRoutePools {
+			// Skip routes for which we have already seen the pool ID
+			if _, ok := uniquePoolIDs[currentPool.GetId()]; ok {
+				continue ROUTE_LOOP
+			} else {
+				uniquePoolIDs[currentPool.GetId()] = struct{}{}
+			}
+
 			currentPoolDenoms := currentRoutePools[j].GetPoolDenoms()
 			currentPoolTokenOutDenom := currentPool.GetTokenOutDenom()
 
@@ -178,23 +191,25 @@ func validateRoutes(routes []domain.Route, tokenInDenom string) error {
 				// Validate that intermediary pools do not contain the token in denom or token out denom
 				if j > 0 && j < len(currentRoutePools)-1 {
 					if denom == tokenInDenom {
-						return RoutePoolWithTokenInDenomError{RouteIndex: i, TokenInDenom: tokenInDenom}
+						r.logger.Warn("route skipped - found token in intermediary pool", zap.Error(RoutePoolWithTokenInDenomError{RouteIndex: i, TokenInDenom: tokenInDenom}))
+						// continue ROUTE_LOOP
 					}
 
 					if denom == currentRouteTokenOutDenom {
-						return RoutePoolWithTokenOutDenomError{RouteIndex: i, TokenOutDenom: currentPoolTokenOutDenom}
+						r.logger.Warn("route skipped- found token out in intermediary pool", zap.Error(RoutePoolWithTokenOutDenomError{RouteIndex: i, TokenOutDenom: currentPoolTokenOutDenom}))
+						// continue ROUTE_LOOP
 					}
 				}
 			}
 
 			// Ensure that the previous pool token out denom is in the current pool.
 			if !foundPreviousTokenOut {
-				return PreviousTokenOutDenomNotInPoolError{RouteIndex: i, PoolId: currentPool.GetId(), PreviousTokenOutDenom: previousTokenOut}
+				return nil, PreviousTokenOutDenomNotInPoolError{RouteIndex: i, PoolId: currentPool.GetId(), PreviousTokenOutDenom: previousTokenOut}
 			}
 
 			// Ensure that the current pool token out denom is in the current pool.
 			if !foundCurrentTokenOut {
-				return CurrentTokenOutDenomNotInPoolError{RouteIndex: i, PoolId: currentPool.GetId(), CurrentTokenOutDenom: currentPoolTokenOutDenom}
+				return nil, CurrentTokenOutDenomNotInPoolError{RouteIndex: i, PoolId: currentPool.GetId(), CurrentTokenOutDenom: currentPoolTokenOutDenom}
 			}
 
 			// Update previous token out denom
@@ -204,17 +219,21 @@ func validateRoutes(routes []domain.Route, tokenInDenom string) error {
 		if i > 0 {
 			// Ensure that all routes have the same final token out denom
 			if currentRouteTokenOutDenom != tokenOutDenom {
-				return TokenOutMismatchBetweenRoutesError{TokenOutDenomRouteA: tokenOutDenom, TokenOutDenomRouteB: currentRouteTokenOutDenom}
+				return nil, TokenOutMismatchBetweenRoutesError{TokenOutDenomRouteA: tokenOutDenom, TokenOutDenomRouteB: currentRouteTokenOutDenom}
 			}
 		}
 
 		tokenOutDenom = currentRouteTokenOutDenom
+
+		// Update filtered routes if this route passed all checks
+		filteredRoutes = append(filteredRoutes, route)
 	}
 
 	if tokenOutDenom == tokenInDenom {
-		return TokenOutDenomMatchesTokenInDenomError{Denom: tokenOutDenom}
+		return nil, TokenOutDenomMatchesTokenInDenomError{Denom: tokenOutDenom}
 	}
-	return nil
+
+	return filteredRoutes, nil
 }
 
 type RouteWithOutAmount struct {

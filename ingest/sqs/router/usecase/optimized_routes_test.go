@@ -218,11 +218,12 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 
 // This test ensures strict route validation.
 // See individual test cases for details.
-func (s *RouterTestSuite) TestValidateRoutes() {
+func (s *RouterTestSuite) TestValidateAndFilterRoutes() {
 	tests := map[string]struct {
-		routes       []domain.Route
-		tokenInDenom string
-		expectError  error
+		routes         []domain.Route
+		tokenInDenom   string
+		expectError    error
+		expectFiltered bool
 	}{
 		"valid single route single hop": {
 			routes: []domain.Route{
@@ -282,30 +283,6 @@ func (s *RouterTestSuite) TestValidateRoutes() {
 
 			expectError: usecase.TokenOutMismatchBetweenRoutesError{TokenOutDenomRouteA: denomNum(2), TokenOutDenomRouteB: denomNum(1)},
 		},
-		"error: token in is in the route": {
-			routes: []domain.Route{withRoutePools(emptyRoute, []domain.RoutablePool{
-				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(1), denomNum(3)}), denomNum(3)),
-				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(2), denomNum(3)}), denomNum(2)),
-				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(2), denomNum(1)}), denomNum(1)),
-				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(1), denomNum(4)}), denomNum(4)),
-			}),
-			},
-			tokenInDenom: denomNum(1),
-
-			expectError: usecase.RoutePoolWithTokenInDenomError{RouteIndex: 0, TokenInDenom: denomNum(1)},
-		},
-		"error: token out is in the route": {
-			routes: []domain.Route{withRoutePools(emptyRoute, []domain.RoutablePool{
-				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(1), denomNum(2)}), denomNum(2)),
-				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(2), denomNum(4)}), denomNum(4)),
-				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(4), denomNum(3)}), denomNum(3)),
-				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(3), denomNum(4)}), denomNum(4)),
-			}),
-			},
-			tokenInDenom: denomNum(1),
-
-			expectError: usecase.RoutePoolWithTokenOutDenomError{RouteIndex: 0, TokenOutDenom: denomNum(4)},
-		},
 		"error: token in matches token out": {
 			routes: []domain.Route{withRoutePools(emptyRoute, []domain.RoutablePool{
 				withTokenOutDenom(defaultPool, denomNum(1)),
@@ -333,13 +310,42 @@ func (s *RouterTestSuite) TestValidateRoutes() {
 
 			expectError: usecase.CurrentTokenOutDenomNotInPoolError{RouteIndex: 0, PoolId: defaultPool.GetId(), CurrentTokenOutDenom: denomNum(3)},
 		},
+
+		// Routes filtered
+		"filtered: token in is in the route": {
+			routes: []domain.Route{withRoutePools(emptyRoute, []domain.RoutablePool{
+				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(1), denomNum(3)}), denomNum(3)),
+				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(2), denomNum(3)}), denomNum(2)),
+				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(2), denomNum(1)}), denomNum(1)),
+				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(1), denomNum(4)}), denomNum(4)),
+			}),
+			},
+			tokenInDenom: denomNum(1),
+
+			expectFiltered: true,
+		},
+		"filtered: token out is in the route": {
+			routes: []domain.Route{withRoutePools(emptyRoute, []domain.RoutablePool{
+				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(1), denomNum(2)}), denomNum(2)),
+				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(2), denomNum(4)}), denomNum(4)),
+				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(4), denomNum(3)}), denomNum(3)),
+				withTokenOutDenom(withDenoms(defaultPool, []string{denomNum(3), denomNum(4)}), denomNum(4)),
+			}),
+			},
+			tokenInDenom: denomNum(1),
+
+			expectFiltered: true,
+		},
 	}
 
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
 
-			err := usecase.ValidateRoutes(tc.routes, tc.tokenInDenom)
+			router := routerusecase.NewRouter([]uint64{}, []domain.PoolI{}, 0, 0, 0, &log.NoOpLogger{})
+
+			// TODO: validate filtered routes
+			filteredRoutes, err := router.ValidateAndFilterRoutes(tc.routes, tc.tokenInDenom)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -347,6 +353,15 @@ func (s *RouterTestSuite) TestValidateRoutes() {
 				return
 			}
 			s.Require().NoError(err)
+
+			if tc.expectFiltered {
+				s.Require().NotEqual(len(tc.routes), len(filteredRoutes))
+				s.Require().Len(filteredRoutes, 0)
+				return
+			}
+
+			s.Require().Equal(len(tc.routes), len(filteredRoutes))
+
 		})
 	}
 }

@@ -19,6 +19,6 @@ func (r Router) GetBestSplitRoutesQuote(routes []domain.Route, tokenIn sdk.Coin)
 	return r.getBestSplitRoutesQuote(routes, tokenIn)
 }
 
-func ValidateRoutes(routes []domain.Route, tokenInDenom string) error {
-	return validateRoutes(routes, tokenInDenom)
+func (r *Router) ValidateAndFilterRoutes(routes []domain.Route, tokenInDenom string) ([]domain.Route, error) {
+	return r.validateAndFilterRoutes(routes, tokenInDenom)
 }
