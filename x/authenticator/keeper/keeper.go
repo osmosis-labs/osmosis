@@ -3,8 +3,9 @@ package keeper
 import (
 	"crypto/sha256"
 	"fmt"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"strings"
+
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
 
