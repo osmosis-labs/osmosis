@@ -13,9 +13,9 @@ import (
 )
 
 type quoteImpl struct {
-	AmountIn  sdk.Coin
-	AmountOut osmomath.Int
-	Route     []domain.SplitRoute
+	AmountIn  sdk.Coin            "json:\"amount_in\""
+	AmountOut osmomath.Int        "json:\"amount_out\""
+	Route     []domain.SplitRoute "json:\"route\""
 }
 
 // GetAmountIn implements Quote.
@@ -45,7 +45,9 @@ func (r *Router) getQuote(tokenIn sdk.Coin, tokenOutDenom string) (domain.Quote,
 
 	// Validate the chosen routes.
 	if err := validateRoutes(routes, tokenIn.Denom); err != nil {
-		return nil, err
+		r.logger.Error("validateRoutes failed", zap.Error(err))
+		// TODO: filter out the route instead
+		// return nil, err
 	}
 
 	bestSingleRouteQuote, err := r.getBestSingleRouteQuote(routes, tokenIn)
@@ -64,8 +66,19 @@ func (r *Router) getQuote(tokenIn sdk.Coin, tokenOutDenom string) (domain.Quote,
 
 	// If the split route quote is better than the single route quote, return the split route quote
 	if bestSplitRouteQuote.GetAmountOut().GT(bestSingleRouteQuote.GetAmountOut()) {
+
+		routes := bestSplitRouteQuote.GetRoute()
+
+		r.logger.Debug("split route is selected", zap.Int("route_count", len(routes)))
+		for _, route := range routes {
+			r.logger.Debug("route", zap.Stringer("route", route))
+		}
+
 		return bestSplitRouteQuote, nil
 	}
+
+	r.logger.Debug("single route is selected")
+	r.logger.Debug("route", zap.Stringer("route", bestSingleRouteQuote.GetRoute()[0]))
 
 	// Otherwise return the single route quote
 	return bestSingleRouteQuote, nil
@@ -114,6 +127,8 @@ func (r *Router) getBestSplitRoutesQuote(routes []domain.Route, tokenIn sdk.Coin
 	if err != nil {
 		return nil, err
 	}
+
+	r.logger.Debug("bestSplit", zap.Any("value", bestSplit))
 
 	return &quoteImpl{
 		AmountIn:  tokenIn,
@@ -204,8 +219,8 @@ func validateRoutes(routes []domain.Route, tokenInDenom string) error {
 
 type RouteWithOutAmount struct {
 	domain.Route
-	OutAmount osmomath.Int
-	InAmount  osmomath.Int
+	OutAmount osmomath.Int "json:\"out_amount\""
+	InAmount  osmomath.Int "json:\"in_amount\""
 }
 
 var _ domain.Route = &RouteWithOutAmount{}
@@ -237,7 +252,7 @@ func (r *Router) splitRecursive(remainingTokenIn sdk.Coin, remainingRoutes []dom
 		return currentSplit, nil
 	}
 
-	if r.maxSplitIterations > 1 {
+	if r.maxSplitIterations <= 1 {
 		return Split{}, fmt.Errorf("maxSplitIterations must be greater than 1, was (%d)", r.maxSplitIterations)
 	}
 

@@ -1,6 +1,8 @@
 package usecase_test
 
 import (
+	"sort"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -23,7 +25,17 @@ var (
 	emptyRoute = &routerusecase.RouteImpl{}
 )
 
+// This test validates that we are able to split over multiple routes.
+// We know that higher liquidity pools should be more optimal than the lower liquidity pools
+// all else equal.
+// Given that, we initialize several pools with different amounts of liquidity.
+// We define an expected order of the amountsIn and Out for the split routes based on liquidity.
+// Lastly, we assert that the actual order of the split routes is the same as the expected order.
 func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
+	type routeWithOrder struct {
+		route domain.SplitRoute
+		order int
+	}
 
 	s.Setup()
 
@@ -63,35 +75,44 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 		expectError error
 
 		expectedTokenOutDenom string
+
+		// Ascending order in terms of which route is preferred
+		// and uses the largest amount of the token in
+		expectedProportionInOrder []int
 	}{
-		// "valid single route": {
-		// 	routes: []domain.Route{
-		// 		withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-		// 			withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(1)), defaultBalancerPool),
-		// 		})},
-		// 	tokenIn: sdk.NewCoin(denomNum(2), sdk.NewInt(100)),
+		"valid single route": {
+			routes: []domain.Route{
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
+					withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(1)), defaultBalancerPool),
+				})},
+			tokenIn: sdk.NewCoin(denomNum(2), sdk.NewInt(100)),
 
-		// 	expectedTokenOutDenom: denomNum(1),
-		// },
-		// "valid two route single hop": {
-		// 	routes: []domain.Route{
-		// 		// Route 1
-		// 		withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-		// 			withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(1)), defaultBalancerPool),
-		// 		}),
+			expectedTokenOutDenom: denomNum(1),
 
-		// 		// Route 2
-		// 		withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
-		// 			withPoolID(withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(1)), secondBalancerPoolSameDenoms), 2),
-		// 		}),
-		// 	},
+			expectedProportionInOrder: []int{0},
+		},
+		"valid two route single hop": {
+			routes: []domain.Route{
+				// Route 1
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
+					withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(1)), defaultBalancerPool),
+				}),
 
-		// 	maxSplitIterations: 10,
+				// Route 2
+				withRoutePools(&routerusecase.RouteImpl{}, []domain.RoutablePool{
+					withPoolID(withChainPoolModel(withTokenOutDenom(defaultPool, denomNum(1)), secondBalancerPoolSameDenoms), 2),
+				}),
+			},
 
-		// 	tokenIn: sdk.NewCoin(denomNum(2), sdk.NewInt(5_000_000)),
+			maxSplitIterations: 10,
 
-		// 	expectedTokenOutDenom: denomNum(1),
-		// },
+			tokenIn: sdk.NewCoin(denomNum(2), sdk.NewInt(5_000_000)),
+
+			expectedTokenOutDenom: denomNum(1),
+
+			// Route 2 is preferred because it has 2x the liquidity of Route 1
+			expectedProportionInOrder: []int{0, 1},
+		},
 		"valid three route single hop": {
 			routes: []domain.Route{
 				// Route 1
@@ -115,6 +136,10 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 			tokenIn: sdk.NewCoin(denomNum(2), sdk.NewInt(56_789_321)),
 
 			expectedTokenOutDenom: denomNum(1),
+
+			// Route 2 is preferred because it has 4x the liquidity of Route 1
+			// and 2X the liquidity of Route 3
+			expectedProportionInOrder: []int{2, 0, 1},
 		},
 
 		// TODO: cover error cases
@@ -153,6 +178,40 @@ func (s *RouterTestSuite) TestGetBestSplitRoutesQuote() {
 			}
 
 			s.Require().Equal(tc.tokenIn.Amount, actualTotalFromSplits)
+
+			// Route must not be nil
+			actualRoutes := quote.GetRoute()
+			s.Require().NotNil(actualRoutes)
+
+			s.Require().Equal(len(tc.expectedProportionInOrder), len(actualRoutes))
+
+			routesWithOrder := make([]routeWithOrder, len(actualRoutes))
+			for i, route := range actualRoutes {
+				routesWithOrder[i] = routeWithOrder{
+					route: route,
+					order: tc.expectedProportionInOrder[i],
+				}
+			}
+
+			// Sort actual routes in the expected order
+			// and assert that the token in is strictly decreasing
+			sort.Slice(routesWithOrder, func(i, j int) bool {
+				return routesWithOrder[i].order < routesWithOrder[j].order
+			})
+			s.Require().NotEmpty(routesWithOrder)
+
+			// Iterate over sorted routes with order and validate that the
+			// amounts in and out are strictly decreasing as per the expected order.
+			previousRouteAmountIn := routesWithOrder[0].route.GetAmountIn()
+			previousRouteAmountOut := routesWithOrder[0].route.GetAmountOut()
+			for i := 1; i < len(routesWithOrder)-1; i++ {
+				currentRouteAmountIn := routesWithOrder[i].route.GetAmountIn()
+				currentRouteAmountOut := routesWithOrder[i].route.GetAmountOut()
+
+				// Both in and out amounts must be strictly decreasing
+				s.Require().True(previousRouteAmountIn.GT(currentRouteAmountIn))
+				s.Require().True(previousRouteAmountOut.GT(currentRouteAmountOut))
+			}
 		})
 	}
 }

@@ -99,10 +99,11 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 	poolsUseCase := poolsUseCase.NewPoolsUsecase(timeoutContext, poolsRepository)
 	poolsHttpDelivery.NewPoolsHandler(e, poolsUseCase)
 
+	// TODO: move to config file
 	routerConfig := domain.RouterConfig{
 		PreferredPoolIDs:   []uint64{},
 		MaxPoolsPerRoute:   4,
-		MaxRoutes:          100,
+		MaxRoutes:          5,
 		MaxSplitIterations: 10,
 	}
 
