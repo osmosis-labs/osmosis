@@ -15,7 +15,7 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "github.com/cosmos/gogoproto/types"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
-	
+	_ "github.com/gogo/protobuf/gogoproto"
 	github_com_osmosis_labs_osmosis_osmomath "github.com/osmosis-labs/osmosis/osmomath"
 	io "io"
 	math "math"

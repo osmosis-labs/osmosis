@@ -11,7 +11,7 @@ import (
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "github.com/cosmos/gogoproto/types"
-	
+	_ "github.com/gogo/protobuf/gogoproto"
 	github_com_osmosis_labs_osmosis_osmomath "github.com/osmosis-labs/osmosis/osmomath"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"

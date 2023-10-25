@@ -15,7 +15,7 @@ import (
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "github.com/cosmos/gogoproto/types"
-	
+	_ "github.com/gogo/protobuf/gogoproto"
 	github_com_osmosis_labs_osmosis_osmomath "github.com/osmosis-labs/osmosis/osmomath"
 	model "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
 	types1 "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"

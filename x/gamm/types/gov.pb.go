@@ -9,7 +9,7 @@ import (
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	proto "github.com/cosmos/gogoproto/proto"
-	
+	_ "github.com/gogo/protobuf/gogoproto"
 	migration "github.com/osmosis-labs/osmosis/v20/x/gamm/types/migration"
 	io "io"
 	math "math"

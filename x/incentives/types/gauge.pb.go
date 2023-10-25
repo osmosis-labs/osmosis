@@ -10,7 +10,7 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "github.com/cosmos/gogoproto/types"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
-	
+	_ "github.com/gogo/protobuf/gogoproto"
 	types "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
 	io "io"
 	math "math"

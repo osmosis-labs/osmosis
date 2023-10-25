@@ -11,7 +11,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
-	
+	_ "github.com/gogo/protobuf/gogoproto"
 	types1 "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"

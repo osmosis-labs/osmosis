@@ -7,7 +7,7 @@ import (
 	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
 	proto "github.com/cosmos/gogoproto/proto"
-	
+	_ "github.com/gogo/protobuf/gogoproto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	io "io"
 	math "math"

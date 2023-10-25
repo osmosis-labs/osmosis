@@ -9,7 +9,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types"
 	proto "github.com/cosmos/gogoproto/proto"
-	
+	_ "github.com/gogo/protobuf/gogoproto"
 	accum "github.com/osmosis-labs/osmosis/osmoutils/accum"
 	model "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
 	types1 "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
