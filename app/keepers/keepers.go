@@ -36,7 +36,6 @@ import (
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v4/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
 	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
 	downtimedetector "github.com/osmosis-labs/osmosis/v20/x/downtime-detector"
@@ -69,11 +68,6 @@ import (
 
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
-
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
-	authenticatorkeeper "github.com/osmosis-labs/osmosis/v20/x/authenticator/keeper"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
 
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v20/wasmbinding"
@@ -126,7 +120,7 @@ type AppKeepers struct {
 	// "Normal" keepers
 	AccountKeeper                *authkeeper.AccountKeeper
 	BankKeeper                   *bankkeeper.BaseKeeper
-	AuthzKeeper                  AuthzKeeperInterface
+	AuthzKeeper                  *authzkeeper.Keeper
 	StakingKeeper                *stakingkeeper.Keeper
 	DistrKeeper                  *distrkeeper.Keeper
 	DowntimeKeeper               *downtimedetector.Keeper
@@ -155,8 +149,6 @@ type AppKeepers struct {
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
-	AuthenticatorKeeper          *authenticatorkeeper.Keeper
-	AuthenticatorManager         *authenticator.AuthenticatorManager
 
 	// IBC modules
 	// transfer module
@@ -183,7 +175,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
 	blockedAddress map[string]bool,
-	encodingConfig *appparams.EncodingConfig,
 ) {
 	// Add 'normal' keepers
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -203,40 +194,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.BankKeeper = &bankKeeper
 
-	// Initialize authenticators
-	appKeepers.AuthenticatorManager = authenticator.NewAuthenticatorManager()
-	appKeepers.AuthenticatorManager.InitializeAuthenticators([]iface.Authenticator{
-		authenticator.NewSignatureVerificationAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()), // default
-		authenticator.NewAllOfAuthenticator(appKeepers.AuthenticatorManager),
-		authenticator.NewAnyOfAuthenticator(appKeepers.AuthenticatorManager),
-		authenticator.NewPassKeyAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()),
-		authenticator.NewSpendLimitAuthenticator(
-			appKeepers.keys[authenticatortypes.AuthenticatorStoreKey],
-			"uosmo",
-			authenticator.AbsoluteValue,
-			appKeepers.BankKeeper, appKeepers.PoolManagerKeeper, appKeepers.TwapKeeper),
-	})
-	appKeepers.AuthenticatorManager.SetDefaultAuthenticatorIndex(0)
-
-	authenticatorKeeper := authenticatorkeeper.NewKeeper(
+	authzKeeper := authzkeeper.NewKeeper(
+		appKeepers.keys[authzkeeper.StoreKey],
 		appCodec,
-		appKeepers.keys[authenticatortypes.ManagerStoreKey],
-		appKeepers.keys[authenticatortypes.AuthenticatorStoreKey],
-		appKeepers.GetSubspace(authenticatortypes.ModuleName),
-		appKeepers.AuthenticatorManager,
+		bApp.MsgServiceRouter(),
 	)
-	appKeepers.AuthenticatorKeeper = &authenticatorKeeper
-
-	authzKeeper := NewKeeperWrapper(
-		authzkeeper.NewKeeper(
-			appKeepers.keys[authzkeeper.StoreKey],
-			appCodec,
-			bApp.MsgServiceRouter(),
-		),
-		appKeepers.AuthenticatorKeeper,
-		appKeepers.AuthenticatorKeeper.TransientStore,
-	)
-	appKeepers.AuthzKeeper = authzKeeper
+	appKeepers.AuthzKeeper = &authzKeeper
 
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
@@ -721,7 +684,6 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
 	paramsKeeper.Subspace(cosmwasmpooltypes.ModuleName)
 	paramsKeeper.Subspace(ibchookstypes.ModuleName)
-	paramsKeeper.Subspace(authenticatortypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -840,7 +802,5 @@ func KVStoreKeys() []string {
 		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		cosmwasmpooltypes.StoreKey,
-		authenticatortypes.ManagerStoreKey,
-		authenticatortypes.AuthenticatorStoreKey,
 	}
 }

@@ -239,7 +239,6 @@ func NewOsmosisApp(
 		wasmEnabledProposals,
 		wasmOpts,
 		app.BlockedAddrs(),
-		&encodingConfig,
 	)
 
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
@@ -315,7 +314,7 @@ func NewOsmosisApp(
 			app.IBCKeeper,
 		),
 	)
-	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper, app.AuthenticatorKeeper))
+	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
 	app.SetEndBlocker(app.EndBlocker)
 
 	// Register snapshot extensions to enable state-sync for wasm.

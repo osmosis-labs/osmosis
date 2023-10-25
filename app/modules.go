@@ -3,7 +3,6 @@ package app
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/client"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v4"
@@ -26,7 +25,6 @@ import (
 	downtimemodule "github.com/osmosis-labs/osmosis/v20/x/downtime-detector/module"
 	downtimetypes "github.com/osmosis-labs/osmosis/v20/x/downtime-detector/types"
 
-	authzwrapper "github.com/osmosis-labs/osmosis/v20/app/keepers"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -35,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
@@ -59,9 +58,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
-	authenticator "github.com/osmosis-labs/osmosis/v20/x/authenticator"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
-
 	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
@@ -127,7 +123,6 @@ var moduleAccountPermissions = map[string][]string{
 	valsetpreftypes.ModuleName:                    {authtypes.Staking},
 	poolmanagertypes.ModuleName:                   nil,
 	cosmwasmpooltypes.ModuleName:                  nil,
-	authenticatortypes.ModuleName:                 nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -159,7 +154,7 @@ func appModules(
 		upgrade.NewAppModule(*app.UpgradeKeeper),
 		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
-		authzwrapper.NewAppModuleWrapper(authzmodule.NewAppModule(appCodec, app.AuthzKeeper.Keeper(), app.AccountKeeper, app.BankKeeper, app.interfaceRegistry), app.AuthzKeeper),
+		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
@@ -191,7 +186,6 @@ func appModules(
 		icq.NewAppModule(*app.AppKeepers.ICQKeeper),
 		packetforward.NewAppModule(app.PacketForwardKeeper),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
-		authenticator.NewAppModule(appCodec, *app.AuthenticatorKeeper),
 	}
 }
 
@@ -279,7 +273,6 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		icqtypes.ModuleName,
 		packetforwardtypes.ModuleName,
 		cosmwasmpooltypes.ModuleName,
-		authenticatortypes.ModuleName,
 	}
 }
 
