@@ -64,7 +64,7 @@ func (k Keeper) CreatePoolGauges(ctx sdk.Context, poolId uint64) error {
 	for _, lockableDuration := range k.GetLockableDurations(ctx) {
 		gaugeId, err := k.incentivesKeeper.CreateGauge(
 			ctx,
-			k.GetParams(ctx).NumEpochsPaidOver == 1,
+			true,
 			k.accountKeeper.GetModuleAddress(types.ModuleName),
 			sdk.Coins{},
 			lockuptypes.QueryCondition{
@@ -75,7 +75,7 @@ func (k Keeper) CreatePoolGauges(ctx sdk.Context, poolId uint64) error {
 			},
 			// QUESTION: Should we set the startTime as the epoch start time that the modules share or the current block time?
 			ctx.BlockTime(),
-			k.GetParams(ctx).NumEpochsPaidOver,
+			1,
 		)
 		if err != nil {
 			return err
