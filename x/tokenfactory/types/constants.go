@@ -1,5 +1,5 @@
 package types
 
 var (
-	TrackBeforeSendGasLimit = uint64(100_000)
+	BeforeSendHookGasLimit = uint64(500_000)
 )
