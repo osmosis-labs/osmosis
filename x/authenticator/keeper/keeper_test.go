@@ -129,6 +129,14 @@ func (s *KeeperTestSuite) TestMsgServer_CreateAccount() {
 	msgServer := keeper.NewMsgServerImpl(*s.App.AuthenticatorKeeper)
 	ctx := s.Ctx
 
+	// Set up account
+	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
+	bz, _ := hex.DecodeString(key)
+	priv := &secp256k1.PrivKey{Key: bz}
+
+	// Ensure the SigVerificationAuthenticator type is registered
+	s.Require().True(s.am.IsAuthenticatorTypeRegistered(authenticator.SignatureVerificationAuthenticator{}.Type()))
+
 	testCases := []struct {
 		name            string
 		msg             *types.MsgCreateAccount
@@ -141,7 +149,7 @@ func (s *KeeperTestSuite) TestMsgServer_CreateAccount() {
 				Sender: "osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89",
 				Salt:   "testSalt",
 				Authenticators: []*types.AuthenticatorData{
-					{Type: "SignatureVerificationAuthenticator", Data: []byte("testData")},
+					{Type: "SignatureVerificationAuthenticator", Data: priv.PubKey().Bytes()},
 				},
 			},
 			expectError: false,
@@ -153,7 +161,7 @@ func (s *KeeperTestSuite) TestMsgServer_CreateAccount() {
 				Sender: "invalidSender",
 				Salt:   "testSalt",
 				Authenticators: []*types.AuthenticatorData{
-					{Type: "SignatureVerificationAuthenticator", Data: []byte("testData")},
+					{Type: "SignatureVerificationAuthenticator", Data: priv.PubKey().Bytes()},
 				},
 			},
 			expectError: true,
@@ -165,7 +173,7 @@ func (s *KeeperTestSuite) TestMsgServer_CreateAccount() {
 				Sender: "osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89",
 				Salt:   "",
 				Authenticators: []*types.AuthenticatorData{
-					{Type: "SignatureVerificationAuthenticator", Data: []byte("testData")},
+					{Type: "SignatureVerificationAuthenticator", Data: priv.PubKey().Bytes()},
 				},
 			},
 			expectError: false,
@@ -177,7 +185,7 @@ func (s *KeeperTestSuite) TestMsgServer_CreateAccount() {
 				Sender: "osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89",
 				Salt:   "testSalt",
 				Authenticators: []*types.AuthenticatorData{
-					{Type: "SignatureVerificationAuthenticator", Data: []byte("testData")},
+					{Type: "SignatureVerificationAuthenticator", Data: priv.PubKey().Bytes()},
 				},
 			},
 			expectError: true,
@@ -189,10 +197,22 @@ func (s *KeeperTestSuite) TestMsgServer_CreateAccount() {
 				Sender: "osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89",
 				Salt:   "testSalt2",
 				Authenticators: []*types.AuthenticatorData{
-					{Type: "SignatureVerificationAuthenticator", Data: []byte("testData")},
+					{Type: "SignatureVerificationAuthenticator", Data: priv.PubKey().Bytes()},
 				},
 			},
 			expectError: false,
+		},
+
+		{
+			name: "invalid authenticator data",
+			msg: &types.MsgCreateAccount{
+				Sender: "osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89",
+				Salt:   "testSalt2",
+				Authenticators: []*types.AuthenticatorData{
+					{Type: "SignatureVerificationAuthenticator", Data: []byte("testData")},
+				},
+			},
+			expectError: true,
 		},
 	}
 
@@ -219,6 +239,16 @@ func (s *KeeperTestSuite) TestMsgServer_CreateAccount() {
 				hashResult := sha256.Sum256([]byte(data.String()))
 				expectedAddress := sdk.AccAddress(hashResult[:]).String()
 				s.Require().Equal(expectedAddress, resp.Address)
+
+				// Check that the account has the right number of authenticators
+				account, err := sdk.AccAddressFromBech32(resp.Address)
+				s.Require().NoError(err)
+				authenticators, err := s.App.AuthenticatorKeeper.GetAuthenticatorsForAccount(ctx, account)
+				s.Require().NoError(err)
+				s.Require().Equal(len(tc.msg.Authenticators), len(authenticators))
+				for i, ator := range authenticators {
+					s.Require().Equal(tc.msg.Authenticators[i].Type, ator.Type())
+				}
 			}
 		})
 	}

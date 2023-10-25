@@ -230,5 +230,14 @@ func (k Keeper) CreateAccount(ctx sdk.Context, sender sdk.AccAddress, salt strin
 	}
 
 	k.accountKeeper.SetAccount(ctx, k.accountKeeper.NewAccountWithAddress(ctx, address))
+
+	// add the authenticators to the account
+	for _, authenticatorData := range authenticators {
+		err := k.AddAuthenticator(ctx, address, authenticatorData.Type, authenticatorData.Data)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return address, nil
 }
