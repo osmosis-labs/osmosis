@@ -17,6 +17,7 @@ require (
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.0.0
 	github.com/cosmos/ibc-apps/modules/async-icq/v7 v7.0.0
 	github.com/cosmos/ibc-go/v7 v7.2.0
+	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/golangci/golangci-lint v1.54.2
@@ -92,7 +93,6 @@ require (
 	github.com/getsentry/sentry-go v0.23.0 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
-	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/uuid v1.3.1 // indirect
@@ -363,14 +363,14 @@ require (
 
 replace (
 	github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231005202707-415ae651a194
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231024230539-89675ab68b1f
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 
-// Local replaces commented for development
-// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
-// github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
-// github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
+	// Local replaces commented for development
+	// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
+	// github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
+	// github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
+	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 // github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 )
 
