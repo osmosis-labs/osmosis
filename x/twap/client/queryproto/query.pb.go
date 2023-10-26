@@ -15,7 +15,7 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "github.com/cosmos/gogoproto/types"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
-	_ "github.com/gogo/protobuf/gogoproto"
+	
 	types1 "github.com/osmosis-labs/osmosis/v20/x/twap/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"

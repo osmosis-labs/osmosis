@@ -9,7 +9,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/codec/types"
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "github.com/cosmos/gogoproto/types"
-	_ "github.com/gogo/protobuf/gogoproto"
+	
 	math "math"
 )
 

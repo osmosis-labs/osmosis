@@ -14,7 +14,7 @@ import (
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
-	_ "github.com/gogo/protobuf/gogoproto"
+	
 	migration "github.com/osmosis-labs/osmosis/v20/x/gamm/types/migration"
 	types2 "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"

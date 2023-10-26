@@ -12,7 +12,7 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "github.com/cosmos/gogoproto/types"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
-	_ "github.com/gogo/protobuf/gogoproto"
+	
 	io "io"
 	math "math"
 	math_bits "math/bits"
