@@ -14,7 +14,8 @@ for dir in $proto_dirs; do
     fi
   done
 done
-ls -a
+
+cd ..
 
 # move proto files to the right places
 #
