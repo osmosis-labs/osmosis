@@ -1,9 +1,7 @@
 package ante
 
-// TODO: This is just a fork of the sdk's SetPubKeyDecorator. Here I'm allowing any pubkey so I can test the ante.
-// This needs to be modified to be aware of authenticators
-
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 
@@ -57,26 +55,23 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			}
 			pk = simSecp256k1Pubkey
 		}
-		// Only make check if simulate=false
-		// TODO: Commented this out temporarily to test the happy path. This will be fixed when we get authenticator-aware fees
-		//if !simulate && !bytes.Equal(pk.Address(), signers[i]) {
-		//	return ctx, sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey,
-		//		"pubKey does not match signer address %s with signer index: %d", signers[i], i)
-		//}
+		// Only set key if simulate=false
+		if !simulate && bytes.Equal(pk.Address(), signers[i]) {
+			acc, err := authante.GetSignerAcc(ctx, spkd.ak, signers[i])
+			if err != nil {
+				return ctx, err
+			}
+			// account already has pubkey set,no need to reset
+			if acc.GetPubKey() != nil {
+				continue
+			}
+			err = acc.SetPubKey(pk)
+			if err != nil {
+				return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
+			}
+			spkd.ak.SetAccount(ctx, acc)
+		}
 
-		acc, err := authante.GetSignerAcc(ctx, spkd.ak, signers[i])
-		if err != nil {
-			return ctx, err
-		}
-		// account already has pubkey set,no need to reset
-		if acc.GetPubKey() != nil {
-			continue
-		}
-		err = acc.SetPubKey(pk)
-		if err != nil {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
-		}
-		spkd.ak.SetAccount(ctx, acc)
 	}
 
 	// Also emit the following events, so that txs can be indexed by these
