@@ -14,8 +14,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 )
 
 // createUptimeAccumulators creates accumulator objects in store for each supported uptime for the given poolId.
@@ -760,14 +760,18 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 	}
 
 	// Send the collected incentives to the position's owner from the pool's address.
-	if err := k.bankKeeper.SendCoins(ctx, pool.GetIncentivesAddress(), sender, collectedIncentivesForPosition); err != nil {
-		return sdk.Coins{}, sdk.Coins{}, err
+	if !collectedIncentivesForPosition.IsZero() {
+		if err := k.bankKeeper.SendCoins(ctx, pool.GetIncentivesAddress(), sender, collectedIncentivesForPosition); err != nil {
+			return sdk.Coins{}, sdk.Coins{}, err
+		}
 	}
 
 	// Send the forfeited incentives to the community pool from the pool's address.
-	err = k.communityPoolKeeper.FundCommunityPool(ctx, forfeitedIncentivesForPosition, pool.GetIncentivesAddress())
-	if err != nil {
-		return sdk.Coins{}, sdk.Coins{}, err
+	if !forfeitedIncentivesForPosition.IsZero() {
+		err = k.communityPoolKeeper.FundCommunityPool(ctx, forfeitedIncentivesForPosition, pool.GetIncentivesAddress())
+		if err != nil {
+			return sdk.Coins{}, sdk.Coins{}, err
+		}
 	}
 
 	// Emit an event indicating that incentives were collected.

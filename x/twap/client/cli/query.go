@@ -13,9 +13,9 @@ import (
 	cosmossdk_io_math "cosmossdk.io/math"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	poolmanager "github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v19/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v19/x/twap/types"
+	poolmanager "github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v20/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v20/x/twap/types"
 )
 
 // twapQueryParseArgs represents the outcome

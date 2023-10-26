@@ -7,10 +7,10 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 const (
@@ -327,4 +327,8 @@ func (k Keeper) SetupSwapStrategy(ctx sdk.Context, p types.ConcentratedPoolExten
 
 func MoveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum *accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
 	return moveRewardsToNewPositionAndDeleteOldAcc(accum, oldPositionName, newPositionName, growthOutside)
+}
+
+func (k Keeper) TransferPositions(ctx sdk.Context, positionIds []uint64, sender sdk.AccAddress, recipient sdk.AccAddress) error {
+	return k.transferPositions(ctx, positionIds, sender, recipient)
 }
