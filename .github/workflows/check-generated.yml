@@ -31,6 +31,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
       - name: "Check protobuf generated code"
         run: |
+          chmod +x ./scripts/protocgen.sh
           make proto-all
           make run-querygen
       - name: Commit changes
