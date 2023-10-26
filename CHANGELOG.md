@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#6623](https://github.com/osmosis-labs/osmosis/pull/6420) feat: transfer cl positions to new owner
 * [#6632](https://github.com/osmosis-labs/osmosis/pull/6632) Taker fee bypass whitelist
 * [#6709](https://github.com/osmosis-labs/osmosis/pull/6709) CLI: Add list-env, all Environment for CLI
+* [#6391](https://github.com/osmosis-labs/osmosis/pull/6391) CLI: Add new extra-arithmetic query, no limit [startTime, endTime] range
 
 ### State Breaking
 
