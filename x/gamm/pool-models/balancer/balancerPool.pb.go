@@ -12,13 +12,14 @@ import (
 	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types1 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
-	_ "github.com/cosmos/gogoproto/types"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
-	
+	_ "google.golang.org/protobuf/types/known/durationpb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -190,7 +191,7 @@ func (m *PoolParams) GetSmoothWeightChangeParams() *SmoothWeightChangeParams {
 type PoolAsset struct {
 	// Coins we are talking about,
 	// the denomination must be unique amongst all PoolAssets for this pool.
-	Token types1.Coin `protobuf:"bytes,1,opt,name=token,proto3" json:"token" yaml:"token"`
+	Token types.Coin `protobuf:"bytes,1,opt,name=token,proto3" json:"token" yaml:"token"`
 	// Weight that is not normalized. This weight must be less than 2^50
 	Weight cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=weight,proto3,customtype=cosmossdk.io/math.Int" json:"weight" yaml:"weight"`
 }
@@ -228,11 +229,11 @@ func (m *PoolAsset) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PoolAsset proto.InternalMessageInfo
 
-func (m *PoolAsset) GetToken() types1.Coin {
+func (m *PoolAsset) GetToken() types.Coin {
 	if m != nil {
 		return m.Token
 	}
-	return types1.Coin{}
+	return types.Coin{}
 }
 
 type Pool struct {
@@ -250,7 +251,7 @@ type Pool struct {
 	// TODO: Further improve these docs
 	FuturePoolGovernor string `protobuf:"bytes,4,opt,name=future_pool_governor,json=futurePoolGovernor,proto3" json:"future_pool_governor,omitempty" yaml:"future_pool_governor"`
 	// sum of all LP tokens sent out
-	TotalShares types1.Coin `protobuf:"bytes,5,opt,name=total_shares,json=totalShares,proto3" json:"total_shares" yaml:"total_shares"`
+	TotalShares types.Coin `protobuf:"bytes,5,opt,name=total_shares,json=totalShares,proto3" json:"total_shares" yaml:"total_shares"`
 	// These are assumed to be sorted by denomiation.
 	// They contain the pool asset and the information about the weight
 	PoolAssets []PoolAsset `protobuf:"bytes,6,rep,name=pool_assets,json=poolAssets,proto3" json:"pool_assets" yaml:"pool_assets"`

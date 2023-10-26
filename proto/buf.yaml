@@ -3,8 +3,10 @@ name: buf.build/osmosis-labs/osmosis
 deps:
   - buf.build/cosmos/gogo-proto
   - buf.build/cosmos/cosmos-sdk:v0.47.0
+  - buf.build/cosmos/ibc:fbb44f5ad3194450af479a615fa715d9
   - buf.build/cosmos/cosmos-proto
   - buf.build/googleapis/googleapis
+  - buf.build/cosmos/ics23:b1abd8678aab07165efd453c96796a179eb3131f
 breaking:
   use:
     - FILE

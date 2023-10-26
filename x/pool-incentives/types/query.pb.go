@@ -6,16 +6,16 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
-	_ "github.com/cosmos/gogoproto/types"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
-	
-	types1 "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	types "github.com/osmosis-labs/osmosis/v20/x/incentives/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	_ "google.golang.org/protobuf/types/known/durationpb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -603,7 +603,7 @@ func (m *QueryExternalIncentiveGaugesRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryExternalIncentiveGaugesRequest proto.InternalMessageInfo
 
 type QueryExternalIncentiveGaugesResponse struct {
-	Data []types1.Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
+	Data []types.Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
 }
 
 func (m *QueryExternalIncentiveGaugesResponse) Reset()         { *m = QueryExternalIncentiveGaugesResponse{} }
@@ -639,7 +639,7 @@ func (m *QueryExternalIncentiveGaugesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryExternalIncentiveGaugesResponse proto.InternalMessageInfo
 
-func (m *QueryExternalIncentiveGaugesResponse) GetData() []types1.Gauge {
+func (m *QueryExternalIncentiveGaugesResponse) GetData() []types.Gauge {
 	if m != nil {
 		return m.Data
 	}
@@ -2681,7 +2681,7 @@ func (m *QueryExternalIncentiveGaugesResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Data = append(m.Data, types1.Gauge{})
+			m.Data = append(m.Data, types.Gauge{})
 			if err := m.Data[len(m.Data)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
