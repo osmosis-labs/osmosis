@@ -104,11 +104,6 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context) error {
 		concentratedPoolsParsed = append(concentratedPoolsParsed, pool)
 	}
 
-	err = pi.poolsRepository.StoreConcentrated(goCtx, concentratedPoolsParsed)
-	if err != nil {
-		return err
-	}
-
 	// CosmWasm pools
 
 	cosmWasmPools, err := pi.cosmWasmKeeper.GetPoolsWithWasmKeeper(ctx)
@@ -127,7 +122,7 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context) error {
 		cosmWasmPoolsParsed = append(cosmWasmPoolsParsed, pool)
 	}
 
-	err = pi.poolsRepository.StoreCosmWasm(goCtx, cosmWasmPoolsParsed)
+	err = pi.poolsRepository.StorePools(goCtx, cfmmPoolsParsed, concentratedPoolsParsed, cosmWasmPoolsParsed)
 	if err != nil {
 		return err
 	}
