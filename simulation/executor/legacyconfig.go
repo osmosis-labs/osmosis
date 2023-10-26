@@ -6,7 +6,6 @@ import (
 	"os"
 
 	cometbftdb "github.com/cometbft/cometbft-db"
-	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -117,7 +116,7 @@ func NewExecutionDbConfigFromFlags() ExecutionDbConfig {
 // the simulation tests. If `FlagEnabledValue` is false it skips the current test.
 // Returns error on an invalid db intantiation or temp dir creation.
 // nolint: revive
-func SetupSimulation(dirPrefix, dbName string) (cfg Config, db dbm.DB, logger log.Logger, cleanup func(), err error) {
+func SetupSimulation(dirPrefix, dbName string) (cfg Config, db cometbftdb.DB, logger log.Logger, cleanup func(), err error) {
 	if !FlagEnabledValue {
 		return Config{}, nil, nil, func() {}, nil
 	}
@@ -151,7 +150,7 @@ func SetupSimulation(dirPrefix, dbName string) (cfg Config, db dbm.DB, logger lo
 }
 
 // PrintStats prints the corresponding statistics from the app DB.
-func PrintStats(db dbm.DB) {
+func PrintStats(db cometbftdb.DB) {
 	fmt.Println("\nLevelDB Stats")
 	fmt.Println(db.Stats()["leveldb.stats"])
 	fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])
