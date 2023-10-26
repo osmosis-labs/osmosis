@@ -303,7 +303,7 @@ proto-help:
 
 proto: proto-help
 
-PROTO_BUILDER_IMAGE=ghcr.io/cosmos/proto-builder:0.14.0
+PROTO_BUILDER_IMAGE=ghcr.io/cosmos/proto-builder:0.13.1
 PROTO_FORMATTER_IMAGE=tendermintdev/docker-build-proto@sha256:aabcfe2fc19c31c0f198d4cd26393f5e5ca9502d7ea3feafbfe972448fee7cae
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE)
 containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
