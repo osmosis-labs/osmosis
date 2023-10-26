@@ -29,11 +29,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
-      - name: Create directories
-        run: |
-          mkdir -p github.com/osmosis-labs/osmosis/v20
-          mkdir -p github.com/osmosis-labs/osmosis/osmoutils
-          mkdir -p github.com/osmosis-labs/osmosis/x/epochs
       - name: "Check protobuf generated code"
         run: |
           make proto-all
