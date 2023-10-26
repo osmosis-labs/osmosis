@@ -141,6 +141,16 @@ func (q Querier) EstimateSwapExactAmountInWithPrimitiveTypes(grpcCtx context.Con
 	return q.Q.EstimateSwapExactAmountInWithPrimitiveTypes(ctx, *req)
 }
 
+func (q Querier) EstimateSwapExactAmountInTransmuterFix(grpcCtx context.Context,
+	req *queryproto.EstimateSwapExactAmountInTransmuterFixRequest,
+) (*queryproto.EstimateSwapExactAmountInTransmuterFixResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.EstimateSwapExactAmountInTransmuterFix(ctx, *req)
+}
+
 func (q Querier) EstimateSwapExactAmountIn(grpcCtx context.Context,
 	req *queryproto.EstimateSwapExactAmountInRequest,
 ) (*queryproto.EstimateSwapExactAmountInResponse, error) {

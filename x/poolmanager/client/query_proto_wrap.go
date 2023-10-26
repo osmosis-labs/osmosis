@@ -64,6 +64,28 @@ func (q Querier) EstimateSwapExactAmountIn(ctx sdk.Context, req queryproto.Estim
 	}, nil
 }
 
+// EstimateSwapExactAmountIn estimates input token amount for a swap.
+func (q Querier) EstimateSwapExactAmountInTransmuterFix(ctx sdk.Context, req queryproto.EstimateSwapExactAmountInTransmuterFixRequest) (*queryproto.EstimateSwapExactAmountInTransmuterFixResponse, error) {
+	if req.TokenIn == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid token")
+	}
+
+	tokenIn, err := sdk.ParseCoinNormalized(req.TokenIn)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
+	}
+
+	ctx = ctx.WithGasMeter(storetypes.NewGasMeter(10_000_000))
+	tokenOutAmount, err := q.K.MultihopEstimateOutGivenExactAmountIn(ctx, req.Routes, tokenIn)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryproto.EstimateSwapExactAmountInTransmuterFixResponse{
+		TokenOutAmount: tokenOutAmount,
+	}, nil
+}
+
 // EstimateSwapExactAmountInWithPrimitiveTypes runs same logic with EstimateSwapExactAmountIn
 // but instead takes array of primitive types in the request to support query through grpc-gateway.
 func (q Querier) EstimateSwapExactAmountInWithPrimitiveTypes(ctx sdk.Context, req queryproto.EstimateSwapExactAmountInWithPrimitiveTypesRequest) (*queryproto.EstimateSwapExactAmountInResponse, error) {

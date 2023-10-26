@@ -134,6 +134,15 @@ service Query {
     option (google.api.http).get =
         "/osmosis/poolmanager/v1beta1/{pool_id}/estimate_trade";
   }
+
+  // Estimates swap amount out given in.
+  rpc EstimateSwapExactAmountInTransmuterFix(
+      EstimateSwapExactAmountInTransmuterFixRequest)
+      returns (EstimateSwapExactAmountInTransmuterFixResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate/"
+        "swap_exact_amount_in_transmuter_fix";
+  }
 }
 
 //=============================== Params
@@ -346,4 +355,24 @@ message EstimateTradeBasedOnPriceImpactResponse {
   // output_coin is the amount of tokens of the ToCoinDenom type
   // that will be received for the actual InputCoin trade.
   cosmos.base.v1beta1.Coin output_coin = 2 [ (gogoproto.nullable) = false ];
+}
+
+message EstimateSwapExactAmountInTransmuterFixRequest {
+  reserved 1;
+  reserved "sender";
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
+  repeated SwapAmountInRoute routes = 4 [
+    (gogoproto.moretags) = "yaml:\"routes\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message EstimateSwapExactAmountInTransmuterFixResponse {
+  string token_out_amount = 1 [
+
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.moretags) = "yaml:\"token_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
 }
