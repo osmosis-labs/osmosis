@@ -1,6 +1,7 @@
 package types
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -52,6 +53,7 @@ type ContractKeeper interface {
 // the WasmKeeper.
 type WasmKeeper interface {
 	QuerySmart(ctx sdk.Context, contractAddress sdk.AccAddress, queryMsg []byte) ([]byte, error)
+	QueryGasLimit() storetypes.Gas
 
 	GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *wasmtypes.ContractInfo
 }
