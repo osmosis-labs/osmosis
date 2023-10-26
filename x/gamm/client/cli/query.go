@@ -36,6 +36,8 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdTotalPoolLiquidity(),
 		GetCmdQueryPoolsWithFilter(),
 		GetCmdPoolType(),
+		osmocli.GetParams[*types.QueryParamsRequest](
+			types.ModuleName, types.NewQueryClient),
 	)
 
 	return cmd
@@ -43,6 +45,16 @@ func GetQueryCmd() *cobra.Command {
 
 var customRouterFlagOverride = map[string]string{
 	"router": FlagSwapRouteDenoms,
+}
+
+// nolint: staticcheck
+func GetCmdParams() *cobra.Command {
+	return osmocli.SimpleQueryCmd[*types.QueryNumPoolsRequest](
+		"num-pools",
+		"Query number of pools",
+		"{{.Short}}",
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
 func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
