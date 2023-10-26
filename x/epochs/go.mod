@@ -5,12 +5,12 @@ go 1.20
 require (
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cosmos/cosmos-sdk v0.47.5
-	github.com/cosmos/gogoproto v1.4.10
+	github.com/cosmos/gogoproto v1.4.11
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.3
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231025193220-01546f049d72
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231026164244-324609ac64a6
 	github.com/osmosis-labs/osmosis/v20 v20.0.0-20231019180727-d47810d6ead2
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
