@@ -2,12 +2,6 @@
 
 set -eo pipefail
 
-# get protoc executions
-go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
-
-# get cosmos sdk from github
-go get github.com/cosmos/cosmos-sdk 2>/dev/null
-
 echo "Generating gogo proto code"
 ls -a
 cd proto
