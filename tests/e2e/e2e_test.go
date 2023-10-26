@@ -71,10 +71,11 @@ func (s *IntegrationTestSuite) TestAllE2E() {
 		s.AddToExistingLock()
 	})
 
-	s.T().Run("ExpeditedProposals", func(t *testing.T) {
-		t.Parallel()
-		s.ExpeditedProposals()
-	})
+	// UNFORKINGNOTE: Test currently disabled until v0.50.0
+	// s.T().Run("ExpeditedProposals", func(t *testing.T) {
+	// 	t.Parallel()
+	// 	s.ExpeditedProposals()
+	// })
 
 	s.T().Run("GeometricTWAP", func(t *testing.T) {
 		t.Parallel()
@@ -382,7 +383,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	poolId := chainABNode.CreateBalancerPool("nativeDenomPool.json", initialization.ValidatorWalletName)
 
 	// enable superfluid assets
-	chainABNode.EnableSuperfluidAsset(chainAB, fmt.Sprintf("gamm/pool/%d", poolId))
+	chainABNode.EnableSuperfluidAsset(chainAB, fmt.Sprintf("gamm/pool/%d", poolId), true)
 
 	// setup wallets and send gamm tokens to these wallets (both chains)
 	superfluidVotingWallet := chainABNode.CreateWallet("TestSuperfluidVoting", chainAB)
@@ -391,7 +392,7 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	chainABNode.SuperfluidDelegate(lockId, chainABNode.OperatorAddress, superfluidVotingWallet)
 
 	// create a text prop and vote yes
-	propNumber := chainABNode.SubmitTextProposal("superfluid vote overwrite test", true)
+	propNumber := chainABNode.SubmitTextProposal("superfluid vote overwrite test", false, true)
 
 	chain.AllValsVoteOnProposal(chainAB, propNumber)
 
@@ -464,7 +465,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 	fmt.Println("Sending >1%")
 	chainANode.SendIBC(chainA, chainB, receiver, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
-	contract, err := chainANode.SetupRateLimiting(paths, chainANode.PublicAddress, chainA)
+	contract, err := chainANode.SetupRateLimiting(paths, chainANode.PublicAddress, chainA, true)
 	s.Require().NoError(err)
 
 	s.Eventually(
@@ -493,6 +494,7 @@ func (s *IntegrationTestSuite) IBCTokenTransferRateLimiting() {
 			string(ibcratelimittypes.KeyContractAddress),
 			[]byte(param),
 			chainA,
+			true,
 		)
 		s.Require().NoError(err)
 		s.Eventually(func() bool {
@@ -655,7 +657,7 @@ func (s *IntegrationTestSuite) AddToExistingLock() {
 	// ensure we can add to new locks and superfluid locks
 	// create pool and enable superfluid assets
 	poolId := chainABNode.CreateBalancerPool("nativeDenomPool.json", funder)
-	chainABNode.EnableSuperfluidAsset(chainAB, fmt.Sprintf("gamm/pool/%d", poolId))
+	chainABNode.EnableSuperfluidAsset(chainAB, fmt.Sprintf("gamm/pool/%d", poolId), true)
 
 	// setup wallets and send gamm tokens to these wallets on chainA
 	gammShares := fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId)
@@ -843,7 +845,7 @@ func (s *IntegrationTestSuite) ArithmeticTWAP() {
 func (s *IntegrationTestSuite) ExpeditedProposals() {
 	chainAB, chainABNode := s.getChainCfgs()
 
-	propNumber := chainABNode.SubmitTextProposal("expedited text proposal", true)
+	propNumber := chainABNode.SubmitTextProposal("expedited text proposal", false, true)
 
 	totalTimeChan := make(chan time.Duration, 1)
 	go chainABNode.QueryPropStatusTimed(propNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
@@ -975,6 +977,6 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 // As a result, we deterministically configure chain B's taker fee prior to running CL tests.
 func (s *IntegrationTestSuite) SetDefaultTakerFeeChainB() {
 	chainB, chainBNode := s.getChainBCfgs()
-	err := chainBNode.ParamChangeProposal("poolmanager", string(poolmanagertypes.KeyDefaultTakerFee), json.RawMessage(`"0.001500000000000000"`), chainB)
+	err := chainBNode.ParamChangeProposal("poolmanager", string(poolmanagertypes.KeyDefaultTakerFee), json.RawMessage(`"0.001500000000000000"`), chainB, true)
 	s.Require().NoError(err)
 }

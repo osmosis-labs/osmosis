@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -485,7 +486,8 @@ func (n *NodeConfig) QueryPropStatus(proposalNumber int) (string, error) {
 	require.NoError(n.t, err)
 
 	var propResp govtypesv1.QueryProposalResponse
-	if err := util.Cdc.UnmarshalJSON(bz, &propResp); err != nil {
+	err = util.Cdc.UnmarshalJSON(bz, &propResp)
+	if err != nil && !strings.Contains(err.Error(), "is_expedited") {
 		return "", err
 	}
 	proposalStatus := propResp.Proposal.Status

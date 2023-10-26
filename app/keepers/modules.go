@@ -29,6 +29,10 @@ import (
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 
+	"github.com/cosmos/cosmos-sdk/x/consensus"
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
+	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module"
+
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/clmodule"
@@ -93,10 +97,12 @@ var AppModuleBasics = []module.AppModuleBasic{
 			incentivesclient.HandleCreateGroupsProposal,
 		},
 	),
+	groupmodule.AppModuleBasic{},
 	params.AppModuleBasic{},
 	crisis.AppModuleBasic{},
 	slashing.AppModuleBasic{},
 	authzmodule.AppModuleBasic{},
+	consensus.AppModuleBasic{},
 	ibc.AppModuleBasic{},
 	upgrade.AppModuleBasic{},
 	evidence.AppModuleBasic{},
@@ -115,6 +121,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	superfluid.AppModuleBasic{},
 	tokenfactory.AppModuleBasic{},
 	valsetprefmodule.AppModuleBasic{},
+	nftmodule.AppModuleBasic{},
 	wasm.AppModuleBasic{},
 	icq.AppModuleBasic{},
 	ica.AppModuleBasic{},

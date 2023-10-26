@@ -147,7 +147,9 @@ type OsmosisApp struct {
 	interfaceRegistry types.InterfaceRegistry
 	invCheckPeriod    uint
 
-	mm           *module.Manager
+	mm *module.Manager
+	// UNFORKINGTODO OQ: Implement sim manager
+	// sm           *module.SimulationManager
 	configurator module.Configurator
 	homePath     string
 }
@@ -331,8 +333,8 @@ func NewOsmosisApp(
 			app.IBCKeeper,
 		),
 	)
-	// UNFORKINGTODO OQ: Figure out set post handler
-	//app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
+
+	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
 	app.SetEndBlocker(app.EndBlocker)
 
 	// Register snapshot extensions to enable state-sync for wasm.
@@ -431,16 +433,12 @@ func (app *OsmosisApp) ModuleManager() module.Manager {
 // API server.
 func (app *OsmosisApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
-	// UNFORKINGTODO C: I think we dont need to register routes anymore
-	//rpc.RegisterRoutes(clientCtx, apiSvr.Router)
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	// Register new tendermint queries routes from grpc-gateway.
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register legacy and grpc-gateway routes for all modules.
-	// UNFORKINGTODO C I think we dont need to register REST routes anymore
-	//ModuleBasics.RegisterRESTRoutes(clientCtx, apiSvr.Router)
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register node gRPC service for grpc-gateway.

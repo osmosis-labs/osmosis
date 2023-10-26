@@ -27,6 +27,7 @@ import (
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/libs/log"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -401,6 +402,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	initRootCmd(rootCmd, encodingConfig)
 
+	rootCmd.AddCommand(
+		rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler),
+	)
+
 	return rootCmd, encodingConfig
 }
 
@@ -609,6 +614,22 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	if err != nil {
 		panic(err)
 	}
+	snapshotOptions := snapshottypes.NewSnapshotOptions(
+		cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)),
+		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
+	)
+
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
+	if chainID == "" {
+		// fallback to genesis chain-id
+		appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+		if err != nil {
+			panic(err)
+		}
+
+		chainID = appGenesis.ChainID
+	}
 
 	var wasmOpts []wasm.Option
 	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
@@ -630,7 +651,10 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetInterBlockCache(cache),
 		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
-		baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)), cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)))),
+		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
+		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
+		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
+		baseapp.SetChainID(chainID),
 	)
 }
 

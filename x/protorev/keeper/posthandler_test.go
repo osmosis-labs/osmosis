@@ -73,7 +73,7 @@ func BenchmarkFourHopHotRouteArb(b *testing.B) {
 	benchmarkWrapper(b, msgs, 1)
 }
 
-func (s *KeeperTestSuite) TestAnteHandle() {
+func (s *KeeperTestSuite) TestPostHandle() {
 	type param struct {
 		trades              []types.Trade
 		expectedNumOfTrades osmomath.Int
@@ -394,7 +394,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			}
 
 			protoRevDecorator := keeper.NewProtoRevDecorator(*s.App.ProtoRevKeeper)
-			posthandlerProtoRev := sdk.ChainAnteDecorators(protoRevDecorator)
+			posthandlerProtoRev := sdk.ChainPostDecorators(protoRevDecorator)
 
 			// Added so we can check the gas consumed during the posthandler
 			s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
@@ -407,7 +407,7 @@ func (s *KeeperTestSuite) TestAnteHandle() {
 			gasBefore := s.Ctx.GasMeter().GasConsumed()
 			gasLimitBefore := s.Ctx.GasMeter().Limit()
 
-			_, err = posthandlerProtoRev(s.Ctx, tx, false)
+			_, err = posthandlerProtoRev(s.Ctx, tx, false, true)
 
 			gasAfter := s.Ctx.GasMeter().GasConsumed()
 			gasLimitAfter := s.Ctx.GasMeter().Limit()
@@ -657,7 +657,7 @@ func benchmarkWrapper(b *testing.B, msgs []sdk.Msg, expectedTrades int) {
 		s, tx, postHandler := setUpBenchmarkSuite(msgs)
 
 		b.StartTimer()
-		_, err := postHandler(s.Ctx, tx, false)
+		_, err := postHandler(s.Ctx, tx, false, true)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -677,7 +677,7 @@ func benchmarkWrapper(b *testing.B, msgs []sdk.Msg, expectedTrades int) {
 
 // setUpBenchmarkSuite sets up a app test suite, tx, and post handler for benchmark tests.
 // It returns the app configured to the correct state, a valid tx, and the protorev post handler.
-func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.AnteHandler) {
+func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.PostHandler) {
 	// Create a new test suite
 	s := new(KeeperTestSuite)
 	s.SetT(&testing.T{})
@@ -715,7 +715,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 
 	// Set up the post handler
 	protoRevDecorator := keeper.NewProtoRevDecorator(*s.App.ProtoRevKeeper)
-	posthandlerProtoRev := sdk.ChainAnteDecorators(protoRevDecorator)
+	posthandlerProtoRev := sdk.ChainPostDecorators(protoRevDecorator)
 
 	return s, tx, posthandlerProtoRev
 }

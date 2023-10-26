@@ -38,8 +38,6 @@ import (
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
 
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
 	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
 	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool"
 	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
@@ -107,6 +105,9 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
+	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
 )
 
 const (
@@ -161,6 +162,8 @@ type AppKeepers struct {
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
 	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 	CosmwasmPoolKeeper           *cosmwasmpool.Keeper
+	GroupKeeper                  *groupkeeper.Keeper
+	NFTKeeper                    *nftkeeper.Keeper
 
 	// IBC modules
 	// transfer module
@@ -469,6 +472,18 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		*appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, appKeepers.DistrKeeper, appKeepers.EpochsKeeper, appKeepers.LockupKeeper, appKeepers.GAMMKeeper, appKeepers.IncentivesKeeper,
 		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper), appKeepers.ConcentratedLiquidityKeeper, appKeepers.PoolManagerKeeper, appKeepers.ValidatorSetPreferenceKeeper)
 
+	groupConfig := group.DefaultConfig()
+	groupKeeper := groupkeeper.NewKeeper(appKeepers.keys[group.StoreKey], appCodec, bApp.MsgServiceRouter(), appKeepers.AccountKeeper, groupConfig)
+	appKeepers.GroupKeeper = &groupKeeper
+
+	nftKeeper := nftkeeper.NewKeeper(
+		appKeepers.keys[nftkeeper.StoreKey],
+		appCodec,
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+	)
+	appKeepers.NFTKeeper = &nftKeeper
+
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1,cosmwasm_1_2"
@@ -482,7 +497,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		*appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		*appKeepers.StakingKeeper,
-		*appKeepers.DistrKeeper,
+		distrkeeper.NewQuerier(*appKeepers.DistrKeeper),
 		appKeepers.RateLimitingICS4Wrapper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
@@ -542,9 +557,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	govConfig := govtypes.DefaultConfig()
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, appKeepers.keys[govtypes.StoreKey],
-		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, bApp.MsgServiceRouter(),
+		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.SuperfluidKeeper, bApp.MsgServiceRouter(),
 		govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	appKeepers.GovKeeper = govKeeper
+	appKeepers.GovKeeper.SetLegacyRouter(govRouter)
 }
 
 // WireICS20PreWasmKeeper Create the IBC Transfer Stack from bottom to top:
@@ -645,9 +661,8 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 	appKeepers.ParamsKeeper = &paramsKeeper
 
 	// set the BaseApp's parameter store
-	// set the BaseApp's parameter store
 	appKeepers.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
-		appCodec, appKeepers.keys[upgradetypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
+		appCodec, appKeepers.keys[consensusparamtypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	bApp.SetParamStore(&appKeepers.ConsensusParamsKeeper)
 
 	// add capability keeper and ScopeToModule for ibc module
@@ -687,7 +702,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(distrtypes.ModuleName)
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
-	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
+	paramsKeeper.Subspace(govtypes.ModuleName)
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
@@ -828,5 +843,7 @@ func KVStoreKeys() []string {
 		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		cosmwasmpooltypes.StoreKey,
+		group.StoreKey,
+		nftkeeper.StoreKey,
 	}
 }

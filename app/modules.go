@@ -60,6 +60,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/nft"
+
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
 	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
@@ -111,6 +114,7 @@ var moduleAccountPermissions = map[string][]string{
 	stakingtypes.BondedPoolName:                   {authtypes.Burner, authtypes.Staking},
 	stakingtypes.NotBondedPoolName:                {authtypes.Burner, authtypes.Staking},
 	govtypes.ModuleName:                           {authtypes.Burner},
+	nft.ModuleName:                                nil,
 	ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 	gammtypes.ModuleName:                          {authtypes.Minter, authtypes.Burner},
 	incentivestypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
@@ -147,7 +151,6 @@ func appModules(
 		vesting.NewAppModule(*app.AccountKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
-		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
 		gov.NewAppModule(appCodec, app.GovKeeper, *app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
 		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
@@ -189,6 +192,7 @@ func appModules(
 		icq.NewAppModule(*app.AppKeepers.ICQKeeper),
 		packetforward.NewAppModule(app.PacketForwardKeeper),
 		cwpoolmodule.NewAppModule(appCodec, *app.CosmwasmPoolKeeper),
+		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
 	}
 }
 
@@ -242,6 +246,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		distrtypes.ModuleName,
 		downtimetypes.ModuleName,
 		stakingtypes.ModuleName,
+		nft.ModuleName,
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
 		minttypes.ModuleName,
@@ -254,6 +259,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
 		genutiltypes.ModuleName,
+		group.ModuleName,
 		evidencetypes.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,

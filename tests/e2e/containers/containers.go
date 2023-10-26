@@ -3,7 +3,9 @@ package containers
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"strconv"
@@ -15,11 +17,28 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/tests/e2e/initialization"
 	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 )
+
+type TxResponse struct {
+	Code      int      `yaml:"code" json:"code"`
+	Codespace string   `yaml:"codespace" json:"codespace"`
+	Data      string   `yaml:"data" json:"data"`
+	GasUsed   string   `yaml:"gas_used" json:"gas_used"`
+	GasWanted string   `yaml:"gas_wanted" json:"gas_wanted"`
+	Height    string   `yaml:"height" json:"height"`
+	Info      string   `yaml:"info" json:"info"`
+	Logs      []string `yaml:"logs" json:"logs"`
+	Timestamp string   `yaml:"timestamp" json:"timestamp"`
+	Tx        string   `yaml:"tx" json:"tx"`
+	TxHash    string   `yaml:"txhash" json:"txhash"`
+	RawLog    string   `yaml:"raw_log" json:"raw_log"`
+	Events    []string `yaml:"events" json:"events"`
+}
 
 const (
 	hermesContainerName = "hermes-relayer"
@@ -36,7 +55,7 @@ var (
 
 	defaultErrRegex = regexp.MustCompile(`(E|e)rror`)
 
-	txArgs = []string{"-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
+	txArgs = []string{"--yes", "--keyring-backend=test", "--log_format=json"}
 
 	// See ConsensusMinFee in x/txfees/types/constants.go
 	txDefaultGasArgs = []string{fmt.Sprintf("--gas=%d", GasLimit), fmt.Sprintf("--fees=%d", Fees) + initialization.E2EFeeToken}
@@ -75,11 +94,13 @@ func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Ma
 // ExecTxCmd Runs ExecTxCmdWithSuccessString searching for `code: 0`
 func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, command []string) (bytes.Buffer, bytes.Buffer, error) {
 	t.Helper()
-	return m.ExecTxCmdWithSuccessString(t, chainId, containerName, command, "code: 0")
+	outBuf, errBuf, err := m.ExecTxCmdWithSuccessString(t, chainId, containerName, command, "code: 0")
+	require.NoError(t, err)
+	return outBuf, errBuf, nil
 }
 
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
-// namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json" --gas=400000`,
+// namely adding flags `--chain-id={chain-id} --yes --keyring-backend=test "--log_format=json" --gas=400000`,
 // and searching for `successStr`
 func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
 	t.Helper()
@@ -96,7 +117,80 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, conta
 		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
 	}
 	txCommand := append(command, allTxArgs...)
-	return m.ExecCmd(t, containerName, txCommand, successStr)
+	outBuf, _, err := m.ExecCmd(t, containerName, txCommand, successStr)
+	require.NoError(t, err)
+
+	// Now that sdk got rid of block.. we need to query the txhash to get the result
+	outStr := outBuf.String()
+	txResponse, err := parseTxResponse(outStr)
+	require.NoError(t, err)
+
+	cmd := []string{"osmosisd", "query", "tx", txResponse.TxHash}
+	outBuf, errBuf, err := m.ExecCmd(t, containerName, cmd, "code: 0")
+	require.NoError(t, err)
+
+	return outBuf, errBuf, nil
+}
+
+// UNFORKINGNOTE: Figure out a better way to do this instead of copying the same method for JSON and YAML
+func (m *Manager) ExecTxCmdWithSuccessStringJSON(t *testing.T, chainId string, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
+	t.Helper()
+	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId)}
+	allTxArgs = append(allTxArgs, txArgs...)
+	// parse to see if command has gas flags. If not, add default gas flags.
+	addGasFlags := true
+	for _, cmd := range command {
+		if strings.HasPrefix(cmd, "--gas") || strings.HasPrefix(cmd, "--fees") {
+			addGasFlags = false
+		}
+	}
+	if addGasFlags {
+		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
+	}
+	txCommand := append(command, allTxArgs...)
+	outBuf, _, err := m.ExecCmd(t, containerName, txCommand, successStr)
+	require.NoError(t, err)
+
+	// Now that sdk got rid of block.. we need to query the txhash to get the result
+	outStr := outBuf.String()
+
+	txResponse, err := parseTxResponse(outStr)
+	require.NoError(t, err)
+
+	cmd := []string{"osmosisd", "query", "tx", txResponse.TxHash, "-o=json"}
+	outBuf, errBuf, err := m.ExecCmd(t, containerName, cmd, "\"code\":0")
+	require.NoError(t, err)
+
+	return outBuf, errBuf, nil
+}
+
+func parseTxResponse(outStr string) (txResponse TxResponse, err error) {
+	if strings.Contains(outStr, "{\"height\":\"") {
+		startIdx := strings.Index(outStr, "{\"height\":\"")
+		if startIdx == -1 {
+			log.Fatalf("Start of JSON data not found")
+		}
+		// Trim the string to start from the identified index
+		outStrTrimmed := outStr[startIdx:]
+		// JSON format
+		err = json.Unmarshal([]byte(outStrTrimmed), &txResponse)
+		if err != nil {
+			log.Fatalf("JSON Unmarshal error: %v", err)
+		}
+	} else {
+		// Find the start of the YAML data
+		startIdx := strings.Index(outStr, "code: ")
+		if startIdx == -1 {
+			log.Fatalf("Start of YAML data not found")
+		}
+		// Trim the string to start from the identified index
+		outStrTrimmed := outStr[startIdx:]
+		err = yaml.Unmarshal([]byte(outStrTrimmed), &txResponse)
+		if err != nil {
+			log.Fatalf("YAML Unmarshal error: %v", err)
+		}
+	}
+	return txResponse, err
 }
 
 // ExecHermesCmd executes command on the hermes relaer container.
@@ -198,7 +292,8 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			// Note that this does not match all errors.
 			// This only works if CLI outpurs "Error" or "error"
 			// to stderr.
-			if (defaultErrRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 {
+			if (defaultErrRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 &&
+				!strings.Contains(errBufString, "not found") {
 				t.Log("\nstderr:")
 				t.Log(errBufString)
 

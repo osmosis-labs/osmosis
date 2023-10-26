@@ -26,9 +26,10 @@ var (
 	// UNFORKINGTODO N: Change this to DefaultMinExpeditedDepositTokens when implemented
 	MinExpeditedDepositValue = govtypesv1.DefaultMinDepositTokens.Int64()
 	// Minimum deposit value for proposal to be submitted.
-	InitialMinDeposit = MinDepositValue / 4
+	// UNFORKINGNOTE: This used to be divided by 4 for both, but this makes sense to me that it should be the same.
+	InitialMinDeposit = MinDepositValue
 	// Minimum expedited deposit value for proposal to be submitted.
-	InitialMinExpeditedDeposit = MinExpeditedDepositValue / 4
+	InitialMinExpeditedDeposit = MinExpeditedDepositValue
 	// v16 upgrade specific canonical OSMO/DAI pool id.
 	// It is expected to create a concentrated liquidity pool
 	// associated with this balancer pool in the upgrade handler.

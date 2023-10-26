@@ -30,7 +30,7 @@ import (
 func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() {
 	chainA, chainANode := s.getChainACfgs()
 
-	poolId, err := chainA.SubmitCreateConcentratedPoolProposal(chainANode)
+	poolId, err := chainA.SubmitCreateConcentratedPoolProposal(chainANode, true)
 	s.NoError(err)
 	fmt.Println("poolId", poolId)
 
@@ -150,7 +150,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 		isPermisionlessCreationEnabledStr := chainBNode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
 		if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
 			// Change the parameter to enable permisionless pool creation.
-			err := chainBNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainB)
+			err := chainBNode.ParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"), chainB, true)
 			s.Require().NoError(err)
 		}
 
@@ -170,7 +170,7 @@ func (s *IntegrationTestSuite) ConcentratedLiquidity() {
 	changeProtorevAdminAndMaxPoolPoints := func() {
 		// Update the protorev admin address to a known wallet we can control
 		adminWalletAddr = chainBNode.CreateWalletAndFund("admin", []string{"4000000uosmo"}, chainB)
-		err := chainBNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainB)
+		err := chainBNode.ParamChangeProposal("protorev", string(protorevtypes.ParamStoreKeyAdminAccount), []byte(fmt.Sprintf(`"%s"`, adminWalletAddr)), chainB, true)
 		s.Require().NoError(err)
 
 		// Update the weight of CL pools so that this test case is not back run by protorev.
@@ -705,7 +705,7 @@ func (s *IntegrationTestSuite) TickSpacingUpdateProp() {
 	newTickSpacing := cltypes.AuthorizedTickSpacing[indexOfCurrentTickSpacing-1]
 
 	// Run the tick spacing reduction proposal
-	propNumber := chainBNode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), true)
+	propNumber := chainBNode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), false, true)
 
 	// TODO: simplify just querying w/ timeout
 	totalTimeChan := make(chan time.Duration, 1)

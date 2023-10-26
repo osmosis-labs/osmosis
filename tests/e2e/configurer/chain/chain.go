@@ -261,8 +261,8 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	return c.NodeConfigs[nodeIndex], nil
 }
 
-func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig) (uint64, error) {
-	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(true)
+func (c *Config) SubmitCreateConcentratedPoolProposal(chainANode *NodeConfig, isLegacy bool) (uint64, error) {
+	propNumber := chainANode.SubmitCreateConcentratedPoolProposal(false, isLegacy)
 
 	chainANode.DepositProposal(propNumber, true)
 
