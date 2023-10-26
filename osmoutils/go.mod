@@ -10,7 +10,6 @@ require (
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/iavl v0.20.0
 	github.com/cosmos/ibc-go/v7 v7.2.0
-	github.com/gogo/protobuf v1.3.3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231019181538-069e69fac08e
 	github.com/osmosis-labs/osmosis/v20 v20.0.0-20231019180727-d47810d6ead2
 	github.com/spf13/cobra v1.7.0
@@ -160,7 +159,7 @@ require (
 replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/05346fa12992
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231024230539-89675ab68b1f
-	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+//github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 // Local replaces commented for development
 // github.com/osmosis-labs/osmosis/osmomath => ../osmomath
