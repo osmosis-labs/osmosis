@@ -154,8 +154,8 @@ func (mp *mockPool) GetPoolDenoms() []string {
 	return mp.denoms
 }
 
-// GetTotalValueLockedUSDC implements domain.PoolI.
-func (mp *mockPool) GetTotalValueLockedUSDC() math.Int {
+// GetTotalValueLockedUOSMO implements domain.PoolI.
+func (mp *mockPool) GetTotalValueLockedUOSMO() math.Int {
 	return mp.totalValueLockedUSDC
 }
 

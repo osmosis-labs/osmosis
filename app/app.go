@@ -275,7 +275,7 @@ func NewOsmosisApp(
 		}
 
 		// Create pools ingester
-		poolsIngester := poolsingester.NewPoolIngester(sidecarQueryServer.GetPoolsRepository(), app.GAMMKeeper, app.ConcentratedLiquidityKeeper, app.CosmwasmPoolKeeper, app.BankKeeper)
+		poolsIngester := poolsingester.NewPoolIngester(sidecarQueryServer.GetPoolsRepository(), app.GAMMKeeper, app.ConcentratedLiquidityKeeper, app.CosmwasmPoolKeeper, app.BankKeeper, app.ProtoRevKeeper, app.PoolManagerKeeper)
 
 		// Create sqs ingester that encapsulates all ingesters.
 		sqsIngester := sqs.NewSidecarQueryServerIngester(poolsIngester)

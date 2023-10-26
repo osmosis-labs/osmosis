@@ -46,7 +46,7 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, 
 
 		isIFirstByPreference := isIPreferred && !isJPreferred
 
-		return isIFirstByPreference && poolsCopy[i].GetTotalValueLockedUSDC().GT(poolsCopy[j].GetTotalValueLockedUSDC())
+		return isIFirstByPreference && poolsCopy[i].GetTotalValueLockedUOSMO().GT(poolsCopy[j].GetTotalValueLockedUOSMO())
 	})
 
 	logger.Debug("pool count in router ", zap.Int("pool_count", len(poolsCopy)))

@@ -16,7 +16,7 @@ type PoolI interface {
 	// GetType returns the type of the pool (Balancer, Stableswap, Concentrated, etc.)
 	GetType() poolmanagertypes.PoolType
 
-	GetTotalValueLockedUSDC() osmomath.Int
+	GetTotalValueLockedUOSMO() osmomath.Int
 
 	GetPoolDenoms() []string
 
@@ -26,7 +26,8 @@ type PoolI interface {
 }
 
 type SQSPool struct {
-	TotalValueLockedUSDC osmomath.Int `json:"total_value_locked_usdc"`
+	TotalValueLockedUSDC      osmomath.Int `json:"total_value_locked_usdc"`
+	IsErrorInTotalValueLocked bool         `json:"is_error_in_total_value_locked"`
 	// Only CL and Cosmwasm pools need balances appended
 	Balances sdk.Coins `json:"balances,string,omitempty"`
 }
@@ -54,8 +55,8 @@ func (p *PoolWrapper) GetType() poolmanagertypes.PoolType {
 	return poolmanagertypes.PoolType(p.ChainModel.GetType())
 }
 
-// GetTotalValueLockedUSDC implements PoolI.
-func (p *PoolWrapper) GetTotalValueLockedUSDC() osmomath.Int {
+// GetTotalValueLockedUOSMO implements PoolI.
+func (p *PoolWrapper) GetTotalValueLockedUOSMO() osmomath.Int {
 	return p.SQSModel.TotalValueLockedUSDC
 }
 
