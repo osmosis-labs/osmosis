@@ -2,8 +2,8 @@
 
 set -eo pipefail
 
-go get github.com/cosmos/gogoproto 2>/dev/null
-go get github.com/cosmos/cosmos-sdk 2>/dev/null
+# go get github.com/cosmos/gogoproto 2>/dev/null
+# go get github.com/cosmos/cosmos-sdk 2>/dev/null
 
 echo "Generating gogo proto code"
 cd proto
