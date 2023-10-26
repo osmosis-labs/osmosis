@@ -214,7 +214,7 @@ func (q Querier) AllPools(ctx sdk.Context, req queryproto.AllPoolsRequest) (*que
 	}, nil
 }
 
-// SpotPrice returns the spot price of the pool with the given quote and base asset denoms. 18 decimals.
+// ListPoolsByDenom return list pools by denom
 func (q Querier) ListPoolsByDenom(ctx sdk.Context, req queryproto.ListPoolsByDenomRequest) (*queryproto.ListPoolsByDenomResponse, error) {
 	if req.Denom == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid quote asset denom")

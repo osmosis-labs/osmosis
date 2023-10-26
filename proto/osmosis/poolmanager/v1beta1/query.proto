@@ -91,7 +91,7 @@ service Query {
   rpc AllPools(AllPoolsRequest) returns (AllPoolsResponse) {
     option (google.api.http).get = "/osmosis/poolmanager/v1beta1/all-pools";
   }
-  // List pools by denom
+  // ListPoolsByDenom return all pools by denom on the Osmosis chain.
   rpc ListPoolsByDenom(ListPoolsByDenomRequest) returns (ListPoolsByDenomResponse) {
     option (google.api.http).get = "/osmosis/poolmanager/v1beta1/list-pools-by-denom";
   }
@@ -239,7 +239,7 @@ message AllPoolsResponse {
 }
 
 // =======================================================
-
+// ListPoolsByDenomRequest
 message ListPoolsByDenomRequest {
   string denom = 1
       [ (gogoproto.moretags) = "yaml:\"base_asset_denom\"" ];
