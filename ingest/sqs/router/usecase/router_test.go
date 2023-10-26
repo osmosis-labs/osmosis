@@ -30,6 +30,12 @@ func (s *RouterTestSuite) TestNewRouter() {
 	// Prepare all supported pools.
 	allPool := s.PrepareAllSupportedPools()
 
+	// Create additional pools for edge cases
+	var (
+		secondBalancerPoolPoolID = s.PrepareBalancerPool()
+		thirdBalancerPoolID      = s.PrepareBalancerPool()
+	)
+
 	// Get balancer pool
 	balancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, allPool.BalancerPoolID)
 	s.Require().NoError(err)
@@ -46,9 +52,18 @@ func (s *RouterTestSuite) TestNewRouter() {
 	cosmWasmPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, allPool.CosmWasmPoolID)
 	s.Require().NoError(err)
 
+	// Get second & third balancer pools
+	// Note that his pool is preferred but has TVL error flag set.
+	secondBalancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, secondBalancerPoolPoolID)
+	s.Require().NoError(err)
+
+	// Note that his pool is not preferred and has TVL error flag set.
+	thirdBalancerPool, err := s.App.PoolManagerKeeper.GetPool(s.Ctx, thirdBalancerPoolID)
+	s.Require().NoError(err)
+
 	var (
 		// Inputs
-		preferredPoolIDs   = []uint64{allPool.BalancerPoolID, allPool.StableSwapPoolID}
+		preferredPoolIDs   = []uint64{allPool.BalancerPoolID, allPool.StableSwapPoolID, secondBalancerPoolPoolID}
 		maxHops            = 3
 		maxRoutes          = 5
 		maxSplitIterations = 10
@@ -78,11 +93,36 @@ func (s *RouterTestSuite) TestNewRouter() {
 					TotalValueLockedUSDC: osmomath.NewInt(3), // 3
 				},
 			},
+
+			// Note that the pools below have highes TVL.
+			// However, since they have TVL error flag set, they
+			// should be sorted after other pools, unless overriden by preferredPoolIDs.
+			&domain.PoolWrapper{
+				ChainModel: secondBalancerPool,
+				SQSModel: domain.SQSPool{
+					TotalValueLockedUSDC:      osmomath.NewInt(10), // 10
+					IsErrorInTotalValueLocked: true,
+				},
+			},
+			&domain.PoolWrapper{
+				ChainModel: thirdBalancerPool,
+				SQSModel: domain.SQSPool{
+					TotalValueLockedUSDC:      osmomath.NewInt(11), // 11
+					IsErrorInTotalValueLocked: true,
+				},
+			},
 		}
 
 		// Expected
 		// First, preferred pool IDs, then sorted by TVL.
-		expectedSortedPoolIDs = []uint64{allPool.BalancerPoolID, allPool.StableSwapPoolID, allPool.ConcentratedPoolID, allPool.CosmWasmPoolID}
+		expectedSortedPoolIDs = []uint64{
+			allPool.BalancerPoolID,
+			allPool.StableSwapPoolID,
+			secondBalancerPoolPoolID, // preferred pool ID with TVL error flag set
+			allPool.ConcentratedPoolID,
+			allPool.CosmWasmPoolID,
+			thirdBalancerPoolID, // non-preferred pool ID with TVL error flag set
+		}
 	)
 
 	// System under test

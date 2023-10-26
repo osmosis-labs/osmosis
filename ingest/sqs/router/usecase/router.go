@@ -24,7 +24,9 @@ type Router struct {
 // NewRouter returns a new Router.
 // It initialized the routable pools where the given preferredPoolIDs take precedence.
 // The rest of the pools are sorted by TVL.
-// Sets
+// Each pool has a flag indicating whether there was an error in estimating its on-chain TVL.
+// If that is the case, the pool is to be sorted towards the end. However, the preferredPoolIDs overwrites this rule
+// and prioritizes the preferred pools.
 func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, maxRoutes int, maxSplitIterations int, logger log.Logger) Router {
 	if logger == nil {
 		logger = &log.NoOpLogger{}
@@ -41,12 +43,20 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, 
 
 	// Sort all pools by TVL.
 	sort.Slice(poolsCopy, func(i, j int) bool {
-		_, isIPreferred := preferredPoolIDsMap[poolsCopy[i].GetId()]
-		_, isJPreferred := preferredPoolIDsMap[poolsCopy[j].GetId()]
+		poolI := poolsCopy[i]
+		poolJ := poolsCopy[j]
+
+		_, isIPreferred := preferredPoolIDsMap[poolI.GetId()]
+		_, isJPreferred := preferredPoolIDsMap[poolJ.GetId()]
+
+		isITVLError := poolI.GetSQSPoolModel().IsErrorInTotalValueLocked
+		isJTVLError := poolJ.GetSQSPoolModel().IsErrorInTotalValueLocked
+
+		isIFirstByTVLError := isITVLError && !isJTVLError
 
 		isIFirstByPreference := isIPreferred && !isJPreferred
 
-		return isIFirstByPreference && poolsCopy[i].GetTotalValueLockedUOSMO().GT(poolsCopy[j].GetTotalValueLockedUOSMO())
+		return isIFirstByTVLError && isIFirstByPreference && poolI.GetTotalValueLockedUOSMO().GT(poolJ.GetTotalValueLockedUOSMO())
 	})
 
 	logger.Debug("pool count in router ", zap.Int("pool_count", len(poolsCopy)))
