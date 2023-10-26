@@ -306,17 +306,29 @@ proto: proto-help
 PROTO_BUILDER_IMAGE=ghcr.io/cosmos/proto-builder:0.14.0
 PROTO_FORMATTER_IMAGE=tendermintdev/docker-build-proto@sha256:aabcfe2fc19c31c0f198d4cd26393f5e5ca9502d7ea3feafbfe972448fee7cae
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE)
+containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
+containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
 
 proto-all: proto-format proto-gen
 
+# proto-gen:
+# 	@echo "Generating Protobuf files"
+# 	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE) sh ./scripts/protocgen.sh
+
 proto-gen:
 	@echo "Generating Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE) sh ./scripts/protocgen.sh
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE) \
+		sh ./scripts/protocgen.sh; fi
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	@$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
-		find ./proto -name "*.proto" -exec clang-format -i {} \;  
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
+
+# proto-format:
+# 	@echo "Formatting Protobuf files"
+# 	@$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+# 		find ./proto -name "*.proto" -exec clang-format -i {} \;  
 
 proto-lint:
 	@$(protoImage) buf lint --error-format=json
