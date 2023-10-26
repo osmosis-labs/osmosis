@@ -12,7 +12,7 @@ for dir in $proto_dirs; do
   for file in $(find "${dir}" -maxdepth 1 -name '*.proto'); do
     if grep go_package $file &>/dev/null; then
       echo "Generating gogo proto code for $file"
-      buf generate $file --template buf.gen.gogo.yaml
+      buf generate $file --template buf.gen.gogo.yaml -v --debug
     fi
   done
 done
