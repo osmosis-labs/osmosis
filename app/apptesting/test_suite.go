@@ -28,8 +28,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	simapp "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-
 	bankutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/dymensionxyz/dymension/app"
 
@@ -125,7 +123,7 @@ func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 
 // FundModuleAcc funds target modules with specified amount.
 func (s *KeeperTestHelper) FundModuleAcc(moduleName string, amounts sdk.Coins) {
-	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, moduleName, amounts)
+	err := bankutil.FundModuleAccount(s.App.BankKeeper, s.Ctx, moduleName, amounts)
 	s.Require().NoError(err)
 }
 
@@ -256,7 +254,7 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 
 	// allocate reward tokens to distribution module
 	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, rewardAmt)}
-	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, distrtypes.ModuleName, coins)
+	err := bankutil.FundModuleAccount(s.App.BankKeeper, s.Ctx, distrtypes.ModuleName, coins)
 	s.Require().NoError(err)
 
 	// allocate rewards to validator

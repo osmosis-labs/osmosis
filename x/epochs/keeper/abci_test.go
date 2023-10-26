@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	simapp "github.com/dymensionxyz/dymension/app"
+	"github.com/dymensionxyz/dymension/app"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -117,7 +117,7 @@ func initializeBlankEpochInfoFields(epoch types.EpochInfo, identifier string, du
 }
 
 func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app := app.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// On init genesis, default epochs information is set
