@@ -315,9 +315,8 @@ proto-gen:
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace \
-	--workdir /workspace $(PROTO_FORMATTER_IMAGE) \
-	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
+	@$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+		find ./proto -name "*.proto" -exec clang-format -i {} \;  
 
 proto-lint:
 	@$(protoImage) buf lint --error-format=json
