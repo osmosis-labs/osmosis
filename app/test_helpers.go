@@ -6,7 +6,6 @@ import (
 	"time"
 
 	cometbftdb "github.com/cometbft/cometbft-db"
-	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cometbft/cometbft/libs/log"
@@ -128,7 +127,7 @@ func GenesisStateWithValSet(app *OsmosisApp) GenesisState {
 
 // SetupWithCustomHome initializes a new OsmosisApp with a custom home directory
 func SetupWithCustomHome(isCheckTx bool, dir string) *OsmosisApp {
-	db := dbm.NewMemDB()
+	db := cometbftdb.NewMemDB()
 	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts)
 	if !isCheckTx {
 		genesisState := GenesisStateWithValSet(app)

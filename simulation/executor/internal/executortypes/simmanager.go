@@ -95,7 +95,7 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []simtypes.Actio
 	simState := module.SimulationState{
 		AppParams:              loadAppParamsForWasm("params.json"),
 		LegacyParamChange:      []simulation.LegacyParamChange{},
-		LegacyProposalContents: []simulation.WeightedProposalContent{},
+		LegacyProposalContents: []simulation.WeightedProposalContent{}, //nolint:staticcheck
 		Cdc:                    cdc,
 	}
 
@@ -169,11 +169,11 @@ func (m Manager) GenerateGenesisStates(simState *module.SimulationState, sim *si
 			// if we define a random genesis function use it, otherwise use default genesis
 			if mod, ok := simModule.(simtypes.AppModuleSimulationGenesis); ok {
 				mod.SimulatorGenesisState(simState, sim)
-
-			} else {
-				// UNFORKINGNOTE: Figure out how to call DefaultGenesis, if we decide to revive simulator
-				// simState.GenState[simModule.Name()] = simModule.DefaultGenesis(simState.Cdc)
 			}
+			// else {
+			// 	// UNFORKINGNOTE: Figure out how to call DefaultGenesis, if we decide to revive simulator
+			// 	// simState.GenState[simModule.Name()] = simModule.DefaultGenesis(simState.Cdc)
+			// }
 		}
 		if simModule, ok := m.legacyModules[moduleName]; ok {
 			simModule.GenerateGenesisState(simState)

@@ -452,8 +452,8 @@ func MainnetGenesisParams() GenesisParams {
 	}
 
 	genParams.DistributionParams = distributiontypes.DefaultParams()
-	genParams.DistributionParams.BaseProposerReward = osmomath.MustNewDecFromStr("0.01")
-	genParams.DistributionParams.BonusProposerReward = osmomath.MustNewDecFromStr("0.04")
+	genParams.DistributionParams.BaseProposerReward = osmomath.MustNewDecFromStr("0.01")  //nolint:staticcheck
+	genParams.DistributionParams.BonusProposerReward = osmomath.MustNewDecFromStr("0.04") //nolint:staticcheck
 	genParams.DistributionParams.CommunityTax = osmomath.MustNewDecFromStr("0")
 	genParams.DistributionParams.WithdrawAddrEnabled = true
 
