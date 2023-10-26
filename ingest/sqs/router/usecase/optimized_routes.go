@@ -59,7 +59,6 @@ func (r *Router) getOptimalQuote(tokenIn sdk.Coin, tokenOutDenom string) (domain
 
 	// If the split route quote is better than the single route quote, return the split route quote
 	if bestSplitRouteQuote.GetAmountOut().GT(bestSingleRouteQuote.GetAmountOut()) {
-
 		routes := bestSplitRouteQuote.GetRoute()
 
 		r.logger.Debug("split route is selected", zap.Int("route_count", len(routes)))

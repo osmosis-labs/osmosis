@@ -84,7 +84,6 @@ func (r *redisPoolsRepo) getPools(ctx context.Context, storeKey string) ([]domai
 
 	pools := make([]domain.PoolI, 0, len(sqsPoolMapByID))
 	for poolIDKeyStr, sqsPoolModelBytes := range sqsPoolMapByID {
-
 		pool := &domain.PoolWrapper{
 			SQSModel: domain.SQSPool{},
 		}

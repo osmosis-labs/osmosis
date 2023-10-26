@@ -41,7 +41,6 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, 
 
 	// Sort all pools by TVL.
 	sort.Slice(poolsCopy, func(i, j int) bool {
-
 		_, isIPreferred := preferredPoolIDsMap[poolsCopy[i].GetId()]
 		_, isJPreferred := preferredPoolIDsMap[poolsCopy[j].GetId()]
 
