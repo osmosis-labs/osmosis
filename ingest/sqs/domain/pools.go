@@ -107,5 +107,8 @@ type PoolsUsecase interface {
 
 // RouterUsecase represent the router's usecases
 type RouterUsecase interface {
+	// GetOptimalQuote returns the optimal quote for the given tokenIn and tokenOutDenom.
 	GetOptimalQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string) (Quote, error)
+	// GetBestSingleRouteQuote returns the best single route quote for the given tokenIn and tokenOutDenom.
+	GetBestSingleRouteQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string) (Quote, error)
 }

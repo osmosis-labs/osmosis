@@ -62,10 +62,33 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, 
 }
 
 // getCandidateRoutes returns candidate routes from tokenInDenom to tokenOutDenom using DFS.
-// Relies on the constructor to initialize the sorted pools with preferred pool IDs, max routes and max hops
+// Relies on the constructor to initialize the sorted pools with preferred pool IDs, max routes and max hops.
+// It.
+// Once the initial routes are found using DFS, those are sorted by number of hops.
+// If the are overlaps in pool IDs between routes, the routes with more hops are filtered out.
 func (r Router) getCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain.Route, error) {
 	r.logger.Debug("getting candidate routes", zap.String("token_in_denom", tokenInDenom), zap.String("token_out_denom", tokenOutDenom), zap.Int("sorted_pool_count", len(r.sortedPools)))
-	return r.findRoutes(tokenInDenom, tokenOutDenom, &routeImpl{}, make([]bool, len(r.sortedPools)), nil)
+	routes, err := r.findRoutes(tokenInDenom, tokenOutDenom, &routeImpl{}, make([]bool, len(r.sortedPools)), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	r.logger.Debug("found routes ", zap.Int("routes_count", len(routes)))
+
+	// Sort routes by number of hops.
+	sort.Slice(routes, func(i, j int) bool {
+		return len(routes[i].GetPools()) < len(routes[j].GetPools())
+	})
+
+	// Validate the chosen routes.
+	if routes, err = r.validateAndFilterRoutes(routes, tokenInDenom); err != nil {
+		r.logger.Error("validateRoutes failed", zap.Error(err))
+		return nil, err
+	}
+
+	r.logger.Debug("filtered routes ", zap.Int("routes_count", len(routes)))
+
+	return routes, nil
 }
 
 // findRoutes returns routes from tokenInDenom to tokenOutDenom.
@@ -73,6 +96,7 @@ func (r Router) getCandidateRoutes(tokenInDenom, tokenOutDenom string) ([]domain
 // The algorithm utilizes the pools defined on the router, max routes and max hops values.
 // It does not do more than max hops recursive calls.
 // It stops once max routes are found.
+// It aims to avoid considering the same pool twice. If such a case occurs, it will skip the pool and the route.
 //
 // CONTRACT: The routable pool IDs are already sorted by preference (e.g. TVL, preferred)
 //
@@ -84,13 +108,6 @@ func (r Router) findRoutes(tokenInDenom, tokenOutDenom string, currentRoute doma
 	if currentRoute == nil {
 		return nil, ErrNilCurrentRoute
 	}
-
-	// currentRoutePools := currentRoute.GetPools()
-	// fmt.Println("currentRoute pools ", len(currentRoutePools))
-	// for _, pool := range currentRoutePools {
-	// 	fmt.Println("pool ", pool.GetId(), " ", pool.GetPoolDenoms(), " ", pool.GetTokenOutDenom())
-	// }
-	// fmt.Printf("\n")
 
 	// Sorted pools and pools used should have the same length.
 	if len(r.sortedPools) != len(poolsUsed) {
@@ -155,9 +172,66 @@ func (r Router) findRoutes(tokenInDenom, tokenOutDenom string, currentRoute doma
 			continue
 		}
 
-		updatedPoolsUsed := make([]bool, len(poolsUsed))
-		copy(updatedPoolsUsed, poolsUsed)
-		updatedPoolsUsed[i] = true
+		// Note that pools used is reused across the recursive calls
+		// This is to prevent having multiple routes that overlap on the same pool
+		// We currently filter out routes with duplicate pools.
+		// In the future, we may switch to using a prefix tree where this could be improved
+		// and optimized: https://app.clickup.com/t/86a17rrmx
+		copyPoolsUsed := make([]bool, len(poolsUsed))
+		copy(copyPoolsUsed, poolsUsed)
+		copyPoolsUsed[i] = true
+
+		// NOTE: The commendted out logic below does not seem to be needed.
+		// If questioned, remove this. Leaving in here for now to reevaluate later.
+		// No test was found that failed with this commented out.
+		// // Check if final token out denom is in the current pool
+		// // If so, we do not need to recurse further on other denoms
+		// // It is always strictly better to go directly to the final token out denom
+		// foundTokenOut := false
+		// for _, poolDenom := range poolDenoms {
+		// 	if poolDenom == tokenOutDenom {
+		// 		// Skip if this is the previous token out denom
+		// 		if poolDenom == previousTokenOutDenom {
+		// 			continue
+		// 		}
+
+		// 		var updatedPreviousTokenOutDenoms []string
+
+		// 		updatedCurrentRoute := currentRoute.DeepCopy()
+
+		// 		// If we find token in denom in the intermediary pool in the route,
+		// 		// we know for sure that it is more beneficial to start from this pool directly.
+		// 		// As a result, we reset the current route to be empty. This may lead to duplicate routes.
+		// 		// That should be filtered out later.
+		// 		// TODO: alternatively, can we detect this and simply skip?
+		// 		if poolDenom == tokenInDenom {
+		// 			updatedCurrentRoute = &routeImpl{}
+		// 			updatedPreviousTokenOutDenoms = []string{}
+		// 		} else {
+		// 			updatedPreviousTokenOutDenoms = make([]string, len(previousTokenOutDenoms))
+		// 			copy(updatedPreviousTokenOutDenoms, previousTokenOutDenoms)
+		// 			updatedPreviousTokenOutDenoms = append(updatedPreviousTokenOutDenoms, poolDenom)
+		// 		}
+
+		// 		updatedCurrentRoute.AddPool(pool, poolDenom)
+
+		// 		newRoutes, err := r.findRoutes(tokenInDenom, tokenOutDenom, updatedCurrentRoute, poolsUsed, updatedPreviousTokenOutDenoms)
+		// 		if err != nil {
+		// 			return nil, err
+		// 		}
+
+		// 		// Append new routes to result up until the max number of routes is reached.
+		// 		for i := 0; i < len(newRoutes) && len(result) < r.maxRoutes; i++ {
+		// 			result = append(result, newRoutes[i])
+		// 		}
+
+		// 		foundTokenOut = true
+		// 	}
+		// }
+
+		// if foundTokenOut {
+		// 	continue
+		// }
 
 		for _, poolDenom := range poolDenoms {
 			// Skip if this is the previous token out denom
@@ -165,14 +239,26 @@ func (r Router) findRoutes(tokenInDenom, tokenOutDenom string, currentRoute doma
 				continue
 			}
 
-			updatedCurrentRoute := currentRoute.DeepCopy()
-			updatedCurrentRoute.AddPool(pool, poolDenom)
+			var updatedPreviousTokenOutDenoms []string
 
-			updatedPreviousTokenOutDenoms := make([]string, len(previousTokenOutDenoms))
+			updatedCurrentRoute := currentRoute.DeepCopy()
+
+			updatedPreviousTokenOutDenoms = make([]string, len(previousTokenOutDenoms))
 			copy(updatedPreviousTokenOutDenoms, previousTokenOutDenoms)
 			updatedPreviousTokenOutDenoms = append(updatedPreviousTokenOutDenoms, poolDenom)
 
-			newRoutes, err := r.findRoutes(tokenInDenom, tokenOutDenom, updatedCurrentRoute, updatedPoolsUsed, updatedPreviousTokenOutDenoms)
+			updatedCurrentRoute.AddPool(pool, poolDenom)
+
+			// If we find token in denom in the intermediary pool in the route,
+			// we know for sure that it is more beneficial to start from this pool directly.
+			// As a result, we reset the current route to be empty. This may lead to duplicate routes.
+			// That should be filtered out later.
+			if poolDenom == tokenInDenom {
+				updatedCurrentRoute = &routeImpl{}
+				updatedPreviousTokenOutDenoms = []string{}
+			}
+
+			newRoutes, err := r.findRoutes(tokenInDenom, tokenOutDenom, updatedCurrentRoute, copyPoolsUsed, updatedPreviousTokenOutDenoms)
 			if err != nil {
 				return nil, err
 			}

@@ -31,6 +31,7 @@ func NewRouterHandler(e *echo.Echo, us domain.RouterUsecase) {
 		RUsecase: us,
 	}
 	e.GET("/quote", handler.GetOptimalQuote)
+	e.GET("/single-quote", handler.GetBestSingleRouteQuote)
 }
 
 // GetOptimalQuote will determine the optimal quote for a given tokenIn and tokenOutDenom
@@ -38,32 +39,29 @@ func NewRouterHandler(e *echo.Echo, us domain.RouterUsecase) {
 func (a *RouterHandler) GetOptimalQuote(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	tokenInStr := c.QueryParam("tokenIn")
-	tokenOutDenom := c.QueryParam("tokenOutDenom")
-
-	if len(tokenInStr) == 0 {
-		return c.JSON(http.StatusBadRequest, ResponseError{Message: "tokenIn is required"})
-	}
-
-	if len(tokenOutDenom) == 0 {
-		return c.JSON(http.StatusBadRequest, ResponseError{Message: "tokenOutDenom is required"})
-	}
-
-	matches := coinPattern.FindStringSubmatch(tokenInStr)
-	if len(matches) != 3 {
-		return c.JSON(http.StatusBadRequest, ResponseError{Message: "tokenIn is invalid - must be in the format amountDenom"})
-	}
-
-	tokenIn := sdk.Coin{
-		Amount: sdk.MustNewDecFromStr(matches[1]).TruncateInt(),
-		Denom:  matches[2],
-	}
-
-	if err := tokenIn.Validate(); err != nil {
-		return c.JSON(http.StatusBadRequest, ResponseError{Message: err.Error()})
+	tokenOutDenom, tokenIn, err := getValidRoutingParameters(c)
+	if err != nil {
+		return err
 	}
 
 	quote, err := a.RUsecase.GetOptimalQuote(ctx, tokenIn, tokenOutDenom)
+	if err != nil {
+		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, quote)
+}
+
+// GetBestSingleRouteQuote returns the best single route quote to be done directly without a split.
+func (a *RouterHandler) GetBestSingleRouteQuote(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	tokenOutDenom, tokenIn, err := getValidRoutingParameters(c)
+	if err != nil {
+		return err
+	}
+
+	quote, err := a.RUsecase.GetBestSingleRouteQuote(ctx, tokenIn, tokenOutDenom)
 	if err != nil {
 		return c.JSON(getStatusCode(err), ResponseError{Message: err.Error()})
 	}
@@ -87,4 +85,33 @@ func getStatusCode(err error) int {
 	default:
 		return http.StatusInternalServerError
 	}
+}
+
+// getValidRoutingParameters returns the tokenIn and tokenOutDenom from server context if they are valid.
+func getValidRoutingParameters(c echo.Context) (string, sdk.Coin, error) {
+	tokenInStr := c.QueryParam("tokenIn")
+	tokenOutDenom := c.QueryParam("tokenOutDenom")
+
+	if len(tokenInStr) == 0 {
+		return "", sdk.Coin{}, c.JSON(http.StatusBadRequest, ResponseError{Message: "tokenIn is required"})
+	}
+
+	if len(tokenOutDenom) == 0 {
+		return "", sdk.Coin{}, c.JSON(http.StatusBadRequest, ResponseError{Message: "tokenOutDenom is required"})
+	}
+
+	matches := coinPattern.FindStringSubmatch(tokenInStr)
+	if len(matches) != 3 {
+		return "", sdk.Coin{}, c.JSON(http.StatusBadRequest, ResponseError{Message: "tokenIn is invalid - must be in the format amountDenom"})
+	}
+
+	tokenIn := sdk.Coin{
+		Amount: sdk.MustNewDecFromStr(matches[1]).TruncateInt(),
+		Denom:  matches[2],
+	}
+
+	if err := tokenIn.Validate(); err != nil {
+		return "", sdk.Coin{}, c.JSON(http.StatusBadRequest, ResponseError{Message: err.Error()})
+	}
+	return tokenOutDenom, tokenIn, nil
 }

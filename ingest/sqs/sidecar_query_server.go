@@ -103,7 +103,7 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 	routerConfig := domain.RouterConfig{
 		PreferredPoolIDs:   []uint64{},
 		MaxPoolsPerRoute:   4,
-		MaxRoutes:          5,
+		MaxRoutes:          7,
 		MaxSplitIterations: 10,
 	}
 

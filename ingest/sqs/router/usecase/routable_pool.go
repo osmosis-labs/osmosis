@@ -16,14 +16,14 @@ var _ domain.RoutablePool = &routablePoolImpl{}
 
 type routablePoolImpl struct {
 	domain.PoolI
-	tokenOutDenom string
+	TokenOutDenom string "json:\"token_out_denom\""
 }
 
 // NewRoutablePool creates a new RoutablePool.
 func NewRoutablePool(pool domain.PoolI, tokenOutDenom string) domain.RoutablePool {
 	return &routablePoolImpl{
 		PoolI:         pool,
-		tokenOutDenom: tokenOutDenom,
+		TokenOutDenom: tokenOutDenom,
 	}
 }
 
@@ -47,7 +47,7 @@ func (r *routablePoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coi
 	}
 
 	// TODO: remove context from interface as it is unusded
-	tokenOut, err := cfmmPool.CalcOutAmtGivenIn(sdk.Context{}, sdk.NewCoins(tokenIn), r.tokenOutDenom, cfmmPool.GetSpreadFactor(sdk.Context{}))
+	tokenOut, err := cfmmPool.CalcOutAmtGivenIn(sdk.Context{}, sdk.NewCoins(tokenIn), r.TokenOutDenom, cfmmPool.GetSpreadFactor(sdk.Context{}))
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -57,7 +57,7 @@ func (r *routablePoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coi
 
 // GetTokenOutDenom implements RoutablePool.
 func (rp *routablePoolImpl) GetTokenOutDenom() string {
-	return rp.tokenOutDenom
+	return rp.TokenOutDenom
 }
 
 // String implements domain.RoutablePool.

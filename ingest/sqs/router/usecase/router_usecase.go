@@ -39,5 +39,16 @@ func (a *routerUseCase) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coin, t
 
 	router := NewRouter([]uint64{}, allPools, a.config.MaxPoolsPerRoute, a.config.MaxRoutes, a.config.MaxSplitIterations, a.logger)
 
-	return router.getQuote(tokenIn, tokenOutDenom)
+	return router.getOptimalQuote(tokenIn, tokenOutDenom)
+}
+
+// GetBestSingleRouteQuote returns the best single route quote to be done directly without a split.
+func (a *routerUseCase) GetBestSingleRouteQuote(ctx context.Context, tokenIn sdk.Coin, tokenOutDenom string) (domain.Quote, error) {
+	allPools, err := a.poolsUsecase.GetAllPools(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	router := NewRouter([]uint64{}, allPools, a.config.MaxPoolsPerRoute, a.config.MaxRoutes, a.config.MaxSplitIterations, a.logger)
+	return router.getBestSingleRouteQuote(tokenIn, tokenOutDenom)
 }

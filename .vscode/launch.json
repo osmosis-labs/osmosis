@@ -304,7 +304,21 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestRouterTestSuite/TestGetBestSplitRoutesQuote",
+                "TestRouterTestSuite/TestFindRoutes/33",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "ingest/sqs/router/TestGetCandidateRoutes",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/ingest/sqs/router/usecase",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestRouterTestSuite/TestGetCandidateRoutes/33",
                 "-test.v"
             ],
         },
