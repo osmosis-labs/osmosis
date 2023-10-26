@@ -29,6 +29,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
+      - name: Install Buf
+        run: |
+          curl -sSL https://github.com/bufbuild/buf/releases/download/v1.27.0/buf-Linux-x86_64 -o /usr/local/bin/buf
+          chmod +x /usr/local/bin/buf
+          buf --version
       - name: "Check protobuf generated code"
         run: |
           chmod +x ./scripts/protocgen.sh
