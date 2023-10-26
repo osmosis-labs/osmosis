@@ -7,6 +7,8 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryprotov2"
@@ -51,6 +53,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx sdk.Context, req queryproto.Estim
 		return nil, status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
 	}
 
+	ctx = ctx.WithGasMeter(storetypes.NewGasMeter(3_000_000))
 	tokenOutAmount, err := q.K.MultihopEstimateOutGivenExactAmountIn(ctx, req.Routes, tokenIn)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
