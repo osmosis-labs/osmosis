@@ -12,7 +12,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v4 v4.1.0
 	github.com/cosmos/ibc-apps/modules/async-icq/v4 v4.1.0
-	github.com/cosmos/ibc-go/v4 v4.5.0
+	github.com/cosmos/ibc-go/v4 v4.5.1
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
@@ -24,7 +24,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.7-0.20231014001935-1946419d44eb
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231011004221-fd24b80f8366
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.7-0.20231017074304-84e27b5e2aad
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.3-0.20231011004221-fd24b80f8366
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231014001935-1946419d44eb
 	github.com/pkg/errors v0.9.1

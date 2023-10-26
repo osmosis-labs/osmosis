@@ -2,9 +2,9 @@
 
 ## Overview
 
-- **v20 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/TODO)
-- **v20 Upgrade Block Height**: `TODO`
-- **v20 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/TODO)
+- **v20 Proposal**: [Proposal Page](https://www.mintscan.io/osmosis/proposals/658)
+- **v20 Upgrade Block Height**: `12028900`
+- **v20 Upgrade Countdown**: [Block Countdown](https://www.mintscan.io/osmosis/blocks/12028900)
 
 ## Hardware Requirements
 
@@ -82,7 +82,7 @@ source ~/.profile
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v20/bin
 cd $HOME/osmosis
 git pull
-git checkout v20.0.0
+git checkout v20.1.0
 make build
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v20/bin
 ```
@@ -102,7 +102,7 @@ Follow these steps if you opt for a manual upgrade:
 ```sh
 cd $HOME/osmosis
 git pull
-git checkout v20.0.0
+git checkout v20.1.0
 make install
 ```
 
