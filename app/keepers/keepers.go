@@ -57,6 +57,7 @@ import (
 	icahost "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
+	ibcfeekeeper "github.com/cosmos/ibc-go/v7/modules/apps/29-fee/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibcclient "github.com/cosmos/ibc-go/v7/modules/core/02-client"
@@ -142,6 +143,7 @@ type AppKeepers struct {
 	DowntimeKeeper               *downtimedetector.Keeper
 	SlashingKeeper               *slashingkeeper.Keeper
 	IBCKeeper                    *ibckeeper.Keeper
+	IBCFeeKeeper                 *ibcfeekeeper.Keeper
 	IBCHooksKeeper               *ibchookskeeper.Keeper
 	ICAHostKeeper                *icahostkeeper.Keeper
 	ICQKeeper                    *icqkeeper.Keeper
@@ -286,7 +288,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
 		appKeepers.GetSubspace(icahosttypes.SubModuleName),
-		appKeepers.IBCKeeper.ChannelKeeper, // ICS4Wrapper
+		appKeepers.IBCFeeKeeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,

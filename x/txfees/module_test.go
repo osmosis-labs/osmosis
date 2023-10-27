@@ -30,6 +30,7 @@ func TestSetBaseDenomOnInitBlock(t *testing.T) {
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: sims.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
+			ChainId:         "osmosis-1",
 		},
 	)
 

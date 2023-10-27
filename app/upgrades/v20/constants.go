@@ -5,7 +5,6 @@ import (
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/nft"
@@ -19,7 +18,6 @@ var Upgrade = upgrades.Upgrade{
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
-			crisistypes.ModuleName,
 			consensustypes.ModuleName,
 			feegranttypes.ModuleName,
 			group.ModuleName,
