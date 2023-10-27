@@ -560,7 +560,7 @@ func (k Keeper) ListPoolsByDenom(
 	}
 	// Allocate the slice with the exact capacity to avoid reallocations.
 	poolCount := k.GetNextPoolId(ctx)
-	sortedPools := make([]types.PoolI, 0, poolCount)
+	sortedPools := make([]types.PoolI)
 	for _, poolModule := range k.poolModules {
 		currentModulePools, err := poolModule.GetPools(ctx)
 		if err != nil {
