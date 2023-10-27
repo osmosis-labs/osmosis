@@ -197,7 +197,7 @@ Group 3: Pool IDs 6, 7
 		},
 	}
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	// UNFORKINGTODO N: Enable when expedited is back
 	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")

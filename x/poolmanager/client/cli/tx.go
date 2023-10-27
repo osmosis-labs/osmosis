@@ -509,11 +509,11 @@ Ex) denom-pair-taker-fee-proposal uion,uosmo,0.0016,stake,uosmo,0.005,uatom,uosm
 		},
 	}
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	// UNFORKINGTODO N: Uncomment when merge expedited feat
 	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)") //nolint:staticcheck
 
 	return cmd
 }

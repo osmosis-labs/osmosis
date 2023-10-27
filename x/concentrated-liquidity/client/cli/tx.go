@@ -152,11 +152,11 @@ Ex) --pool-records=uion,uosmo,100,0.003,stake,uosmo,1000,0.005 ->
 		},
 	}
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	// UNFORKINGTODO N: Uncomment when merge expedited feat
 	// cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)") //nolint:staticcheck
 	cmd.Flags().String(FlagPoolRecords, "", "The pool records array")
 
 	return cmd
@@ -209,11 +209,11 @@ Note: The new tick spacing value must be less than the current tick spacing valu
 	}
 
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	// UNFORKINGTODO N: Uncomment when merge expedited feat
 	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)") //nolint:staticcheck
 	cmd.Flags().String(FlagPoolIdToTickSpacingRecords, "", "The pool ID to new tick spacing records array")
 
 	return cmd
@@ -225,7 +225,7 @@ func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command) (govt
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +250,7 @@ func parsePoolIdToTickSpacingRecordsArgsToContent(cmd *cobra.Command) (govtypesv
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}

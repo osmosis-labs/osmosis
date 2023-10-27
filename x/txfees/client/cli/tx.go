@@ -72,7 +72,7 @@ Ex) uosmo,1,uion,2,ufoo,0 -> [Adds uosmo<>pool1, uion<>pool2, Removes ufoo as a 
 	}
 
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	// UNFORKINGTODO N: Uncomment when merge expedited feat
 	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
@@ -121,7 +121,7 @@ func parseFeeTokenRecordsArgsToContent(cmd *cobra.Command) (govtypesv1.Content, 
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}

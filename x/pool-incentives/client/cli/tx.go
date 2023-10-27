@@ -81,9 +81,9 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 	}
 
 	cmd.Flags().String(govcli.FlagTitle, "", "The proposal title")
-	cmd.Flags().String(govcli.FlagDescription, "", "The proposal description")
+	cmd.Flags().String(govcli.FlagDescription, "", "The proposal description") //nolint:staticcheck
 	cmd.Flags().String(govcli.FlagDeposit, "", "The proposal deposit")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)") //nolint:staticcheck
 
 	return cmd
 }
@@ -153,9 +153,9 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 	}
 
 	cmd.Flags().String(govcli.FlagTitle, "", "The proposal title")
-	cmd.Flags().String(govcli.FlagDescription, "", "The proposal description")
+	cmd.Flags().String(govcli.FlagDescription, "", "The proposal description") //nolint:staticcheck
 	cmd.Flags().String(govcli.FlagDeposit, "", "The proposal deposit")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)") //nolint:staticcheck
 
 	return cmd
 }

@@ -148,7 +148,7 @@ func NewCmdSubmitSetSuperfluidAssetsProposal() *cobra.Command {
 	}
 
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().String(FlagSuperfluidAssets, "", "The superfluid asset array")
 
@@ -197,7 +197,7 @@ func NewCmdSubmitRemoveSuperfluidAssetsProposal() *cobra.Command {
 	}
 
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().String(FlagSuperfluidAssets, "", "The superfluid asset array")
 
@@ -253,7 +253,7 @@ func parseRemoveSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypesv1.Co
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}
@@ -365,7 +365,7 @@ func NewCmdUpdateUnpoolWhitelistProposal() *cobra.Command {
 	}
 
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().String(FlagPoolIds, "", "The new pool id whitelist to set")
 	cmd.Flags().Bool(FlagOverwrite, false, "The flag indicating whether to overwrite the whitelist or append to it")
