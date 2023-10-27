@@ -61,7 +61,7 @@ During this time:
 
 ## Bug Bounty
 
-Though we don't have an official bug bounty program, we generally offer rewards to security researchers who responsibly disclose vulnerabilities to us. Bounties are generally awarded for vulnerabilities classified as **high** or **critical** severity. Bounty amounts can be discussed and agreed upon during the disclosure process.
+Though we don't have an official bug bounty program, we generally offer rewards to security researchers who responsibly disclose vulnerabilities to us. Bounties are generally awarded for vulnerabilities classified as **high** or **critical** severity. Bounty amounts will be determined during the disclosure process, after the severity has been assessed.
 
 > [!WARNING] 
 > Targeting our production environments will disqualify you from receiving any bounty.
