@@ -43,7 +43,12 @@ Please refrain from testing the vulnerability on our production environments, in
 4. **Resolution**: Once fixed, you will be contacted to verify the solution.
 5. **Public Disclosure**: Details of the vulnerability may be publicly disclosed after ensuring it poses no further risk.
 
-Should a security issue require a network upgrade, additional time may be needed to raise a governance proposal and complete the upgrade.
+During the vulnerability disclosure process, we ask security researchers to keep vulnerabilities and communications around vulnerability submissions private and confidential until a patch is developed. Should a security issue require a network upgrade, additional time may be needed to raise a governance proposal and complete the upgrade.
+
+During this time:
+
+- Avoid exploiting any vulnerabilities you discover.
+- Demonstrate good faith by not disrupting or degrading Osmosis's services.
 
 ## Severity Characterization
 
@@ -56,7 +61,7 @@ Should a security issue require a network upgrade, additional time may be needed
 
 ## Bug Bounty
 
-Though we don't have an official bug bounty program, we generally offer rewards to security researchers who responsibly disclose vulnerabilities to us. Bounties are generally awarded for vulnerabilities classified as medium or high severity. Specific bounty amounts can be negotiated during the disclosure process.
+Though we don't have an official bug bounty program, we generally offer rewards to security researchers who responsibly disclose vulnerabilities to us. Bounties are generally awarded for vulnerabilities classified as **high** or **critical** severity. Bounty amounts can be discussed and agreed upon during the disclosure process.
 
 > [!WARNING] 
 > Targeting our production environments will disqualify you from receiving any bounty.
