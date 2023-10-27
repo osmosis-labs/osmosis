@@ -92,10 +92,6 @@ func newClientContextWithFrom(t *testing.T, fs *pflag.FlagSet) client.Context {
 	t.Helper()
 	clientCtx := client.Context{}
 	from, _ := fs.GetString(flags.FlagFrom)
-	// UNFORKINGNOTE: Keyring does not work the same here, but this change does what we need it to do.
-	// fromAddr, fromName, _, err := client.GetFromFields(clientCtx, clientCtx.Keyring, from)
-	// require.NoError(t, err)
-
 	clientCtx = clientCtx.WithFrom(from).WithFromAddress(sdk.MustAccAddressFromBech32(from)).WithFromName(from)
 	return clientCtx
 }

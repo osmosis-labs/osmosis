@@ -388,10 +388,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 					}
 				})
 			}
-
-			customTMConfig := initTendermintConfig()
-
-			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customTMConfig)
+			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, tmcfg.DefaultConfig())
 		},
 		SilenceUsage: true,
 	}
@@ -405,16 +402,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	)
 
 	return rootCmd, encodingConfig
-}
-
-func initTendermintConfig() *tmcfg.Config {
-	cfg := tmcfg.DefaultConfig()
-
-	// these values put a higher strain on node memory
-	// cfg.P2P.MaxNumInboundPeers = 100
-	// cfg.P2P.MaxNumOutboundPeers = 40
-
-	return cfg
 }
 
 func getHomeEnvironment() string {
@@ -588,7 +575,7 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-// newApp initializes and returns a new Osmosis osmosis.
+// newApp initializes and returns a new Osmosis app.
 func newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	var cache sdk.MultiStorePersistentCache
 

@@ -94,6 +94,7 @@ func (desc TxCliDesc) BuildCommandCustomFn() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			msg, err := desc.ParseAndBuildMsg(clientCtx, args, cmd.Flags())
 			if err != nil {
