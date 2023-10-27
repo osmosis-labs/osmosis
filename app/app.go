@@ -229,7 +229,6 @@ func NewOsmosisApp(
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
-	bApp.SetTxEncoder(txConfig.TxEncoder())
 
 	app := &OsmosisApp{
 		AppKeepers:        keepers.AppKeepers{},

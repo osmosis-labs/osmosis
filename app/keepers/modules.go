@@ -35,6 +35,8 @@ import (
 
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/clmodule"
@@ -67,7 +69,7 @@ import (
 // AppModuleBasics returns ModuleBasics for the module BasicManager.
 var AppModuleBasics = []module.AppModuleBasic{
 	auth.AppModuleBasic{},
-	genutil.AppModuleBasic{},
+	genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 	bank.AppModuleBasic{},
 	capability.AppModuleBasic{},
 	staking.AppModuleBasic{},
