@@ -91,7 +91,7 @@ service Query {
   rpc AllPools(AllPoolsRequest) returns (AllPoolsResponse) {
     option (google.api.http).get = "/osmosis/poolmanager/v1beta1/all-pools";
   }
-  // ListPoolsByDenom return all pools by denom on the Osmosis chain.
+  // ListPoolsByDenom return all pools by denom
   rpc ListPoolsByDenom(ListPoolsByDenomRequest) returns (ListPoolsByDenomResponse) {
     option (google.api.http).get = "/osmosis/poolmanager/v1beta1/list-pools-by-denom";
   }
