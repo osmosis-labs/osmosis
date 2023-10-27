@@ -7,7 +7,6 @@ LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 BUILDDIR ?= $(CURDIR)/build
 DOCKER := $(shell which docker)
-DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.7.0
 E2E_UPGRADE_VERSION := "v20"
 #SHELL := /bin/bash
 
@@ -298,16 +297,11 @@ proto-help:
 	@echo "  all        Run proto-format and proto-gen"
 	@echo "  gen        Generate Protobuf files"
 	@echo "  format     Format Protobuf files"
-	@echo "  image-build  Build the protobuf Docker image"
-	@echo "  image-push  Push the protobuf Docker image"
 
 proto: proto-help
 
 PROTO_BUILDER_IMAGE=ghcr.io/cosmos/proto-builder:0.14.0
-PROTO_FORMATTER_IMAGE=tendermintdev/docker-build-proto@sha256:aabcfe2fc19c31c0f198d4cd26393f5e5ca9502d7ea3feafbfe972448fee7cae
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE)
-containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
-containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
 
 proto-all: proto-format proto-gen
 
@@ -322,13 +316,6 @@ proto-format:
 
 proto-lint:
 	@$(protoImage) buf lint --error-format=json
-
-proto-image-build:
-	@DOCKER_BUILDKIT=1 docker build -t $(protoImageName) -f ./proto/Dockerfile ./proto
-
-proto-image-push:
-	docker push $(protoImageName)
-
 
 test:
 	@go test -v ./x/...

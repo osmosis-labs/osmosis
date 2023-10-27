@@ -168,8 +168,7 @@ type OsmosisApp struct {
 	interfaceRegistry types.InterfaceRegistry
 	invCheckPeriod    uint
 
-	mm *module.Manager
-	// UNFORKINGTODO OQ: Implement sim manager
+	mm           *module.Manager
 	sm           *module.SimulationManager
 	configurator module.Configurator
 	homePath     string
@@ -311,8 +310,7 @@ func NewOsmosisApp(
 	app.mm.SetOrderInitGenesis(OrderInitGenesis(app.mm.ModuleNames())...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
-	// UNFORKINGTODO OQ: Figure out register routes, if at all needed
-	//app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
+
 	app.configurator = module.NewConfigurator(app.AppCodec(), app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 
@@ -374,7 +372,6 @@ func NewOsmosisApp(
 			app.IBCKeeper,
 		),
 	)
-
 	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
 	app.SetEndBlocker(app.EndBlocker)
 
@@ -511,9 +508,9 @@ func (app *OsmosisApp) RegisterNodeService(clientCtx client.Context) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
 }
 
-// SimulationManager always returns nil.
+// SimulationManager implements the SimulationApp interface
 func (app *OsmosisApp) SimulationManager() *module.SimulationManager {
-	return nil
+	return app.sm
 }
 
 // configure store loader that checks if version == upgradeHeight and applies store upgrades

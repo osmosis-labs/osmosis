@@ -326,7 +326,6 @@ func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	var valAddr []byte
 
 	validators := s.App.StakingKeeper.GetAllValidators(s.Ctx)
-	fmt.Println("validators", validators)
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
 		s.Require().NoError(err)

@@ -65,6 +65,8 @@ import (
 
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 
+	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
+
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
 	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
@@ -252,6 +254,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		nft.ModuleName,
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
+		feegrant.ModuleName,
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
 		ibchost.ModuleName,
