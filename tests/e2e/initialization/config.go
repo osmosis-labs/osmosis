@@ -103,7 +103,6 @@ var (
 	OsmoToken       = sdk.NewInt64Coin(OsmoDenom, IbcSendAmount)  // 3,300uosmo
 	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
 	tenOsmo         = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 10_000_000)}
-	fiftyOsmo       = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 50_000_000)}
 	WalletFeeTokens = sdk.NewCoin(E2EFeeToken, osmomath.NewInt(WalletFeeBalance))
 )
 
@@ -509,6 +508,7 @@ func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 	crisisGenState.ConstantFee.Denom = OsmoDenom
 }
 
+//nolint:unparam
 func updateGovGenesis(votingPeriod, expeditedVotingPeriod time.Duration) func(*govtypesv1.GenesisState) {
 	return func(govGenState *govtypesv1.GenesisState) {
 		govGenState.Params.VotingPeriod = &votingPeriod

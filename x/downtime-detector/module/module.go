@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -46,9 +45,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 	return genState.Validate()
-}
-
-func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {

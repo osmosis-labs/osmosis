@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -52,9 +51,6 @@ func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEnc
 
 // ---------------------------------------
 // Interfaces.
-func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
-}
-
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)) //nolint:errcheck
 }

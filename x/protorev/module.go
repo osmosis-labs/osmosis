@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -127,9 +126,6 @@ func (AppModule) QuerierRoute() string { return types.RouterKey }
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
-}
-
-func (a AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 // RegisterInvariants registers the invariants of the module. If an invariant deviates from its predicted value, the InvariantRegistry triggers appropriate logic (most often the chain will be halted)

@@ -15,7 +15,6 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -27,7 +26,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/osmosis-labs/osmosis/v20/x/mint/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/mint/client/rest"
 	"github.com/osmosis-labs/osmosis/v20/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v20/x/mint/simulation"
 	"github.com/osmosis-labs/osmosis/v20/x/mint/types"
@@ -71,11 +69,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	}
 
 	return types.ValidateGenesis(data)
-}
-
-// RegisterRESTRoutes registers the REST routes for the mint module.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(clientCtx, rtr)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the mint module.

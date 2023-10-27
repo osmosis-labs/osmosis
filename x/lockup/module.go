@@ -17,7 +17,6 @@ import (
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -30,7 +29,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v20/x/lockup/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/lockup/client/rest"
 	"github.com/osmosis-labs/osmosis/v20/x/lockup/keeper"
 
 	simulation "github.com/osmosis-labs/osmosis/v20/x/lockup/simulation"
@@ -79,11 +77,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 	return genState.Validate()
-}
-
-// RegisterRESTRoutes registers the capability module's REST service handlers.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(clientCtx, rtr)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.

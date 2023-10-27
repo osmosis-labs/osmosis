@@ -22,7 +22,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var defaultGenesisBz []byte
+// var defaultGenesisBz []byte
 
 // func getDefaultGenesisStateBytes() []byte {
 // 	if len(defaultGenesisBz) == 0 {

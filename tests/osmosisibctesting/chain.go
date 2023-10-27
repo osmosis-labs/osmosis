@@ -2,9 +2,10 @@ package osmosisibctesting
 
 import (
 	"encoding/json"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"math/rand"
 	"time"
+
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -77,6 +78,9 @@ func SignAndDeliver(
 		accSeqs,
 		priv...,
 	)
+	if err != nil {
+		return sdk.GasInfo{}, nil, err
+	}
 
 	// Simulate a sending a transaction
 	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)

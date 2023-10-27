@@ -294,7 +294,7 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	// UNFORKINGTODO N: Uncomment when merge expedited feat
 	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)") //nolint:staticcheck
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
 
 	return cmd
@@ -346,7 +346,7 @@ func NewCmdSubmitCreateCLPoolAndLinkToCFMMProposal() *cobra.Command {
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	// UNFORKINGTODO N: Uncomment when merge expedited feat
 	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)") //nolint:staticcheck
 	cmd.Flags().String(FlagPoolRecords, "", "The pool records array")
 
 	return cmd
@@ -927,7 +927,7 @@ func parsePoolRecordsWithCFMMLink(cmd *cobra.Command) ([]types.PoolRecordWithCFM
 }
 
 func parseSetScalingFactorControllerArgsToContent(cmd *cobra.Command) (govtypesv1.Content, error) {
-	proposalFile, err := cmd.Flags().GetString(govcli.FlagProposal)
+	proposalFile, err := cmd.Flags().GetString(govcli.FlagProposal) //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}

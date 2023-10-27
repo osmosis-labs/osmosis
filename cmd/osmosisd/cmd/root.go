@@ -490,7 +490,10 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	debugCmd.AddCommand(ConvertBech32Cmd())
 	debugCmd.AddCommand(DebugProtoMarshalledBytes())
 
-	gentxModule := osmosis.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
+	gentxModule, ok := osmosis.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
+	if !ok {
+		panic(fmt.Errorf("expected %s module to be an instance of type %T", genutiltypes.ModuleName, genutil.AppModuleBasic{}))
+	}
 
 	rootCmd.AddCommand(
 		// genutilcli.InitCmd(osmosis.ModuleBasics, osmosis.DefaultNodeHome),

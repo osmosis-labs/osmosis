@@ -76,7 +76,7 @@ Ex) uosmo,1,uion,2,ufoo,0 -> [Adds uosmo<>pool1, uion<>pool2, Removes ufoo as a 
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	// UNFORKINGTODO N: Uncomment when merge expedited feat
 	//cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)") //nolint:staticcheck
 	cmd.Flags().String(FlagFeeTokens, "", "The fee token records array")
 
 	return cmd
