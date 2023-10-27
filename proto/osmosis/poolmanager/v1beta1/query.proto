@@ -242,7 +242,7 @@ message AllPoolsResponse {
 // ListPoolsByDenomRequest
 message ListPoolsByDenomRequest {
   string denom = 1
-      [ (gogoproto.moretags) = "yaml:\"base_asset_denom\"" ];
+      [ (gogoproto.moretags) = "yaml:\"denom\"" ];
 }
 
 
