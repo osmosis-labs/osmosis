@@ -553,7 +553,7 @@ func (k Keeper) AllPools(
 // pool manager keeper.
 func (k Keeper) ListPoolsByDenom(
 	ctx sdk.Context,
-	Denom string,
+	denom string,
 ) ([]types.PoolI, error) {
 	less := func(i, j types.PoolI) bool {
 		return i.GetId() < j.GetId()
