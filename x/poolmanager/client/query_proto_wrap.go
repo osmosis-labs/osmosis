@@ -217,7 +217,7 @@ func (q Querier) AllPools(ctx sdk.Context, req queryproto.AllPoolsRequest) (*que
 // ListPoolsByDenom returns a list of pools filtered by denom
 func (q Querier) ListPoolsByDenom(ctx sdk.Context, req queryproto.ListPoolsByDenomRequest) (*queryproto.ListPoolsByDenomResponse, error) {
 	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid quote asset denom")
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
 	}
 	pools, err := q.K.ListPoolsByDenom(ctx, req.Denom)
 	if err != nil {
