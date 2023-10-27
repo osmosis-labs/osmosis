@@ -33,6 +33,8 @@ import (
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module"
 
+	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
+
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
 	clclient "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/clmodule"
@@ -101,6 +103,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	params.AppModuleBasic{},
 	crisis.AppModuleBasic{},
 	slashing.AppModuleBasic{},
+	feegrantmodule.AppModuleBasic{},
 	authzmodule.AppModuleBasic{},
 	consensus.AppModuleBasic{},
 	ibc.AppModuleBasic{},

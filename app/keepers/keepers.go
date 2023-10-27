@@ -105,6 +105,8 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
@@ -134,6 +136,7 @@ type AppKeepers struct {
 	AccountKeeper                *authkeeper.AccountKeeper
 	BankKeeper                   bankkeeper.BaseKeeper
 	AuthzKeeper                  *authzkeeper.Keeper
+	FeeGrantKeeper               *feegrantkeeper.Keeper
 	StakingKeeper                *stakingkeeper.Keeper
 	DistrKeeper                  *distrkeeper.Keeper
 	DowntimeKeeper               *downtimedetector.Keeper
@@ -219,6 +222,13 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 	)
 	appKeepers.AuthzKeeper = &authzKeeper
+
+	feeGrantKeeper := feegrantkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[feegrant.StoreKey],
+		appKeepers.AccountKeeper,
+	)
+	appKeepers.FeeGrantKeeper = &feeGrantKeeper
 
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
@@ -824,6 +834,7 @@ func KVStoreKeys() []string {
 		evidencetypes.StoreKey,
 		ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey,
+		feegrant.StoreKey,
 		gammtypes.StoreKey,
 		twaptypes.StoreKey,
 		lockuptypes.StoreKey,
