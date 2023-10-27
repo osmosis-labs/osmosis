@@ -58,6 +58,7 @@ func setupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 	}
 	paramSpace, ok := keepers.ParamsKeeper.GetSubspace(ibcratelimittypes.ModuleName)
 	if !ok {
+		//nolint:staticcheck
 		return sdkerrors.New("rate-limiting-upgrades", 2, "can't create paramspace")
 	}
 	paramSpace.SetParamSet(ctx, &params)
