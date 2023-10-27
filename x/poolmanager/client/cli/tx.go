@@ -563,7 +563,7 @@ func parseDenomPairTakerFeeArgToContent(cmd *cobra.Command, arg string) (govtype
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}

@@ -210,7 +210,7 @@ func parseSetSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypesv1.Conte
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}
@@ -387,7 +387,7 @@ func parseUpdateUnpoolWhitelistArgsToContent(flags *flag.FlagSet) (govtypesv1.Co
 		return nil, err
 	}
 
-	description, err := flags.GetString(govcli.FlagDescription)
+	description, err := flags.GetString(govcli.FlagDescription) //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}

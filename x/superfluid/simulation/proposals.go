@@ -18,6 +18,8 @@ const (
 )
 
 // ProposalContents defines the module weighted proposals' contents.
+//
+//nolint:staticcheck
 func ProposalContents(k keeper.Keeper, gk types.GammKeeper) []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{
 		simulation.NewWeightedProposalContent(

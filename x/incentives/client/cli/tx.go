@@ -212,7 +212,7 @@ func parseCreateGroupArgToContent(cmd *cobra.Command, arg string) (govtypesv1.Co
 		return nil, err
 	}
 
-	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}

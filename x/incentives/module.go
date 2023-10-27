@@ -176,6 +176,8 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents returns nil for governance proposals contents.
 // Should eventually be deleted in a future update.
+//
+//nolint:staticcheck
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil
 }
