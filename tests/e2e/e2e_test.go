@@ -389,6 +389,10 @@ func (s *IntegrationTestSuite) SuperfluidVoting() {
 	superfluidVotingWallet := chainABNode.CreateWallet("TestSuperfluidVoting", chainAB)
 	chainABNode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), initialization.ValidatorWalletName, superfluidVotingWallet)
 	lockId := chainABNode.LockTokens(fmt.Sprintf("%v%s", osmomath.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
+
+	// UNFORKINGNOTE: Now that we need to query the tx hash after submission due to no longer having block send type, we temporarily need to
+	// sleep here until a more robust solution is found.
+	time.Sleep(5 * time.Second)
 	chainABNode.SuperfluidDelegate(lockId, chainABNode.OperatorAddress, superfluidVotingWallet)
 
 	// create a text prop and vote yes
