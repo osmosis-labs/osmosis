@@ -558,7 +558,7 @@ func (k Keeper) ListPoolsByDenom(
 	less := func(i, j types.PoolI) bool {
 		return i.GetId() < j.GetId()
 	}
-	//	Allocate the slice with the exact capacity to avoid reallocations.
+	// Allocate the slice with the exact capacity to avoid reallocations.
 	poolCount := k.GetNextPoolId(ctx)
 	sortedPools := make([]types.PoolI, 0, poolCount)
 	for _, poolModule := range k.poolModules {
