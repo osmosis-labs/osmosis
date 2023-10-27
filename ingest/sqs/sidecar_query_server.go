@@ -19,6 +19,7 @@ import (
 	poolsHttpDelivery "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/delivery/http"
 	poolsRedisRepository "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/repository/redis"
 	poolsUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/usecase"
+	redisrepo "github.com/osmosis-labs/osmosis/v20/ingest/sqs/repository/redis"
 
 	routerHttpDelivery "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/delivery/http"
 	routerUseCase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
@@ -28,16 +29,23 @@ import (
 // It encapsulates all logic for ingesting chain data into the server
 // and exposes endpoints for querying formatter and processed data from frontend.
 type SideCarQueryServer interface {
+	GetTxManager() domain.TxManager
 	GetPoolsRepository() domain.PoolsRepository
 }
 
 type sideCarQueryServer struct {
+	txManager       domain.TxManager
 	poolsRepository domain.PoolsRepository
 }
 
 // GetPoolsRepository implements SideCarQueryServer.
 func (sqs *sideCarQueryServer) GetPoolsRepository() domain.PoolsRepository {
 	return sqs.poolsRepository
+}
+
+// GetTxManager implements SideCarQueryServer.
+func (sqs *sideCarQueryServer) GetTxManager() domain.TxManager {
+	return sqs.txManager
 }
 
 // NewSideCarQueryServer creates a new sidecar query server (SQS).
@@ -93,10 +101,13 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 		return nil, err
 	}
 
+	// Creare repository manager
+	redisTxManager := redisrepo.NewTxManager(redisClient)
+
 	// Initialize pools repository, usecase and HTTP handler
-	poolsRepository := poolsRedisRepository.NewRedisPoolsRepo(appCodec, redisClient)
+	poolsRepository := poolsRedisRepository.NewRedisPoolsRepo(appCodec, redisTxManager)
 	timeoutContext := time.Duration(useCaseTimeoutDuration) * time.Second
-	poolsUseCase := poolsUseCase.NewPoolsUsecase(timeoutContext, poolsRepository)
+	poolsUseCase := poolsUseCase.NewPoolsUsecase(timeoutContext, poolsRepository, redisTxManager)
 	poolsHttpDelivery.NewPoolsHandler(e, poolsUseCase)
 
 	// TODO: move to config file
@@ -121,6 +132,7 @@ func NewSideCarQueryServer(appCodec codec.Codec, dbHost, dbPort, sideCarQuerySer
 	}()
 
 	return &sideCarQueryServer{
+		txManager:       redisTxManager,
 		poolsRepository: poolsRepository,
 	}, nil
 }

@@ -14,12 +14,14 @@ import (
 )
 
 type redisPoolsRepo struct {
-	appCodec    codec.Codec
-	client      *redis.Client
-	txPipeliner redis.Pipeliner
+	appCodec          codec.Codec
+	client            *redis.Client
+	repositoryManager domain.TxManager
 }
 
-var _ domain.PoolsRepository = &redisPoolsRepo{}
+var (
+	_ domain.PoolsRepository = &redisPoolsRepo{}
+)
 
 const (
 	cfmmPoolKey         = "cfmmPool"
@@ -28,26 +30,24 @@ const (
 )
 
 // NewRedisPoolsRepo will create an implementation of pools.Repository
-func NewRedisPoolsRepo(appCodec codec.Codec, client *redis.Client) domain.PoolsRepository {
+func NewRedisPoolsRepo(appCodec codec.Codec, repositoryManager domain.TxManager) domain.PoolsRepository {
 	return &redisPoolsRepo{
-		appCodec: appCodec,
-		client:   client,
+		appCodec:          appCodec,
+		repositoryManager: repositoryManager,
 	}
 }
 
 // GetAllCFMM implements domain.PoolsRepository.
 // Returns balancer and stableswap pools sorted by ID.
 func (r *redisPoolsRepo) GetAllCFMM(ctx context.Context) ([]domain.PoolI, error) {
-	if err := r.startTx(ctx); err != nil {
-		return nil, err
-	}
+	tx := r.repositoryManager.StartTx()
 
-	sqsPoolMapByIDCmd, chainPoolMapByIDCmd, err := r.requestPoolsAtomically(ctx, cfmmPoolKey)
+	sqsPoolMapByIDCmd, chainPoolMapByIDCmd, err := r.requestPoolsAtomically(ctx, tx, cfmmPoolKey)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := r.execTx(ctx); err != nil {
+	if err := tx.Exec(ctx); err != nil {
 		return nil, err
 	}
 
@@ -60,16 +60,14 @@ func (r *redisPoolsRepo) GetAllCFMM(ctx context.Context) ([]domain.PoolI, error)
 // GetAllConcentrated implements domain.PoolsRepository.
 // Returns concentrated pools sorted by ID.
 func (r *redisPoolsRepo) GetAllConcentrated(ctx context.Context) ([]domain.PoolI, error) {
-	if err := r.startTx(ctx); err != nil {
-		return nil, err
-	}
+	tx := r.repositoryManager.StartTx()
 
-	sqsPoolMapByIDCmd, chainPoolMapByIDCmd, err := r.requestPoolsAtomically(ctx, concentratedPoolKey)
+	sqsPoolMapByIDCmd, chainPoolMapByIDCmd, err := r.requestPoolsAtomically(ctx, tx, concentratedPoolKey)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := r.execTx(ctx); err != nil {
+	if err := tx.Exec(ctx); err != nil {
 		return nil, err
 	}
 
@@ -82,16 +80,14 @@ func (r *redisPoolsRepo) GetAllConcentrated(ctx context.Context) ([]domain.PoolI
 // GetAllCosmWasm implements domain.PoolsRepository.
 // Returns cosmwasm pools sorted by ID.
 func (r *redisPoolsRepo) GetAllCosmWasm(ctx context.Context) ([]domain.PoolI, error) {
-	if err := r.startTx(ctx); err != nil {
-		return nil, err
-	}
+	tx := r.repositoryManager.StartTx()
 
-	sqsPoolMapByIDCmd, chainPoolMapByIDCmd, err := r.requestPoolsAtomically(ctx, cosmWasmPoolKey)
+	sqsPoolMapByIDCmd, chainPoolMapByIDCmd, err := r.requestPoolsAtomically(ctx, tx, cosmWasmPoolKey)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := r.execTx(ctx); err != nil {
+	if err := tx.Exec(ctx); err != nil {
 		return nil, err
 	}
 
@@ -104,26 +100,24 @@ func (r *redisPoolsRepo) GetAllCosmWasm(ctx context.Context) ([]domain.PoolI, er
 // GetAllPools implements domain.PoolsRepository.
 // Atomically reads all pools from Redis.
 func (r *redisPoolsRepo) GetAllPools(ctx context.Context) ([]domain.PoolI, error) {
-	if err := r.startTx(ctx); err != nil {
-		return nil, err
-	}
+	tx := r.repositoryManager.StartTx()
 
-	sqsPoolMapByIDCmdCFMM, chainPoolMapByIDCmdCFMM, err := r.requestPoolsAtomically(ctx, cfmmPoolKey)
+	sqsPoolMapByIDCmdCFMM, chainPoolMapByIDCmdCFMM, err := r.requestPoolsAtomically(ctx, tx, cfmmPoolKey)
 	if err != nil {
 		return nil, err
 	}
 
-	sqsPoolMapByIDCmdConcentrated, chainPoolMapByIDCmdConcentrated, err := r.requestPoolsAtomically(ctx, concentratedPoolKey)
+	sqsPoolMapByIDCmdConcentrated, chainPoolMapByIDCmdConcentrated, err := r.requestPoolsAtomically(ctx, tx, concentratedPoolKey)
 	if err != nil {
 		return nil, err
 	}
 
-	sqsPoolMapByIDCmdCosmwasm, chainPoolMapByIDCmdCosmwasm, err := r.requestPoolsAtomically(ctx, cosmWasmPoolKey)
+	sqsPoolMapByIDCmdCosmwasm, chainPoolMapByIDCmdCosmwasm, err := r.requestPoolsAtomically(ctx, tx, cosmWasmPoolKey)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := r.execTx(ctx); err != nil {
+	if err := tx.Exec(ctx); err != nil {
 		return nil, err
 	}
 
@@ -156,26 +150,17 @@ func (r *redisPoolsRepo) GetAllPools(ctx context.Context) ([]domain.PoolI, error
 	return allPools, nil
 }
 
-func (r *redisPoolsRepo) StorePools(ctx context.Context, cfmmPools []domain.PoolI, concentratedPools []domain.PoolI, cosmwasmPools []domain.PoolI) error {
-	// Start atomic transaction
-	if err := r.startTx(ctx); err != nil {
+func (r *redisPoolsRepo) StorePools(ctx context.Context, tx domain.Tx, cfmmPools []domain.PoolI, concentratedPools []domain.PoolI, cosmwasmPools []domain.PoolI) error {
+
+	if err := r.addCFMMPoolsTx(ctx, tx, cfmmPools); err != nil {
 		return err
 	}
 
-	if err := r.addCFMMPoolsTx(ctx, cfmmPools); err != nil {
+	if err := r.addConcentratedPoolsTx(ctx, tx, concentratedPools); err != nil {
 		return err
 	}
 
-	if err := r.addConcentratedPoolsTx(ctx, concentratedPools); err != nil {
-		return err
-	}
-
-	if err := r.addCosmwasmPoolsTx(ctx, cosmwasmPools); err != nil {
-		return err
-	}
-
-	// Finish atomic transaction
-	if err := r.execTx(ctx); err != nil {
+	if err := r.addCosmwasmPoolsTx(ctx, tx, cosmwasmPools); err != nil {
 		return err
 	}
 
@@ -185,31 +170,40 @@ func (r *redisPoolsRepo) StorePools(ctx context.Context, cfmmPools []domain.Pool
 // addCFMMPoolsTx pipelines the given CFMM pools at the given storeKey to be executed atomically in a transaction.
 // CONTRACT: all pools are CFMM.
 // This method does not perform any validation.
-func (r *redisPoolsRepo) addCFMMPoolsTx(ctx context.Context, pools []domain.PoolI) (err error) {
-	return r.addPoolsTx(ctx, cfmmPoolKey, pools)
+func (r *redisPoolsRepo) addCFMMPoolsTx(ctx context.Context, tx domain.Tx, pools []domain.PoolI) (err error) {
+	return r.addPoolsTx(ctx, tx, cfmmPoolKey, pools)
 }
 
 // addConcentratedPoolsTx pipelines the given concentrated pools at the given storeKey to be executed atomically in a transaction.
 // CONTRACT: all pools are concentrated.
 // This method does not perform any validation.
-func (r *redisPoolsRepo) addConcentratedPoolsTx(ctx context.Context, pools []domain.PoolI) error {
-	return r.addPoolsTx(ctx, concentratedPoolKey, pools)
+func (r *redisPoolsRepo) addConcentratedPoolsTx(ctx context.Context, tx domain.Tx, pools []domain.PoolI) error {
+	return r.addPoolsTx(ctx, tx, concentratedPoolKey, pools)
 }
 
 // addCosmWasmPoolsTx pipelines the given cosmwasm pools at the given storeKey to be executed atomically in a transaction.
 // CONTRACT: all pools are cosmwasm.
 // This method does not perform any validation.
-func (r *redisPoolsRepo) addCosmwasmPoolsTx(ctx context.Context, pools []domain.PoolI) error {
-	return r.addPoolsTx(ctx, cosmWasmPoolKey, pools)
+func (r *redisPoolsRepo) addCosmwasmPoolsTx(ctx context.Context, tx domain.Tx, pools []domain.PoolI) error {
+	return r.addPoolsTx(ctx, tx, cosmWasmPoolKey, pools)
 }
 
-func (r *redisPoolsRepo) requestPoolsAtomically(ctx context.Context, storeKey string) (sqsPoolMapByID *redis.MapStringStringCmd, chainPoolMapByID *redis.MapStringStringCmd, err error) {
-	if r.txPipeliner == nil {
-		return nil, nil, fmt.Errorf("txPipeline does not exist")
+func (r *redisPoolsRepo) requestPoolsAtomically(ctx context.Context, tx domain.Tx, storeKey string) (sqsPoolMapByID *redis.MapStringStringCmd, chainPoolMapByID *redis.MapStringStringCmd, err error) {
+	if !tx.IsActive() {
+		return nil, nil, fmt.Errorf("tx is inactive")
 	}
 
-	sqsPoolMapByID = r.txPipeliner.HGetAll(ctx, sqsPoolModelKey(storeKey))
-	chainPoolMapByID = r.txPipeliner.HGetAll(ctx, chainPoolModelKey(storeKey))
+	redisTx, err := tx.AsRedisTx()
+	if err != nil {
+		return nil, nil, err
+	}
+	pipeliner, err := redisTx.GetPipeliner(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	sqsPoolMapByID = pipeliner.HGetAll(ctx, sqsPoolModelKey(storeKey))
+	chainPoolMapByID = pipeliner.HGetAll(ctx, chainPoolModelKey(storeKey))
 
 	return sqsPoolMapByID, chainPoolMapByID, nil
 }
@@ -254,9 +248,15 @@ func (r *redisPoolsRepo) getPools(sqsPoolMapByID, chainPoolMapByID map[string]st
 }
 
 // addPoolsTx pipelines the given pools at the given storeKey to be executed atomically in a transaction.
-func (r *redisPoolsRepo) addPoolsTx(ctx context.Context, storeKey string, pools []domain.PoolI) error {
-	if r.txPipeliner == nil {
-		return fmt.Errorf("txPipeline does not exist")
+func (r *redisPoolsRepo) addPoolsTx(ctx context.Context, tx domain.Tx, storeKey string, pools []domain.PoolI) error {
+
+	redisTx, err := tx.AsRedisTx()
+	if err != nil {
+		return err
+	}
+	pipeliner, err := redisTx.GetPipeliner(ctx)
+	if err != nil {
+		return err
 	}
 
 	for _, pool := range pools {
@@ -271,51 +271,16 @@ func (r *redisPoolsRepo) addPoolsTx(ctx context.Context, storeKey string, pools 
 		}
 
 		// Note that we have 2x write and read amplification due to storage layout. We can optimize this later.
-		err = r.txPipeliner.HSet(ctx, sqsPoolModelKey(storeKey), pool.GetId(), serializedSQSPoolModel).Err()
+		err = pipeliner.HSet(ctx, sqsPoolModelKey(storeKey), pool.GetId(), serializedSQSPoolModel).Err()
 		if err != nil {
 			return err
 		}
 
-		err = r.txPipeliner.HSet(ctx, chainPoolModelKey(storeKey), pool.GetId(), serializedChainPoolModel).Err()
+		err = pipeliner.HSet(ctx, chainPoolModelKey(storeKey), pool.GetId(), serializedChainPoolModel).Err()
 		if err != nil {
 			return err
 		}
 	}
-	return nil
-}
-
-// execTx executes all operations pipelined into an internal transaction
-// atomically. For reads, the results are only available after execTx.
-// Once execTx is executed, startTx must be called again before starting any
-// new operations.
-func (r *redisPoolsRepo) execTx(ctx context.Context) error {
-	if r.txPipeliner == nil {
-		return fmt.Errorf("txPipeline does not exist")
-	}
-
-	_, err := r.txPipeliner.Exec(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Clear if not executed
-	r.txPipeliner.Discard()
-	r.txPipeliner = nil
-
-	return nil
-}
-
-// startTx starts an atomic transaction. All operations get pipeline until
-// execTx is called. For reads, the results are only available after execTx.
-// Once execTx is executed, startTx must be called again before starting any
-// new operations.
-func (r *redisPoolsRepo) startTx(context.Context) error {
-	if r.txPipeliner != nil {
-		return fmt.Errorf("txPipeline already exists")
-	}
-
-	r.txPipeliner = r.client.TxPipeline()
-
 	return nil
 }
 

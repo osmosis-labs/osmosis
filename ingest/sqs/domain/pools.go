@@ -90,7 +90,7 @@ type PoolsRepository interface {
 	// GetAllCosmWasm atomically reads and returns CosmWasm pools sorted by ID.
 	GetAllCosmWasm(context.Context) ([]PoolI, error)
 	// StorePools atomically stores the given pools.
-	StorePools(ctx context.Context, cfmmPools []PoolI, concentratedPools []PoolI, cosmwasmPools []PoolI) error
+	StorePools(ctx context.Context, tx Tx, cfmmPools []PoolI, concentratedPools []PoolI, cosmwasmPools []PoolI) error
 }
 
 // PoolsUsecase represent the pool's usecases

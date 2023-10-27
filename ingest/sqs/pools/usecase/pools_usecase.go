@@ -8,15 +8,17 @@ import (
 )
 
 type poolsUseCase struct {
-	contextTimeout  time.Duration
-	poolsRepository domain.PoolsRepository
+	contextTimeout         time.Duration
+	poolsRepository        domain.PoolsRepository
+	redisRepositoryManager domain.TxManager
 }
 
 // NewPoolsUsecase will create a new pools use case object
-func NewPoolsUsecase(timeout time.Duration, poolsRepository domain.PoolsRepository) domain.PoolsUsecase {
+func NewPoolsUsecase(timeout time.Duration, poolsRepository domain.PoolsRepository, redisRepositoryManager domain.TxManager) domain.PoolsUsecase {
 	return &poolsUseCase{
-		contextTimeout:  timeout,
-		poolsRepository: poolsRepository,
+		contextTimeout:         timeout,
+		poolsRepository:        poolsRepository,
+		redisRepositoryManager: redisRepositoryManager,
 	}
 }
 

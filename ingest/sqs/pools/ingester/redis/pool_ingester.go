@@ -1,4 +1,4 @@
-package ingester
+package redis
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,6 +23,7 @@ import (
 // has a flag to indicate that there was an error in TVL calculation.
 type poolIngester struct {
 	poolsRepository    domain.PoolsRepository
+	repositoryManager  domain.TxManager
 	gammKeeper         common.PoolKeeper
 	concentratedKeeper common.PoolKeeper
 	cosmWasmKeeper     common.CosmWasmPoolKeeper
@@ -42,9 +43,10 @@ type denomRoutingInfo struct {
 const UOSMO = "uosmo"
 
 // NewPoolIngester returns a new pool ingester.
-func NewPoolIngester(poolsRepository domain.PoolsRepository, gammKeeper common.PoolKeeper, concentratedKeeper common.PoolKeeper, cosmwasmKeeper common.CosmWasmPoolKeeper, bankKeeper common.BankKeeper, protorevKeeper common.ProtorevKeeper, poolManagerKeeper common.PoolManagerKeeper) ingest.Ingester {
+func NewPoolIngester(poolsRepository domain.PoolsRepository, repositoryManager domain.TxManager, gammKeeper common.PoolKeeper, concentratedKeeper common.PoolKeeper, cosmwasmKeeper common.CosmWasmPoolKeeper, bankKeeper common.BankKeeper, protorevKeeper common.ProtorevKeeper, poolManagerKeeper common.PoolManagerKeeper) ingest.AtomicIngester {
 	return &poolIngester{
 		poolsRepository:    poolsRepository,
+		repositoryManager:  repositoryManager,
 		gammKeeper:         gammKeeper,
 		concentratedKeeper: concentratedKeeper,
 		cosmWasmKeeper:     cosmwasmKeeper,
@@ -55,13 +57,13 @@ func NewPoolIngester(poolsRepository domain.PoolsRepository, gammKeeper common.P
 }
 
 // ProcessBlock implements ingest.Ingester.
-func (pi *poolIngester) ProcessBlock(ctx sdk.Context) error {
-	return pi.updatePoolState(ctx)
+func (pi *poolIngester) ProcessBlock(ctx sdk.Context, tx domain.Tx) error {
+	return pi.updatePoolState(ctx, tx)
 }
 
-var _ ingest.Ingester = &poolIngester{}
+var _ ingest.AtomicIngester = &poolIngester{}
 
-func (pi *poolIngester) updatePoolState(ctx sdk.Context) error {
+func (pi *poolIngester) updatePoolState(ctx sdk.Context, tx domain.Tx) error {
 	goCtx := sdk.WrapSDKContext(ctx)
 
 	// Create a map from denom to routable pool ID.
@@ -122,7 +124,7 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context) error {
 		cosmWasmPoolsParsed = append(cosmWasmPoolsParsed, pool)
 	}
 
-	err = pi.poolsRepository.StorePools(goCtx, cfmmPoolsParsed, concentratedPoolsParsed, cosmWasmPoolsParsed)
+	err = pi.poolsRepository.StorePools(goCtx, tx, cfmmPoolsParsed, concentratedPoolsParsed, cosmWasmPoolsParsed)
 	if err != nil {
 		return err
 	}

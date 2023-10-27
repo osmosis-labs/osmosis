@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v20/ingest"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 )
 
 var _ ingest.Ingester = &sqsIngester{}
@@ -11,19 +12,32 @@ var _ ingest.Ingester = &sqsIngester{}
 // sqsIngester is a sidecar query server (SQS) implementation of Ingester.
 // It encapsulates all individual SQS ingesters.
 type sqsIngester struct {
-	poolsIngester ingest.Ingester
+	txManager     domain.TxManager
+	poolsIngester ingest.AtomicIngester
 }
 
 // NewSidecarQueryServerIngester creates a new sidecar query server ingester.
 // poolsRepository is the storage for pools.
 // gammKeeper is the keeper for Gamm pools.
-func NewSidecarQueryServerIngester(poolsIngester ingest.Ingester) ingest.Ingester {
+func NewSidecarQueryServerIngester(poolsIngester ingest.AtomicIngester, txManager domain.TxManager) ingest.Ingester {
 	return &sqsIngester{
+		txManager:     txManager,
 		poolsIngester: poolsIngester,
 	}
 }
 
 // ProcessBlock implements ingest.Ingester.
 func (i *sqsIngester) ProcessBlock(ctx sdk.Context) error {
-	return i.poolsIngester.ProcessBlock(ctx)
+	// Start atomic transaction
+	tx := i.txManager.StartTx()
+
+	// Process block by reading and writing data and ingesting data into sinks
+	if err := i.poolsIngester.ProcessBlock(ctx, tx); err != nil {
+		return err
+	}
+
+	goCtx := sdk.WrapSDKContext(ctx)
+
+	// Flush all writes atomically
+	return tx.Exec(goCtx)
 }
