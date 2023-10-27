@@ -574,9 +574,6 @@ func (k Keeper) ListPoolsByDenom(
 				return nil, err
 			}
 			if coins.AmountOf(Denom).GT(osmomath.ZeroInt()) {
-				if err != nil {
-					return nil, err
-				}
 				poolsByDenom = append(poolsByDenom, pool)
 			}
 		}
