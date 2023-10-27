@@ -52,12 +52,12 @@ During this time:
 
 ## Severity Characterization
 
-| Severity   | Description                                                             |
-|------------|-------------------------------------------------------------------------|
-| *CRITICAL* | Immediate threat to critical systems (e.g., chain halts, funds at risk) |
-| *HIGH*     | Significant impact on major functionality                               |
-| *MEDIUM*   | Impacts minor features or exposes non-sensitive data                    |
-| *LOW*      | Minimal impact                                                          |
+| Severity     | Description                                                             |
+|--------------|-------------------------------------------------------------------------|
+| **CRITICAL** | Immediate threat to critical systems (e.g., chain halts, funds at risk) |
+| **HIGH**     | Significant impact on major functionality                               |
+| **MEDIUM**   | Impacts minor features or exposes non-sensitive data                    |
+| **LOW**      | Minimal impact                                                          |
 
 ## Bug Bounty
 
