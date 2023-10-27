@@ -12,7 +12,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/vv21/x/valset-pref/types"
 )
 
 type Keeper struct {

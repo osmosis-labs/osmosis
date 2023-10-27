@@ -10,11 +10,11 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmoapp "github.com/osmosis-labs/osmosis/v20/app"
+	osmoapp "github.com/osmosis-labs/osmosis/vv21/app"
 
-	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/vv21/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/vv21/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/vv21/x/lockup/types"
 )
 
 var (

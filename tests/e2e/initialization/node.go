@@ -31,8 +31,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	osmosisApp "github.com/osmosis-labs/osmosis/v20/app"
-	"github.com/osmosis-labs/osmosis/v20/tests/e2e/util"
+	osmosisApp "github.com/osmosis-labs/osmosis/vv21/app"
+	"github.com/osmosis-labs/osmosis/vv21/tests/e2e/util"
 )
 
 type internalNode struct {

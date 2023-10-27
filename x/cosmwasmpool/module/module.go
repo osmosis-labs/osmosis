@@ -15,14 +15,14 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
-	cosmwasmpool "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool"
-	moduleclient "github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/client"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/client/grpc"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/model"
-	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool/types"
+	"github.com/osmosis-labs/osmosis/vv21/simulation/simtypes"
+	cosmwasmpool "github.com/osmosis-labs/osmosis/vv21/x/cosmwasmpool"
+	moduleclient "github.com/osmosis-labs/osmosis/vv21/x/cosmwasmpool/client"
+	"github.com/osmosis-labs/osmosis/vv21/x/cosmwasmpool/client/cli"
+	"github.com/osmosis-labs/osmosis/vv21/x/cosmwasmpool/client/grpc"
+	"github.com/osmosis-labs/osmosis/vv21/x/cosmwasmpool/client/queryproto"
+	"github.com/osmosis-labs/osmosis/vv21/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/vv21/x/cosmwasmpool/types"
 )
 
 var (

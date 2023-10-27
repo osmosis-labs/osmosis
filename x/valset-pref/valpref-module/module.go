@@ -17,13 +17,13 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes"
-	keeper "github.com/osmosis-labs/osmosis/v20/x/valset-pref"
-	validatorprefclient "github.com/osmosis-labs/osmosis/v20/x/valset-pref/client"
-	valsetprefcli "github.com/osmosis-labs/osmosis/v20/x/valset-pref/client/cli"
-	"github.com/osmosis-labs/osmosis/v20/x/valset-pref/client/grpc"
-	"github.com/osmosis-labs/osmosis/v20/x/valset-pref/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v20/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/vv21/simulation/simtypes"
+	keeper "github.com/osmosis-labs/osmosis/vv21/x/valset-pref"
+	validatorprefclient "github.com/osmosis-labs/osmosis/vv21/x/valset-pref/client"
+	valsetprefcli "github.com/osmosis-labs/osmosis/vv21/x/valset-pref/client/cli"
+	"github.com/osmosis-labs/osmosis/vv21/x/valset-pref/client/grpc"
+	"github.com/osmosis-labs/osmosis/vv21/x/valset-pref/client/queryproto"
+	"github.com/osmosis-labs/osmosis/vv21/x/valset-pref/types"
 )
 
 var (

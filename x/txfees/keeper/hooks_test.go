@@ -8,10 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/vv21/app/apptesting"
+	gammtypes "github.com/osmosis-labs/osmosis/vv21/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/vv21/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/vv21/x/txfees/types"
 
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )

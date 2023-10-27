@@ -1,7 +1,7 @@
 package txfee_filters
 
 import (
-	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/vv21/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
