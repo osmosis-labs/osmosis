@@ -560,7 +560,7 @@ func (k Keeper) ListPoolsByDenom(
 	}
 	// Allocate the slice with the exact capacity to avoid reallocations.
 	poolCount := k.GetNextPoolId(ctx)
-	sortedPools := make([]types.PoolI)
+	sortedPools := make([]types.PoolI, poolCount)
 	for _, poolModule := range k.poolModules {
 		currentModulePools, err := poolModule.GetPools(ctx)
 		if err != nil {
@@ -573,7 +573,7 @@ func (k Keeper) ListPoolsByDenom(
 			if err != nil {
 				return nil, err
 			}
-			if coins.AmountOf(Denom).GT(osmomath.ZeroInt()) {
+			if coins.AmountOf(denom).GT(osmomath.ZeroInt()) {
 				poolsByDenom = append(poolsByDenom, pool)
 			}
 		}
