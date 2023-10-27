@@ -335,10 +335,6 @@ func NewOsmosisApp(
 
 	app.sm.RegisterStoreDecoders()
 
-	// add test gRPC service for testing gRPC queries in isolation
-	// UNFORKINGTODO OQ: I think we only need to register the autocli query server, but leaving this commented for now
-	// testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
-
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
 
 	reflectionSvc, err := runtimeservices.NewReflectionService()

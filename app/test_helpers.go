@@ -12,6 +12,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -128,7 +129,7 @@ func GenesisStateWithValSet(app *OsmosisApp) GenesisState {
 // SetupWithCustomHome initializes a new OsmosisApp with a custom home directory
 func SetupWithCustomHome(isCheckTx bool, dir string) *OsmosisApp {
 	db := cometbftdb.NewMemDB()
-	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts)
+	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, dir, 0, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
 	if !isCheckTx {
 		genesisState := GenesisStateWithValSet(app)
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -141,6 +142,7 @@ func SetupWithCustomHome(isCheckTx bool, dir string) *OsmosisApp {
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: sims.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
+				ChainId:         "osmosis-1",
 			},
 		)
 	}
@@ -164,7 +166,7 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 	if err != nil {
 		panic(err)
 	}
-	app = NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, sims.EmptyAppOptions{}, EmptyWasmOpts)
+	app = NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, sims.EmptyAppOptions{}, EmptyWasmOpts, baseapp.SetChainID("osmosis-1"))
 	if !isCheckTx {
 		genesisState := GenesisStateWithValSet(app)
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
