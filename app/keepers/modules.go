@@ -7,6 +7,7 @@ import (
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	buildermodule "github.com/skip-mev/pob/x/builder"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -108,6 +109,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	feegrantmodule.AppModuleBasic{},
 	authzmodule.AppModuleBasic{},
 	consensus.AppModuleBasic{},
+	buildermodule.AppModuleBasic{},
 	ibc.AppModuleBasic{},
 	upgrade.AppModuleBasic{},
 	evidence.AppModuleBasic{},

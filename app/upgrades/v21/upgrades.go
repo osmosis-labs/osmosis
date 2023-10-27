@@ -3,7 +3,9 @@ package v21
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	buildertypes "github.com/skip-mev/pob/x/builder/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,7 +41,6 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		// TODO START: Move this to v21
 		// UNFORKINGNOTE: Add the remaining modules to this
 		fromVM[govtypes.ModuleName] = 1
 		baseAppLegacySS := keepers.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
@@ -81,10 +82,10 @@ func CreateUpgradeHandler(
 			case wasmtypes.ModuleName:
 				keyTable = wasmtypes.ParamKeyTable() //nolint:staticcheck
 
-			// // POB
-			// case buildertypes.ModuleName:
-			// 	// already SDK v47
-			// 	continue
+			// POB
+			case buildertypes.ModuleName:
+				// already SDK v47
+				continue
 
 			// osmosis modules
 			case protorevtypes.ModuleName:
@@ -142,6 +143,21 @@ func CreateUpgradeHandler(
 		// NOTE: DO NOT PUT ANY STATE CHANGES BEFORE RunMigrations().
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
+			return nil, err
+		}
+
+		// x/POB
+		pobAddr := keepers.AccountKeeper.GetModuleAddress(buildertypes.ModuleName)
+
+		builderParams := buildertypes.DefaultGenesisState().GetParams()
+		builderParams.EscrowAccountAddress = pobAddr
+		builderParams.MaxBundleSize = 4
+		builderParams.FrontRunningProtection = false
+		builderParams.MinBidIncrement.Denom = keepers.StakingKeeper.BondDenom(ctx)
+		builderParams.MinBidIncrement.Amount = math.NewInt(1000000)
+		builderParams.ReserveFee.Denom = keepers.StakingKeeper.BondDenom(ctx)
+		builderParams.ReserveFee.Amount = math.NewInt(1000000)
+		if err := keepers.BuildKeeper.SetParams(ctx, builderParams); err != nil {
 			return nil, err
 		}
 

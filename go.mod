@@ -32,6 +32,7 @@ require (
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.9-0.20231026175343-311472e85591
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
+	github.com/skip-mev/pob v1.0.4
 	github.com/spf13/cast v1.5.1
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
@@ -170,7 +171,7 @@ require (
 	github.com/breml/bidichk v0.2.4 // indirect
 	github.com/breml/errchkjson v0.3.1 // indirect
 	github.com/butuzov/ireturn v0.2.0 // indirect
-	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
+	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/charithe/durationcheck v0.0.10 // indirect

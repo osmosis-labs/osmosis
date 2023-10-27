@@ -37,6 +37,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v7"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v7/types"
+	buildertypes "github.com/skip-mev/pob/x/builder/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v20/app/params"
 	"github.com/osmosis-labs/osmosis/v20/x/cosmwasmpool"
@@ -71,6 +72,8 @@ import (
 
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer"
+
+	builderkeeper "github.com/skip-mev/pob/x/builder/keeper"
 
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v20/wasmbinding"
@@ -135,6 +138,7 @@ type AppKeepers struct {
 	// "Normal" keepers
 	AccountKeeper                *authkeeper.AccountKeeper
 	BankKeeper                   bankkeeper.BaseKeeper
+	BuildKeeper                  *builderkeeper.Keeper
 	AuthzKeeper                  *authzkeeper.Keeper
 	FeeGrantKeeper               *feegrantkeeper.Keeper
 	StakingKeeper                *stakingkeeper.Keeper
@@ -468,6 +472,18 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
 
+	// Create the Skip Builder Keeper
+	buildKeeper := builderkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[buildertypes.StoreKey],
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.DistrKeeper,
+		stakingKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	appKeepers.BuildKeeper = &buildKeeper
+
 	validatorSetPreferenceKeeper := valsetpref.NewKeeper(
 		appKeepers.keys[valsetpreftypes.StoreKey],
 		appKeepers.GetSubspace(valsetpreftypes.ModuleName),
@@ -724,6 +740,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(poolmanagertypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
+	paramsKeeper.Subspace(buildertypes.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
@@ -855,5 +872,6 @@ func KVStoreKeys() []string {
 		cosmwasmpooltypes.StoreKey,
 		group.StoreKey,
 		nftkeeper.StoreKey,
+		buildertypes.StoreKey,
 	}
 }

@@ -32,6 +32,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
+	pobabci "github.com/skip-mev/pob/abci"
+	pobmempool "github.com/skip-mev/pob/mempool"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -173,6 +175,8 @@ type OsmosisApp struct {
 	sm           *module.SimulationManager
 	configurator module.Configurator
 	homePath     string
+
+	checkTxHandler pobabci.CheckTx
 }
 
 // init sets DefaultNodeHome to default osmosisd install location.
@@ -351,23 +355,55 @@ func NewOsmosisApp(
 	app.MountTransientStores(app.GetTransientStoreKey())
 	app.MountMemoryStores(app.GetMemoryStoreKey())
 
+	factory := pobmempool.NewDefaultAuctionFactory(app.GetTxConfig().TxDecoder())
+	mempool := pobmempool.NewAuctionMempool(
+		app.GetTxConfig().TxDecoder(),
+		app.GetTxConfig().TxEncoder(),
+		0,
+		factory,
+	)
+	app.SetMempool(mempool)
+
+	anteHandler := NewAnteHandler(
+		appOpts,
+		wasmConfig,
+		app.GetKey(wasm.StoreKey),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.TxFeesKeeper,
+		app.GAMMKeeper,
+		ante.DefaultSigVerificationGasConsumer,
+		encodingConfig.TxConfig.SignModeHandler(),
+		app.IBCKeeper,
+		app.BuildKeeper,
+		app.GetTxConfig().TxEncoder(),
+		mempool,
+	)
+
+	proposalHandlers := pobabci.NewProposalHandler(
+		mempool,
+		app.Logger(),
+		anteHandler,
+		app.GetTxConfig().TxEncoder(),
+		app.GetTxConfig().TxDecoder(),
+	)
+	app.SetPrepareProposal(proposalHandlers.PrepareProposalHandler())
+	app.SetProcessProposal(proposalHandlers.ProcessProposalHandler())
+
+	// Set the custom CheckTx handler on BaseApp.
+	checkTxHandler := pobabci.NewCheckTxHandler(
+		app.BaseApp,
+		app.GetTxConfig().TxDecoder(),
+		mempool,
+		anteHandler,
+		app.ChainID(),
+	)
+	app.SetCheckTx(checkTxHandler.CheckTx())
+
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetAnteHandler(
-		NewAnteHandler(
-			appOpts,
-			wasmConfig,
-			app.GetKey(wasm.StoreKey),
-			app.AccountKeeper,
-			app.BankKeeper,
-			app.TxFeesKeeper,
-			app.GAMMKeeper,
-			ante.DefaultSigVerificationGasConsumer,
-			encodingConfig.TxConfig.SignModeHandler(),
-			app.IBCKeeper,
-		),
-	)
+	app.SetAnteHandler(anteHandler)
 	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
 	app.SetEndBlocker(app.EndBlocker)
 
@@ -405,6 +441,19 @@ func MakeCodecs() (codec.Codec, *codec.LegacyAmino) {
 
 func (app *OsmosisApp) GetBaseApp() *baseapp.BaseApp {
 	return app.BaseApp
+}
+
+// CheckTx will check the transaction with the provided checkTxHandler. We override the default
+// handler so that we can verify bid transactions before they are inserted into the mempool.
+// With the POB CheckTx, we can verify the bid transaction and all of the bundled transactions
+// before inserting the bid transaction into the mempool.
+func (app *OsmosisApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
+	return app.checkTxHandler(req)
+}
+
+// SetCheckTx sets the checkTxHandler for the app.
+func (app *OsmosisApp) SetCheckTx(handler pobabci.CheckTx) {
+	app.checkTxHandler = handler
 }
 
 // Name returns the name of the App.
@@ -507,6 +556,13 @@ func (app *OsmosisApp) RegisterNodeService(clientCtx client.Context) {
 // SimulationManager implements the SimulationApp interface
 func (app *OsmosisApp) SimulationManager() *module.SimulationManager {
 	return app.sm
+}
+
+// ChainID gets chainID from private fields of BaseApp
+// Should be removed once SDK 0.50.x will be adopted
+func (app *OsmosisApp) ChainID() string {
+	field := reflect.ValueOf(app.BaseApp).Elem().FieldByName("chainID")
+	return field.String()
 }
 
 // configure store loader that checks if version == upgradeHeight and applies store upgrades

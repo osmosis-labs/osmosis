@@ -1,6 +1,8 @@
 package v21
 
 import (
+	buildertypes "github.com/skip-mev/pob/x/builder/types"
+
 	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
@@ -19,6 +21,10 @@ var Upgrade = upgrades.Upgrade{
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
 		Added: []string{
+			// new modules
+			buildertypes.ModuleName,
+
+			// v47 modules
 			crisistypes.ModuleName,
 			consensustypes.ModuleName,
 			feegranttypes.ModuleName,

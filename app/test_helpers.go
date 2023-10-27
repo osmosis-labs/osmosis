@@ -23,20 +23,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// var defaultGenesisBz []byte
-
-// func getDefaultGenesisStateBytes() []byte {
-// 	if len(defaultGenesisBz) == 0 {
-// 		genesisState := NewDefaultGenesisState()
-// 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 		defaultGenesisBz = stateBytes
-// 	}
-// 	return defaultGenesisBz
-// }
-
 func GenesisStateWithValSet(app *OsmosisApp) GenesisState {
 	privVal := mock.NewPV()
 	pubKey, _ := privVal.GetPubKey()
@@ -179,6 +165,7 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: sims.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
+				ChainId:         "osmosis-1",
 			},
 		)
 	}
