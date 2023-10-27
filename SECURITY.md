@@ -26,7 +26,7 @@ When reporting a vulnerability through either method, please include the followi
 - Description of the vulnerability
 - Steps to reproduce the issue
 - Impact of the issue
-- Wxplaining how an attacker could exploit it
+- Eplanation on how an attacker could exploit it
 
 Please refrain from testing the vulnerability on our production environments, including but not limited to:
 
