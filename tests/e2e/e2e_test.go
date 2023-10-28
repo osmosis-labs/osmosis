@@ -912,11 +912,11 @@ func (s *IntegrationTestSuite) GeometricTWAP() {
 	// is provided as start time, the latest spot price is used. Otherwise
 	// interpolation is done.
 	timeBeforeSwapPlus5ms := chainANode.QueryLatestBlockTime().Add(5 * time.Millisecond)
-	s.T().Log("geometric twap, start time ", timeBeforeSwapPlus5ms.Unix())
+	s.T().Log("geometric twap, start time ", timeBeforeSwapPlus5ms)
 
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforeSwap) is not equal to the block time.
-	chainA.WaitForNumHeights(2)
+	chainA.WaitUntilBlockTime(timeBeforeSwapPlus5ms.Add(time.Second * 3))
 
 	s.T().Log("querying for the first geometric TWAP to now (before swap)")
 	// Assume base = uosmo, quote = stake

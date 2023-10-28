@@ -151,6 +151,25 @@ func (c *Config) WaitUntilHeight(height int64) {
 	}
 }
 
+func (c *Config) WaitUntilBlockTime(blockTime time.Time) {
+	// Ensure the nodes are making progress.
+	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
+		curBlockTime := syncInfo.LatestBlockTime
+
+		if curBlockTime.Before(blockTime) {
+			c.t.Logf("current block time is %s, waiting to reach block time: %s", curBlockTime, blockTime)
+			return false
+		}
+
+		return !syncInfo.CatchingUp
+	}
+
+	for _, node := range c.NodeConfigs {
+		c.t.Logf("node container: %s, waiting to reach block time %s", node.Name, blockTime)
+		node.WaitUntil(doneCondition)
+	}
+}
+
 // WaitForNumHeights waits for all nodes to go through a given number of heights.
 // TODO: Remove in favor of node.WaitForNumHeights
 func (c *Config) WaitForNumHeights(heightsToWait int64) {
