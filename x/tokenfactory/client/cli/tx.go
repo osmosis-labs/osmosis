@@ -70,6 +70,7 @@ func NewSetBeforeSendHookCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			msg := types.NewMsgSetBeforeSendHook(
 				clientCtx.GetFromAddress().String(),

@@ -52,6 +52,8 @@ func NewCreateGaugeCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
 			coins, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
 				return err

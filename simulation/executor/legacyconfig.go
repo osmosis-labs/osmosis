@@ -14,7 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v20/simulation/simtypes/simlogger"
 )
 
-const SimAppChainID = ""
+const SimAppChainID = "osmosis-test"
 
 // List of available flags for the simulator
 var (

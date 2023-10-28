@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -61,12 +60,10 @@ func (sim *SimCtx) defaultTxBuilder(
 // TODO: Fix these args
 func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation.OperationMsg, []simulation.FutureOperation, []byte, error) {
 	txConfig := params.MakeEncodingConfig().TxConfig // TODO: unhardcode
-	txBytes, err := txConfig.TxEncoder()(tx)
+	_, results, err := sim.BaseApp().SimDeliver(txConfig.TxEncoder(), tx)
 	if err != nil {
 		return simulation.OperationMsg{}, nil, nil, err
 	}
-
-	results := sim.BaseApp().DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 
 	opMsg := simulation.NewOperationMsg(msg, true, "", nil)
 	opMsg.Route = msgName

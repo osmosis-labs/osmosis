@@ -264,13 +264,11 @@ func NewCreatePoolCmd() *cobra.Command {
 				return err
 			}
 
-			// UNFORKINGTODO C: This is what the old NewFactoryCLI txf looked like. Just want to confirm removing WithTxConfig and WithAccRetriever is okay.
-			// It was done on all NewFactoryCLIs
-			//txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			txf, msg, err := NewBuildCreateBalancerPoolMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {

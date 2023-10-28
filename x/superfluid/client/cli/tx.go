@@ -60,6 +60,7 @@ func NewSuperfluidDelegateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			lockId, err := strconv.Atoi(args[0])
 			if err != nil {
@@ -289,6 +290,7 @@ func NewCmdLockAndSuperfluidDelegate() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			sender := clientCtx.GetFromAddress()
 
@@ -448,6 +450,7 @@ func NewUnbondConvertAndStake() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			sender := clientCtx.GetFromAddress()
 			lockId, err := strconv.Atoi(args[0])

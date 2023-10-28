@@ -55,10 +55,10 @@ func (stats StatsDb) LogActionResult(header tmproto.Header, opMsg simulation.Ope
 	}
 	appHash := fmt.Sprintf("%X", header.AppHash)
 	resData := fmt.Sprintf("%X", resultData)
-	// UNFORKINGNOTE: Is GasWanted and GasUsed getting added? If so, add and uncomment.
-	// If not, remove from INSERT statement below
-	sts := "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed, msg, resData, appHash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10);"
+	// UNFORKINGNOTE: Is GasWanted and GasUsed getting added to simulation.OperationMsg? If so, uncomment and delete.
+	// sts := "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed, msg, resData, appHash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10);"
 	//_, err := stats.db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed, opMsg.Msg, resData, appHash)
+	sts := "INSERT INTO blocks(height,module,name,comment,passed, msg, resData, appHash) VALUES($1,$2,$3,$4,$5,$6,$7,$8);"
 	_, err := stats.db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.Msg, resData, appHash)
 	return err
 }
