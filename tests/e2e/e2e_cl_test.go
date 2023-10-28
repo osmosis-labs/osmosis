@@ -97,6 +97,7 @@ func (s *IntegrationTestSuite) CreateConcentratedLiquidityPoolVoting_And_TWAP() 
 	timeAfterSwap := chainANode.QueryLatestBlockTime()
 	chainANode.WaitForNumHeights(1)
 	timeAfterSwapPlus1Height := chainANode.QueryLatestBlockTime()
+	chainANode.WaitForNumHeights(1)
 
 	s.T().Log("querying for the TWAP after swap")
 	afterSwapTwapBOverA, err := chainANode.QueryGeometricTwap(concentratedPool.GetId(), concentratedPool.GetToken1(), concentratedPool.GetToken0(), timeAfterSwap, timeAfterSwapPlus1Height)
