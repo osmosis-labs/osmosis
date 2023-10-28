@@ -19,6 +19,9 @@ type Tx interface {
 	// AsRedisTx returns a redis transaction.
 	// Returns an error if this is not a redis transaction.
 	AsRedisTx() (*RedisTx, error)
+
+	// ClearAll clears all data. Returns an error if any.
+	ClearAll(ctx context.Context) error
 }
 
 // RedisTx is a redis transaction.
@@ -52,6 +55,19 @@ func (rt *RedisTx) GetPipeliner(ctx context.Context) (redis.Pipeliner, error) {
 	}
 
 	return rt.pipeliner, nil
+}
+
+// ClearAll implements Tx.
+func (rt *RedisTx) ClearAll(ctx context.Context) error {
+	// TODO: can we make async flush here?
+	flushCmd := rt.pipeliner.FlushAll(ctx)
+
+	_, err := flushCmd.Result()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // AsRedisTx implements Tx.
