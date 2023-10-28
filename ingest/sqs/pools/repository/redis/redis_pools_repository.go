@@ -54,15 +54,21 @@ func (r *redisPoolsRepo) GetAllCFMM(ctx context.Context) ([]domain.PoolI, error)
 	sqsPoolMapByID := sqsPoolMapByIDCmd.Val()
 	chainPoolMapByID := chainPoolMapByIDCmd.Val()
 
-	return r.getPools(sqsPoolMapByID, chainPoolMapByID)
+	return r.getPools(sqsPoolMapByID, chainPoolMapByID, nil)
 }
 
 // GetAllConcentrated implements domain.PoolsRepository.
 // Returns concentrated pools sorted by ID.
+// Note that this does not retrieve ticks by default.
 func (r *redisPoolsRepo) GetAllConcentrated(ctx context.Context) ([]domain.PoolI, error) {
 	tx := r.repositoryManager.StartTx()
 
 	sqsPoolMapByIDCmd, chainPoolMapByIDCmd, err := r.requestPoolsAtomically(ctx, tx, concentratedPoolKey)
+	if err != nil {
+		return nil, err
+	}
+
+	ticksMapByIDCmd, err := getTicksMapByIdCmd(ctx, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +79,9 @@ func (r *redisPoolsRepo) GetAllConcentrated(ctx context.Context) ([]domain.PoolI
 
 	sqsPoolMapByID := sqsPoolMapByIDCmd.Val()
 	chainPoolMapByID := chainPoolMapByIDCmd.Val()
+	ticksMapByID := ticksMapByIDCmd.Val()
 
-	return r.getPools(sqsPoolMapByID, chainPoolMapByID)
+	return r.getPools(sqsPoolMapByID, chainPoolMapByID, ticksMapByID)
 }
 
 // GetAllCosmWasm implements domain.PoolsRepository.
@@ -94,7 +101,7 @@ func (r *redisPoolsRepo) GetAllCosmWasm(ctx context.Context) ([]domain.PoolI, er
 	sqsPoolMapByID := sqsPoolMapByIDCmd.Val()
 	chainPoolMapByID := chainPoolMapByIDCmd.Val()
 
-	return r.getPools(sqsPoolMapByID, chainPoolMapByID)
+	return r.getPools(sqsPoolMapByID, chainPoolMapByID, nil)
 }
 
 // GetAllPools implements domain.PoolsRepository.
@@ -117,21 +124,26 @@ func (r *redisPoolsRepo) GetAllPools(ctx context.Context) ([]domain.PoolI, error
 		return nil, err
 	}
 
+	ticksMapByIDCmd, err := getTicksMapByIdCmd(ctx, tx)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := tx.Exec(ctx); err != nil {
 		return nil, err
 	}
 
-	cfmmPools, err := r.getPools(sqsPoolMapByIDCmdCFMM.Val(), chainPoolMapByIDCmdCFMM.Val())
+	cfmmPools, err := r.getPools(sqsPoolMapByIDCmdCFMM.Val(), chainPoolMapByIDCmdCFMM.Val(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	concentratedPools, err := r.getPools(sqsPoolMapByIDCmdConcentrated.Val(), chainPoolMapByIDCmdConcentrated.Val())
+	concentratedPools, err := r.getPools(sqsPoolMapByIDCmdConcentrated.Val(), chainPoolMapByIDCmdConcentrated.Val(), ticksMapByIDCmd.Val())
 	if err != nil {
 		return nil, err
 	}
 
-	cosmwasmPools, err := r.getPools(sqsPoolMapByIDCmdCosmwasm.Val(), chainPoolMapByIDCmdCosmwasm.Val())
+	cosmwasmPools, err := r.getPools(sqsPoolMapByIDCmdCosmwasm.Val(), chainPoolMapByIDCmdCosmwasm.Val(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -209,9 +221,18 @@ func (r *redisPoolsRepo) requestPoolsAtomically(ctx context.Context, tx domain.T
 }
 
 // getPools returns pools from Redis by storeKey.
-func (r *redisPoolsRepo) getPools(sqsPoolMapByID, chainPoolMapByID map[string]string) ([]domain.PoolI, error) {
+func (r *redisPoolsRepo) getPools(sqsPoolMapByID, chainPoolMapByID, ticksMap map[string]string) ([]domain.PoolI, error) {
 	if len(sqsPoolMapByID) != len(chainPoolMapByID) {
 		return nil, fmt.Errorf("pools count mismatch: sqsPoolMapByID: %d, chainPoolMapByID: %d", len(sqsPoolMapByID), len(chainPoolMapByID))
+	}
+
+	tickMapLength := len(ticksMap)
+	shouldUnmarshalTicks := tickMapLength > 0
+
+	// Tick map is zero for non-concentrated pools.
+	// For concentrated, must be equal to sqsPoolMapByID and chainPoolMapByID.
+	if shouldUnmarshalTicks && tickMapLength != len(sqsPoolMapByID) {
+		return nil, fmt.Errorf("pools count mismatch: sqsPoolMapByID: %d, ticksMap: %d", len(sqsPoolMapByID), tickMapLength)
 	}
 
 	pools := make([]domain.PoolI, 0, len(sqsPoolMapByID))
@@ -236,6 +257,20 @@ func (r *redisPoolsRepo) getPools(sqsPoolMapByID, chainPoolMapByID map[string]st
 			return nil, err
 		}
 
+		if shouldUnmarshalTicks {
+			pool.TickModel = &domain.TickModel{}
+
+			tickData, ok := ticksMap[poolIDKeyStr]
+			if !ok {
+				return nil, fmt.Errorf("pool ID %s not found in ticksMap", poolIDKeyStr)
+			}
+
+			err := json.Unmarshal([]byte(tickData), pool.TickModel)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		pools = append(pools, pool)
 	}
 
@@ -249,7 +284,6 @@ func (r *redisPoolsRepo) getPools(sqsPoolMapByID, chainPoolMapByID map[string]st
 
 // addPoolsTx pipelines the given pools at the given storeKey to be executed atomically in a transaction.
 func (r *redisPoolsRepo) addPoolsTx(ctx context.Context, tx domain.Tx, storeKey string, pools []domain.PoolI) error {
-
 	redisTx, err := tx.AsRedisTx()
 	if err != nil {
 		return err
@@ -258,6 +292,11 @@ func (r *redisPoolsRepo) addPoolsTx(ctx context.Context, tx domain.Tx, storeKey 
 	if err != nil {
 		return err
 	}
+
+	// TODO: refactor this in a more general way to avoid having to do this check
+	// Generally, for other pool types we should be able to serialize nil
+	// tick model to empty bytes and deserialize it back to nil
+	isConcentrated := storeKey == concentratedPoolKey
 
 	for _, pool := range pools {
 		serializedSQSPoolModel, err := json.Marshal(pool.GetSQSPoolModel())
@@ -280,8 +319,43 @@ func (r *redisPoolsRepo) addPoolsTx(ctx context.Context, tx domain.Tx, storeKey 
 		if err != nil {
 			return err
 		}
+
+		// Write concentrated tick model
+		if isConcentrated {
+			tickModel, err := pool.GetTickModel()
+			if err != nil {
+				// Skip pool
+				continue
+			}
+
+			serializedTickModel, err := json.Marshal(tickModel)
+
+			err = pipeliner.HSet(ctx, concentratedTicksModelKey(storeKey), pool.GetId(), serializedTickModel).Err()
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
+}
+
+// getTicksMapByIdCmd returns a map of tick models by pool ID.
+// Uses transaction to ensure atomicity.
+func getTicksMapByIdCmd(ctx context.Context, tx domain.Tx) (*redis.MapStringStringCmd, error) {
+	if !tx.IsActive() {
+		return nil, fmt.Errorf("tx is inactive")
+	}
+	redisTx, err := tx.AsRedisTx()
+	if err != nil {
+		return nil, err
+	}
+	pipeliner, err := redisTx.GetPipeliner(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	ticksMapByIDCmd := pipeliner.HGetAll(ctx, concentratedTicksModelKey(concentratedPoolKey))
+	return ticksMapByIDCmd, nil
 }
 
 func sqsPoolModelKey(storeKey string) string {
@@ -290,4 +364,8 @@ func sqsPoolModelKey(storeKey string) string {
 
 func chainPoolModelKey(storeKey string) string {
 	return fmt.Sprintf("%s/chain", storeKey)
+}
+
+func concentratedTicksModelKey(storeKey string) string {
+	return fmt.Sprintf("%s/ticks", storeKey)
 }
