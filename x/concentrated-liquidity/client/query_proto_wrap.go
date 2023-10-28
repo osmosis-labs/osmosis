@@ -113,7 +113,7 @@ func (q Querier) Params(ctx sdk.Context, req clquery.ParamsRequest) (*clquery.Pa
 // LiquidityPerTickRange returns the amount of liquidity per every tick range
 // existing within the given pool. The amounts are returned as a slice of ranges with their liquidity depths.
 func (q Querier) LiquidityPerTickRange(ctx sdk.Context, req clquery.LiquidityPerTickRangeRequest) (*clquery.LiquidityPerTickRangeResponse, error) {
-	liquidity, err := q.Keeper.GetTickLiquidityForFullRange(
+	liquidity, _, err := q.Keeper.GetTickLiquidityForFullRange(
 		ctx,
 		req.PoolId,
 	)

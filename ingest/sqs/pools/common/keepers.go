@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -44,4 +45,15 @@ type PoolManagerKeeper interface {
 		tokenOutDenom string,
 		tokenOutMinAmount osmomath.Int,
 	) (tokenOutAmount osmomath.Int, err error)
+
+	RouteGetPoolDenoms(
+		ctx sdk.Context,
+		poolId uint64,
+	) (denoms []string, err error)
+}
+
+// ConcentratedKeeper is an interface for the concentrated keeper.
+type ConcentratedKeeper interface {
+	PoolKeeper
+	GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, int64, error)
 }

@@ -13,6 +13,6 @@ type (
 	PoolIngester     = poolIngester
 )
 
-func ConvertPool(ctx sdk.Context, pool poolmanagertypes.PoolI, denomToRoutingInfoMap map[string]denomRoutingInfo, bankKeeper common.BankKeeper, protorevKeeper common.ProtorevKeeper, poolManagerKeeper common.PoolManagerKeeper) (domain.PoolI, error) {
-	return convertPool(ctx, pool, denomToRoutingInfoMap, bankKeeper, protorevKeeper, poolManagerKeeper)
+func ConvertPool(ctx sdk.Context, pool poolmanagertypes.PoolI, denomToRoutingInfoMap map[string]denomRoutingInfo, bankKeeper common.BankKeeper, protorevKeeper common.ProtorevKeeper, poolManagerKeeper common.PoolManagerKeeper, concentratedKeeper common.ConcentratedKeeper) (domain.PoolI, error) {
+	return convertPool(ctx, pool, denomToRoutingInfoMap, bankKeeper, protorevKeeper, poolManagerKeeper, concentratedKeeper)
 }

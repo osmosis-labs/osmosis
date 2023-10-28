@@ -48,6 +48,17 @@ func (*mockPool) String() string {
 	panic("unimplemented")
 }
 
+// GetTickModel implements domain.RoutablePool.
+func (*mockPool) GetTickModel() (*domain.TickModel, error) {
+	panic("unimplemented")
+}
+
+// Validate implements domain.PoolI.
+func (*mockPool) Validate(minUOSMOTVL math.Int) error {
+	// Note: always valid for tests.
+	return nil
+}
+
 // GetTokenOutDenom implements routerusecase.RoutablePool.
 func (mp *mockPool) GetTokenOutDenom() string {
 	return mp.tokenOutDenom
@@ -522,7 +533,7 @@ func (s *RouterTestSuite) TestFindRoutes() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 
-			r := routerusecase.NewRouter([]uint64{}, tc.pools, tc.maxHops, tc.maxRoutes, 0, nil)
+			r := routerusecase.NewRouter([]uint64{}, tc.pools, tc.maxHops, tc.maxRoutes, 0, 0, nil)
 
 			routes, err := r.FindRoutes(tc.tokenInDenom, tc.tokenOutDenom, tc.currentRoute, tc.poolsUsed, tc.previousTokenOutDenoms)
 
@@ -642,7 +653,7 @@ func (s *RouterTestSuite) TestGetCandidateRoutes() {
 	for name, tc := range tests {
 		s.Run(name, func() {
 
-			r := routerusecase.NewRouter([]uint64{}, tc.pools, tc.maxHops, tc.maxRoutes, 3, nil)
+			r := routerusecase.NewRouter([]uint64{}, tc.pools, tc.maxHops, tc.maxRoutes, 3, 0, nil)
 
 			routes, err := r.GetCandidateRoutes(tc.tokenInDenom, tc.tokenOutDenom)
 

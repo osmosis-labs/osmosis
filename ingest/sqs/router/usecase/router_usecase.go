@@ -37,7 +37,7 @@ func (a *routerUseCase) GetOptimalQuote(ctx context.Context, tokenIn sdk.Coin, t
 		return nil, err
 	}
 
-	router := NewRouter([]uint64{}, allPools, a.config.MaxPoolsPerRoute, a.config.MaxRoutes, a.config.MaxSplitIterations, a.logger)
+	router := NewRouter([]uint64{}, allPools, a.config.MaxPoolsPerRoute, a.config.MaxRoutes, a.config.MaxSplitIterations, a.config.MinOSMOLiquidity, a.logger)
 
 	return router.getOptimalQuote(tokenIn, tokenOutDenom)
 }
@@ -49,6 +49,6 @@ func (a *routerUseCase) GetBestSingleRouteQuote(ctx context.Context, tokenIn sdk
 		return nil, err
 	}
 
-	router := NewRouter([]uint64{}, allPools, a.config.MaxPoolsPerRoute, a.config.MaxRoutes, a.config.MaxSplitIterations, a.logger)
+	router := NewRouter([]uint64{}, allPools, a.config.MaxPoolsPerRoute, a.config.MaxRoutes, a.config.MaxSplitIterations, a.config.MinOSMOLiquidity, a.logger)
 	return router.getBestSingleRouteQuote(tokenIn, tokenOutDenom)
 }

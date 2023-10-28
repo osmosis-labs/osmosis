@@ -44,4 +44,6 @@ type RouterConfig struct {
 	MaxPoolsPerRoute   int
 	MaxRoutes          int
 	MaxSplitIterations int
+	// Denominated in OSMO (not uosmo)
+	MinOSMOLiquidity int
 }

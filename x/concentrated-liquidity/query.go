@@ -20,7 +20,8 @@ import (
 // This file contains query-related helper functions for the Concentrated Liquidity module
 
 // GetTickLiquidityForFullRange returns an array of liquidity depth for all ticks existing from min tick ~ max tick.
-func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, error) {
+// Returns index of the leftmost tick that has current liquidity.
+func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, int64, error) {
 	// use false for zeroForOne since we're going from lower tick -> upper tick
 	zeroForOne := false
 	swapStrategy := swapstrategy.New(zeroForOne, osmomath.ZeroBigDec(), k.storeKey, osmomath.ZeroDec())
@@ -32,17 +33,17 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, currentTick)
 	defer nextTickIter.Close()
 	if !nextTickIter.Valid() {
-		return []queryproto.LiquidityDepthWithRange{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
+		return []queryproto.LiquidityDepthWithRange{}, -1, types.RanOutOfTicksForPoolError{PoolId: poolId}
 	}
 
 	nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
 	if err != nil {
-		return []queryproto.LiquidityDepthWithRange{}, err
+		return []queryproto.LiquidityDepthWithRange{}, -1, err
 	}
 
 	tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
 	if err != nil {
-		return []queryproto.LiquidityDepthWithRange{}, err
+		return []queryproto.LiquidityDepthWithRange{}, -1, err
 	}
 
 	liquidityDepthsForRange := []queryproto.LiquidityDepthWithRange{}
@@ -54,17 +55,31 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 
 	previousTickIndex := currentTick
 
+	concentratedPool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return []queryproto.LiquidityDepthWithRange{}, -1, err
+	}
+
+	currentTickLiquidityIndex := int64(-1)
+
 	// start from the next index so that the current tick can become lower tick.
 	nextTickIter.Next()
 	for ; nextTickIter.Valid(); nextTickIter.Next() {
 		tickIndex, err := types.TickIndexFromBytes(nextTickIter.Key())
 		if err != nil {
-			return []queryproto.LiquidityDepthWithRange{}, err
+			return []queryproto.LiquidityDepthWithRange{}, -1, err
 		}
 
 		tickStruct, err := ParseTickFromBz(nextTickIter.Value())
 		if err != nil {
-			return []queryproto.LiquidityDepthWithRange{}, err
+			return []queryproto.LiquidityDepthWithRange{}, -1, err
+		}
+
+		if tickIndex == currentTick {
+			currentTickLiquidityIndex = int64(len(liquidityDepthsForRange))
+		}
+		if currentTickLiquidityIndex == -1 && tickIndex >= currentTick && concentratedPool.GetLiquidity().Equal(totalLiquidityWithinRange) {
+			currentTickLiquidityIndex = int64(len(liquidityDepthsForRange))
 		}
 
 		liquidityDepthForRange := queryproto.LiquidityDepthWithRange{
@@ -80,7 +95,7 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
 	}
 
-	return liquidityDepthsForRange, nil
+	return liquidityDepthsForRange, currentTickLiquidityIndex, nil
 }
 
 // GetLiquidityNetInDirection is a method that returns an array of TickLiquidityNet objects representing the net liquidity in a specified direction

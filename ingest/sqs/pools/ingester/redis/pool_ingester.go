@@ -1,12 +1,16 @@
 package redis
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/common"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/client/queryproto"
+	concentratedtypes "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
@@ -25,7 +29,7 @@ type poolIngester struct {
 	poolsRepository    domain.PoolsRepository
 	repositoryManager  domain.TxManager
 	gammKeeper         common.PoolKeeper
-	concentratedKeeper common.PoolKeeper
+	concentratedKeeper common.ConcentratedKeeper
 	cosmWasmKeeper     common.CosmWasmPoolKeeper
 	bankKeeper         common.BankKeeper
 	protorevKeeper     common.ProtorevKeeper
@@ -43,7 +47,7 @@ type denomRoutingInfo struct {
 const UOSMO = "uosmo"
 
 // NewPoolIngester returns a new pool ingester.
-func NewPoolIngester(poolsRepository domain.PoolsRepository, repositoryManager domain.TxManager, gammKeeper common.PoolKeeper, concentratedKeeper common.PoolKeeper, cosmwasmKeeper common.CosmWasmPoolKeeper, bankKeeper common.BankKeeper, protorevKeeper common.ProtorevKeeper, poolManagerKeeper common.PoolManagerKeeper) ingest.AtomicIngester {
+func NewPoolIngester(poolsRepository domain.PoolsRepository, repositoryManager domain.TxManager, gammKeeper common.PoolKeeper, concentratedKeeper common.ConcentratedKeeper, cosmwasmKeeper common.CosmWasmPoolKeeper, bankKeeper common.BankKeeper, protorevKeeper common.ProtorevKeeper, poolManagerKeeper common.PoolManagerKeeper) ingest.AtomicIngester {
 	return &poolIngester{
 		poolsRepository:    poolsRepository,
 		repositoryManager:  repositoryManager,
@@ -80,7 +84,7 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context, tx domain.Tx) error {
 	cfmmPoolsParsed := make([]domain.PoolI, 0, len(cfmmPools))
 	for _, pool := range cfmmPools {
 		// Parse CFMM pool to the standard SQS types.
-		pool, err := convertPool(ctx, pool, denomToRoutablePoolIDMap, pi.bankKeeper, pi.protorevKeeper, pi.poolManagerKeeper)
+		pool, err := convertPool(ctx, pool, denomToRoutablePoolIDMap, pi.bankKeeper, pi.protorevKeeper, pi.poolManagerKeeper, pi.concentratedKeeper)
 		if err != nil {
 			return err
 		}
@@ -98,7 +102,7 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context, tx domain.Tx) error {
 	concentratedPoolsParsed := make([]domain.PoolI, 0, len(concentratedPools))
 	for _, pool := range concentratedPools {
 		// Parse concentrated pool to the standard SQS types.
-		pool, err := convertPool(ctx, pool, denomToRoutablePoolIDMap, pi.bankKeeper, pi.protorevKeeper, pi.poolManagerKeeper)
+		pool, err := convertPool(ctx, pool, denomToRoutablePoolIDMap, pi.bankKeeper, pi.protorevKeeper, pi.poolManagerKeeper, pi.concentratedKeeper)
 		if err != nil {
 			return err
 		}
@@ -116,7 +120,7 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context, tx domain.Tx) error {
 	cosmWasmPoolsParsed := make([]domain.PoolI, 0, len(cosmWasmPools))
 	for _, pool := range cosmWasmPools {
 		// Parse cosmwasm pool to the standard SQS types.
-		pool, err := convertPool(ctx, pool, denomToRoutablePoolIDMap, pi.bankKeeper, pi.protorevKeeper, pi.poolManagerKeeper)
+		pool, err := convertPool(ctx, pool, denomToRoutablePoolIDMap, pi.bankKeeper, pi.protorevKeeper, pi.poolManagerKeeper, pi.concentratedKeeper)
 		if err != nil {
 			return err
 		}
@@ -140,7 +144,15 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context, tx domain.Tx) error {
 // - TVL is calculated using spot price. TODO: use TWAP (https://app.clickup.com/t/86a182835)
 // - TVL does not account for token precision. TODO: use assetlist for pulling token precision data
 // (https://app.clickup.com/t/86a18287v)
-func convertPool(ctx sdk.Context, pool poolmanagertypes.PoolI, denomToRoutingInfoMap map[string]denomRoutingInfo, bankKeeper common.BankKeeper, protorevKeeper common.ProtorevKeeper, poolManagerKeeper common.PoolManagerKeeper) (domain.PoolI, error) {
+func convertPool(
+	ctx sdk.Context,
+	pool poolmanagertypes.PoolI,
+	denomToRoutingInfoMap map[string]denomRoutingInfo,
+	bankKeeper common.BankKeeper,
+	protorevKeeper common.ProtorevKeeper,
+	poolManagerKeeper common.PoolManagerKeeper,
+	concentratedKeeper common.ConcentratedKeeper,
+) (domain.PoolI, error) {
 	balances := bankKeeper.GetAllBalances(ctx, pool.GetAddress())
 
 	osmoPoolTVL := osmomath.ZeroInt()
@@ -178,12 +190,47 @@ func convertPool(ctx sdk.Context, pool poolmanagertypes.PoolI, denomToRoutingInf
 		osmoPoolTVL = osmoPoolTVL.Add(osmomath.NewBigDecFromBigInt(balance.Amount.BigInt()).MulMut(routingInfo.Price).Dec().TruncateInt())
 	}
 
+	// Get pool denoms. Although these can be inferred from balances, this is safer.
+	// If we used balances, for pools with no liquidity, we would not be able to get the denoms.
+	denoms, err := poolManagerKeeper.RouteGetPoolDenoms(ctx, pool.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the tick model for concentrated pools
+	var tickModel *domain.TickModel
+
+	// For CL pools, get the tick data
+	if pool.GetType() == poolmanagertypes.Concentrated {
+		tickData, currentTickIndex, err := concentratedKeeper.GetTickLiquidityForFullRange(ctx, pool.GetId())
+		// If there is no error, we set the tick model
+		if err == nil {
+			tickModel = &domain.TickModel{
+				Ticks:            tickData,
+				CurrentTickIndex: currentTickIndex,
+			}
+			// If there is no liquidity, we set the tick model to nil and update no liquidity flag
+		} else if err != nil && errors.Is(err, concentratedtypes.RanOutOfTicksForPoolError{PoolId: pool.GetId()}) {
+			tickModel = &domain.TickModel{
+				Ticks:            []queryproto.LiquidityDepthWithRange{},
+				CurrentTickIndex: -1,
+				HasNoLiquidity:   true,
+			}
+
+			// On any other error, we return the error
+		} else {
+			return nil, err
+		}
+	}
+
 	return &domain.PoolWrapper{
 		ChainModel: pool,
 		SQSModel: domain.SQSPool{
 			TotalValueLockedUSDC:      osmoPoolTVL,
 			IsErrorInTotalValueLocked: isErrorInTVL,
 			Balances:                  balances,
+			PoolDenoms:                denoms,
 		},
+		TickModel: tickModel,
 	}, nil
 }
