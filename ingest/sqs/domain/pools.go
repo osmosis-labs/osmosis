@@ -39,7 +39,7 @@ type PoolI interface {
 }
 
 type SQSPool struct {
-	TotalValueLockedUSDC      osmomath.Int `json:"total_value_locked_usdc"`
+	TotalValueLockedUSDC      osmomath.Int `json:"total_value_locked_uosmo"`
 	IsErrorInTotalValueLocked bool         `json:"is_error_in_total_value_locked"`
 	// Only CL and Cosmwasm pools need balances appended
 	Balances   sdk.Coins `json:"balances,string"`

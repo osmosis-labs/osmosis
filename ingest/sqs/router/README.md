@@ -1,5 +1,11 @@
 # Router
 
+## Query
+
+```bash
+curl "localhost:9092/quote?tokenIn=5000000uosmo&tokenOutDenom=uusdc" | jq .
+```
+
 ## Trade-offs To Re-evaluate
 
 - Router skips found route if token OUT is found in the intermediary
