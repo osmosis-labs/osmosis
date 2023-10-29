@@ -363,22 +363,23 @@ require (
 )
 
 replace (
-	// github.com/cosmos/cosmos-proto => github.com/cosmos/cosmos-proto v1.0.0-beta.2
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231024230539-89675ab68b1f
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231029011354-41f626d417ea
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-
-	// Local replaces commented for development
-	// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
-	// github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
-	// github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
+
+// Local replaces commented for development
+// github.com/osmosis-labs/osmosis/osmomath => ./osmomath
+// github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
+// github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
 // github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
 )
 
-// exclusion so we use v1.0.0 instead
+// exclusion so we use v1.0.0
 exclude github.com/coinbase/rosetta-sdk-go v0.7.9
 
+// exclusion so we use v1.0.0-beta.2
 exclude github.com/cosmos/cosmos-proto v1.0.0-beta.3
 
+// exclusion so we use v1.4.10
 exclude github.com/cosmos/gogoproto v1.4.11
