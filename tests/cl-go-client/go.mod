@@ -145,6 +145,7 @@ require (
 
 replace (
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.47.6-0.20231024230539-89675ab68b1f
+	golang.org/x/exp => golang.org/x/exp v0.0.0-20230711153332-06a737ee72cb
 
 	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
 	github.com/osmosis-labs/osmosis/x/ibc-hooks => ./x/ibc-hooks
