@@ -18,11 +18,11 @@ import (
 func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uint64, actionPrefix string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = types.ContractHookOutOfGasError{GasLimit: types.ContractHookGasLimit}
+			err = types.ContractHookOutOfGasError{GasLimit: k.GetParams(ctx).HookGasLimit}
 		}
 	}()
 
-	cosmwasmAddress := k.GetPoolHookContract(ctx, poolId, actionPrefix)
+	cosmwasmAddress := k.getPoolHookContract(ctx, poolId, actionPrefix)
 	if cosmwasmAddress != "" {
 		cwAddr, err := sdk.AccAddressFromBech32(cosmwasmAddress)
 		if err != nil {
@@ -37,7 +37,7 @@ func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uin
 		//
 		// We ensure this limit only applies to this call by creating a child context with a gas
 		// limit and then metering the gas used in parent context once the operation is completed.
-		childCtx := ctx.WithGasMeter(sdk.NewGasMeter(types.ContractHookGasLimit))
+		childCtx := ctx.WithGasMeter(sdk.NewGasMeter(k.GetParams(ctx).HookGasLimit))
 		_, err = k.contractKeeper.Sudo(childCtx.WithEventManager(em), cwAddr, msgBz)
 		if err != nil {
 			return err
@@ -52,17 +52,19 @@ func (k Keeper) callPoolActionListener(ctx sdk.Context, msgBz []byte, poolId uin
 
 // --- Store helpers ---
 
-// GetPoolHookPrefixStore returns the substore for a specific pool ID where hook-related data is stored.
-func (k Keeper) GetPoolHookPrefixStore(ctx sdk.Context, poolID uint64) sdk.KVStore {
+// nolint: unused
+// getPoolHookPrefixStore returns the substore for a specific pool ID where hook-related data is stored.
+func (k Keeper) getPoolHookPrefixStore(ctx sdk.Context, poolID uint64) sdk.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetPoolPrefixStoreKey(poolID))
 }
 
-// GetPoolHookContract returns the contract address linked to the passed in action for a specific pool ID.
+// nolint: unused
+// getPoolHookContract returns the contract address linked to the passed in action for a specific pool ID.
 // For instance, if poolId is `1` and actionPrefix is "beforeSwap", this will return the contract address
 // corresponding to the beforeSwap hook on pool 1.
-func (k Keeper) GetPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix string) string {
-	store := k.GetPoolHookPrefixStore(ctx, poolId)
+func (k Keeper) getPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix string) string {
+	store := k.getPoolHookPrefixStore(ctx, poolId)
 
 	bz := store.Get([]byte(actionPrefix))
 	if bz == nil {
@@ -74,12 +76,15 @@ func (k Keeper) GetPoolHookContract(ctx sdk.Context, poolId uint64, actionPrefix
 
 // nolint: unused
 // setPoolHookContract sets the contract address linked to the passed in hook for a specific pool ID.
+// Passing in an empty string for `cosmwasmAddress` will be interpreted as a deletion for the contract associated
+// with the given poolId and actionPrefix.
+// Attempting to delete a non-existent contract in state will simply be a no-op.
 func (k Keeper) setPoolHookContract(ctx sdk.Context, poolID uint64, actionPrefix string, cosmwasmAddress string) error {
-	store := k.GetPoolHookPrefixStore(ctx, poolID)
+	store := k.getPoolHookPrefixStore(ctx, poolID)
 
 	// If cosmwasm address is nil, treat this as a delete operation for the stored address.
 	if cosmwasmAddress == "" {
-		store.Delete([]byte(actionPrefix))
+		deletePoolHookContract(store, actionPrefix)
 		return nil
 	}
 
@@ -92,4 +97,12 @@ func (k Keeper) setPoolHookContract(ctx sdk.Context, poolID uint64, actionPrefix
 	store.Set([]byte(actionPrefix), []byte(cosmwasmAddress))
 
 	return nil
+}
+
+// nolint: unused
+// deletePoolHookContract deletes the pool hook contract corresponding to the given action prefix from the passed in store.
+// It takes in a store directly instead of ctx and pool ID to avoid doing another read (to fetch pool hook prefix store) for
+// an abstraction that was primarily added for code readability reasons.
+func deletePoolHookContract(store sdk.KVStore, actionPrefix string) {
+	store.Delete([]byte(actionPrefix))
 }

@@ -44,8 +44,13 @@ func (s *KeeperTestSuite) TestSetAndGetPoolHookContract() {
 			actionPrefix:    validActionPrefix,
 			poolId:          validPoolId,
 		},
+		"attempt to delete non-existent address": {
+			// Should fail quietly and return nil
+			cosmwasmAddress: "",
+			actionPrefix:    validActionPrefix,
+			poolId:          validPoolId,
+		},
 		"error: incorrectly constructed address": {
-
 			cosmwasmAddress: invalidCosmwasmAddress,
 			actionPrefix:    validActionPrefix,
 			poolId:          validPoolId,
@@ -68,11 +73,17 @@ func (s *KeeperTestSuite) TestSetAndGetPoolHookContract() {
 			}
 			s.Require().NoError(err)
 
-			// Get contract address
+			// Get contract address and ensure it was the one we set in state
 			contractAddress := s.clk.GetPoolHookContract(s.Ctx, 1, tc.actionPrefix)
-
-			// Assertions
 			s.Require().Equal(tc.cosmwasmAddress, contractAddress)
+
+			// Delete contract address
+			err = s.clk.SetPoolHookContract(s.Ctx, 1, tc.actionPrefix, "")
+			s.Require().NoError(err)
+
+			// Ensure contract was correctly removed from state
+			contractAddress = s.clk.GetPoolHookContract(s.Ctx, 1, tc.actionPrefix)
+			s.Require().Equal("", contractAddress)
 		})
 	}
 }
@@ -127,11 +138,11 @@ func (s *KeeperTestSuite) TestCallPoolActionListener() {
 				Count: CountMsg{
 					// Each loop in the contract consumes on the order of 1k-10k gas,
 					// so this should push consumed gas over the limit.
-					Amount: types.ContractHookGasLimit / 1000,
+					Amount: types.DefaultContractHookGasLimit / 1000,
 				},
 			},
 
-			expectedError: types.ContractHookOutOfGasError{GasLimit: types.ContractHookGasLimit},
+			expectedError: types.ContractHookOutOfGasError{GasLimit: types.DefaultContractHookGasLimit},
 		},
 	}
 	for name, tc := range tests {
@@ -158,7 +169,7 @@ func (s *KeeperTestSuite) TestCallPoolActionListener() {
 			// --- Assertions ---
 
 			if tc.expectedError != nil {
-				s.Require().ErrorAs(err, &tc.expectedError)
+				s.Require().ErrorIs(err, tc.expectedError)
 				return
 			}
 

@@ -36,8 +36,8 @@ const (
 	// unbounded gas in these scenarios is a risk we don't want to take regardless.
 	//
 	// 2M gas is enough to execute tens of expensive CL operations and is only set this high
-	// to accommodate position withdrawals, which are unusually expesive.
-	ContractHookGasLimit = 2_000_000
+	// to accommodate position withdrawals, which are unusually expensive.
+	DefaultContractHookGasLimit = 2_000_000
 )
 
 var (
