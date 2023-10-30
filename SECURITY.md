@@ -6,7 +6,7 @@ Security researchers are essential in identifying vulnerabilities that may impac
 
 ### Guidelines for Responsible Vulnerability Testing and Reporting
 
-1. **Please refrain from testing the vulnerability on our publically accessible environments**, including but not limited to:
+1. **Refrain from testing vulnerabilities on our publicly accessible environments**, including but not limited to:
   - Osmosis mainnet `osmosis-1` 
   - Osmosis frontend: `app.osmosis.zone` 
   - Osmosis public testnets
