@@ -17,7 +17,7 @@ type ImageConfig struct {
 const (
 	// Current Git branch osmosis repo/version. It is meant to be built locally.
 	// It is used when skipping upgrade by setting OSMOSIS_E2E_SKIP_UPGRADE to true).
-	// This image should be pre-built with `make docker-build-debug` either in CI or locally.
+	// This image should be pre-built with `make e2e-docker-build-debug` either in CI or locally.
 	CurrentBranchOsmoRepository = "osmosis"
 	CurrentBranchOsmoTag        = "debug"
 	// Pre-upgrade osmosis repo/tag to pull.
