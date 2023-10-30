@@ -1,11 +1,16 @@
 package keeper_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/coinutil"
+	"github.com/osmosis-labs/osmosis/v20/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+var defaultCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, osmomath.NewInt(10000)))
 
 func (s *KeeperTestSuite) TestAllocateAsset() {
 	tests := []struct {
@@ -125,6 +130,71 @@ func (s *KeeperTestSuite) TestAllocateAsset() {
 	}
 }
 
+// Validates that group gauges can be allocated minted tokens from pool incentives as expected
+// The test creates 2 groups, creates distribuion records for them, calls AllocateAsset and then
+// checks that the group gauges have the expected amount of tokens.
+func (s *KeeperTestSuite) TestAllocateAsset_GroupGauge() {
+	var (
+		weightGroupOne = osmomath.NewInt(100)
+		weightGroupTwo = osmomath.NewInt(200)
+		totalWeight    = weightGroupTwo.Add(weightGroupOne)
+
+		poolIncentiveDistribution = defaultCoins.Add(defaultCoins...)
+	)
+
+	s.Setup()
+	poolInfo := s.PrepareAllSupportedPools()
+
+	poolIDs := []uint64{poolInfo.BalancerPoolID, poolInfo.ConcentratedPoolID, poolInfo.StableSwapPoolID}
+
+	// Fund fee and initial coins for each group.
+	groupCreationFee := s.App.IncentivesKeeper.GetParams(s.Ctx).GroupCreationFee
+	s.FundAcc(s.TestAccs[1], groupCreationFee.Add(groupCreationFee...).Add(defaultCoins...).Add(defaultCoins...))
+
+	// Setup initial volume for each pool.
+	for _, poolID := range poolIDs {
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, poolID, defaultCoins)
+	}
+
+	groupGaugeIDOne, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, 0, s.TestAccs[1], poolIDs)
+	s.Require().NoError(err)
+
+	groupGaugeIDTwo, err := s.App.IncentivesKeeper.CreateGroup(s.Ctx, defaultCoins, 0, s.TestAccs[1], poolIDs)
+	s.Require().NoError(err)
+
+	err = s.App.PoolIncentivesKeeper.ReplaceDistrRecords(s.Ctx, types.DistrRecord{
+		GaugeId: groupGaugeIDOne,
+		Weight:  weightGroupOne,
+	}, types.DistrRecord{
+		GaugeId: groupGaugeIDTwo,
+		Weight:  weightGroupTwo,
+	})
+	s.Require().NoError(err)
+
+	// Fund pool incentives module account
+	s.FundModuleAcc(types.ModuleName, poolIncentiveDistribution)
+
+	// Allocate pool incentive distribution
+	err = s.App.PoolIncentivesKeeper.AllocateAsset(s.Ctx)
+	s.Require().NoError(err)
+
+	// Get first Group Gauge and ensure that full amount is received.
+	groupGaugeOne, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, groupGaugeIDOne)
+	s.Require().NoError(err)
+
+	// expected to contain initial default coins + 100 / 300 of the distribution
+	expectedDistributionGroupGaugeOne := coinutil.MulDec(poolIncentiveDistribution, weightGroupOne.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
+	s.Require().Equal(defaultCoins.Add(expectedDistributionGroupGaugeOne...), groupGaugeOne.Coins)
+
+	// Get second Group Gauge and ensure that full amount is received.
+	groupGaugeTwo, err := s.App.IncentivesKeeper.GetGaugeByID(s.Ctx, groupGaugeIDTwo)
+	s.Require().NoError(err)
+
+	// expected to contain initial default coins + 200 / 300 of the distribution
+	expectedDistributionGroupGaugeTwo := coinutil.MulDec(poolIncentiveDistribution, weightGroupTwo.ToLegacyDec().Quo(totalWeight.ToLegacyDec()))
+	s.Require().Equal(defaultCoins.Add(expectedDistributionGroupGaugeTwo...), groupGaugeTwo.Coins)
+}
+
 func (s *KeeperTestSuite) TestReplaceDistrRecords() {
 	tests := []struct {
 		name               string
@@ -217,6 +287,138 @@ func (s *KeeperTestSuite) TestReplaceDistrRecords() {
 
 			err := keeper.ReplaceDistrRecords(s.Ctx, test.testingDistrRecord...)
 			if test.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				distrInfo := keeper.GetDistrInfo(s.Ctx)
+				s.Require().Equal(len(test.testingDistrRecord), len(distrInfo.Records))
+				for i, record := range test.testingDistrRecord {
+					s.Require().Equal(record.Weight, distrInfo.Records[i].Weight)
+				}
+				s.Require().Equal(test.expectTotalWeight, distrInfo.TotalWeight)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestReplaceDistrRecords_GroupGauge() {
+	s.SetupTest()
+	keeper := s.App.PoolIncentivesKeeper
+
+	poolGroup := s.PrepareAllSupportedPools()
+
+	// Create perpetual group
+	perpetualGroupGauge, err := s.App.IncentivesKeeper.CreateGroupAsIncentivesModuleAcc(s.Ctx, 0, []uint64{poolGroup.BalancerPoolID, poolGroup.ConcentratedPoolID, poolGroup.StableSwapPoolID})
+	s.Require().NoError(err)
+
+	// Create non-perpetual group
+	nonPerpetualGroupGauge, err := s.App.IncentivesKeeper.CreateGroupAsIncentivesModuleAcc(s.Ctx, 1, []uint64{poolGroup.BalancerPoolID, poolGroup.ConcentratedPoolID, poolGroup.StableSwapPoolID})
+	s.Require().NoError(err)
+
+	// Initial state to use to ensure replace actually removes previous records.
+	initialDistrRecords := []types.DistrRecord{
+		{
+			GaugeId: 0,
+			Weight:  osmomath.NewInt(500),
+		},
+		{
+			GaugeId: 1,
+			Weight:  osmomath.NewInt(600),
+		},
+		{
+			GaugeId: 2,
+			Weight:  osmomath.NewInt(700),
+		},
+	}
+
+	tests := []struct {
+		name               string
+		testingDistrRecord []types.DistrRecord
+		expectedErr        error
+		expectTotalWeight  osmomath.Int
+	}{
+		{
+			name: "Perpetual group",
+			testingDistrRecord: []types.DistrRecord{
+				{
+					GaugeId: 0,
+					Weight:  osmomath.NewInt(100),
+				},
+				{
+					GaugeId: perpetualGroupGauge,
+					Weight:  osmomath.NewInt(100),
+				},
+			},
+			expectTotalWeight: osmomath.NewInt(200),
+		},
+		{
+			name: "Perpetual group, new weights",
+			testingDistrRecord: []types.DistrRecord{
+				{
+					GaugeId: 0,
+					Weight:  osmomath.NewInt(100),
+				},
+				{
+					GaugeId: perpetualGroupGauge,
+					Weight:  osmomath.NewInt(200),
+				},
+			},
+			expectTotalWeight: osmomath.NewInt(300),
+		},
+		{
+			name: "Error: non perpetual group",
+			testingDistrRecord: []types.DistrRecord{
+				{
+					GaugeId: 0,
+					Weight:  osmomath.NewInt(100),
+				},
+				{
+					GaugeId: nonPerpetualGroupGauge,
+					Weight:  osmomath.NewInt(200),
+				},
+			},
+			expectedErr: errorsmod.Wrapf(types.ErrDistrRecordRegisteredGauge,
+				"Gauge ID #%d is not perpetual.",
+				nonPerpetualGroupGauge),
+		},
+		{
+			name: "Error: perpetual and non perpetual group",
+			testingDistrRecord: []types.DistrRecord{
+				{
+					GaugeId: 0,
+					Weight:  osmomath.NewInt(100),
+				},
+				{
+					GaugeId: perpetualGroupGauge,
+					Weight:  osmomath.NewInt(100),
+				},
+				{
+					GaugeId: nonPerpetualGroupGauge,
+					Weight:  osmomath.NewInt(100),
+				},
+			},
+			expectedErr: errorsmod.Wrapf(types.ErrDistrRecordRegisteredGauge,
+				"Gauge ID #%d is not perpetual.",
+				nonPerpetualGroupGauge),
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Set up distribution records prior to replace, to ensure replace deletes them.
+			distrInfo := keeper.GetDistrInfo(s.Ctx)
+			totalWeight := osmomath.NewInt(0)
+			for _, record := range initialDistrRecords {
+				totalWeight = totalWeight.Add(record.Weight)
+			}
+			distrInfo.Records = initialDistrRecords
+			distrInfo.TotalWeight = totalWeight
+			keeper.SetDistrInfo(s.Ctx, distrInfo)
+
+			// System under test.
+			err = keeper.ReplaceDistrRecords(s.Ctx, test.testingDistrRecord...)
+			if test.expectedErr != nil {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
@@ -334,6 +536,143 @@ func (s *KeeperTestSuite) TestUpdateDistrRecords() {
 					s.Require().Equal(record.Weight, distrInfo.Records[i].Weight)
 				}
 				s.Require().Equal(test.expectTotalWeight, distrInfo.TotalWeight)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestUpdateDistrRecords_GroupGauge() {
+	s.SetupTest()
+	keeper := s.App.PoolIncentivesKeeper
+
+	poolGroup := s.PrepareAllSupportedPools()
+
+	// Create perpetual group
+	perpetualGroupGauge, err := s.App.IncentivesKeeper.CreateGroupAsIncentivesModuleAcc(s.Ctx, 0, []uint64{poolGroup.BalancerPoolID, poolGroup.ConcentratedPoolID, poolGroup.StableSwapPoolID})
+	s.Require().NoError(err)
+
+	// Create non-perpetual group
+	nonPerpetualGroupGauge, err := s.App.IncentivesKeeper.CreateGroupAsIncentivesModuleAcc(s.Ctx, 1, []uint64{poolGroup.BalancerPoolID, poolGroup.ConcentratedPoolID, poolGroup.StableSwapPoolID})
+	s.Require().NoError(err)
+
+	tests := []struct {
+		name                     string
+		testingDistrRecord       []types.DistrRecord
+		testingDistrRecordUpdate []types.DistrRecord
+		expectedFinalDistrRecord []types.DistrRecord
+		expectedErr              error
+		expectTotalWeight        osmomath.Int
+		expectedFinalTotalWeight osmomath.Int
+	}{
+		{
+			name: "Perpetual group",
+			testingDistrRecord: []types.DistrRecord{
+				{
+					GaugeId: 0,
+					Weight:  osmomath.NewInt(100),
+				},
+				{
+					GaugeId: perpetualGroupGauge,
+					Weight:  osmomath.NewInt(100),
+				},
+			},
+			expectTotalWeight: osmomath.NewInt(200),
+			testingDistrRecordUpdate: []types.DistrRecord{
+				{
+					GaugeId: perpetualGroupGauge,
+					Weight:  osmomath.NewInt(200),
+				},
+			},
+			expectedFinalDistrRecord: []types.DistrRecord{
+				{
+					GaugeId: 0,
+					Weight:  osmomath.NewInt(100),
+				},
+				{
+					GaugeId: perpetualGroupGauge,
+					Weight:  osmomath.NewInt(200),
+				},
+			},
+			expectedFinalTotalWeight: osmomath.NewInt(300),
+		},
+		{
+			name: "Error: non perpetual group",
+			testingDistrRecord: []types.DistrRecord{
+				{
+					GaugeId: 0,
+					Weight:  osmomath.NewInt(100),
+				},
+				{
+					GaugeId: nonPerpetualGroupGauge,
+					Weight:  osmomath.NewInt(200),
+				},
+			},
+			testingDistrRecordUpdate: []types.DistrRecord{
+				{
+					GaugeId: nonPerpetualGroupGauge,
+					Weight:  osmomath.NewInt(200),
+				},
+			},
+			expectedErr: errorsmod.Wrapf(types.ErrDistrRecordRegisteredGauge,
+				"Gauge ID #%d is not perpetual.",
+				nonPerpetualGroupGauge),
+		},
+		{
+			name: "Error: perpetual and non perpetual group",
+			testingDistrRecord: []types.DistrRecord{
+				{
+					GaugeId: 0,
+					Weight:  osmomath.NewInt(100),
+				},
+				{
+					GaugeId: perpetualGroupGauge,
+					Weight:  osmomath.NewInt(100),
+				},
+				{
+					GaugeId: nonPerpetualGroupGauge,
+					Weight:  osmomath.NewInt(100),
+				},
+			},
+			testingDistrRecordUpdate: []types.DistrRecord{
+				{
+					GaugeId: nonPerpetualGroupGauge,
+					Weight:  osmomath.NewInt(200),
+				},
+			},
+			expectedErr: errorsmod.Wrapf(types.ErrDistrRecordRegisteredGauge,
+				"Gauge ID #%d is not perpetual.",
+				nonPerpetualGroupGauge),
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			err := keeper.UpdateDistrRecords(s.Ctx, test.testingDistrRecord...)
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				distrInfo := keeper.GetDistrInfo(s.Ctx)
+				s.Require().Equal(len(test.testingDistrRecord), len(distrInfo.Records))
+				for i, record := range test.testingDistrRecord {
+					s.Require().Equal(record.Weight, distrInfo.Records[i].Weight)
+				}
+				s.Require().Equal(test.expectTotalWeight, distrInfo.TotalWeight)
+			}
+
+			err = keeper.UpdateDistrRecords(s.Ctx, test.testingDistrRecordUpdate...)
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				distrInfo := keeper.GetDistrInfo(s.Ctx)
+				s.Require().Equal(len(test.expectedFinalDistrRecord), len(distrInfo.Records))
+				for i, record := range test.expectedFinalDistrRecord {
+					s.Require().Equal(record.Weight, distrInfo.Records[i].Weight)
+				}
+				s.Require().Equal(test.expectedFinalTotalWeight, distrInfo.TotalWeight)
 			}
 		})
 	}

@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,9 +15,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/utils"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/utils"
 )
 
 type AuthzKeeperInterface interface {

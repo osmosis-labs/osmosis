@@ -27,6 +27,7 @@ const (
 	ConcentratedGasFeeForSwap           = 10_000
 	BaseGasFeeForNewIncentive           = 10_000
 	BaseGasFeeForInitializingTick       = 10_000
+	BaseGasFeeForTransferPosition       = 10_000
 )
 
 var (

@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/ibc-go/v4/testing/simapp/helpers"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v19/app"
+	"github.com/osmosis-labs/osmosis/v20/app"
 )
 
 type TestChain struct {
@@ -113,7 +113,7 @@ func SignAndDeliver(
 	tx, _ := helpers.GenTx(
 		txCfg,
 		msgs,
-		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 2500)},
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5000)},
 		helpers.DefaultGenTxGas,
 		chainID,
 		accNums,

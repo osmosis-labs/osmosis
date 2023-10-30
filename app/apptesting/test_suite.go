@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -32,15 +33,15 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/app"
+	"github.com/osmosis-labs/osmosis/v20/app"
 
-	"github.com/osmosis-labs/osmosis/v19/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v19/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v20/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
 
-	lockupkeeper "github.com/osmosis-labs/osmosis/v19/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v19/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v20/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v20/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 type KeeperTestHelper struct {
@@ -59,6 +60,22 @@ type KeeperTestHelper struct {
 	Ctx         sdk.Context
 	QueryHelper *baseapp.QueryServiceTestHelper
 	TestAccs    []sdk.AccAddress
+}
+
+// Defines IDs for all supported
+// Osmosis pools. Additionally, encapsulates
+// an internal gauge ID for each pool.
+// This struct is initialized and returned by
+// PrepareAllSupportedPools().
+type SupportedPoolAndGaugeInfo struct {
+	ConcentratedPoolID uint64
+	BalancerPoolID     uint64
+	StableSwapPoolID   uint64
+	CosmWasmPoolID     uint64
+
+	ConcentratedGaugeID uint64
+	BalancerGaugeID     uint64
+	StableSwapGaugeID   uint64
 }
 
 var (
@@ -82,6 +99,42 @@ func (s *KeeperTestHelper) Setup() {
 	s.T().Cleanup(func() { os.RemoveAll(dir); s.withCaching = false })
 	s.App = app.SetupWithCustomHome(false, dir)
 	s.setupGeneral()
+}
+
+// PrepareAllSupportedPools creates all supported pools and returns their IDs.
+// Additionally, attaches an internal gauge ID for each pool.
+func (s *KeeperTestHelper) PrepareAllSupportedPools() SupportedPoolAndGaugeInfo {
+	// This is the ID of the first gauge created next (concentrated).
+	nextGaugeID := s.App.IncentivesKeeper.GetLastGaugeID(s.Ctx) + 1
+
+	numLockableDurations := uint64(len(s.App.PoolIncentivesKeeper.GetLockableDurations(s.Ctx)))
+
+	var (
+		// Prepare pools and their IDs
+		concentratedPool   = s.PrepareConcentratedPool()
+		concentratedPoolID = concentratedPool.GetId()
+		balancerPoolID     = s.PrepareBalancerPool()
+		stableswapPoolID   = s.PrepareBasicStableswapPool()
+		cosmWasmPool       = s.PrepareCosmWasmPool()
+		cosmWasmPoolID     = cosmWasmPool.GetId()
+	)
+	return SupportedPoolAndGaugeInfo{
+		ConcentratedPoolID: concentratedPoolID,
+		BalancerPoolID:     balancerPoolID,
+		StableSwapPoolID:   stableswapPoolID,
+		CosmWasmPoolID:     cosmWasmPoolID,
+
+		// Define expected gauge IDs:
+
+		// CL creates 1 gauge
+		ConcentratedGaugeID: nextGaugeID,
+
+		// Balancer creates 3 gauges and the longest duration ID is returned.
+		BalancerGaugeID: nextGaugeID + numLockableDurations,
+
+		// Stableswap creates 3 gauges and the longest duration ID is returned.
+		StableSwapGaugeID: nextGaugeID + 2*numLockableDurations,
+	}
 }
 
 // resets the test environment
@@ -544,4 +597,35 @@ func GenerateTestAddrs() (string, string) {
 	validAddr := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid").String()
 	return validAddr, invalidAddr
+}
+
+// sets up the volume for the pools in the group
+// mutates poolIDToVolumeMap
+func (s *KeeperTestHelper) SetupVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int, poolIDToVolumeMap map[uint64]math.Int) {
+	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
+
+	s.Require().Equal(len(poolIDs), len(volumesForEachPool))
+	for i := 0; i < len(poolIDs); i++ {
+		currentPoolID := poolIDs[i]
+
+		currentVolume := volumesForEachPool[i]
+
+		fmt.Printf("currentVolume %d %s\n", i, currentVolume)
+
+		// Retrieve the existing volume to add to it.
+		existingVolume := s.App.PoolManagerKeeper.GetOsmoVolumeForPool(s.Ctx, currentPoolID)
+
+		s.App.PoolManagerKeeper.SetVolume(s.Ctx, currentPoolID, sdk.NewCoins(sdk.NewCoin(bondDenom, existingVolume.Add(currentVolume))))
+
+		if existingVolume, ok := poolIDToVolumeMap[currentPoolID]; ok {
+			poolIDToVolumeMap[currentPoolID] = existingVolume.Add(currentVolume)
+		} else {
+			poolIDToVolumeMap[currentPoolID] = currentVolume
+		}
+	}
+}
+
+// initializes or increases the volumes for the given pools
+func (s *KeeperTestHelper) IncreaseVolumeForPools(poolIDs []uint64, volumesForEachPool []osmomath.Int) {
+	s.SetupVolumeForPools(poolIDs, volumesForEachPool, map[uint64]osmomath.Int{})
 }

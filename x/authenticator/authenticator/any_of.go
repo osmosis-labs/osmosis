@@ -3,7 +3,7 @@ package authenticator
 import (
 	"encoding/json"
 
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -66,8 +66,14 @@ func (aoa AnyOfAuthenticator) Initialize(data []byte) (iface.Authenticator, erro
 					return nil, err // Handling the error by returning it
 				}
 				aoa.SubAuthenticators = append(aoa.SubAuthenticators, instance)
+				continue
 			}
 		}
+	}
+
+	// If not all sub-authenticators are registered, return an error
+	if len(aoa.SubAuthenticators) != len(initDatas) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "failed to initialize all sub-authenticators")
 	}
 
 	return aoa, nil
@@ -130,6 +136,9 @@ func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccA
 func (aoa AnyOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
 	var initDatas []InitializationData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
+		return err
+	}
+	if err := validateSubAuthenticatorData(initDatas, aoa.am); err != nil {
 		return err
 	}
 	return nil

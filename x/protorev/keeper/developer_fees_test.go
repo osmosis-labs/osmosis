@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v19/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
 )
 
 // TestSendDeveloperFee tests the SendDeveloperFee function

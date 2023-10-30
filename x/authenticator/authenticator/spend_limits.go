@@ -7,10 +7,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
 
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v19/x/twap"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v20/x/twap"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -18,7 +18,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/utils"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/utils"
 )
 
 type PeriodType string
@@ -103,7 +103,7 @@ func (sla SpendLimitAuthenticator) Initialize(data []byte) (iface.Authenticator,
 }
 
 func (sla SpendLimitAuthenticator) GetAuthenticationData(ctx sdk.Context, tx sdk.Tx, messageIndex int, simulate bool) (iface.AuthenticatorData, error) {
-	return SignatureData{}, nil // No data needed for this authenticator
+	return iface.EmptyAuthenticationData{}, nil // No data needed for this authenticator
 }
 
 func (sla SpendLimitAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.AuthenticationResult {
@@ -199,7 +199,7 @@ func (sla SpendLimitAuthenticator) getPriceInQuoteDenom(ctx sdk.Context, coin sd
 		numPools := sla.poolManagerKeeper.GetNextPoolId(ctx)
 		for i := uint64(1); i < numPools; i++ {
 			price, err := sla.twapKeeper.GetArithmeticTwapToNow(ctx, i, coin.Denom, sla.quoteDenom, oneWeekAgo)
-			if err != nil {
+			if err == nil {
 				return price, nil
 			}
 		}

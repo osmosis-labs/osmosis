@@ -2,15 +2,17 @@ package authenticator_test
 
 import (
 	"encoding/json"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v19/app"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/testutils"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"strings"
 	"testing"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/osmosis-labs/osmosis/v20/app"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/testutils"
 )
 
 type AggregatedAuthenticatorsTest struct {

@@ -23,6 +23,7 @@ func TestAbsDifferenceWithSign(t *testing.T) {
 
 func TestPowApprox(t *testing.T) {
 	testCases := []struct {
+		expectPanic    bool
 		base           Dec
 		exp            Dec
 		powPrecision   Dec
@@ -44,10 +45,10 @@ func TestPowApprox(t *testing.T) {
 		},
 		{
 			// zero base, this should panic
-			base:           ZeroDec(),
-			exp:            OneDec(),
-			powPrecision:   MustNewDecFromStr("0.00001"),
-			expectedResult: ZeroDec(),
+			base:         ZeroDec(),
+			exp:          OneDec(),
+			powPrecision: MustNewDecFromStr("0.00001"),
+			expectPanic:  true,
 		},
 		{
 			// large base, small exp
@@ -84,17 +85,60 @@ func TestPowApprox(t *testing.T) {
 			powPrecision:   MustNewDecFromStr("0.00000001"),
 			expectedResult: OneDec(),
 		},
+		{
+			// base close to 2
+
+			base:         MustNewDecFromStr("1.999999999999999999"),
+			exp:          SmallestDec(),
+			powPrecision: powPrecision,
+			// In Python: 1.000000000000000000693147181
+			expectedResult: OneDec(),
+		},
+		{
+			// base close to 2 and hitting iteration bound
+
+			base:         MustNewDecFromStr("1.999999999999999999"),
+			exp:          MustNewDecFromStr("0.1"),
+			powPrecision: powPrecision,
+
+			// In Python: 1.071773462536293164
+
+			expectPanic: true,
+		},
+		{
+			// base close to 2 under iteration limit
+
+			base:         MustNewDecFromStr("1.99999"),
+			exp:          MustNewDecFromStr("0.1"),
+			powPrecision: powPrecision,
+
+			// expectedResult: MustNewDecFromStr("1.071772926648356147"),
+
+			// In Python: 1.071772926648356147102864087
+
+			expectPanic: true,
+		},
+		{
+			// base close to 2 under iteration limit
+
+			base:         MustNewDecFromStr("1.9999"),
+			exp:          MustNewDecFromStr("0.1"),
+			powPrecision: powPrecision,
+
+			// In Python: 1.071768103548402149880477100
+			expectedResult: MustNewDecFromStr("1.071768103548402149"),
+		},
 	}
 
 	for i, tc := range testCases {
 		var actualResult Dec
-		ConditionalPanic(t, tc.base.IsZero(), func() {
+		ConditionalPanic(t, tc.expectPanic, func() {
 			fmt.Println(tc.base)
 			actualResult = PowApprox(tc.base, tc.exp, tc.powPrecision)
 			require.True(
 				t,
 				tc.expectedResult.Sub(actualResult).Abs().LTE(tc.powPrecision),
-				fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
+				fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision, expected: %s, actual: %s, precision: %s", i, tc.expectedResult, actualResult, tc.powPrecision),
 			)
 		})
 	}

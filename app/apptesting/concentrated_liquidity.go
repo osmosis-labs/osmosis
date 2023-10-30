@@ -6,11 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	clmodel "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v19/x/poolmanager/types"
+	clmodel "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 
-	cl "github.com/osmosis-labs/osmosis/v19/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity"
 )
 
 var (
@@ -85,7 +85,7 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndLockedFullRangePos
 // PrepareCustomConcentratedPool sets up a concentrated liquidity pool with the custom parameters.
 func (s *KeeperTestHelper) PrepareCustomConcentratedPool(owner sdk.AccAddress, denom0, denom1 string, tickSpacing uint64, spreadFactor osmomath.Dec) types.ConcentratedPoolExtension {
 	// Mint some assets to the account.
-	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
+	s.FundAcc(s.TestAccs[0], s.App.PoolManagerKeeper.GetParams(s.Ctx).PoolCreationFee)
 
 	// Create a concentrated pool via the poolmanager
 	poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(owner, denom0, denom1, tickSpacing, spreadFactor))

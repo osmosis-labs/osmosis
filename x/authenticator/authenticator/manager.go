@@ -3,7 +3,8 @@ package authenticator
 import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
+
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
 )
 
 type AuthenticatorManager struct {

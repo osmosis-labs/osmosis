@@ -3,19 +3,20 @@ package authenticator_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/testutils"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/testutils"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v19/app"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v20/app"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -25,8 +26,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v19/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v20/tests/osmosisibctesting"
 )
 
 type AuthenticatorSuite struct {
@@ -454,9 +455,6 @@ func (s *AuthenticatorSuite) TestCompositeAuthenticatorIntegration() {
 	anyOf := authenticator.NewAnyOfAuthenticator(s.app.AuthenticatorManager)
 	allOf := authenticator.NewAllOfAuthenticator(s.app.AuthenticatorManager)
 
-	s.app.AuthenticatorManager.RegisterAuthenticator(anyOf)
-	s.app.AuthenticatorManager.RegisterAuthenticator(allOf)
-
 	// construct InitializationData for each SigVerificationAuthenticator
 	initDataPrivKey0 := authenticator.InitializationData{
 		AuthenticatorType: "SignatureVerificationAuthenticator",
@@ -736,7 +734,7 @@ func (s *AuthenticatorSuite) TestSpendWithinLimitWithAuthzTableTest() {
 	}
 
 	// Create account for the second private key. This is needed for executing the grant
-	s.CreateAccount(s.PrivKeys[1], 50_000)
+	s.CreateAccount(s.PrivKeys[1], 100_000)
 
 	// Store the grant
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, grantMsg)

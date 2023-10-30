@@ -2,17 +2,18 @@ package keeper_test
 
 import (
 	"encoding/hex"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
 	"testing"
+
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v19/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/authenticator"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/keeper"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
 )
 
 type KeeperTestSuite struct {

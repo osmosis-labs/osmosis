@@ -3,14 +3,15 @@ package ante
 import (
 	"fmt"
 
-	types "github.com/osmosis-labs/osmosis/v19/x/authenticator/iface"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/utils"
+	types "github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/utils"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authenticatorkeeper "github.com/osmosis-labs/osmosis/v19/x/authenticator/keeper"
+
+	authenticatorkeeper "github.com/osmosis-labs/osmosis/v20/x/authenticator/keeper"
 )
 
 // AuthenticatorDecorator is responsible for processing authentication logic
@@ -115,17 +116,16 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			return sdk.Context{}, err
 		}
 
-		msgAuthenticated := false
-		var authenticators []types.Authenticator
-		if selectedAuthenticators[msgIndex] == -1 {
-			authenticators = allAuthenticators
-		} else {
+		// Check if there has been a selected authenticator in the transaction
+		authenticators := allAuthenticators
+		if selectedAuthenticators[msgIndex] >= 0 {
 			if int(selectedAuthenticators[msgIndex]) >= len(allAuthenticators) {
 				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("invalid authenticator index for message %d", msgIndex))
 			}
 			authenticators = []types.Authenticator{allAuthenticators[selectedAuthenticators[msgIndex]]}
 		}
 
+		msgAuthenticated := false
 		for _, authenticator := range authenticators {
 			// Consume the authenticator's static gas
 			cacheCtx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
@@ -160,6 +160,12 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		if !msgAuthenticated {
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("authentication failed for message %d", msgIndex))
 		}
+	}
+
+	// Ensure that the fee payer has been authenticated. For this to be true, the fee payer must be
+	// the signer of at least one message
+	if !feePayerAuthenticated {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "fee payer not authenticated")
 	}
 
 	// If the transaction has been authenticated, we call TrackMessages(...) to

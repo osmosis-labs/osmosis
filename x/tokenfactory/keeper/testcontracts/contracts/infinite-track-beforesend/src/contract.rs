@@ -45,9 +45,13 @@ pub fn query(_deps: Deps, _env: Env, _msg: ()) -> StdResult<Binary> {
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn sudo(_deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
     match msg {
-        // Hook for bank send (aka. token transfer), this is called before the token is sent if this contract is registered with MsgSetBeforeSendHook
-        SudoMsg::TrackBeforeSend { .. } => {
-            // infinite loop
+        SudoMsg::TrackBeforeSend { .. } =>
+        {
+            #[allow(clippy::empty_loop)]
+            loop {}
+        }
+        SudoMsg::BlockBeforeSend { .. } =>
+        {
             #[allow(clippy::empty_loop)]
             loop {}
         }

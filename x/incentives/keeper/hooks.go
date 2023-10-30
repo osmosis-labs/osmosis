@@ -3,8 +3,8 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v19/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v20/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v20/x/lockup/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,8 +25,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			return err
 		}
 
-		// TODO: temporary allocate to all groups. Must be active only.
-		// Temporary until we decide on a better way to deal with Active/Upcoming/Finished groups.
+		ctx.Logger().Info(fmt.Sprintf("x/incentives AfterEpochEnd, num groups %d, %d", len(groups), ctx.BlockHeight()))
 		err = k.AllocateAcrossGauges(ctx, groups)
 		if err != nil {
 			return err

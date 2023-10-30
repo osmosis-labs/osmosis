@@ -1,4 +1,5 @@
-package grpc 
+
+package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `proto/osmosis/poolmanager/v1beta1/query.yml`
@@ -10,8 +11,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client"
-	"github.com/osmosis-labs/osmosis/v19/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v20/x/poolmanager/client/queryproto"
 )
 
 type Querier struct {
@@ -19,6 +20,26 @@ type Querier struct {
 }
 
 var _ queryproto.QueryServer = Querier{}
+
+func (q Querier) TradingPairTakerFee(grpcCtx context.Context,
+	req *queryproto.TradingPairTakerFeeRequest,
+) (*queryproto.TradingPairTakerFeeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.TradingPairTakerFee(ctx, *req)
+}
+
+func (q Querier) TotalVolumeForPool(grpcCtx context.Context,
+	req *queryproto.TotalVolumeForPoolRequest,
+) (*queryproto.TotalVolumeForPoolResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.TotalVolumeForPool(ctx, *req)
+}
 
 func (q Querier) TotalPoolLiquidity(grpcCtx context.Context,
 	req *queryproto.TotalPoolLiquidityRequest,
@@ -78,6 +99,16 @@ func (q Querier) NumPools(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.NumPools(ctx, *req)
+}
+
+func (q Querier) EstimateTradeBasedOnPriceImpact(grpcCtx context.Context,
+	req *queryproto.EstimateTradeBasedOnPriceImpactRequest,
+) (*queryproto.EstimateTradeBasedOnPriceImpactResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.EstimateTradeBasedOnPriceImpact(ctx, *req)
 }
 
 func (q Querier) EstimateSwapExactAmountOutWithPrimitiveTypes(grpcCtx context.Context,

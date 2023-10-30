@@ -3,12 +3,14 @@ package ante_test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authenticatortypes "github.com/osmosis-labs/osmosis/v19/x/authenticator/types"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+
+	authenticatortypes "github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -21,10 +23,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v19/app"
-	"github.com/osmosis-labs/osmosis/v19/app/params"
-	"github.com/osmosis-labs/osmosis/v19/x/authenticator/ante"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osmosis-labs/osmosis/v20/app"
+	"github.com/osmosis-labs/osmosis/v20/app/params"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/ante"
 )
 
 type AutherticatorAnteSuite struct {
