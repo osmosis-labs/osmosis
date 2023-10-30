@@ -105,7 +105,7 @@ func (p *PoolWrapper) GetTickModel() (*TickModel, error) {
 	}
 
 	if p.TickModel == nil {
-		return nil, fmt.Errorf("concentrated pool (%d) has no tick model", p.GetId())
+		return nil, ConcentratedPoolNoTickModelError{PoolId: p.GetId()}
 	}
 
 	return p.TickModel, nil
@@ -123,7 +123,7 @@ func (p *PoolWrapper) Validate(minUOSMOTVL osmomath.Int) error {
 	// Note that balances are allowed to be zero because zero coins are filtered out.
 
 	// Validate TVL
-	if sqsModel.TotalValueLockedUSDC.LTE(minUOSMOTVL) {
+	if sqsModel.TotalValueLockedUSDC.LT(minUOSMOTVL) {
 		return fmt.Errorf("pool (%d) has less than minimum tvl, pool tvl (%s), minimum tvl (%s)", p.GetId(), sqsModel.TotalValueLockedUSDC, minUOSMOTVL)
 	}
 

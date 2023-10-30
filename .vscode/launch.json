@@ -52,7 +52,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestKeeperTestSuite/TestYourName",
+                "TestKeeperTestSuite/TestComputeAndSwapOutAmtGivenIn",
                 "-test.v"
             ],
         },
@@ -309,7 +309,7 @@
             ],
         },
         {
-            "name": "ingest/sqs/router/TestGetCandidateRoutes",
+            "name": "ingest/sqs/router/usecase",
             "type": "go",
             "request": "launch",
             "mode": "test",
@@ -318,7 +318,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestRouterTestSuite/TestGetCandidateRoutes/33",
+                "TestRouterTestSuite/TestCalculateTokenOutByTokenIn_Concentrated_ErrorAndEdgeCases/22",
                 "-test.v"
             ],
         },

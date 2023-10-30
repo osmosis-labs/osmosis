@@ -6,7 +6,7 @@ import (
 	routerusecase "github.com/osmosis-labs/osmosis/v20/ingest/sqs/router/usecase"
 )
 
-func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn() {
+func (s *RouterTestSuite) TestCalculateTokenOutByTokenIn_CFMM() {
 
 	tests := map[string]struct {
 		tokenIn          sdk.Coin

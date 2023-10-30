@@ -14,7 +14,7 @@ import (
 )
 
 type RouterTestSuite struct {
-	apptesting.KeeperTestHelper
+	apptesting.ConcentratedKeeperTestHelper
 }
 
 func TestRouterTestSuite(t *testing.T) {

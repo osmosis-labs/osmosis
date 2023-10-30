@@ -14,6 +14,7 @@ import (
 
 type mockPool struct {
 	ChainPoolModel       poolmanagertypes.PoolI
+	TickModel            *domain.TickModel
 	ID                   uint64
 	denoms               []string
 	totalValueLockedUSDC osmomath.Int
@@ -49,8 +50,8 @@ func (*mockPool) String() string {
 }
 
 // GetTickModel implements domain.RoutablePool.
-func (*mockPool) GetTickModel() (*domain.TickModel, error) {
-	panic("unimplemented")
+func (mp *mockPool) GetTickModel() (*domain.TickModel, error) {
+	return mp.TickModel, nil
 }
 
 // Validate implements domain.PoolI.

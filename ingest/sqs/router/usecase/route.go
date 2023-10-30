@@ -28,10 +28,7 @@ func (r routeImpl) DeepCopy() domain.Route {
 }
 
 func (r *routeImpl) AddPool(pool domain.PoolI, tokenOutDenom string) {
-	routablePool := &routablePoolImpl{
-		PoolI:         pool,
-		TokenOutDenom: tokenOutDenom,
-	}
+	routablePool := NewRoutablePool(pool, tokenOutDenom)
 	r.Pools = append(r.Pools, routablePool)
 }
 

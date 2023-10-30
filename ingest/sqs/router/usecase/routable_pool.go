@@ -12,27 +12,34 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
-var _ domain.RoutablePool = &routablePoolImpl{}
+var _ domain.RoutablePool = &routableCFMMPoolImpl{}
 
-type routablePoolImpl struct {
+type routableCFMMPoolImpl struct {
 	domain.PoolI
 	TokenOutDenom string "json:\"token_out_denom\""
 }
 
 // NewRoutablePool creates a new RoutablePool.
 func NewRoutablePool(pool domain.PoolI, tokenOutDenom string) domain.RoutablePool {
-	return &routablePoolImpl{
+	if pool.GetType() == poolmanagertypes.Concentrated {
+		return &routableConcentratedPoolImpl{
+			PoolI:         pool,
+			TokenOutDenom: tokenOutDenom,
+		}
+	}
+
+	return &routableCFMMPoolImpl{
 		PoolI:         pool,
 		TokenOutDenom: tokenOutDenom,
 	}
 }
 
 // CalculateTokenOutByTokenIn implements RoutablePool.
-func (r *routablePoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
+func (r *routableCFMMPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
 	poolType := r.GetType()
 
 	if poolType != poolmanagertypes.Balancer {
-		return sdk.Coin{}, OnlyBalancerPoolsSupportedError{ActualType: int32(poolType)}
+		return sdk.Coin{}, domain.InvalidPoolTypeError{PoolType: int32(poolType)}
 	}
 
 	osmosisPool := r.PoolI.GetUnderlyingPool()
@@ -56,11 +63,11 @@ func (r *routablePoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coi
 }
 
 // GetTokenOutDenom implements RoutablePool.
-func (rp *routablePoolImpl) GetTokenOutDenom() string {
+func (rp *routableCFMMPoolImpl) GetTokenOutDenom() string {
 	return rp.TokenOutDenom
 }
 
 // String implements domain.RoutablePool.
-func (r *routablePoolImpl) String() string {
+func (r *routableCFMMPoolImpl) String() string {
 	return fmt.Sprintf("pool (%d), pool type (%d), pool denoms (%v)", r.PoolI.GetId(), r.PoolI.GetType(), r.PoolI.GetPoolDenoms())
 }

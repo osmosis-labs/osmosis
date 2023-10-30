@@ -27,14 +27,6 @@ func (e SortedPoolsAndPoolsInRouteLengthMismatchError) Error() string {
 	return fmt.Sprintf("length of pools in route (%d) should not exceed length of sorted pools (%d)", e.PoolsInRoute, e.SortedPoolsLen)
 }
 
-type OnlyBalancerPoolsSupportedError struct {
-	ActualType int32
-}
-
-func (e OnlyBalancerPoolsSupportedError) Error() string {
-	return fmt.Sprintf("pool type (%d) is invalid. Only balancer is currently supported", e.ActualType)
-}
-
 type FailedToCastPoolModelError struct {
 	ExpectedModel string
 	ActualModel   string
@@ -105,4 +97,49 @@ type CurrentTokenOutDenomNotInPoolError struct {
 
 func (e CurrentTokenOutDenomNotInPoolError) Error() string {
 	return fmt.Sprintf("current token out denom (%s) not found in pool (%d), route index (%d)", e.CurrentTokenOutDenom, e.PoolId, e.RouteIndex)
+}
+
+type ConcentratedCurrentTickNotWithinBucketError struct {
+	PoolId             uint64
+	CurrentBucketIndex int64
+	TotalBuckets       int64
+}
+
+func (e ConcentratedCurrentTickNotWithinBucketError) Error() string {
+	return fmt.Sprintf("current bucket index (%d) is out of range (%d) for pool (%d)", e.CurrentBucketIndex, e.TotalBuckets, e.PoolId)
+}
+
+type ConcentratedNoLiquidityError struct {
+	PoolId uint64
+}
+
+func (e ConcentratedNoLiquidityError) Error() string {
+	return fmt.Sprintf("pool (%d) has no liquidity", e.PoolId)
+}
+
+type ConcentratedCurrentTickAndBucketMismatchError struct {
+	CurrentTick int64
+	LowerTick   int64
+	UpperTick   int64
+}
+
+func (e ConcentratedCurrentTickAndBucketMismatchError) Error() string {
+	return fmt.Sprintf("current tick (%d) is not within bucket (%d, %d)", e.CurrentTick, e.LowerTick, e.UpperTick)
+}
+
+type ConcentratedZeroCurrentSqrtPriceError struct {
+	PoolId uint64
+}
+
+func (e ConcentratedZeroCurrentSqrtPriceError) Error() string {
+	return fmt.Sprintf("pool (%d) has zero current sqrt price", e.PoolId)
+}
+
+type ConcentratedNotEnoughLiquidityToCompleteSwapError struct {
+	PoolId   uint64
+	AmountIn string
+}
+
+func (e ConcentratedNotEnoughLiquidityToCompleteSwapError) Error() string {
+	return fmt.Sprintf("not enough liquidity to complete swap in pool (%d) with amount in (%s)", e.PoolId, e.AmountIn)
 }

@@ -1,6 +1,9 @@
 package domain
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	// ErrInternalServerError will throw if any the Internal Server Error happen
@@ -20,4 +23,12 @@ type InvalidPoolTypeError struct {
 
 func (e InvalidPoolTypeError) Error() string {
 	return "invalid pool type: " + string(e.PoolType)
+}
+
+type ConcentratedPoolNoTickModelError struct {
+	PoolId uint64
+}
+
+func (e ConcentratedPoolNoTickModelError) Error() string {
+	return fmt.Sprintf("concentrated pool (%d) has no tick model", e.PoolId)
 }

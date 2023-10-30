@@ -7,8 +7,9 @@ import (
 )
 
 type (
-	RouteImpl        = routeImpl
-	RoutablePoolImpl = routablePoolImpl
+	RouteImpl                    = routeImpl
+	RoutableCFMMPoolImpl         = routableCFMMPoolImpl
+	RoutableConcentratedPoolImpl = routableConcentratedPoolImpl
 )
 
 const OsmoPrecisionMultiplier = osmoPrecisionMultiplier
