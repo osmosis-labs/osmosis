@@ -7,6 +7,8 @@ LocalOsmosis comes in two flavors:
 1. No initial state: brand new testnet with no initial state. 
 2. With mainnet state: creates a testnet from a mainnet state export
 
+Both ways, the chain-id for LocalOsmosis is set to 'localosmosis'.
+
 ## Prerequisites
 
 Ensure you have docker and docker-compose installed:
@@ -59,7 +61,7 @@ make localnet-keys
 - These keys are added to your `--keyring-backend test`
 - If the keys are already on your keyring, you will get an `"Error: aborted"`
 - Ensure you use the name of the account as listed in the table below, as well as ensure you append the `--keyring-backend test` to your txs
-- Example: `osmosisd tx bank send lo-test2 osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks --keyring-backend test --chain-id LocalOsmosis`
+- Example: `osmosisd tx bank send lo-test2 osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks --keyring-backend test --chain-id localosmosis`
 
 5. You can stop chain, keeping the state with
 

@@ -381,7 +381,7 @@ func (s *KeeperTestSuite) computeSwapAmountsInGivenOut(poolId uint64, curSqrtPri
 		var isWithinDesiredBucketAfterSwap bool
 		if isZeroForOne {
 			// Round up so that we cross the tick by default.
-			curAmountOut := math.CalcAmount1Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, false)
+			curAmountOut := math.CalcAmount1Delta(currentLiquidity, curSqrtPrice, nextInitTickSqrtPrice, true)
 
 			amountOut = amountOut.Add(curAmountOut.Dec())
 
