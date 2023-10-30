@@ -117,19 +117,7 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, conta
 		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
 	}
 	txCommand := append(command, allTxArgs...)
-	outBuf, _, err := m.ExecCmd(t, containerName, txCommand, successStr)
-	require.NoError(t, err)
-
-	// Now that sdk got rid of block.. we need to query the txhash to get the result
-	outStr := outBuf.String()
-	txResponse, err := parseTxResponse(outStr)
-	require.NoError(t, err)
-
-	cmd := []string{"osmosisd", "query", "tx", txResponse.TxHash}
-	outBuf, errBuf, err := m.ExecCmd(t, containerName, cmd, "code: 0")
-	require.NoError(t, err)
-
-	return outBuf, errBuf, nil
+	return m.ExecCmd(t, containerName, txCommand, successStr, true, false)
 }
 
 // UNFORKINGNOTE: Figure out a better way to do this instead of copying the same method for JSON and YAML
@@ -148,20 +136,7 @@ func (m *Manager) ExecTxCmdWithSuccessStringJSON(t *testing.T, chainId string, c
 		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
 	}
 	txCommand := append(command, allTxArgs...)
-	outBuf, _, err := m.ExecCmd(t, containerName, txCommand, successStr)
-	require.NoError(t, err)
-
-	// Now that sdk got rid of block.. we need to query the txhash to get the result
-	outStr := outBuf.String()
-
-	txResponse, err := parseTxResponse(outStr)
-	require.NoError(t, err)
-
-	cmd := []string{"osmosisd", "query", "tx", txResponse.TxHash, "-o=json"}
-	outBuf, errBuf, err := m.ExecCmd(t, containerName, cmd, "\"code\":0")
-	require.NoError(t, err)
-
-	return outBuf, errBuf, nil
+	return m.ExecCmd(t, containerName, txCommand, successStr, true, true)
 }
 
 func parseTxResponse(outStr string) (txResponse TxResponse, err error) {
@@ -196,7 +171,7 @@ func parseTxResponse(outStr string) (txResponse TxResponse, err error) {
 // ExecHermesCmd executes command on the hermes relaer container.
 func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
 	t.Helper()
-	return m.ExecCmd(t, hermesContainerName, command, success)
+	return m.ExecCmd(t, hermesContainerName, command, success, false, false)
 }
 
 // ExecCmd executes command by running it on the node container (specified by containerName)
@@ -204,7 +179,7 @@ func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) 
 // It is found by checking if stdout or stderr contains the success string anywhere within it.
 // returns container std out, container std err, and error if any.
 // An error is returned if the command fails to execute or if the success string is not found in the output.
-func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
+func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, success string, checkTxHash, returnTxHashInfoAsJSON bool) (bytes.Buffer, bytes.Buffer, error) {
 	t.Helper()
 	if _, ok := m.resources[containerName]; !ok {
 		return bytes.Buffer{}, bytes.Buffer{}, fmt.Errorf("no resource %s found", containerName)
@@ -307,8 +282,27 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				maxDebugLogTriesLeft--
 			}
 
-			if success != "" {
+			if success != "" && !checkTxHash {
 				return strings.Contains(outBuf.String(), success) || strings.Contains(errBufString, success)
+			}
+
+			if success != "" && checkTxHash {
+				// Now that sdk got rid of block.. we need to query the txhash to get the result
+				outStr := outBuf.String()
+				txResponse, err := parseTxResponse(outStr)
+				require.NoError(t, err)
+
+				// Don't even attempt to query the tx hash if the initial response code is not 0
+				if txResponse.Code != 0 {
+					return false
+				}
+
+				// This method attempts to query the txhash until the block is committed, at which point it returns an error here,
+				// causing the tx to be submitted again.
+				outBuf, errBuf, err = m.ExecQueryTxHash(t, containerName, txResponse.TxHash, returnTxHashInfoAsJSON)
+				if err != nil {
+					return false
+				}
 			}
 
 			return true
@@ -318,6 +312,89 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 		fmt.Sprintf("success condition (%s) was not met.\nstdout:\n %s\nstderr:\n %s\n",
 			success, outBuf.String(), errBuf.String()),
 	)
+
+	return outBuf, errBuf, nil
+}
+
+func (m *Manager) ExecQueryTxHash(t *testing.T, containerName, txHash string, returnAsJson bool) (bytes.Buffer, bytes.Buffer, error) {
+	t.Helper()
+	if _, ok := m.resources[containerName]; !ok {
+		return bytes.Buffer{}, bytes.Buffer{}, fmt.Errorf("no resource %s found", containerName)
+	}
+	containerId := m.resources[containerName].Container.ID
+
+	var (
+		outBuf bytes.Buffer
+		errBuf bytes.Buffer
+	)
+
+	var command []string
+	if returnAsJson {
+		command = []string{"osmosisd", "query", "tx", txHash, "-o=json"}
+	} else {
+		command = []string{"osmosisd", "query", "tx", txHash}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	if m.isDebugLogEnabled {
+		t.Logf("\n\nRunning: \"%s\", success condition is \"code: 0\"", txHash)
+	}
+	maxDebugLogTriesLeft := maxDebugLogsPerCommand
+
+	successConditionMet := false
+	startTime := time.Now()
+	for time.Since(startTime) < time.Second*5 {
+		outBuf.Reset()
+		errBuf.Reset()
+
+		exec, err := m.pool.Client.CreateExec(docker.CreateExecOptions{
+			Context:      ctx,
+			AttachStdout: true,
+			AttachStderr: true,
+			Container:    containerId,
+			User:         "root",
+			Cmd:          command,
+		})
+		if err != nil {
+			return outBuf, errBuf, err
+		}
+
+		err = m.pool.Client.StartExec(exec.ID, docker.StartExecOptions{
+			Context:      ctx,
+			Detach:       false,
+			OutputStream: &outBuf,
+			ErrorStream:  &errBuf,
+		})
+		if err != nil {
+			return outBuf, errBuf, err
+		}
+
+		errBufString := errBuf.String()
+
+		if (defaultErrRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 &&
+			!strings.Contains(errBufString, "not found") {
+			t.Log("\nstderr:")
+			t.Log(errBufString)
+
+			t.Log("\nstdout:")
+			t.Log(outBuf.String())
+			maxDebugLogTriesLeft--
+		}
+
+		successConditionMet = strings.Contains(outBuf.String(), "code: 0") || strings.Contains(errBufString, "code: 0") || strings.Contains(outBuf.String(), "code\":0") || strings.Contains(errBufString, "code\":0")
+		if successConditionMet {
+			break
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	if !successConditionMet {
+		return outBuf, errBuf, fmt.Errorf("success condition for txhash %s \"code: 0\" was not met.\nstdout:\n %s\nstderr:\n %s\n",
+			txHash, outBuf.String(), errBuf.String())
+	}
 
 	return outBuf, errBuf, nil
 }
