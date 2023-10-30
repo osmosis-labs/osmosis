@@ -4,9 +4,17 @@
 
 Security researchers are essential in identifying vulnerabilities that may impact the Osmosis ecosystem. If you have discovered a security vulnerability in the Osmosis chain or any repository managed by Osmosis, we encourage you to notify us using one of the methods outlined below.
 
-## Reporting Security Issues
+### Guidelines for Responsible Vulnerability Testing and Reporting
 
-**Avoid reporting security vulnerabilities through public channels, including GitHub issues.**
+1. **Please refrain from testing the vulnerability on our publically accessible environments**, including but not limited to:
+  - Osmosis mainnet `osmosis-1` 
+  - Osmosis frontend: `app.osmosis.zone` 
+  - Osmosis public testnets
+  - Osmosis testnet frontend
+
+2. **Avoid reporting security vulnerabilities through public channels, including GitHub issues**
+
+## Reporting Security Issues
 
 To privately report a security vulnerability, please choose one of the following options:
 
@@ -27,13 +35,6 @@ When reporting a vulnerability through either method, please include the followi
 - Steps to reproduce the issue
 - Impact of the issue
 - Eplanation on how an attacker could exploit it
-
-Please refrain from testing the vulnerability on our production environments, including but not limited to:
-
-- Osmosis mainnet `osmosis-1` 
-- Osmosis frontend: `app.osmosis.zone` 
-- Osmosis public testnets
-- Osmosis testnet frontend
 
 ## Vulnerability Disclosure Process
 
