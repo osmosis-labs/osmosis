@@ -290,7 +290,9 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 				// Now that sdk got rid of block.. we need to query the txhash to get the result
 				outStr := outBuf.String()
 				txResponse, err := parseTxResponse(outStr)
-				require.NoError(t, err)
+				if err != nil {
+					return false
+				}
 
 				// Don't even attempt to query the tx hash if the initial response code is not 0
 				if txResponse.Code != 0 {
