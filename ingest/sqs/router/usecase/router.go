@@ -43,7 +43,7 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, 
 	// Make a copy and filter pools
 	for _, pool := range allPools {
 		if err := pool.Validate(minUOSMOTVL); err != nil {
-			logger.Debug("pool validation failed, skip silently", zap.Uint64("pool_id", pool.GetId()), zap.Error(err))
+			logger.Info("pool validation failed, skip silently", zap.Uint64("pool_id", pool.GetId()), zap.Error(err))
 			continue
 		}
 
