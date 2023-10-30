@@ -163,7 +163,6 @@ func (r *redisPoolsRepo) GetAllPools(ctx context.Context) ([]domain.PoolI, error
 }
 
 func (r *redisPoolsRepo) StorePools(ctx context.Context, tx domain.Tx, cfmmPools []domain.PoolI, concentratedPools []domain.PoolI, cosmwasmPools []domain.PoolI) error {
-
 	if err := r.addCFMMPoolsTx(ctx, tx, cfmmPools); err != nil {
 		return err
 	}
