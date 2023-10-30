@@ -119,7 +119,7 @@ func (s *AutherticatorSetPubKeyAnteSuite) TestSetPubKeyAnte() {
 		pk, err := s.OsmosisApp.AccountKeeper.GetPubKey(ctx, addr)
 		s.Require().NoError(err, "Error on retrieving pubkey from the account")
 		s.Require().True(s.TestPrivKeys[i].PubKey().Equals(pk),
-			"Wrong Pubkey retrieved from AccountKeeper, idx=%d\nexpected=%s\n     got=%s", i, s.TestPrivKeys[i].PubKey(), pk)
+			"Wrong Pubkey retrieved from AccountKeeper, idx=%d expected=%s got=%s", i, s.TestPrivKeys[i].PubKey(), pk)
 	}
 }
 

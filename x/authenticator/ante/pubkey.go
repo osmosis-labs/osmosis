@@ -71,7 +71,6 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			}
 			spkd.ak.SetAccount(ctx, acc)
 		}
-
 	}
 
 	// Also emit the following events, so that txs can be indexed by these

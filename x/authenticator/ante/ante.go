@@ -179,19 +179,33 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	return next(ctx, tx, simulate)
 }
 
+// GetSelectedAuthenticators retrieves the selected authenticators for the provided transaction extension
+// and matches them with the number of messages in the transaction.
+// If no selected authenticators are found in the extension, the function initializes the list with -1 values.
+// It returns an array of selected authenticators or an error if the number of selected authenticators does not match
+// the number of messages in the transaction.
 func (ad AuthenticatorDecorator) GetSelectedAuthenticators(extTx authante.HasExtensionOptionsTx, msgCount int) ([]int32, error) {
+	// Initialize the list of selected authenticators with -1 values.
 	selectedAuthenticators := make([]int32, msgCount)
 	for i := range selectedAuthenticators {
 		selectedAuthenticators[i] = -1
 	}
 
+	// Get the transaction options from the AuthenticatorKeeper extension.
 	txOptions := ad.authenticatorKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
+
 	if txOptions != nil {
+		// Retrieve the selected authenticators from the extension.
 		selectedAuthenticatorsFromExtension := txOptions.GetSelectedAuthenticators()
+
 		if len(selectedAuthenticatorsFromExtension) != msgCount {
+			// Return an error if the number of selected authenticators does not match the number of messages.
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Mismatch between the number of selected authenticators and messages")
 		}
+
+		// Use the selected authenticators from the extension.
 		selectedAuthenticators = selectedAuthenticatorsFromExtension
 	}
+
 	return selectedAuthenticators, nil
 }
