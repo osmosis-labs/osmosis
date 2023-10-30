@@ -17,11 +17,27 @@ services:
     entrypoint:
       - /osmosis/start.sh
     environment:
-      - MONIKER=val
-      - CHAIN_ID=localosmosis
+      MONIKER: val
+      CHAIN_ID: localosmosis
+      INGEST_TYPE: "sqs"
+      INGEST_SQS_DBHOST: "redis"
+      INGEST_SQS_DBPORT: "6379"
+      INGEST_SQS_SERVER_ADDRESS: ":9092"
+      INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS: "2"
     ports:
       - 26657:26657
       - 1317:1317
       - 9090:9090
       - 9091:9091
       - 6060:6060
+      - 9092:9092
+    links:
+      - redis
+  # Enable Redis for sidecar query server
+  redis:
+    image: redis/redis-stack:7.2.0-v3
+    ports:
+      - 6379:6379
+      - 8001:8001
+    volumes:
+      - ./redis-data:/data

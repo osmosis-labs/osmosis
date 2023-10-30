@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
@@ -69,9 +70,24 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v20/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v20/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v20/ingest"
+	"github.com/osmosis-labs/osmosis/v20/ingest/sqs"
+
+	poolsingester "github.com/osmosis-labs/osmosis/v20/ingest/sqs/pools/ingester/redis"
 )
 
-const appName = "OsmosisApp"
+const (
+	appName = "OsmosisApp"
+
+	// Environment variable configurations
+	// TODO: replace all SQS environment variables with a config file
+	ENV_NAME_INGEST_TYPE                             = "INGEST_TYPE"
+	ENV_NAME_INGEST_SQS_DBHOST                       = "INGEST_SQS_DBHOST"
+	ENV_NAME_INGEST_SQS_DBPORT                       = "INGEST_SQS_DBPORT"
+	ENV_NAME_INGEST_SQS_SERVER_ADDRESS               = "INGEST_SQS_SERVER_ADDRESS"
+	ENV_NAME_INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS = "INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS"
+	ENV_VALUE_INGESTER_SQS                           = "sqs"
+)
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -243,6 +259,35 @@ func NewOsmosisApp(
 		app.BlockedAddrs(),
 	)
 
+	isIngestManagerEnabled := os.Getenv(ENV_NAME_INGEST_TYPE) == ENV_VALUE_INGESTER_SQS
+	app.IngestManager = ingest.NewIngestManager()
+	if isIngestManagerEnabled {
+		dbHost := os.Getenv(ENV_NAME_INGEST_SQS_DBHOST)
+		dbPort := os.Getenv(ENV_NAME_INGEST_SQS_DBPORT)
+		sidecarQueryServerAddress := os.Getenv(ENV_NAME_INGEST_SQS_SERVER_ADDRESS)
+		sidecarQueryServerTimeoutDuration, err := strconv.Atoi(os.Getenv(ENV_NAME_INGEST_SQS_SERVER_TIMEOUT_DURATION_SECS))
+		if err != nil {
+			panic(fmt.Sprintf("error while parsing timeout duration: %s", err))
+		}
+
+		// Create sidecar query server
+		sidecarQueryServer, err := sqs.NewSideCarQueryServer(appCodec, dbHost, dbPort, sidecarQueryServerAddress, sidecarQueryServerTimeoutDuration)
+		if err != nil {
+			panic(fmt.Sprintf("error while creating sidecar query server: %s", err))
+		}
+
+		txManager := sidecarQueryServer.GetTxManager()
+
+		// Create pools ingester
+		poolsIngester := poolsingester.NewPoolIngester(sidecarQueryServer.GetPoolsRepository(), txManager, app.GAMMKeeper, app.ConcentratedLiquidityKeeper, app.CosmwasmPoolKeeper, app.BankKeeper, app.ProtoRevKeeper, app.PoolManagerKeeper)
+
+		// Create sqs ingester that encapsulates all ingesters.
+		sqsIngester := sqs.NewSidecarQueryServerIngester(poolsIngester, txManager)
+
+		// Set the sidecar query server ingester to the ingest manager.
+		app.IngestManager.SetIngester(sqsIngester)
+	}
+
 	// TODO: There is a bug here, where we register the govRouter routes in InitNormalKeepers and then
 	// call setupHooks afterwards. Therefore, if a gov proposal needs to call a method and that method calls a
 	// hook, we will get a nil pointer dereference error due to the hooks in the keeper not being
@@ -366,6 +411,8 @@ func (app *OsmosisApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
 
 // EndBlocker application updates every end block.
 func (app *OsmosisApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	app.IngestManager.ProcessBlock(ctx)
+
 	return app.mm.EndBlock(ctx, req)
 }
 

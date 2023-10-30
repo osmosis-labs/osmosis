@@ -52,7 +52,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestKeeperTestSuite/TestYourName",
+                "TestKeeperTestSuite/TestComputeAndSwapOutAmtGivenIn",
                 "-test.v"
             ],
         },
@@ -291,6 +291,48 @@
                 "30m",
                 "-test.run",
                 "TestKeeperTestSuite/TestYourName",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "ingest/sqs/router",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/ingest/sqs/router/usecase",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestRouterTestSuite/TestNewRouter",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "ingest/sqs/router/usecase",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/ingest/sqs/router/usecase",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestRouterTestSuite/TestCalculateTokenOutByTokenIn_Concentrated_ErrorAndEdgeCases/22",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "ingest/sqs/pools/ingester/redis",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/ingest/sqs/pools/ingester/redis",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestIngesterTestSuite/TestConvertPool_Concentrated",
                 "-test.v"
             ],
         },
