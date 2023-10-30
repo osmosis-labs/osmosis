@@ -1,0 +1,118 @@
+package authenticator_test
+
+import (
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/osmosis-labs/osmosis/v20/app"
+	"github.com/osmosis-labs/osmosis/v20/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v20/app/params"
+	"github.com/osmosis-labs/osmosis/v20/x/authenticator/authenticator"
+	minttypes "github.com/osmosis-labs/osmosis/v20/x/mint/types"
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"testing"
+)
+
+type CosmwasmAuthenticatorTest struct {
+	suite.Suite
+	Ctx            sdk.Context
+	OsmosisApp     *app.OsmosisApp
+	Store          prefix.Store
+	EncodingConfig params.EncodingConfig
+	CosmwasmAuth   authenticator.CosmwasmAuthenticator
+}
+
+func TestCosmwasmAuthenticatorTest(t *testing.T) {
+	suite.Run(t, new(CosmwasmAuthenticatorTest))
+}
+
+func (s *CosmwasmAuthenticatorTest) SetupTest() {
+	s.OsmosisApp = app.Setup(false)
+	s.Ctx = s.OsmosisApp.NewContext(false, tmproto.Header{})
+	s.Ctx = s.Ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
+	s.EncodingConfig = app.MakeEncodingConfig()
+
+	s.CosmwasmAuth = authenticator.NewCosmwasmAuthenticator(s.OsmosisApp.ContractKeeper, s.OsmosisApp.AccountKeeper, s.EncodingConfig.TxConfig.SignModeHandler(), s.OsmosisApp.AppCodec())
+}
+
+func (s *CosmwasmAuthenticatorTest) TestInitialize() {
+	tests := []struct {
+		name string // name
+		data []byte // initData
+		pass bool   // wantErr
+	}{
+		{"Valid Contract", []byte(`{"contract": "osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69"}`), true},
+		{"Missing Contract", []byte(`{}`), false},
+		{"Invalid Contract", []byte(`{"contract": "invalid_address"}`), false},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			_, err := s.CosmwasmAuth.Initialize(tt.data)
+			if tt.pass {
+				s.Require().NoError(err, "Should succeed")
+			} else {
+				s.Require().Error(err, "Should fail")
+			}
+		})
+	}
+}
+
+func (s *CosmwasmAuthenticatorTest) TestGeneral() {
+	auth, err := s.CosmwasmAuth.Initialize([]byte(`{"contract": "osmo1t3gjpqadhhqcd29v64xa06z66mmz7kazsvkp69"}`))
+	s.Require().NoError(err, "Should succeed")
+
+	accounts := apptesting.CreateRandomAccounts(2)
+	for _, acc := range accounts {
+		someCoins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
+		err = s.OsmosisApp.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, someCoins)
+		s.Require().NoError(err)
+		err = s.OsmosisApp.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, acc, someCoins)
+		s.Require().NoError(err)
+	}
+
+	// Mocking some data for the GenTx function based on PassKeyTests
+	osmoToken := "osmo"
+	feeCoins := sdk.Coins{sdk.NewInt64Coin(osmoToken, 2500)}
+
+	// Create a test message for signing
+	testMsg := &banktypes.MsgSend{
+		FromAddress: sdk.MustBech32ifyAddressBytes(osmoToken, accounts[0]),
+		ToAddress:   sdk.MustBech32ifyAddressBytes(osmoToken, accounts[1]),
+		Amount:      feeCoins,
+	}
+	msgs := []sdk.Msg{testMsg}
+
+	// Account numbers and sequences
+	accNums := []uint64{0}
+	accSeqs := []uint64{0}
+
+	// Generate a private key for signing
+	priv, _ := secp256r1.GenPrivKey()
+	signers := []cryptotypes.PrivKey{priv}
+	signatures := []cryptotypes.PrivKey{priv}
+
+	// Define encoding config if not already defined
+	encodingConfig := app.MakeEncodingConfig() // Assuming the app has a method called MakeEncodingConfig
+
+	tx, _ := GenTx(
+		encodingConfig.TxConfig,
+		msgs,
+		feeCoins,
+		300000,
+		"",
+		accNums,
+		accSeqs,
+		signers,
+		signatures,
+	)
+
+	authData, err := auth.GetAuthenticationData(s.Ctx, tx, -1, false)
+	s.Require().NoError(err, "Should succeed")
+
+	status := auth.Authenticate(s.Ctx, accounts[0], testMsg, authData)
+	s.Require().True(status.IsAuthenticated(), "Should be authenticated")
+}
