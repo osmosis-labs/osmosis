@@ -1,6 +1,8 @@
 package poolmanager_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -32,6 +34,7 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 
 		expectedResult sdk.Coin
 		expectError    error
+		sendCoins      func(s *KeeperTestSuite, coin sdk.Coins)
 	}{
 		"fee charged on token in": {
 			takerFee:      defaultTakerFee,
@@ -62,10 +65,39 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 
 			expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount),
 		},
-		// TODO: under more test cases
-		// https://github.com/osmosis-labs/osmosis/issues/6633
-		// - exactOut: false
-		// - sender does not have enough coins
+		"fee charged on token out": {
+			takerFee:      defaultTakerFee,
+			tokenIn:       sdk.NewCoin(apptesting.ETH, defaultAmount),
+			tokenOutDenom: apptesting.USDC,
+			senderIndex:   whitelistedSenderIndex,
+			exactIn:       false,
+
+			expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount.ToLegacyDec().Quo(osmomath.OneDec().Sub(defaultTakerFee)).Ceil().TruncateInt()),
+		},
+		"fee charged on token out due to different address being whitelisted": {
+			takerFee:                 defaultTakerFee,
+			tokenIn:                  sdk.NewCoin(apptesting.ETH, defaultAmount),
+			tokenOutDenom:            apptesting.USDC,
+			senderIndex:              nonWhitelistedSenderIndex,
+			exactIn:                  false,
+			shouldSetSenderWhitelist: true,
+
+			expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount.ToLegacyDec().Quo(osmomath.OneDec().Sub(defaultTakerFee)).Ceil().TruncateInt()),
+		},
+		"sender does not have enough coins in": {
+			takerFee:                 defaultTakerFee,
+			tokenIn:                  sdk.NewCoin(apptesting.ETH, defaultAmount),
+			tokenOutDenom:            apptesting.USDC,
+			senderIndex:              nonWhitelistedSenderIndex,
+			exactIn:                  true,
+			shouldSetSenderWhitelist: true,
+
+			// expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount),
+			sendCoins: func(s *KeeperTestSuite, coins sdk.Coins) {
+				s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[nonWhitelistedSenderIndex], s.TestAccs[whitelistedSenderIndex], coins)
+			},
+			expectError: fmt.Errorf("insufficient funds"),
+		},
 	}
 
 	for name, tc := range tests {
@@ -88,6 +120,11 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 
 			// Pre-fund owner.
 			s.FundAcc(s.TestAccs[tc.senderIndex], sdk.NewCoins(tc.tokenIn))
+
+			// send coins.
+			if tc.sendCoins != nil {
+				tc.sendCoins(s, sdk.NewCoins(tc.tokenIn))
+			}
 
 			// System under test.
 			tokenInAfterTakerFee, err := poolManager.ChargeTakerFee(s.Ctx, tc.tokenIn, tc.tokenOutDenom, s.TestAccs[tc.senderIndex], tc.exactIn)
