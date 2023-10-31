@@ -106,6 +106,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 	if err != nil {
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
+
 	poolI, err := asPoolI(concentratedPool)
 	if err != nil {
 		return nil, err
