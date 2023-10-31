@@ -48,7 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v20.0.0
 
->>>>>>> e7517c2c (fix: improve error message for slippage bound when LPing (#6788))
 ### Features
 
 * [#6468](https://github.com/osmosis-labs/osmosis/pull/6468) feat: remove osmo multihop discount
