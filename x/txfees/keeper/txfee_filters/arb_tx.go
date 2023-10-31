@@ -1,6 +1,8 @@
 package txfee_filters
 
 import (
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
+
 	gammtypes "github.com/osmosis-labs/osmosis/v20/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 
@@ -23,33 +25,53 @@ func IsArbTxLoose(tx sdk.Tx) bool {
 
 	swapInDenom := ""
 	lpTypesSeen := make(map[gammtypes.LiquidityChangeType]bool, 2)
+	isArb := false
 
 	for _, m := range msgs {
-		// (4) Check that the tx doesn't have both JoinPool & ExitPool msgs
-		lpMsg, isLpMsg := m.(gammtypes.LiquidityChangeMsg)
-		if isLpMsg {
-			lpTypesSeen[lpMsg.LiquidityChangeType()] = true
-			if len(lpTypesSeen) > 1 {
-				return true
-			}
-		}
-
-		swapMsg, isSwapMsg := m.(poolmanagertypes.SwapMsgRoute)
-		if !isSwapMsg {
-			continue
-		}
-
-		// (1) Check that swap denom in != swap denom out
-		if swapMsg.TokenInDenom() == swapMsg.TokenOutDenom() {
+		swapInDenom, isArb = isArbTxLooseAuthz(m, swapInDenom, lpTypesSeen)
+		if isArb {
 			return true
 		}
-
-		// (2)
-		if swapInDenom != "" && swapMsg.TokenInDenom() != swapInDenom {
-			return true
-		}
-		swapInDenom = swapMsg.TokenInDenom()
 	}
 
 	return false
+}
+
+func isArbTxLooseAuthz(msg sdk.Msg, swapInDenom string, lpTypesSeen map[gammtypes.LiquidityChangeType]bool) (string, bool) {
+	if authzMsg, ok := msg.(*authztypes.MsgExec); ok {
+		msgs, _ := authzMsg.GetMessages()
+		for _, m := range msgs {
+			swapInDenom, isAuthz := isArbTxLooseAuthz(m, swapInDenom, lpTypesSeen)
+			if isAuthz {
+				return swapInDenom, true
+			}
+		}
+		return swapInDenom, false
+	}
+
+	// (4) Check that the tx doesn't have both JoinPool & ExitPool msgs
+	lpMsg, isLpMsg := msg.(gammtypes.LiquidityChangeMsg)
+	if isLpMsg {
+		lpTypesSeen[lpMsg.LiquidityChangeType()] = true
+		if len(lpTypesSeen) > 1 {
+			return swapInDenom, true
+		}
+	}
+
+	swapMsg, isSwapMsg := msg.(poolmanagertypes.SwapMsgRoute)
+	if !isSwapMsg {
+		return swapInDenom, false
+	}
+
+	// (1) Check that swap denom in != swap denom out
+	if swapMsg.TokenInDenom() == swapMsg.TokenOutDenom() {
+		return swapInDenom, true
+	}
+
+	// (2)
+	if swapInDenom != "" && swapMsg.TokenInDenom() != swapInDenom {
+		return swapInDenom, true
+	}
+	swapInDenom = swapMsg.TokenInDenom()
+	return swapInDenom, false
 }
