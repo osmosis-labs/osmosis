@@ -108,7 +108,6 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// Calculate the amount of liquidity that will be added to the pool when this position is created.
 	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
 	if liquidityDelta.IsZero() {
-
 		// Note that it is impossible to reach the case with both tokens being zero because that case is handled above.
 
 		if !amount0Desired.IsZero() && !amount1Desired.IsZero() {
