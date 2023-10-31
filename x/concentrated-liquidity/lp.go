@@ -112,16 +112,16 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		// Note that it is impossible to reach the case with both tokens being zero because that case is handled above.
 
 		if !amount0Desired.IsZero() && !amount1Desired.IsZero() {
-			return CreatePositionData{}, fmt.Errorf(`failed to translate amount0 (%d) and amount1 (%d) to positive liquidity. Either try to provide more liquidity or confirm that the desired tick range is still in range.
+			return CreatePositionData{}, fmt.Errorf(`failed to translate amount0 (%d) and amount1 (%d) to positive liquidity. Either try to provide more liquidity or confirm that the desired tick range is still active.
 			If range becomes inactive before getting on chain, you might need to provide more of one token as opposed to two of the original amount`, amount0Desired, amount1Desired)
 		} else if amount0Desired.IsZero() {
-			return CreatePositionData{}, fmt.Errorf(`failed to translate amount1 (%d) to positive liquidity. Either try providing more liquidity or confirm that you are still out of range.
+			return CreatePositionData{}, fmt.Errorf(`failed to translate amount1 (%d) to positive liquidity. Either try providing more liquidity or confirm that given range is still inactive.
 			If the given range becomes activated, two tokens will be needed as opposed to one.`, amount1Desired)
 		}
 
 		// amount1Desired is zero
 
-		return CreatePositionData{}, fmt.Errorf(`failed to translate amount0 (%d) to positive liquidity. Either try providing more liquidity or confirm that you are still out of range.
+		return CreatePositionData{}, fmt.Errorf(`failed to translate amount0 (%d) to positive liquidity. Either try providing more liquidity or confirm that given range is still inactive.
 			If the given range becomes activated, two tokens will be needed as opposed to one.`, amount0Desired)
 	}
 
