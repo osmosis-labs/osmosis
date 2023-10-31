@@ -8,6 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/domain"
 	"github.com/osmosis-labs/osmosis/v20/ingest/sqs/log"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 )
 
 type Router struct {
@@ -22,7 +23,29 @@ type Router struct {
 	logger log.Logger
 }
 
-const osmoPrecisionMultiplier = 1000000
+type ratedPool struct {
+	pool   domain.PoolI
+	rating int64
+}
+
+const (
+	// OSMO token precision
+	osmoPrecisionMultiplier = 1000000
+
+	// Pool ordering constants below:
+
+	// 100 points for no error in TVL
+	noTVLErrorPoints = 100
+
+	// each pool gets a proportion of this value depending on its on-chain TVL.
+	proRataTVLPointsTotal = 10000
+
+	// points for being a preferred pool
+	preferredPoints = 1000
+
+	// points for being concentrated
+	concentratedPoints = 20
+)
 
 // NewRouter returns a new Router.
 // It initialized the routable pools where the given preferredPoolIDs take precedence.
@@ -37,6 +60,7 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, 
 
 	// TODO: consider mutating directly on allPools
 	poolsCopy := make([]domain.PoolI, 0)
+	totalTVL := osmomath.ZeroInt()
 
 	minUOSMOTVL := osmomath.NewInt(int64(minOSMOTVL * osmoPrecisionMultiplier))
 
@@ -48,6 +72,8 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, 
 		}
 
 		poolsCopy = append(poolsCopy, pool)
+
+		totalTVL = totalTVL.Add(pool.GetTotalValueLockedUOSMO())
 	}
 
 	preferredPoolIDsMap := make(map[uint64]struct{})
@@ -55,25 +81,52 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, 
 		preferredPoolIDsMap[poolID] = struct{}{}
 	}
 
-	// Sort all pools by TVL.
-	sort.Slice(poolsCopy, func(i, j int) bool {
-		poolI := poolsCopy[i]
-		poolJ := poolsCopy[j]
+	// TODO: move rating into a separate function
+	// https://app.clickup.com/t/86a19n1ge
+	ratedPools := make([]ratedPool, 0, len(poolsCopy))
+	for _, pool := range poolsCopy {
+		osmoTVL := pool.GetTotalValueLockedUOSMO()
+		tvlProportion := osmoTVL.ToLegacyDec().Quo(totalTVL.ToLegacyDec())
 
-		_, isIPreferred := preferredPoolIDsMap[poolI.GetId()]
-		_, isJPreferred := preferredPoolIDsMap[poolJ.GetId()]
+		// Get points proportional to 100 depending on the total on-chain TVL.
+		rating := tvlProportion.Mul(osmomath.NewDec(proRataTVLPointsTotal)).RoundInt64()
 
-		isITVLError := poolI.GetSQSPoolModel().IsErrorInTotalValueLocked
-		isJTVLError := poolJ.GetSQSPoolModel().IsErrorInTotalValueLocked
+		// 100 points for no error in TVL
+		if !pool.GetSQSPoolModel().IsErrorInTotalValueLocked {
+			rating += noTVLErrorPoints
+		}
 
-		isIFirstByTVLError := isITVLError && !isJTVLError
+		_, isPreferred := preferredPoolIDsMap[pool.GetId()]
+		if isPreferred {
+			rating += preferredPoints
+		}
 
-		isIFirstByPreference := isIPreferred && !isJPreferred
+		isConcentrated := pool.GetType() == poolmanagertypes.Concentrated
+		if isConcentrated {
+			rating += concentratedPoints
+		}
 
-		return isIFirstByTVLError && isIFirstByPreference && poolI.GetTotalValueLockedUOSMO().GT(poolJ.GetTotalValueLockedUOSMO())
+		ratedPools = append(ratedPools, ratedPool{
+			pool:   pool,
+			rating: rating,
+		})
+	}
+
+	// Sort all pools by the rating score
+	sort.Slice(ratedPools, func(i, j int) bool {
+		return ratedPools[i].rating > ratedPools[j].rating
 	})
 
-	logger.Debug("pool count in router ", zap.Int("pool_count", len(poolsCopy)))
+	logger.Debug("pool count in router ", zap.Int("pool_count", len(ratedPools)))
+	logger.Info("initial pool order")
+	for i, pool := range ratedPools {
+		logger.Info("pool", zap.Int("index", i), zap.Any("pool", pool.pool), zap.Int64("rate", pool.rating))
+	}
+
+	// Convert back to pools
+	for i, ratedPool := range ratedPools {
+		poolsCopy[i] = ratedPool.pool
+	}
 
 	return Router{
 		sortedPools:        poolsCopy,
