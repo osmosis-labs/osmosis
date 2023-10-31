@@ -176,7 +176,7 @@ create_concentrated_pool() {
 
 create_concentrated_pool_positions () {
     # Define an array to hold the parameters that change for each command
-    set "[-1620000] 3420000" "305450 315000" "315000 322500" "300000 309990" "[-108000000], 342000000" "[-108000000], 342000000"
+    set "[-1620000] 3420000" "305450 315000" "315000 322500" "300000 309990" "[-108000000] 342000000" "[-108000000] 342000000"
 
     substring='code: 0'
     COUNTER=0
