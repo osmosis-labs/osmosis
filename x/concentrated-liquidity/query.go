@@ -67,17 +67,10 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 	}
 
 	var (
-		currentBucketIndex   = invalidTickIndex
+		currentBucketIndex   = int64(-1)
 		currentTick          = concentratedPool.GetCurrentTick()
 		currentTickLiquidity = concentratedPool.GetLiquidity()
 	)
-
-	concentratedPool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return []queryproto.LiquidityDepthWithRange{}, -1, err
-	}
-
-	currentTickLiquidityIndex := int64(-1)
 
 	// start from the next index so that the current tick can become lower tick.
 	nextTickIter.Next()

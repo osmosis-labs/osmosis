@@ -52,7 +52,7 @@
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "TestKeeperTestSuite/TestComputeAndSwapOutAmtGivenIn",
+                "TestKeeperTestSuite/TestGetTickLiquidityForFullRange_CreatePosition",
                 "-test.v"
             ],
         },
