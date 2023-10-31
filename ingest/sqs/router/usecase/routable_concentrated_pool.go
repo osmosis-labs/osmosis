@@ -142,7 +142,7 @@ func (r *routableConcentratedPoolImpl) CalculateTokenOutByTokenIn(tokenIn types.
 		amountOutTotal = amountOutTotal.AddMut(amountOutComputed)
 
 		// Logs
-		r.emitSwapDebugLogs(currentSqrtPrice, sqrtPriceNext, currentBucket.LiquidityAmount, amountInConsumed, amountOutComputed, spreadRewardChargeTotal)
+		// r.emitSwapDebugLogs(currentSqrtPrice, sqrtPriceNext, currentBucket.LiquidityAmount, amountInConsumed, amountOutComputed, spreadRewardChargeTotal)
 
 		// Update current sqrt price
 		currentSqrtPrice = sqrtPriceNext
