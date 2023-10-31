@@ -2,19 +2,6 @@
 ###                                  Build                                  ###
 ###############################################################################
 
-check_version:
-	@echo "Go version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION)"
-	@if [ $(GO_MAJOR_VERSION) -gt $(GO_MINIMUM_MAJOR_VERSION) ]; then \
-		echo "Go version is sufficient"; \
-		exit 0; \
-	elif [ $(GO_MAJOR_VERSION) -lt $(GO_MINIMUM_MAJOR_VERSION) ]; then \
-		echo '$(GO_VERSION_ERR_MSG)'; \
-		exit 1; \
-	elif [ $(GO_MINOR_VERSION) -lt $(GO_MINIMUM_MINOR_VERSION) ]; then \
-		echo '$(GO_VERSION_ERR_MSG)'; \
-		exit 1; \
-	fi
-
 build-help:
 	@echo "build subcommands"
 	@echo ""
@@ -46,7 +33,7 @@ build-check-version:
 		exit 1; \
 	fi
 
-build-all: check_version go.sum
+build-all: build-check-version go.sum
 	mkdir -p $(BUILDDIR)/
 	GOWORK=off go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./...
 
@@ -63,7 +50,7 @@ build-dev-build:
 	mkdir -p $(BUILDDIR)/
 	GOWORK=off go build $(GC_FLAGS) -mod=readonly -ldflags '$(DEBUG_LDFLAGS)' -trimpath -o $(BUILDDIR) ./...;
 
-build-install-with-autocomplete: check_version go.sum
+build-install-with-autocomplete: build-check-version go.sum
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 	@PARENT_SHELL=$$(ps -o ppid= -p $$PPID | xargs ps -o comm= -p); \
 	if echo "$$PARENT_SHELL" | grep -q "zsh"; then \

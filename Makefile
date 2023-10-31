@@ -140,11 +140,11 @@ endif
 ###                            Build & Install                              ###
 ###############################################################################
 
-build: check_version go.sum
+build: build-check-version go.sum
 	mkdir -p $(BUILDDIR)/
 	GOWORK=off go build -mod=readonly  $(BUILD_FLAGS) -o $(BUILDDIR)/ $(GO_MODULE)/cmd/osmosisd
 
-install: check_version go.sum
+install: build-check-version go.sum
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 
 ###############################################################################
