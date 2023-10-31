@@ -2,6 +2,19 @@
 ###                                  Build                                  ###
 ###############################################################################
 
+check_version:
+	@echo "Go version: $(GO_MAJOR_VERSION).$(GO_MINOR_VERSION)"
+	@if [ $(GO_MAJOR_VERSION) -gt $(GO_MINIMUM_MAJOR_VERSION) ]; then \
+		echo "Go version is sufficient"; \
+		exit 0; \
+	elif [ $(GO_MAJOR_VERSION) -lt $(GO_MINIMUM_MAJOR_VERSION) ]; then \
+		echo '$(GO_VERSION_ERR_MSG)'; \
+		exit 1; \
+	elif [ $(GO_MINOR_VERSION) -lt $(GO_MINIMUM_MINOR_VERSION) ]; then \
+		echo '$(GO_VERSION_ERR_MSG)'; \
+		exit 1; \
+	fi
+
 build-help:
 	@echo "build subcommands"
 	@echo ""
