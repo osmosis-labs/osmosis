@@ -42,6 +42,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+<<<<<<< HEAD
+=======
+### State Breaks
+
+* [#6758](https://github.com/osmosis-labs/osmosis/pull/6758) Add codec for MsgUndelegateFromRebalancedValidatorSet
+
+### Misc Improvements
+
+* [#6788](https://github.com/osmosis-labs/osmosis/pull/6788) Improve error message when CL LP fails due to slippage bound hit.
+
+## v20.0.0
+
+### Features
+
+* [#6468](https://github.com/osmosis-labs/osmosis/pull/6468) feat: remove osmo multihop discount
+* [#6420](https://github.com/osmosis-labs/osmosis/pull/6420) feat[CL]: Creates a governance set whitelist of addresses that can bypass the normal pool creation restrictions on concentrated liquidity pools
+* [#6623](https://github.com/osmosis-labs/osmosis/pull/6420) feat: transfer cl positions to new owner
+* [#6632](https://github.com/osmosis-labs/osmosis/pull/6632) Taker fee bypass whitelist
+* [#6709](https://github.com/osmosis-labs/osmosis/pull/6709) CLI: Add list-env, all Environment for CLI
+
+### State Breaking
+
+* [#6344](https://github.com/osmosis-labs/osmosis/pull/6344) fix: set name, display and symbol of denom metadata in tokenfactory's CreateDenom
+* [#6279](https://github.com/osmosis-labs/osmosis/pull/6279) fix prop-597 introduced issue
+* [#6282](https://github.com/osmosis-labs/osmosis/pull/6282) Fix CreateCanonicalConcentratedLiquidityPoolAndMigrationLink overriding migration records
+* [#6309](https://github.com/osmosis-labs/osmosis/pull/6309) Add  Cosmwasm Pool Queries to Stargate Query
+* [#6493](https://github.com/osmosis-labs/osmosis/pull/6493) Add PoolManager Params query to Stargate Whitelist
+* [#6421](https://github.com/osmosis-labs/osmosis/pull/6421) Moves ValidatePermissionlessPoolCreationEnabled out of poolmanager module
+* [#5967](https://github.com/osmosis-labs/osmosis/pull/5967) fix ValSet undelegate API out of sync with existing staking
+* [#6627](https://github.com/osmosis-labs/osmosis/pull/6627) Limit pow iterations in osmomath.
+* [#6586](https://github.com/osmosis-labs/osmosis/pull/6586) add auth.moduleaccounts to the stargate whitelist
+* [#6680](https://github.com/osmosis-labs/osmosis/pull/6680) Add Taker Fee query and add it to stargate whitelist
+* [#6699](https://github.com/osmosis-labs/osmosis/pull/6699) fix ValSet undelegate API to work with tokens instead of shares
+
+>>>>>>> e7517c2c (fix: improve error message for slippage bound when LPing (#6788))
 ### Bug Fixes
 * [#6644](https://github.com/osmosis-labs/osmosis/pull/6644) fix: genesis bug in pool incentives linking NoLock gauges and PoolIDs
 * [#6666](https://github.com/osmosis-labs/osmosis/pull/6666) fix: cosmwasmpool state export bug
