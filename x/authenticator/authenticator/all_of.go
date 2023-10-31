@@ -122,6 +122,12 @@ func (aoa AllOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 }
 
 func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
+	for _, auth := range aoa.SubAuthenticators {
+		result := auth.ConfirmExecution(ctx, account, msg, authenticationData)
+		if result.IsBlock() {
+			return result
+		}
+	}
 	return iface.Confirm()
 }
 
