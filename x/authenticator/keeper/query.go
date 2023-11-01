@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -32,4 +31,24 @@ func (k Keeper) GetAuthenticators(
 	}
 
 	return &types.GetAuthenticatorsResponse{AccountAuthenticators: authenticators}, nil
+}
+
+func (k Keeper) GetSpendLimitsForAccount(ctx context.Context, request *types.GetSpendLimitsForAccountRequest) (*types.GetSpendLimitsForAccountResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	acc, err := sdk.AccAddressFromBech32(request.Account)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	limits, err := k.GetSpendLimitsForAccountImpl(sdkCtx, acc)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.GetSpendLimitsForAccountResponse{
+		SpendLimits: limits,
+	}, nil
 }

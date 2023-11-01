@@ -3,6 +3,7 @@ package authenticator
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -74,6 +75,7 @@ func NewSpendLimitAuthenticator(storeKey sdk.StoreKey, quoteDenom string, priceS
 }
 
 type InitData struct {
+	Id           uint64     `json:"id"`
 	AllowedDelta uint64     `json:"allowed"`
 	PeriodType   PeriodType `json:"period"`
 }
@@ -160,7 +162,7 @@ func (sla SpendLimitAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk
 	delta := totalPrevValue.Sub(totalCurrentValue)
 
 	// Get the total spent so far in the current period
-	spentSoFar := sla.GetSpentInPeriod(account, ctx.BlockTime())
+	spentSoFar := sla.GetSpentInPeriod(ctx, account, ctx.BlockTime())
 
 	if delta.Add(spentSoFar).Int64() > int64(sla.allowedDelta.Uint64()) {
 		return iface.Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "spend limit exceeded"))
@@ -184,6 +186,15 @@ func (sla SpendLimitAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account
 	if !(initData.PeriodType == Day || initData.PeriodType == Week || initData.PeriodType == Month || initData.PeriodType == Year) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period type %s", initData.PeriodType)
 	}
+
+	// Check and store the id
+	sla.store = prefix.NewStore(ctx.KVStore(sla.storeKey), []byte(sla.Type()))
+	idKey := getIdKey(account, strconv.FormatUint(initData.Id, 10))
+	if sla.store.Has(idKey) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "spend limit with id %s already exists for %s", initData.Id, account)
+	}
+	sla.store.Set(idKey, data)
+
 	return nil
 }
 
@@ -191,10 +202,15 @@ func (sla SpendLimitAuthenticator) OnAuthenticatorRemoved(ctx sdk.Context, accou
 	return nil
 }
 
+func (sla SpendLimitAuthenticator) GetQuoteDenom() string {
+	return sla.quoteDenom
+}
+
 func (sla SpendLimitAuthenticator) getPriceInQuoteDenom(ctx sdk.Context, coin sdk.Coin) (osmomath.Dec, error) {
 	switch sla.priceStrategy {
 	case Twap:
 		// This is a very bad and inefficient implementation that should be improved
+		// TODO: cache prices we've already seen while processing the block
 		oneWeekAgo := ctx.BlockTime().Add(-time.Hour * 24 * 7)
 		numPools := sla.poolManagerKeeper.GetNextPoolId(ctx)
 		for i := uint64(1); i < numPools; i++ {
@@ -212,6 +228,7 @@ func (sla SpendLimitAuthenticator) getPriceInQuoteDenom(ctx sdk.Context, coin sd
 }
 
 // STATE
+
 func (sla SpendLimitAuthenticator) GetBalance(account sdk.AccAddress) []sdk.Coin {
 	var coins []sdk.Coin
 	_ = json.Unmarshal(sla.store.Get(getBalanceKey(account)), &coins)
@@ -227,7 +244,8 @@ func (sla SpendLimitAuthenticator) DeleteBalances(account sdk.AccAddress) {
 	osmoutils.DeleteAllKeysFromPrefix(sla.store, getBalanceKey(account))
 }
 
-func (sla SpendLimitAuthenticator) GetSpentInPeriod(account sdk.AccAddress, t time.Time) osmomath.Int {
+func (sla SpendLimitAuthenticator) GetSpentInPeriod(ctx sdk.Context, account sdk.AccAddress, t time.Time) osmomath.Int {
+	sla.store = prefix.NewStore(ctx.KVStore(sla.storeKey), []byte(sla.Type()))
 	key := getPeriodKey(account, sla.periodType, t)
 	var spent osmomath.Int
 	err := json.Unmarshal(sla.store.Get(key), &spent)
@@ -271,6 +289,25 @@ func (sla SpendLimitAuthenticator) SetActivePeriod(account sdk.AccAddress, curre
 	sla.store.Set(key, []byte(current))
 }
 
+func (sla SpendLimitAuthenticator) GetRegisteredDatas(ctx sdk.Context, account sdk.AccAddress) ([]InitData, error) {
+	// iterate over the keys that start with utils.BuildKey(account, "spend_limit_id") using osmoutils
+	// and return the InitData for each one
+	var datas []InitData
+	sla.store = prefix.NewStore(ctx.KVStore(sla.storeKey), []byte(sla.Type()))
+	filter := prefix.NewStore(sla.store, utils.BuildKey(account, "spend_limit_id"))
+	iter := filter.Iterator(nil, nil)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var data InitData
+		err := json.Unmarshal(iter.Value(), &data)
+		if err != nil {
+			return nil, err
+		}
+		datas = append(datas, data)
+	}
+	return datas, nil
+}
+
 // KEYS
 func getPeriodKey(account sdk.AccAddress, period PeriodType, t time.Time) []byte {
 	if !(period == Day || period == Week || period == Month || period == Year) {
@@ -285,6 +322,10 @@ func getBalanceKey(account sdk.AccAddress) []byte {
 
 func getActivePeriodKey(account sdk.AccAddress, period PeriodType) []byte {
 	return utils.BuildKey("activePeriod", account, string(period))
+}
+
+func getIdKey(account sdk.AccAddress, id string) []byte {
+	return utils.BuildKey(account, "spend_limit_id", id)
 }
 
 func formatPeriodTime(t time.Time, periodType PeriodType) string {

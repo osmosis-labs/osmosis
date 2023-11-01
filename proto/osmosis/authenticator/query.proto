@@ -21,6 +21,12 @@ service Query {
     option (google.api.http).get =
         "/osmosis/authenticator/authenticators/{account}";
   }
+
+  rpc GetSpendLimitsForAccount(GetSpendLimitsForAccountRequest)
+      returns (GetSpendLimitsForAccountResponse) {
+    option (google.api.http).get =
+        "/osmosis/authenticator/spend_limits/{account}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -32,10 +38,27 @@ message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
-// MsgGetAuthenticatorsRequest defines the Msg/GetAuthenticators request type.
+// GetAuthenticatorsRequest defines the Msg/GetAuthenticators request type.
 message GetAuthenticatorsRequest { string account = 1; }
 
-// MsgGetAuthenticatorsResponse defines the Msg/GetAuthenticators response type.
+// GetAuthenticatorsResponse defines the Msg/GetAuthenticators response type.
 message GetAuthenticatorsResponse {
   repeated AccountAuthenticator account_authenticators = 1;
+}
+
+/// Spend Limit queries
+message SpendLimit {
+  string account = 1;
+  uint64 limit = 2;
+  string quoteDenom = 3;
+  string period = 4;
+  uint64 used = 5;
+  uint64 id = 6;
+}
+
+// GetSpendLimitsForAccount returns the spend limits for an account
+message GetSpendLimitsForAccountRequest { string account = 1; }
+
+message GetSpendLimitsForAccountResponse {
+  repeated SpendLimit spend_limits = 1;
 }

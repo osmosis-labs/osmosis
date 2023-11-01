@@ -561,6 +561,13 @@ func (s *AuthenticatorSuite) TestSpendWithinLimit() {
 	// sending 500 ok after a day
 	_, err = s.chainA.SendMsgsFromPrivKeys(pks{s.PrivKeys[0]}, sendMsg)
 	s.Require().NoError(err)
+
+	result, err := s.app.AuthenticatorKeeper.GetSpendLimitsForAccountImpl(
+		s.chainA.GetContext(),
+		s.Account.GetAddress(),
+	)
+	s.Require().NoError(err)
+	fmt.Println("result: ", result)
 }
 
 // TODO: We have discovered an issue with the authz integration that prevents this test from if

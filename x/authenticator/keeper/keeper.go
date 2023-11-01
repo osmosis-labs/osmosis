@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"encoding/json"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v20/x/authenticator/iface"
 
@@ -144,8 +146,13 @@ func (k Keeper) AddAuthenticator(ctx sdk.Context, account sdk.AccAddress, authen
 	if impl == nil {
 		return fmt.Errorf("authenticator type %s is not registered", authenticatorType)
 	}
-	cacheCtx, _ := ctx.CacheContext()
-	err := impl.OnAuthenticatorAdded(cacheCtx, account, data)
+	// Note to reviewer: Here we were passing cacheCtx to ensure that OnAuthenticatorAdded couldn't modify state.
+	// I'm removing it so that I can modify state inside spend limit.
+	// We were not doing the same thing on RemoveAuthenticator, and these should behave in the same way,
+	// I'm removing it here, which I think is ok: the authenticators are responsible of implementing that function properly
+	// and if the tx fails the changes will be reverted
+	//cacheCtx, _ := ctx.CacheContext()
+	err := impl.OnAuthenticatorAdded(ctx, account, data)
 	if err != nil {
 		return err
 	}
@@ -197,4 +204,44 @@ func (k Keeper) GetAuthenticatorExtension(exts []*codectypes.Any) types.Authenti
 		}
 	}
 	return nil
+}
+
+func (k Keeper) GetSpendLimitsForAccountImpl(ctx sdk.Context, account sdk.AccAddress) ([]*types.SpendLimit, error) {
+	impl := k.AuthenticatorManager.GetAuthenticatorByType(authenticator.SpendLimitAuthenticator{}.Type())
+	spendLimit, ok := impl.(authenticator.SpendLimitAuthenticator)
+	if !ok {
+		return nil, fmt.Errorf("SpendLimitAuthenticator not properly registered")
+	}
+	datas, err := spendLimit.GetRegisteredDatas(ctx, account)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "failed to get registered datas")
+	}
+
+	var limits []*types.SpendLimit
+	for _, data := range datas {
+		// TODO: maybe not unmarshall in the internal func?
+		dataBz, err := json.Marshal(data)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "failed to marshal spend limit data")
+		}
+		initialized, err := spendLimit.Initialize(dataBz)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "failed to initialize spend limit")
+		}
+		userLimit, ok := initialized.(authenticator.SpendLimitAuthenticator)
+		if !ok {
+			return nil, fmt.Errorf("Couldn't cast to SpendLimitAuthenticator")
+		}
+
+		limits = append(limits, &types.SpendLimit{
+			Account:    account.String(),
+			Limit:      data.AllowedDelta,
+			QuoteDenom: userLimit.GetQuoteDenom(),
+			Period:     string(data.PeriodType),
+			// TODO: This can be negative
+			Used: userLimit.GetSpentInPeriod(ctx, account, ctx.BlockTime()).Uint64(),
+			Id:   data.Id,
+		})
+	}
+	return limits, nil
 }
