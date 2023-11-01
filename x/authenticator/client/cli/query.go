@@ -10,6 +10,7 @@ import (
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdAuthenticators)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdParams)
 
 	return cmd
 }
@@ -19,6 +20,15 @@ func GetCmdAuthenticators() (*osmocli.QueryDescriptor, *types.GetAuthenticatorsR
 		Use:   "authenticators",
 		Short: "Query authenticators",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pool 1`,
+{{.CommandPrefix}} osmo1asdadasd`,
 	}, &types.GetAuthenticatorsRequest{}
+}
+
+func GetCmdParams() (*osmocli.QueryDescriptor, *types.QueryParamsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "params",
+		Short: "Query params",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} params`,
+	}, &types.QueryParamsRequest{}
 }
