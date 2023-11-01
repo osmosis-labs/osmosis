@@ -122,11 +122,12 @@ func (aoa AnyOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 func (aoa AnyOfAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
 	for _, auth := range aoa.SubAuthenticators {
 		result := auth.ConfirmExecution(ctx, account, msg, authenticationData)
-		if result.IsBlock() {
-			return result
+		if result.IsConfirm() {
+			return iface.Confirm()
 		}
 	}
-	return iface.Confirm()
+
+	return iface.Block(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "No sub authenticators can confirm the transaction"))
 }
 
 func (aoa AnyOfAuthenticator) OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, data []byte) error {
