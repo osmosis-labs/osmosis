@@ -120,13 +120,15 @@ func (pi *poolIngester) updatePoolState(ctx sdk.Context, tx domain.Tx) error {
 	cosmWasmPoolsParsed := make([]domain.PoolI, 0, len(cosmWasmPools))
 	for _, pool := range cosmWasmPools {
 		// Parse cosmwasm pool to the standard SQS types.
-		pool, err := convertPool(ctx, pool, denomToRoutablePoolIDMap, pi.bankKeeper, pi.protorevKeeper, pi.poolManagerKeeper, pi.concentratedKeeper)
+		pool, err := convertPool(ctx, pool.AsSerializablePool(), denomToRoutablePoolIDMap, pi.bankKeeper, pi.protorevKeeper, pi.poolManagerKeeper, pi.concentratedKeeper)
 		if err != nil {
 			return err
 		}
 
 		cosmWasmPoolsParsed = append(cosmWasmPoolsParsed, pool)
 	}
+
+	ctx.Logger().Info("ingesting pools to Redis", "height", ctx.BlockHeight(), "num_cfmm", len(cfmmPools), "num_concentrated", len(concentratedPools), "num_cosmwasm", len(cosmWasmPools))
 
 	err = pi.poolsRepository.StorePools(goCtx, tx, cfmmPoolsParsed, concentratedPoolsParsed, cosmWasmPoolsParsed)
 	if err != nil {
