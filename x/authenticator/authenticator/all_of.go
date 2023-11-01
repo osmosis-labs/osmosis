@@ -11,7 +11,6 @@ import (
 
 type AllOfAuthenticator struct {
 	SubAuthenticators []iface.Authenticator
-	executedAuths     []iface.Authenticator
 	am                *AuthenticatorManager
 }
 
@@ -28,7 +27,6 @@ func NewAllOfAuthenticator(am *AuthenticatorManager) AllOfAuthenticator {
 	return AllOfAuthenticator{
 		am:                am,
 		SubAuthenticators: []iface.Authenticator{},
-		executedAuths:     []iface.Authenticator{},
 	}
 }
 
@@ -109,6 +107,7 @@ func (aoa AllOfAuthenticator) Authenticate(ctx sdk.Context, account sdk.AccAddre
 			return result
 		}
 	}
+
 	return iface.Authenticated()
 }
 
@@ -123,9 +122,10 @@ func (aoa AllOfAuthenticator) Track(ctx sdk.Context, account sdk.AccAddress, msg
 }
 
 func (aoa AllOfAuthenticator) ConfirmExecution(ctx sdk.Context, account sdk.AccAddress, msg sdk.Msg, authenticationData iface.AuthenticatorData) iface.ConfirmationResult {
-	for _, auth := range aoa.executedAuths {
-		if confirmation := auth.ConfirmExecution(ctx, nil, msg, authenticationData); confirmation.IsBlock() {
-			return confirmation
+	for _, auth := range aoa.SubAuthenticators {
+		result := auth.ConfirmExecution(ctx, account, msg, authenticationData)
+		if result.IsBlock() {
+			return result
 		}
 	}
 	return iface.Confirm()
