@@ -166,6 +166,10 @@ create_two_asset_pool() {
   run_with_retries "osmosisd tx gamm create-pool --pool-file=$1 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --yes" "create two asset pool: successful"
 }
 
+create_stable_pool() {
+  run_with_retries "osmosisd tx gamm create-pool --pool-file=uwethUusdcStablePool.json --pool-type=stableswap --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --yes" "create two asset pool: successful"
+}
+
 create_three_asset_pool() {
   run_with_retries "osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create three asset pool: successful"
 }
@@ -182,7 +186,7 @@ create_concentrated_pool_positions () {
     COUNTER=0
     # Loop through each set of parameters in the array
     for param in "$@"; do
-        run_with_retries "osmosisd tx concentratedliquidity create-position 4 $param 5000000000uosmo,1000000uion 0 0 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes"
+        run_with_retries "osmosisd tx concentratedliquidity create-position 6 $param 5000000000uosmo,1000000uion 0 0 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes"
     done
 }
 
@@ -200,10 +204,24 @@ osmosisd start --home $OSMOSIS_HOME &
 
 if [[ $STATE == 'true' ]]
 then
-    create_two_asset_pool "nativeDenomPoolA.json"
-    create_two_asset_pool "nativeDenomPoolB.json"
-    create_two_asset_pool "nativeDenomPoolUUSDCUION.json"
+    echo "Creating pools"
+    
+    echo "uosmo / uusdc balancer"
+    create_two_asset_pool "uosmoUusdcBalancerPool.json"
+    
+    echo "uosmo / uion balancer"
+    create_two_asset_pool "uosmoUionBalancerPool.json"
+    
+    echo "uweth / uusdc stableswap"
+    create_stable_pool
+    
+    echo "uusdc / uion balancer"
+    create_two_asset_pool "uusdcUionBalancerPool.json"
+
+    echo "stake / uion / uosmo balancer"
     create_three_asset_pool
+
+    echo "uion / uosmo concentrated"
     create_concentrated_pool
     create_concentrated_pool_positions
 fi
