@@ -38,7 +38,7 @@ func NewRoutablePool(pool domain.PoolI, tokenOutDenom string) domain.RoutablePoo
 func (r *routableCFMMPoolImpl) CalculateTokenOutByTokenIn(tokenIn sdk.Coin) (sdk.Coin, error) {
 	poolType := r.GetType()
 
-	if poolType != poolmanagertypes.Balancer {
+	if poolType != poolmanagertypes.Balancer && poolType != poolmanagertypes.Stableswap {
 		return sdk.Coin{}, domain.InvalidPoolTypeError{PoolType: int32(poolType)}
 	}
 
