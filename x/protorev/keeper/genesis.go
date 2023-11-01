@@ -89,11 +89,15 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 	// Since we now track all aspects of protocol revenue, we need to take a snapshot of cyclic arb profits from this module at a certain block height.
 	// This allows us to display how much protocol revenue has been generated since block "X" instead of just since the module was initialized.
-	if genState.CyclicArbTracker != nil {
+	if !genState.CyclicArbTracker.CyclicArb.IsZero() {
 		k.SetCyclicArbProfitTrackerValue(ctx, genState.CyclicArbTracker.CyclicArb)
-		k.SetCyclicArbProfitTrackerStartHeight(ctx, genState.CyclicArbTracker.HeightAccountingStartsFrom)
 	} else {
 		k.SetCyclicArbProfitTrackerValue(ctx, genState.Profits)
+	}
+
+	if genState.CyclicArbTracker.HeightAccountingStartsFrom != 0 {
+		k.SetCyclicArbProfitTrackerStartHeight(ctx, genState.CyclicArbTracker.HeightAccountingStartsFrom)
+	} else {
 		k.SetCyclicArbProfitTrackerStartHeight(ctx, uint64(ctx.BlockHeight()))
 	}
 }
