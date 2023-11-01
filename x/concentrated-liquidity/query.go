@@ -17,6 +17,8 @@ import (
 	types "github.com/osmosis-labs/osmosis/v20/x/concentrated-liquidity/types"
 )
 
+const invalidTickIndex = int64(-1)
+
 // This file contains query-related helper functions for the Concentrated Liquidity module
 
 // GetTickLiquidityForFullRange returns a slice of liquidity buckets for all tick range existing from min tick ~ max tick.
@@ -37,17 +39,17 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, leftMostTickIndex)
 	defer nextTickIter.Close()
 	if !nextTickIter.Valid() {
-		return []queryproto.LiquidityDepthWithRange{}, -1, types.RanOutOfTicksForPoolError{PoolId: poolId}
+		return []queryproto.LiquidityDepthWithRange{}, invalidTickIndex, types.RanOutOfTicksForPoolError{PoolId: poolId}
 	}
 
 	nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
 	if err != nil {
-		return []queryproto.LiquidityDepthWithRange{}, -1, err
+		return []queryproto.LiquidityDepthWithRange{}, invalidTickIndex, err
 	}
 
 	tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
 	if err != nil {
-		return []queryproto.LiquidityDepthWithRange{}, -1, err
+		return []queryproto.LiquidityDepthWithRange{}, invalidTickIndex, err
 	}
 
 	liquidityDepthsForRange := []queryproto.LiquidityDepthWithRange{}
@@ -61,11 +63,11 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 
 	concentratedPool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
-		return []queryproto.LiquidityDepthWithRange{}, -1, err
+		return []queryproto.LiquidityDepthWithRange{}, invalidTickIndex, err
 	}
 
 	var (
-		currentBucketIndex   = int64(-1)
+		currentBucketIndex   = invalidTickIndex
 		currentTick          = concentratedPool.GetCurrentTick()
 		currentTickLiquidity = concentratedPool.GetLiquidity()
 	)
@@ -75,16 +77,16 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 	for ; nextTickIter.Valid(); nextTickIter.Next() {
 		tickIndex, err := types.TickIndexFromBytes(nextTickIter.Key())
 		if err != nil {
-			return []queryproto.LiquidityDepthWithRange{}, -1, err
+			return []queryproto.LiquidityDepthWithRange{}, invalidTickIndex, err
 		}
 
 		tickStruct, err := ParseTickFromBz(nextTickIter.Value())
 		if err != nil {
-			return []queryproto.LiquidityDepthWithRange{}, -1, err
+			return []queryproto.LiquidityDepthWithRange{}, invalidTickIndex, err
 		}
 
 		// Found the current bucket, update its index.
-		if currentBucketIndex == -1 && concentratedPool.IsCurrentTickInRange(previousTickIndex, tickIndex) && currentTickLiquidity.Equal(totalLiquidityWithinRange) {
+		if currentBucketIndex == invalidTickIndex && concentratedPool.IsCurrentTickInRange(previousTickIndex, tickIndex) && currentTickLiquidity.Equal(totalLiquidityWithinRange) {
 			currentBucketIndex = int64(len(liquidityDepthsForRange))
 		}
 
