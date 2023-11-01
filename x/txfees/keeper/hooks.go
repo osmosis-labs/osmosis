@@ -104,7 +104,8 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 		}
 
 		// Do the swap of this fee token denom to base denom.
-		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		var tokenOutAmt osmomath.Int
+		err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			// We allow full slippage. Theres not really an effective way to bound slippage until TWAP's land,
 			// but even then the point is a bit moot.
 			// The only thing that could be done is a costly griefing attack to reduce the amount of osmo given as tx fees.
@@ -113,16 +114,26 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 
 			// We swap without charging a taker fee / sending to the non native fee collector, since these are funds that
 			// are accruing from the taker fee itself.
-			tokenOutAmt, err := k.poolManager.SwapExactAmountInNoTakerFee(cacheCtx, feeCollectorAddress, poolId, coin, denomToSwapTo, minAmountOut)
-			// If the swap goes through, update the tx fees tracker value.
-			if err == nil {
-				currentTxFeesTrackerValue := k.GetTxFeesTrackerValue(ctx)
-				// Subtract the amount swapped in and add the amount received from the current tx fees tracker value.
-				newTxFeesTrackerValue := currentTxFeesTrackerValue.Sub(sdk.NewCoins(coin)).Add(sdk.NewCoin(denomToSwapTo, tokenOutAmt))
-				// Set the new tx fees tracker value.
-				k.SetTxFeesTrackerValue(ctx, newTxFeesTrackerValue)
-			}
+			tokenOutAmt, err = k.poolManager.SwapExactAmountInNoTakerFee(cacheCtx, feeCollectorAddress, poolId, coin, denomToSwapTo, minAmountOut)
 			return err
 		})
+
+		// If the swap was successful, subtract the amount swapped in from the tx fees tracker value.
+		// We do this outside of the ApplyFuncIfNoError since we don't want to halt all hooks from executing
+		// in the event on chain accounting is bugged.
+		if err != nil {
+			currentTxFeesTrackerValue := k.GetTxFeesTrackerValue(ctx)
+			// Add the amount received from the swap to the current tx fees tracker value.
+			txFeesTrackerInterim := currentTxFeesTrackerValue.Add(sdk.NewCoin(denomToSwapTo, tokenOutAmt))
+			// Subtract the amount swapped in from the current tx fees tracker value.
+			newTxFeesTrackerValue, ok := txFeesTrackerInterim.SafeSub(sdk.NewCoins(coin))
+			if !ok {
+				// If for some reason the accounting fails, just continue, we don't want
+				// to halt all hooks from executing.
+				continue
+			}
+			// Set the new tx fees tracker value.
+			k.SetTxFeesTrackerValue(ctx, newTxFeesTrackerValue)
+		}
 	}
 }

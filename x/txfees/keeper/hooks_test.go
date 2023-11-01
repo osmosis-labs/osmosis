@@ -104,6 +104,11 @@ func (s *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 				s.NoError(err)
 				err = s.App.BankKeeper.SendCoinsFromAccountToModule(s.Ctx, addr0, types.FeeCollectorForStakingRewardsName, sdk.Coins{coin})
 				s.NoError(err)
+
+				// Update the tx fee tracker
+				currentTxFeesTrackerValue := s.App.TxFeesKeeper.GetTxFeesTrackerValue(s.Ctx)
+				newTxFeesTrackerValue := currentTxFeesTrackerValue.Add(sdk.NewCoins(coin)...)
+				s.App.TxFeesKeeper.SetTxFeesTrackerValue(s.Ctx, newTxFeesTrackerValue)
 			}
 
 			// checks the balance of the non-native denom in module account
@@ -411,6 +416,9 @@ func (s *KeeperTestSuite) TestAfterEpochEnd() {
 		// Prepare coins with all edge cases and success scenarios for swapping to denomToSwapTo.
 		preFundCollectorCoins := prepareCoinsForSwapToDenomTest(denomToSwapTo)
 		s.FundModuleAcc(collectorName, preFundCollectorCoins)
+
+		currentTxFeesTrackerValue := s.App.TxFeesKeeper.GetTxFeesTrackerValue(s.Ctx)
+		s.App.TxFeesKeeper.SetTxFeesTrackerValue(s.Ctx, currentTxFeesTrackerValue.Add(preFundCollectorCoins...))
 
 		// Prepare pools.
 		s.preparePoolsForSwappingToDenom(otherPreSwapDenom, preSwapDenom, denomToSwapTo)
