@@ -233,8 +233,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 	}()
 
-	routeStep := types.SwapAmountInRoutes(route)
-	if err := routeStep.Validate(); err != nil {
+	if err := types.SwapAmountInRoutes(route).Validate(); err != nil {
 		return osmomath.Int{}, err
 	}
 
