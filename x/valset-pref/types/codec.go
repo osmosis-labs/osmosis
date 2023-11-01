@@ -23,6 +23,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgSetValidatorSetPreference{},
 		&MsgDelegateToValidatorSet{},
 		&MsgUndelegateFromValidatorSet{},
+		&MsgUndelegateFromRebalancedValidatorSet{},
 		&MsgWithdrawDelegationRewards{},
 		&MsgRedelegateValidatorSet{},
 	)
