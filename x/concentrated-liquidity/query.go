@@ -21,7 +21,7 @@ const invalidTickIndex = int64(-1)
 
 // This file contains query-related helper functions for the Concentrated Liquidity module
 
-// GetTickLiquidityForFullRange returns a slice of liquidity buckets for all tick range existing from min tick ~ max tick.
+// GetTickLiquidityForFullRange returns a slice of liquidity buckets for all tick ranges existing from min tick ~ max tick.
 // Returns index of the bucket that corresponds to the current tick.
 // For cases where there is no liqudity in the bucket but there may be liquidity to the right, the value will be -1.
 // For cases where there is no liquidity in the bucket but there may be liquidity to the left, the value will be len(liquidityDepthsForRange).
