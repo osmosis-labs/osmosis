@@ -256,5 +256,7 @@ func DeductFees(txFeesKeeper types.TxFeesKeeper, bankKeeper types.BankKeeper, ct
 		}
 	}
 
+	txFeesKeeper.IncreaseTxFeesTracker(ctx, fees[0])
+
 	return nil
 }

@@ -86,6 +86,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 			panic(err)
 		}
 	}
+
+	// Since we now track all aspects of protocol revenue, we need to take a snapshot of cyclic arb profits from this module at a certain block height.
+	// This allows us to display how much protocol revenue has been generated since block "X" instead of just since the module was initialized.
+	if genState.CyclicArbTracker != nil {
+		k.SetCyclicArbProfitTrackerValue(ctx, genState.CyclicArbTracker.CyclicArb)
+		k.SetCyclicArbProfitTrackerStartHeight(ctx, genState.CyclicArbTracker.HeightAccountingStartsFrom)
+	} else {
+		k.SetCyclicArbProfitTrackerValue(ctx, genState.Profits)
+		k.SetCyclicArbProfitTrackerStartHeight(ctx, uint64(ctx.BlockHeight()))
+	}
 }
 
 // ExportGenesis returns the module's exported genesis. ExportGenesis intentionally ignores a few of the errors thrown
@@ -154,6 +164,13 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 
 	// Export the profits that have been collected by Protorev.
 	genesis.Profits = k.GetAllProfits(ctx)
+
+	// Export the profits that have been collected by Protorev since a certain block height.
+	cyclicArbTracker := types.CyclicArbTracker{
+		CyclicArb:                  k.GetCyclicArbProfitTrackerValue(ctx),
+		HeightAccountingStartsFrom: k.GetCyclicArbProfitTrackerStartHeight(ctx),
+	}
+	genesis.CyclicArbTracker = &cyclicArbTracker
 
 	return genesis
 }

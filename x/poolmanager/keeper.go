@@ -97,14 +97,44 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	for _, poolRoute := range genState.PoolRoutes {
 		k.SetPoolRoute(ctx, poolRoute.PoolId, poolRoute.PoolType)
 	}
+
+	// We track taker fees generated in the module's KVStore.
+	// If the values were exported, we set them here.
+	// If the values were not exported, we initialize the tracker to zero and set the accounting height to the current height.
+	if genState.TakerFeesToStakersTracker != nil {
+		k.SetTakerFeeTrackerForStakers(ctx, genState.TakerFeesToStakersTracker.TakerFeesToStakers)
+		k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesToStakersTracker.HeightAccountingStartsFrom)
+	} else {
+		k.SetTakerFeeTrackerForStakers(ctx, sdk.NewCoins())
+		k.SetTakerFeeTrackerStartHeight(ctx, uint64(ctx.BlockHeight()))
+	}
+	if genState.TakerFeesToCommunityPoolTracker != nil {
+		k.SetTakerFeeTrackerForCommunityPool(ctx, genState.TakerFeesToCommunityPoolTracker.TakerFeesToCommunityPool)
+		k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesToCommunityPoolTracker.HeightAccountingStartsFrom)
+	} else {
+		k.SetTakerFeeTrackerForCommunityPool(ctx, sdk.NewCoins())
+		k.SetTakerFeeTrackerStartHeight(ctx, uint64(ctx.BlockHeight()))
+	}
 }
 
 // ExportGenesis returns the poolmanager module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	// Export KVStore values to the genesis state so they can be imported in init genesis.
+	takerFeesToStakersTracker := types.TakerFeesToStakersTracker{
+		TakerFeesToStakers:         k.GetTakerFeeTrackerForStakers(ctx),
+		HeightAccountingStartsFrom: k.GetTakerFeeTrackerStartHeight(ctx),
+	}
+	takerFeesToCommunityPoolTracker := types.TakerFeesToCommunityPoolTracker{
+		TakerFeesToCommunityPool:   k.GetTakerFeeTrackerForCommunityPool(ctx),
+		HeightAccountingStartsFrom: k.GetTakerFeeTrackerStartHeight(ctx),
+	}
+
 	return &types.GenesisState{
-		Params:     k.GetParams(ctx),
-		NextPoolId: k.GetNextPoolId(ctx),
-		PoolRoutes: k.getAllPoolRoutes(ctx),
+		Params:                          k.GetParams(ctx),
+		NextPoolId:                      k.GetNextPoolId(ctx),
+		PoolRoutes:                      k.getAllPoolRoutes(ctx),
+		TakerFeesToStakersTracker:       &takerFeesToStakersTracker,
+		TakerFeesToCommunityPoolTracker: &takerFeesToCommunityPoolTracker,
 	}
 }
 

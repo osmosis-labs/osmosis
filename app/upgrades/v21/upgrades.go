@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v20/app/keepers"
 	"github.com/osmosis-labs/osmosis/v20/app/upgrades"
 )
@@ -22,6 +23,16 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+
+		// Since we are now tracking all protocol rev, we set the accounting height to the current block height for each module
+		// that generates protocol rev.
+		keepers.PoolManagerKeeper.SetTakerFeeTrackerStartHeight(ctx, uint64(ctx.BlockHeight()))
+		keepers.TxFeesKeeper.SetTxFeesTrackerStartHeight(ctx, uint64(ctx.BlockHeight()))
+		// We start the cyclic arb tracker from the value it currently is at since it has been tracking since inception (without a start height).
+		allCyclicArbProfits := keepers.ProtoRevKeeper.GetAllProfits(ctx)
+		allCyclicArbProfitsCoins := osmoutils.ConvertCoinArrayToCoins(allCyclicArbProfits)
+		keepers.ProtoRevKeeper.SetCyclicArbProfitTrackerValue(ctx, allCyclicArbProfitsCoins)
+		keepers.ProtoRevKeeper.SetCyclicArbProfitTrackerStartHeight(ctx, uint64(ctx.BlockHeight()))
 
 		return migrations, nil
 	}

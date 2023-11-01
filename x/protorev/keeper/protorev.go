@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v20/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v20/x/protorev/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
@@ -482,4 +484,45 @@ func (k Keeper) GetInfoByPoolType(ctx sdk.Context) types.InfoByPoolType {
 func (k Keeper) SetInfoByPoolType(ctx sdk.Context, poolWeights types.InfoByPoolType) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixInfoByPoolType)
 	osmoutils.MustSet(store, types.KeyPrefixInfoByPoolType, &poolWeights)
+}
+
+// GetAllProtocolRevenue returns all types of protocol revenue (txfees, taker fees, and cyclic arb profits), as well as the block height from which we started accounting
+// for each of these revenue sources.
+func (k Keeper) GetAllProtocolRevenue(ctx sdk.Context) types.AllProtocolRevenue {
+	takerFeesToStakers := k.poolmanagerKeeper.GetTakerFeeTrackerForStakers(ctx)
+	takerFeesToCommunityPool := k.poolmanagerKeeper.GetTakerFeeTrackerForCommunityPool(ctx)
+	takerFeesAccountingHeight := k.poolmanagerKeeper.GetTakerFeeTrackerStartHeight(ctx)
+
+	txFees := k.txfeesKeeper.GetTxFeesTrackerValue(ctx)
+	txFeesAccountingHeight := k.txfeesKeeper.GetTxFeesTrackerStartHeight(ctx)
+
+	currentCyclicArb := k.GetAllProfits(ctx)
+	currentCyclicArbCoins := osmoutils.ConvertCoinArrayToCoins(currentCyclicArb)
+
+	cyclicArbTracker := types.CyclicArbTracker{
+		CyclicArb:                  currentCyclicArbCoins.Sub(k.GetCyclicArbProfitTrackerValue(ctx)),
+		HeightAccountingStartsFrom: k.GetCyclicArbProfitTrackerStartHeight(ctx),
+	}
+
+	takerFeesToStakersTracker := poolmanagertypes.TakerFeesToStakersTracker{
+		TakerFeesToStakers:         takerFeesToStakers,
+		HeightAccountingStartsFrom: takerFeesAccountingHeight,
+	}
+
+	takerFeesToCommunityPoolTracker := poolmanagertypes.TakerFeesToCommunityPoolTracker{
+		TakerFeesToCommunityPool:   takerFeesToCommunityPool,
+		HeightAccountingStartsFrom: takerFeesAccountingHeight,
+	}
+
+	txFeesTracker := txfeestypes.TxFeesTracker{
+		TxFees:                     txFees,
+		HeightAccountingStartsFrom: txFeesAccountingHeight,
+	}
+
+	return types.AllProtocolRevenue{
+		TakerFeesToStakersTracker:       takerFeesToStakersTracker,
+		TakerFeesToCommunityPoolTracker: takerFeesToCommunityPoolTracker,
+		TxFeesTracker:                   txFeesTracker,
+		CyclicArbTracker:                cyclicArbTracker,
+	}
 }

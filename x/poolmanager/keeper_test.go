@@ -43,6 +43,15 @@ var (
 			PoolType: types.Stableswap,
 		},
 	}
+
+	testFeesToStakers = types.TakerFeesToStakersTracker{
+		TakerFeesToStakers:         sdk.Coins{sdk.NewCoin("uosmo", sdk.NewInt(1000))},
+		HeightAccountingStartsFrom: 100,
+	}
+	testFeesToCommunityPool = types.TakerFeesToCommunityPoolTracker{
+		TakerFeesToCommunityPool:   sdk.Coins{sdk.NewCoin("uusdc", sdk.NewInt(1000))},
+		HeightAccountingStartsFrom: 100,
+	}
 )
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -101,8 +110,10 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			},
 			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
 		},
-		NextPoolId: testExpectedPoolId,
-		PoolRoutes: testPoolRoute,
+		NextPoolId:                      testExpectedPoolId,
+		PoolRoutes:                      testPoolRoute,
+		TakerFeesToStakersTracker:       &testFeesToStakers,
+		TakerFeesToCommunityPoolTracker: &testFeesToCommunityPool,
 	})
 
 	params := s.App.PoolManagerKeeper.GetParams(s.Ctx)
@@ -115,6 +126,10 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, params.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
 	s.Require().Equal(testAuthorizedQuoteDenoms, params.AuthorizedQuoteDenoms)
 	s.Require().Equal(testPoolRoute, s.App.PoolManagerKeeper.GetAllPoolRoutes(s.Ctx))
+	s.Require().Equal(testFeesToStakers.TakerFeesToStakers, s.App.PoolManagerKeeper.GetTakerFeeTrackerForStakers(s.Ctx))
+	s.Require().Equal(testFeesToCommunityPool.TakerFeesToCommunityPool, s.App.PoolManagerKeeper.GetTakerFeeTrackerForCommunityPool(s.Ctx))
+	s.Require().Equal(testFeesToStakers.HeightAccountingStartsFrom, s.App.PoolManagerKeeper.GetTakerFeeTrackerStartHeight(s.Ctx))
+	s.Require().Equal(testFeesToCommunityPool.HeightAccountingStartsFrom, s.App.PoolManagerKeeper.GetTakerFeeTrackerStartHeight(s.Ctx))
 }
 
 func (s *KeeperTestSuite) TestExportGenesis() {
@@ -130,8 +145,10 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 			},
 			AuthorizedQuoteDenoms: testAuthorizedQuoteDenoms,
 		},
-		NextPoolId: testExpectedPoolId,
-		PoolRoutes: testPoolRoute,
+		NextPoolId:                      testExpectedPoolId,
+		PoolRoutes:                      testPoolRoute,
+		TakerFeesToStakersTracker:       &testFeesToStakers,
+		TakerFeesToCommunityPoolTracker: &testFeesToCommunityPool,
 	})
 
 	genesis := s.App.PoolManagerKeeper.ExportGenesis(s.Ctx)
@@ -144,4 +161,8 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 	s.Require().Equal(testCommunityPoolDenomToSwapNonWhitelistedAssetsTo, genesis.Params.TakerFeeParams.CommunityPoolDenomToSwapNonWhitelistedAssetsTo)
 	s.Require().Equal(testAuthorizedQuoteDenoms, genesis.Params.AuthorizedQuoteDenoms)
 	s.Require().Equal(testPoolRoute, genesis.PoolRoutes)
+	s.Require().Equal(testFeesToStakers.TakerFeesToStakers, genesis.TakerFeesToStakersTracker.TakerFeesToStakers)
+	s.Require().Equal(testFeesToCommunityPool.TakerFeesToCommunityPool, genesis.TakerFeesToCommunityPoolTracker.TakerFeesToCommunityPool)
+	s.Require().Equal(testFeesToStakers.HeightAccountingStartsFrom, genesis.TakerFeesToStakersTracker.HeightAccountingStartsFrom)
+	s.Require().Equal(testFeesToCommunityPool.HeightAccountingStartsFrom, genesis.TakerFeesToCommunityPoolTracker.HeightAccountingStartsFrom)
 }

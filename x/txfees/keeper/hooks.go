@@ -113,7 +113,15 @@ func (k Keeper) swapNonNativeFeeToDenom(ctx sdk.Context, denomToSwapTo string, f
 
 			// We swap without charging a taker fee / sending to the non native fee collector, since these are funds that
 			// are accruing from the taker fee itself.
-			_, err := k.poolManager.SwapExactAmountInNoTakerFee(cacheCtx, feeCollectorAddress, poolId, coin, denomToSwapTo, minAmountOut)
+			tokenOutAmt, err := k.poolManager.SwapExactAmountInNoTakerFee(cacheCtx, feeCollectorAddress, poolId, coin, denomToSwapTo, minAmountOut)
+			// If the swap goes through, update the tx fees tracker value.
+			if err == nil {
+				currentTxFeesTrackerValue := k.GetTxFeesTrackerValue(ctx)
+				// Subtract the amount swapped in and add the amount received from the current tx fees tracker value.
+				newTxFeesTrackerValue := currentTxFeesTrackerValue.Sub(sdk.NewCoins(coin)).Add(sdk.NewCoin(denomToSwapTo, tokenOutAmt))
+				// Set the new tx fees tracker value.
+				k.SetTxFeesTrackerValue(ctx, newTxFeesTrackerValue)
+			}
 			return err
 		})
 	}

@@ -5,6 +5,8 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/poolmanager/v1beta1/genesis.proto";
+import "osmosis/txfees/v1beta1/genesis.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v20/x/protorev/types";
 
@@ -179,4 +181,34 @@ message BaseDenom {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"step_size\""
   ];
+}
+
+message AllProtocolRevenue {
+  osmosis.poolmanager.v1beta1.TakerFeesToStakersTracker
+      taker_fees_to_stakers_tracker = 1 [
+    (gogoproto.moretags) = "yaml:\"taker_fees_to_stakers_tracker\"",
+    (gogoproto.nullable) = false
+  ];
+  osmosis.poolmanager.v1beta1.TakerFeesToCommunityPoolTracker
+      taker_fees_to_community_pool_tracker = 2 [
+    (gogoproto.moretags) = "yaml:\"taker_fees_to_community_pool_tracker\"",
+    (gogoproto.nullable) = false
+  ];
+  osmosis.txfees.v1beta1.TxFeesTracker tx_fees_tracker = 3 [
+    (gogoproto.moretags) = "yaml:\"tx_fees_tracker\"",
+    (gogoproto.nullable) = false
+  ];
+  CyclicArbTracker cyclic_arb_tracker = 4 [
+    (gogoproto.moretags) = "yaml:\"cyclic_arb_tracker\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message CyclicArbTracker {
+  repeated cosmos.base.v1beta1.Coin cyclic_arb = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  uint64 height_accounting_starts_from = 2
+      [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
 }

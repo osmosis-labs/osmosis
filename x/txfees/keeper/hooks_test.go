@@ -151,6 +151,12 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom() {
 			poolCoins:     defaultPoolCoins,
 			preFundCoins:  defaultBalanceToSwap,
 		},
+		{
+			name:          "same denom to swap to",
+			denomToSwapTo: defaultBalanceToSwap[0].Denom,
+			poolCoins:     defaultPoolCoins,
+			preFundCoins:  defaultBalanceToSwap,
+		},
 
 		// TODO: add more test cases
 		// - pool does not exist for denom pair but protorev has it set for a pair
@@ -183,11 +189,18 @@ func (s *KeeperTestSuite) TestSwapNonNativeFeeToDenom() {
 			// Fund the account with the preFundCoins
 			s.FundAcc(testAccount, tc.preFundCoins)
 
+			// Set and check the txfees tracker before swap
+			s.App.TxFeesKeeper.SetTxFeesTrackerValue(s.Ctx, tc.preFundCoins)
+			s.Require().Equal(s.App.TxFeesKeeper.GetTxFeesTrackerValue(s.Ctx), tc.preFundCoins)
+
 			s.App.TxFeesKeeper.SwapNonNativeFeeToDenom(s.Ctx, tc.denomToSwapTo, testAccount)
 
 			// Check balance
 			balances := s.App.BankKeeper.GetAllBalances(s.Ctx, testAccount)
 			s.Require().Len(balances, 1)
+
+			// Check the txfees tracker after swap
+			s.Require().Equal(balances, s.App.TxFeesKeeper.GetTxFeesTrackerValue(s.Ctx))
 
 			// Check that the denomToSwapTo is the denom of the balance
 			s.Require().Equal(balances[0].Denom, tc.denomToSwapTo)

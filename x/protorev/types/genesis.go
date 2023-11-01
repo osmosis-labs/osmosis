@@ -39,6 +39,10 @@ var (
 	DefaultMaxPoolPointsPerTx        = uint64(18)
 	DefaultPoolPointsConsumedInBlock = uint64(0)
 	DefaultProfits                   = []sdk.Coin{}
+	DefaultCyclicArbTracker          = CyclicArbTracker{
+		CyclicArb:                  sdk.Coins(nil),
+		HeightAccountingStartsFrom: 0,
+	}
 )
 
 // DefaultGenesis returns the default genesis state
@@ -56,6 +60,7 @@ func DefaultGenesis() *GenesisState {
 		MaxPoolPointsPerTx:     DefaultMaxPoolPointsPerTx,
 		PointCountForBlock:     DefaultPoolPointsConsumedInBlock,
 		Profits:                DefaultProfits,
+		CyclicArbTracker:       &DefaultCyclicArbTracker,
 	}
 }
 
