@@ -22,6 +22,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetTickLiquidityNetInDirection)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetPoolAccumulatorRewards)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetTickAccumulatorTrackers)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetLiquidityPerTickRange)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
@@ -115,6 +116,17 @@ func GetTickLiquidityNetInDirection() (*osmocli.QueryDescriptor, *queryproto.Liq
 [poolid] [inputDenom] [start tick] [use cur tick] [bound tick] [use_no_bound]
 TODO: What does any of that mean...?`,
 	}, &queryproto.LiquidityNetInDirectionRequest{}
+}
+
+func GetLiquidityPerTickRange() (*osmocli.QueryDescriptor, *queryproto.LiquidityPerTickRangeRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "liquidity-per-tick-range",
+		Short: "Query liquidity per tick range",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} 1
+
+[poolid]`,
+	}, &queryproto.LiquidityPerTickRangeRequest{}
 }
 
 func GetPoolAccumulatorRewards() (*osmocli.QueryDescriptor, *queryproto.PoolAccumulatorRewardsRequest) {
