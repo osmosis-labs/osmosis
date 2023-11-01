@@ -33,7 +33,7 @@ build-check-version:
 		exit 1; \
 	fi
 
-build-all: check_version go.sum
+build-all: build-check-version go.sum
 	mkdir -p $(BUILDDIR)/
 	GOWORK=off go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./...
 
@@ -50,7 +50,7 @@ build-dev-build:
 	mkdir -p $(BUILDDIR)/
 	GOWORK=off go build $(GC_FLAGS) -mod=readonly -ldflags '$(DEBUG_LDFLAGS)' -trimpath -o $(BUILDDIR) ./...;
 
-build-install-with-autocomplete: check_version go.sum
+build-install-with-autocomplete: build-check-version go.sum
 	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 	@PARENT_SHELL=$$(ps -o ppid= -p $$PPID | xargs ps -o comm= -p); \
 	if echo "$$PARENT_SHELL" | grep -q "zsh"; then \
