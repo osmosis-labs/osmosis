@@ -16,6 +16,7 @@ type mockPool struct {
 	ChainPoolModel       poolmanagertypes.PoolI
 	TickModel            *domain.TickModel
 	ID                   uint64
+	Balances             sdk.Coins
 	denoms               []string
 	totalValueLockedUSDC osmomath.Int
 	poolType             poolmanagertypes.PoolType
@@ -35,6 +36,7 @@ func (mp *mockPool) GetUnderlyingPool() poolmanagertypes.PoolI {
 // GetSQSPoolModel implements domain.PoolI.
 func (mp *mockPool) GetSQSPoolModel() domain.SQSPool {
 	return domain.SQSPool{
+		Balances:             mp.Balances,
 		TotalValueLockedUSDC: mp.totalValueLockedUSDC,
 	}
 }

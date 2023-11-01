@@ -45,6 +45,9 @@ const (
 
 	// points for being concentrated
 	concentratedPoints = 20
+
+	// Transmuter pools should be prioritized due to no slippage swaps.
+	transmuterPoints = preferredPoints * 2
 )
 
 // NewRouter returns a new Router.
@@ -104,6 +107,10 @@ func NewRouter(preferredPoolIDs []uint64, allPools []domain.PoolI, maxHops int, 
 		isConcentrated := pool.GetType() == poolmanagertypes.Concentrated
 		if isConcentrated {
 			rating += concentratedPoints
+		}
+
+		if isTransmuter := pool.GetType() == poolmanagertypes.CosmWasm; isTransmuter {
+			rating += transmuterPoints
 		}
 
 		ratedPools = append(ratedPools, ratedPool{

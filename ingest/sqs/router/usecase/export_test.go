@@ -10,6 +10,7 @@ type (
 	RouteImpl                    = routeImpl
 	RoutableCFMMPoolImpl         = routableCFMMPoolImpl
 	RoutableConcentratedPoolImpl = routableConcentratedPoolImpl
+	RoutableTransmuterPoolImpl   = routableTransmuterPoolImpl
 )
 
 const OsmoPrecisionMultiplier = osmoPrecisionMultiplier

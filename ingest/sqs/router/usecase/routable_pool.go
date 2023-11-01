@@ -28,6 +28,13 @@ func NewRoutablePool(pool domain.PoolI, tokenOutDenom string) domain.RoutablePoo
 		}
 	}
 
+	if pool.GetType() == poolmanagertypes.CosmWasm {
+		return &routableTransmuterPoolImpl{
+			PoolI:         pool,
+			TokenOutDenom: tokenOutDenom,
+		}
+	}
+
 	return &routableCFMMPoolImpl{
 		PoolI:         pool,
 		TokenOutDenom: tokenOutDenom,
