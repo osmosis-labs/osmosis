@@ -19,52 +19,73 @@ import (
 
 // This file contains query-related helper functions for the Concentrated Liquidity module
 
-// GetTickLiquidityForFullRange returns an array of liquidity depth for all ticks existing from min tick ~ max tick.
-func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, error) {
+// GetTickLiquidityForFullRange returns a slice of liquidity buckets for all tick range existing from min tick ~ max tick.
+// Returns index of the bucket that corresponds to the current tick.
+// For cases where there is no liqudity in the bucket but there may be liquidity to the right, the value will be -1.
+// For cases where there is no liquidity in the bucket but there may be liquidity to the left, the value will be len(liquidityDepthsForRange).
+// Otherwise, the index points to the bucket that corresponds to the current tick.
+func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, int64, error) {
 	// use false for zeroForOne since we're going from lower tick -> upper tick
 	zeroForOne := false
 	swapStrategy := swapstrategy.New(zeroForOne, osmomath.ZeroBigDec(), k.storeKey, osmomath.ZeroDec())
 
-	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
+	// set leftmost tick to min tick, and find the first initialized tick starting from min tick -1.
 	// we do -1 to make min tick inclusive.
-	currentTick := types.MinCurrentTick
+	// Note that MinCurrentTick = MinInitializedTick - 1
+	leftMostTickIndex := types.MinCurrentTick
 
-	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, currentTick)
+	nextTickIter := swapStrategy.InitializeNextTickIterator(ctx, poolId, leftMostTickIndex)
 	defer nextTickIter.Close()
 	if !nextTickIter.Valid() {
-		return []queryproto.LiquidityDepthWithRange{}, types.RanOutOfTicksForPoolError{PoolId: poolId}
+		return []queryproto.LiquidityDepthWithRange{}, -1, types.RanOutOfTicksForPoolError{PoolId: poolId}
 	}
 
 	nextTick, err := types.TickIndexFromBytes(nextTickIter.Key())
 	if err != nil {
-		return []queryproto.LiquidityDepthWithRange{}, err
+		return []queryproto.LiquidityDepthWithRange{}, -1, err
 	}
 
 	tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
 	if err != nil {
-		return []queryproto.LiquidityDepthWithRange{}, err
+		return []queryproto.LiquidityDepthWithRange{}, -1, err
 	}
 
 	liquidityDepthsForRange := []queryproto.LiquidityDepthWithRange{}
 
 	// use the smallest tick initialized as the starting point for calculating liquidity.
 	currentLiquidity := tick.LiquidityNet
-	currentTick = nextTick
+	leftMostTickIndex = nextTick
 	totalLiquidityWithinRange := currentLiquidity
 
-	previousTickIndex := currentTick
+	previousTickIndex := leftMostTickIndex
+
+	concentratedPool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return []queryproto.LiquidityDepthWithRange{}, -1, err
+	}
+
+	var (
+		currentBucketIndex   = int64(-1)
+		currentTick          = concentratedPool.GetCurrentTick()
+		currentTickLiquidity = concentratedPool.GetLiquidity()
+	)
 
 	// start from the next index so that the current tick can become lower tick.
 	nextTickIter.Next()
 	for ; nextTickIter.Valid(); nextTickIter.Next() {
 		tickIndex, err := types.TickIndexFromBytes(nextTickIter.Key())
 		if err != nil {
-			return []queryproto.LiquidityDepthWithRange{}, err
+			return []queryproto.LiquidityDepthWithRange{}, -1, err
 		}
 
 		tickStruct, err := ParseTickFromBz(nextTickIter.Value())
 		if err != nil {
-			return []queryproto.LiquidityDepthWithRange{}, err
+			return []queryproto.LiquidityDepthWithRange{}, -1, err
+		}
+
+		// Found the current bucket, update its index.
+		if currentBucketIndex == -1 && concentratedPool.IsCurrentTickInRange(previousTickIndex, tickIndex) && currentTickLiquidity.Equal(totalLiquidityWithinRange) {
+			currentBucketIndex = int64(len(liquidityDepthsForRange))
 		}
 
 		liquidityDepthForRange := queryproto.LiquidityDepthWithRange{
@@ -80,7 +101,12 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
 	}
 
-	return liquidityDepthsForRange, nil
+	// This signifies that currrent tick is above the max initialized tick
+	if currentTick >= previousTickIndex && currentTickLiquidity.IsZero() {
+		currentBucketIndex = int64(len(liquidityDepthsForRange))
+	}
+
+	return liquidityDepthsForRange, currentBucketIndex, nil
 }
 
 // GetLiquidityNetInDirection is a method that returns an array of TickLiquidityNet objects representing the net liquidity in a specified direction
