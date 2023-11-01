@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#6758](https://github.com/osmosis-labs/osmosis/pull/6758) Add codec for MsgUndelegateFromRebalancedValidatorSet
 
+### Misc Improvements
+
+* [#6788](https://github.com/osmosis-labs/osmosis/pull/6788) Improve error message when CL LP fails due to slippage bound hit.
+
 ## v20.0.0
 
 ### Features
