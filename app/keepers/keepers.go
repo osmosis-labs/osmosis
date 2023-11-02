@@ -212,7 +212,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		authenticator.NewPassKeyAuthenticator(appKeepers.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()),
 		authenticator.NewSpendLimitAuthenticator(
 			appKeepers.keys[authenticatortypes.AuthenticatorStoreKey],
-			"uosmo",
+			authenticatortypes.SpendLimitDenom,
 			authenticator.AbsoluteValue,
 			appKeepers.BankKeeper, appKeepers.PoolManagerKeeper, appKeepers.TwapKeeper),
 	})

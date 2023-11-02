@@ -16,6 +16,7 @@ import (
 
 	authante "github.com/osmosis-labs/osmosis/v20/x/authenticator/ante"
 	authenticators "github.com/osmosis-labs/osmosis/v20/x/authenticator/keeper"
+	authenticatortypes "github.com/osmosis-labs/osmosis/v20/x/authenticator/types"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v20/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 )
@@ -58,7 +59,7 @@ func NewAnteHandler(
 		authante.NewSetPubKeyDecorator(accountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(accountKeeper),
 		// Our authenticator decorator
-		authante.NewAuthenticatorDecorator(authenticatorKeeper, 20_000), // TODO: what's a good value for maxFeePayerGas?
+		authante.NewAuthenticatorDecorator(authenticatorKeeper, authenticatortypes.MaximumUnauthenticatedGas),
 		ante.NewIncrementSequenceDecorator(accountKeeper),
 		ibcante.NewAnteDecorator(channelKeeper),
 	)
