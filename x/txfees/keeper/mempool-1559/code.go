@@ -21,7 +21,8 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 
 // TODO: Read this from config, can even make default 0, so this is only turned on by nodes who change it!
 // ALt: do that with an enable/disable flag.
-var DefaultBaseFee = sdk.MustNewDecFromStr("1.0")
+var DefaultBaseFee = sdk.MustNewDecFromStr("0.0025")
+var MinBaseFee = sdk.MustNewDecFromStr("0.0025")
 var TargetGas = int64(90_000_000)
 var MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
 var ResetInterval = int64(1000)
@@ -66,6 +67,11 @@ func (e *EipState) updateBaseFee(height int64) {
 	baseFeeIncrement := sdk.NewDec(gasDiff).Quo(sdk.NewDec(TargetGas)).Mul(MaxBlockChangeRate)
 	baseFeeMultiplier := sdk.NewDec(1).Add(baseFeeIncrement)
 	e.CurBaseFee.MulMut(baseFeeMultiplier)
+
+	// Make a min base fee
+	if e.CurBaseFee.LT(MinBaseFee) {
+		e.CurBaseFee = MinBaseFee
+	}
 }
 
 func (e *EipState) GetCurBaseFee() sdk.Dec {
