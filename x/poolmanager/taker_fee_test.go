@@ -34,7 +34,7 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 
 		expectedResult sdk.Coin
 		expectError    error
-		sendCoins      func(s *KeeperTestSuite, coin sdk.Coins)
+		sendCoins      bool
 	}{
 		"fee charged on token in": {
 			takerFee:      defaultTakerFee,
@@ -92,10 +92,7 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			exactIn:                  true,
 			shouldSetSenderWhitelist: true,
 
-			// expectedResult: sdk.NewCoin(apptesting.ETH, defaultAmount),
-			sendCoins: func(s *KeeperTestSuite, coins sdk.Coins) {
-				s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[nonWhitelistedSenderIndex], s.TestAccs[whitelistedSenderIndex], coins)
-			},
+			sendCoins:   true,
 			expectError: fmt.Errorf("insufficient funds"),
 		},
 	}
@@ -122,8 +119,8 @@ func (s *KeeperTestSuite) TestChargeTakerFee() {
 			s.FundAcc(s.TestAccs[tc.senderIndex], sdk.NewCoins(tc.tokenIn))
 
 			// send coins.
-			if tc.sendCoins != nil {
-				tc.sendCoins(s, sdk.NewCoins(tc.tokenIn))
+			if tc.sendCoins {
+				s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[nonWhitelistedSenderIndex], s.TestAccs[whitelistedSenderIndex], sdk.NewCoins(tc.tokenIn))
 			}
 
 			// System under test.
