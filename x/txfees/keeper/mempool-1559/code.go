@@ -45,7 +45,9 @@ func (e *eipState) deliverTxCode(_ sdk.Context, tx sdk.FeeTx) {
 	e.totalGasWantedThisBlock += int64(tx.GetGas())
 }
 
-// How to get
+// Equation is:
+// baseFeeMultiplier = 1 + (gasUsed - targetGas) / targetGas * maxChangeRate
+// newBaseFee = baseFee * baseFeeMultiplier
 func (e *eipState) updateBaseFee(height int64) {
 	gasUsed := e.totalGasWantedThisBlock
 	// obvi fix
