@@ -44,8 +44,7 @@ message GenesisState {
   repeated ModuleRoute pool_routes = 3 [ (gogoproto.nullable) = false ];
 
   // KVStore state
-  TakerFeesToStakersTracker taker_fees_to_stakers_tracker = 4;
-  TakerFeesToCommunityPoolTracker taker_fees_to_community_pool_tracker = 5;
+  TakerFeesTracker taker_fees_tracker = 4;
 }
 
 // TakerFeeParams consolidates the taker fee parameters for the poolmanager.
@@ -122,20 +121,15 @@ message TakerFeeDistributionPercentage {
   ];
 }
 
-message TakerFeesToStakersTracker {
+message TakerFeesTracker {
   repeated cosmos.base.v1beta1.Coin taker_fees_to_stakers = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
-  int64 height_accounting_starts_from = 2
-      [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
-}
-
-message TakerFeesToCommunityPoolTracker {
-  repeated cosmos.base.v1beta1.Coin taker_fees_to_community_pool = 1 [
+  repeated cosmos.base.v1beta1.Coin taker_fees_to_community_pool = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
-  int64 height_accounting_starts_from = 2
+  int64 height_accounting_starts_from = 3
       [ (gogoproto.moretags) = "yaml:\"height_accounting_starts_from\"" ];
 }

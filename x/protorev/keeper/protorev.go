@@ -497,12 +497,8 @@ func (k Keeper) GetAllProtocolRevenue(ctx sdk.Context) types.AllProtocolRevenue 
 		HeightAccountingStartsFrom: k.GetCyclicArbProfitTrackerStartHeight(ctx),
 	}
 
-	takerFeesToStakersTracker := poolmanagertypes.TakerFeesToStakersTracker{
+	takerFeesTracker := poolmanagertypes.TakerFeesTracker{
 		TakerFeesToStakers:         k.poolmanagerKeeper.GetTakerFeeTrackerForStakers(ctx),
-		HeightAccountingStartsFrom: k.poolmanagerKeeper.GetTakerFeeTrackerStartHeight(ctx),
-	}
-
-	takerFeesToCommunityPoolTracker := poolmanagertypes.TakerFeesToCommunityPoolTracker{
 		TakerFeesToCommunityPool:   k.poolmanagerKeeper.GetTakerFeeTrackerForCommunityPool(ctx),
 		HeightAccountingStartsFrom: k.poolmanagerKeeper.GetTakerFeeTrackerStartHeight(ctx),
 	}
@@ -513,9 +509,8 @@ func (k Keeper) GetAllProtocolRevenue(ctx sdk.Context) types.AllProtocolRevenue 
 	}
 
 	return types.AllProtocolRevenue{
-		TakerFeesToStakersTracker:       takerFeesToStakersTracker,
-		TakerFeesToCommunityPoolTracker: takerFeesToCommunityPoolTracker,
-		TxFeesTracker:                   txFeesTracker,
-		CyclicArbTracker:                cyclicArbTracker,
+		TakerFeesTracker: takerFeesTracker,
+		TxFeesTracker:    txFeesTracker,
+		CyclicArbTracker: cyclicArbTracker,
 	}
 }

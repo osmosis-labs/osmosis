@@ -360,8 +360,8 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	allProtoRev = s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)
 	s.Require().Equal(cyclicArbProfits, allProtoRev.CyclicArbTracker.CyclicArb)
 	s.Require().Equal(txFeeCharged, allProtoRev.TxFeesTracker.TxFees)
-	s.Require().Equal(expectedTakerFeeToStakers, allProtoRev.TakerFeesToStakersTracker.TakerFeesToStakers)
-	s.Require().Equal(expectedTakerFeeToCommunityPool, allProtoRev.TakerFeesToCommunityPoolTracker.TakerFeesToCommunityPool)
+	s.Require().Equal(expectedTakerFeeToStakers, allProtoRev.TakerFeesTracker.TakerFeesToStakers)
+	s.Require().Equal(expectedTakerFeeToCommunityPool, allProtoRev.TakerFeesTracker.TakerFeesToCommunityPool)
 
 	// A second round of the same thing
 	// Swap on a pool to charge taker fee
@@ -382,6 +382,6 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenue() {
 	allProtoRev = s.App.ProtoRevKeeper.GetAllProtocolRevenue(s.Ctx)
 	s.Require().Equal(cyclicArbProfits.Add(cyclicArbProfits...), allProtoRev.CyclicArbTracker.CyclicArb)
 	s.Require().Equal(txFeeCharged.Add(txFeeCharged...), allProtoRev.TxFeesTracker.TxFees)
-	s.Require().Equal(expectedTakerFeeToStakers.Add(expectedTakerFeeToStakers...), allProtoRev.TakerFeesToStakersTracker.TakerFeesToStakers)
-	s.Require().Equal(expectedTakerFeeToCommunityPool.Add(expectedTakerFeeToCommunityPool...), allProtoRev.TakerFeesToCommunityPoolTracker.TakerFeesToCommunityPool)
+	s.Require().Equal(expectedTakerFeeToStakers.Add(expectedTakerFeeToStakers...), allProtoRev.TakerFeesTracker.TakerFeesToStakers)
+	s.Require().Equal(expectedTakerFeeToCommunityPool.Add(expectedTakerFeeToCommunityPool...), allProtoRev.TakerFeesTracker.TakerFeesToCommunityPool)
 }

@@ -101,18 +101,19 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	// We track taker fees generated in the module's KVStore.
 	// If the values were exported, we set them here.
 	// If the values were not exported, we initialize the tracker to zero and set the accounting height to the current height.
-	if genState.TakerFeesToStakersTracker != nil {
-		k.SetTakerFeeTrackerForStakers(ctx, genState.TakerFeesToStakersTracker.TakerFeesToStakers)
-		k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesToStakersTracker.HeightAccountingStartsFrom)
+	if !genState.TakerFeesTracker.TakerFeesToStakers.Empty() {
+		k.SetTakerFeeTrackerForStakers(ctx, genState.TakerFeesTracker.TakerFeesToStakers)
 	} else {
 		k.SetTakerFeeTrackerForStakers(ctx, sdk.NewCoins())
-		k.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
 	}
-	if genState.TakerFeesToCommunityPoolTracker != nil {
-		k.SetTakerFeeTrackerForCommunityPool(ctx, genState.TakerFeesToCommunityPoolTracker.TakerFeesToCommunityPool)
-		k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesToCommunityPoolTracker.HeightAccountingStartsFrom)
+	if !genState.TakerFeesTracker.TakerFeesToCommunityPool.Empty() {
+		k.SetTakerFeeTrackerForCommunityPool(ctx, genState.TakerFeesTracker.TakerFeesToCommunityPool)
 	} else {
 		k.SetTakerFeeTrackerForCommunityPool(ctx, sdk.NewCoins())
+	}
+	if genState.TakerFeesTracker.HeightAccountingStartsFrom != 0 {
+		k.SetTakerFeeTrackerStartHeight(ctx, genState.TakerFeesTracker.HeightAccountingStartsFrom)
+	} else {
 		k.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
 	}
 }
@@ -120,21 +121,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 // ExportGenesis returns the poolmanager module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	// Export KVStore values to the genesis state so they can be imported in init genesis.
-	takerFeesToStakersTracker := types.TakerFeesToStakersTracker{
+	takerFeesTracker := types.TakerFeesTracker{
 		TakerFeesToStakers:         k.GetTakerFeeTrackerForStakers(ctx),
-		HeightAccountingStartsFrom: k.GetTakerFeeTrackerStartHeight(ctx),
-	}
-	takerFeesToCommunityPoolTracker := types.TakerFeesToCommunityPoolTracker{
 		TakerFeesToCommunityPool:   k.GetTakerFeeTrackerForCommunityPool(ctx),
 		HeightAccountingStartsFrom: k.GetTakerFeeTrackerStartHeight(ctx),
 	}
-
 	return &types.GenesisState{
-		Params:                          k.GetParams(ctx),
-		NextPoolId:                      k.GetNextPoolId(ctx),
-		PoolRoutes:                      k.getAllPoolRoutes(ctx),
-		TakerFeesToStakersTracker:       &takerFeesToStakersTracker,
-		TakerFeesToCommunityPoolTracker: &takerFeesToCommunityPoolTracker,
+		Params:           k.GetParams(ctx),
+		NextPoolId:       k.GetNextPoolId(ctx),
+		PoolRoutes:       k.getAllPoolRoutes(ctx),
+		TakerFeesTracker: &takerFeesTracker,
 	}
 }
 

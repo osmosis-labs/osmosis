@@ -420,8 +420,8 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenueGRPCQuery() {
 	s.Require().NoError(err)
 	s.Require().Equal(cyclicArbProfits, res.AllProtocolRevenue.CyclicArbTracker.CyclicArb)
 	s.Require().Equal(txFeeCharged, res.AllProtocolRevenue.TxFeesTracker.TxFees)
-	s.Require().Equal(expectedTakerFeeToStakers, res.AllProtocolRevenue.TakerFeesToStakersTracker.TakerFeesToStakers)
-	s.Require().Equal(expectedTakerFeeToCommunityPool, res.AllProtocolRevenue.TakerFeesToCommunityPoolTracker.TakerFeesToCommunityPool)
+	s.Require().Equal(expectedTakerFeeToStakers, res.AllProtocolRevenue.TakerFeesTracker.TakerFeesToStakers)
+	s.Require().Equal(expectedTakerFeeToCommunityPool, res.AllProtocolRevenue.TakerFeesTracker.TakerFeesToCommunityPool)
 
 	// A second round of the same thing
 	// Swap on a pool to charge taker fee
@@ -443,6 +443,6 @@ func (s *KeeperTestSuite) TestGetAllProtocolRevenueGRPCQuery() {
 	s.Require().NoError(err)
 	s.Require().Equal(cyclicArbProfits.Add(cyclicArbProfits...), res.AllProtocolRevenue.CyclicArbTracker.CyclicArb)
 	s.Require().Equal(txFeeCharged.Add(txFeeCharged...), res.AllProtocolRevenue.TxFeesTracker.TxFees)
-	s.Require().Equal(expectedTakerFeeToStakers.Add(expectedTakerFeeToStakers...), res.AllProtocolRevenue.TakerFeesToStakersTracker.TakerFeesToStakers)
-	s.Require().Equal(expectedTakerFeeToCommunityPool.Add(expectedTakerFeeToCommunityPool...), res.AllProtocolRevenue.TakerFeesToCommunityPoolTracker.TakerFeesToCommunityPool)
+	s.Require().Equal(expectedTakerFeeToStakers.Add(expectedTakerFeeToStakers...), res.AllProtocolRevenue.TakerFeesTracker.TakerFeesToStakers)
+	s.Require().Equal(expectedTakerFeeToCommunityPool.Add(expectedTakerFeeToCommunityPool...), res.AllProtocolRevenue.TakerFeesTracker.TakerFeesToCommunityPool)
 }

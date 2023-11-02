@@ -184,21 +184,15 @@ message BaseDenom {
 }
 
 message AllProtocolRevenue {
-  osmosis.poolmanager.v1beta1.TakerFeesToStakersTracker
-      taker_fees_to_stakers_tracker = 1 [
-    (gogoproto.moretags) = "yaml:\"taker_fees_to_stakers_tracker\"",
+  osmosis.poolmanager.v1beta1.TakerFeesTracker taker_fees_tracker = 1 [
+    (gogoproto.moretags) = "yaml:\"taker_fees_tracker\"",
     (gogoproto.nullable) = false
   ];
-  osmosis.poolmanager.v1beta1.TakerFeesToCommunityPoolTracker
-      taker_fees_to_community_pool_tracker = 2 [
-    (gogoproto.moretags) = "yaml:\"taker_fees_to_community_pool_tracker\"",
-    (gogoproto.nullable) = false
-  ];
-  osmosis.txfees.v1beta1.TxFeesTracker tx_fees_tracker = 3 [
+  osmosis.txfees.v1beta1.TxFeesTracker tx_fees_tracker = 2 [
     (gogoproto.moretags) = "yaml:\"tx_fees_tracker\"",
     (gogoproto.nullable) = false
   ];
-  CyclicArbTracker cyclic_arb_tracker = 4 [
+  CyclicArbTracker cyclic_arb_tracker = 3 [
     (gogoproto.moretags) = "yaml:\"cyclic_arb_tracker\"",
     (gogoproto.nullable) = false
   ];
