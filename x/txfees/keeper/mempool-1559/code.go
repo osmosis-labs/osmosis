@@ -126,7 +126,7 @@ func (e *EipState) tryLoad() sdk.Dec {
 	if err != nil {
 		fmt.Println("Error reading eip1559 state", err)
 		fmt.Println("Setting eip1559 state to default value", MinBaseFee)
-		return MinBaseFee
+		return MinBaseFee.Clone()
 	}
 
 	var loaded EipState
@@ -134,9 +134,9 @@ func (e *EipState) tryLoad() sdk.Dec {
 	if err != nil {
 		fmt.Println("Error unmarshalling eip1559 state", err)
 		fmt.Println("Setting eip1559 state to default value", MinBaseFee)
-		return MinBaseFee
+		return MinBaseFee.Clone()
 	}
 
 	fmt.Println("Loaded eip1559 state. CurBaseFee=", loaded.CurBaseFee)
-	return loaded.CurBaseFee
+	return loaded.CurBaseFee.Clone()
 }
