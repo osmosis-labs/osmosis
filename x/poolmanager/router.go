@@ -35,8 +35,7 @@ func (k Keeper) RouteExactAmountIn(
 	tokenOutMinAmount osmomath.Int,
 ) (tokenOutAmount osmomath.Int, err error) {
 	// Ensure that provided route is not empty and has valid denom format.
-	routeStep := types.SwapAmountInRoutes(route)
-	if err := routeStep.Validate(); err != nil {
+	if err := types.SwapAmountInRoutes(route).Validate(); err != nil {
 		return osmomath.Int{}, err
 	}
 
@@ -234,8 +233,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		}
 	}()
 
-	routeStep := types.SwapAmountInRoutes(route)
-	if err := routeStep.Validate(); err != nil {
+	if err := types.SwapAmountInRoutes(route).Validate(); err != nil {
 		return osmomath.Int{}, err
 	}
 
@@ -290,8 +288,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 ) (tokenInAmount osmomath.Int, err error) {
 	isMultiHopRouted, routeSpreadFactor, sumOfSpreadFactors := false, osmomath.Dec{}, osmomath.Dec{}
 	// Ensure that provided route is not empty and has valid denom format.
-	routeStep := types.SwapAmountOutRoutes(route)
-	if err := routeStep.Validate(); err != nil {
+	if err := types.SwapAmountOutRoutes(route).Validate(); err != nil {
 		return osmomath.Int{}, err
 	}
 

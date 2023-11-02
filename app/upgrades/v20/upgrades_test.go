@@ -202,8 +202,8 @@ func (s *UpgradeTestSuite) TestCreateGroupsForIncentivePairs() {
 
 	// 2 concentrated pools linked to 2 balancer pools - converted to group
 	// linked balancer pools are not incentivized individually
-	// separete individual balancer pool - no-op
-	// 2 separete individual stableswap pools - no-op
+	// seperate individual balancer pool - no-op
+	// 2 seperate individual stableswap pools - no-op
 	// concentrated pool that does not have migration link - no-op
 	s.Run("valid multi distr record test", func() {
 

@@ -226,3 +226,50 @@ func customArgs(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
+func PrintAllEnvironmentCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-env ",
+		Short: "listing all available environments.",
+		Long: `listing all available environments.
+Example:
+	osmosisd list-env'
+	Returns all EnvironmentCmd`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// mainnet
+			path, err := environmentNameToPath(EnvMainnet)
+			if err != nil {
+				fmt.Printf("Error: %v \n", err)
+			}
+
+			fmt.Printf("Environment name, path: %s, %s\n", EnvMainnet, path)
+
+			// localnet
+			path, err = environmentNameToPath(EnvLocalnet)
+			if err != nil {
+				fmt.Printf("Error: %v \n", err)
+			}
+
+			fmt.Printf("Environment name, path: %s, %s\n", EnvLocalnet, path)
+
+			// testnet
+			path, err = environmentNameToPath(EnvTestnet)
+			if err != nil {
+				fmt.Printf("Error: %v \n", err)
+			}
+
+			fmt.Printf("Environment name, path: %s, %s\n", EnvTestnet, path)
+
+			// OSMOSISD_ENVIRONMENT
+			val := os.Getenv(EnvVariable)
+			path, err = environmentNameToPath(val)
+			if err != nil {
+				fmt.Printf("Error: %v \n", err)
+			}
+
+			fmt.Printf("Environment name, path: %s, %s\n", EnvVariable, path)
+
+			return nil
+		},
+	}
+	return cmd
+}
