@@ -24,6 +24,7 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 var DefaultBaseFee = sdk.MustNewDecFromStr("1.0")
 var TargetGas = int64(90_000_000)
 var MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
+var ResetInterval = int64(1000)
 
 type eipState struct {
 	// Signal when we are starting a new block
@@ -39,6 +40,10 @@ var CurEipState = eipState{}
 func (e *eipState) startBlock(height int64) {
 	e.lastBlockHeight = height
 	e.totalGasWantedThisBlock = 0
+
+	if height%ResetInterval == 0 {
+		e.CurBaseFee = DefaultBaseFee
+	}
 }
 
 func (e *eipState) deliverTxCode(_ sdk.Context, tx sdk.FeeTx) {
