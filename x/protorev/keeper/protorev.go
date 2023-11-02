@@ -489,13 +489,6 @@ func (k Keeper) SetInfoByPoolType(ctx sdk.Context, poolWeights types.InfoByPoolT
 // GetAllProtocolRevenue returns all types of protocol revenue (txfees, taker fees, and cyclic arb profits), as well as the block height from which we started accounting
 // for each of these revenue sources.
 func (k Keeper) GetAllProtocolRevenue(ctx sdk.Context) types.AllProtocolRevenue {
-	takerFeesToStakers := k.poolmanagerKeeper.GetTakerFeeTrackerForStakers(ctx)
-	takerFeesToCommunityPool := k.poolmanagerKeeper.GetTakerFeeTrackerForCommunityPool(ctx)
-	takerFeesAccountingHeight := k.poolmanagerKeeper.GetTakerFeeTrackerStartHeight(ctx)
-
-	txFees := k.txfeesKeeper.GetTxFeesTrackerValue(ctx)
-	txFeesAccountingHeight := k.txfeesKeeper.GetTxFeesTrackerStartHeight(ctx)
-
 	currentCyclicArb := k.GetAllProfits(ctx)
 	currentCyclicArbCoins := osmoutils.ConvertCoinArrayToCoins(currentCyclicArb)
 
@@ -505,18 +498,18 @@ func (k Keeper) GetAllProtocolRevenue(ctx sdk.Context) types.AllProtocolRevenue 
 	}
 
 	takerFeesToStakersTracker := poolmanagertypes.TakerFeesToStakersTracker{
-		TakerFeesToStakers:         takerFeesToStakers,
-		HeightAccountingStartsFrom: takerFeesAccountingHeight,
+		TakerFeesToStakers:         k.poolmanagerKeeper.GetTakerFeeTrackerForStakers(ctx),
+		HeightAccountingStartsFrom: k.poolmanagerKeeper.GetTakerFeeTrackerStartHeight(ctx),
 	}
 
 	takerFeesToCommunityPoolTracker := poolmanagertypes.TakerFeesToCommunityPoolTracker{
-		TakerFeesToCommunityPool:   takerFeesToCommunityPool,
-		HeightAccountingStartsFrom: takerFeesAccountingHeight,
+		TakerFeesToCommunityPool:   k.poolmanagerKeeper.GetTakerFeeTrackerForCommunityPool(ctx),
+		HeightAccountingStartsFrom: k.poolmanagerKeeper.GetTakerFeeTrackerStartHeight(ctx),
 	}
 
 	txFeesTracker := txfeestypes.TxFeesTracker{
-		TxFees:                     txFees,
-		HeightAccountingStartsFrom: txFeesAccountingHeight,
+		TxFees:                     k.txfeesKeeper.GetTxFeesTrackerValue(ctx),
+		HeightAccountingStartsFrom: k.txfeesKeeper.GetTxFeesTrackerStartHeight(ctx),
 	}
 
 	return types.AllProtocolRevenue{

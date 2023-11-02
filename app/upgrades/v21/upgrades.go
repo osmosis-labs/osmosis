@@ -29,6 +29,7 @@ func CreateUpgradeHandler(
 		keepers.PoolManagerKeeper.SetTakerFeeTrackerStartHeight(ctx, ctx.BlockHeight())
 		keepers.TxFeesKeeper.SetTxFeesTrackerStartHeight(ctx, ctx.BlockHeight())
 		// We start the cyclic arb tracker from the value it currently is at since it has been tracking since inception (without a start height).
+		// This will allow us to display the amount of cyclic arb profits that have been generated from a certain block height.
 		allCyclicArbProfits := keepers.ProtoRevKeeper.GetAllProfits(ctx)
 		allCyclicArbProfitsCoins := osmoutils.ConvertCoinArrayToCoins(allCyclicArbProfits)
 		keepers.ProtoRevKeeper.SetCyclicArbProfitTrackerValue(ctx, allCyclicArbProfitsCoins)

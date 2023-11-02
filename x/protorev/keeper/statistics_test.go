@@ -228,15 +228,11 @@ func (s *KeeperTestSuite) TestGetSetCyclicArbProfitTrackerValue() {
 			s.Require().Empty(s.App.ProtoRevKeeper.GetCyclicArbProfitTrackerValue(s.Ctx))
 
 			s.App.ProtoRevKeeper.SetCyclicArbProfitTrackerValue(s.Ctx, tc.firstCyclicArbValue)
-
 			actualFirstCyclicArbValue := s.App.ProtoRevKeeper.GetCyclicArbProfitTrackerValue(s.Ctx)
-
 			s.Require().Equal(tc.firstCyclicArbValue, actualFirstCyclicArbValue)
 
 			s.App.ProtoRevKeeper.SetCyclicArbProfitTrackerValue(s.Ctx, tc.secondCyclicArbValue)
-
 			actualSecondCyclicArbValue := s.App.ProtoRevKeeper.GetCyclicArbProfitTrackerValue(s.Ctx)
-
 			s.Require().Equal(tc.secondCyclicArbValue, actualSecondCyclicArbValue)
 		})
 	}
