@@ -29,7 +29,8 @@ import (
 // TODO: Read this from config, can even make default 0, so this is only turned on by nodes who change it!
 // ALt: do that with an enable/disable flag. THat seems likes a better idea
 var DefaultBaseFee = sdk.MustNewDecFromStr("0.0025")
-var MinBaseFee = sdk.MustNewDecFromStr("0.0025")
+var MinBaseFee = sdk.MustNewDecFromStr("0.0020")
+var MaxBaseFee = sdk.MustNewDecFromStr("10")
 var TargetGas = int64(70_000_000)
 var MaxBlockChangeRate = sdk.NewDec(1).Quo(sdk.NewDec(16))
 var ResetInterval = int64(1000)
@@ -92,6 +93,11 @@ func (e *EipState) updateBaseFee(height int64) {
 	// Make a min base fee
 	if e.CurBaseFee.LT(MinBaseFee) {
 		e.CurBaseFee = MinBaseFee.Clone()
+	}
+
+	// Make a max base fee
+	if e.CurBaseFee.GT(MaxBaseFee) {
+		e.CurBaseFee = MaxBaseFee.Clone()
 	}
 
 	go e.tryPersist()
