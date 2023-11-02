@@ -62,8 +62,10 @@ func (e *eipState) updateBaseFee(height int64) {
 	// obvi fix
 	e.lastBlockHeight = height
 	gasDiff := gasUsed - TargetGas
-	baseFeeMultiplier := sdk.NewDec(1).Add(sdk.NewDec((gasDiff)).Mul(MaxBlockChangeRate))
-	e.CurBaseFee = e.CurBaseFee.Mul(baseFeeMultiplier)
+	//  (gasUsed - targetGas) / targetGas * maxChangeRate
+	baseFeeIncrement := sdk.NewDec(gasDiff).Quo(sdk.NewDec(TargetGas)).Mul(MaxBlockChangeRate)
+	baseFeeMultiplier := sdk.NewDec(1).Add(baseFeeIncrement)
+	e.CurBaseFee.MulMut(baseFeeMultiplier)
 }
 
 func (e *eipState) GetCurBaseFee() sdk.Dec {
