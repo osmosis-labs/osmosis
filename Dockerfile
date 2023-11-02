@@ -56,9 +56,12 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 # Runner
 # --------------------------------------------------------
 
-FROM ${RUNNER_IMAGE}
+FROM alpine:3.18
+# FROM ubuntu:20.04
 
 COPY --from=builder /osmosis/build/osmosisd /bin/osmosisd
+
+RUN apk add jq
 
 ENV HOME /osmosis
 WORKDIR $HOME

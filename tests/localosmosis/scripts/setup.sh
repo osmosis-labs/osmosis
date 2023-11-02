@@ -87,6 +87,25 @@ edit_genesis () {
 
 add_genesis_accounts () {
 
+    testacc1=1
+
+    i=1
+    # Loop 1000 times
+    while [ $i -le 1000 ]; do
+        # Run the osmosisd keys add command with the current testacc1 value
+        osmosisd keys add lo-test"$testacc1" --keyring-backend test
+
+        # echo "iteration $i"
+
+        osmosisd add-genesis-account $(osmosisd keys show lo-test"$testacc1" --keyring-backend test --output json | jq .address) 100000000000uosmo,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
+
+        # Increase the testacc1 value for the next iteration
+        testacc1=$((testacc1 + 1))
+
+        # Increment the loop counter
+        i=$((i + 1))
+    done
+
     osmosisd add-genesis-account osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj 100000000000uosmo,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
     # note such large amounts are set for e2e tests on FE 
     osmosisd add-genesis-account osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks 9999999999999999999999999999999999999999999999999uosmo,9999999999999999999999999999999999999999999999999uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
@@ -227,6 +246,9 @@ then
     ./script --operation 2 --localosmosis
     cd ..
 fi
+
+echo $OSMOSIS_HOME
+
 
 osmosisd start --home $OSMOSIS_HOME &
 
