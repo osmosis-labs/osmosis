@@ -59,7 +59,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 
 	// TODO: Is there a better way to do this?
-	// I want ctx.IsDeliverTx()
+	// I want ctx.IsDeliverTx() but that doesn't exist.
 	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
 		mempool1559.DeliverTxCode(ctx, feeTx)
 	}

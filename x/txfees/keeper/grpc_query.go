@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	mempool1559 "github.com/osmosis-labs/osmosis/v20/x/txfees/keeper/mempool-1559"
 	"github.com/osmosis-labs/osmosis/v20/x/txfees/types"
 )
 
@@ -82,4 +83,9 @@ func (q Querier) BaseDenom(ctx context.Context, _ *types.QueryBaseDenomRequest) 
 	}
 
 	return &types.QueryBaseDenomResponse{BaseDenom: baseDenom}, nil
+}
+
+func (q Querier) GetEipBaseFee(_ context.Context, _ *types.QueryEipBaseFeeRequest) (*types.QueryEipBaseFeeResponse, error) {
+	response := mempool1559.CurEipState.GetCurBaseFee()
+	return &types.QueryEipBaseFeeResponse{BaseFee: response}, nil
 }
