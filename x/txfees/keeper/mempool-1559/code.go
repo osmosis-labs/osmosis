@@ -35,7 +35,11 @@ type eipState struct {
 	CurBaseFee sdk.Dec
 }
 
-var CurEipState = eipState{}
+var CurEipState = eipState{
+	lastBlockHeight:         0,
+	totalGasWantedThisBlock: 0,
+	CurBaseFee:              DefaultBaseFee,
+}
 
 func (e *eipState) startBlock(height int64) {
 	e.lastBlockHeight = height
